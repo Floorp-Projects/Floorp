@@ -558,6 +558,7 @@ WasmArrayObject* WasmArrayObject::createArray(
       // the tenured heap.
       if (!nursery.registerTrailer(outlineData, outlineBytes.value())) {
         nursery.mallocedBlockCache().free(outlineData);
+        ReportOutOfMemory(cx);
         return nullptr;
       }
     }
@@ -750,6 +751,7 @@ WasmStructObject* WasmStructObject::createStruct(
       // See corresponding comment in WasmArrayObject::createArray.
       if (!nursery.registerTrailer(outlineData, outlineBytes)) {
         nursery.mallocedBlockCache().free(outlineData);
+        ReportOutOfMemory(cx);
         return nullptr;
       }
     }

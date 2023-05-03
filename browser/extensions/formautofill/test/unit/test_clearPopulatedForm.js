@@ -83,7 +83,7 @@ const TESTCASES = [
 
 add_task(async function do_test() {
   let { FormAutofillHandler } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofillHandler.sys.mjs"
+    "resource://gre/modules/shared/FormAutofillHandler.sys.mjs"
   );
   for (let test of TESTCASES) {
     info("Test case: " + test.description);

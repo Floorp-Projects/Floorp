@@ -129,7 +129,7 @@ const KNOWN_NAMES = {
 
 add_setup(async () => {
   ({ FormAutofillHeuristics } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofillHeuristics.sys.mjs"
+    "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs"
   ));
 });
 
@@ -137,7 +137,10 @@ for (let field in KNOWN_NAMES) {
   KNOWN_NAMES[field].forEach(name => {
     add_task(async () => {
       ok(
-        FormAutofillHeuristics.RULES[field].test(name),
+        FormAutofillHeuristics.testRegex(
+          FormAutofillHeuristics.RULES[field],
+          name
+        ),
         `RegExp for ${field} matches string '${name}'`
       );
     });

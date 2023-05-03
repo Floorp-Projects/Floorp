@@ -65,7 +65,7 @@ void* gc::CellAllocator::AllocateObjectCell(JSContext* cx, AllocKind kind,
 
   if (heap != TenuredHeap && cx->zone()->allocNurseryObjects) {
     if (!site) {
-      site = cx->zone()->unknownAllocSite();
+      site = cx->zone()->unknownAllocSite(JS::TraceKind::Object);
     }
 
     void* obj = rt->gc.tryNewNurseryObject<allowGC>(cx, thingSize, clasp, site);
@@ -129,7 +129,7 @@ void* GCRuntime::tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
-  AllocSite* site = cx->zone()->unknownAllocSite();
+  AllocSite* site = cx->zone()->unknownAllocSite(JS::TraceKind::String);
   void* ptr = cx->nursery().allocateString(site, thingSize);
   if (ptr) {
     return ptr;
@@ -197,7 +197,7 @@ void* GCRuntime::tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
-  AllocSite* site = cx->zone()->unknownAllocSite();
+  AllocSite* site = cx->zone()->unknownAllocSite(JS::TraceKind::BigInt);
   void* ptr = cx->nursery().allocateBigInt(site, thingSize);
   if (ptr) {
     return ptr;

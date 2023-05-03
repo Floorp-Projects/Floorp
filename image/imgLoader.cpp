@@ -2418,7 +2418,7 @@ nsresult imgLoader::LoadImage(
       // preload image interacts with list of available images, see
       // https://github.com/whatwg/html/issues/4474.
       proxy->RemoveSelf(aLoadingDocument);
-      proxy->NotifyUsage();
+      proxy->NotifyUsage(aLoadingDocument);
 
       imgRequest* request = proxy->GetOwner();
       nsresult rv =

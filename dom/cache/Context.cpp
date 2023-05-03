@@ -18,6 +18,7 @@
 #include "mozilla/dom/quota/DirectoryLock.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozIStorageConnection.h"
 #include "nsIPrincipal.h"
 #include "nsIRunnable.h"
@@ -215,6 +216,7 @@ class Context::QuotaInitRunnable final : public nsIRunnable,
   SafeRefPtr<Action> mInitAction;
   nsCOMPtr<nsIEventTarget> mInitiatingEventTarget;
   nsresult mResult;
+  Maybe<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
   Maybe<CacheDirectoryMetadata> mDirectoryMetadata;
   RefPtr<DirectoryLock> mDirectoryLock;
   State mState;
@@ -326,10 +328,11 @@ Context::QuotaInitRunnable::Run() {
 
         nsCOMPtr<nsIPrincipal> principal = mManager->GetManagerId().Principal();
 
-        QM_TRY_UNWRAP(auto principalMetadata,
-                      QuotaManager::GetInfoFromPrincipal(principal));
+        mozilla::ipc::PrincipalInfo principalInfo;
+        QM_TRY(
+            MOZ_TO_RESULT(PrincipalToPrincipalInfo(principal, &principalInfo)));
 
-        mDirectoryMetadata.emplace(std::move(principalMetadata));
+        mPrincipalInfo.emplace(std::move(principalInfo));
 
         mState = STATE_CREATE_QUOTA_MANAGER;
 
@@ -353,6 +356,9 @@ Context::QuotaInitRunnable::Run() {
         resolver->Resolve(NS_ERROR_ABORT);
         break;
       }
+
+      mDirectoryMetadata.emplace(
+          QuotaManager::GetInfoFromValidatedPrincipalInfo(*mPrincipalInfo));
 
       QM_TRY(QuotaManager::EnsureCreated(), QM_PROPAGATE,
              [&resolver](const auto rv) { resolver->Resolve(rv); });

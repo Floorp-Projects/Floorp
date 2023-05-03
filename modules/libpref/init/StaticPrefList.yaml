@@ -2484,6 +2484,12 @@
   value: true
   mirror: always
 
+# Whether the LargestContentfulPaint API will be gathered and returned by performance observer*
+- name: dom.enable_largest_contentful_paint
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether performance.GetEntries* will contain an entry for the active document
 - name: dom.enable_performance_navigation_timing
   type: bool
@@ -3984,10 +3990,10 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# Is support for modules (new Worker(..., {type: "module">)) enabled for workers?
+# Is support for modules (new Worker(..., {type: "module"})) enabled for workers?
 - name: dom.workers.modules.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: dom.workers.requestAnimationFrame
@@ -8284,7 +8290,7 @@
 # Whether infinity / nan constants are enabled in calc().
 - name: layout.css.nan-inf.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
@@ -10734,7 +10740,7 @@
 # disabled, an older forked capture module is used.
 - name: media.getusermedia.camera.macavf.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: once
 
 # WebRTC prefs follow

@@ -145,7 +145,7 @@ static inline bool IsSubmetricId(uint32_t aId) {
   return (aId & (1 << 25)) > 0;
 }
 
-static Maybe<ScalarID> ScalarIdForMetric(uint32_t aId) {
+static inline Maybe<ScalarID> ScalarIdForMetric(uint32_t aId) {
   switch(aId) {
     case 1: { // test.boolean_metric
       return Some(ScalarID::SOME_BOOL_SCALAR);
@@ -171,16 +171,16 @@ static Maybe<ScalarID> ScalarIdForMetric(uint32_t aId) {
     case 12: { // test.string_metric
       return Some(ScalarID::SOME_STRING_SCALAR);
     }
-    case 14: { // test.timespan_metric
+    case 13: { // test.timespan_metric
       return Some(ScalarID::SOME_OTHER_UINT_SCALAR);
     }
-    case 16: { // test.nested.datetime_metric
+    case 15: { // test.nested.datetime_metric
       return Some(ScalarID::SOME_STILL_OTHER_STRING_SCALAR);
     }
-    case 20: { // test.nested.quantity_metric
+    case 19: { // test.nested.quantity_metric
       return Some(ScalarID::TELEMETRY_TEST_MIRROR_FOR_QUANTITY);
     }
-    case 23: { // test.nested.uuid_metric
+    case 22: { // test.nested.uuid_metric
       return Some(ScalarID::SOME_OTHER_STRING_SCALAR);
     }
     default: {

@@ -372,3 +372,73 @@ add_task(async function test_text_tracks_existing_window_multi_cue() {
     }
   );
 });
+
+/**
+ * This test ensures that the showHiddenTextTracks override correctly shows
+ * text tracks with a mode of "hidden".
+ */
+const prepareHiddenTrackTest = () =>
+  new Promise((resolve, reject) => {
+    BrowserTestUtils.withNewTab(
+      {
+        url: TEST_PAGE_WITH_WEBVTT,
+        gBrowser,
+      },
+
+      async browser => {
+        const videoID = "with-controls";
+        await prepareVideosAndWebVTTTracks(browser, videoID, 0, "hidden");
+        await SpecialPowers.spawn(browser, [{ videoID }], async args => {
+          let video = content.document.getElementById(args.videoID);
+          const tracks = video.textTracks;
+          ok(tracks[0].mode === "hidden", "Track 1 mode is 'hidden'");
+        });
+
+        let pipWin = await triggerPictureInPicture(browser, videoID);
+        ok(pipWin, "Got Picture-in-Picture window.");
+        let pipBrowser = pipWin.document.getElementById("browser");
+        if (!pipBrowser) {
+          reject();
+        }
+        resolve(pipBrowser);
+      }
+    );
+  });
+
+add_task(async function test_hidden_text_tracks_override() {
+  info("Running test - showHiddenTextTracks");
+
+  info("hidden mode with override");
+  Services.ppmm.sharedData.set(SHARED_DATA_KEY, {
+    "*://example.com/*": { showHiddenTextTracks: true },
+  });
+  Services.ppmm.sharedData.flush();
+
+  await prepareHiddenTrackTest().then(async pipBrowser => {
+    await SpecialPowers.spawn(pipBrowser, [], async () => {
+      info("Checking text track content in pip window");
+      let textTracks = content.document.getElementById("texttracks");
+
+      // Verify text track is showing in PiP window.
+      ok(textTracks, "TextTracks container should exist in the pip window");
+      ok(textTracks.textContent.includes("track 1"), "Track 1 should be shown");
+    });
+  });
+
+  info("hidden mode without override");
+  Services.ppmm.sharedData.set(SHARED_DATA_KEY, {});
+  Services.ppmm.sharedData.flush();
+
+  await prepareHiddenTrackTest().then(async pipBrowser => {
+    await SpecialPowers.spawn(pipBrowser, [], async () => {
+      info("Checking text track content in pip window");
+      let textTracks = content.document.getElementById("texttracks");
+
+      // Verify text track is [not] showing in PiP window.
+      ok(
+        !textTracks || !textTracks.textContent.length,
+        "Text track should NOT appear in PiP window."
+      );
+    });
+  });
+});

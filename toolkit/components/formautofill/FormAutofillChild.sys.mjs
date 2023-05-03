@@ -8,7 +8,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AutoCompleteChild: "resource://gre/actors/AutoCompleteChild.sys.mjs",
   FormAutofill: "resource://autofill/FormAutofill.sys.mjs",
   FormAutofillContent: "resource://autofill/FormAutofillContent.sys.mjs",
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
+  FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 

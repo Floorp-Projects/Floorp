@@ -38,6 +38,8 @@ struct ParamTraits<mozilla::dom::quota::FullOriginMetadata> {
     WriteParam(aWriter, aParam.mSuffix);
     WriteParam(aWriter, aParam.mGroup);
     WriteParam(aWriter, aParam.mOrigin);
+    WriteParam(aWriter, aParam.mStorageOrigin);
+    WriteParam(aWriter, aParam.mIsPrivate);
     WriteParam(aWriter, aParam.mPersistenceType);
     WriteParam(aWriter, aParam.mPersisted);
     WriteParam(aWriter, aParam.mLastAccessTime);
@@ -47,6 +49,8 @@ struct ParamTraits<mozilla::dom::quota::FullOriginMetadata> {
     return ReadParam(aReader, &aResult->mSuffix) &&
            ReadParam(aReader, &aResult->mGroup) &&
            ReadParam(aReader, &aResult->mOrigin) &&
+           ReadParam(aReader, &aResult->mStorageOrigin) &&
+           ReadParam(aReader, &aResult->mIsPrivate) &&
            ReadParam(aReader, &aResult->mPersistenceType) &&
            ReadParam(aReader, &aResult->mPersisted) &&
            ReadParam(aReader, &aResult->mLastAccessTime);

@@ -175,13 +175,12 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
     PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginMetadata.mPersistenceType == aPersistenceType);
 
   QuotaManager* const qm = QuotaManager::Get();
   MOZ_DIAGNOSTIC_ASSERT(qm);
 
-  QM_TRY_INSPECT(
-      const auto& dir,
-      qm->GetDirectoryForOrigin(aPersistenceType, aOriginMetadata.mOrigin));
+  QM_TRY_INSPECT(const auto& dir, qm->GetOriginDirectory(aOriginMetadata));
 
   QM_TRY(MOZ_TO_RESULT(
       dir->Append(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME))));

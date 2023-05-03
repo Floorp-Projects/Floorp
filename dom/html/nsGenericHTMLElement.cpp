@@ -3291,6 +3291,7 @@ void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
     return;
   }
   RefPtr<Document> document = OwnerDoc();
+  MOZ_ASSERT(!OwnerDoc()->TopLayerContains(*this));
 
   // Fire beforetoggle event and re-check popover validity.
   if (FireToggleEvent(PopoverVisibilityState::Hidden,
@@ -3300,7 +3301,21 @@ void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
   if (!CheckPopoverValidity(PopoverVisibilityState::Hidden, document, aRv)) {
     return;
   }
-  // TODO: Run auto popover steps.
+
+  if (IsAutoPopover()) {
+    RefPtr<Element> ancestor = GetTopmostPopoverAncestor();
+    if (!ancestor) {
+      ancestor = document->GetDocumentElement();
+    }
+    document->HideAllPopoversUntil(*ancestor, false, true);
+
+    // TODO: Handle if document changes, see
+    // https://github.com/whatwg/html/issues/9177
+    if (!IsAutoPopover() ||
+        !CheckPopoverValidity(PopoverVisibilityState::Hidden, document, aRv)) {
+      return;
+    }
+  }
 
   const bool shouldRestoreFocus = !document->GetTopmostAutoPopover();
   // Let originallyFocusedElement be document's focused area of the document's
@@ -3312,7 +3327,7 @@ void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
         do_GetWeakReference(unretargetedFocus->AsElement());
   }
 
-  // TODO: Add to Top Layer.
+  document->AddPopoverToTopLayer(*this);
 
   PopoverPseudoStateUpdate(true, true);
   GetPopoverData()->SetPopoverVisibilityState(PopoverVisibilityState::Showing);

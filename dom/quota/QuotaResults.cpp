@@ -38,6 +38,12 @@ FullOriginMetadataResult::GetOrigin(nsACString& aOrigin) {
 }
 
 NS_IMETHODIMP
+FullOriginMetadataResult::GetStorageOrigin(nsACString& aStorageOrigin) {
+  aStorageOrigin = mFullOriginMetadata.mStorageOrigin;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 FullOriginMetadataResult::GetPersistenceType(nsACString& aPersistenceType) {
   aPersistenceType =
       PersistenceTypeToString(mFullOriginMetadata.mPersistenceType);

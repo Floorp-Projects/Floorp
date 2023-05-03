@@ -23,7 +23,15 @@ namespace mozilla {
 template <typename V, typename E>
 class Result;
 
-namespace dom::fs {
+namespace dom {
+
+namespace quota {
+
+struct OriginMetadata;
+
+}  // namespace quota
+
+namespace fs {
 
 class FileSystemChildMetadata;
 class FileSystemEntryMetadata;
@@ -40,7 +48,7 @@ class FileSystemDatabaseManager {
    * @return nsresult error code
    */
   static nsresult RescanUsages(const ResultConnection& aConnection,
-                               const Origin& aOrigin);
+                               const quota::OriginMetadata& aOriginMetadata);
 
   /**
    * @brief Obtains the current total usage for origin and connection.
@@ -53,7 +61,8 @@ class FileSystemDatabaseManager {
    * If the disk is inaccessible, various IO related errors may be returned.
    */
   static Result<quota::UsageInfo, QMResult> GetUsage(
-      const ResultConnection& aConnection, const Origin& aOrigin);
+      const ResultConnection& aConnection,
+      const quota::OriginMetadata& aOriginMetadata);
 
   /**
    * @brief Refreshes the stored file size.
@@ -163,7 +172,8 @@ class FileSystemDatabaseManager {
 };
 
 }  // namespace data
-}  // namespace dom::fs
+}  // namespace fs
+}  // namespace dom
 }  // namespace mozilla
 
 #endif  // DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATABASEMANAGER_H_

@@ -108,7 +108,7 @@ class TranslationsState {
 
   /**
    * Identifies the human language in which the message is written and returns
-   * the two-letter language label of the language it is determined to be.
+   * the BCP 47 language tag of the language it is determined to be.
    *
    * e.g. "en" for English.
    *
@@ -117,13 +117,13 @@ class TranslationsState {
   async identifyLanguage(message) {
     await this.languageIdEngineCreated;
     const start = performance.now();
-    const { languageLabel, confidence } = await AT_identifyLanguage(message);
+    const { langTag, confidence } = await AT_identifyLanguage(message);
     const duration = performance.now() - start;
     AT_log(
-      `[ ${languageLabel}(${(confidence * 100).toFixed(2)}%) ]`,
+      `[ ${langTag}(${(confidence * 100).toFixed(2)}%) ]`,
       `Source language identified in ${duration / 1000} seconds`
     );
-    return languageLabel;
+    return langTag;
   }
 
   /**
@@ -222,7 +222,7 @@ class TranslationsState {
       // If fromLanguage or toLanguage are unpopulated we cannot load anything.
       !this.fromLanguage ||
       !this.toLanguage ||
-      // If fromLanguage's value is "detect", rather than a two-letter language tag, then no language
+      // If fromLanguage's value is "detect", rather than a BCP 47 language tag, then no language
       // has been detected yet.
       this.fromLanguage === "detect" ||
       // If fromLanguage and toLanguage are the same, this means that the detected language
@@ -275,7 +275,7 @@ class TranslationsState {
       return;
     }
 
-    const [languageLabel, supportedLanguages] = await Promise.all([
+    const [langTag, supportedLanguages] = await Promise.all([
       this.identifyLanguage(this.messageToTranslate),
       this.supportedLanguages,
     ]);
@@ -283,11 +283,11 @@ class TranslationsState {
     // Only update the language if the detected language matches
     // one of our supported languages.
     const entry = supportedLanguages.fromLanguages.find(
-      ({ langTag }) => langTag === languageLabel
+      ({ langTag: existingTag }) => existingTag === langTag
     );
     if (entry) {
       const { displayName, isBeta } = entry;
-      await this.setFromLanguage(languageLabel);
+      await this.setFromLanguage(langTag);
       this.ui.setDetectOptionTextContent(displayName, isBeta);
     }
   }

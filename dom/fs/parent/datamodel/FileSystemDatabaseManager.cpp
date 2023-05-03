@@ -20,7 +20,8 @@ namespace mozilla::dom::fs::data {
 
 /* static */
 nsresult FileSystemDatabaseManager::RescanUsages(
-    const ResultConnection& aConnection, const Origin& aOrigin) {
+    const ResultConnection& aConnection,
+    const quota::OriginMetadata& aOriginMetadata) {
   DatabaseVersion version = 0;
   QM_TRY(MOZ_TO_RESULT(aConnection->GetSchemaVersion(&version)));
 
@@ -31,7 +32,7 @@ nsresult FileSystemDatabaseManager::RescanUsages(
 
     case 1: {
       return FileSystemDatabaseManagerVersion001::RescanTrackedUsages(
-          aConnection, aOrigin);
+          aConnection, aOriginMetadata);
     }
 
     default:
@@ -43,8 +44,9 @@ nsresult FileSystemDatabaseManager::RescanUsages(
 
 /* static */
 Result<quota::UsageInfo, QMResult> FileSystemDatabaseManager::GetUsage(
-    const ResultConnection& aConnection, const Origin& aOrigin) {
-  QM_TRY_INSPECT(const auto& databaseFile, GetDatabaseFile(aOrigin));
+    const ResultConnection& aConnection,
+    const quota::OriginMetadata& aOriginMetadata) {
+  QM_TRY_INSPECT(const auto& databaseFile, GetDatabaseFile(aOriginMetadata));
 
   // If database is deleted between connection creation and now, error
   int64_t dbSize = 0;

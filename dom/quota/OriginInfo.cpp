@@ -15,12 +15,14 @@
 namespace mozilla::dom::quota {
 
 OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
-                       bool aIsPrivate, const ClientUsageArray& aClientUsages,
-                       uint64_t aUsage, int64_t aAccessTime, bool aPersisted,
+                       const nsACString& aStorageOrigin, bool aIsPrivate,
+                       const ClientUsageArray& aClientUsages, uint64_t aUsage,
+                       int64_t aAccessTime, bool aPersisted,
                        bool aDirectoryExists)
     : mClientUsages(aClientUsages.Clone()),
       mGroupInfo(aGroupInfo),
       mOrigin(aOrigin),
+      mStorageOrigin(aStorageOrigin),
       mUsage(aUsage),
       mAccessTime(aAccessTime),
       mIsPrivate(aIsPrivate),
@@ -28,6 +30,7 @@ OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
       mPersisted(aPersisted),
       mDirectoryExists(aDirectoryExists) {
   MOZ_ASSERT(aGroupInfo);
+  MOZ_ASSERT(aOrigin == aStorageOrigin);
   MOZ_ASSERT(aClientUsages.Length() == Client::TypeMax());
   MOZ_ASSERT_IF(aPersisted,
                 aGroupInfo->mPersistenceType == PERSISTENCE_TYPE_DEFAULT);
@@ -57,7 +60,10 @@ OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
 
 OriginMetadata OriginInfo::FlattenToOriginMetadata() const {
   return {mGroupInfo->mGroupInfoPair->Suffix(),
-          mGroupInfo->mGroupInfoPair->Group(), mOrigin, mIsPrivate,
+          mGroupInfo->mGroupInfoPair->Group(),
+          mOrigin,
+          mStorageOrigin,
+          mIsPrivate,
           mGroupInfo->mPersistenceType};
 }
 

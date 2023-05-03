@@ -145,7 +145,7 @@ class Connection final : public PBackgroundSDBConnectionParent {
   PersistenceType GetPersistenceType() const { return mPersistenceType; }
 
   const PrincipalInfo& GetPrincipalInfo() const {
-    MOZ_ASSERT(NS_IsMainThread());
+    AssertIsOnBackgroundThread();
 
     return mPrincipalInfo;
   }
@@ -1081,24 +1081,6 @@ nsresult OpenOp::Open() {
     return NS_ERROR_UNEXPECTED;
   }
 
-  PersistenceType persistenceType = GetConnection()->GetPersistenceType();
-
-  const PrincipalInfo& principalInfo = GetConnection()->GetPrincipalInfo();
-
-  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
-    mOriginMetadata = {QuotaManager::GetInfoForChrome(), persistenceType};
-  } else {
-    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
-
-    QM_TRY_INSPECT(const auto& principal,
-                   PrincipalInfoToPrincipal(principalInfo));
-
-    QM_TRY_UNWRAP(auto principalMetadata,
-                  QuotaManager::GetInfoFromPrincipal(principal));
-
-    mOriginMetadata = {std::move(principalMetadata), persistenceType};
-  }
-
   mState = State::FinishOpen;
   MOZ_ALWAYS_SUCCEEDS(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
 
@@ -1107,13 +1089,27 @@ nsresult OpenOp::Open() {
 
 nsresult OpenOp::FinishOpen() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!mOriginMetadata.mOrigin.IsEmpty());
+  MOZ_ASSERT(mOriginMetadata.mOrigin.IsEmpty());
   MOZ_ASSERT(!mDirectoryLock);
   MOZ_ASSERT(mState == State::FinishOpen);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       IsActorDestroyed()) {
     return NS_ERROR_ABORT;
+  }
+
+  const PrincipalInfo& principalInfo = GetConnection()->GetPrincipalInfo();
+
+  PersistenceType persistenceType = GetConnection()->GetPersistenceType();
+
+  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+    mOriginMetadata = {QuotaManager::GetInfoForChrome(), persistenceType};
+  } else {
+    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+
+    mOriginMetadata = {
+        QuotaManager::GetInfoFromValidatedPrincipalInfo(principalInfo),
+        persistenceType};
   }
 
   if (gOpenConnections) {
@@ -1679,12 +1675,13 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
     PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginMetadata.mPersistenceType == aPersistenceType);
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  QM_TRY_UNWRAP(auto directory, quotaManager->GetDirectoryForOrigin(
-                                    aPersistenceType, aOriginMetadata.mOrigin));
+  QM_TRY_UNWRAP(auto directory,
+                quotaManager->GetOriginDirectory(aOriginMetadata));
 
   MOZ_ASSERT(directory);
 

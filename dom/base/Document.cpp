@@ -2108,6 +2108,7 @@ void Document::AccumulatePageLoadTelemetry(
   nsAutoCString dnsKey("Native");
   nsAutoCString http3Key;
   nsAutoCString http3WithPriorityKey;
+  nsAutoCString earlyHintKey;
   nsCOMPtr<nsIHttpChannelInternal> httpChannel =
       do_QueryInterface(GetChannel());
   if (httpChannel) {
@@ -2147,6 +2148,16 @@ void Document::AccumulatePageLoadTelemetry(
 
       aEventTelemetryDataOut.httpVer = mozilla::Some(major);
     }
+
+    uint32_t earlyHintType = 0;
+    Unused << httpChannel->GetEarlyHintLinkType(&earlyHintType);
+    if (earlyHintType & LinkStyle::ePRECONNECT) {
+      earlyHintKey.Append("preconnect_"_ns);
+    }
+    if (earlyHintType & LinkStyle::ePRELOAD) {
+      earlyHintKey.Append("preload_"_ns);
+      earlyHintKey.Append(mPreloadService.GetEarlyHintUsed() ? "1"_ns : "0"_ns);
+    }
   }
 
   TimeStamp asyncOpen;
@@ -2171,6 +2182,12 @@ void Document::AccumulatePageLoadTelemetry(
     if (!http3WithPriorityKey.IsEmpty()) {
       Telemetry::AccumulateTimeDelta(
           Telemetry::H3P_PERF_FIRST_CONTENTFUL_PAINT_MS, http3WithPriorityKey,
+          navigationStart, firstContentfulComposite);
+    }
+
+    if (!earlyHintKey.IsEmpty()) {
+      Telemetry::AccumulateTimeDelta(
+          Telemetry::EH_PERF_FIRST_CONTENTFUL_PAINT_MS, earlyHintKey,
           navigationStart, firstContentfulComposite);
     }
 
@@ -2209,6 +2226,12 @@ void Document::AccumulatePageLoadTelemetry(
     if (!http3WithPriorityKey.IsEmpty()) {
       Telemetry::AccumulateTimeDelta(Telemetry::H3P_PERF_PAGE_LOAD_TIME_MS,
                                      http3WithPriorityKey, navigationStart,
+                                     loadEventStart);
+    }
+
+    if (!earlyHintKey.IsEmpty()) {
+      Telemetry::AccumulateTimeDelta(Telemetry::EH_PERF_PAGE_LOAD_TIME_MS,
+                                     earlyHintKey, navigationStart,
                                      loadEventStart);
     }
 
@@ -14954,6 +14977,14 @@ nsTArray<Element*> Document::GetTopLayer() const {
   return elements;
 }
 
+bool Document::TopLayerContains(Element& aElement) const {
+  if (mTopLayer.IsEmpty()) {
+    return false;
+  }
+  nsWeakPtr weakElement = do_GetWeakReference(&aElement);
+  return mTopLayer.Contains(weakElement);
+}
+
 void Document::HideAllPopoversUntil(nsINode& aEndpoint,
                                     bool aFocusPreviousElement,
                                     bool aFireEvents) {
@@ -15006,7 +15037,19 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
     return;
   }
 
-  // TODO: Run auto popover steps.
+  if (popoverHTMLEl->IsAutoPopover()) {
+    // TODO: There might be a circle if show other auto popover while hidding
+    // See, https://github.com/whatwg/html/issues/9196
+    HideAllPopoversUntil(*popoverHTMLEl, aFocusPreviousElement, aFireEvents);
+    if (!popoverHTMLEl->CheckPopoverValidity(PopoverVisibilityState::Showing,
+                                             nullptr, aRv)) {
+      return;
+    }
+    // TODO: we can't always guarantee:
+    // The last item in document's auto popover list is popoverHTMLEl.
+    // See, https://github.com/whatwg/html/issues/9197
+    MOZ_ASSERT(GetTopmostAutoPopover() == popoverHTMLEl);
+  }
 
   aPopover.SetHasPopoverInvoker(false);
 
@@ -15023,7 +15066,7 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
     }
   }
 
-  // TODO: Remove from Top Layer.
+  RemovePopoverFromTopLayer(aPopover);
 
   popoverHTMLEl->PopoverPseudoStateUpdate(false, true);
   popoverHTMLEl->GetPopoverData()->SetPopoverVisibilityState(
@@ -15070,6 +15113,16 @@ void Document::AddToAutoPopoverList(Element& aElement) {
 
 void Document::RemoveFromAutoPopoverList(Element& aElement) {
   MOZ_ASSERT(aElement.IsAutoPopover());
+  TopLayerPop(aElement);
+}
+
+void Document::AddPopoverToTopLayer(Element& aElement) {
+  MOZ_ASSERT(aElement.GetPopoverData());
+  TopLayerPush(aElement);
+}
+
+void Document::RemovePopoverFromTopLayer(Element& aElement) {
+  MOZ_ASSERT(aElement.GetPopoverData());
   TopLayerPop(aElement);
 }
 

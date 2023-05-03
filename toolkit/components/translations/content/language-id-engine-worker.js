@@ -54,7 +54,7 @@ addEventListener("message", handleInitializationMessage);
  * @property {string} data.type - The message type, expects "initialize".
  * @property {ArrayBuffer} data.wasmBuffer - The buffer containing the wasm binary.
  * @property {ArrayBuffer} data.modelBuffer - The buffer containing the language-id model binary.
- * @property {string} data.languageLabel - The mocked language label value (only present when mocking).
+ * @property {string} data.langTag - The mocked language tag value (only present when mocking).
  * @property {number} data.confidence - The mocked confidence value (only present when mocking).
  * @property {boolean} data.isLoggingEnabled
  */
@@ -91,16 +91,16 @@ async function handleInitializationMessage({ data }) {
 }
 
 /**
- * Returns true if this data payload contains mocked values for the languageLabel
+ * Returns true if this data payload contains mocked values for the langTag
  * and the confidence, otherwise returns false.
  *
- * @property {string} data.languageLabel
+ * @property {string} data.langTag
  * @property {number} data.confidence
  * @returns {boolean}
  */
 function isMockedDataPayload(data) {
-  let { languageLabel, confidence } = data;
-  return languageLabel && confidence;
+  let { langTag, confidence } = data;
+  return langTag && confidence;
 }
 
 /**
@@ -151,25 +151,25 @@ async function initializeLanguageIdEngine(data) {
 
 /**
  * Initialize the MockedLanguageIdEngine from the data payload by loading
- * assigning it a pre-determined languageLabel and confidence values.
+ * assigning it a pre-determined langTag and confidence values.
  *
  * @param {Object} data
- * @property {string} data.languageLabel - The pre-determined mocked language label
+ * @property {string} data.langTag - The pre-determined mocked language tag
  * @property {number} data.confidence - the pre-determined mocked confidence
  */
 function initializeMockedLanguageIdEngine(data) {
-  const { languageLabel, confidence } = data;
-  if (!languageLabel) {
-    throw new Error('MockedLanguageIdEngine missing "languageLabel"');
+  const { langTag, confidence } = data;
+  if (!langTag) {
+    throw new Error('MockedLanguageIdEngine missing "langTag"');
   }
   if (!confidence) {
     throw new Error('MockedLanguageIdEngine missing "confidence"');
   }
-  return new MockedLanguageIdEngine(languageLabel, confidence);
+  return new MockedLanguageIdEngine(langTag, confidence);
 }
 
 /**
- * Sets up the message handling for the lworker.
+ * Sets up the message handling for the worker.
  *
  * @param {LanguageIdEngine | MockedLanguageIdEngine} languageIdEngine
  */
@@ -193,13 +193,12 @@ function handleMessages(languageIdEngine) {
         case "language-id-request": {
           const { message, messageId } = data;
           try {
-            const [
-              confidence,
-              languageLabel,
-            ] = languageIdEngine.identifyLanguage(message);
+            const [confidence, langTag] = languageIdEngine.identifyLanguage(
+              message
+            );
             postMessage({
               type: "language-id-response",
-              languageLabel,
+              langTag,
               confidence,
               messageId,
             });
@@ -226,7 +225,7 @@ function handleMessages(languageIdEngine) {
 /**
  * The LanguageIdEngine wraps around a machine-learning model that can identify text
  * as being written in a given human language. The engine is responsible for invoking
- * model and returning the language label in the format that is expected by firefox
+ * model and returning the language tag in the format that is expected by firefox
  * translations code.
  */
 class LanguageIdEngine {
@@ -241,31 +240,72 @@ class LanguageIdEngine {
   }
 
   /**
-   * Formats the language label returned by the language-identification model
-   * to conform to the correct two-character language tags.
+   * Formats the language tag returned by the language-identification model to match
+   * conform to the format used internally by Firefox.
    *
-   * The current model returns labels of the format "__label_xx" where the last
-   * two characters are the two-character language tag.
+   * This function is currently configured to handle the fastText language-identification
+   * model. Updating the language-identification model or moving to something other than
+   * fastText in the future will likely require updating this function.
    *
-   * As such, this function strips of those final two characters.
-   * Updating the language-identification model may require updating this function.
-   *
-   * @param {string} label
-   * @returns {string}
+   * @param {string} langTag
+   * @returns {string} The correctly formatted langTag
    */
-  #formatLanguageLabel(label) {
-    return label.slice(-2);
+  #formatLangTag(langTag) {
+    // The fastText language model returns values of the format "__label__{langTag}".
+    // As such, this function strips the "__label__" prefix, leaving only the langTag.
+    let formattedTag = langTag.replace("__label__", "");
+
+    // fastText is capable of returning any of a predetermined set of 176 langTags:
+    // https://fasttext.cc/docs/en/language-identification.html
+    //
+    // These tags come from ISO639-3:
+    // https://iso639-3.sil.org/code_tables/deprecated_codes/data
+    //
+    // Each of these tags have been cross checked for compatibility with the IANA
+    // language subtag registry, which is used by BCP 47, and any edge cases are handled below.
+    // https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry
+    switch (formattedTag) {
+      // fastText may return "eml" which is a deprecated ISO639-3 language tag for the language
+      // Emiliano-Romagnolo. It was split into two separate tags "egl" and "rgn":
+      // https://iso639-3.sil.org/request/2008-040
+      //
+      // "eml" was once requested to be added to the IANA registry, but it was denied:
+      // https://www.alvestrand.no/pipermail/ietf-languages/2009-December/009754.html
+      //
+      // This case should return either "egl" or "rgn", given that the "eml" tag was split.
+      // However, given that the fastText model does not distinguish between the two by using
+      // the deprecated tag, this function will default to "egl" because it is alphabetically first.
+      //
+      // At such a time that Firefox Translations may support either of these languages, we should consider
+      // a way to further distinguish between the two languages at that time.
+      case "eml": {
+        formattedTag = "egl";
+        break;
+      }
+      // The fastText model returns "no" for Norwegian Bokmål.
+      //
+      // According to advice from https://r12a.github.io/app-subtags/
+      // "no" is a macro language that encompasses the following more specific primary language subtags: "nb" "nn".
+      // It is recommended to use more specific language subtags as long as it does not break legacy usage of an application.
+      // As such, this function will return "nb" for Norwegian Bokmål instead of "no" as reported by fastText.
+      case "no": {
+        formattedTag = "nb";
+        break;
+      }
+    }
+    return formattedTag;
   }
 
   /**
    * Identifies the human language in which the message is written and returns
-   * the two-letter language label of the language it is determined to be along
+   * the BCP 47 language tag of the language it is determined to be along along
    * with a rating of how confident the model is that the label is correct.
    *
    * @param {string} message
-   * @returns {Array<number | string>} An array containing the confidence and language label.
+   * @returns {Array<number | string>} An array containing the confidence and language tag.
    * The confidence is a number between 0 and 1, representing a percentage.
-   * The language label is a two-character label such as "en" for English.
+   * The language tag is a BCP 47 language tag such as "en" for English.
+   *
    * e.g. [0.87, "en"]
    */
   identifyLanguage(message) {
@@ -279,8 +319,8 @@ class LanguageIdEngine {
       throw new Error("Unable to identify a language");
     }
 
-    const [confidence, languageLabel] = mostLikelyLanguageData;
-    return [confidence, this.#formatLanguageLabel(languageLabel)];
+    const [confidence, langTag] = mostLikelyLanguageData;
+    return [confidence, this.#formatLangTag(langTag)];
   }
 }
 
@@ -291,24 +331,24 @@ class LanguageIdEngine {
  */
 class MockedLanguageIdEngine {
   /** @type {string} */
-  #languageLabel;
+  #langTag;
   /** @type {number} */
   #confidence;
 
   /**
-   * @param {string} languageLabel
+   * @param {string} langTag
    * @param {number} confidence
    */
-  constructor(languageLabel, confidence) {
-    this.#languageLabel = languageLabel;
+  constructor(langTag, confidence) {
+    this.#langTag = langTag;
     this.#confidence = confidence;
   }
 
   /**
-   * Mocks identifying a lgnauge by returning the mocked engine's pre-determined
-   * language label and confidence values.
+   * Mocks identifying a language by returning the mocked engine's pre-determined
+   * language tag and confidence values.
    */
   identifyLanguage(_message) {
-    return [this.#confidence, this.#languageLabel];
+    return [this.#confidence, this.#langTag];
   }
 }

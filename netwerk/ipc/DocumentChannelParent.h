@@ -55,7 +55,8 @@ class DocumentChannelParent final
       nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
           aStreamFilterEndpoints,
       uint32_t aRedirectFlags, uint32_t aLoadFlags,
-      nsTArray<EarlyHintConnectArgs>&& aEarlyHints);
+      nsTArray<EarlyHintConnectArgs>&& aEarlyHints,
+      uint32_t aEarlyHintLinkType);
 
   virtual ~DocumentChannelParent();
 

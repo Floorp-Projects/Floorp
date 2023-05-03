@@ -249,15 +249,6 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
-
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
-  width: 24px;
-  height: 24px;
-  margin-inline-end: 12px;
-  flex-basis: 24px;
-  flex-grow:  0;
-}
-
 .urlbarView-row[tail-suggestion] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
   visibility: hidden;
 }
@@ -424,12 +415,12 @@
 }
 
 .urlbarView-row[type=tip]:not(:last-child) {
-  border-bottom: 1px solid var(--panel-separator-color);
+  border-bottom: 1px solid var(--autocomplete-popup-separator-color);
   margin-bottom: 4px;
 }
 
 .urlbarView-row[type=tip]:not(:first-child) {
-  border-top: 1px solid var(--panel-separator-color);
+  border-top: 1px solid var(--autocomplete-popup-separator-color);
   margin-top: 4px;
 }
 
@@ -441,6 +432,14 @@
   margin-inline-end: 1.8em;
 }
 
+.urlbarView-row[type=tip]:not([tip-type=dismissalAcknowledgment]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
+  width: 24px;
+  height: 24px;
+  margin-inline-end: 12px;
+  flex-basis: 24px;
+  flex-grow:  0;
+}
+
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-url {
   display: none;
@@ -448,6 +447,10 @@
 
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title {
   white-space: normal;
+}
+
+.urlbarView-row[type=tip][tip-type=dismissalAcknowledgment] {
+  padding-block: 0 6px;
 }
 
 /* Row label (a.k.a. group label) */
@@ -479,6 +482,29 @@
   /* `margin-block-start` controls how far the main part of the row is from the
      main part of the previous row. */
   margin-block-start: calc(1.46em + 4px);
+}
+
+/* Feedback acknowledgment */
+
+.urlbarView-row[feedback-acknowledgment]::after {
+  content: attr(feedback-acknowledgment);
+  display: flex;
+  align-items: center;
+  position: absolute;
+  bottom: 0.72em;
+  font-size: 0.85em;
+  margin-inline-start: var(--urlbarView-item-inline-padding);
+  padding-inline-start: calc(var(--urlbarView-favicon-width) + 6px);
+  background-image: url("chrome://branding/content/icon32.png");
+  background-repeat: no-repeat;
+  background-position: 0 center;
+  background-size: var(--urlbarView-favicon-width);
+  min-height: var(--urlbarView-favicon-width);
+}
+
+.urlbarView-row[feedback-acknowledgment] {
+  position: relative;
+  padding-bottom: 1.94em;
 }
 
 /* Title */

@@ -380,6 +380,11 @@ static bool ShouldBlockBasedOnBlockInfo(const DllBlockInfo& info,
     return false;
   }
 
+  if ((info.mFlags & DllBlockInfo::GMPLUGIN_PROCESSES_ONLY) &&
+      !(sInitFlags & eDllBlocklistInitFlagIsGMPluginProcess)) {
+    return false;
+  }
+
   *fVersion = DllBlockInfo::ALL_VERSIONS;
 
   if (info.mMaxVersion != DllBlockInfo::ALL_VERSIONS) {

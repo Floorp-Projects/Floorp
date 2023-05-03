@@ -357,12 +357,10 @@ var gEditItemOverlay = {
 
     // Selection count.
     if (showOrCollapse("selectionCount", bulkTagging)) {
-      this._element(
-        "itemsCountText"
-      ).value = PlacesUIUtils.getPluralString(
-        "detailsPane.itemsCountLabel",
-        uris.length,
-        [uris.length]
+      document.l10n.setAttributes(
+        this._element("itemsCountText"),
+        "places-details-pane-items-count",
+        { count: uris.length }
       );
     }
 

@@ -493,13 +493,6 @@ class WinUtils {
   static LayoutDeviceIntRect ToIntRect(const RECT& aRect);
 
   /**
-   * Helper used in invalidating flash plugin windows owned
-   * by low rights flash containers.
-   */
-  static void InvalidatePluginAsWorkaround(nsIWidget* aWidget,
-                                           const LayoutDeviceIntRect& aRect);
-
-  /**
    * Returns true if the context or IME state is enabled.  Otherwise, false.
    */
   static bool IsIMEEnabled(const InputContext& aInputContext);

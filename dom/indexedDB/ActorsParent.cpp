@@ -4811,7 +4811,7 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   static void DeleteTimerCallback(nsITimer* aTimer, void* aClosure);
 
   Result<nsCOMPtr<nsIFile>, nsresult> GetDirectory(
-      PersistenceType aPersistenceType, const nsACString& aOrigin);
+      const OriginMetadata& aOriginMetadata);
 
   struct SubdirectoriesToProcessAndDatabaseFilenames {
     AutoTArray<nsString, 20> subdirsToProcess;
@@ -12233,9 +12233,10 @@ nsresult QuotaClient::GetUsageForOriginInternal(
     const AtomicBool& aCanceled, const bool aInitializing,
     UsageInfo* aUsageInfo) {
   AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginMetadata.mPersistenceType == aPersistenceType);
 
   QM_TRY_INSPECT(const nsCOMPtr<nsIFile>& directory,
-                 GetDirectory(aPersistenceType, aOriginMetadata.mOrigin));
+                 GetDirectory(aOriginMetadata));
 
   // We need to see if there are any files in the directory already. If they
   // are database files then we need to cleanup stored files (if it's needed)
@@ -12577,12 +12578,12 @@ void QuotaClient::DeleteTimerCallback(nsITimer* aTimer, void* aClosure) {
 }
 
 Result<nsCOMPtr<nsIFile>, nsresult> QuotaClient::GetDirectory(
-    PersistenceType aPersistenceType, const nsACString& aOrigin) {
+    const OriginMetadata& aOriginMetadata) {
   QuotaManager* const quotaManager = QuotaManager::Get();
   NS_ASSERTION(quotaManager, "This should never fail!");
 
-  QM_TRY_INSPECT(const auto& directory, quotaManager->GetDirectoryForOrigin(
-                                            aPersistenceType, aOrigin));
+  QM_TRY_INSPECT(const auto& directory,
+                 quotaManager->GetOriginDirectory(aOriginMetadata));
 
   MOZ_ASSERT(directory);
 
@@ -14632,14 +14633,6 @@ nsresult FactoryOp::Open() {
     }
   }
 
-  const DatabaseMetadata& metadata = mCommonParams.metadata();
-
-  QuotaManager::GetStorageId(metadata.persistenceType(),
-                             mOriginMetadata.mOrigin, Client::IDB, mDatabaseId);
-
-  mDatabaseId.Append('*');
-  mDatabaseId.Append(NS_ConvertUTF16toUTF8(metadata.name()));
-
   MOZ_ASSERT(permission == PermissionValue::kPermissionAllowed);
 
   mState = State::FinishOpen;
@@ -14845,30 +14838,16 @@ Result<PermissionValue, nsresult> FactoryOp::CheckPermission(
       mChromeWriteAccessAllowed = true;
     }
 
-    if (State::Initial == mState) {
-      mOriginMetadata = {QuotaManager::GetInfoForChrome(), persistenceType};
-
-      MOZ_ASSERT(QuotaManager::IsOriginInternal(mOriginMetadata.mOrigin));
-
-      mEnforcingQuota = false;
-    }
-
     return PermissionValue::kPermissionAllowed;
   }
 
   MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
-  QM_TRY_INSPECT(const auto& principal,
-                 PrincipalInfoToPrincipal(principalInfo));
-
-  QM_TRY_UNWRAP(auto principalMetadata,
-                QuotaManager::GetInfoFromPrincipal(principal));
-
   QM_TRY_INSPECT(
       const auto& permission,
-      ([persistenceType, &origin = principalMetadata.mOrigin,
-        &principal =
-            *principal]() -> mozilla::Result<PermissionValue, nsresult> {
+      ([persistenceType,
+        origin = QuotaManager::GetOriginFromValidatedPrincipalInfo(
+            principalInfo)]() -> mozilla::Result<PermissionValue, nsresult> {
         if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
           if (QuotaManager::IsOriginInternal(origin)) {
             return PermissionValue::kPermissionAllowed;
@@ -14877,13 +14856,6 @@ Result<PermissionValue, nsresult> FactoryOp::CheckPermission(
         }
         return PermissionValue::kPermissionAllowed;
       })());
-
-  if (permission != PermissionValue::kPermissionDenied &&
-      State::Initial == mState) {
-    mOriginMetadata = {std::move(principalMetadata), persistenceType};
-
-    mEnforcingQuota = persistenceType != PERSISTENCE_TYPE_PERSISTENT;
-  }
 
   return permission;
 }
@@ -14941,7 +14913,7 @@ bool FactoryOp::CheckAtLeastOneAppHasPermission(
 nsresult FactoryOp::FinishOpen() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::FinishOpen);
-  MOZ_ASSERT(!mOriginMetadata.mOrigin.IsEmpty());
+  MOZ_ASSERT(mOriginMetadata.mOrigin.IsEmpty());
   MOZ_ASSERT(!mDirectoryLock);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
@@ -14950,33 +14922,56 @@ nsresult FactoryOp::FinishOpen() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  QM_TRY(QuotaManager::EnsureCreated());
+  const PrincipalInfo& principalInfo = mCommonParams.principalInfo();
 
-  const PersistenceType persistenceType =
-      mCommonParams.metadata().persistenceType();
+  const DatabaseMetadata& metadata = mCommonParams.metadata();
+
+  const PersistenceType persistenceType = metadata.persistenceType();
+
+  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+    mOriginMetadata = {QuotaManager::GetInfoForChrome(), persistenceType};
+
+    MOZ_ASSERT(QuotaManager::IsOriginInternal(mOriginMetadata.mOrigin));
+
+    mEnforcingQuota = false;
+  } else {
+    MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+
+    mOriginMetadata = {
+        QuotaManager::GetInfoFromValidatedPrincipalInfo(principalInfo),
+        persistenceType};
+
+    mEnforcingQuota = persistenceType != PERSISTENCE_TYPE_PERSISTENT;
+  }
+
+  QuotaManager::GetStorageId(persistenceType, mOriginMetadata.mOrigin,
+                             Client::IDB, mDatabaseId);
+
+  mDatabaseId.Append('*');
+  mDatabaseId.Append(NS_ConvertUTF16toUTF8(metadata.name()));
+
+  QM_TRY(QuotaManager::EnsureCreated());
 
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   // Need to get database file path before opening the directory.
   // XXX: For what reason?
-  QM_TRY_UNWRAP(mDatabaseFilePath,
-                ([this, quotaManager,
-                  persistenceType]() -> mozilla::Result<nsString, nsresult> {
-                  QM_TRY_INSPECT(const auto& dbFile,
-                                 quotaManager->GetDirectoryForOrigin(
-                                     persistenceType, mOriginMetadata.mOrigin));
+  QM_TRY_UNWRAP(
+      mDatabaseFilePath,
+      ([this, metadata, quotaManager]() -> mozilla::Result<nsString, nsresult> {
+        QM_TRY_INSPECT(const auto& dbFile,
+                       quotaManager->GetOriginDirectory(mOriginMetadata));
 
-                  QM_TRY(MOZ_TO_RESULT(dbFile->Append(
-                      NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME))));
+        QM_TRY(MOZ_TO_RESULT(dbFile->Append(
+            NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME))));
 
-                  QM_TRY(MOZ_TO_RESULT(dbFile->Append(
-                      GetDatabaseFilenameBase(mCommonParams.metadata().name()) +
-                      kSQLiteSuffix)));
+        QM_TRY(MOZ_TO_RESULT(dbFile->Append(
+            GetDatabaseFilenameBase(metadata.name()) + kSQLiteSuffix)));
 
-                  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
-                      nsString, dbFile, GetPath));
-                }()));
+        QM_TRY_RETURN(
+            MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, dbFile, GetPath));
+      }()));
 
   // Open directory
   RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(
@@ -16336,6 +16331,8 @@ nsresult DeleteDatabaseOp::DatabaseOpen() {
 nsresult DeleteDatabaseOp::DoDatabaseWork() {
   AssertIsOnIOThread();
   MOZ_ASSERT(mState == State::DatabaseWorkOpen);
+  MOZ_ASSERT(mOriginMetadata.mPersistenceType ==
+             mCommonParams.metadata().persistenceType());
 
   AUTO_PROFILER_LABEL("DeleteDatabaseOp::DoDatabaseWork", DOM);
 
@@ -16346,14 +16343,12 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
   }
 
   const nsAString& databaseName = mCommonParams.metadata().name();
-  const PersistenceType persistenceType =
-      mCommonParams.metadata().persistenceType();
 
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  QM_TRY_UNWRAP(auto directory, quotaManager->GetDirectoryForOrigin(
-                                    persistenceType, mOriginMetadata.mOrigin));
+  QM_TRY_UNWRAP(auto directory,
+                quotaManager->GetOriginDirectory(mOriginMetadata));
 
   QM_TRY(MOZ_TO_RESULT(
       directory->Append(NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME))));

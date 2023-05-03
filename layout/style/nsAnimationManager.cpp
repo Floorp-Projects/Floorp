@@ -268,7 +268,12 @@ static already_AddRefed<dom::AnimationTimeline> GetTimeline(
     case StyleAnimationTimeline::Tag::Scroll: {
       const auto& scroll = aStyleTimeline.AsScroll();
       return ScrollTimeline::MakeAnonymous(aPresContext->Document(), aTarget,
-                                           scroll._0, scroll._1);
+                                           scroll.axis, scroll.scroller);
+    }
+    case StyleAnimationTimeline::Tag::View: {
+      const auto& view = aStyleTimeline.AsView();
+      return ViewTimeline::MakeAnonymous(aPresContext->Document(), aTarget,
+                                         view.axis, view.inset);
     }
     case StyleAnimationTimeline::Tag::Auto:
       return do_AddRef(aTarget.mElement->OwnerDoc()->Timeline());

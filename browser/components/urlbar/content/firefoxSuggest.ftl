@@ -34,6 +34,12 @@ urlbar-result-menu-learn-more-about-firefox-suggest =
     .label = Learn more about { -firefox-suggest-brand-name }
     .accesskey = L
 
+# A message shown in a result when the user gives feedback on it.
+firefox-suggest-feedback-acknowledgment = Thanks for your feedback
+
+# A message that replaces a result when the user dismisses it.
+firefox-suggest-dismissal-acknowledgment = Thanks for your feedback. You won’t see this again.
+
 ## These strings are used for weather suggestions in the urlbar.
 
 # This string is displayed above the current temperature

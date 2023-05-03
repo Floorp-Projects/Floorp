@@ -77,10 +77,6 @@ add_task(async function test_filter_current_firefox_version() {
       filter_expression: ``,
     },
     {
-      name: `env.version == ${firefoxFullVersion}`,
-      filter_expression: `env.version|versionCompare('${firefoxFullVersion}') == 0`,
-    },
-    {
       name: `env.version <= ${firefoxMajorVersion}`,
       filter_expression: `env.version|versionCompare('${firefoxMajorVersion}') <= 0`,
     },
@@ -147,7 +143,10 @@ add_task(async function test_get_records_with_multiple_versions() {
   );
 
   const lookupKey = record =>
-    `${record.name}${record.fromLang}${record.toLang}`;
+    `${record.name}${TranslationsParent.languagePairKey(
+      record.fromLang,
+      record.toLang
+    )}`;
 
   // A mapping of each record name to its max version.
   const maxVersionMap = {};

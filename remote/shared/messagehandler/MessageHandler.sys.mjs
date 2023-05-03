@@ -88,6 +88,7 @@ export class MessageHandler extends EventEmitter {
   #contextId;
   #eventsDispatcher;
   #moduleCache;
+  #registry;
   #sessionId;
 
   /**
@@ -97,8 +98,10 @@ export class MessageHandler extends EventEmitter {
    *     ID of the session the handler is used for.
    * @param {object} context
    *     The context linked to this MessageHandler instance.
+   * @param {MessageHandlerRegistry} registry
+   *     The MessageHandlerRegistry which owns this MessageHandler instance.
    */
-  constructor(sessionId, context) {
+  constructor(sessionId, context, registry) {
     super();
 
     this.#moduleCache = new lazy.ModuleCache(this);
@@ -107,6 +110,7 @@ export class MessageHandler extends EventEmitter {
     this.#context = context;
     this.#contextId = this.constructor.getIdFromContext(context);
     this.#eventsDispatcher = new lazy.EventsDispatcher(this);
+    this.#registry = registry;
   }
 
   get context() {
@@ -127,6 +131,10 @@ export class MessageHandler extends EventEmitter {
 
   get name() {
     return [this.sessionId, this.constructor.type, this.contextId].join("-");
+  }
+
+  get registry() {
+    return this.#registry;
   }
 
   get sessionId() {

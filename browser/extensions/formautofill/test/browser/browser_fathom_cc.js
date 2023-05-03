@@ -2,7 +2,7 @@
  * By default this test only tests 1 sample. This is to avoid publishing all samples we have
  * to the codebase. If you update the Fathom CC model, please follow the instruction below
  * and run the test. Doing this makes sure the optimized (Native implementation) CC fathom model produces
- * exactly the same result as the non-optimized model (JS implementation, See CreditCardRuleset.jsm).
+ * exactly the same result as the non-optimized model (JS implementation, See CreditCardRuleset.sys.mjs).
  *
  * To test this:
  * 1. Run the test setup script (fathom/test-setup.sh) to download all samples to the local
@@ -63,10 +63,10 @@ async function run_test(path, dirs) {
         [{ eligibleElementSelector, file }],
         obj => {
           const { FieldScanner } = ChromeUtils.importESModule(
-            "resource://autofill/FormAutofillHeuristics.sys.mjs"
+            "resource://gre/modules/shared/FieldScanner.sys.mjs"
           );
           const { FormAutofillUtils } = ChromeUtils.importESModule(
-            "resource://autofill/FormAutofillUtils.sys.mjs"
+            "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
           );
 
           let eligibleFields = [];
@@ -102,7 +102,7 @@ async function run_test(path, dirs) {
           }
 
           // This value should sync with the number of supported types in
-          // CreditCardRuleset.jsm (See `get types()` in `this.creditCardRulesets`).
+          // CreditCardRuleset.sys.mjs (See `get types()` in `this.creditCardRulesets`).
           const EXPECTED_NUM_OF_CONFIDENCE = 2;
           for (let i = 0; i < eligibleFields.length; i++) {
             if (

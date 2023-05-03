@@ -16,6 +16,7 @@ LOCAL_INCLUDES += [
 
 TEST_DIRS += [
     "TestDllBlocklist_AllowByVersion",
+    "TestDllBlocklist_GMPluginProcessOnly",
     "TestDllBlocklist_GPUProcessOnly",
     "TestDllBlocklist_MatchByName",
     "TestDllBlocklist_MatchByVersion",

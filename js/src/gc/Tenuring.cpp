@@ -385,8 +385,7 @@ void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover) {
 template <typename T>
 void js::gc::StoreBuffer::CellPtrEdge<T>::trace(TenuringTracer& mover) const {
   static_assert(std::is_base_of_v<Cell, T>, "T must be a Cell type");
-  static_assert(!std::is_base_of_v<TenuredCell, T>,
-                "T must not be a tenured Cell type");
+  static_assert(!GCTypeIsTenured<T>(), "T must not be a tenured Cell type");
 
   T* thing = *edge;
   if (!thing) {

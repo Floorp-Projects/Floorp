@@ -1,20 +1,18 @@
 "use strict";
 
 const { FieldScanner } = ChromeUtils.importESModule(
-  "resource://autofill/FormAutofillHeuristics.sys.mjs"
+  "resource://gre/modules/shared/FieldScanner.sys.mjs"
 );
-var FormAutofillHeuristics, LabelUtils, FormAutofill;
-add_task(async function() {
-  ({ FormAutofillHeuristics } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofillHeuristics.sys.mjs"
-  ));
-  ({ LabelUtils } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofillUtils.sys.mjs"
-  ));
-  ({ FormAutofill } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofill.sys.mjs"
-  ));
-});
+
+var { FormAutofillHeuristics } = ChromeUtils.importESModule(
+  "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs"
+);
+var { LabelUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/shared/LabelUtils.sys.mjs"
+);
+var { FormAutofill } = ChromeUtils.importESModule(
+  "resource://autofill/FormAutofill.sys.mjs"
+);
 
 const TESTCASES = [
   {

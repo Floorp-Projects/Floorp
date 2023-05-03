@@ -712,10 +712,11 @@ FileSystemDatabaseManagerVersion001::FileSystemDatabaseManagerVersion001(
 
 /* static */
 nsresult FileSystemDatabaseManagerVersion001::RescanTrackedUsages(
-    const FileSystemConnection& aConnection, const Origin& aOrigin) {
-  QM_TRY_UNWRAP(
-      FileSystemFileManager fileManager,
-      data::FileSystemFileManager::CreateFileSystemFileManager(aOrigin));
+    const FileSystemConnection& aConnection,
+    const quota::OriginMetadata& aOriginMetadata) {
+  QM_TRY_UNWRAP(FileSystemFileManager fileManager,
+                data::FileSystemFileManager::CreateFileSystemFileManager(
+                    aOriginMetadata));
 
   QM_TRY_UNWRAP(bool ok, ScanTrackedFiles(aConnection, fileManager));
   if (ok) {

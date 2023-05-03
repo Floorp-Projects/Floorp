@@ -224,7 +224,7 @@ static inline bool IsSubmetricId(uint32_t aId) {
 }
 {% endif %}
 
-static{% if probe_type == "Event" %} inline{% endif %} Maybe<{{ probe_type }}ID> {{ probe_type }}IdForMetric(uint32_t aId) {
+static{% if probe_type == "Event" or probe_type == "Scalar" %} inline{% endif %} Maybe<{{ probe_type }}ID> {{ probe_type }}IdForMetric(uint32_t aId) {
   switch(aId) {
 {% for id, (mirror, metric_name) in ids_to_probes.items() %}
     case {{ id }}: { // {{ metric_name }}

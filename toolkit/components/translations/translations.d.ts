@@ -277,7 +277,7 @@ interface LanguageIdEnginePayload {
  */
 interface LanguageIdEngineMockedPayload {
   confidence: number,
-  languageLabel: string,
+  langTag: string,
 }
 
 /**

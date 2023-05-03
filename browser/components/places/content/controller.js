@@ -650,28 +650,19 @@ PlacesController.prototype = {
       }
     }
 
-    // Make sure to display the correct string when multiple pages are selected.
-    let stringId = metadata.length === 1 ? "SinglePage" : "MultiplePages";
-
-    let deleteHistoryItem = document.getElementById(
+    const deleteHistoryItem = document.getElementById(
       "placesContext_delete_history"
     );
-    deleteHistoryItem.label = PlacesUIUtils.getString(
-      `cmd.delete${stringId}.label`
-    );
-    deleteHistoryItem.accessKey = PlacesUIUtils.getString(
-      `cmd.delete${stringId}.accesskey`
-    );
+    document.l10n.setAttributes(deleteHistoryItem, "places-delete-page", {
+      count: metadata.length,
+    });
 
-    let createBookmarkItem = document.getElementById(
+    const createBookmarkItem = document.getElementById(
       "placesContext_createBookmark"
     );
-    createBookmarkItem.label = PlacesUIUtils.getString(
-      `cmd.bookmark${stringId}2.label`
-    );
-    createBookmarkItem.accessKey = PlacesUIUtils.getString(
-      `cmd.bookmark${stringId}2.accesskey`
-    );
+    document.l10n.setAttributes(createBookmarkItem, "places-create-bookmark", {
+      count: metadata.length,
+    });
 
     return usableItemCount > 0;
   },

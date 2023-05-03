@@ -15,6 +15,7 @@
 #include "gc/GCParallelTask.h"
 #include "gc/Heap.h"
 #include "gc/MallocedBlockCache.h"
+#include "gc/Pretenuring.h"
 #include "js/AllocPolicy.h"
 #include "js/Class.h"
 #include "js/GCAPI.h"
@@ -185,7 +186,10 @@ class alignas(TypicalCacheLineSize) Nursery {
     MOZ_ASSERT(canAllocateBigInts());
     return allocateCell(site, size, JS::TraceKind::BigInt);
   }
-  void* allocateString(gc::AllocSite* site, size_t size);
+  void* allocateString(gc::AllocSite* site, size_t size) {
+    MOZ_ASSERT(canAllocateStrings());
+    return allocateCell(site, size, JS::TraceKind::String);
+  }
 
   static size_t nurseryCellHeaderSize() {
     return sizeof(gc::NurseryCellHeader);
@@ -317,6 +321,7 @@ class alignas(TypicalCacheLineSize) Nursery {
       return false;
     }
     if (MOZ_UNLIKELY(!trailersRemoved_.append(nullptr))) {
+      trailersAdded_.popBack();
       return false;
     }
 

@@ -776,6 +776,7 @@ WEBIDL_FILES = [
     "Performance.webidl",
     "PerformanceEntry.webidl",
     "PerformanceEventTiming.webidl",
+    "PerformanceLargestContentfulPaint.webidl",
     "PerformanceMark.webidl",
     "PerformanceMeasure.webidl",
     "PerformanceNavigation.webidl",

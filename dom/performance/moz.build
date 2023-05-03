@@ -9,6 +9,7 @@ with Files("**"):
 
 EXPORTS.mozilla.dom += [
     "EventCounts.h",
+    "LargestContentfulPaint.h",
     "Performance.h",
     "PerformanceEntry.h",
     "PerformanceEventTiming.h",
@@ -31,6 +32,7 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     "EventCounts.cpp",
+    "LargestContentfulPaint.cpp",
     "Performance.cpp",
     "PerformanceEntry.cpp",
     "PerformanceEventTiming.cpp",

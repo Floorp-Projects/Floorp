@@ -43,8 +43,9 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
       const EntryId& aRootEntry);
 
   /* Static to allow use by quota client without instantiation */
-  static nsresult RescanTrackedUsages(const FileSystemConnection& aConnection,
-                                      const Origin& aOrigin);
+  static nsresult RescanTrackedUsages(
+      const FileSystemConnection& aConnection,
+      const quota::OriginMetadata& aOriginMetadata);
 
   /* Static to allow use by quota client without instantiation */
   static Result<Usage, QMResult> GetFileUsage(

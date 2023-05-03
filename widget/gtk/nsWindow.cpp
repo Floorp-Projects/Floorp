@@ -3628,10 +3628,23 @@ void nsWindow::CaptureRollupEvents(bool aDoCapture) {
       return;
     }
 
-    GdkGrabStatus status = gdk_device_grab(
-        GdkGetPointer(), GetToplevelGdkWindow(), GDK_OWNERSHIP_NONE,
-        /* owner_events = */ true, kCaptureEventsMask,
-        /* cursor = */ nullptr, GetLastUserInputTime());
+    // gdk_pointer_grab is deprecated in favor of gdk_device_grab, but that
+    // causes a strange bug on X11, most obviously with nested popup menus:
+    // we somehow take the pointer position relative to the top left of the
+    // outer menu and use it as if it were relative to the submenu.  This
+    // doesn't happen with gdk_pointer_grab even though the code is very
+    // similar.  See the video attached to bug 1750721 for a demonstration,
+    // and see also bug 1820542 for when the same thing happened with
+    // another attempt to use gdk_device_grab.
+    //
+    // (gdk_device_grab is deprecated in favor of gdk_seat_grab as of 3.20,
+    // but at the time of this writing we still support older versions of
+    // GTK 3.)
+    GdkGrabStatus status =
+        gdk_pointer_grab(GetToplevelGdkWindow(),
+                         /* owner_events = */ true, kCaptureEventsMask,
+                         /* confine_to = */ nullptr,
+                         /* cursor = */ nullptr, GetLastUserInputTime());
     Unused << NS_WARN_IF(status != GDK_GRAB_SUCCESS);
     LOG(" > pointer grab with status %d", int(status));
     gtk_grab_add(GTK_WIDGET(mContainer));
@@ -3640,7 +3653,7 @@ void nsWindow::CaptureRollupEvents(bool aDoCapture) {
     // so make sure to remove any added grab.  This is a no-op if the grab
     // was not added to this widget.
     gtk_grab_remove(GTK_WIDGET(mContainer));
-    gdk_device_ungrab(GdkGetPointer(), GetLastUserInputTime());
+    gdk_pointer_ungrab(GetLastUserInputTime());
   }
 }
 

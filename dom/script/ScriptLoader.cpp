@@ -1370,7 +1370,7 @@ ScriptLoadRequest* ScriptLoader::LookupPreloadRequest(
 
   // This makes sure the pending preload (if exists) for this resource is
   // properly marked as used and thus not notified in the console as unused.
-  request->GetScriptLoadContext()->NotifyUsage();
+  request->GetScriptLoadContext()->NotifyUsage(mDocument);
   // A used preload must no longer be found in the Document's hash table.  Any
   // <link preload> tag after the <script> tag will start a new request, that
   // can be satisfied from a different cache, but not from the preload cache.
