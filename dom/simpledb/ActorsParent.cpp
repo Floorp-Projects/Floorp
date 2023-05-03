@@ -1112,9 +1112,11 @@ nsresult OpenOp::FinishOpen() {
   } else {
     MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
-    mOriginMetadata = {
-        quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo),
-        persistenceType};
+    QM_TRY_UNWRAP(
+        auto principalMetadata,
+        quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo));
+
+    mOriginMetadata = {std::move(principalMetadata), persistenceType};
   }
 
   if (gOpenConnections) {

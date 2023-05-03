@@ -6437,7 +6437,8 @@ bool QuotaManager::IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo) {
   return false;
 }
 
-PrincipalMetadata QuotaManager::GetInfoFromValidatedPrincipalInfo(
+Result<PrincipalMetadata, nsresult>
+QuotaManager::GetInfoFromValidatedPrincipalInfo(
     const PrincipalInfo& aPrincipalInfo) {
   MOZ_ASSERT(IsPrincipalInfoValid(aPrincipalInfo));
 
@@ -8388,8 +8389,9 @@ GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
 nsresult GetOriginUsageOp::DoInit(QuotaManager& aQuotaManager) {
   AssertIsOnOwningThread();
 
-  PrincipalMetadata principalMetadata =
-      aQuotaManager.GetInfoFromValidatedPrincipalInfo(mParams.principalInfo());
+  QM_TRY_UNWRAP(
+      PrincipalMetadata principalMetadata,
+      aQuotaManager.GetInfoFromValidatedPrincipalInfo(mParams.principalInfo()));
   MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
 
   mSuffix = std::move(principalMetadata.mSuffix);
@@ -8666,8 +8668,9 @@ void InitializeOriginRequestBase::Init(Quota& aQuota) {
 nsresult InitializeOriginRequestBase::DoInit(QuotaManager& aQuotaManager) {
   AssertIsOnOwningThread();
 
-  auto principalMetadata =
-      aQuotaManager.GetInfoFromValidatedPrincipalInfo(mPrincipalInfo);
+  QM_TRY_UNWRAP(
+      auto principalMetadata,
+      aQuotaManager.GetInfoFromValidatedPrincipalInfo(mPrincipalInfo));
   MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
 
   mSuffix = std::move(principalMetadata.mSuffix);
@@ -8767,8 +8770,9 @@ GetFullOriginMetadataOp::GetFullOriginMetadataOp(
 nsresult GetFullOriginMetadataOp::DoInit(QuotaManager& aQuotaManager) {
   AssertIsOnOwningThread();
 
-  PrincipalMetadata principalMetadata =
-      aQuotaManager.GetInfoFromValidatedPrincipalInfo(mParams.principalInfo());
+  QM_TRY_UNWRAP(
+      PrincipalMetadata principalMetadata,
+      aQuotaManager.GetInfoFromValidatedPrincipalInfo(mParams.principalInfo()));
   MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
 
   mOriginMetadata = {std::move(principalMetadata), mParams.persistenceType()};
@@ -9277,8 +9281,9 @@ nsresult PersistRequestBase::DoInit(QuotaManager& aQuotaManager) {
   AssertIsOnOwningThread();
 
   // Figure out which origin we're dealing with.
-  PrincipalMetadata principalMetadata =
-      aQuotaManager.GetInfoFromValidatedPrincipalInfo(mPrincipalInfo);
+  QM_TRY_UNWRAP(
+      PrincipalMetadata principalMetadata,
+      aQuotaManager.GetInfoFromValidatedPrincipalInfo(mPrincipalInfo));
   MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
 
   mSuffix = std::move(principalMetadata.mSuffix);
@@ -9440,8 +9445,9 @@ EstimateOp::EstimateOp(const EstimateParams& aParams)
 nsresult EstimateOp::DoInit(QuotaManager& aQuotaManager) {
   AssertIsOnOwningThread();
 
-  PrincipalMetadata principalMetadata =
-      aQuotaManager.GetInfoFromValidatedPrincipalInfo(mParams.principalInfo());
+  QM_TRY_UNWRAP(
+      PrincipalMetadata principalMetadata,
+      aQuotaManager.GetInfoFromValidatedPrincipalInfo(mParams.principalInfo()));
   MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
 
   mOriginMetadata = {std::move(principalMetadata), PERSISTENCE_TYPE_DEFAULT};
@@ -9880,9 +9886,12 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
 
         PrincipalInfo principalInfo(contentPrincipalInfo);
 
-        originProps.mOriginMetadata = {
-            quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo),
-            *originProps.mPersistenceType};
+        QM_TRY_UNWRAP(
+            auto principalMetadata,
+            quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo));
+
+        originProps.mOriginMetadata = {std::move(principalMetadata),
+                                       *originProps.mPersistenceType};
 
 #ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
         principalInfos.AppendElement(principalInfo);

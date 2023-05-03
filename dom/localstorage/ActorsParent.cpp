@@ -6671,9 +6671,9 @@ nsresult PrepareDatastoreOp::Start() {
     MOZ_ASSERT(storagePrincipalInfo.type() ==
                PrincipalInfo::TContentPrincipalInfo);
 
-    PrincipalMetadata principalMetadata =
-        QuotaManager::Get()->GetInfoFromValidatedPrincipalInfo(
-            storagePrincipalInfo);
+    QM_TRY_UNWRAP(auto principalMetadata,
+                  QuotaManager::Get()->GetInfoFromValidatedPrincipalInfo(
+                      storagePrincipalInfo));
 
     mOriginMetadata.mSuffix = std::move(principalMetadata.mSuffix);
     mOriginMetadata.mGroup = std::move(principalMetadata.mGroup);
