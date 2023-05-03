@@ -11,19 +11,12 @@
 
 namespace mozilla {
 
-// This functions ensures that calling BCryptGenRandom will work later:
-//  - It triggers a first call to BCryptGenRandom() to pre-load
-//    bcryptPrimitives.dll while the current thread still has an unrestricted
-//    impersonation token. We need to perform that operation in sandboxed
-//    processes to warmup the BCryptGenRandom() call that is used by others,
-//    especially Rust. See bug 1746524, bug 1751094, bug 1751177.
-//  - If that first call fails, we detect it and hook BCryptGenRandom to
-//    install a fallback based on RtlGenRandom for calls that use flag
-//    BCRYPT_USE_SYSTEM_PREFERRED_RNG. We need this because BCryptGenRandom
-//    failures are currently fatal and on some machines BCryptGenRandom is
-//    broken (usually Windows 7). We hope to remove this hook in the future
-//    once the Rust stdlib and the getrandom crate both have their own
-//    RtlGenRandom-based fallback. See bug 1788004.
+// This functions ensures that calling BCryptGenRandom will work later. It
+// triggers a first call to BCryptGenRandom() to pre-load bcryptPrimitives.dll.
+// In sandboxed processes, this must happen while the current thread still has
+// an unrestricted impersonation token. We need to perform that operation to
+// warmup the BCryptGenRandom() calls is used by others, especially Rust. See
+// bug 1746524, bug 1751094, bug 1751177, bug 1788004.
 MFBT_API bool WindowsBCryptInitialization();
 
 }  // namespace mozilla
