@@ -8787,7 +8787,7 @@ class BulkAppender {
   void Finish() { mHandle.Finish(mPosition, false); }
 
  private:
-  mozilla::BulkWriteHandle<char16_t> mHandle;
+  BulkWriteHandle<char16_t> mHandle;
   size_type mPosition;
 };
 
@@ -8797,24 +8797,22 @@ class StringBuilder {
   static const uint32_t STRING_BUFFER_UNITS = 1020;
   class Unit {
    public:
-    Unit() : mAtom(nullptr), mType(eUnknown), mLength(0) {
-      MOZ_COUNT_CTOR(StringBuilder::Unit);
-    }
+    Unit() : mAtom(nullptr) { MOZ_COUNT_CTOR(StringBuilder::Unit); }
     ~Unit() {
-      if (mType == eString || mType == eStringWithEncode) {
+      if (mType == Type::String || mType == Type::StringWithEncode) {
         mString.~nsString();
       }
       MOZ_COUNT_DTOR(StringBuilder::Unit);
     }
 
-    enum Type {
-      eUnknown,
-      eAtom,
-      eString,
-      eStringWithEncode,
-      eLiteral,
-      eTextFragment,
-      eTextFragmentWithEncode,
+    enum class Type : uint8_t {
+      Unknown,
+      Atom,
+      String,
+      StringWithEncode,
+      Literal,
+      TextFragment,
+      TextFragmentWithEncode,
     };
 
     union {
@@ -8823,9 +8821,12 @@ class StringBuilder {
       nsString mString;
       const nsTextFragment* mTextFragment;
     };
-    Type mType;
-    uint32_t mLength;
+    uint32_t mLength = 0;
+    Type mType = Type::Unknown;
   };
+
+  static_assert(sizeof(void*) != 8 || sizeof(Unit) <= 3 * sizeof(void*),
+                "Unit should remain small");
 
  public:
   StringBuilder() : mLast(this), mLength(0) { MOZ_COUNT_CTOR(StringBuilder); }
@@ -8835,7 +8836,7 @@ class StringBuilder {
   void Append(nsAtom* aAtom) {
     Unit* u = AddUnit();
     u->mAtom = aAtom;
-    u->mType = Unit::eAtom;
+    u->mType = Unit::Type::Atom;
     uint32_t len = aAtom->GetLength();
     u->mLength = len;
     mLength += len;
@@ -8845,7 +8846,7 @@ class StringBuilder {
   void Append(const char16_t (&aLiteral)[N]) {
     Unit* u = AddUnit();
     u->mLiteral = aLiteral;
-    u->mType = Unit::eLiteral;
+    u->mType = Unit::Type::Literal;
     uint32_t len = N - 1;
     u->mLength = len;
     mLength += len;
@@ -8855,7 +8856,7 @@ class StringBuilder {
     Unit* u = AddUnit();
     uint32_t len = aString.Length();
     new (&u->mString) nsString(std::move(aString));
-    u->mType = Unit::eString;
+    u->mType = Unit::Type::String;
     u->mLength = len;
     mLength += len;
   }
@@ -8863,7 +8864,7 @@ class StringBuilder {
   void AppendWithAttrEncode(nsString&& aString, uint32_t aLen) {
     Unit* u = AddUnit();
     new (&u->mString) nsString(std::move(aString));
-    u->mType = Unit::eStringWithEncode;
+    u->mType = Unit::Type::StringWithEncode;
     u->mLength = aLen;
     mLength += aLen;
   }
@@ -8871,7 +8872,7 @@ class StringBuilder {
   void Append(const nsTextFragment* aTextFragment) {
     Unit* u = AddUnit();
     u->mTextFragment = aTextFragment;
-    u->mType = Unit::eTextFragment;
+    u->mType = Unit::Type::TextFragment;
     uint32_t len = aTextFragment->GetLength();
     u->mLength = len;
     mLength += len;
@@ -8880,7 +8881,7 @@ class StringBuilder {
   void AppendWithEncode(const nsTextFragment* aTextFragment, uint32_t aLen) {
     Unit* u = AddUnit();
     u->mTextFragment = aTextFragment;
-    u->mType = Unit::eTextFragmentWithEncode;
+    u->mType = Unit::Type::TextFragmentWithEncode;
     u->mLength = aLen;
     mLength += aLen;
   }
@@ -8902,19 +8903,19 @@ class StringBuilder {
       for (uint32_t i = 0; i < len; ++i) {
         Unit& u = current->mUnits[i];
         switch (u.mType) {
-          case Unit::eAtom:
+          case Unit::Type::Atom:
             appender.Append(*(u.mAtom));
             break;
-          case Unit::eString:
+          case Unit::Type::String:
             appender.Append(u.mString);
             break;
-          case Unit::eStringWithEncode:
+          case Unit::Type::StringWithEncode:
             EncodeAttrString(u.mString, appender);
             break;
-          case Unit::eLiteral:
+          case Unit::Type::Literal:
             appender.Append(Span(u.mLiteral, u.mLength));
             break;
-          case Unit::eTextFragment:
+          case Unit::Type::TextFragment:
             if (u.mTextFragment->Is2b()) {
               appender.Append(
                   Span(u.mTextFragment->Get2b(), u.mTextFragment->GetLength()));
@@ -8923,7 +8924,7 @@ class StringBuilder {
                   Span(u.mTextFragment->Get1b(), u.mTextFragment->GetLength()));
             }
             break;
-          case Unit::eTextFragmentWithEncode:
+          case Unit::Type::TextFragmentWithEncode:
             if (u.mTextFragment->Is2b()) {
               EncodeTextFragment(
                   Span(u.mTextFragment->Get2b(), u.mTextFragment->GetLength()),
@@ -9024,7 +9025,7 @@ class StringBuilder {
   }
 
   AutoTArray<Unit, STRING_BUFFER_UNITS> mUnits;
-  mozilla::UniquePtr<StringBuilder> mNext;
+  UniquePtr<StringBuilder> mNext;
   StringBuilder* mLast;
   // mLength is used only in the first StringBuilder object in the linked list.
   CheckedInt<uint32_t> mLength;
