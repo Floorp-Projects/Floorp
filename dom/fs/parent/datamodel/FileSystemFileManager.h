@@ -36,7 +36,7 @@ namespace fs::data {
  * @return Result<nsCOMPtr<nsIFile>, QMResult> Top file system directory
  */
 Result<nsCOMPtr<nsIFile>, QMResult> GetFileSystemDirectory(
-    const Origin& aOrigin);
+    const quota::OriginMetadata& aOriginMetadata);
 
 /**
  * @brief Ensure that the origin-specific directory for file system exists.
@@ -56,7 +56,8 @@ nsresult EnsureFileSystemDirectory(
  * @param aOrigin Specified origin
  * @return Result<nsCOMPtr<nsIFile>, QMResult> Database file object
  */
-Result<nsCOMPtr<nsIFile>, QMResult> GetDatabaseFile(const Origin& aOrigin);
+Result<nsCOMPtr<nsIFile>, QMResult> GetDatabaseFile(
+    const quota::OriginMetadata& aOriginMetadata);
 
 /**
  * @brief Get file system's database url with directory lock parameter for
@@ -68,7 +69,8 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetDatabaseFile(const Origin& aOrigin);
  * @return Result<nsCOMPtr<nsIFileURL>, QMResult> Database file URL object
  */
 Result<nsCOMPtr<nsIFileURL>, QMResult> GetDatabaseFileURL(
-    const Origin& aOrigin, const int64_t aDirectoryLockId);
+    const quota::OriginMetadata& aOriginMetadata,
+    const int64_t aDirectoryLockId);
 
 /**
  * @brief Creates and removes disk-backed representations of the file systems'
@@ -97,7 +99,7 @@ class FileSystemFileManager {
    * @return Result<FileSystemFileManager, QMResult>
    */
   static Result<FileSystemFileManager, QMResult> CreateFileSystemFileManager(
-      const Origin& aOrigin);
+      const quota::OriginMetadata& aOriginMetadata);
 
   /**
    * @brief Create a File System File Manager object which keeps file entries
