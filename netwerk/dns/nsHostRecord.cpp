@@ -313,52 +313,57 @@ void AddrHostRecord::ResolveComplete() {
                     : Telemetry::LABELS_DNS_LOOKUP_DISPOSITION3::trrFail);
   }
 
-  MOZ_ASSERT(mTRRSkippedReason != mozilla::net::TRRSkippedReason::TRR_UNSET);
+  if (nsHostResolver::Mode() == nsIDNSService::MODE_TRRFIRST ||
+      nsHostResolver::Mode() == nsIDNSService::MODE_TRRONLY) {
+    MOZ_ASSERT(mTRRSkippedReason != mozilla::net::TRRSkippedReason::TRR_UNSET);
 
-  Telemetry::Accumulate(Telemetry::TRR_SKIP_REASON_TRR_FIRST2,
-                        TRRService::ProviderKey(),
-                        static_cast<uint32_t>(mTRRSkippedReason));
-  if (!mTRRSuccess && LoadNativeUsed()) {
-    Telemetry::Accumulate(
-        mNativeSuccess ? Telemetry::TRR_SKIP_REASON_NATIVE_SUCCESS
-                       : Telemetry::TRR_SKIP_REASON_NATIVE_FAILED,
-        TRRService::ProviderKey(), static_cast<uint32_t>(mTRRSkippedReason));
-  }
-
-  if (IsRelevantTRRSkipReason(mTRRSkippedReason)) {
-    Telemetry::Accumulate(Telemetry::TRR_RELEVANT_SKIP_REASON_TRR_FIRST,
+    Telemetry::Accumulate(Telemetry::TRR_SKIP_REASON_TRR_FIRST2,
                           TRRService::ProviderKey(),
                           static_cast<uint32_t>(mTRRSkippedReason));
-
     if (!mTRRSuccess && LoadNativeUsed()) {
       Telemetry::Accumulate(
-          mNativeSuccess ? Telemetry::TRR_RELEVANT_SKIP_REASON_NATIVE_SUCCESS
-                         : Telemetry::TRR_RELEVANT_SKIP_REASON_NATIVE_FAILED,
+          mNativeSuccess ? Telemetry::TRR_SKIP_REASON_NATIVE_SUCCESS
+                         : Telemetry::TRR_SKIP_REASON_NATIVE_FAILED,
           TRRService::ProviderKey(), static_cast<uint32_t>(mTRRSkippedReason));
     }
-  }
 
-  if (StaticPrefs::network_trr_retry_on_recoverable_errors() &&
-      nsHostResolver::Mode() == nsIDNSService::MODE_TRRFIRST) {
-    nsAutoCString telemetryKey(TRRService::ProviderKey());
-
-    if (mFirstTRRSkippedReason != mozilla::net::TRRSkippedReason::TRR_UNSET) {
-      telemetryKey.AppendLiteral("|");
-      telemetryKey.AppendInt(static_cast<uint32_t>(mFirstTRRSkippedReason));
-
-      Telemetry::Accumulate(mTRRSuccess
-                                ? Telemetry::TRR_SKIP_REASON_RETRY_SUCCESS
-                                : Telemetry::TRR_SKIP_REASON_RETRY_FAILED,
+    if (IsRelevantTRRSkipReason(mTRRSkippedReason)) {
+      Telemetry::Accumulate(Telemetry::TRR_RELEVANT_SKIP_REASON_TRR_FIRST,
                             TRRService::ProviderKey(),
-                            static_cast<uint32_t>(mFirstTRRSkippedReason));
+                            static_cast<uint32_t>(mTRRSkippedReason));
+
+      if (!mTRRSuccess && LoadNativeUsed()) {
+        Telemetry::Accumulate(
+            mNativeSuccess ? Telemetry::TRR_RELEVANT_SKIP_REASON_NATIVE_SUCCESS
+                           : Telemetry::TRR_RELEVANT_SKIP_REASON_NATIVE_FAILED,
+            TRRService::ProviderKey(),
+            static_cast<uint32_t>(mTRRSkippedReason));
+      }
     }
 
-    Telemetry::Accumulate(Telemetry::TRR_SKIP_REASON_STRICT_MODE, telemetryKey,
-                          static_cast<uint32_t>(mTRRSkippedReason));
+    if (StaticPrefs::network_trr_retry_on_recoverable_errors() &&
+        nsHostResolver::Mode() == nsIDNSService::MODE_TRRFIRST) {
+      nsAutoCString telemetryKey(TRRService::ProviderKey());
 
-    if (mTRRSuccess) {
-      Telemetry::Accumulate(Telemetry::TRR_ATTEMPT_COUNT,
-                            TRRService::ProviderKey(), mTrrAttempts);
+      if (mFirstTRRSkippedReason != mozilla::net::TRRSkippedReason::TRR_UNSET) {
+        telemetryKey.AppendLiteral("|");
+        telemetryKey.AppendInt(static_cast<uint32_t>(mFirstTRRSkippedReason));
+
+        Telemetry::Accumulate(mTRRSuccess
+                                  ? Telemetry::TRR_SKIP_REASON_RETRY_SUCCESS
+                                  : Telemetry::TRR_SKIP_REASON_RETRY_FAILED,
+                              TRRService::ProviderKey(),
+                              static_cast<uint32_t>(mFirstTRRSkippedReason));
+      }
+
+      Telemetry::Accumulate(Telemetry::TRR_SKIP_REASON_STRICT_MODE,
+                            telemetryKey,
+                            static_cast<uint32_t>(mTRRSkippedReason));
+
+      if (mTRRSuccess) {
+        Telemetry::Accumulate(Telemetry::TRR_ATTEMPT_COUNT,
+                              TRRService::ProviderKey(), mTrrAttempts);
+      }
     }
   }
 
