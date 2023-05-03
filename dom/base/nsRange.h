@@ -18,7 +18,6 @@
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WeakPtr.h"
@@ -34,26 +33,6 @@ class DOMRectList;
 class InspectorFontFace;
 class Selection;
 }  // namespace dom
-/**
- * @brief Wrapper class to allow storing a |Selection| in a |LinkedList|.
- *
- * This helper allows an |nsRange| to store all |Selection|s associated with it
- * in a |mozilla::LinkedList|.
- */
-class SelectionListWrapper
-    : public LinkedListElement<RefPtr<SelectionListWrapper>> {
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SelectionListWrapper)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(SelectionListWrapper)
- public:
-  explicit SelectionListWrapper(dom::Selection* aSelection);
-
-  /// Returns the stored |Selection|.
-  dom::Selection* Get() const;
-
- private:
-  ~SelectionListWrapper() = default;
-  WeakPtr<dom::Selection> mSelection;
-};
 }  // namespace mozilla
 
 class nsRange final : public mozilla::dom::AbstractRange,
@@ -116,7 +95,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
    * Return true if this range is part of a Selection object
    * and isn't detached.
    */
-  bool IsInAnySelection() const { return !mSelections.isEmpty(); }
+  bool IsInAnySelection() const { return !mSelections.IsEmpty(); }
 
   MOZ_CAN_RUN_SCRIPT void RegisterSelection(
       mozilla::dom::Selection& aSelection);
@@ -126,8 +105,8 @@ class nsRange final : public mozilla::dom::AbstractRange,
   /**
    * Returns a list of all Selections the range is associated with.
    */
-  const mozilla::LinkedList<RefPtr<mozilla::SelectionListWrapper>>&
-  GetSelections() const;
+  const nsTArray<mozilla::WeakPtr<mozilla::dom::Selection>>& GetSelections()
+      const;
 
   /**
    * Return true if this range is in |aSelection|.
@@ -354,10 +333,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
   /**
    * @brief Returns true if the range is part of exactly one |Selection|.
    */
-  bool IsPartOfOneSelectionOnly() const {
-    return !mSelections.isEmpty() &&
-           mSelections.getFirst() == mSelections.getLast();
-  };
+  bool IsPartOfOneSelectionOnly() const { return mSelections.Length() == 1; };
 
  public:
   /**
@@ -467,7 +443,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
 #ifdef DEBUG
   bool IsCleared() const {
     return !mRoot && !mRegisteredClosestCommonInclusiveAncestor &&
-           mSelections.isEmpty() && !mNextStartRef && !mNextEndRef;
+           mSelections.IsEmpty() && !mNextStartRef && !mNextEndRef;
   }
 #endif  // #ifdef DEBUG
 
@@ -478,7 +454,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
   nsINode* MOZ_NON_OWNING_REF mRegisteredClosestCommonInclusiveAncestor;
 
   // A Range can be part of multiple |Selection|s. This is a very rare use case.
-  mozilla::LinkedList<RefPtr<mozilla::SelectionListWrapper>> mSelections;
+  AutoTArray<mozilla::WeakPtr<mozilla::dom::Selection>, 1> mSelections;
 
   // These raw pointers are used to remember a child that is about
   // to be inserted between a CharacterData call and a subsequent
