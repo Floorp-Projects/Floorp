@@ -1836,13 +1836,11 @@ bool BaselineCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
 #endif
 
   masm.Push(Imm32(strict));
-  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
   masm.Push(val);
   masm.Push(idVal);
   masm.Push(obj);
 
-  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
-                      HandleValue, bool);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
   callVM<Fn, SetElementMegamorphic>(masm);
 
   stubFrame.leave(masm);
