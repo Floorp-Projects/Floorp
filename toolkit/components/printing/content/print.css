@@ -274,6 +274,7 @@ input[type="number"].photon-number::-moz-number-spin-down {
   border-radius: 0;
   background-color: var(--in-content-button-background);
   background-image: url("chrome://global/skin/icons/arrow-down.svg");
+  background-repeat: no-repeat;
   background-size: 8px;
   background-position: center;
   -moz-context-properties: fill;
