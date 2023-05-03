@@ -99,11 +99,19 @@ class DefaultReaderModeControllerTest {
 
     @Test
     fun testShowControlsPrivateTab() {
-        val controller = DefaultReaderModeController(
-            featureWrapper,
-            readerViewControlsBar,
-            isPrivate = true,
+        val controller = spyk(
+            DefaultReaderModeController(
+                featureWrapper,
+                readerViewControlsBar,
+                isPrivate = true,
+            ),
         )
+
+        val privateButtonColor = mockk<ColorStateList>()
+        val privateRadioButtonColor = mockk<ColorStateList>()
+
+        every { controller.privateButtonColor } returns privateButtonColor
+        every { controller.privateRadioButtonColor } returns privateRadioButtonColor
 
         val decrease = mockk<Button>(relaxUnitFun = true)
         val increase = mockk<Button>(relaxUnitFun = true)
@@ -126,10 +134,10 @@ class DefaultReaderModeControllerTest {
         controller.showControls()
         verify { readerViewFeature.showControls() }
         verifyAll {
-            decrease.setTextColor(any<ColorStateList>())
-            increase.setTextColor(any<ColorStateList>())
-            serif.setTextColor(any<ColorStateList>())
-            sansSerif.setTextColor(any<ColorStateList>())
+            decrease.setTextColor(privateButtonColor)
+            increase.setTextColor(privateButtonColor)
+            serif.setTextColor(privateRadioButtonColor)
+            sansSerif.setTextColor(privateRadioButtonColor)
         }
     }
 }
