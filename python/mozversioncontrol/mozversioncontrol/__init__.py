@@ -50,7 +50,7 @@ class CannotDeleteFromRootOfRepositoryException(Exception):
     the repository, which is not permitted."""
 
 
-def get_tool_path(tool: Optional[Union[str, Path]] = None):
+def get_tool_path(tool: Union[str, Path]):
     tool = Path(tool)
     """Obtain the path of `tool`."""
     if tool.is_absolute() and tool.exists():
@@ -78,9 +78,9 @@ class Repository(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, path: Path, tool: Optional[str] = None):
+    def __init__(self, path: Path, tool: str):
         self.path = str(path.resolve())
-        self._tool = Path(get_tool_path(tool)) if tool else None
+        self._tool = Path(get_tool_path(tool))
         self._version = None
         self._valid_diff_filter = ("m", "a", "d")
         self._env = os.environ.copy()
@@ -206,7 +206,7 @@ class Repository(object):
         """Undo the effects of a previous add_remove_files call for `paths`."""
 
     @abc.abstractmethod
-    def get_tracked_files_finder(self, path=None):
+    def get_tracked_files_finder(self):
         """Obtain a mozpack.files.BaseFinder of managed files in the working
         directory.
 
@@ -495,7 +495,7 @@ class HgRepository(Repository):
 
         self._run("forget", *paths)
 
-    def get_tracked_files_finder(self, path=None):
+    def get_tracked_files_finder(self):
         # Can return backslashes on Windows. Normalize to forward slashes.
         files = list(
             p.replace("\\", "/") for p in self._run("files", "-0").split("\0") if p
@@ -672,7 +672,7 @@ class GitRepository(Repository):
 
         self._run("reset", *paths)
 
-    def get_tracked_files_finder(self, path=None):
+    def get_tracked_files_finder(self):
         files = [p for p in self._run("ls-files", "-z").split("\0") if p]
         return FileListFinder(files)
 
@@ -744,130 +744,7 @@ class GitRepository(Repository):
         self._run("config", name, value)
 
 
-class SrcRepository(Repository):
-    """An implementation of `Repository` for Git repositories."""
-
-    def __init__(self, path: Path, src="src"):
-        super(SrcRepository, self).__init__(path, tool=None)
-
-    @property
-    def name(self):
-        return "src"
-
-    @property
-    def head_ref(self):
-        pass
-
-    @property
-    def base_ref(self):
-        pass
-
-    def base_ref_as_hg(self):
-        pass
-
-    @property
-    def branch(self):
-        pass
-
-    @property
-    def has_git_cinnabar(self):
-        pass
-
-    def get_commit_time(self):
-        pass
-
-    def sparse_checkout_present(self):
-        pass
-
-    def get_user_email(self):
-        pass
-
-    def get_upstream(self):
-        pass
-
-    def get_changed_files(self, diff_filter="ADM", mode="unstaged", rev=None):
-        pass
-
-    def get_outgoing_files(self, diff_filter="ADM", upstream=None):
-        pass
-
-    def add_remove_files(self, *paths: Union[str, Path]):
-        pass
-
-    def forget_add_remove_files(self, *paths: Union[str, Path]):
-        pass
-
-    def git_ignore(self, path):
-        """This function reads the mozilla-central/.gitignore file and creates a
-        list of the patterns to ignore
-        """
-        ignore = []
-        f = open(path + "/.gitignore", "r")
-        while True:
-            line = f.readline()
-            if not line:
-                break
-            if line.startswith("#"):
-                pass
-            elif line.strip() and line not in ["\r", "\r\n"]:
-                ignore.append(line.strip().lstrip("/"))
-        f.close()
-        return ignore
-
-    def get_files(self, path):
-        """This function gets all files in your source folder e.g mozilla-central
-        and creates a list of that
-        """
-        res = []
-        # move away the .git or .hg folder from path to more easily test in a hg/git repo
-        for root, dirs, files in os.walk("."):
-            for name in files:
-                res.append(os.path.join(root, name))
-        return res
-
-    def get_tracked_files_finder(self, path):
-        """Get files, similar to 'hg files -0' or 'git ls-files -z', thats why
-        we read the .gitignore file for patterns to ignore.
-        Speed could probably be improved.
-        """
-        import fnmatch
-
-        files = list(
-            p.replace("\\", "/").replace("./", "") for p in self.get_files(path) if p
-        )
-        files.sort()
-        ig = self.git_ignore(path)
-        mat = []
-        for i in ig:
-            x = fnmatch.filter(files, i)
-            if x:
-                mat = mat + x
-        match = list(set(files) - set(mat))
-        match.sort()
-        if len(match) == 0:
-            return None
-        else:
-            return FileListFinder(match)
-
-    def working_directory_clean(self, untracked=False, ignored=False):
-        pass
-
-    def clean_directory(self, path: Union[str, Path]):
-        pass
-
-    def update(self, ref):
-        pass
-
-    def push_to_try(self, message, allow_log_capture=False):
-        pass
-
-    def set_config(self, name, value):
-        pass
-
-
-def get_repository_object(
-    path: Optional[Union[str, Path]], hg="hg", git="git", src="src"
-):
+def get_repository_object(path: Optional[Union[str, Path]], hg="hg", git="git"):
     """Get a repository object for the repository at `path`.
     If `path` is not a known VCS repository, raise an exception.
     """
@@ -879,8 +756,6 @@ def get_repository_object(
         return HgRepository(path, hg=hg)
     elif (path / ".git").exists():
         return GitRepository(path, git=git)
-    elif (path / "moz.configure").exists():
-        return SrcRepository(path, src=src)
     else:
         raise InvalidRepoPath(f"Unknown VCS, or not a source checkout: {path}")
 
@@ -906,8 +781,6 @@ def get_repository_from_build_config(config):
         return HgRepository(Path(config.topsrcdir), hg=config.substs["HG"])
     elif flavor == "git":
         return GitRepository(Path(config.topsrcdir), git=config.substs["GIT"])
-    elif flavor == "src":
-        return SrcRepository(Path(config.topsrcdir), src=config.substs["SRC"])
     else:
         raise MissingVCSInfo("unknown VCS_CHECKOUT_TYPE value: %s" % flavor)
 
