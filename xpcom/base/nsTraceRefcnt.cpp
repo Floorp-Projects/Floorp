@@ -1176,6 +1176,36 @@ void nsTraceRefcnt::SetActivityIsLegal(bool aLegal) {
   PR_SetThreadPrivate(gActivityTLS, reinterpret_cast<void*>(!aLegal));
 }
 
+void nsTraceRefcnt::StartLoggingClass(const char* aClass) {
+  gLogging = FullLogging;
+
+  if (!gTypesToLog) {
+    gTypesToLog = new CharPtrSet(256);
+  }
+
+  fprintf(stdout, "### StartLoggingClass %s\n", aClass);
+  if (!gTypesToLog->Contains(aClass)) {
+    gTypesToLog->PutEntry(aClass);
+  }
+
+  // We are deliberately not initializing gSerialNumbers here, because
+  // it would cause assertions. gObjectsToLog can't be used because it
+  // relies on serial numbers.
+
+#ifdef XP_WIN
+#  define ENVVAR(x) u"" x
+#else
+#  define ENVVAR(x) x
+#endif
+
+  if (!gRefcntsLog) {
+    InitLog(ENVVAR("XPCOM_MEM_LATE_REFCNT_LOG"), "refcounts", &gRefcntsLog,
+            XRE_GetProcessTypeString());
+  }
+
+#undef ENVVAR
+}
+
 #ifdef MOZ_ENABLE_FORKSERVER
 void nsTraceRefcnt::ResetLogFiles(const char* aProcType) {
   AutoRestore<LoggingType> saveLogging(gLogging);
