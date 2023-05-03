@@ -5,7 +5,7 @@
  *
  * The origins of this IDL file are
  * http://url.spec.whatwg.org/#api
- * http://dev.w3.org/2006/webapi/FileAPI/#creating-revoking
+ * https://w3c.github.io/FileAPI/#creating-revoking
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -21,9 +21,7 @@ interface URL {
 
   [SetterThrows]
   stringifier attribute USVString href;
-  [GetterThrows]
   readonly attribute USVString origin;
-  [SetterThrows]
            attribute USVString protocol;
            attribute USVString username;
            attribute USVString password;

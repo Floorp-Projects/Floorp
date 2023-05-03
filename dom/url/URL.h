@@ -73,11 +73,11 @@ class URL final : public URLSearchParamsObserver, public nsWrapperCache {
 
   void SetHref(const nsAString& aHref, ErrorResult& aRv);
 
-  void GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const;
+  void GetOrigin(nsAString& aOrigin) const;
 
   void GetProtocol(nsAString& aProtocol) const;
 
-  void SetProtocol(const nsAString& aProtocol, ErrorResult& aRv);
+  void SetProtocol(const nsAString& aProtocol);
 
   void GetUsername(nsAString& aUsername) const;
 
