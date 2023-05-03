@@ -24,9 +24,6 @@
 <script>
 "use strict";
 
-// FIXME: getAnimations() doesn't return scroll-animations. We should fix this
-// in Bug 1676795.
-
 test(function(t) {
   const div = addDiv(t,
     { style: "width: 10px; height: 100px; " +
@@ -41,11 +38,14 @@ test(function(t) {
                 "The scroll animation is there");
 
   const animations = div.getAnimations();
-  assert_equals(animations.length, 1,
-                'getAnimations() should not include scroll animations');
-  assert_equals(animations[0].animationName, "animTop",
-                'getAmimations() should not return scroll animations');
-}, 'Element.getAnimation() should not include scroll animations');
+  assert_equals(animations.length, 2,
+                'getAnimations() should include scroll animations');
+  assert_equals(animations[0].animationName, "animWidth",
+                'getAmimations() should return scroll animations');
+  // FIXME: Bug 1676794. Support ScrollTimeline interface.
+  assert_equals(animations[0].timeline, null,
+                'scroll animation should not return scroll timeline');
+}, 'Element.getAnimation() should include scroll animations');
 
 test(function(t) {
   const div = addDiv(t,
@@ -61,11 +61,14 @@ test(function(t) {
                 "The scroll animation is there");
 
   const animations = document.getAnimations();
-  assert_equals(animations.length, 1,
-                'getAnimations() should not include scroll animations');
-  assert_equals(animations[0].animationName, "animTop",
-                'getAmimations() should not return scroll animations');
-}, 'Document.getAnimation() should not include scroll animations');
+  assert_equals(animations.length, 2,
+                'getAnimations() should include scroll animations');
+  assert_equals(animations[0].animationName, "animWidth",
+                'getAmimations() should return scroll animations');
+  // FIXME: Bug 1676794. Support ScrollTimeline interface.
+  assert_equals(animations[0].timeline, null,
+                'scroll animation should not return scroll timeline');
+}, 'Document.getAnimation() should include scroll animations');
 
 </script>
 </body>

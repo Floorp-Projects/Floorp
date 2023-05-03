@@ -3780,13 +3780,6 @@ void Element::GetAnimationsUnsorted(Element* aElement,
                "added to an element's effect set");
     Animation* animation = effect->GetAnimation();
 
-    // FIXME: Bug 1676795: Don't expose scroll-driven animations because we are
-    // not ready.
-    if (animation->GetTimeline() &&
-        animation->GetTimeline()->IsScrollTimeline()) {
-      continue;
-    }
-
     MOZ_ASSERT(animation->IsRelevant(),
                "Only relevant animations should be added to an element's "
                "effect set");
