@@ -13719,6 +13719,12 @@
   value: @IS_ANDROID@
   mirror: always
 
+# residentKey support when using Android platform API
+- name: security.webauthn.webauthn_enable_android_fido2.residentkey
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Dispatch WebAuthn requests to authenticator-rs
 - name: security.webauth.webauthn_enable_usbtoken
   type: RelaxedAtomicBool
