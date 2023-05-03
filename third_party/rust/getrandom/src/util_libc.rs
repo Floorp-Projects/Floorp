@@ -8,6 +8,8 @@
 #![allow(dead_code)]
 use crate::Error;
 use core::{
+    cmp::min,
+    mem::MaybeUninit,
     num::NonZeroU32,
     ptr::NonNull,
     sync::atomic::{fence, AtomicPtr, Ordering},
@@ -25,12 +27,16 @@ cfg_if! {
         use libc::__error as errno_location;
     } else if #[cfg(target_os = "haiku")] {
         use libc::_errnop as errno_location;
+    } else if #[cfg(target_os = "nto")] {
+        use libc::__get_errno_ptr as errno_location;
     } else if #[cfg(all(target_os = "horizon", target_arch = "arm"))] {
         extern "C" {
             // Not provided by libc: https://github.com/rust-lang/libc/issues/1995
             fn __errno() -> *mut libc::c_int;
         }
         use __errno as errno_location;
+    } else if #[cfg(target_os = "aix")] {
+        use libc::_Errno as errno_location;
     }
 }
 
@@ -59,8 +65,8 @@ pub fn last_os_error() -> Error {
 //   - should return -1 and set errno on failure
 //   - should return the number of bytes written on success
 pub fn sys_fill_exact(
-    mut buf: &mut [u8],
-    sys_fill: impl Fn(&mut [u8]) -> libc::ssize_t,
+    mut buf: &mut [MaybeUninit<u8>],
+    sys_fill: impl Fn(&mut [MaybeUninit<u8>]) -> libc::ssize_t,
 ) -> Result<(), Error> {
     while !buf.is_empty() {
         let res = sys_fill(buf);
@@ -73,7 +79,8 @@ pub fn sys_fill_exact(
         } else {
             // We don't check for EOF (ret = 0) as the data we are reading
             // should be an infinite stream of random bytes.
-            buf = &mut buf[(res as usize)..];
+            let len = min(res as usize, buf.len());
+            buf = &mut buf[len..];
         }
     }
     Ok(())
@@ -135,19 +142,11 @@ impl Weak {
     }
 }
 
-cfg_if! {
-    if #[cfg(any(target_os = "linux", target_os = "emscripten"))] {
-        use libc::open64 as open;
-    } else {
-        use libc::open;
-    }
-}
-
 // SAFETY: path must be null terminated, FD must be manually closed.
 pub unsafe fn open_readonly(path: &str) -> Result<libc::c_int, Error> {
     debug_assert_eq!(path.as_bytes().last(), Some(&0));
     loop {
-        let fd = open(path.as_ptr() as *const _, libc::O_RDONLY | libc::O_CLOEXEC);
+        let fd = libc::open(path.as_ptr() as *const _, libc::O_RDONLY | libc::O_CLOEXEC);
         if fd >= 0 {
             return Ok(fd);
         }

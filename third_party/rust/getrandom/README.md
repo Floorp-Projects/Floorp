@@ -15,10 +15,10 @@
 [License]: https://img.shields.io/crates/l/getrandom
 
 
-A Rust library for retrieving random data from (operating) system source. It is
-assumed that system always provides high-quality cryptographically secure random
+A Rust library for retrieving random data from (operating) system sources. It is
+assumed that the system always provides high-quality cryptographically secure random
 data, ideally backed by hardware entropy sources. This crate derives its name
-from Linux's `getrandom` function, but is cross platform, roughly supporting
+from Linux's `getrandom` function, but is cross-platform, roughly supporting
 the same set of platforms as Rust's `std` lib.
 
 This is a low-level API. Most users should prefer using high-level random-number
@@ -52,7 +52,7 @@ crate features, WASM support and Custom RNGs see the
 
 ## Minimum Supported Rust Version
 
-This crate requires Rust 1.34.0 or later.
+This crate requires Rust 1.36.0 or later.
 
 # License
 
