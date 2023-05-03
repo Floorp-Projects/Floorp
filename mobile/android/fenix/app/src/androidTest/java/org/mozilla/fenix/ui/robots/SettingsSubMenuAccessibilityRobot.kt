@@ -173,7 +173,7 @@ fun textSizePercentageEquals(textSizePercentage: Int): ViewAssertion {
 
         val textView = view as TextView
         val scaledPixels =
-            textView.textSize / InstrumentationRegistry.getInstrumentation().context.resources.displayMetrics.scaledDensity
+            textView.textSize / InstrumentationRegistry.getInstrumentation().context.resources.displayMetrics.density
         val currentTextSizePercentage = calculateTextPercentageFromTextSize(scaledPixels)
 
         if (currentTextSizePercentage != textSizePercentage) throw AssertionError("The textview has a text size percentage of $currentTextSizePercentage, and does not match $textSizePercentage")
