@@ -7140,7 +7140,7 @@ Result<nsCString, nsresult> QuotaManager::EnsureStorageOriginFromOrigin(
             QM_TRY(MOZ_TO_RESULT(
                 NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
                     .SetSpec(originNoSuffix)
-                    .SetScheme("uuid"_ns)
+                    .SetScheme(kUUIDOriginScheme)
                     .SetHost(NSID_TrimBracketsASCII(nsID::GenerateUUID()))
                     .SetPort(-1)
                     .Finalize(uri)));
@@ -10197,7 +10197,8 @@ void OriginParser::HandleScheme(const nsDependentCSubstring& aToken) {
       (isFile = aToken.EqualsLiteral("file")) || aToken.EqualsLiteral("app") ||
       aToken.EqualsLiteral("resource") ||
       aToken.EqualsLiteral("moz-extension") ||
-      (isChrome = aToken.EqualsLiteral(kChromeOrigin))) {
+      (isChrome = aToken.EqualsLiteral(kChromeOrigin)) ||
+      aToken.EqualsLiteral("uuid")) {
     mScheme = aToken;
 
     if (isAbout) {
