@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Test for Bug 1808352</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<div id=log></div>
+<div id="testnode"></div>
+<script>
+var w;
+function loadedFrame() {
+    var node = document.getElementById("testnode");
+    w.document.adoptNode(node);
+    document.adoptNode(node);
+    var res;
+    // Use a loop to ensure the JITs optimize the `id` getter access.
+    for (var i = 0; i < 10_000; i++) {
+        res = node.id;
+    }
+    is(res, "testnode", "expected node id");
+    w.close();
+    SimpleTest.finish();
+}
+SimpleTest.waitForExplicitFinish();
+// Open a popup window, so it'll be same origin, but cross compartment.
+w = window.open("file_bug1808352b_frame.html", "_blank");
+</script>
