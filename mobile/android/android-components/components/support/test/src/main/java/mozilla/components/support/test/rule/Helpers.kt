@@ -7,7 +7,6 @@
 package mozilla.components.support.test.rule
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -17,12 +16,14 @@ import kotlinx.coroutines.test.runTest
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.companionObjectInstance
 import kotlin.reflect.full.memberProperties
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * `coroutines.test` default timeout to use when waiting for asynchronous completions of the coroutines
  * managed by a [TestCoroutineScheduler].
  */
-private const val DEFAULT_DISPATCH_TIMEOUT_MS = 60_000L
+private val DEFAULT_DISPATCH_TIMEOUT_SECONDS = 60.seconds
 
 /**
  * Convenience method of executing [testBody] in a new coroutine running with the
@@ -37,9 +38,8 @@ private const val DEFAULT_DISPATCH_TIMEOUT_MS = 60_000L
  * @see Dispatchers.setMain
  * @see TestDispatcher
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 fun runTestOnMain(
-    dispatchTimeoutMs: Long = DEFAULT_DISPATCH_TIMEOUT_MS,
+    testTimeoutMs: Duration = DEFAULT_DISPATCH_TIMEOUT_SECONDS,
     testBody: suspend TestScope.() -> Unit,
 ): TestResult {
     val mainDispatcher = Dispatchers.Main
@@ -53,5 +53,5 @@ fun runTestOnMain(
     val testDispatcher = companionObject!!.memberProperties.first().getter.call(companionInstance) as TestDispatcher
 
     // Delegate to the original implementation of `runTest`. Just with a previously set TestDispatcher.
-    runTest(testDispatcher, dispatchTimeoutMs, testBody)
+    runTest(testDispatcher, timeout = testTimeoutMs, testBody)
 }

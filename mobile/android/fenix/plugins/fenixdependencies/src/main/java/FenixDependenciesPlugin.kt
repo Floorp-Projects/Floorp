@@ -14,7 +14,7 @@ class FenixDependenciesPlugin : Plugin<Settings> {
 
 object FenixVersions {
     const val kotlin = "1.8.21"
-    const val coroutines = "1.6.4"
+    const val coroutines = "1.7.1"
     const val python_envs_plugin = "0.0.31"
 
     // These versions are linked: lint should be X+23.Y.Z of gradle_plugin version, according to:
