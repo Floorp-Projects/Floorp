@@ -72,27 +72,6 @@ class nsSharedPageData {
   // frames that overflowed.  It's 1.0 if none overflowed horizontally.
   float mShrinkToFitRatio = 1.0f;
 
-  // The mPagesPerSheet{...} members are only used if
-  // PagesPerSheetInfo()->mNumPages > 1.  They're initialized with reasonable
-  // defaults here (which correspond to what we do for the regular
-  // 1-page-per-sheet scenario, though we don't actually use these members in
-  // that case).  If we're in >1 pages-per-sheet scenario, then these members
-  // will be assigned "real" values during the reflow of the first
-  // PrintedSheetFrame.
-  float mPagesPerSheetScale = 1.0f;
-  // Number of "columns" in our pages-per-sheet layout. For example: if we're
-  // printing with 6 pages-per-sheet, then this could be either 3 or 2,
-  // depending on whether we're printing portrait-oriented pages onto a
-  // landscape-oriented sheet (3 cols) vs. if we're printing landscape-oriented
-  // pages onto a portrait-oriented sheet (2 cols).
-  uint32_t mPagesPerSheetNumCols = 1;
-  nsPoint mPagesPerSheetGridOrigin;
-
-  // The size of each cell on the sheet into which pages are to be placed.
-  // (The default values are arbitrary.)
-  float mCellWidth = 1.0f;
-  float mCellHeight = 1.0f;
-
   // Lazy getter, to look up our pages-per-sheet info based on mPrintSettings
   // (if it's available).  The result is stored in our mPagesPerSheetInfo
   // member-var to speed up subsequent lookups.
