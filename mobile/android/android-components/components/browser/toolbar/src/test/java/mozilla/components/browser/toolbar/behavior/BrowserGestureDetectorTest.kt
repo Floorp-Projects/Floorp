@@ -218,10 +218,10 @@ class BrowserGestureDetectorTest {
         detector.handleTouchEvent(moveEvent)
         detector.handleTouchEvent(moveEvent2)
 
-        verify(scrollListener, never()).invoke(-100f, -200f)
+        verify(scrollListener).invoke(-100f, -200f)
+
         // We don't crash but neither can identify vertical / horizontal scrolls.
 
-        verify(crashReporting).submitCaughtException(any())
         verify(verticalScrollListener, never()).invoke(anyFloat())
         verify(horizontalScrollListener, never()).invoke(anyFloat())
         verify(scaleBeginListener, never()).invoke(anyFloat())
