@@ -297,6 +297,7 @@ class CWriter {
   static void SerializeFuncType(const FuncType&, std::string&);
 
   std::string GetGlobalName(ModuleFieldType, const std::string&) const;
+  std::string GetLocalName(const std::string&, bool is_label) const;
 
   void Indent(int size = INDENT_SIZE);
   void Dedent(int size = INDENT_SIZE);
@@ -367,6 +368,7 @@ class CWriter {
                                   const std::string&);
   void WriteCallIndirectFuncDeclaration(const FuncDeclaration&,
                                         const std::string&);
+  void WriteFeatureMacros();
   void WriteModuleInstance();
   void WriteGlobals();
   void WriteGlobal(const Global&, const std::string&);
@@ -910,6 +912,13 @@ std::string CWriter::DefineLocalScopeName(std::string_view name,
       kLocalSymbolPrefix + MangleName(StripLeadingDollar(name)));
 }
 
+std::string CWriter::GetLocalName(const std::string& name,
+                                  bool is_label) const {
+  std::string mangled = name + (is_label ? kLabelSuffix : kParamSuffix);
+  assert(local_sym_map_.count(mangled) == 1);
+  return local_sym_map_.at(mangled);
+}
+
 std::string CWriter::DefineParamName(std::string_view name) {
   return DefineLocalScopeName(name, false);
 }
@@ -1021,21 +1030,15 @@ void CWriter::Write(std::string_view s) {
 }
 
 void CWriter::Write(const ParamName& name) {
-  std::string mangled = name.name + kParamSuffix;
-  assert(local_sym_map_.count(mangled) == 1);
-  Write(local_sym_map_[mangled]);
+  Write(GetLocalName(name.name, false));
 }
 
 void CWriter::Write(const LabelName& name) {
-  std::string mangled = name.name + kLabelSuffix;
-  assert(local_sym_map_.count(mangled) == 1);
-  Write(local_sym_map_[mangled]);
+  Write(GetLocalName(name.name, true));
 }
 
 void CWriter::Write(const GlobalName& name) {
-  std::string mangled = name.name + MangleField(name.type);
-  assert(global_sym_map_.count(mangled) == 1);
-  Write(global_sym_map_.at(mangled));
+  Write(GetGlobalName(name.type, name.name));
 }
 
 void CWriter::Write(const ExternalPtr& name) {
@@ -1785,6 +1788,15 @@ void CWriter::WriteCallIndirectFuncDeclaration(const FuncDeclaration& decl,
   Write(ResultType(decl.sig.result_types), " ", name, "(void*");
   WriteParamTypes(decl);
   Write(")");
+}
+
+void CWriter::WriteFeatureMacros() {
+  if (options_.features->exceptions_enabled()) {
+    Write("#define WASM_RT_ENABLE_EXCEPTION_HANDLING", Newline(), Newline());
+  }
+  if (options_.features->simd_enabled()) {
+    Write("#define WASM_RT_ENABLE_SIMD", Newline(), Newline());
+  }
 }
 
 void CWriter::WriteModuleInstance() {
@@ -5120,6 +5132,7 @@ void CWriter::WriteCHeader() {
   Write("#ifndef ", guard, Newline());
   Write("#define ", guard, Newline());
   Write(Newline());
+  WriteFeatureMacros();
   Write(s_header_top);
   Write(Newline());
   WriteModuleInstance();

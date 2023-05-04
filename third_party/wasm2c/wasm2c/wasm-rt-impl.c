@@ -36,13 +36,7 @@
 #include <sys/mman.h>
 #endif
 
-#if _MSC_VER
-#include <malloc.h>
-#define alloca _alloca
-#endif
-
 #define PAGE_SIZE 65536
-#define MAX_EXCEPTION_SIZE PAGE_SIZE
 
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
 static bool g_signal_handler_installed = false;
@@ -59,12 +53,6 @@ WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
 #endif
 
 WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
-
-static WASM_RT_THREAD_LOCAL wasm_rt_tag_t g_active_exception_tag;
-static WASM_RT_THREAD_LOCAL uint8_t g_active_exception[MAX_EXCEPTION_SIZE];
-static WASM_RT_THREAD_LOCAL uint32_t g_active_exception_size;
-
-static WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf* g_unwind_target;
 
 #ifdef WASM_RT_TRAP_HANDLER
 extern void WASM_RT_TRAP_HANDLER(wasm_rt_trap_t code);
@@ -86,45 +74,6 @@ void wasm_rt_trap(wasm_rt_trap_t code) {
 #else
   WASM_RT_LONGJMP(g_wasm_rt_jmp_buf, code);
 #endif
-}
-
-void wasm_rt_load_exception(const wasm_rt_tag_t tag,
-                            uint32_t size,
-                            const void* values) {
-  if (size > MAX_EXCEPTION_SIZE) {
-    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
-  }
-
-  g_active_exception_tag = tag;
-  g_active_exception_size = size;
-
-  if (size) {
-    memcpy(g_active_exception, values, size);
-  }
-}
-
-WASM_RT_NO_RETURN void wasm_rt_throw(void) {
-  WASM_RT_LONGJMP(*g_unwind_target, WASM_RT_TRAP_UNCAUGHT_EXCEPTION);
-}
-
-WASM_RT_UNWIND_TARGET* wasm_rt_get_unwind_target(void) {
-  return g_unwind_target;
-}
-
-void wasm_rt_set_unwind_target(WASM_RT_UNWIND_TARGET* target) {
-  g_unwind_target = target;
-}
-
-wasm_rt_tag_t wasm_rt_exception_tag(void) {
-  return g_active_exception_tag;
-}
-
-uint32_t wasm_rt_exception_size(void) {
-  return g_active_exception_size;
-}
-
-void* wasm_rt_exception(void) {
-  return g_active_exception;
 }
 
 #ifdef _WIN32
@@ -399,7 +348,7 @@ uint64_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint64_t delta) {
 void wasm_rt_free_memory(wasm_rt_memory_t* memory) {
 #if WASM_RT_USE_MMAP
   const uint64_t mmap_size = get_allocation_size_for_mmap(memory);
-  os_munmap(memory->data, mmap_size); // ignore error
+  os_munmap(memory->data, mmap_size);  // ignore error
 #else
   free(memory->data);
 #endif

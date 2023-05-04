@@ -341,8 +341,9 @@ exhaustion.
 
 ### Runtime support for exception handling
 
-Several additional symbols must be defined if wasm2c is being run with
-support for exceptions (`--enable-exceptions`):
+Several additional symbols must be defined if wasm2c is being run with support
+for exceptions (`--enable-exceptions`). These are defined in
+`wasm-rt-exceptions.h`. These symbols are:
 
 ```c
 void wasm_rt_load_exception(const char* tag, uint32_t size, const void* values);
@@ -357,7 +358,7 @@ wasm_rt_try(target)
 ```
 
 A C implementation of these functions is also available in
-[`wasm-rt-impl.h`](wasm-rt-impl.h) and [`wasm-rt-impl.c`](wasm-rt-impl.c).
+[`wasm-rt-exceptions-impl.c`](wasm-rt-exceptions-impl.c).
 
 `wasm_rt_load_exception` sets the active exception to a given tag, size, and contents.
 
