@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // If you ever need to force a toolchain rebuild (taskcluster) then edit the following comment.
-// FORCE REBUILD 2022-12-11
+// FORCE REBUILD 2023-05-04
 
 object FenixVersions {
     const val kotlin = "1.8.20"
