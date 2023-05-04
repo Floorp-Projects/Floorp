@@ -11,6 +11,7 @@ transforms:
 
 kind-dependencies:
     - push-apk
+    - post-beetmover
     - github-release-components
     - github-release-apks
     - version-bump

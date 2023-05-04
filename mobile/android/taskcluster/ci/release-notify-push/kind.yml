@@ -12,7 +12,6 @@ transforms:
 
 kind-dependencies:
     - push-apk
-    - post-beetmover
 
 task-defaults:
     name: notify-release-drivers-push

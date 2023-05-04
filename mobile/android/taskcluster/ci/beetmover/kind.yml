@@ -29,7 +29,7 @@ task-template:
     description: Publish component
     maven-destination: 'maven2/org/mozilla/components/{component}/{version}/{artifact_file_name}'
     run-on-tasks-for: []
-    shipping-phase: push
+    shipping-phase: ship
     treeherder:
         job-symbol:
             by-build-type:
