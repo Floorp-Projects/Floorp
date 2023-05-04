@@ -23,6 +23,7 @@ struct FetchOpArgs{
   CookieJarSettingsArgs? cookieJarSettings;
   bool needOnDataAvailable;
   bool hasCSPEventListener;
+  uint64_t associatedBrowsingContextID;
 };
 
 protocol PFetch {

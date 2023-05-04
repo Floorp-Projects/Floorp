@@ -87,6 +87,7 @@ inline void SwapToISupportsArray(SmartPtr<T>& aSrc,
 WorkerLoadInfoData::WorkerLoadInfoData()
     : mLoadFlags(nsIRequest::LOAD_NORMAL),
       mWindowID(UINT64_MAX),
+      mAssociatedBrowsingContextID(0),
       mReferrerInfo(new ReferrerInfo(nullptr)),
       mFromWindow(false),
       mEvalAllowed(false),

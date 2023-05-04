@@ -653,6 +653,9 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
         ipcArgs.hasCSPEventListener() = false;
       }
 
+      ipcArgs.associatedBrowsingContextID() =
+          worker->AssociatedBrowsingContextID();
+
       actor->DoFetchOp(ipcArgs);
 
       return p.forget();
