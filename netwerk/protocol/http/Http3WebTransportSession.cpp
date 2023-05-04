@@ -494,4 +494,23 @@ void Http3WebTransportSession::OnOutgoingDatagramOutCome(
   mListener->OnOutgoingDatagramOutCome(aId, aOutCome);
 }
 
+void Http3WebTransportSession::OnStreamStopSending(uint64_t aId,
+                                                   nsresult aError) {
+  LOG(("OnStreamStopSending id:%" PRId64, aId));
+  if (!mListener) {
+    return;
+  }
+
+  mListener->OnStopSending(aId, aError);
+}
+
+void Http3WebTransportSession::OnStreamReset(uint64_t aId, nsresult aError) {
+  LOG(("OnStreamReset id:%" PRId64, aId));
+  if (!mListener) {
+    return;
+  }
+
+  mListener->OnResetReceived(aId, aError);
+}
+
 }  // namespace mozilla::net

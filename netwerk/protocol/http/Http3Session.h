@@ -236,7 +236,12 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   void SetupTimer(uint64_t aTimeout);
 
-  void ResetRecvd(uint64_t aStreamId, uint64_t aError);
+  enum ResetType {
+    RESET,
+    STOP_SENDING,
+  };
+  void ResetOrStopSendingRecvd(uint64_t aStreamId, uint64_t aError,
+                               ResetType aType);
 
   void QueueStream(Http3StreamBase* stream);
   void RemoveStreamFromQueues(Http3StreamBase*);
@@ -264,6 +269,10 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   RefPtr<NeqoHttp3Conn> mHttp3Connection;
   RefPtr<nsAHttpConnection> mConnection;
+  // We need an extra map to store the mapping of WebTransportSession and
+  // WebTransportStreams to handle the case that a stream is already removed
+  // from mStreamIdHash and we still need the WebTransportSession.
+  nsTHashMap<nsUint64HashKey, uint64_t> mWebTransportStreamToSessionMap;
   nsRefPtrHashtable<nsUint64HashKey, Http3StreamBase> mStreamIdHash;
   nsRefPtrHashtable<nsPtrHashKey<nsAHttpTransaction>, Http3StreamBase>
       mStreamTransactionHash;

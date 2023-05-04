@@ -1131,4 +1131,40 @@ WebTransportSessionProxy::OnOutgoingDatagramOutCome(
   return NS_OK;
 }
 
+NS_IMETHODIMP WebTransportSessionProxy::OnStopSending(uint64_t aStreamId,
+                                                      nsresult aError) {
+  MOZ_ASSERT(OnSocketThread());
+  nsCOMPtr<WebTransportSessionEventListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(mTarget->IsOnCurrentThread());
+
+    if (mState != WebTransportSessionProxyState::ACTIVE || !mListener) {
+      return NS_OK;
+    }
+    listener = mListener;
+  }
+
+  listener->OnStopSending(aStreamId, aError);
+  return NS_OK;
+}
+
+NS_IMETHODIMP WebTransportSessionProxy::OnResetReceived(uint64_t aStreamId,
+                                                        nsresult aError) {
+  MOZ_ASSERT(OnSocketThread());
+  nsCOMPtr<WebTransportSessionEventListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(mTarget->IsOnCurrentThread());
+
+    if (mState != WebTransportSessionProxyState::ACTIVE || !mListener) {
+      return NS_OK;
+    }
+    listener = mListener;
+  }
+
+  listener->OnResetReceived(aStreamId, aError);
+  return NS_OK;
+}
+
 }  // namespace mozilla::net

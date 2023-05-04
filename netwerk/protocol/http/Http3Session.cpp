@@ -462,12 +462,15 @@ nsresult Http3Session::ProcessEvents() {
         }
       } break;
       case Http3Event::Tag::Reset:
-        LOG(("Http3Session::ProcessEvents - Reset"));
-        ResetRecvd(event.reset.stream_id, event.reset.error);
+        LOG(("Http3Session::ProcessEvents %p - Reset", this));
+        ResetOrStopSendingRecvd(event.reset.stream_id, event.reset.error,
+                                RESET);
         break;
       case Http3Event::Tag::StopSending:
-        LOG(("Http3Session::ProcessEvents - StopSeniding with error 0x%" PRIx64,
-             event.stop_sending.error));
+        LOG(
+            ("Http3Session::ProcessEvents %p - StopSeniding with error "
+             "0x%" PRIx64,
+             this, event.stop_sending.error));
         if (event.stop_sending.error == HTTP3_APP_ERROR_NO_ERROR) {
           RefPtr<Http3StreamBase> stream =
               mStreamIdHash.Get(event.data_writable.stream_id);
@@ -477,7 +480,8 @@ nsresult Http3Session::ProcessEvents() {
             httpStream->StopSending();
           }
         } else {
-          ResetRecvd(event.reset.stream_id, event.reset.error);
+          ResetOrStopSendingRecvd(event.reset.stream_id, event.reset.error,
+                                  STOP_SENDING);
         }
         break;
       case Http3Event::Tag::PushPromise:
@@ -769,6 +773,8 @@ nsresult Http3Session::ProcessEvents() {
 
             // WebTransportStream is managed by Http3Session now.
             mWebTransportStreams.AppendElement(wtStream);
+            mWebTransportStreamToSessionMap.InsertOrUpdate(wtStream->StreamId(),
+                                                           wt->StreamId());
             mStreamIdHash.InsertOrUpdate(wtStream->StreamId(),
                                          std::move(wtStream));
           } break;
@@ -1232,6 +1238,8 @@ nsresult Http3Session::TryActivatingWebTransportStream(
 
   // WebTransportStream is managed by Http3Session now.
   mWebTransportStreams.AppendElement(wtStream);
+  mWebTransportStreamToSessionMap.InsertOrUpdate(*aStreamId,
+                                                 session->StreamId());
   mStreamIdHash.InsertOrUpdate(*aStreamId, std::move(wtStream));
   return NS_OK;
 }
@@ -1267,14 +1275,47 @@ nsresult Http3Session::SendRequestBody(uint64_t aStreamId, const char* buf,
   return rv;
 }
 
-void Http3Session::ResetRecvd(uint64_t aStreamId, uint64_t aError) {
+void Http3Session::ResetOrStopSendingRecvd(uint64_t aStreamId, uint64_t aError,
+                                           ResetType aType) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  uint64_t sessionId = 0;
+  if (mWebTransportStreamToSessionMap.Get(aStreamId, &sessionId)) {
+    uint8_t wtError = Http3ErrorToWebTransportError(aError);
+    nsresult rv = GetNSResultFromWebTransportError(wtError);
+
+    RefPtr<Http3StreamBase> stream = mStreamIdHash.Get(aStreamId);
+    if (stream) {
+      if (aType == RESET) {
+        stream->SetRecvdReset();
+      }
+      RefPtr<Http3WebTransportStream> wtStream =
+          stream->GetHttp3WebTransportStream();
+      if (wtStream) {
+        CloseWebTransportStream(wtStream, rv);
+      }
+    }
+
+    RefPtr<Http3StreamBase> session = mStreamIdHash.Get(sessionId);
+    if (session) {
+      Http3WebTransportSession* wtSession =
+          session->GetHttp3WebTransportSession();
+      MOZ_ASSERT(wtSession);
+      if (wtSession) {
+        if (aType == RESET) {
+          wtSession->OnStreamReset(aStreamId, rv);
+        } else {
+          wtSession->OnStreamStopSending(aStreamId, rv);
+        }
+      }
+    }
+    return;
+  }
+
   RefPtr<Http3StreamBase> stream = mStreamIdHash.Get(aStreamId);
   if (!stream) {
     return;
   }
-
-  stream->SetRecvdReset();
 
   RefPtr<Http3Stream> httpStream = stream->GetHttp3Stream();
   if (!httpStream) {

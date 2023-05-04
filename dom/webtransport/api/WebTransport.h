@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsISupports.h"
+#include "nsTHashMap.h"
 #include "nsWrapperCache.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/Promise.h"
@@ -75,10 +76,12 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
 
   // From Parent
   void NewBidirectionalStream(
+      uint64_t aStreamId,
       const RefPtr<mozilla::ipc::DataPipeReceiver>& aIncoming,
       const RefPtr<mozilla::ipc::DataPipeSender>& aOutgoing);
 
   void NewUnidirectionalStream(
+      uint64_t aStreamId,
       const RefPtr<mozilla::ipc::DataPipeReceiver>& aStream);
 
   void NewDatagramReceived(nsTArray<uint8_t>&& aData,
@@ -86,6 +89,9 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
 
   void RemoteClosed(bool aCleanly, const uint32_t& aCode,
                     const nsACString& aReason);
+
+  void OnStreamResetOrStopSending(uint64_t aStreamId,
+                                  const StreamResetOrStopSendingError& aError);
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
 
@@ -121,6 +127,10 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
  private:
   ~WebTransport();
 
+  template <typename Stream>
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void PropagateError(Stream* aStream,
+                                                  WebTransportError* aError);
+
   nsCOMPtr<nsIGlobalObject> mGlobal;
   // We are the owner of WebTransportChild.  We must call Shutdown() on it
   // before we're destroyed.
@@ -136,10 +146,8 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   // Order is visible due to
   // https://w3c.github.io/webtransport/#webtransport-procedures step 10: "For
   // each sendStream in sendStreams, error sendStream with error."
-  // XXX Use nsTArray.h for now, but switch to OrderHashSet/Table for release to
-  // improve remove performance (if needed)
-  nsTArray<RefPtr<WebTransportSendStream>> mSendStreams;
-  nsTArray<RefPtr<WebTransportReceiveStream>> mReceiveStreams;
+  nsTHashMap<uint64_t, RefPtr<WebTransportSendStream>> mSendStreams;
+  nsTHashMap<uint64_t, RefPtr<WebTransportReceiveStream>> mReceiveStreams;
 
   WebTransportState mState;
   RefPtr<Promise> mReady;
@@ -151,8 +159,10 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   // Incoming streams get queued here.  Use a TArray though it's working as
   // a FIFO - rarely will there be more than one entry in these arrays, so
   // the overhead of mozilla::Queue is unneeded
-  nsTArray<RefPtr<mozilla::ipc::DataPipeReceiver>> mUnidirectionalStreams;
-  nsTArray<UniquePtr<BidirectionalPair>> mBidirectionalStreams;
+  nsTArray<std::tuple<uint64_t, RefPtr<mozilla::ipc::DataPipeReceiver>>>
+      mUnidirectionalStreams;
+  nsTArray<std::tuple<uint64_t, UniquePtr<BidirectionalPair>>>
+      mBidirectionalStreams;
 
   // These are created in the constructor
   RefPtr<ReadableStream> mIncomingUnidirectionalStreams;

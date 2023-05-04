@@ -16,6 +16,7 @@
 #include "nsISupports.h"
 #include "nsIPrincipal.h"
 #include "nsIWebTransport.h"
+#include "nsTHashMap.h"
 
 namespace mozilla::dom {
 
@@ -54,6 +55,19 @@ class WebTransportParent : public PWebTransportParent,
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
+  class OnResetOrStopSendingCallback final {
+   public:
+    explicit OnResetOrStopSendingCallback(
+        std::function<void(nsresult)>&& aCallback)
+        : mCallback(std::move(aCallback)) {}
+    ~OnResetOrStopSendingCallback() = default;
+
+    void OnResetOrStopSending(nsresult aError) { mCallback(aError); }
+
+   private:
+    std::function<void(nsresult)> mCallback;
+  };
+
  protected:
   virtual ~WebTransportParent();
 
@@ -74,6 +88,7 @@ class WebTransportParent : public PWebTransportParent,
 
   nsCOMPtr<nsIWebTransport> mWebTransport;
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
+  nsTHashMap<nsUint64HashKey, OnResetOrStopSendingCallback> mStreamCallbackMap;
 };
 
 }  // namespace mozilla::dom

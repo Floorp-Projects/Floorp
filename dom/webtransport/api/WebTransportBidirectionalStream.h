@@ -33,7 +33,7 @@ class WebTransportBidirectionalStream final : public nsISupports,
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(WebTransportBidirectionalStream)
 
   static already_AddRefed<WebTransportBidirectionalStream> Create(
-      WebTransport* aWebTransport, nsIGlobalObject* aGlobal,
+      WebTransport* aWebTransport, nsIGlobalObject* aGlobal, uint64_t aStreamId,
       ::mozilla::ipc::DataPipeReceiver* receiver,
       ::mozilla::ipc::DataPipeSender* sender, ErrorResult& aRv);
 

@@ -37,6 +37,8 @@ class WebTransportStreamProxy final
   NS_IMETHOD GetInputStream(nsIAsyncInputStream** aOut) override;
   NS_IMETHOD GetOutputStream(nsIAsyncOutputStream** aOut) override;
 
+  NS_IMETHOD GetStreamId(uint64_t* aId) override;
+
  private:
   virtual ~WebTransportStreamProxy();
 

@@ -218,6 +218,11 @@ NS_IMETHODIMP WebTransportStreamProxy::GetOutputStream(
   return NS_OK;
 }
 
+NS_IMETHODIMP WebTransportStreamProxy::GetStreamId(uint64_t* aId) {
+  *aId = mWebTransportStream->StreamId();
+  return NS_OK;
+}
+
 //------------------------------------------------------------------------------
 // WebTransportStreamProxy::AsyncInputStreamWrapper
 //------------------------------------------------------------------------------

@@ -40,7 +40,7 @@ JSObject* WebTransportReceiveStream::WrapObject(
 }
 
 already_AddRefed<WebTransportReceiveStream> WebTransportReceiveStream::Create(
-    WebTransport* aWebTransport, nsIGlobalObject* aGlobal,
+    WebTransport* aWebTransport, nsIGlobalObject* aGlobal, uint64_t aStreamId,
     DataPipeReceiver* receiver, ErrorResult& aRv) {
   // https://w3c.github.io/webtransport/#webtransportreceivestream-create
   AutoJSAPI jsapi;
@@ -60,7 +60,7 @@ already_AddRefed<WebTransportReceiveStream> WebTransportReceiveStream::Create(
     return nullptr;
   }
   // Add to ReceiveStreams
-  aWebTransport->mReceiveStreams.AppendElement(stream);
+  aWebTransport->mReceiveStreams.InsertOrUpdate(aStreamId, stream);
   return stream.forget();
 }
 
