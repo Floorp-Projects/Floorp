@@ -117,11 +117,11 @@ class IDBEncryptionPBM(MarionetteTestCase):
             self.marionette.absolute_url("")[:-1] + "^privateBrowsingId=1"
         )
 
-        origin = fullOriginMetadata["origin"]
-        sanitizedOrigin = origin.replace(":", "+").replace("/", "+")
+        storageOrigin = fullOriginMetadata["storageOrigin"]
+        sanitizedStorageOrigin = storageOrigin.replace(":", "+").replace("/", "+")
 
         storagePath = os.path.join(
-            self.profilePath, "storage", "private", sanitizedOrigin, "idb"
+            self.profilePath, "storage", "private", sanitizedStorageOrigin, "idb"
         )
 
         self.idbStoragePath = storagePath
