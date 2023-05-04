@@ -9,6 +9,7 @@
 
 !.eslintrc*.js
 !.prettierrc.js
+!.babel-eslint.rc.js
 
 # Always ignore node_modules.
 **/node_modules/
