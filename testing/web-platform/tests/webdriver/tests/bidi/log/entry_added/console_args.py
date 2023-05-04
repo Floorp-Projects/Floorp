@@ -1,7 +1,7 @@
 import pytest
 from webdriver.bidi.modules.script import ContextTarget
 
-from . import assert_console_entry, create_console_api_message_for_primitive_value
+from . import assert_console_entry, create_console_api_message_from_string
 
 
 @pytest.mark.asyncio
@@ -34,7 +34,7 @@ async def test_primitive_types(
     await bidi_session.session.subscribe(events=["log.entryAdded"])
 
     on_entry_added = wait_for_event("log.entryAdded")
-    await create_console_api_message_for_primitive_value(
+    await create_console_api_message_from_string(
         bidi_session, top_context, "log", f"'foo', {data}")
     event_data = await on_entry_added
     args = [
