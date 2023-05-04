@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-04-12T14:39:57.947364'
+updated_at: '2023-05-03T18:54:46.036233'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1459,7 +1459,6 @@ modules:
       url: http://developer.mozilla.org/en/docs/DOM
       components:
         - Core::DOM
-        - 'Core::DOM: CSS Object Model'
         - 'Core::DOM: Core & HTML'
     owners:
       - *peterv
@@ -2585,6 +2584,7 @@ modules:
       url: https://wiki.mozilla.org/Gecko:Overview#Style_System
       components:
         - Core::CSS Parsing and Computation
+        - 'Core::DOM: CSS Object Model'
     owners:
       - *emilio
     peers:
@@ -4083,5 +4083,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: ae2d574be8b71032afd58d06fdada016eff41c68
-  export: fbbc9a293c177a87694878b68cfedbf12670e835
+  config: 7e2e193f3d9913b8b35e9db11657d23e3db68fd7
+  export: b4f4c926f9447aba8d035f25b4dd1ea62239f32c
