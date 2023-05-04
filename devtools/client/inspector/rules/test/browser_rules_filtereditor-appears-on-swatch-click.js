@@ -13,11 +13,11 @@ add_task(async function() {
   const { toolbox, view } = await openRuleView();
 
   info("Getting the filter swatch element");
-  const swatch = getRuleViewProperty(
-    view,
-    "body",
-    "filter"
-  ).valueSpan.querySelector(".ruleview-filterswatch");
+  const property = await getRuleViewProperty(view, "body", "filter", {
+    wait: true,
+  });
+
+  const swatch = property.valueSpan.querySelector(".ruleview-filterswatch");
 
   const filterTooltip = view.tooltips.getTooltip("filterEditor");
   // Clicking on a cssfilter swatch sets the current filter value in the tooltip
