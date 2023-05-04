@@ -18,3 +18,5 @@ TESTING_JS_MODULES += [
 ]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
