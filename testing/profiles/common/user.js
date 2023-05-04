@@ -11,10 +11,22 @@ user_pref("browser.dom.window.dump.enabled", true);
 user_pref("devtools.console.stdout.chrome", true);
 // asrouter expects a plain object or null
 user_pref("browser.newtabpage.activity-stream.asrouter.providers.cfr", "null");
-user_pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "null");
-user_pref("browser.newtabpage.activity-stream.asrouter.providers.message-groups", "null");
-user_pref("browser.newtabpage.activity-stream.asrouter.providers.whats-new-panel", "null");
-user_pref("browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments", "null");
+user_pref(
+  "browser.newtabpage.activity-stream.asrouter.providers.snippets",
+  "null"
+);
+user_pref(
+  "browser.newtabpage.activity-stream.asrouter.providers.message-groups",
+  "null"
+);
+user_pref(
+  "browser.newtabpage.activity-stream.asrouter.providers.whats-new-panel",
+  "null"
+);
+user_pref(
+  "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments",
+  "null"
+);
 user_pref("browser.newtabpage.activity-stream.feeds.system.topstories", false);
 user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
 user_pref("browser.newtabpage.activity-stream.tippyTop.service.endpoint", "");
@@ -46,7 +58,10 @@ user_pref("extensions.experiments.enabled", true);
 // Turn off extension updates so they don't bother tests
 user_pref("extensions.update.enabled", false);
 // Prevent network access for recommendations by default. The payload is {"results":[]}.
-user_pref("extensions.getAddons.discovery.api_url", "data:;base64,eyJyZXN1bHRzIjpbXX0%3D");
+user_pref(
+  "extensions.getAddons.discovery.api_url",
+  "data:;base64,eyJyZXN1bHRzIjpbXX0%3D"
+);
 // Treat WebExtension API/schema warnings as errors.
 user_pref("extensions.webextensions.warnings-as-errors", true);
 // Disable useragent updates.
@@ -56,7 +71,10 @@ user_pref("media.gmp-manager.updateEnabled", false);
 // Don't do network connections for mitm priming
 user_pref("security.certerrors.mitm.priming.enabled", false);
 // Enable some dangerous features for test code. :-(
-user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_computer", true);
+user_pref(
+  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+  true
+);
 user_pref("xpinstall.signatures.required", false);
 // Prevent Remote Settings to issue non local connections.
 user_pref("services.settings.server", "data:,#remote-settings-dummy/v1");

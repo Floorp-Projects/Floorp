@@ -31,23 +31,23 @@ user_pref("toolkit.content-background-hang-monitor.disabled", true);
 
 // disable async stacks to match release builds
 // https://developer.mozilla.org/en-US/docs/Mozilla/Benchmarking#Async_Stacks
-user_pref('javascript.options.asyncstack', false);
+user_pref("javascript.options.asyncstack", false);
 
 // disable Firefox Telemetry (and some other things too)
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1533879
-user_pref('datareporting.healthreport.uploadEnabled', false);
+user_pref("datareporting.healthreport.uploadEnabled", false);
 
 // Telemetry initialization happens on a delay, that may elapse exactly in the
 // middle of some raptor tests. While it doesn't do a lot of expensive work, it
 // causes some I/O and thread creation, that can add noise to performance
 // profiles we use to analyze performance regressions.
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1706180
-user_pref('toolkit.telemetry.initDelay', 99999999);
+user_pref("toolkit.telemetry.initDelay", 99999999);
 
 // disable autoplay for raptor tests
-user_pref('media.autoplay.default', 5);
-user_pref('media.autoplay.ask-permission', true);
-user_pref('media.autoplay.blocking_policy', 1);
-user_pref('media.autoplay.block-webaudio', true);
-user_pref('media.allowed-to-play.enabled', false);
-user_pref('media.block-autoplay-until-in-foreground', true);
+user_pref("media.autoplay.default", 5);
+user_pref("media.autoplay.ask-permission", true);
+user_pref("media.autoplay.blocking_policy", 1);
+user_pref("media.autoplay.block-webaudio", true);
+user_pref("media.allowed-to-play.enabled", false);
+user_pref("media.block-autoplay-until-in-foreground", true);

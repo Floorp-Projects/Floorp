@@ -22,21 +22,45 @@ user_pref("browser.newtabpage.activity-stream.telemetry", false);
 user_pref("browser.reader.detectedFirstArticle", true);
 user_pref("browser.safebrowsing.blockedURIs.enabled", false);
 user_pref("browser.safebrowsing.downloads.enabled", false);
-user_pref("browser.safebrowsing.downloads.remote.url", "http://127.0.0.1/safebrowsing-dummy/downloads");
+user_pref(
+  "browser.safebrowsing.downloads.remote.url",
+  "http://127.0.0.1/safebrowsing-dummy/downloads"
+);
 user_pref("browser.safebrowsing.malware.enabled", false);
 user_pref("browser.safebrowsing.passwords.enabled", false);
 user_pref("browser.safebrowsing.phishing.enabled", false);
-user_pref("browser.safebrowsing.provider.google.gethashURL", "http://127.0.0.1/safebrowsing-dummy/gethash");
-user_pref("browser.safebrowsing.provider.google.updateURL", "http://127.0.0.1/safebrowsing-dummy/update");
-user_pref("browser.safebrowsing.provider.google4.gethashURL", "http://127.0.0.1/safebrowsing4-dummy/gethash");
-user_pref("browser.safebrowsing.provider.google4.updateURL", "http://127.0.0.1/safebrowsing4-dummy/update");
-user_pref("browser.safebrowsing.provider.mozilla.gethashURL", "http://127.0.0.1/safebrowsing-dummy/gethash");
-user_pref("browser.safebrowsing.provider.mozilla.updateURL", "http://127.0.0.1/safebrowsing-dummy/update");
+user_pref(
+  "browser.safebrowsing.provider.google.gethashURL",
+  "http://127.0.0.1/safebrowsing-dummy/gethash"
+);
+user_pref(
+  "browser.safebrowsing.provider.google.updateURL",
+  "http://127.0.0.1/safebrowsing-dummy/update"
+);
+user_pref(
+  "browser.safebrowsing.provider.google4.gethashURL",
+  "http://127.0.0.1/safebrowsing4-dummy/gethash"
+);
+user_pref(
+  "browser.safebrowsing.provider.google4.updateURL",
+  "http://127.0.0.1/safebrowsing4-dummy/update"
+);
+user_pref(
+  "browser.safebrowsing.provider.mozilla.gethashURL",
+  "http://127.0.0.1/safebrowsing-dummy/gethash"
+);
+user_pref(
+  "browser.safebrowsing.provider.mozilla.updateURL",
+  "http://127.0.0.1/safebrowsing-dummy/update"
+);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.startup.couldRestoreSession.count", -1);
 user_pref("browser.tabs.remote.autostart", true);
 user_pref("browser.warnOnQuit", false);
-user_pref("datareporting.healthreport.documentServerURI", "http://127.0.0.1/healthreport/");
+user_pref(
+  "datareporting.healthreport.documentServerURI",
+  "http://127.0.0.1/healthreport/"
+);
 user_pref("devtools.chrome.enabled", false);
 user_pref("devtools.debugger.remote-enabled", false);
 user_pref("devtools.theme", "light");
@@ -49,17 +73,38 @@ user_pref("dom.push.connection.enabled", false);
 user_pref("extensions.autoDisableScopes", 10);
 user_pref("extensions.blocklist.enabled", false);
 user_pref("extensions.checkCompatibility", false);
-user_pref("extensions.getAddons.get.url", "http://127.0.0.1/extensions-dummy/repositoryGetURL");
-user_pref("extensions.getAddons.search.browseURL", "http://127.0.0.1/extensions-dummy/repositoryBrowseURL");
-user_pref("extensions.hotfix.url", "http://127.0.0.1/extensions-dummy/hotfixURL");
-user_pref("extensions.systemAddon.update.url", "http://127.0.0.1/dummy-system-addons.xml");
-user_pref("extensions.update.background.url", "http://127.0.0.1/extensions-dummy/updateBackgroundURL");
+user_pref(
+  "extensions.getAddons.get.url",
+  "http://127.0.0.1/extensions-dummy/repositoryGetURL"
+);
+user_pref(
+  "extensions.getAddons.search.browseURL",
+  "http://127.0.0.1/extensions-dummy/repositoryBrowseURL"
+);
+user_pref(
+  "extensions.hotfix.url",
+  "http://127.0.0.1/extensions-dummy/hotfixURL"
+);
+user_pref(
+  "extensions.systemAddon.update.url",
+  "http://127.0.0.1/dummy-system-addons.xml"
+);
+user_pref(
+  "extensions.update.background.url",
+  "http://127.0.0.1/extensions-dummy/updateBackgroundURL"
+);
 user_pref("extensions.update.notifyUser", false);
-user_pref("extensions.update.url", "http://127.0.0.1/extensions-dummy/updateURL");
+user_pref(
+  "extensions.update.url",
+  "http://127.0.0.1/extensions-dummy/updateURL"
+);
 user_pref("identity.fxaccounts.auth.uri", "https://127.0.0.1/fxa-dummy/");
 user_pref("identity.fxaccounts.migrateToDevEdition", false);
 user_pref("media.capturestream_hints.enabled", true);
-user_pref("media.gmp-manager.url", "http://127.0.0.1/gmpmanager-dummy/update.xml");
+user_pref(
+  "media.gmp-manager.url",
+  "http://127.0.0.1/gmpmanager-dummy/update.xml"
+);
 // Don't block old libavcodec libraries when testing, because our test systems
 // cannot easily be upgraded.
 user_pref("media.libavcodec.allow-obsolete", true);
@@ -75,7 +120,10 @@ user_pref("plugin.state.flash", 0);
 user_pref("privacy.reduceTimerPrecision", false); // Bug 1445243 - reduces precision of tests
 user_pref("privacy.trackingprotection.annotate_channels", false);
 user_pref("privacy.trackingprotection.enabled", false);
-user_pref("privacy.trackingprotection.introURL", "http://127.0.0.1/trackingprotection/tour");
+user_pref(
+  "privacy.trackingprotection.introURL",
+  "http://127.0.0.1/trackingprotection/tour"
+);
 user_pref("privacy.trackingprotection.pbmode.enabled", false);
 user_pref("security.enable_java", false);
 user_pref("security.fileuri.strict_origin_policy", false);
