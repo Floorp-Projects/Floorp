@@ -317,6 +317,7 @@ class LoadInfo final : public nsILoadInfo {
   bool mForceInheritPrincipalDropped = false;
   uint64_t mInnerWindowID = 0;
   uint64_t mBrowsingContextID = 0;
+  uint64_t mWorkerAssociatedBrowsingContextID = 0;
   uint64_t mFrameBrowsingContextID = 0;
   bool mInitialSecurityCheckDone = false;
   // NB: TYPE_DOCUMENT implies !third-party.
