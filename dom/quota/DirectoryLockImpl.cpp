@@ -42,7 +42,10 @@ DirectoryLockImpl::DirectoryLockImpl(
   MOZ_ASSERT_IF(!aInternal, !aGroup.IsEmpty());
   MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
   MOZ_ASSERT_IF(!aInternal, !aStorageOrigin.IsEmpty());
-  MOZ_ASSERT_IF(!aInternal, aOriginScope.GetOrigin() == aStorageOrigin);
+  MOZ_ASSERT_IF(!aInternal && !aIsPrivate,
+                aOriginScope.GetOrigin() == aStorageOrigin);
+  MOZ_ASSERT_IF(!aInternal && aIsPrivate,
+                aOriginScope.GetOrigin() != aStorageOrigin);
   MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
   MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
 }

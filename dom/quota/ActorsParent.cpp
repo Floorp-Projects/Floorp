@@ -85,6 +85,7 @@
 #include "mozilla/dom/quota/AssertionsImpl.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/Client.h"
+#include "mozilla/dom/quota/Constants.h"
 #include "mozilla/dom/quota/DirectoryLock.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/PQuota.h"
@@ -122,6 +123,7 @@
 #include "nsIBinaryOutputStream.h"
 #include "nsIConsoleService.h"
 #include "nsIDirectoryEnumerator.h"
+#include "nsIDUtils.h"
 #include "nsIEventTarget.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
@@ -146,6 +148,7 @@
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
+#include "nsStandardURL.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsStringFlags.h"
@@ -6499,16 +6502,40 @@ QuotaManager::GetInfoFromValidatedPrincipalInfo(
       const ContentPrincipalInfo& info =
           aPrincipalInfo.get_ContentPrincipalInfo();
 
+      nsCString suffix;
+      info.attrs().CreateSuffix(suffix);
+
+      nsCString origin = info.originNoSuffix() + suffix;
+
+      if (StringBeginsWith(origin, kUUIDOriginScheme)) {
+        QM_TRY_INSPECT(const auto& originalOrigin,
+                       GetOriginFromStorageOrigin(origin));
+
+        nsCOMPtr<nsIPrincipal> principal =
+            BasePrincipal::CreateContentPrincipal(originalOrigin);
+        QM_TRY(MOZ_TO_RESULT(principal));
+
+        PrincipalInfo principalInfo;
+        QM_TRY(
+            MOZ_TO_RESULT(PrincipalToPrincipalInfo(principal, &principalInfo)));
+
+        return GetInfoFromValidatedPrincipalInfo(principalInfo);
+      }
+
       PrincipalMetadata principalMetadata;
 
-      info.attrs().CreateSuffix(principalMetadata.mSuffix);
+      principalMetadata.mSuffix = suffix;
 
-      principalMetadata.mGroup = info.baseDomain() + principalMetadata.mSuffix;
+      principalMetadata.mGroup = info.baseDomain() + suffix;
 
-      principalMetadata.mOrigin =
-          info.originNoSuffix() + principalMetadata.mSuffix;
+      principalMetadata.mOrigin = origin;
 
-      principalMetadata.mStorageOrigin = principalMetadata.mOrigin;
+      if (info.attrs().mPrivateBrowsingId != 0) {
+        QM_TRY_UNWRAP(principalMetadata.mStorageOrigin,
+                      EnsureStorageOriginFromOrigin(origin));
+      } else {
+        principalMetadata.mStorageOrigin = origin;
+      }
 
       principalMetadata.mIsPrivate = info.attrs().mPrivateBrowsingId != 0;
 
@@ -7141,6 +7168,59 @@ bool QuotaManager::IsSanitizedOriginValid(const nsACString& aSanitizedOrigin) {
 
         return result == OriginParser::ValidOrigin;
       });
+}
+
+Result<nsCString, nsresult> QuotaManager::EnsureStorageOriginFromOrigin(
+    const nsACString& aOrigin) {
+  MutexAutoLock lock(mQuotaMutex);
+
+  QM_TRY_UNWRAP(
+      auto storageOrigin,
+      mOriginToStorageOriginMap.TryLookupOrInsertWith(
+          aOrigin, [this, &aOrigin]() -> Result<nsCString, nsresult> {
+            OriginAttributes originAttributes;
+
+            nsCString originNoSuffix;
+            QM_TRY(MOZ_TO_RESULT(
+                originAttributes.PopulateFromOrigin(aOrigin, originNoSuffix)));
+
+            nsCOMPtr<nsIURI> uri;
+            QM_TRY(MOZ_TO_RESULT(
+                NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
+                    .SetSpec(originNoSuffix)
+                    .SetScheme("uuid"_ns)
+                    .SetHost(NSID_TrimBracketsASCII(nsID::GenerateUUID()))
+                    .SetPort(-1)
+                    .Finalize(uri)));
+
+            nsCOMPtr<nsIPrincipal> principal =
+                BasePrincipal::CreateContentPrincipal(uri, OriginAttributes{});
+            QM_TRY(MOZ_TO_RESULT(principal));
+
+            QM_TRY_UNWRAP(auto origin,
+                          MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+                              nsAutoCString, principal, GetOrigin));
+
+            mStorageOriginToOriginMap.WithEntryHandle(
+                origin,
+                [&aOrigin](auto entryHandle) { entryHandle.Insert(aOrigin); });
+
+            return nsCString(std::move(origin));
+          }));
+
+  return nsCString(std::move(storageOrigin));
+}
+
+Result<nsCString, nsresult> QuotaManager::GetOriginFromStorageOrigin(
+    const nsACString& aStorageOrigin) {
+  MutexAutoLock lock(mQuotaMutex);
+
+  auto maybeOrigin = mStorageOriginToOriginMap.MaybeGet(aStorageOrigin);
+  if (maybeOrigin.isNothing()) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  return maybeOrigin.ref();
 }
 
 int64_t QuotaManager::GenerateDirectoryLockId() {
@@ -8478,7 +8558,8 @@ nsresult GetOriginUsageOp::DoInit(QuotaManager& aQuotaManager) {
   QM_TRY_UNWRAP(
       PrincipalMetadata principalMetadata,
       aQuotaManager.GetInfoFromValidatedPrincipalInfo(mParams.principalInfo()));
-  MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
+
+  principalMetadata.AssertInvariants();
 
   mSuffix = std::move(principalMetadata.mSuffix);
   mGroup = std::move(principalMetadata.mGroup);
@@ -8757,7 +8838,8 @@ nsresult InitializeOriginRequestBase::DoInit(QuotaManager& aQuotaManager) {
   QM_TRY_UNWRAP(
       auto principalMetadata,
       aQuotaManager.GetInfoFromValidatedPrincipalInfo(mPrincipalInfo));
-  MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
+
+  principalMetadata.AssertInvariants();
 
   mSuffix = std::move(principalMetadata.mSuffix);
   mGroup = std::move(principalMetadata.mGroup);
@@ -8859,7 +8941,8 @@ nsresult GetFullOriginMetadataOp::DoInit(QuotaManager& aQuotaManager) {
   QM_TRY_UNWRAP(
       PrincipalMetadata principalMetadata,
       aQuotaManager.GetInfoFromValidatedPrincipalInfo(mParams.principalInfo()));
-  MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
+
+  principalMetadata.AssertInvariants();
 
   mOriginMetadata = {std::move(principalMetadata), mParams.persistenceType()};
 
@@ -9370,7 +9453,8 @@ nsresult PersistRequestBase::DoInit(QuotaManager& aQuotaManager) {
   QM_TRY_UNWRAP(
       PrincipalMetadata principalMetadata,
       aQuotaManager.GetInfoFromValidatedPrincipalInfo(mPrincipalInfo));
-  MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
+
+  principalMetadata.AssertInvariants();
 
   mSuffix = std::move(principalMetadata.mSuffix);
   mGroup = std::move(principalMetadata.mGroup);
@@ -9534,7 +9618,8 @@ nsresult EstimateOp::DoInit(QuotaManager& aQuotaManager) {
   QM_TRY_UNWRAP(
       PrincipalMetadata principalMetadata,
       aQuotaManager.GetInfoFromValidatedPrincipalInfo(mParams.principalInfo()));
-  MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
+
+  principalMetadata.AssertInvariants();
 
   mOriginMetadata = {std::move(principalMetadata), PERSISTENCE_TYPE_DEFAULT};
 
