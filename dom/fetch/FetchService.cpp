@@ -227,8 +227,6 @@ RefPtr<FetchServicePromises> FetchService::FetchInstance::Fetch() {
     if (args.mCSPEventListener) {
       mFetchDriver->SetCSPEventListener(args.mCSPEventListener);
     }
-    mFetchDriver->SetAssociatedBrowsingContextID(
-        args.mAssociatedBrowsingContextID);
   }
 
   mFetchDriver->EnableNetworkInterceptControl();
@@ -436,30 +434,6 @@ void FetchService::FetchInstance::OnReportPerformanceTiming() {
   }
 
   mPromises->ResolveResponseTimingPromise(std::move(timing), __func__);
-}
-
-void FetchService::FetchInstance::OnNotifyNetworkMonitorAlternateStack(
-    uint64_t aChannelID) {
-  FETCH_LOG(("FetchInstance::OnNotifyNetworkMonitorAlternateStack [%p]", this));
-  MOZ_ASSERT(mFetchDriver);
-  MOZ_ASSERT(mPromises);
-  if (!mIsWorkerFetch) {
-    return;
-  }
-
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      __func__, [actorID = mArgs.as<WorkerFetchArgs>().mActorID,
-                 channelID = aChannelID]() {
-        FETCH_LOG(
-            ("FetchInstance::NotifyNetworkMonitorAlternateStack, Runnable"));
-        RefPtr<FetchParent> actor = FetchParent::GetActorByID(actorID);
-        if (actor) {
-          actor->OnNotifyNetworkMonitorAlternateStack(channelID);
-        }
-      });
-
-  MOZ_ALWAYS_SUCCEEDS(mArgs.as<WorkerFetchArgs>().mEventTarget->Dispatch(
-      r, nsIThread::DISPATCH_NORMAL));
 }
 
 // FetchService

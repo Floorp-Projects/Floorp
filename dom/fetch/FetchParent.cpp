@@ -108,7 +108,6 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
     mCSPEventListener =
         MakeRefPtr<FetchParentCSPEventListener>(mID, mBackgroundEventTarget);
   }
-  mAssociatedBrowsingContextID = aArgs.associatedBrowsingContextID();
 
   MOZ_ASSERT(!mPromise);
   mPromise = new GenericPromise::Private(__func__);
@@ -172,8 +171,8 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
             {self->mRequest.clonePtr(), self->mPrincipalInfo,
              self->mWorkerScript, self->mClientInfo, self->mController,
              self->mCookieJarSettings, self->mNeedOnDataAvailable,
-             self->mCSPEventListener, self->mAssociatedBrowsingContextID,
-             self->mBackgroundEventTarget, self->mID})));
+             self->mCSPEventListener, self->mBackgroundEventTarget,
+             self->mID})));
 
     self->mResponsePromises->GetResponseEndPromise()->Then(
         GetMainThreadSerialEventTarget(), __func__,
@@ -299,14 +298,6 @@ void FetchParent::OnReportPerformanceTiming(const ResponseTiming&& aTiming) {
   MOZ_ASSERT(!mActorDestroyed);
 
   Unused << SendOnReportPerformanceTiming(aTiming);
-}
-
-void FetchParent::OnNotifyNetworkMonitorAlternateStack(uint64_t aChannelID) {
-  FETCH_LOG(("FetchParent::OnNotifyNetworkMonitorAlternateStack [%p]", this));
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mActorDestroyed);
-
-  Unused << SendOnNotifyNetworkMonitorAlternateStack(aChannelID);
 }
 
 void FetchParent::ActorDestroy(ActorDestroyReason aReason) {

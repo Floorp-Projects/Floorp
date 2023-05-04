@@ -648,12 +648,6 @@ nsresult FetchDriver::HttpFetch(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (mAssociatedBrowsingContextID) {
-    nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
-    rv = loadInfo->SetWorkerAssociatedBrowsingContextID(
-        mAssociatedBrowsingContextID);
-  }
-
   // If the fetch is created by FetchEvent.request or NavigationPreload request,
   // corresponding InterceptedHttpChannel information need to propagte to the
   // channel of the fetch.
@@ -838,9 +832,6 @@ nsresult FetchDriver::HttpFetch(
   }
 
   NotifyNetworkMonitorAlternateStack(chan, std::move(mOriginStack));
-  if (mObserver && httpChan) {
-    mObserver->OnNotifyNetworkMonitorAlternateStack(httpChan->ChannelId());
-  }
 
   // if the preferred alternative data type in InternalRequest is not empty, set
   // the data type on the created channel and also create a

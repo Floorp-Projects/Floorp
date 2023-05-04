@@ -14,7 +14,6 @@ EXPORTS.mozilla.dom += [
     "ChromeWorker.h",
     "JSExecutionManager.h",
     "Worker.h",
-    "WorkerChannelInfo.h",
     "WorkerCommon.h",
     "WorkerDebugger.h",
     "WorkerDebuggerManager.h",
@@ -43,7 +42,6 @@ EXPORTS.mozilla.dom.workerinternals += [
 XPIDL_MODULE = "dom_workers"
 
 XPIDL_SOURCES += [
-    "nsIWorkerChannelInfo.idl",
     "nsIWorkerDebugger.idl",
     "nsIWorkerDebuggerManager.idl",
 ]
@@ -57,7 +55,6 @@ UNIFIED_SOURCES += [
     "RuntimeService.cpp",
     "ScriptLoader.cpp",
     "Worker.cpp",
-    "WorkerChannelInfo.cpp",
     "WorkerCSPEventListener.cpp",
     "WorkerDebugger.cpp",
     "WorkerDebuggerManager.cpp",
