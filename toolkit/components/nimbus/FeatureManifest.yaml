@@ -1054,6 +1054,19 @@ dooh:
       type: string
       setPref: "network.trr.ohttp.uri"
 
+networking:
+  description: "Firefox Networking (Necko)"
+  owner: vgosu@mozilla.com
+  variables:
+    ehPreloadEnabled:
+      description: Whether Early Hints preload is enabled
+      type: boolean
+      setPref: "network.early-hints.enabled"
+    ehPreconnectEnabled:
+      description: Whether Early Hints preconnect is enabled
+      type: boolean
+      setPref: "network.early-hints.preconnect.enabled"
+
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
   owner: nalexander@mozilla.com
