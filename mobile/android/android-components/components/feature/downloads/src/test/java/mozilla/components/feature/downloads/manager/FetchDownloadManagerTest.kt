@@ -185,6 +185,16 @@ class FetchDownloadManagerTest {
     }
 
     @Test
+    fun `trying to download a file with a moz-extension scheme should trigger a download`() {
+        val validBlobDownload =
+            download.copy(url = "moz-extension://db84fb8b-909c-4270-8567-0e947ffe379f/readerview.html?id=1&url=https%3A%2F%2Fmozilla.org")
+        grantPermissions()
+
+        val id = downloadManager.download(validBlobDownload)!!
+        assertNotNull(id)
+    }
+
+    @Test
     fun `sendBroadcast with valid downloadID must call onDownloadStopped after download`() {
         var downloadStopped = false
         var downloadStatus: DownloadState.Status? = null
