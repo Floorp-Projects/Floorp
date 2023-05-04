@@ -7,8 +7,10 @@ package org.mozilla.fenix.helpers
 import android.graphics.Bitmap
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers
 import junit.framework.AssertionFailedError
 import org.hamcrest.CoreMatchers.not
@@ -69,4 +71,22 @@ fun ViewInteraction.isVisibleForUser(): Boolean {
     }
 
     return true
+}
+
+fun atPosition(position: Int, itemMatcher: Matcher<View?>): Matcher<View?>? {
+    return object : BoundedMatcher<View?, RecyclerView>(
+        RecyclerView::class.java,
+    ) {
+        override fun describeTo(description: Description) {
+            description.appendText("has item at position $position: ")
+            itemMatcher.describeTo(description)
+        }
+
+        override fun matchesSafely(view: RecyclerView): Boolean {
+            val viewHolder = view.findViewHolderForAdapterPosition(position)
+                ?: // has no item on such position
+                return false
+            return itemMatcher.matches(viewHolder.itemView)
+        }
+    }
 }

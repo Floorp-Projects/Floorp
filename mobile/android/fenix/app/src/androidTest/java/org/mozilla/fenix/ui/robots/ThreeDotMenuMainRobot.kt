@@ -38,6 +38,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.checkedItemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
@@ -59,6 +60,14 @@ class ThreeDotMenuMainRobot {
     fun verifyEditBookmarkButton() = assertEditBookmarkButton()
     fun verifyCloseAllTabsButton() = assertCloseAllTabsButton()
     fun verifyReaderViewAppearance(visible: Boolean) = assertReaderViewAppearanceButton(visible)
+
+    fun verifyQuitButtonExists() {
+        // Need to double swipe the menu, to make this button visible.
+        // In case it reaches the end, the second swipe is no-op.
+        expandMenu()
+        expandMenu()
+        assertItemContainingTextExists(itemWithText("Quit"))
+    }
 
     fun expandMenu() {
         onView(withId(R.id.mozac_browser_menu_menuView)).perform(swipeUp())
@@ -155,6 +164,11 @@ class ThreeDotMenuMainRobot {
                 }
             }
         }
+    }
+
+    fun clickQuit() {
+        expandMenu()
+        onView(withText("Quit")).click()
     }
 
     class Transition {

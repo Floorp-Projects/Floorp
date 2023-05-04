@@ -7,15 +7,19 @@ package org.mozilla.fenix.ui.robots
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.withChild
+import androidx.test.espresso.matcher.ViewMatchers.withClassName
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withParentIndex
 import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.assertIsChecked
+import org.mozilla.fenix.helpers.atPosition
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.isChecked
 
@@ -24,32 +28,70 @@ import org.mozilla.fenix.helpers.isChecked
  */
 class SettingsSubMenuDeleteBrowsingDataOnQuitRobot {
 
-    fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
+    fun verifyNavigationToolBarHeader() =
+        onView(
+            allOf(
+                withId(R.id.navigationToolbar),
+                withChild(withText(R.string.preferences_delete_browsing_data_on_quit)),
+            ),
+        )
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    fun verifyDeleteBrowsingOnQuitButton() = assertDeleteBrowsingOnQuitButton()
+    fun verifyDeleteBrowsingOnQuitEnabled(enabled: Boolean) =
+        deleteBrowsingOnQuitButton.assertIsChecked(enabled)
 
-    fun verifyDeleteBrowsingOnQuitButtonSummary() = assertDeleteBrowsingOnQuitButtonSummary()
+    fun verifyDeleteBrowsingOnQuitButtonSummary() =
+        onView(
+            withText(R.string.preference_summary_delete_browsing_data_on_quit_2),
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    fun verifyDeleteBrowsingOnQuitButtonSwitchDefault() = assertDeleteBrowsingOnQuitButtonSwitchDefault()
+    fun clickDeleteBrowsingOnQuitButtonSwitch() = onView(withResourceName("switch_widget")).click()
 
-    fun clickDeleteBrowsingOnQuitButtonSwitchDefaultChange() = verifyDeleteBrowsingOnQuitButtonSwitchDefault().click()
+    fun verifyAllTheCheckBoxesText() {
+        openTabsCheckbox
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    fun verifyAllTheCheckBoxesText() = assertAllOptionsAndCheckBoxes()
+        browsingDataCheckbox
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    fun verifyAllTheCheckBoxesChecked() = assertAllCheckBoxesAreChecked()
+        cookiesCheckbox
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    fun verifyDeleteBrowsingDataOnQuitSubMenuItems() {
-        verifyDeleteBrowsingOnQuitButton()
-        verifyDeleteBrowsingOnQuitButtonSummary()
-        verifyDeleteBrowsingOnQuitButtonSwitchDefault()
-        clickDeleteBrowsingOnQuitButtonSwitchDefaultChange()
-        verifyAllTheCheckBoxesText()
-        verifyAllTheCheckBoxesChecked()
+        onView(withText(R.string.preferences_delete_browsing_data_cookies_subtitle))
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        cachedFilesCheckbox
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        onView(withText(R.string.preferences_delete_browsing_data_cached_files_subtitle))
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+        sitePermissionsCheckbox
+            .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    }
+
+    fun verifyAllTheCheckBoxesChecked(checked: Boolean) {
+        for (index in 2..7) {
+            onView(withId(R.id.recycler_view))
+                .check(
+                    matches(
+                        atPosition(
+                            index,
+                            hasDescendant(
+                                allOf(
+                                    withResourceName(containsString("checkbox")),
+                                    isChecked(checked),
+                                ),
+                            ),
+                        ),
+                    ),
+                )
+        }
     }
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
-            goBackButton().click()
+            goBackButton.click()
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
@@ -57,57 +99,21 @@ class SettingsSubMenuDeleteBrowsingDataOnQuitRobot {
     }
 }
 
-private fun goBackButton() = onView(withContentDescription("Navigate up"))
+private val goBackButton = onView(withContentDescription("Navigate up"))
 
-private fun assertNavigationToolBarHeader() = onView(
-    allOf(
-        withId(R.id.navigationToolbar),
-        withChild(withText(R.string.preferences_delete_browsing_data_on_quit)),
-    ),
-)
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private val deleteBrowsingOnQuitButton =
+    onView(withClassName(containsString("android.widget.Switch")))
 
-private fun deleteBrowsingOnQuitButton() = onView(
-    allOf(
-        withParentIndex(0),
-        withChild(withText(R.string.preferences_delete_browsing_data_on_quit)),
-    ),
-)
-
-private fun assertDeleteBrowsingOnQuitButton() = deleteBrowsingOnQuitButton()
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertDeleteBrowsingOnQuitButtonSummary() = onView(
-    withText(R.string.preference_summary_delete_browsing_data_on_quit_2),
-)
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertDeleteBrowsingOnQuitButtonSwitchDefault() = onView(withResourceName("switch_widget"))
-    .check(matches(isChecked(false)))
-
-private fun assertAllOptionsAndCheckBoxes() {
+private val openTabsCheckbox =
     onView(withText(R.string.preferences_delete_browsing_data_tabs_title_2))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
+private val browsingDataCheckbox =
     onView(withText(R.string.preferences_delete_browsing_data_browsing_data_title))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    onView(withText(R.string.preferences_delete_browsing_data_cookies))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private val cookiesCheckbox = onView(withText(R.string.preferences_delete_browsing_data_cookies))
 
-    onView(withText(R.string.preferences_delete_browsing_data_cookies_subtitle))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
+private val cachedFilesCheckbox =
     onView(withText(R.string.preferences_delete_browsing_data_cached_files))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    onView(withText(R.string.preferences_delete_browsing_data_cached_files_subtitle))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
+private val sitePermissionsCheckbox =
     onView(withText(R.string.preferences_delete_browsing_data_site_permissions))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertAllCheckBoxesAreChecked() {
-    // Only verifying the options, checkboxes default value can't be verified due to issue #9471
-}

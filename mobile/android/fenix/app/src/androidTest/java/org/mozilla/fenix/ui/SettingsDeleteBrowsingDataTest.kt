@@ -30,8 +30,6 @@ import org.mozilla.fenix.ui.robots.settingsScreen
 /**
  *  Tests for verifying the Settings for:
  *  Delete Browsing Data
- *  Delete Browsing Data on quit
- *
  */
 
 class SettingsDeleteBrowsingDataTest {
