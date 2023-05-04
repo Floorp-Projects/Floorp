@@ -1542,7 +1542,6 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
                             reason, JS::GCReason::FULL_CELL_PTR_BIGINT_BUFFER);
   }
 
-  mozilla::Maybe<AutoGCSession> session;
   uint32_t numStringsTenured = 0;
   uint32_t numBigIntsTenured = 0;
   for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
@@ -1564,9 +1563,6 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
     bool disableNurseryBigInts = pretenureBigInt && zone->allocNurseryBigInts &&
                                  zone->tenuredBigInts >= 30 * 1000;
     if (disableNurseryStrings || disableNurseryBigInts) {
-      if (!session.isSome()) {
-        session.emplace(gc, JS::HeapState::MinorCollecting);
-      }
       CancelOffThreadIonCompile(zone);
       bool preserving = zone->isPreservingCode();
       zone->setPreservingCode(false);
@@ -1592,7 +1588,6 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
     numBigIntsTenured += zone->tenuredBigInts;
     zone->tenuredBigInts = 0;
   }
-  session.reset();  // End the minor GC session, if running one.
   stats().setStat(gcstats::STAT_STRINGS_TENURED, numStringsTenured);
   stats().setStat(gcstats::STAT_BIGINTS_TENURED, numBigIntsTenured);
 
