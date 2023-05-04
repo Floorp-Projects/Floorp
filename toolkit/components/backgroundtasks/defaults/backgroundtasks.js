@@ -6,6 +6,8 @@
 // `backgroundtasks_browser.js` to override browser/-specific preferences in
 // `firefox.js`.
 
+/* global pref */
+
 pref("browser.dom.window.dump.enabled", true);
 pref("devtools.console.stdout.chrome", true);
 
