@@ -35,18 +35,18 @@ object FocusVersions {
 
     object Google {
         const val accompanist = "0.16.1"
-        const val compose_compiler = "1.4.6"
+        const val compose_compiler = "1.4.7"
         const val material = "1.7.0"
         const val play = "1.10.3"
     }
 
     object Gradle {
-        const val android_plugin = "7.4.1"
+        const val android_plugin = "7.4.2"
         const val kotlin_plugin = Kotlin.compiler
     }
 
     object Kotlin {
-        const val compiler = "1.8.20"
+        const val compiler = "1.8.21"
         const val coroutines = "1.6.4"
     }
 

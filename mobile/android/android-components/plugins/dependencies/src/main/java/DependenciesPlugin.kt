@@ -14,7 +14,7 @@ class DependenciesPlugin : Plugin<Settings> {
 
 // Synchronized version numbers for dependencies used by (some) modules
 object Versions {
-    const val kotlin = "1.8.20"
+    const val kotlin = "1.8.21"
     const val coroutines = "1.6.4"
     const val serialization = "1.5.0"
 
@@ -27,11 +27,11 @@ object Versions {
     const val mockwebserver = "3.10.0"
     const val okhttp = "3.13.1"
 
-    const val android_gradle_plugin = "7.4.1"
+    const val android_gradle_plugin = "7.4.2"
 
     // This has to be synced to the gradlew plugin version. See
     // http://googlesamples.github.io/android-custom-lint-rules/api-guide/example.md.html#example:samplelintcheckgithubproject/lintversion?
-    const val lint = "30.4.1"
+    const val lint = "30.4.2"
     const val detekt = "1.19.0"
 
     const val sentry_latest = "6.18.1"
@@ -51,7 +51,7 @@ object Versions {
     // see https://android-developers.googleblog.com/2022/06/independent-versioning-of-Jetpack-Compose-libraries.html
     // for Jetpack Compose libraries versioning
     const val compose_version = "1.4.3"
-    const val compose_compiler = "1.4.6"
+    const val compose_compiler = "1.4.7"
 
     object AndroidX {
         const val activityCompose = "1.4.0"
