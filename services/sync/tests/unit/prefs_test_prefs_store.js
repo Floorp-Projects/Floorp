@@ -30,7 +30,10 @@ user_pref("testing.dont.change", "Please don't change me.");
 user_pref("testing.turned.off", "I won't get synced.");
 user_pref("testing.not.turned.on", "I won't get synced either!");
 // Some url we don't want to sync
-user_pref("testing.unsynced.url", "moz-extension://d5d31b00-b944-4afb-bd3d-d0326551a0ae");
+user_pref(
+  "testing.unsynced.url",
+  "moz-extension://d5d31b00-b944-4afb-bd3d-d0326551a0ae"
+);
 user_pref("testing.synced.url", "https://www.example.com");
 
 // A pref that exists but still has the default value - will be synced with

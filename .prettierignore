@@ -14,55 +14,24 @@
 # This should be re-enabled in bug 1827456.
 js/src/builtin
 
-
 # Don't format README files.
 README
-
-# Ignore default pref files which have a .js suffix but aren't parsed normally as JavaScript.
-browser/app/profile/channel-prefs.js
-browser/app/profile/firefox.js
-browser/branding/aurora/pref/firefox-branding.js
-browser/branding/nightly/pref/firefox-branding.js
-browser/branding/official/pref/firefox-branding.js
-browser/branding/unofficial/pref/firefox-branding.js
-devtools/client/preferences/debugger.js
-extensions/pref/autoconfig/test/unit/autoconfig.js
-mobile/android/app/geckoview-prefs.js
-mobile/android/app/mobile.js
-mobile/android/installer/mobile-l10n.js
-modules/libpref/init/all.js
-modules/libpref/test/unit/data/testParser.js
-modules/libpref/test/unit/data/testPrefLocked.js
-modules/libpref/test/unit/data/testPrefSticky.js
-modules/libpref/test/unit/extdata/testExt.js
-services/sync/tests/unit/prefs_test_prefs_store.js
 
 # Ignore CORS fixtures which require specific resource hashes.
 dom/security/test/sri/script*
 
-# Ignore other DOM fixtures with funky chars.
+# Files that are intentionally broken for tests.
 dom/base/test/file_bug687859-charset.js
 dom/base/test/file_bug687859-inherit.js
-
-# Ignore devtools debugger files
-devtools/client/debugger/src/test/examples/**
-devtools/client/debugger/src/test/integration/**
-devtools/client/debugger/src/test/unit-sources/**
-devtools/client/debugger/src/**/fixtures/**
-devtools/client/debugger/src/test/mochitest/**
-
-# These are source mapped and the locations are asserted in the test case.
-devtools/client/webconsole/test/browser/test-mangled-function.*
-
-# This file is based on another and we want to keep the syntax the same.
-devtools/shared/plural-form.js
-
-# Intentionally broken files
 parser/htmlparser/tests/mochitest/broken_xml.xhtml
 parser/htmlparser/tests/mochitest/test_bug563322.xhtml
 
-# A mainly-imported file, that we don't want to format, but want to keep an eye
-# on with the other imported files.
+# Files that are specific formats/layouts for tests.
+devtools/client/debugger/src/**/fixtures/**
+
+# Imported files where we don't want to change the format, but we do want ESLint
+# to keep an eye on them (hence not in Generated.txt/ThirdPartyFiles.txt)
+devtools/shared/plural-form.js
 toolkit/components/formautofill/shared/CreditCardRuleset.sys.mjs
 
 ##############################################################################
@@ -148,6 +117,7 @@ devtools/client/webconsole/test/browser/test-autocomplete-mapped.src.js
 devtools/client/inspector/markup/test/shadowdom_open_debugger.min.js
 devtools/client/webconsole/test/browser/test-click-function-to-source*.js
 devtools/client/webconsole/test/browser/test-external-script-errors.js
+devtools/client/webconsole/test/browser/test-mangled-function.*
 devtools/client/webconsole/test/browser/test-message-categories-canvas-css.js
 devtools/client/webconsole/test/browser/test-message-categories-empty-getelementbyid.js
 devtools/client/webconsole/test/browser/test-sourcemap*.js
