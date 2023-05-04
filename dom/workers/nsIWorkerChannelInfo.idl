@@ -1,0 +1,22 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl BrowsingContext;
+
+[scriptable, builtinclass, uuid(bf9a175a-03bc-4d7b-ba2f-76347cf40d7b)]
+interface nsIWorkerChannelLoadInfo : nsISupports
+{
+  [infallible] attribute unsigned long long workerAssociatedBrowsingContextID;
+  [infallible] readonly attribute BrowsingContext workerAssociatedBrowsingContext;
+};
+
+[scriptable, builtinclass, uuid(df1fffe4-dac6-487e-979a-629ac8c64831)]
+interface nsIWorkerChannelInfo : nsISupports
+{
+  attribute nsIWorkerChannelLoadInfo loadInfo;
+  [must_use] readonly attribute uint64_t channelId;
+};

@@ -838,6 +838,9 @@ nsresult FetchDriver::HttpFetch(
   }
 
   NotifyNetworkMonitorAlternateStack(chan, std::move(mOriginStack));
+  if (mObserver && httpChan) {
+    mObserver->OnNotifyNetworkMonitorAlternateStack(httpChan->ChannelId());
+  }
 
   // if the preferred alternative data type in InternalRequest is not empty, set
   // the data type on the created channel and also create a

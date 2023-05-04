@@ -301,6 +301,14 @@ void FetchParent::OnReportPerformanceTiming(const ResponseTiming&& aTiming) {
   Unused << SendOnReportPerformanceTiming(aTiming);
 }
 
+void FetchParent::OnNotifyNetworkMonitorAlternateStack(uint64_t aChannelID) {
+  FETCH_LOG(("FetchParent::OnNotifyNetworkMonitorAlternateStack [%p]", this));
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  Unused << SendOnNotifyNetworkMonitorAlternateStack(aChannelID);
+}
+
 void FetchParent::ActorDestroy(ActorDestroyReason aReason) {
   FETCH_LOG(("FetchParent::ActorDestroy [%p]", this));
   AssertIsOnBackgroundThread();

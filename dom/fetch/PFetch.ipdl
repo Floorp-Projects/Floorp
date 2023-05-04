@@ -47,6 +47,8 @@ protocol PFetch {
 
     async OnReportPerformanceTiming(ResponseTiming aTiming);
 
+    async OnNotifyNetworkMonitorAlternateStack(uint64_t aChannelID);
+
     async __delete__(nsresult aResult);
 };
 

@@ -656,6 +656,12 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
       ipcArgs.associatedBrowsingContextID() =
           worker->AssociatedBrowsingContextID();
 
+      if (worker->IsWatchedByDevTools()) {
+        UniquePtr<SerializedStackHolder> stack;
+        stack = GetCurrentStackForNetMonitor(cx);
+        actor->SetOriginStack(std::move(stack));
+      }
+
       actor->DoFetchOp(ipcArgs);
 
       return p.forget();
