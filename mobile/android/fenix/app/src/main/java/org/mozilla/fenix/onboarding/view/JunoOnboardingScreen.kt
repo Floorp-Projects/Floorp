@@ -28,6 +28,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -173,7 +174,10 @@ private fun JunoOnboardingContent(
                 onNotificationPermissionButtonClick = onNotificationPermissionButtonClick,
                 onNotificationPermissionSkipClick = onNotificationPermissionSkipClick,
             )
-            OnboardingPage(pageState = onboardingPageState)
+            OnboardingPage(
+                pageState = onboardingPageState,
+                imageResContentScale = pageUiState.imageResContentScale,
+            )
         }
 
         PagerIndicator(
@@ -233,6 +237,7 @@ private fun defaultPreviewPages() = listOf(
     OnboardingPageUiData(
         type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
         imageRes = R.drawable.ic_onboarding_welcome,
+        imageResContentScale = ContentScale.Fit,
         title = stringResource(R.string.juno_onboarding_default_browser_title_nimbus),
         description = stringResource(R.string.juno_onboarding_default_browser_description_nimbus),
         linkText = stringResource(R.string.juno_onboarding_default_browser_description_link_text),
@@ -242,6 +247,7 @@ private fun defaultPreviewPages() = listOf(
     OnboardingPageUiData(
         type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
         imageRes = R.drawable.ic_onboarding_sync,
+        imageResContentScale = ContentScale.Fit,
         title = stringResource(R.string.juno_onboarding_sign_in_title),
         description = stringResource(R.string.juno_onboarding_sign_in_description),
         primaryButtonLabel = stringResource(R.string.juno_onboarding_sign_in_positive_button),
@@ -250,6 +256,7 @@ private fun defaultPreviewPages() = listOf(
     OnboardingPageUiData(
         type = OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
         imageRes = R.drawable.ic_notification_permission,
+        imageResContentScale = ContentScale.Fit,
         title = stringResource(R.string.juno_onboarding_enable_notifications_title_nimbus),
         description = stringResource(R.string.juno_onboarding_enable_notifications_description_nimbus),
         primaryButtonLabel = stringResource(R.string.juno_onboarding_enable_notifications_positive_button),

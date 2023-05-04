@@ -82,3 +82,21 @@ fun Modifier.debouncedClickable(
         ),
     )
 }
+
+/**
+ * A conditional [Modifier.then] extension that allows chaining of conditional Modifiers.
+ *
+ * @param modifier The [Modifier] to return if the [predicate] is satisfied.
+ * @param predicate The predicate used to determine which [Modifier] to return.
+ *
+ * @return the appropriate [Modifier] given the [predicate].
+ */
+fun Modifier.thenConditional(
+    modifier: Modifier,
+    predicate: () -> Boolean,
+): Modifier =
+    if (predicate()) {
+        then(modifier)
+    } else {
+        this
+    }
