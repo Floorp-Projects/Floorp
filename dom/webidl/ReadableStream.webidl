@@ -7,9 +7,7 @@
  * https://streams.spec.whatwg.org/#rs-class-definition
  */
 
-[Exposed=*,
-//Transferable See Bug 1562065
-]
+[Exposed=*] // [Transferable] - See Bug 1562065
 interface ReadableStream {
   [Throws]
   constructor(optional object underlyingSource, optional QueuingStrategy strategy = {});
