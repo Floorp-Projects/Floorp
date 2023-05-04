@@ -15,6 +15,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
+#include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -581,9 +582,15 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
     isInternal = QuotaManager::IsOriginInternal(origin);
   }
 
+  const bool isPrivate =
+      principalInfo.type() == PrincipalInfo::TContentPrincipalInfo &&
+      principalInfo.get_ContentPrincipalInfo().attrs().mPrivateBrowsingId > 0;
+
   if (isInternal) {
     // Chrome privilege and internal origins always get persistent storage.
     persistenceType = PERSISTENCE_TYPE_PERSISTENT;
+  } else if (isPrivate) {
+    persistenceType = PERSISTENCE_TYPE_PRIVATE;
   } else {
     persistenceType = PERSISTENCE_TYPE_DEFAULT;
   }
