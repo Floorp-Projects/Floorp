@@ -349,9 +349,11 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
   void SetCurrentImages(const nsTArray<NonOwningImage>& aImages);
 
   /**
-   * Clear all images. Let ImageClient release all TextureClients.
+   * Clear all images. Let ImageClient release all TextureClients. Because we
+   * may release the lock after acquiring it in this method, it cannot be called
+   * with the lock held.
    */
-  void ClearAllImages();
+  void ClearAllImages() EXCLUDES(mRecursiveMutex);
 
   /**
    * Clear any resources that are not immediately necessary. This may be called
@@ -530,10 +532,7 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
   void NotifyComposite(const ImageCompositeNotification& aNotification);
   void NotifyDropped(uint32_t aDropped);
 
-  already_AddRefed<ImageContainerListener> GetImageContainerListener() {
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    return do_AddRef(mNotifyCompositeListener);
-  }
+  already_AddRefed<ImageContainerListener> GetImageContainerListener() const;
 
   /**
    * Get the ImageClient associated with this container. Returns only after
@@ -628,8 +627,7 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
   // ProducerID for last current image(s)
   ProducerID mCurrentProducerID GUARDED_BY(mRecursiveMutex);
 
-  RefPtr<ImageContainerListener> mNotifyCompositeListener
-      GUARDED_BY(mRecursiveMutex);
+  RefPtr<ImageContainerListener> mNotifyCompositeListener;
 
   static mozilla::Atomic<uint32_t> sGenerationCounter;
 };
