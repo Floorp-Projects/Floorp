@@ -227,7 +227,7 @@ webgpu:
     description: >-
         Runs the tests relevant to WebGPU.
     query:
-        - "'web-platform-tests !tsan !asan !macos !android"
+        - "'webgpu"
         - "source-test-mozlint-updatebot"
         - "source-test-vendor-rust"
 
