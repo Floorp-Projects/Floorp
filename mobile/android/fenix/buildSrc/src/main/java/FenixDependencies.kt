@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // If you ever need to force a toolchain rebuild (taskcluster) then edit the following comment.
-// FORCE REBUILD 2023-05-05
+// FORCE REBUILD 2023-05-12
 
 object FenixVersions {
     const val kotlin = "1.8.21"
@@ -28,7 +28,7 @@ object FenixVersions {
     const val androidx_coordinator_layout = "1.2.0"
     const val androidx_constraint_layout = "2.1.4"
     const val androidx_preference = "1.1.1"
-    const val androidx_profileinstaller = "1.2.2"
+    const val androidx_profileinstaller = "1.3.1"
     const val androidx_legacy = "1.0.0"
     const val androidx_annotation = "1.6.0"
     const val androidx_lifecycle = "2.6.1"
