@@ -90,6 +90,7 @@ devtools/client/webconsole/test/browser/test-autocomplete-mapped.src.js
 devtools/client/inspector/markup/test/shadowdom_open_debugger.min.js
 devtools/client/webconsole/test/browser/test-click-function-to-source*.js
 devtools/client/webconsole/test/browser/test-external-script-errors.js
+devtools/client/webconsole/test/browser/test-mangled-function.*
 devtools/client/webconsole/test/browser/test-message-categories-canvas-css.js
 devtools/client/webconsole/test/browser/test-message-categories-empty-getelementbyid.js
 devtools/client/webconsole/test/browser/test-sourcemap*.js
