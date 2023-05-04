@@ -735,9 +735,9 @@
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
-    <string name="preference_light_theme">Light</string>
+    <string name="preference_light_theme">ライト</string>
     <!-- Preference for using dark theme -->
-    <string name="preference_dark_theme">Dark</string>
+    <string name="preference_dark_theme">ダーク</string>
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">バッテリーセーバーで設定</string>
     <!-- Preference for using following device theme -->

@@ -15,11 +15,20 @@
     <!-- Name of the "notification channel" used for displaying a notification when the app crashed and we can't show a prompt. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_lib_crash_channel">Nej sa gahui a\'nan\'</string>
 
+    <!-- Title of the crash reporter notification for background process crashes. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_background_process_notification_title">Sī ga’man ruhuât. Huā sa gahui a’nan’ riña %1$s.</string>
+
     <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
     <string name="mozac_lib_crash_notification_action_report">Gānātà\'</string>
 
     <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_send_crash_report_in_progress">Hīaj a\'nïn hua\'ānj nuguan\' rayi\'î sa \'iaj re\' riña %1$s</string>
+
+    <!-- Label of notification showing that the crash handling service is gathering the crash data. -->
+    <string name="mozac_lib_gathering_crash_data_in_progress">Sa naran’ andaj gire’ riña aga’ nan</string>
+
+    <!-- Label of notification showing that the telemetry service is gathering the crash data. -->
+    <string name="mozac_lib_gathering_crash_telemetry_in_progress">Sa naran’ andaj telemetría gire’ riña aga’ nan</string>
 
     <!-- Title of the activity that shows the list of past crashes (similar to about:crashes)-->
     <string name="mozac_lib_crash_activity_title">Nuguan\' nata\' sa gahui a\'nan\'an</string>
