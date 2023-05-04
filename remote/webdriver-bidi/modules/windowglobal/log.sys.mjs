@@ -51,9 +51,9 @@ class LogModule extends WindowGlobalBiDiModule {
     this.#subscribedEvents = null;
   }
 
-  #buildSource() {
+  #buildSource(realm) {
     return {
-      realm: this.messageHandler.window.windowGlobalChild?.innerWindowId.toString(),
+      realm: realm.id,
       context: this.messageHandler.context,
     };
   }
@@ -137,19 +137,20 @@ class LogModule extends WindowGlobalBiDiModule {
     text += args.map(String).join(" ");
 
     // Serialize each arg as remote value.
+    const defaultRealm = this.messageHandler.getRealm();
     const nodeCache = this.nodeCache;
     const serializedArgs = [];
     for (const arg of args) {
-      // Note that we can pass a `null` realm for now since realms are only
+      // Note that we can pass a default realm for now since realms are only
       // involved when creating object references, which will not happen with
-      // OwnershipModel.None. This will be revisited in Bug 1731589.
+      // OwnershipModel.None. This will be revisited in Bug 1742589.
       serializedArgs.push(
         lazy.serialize(
-          arg,
+          Cu.waiveXrays(arg),
           lazy.setDefaultSerializationOptions(),
           lazy.OwnershipModel.None,
           new Map(),
-          null,
+          defaultRealm,
           {
             nodeCache,
           }
@@ -158,7 +159,8 @@ class LogModule extends WindowGlobalBiDiModule {
     }
 
     // Set source to an object which contains realm and browsing context.
-    const source = this.#buildSource();
+    // TODO: Bug 1742589. Use an actual realm from which the event came from.
+    const source = this.#buildSource(defaultRealm);
 
     // Set stack trace only for certain methods.
     let stackTrace;
@@ -191,12 +193,14 @@ class LogModule extends WindowGlobalBiDiModule {
 
   #onJavaScriptError = (eventName, data = {}) => {
     const { level, message, stacktrace, timeStamp } = data;
+    const defaultRealm = this.messageHandler.getRealm();
 
     // Build the JavascriptLogEntry
     const entry = {
       type: "javascript",
       level,
-      source: this.#buildSource(),
+      // TODO: Bug 1742589. Use an actual realm from which the event came from.
+      source: this.#buildSource(defaultRealm),
       text: message,
       timestamp: timeStamp || Date.now(),
       stackTrace: this.#buildStackTrace(stacktrace),
