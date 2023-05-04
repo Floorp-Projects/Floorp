@@ -7634,8 +7634,6 @@ void nsWindow::OnSizeModeChange() {
   MOZ_LOG(gWindowsLog, LogLevel::Info,
           ("nsWindow::OnSizeModeChange() sizeMode %d", mode));
 
-  UpdateNonClientMargins(false);
-
   if (NeedsToTrackWindowOcclusionState()) {
     WinWindowOcclusionTracker::Get()->OnWindowVisibilityChanged(
         this, mode != nsSizeMode_Minimized);
@@ -9565,6 +9563,8 @@ void nsWindow::FrameState::SetSizeModeInternal(nsSizeMode aMode,
   if (bool(aDoShowWindow) && mWindow->mIsVisible) {
     ShowWindowWithMode(mWindow->mWnd, aMode);
   }
+
+  mWindow->UpdateNonClientMargins(false);
 
   if (fullscreenChange) {
     mWindow->OnFullscreenChanged(oldSizeMode, fullscreen);
