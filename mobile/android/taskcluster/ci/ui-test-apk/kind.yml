@@ -113,7 +113,7 @@ tasks:
             pre-commands:
                 - ["cd", "focus-android"]
             commands:
-                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/focus/arm64-v8a/target.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
                 # TODO: Use the same path as fenix
                 - [wget, {artifact-reference: '<signed-apk-android-test/public/build/app-focus-androidTest.apk>'}, '-O', android-test.apk]
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'arm64-v8a', 'app.apk', 'android-test.apk', '50']
@@ -146,7 +146,7 @@ tasks:
             pre-commands:
                 - ["cd", "focus-android"]
             commands:
-                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/focus/arm64-v8a/target.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
                 # TODO: Use the same path as fenix
                 - [wget, {artifact-reference: '<signed-apk-android-test/public/build/app-focus-androidTest.apk>'}, '-O', android-test.apk]
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'arm-start-test', 'app.apk', 'android-test.apk', '1']
@@ -175,7 +175,7 @@ tasks:
             pre-commands:
                 - ["cd", "focus-android"]
             commands:
-                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/focus/arm64-v8a/target.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
                 # TODO: Use the same path as fenix
                 - [wget, {artifact-reference: '<signed-apk-android-test/public/build/app-focus-androidTest.apk>'}, '-O', android-test.apk]
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'arm-beta-tests', 'app.apk', 'android-test.apk', '1']
@@ -203,8 +203,8 @@ tasks:
             pre-commands:
                 - ["cd", "fenix"]
             commands:
-                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/fenix/arm64-v8a/target.apk>'}, '-O', app.apk]
-                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/fenix/noarch/target.apk>'}, '-O', android-test.apk]
+                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/target.noarch.apk>'}, '-O', android-test.apk]
                 - [automation/taskcluster/androidTest/ui-test.sh, arm64-v8a, app.apk, android-test.apk, '100']
         treeherder:
             platform: 'fenix-ui-test/opt'
@@ -232,8 +232,8 @@ tasks:
             pre-commands:
                 - ["cd", "fenix"]
             commands:
-                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/fenix/arm64-v8a/target.apk>'}, '-O', app.apk]
-                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/fenix/noarch/target.apk>'}, '-O', android-test.apk]
+                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/target.noarch.apk>'}, '-O', android-test.apk]
                 - [automation/taskcluster/androidTest/ui-test.sh, arm-screenshots-tests, app.apk, android-test.apk, '1']
         treeherder:
             platform: 'fenix-ui-test/opt'
@@ -260,8 +260,8 @@ tasks:
             pre-commands:
                 - ["cd", "fenix"]
             commands:
-                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/fenix/arm64-v8a/target.apk>'}, '-O', app.apk]
-                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/fenix/noarch/target.apk>'}, '-O', android-test.apk]
+                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/target.noarch.apk>'}, '-O', android-test.apk]
                 - [automation/taskcluster/androidTest/ui-test.sh, arm-beta-tests, app.apk, android-test.apk, '2']
         treeherder:
             platform: 'fenix-ui-test/opt'
@@ -288,8 +288,8 @@ tasks:
             pre-commands:
                 - ["cd", "fenix"]
             commands:
-                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/fenix/arm64-v8a/target.apk>'}, '-O', app.apk]
-                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/fenix/noarch/target.apk>'}, '-O', android-test.apk]
+                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/target.noarch.apk>'}, '-O', android-test.apk]
                 - [automation/taskcluster/androidTest/ui-test.sh, arm-start-test, app.apk, android-test.apk, '2']
         treeherder:
             platform: 'fenix-ui-test/opt'
@@ -317,8 +317,8 @@ tasks:
             pre-commands:
                 - ["cd", "fenix"]
             commands:
-                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/fenix/arm64-v8a/target.apk>'}, '-O', app.apk]
-                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/fenix/noarch/target.apk>'}, '-O', android-test.apk]
+                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/target.noarch.apk>'}, '-O', android-test.apk]
                 - [automation/taskcluster/androidTest/ui-test.sh, arm-legacy-api-tests, app.apk, android-test.apk, '50']
         treeherder:
             platform: 'fenix-ui-test/opt'
@@ -345,7 +345,7 @@ tasks:
             pre-commands:
                 - ["cd", "fenix"]
             commands:
-                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/fenix/arm64-v8a/target.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
                 - [automation/taskcluster/androidTest/robo-test.sh, arm-robo-test, app.apk]
         treeherder:
             platform: 'fenix-ui-test/opt'

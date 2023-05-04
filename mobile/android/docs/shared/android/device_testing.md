@@ -24,8 +24,8 @@ Find the line where it downloads the `target.apk` produced in a previous step an
 ```patch
   run:
       commands:
--         - [wget, {artifact-reference: '<signing/public/build/x86/target.apk>'}, '-O', app.apk]
-+         - [wget, {artifact-reference: '<signing/public/build/arm64-v8a/target.apk>'}, '-O', app.apk]
+-         - [wget, {artifact-reference: '<signing/public/build/target.x86.apk>'}, '-O', app.apk]
++         - [wget, {artifact-reference: '<signing/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
 ```
 
 Then look for the line where it invokes the `ui-test.sh` and tell it to use `arm64-v8a` again:
