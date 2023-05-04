@@ -9,9 +9,11 @@
 #include "mozilla/dom/AbortFollower.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PFetchChild.h"
+#include "mozilla/dom/SerializedStackHolder.h"
 #include "nsIConsoleReportCollector.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsISupports.h"
+#include "nsIWorkerChannelInfo.h"
 
 namespace mozilla::dom {
 
@@ -43,6 +45,9 @@ class FetchChild final : public PFetchChild, public AbortFollower {
   mozilla::ipc::IPCResult RecvOnReportPerformanceTiming(
       ResponseTiming&& aTiming);
 
+  mozilla::ipc::IPCResult RecvOnNotifyNetworkMonitorAlternateStack(
+      uint64_t aChannelID);
+
   void SetCSPEventListener(nsICSPEventListener* aListener);
 
   static RefPtr<FetchChild> Create(WorkerPrivate* aWorkerPrivate,
@@ -58,6 +63,11 @@ class FetchChild final : public PFetchChild, public AbortFollower {
 
   void DoFetchOp(const FetchOpArgs& aArgs);
 
+  void SetOriginStack(UniquePtr<SerializedStackHolder>&& aStack) {
+    MOZ_ASSERT(!mOriginStack);
+    mOriginStack = std::move(aStack);
+  }
+
  private:
   ~FetchChild() = default;
 
@@ -69,9 +79,11 @@ class FetchChild final : public PFetchChild, public AbortFollower {
   RefPtr<Promise> mPromise;
   RefPtr<AbortSignalImpl> mSignalImpl;
   RefPtr<FetchObserver> mFetchObserver;
+  UniquePtr<SerializedStackHolder> mOriginStack;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;
   nsCOMPtr<nsIConsoleReportCollector> mReporter;
   FlippedOnce<false> mIsShutdown;
+  nsCOMPtr<nsIWorkerChannelInfo> mWorkerChannelInfo;
 };
 
 }  // namespace mozilla::dom
