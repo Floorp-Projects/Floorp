@@ -90,15 +90,15 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::MakeAnonymous(
       scroller = Scroller::Nearest(const_cast<Element*>(element), pseudo);
       break;
     }
+    case StyleScroller::SelfElement:
+      scroller = Scroller::Self(aTarget.mElement, aTarget.mPseudoType);
+      break;
   }
 
-  // Note: We create new ScrollTimeline for anonymous scroll timeline, i.e.
-  // scroll(). In other words, each anonymous scroll timeline is a different
-  // object per the resolution of this spec issue:
-  // https://github.com/w3c/csswg-drafts/issues/8204
-  //
-  // FIXME: Perhaps it's still possible to reuse scroll(root). Need to revisit
-  // this after we start to work on JS support.
+  // Each use of scroll() corresponds to its own instance of ScrollTimeline in
+  // the Web Animations API, even if multiple elements use scroll() to refer to
+  // the same scroll container with the same arguments.
+  // https://drafts.csswg.org/scroll-animations-1/#scroll-notation
   return MakeAndAddRef<ScrollTimeline>(aDocument, scroller, aAxis);
 }
 
@@ -255,6 +255,7 @@ const nsIScrollableFrame* ScrollTimeline::GetScrollFrame() const {
       return nullptr;
     case Scroller::Type::Nearest:
     case Scroller::Type::Name:
+    case Scroller::Type::Self:
       return nsLayoutUtils::FindScrollableFrameFor(mSource.mElement);
   }
 

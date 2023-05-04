@@ -68,13 +68,13 @@ class ScrollTimeline : public AnimationTimeline {
 
  public:
   struct Scroller {
-    // FIXME: Bug 1814444. Add self keyword.
     // FIXME: Bug 1765211. Perhaps we only need root and a specific element.
     // This depends on how we fix this bug.
     enum class Type : uint8_t {
       Root,
       Nearest,
       Name,
+      Self,
     };
     Type mType = Type::Root;
     RefPtr<Element> mElement;
@@ -98,6 +98,10 @@ class ScrollTimeline : public AnimationTimeline {
 
     static Scroller Named(Element* aElement, PseudoStyleType aPseudoType) {
       return {Type::Name, aElement, aPseudoType};
+    }
+
+    static Scroller Self(Element* aElement, PseudoStyleType aPseudoType) {
+      return {Type::Self, aElement, aPseudoType};
     }
 
     explicit operator bool() const { return mElement; }
