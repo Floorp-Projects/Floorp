@@ -165,6 +165,8 @@ class RTCRtpSender : public nsISupports,
   // from before.
   Maybe<RTCRtpEncodingParameters> mUnicastEncoding;
   bool mSimulcastEnvelopeSet = false;
+  bool mSimulcastEnvelopeSetByJSEP = false;
+  bool mPendingRidChangeFromCompatMode = false;
   Maybe<RTCRtpSendParameters> mLastReturnedParameters;
   RefPtr<MediaPipelineTransmit> mPipeline;
   RefPtr<MediaTransportHandler> mTransportHandler;
