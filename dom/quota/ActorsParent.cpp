@@ -106,7 +106,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/net/MozURL.h"
+#include "mozilla/net/ExtensionProtocolHandler.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
@@ -217,7 +217,6 @@ static_assert(
 namespace mozilla::dom::quota {
 
 using namespace mozilla::ipc;
-using mozilla::net::MozURL;
 
 // We want profiles to be platform-independent so we always need to replace
 // the same characters on every platform. Windows has the most extensive set
@@ -1709,22 +1708,13 @@ Result<bool, nsresult> MaybeUpdateGroupForOrigin(
       updated = true;
     }
   } else {
-    OriginAttributes originAttributes;
-    nsCString originNoSuffix;
-    QM_TRY(OkIf(originAttributes.PopulateFromOrigin(aOriginMetadata.mOrigin,
-                                                    originNoSuffix)),
-           Err(NS_ERROR_FAILURE));
+    nsCOMPtr<nsIPrincipal> principal =
+        BasePrincipal::CreateContentPrincipal(aOriginMetadata.mOrigin);
+    QM_TRY(MOZ_TO_RESULT(principal));
 
-    RefPtr<MozURL> url;
-    QM_TRY(MOZ_TO_RESULT(MozURL::Init(getter_AddRefs(url), originNoSuffix)),
-           QM_PROPAGATE, [&originNoSuffix](const nsresult) {
-             QM_WARNING("A URL %s is not recognized by MozURL",
-                        originNoSuffix.get());
-           });
-
-    QM_TRY_INSPECT(
-        const auto& baseDomain,
-        MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoCString, *url, BaseDomain));
+    QM_TRY_INSPECT(const auto& baseDomain,
+                   MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoCString, principal,
+                                                     GetBaseDomain));
 
     const nsCString upToDateGroup = baseDomain + aOriginMetadata.mSuffix;
 
@@ -1733,6 +1723,12 @@ Result<bool, nsresult> MaybeUpdateGroupForOrigin(
       updated = true;
 
 #ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
+      OriginAttributes originAttributes;
+      nsCString originNoSuffix;
+      QM_TRY(OkIf(originAttributes.PopulateFromOrigin(aOriginMetadata.mOrigin,
+                                                      originNoSuffix)),
+             Err(NS_ERROR_FAILURE));
+
       ContentPrincipalInfo contentPrincipalInfo;
       contentPrincipalInfo.attrs() = originAttributes;
       contentPrincipalInfo.originNoSuffix() = originNoSuffix;
@@ -2594,11 +2590,14 @@ void InitializeQuotaManager() {
 #endif
 
   if (!QuotaManager::IsRunningGTests()) {
-    // This service has to be started on the main thread currently.
+    // These services have to be started on the main thread currently.
     const nsCOMPtr<mozIStorageService> ss =
         do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-
     QM_WARNONLY_TRY(OkIf(ss));
+
+    RefPtr<net::ExtensionProtocolHandler> extensionProtocolHandler =
+        net::ExtensionProtocolHandler::GetSingleton();
+    QM_WARNONLY_TRY(MOZ_TO_RESULT(extensionProtocolHandler));
   }
 
   QM_WARNONLY_TRY(QM_TO_RESULT(QuotaManager::Initialize()));
@@ -6448,16 +6447,18 @@ bool QuotaManager::IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo) {
           aPrincipalInfo.get_ContentPrincipalInfo();
 
       // Verify the principal spec parses.
-      RefPtr<MozURL> specURL;
-      nsresult rv = MozURL::Init(getter_AddRefs(specURL), info.spec());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        QM_WARNING("A URL %s is not recognized by MozURL", info.spec().get());
-        return false;
-      }
+      nsCOMPtr<nsIURI> uri;
+      QM_TRY(MOZ_TO_RESULT(NS_NewURI(getter_AddRefs(uri), info.spec())), false);
+
+      nsCOMPtr<nsIPrincipal> principal =
+          BasePrincipal::CreateContentPrincipal(uri, info.attrs());
+      QM_TRY(MOZ_TO_RESULT(principal), false);
 
       // Verify the principal originNoSuffix matches spec.
-      nsCString originNoSuffix;
-      specURL->Origin(originNoSuffix);
+      QM_TRY_INSPECT(const auto& originNoSuffix,
+                     MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoCString, principal,
+                                                       GetOriginNoSuffix),
+                     false);
 
       if (NS_WARN_IF(originNoSuffix != info.originNoSuffix())) {
         QM_WARNING("originNoSuffix (%s) doesn't match passed one (%s)!",
@@ -6481,11 +6482,10 @@ bool QuotaManager::IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo) {
       }
 
       // Verify the principal baseDomain matches spec.
-      nsCString baseDomain;
-      rv = specURL->BaseDomain(baseDomain);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
+      QM_TRY_INSPECT(const auto& baseDomain,
+                     MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoCString, principal,
+                                                       GetBaseDomain),
+                     false);
 
       if (NS_WARN_IF(baseDomain != info.baseDomain())) {
         QM_WARNING("baseDomain (%s) doesn't match passed one (%s)!",
@@ -10027,39 +10027,17 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
       }
 
       case OriginProps::eContent: {
-        RefPtr<MozURL> specURL;
-        nsresult rv = MozURL::Init(getter_AddRefs(specURL), originProps.mSpec);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          // If a URL cannot be understood by MozURL during restoring or
-          // upgrading, either marking the directory as broken or removing that
-          // corresponding directory should be considered. While the cost of
-          // marking the directory as broken during a upgrade is too high,
-          // removing the directory is a better choice rather than blocking the
-          // initialization or the upgrade.
-          QM_WARNING(
-              "A URL (%s) for the origin directory is not recognized by "
-              "MozURL. The directory will be deleted for now to pass the "
-              "initialization or the upgrade.",
-              originProps.mSpec.get());
+        nsCOMPtr<nsIURI> uri;
+        QM_TRY(
+            MOZ_TO_RESULT(NS_NewURI(getter_AddRefs(uri), originProps.mSpec)));
 
-          originProps.mType = OriginProps::eObsolete;
-          break;
-        }
+        nsCOMPtr<nsIPrincipal> principal =
+            BasePrincipal::CreateContentPrincipal(uri, originProps.mAttrs);
+        QM_TRY(MOZ_TO_RESULT(principal));
 
-        nsCString originNoSuffix;
-        specURL->Origin(originNoSuffix);
-
-        QM_TRY_INSPECT(
-            const auto& baseDomain,
-            MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCString, specURL, BaseDomain));
-
-        ContentPrincipalInfo contentPrincipalInfo;
-        contentPrincipalInfo.attrs() = originProps.mAttrs;
-        contentPrincipalInfo.originNoSuffix() = originNoSuffix;
-        contentPrincipalInfo.spec() = originProps.mSpec;
-        contentPrincipalInfo.baseDomain() = baseDomain;
-
-        PrincipalInfo principalInfo(contentPrincipalInfo);
+        PrincipalInfo principalInfo;
+        QM_TRY(
+            MOZ_TO_RESULT(PrincipalToPrincipalInfo(principal, &principalInfo)));
 
         QM_TRY_UNWRAP(
             auto principalMetadata,
