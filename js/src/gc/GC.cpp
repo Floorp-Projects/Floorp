@@ -3291,7 +3291,10 @@ void GCRuntime::maybeStopPretenuring() {
     double rate = double(zone->finalizedStrings) / double(numStrings);
     if (rate > tunables.stopPretenureStringThreshold()) {
       CancelOffThreadIonCompile(zone);
-      zone->forceDiscardJitCode(rt->gcContext());
+      bool preserving = zone->isPreservingCode();
+      zone->setPreservingCode(false);
+      zone->discardJitCode(rt->gcContext());
+      zone->setPreservingCode(preserving);
       for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
         if (jit::JitRealm* jitRealm = r->jitRealm()) {
           jitRealm->discardStubs();

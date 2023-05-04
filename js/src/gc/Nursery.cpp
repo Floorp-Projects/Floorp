@@ -862,6 +862,17 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
                   stats().allocsSinceMinorGCTenured());
   }
 
+  if (stats().getStat(gcstats::STAT_NURSERY_STRING_REALMS_DISABLED)) {
+    json.property(
+        "nursery_string_realms_disabled",
+        stats().getStat(gcstats::STAT_NURSERY_STRING_REALMS_DISABLED));
+  }
+  if (stats().getStat(gcstats::STAT_NURSERY_BIGINT_REALMS_DISABLED)) {
+    json.property(
+        "nursery_bigint_realms_disabled",
+        stats().getStat(gcstats::STAT_NURSERY_BIGINT_REALMS_DISABLED));
+  }
+
   json.beginObjectProperty("phase_times");
 
 #define EXTRACT_NAME(name, text) #name,
@@ -1542,8 +1553,11 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
                             reason, JS::GCReason::FULL_CELL_PTR_BIGINT_BUFFER);
   }
 
+  mozilla::Maybe<AutoGCSession> session;
   uint32_t numStringsTenured = 0;
+  uint32_t numNurseryStringRealmsDisabled = 0;
   uint32_t numBigIntsTenured = 0;
+  uint32_t numNurseryBigIntRealmsDisabled = 0;
   for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
     // For some tests in JetStream2 and Kraken, the tenuredRate is high but the
     // number of allocated strings is low. So we calculate the tenuredRate only
@@ -1558,19 +1572,28 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
         allocThreshold ? double(zoneTenuredStrings) / double(zoneNurseryStrings)
                        : 0.0;
     bool disableNurseryStrings =
-        pretenureStr && zone->allocNurseryStrings() &&
+        pretenureStr && zone->allocNurseryStrings &&
         tenuredRate > tunables().pretenureStringThreshold();
-    bool disableNurseryBigInts = pretenureBigInt &&
-                                 zone->allocNurseryBigInts() &&
+    bool disableNurseryBigInts = pretenureBigInt && zone->allocNurseryBigInts &&
                                  zone->tenuredBigInts >= 30 * 1000;
     if (disableNurseryStrings || disableNurseryBigInts) {
+      if (!session.isSome()) {
+        session.emplace(gc, JS::HeapState::MinorCollecting);
+      }
       CancelOffThreadIonCompile(zone);
-      zone->forceDiscardJitCode(rt->gcContext());
+      bool preserving = zone->isPreservingCode();
+      zone->setPreservingCode(false);
+      zone->discardJitCode(rt->gcContext());
+      zone->setPreservingCode(preserving);
       for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
         if (jit::JitRealm* jitRealm = r->jitRealm()) {
           jitRealm->discardStubs();
           if (disableNurseryStrings) {
             jitRealm->setStringsCanBeInNursery(false);
+            numNurseryStringRealmsDisabled++;
+          }
+          if (disableNurseryBigInts) {
+            numNurseryBigIntRealmsDisabled++;
           }
         }
       }
@@ -1586,7 +1609,12 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
     numBigIntsTenured += zone->tenuredBigInts;
     zone->tenuredBigInts = 0;
   }
+  session.reset();  // End the minor GC session, if running one.
+  stats().setStat(gcstats::STAT_NURSERY_STRING_REALMS_DISABLED,
+                  numNurseryStringRealmsDisabled);
   stats().setStat(gcstats::STAT_STRINGS_TENURED, numStringsTenured);
+  stats().setStat(gcstats::STAT_NURSERY_BIGINT_REALMS_DISABLED,
+                  numNurseryBigIntRealmsDisabled);
   stats().setStat(gcstats::STAT_BIGINTS_TENURED, numBigIntsTenured);
 
   return sitesPretenured;

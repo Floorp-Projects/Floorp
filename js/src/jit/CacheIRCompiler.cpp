@@ -5764,7 +5764,10 @@ bool CacheIRCompiler::emitStoreTypedArrayElement(ObjOperandId objId,
 
 static gc::InitialHeap InitialBigIntHeap(JSContext* cx) {
   JS::Zone* zone = cx->zone();
-  return zone->allocNurseryBigInts() ? gc::DefaultHeap : gc::TenuredHeap;
+  bool canNurseryAllocate =
+      zone->runtimeFromAnyThread()->gc.nursery().canAllocateBigInts() &&
+      zone->allocNurseryBigInts;
+  return canNurseryAllocate ? gc::DefaultHeap : gc::TenuredHeap;
 }
 
 static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
