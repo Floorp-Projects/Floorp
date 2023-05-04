@@ -40,6 +40,12 @@ function initSandbox({ pin = true, isDefault = false } = {}) {
   return sandbox;
 }
 
+add_setup(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.aboutwelcome.transitions", false]],
+  });
+});
+
 /**
  * Test MR message telemetry
  */
@@ -348,6 +354,7 @@ add_task(async function test_aboutwelcome_gratitude() {
   // make sure the button navigates to newtab
   await test_screen_content(
     browser,
+    "home",
     //Expected selectors
     ["body.activity-stream"],
 
@@ -460,12 +467,23 @@ add_task(async function test_aboutwelcome_embedded_migration() {
 
     // Recalculate the <panel-list> rect top value relative to the top-left
     // of the selectorRect. We expect the <panel-list> to be tightly anchored
-    // to the bottom of the <button>, so we expect this new value to be 0.
+    // to the bottom of the <button>, so we expect this new value to be close to 0,
+    // to account for subpixel rounding
     let panelTopLeftRelativeToAnchorTopLeft =
       panelRect.top - selectorRect.top - selectorRect.height;
-    Assert.equal(
+
+    function isfuzzy(actual, expected, epsilon, msg) {
+      if (actual >= expected - epsilon && actual <= expected + epsilon) {
+        ok(true, msg);
+      } else {
+        is(actual, expected, msg);
+      }
+    }
+
+    isfuzzy(
       panelTopLeftRelativeToAnchorTopLeft,
       0,
+      1,
       "Panel should be tightly anchored to the bottom of the button shadow node."
     );
   });

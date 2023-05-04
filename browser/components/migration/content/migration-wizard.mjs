@@ -148,7 +148,7 @@ export class MigrationWizard extends HTMLElement {
                 <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
             </div>
-            <moz-button-group class="buttons">
+            <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label" disabled></button>
               <button class="primary finish-button done-button" data-l10n-id="migration-done-button-label"></button>
               <button class="primary finish-button continue-button" data-l10n-id="migration-continue-button-label"></button>
