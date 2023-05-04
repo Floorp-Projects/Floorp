@@ -294,31 +294,35 @@ def verify_required_signoffs(task, taskgraph, scratch_pad, graph_config, paramet
 
 
 @verifications.add("full_task_graph")
-def verify_toolchain_alias(task, taskgraph, scratch_pad, graph_config, parameters):
+def verify_aliases(task, taskgraph, scratch_pad, graph_config, parameters):
     """
-    This function verifies that toolchain aliases are not reused.
+    This function verifies that aliases are not reused.
     """
     if task is None:
         return
+    if task.kind not in ("toolchain", "fetch"):
+        return
+    aliases = scratch_pad.setdefault(task.kind, {})
+    alias_attribute = f"{task.kind}-alias"
     attributes = task.attributes
-    if "toolchain-alias" in attributes:
-        keys = attributes["toolchain-alias"]
+    if alias_attribute in attributes:
+        keys = attributes[alias_attribute]
         if not keys:
             keys = []
         elif isinstance(keys, str):
             keys = [keys]
         for key in keys:
-            if key in scratch_pad:
+            if key in aliases:
                 raise Exception(
-                    "Duplicate toolchain-alias in tasks "
-                    "`{}`and `{}`: {}".format(
+                    "Duplicate {} in tasks `{}`and `{}`: {}".format(
+                        alias_attribute,
                         task.label,
-                        scratch_pad[key],
+                        aliases[key],
                         key,
                     )
                 )
             else:
-                scratch_pad[key] = task.label
+                aliases[key] = task.label
 
 
 @verifications.add("optimized_task_graph")
