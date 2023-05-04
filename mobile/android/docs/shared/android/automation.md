@@ -83,14 +83,12 @@ Signing requires access to Mozilla's signing certificates. In addition to that a
 * [Chain of Trust](http://scriptworker.readthedocs.io/en/latest/chain_of_trust.html)
 * [pushapkscript](https://github.com/mozilla-releng/pushapkscript)
 
-### 📓 Planned: Upload to archive.mozilla.org
+### ✅ Active: Upload to archive.mozilla.org
 
-We want to publish every release on archive.mozilla.org. Currently we upload those builds manually. In automation this will be done by  the beetmover_scriptworker.
+Every release is published on archive.mozilla.org.  Nightly builds go to https://archive.mozilla.org/pub/fenix/nightly/ and https://archive.mozilla.org/pub/focus/nightly/.
+Release builds are uploaded to https://archive.mozilla.org/pub/fenix/releases/ and https://archive.mozilla.org/pub/focus/releases/.
 
-Before we can automate this task we need to automate signing builds and have a chain of trust.
-
-* [beetmover script](https://github.com/mozilla-releng/beetmoverscript/)
-* [beetmover configuration for Fennec](https://github.com/mozilla-releng/beetmoverscript/blob/master/beetmoverscript/templates/fennec_nightly.yml)
+* [beetmover script](https://github.com/mozilla-releng/scriptworker-scripts/tree/master/beetmoverscript/)
 
 ### ✅ Active: Publish
 
@@ -98,7 +96,7 @@ Finally we want to publish a release build on Google Play
 
 Like other scriptworker instances, we can use the existing instance. The current implementation is fennec-specific. We have to add support there too. pushapk_scriptworker mainly delegates checks and uploads to mozapkpublisher. That tool needs Focus support. Working on mozapkpublisher doesn't require any Taskcluster knowledge.
 
-* [pushapkscript](https://github.com/mozilla-releng/pushapkscript)
+* [pushapkscript](https://github.com/mozilla-releng/scriptworker-scripts/tree/master/pushapkscript/)
 * [mozapkpublisher](https://github.com/mozilla-releng/mozapkpublisher)
 
 ## Nightly (Alpha) pipeline

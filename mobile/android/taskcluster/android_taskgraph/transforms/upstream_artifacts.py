@@ -21,7 +21,7 @@ def build_upstream_artifacts(config, tasks):
             "upstream-artifacts": [],
         }
         if "artifact_map" in task["attributes"]:
-            # Beetmover-fenix tasks use declarative artifacts.
+            # Beetmover-apk tasks use declarative artifacts.
             locale = task["attributes"].get("locale")
             build_type = task["attributes"]["build-type"]
             worker_definition[
