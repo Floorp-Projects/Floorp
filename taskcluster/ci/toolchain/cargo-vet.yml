@@ -32,7 +32,6 @@ macosx64-cargo-vet:
         symbol: TM(cargo-vet)
     run:
         arguments: ['x86_64-apple-darwin']
-        toolchain-alias: macosx64-aarch64-cargo-vet
     fetches:
         toolchain:
             - linux64-clang-toolchain
