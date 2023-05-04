@@ -207,7 +207,7 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
                                nsresult aResult);
   void StreamHasDataToWrite(Http3StreamBase* aStream);
   void ResetWebTransportStream(Http3WebTransportStream* aStream,
-                               uint8_t aErrorCode);
+                               uint64_t aErrorCode);
   void StreamStopSending(Http3WebTransportStream* aStream, uint8_t aErrorCode);
 
   void SendDatagram(Http3WebTransportSession* aSession,

@@ -38,6 +38,10 @@ const uint32_t kHttp3VersionCount = 5;
 const nsCString kHttp3Versions[] = {"h3-29"_ns, "h3-30"_ns, "h3-31"_ns,
                                     "h3-32"_ns, "h3"_ns};
 
+// https://datatracker.ietf.org/doc/html/draft-ietf-webtrans-http3/#section-4.3
+constexpr uint64_t kWebTransportErrorCodeStart = 0x52e4a40fa8db;
+constexpr uint64_t kWebTransportErrorCodeEnd = 0x52e4a40fa9e2;
+
 // define storage for all atoms
 namespace nsHttp {
 #define HTTP_ATOM(_name, _value) nsHttpAtom _name(nsLiteralCString{_value});
@@ -1079,6 +1083,42 @@ void CreatePushHashKey(const nsCString& scheme, const nsCString& hostHeader,
   outKey.AppendInt(serial);
   outKey.Append(']');
   outKey.Append(pathInfo);
+}
+
+nsresult GetNSResultFromWebTransportError(uint8_t aErrorCode) {
+  return static_cast<nsresult>((uint32_t)NS_ERROR_WEBTRANSPORT_CODE_BASE +
+                               (uint32_t)aErrorCode);
+}
+
+uint8_t GetWebTransportErrorFromNSResult(nsresult aResult) {
+  if (aResult < NS_ERROR_WEBTRANSPORT_CODE_BASE ||
+      aResult > NS_ERROR_WEBTRANSPORT_CODE_END) {
+    return 0;
+  }
+
+  return static_cast<uint8_t>((uint32_t)aResult -
+                              (uint32_t)NS_ERROR_WEBTRANSPORT_CODE_BASE);
+}
+
+uint64_t WebTransportErrorToHttp3Error(uint8_t aErrorCode) {
+  return kWebTransportErrorCodeStart + aErrorCode + aErrorCode / 0x1e;
+}
+
+uint8_t Http3ErrorToWebTransportError(uint64_t aErrorCode) {
+  // Ensure the code is within the valid range.
+  if (aErrorCode < kWebTransportErrorCodeStart ||
+      aErrorCode > kWebTransportErrorCodeEnd) {
+    return 0;
+  }
+
+  uint64_t shifted = aErrorCode - kWebTransportErrorCodeStart;
+  uint64_t result = shifted - shifted / 0x1f;
+
+  if (result <= std::numeric_limits<uint8_t>::max()) {
+    return (uint8_t)result;
+  }
+
+  return 0;
 }
 
 }  // namespace net
