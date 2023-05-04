@@ -1860,7 +1860,6 @@ module.exports = {
         "toolkit/components/extensions/test/browser/browser_ext_extension_page_tab_navigated.js",
         "toolkit/components/extensions/test/browser/browser_ext_themes_autocomplete_popup.js",
         "toolkit/components/extensions/test/browser/browser_ext_thumbnails_bg_extension.js",
-        "toolkit/components/extensions/test/mochitest/file_simple_xhr.html",
         "toolkit/components/extensions/test/mochitest/file_third_party.html",
         "toolkit/components/extensions/test/mochitest/test_chrome_ext_permissions.html",
         "toolkit/components/extensions/test/mochitest/test_chrome_ext_trackingprotection.html",

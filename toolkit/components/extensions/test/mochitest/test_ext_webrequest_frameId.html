@@ -17,6 +17,12 @@ let extensionData = {
   },
   background() {
     browser.webRequest.onBeforeRequest.addListener(details => {
+      if (details.url.endsWith("/favicon.ico")) {
+        // We don't care about favicon.ico in this test. It is hard to control
+        // whether the request happens.
+        browser.test.log(`Ignoring favicon request: ${details.url}`);
+        return;
+      }
       browser.test.sendMessage("onBeforeRequest", details);
     }, {urls: ["<all_urls>"]}, ["blocking"]);
 
@@ -116,21 +122,7 @@ let expected = {
   },
 };
 
-if (AppConstants.platform != "android") {
-  expected["favicon.ico"] = {
-    type: "image",
-    toplevel: true,
-    origin: "file_simple_xhr.html",
-    cached: false,
-  };
-}
-
 function checkDetails(details) {
-  // See bug 1471387
-  if (details.originUrl == "about:newtab") {
-    return;
-  }
-
   let url = new URL(details.url);
   let filename = url.pathname.split("/").pop();
   ok(filename in expected, `Should be expecting a request for ${filename}`);
@@ -177,6 +169,7 @@ function checkDetails(details) {
     is(details.frameId, parent.subframeId, "expect load in subframe");
     is(details.parentFrameId, parent.parentId, "expect subframe parent");
   }
+  return filename;
 }
 
 add_task(async function test_webRequest_main_frame() {
@@ -194,8 +187,15 @@ add_task(async function test_webRequest_main_frame() {
   let a = addLink(`file_simple_xhr.html?topframe=true&nocache=${Math.random()}`);
   a.click();
 
-  for (let i = 0; i < Object.keys(expected).length; i++) {
-    checkDetails(await extension.awaitMessage("onBeforeRequest"));
+  let remaining = new Set(Object.keys(expected));
+  let totalExpectedCount = remaining.size;
+  for (let i = 0; i < totalExpectedCount; i++) {
+    info(`Waiting for request ${i + 1} out of ${totalExpectedCount}`);
+    info(`Expecting one of: ${Array.from(remaining)}`);
+    let details = await extension.awaitMessage("onBeforeRequest");
+    info(`Checking details for request ${i}: ${JSON.stringify(details)}`);
+    let filename = checkDetails(details);
+    ok(remaining.delete(filename), `Got only one request for ${filename}`);
   }
 
   await extension.awaitMessage("tab-created");
