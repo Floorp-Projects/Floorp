@@ -34,6 +34,7 @@ import os
 import pprint
 import re
 import shutil
+import ssl
 import stat
 import sys
 import tarfile
@@ -46,6 +47,9 @@ from functools import wraps
 from io import BytesIO, open
 from random import random
 from subprocess import PIPE, Popen
+
+if os.name == "nt":
+    import certifi
 
 __version__ = "1.4.0"
 
@@ -383,7 +387,7 @@ def calculate_mac(
     normalized = normalize_string(
         mac_type, timestamp, nonce, method, name, host, port, content_hash
     )
-    log.debug(u"normalized resource for mac calc: {norm}".format(norm=normalized))
+    log.debug("normalized resource for mac calc: {norm}".format(norm=normalized))
     digestmod = getattr(hashlib, algorithm)
 
     if not isinstance(normalized, six_binary_type):
@@ -432,12 +436,12 @@ def make_taskcluster_header(credentials, req):
         content_hash,
     )
 
-    header = u'Hawk mac="{}"'.format(prepare_header_val(mac))
+    header = 'Hawk mac="{}"'.format(prepare_header_val(mac))
 
     if content_hash:  # pragma: no cover
-        header = u'{}, hash="{}"'.format(header, prepare_header_val(content_hash))
+        header = '{}, hash="{}"'.format(header, prepare_header_val(content_hash))
 
-    header = u'{header}, id="{id}", ts="{ts}", nonce="{nonce}"'.format(
+    header = '{header}, id="{id}", ts="{ts}", nonce="{nonce}"'.format(
         header=header,
         id=prepare_header_val(credentials["clientId"]),
         ts=prepare_header_val(timestamp),
@@ -809,9 +813,8 @@ def validate_manifest(manifest_file):
     for f in manifest.file_records:
         if not f.present():
             absent_files.append(f)
-        else:
-            if not f.validate():
-                invalid_files.append(f)
+        elif not f.validate():
+            invalid_files.append(f)
     if len(invalid_files + absent_files) == 0:
         return True
     else:
@@ -881,12 +884,19 @@ def touch(f):
         log.warn("impossible to update utime of file %s" % f)
 
 
+def _urlopen(req):
+    ssl_context = None
+    if os.name == "nt":
+        ssl_context = ssl.create_default_context(cafile=certifi.where())
+    return urllib2.urlopen(req, context=ssl_context)
+
+
 @contextmanager
 @retriable(sleeptime=2)
 def request(url, auth_file=None):
     req = Request(url)
     _authorize(req, auth_file)
-    with closing(urllib2.urlopen(req)) as f:
+    with closing(_urlopen(req)) as f:
         log.debug("opened %s for reading" % url)
         yield f
 
@@ -1299,7 +1309,7 @@ def _send_batch(base_url, auth_file, batch, region):
     req = Request(url, data, {"Content-Type": "application/json"})
     _authorize(req, auth_file)
     try:
-        resp = urllib2.urlopen(req)
+        resp = _urlopen(req)
     except (URLError, HTTPError) as e:
         _log_api_error(e)
         return None
@@ -1347,7 +1357,7 @@ def _notify_upload_complete(base_url, auth_file, file):
     req = Request(urljoin(base_url, "upload/complete/%(algorithm)s/%(digest)s" % file))
     _authorize(req, auth_file)
     try:
-        urllib2.urlopen(req)
+        _urlopen(req)
     except HTTPError as e:
         if e.code != 409:
             _log_api_error(e)
@@ -1449,7 +1459,7 @@ def send_operation_on_file(data, base_urls, digest, auth_file):
     _authorize(req, auth_file)
 
     try:
-        urllib2.urlopen(req)
+        _urlopen(req)
     except (URLError, HTTPError) as e:
         _log_api_error(e)
         return False
