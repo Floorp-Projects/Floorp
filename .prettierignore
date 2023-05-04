@@ -64,9 +64,6 @@ devtools/shared/plural-form.js
 parser/htmlparser/tests/mochitest/broken_xml.xhtml
 parser/htmlparser/tests/mochitest/test_bug563322.xhtml
 
-# Ignore backgroundtasks preferences files.
-toolkit/components/backgroundtasks/defaults
-
 # A mainly-imported file, that we don't want to format, but want to keep an eye
 # on with the other imported files.
 toolkit/components/formautofill/shared/CreditCardRuleset.sys.mjs
@@ -303,9 +300,6 @@ tools/tryselect/selectors/chooser/templates/chooser.html
 
 # Ignore preprocessed *(P)refs.js files in update-packaging.
 tools/update-packaging/**/*refs.js
-
-# Ignore backgroundtasks preferences files.
-toolkit/components/backgroundtasks/defaults
 
 # Ignore pre-generated webpack and typescript transpiled files for translations
 browser/extensions/translations/extension/
