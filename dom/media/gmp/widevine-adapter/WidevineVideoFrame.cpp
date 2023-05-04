@@ -99,18 +99,24 @@ int64_t WidevineVideoFrame::Timestamp() const { return mTimestamp; }
 
 bool WidevineVideoFrame::InitToBlack(int32_t aWidth, int32_t aHeight,
                                      int64_t aTimeStamp) {
-  MOZ_ASSERT(aWidth >= 0 && aHeight >= 0,
-             "Frame dimensions should be positive");
-  CheckedInt<size_t> ySizeChk = aWidth;
-  ySizeChk *= aHeight;
-  // If w*h didn't overflow, half of them won't.
-  const size_t uSize = ((aWidth + 1) / 2) * ((aHeight + 1) / 2);
-  CheckedInt<size_t> yuSizeChk = ySizeChk + uSize;
-  if (!yuSizeChk.isValid()) {
+  if (NS_WARN_IF(aWidth < 0 || aHeight < 0)) {
+    MOZ_ASSERT_UNREACHABLE("Frame dimensions should be positive");
     return false;
   }
+
+  const uint32_t halfWidth = (uint32_t(aWidth) + 1) / 2;
+  CheckedInt<size_t> ySizeChk = aWidth;
+  ySizeChk *= aHeight;
+  CheckedInt<size_t> uSizeChk = halfWidth;
+  uSizeChk *= (uint32_t(aHeight) + 1) / 2;
+  CheckedInt<size_t> yuSizeChk = ySizeChk + uSizeChk;
+  if (NS_WARN_IF(!yuSizeChk.isValid())) {
+    return false;
+  }
+
   WidevineBuffer* buffer = new WidevineBuffer(yuSizeChk.value());
-  const size_t& ySize = ySizeChk.value();
+  const size_t ySize = ySizeChk.value();
+  const size_t uSize = uSizeChk.value();
   // Black in YCbCr is (0,128,128).
   memset(buffer->Data(), 0, ySize);
   memset(buffer->Data() + ySize, 128, uSize);
@@ -126,9 +132,9 @@ bool WidevineVideoFrame::InitToBlack(int32_t aWidth, int32_t aHeight,
   // Note: U and V planes are stored at the same place in order to
   // save memory since their contents are the same.
   SetPlaneOffset(cdm::VideoPlane::kUPlane, ySize);
-  SetStride(cdm::VideoPlane::kUPlane, (aWidth + 1) / 2);
+  SetStride(cdm::VideoPlane::kUPlane, halfWidth);
   SetPlaneOffset(cdm::VideoPlane::kVPlane, ySize);
-  SetStride(cdm::VideoPlane::kVPlane, (aWidth + 1) / 2);
+  SetStride(cdm::VideoPlane::kVPlane, halfWidth);
   SetTimestamp(aTimeStamp);
   return true;
 }
