@@ -55,6 +55,97 @@ function assertVisibleContextMenuItems(contextMenu, expected) {
   is(visibleItems.length, expected, `expected ${expected} visible menu items`);
 }
 
+function assertOrderOfWidgetsInPanel(extensions, win = window) {
+  const widgetIds = CustomizableUI.getWidgetIdsInArea(
+    CustomizableUI.AREA_ADDONS
+  ).filter(
+    widgetId => !!CustomizableUI.getWidget(widgetId).forWindow(win).node
+  );
+  const widgetIdsFromExtensions = extensions.map(ext =>
+    AppUiTestInternals.getBrowserActionWidgetId(ext.id)
+  );
+
+  Assert.deepEqual(
+    widgetIds,
+    widgetIdsFromExtensions,
+    "expected extensions to be ordered"
+  );
+}
+
+async function moveWidgetUp(extension, win = window) {
+  const contextMenu = await openUnifiedExtensionsContextMenu(extension.id, win);
+  const hidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  contextMenu.activateItem(
+    contextMenu.querySelector(".unified-extensions-context-menu-move-widget-up")
+  );
+  await hidden;
+}
+
+async function moveWidgetDown(extension, win = window) {
+  const contextMenu = await openUnifiedExtensionsContextMenu(extension.id, win);
+  const hidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  contextMenu.activateItem(
+    contextMenu.querySelector(
+      ".unified-extensions-context-menu-move-widget-down"
+    )
+  );
+  await hidden;
+}
+
+async function pinToToolbar(extension, win = window) {
+  const contextMenu = await openUnifiedExtensionsContextMenu(extension.id, win);
+  const pinToToolbarItem = contextMenu.querySelector(
+    ".unified-extensions-context-menu-pin-to-toolbar"
+  );
+  ok(pinToToolbarItem, "expected 'pin to toolbar' menu item");
+
+  const hidden = BrowserTestUtils.waitForEvent(
+    win.gUnifiedExtensions.panel,
+    "popuphidden",
+    true
+  );
+  contextMenu.activateItem(pinToToolbarItem);
+  await hidden;
+}
+
+async function assertMoveContextMenuItems(
+  ext,
+  { expectMoveUpHidden, expectMoveDownHidden, expectOrder },
+  win = window
+) {
+  const extName = WebExtensionPolicy.getByID(ext.id).name;
+  info(`Assert Move context menu items visibility for ${extName}`);
+  const contextMenu = await openUnifiedExtensionsContextMenu(ext.id, win);
+  const moveUp = contextMenu.querySelector(
+    ".unified-extensions-context-menu-move-widget-up"
+  );
+  const moveDown = contextMenu.querySelector(
+    ".unified-extensions-context-menu-move-widget-down"
+  );
+  ok(moveUp, "expected 'move up' item in the context menu");
+  ok(moveDown, "expected 'move down' item in the context menu");
+
+  is(
+    BrowserTestUtils.is_hidden(moveUp),
+    expectMoveUpHidden,
+    `expected 'move up' item to be ${expectMoveUpHidden ? "hidden" : "visible"}`
+  );
+  is(
+    BrowserTestUtils.is_hidden(moveDown),
+    expectMoveDownHidden,
+    `expected 'move down' item to be ${
+      expectMoveDownHidden ? "hidden" : "visible"
+    }`
+  );
+  const expectedVisibleItems =
+    5 + (+(expectMoveUpHidden ? 0 : 1) + (expectMoveDownHidden ? 0 : 1));
+  assertVisibleContextMenuItems(contextMenu, expectedVisibleItems);
+  if (expectOrder) {
+    assertOrderOfWidgetsInPanel(expectOrder, win);
+  }
+  await closeChromeContextMenu(contextMenu.id, null, win);
+}
+
 add_task(async function test_context_menu() {
   const [extension] = createExtensions([{ name: "an extension" }]);
   await extension.startup();
@@ -71,7 +162,7 @@ add_task(async function test_context_menu() {
   const messageDeck = item.querySelector(
     ".unified-extensions-item-message-deck"
   );
-  Assert.ok(messageDeck, "expected message deck");
+  ok(messageDeck, "expected message deck");
   is(
     messageDeck.selectedIndex,
     gUnifiedExtensions.MESSAGE_DECK_INDEX_DEFAULT,
@@ -558,22 +649,10 @@ add_task(async function test_pin_to_toolbar() {
   ]);
   await extension.startup();
 
-  // Open the extension panel, then open the context menu for the extension.
+  // Open the extension panel, then open the context menu for the extension and
+  // pin the extension to the toolbar.
   await openExtensionsPanel();
-  const contextMenu = await openUnifiedExtensionsContextMenu(extension.id);
-
-  const pinToToolbarItem = contextMenu.querySelector(
-    ".unified-extensions-context-menu-pin-to-toolbar"
-  );
-  ok(pinToToolbarItem, "expected 'pin to toolbar' menu item");
-
-  const hidden = BrowserTestUtils.waitForEvent(
-    gUnifiedExtensions.panel,
-    "popuphidden",
-    true
-  );
-  contextMenu.activateItem(pinToToolbarItem);
-  await hidden;
+  await pinToToolbar(extension);
 
   // Undo the 'pin to toolbar' action.
   await CustomizableUI.reset();
@@ -622,3 +701,240 @@ add_task(async function test_contextmenu_command_closes_panel() {
 
   await extension.unload();
 });
+
+add_task(async function test_contextmenu_reorder_extensions() {
+  const [ext1, ext2, ext3] = createExtensions([
+    { name: "ext1", browser_action: {} },
+    { name: "ext2", browser_action: {} },
+    { name: "ext3", browser_action: {} },
+  ]);
+  await Promise.all([ext1.startup(), ext2.startup(), ext3.startup()]);
+
+  await openExtensionsPanel();
+
+  // First extension in the list should only have "Move Down".
+  await assertMoveContextMenuItems(ext1, {
+    expectMoveUpHidden: true,
+    expectMoveDownHidden: false,
+  });
+
+  // Second extension in the list should have "Move Up" and "Move Down".
+  await assertMoveContextMenuItems(ext2, {
+    expectMoveUpHidden: false,
+    expectMoveDownHidden: false,
+  });
+
+  // Third extension in the list should only have "Move Up".
+  await assertMoveContextMenuItems(ext3, {
+    expectMoveUpHidden: false,
+    expectMoveDownHidden: true,
+    expectOrder: [ext1, ext2, ext3],
+  });
+
+  // Let's move some extensions now. We'll start by moving ext1 down until it
+  // is positioned at the end of the list.
+  info("Move down ext1 action to the bottom of the list");
+  await moveWidgetDown(ext1);
+  assertOrderOfWidgetsInPanel([ext2, ext1, ext3]);
+  await moveWidgetDown(ext1);
+
+  // Verify that the extension 1 has the right context menu items now that it
+  // is located at the end of the list.
+  await assertMoveContextMenuItems(ext1, {
+    expectMoveUpHidden: false,
+    expectMoveDownHidden: true,
+    expectOrder: [ext2, ext3, ext1],
+  });
+
+  info("Move up ext1 action to the top of the list");
+  await moveWidgetUp(ext1);
+  assertOrderOfWidgetsInPanel([ext2, ext1, ext3]);
+
+  await moveWidgetUp(ext1);
+  assertOrderOfWidgetsInPanel([ext1, ext2, ext3]);
+
+  // Move the last extension up.
+  info("Move up ext3 action");
+  await moveWidgetUp(ext3);
+  assertOrderOfWidgetsInPanel([ext1, ext3, ext2]);
+
+  // Move the last extension up (again).
+  info("Move up ext2 action to the top of the list");
+  await moveWidgetUp(ext2);
+  assertOrderOfWidgetsInPanel([ext1, ext2, ext3]);
+
+  // Move the second extension up.
+  await moveWidgetUp(ext2);
+  assertOrderOfWidgetsInPanel([ext2, ext1, ext3]);
+
+  // Pin an extension to the toolbar, which should remove it from the panel.
+  info("Pin ext1 action to the toolbar");
+  await pinToToolbar(ext1);
+  await openExtensionsPanel();
+  assertOrderOfWidgetsInPanel([ext2, ext3]);
+  await closeExtensionsPanel();
+
+  await Promise.all([ext1.unload(), ext2.unload(), ext3.unload()]);
+  await CustomizableUI.reset();
+});
+
+add_task(async function test_contextmenu_only_one_widget() {
+  const [extension] = createExtensions([{ name: "ext1", browser_action: {} }]);
+  await extension.startup();
+
+  await openExtensionsPanel();
+  await assertMoveContextMenuItems(extension, {
+    expectMoveUpHidden: true,
+    expectMoveDownHidden: true,
+  });
+  await closeExtensionsPanel();
+
+  await extension.unload();
+  await CustomizableUI.reset();
+});
+
+add_task(
+  async function test_contextmenu_reorder_extensions_with_private_window() {
+    // We want a panel in private mode that looks like this one (ext2 is not
+    // allowed in PB mode):
+    //
+    // - ext1
+    // - ext3
+    //
+    // But if we ask CUI to list the widgets in the panel, it would list:
+    //
+    // - ext1
+    // - ext2
+    // - ext3
+    //
+    const ext1 = ExtensionTestUtils.loadExtension({
+      manifest: {
+        name: "ext1",
+        browser_specific_settings: { gecko: { id: "ext1@reorder-private" } },
+        browser_action: {},
+      },
+      useAddonManager: "temporary",
+      incognitoOverride: "spanning",
+    });
+    await ext1.startup();
+
+    const ext2 = ExtensionTestUtils.loadExtension({
+      manifest: {
+        name: "ext2",
+        browser_specific_settings: { gecko: { id: "ext2@reorder-private" } },
+        browser_action: {},
+      },
+      useAddonManager: "temporary",
+      incognitoOverride: "not_allowed",
+    });
+    await ext2.startup();
+
+    const ext3 = ExtensionTestUtils.loadExtension({
+      manifest: {
+        name: "ext3",
+        browser_specific_settings: { gecko: { id: "ext3@reorder-private" } },
+        browser_action: {},
+      },
+      useAddonManager: "temporary",
+      incognitoOverride: "spanning",
+    });
+    await ext3.startup();
+
+    // Make sure all extension widgets are in the correct order.
+    assertOrderOfWidgetsInPanel([ext1, ext2, ext3]);
+
+    const privateWin = await BrowserTestUtils.openNewBrowserWindow({
+      private: true,
+    });
+
+    await openExtensionsPanel(privateWin);
+
+    // First extension in the list should only have "Move Down".
+    await assertMoveContextMenuItems(
+      ext1,
+      {
+        expectMoveUpHidden: true,
+        expectMoveDownHidden: false,
+        expectOrder: [ext1, ext3],
+      },
+      privateWin
+    );
+
+    // Second extension in the list (which is ext3) should only have "Move Up".
+    await assertMoveContextMenuItems(
+      ext3,
+      {
+        expectMoveUpHidden: false,
+        expectMoveDownHidden: true,
+        expectOrder: [ext1, ext3],
+      },
+      privateWin
+    );
+
+    // In private mode, we should only have two CUI widget nodes in the panel.
+    assertOrderOfWidgetsInPanel([ext1, ext3], privateWin);
+
+    info("Move ext1 down");
+    await moveWidgetDown(ext1, privateWin);
+    // The new order in a regular window should be:
+    assertOrderOfWidgetsInPanel([ext2, ext3, ext1]);
+    // ... while the order in the private window should be:
+    assertOrderOfWidgetsInPanel([ext3, ext1], privateWin);
+
+    // Verify that the extension 1 has the right context menu items now that it
+    // is located at the end of the list in PB mode.
+    await assertMoveContextMenuItems(
+      ext1,
+      {
+        expectMoveUpHidden: false,
+        expectMoveDownHidden: true,
+        expectOrder: [ext3, ext1],
+      },
+      privateWin
+    );
+
+    // Verify that the extension 3 has the right context menu items now that it
+    // is located at the top of the list in PB mode.
+    await assertMoveContextMenuItems(
+      ext3,
+      {
+        expectMoveUpHidden: true,
+        expectMoveDownHidden: false,
+        expectOrder: [ext3, ext1],
+      },
+      privateWin
+    );
+
+    info("Move ext3 extension down");
+    await moveWidgetDown(ext3, privateWin);
+    // The new order in a regular window should be:
+    assertOrderOfWidgetsInPanel([ext2, ext1, ext3]);
+    // ... while the order in the private window should be:
+    assertOrderOfWidgetsInPanel([ext1, ext3], privateWin);
+
+    // Pin an extension to the toolbar, which should remove it from the panel.
+    info("Pin ext1 to the toolbar");
+    await pinToToolbar(ext1, privateWin);
+    await openExtensionsPanel(privateWin);
+
+    // The new order in a regular window should be:
+    assertOrderOfWidgetsInPanel([ext2, ext3]);
+    await assertMoveContextMenuItems(
+      ext3,
+      {
+        expectMoveUpHidden: true,
+        expectMoveDownHidden: true,
+        // ... while the order in the private window should be:
+        expectOrder: [ext3],
+      },
+      privateWin
+    );
+
+    await closeExtensionsPanel(privateWin);
+
+    await Promise.all([ext1.unload(), ext2.unload(), ext3.unload()]);
+    await CustomizableUI.reset();
+
+    await BrowserTestUtils.closeWindow(privateWin);
+  }
+);

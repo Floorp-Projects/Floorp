@@ -1616,9 +1616,16 @@ var gUnifiedExtensions = {
     const menuSeparator = menu.querySelector(
       ".unified-extensions-context-menu-management-separator"
     );
+    const moveUp = menu.querySelector(
+      ".unified-extensions-context-menu-move-widget-up"
+    );
+    const moveDown = menu.querySelector(
+      ".unified-extensions-context-menu-move-widget-down"
+    );
 
-    menuSeparator.hidden = !forBrowserAction;
-    pinButton.hidden = !forBrowserAction;
+    for (const element of [menuSeparator, pinButton, moveUp, moveDown]) {
+      element.hidden = !forBrowserAction;
+    }
 
     reportButton.hidden = !gAddonAbuseReportEnabled;
     // We use this syntax instead of async/await to not block this method that
@@ -1634,6 +1641,28 @@ var gUnifiedExtensions = {
       let area = CustomizableUI.getPlacementOfWidget(widgetId).area;
       let inToolbar = area != CustomizableUI.AREA_ADDONS;
       pinButton.setAttribute("checked", inToolbar);
+
+      const placement = CustomizableUI.getPlacementOfWidget(widgetId);
+      const notInPanel = placement?.area !== CustomizableUI.AREA_ADDONS;
+      // We rely on the DOM nodes because CUI widgets will always exist but
+      // not necessarily with DOM nodes created depending on the window. For
+      // example, in PB mode, not all extensions will be listed in the panel
+      // but the CUI widgets may be all created.
+      if (
+        notInPanel ||
+        document.querySelector("#unified-extensions-area > :first-child")
+          ?.id === widgetId
+      ) {
+        moveUp.hidden = true;
+      }
+
+      if (
+        notInPanel ||
+        document.querySelector("#unified-extensions-area > :last-child")?.id ===
+          widgetId
+      ) {
+        moveDown.hidden = true;
+      }
     }
 
     ExtensionsUI.originControlsMenu(menu, id);
@@ -1646,6 +1675,16 @@ var gUnifiedExtensions = {
 
   // This is registered on the top-level unified extensions context menu.
   onContextMenuCommand(menu, event) {
+    // Do not close the extensions panel automatically when we move extension
+    // widgets.
+    const { classList } = event.target;
+    if (
+      classList.contains("unified-extensions-context-menu-move-widget-up") ||
+      classList.contains("unified-extensions-context-menu-move-widget-down")
+    ) {
+      return;
+    }
+
     this.togglePanel();
   },
 
@@ -1722,6 +1761,39 @@ var gUnifiedExtensions = {
     CustomizableUI.addWidgetToArea(widgetId, newArea, newPosition);
 
     this.updateAttention();
+  },
+
+  async moveWidget(menu, direction) {
+    // We'll move the widgets based on the DOM node positions. This is because
+    // in PB mode (for example), we might not have the same extensions listed
+    // in the panel but CUI does not know that. As far as CUI is concerned, all
+    // extensions will likely have widgets.
+    const node = menu.triggerNode.closest(".unified-extensions-item");
+
+    // Find the element that is before or after the current widget/node to
+    // move. `element` might be `null`, e.g. if the current node is the first
+    // one listed in the panel (though it shouldn't be possible to call this
+    // method in this case).
+    let element;
+    if (direction === "up" && node.previousElementSibling) {
+      element = node.previousElementSibling;
+    } else if (direction === "down" && node.nextElementSibling) {
+      element = node.nextElementSibling;
+    }
+
+    // Now we need to retrieve the position of the CUI placement.
+    const placement = CustomizableUI.getPlacementOfWidget(element?.id);
+    if (placement) {
+      let newPosition = placement.position;
+      // That, I am not sure why this is required but it looks like we need to
+      // always add one to the current position if we want to move a widget
+      // down in the list.
+      if (direction === "down") {
+        newPosition += 1;
+      }
+
+      CustomizableUI.moveWidgetWithinArea(node.id, newPosition);
+    }
   },
 
   onWidgetAdded(aWidgetId, aArea, aPosition) {
