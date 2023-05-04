@@ -13756,6 +13756,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-driven-animations.enabled")) {
       "scroll(nearest)",
       "scroll(inline nearest)",
       "scroll(vertical root)",
+      "scroll(root horizontal)",
       "view()",
       "view(inline)",
       "view(auto)",
