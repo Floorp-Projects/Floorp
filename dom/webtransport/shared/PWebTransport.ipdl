@@ -10,7 +10,19 @@ using mozilla::TimeStamp from "mozilla/TimeStamp.h";
 
 namespace mozilla {
 namespace dom {
+
+struct UnidirectionalStream {
+  uint64_t streamId;
+  nullable DataPipeSender outStream;
+};
+
+union UnidirectionalStreamResponse {
+  nsresult;
+  UnidirectionalStream;
+};
+
 struct BidirectionalStream {
+  uint64_t streamId;
   nullable DataPipeReceiver inStream;
   nullable DataPipeSender outStream;
 };
@@ -18,6 +30,19 @@ struct BidirectionalStream {
 union BidirectionalStreamResponse {
   nsresult;
   BidirectionalStream;
+};
+
+struct ResetError {
+  nsresult error;
+};
+
+struct StopSendingError {
+  nsresult error;
+};
+
+union StreamResetOrStopSendingError {
+  ResetError;
+  StopSendingError;
 };
 
 async protocol PWebTransport
@@ -28,7 +53,7 @@ async protocol PWebTransport
    */
   async Close(uint32_t code, nsCString reason);
   async CreateUnidirectionalStream(int64_t? sendOrder)
-      returns(nullable DataPipeSender sender);
+      returns(UnidirectionalStreamResponse response);
   async CreateBidirectionalStream(int64_t? sendOrder)
       returns(BidirectionalStreamResponse response);
 
@@ -42,8 +67,8 @@ async protocol PWebTransport
 
  child:
 
-  async IncomingUnidirectionalStream(nullable DataPipeReceiver receive);
-  async IncomingBidirectionalStream(nullable DataPipeReceiver receive, nullable DataPipeSender send);
+  async IncomingUnidirectionalStream(uint64_t streamId, nullable DataPipeReceiver receive);
+  async IncomingBidirectionalStream(uint64_t streamId, nullable DataPipeReceiver receive, nullable DataPipeSender send);
 
   /**
   * IPC for receiving webtransport datagrams
@@ -53,6 +78,9 @@ async protocol PWebTransport
   async IncomingDatagram(uint8_t[] data, TimeStamp receivedTime);
 
   async RemoteClosed(bool cleanly, uint32_t code, nsCString reason);
+
+  async OnStreamResetOrStopSending(uint64_t streamId,
+                                   StreamResetOrStopSendingError error);
 
   async CloseAll()
       returns(nsresult rv);

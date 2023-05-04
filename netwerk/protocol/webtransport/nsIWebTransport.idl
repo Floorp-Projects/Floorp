@@ -88,6 +88,9 @@ interface WebTransportSessionEventListener : nsISupports {
   // object to WebTransportSessionProxy.
   void onIncomingStreamAvailableInternal(in Http3WebTransportStreamPtr aStream);
 
+  void onStopSending(in uint64_t aStreamId, in nsresult aError);
+  void onResetReceived(in uint64_t aStreamId, in nsresult aError);
+
   // When a new datagram has been received.
   void onDatagramReceived(in Array<uint8_t> aData);
 

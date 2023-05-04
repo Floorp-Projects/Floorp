@@ -27,7 +27,8 @@ class WebTransportReceiveStream final : public ReadableStream {
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static already_AddRefed<WebTransportReceiveStream>
   Create(WebTransport* aWebTransport, nsIGlobalObject* aGlobal,
-         mozilla::ipc::DataPipeReceiver* receiver, ErrorResult& aRv);
+         uint64_t aStreamId, mozilla::ipc::DataPipeReceiver* receiver,
+         ErrorResult& aRv);
 
   // WebIDL Boilerplate
   JSObject* WrapObject(JSContext* aCx,

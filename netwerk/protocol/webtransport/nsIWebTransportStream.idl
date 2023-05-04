@@ -48,6 +48,7 @@ interface nsIWebTransportReceiveStream : nsISupports {
   // When true, this indicates that FIN had been received.
   readonly attribute boolean hasReceivedFIN;
   readonly attribute nsIAsyncInputStream inputStream;
+  readonly attribute uint64_t streamId;
 };
 
 [builtinclass, scriptable, uuid(804f245c-52ea-403c-8a78-f751533bdd70)]
@@ -60,6 +61,7 @@ interface nsIWebTransportSendStream : nsISupports {
 
   void getSendStreamStats(in nsIWebTransportStreamStatsCallback aCallback);
   readonly attribute nsIAsyncOutputStream outputStream;
+  readonly attribute uint64_t streamId;
 };
 
 [builtinclass, scriptable, uuid(f9ecb509-36db-4689-97d6-137639a08750)]
@@ -78,4 +80,5 @@ interface nsIWebTransportBidirectionalStream : nsISupports {
 
   readonly attribute nsIAsyncInputStream inputStream;
   readonly attribute nsIAsyncOutputStream outputStream;
+  readonly attribute uint64_t streamId;
 };

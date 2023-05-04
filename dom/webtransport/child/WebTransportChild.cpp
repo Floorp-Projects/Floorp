@@ -40,18 +40,18 @@ void WebTransportChild::CloseAll() {
 }
 
 ::mozilla::ipc::IPCResult WebTransportChild::RecvIncomingBidirectionalStream(
-    const RefPtr<DataPipeReceiver>& aIncoming,
+    const uint64_t& aStreamId, const RefPtr<DataPipeReceiver>& aIncoming,
     const RefPtr<DataPipeSender>& aOutgoing) {
   if (mTransport) {
-    mTransport->NewBidirectionalStream(aIncoming, aOutgoing);
+    mTransport->NewBidirectionalStream(aStreamId, aIncoming, aOutgoing);
   }
   return IPC_OK();
 }
 
 ::mozilla::ipc::IPCResult WebTransportChild::RecvIncomingUnidirectionalStream(
-    const RefPtr<DataPipeReceiver>& aStream) {
+    const uint64_t& aStreamId, const RefPtr<DataPipeReceiver>& aStream) {
   if (mTransport) {
-    mTransport->NewUnidirectionalStream(aStream);
+    mTransport->NewUnidirectionalStream(aStreamId, aStream);
   }
   return IPC_OK();
 }
@@ -59,6 +59,12 @@ void WebTransportChild::CloseAll() {
 ::mozilla::ipc::IPCResult WebTransportChild::RecvIncomingDatagram(
     nsTArray<uint8_t>&& aData, const TimeStamp& aRecvTimeStamp) {
   mTransport->NewDatagramReceived(std::move(aData), aRecvTimeStamp);
+  return IPC_OK();
+}
+
+::mozilla::ipc::IPCResult WebTransportChild::RecvOnStreamResetOrStopSending(
+    const uint64_t& aStreamId, const StreamResetOrStopSendingError& aError) {
+  mTransport->OnStreamResetOrStopSending(aStreamId, aError);
   return IPC_OK();
 }
 

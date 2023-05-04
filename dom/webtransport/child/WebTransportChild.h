@@ -33,14 +33,19 @@ class WebTransportChild : public PWebTransportChild {
                                              const nsACString& aReason);
 
   ::mozilla::ipc::IPCResult RecvIncomingBidirectionalStream(
+      const uint64_t& aStreamId,
       const RefPtr<mozilla::ipc::DataPipeReceiver>& aIncoming,
       const RefPtr<mozilla::ipc::DataPipeSender>& aOutgoing);
 
   ::mozilla::ipc::IPCResult RecvIncomingUnidirectionalStream(
+      const uint64_t& aStreamId,
       const RefPtr<mozilla::ipc::DataPipeReceiver>& aStream);
 
   ::mozilla::ipc::IPCResult RecvIncomingDatagram(
       nsTArray<uint8_t>&& aData, const TimeStamp& aRecvTimeStamp);
+
+  ::mozilla::ipc::IPCResult RecvOnStreamResetOrStopSending(
+      const uint64_t& aStreamId, const StreamResetOrStopSendingError& aError);
 
  protected:
   WebTransport* mTransport;  // WebTransport holds a strong reference to us, and

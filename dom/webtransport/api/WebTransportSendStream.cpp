@@ -39,7 +39,7 @@ JSObject* WebTransportSendStream::WrapObject(
 // NOTE: this does not yet implement SendOrder; see bug 1816925
 /* static */
 already_AddRefed<WebTransportSendStream> WebTransportSendStream::Create(
-    WebTransport* aWebTransport, nsIGlobalObject* aGlobal,
+    WebTransport* aWebTransport, nsIGlobalObject* aGlobal, uint64_t aStreamId,
     DataPipeSender* sender, ErrorResult& aRv) {
   // https://w3c.github.io/webtransport/#webtransportsendstream-create
   AutoJSAPI jsapi;
@@ -69,7 +69,7 @@ already_AddRefed<WebTransportSendStream> WebTransportSendStream::Create(
   // XXX TODO
 
   // Step 7: Append stream to SendStreams
-  aWebTransport->mSendStreams.AppendElement(stream);
+  aWebTransport->mSendStreams.InsertOrUpdate(aStreamId, stream);
   // Step 8: return stream
   return stream.forget();
 }

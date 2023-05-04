@@ -99,14 +99,16 @@ void WebTransportIncomingStreamsAlgorithms::BuildStream(JSContext* aCx,
     // Step 6: Let internalStream be the result of receiving an incoming
     // unidirectional stream.
     MOZ_ASSERT(mTransport->mUnidirectionalStreams.Length() > 0);
-    RefPtr<DataPipeReceiver> pipe = mTransport->mUnidirectionalStreams[0];
+    std::tuple<uint64_t, RefPtr<mozilla::ipc::DataPipeReceiver>> tuple =
+        mTransport->mUnidirectionalStreams[0];
     mTransport->mUnidirectionalStreams.RemoveElementAt(0);
 
     // Step 7.1: Let stream be the result of creating a
     // WebTransportReceiveStream with internalStream and transport
     RefPtr<WebTransportReceiveStream> readableStream =
-        WebTransportReceiveStream::Create(mTransport, mTransport->mGlobal, pipe,
-                                          aRv);
+        WebTransportReceiveStream::Create(mTransport, mTransport->mGlobal,
+                                          std::get<0>(tuple),
+                                          std::get<1>(tuple), aRv);
     if (MOZ_UNLIKELY(!readableStream)) {
       aRv.ThrowUnknownError("Internal error");
       return;
@@ -129,15 +131,16 @@ void WebTransportIncomingStreamsAlgorithms::BuildStream(JSContext* aCx,
     // Step 6: Let internalStream be the result of receiving a bidirectional
     // stream
     MOZ_ASSERT(mTransport->mBidirectionalStreams.Length() > 0);
-    UniquePtr<BidirectionalPair> pipes =
+    std::tuple<uint64_t, UniquePtr<BidirectionalPair>> tuple =
         std::move(mTransport->mBidirectionalStreams.ElementAt(0));
     mTransport->mBidirectionalStreams.RemoveElementAt(0);
-    RefPtr<DataPipeReceiver> input = pipes->first.forget();
-    RefPtr<DataPipeSender> output = pipes->second.forget();
+    RefPtr<DataPipeReceiver> input = std::get<1>(tuple)->first.forget();
+    RefPtr<DataPipeSender> output = std::get<1>(tuple)->second.forget();
 
     RefPtr<WebTransportBidirectionalStream> stream =
         WebTransportBidirectionalStream::Create(mTransport, mTransport->mGlobal,
-                                                input, output, aRv);
+                                                std::get<0>(tuple), input,
+                                                output, aRv);
 
     // Step 7.2 Enqueue stream to transport.[[IncomingBidirectionalStreams]].
     JS::Rooted<JS::Value> jsStream(aCx);

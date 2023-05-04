@@ -77,6 +77,9 @@ class Http3WebTransportSession final : public Http3StreamBase,
   void OnOutgoingDatagramOutCome(
       uint64_t aId, WebTransportSessionEventListener::DatagramOutcome aOutCome);
 
+  void OnStreamStopSending(uint64_t aId, nsresult aError);
+  void OnStreamReset(uint64_t aId, nsresult aError);
+
  private:
   virtual ~Http3WebTransportSession();
 
