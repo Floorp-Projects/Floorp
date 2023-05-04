@@ -95,8 +95,7 @@ void js::ReleaseAllJITCode(JS::GCContext* gcx) {
   js::CancelOffThreadIonCompile(gcx->runtime());
 
   for (ZonesIter zone(gcx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-    zone->setPreservingCode(false);
-    zone->discardJitCode(gcx);
+    zone->forceDiscardJitCode(gcx);
   }
 
   for (RealmsIter realm(gcx->runtime()); !realm.done(); realm.next()) {
