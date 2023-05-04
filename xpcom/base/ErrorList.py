@@ -447,6 +447,11 @@ with modules["NETWORK"]:
     # Generic error for non-specific failures during service worker interception
     errors["NS_ERROR_INTERCEPTION_FAILED"] = FAILURE(100)
 
+    errors["NS_ERROR_WEBTRANSPORT_CODE_BASE"] = FAILURE(200)
+    errors["NS_ERROR_WEBTRANSPORT_CODE_END"] = (
+        errors["NS_ERROR_WEBTRANSPORT_CODE_BASE"] + 255
+    )
+
     # All Http proxy CONNECT response codes
     errors["NS_ERROR_PROXY_CODE_BASE"] = FAILURE(1000)
     # Redirection 3xx

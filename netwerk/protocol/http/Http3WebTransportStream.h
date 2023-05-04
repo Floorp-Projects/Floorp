@@ -61,7 +61,7 @@ class Http3WebTransportStream final : public Http3StreamBase,
   WebTransportStreamType StreamType() const { return mStreamType; }
 
   void SendFin();
-  void Reset(uint8_t aErrorCode);
+  void Reset(uint64_t aErrorCode);
   void SendStopSending(uint8_t aErrorCode);
 
   already_AddRefed<nsIWebTransportSendStreamStats> GetSendStreamStats();
@@ -121,7 +121,7 @@ class Http3WebTransportStream final : public Http3StreamBase,
   uint64_t mTotalAcknowledged = 0;
   bool mSendFin{false};
   // The error code used to reset the stream. Should be only set once.
-  Maybe<uint8_t> mResetError;
+  Maybe<uint64_t> mResetError;
   // The error code used for STOP_SENDING. Should be only set once.
   Maybe<uint8_t> mStopSendingError;
 
