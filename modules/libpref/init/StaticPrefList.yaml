@@ -2418,7 +2418,7 @@
 
 - name: dom.enable_window_print
   type: bool
-  value: true
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 # Only intended for fuzzing purposes, this will break mozPrintCallback, etc.
