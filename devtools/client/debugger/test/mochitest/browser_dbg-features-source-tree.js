@@ -364,10 +364,10 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
   info("Verify blackbox source icon");
   await selectSource(dbg, "script.js");
   await clickElement(dbg, "blackbox");
-  await waitForDispatch(dbg.store, "BLACKBOX");
+  await waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES");
   assertSourceIcon(dbg, "script.js", "blackBox");
   await clickElement(dbg, "blackbox");
-  await waitForDispatch(dbg.store, "BLACKBOX");
+  await waitForDispatch(dbg.store, "UNBLACKBOX_WHOLE_SOURCES");
   assertSourceIcon(dbg, "script.js", "javascript");
 
   info("Assert the content of the named eval");
