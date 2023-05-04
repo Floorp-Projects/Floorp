@@ -325,7 +325,6 @@ class SourcesTree extends Component {
     const isSourceBlackBoxed = item.source
       ? this.props.blackBoxRanges[item.source.url]
       : null;
-
     return (
       <SourcesTreeItem
         item={item}
