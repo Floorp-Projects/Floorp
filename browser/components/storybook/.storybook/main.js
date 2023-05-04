@@ -48,6 +48,7 @@ module.exports = {
   staticDirs: [
     `${projectRoot}/toolkit/content/widgets/`,
     `${projectRoot}/browser/themes/shared/`,
+    `${projectRoot}/browser/components/firefoxview/`,
   ],
   addons: [
     "@storybook/addon-links",
