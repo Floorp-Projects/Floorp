@@ -79,7 +79,7 @@ module.exports = function(config) {
             "lib/AboutPreferences.jsm": {
               statements: 98,
               lines: 98,
-              functions: 100,
+              functions: 94,
               branches: 66,
             },
             "lib/ASRouter.jsm": {
@@ -97,7 +97,7 @@ module.exports = function(config) {
             "content-src/asrouter/asrouter-utils.js": {
               statements: 66,
               lines: 66,
-              functions: 100,
+              functions: 78,
               branches: 63,
             },
             "lib/TelemetryFeed.jsm": {
@@ -145,13 +145,13 @@ module.exports = function(config) {
             "lib/Screenshots.jsm": {
               statements: 94,
               lines: 94,
-              functions: 100,
+              functions: 75,
               branches: 84,
             },
             "lib/*.jsm": {
               statements: 100,
               lines: 100,
-              functions: 100,
+              functions: 99,
               branches: 84,
             },
             "content-src/components/DiscoveryStreamComponents/**/*.jsx": {
@@ -187,7 +187,7 @@ module.exports = function(config) {
             "content-src/lib/aboutwelcome-utils.js": {
               statements: 50,
               lines: 50,
-              functions: 100,
+              functions: 50,
               branches: 0,
             },
             "content-src/lib/link-menu-options.js": {
@@ -312,7 +312,7 @@ module.exports = function(config) {
           {
             enforce: "post",
             test: /\.js[mx]?$/,
-            loader: "istanbul-instrumenter-loader",
+            loader: "@jsdevtools/coverage-istanbul-loader",
             options: { esModules: true },
             include: [
               path.resolve("content-src"),
