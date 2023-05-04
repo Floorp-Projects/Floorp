@@ -181,14 +181,12 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadData<bool> nurseryStringsDisabled;
   js::MainThreadData<bool> nurseryBigIntsDisabled;
 
- private:
   // Flags dynamically updated based on more than one condition, including the
   // flags above.
-  js::MainThreadData<bool> allocNurseryObjects_;
-  js::MainThreadData<bool> allocNurseryStrings_;
-  js::MainThreadData<bool> allocNurseryBigInts_;
+  js::MainThreadData<bool> allocNurseryObjects;
+  js::MainThreadData<bool> allocNurseryStrings;
+  js::MainThreadData<bool> allocNurseryBigInts;
 
- public:
   // When true, skip calling the metadata callback. We use this:
   // - to avoid invoking the callback recursively;
   // - to avoid observing lazy prototype setup (which confuses callbacks that
@@ -329,10 +327,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void discardJitCode(JS::GCContext* gcx,
                       const DiscardOptions& options = DiscardOptions());
 
-  // Discard JIT code regardless of isPreservingCode().
-  void forceDiscardJitCode(JS::GCContext* gcx,
-                           const DiscardOptions& options = DiscardOptions());
-
   void resetAllocSitesAndInvalidate(bool resetNurserySites,
                                     bool resetPretenuredSites);
 
@@ -471,9 +465,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void fixupScriptMapsAfterMovingGC(JSTracer* trc);
 
   void updateNurseryAllocFlags(const js::Nursery& nursery);
-  bool allocNurseryObjects() const { return allocNurseryObjects_; }
-  bool allocNurseryStrings() const { return allocNurseryStrings_; }
-  bool allocNurseryBigInts() const { return allocNurseryBigInts_; }
 
   mozilla::LinkedList<detail::WeakCacheBase>& weakCaches() {
     return weakCaches_.ref();

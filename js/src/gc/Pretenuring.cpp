@@ -70,6 +70,9 @@ JS_PUBLIC_API void JS::SetSiteBasedPretenuringEnabled(bool enable) {
   SiteBasedPretenuringEnabled = enable;
 }
 
+class PretenuringNursery::MaybeGCSession
+    : public mozilla::Maybe<AutoGCSession> {};
+
 bool PretenuringNursery::canCreateAllocSite() {
   MOZ_ASSERT(allocSitesCreated <= MaxAllocSitesPerMinorGC);
   return SiteBasedPretenuringEnabled &&
@@ -80,6 +83,8 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
                                          bool validPromotionRate,
                                          double promotionRate, bool reportInfo,
                                          size_t reportThreshold) {
+  MaybeGCSession session;
+
   size_t sitesActive = 0;
   size_t sitesPretenured = 0;
   size_t sitesInvalidated = 0;
@@ -123,7 +128,7 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
 
     if (site->isNormal()) {
       processSite(gc, site, sitesActive, sitesPretenured, sitesInvalidated,
-                  reportInfo, reportThreshold);
+                  session, reportInfo, reportThreshold);
     }
 
     site = next;
@@ -156,7 +161,8 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
 void PretenuringNursery::processSite(GCRuntime* gc, AllocSite* site,
                                      size_t& sitesActive,
                                      size_t& sitesPretenured,
-                                     size_t& sitesInvalidated, bool reportInfo,
+                                     size_t& sitesInvalidated,
+                                     MaybeGCSession& session, bool reportInfo,
                                      size_t reportThreshold) {
   sitesActive++;
 
@@ -180,6 +186,11 @@ void PretenuringNursery::processSite(GCRuntime* gc, AllocSite* site,
 
       // We can optimize JIT code before we realise that a site should be
       // pretenured. Make sure we invalidate any existing optimized code.
+
+      if (!session.isSome()) {
+        session.emplace(gc, JS::HeapState::MinorCollecting);
+      }
+
       if (site->hasScript()) {
         wasInvalidated = site->invalidateScript(gc);
         if (wasInvalidated) {

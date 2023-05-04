@@ -172,11 +172,13 @@ void* CompileZone::addressOfNurseryAllocatedSites() {
 }
 
 bool CompileZone::canNurseryAllocateStrings() {
-  return zone()->allocNurseryStrings();
+  return zone()->runtimeFromAnyThread()->gc.nursery().canAllocateStrings() &&
+         zone()->allocNurseryStrings;
 }
 
 bool CompileZone::canNurseryAllocateBigInts() {
-  return zone()->allocNurseryBigInts();
+  return zone()->runtimeFromAnyThread()->gc.nursery().canAllocateBigInts() &&
+         zone()->allocNurseryBigInts;
 }
 
 gc::AllocSite* CompileZone::catchAllAllocSite(JS::TraceKind traceKind,
