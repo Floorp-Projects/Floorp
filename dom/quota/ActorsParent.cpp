@@ -9176,20 +9176,8 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
   QM_TRY(
       CollectEachFile(
           *directory,
-          [originScope =
-               [this] {
-                 OriginScope originScope = mOriginScope.Clone();
-                 if (originScope.IsOrigin()) {
-                   originScope.SetOrigin(
-                       MakeSanitizedOriginCString(originScope.GetOrigin()));
-                 } else if (originScope.IsPrefix()) {
-                   originScope.SetOriginNoSuffix(MakeSanitizedOriginCString(
-                       originScope.GetOriginNoSuffix()));
-                 }
-                 return originScope;
-               }(),
-           aPersistenceType, &aQuotaManager, &directoriesForRemovalRetry,
-           &toBeRemovedDir,
+          [&originScope = mOriginScope, aPersistenceType, &aQuotaManager,
+           &directoriesForRemovalRetry, &toBeRemovedDir,
            this](nsCOMPtr<nsIFile>&& file) -> mozilla::Result<Ok, nsresult> {
             QM_TRY_INSPECT(const auto& leafName,
                            MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoString, file,
@@ -9199,17 +9187,17 @@ void ClearRequestBase::DeleteFiles(QuotaManager& aQuotaManager,
 
             switch (dirEntryKind) {
               case nsIFileKind::ExistsAsDirectory: {
-                // Skip the origin directory if it doesn't match the pattern.
-                if (!originScope.Matches(OriginScope::FromOrigin(
-                        NS_ConvertUTF16toUTF8(leafName)))) {
-                  break;
-                }
-
                 QM_TRY_INSPECT(
                     const auto& metadata,
                     aQuotaManager.LoadFullOriginMetadataWithRestore(file));
 
                 MOZ_ASSERT(metadata.mPersistenceType == aPersistenceType);
+
+                // Skip the origin directory if it doesn't match the pattern.
+                if (!originScope.Matches(
+                        OriginScope::FromOrigin(metadata.mOrigin))) {
+                  break;
+                }
 
                 if (!mClientType.IsNull()) {
                   nsAutoString clientDirectoryName;
