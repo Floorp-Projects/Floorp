@@ -2445,7 +2445,21 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
   // need to handle it here.
   bool doMultistrikeBold = ApplySyntheticBold() && !textDrawer;
   if (doMultistrikeBold) {
-    gfx::Float xscale = CalcXScale(aRunParams.context->GetDrawTarget());
+    // For screen display, we want to try and repeat strikes with an offset of
+    // one device pixel, accounting for zoom or other transforms that may be
+    // in effect, so compute x-axis scale factor from the drawtarget.
+    // However, when generating PDF output the drawtarget's transform does not
+    // really bear any relation to "device pixels", and may result in an
+    // excessively large offset relative to the font size (bug 1823888), so
+    // we limit it based on the used font size to avoid this.
+    // The constant 48.0 reflects the threshold where the calculation in
+    // gfxFont::GetSyntheticBoldOffset() switches to a simple origin-based
+    // slope, though the exact value is somewhat arbitrary; it's selected to
+    // allow a visible amount of boldness while preventing the offset from
+    // becoming "large" in relation to the glyphs.
+    Float xscale =
+        std::min<Float>(GetAdjustedSize() / 48.0,
+                        CalcXScale(aRunParams.context->GetDrawTarget()));
     fontParams.synBoldOnePixelOffset = aRunParams.direction * xscale;
     if (xscale != 0.0) {
       static const int32_t kMaxExtraStrikes = 128;
@@ -2461,6 +2475,9 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
         // use as many strikes as needed for the increased advance
         fontParams.extraStrikes = NS_lroundf(std::max(1.0, extraStrikes));
       }
+    } else {
+      // Degenerate transform?!
+      fontParams.extraStrikes = 0;
     }
   } else {
     fontParams.synBoldOnePixelOffset = 0;
