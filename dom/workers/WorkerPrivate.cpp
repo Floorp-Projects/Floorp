@@ -2777,6 +2777,8 @@ nsresult WorkerPrivate::GetLoadInfo(
     loadInfo.mDomain = aParent->Domain();
     loadInfo.mFromWindow = aParent->IsFromWindow();
     loadInfo.mWindowID = aParent->WindowID();
+    loadInfo.mAssociatedBrowsingContextID =
+        aParent->AssociatedBrowsingContextID();
     loadInfo.mStorageAccess = aParent->StorageAccess();
     loadInfo.mUseRegularPrincipal = aParent->UseRegularPrincipal();
     loadInfo.mHasStorageAccessPermissionGranted =
@@ -2926,6 +2928,8 @@ nsresult WorkerPrivate::GetLoadInfo(
           ReferrerInfo::CreateForFetch(loadInfo.mLoadingPrincipal, document);
       loadInfo.mFromWindow = true;
       loadInfo.mWindowID = globalWindow->WindowID();
+      loadInfo.mAssociatedBrowsingContextID =
+          globalWindow->GetBrowsingContext()->Id();
       loadInfo.mStorageAccess = StorageAllowedForWindow(globalWindow);
       loadInfo.mUseRegularPrincipal = document->UseRegularPrincipal();
       loadInfo.mHasStorageAccessPermissionGranted =

@@ -764,6 +764,10 @@ class WorkerPrivate final
 
   uint64_t WindowID() const { return mLoadInfo.mWindowID; }
 
+  uint64_t AssociatedBrowsingContextID() const {
+    return mLoadInfo.mAssociatedBrowsingContextID;
+  }
+
   uint64_t ServiceWorkerID() const { return GetServiceWorkerDescriptor().Id(); }
 
   const nsCString& ServiceWorkerScope() const {
