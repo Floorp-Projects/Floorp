@@ -110,12 +110,19 @@ def lint(paths, config, binary=None, fix=None, rules=[], setup=None, **lintargs)
 
     # Then run Prettier
     patterns = []
+    arg_wrapper = ""
+    if is_windows():
+        arg_wrapper = '"'
     for p in paths:
         filename, file_extension = os.path.splitext(p)
         if file_extension:
             patterns.append(p)
         else:
-            patterns.append(p + "/**/*.+({})".format("|".join(config["extensions"])))
+            patterns.append(
+                "{}{}/**/*.+({}){}".format(
+                    arg_wrapper, p, "|".join(config["extensions"]), arg_wrapper
+                )
+            )
 
     cmd_args = (
         [
@@ -208,12 +215,8 @@ def run(cmd_args, config):
 
 
 def run_prettier(cmd_args, config, fix):
-
     shell = False
-    if (
-        os.environ.get("MSYSTEM") in ("MINGW32", "MINGW64")
-        or "MOZILLABUILD" in os.environ
-    ):
+    if is_windows():
         # The eslint binary needs to be run from a shell with msys
         shell = True
     encoding = "utf-8"
@@ -279,3 +282,10 @@ def run_prettier(cmd_args, config, fix):
             )
 
     return {"results": results, "fixed": fixed}
+
+
+def is_windows():
+    return (
+        os.environ.get("MSYSTEM") in ("MINGW32", "MINGW64")
+        or "MOZILLABUILD" in os.environ
+    )
