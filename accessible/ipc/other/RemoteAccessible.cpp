@@ -165,6 +165,10 @@ int32_t RemoteAccessible::CaretLineNumber() {
 }
 
 int32_t RemoteAccessible::CaretOffset() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::CaretOffset();
+  }
+
   int32_t offset = 0;
   Unused << mDoc->SendCaretOffset(mID, &offset);
   return offset;
