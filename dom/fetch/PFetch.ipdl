@@ -23,7 +23,6 @@ struct FetchOpArgs{
   CookieJarSettingsArgs? cookieJarSettings;
   bool needOnDataAvailable;
   bool hasCSPEventListener;
-  uint64_t associatedBrowsingContextID;
 };
 
 protocol PFetch {
@@ -46,8 +45,6 @@ protocol PFetch {
     async OnCSPViolationEvent(nsString aJSON);
 
     async OnReportPerformanceTiming(ResponseTiming aTiming);
-
-    async OnNotifyNetworkMonitorAlternateStack(uint64_t aChannelID);
 
     async __delete__(nsresult aResult);
 };

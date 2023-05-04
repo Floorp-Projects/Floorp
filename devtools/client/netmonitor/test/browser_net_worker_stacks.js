@@ -70,6 +70,10 @@ const EXPECTED_REQUESTS = [
       { file: WORKER_URL, line: 18 },
     ],
   },
+  // After enabling PFetch, we lose the link between the channel of the parent
+  // process and the tab.
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1819570
+  /*
   {
     method: "GET",
     url: HTTPS_EXAMPLE_URL + "missing.txt",
@@ -80,6 +84,7 @@ const EXPECTED_REQUESTS = [
       { file: WORKER_URL, line: 26 },
     ],
   },
+  */
 ];
 
 add_task(async function() {
