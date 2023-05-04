@@ -219,7 +219,7 @@ open class FakeContext(
     override fun startService(service: Intent?): ComponentName? = throw NotImplementedError()
     override fun startForegroundService(service: Intent?): ComponentName? = throw NotImplementedError()
     override fun stopService(service: Intent?): Boolean = throw NotImplementedError()
-    override fun bindService(service: Intent?, conn: ServiceConnection, flags: Int): Boolean =
+    override fun bindService(service: Intent, conn: ServiceConnection, flags: Int): Boolean =
         throw NotImplementedError()
     override fun unbindService(conn: ServiceConnection) = throw NotImplementedError()
     override fun startInstrumentation(
