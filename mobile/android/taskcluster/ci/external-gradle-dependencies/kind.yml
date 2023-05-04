@@ -27,7 +27,7 @@ task-defaults:
         resources:
             - taskcluster/scripts/toolchain/external-gradle-dependencies.sh
             - taskcluster/scripts/toolchain/external-gradle-dependencies/**
-            - android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt
+            - android-components/plugins/dependencies/src/main/java/**
             - android-components/build.gradle
             - android-components/gradle/wrapper/gradle-wrapper.properties
         toolchain-artifact: public/build/external-gradle-dependencies.tar.xz
