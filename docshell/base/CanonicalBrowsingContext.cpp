@@ -330,6 +330,10 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetDisplayMode(GetDisplayMode());
   txn.SetForceDesktopViewport(GetForceDesktopViewport());
 
+  // Propagate the default load flags so that the TRR mode flags are forwarded
+  // to the new browsing context. See bug 1828643.
+  txn.SetDefaultLoadFlags(GetDefaultLoadFlags());
+
   // As this is a different BrowsingContext, set InitialSandboxFlags to the
   // current flags in the new context so that they also apply to any initial
   // about:blank documents created in it.
