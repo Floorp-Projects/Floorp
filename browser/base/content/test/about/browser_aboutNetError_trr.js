@@ -91,19 +91,7 @@ add_task(async function TRROnlyExceptionButtonTelemetry() {
       doc.documentURI.startsWith("about:neterror"),
       "Should be showing error page"
     );
-
-    let buttons = ["neterrorTryAgainButton", "trrSettingsButton"];
-    for (let buttonId of buttons) {
-      let button = doc.getElementById(buttonId);
-      button.click();
-    }
   });
-
-  is(
-    gBrowser.tabs.length,
-    3,
-    "Should open about:preferences#privacy-doh in another tab"
-  );
 
   let loadEvent = await TestUtils.waitForCondition(() => {
     let events = Services.telemetry.snapshotEvents(
@@ -126,15 +114,38 @@ add_task(async function TRROnlyExceptionButtonTelemetry() {
     },
   ]);
 
-  let clickEvents = await TestUtils.waitForCondition(() => {
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).content;
-    return events?.filter(
-      e => e[1] == "security.doh.neterror" && e[2] == "click"
-    );
-  }, "recorded telemetry for clicking buttons");
+  await SpecialPowers.spawn(browser, [], function() {
+    const doc = content.document;
+    let buttons = ["neterrorTryAgainButton", "trrSettingsButton"];
+    for (let buttonId of buttons) {
+      let button = doc.getElementById(buttonId);
+      button.click();
+    }
+  });
+
+  // Since we click TryAgain, make sure the error page is loaded again.
+  await BrowserTestUtils.waitForErrorPage(browser);
+
+  is(
+    gBrowser.tabs.length,
+    3,
+    "Should open about:preferences#privacy-doh in another tab"
+  );
+
+  let clickEvents = await TestUtils.waitForCondition(
+    () => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        true
+      ).content;
+      return events?.filter(
+        e => e[1] == "security.doh.neterror" && e[2] == "click"
+      );
+    },
+    "recorded telemetry for clicking buttons",
+    500,
+    100
+  );
 
   let firstEvent = clickEvents[0];
   firstEvent.shift(); // remove timestamp
