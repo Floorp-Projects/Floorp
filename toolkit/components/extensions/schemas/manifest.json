@@ -183,20 +183,22 @@
               "browser_style": {
                 "type": "boolean",
                 "optional": true,
-                "description": "Defaults to true in Manifest V2; Deprecated in Manifest V3."
+                "default": true
               },
               "chrome_style": {
                 "type": "boolean",
-                "optional": true,
-                "max_manifest_version": 2,
-                "description": "chrome_style is ignored in Firefox. Its replacement (browser_style) has been deprecated."
+                "optional": true
               },
               "open_in_tab": {
                 "type": "boolean",
                 "optional": true
               }
             },
-            "additionalProperties": { "$ref": "UnrecognizedProperty" }
+
+            "additionalProperties": {
+              "type": "any",
+              "deprecated": "An unexpected property was found in the WebExtension manifest"
+            }
           },
 
           "content_scripts": {
