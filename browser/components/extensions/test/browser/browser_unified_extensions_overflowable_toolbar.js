@@ -1352,3 +1352,40 @@ add_task(async function test_overflow_with_extension_in_collapsed_area() {
 
   await BrowserTestUtils.closeWindow(win);
 });
+
+add_task(async function test_overflowed_extension_cannot_be_moved() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let extensionID;
+
+  await withWindowOverflowed(win, {
+    whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+      const secondExtensionWidget = unifiedExtensionList.children[1];
+      Assert.ok(secondExtensionWidget, "expected an extension widget");
+      extensionID = secondExtensionWidget.dataset.extensionid;
+
+      await openExtensionsPanel(win);
+      const contextMenu = await openUnifiedExtensionsContextMenu(
+        extensionID,
+        win
+      );
+      Assert.ok(contextMenu, "expected a context menu");
+
+      const moveUp = contextMenu.querySelector(
+        ".unified-extensions-context-menu-move-widget-up"
+      );
+      Assert.ok(moveUp, "expected 'move up' item in the context menu");
+      Assert.ok(moveUp.hidden, "expected 'move up' item to be hidden");
+
+      const moveDown = contextMenu.querySelector(
+        ".unified-extensions-context-menu-move-widget-down"
+      );
+      Assert.ok(moveDown, "expected 'move down' item in the context menu");
+      Assert.ok(moveDown.hidden, "expected 'move down' item to be hidden");
+
+      await closeChromeContextMenu(contextMenu.id, null, win);
+      await closeExtensionsPanel(win);
+    },
+  });
+
+  await BrowserTestUtils.closeWindow(win);
+});
