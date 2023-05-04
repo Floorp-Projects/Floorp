@@ -564,7 +564,6 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   // If any of the following conditions are met,
   // return a promise rejected with a newly created InvalidModificationError:
 
-  bool compatModeAllowedRidChange = false;
   // encodings.length is different from N.
   if (paramsCopy.mEncodings.Length() != oldParams->mEncodings.Length()) {
     nsCString error("Cannot change the number of encodings with setParameters");
@@ -577,7 +576,10 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
       p->MaybeRejectWithInvalidModificationError(error);
       return p.forget();
     }
-    compatModeAllowedRidChange = true;
+    // Make sure we don't use the old rids in SyncToJsep while we wait for the
+    // queued task below to update mParameters.
+    mPendingRidChangeFromCompatMode = true;
+    mSimulcastEnvelopeSet = true;
     if (!mHaveWarnedBecauseEncodingCountChange) {
       mHaveWarnedBecauseEncodingCountChange = true;
       mozilla::glean::rtcrtpsender_setparameters::warn_length_changed
@@ -719,10 +721,6 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   uint32_t serialNumber = ++mNumSetParametersCalls;
   MaybeUpdateConduit();
 
-  if (compatModeAllowedRidChange) {
-    mSimulcastEnvelopeSet = true;
-  }
-
   // If the media stack is successfully configured with parameters,
   // queue a task to run the following steps:
   GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
@@ -738,6 +736,9 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
         // if no subsequent setParameters is pending.
         if (serialNumber == mNumSetParametersCalls) {
           mPendingParameters = Nothing();
+          // Ok, nothing has called SyncToJsep while this async task was
+          // pending. No need for special handling anymore.
+          mPendingRidChangeFromCompatMode = false;
         }
         MOZ_ASSERT(mParameters.mEncodings.Length());
         // Resolve p with undefined.
@@ -972,6 +973,7 @@ void RTCRtpSender::MaybeGetJsepRids() {
       mParameters.mEncodings = ToSendEncodings(jsepRids);
     }
     mSimulcastEnvelopeSet = true;
+    mSimulcastEnvelopeSetByJSEP = true;
   }
 }
 
@@ -1276,8 +1278,20 @@ void RTCRtpSender::SyncFromJsep(const JsepTransceiver& aJsepTransceiver) {
     // Spec says that we do not update our encodings until we're in stable,
     // _unless_ this is the first negotiation.
     std::vector<std::string> rids = aJsepTransceiver.mSendTrack.GetRids();
-    mParameters.mEncodings = GetMatchingEncodings(rids);
-    MOZ_ASSERT(mParameters.mEncodings.Length());
+    if (mSimulcastEnvelopeSetByJSEP && rids.empty()) {
+      // JSEP previously set the simulcast envelope, but now it has no opinion
+      // regarding unicast/simulcast. This can only happen on rollback of the
+      // initial remote offer.
+      mParameters.mEncodings = GetMatchingEncodings(rids);
+      MOZ_ASSERT(mParameters.mEncodings.Length());
+      mSimulcastEnvelopeSetByJSEP = false;
+      mSimulcastEnvelopeSet = false;
+    } else if (!rids.empty()) {
+      // JSEP has an opinion on the simulcast envelope, which trumps anything
+      // we have already.
+      mParameters.mEncodings = GetMatchingEncodings(rids);
+      MOZ_ASSERT(mParameters.mEncodings.Length());
+    }
   }
 
   MaybeUpdateConduit();
@@ -1297,7 +1311,17 @@ void RTCRtpSender::SyncToJsep(JsepTransceiver& aJsepTransceiver) const {
 
   if (mSimulcastEnvelopeSet) {
     std::vector<std::string> rids;
-    for (const auto& encoding : mParameters.mEncodings) {
+    Maybe<RTCRtpSendParameters> parameters;
+    if (mPendingRidChangeFromCompatMode) {
+      // *sigh* If we have just let a setParameters change our rids, but we have
+      // not yet updated mParameters because the queued task hasn't run yet,
+      // we want to set the _new_ rids on the JsepTrack. So, we are forced to
+      // grab them from mPendingParameters.
+      parameters = mPendingParameters;
+    } else {
+      parameters = Some(mParameters);
+    }
+    for (const auto& encoding : parameters->mEncodings) {
       if (encoding.mRid.WasPassed()) {
         rids.push_back(NS_ConvertUTF16toUTF8(encoding.mRid.Value()).get());
       } else {
