@@ -302,8 +302,19 @@ def verify_aliases(task, taskgraph, scratch_pad, graph_config, parameters):
         return
     if task.kind not in ("toolchain", "fetch"):
         return
-    aliases = scratch_pad.setdefault(task.kind, {})
+    for_kind = scratch_pad.setdefault(task.kind, {})
+    aliases = for_kind.setdefault("aliases", {})
     alias_attribute = f"{task.kind}-alias"
+    if task.label in aliases:
+        raise Exception(
+            "Task `{}` has a {} of `{}`, masking a task of that name.".format(
+                aliases[task.label],
+                alias_attribute,
+                task.label[len(task.kind) + 1 :],
+            )
+        )
+    labels = for_kind.setdefault("labels", set())
+    labels.add(task.label)
     attributes = task.attributes
     if alias_attribute in attributes:
         keys = attributes[alias_attribute]
@@ -312,17 +323,27 @@ def verify_aliases(task, taskgraph, scratch_pad, graph_config, parameters):
         elif isinstance(keys, str):
             keys = [keys]
         for key in keys:
-            if key in aliases:
+            full_key = f"{task.kind}-{key}"
+            if full_key in labels:
+                raise Exception(
+                    "Task `{}` has a {} of `{}`,"
+                    " masking a task of that name.".format(
+                        task.label,
+                        alias_attribute,
+                        key,
+                    )
+                )
+            if full_key in aliases:
                 raise Exception(
                     "Duplicate {} in tasks `{}`and `{}`: {}".format(
                         alias_attribute,
                         task.label,
-                        aliases[key],
+                        aliases[full_key],
                         key,
                     )
                 )
             else:
-                aliases[key] = task.label
+                aliases[full_key] = task.label
 
 
 @verifications.add("optimized_task_graph")
