@@ -12,6 +12,7 @@ module.exports = async function(context, commands) {
   let post_startup_delay = context.options.browsertime.post_startup_delay;
   let page_timeout = context.options.timeouts.pageLoad;
   let ret = false;
+  let expose_profiler = context.options.browsertime.expose_profiler;
 
   context.log.info(
     "Waiting for %d ms (post_startup_delay)",
@@ -27,6 +28,10 @@ module.exports = async function(context, commands) {
     await commands.wait.byTime(page_cycle_delay);
 
     context.log.info("Cycle %d, starting the measure", count);
+    if (expose_profiler === "true") {
+      context.log.info("Custom profiler start!");
+      await commands.profiler.start();
+    }
     await commands.measure.start(url);
 
     context.log.info("Benchmark custom metric collection");
@@ -44,6 +49,10 @@ module.exports = async function(context, commands) {
       data = await commands.js.run(
         "return window.sessionStorage.getItem('benchmark_results');"
       );
+    }
+    if (expose_profiler === "true") {
+      context.log.info("Custom profiler stop!");
+      await commands.profiler.stop();
     }
     if (
       data == null &&

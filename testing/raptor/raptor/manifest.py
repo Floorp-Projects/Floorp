@@ -616,6 +616,7 @@ def get_raptor_test_list(args, oskey):
             "accept_zero_vismet",
             "interactive",
             "host_from_parent",
+            "expose_gecko_profiler",
         ]
         for setting in bool_settings:
             if next_test.get(setting, None) is not None:

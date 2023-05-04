@@ -402,6 +402,9 @@ browsertime-benchmark:
             motionmark-htmlsuite: 1500
             unity-webgl: 1500
             default: 900
+    mozharness:
+        extra-options:
+            - --extra-profiler-run
 
 browsertime-benchmark-wasm:
     description: Raptor (browsertime) WASM benchmarks
@@ -434,6 +437,9 @@ browsertime-benchmark-wasm:
             wasm-godot: 1500
             wasm-godot-baseline: 1500
             default: 900
+    mozharness:
+        extra-options:
+            - --extra-profiler-run
 
 browsertime-youtube-playback:
     description: Browsertime YouTube Playback on Firefox
