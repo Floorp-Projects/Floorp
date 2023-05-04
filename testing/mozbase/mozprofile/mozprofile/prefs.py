@@ -172,12 +172,31 @@ class Preferences(object):
         marker = "##//"  # magical marker
         lines = [i.strip() for i in mozfile.load(path).readlines()]
         _lines = []
+        multi_line_pref = None
         for line in lines:
             # decode bytes in case of URL processing
             if isinstance(line, bytes):
                 line = line.decode()
-            if not line.startswith(pref_setter):
+            pref_start = line.startswith(pref_setter)
+
+            # Handle preferences split over multiple lines
+            # Some lines may include brackets so do our best to ensure this
+            # is an actual expected end of function call by checking for a
+            # semi-colon as well.
+            if pref_start and not ");" in line:
+                multi_line_pref = line
                 continue
+            elif multi_line_pref:
+                multi_line_pref = multi_line_pref + line
+                if ");" in line:
+                    if "//" in multi_line_pref:
+                        multi_line_pref = multi_line_pref.replace("//", marker)
+                    _lines.append(multi_line_pref)
+                    multi_line_pref = None
+                continue
+            elif not pref_start:
+                continue
+
             if "//" in line:
                 line = line.replace("//", marker)
             _lines.append(line)

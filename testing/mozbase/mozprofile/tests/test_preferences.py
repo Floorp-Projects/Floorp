@@ -392,6 +392,15 @@ def test_read_prefs_with_interpolation():
     assert dict(read_prefs) == expected_prefs
 
 
+def test_read_prefs_with_multiline():
+    """test reading preferences from a prefs.js file that contains multiline prefs"""
+
+    path = os.path.join(here, "files", "prefs_with_multiline.js")
+    assert dict(Preferences.read_prefs(path)) == {
+        "browser.long.preference.name.that.causes.the.line.to.wrap": "itislong"
+    }
+
+
 def test_read_prefs_ttw():
     """test reading preferences through the web via wptserve"""
 

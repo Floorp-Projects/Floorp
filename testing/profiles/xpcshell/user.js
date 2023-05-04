@@ -6,8 +6,14 @@
 /* globals user_pref */
 /* eslint quotes: 0 */
 user_pref("app.normandy.api_url", "https://%(server)s/selfsupport-dummy/");
-user_pref("browser.safebrowsing.downloads.remote.url", "https://%(server)s/safebrowsing-dummy");
-user_pref("extensions.systemAddon.update.url", "http://%(server)s/dummy-system-addons.xml");
+user_pref(
+  "browser.safebrowsing.downloads.remote.url",
+  "https://%(server)s/safebrowsing-dummy"
+);
+user_pref(
+  "extensions.systemAddon.update.url",
+  "http://%(server)s/dummy-system-addons.xml"
+);
 // Treat WebExtension API/schema warnings as errors.
 user_pref("extensions.webextensions.warnings-as-errors", true);
 // Always use network provider for geolocation tests
@@ -16,7 +22,10 @@ user_pref("geo.provider.testing", true);
 user_pref("browser.region.network.url", "");
 user_pref("geo.provider.network.compare.url", "");
 user_pref("media.gmp-manager.updateEnabled", false);
-user_pref("media.gmp-manager.url.override", "http://%(server)s/dummy-gmp-manager.xml");
+user_pref(
+  "media.gmp-manager.url.override",
+  "http://%(server)s/dummy-gmp-manager.xml"
+);
 user_pref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy");
 user_pref("telemetry.fog.test.localhost_port", -1);
 // Prevent Remote Settings to issue non local connections.
