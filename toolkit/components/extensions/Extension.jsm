@@ -153,6 +153,28 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+// Deprecation of browser_style, through .supported & .same_as_mv2 prefs:
+// - true true  = warn only: deprecation message only (no behavioral changes).
+// - true false = deprecate: default to false, even if default was true in MV2.
+// - false      = remove: always use false, even when true is specified.
+//                (if .same_as_mv2 is set, also warn if the default changed)
+// Deprecation plan: https://bugzilla.mozilla.org/show_bug.cgi?id=1827910#c1
+// Bug 1830711 will set browser_style_mv3.supported to false.
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "browserStyleMV3supported",
+  "extensions.browser_style_mv3.supported",
+  false
+);
+// Bug 1830710 will set browser_style_mv3.same_as_mv2 to true.
+// Bug 1830711 will then set browser_style_mv3.supported to false.
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "browserStyleMV3sameAsMV2",
+  "extensions.browser_style_mv3.same_as_mv2",
+  false
+);
+
 var {
   GlobalManager,
   IconDetails,
@@ -1289,6 +1311,51 @@ class ExtensionData {
     return lazy.Schemas.normalize(this.rawManifest, manifestType, context);
   }
 
+  #parseBrowserStyleInManifest(manifest, manifestKey, defaultValueInMV2) {
+    const obj = manifest[manifestKey];
+    if (!obj) {
+      return;
+    }
+    const browserStyleIsVoid = obj.browser_style == null;
+    obj.browser_style ??= defaultValueInMV2;
+    if (this.manifestVersion < 3 || !obj.browser_style) {
+      // MV2 (true or false), or MV3 (false set explicitly or default false).
+      // No changes in observed behavior, return now to avoid logspam.
+      return;
+    }
+    // Now there are two cases (MV3 only):
+    // - browser_style was not specified, but defaults to true.
+    // - browser_style was set to true by the extension.
+    //
+    // These will eventually be deprecated. For the deprecation plan, see
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1827910#c1
+    let warning;
+    if (!lazy.browserStyleMV3supported) {
+      obj.browser_style = false;
+      if (browserStyleIsVoid && !lazy.browserStyleMV3sameAsMV2) {
+        // defaultValueInMV2 is true, but there was no intent to use these
+        // defaults. Don't warn.
+        return;
+      }
+      warning = `"browser_style:true" is no longer supported in Manifest Version 3.`;
+    } else {
+      warning = `"browser_style:true" has been deprecated in Manifest Version 3 and will be unsupported in the near future.`;
+    }
+    if (browserStyleIsVoid) {
+      warning += ` While "${manifestKey}.browser_style" was not explicitly specified in manifest.json, its default value was true.`;
+      if (!lazy.browserStyleMV3sameAsMV2) {
+        obj.browser_style = false;
+        warning += ` The default value of "${manifestKey}.browser_style" has changed from true to false in Manifest Version 3.`;
+      } else {
+        warning += ` Its default will change to false in Manifest Version 3 starting from Firefox 115.`;
+      }
+    }
+
+    this.manifestWarning(
+      `Warning processing ${manifestKey}.browser_style: ${warning}`
+    );
+  }
+
   async initializeAddonTypeAndID() {
     if (this.type) {
       // Already initialized.
@@ -1427,6 +1494,17 @@ class ExtensionData {
       this.manifestError(
         "Cannot use browser and/or page actions in hidden add-ons"
       );
+    }
+
+    this.#parseBrowserStyleInManifest(manifest, "options_ui", true);
+    if (this.manifestVersion < 3) {
+      this.#parseBrowserStyleInManifest(manifest, "browser_action", false);
+    } else {
+      this.#parseBrowserStyleInManifest(manifest, "action", false);
+    }
+    this.#parseBrowserStyleInManifest(manifest, "page_action", false);
+    if (AppConstants.MOZ_BUILD_APP === "browser") {
+      this.#parseBrowserStyleInManifest(manifest, "sidebar_action", true);
     }
 
     let apiNames = new Set();
