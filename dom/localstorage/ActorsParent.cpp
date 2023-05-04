@@ -6684,7 +6684,9 @@ nsresult PrepareDatastoreOp::Start() {
     mOriginMetadata.mStorageOrigin =
         std::move(principalMetadata.mStorageOrigin);
     mOriginMetadata.mIsPrivate = principalMetadata.mIsPrivate;
-    mOriginMetadata.mPersistenceType = PERSISTENCE_TYPE_DEFAULT;
+    mOriginMetadata.mPersistenceType = principalMetadata.mIsPrivate
+                                           ? PERSISTENCE_TYPE_PRIVATE
+                                           : PERSISTENCE_TYPE_DEFAULT;
   }
 
   mState = State::Nesting;
@@ -6848,7 +6850,7 @@ nsresult PrepareDatastoreOp::BeginDatastorePreparationInternal() {
 
   // Open directory
   mPendingDirectoryLock = quotaManager->CreateDirectoryLock(
-      PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
+      mOriginMetadata.mPersistenceType, mOriginMetadata,
       mozilla::dom::quota::Client::LS,
       /* aExclusive */ false);
 
