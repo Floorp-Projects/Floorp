@@ -586,6 +586,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mForceInheritPrincipalDropped(rhs.mForceInheritPrincipalDropped),
       mInnerWindowID(rhs.mInnerWindowID),
       mBrowsingContextID(rhs.mBrowsingContextID),
+      mWorkerAssociatedBrowsingContextID(
+          rhs.mWorkerAssociatedBrowsingContextID),
       mFrameBrowsingContextID(rhs.mFrameBrowsingContextID),
       mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone),
       mIsThirdPartyContext(rhs.mIsThirdPartyContext),
@@ -1295,6 +1297,18 @@ LoadInfo::GetBrowsingContextID(uint64_t* aResult) {
 }
 
 NS_IMETHODIMP
+LoadInfo::GetWorkerAssociatedBrowsingContextID(uint64_t* aResult) {
+  *aResult = mWorkerAssociatedBrowsingContextID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetWorkerAssociatedBrowsingContextID(uint64_t aID) {
+  mWorkerAssociatedBrowsingContextID = aID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LoadInfo::GetFrameBrowsingContextID(uint64_t* aResult) {
   *aResult = mFrameBrowsingContextID;
   return NS_OK;
@@ -1311,6 +1325,12 @@ LoadInfo::GetTargetBrowsingContextID(uint64_t* aResult) {
 NS_IMETHODIMP
 LoadInfo::GetBrowsingContext(dom::BrowsingContext** aResult) {
   *aResult = BrowsingContext::Get(mBrowsingContextID).take();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetWorkerAssociatedBrowsingContext(dom::BrowsingContext** aResult) {
+  *aResult = BrowsingContext::Get(mWorkerAssociatedBrowsingContextID).take();
   return NS_OK;
 }
 
