@@ -232,7 +232,7 @@ export class NetErrorChild extends RemotePageChild {
   }
 
   RPMSetTRRDisabledLoadFlags() {
-    this.contentWindow.docShell.defaultLoadFlags |=
+    this.contentWindow.docShell.browsingContext.defaultLoadFlags |=
       Ci.nsIRequest.LOAD_TRR_DISABLED_MODE;
   }
 }
