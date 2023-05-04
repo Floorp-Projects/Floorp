@@ -264,6 +264,13 @@ export var NetworkHelper = {
    */
   getRequestLoadContext(request) {
     try {
+      if (request.loadInfo.workerAssociatedBrowsingContext) {
+        return request.loadInfo.workerAssociatedBrowsingContext;
+      }
+    } catch (ex) {
+      // Ignore.
+    }
+    try {
       return request.notificationCallbacks.getInterface(Ci.nsILoadContext);
     } catch (ex) {
       // Ignore.
