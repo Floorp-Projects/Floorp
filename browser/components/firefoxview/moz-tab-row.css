@@ -1,0 +1,116 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  --mztabrow-text-secondary-color: color-mix(in srgb, currentColor 70%, transparent);
+  --mztabrow-background-color: var(--newtab-background-color, var(--in-content-page-background));
+  --mztabrow-element-background-hover: color-mix(in srgb, var(--mztabrow-background-color) 90%, currentColor);
+  --mztabrow-element-background-active: color-mix(in srgb, var(--mztabrow-background-color) 80%, currentColor);
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: span 6;
+  border-radius: 4px;
+  align-items: stretch;
+  border-radius: 4px;
+}
+
+@media (prefers-contrast) {
+  :host {
+    --mztabrow-element-background-hover: ButtonText;
+    --mztabrow-element-background-active: ButtonText;
+    --mztabrow-text-color-hover: ButtonFace;
+    --mztabrow-text-secondary-color: currentColor;
+  }
+}
+
+.moz-tab-row-main {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: span 5;
+  gap: 16px;
+  border-radius: 4px;
+  align-items: center;
+  padding: 4px 8px;
+  user-select: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.moz-tab-row-main,
+.moz-tab-row-main:visited,
+.moz-tab-row-main:hover:active,
+.moz-tab-row-button {
+  color: inherit;
+}
+
+.moz-tab-row-main:hover,
+.moz-tab-row-button.ghost-button.icon-button:enabled:hover {
+  background-color: var(--mztabrow-element-background-hover);
+  color: var(--mztabrow-text-color-hover);
+}
+
+.moz-tab-row-main:hover:active,
+.moz-tab-row-button.ghost-button.icon-button:enabled:hover:active {
+  background-color: var(--mztabrow-element-background-active);
+}
+
+@media (prefers-contrast) {
+  .moz-tab-row-main,
+  .moz-tab-row-main:hover,
+  .moz-tab-row-main:active {
+    background-color: transparent;
+    border: 1px solid LinkText;
+    color: LinkText;
+  }
+
+  .moz-tab-row-main:visited .moz-tab-row-main:visited:hover {
+    border: 1px solid VisitedText;
+    color: VisitedText;
+  }
+}
+
+.moz-tab-row-favicon {
+  background-size: cover;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  display: inline-block;
+  min-height: 16px;
+  min-width: 16px;
+  position: relative;
+}
+
+.moz-tab-row-title {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moz-tab-row-main:hover .moz-tab-row-title {
+  text-decoration-line: underline;
+}
+
+.moz-tab-row-url {
+  color: var(--mztabrow-text-secondary-color);
+  word-break: break-word;
+  text-decoration-line: underline;
+}
+
+.moz-tab-row-title,
+.moz-tab-row-url {
+  overflow: hidden;
+}
+
+.moz-tab-row-date,
+.moz-tab-row-time {
+  color: var(--mztabrow-text-secondary-color);
+  white-space: nowrap;
+}
+
+.moz-tab-row-url,
+.moz-tab-row-time {
+  font-weight: 400;
+}
+
+.moz-tab-row-button {
+  margin: 0;
+}
