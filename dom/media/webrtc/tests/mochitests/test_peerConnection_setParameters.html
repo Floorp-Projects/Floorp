@@ -55,6 +55,13 @@ function buildMaximumSendEncodings() {
   }
 }
 
+async function queueAWebrtcTask() {
+  const pc = new RTCPeerConnection();
+  pc.addTransceiver('audio');
+  await new Promise(r => pc.onnegotiationneeded = r);
+  pc.close();
+}
+
 // setParameters is mostly tested in wpt, but we test a few
 // implementation-specific things here. Other mochitests check whether the
 // set parameters actually have the desired effect on the media streams.
@@ -238,6 +245,170 @@ const tests = [
     // No overlap in rids -> unicast
     isDeeply(rids, [undefined]);
   },
+
+  async function checkCompatModeSimulcastSetParametersRacesLocalUnicastOffer() {
+    await pushPrefs(
+      ["media.peerconnection.allow_old_setParameters", true]);
+    const pc1 = new RTCPeerConnection();
+    const pc2 = new RTCPeerConnection();
+    const stream = await navigator.mediaDevices.getUserMedia({video: true});
+    const sender = pc1.addTrack(stream.getTracks()[0]);
+    // unicast offer
+    const offer = await pc1.createOffer();
+    const aTask = queueAWebrtcTask();
+    const sldPromise =  pc1.setLocalDescription(offer);
+
+    // Right now, we have aTask queued. The success task for sLD is not queued
+    // yet, because Firefox performs the initial steps on the microtask queue,
+    // which we have not allowed to run yet. Awaiting aTask will first clear
+    // the microtask queue, then run the task queue until aTask is finished.
+    // That _should_ result in the success task for sLD(offer) being queued.
+    await aTask;
+
+    const parameters = sender.getParameters();
+    parameters.encodings[0].rid = "foo";
+    parameters.encodings.push({rid: "bar"});
+    // simulcast setParameters; the task to update [[SendEncodings]] should be
+    // queued after the success task for sLD(offer)
+    await sender.setParameters(parameters);
+    await sldPromise;
+
+    const {encodings} = sender.getParameters();
+    const rids = encodings.map(({rid}) => rid);
+    // Compat mode lets this slide, but won't try to negotiate it since we've
+    // already applied a unicast local offer.
+    isDeeply(rids, ["foo", "bar"]);
+
+    // Let negotiation finish, so we can generate a new offer
+    await pc2.setRemoteDescription(pc1.localDescription);
+    await pc2.setLocalDescription();
+    await pc1.setRemoteDescription(pc2.localDescription);
+
+    const reoffer = await pc1.createOffer();
+    ok(!reoffer.sdp.includes("a=simulcast"), "reoffer should be unicast");
+  },
+
+  async function checkCompatModeSimulcastSetParametersRacesRemoteOffer() {
+    await pushPrefs(
+      ["media.peerconnection.allow_old_setParameters", true]);
+    const pc1 = new RTCPeerConnection();
+    const stream = await navigator.mediaDevices.getUserMedia({video: true});
+    const sender = pc1.addTrack(stream.getTracks()[0]);
+    const parameters = sender.getParameters();
+    parameters.encodings[0].rid = "foo";
+    parameters.encodings.push({rid: "bar"});
+    const p = sender.setParameters(parameters);
+    await pc1.setRemoteDescription({type: "offer", sdp: simulcastOffer});
+    await p;
+    const answer = await pc1.createAnswer();
+
+    const {encodings} = sender.getParameters();
+    const rids = encodings.map(({rid}) => rid);
+    isDeeply(rids, ["foo", "bar"]);
+    ok(answer.sdp.includes("a=simulcast:send foo;bar"), "answer should be simulcast");
+  },
+
+  async function checkCompatModeSimulcastSetParametersRacesLocalAnswer() {
+    await pushPrefs(
+      ["media.peerconnection.allow_old_setParameters", true]);
+    // We do an initial negotiation, and while the local answer is pending,
+    // perform a setParameters on a not-yet-negotiated video sender. The intent
+    // here is to have the success task for sLD(answer) run while the
+    // setParameters is pending.
+    const pc1 = new RTCPeerConnection();
+    const pc2 = new RTCPeerConnection();
+
+    const audioStream = await navigator.mediaDevices.getUserMedia({audio: true});
+    // We use this later on, but set it up now so we don't inadvertently
+    // crank the event loop more than we intend below.
+    const videoStream = await navigator.mediaDevices.getUserMedia({video: true});
+    pc2.addTrack(audioStream.getTracks()[0]);
+    await pc2.setLocalDescription();
+    await pc1.setRemoteDescription(pc2.localDescription);
+    const answer = await pc1.createAnswer();
+    const aTask = queueAWebrtcTask();
+    const sldPromise = pc1.setLocalDescription(answer);
+
+    // Right now, we have aTask queued. The success task for sLD is not queued
+    // yet, because Firefox performs the initial steps on the microtask queue,
+    // which we have not allowed to run yet. Awaiting aTask will first clear
+    // the microtask queue, then run the task queue until aTask is finished.
+    // That _should_ result in the success task for sLD(answer) being queued.
+    await aTask;
+
+    // The success task for sLD(answer) should be queued now. Don't relinquish
+    // the event loop!
+
+    // New sender that has nothing to do with the negotiation in progress.
+    const sender = pc1.addTrack(videoStream.getTracks()[0]);
+    const parameters = sender.getParameters();
+    parameters.encodings[0].rid = "foo";
+    parameters.encodings.push({rid: "bar"});
+
+    // We have not relinquished the event loop, so the sLD(answer) should still
+    // be queued. The task that updates [[SendEncodings]] (from setParameters)
+    // should be queued behind it. Let them both run.
+    await sender.setParameters(parameters);
+    await sldPromise;
+
+    const offer = await pc1.createOffer();
+
+    const {encodings} = sender.getParameters();
+    const rids = encodings.map(({rid}) => rid);
+    isDeeply(rids, ["foo", "bar"]);
+    ok(offer.sdp.includes("a=simulcast:send foo;bar"), "offer should be simulcast");
+  },
+
+  async function checkCompatModeSimulcastSetParametersRacesRemoteAnswer() {
+    await pushPrefs(
+      ["media.peerconnection.allow_old_setParameters", true]);
+    // We do an initial negotiation, and while the remote answer is pending,
+    // perform a setParameters on a not-yet-negotiated video sender. The intent
+    // here is to have the success task for sRD(answer) run while the
+    // setParameters is pending.
+    const pc1 = new RTCPeerConnection();
+    const pc2 = new RTCPeerConnection();
+
+    const audioStream = await navigator.mediaDevices.getUserMedia({audio: true});
+    // We use this later on, but set it up now so we don't inadvertently
+    // crank the event loop more than we intend below.
+    const videoStream = await navigator.mediaDevices.getUserMedia({video: true});
+    pc1.addTrack(audioStream.getTracks()[0]);
+    await pc1.setLocalDescription();
+    await pc2.setRemoteDescription(pc1.localDescription);
+    await pc2.setLocalDescription();
+    const aTask = queueAWebrtcTask();
+    const srdPromise = pc1.setRemoteDescription(pc2.localDescription);
+
+    // Right now, we have aTask queued. The success task for sRD is not queued
+    // yet, because Firefox performs the initial steps on the microtask queue,
+    // which we have not allowed to run yet. Awaiting aTask will first clear
+    // the microtask queue, then run the task queue until aTask is finished.
+    // That _should_ result in the success task for sRD(answer) being queued.
+    await aTask;
+
+    // The success task for sRD(answer) should be queued now. Don't relinquish
+    // the event loop!
+
+    const sender = pc1.addTrack(videoStream.getTracks()[0]);
+    const parameters = sender.getParameters();
+    parameters.encodings[0].rid = "foo";
+    parameters.encodings.push({rid: "bar"});
+
+    // We have not relinquished the event loop, so the sRD(answer) should still
+    // be queued. The task that updates [[SendEncodings]] (from setParameters)
+    // should be queued behind it. Let them both run.
+    await sender.setParameters(parameters);
+    await srdPromise;
+
+    const offer = await pc1.createOffer();
+
+    const {encodings} = sender.getParameters();
+    const rids = encodings.map(({rid}) => rid);
+    isDeeply(rids, ["foo", "bar"]);
+    ok(offer.sdp.includes("a=simulcast:send foo;bar"), "offer should be simulcast");
+  },
+
 ];
 
 runNetworkTest(async () => {
