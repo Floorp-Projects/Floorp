@@ -23,6 +23,11 @@ window.MozXULElement = {
       /* webpackInclude: /.*[\/\\].*\.css$/ */
       `browser/themes/shared/${resourceName}`
     );
+    // eslint-disable-next-line no-unsanitized/method
+    file = await import(
+      /* webpackInclude: /.*[\/\\].*\.css$/ */
+      `browser/components/firefoxview/${resourceName}`
+    );
     return file;
   },
 };
