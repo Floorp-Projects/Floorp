@@ -166,6 +166,7 @@ export function verifyPrefSchema() {
     asyncStore.tabs = [];
     asyncStore.xhrBreakpoints = [];
     asyncStore.eventListenerBreakpoints = undefined;
+    asyncStore.blackboxedRanges = {};
     prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
   }
 }

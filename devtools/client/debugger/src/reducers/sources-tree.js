@@ -66,6 +66,7 @@ export function initialSourcesTreeState() {
   };
 }
 
+// eslint-disable-next-line complexity
 export default function update(state = initialSourcesTreeState(), action) {
   switch (action.type) {
     case "ADD_ORIGINAL_SOURCES": {
@@ -172,8 +173,18 @@ export default function update(state = initialSourcesTreeState(), action) {
     case "SET_PROJECT_DIRECTORY_ROOT":
       const { url, name } = action;
       return updateProjectDirectoryRoot(state, url, name);
-  }
 
+    case "BLACKBOX_WHOLE_SOURCES":
+    case "BLACKBOX_SOURCE_RANGES": {
+      const sources = action.sources || [action.source];
+      return updateBlackbox(state, sources, true);
+    }
+
+    case "UNBLACKBOX_WHOLE_SOURCES": {
+      const sources = action.sources || [action.source];
+      return updateBlackbox(state, sources, false);
+    }
+  }
   return state;
 }
 
@@ -201,6 +212,20 @@ function addThread(state, thread) {
   // (this is also used by sortThreadItems to sort the thread as a Tree in the Browser Toolbox)
   threadItem.thread = thread;
   state.threadItems.sort(sortThreadItems);
+}
+
+function updateBlackbox(state, sources, shouldBlackBox) {
+  const threadItems = [...state.threadItems];
+
+  for (const source of sources) {
+    for (const threadItem of threadItems) {
+      const sourceTreeItem = findSourceInThreadItem(source, threadItem);
+      if (sourceTreeItem) {
+        sourceTreeItem.isBlackBoxed = shouldBlackBox;
+      }
+    }
+  }
+  return { ...state, threadItems };
 }
 
 function updateExpanded(state, action) {
@@ -303,6 +328,29 @@ function addSource(threadItems, source, sourceActor) {
   directoryItem.children.sort(sortItems);
 
   return true;
+}
+/**
+ * Find all the source items in tree
+ * @param {Object} item - Current item node in the tree
+ * @param {Function} callback
+ */
+function findSourceInThreadItem(source, threadItem) {
+  const { displayURL } = source;
+  const { group, path } = displayURL;
+  const groupItem = threadItem.children.find(item => {
+    return item.groupName == group;
+  });
+  if (!groupItem) return null;
+
+  const parentPath = path.substring(0, path.lastIndexOf("/"));
+  const directoryItem = groupItem._allGroupDirectoryItems.find(item => {
+    return item.type == "directory" && item.path == parentPath;
+  });
+  if (!directoryItem) return null;
+
+  return directoryItem.children.find(item => {
+    return item.type == "source" && item.source == source;
+  });
 }
 
 function sortItems(a, b) {
