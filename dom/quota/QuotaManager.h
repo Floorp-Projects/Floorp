@@ -579,6 +579,12 @@ class QuotaManager final : public BackgroundThreadObject {
 
   bool IsSanitizedOriginValid(const nsACString& aSanitizedOrigin);
 
+  Result<nsCString, nsresult> EnsureStorageOriginFromOrigin(
+      const nsACString& aOrigin);
+
+  Result<nsCString, nsresult> GetOriginFromStorageOrigin(
+      const nsACString& aStorageOrigin);
+
   int64_t GenerateDirectoryLockId();
 
   bool ShutdownStarted() const;
@@ -656,6 +662,10 @@ class QuotaManager final : public BackgroundThreadObject {
   // sanitized origin strings. This hash table isn't protected by any mutex but
   // it is only ever touched on the IO thread.
   nsTHashMap<nsCStringHashKey, bool> mValidOrigins;
+
+  // These maps are protected by mQuotaMutex.
+  nsTHashMap<nsCStringHashKey, nsCString> mOriginToStorageOriginMap;
+  nsTHashMap<nsCStringHashKey, nsCString> mStorageOriginToOriginMap;
 
   // This array is populated at initialization time and then never modified, so
   // it can be iterated on any thread.

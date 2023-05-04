@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "mozilla/dom/quota/Client.h"
+#include "mozilla/dom/quota/Constants.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "nsString.h"
 
@@ -34,7 +35,13 @@ struct PrincipalMetadata {
         mOrigin{std::move(aOrigin)},
         mStorageOrigin{std::move(aStorageOrigin)},
         mIsPrivate{aIsPrivate} {
-    MOZ_ASSERT(mOrigin == mStorageOrigin);
+    AssertInvariants();
+  }
+
+  void AssertInvariants() const {
+    MOZ_ASSERT(!StringBeginsWith(mOrigin, kUUIDOriginScheme));
+    MOZ_ASSERT_IF(!mIsPrivate, mOrigin == mStorageOrigin);
+    MOZ_ASSERT_IF(mIsPrivate, mOrigin != mStorageOrigin);
   }
 };
 
