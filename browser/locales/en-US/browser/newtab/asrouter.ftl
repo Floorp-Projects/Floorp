@@ -231,3 +231,10 @@ fox-doodle-pin-secondary = Not now
 
 set-default-pdf-handler-headline = <strong>Your PDFs now open in { -brand-short-name }.</strong> Edit or sign forms directly in your browser. To change, search “PDF” in settings.
 set-default-pdf-handler-primary = Got it
+
+## Device Migration FxA Spotlight
+
+device-migration-fxa-spotlight-header = Using an older device?
+device-migration-fxa-spotlight-body = Back up your data to make sure you don’t lose important info like bookmarks and passwords –– especially if you switch to a new device.
+device-migration-fxa-spotlight-primary-button = How to back up my data
+device-migration-fxa-spotlight-link = Remind me later
