@@ -93,6 +93,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1821993")
     @SmokeTest
     @Test
     fun scanButtonDenyPermissionTest() {
