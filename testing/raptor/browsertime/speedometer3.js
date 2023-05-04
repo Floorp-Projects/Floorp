@@ -13,6 +13,7 @@ module.exports = async function(context, commands) {
   let page_cycle_delay = context.options.browsertime.page_cycle_delay;
   let post_startup_delay = context.options.browsertime.post_startup_delay;
   let page_timeout = context.options.timeouts.pageLoad;
+  let expose_profiler = context.options.browsertime.expose_profiler;
 
   context.log.info(
     "Waiting for %d ms (post_startup_delay)",
@@ -28,6 +29,10 @@ module.exports = async function(context, commands) {
     await commands.wait.byTime(page_cycle_delay);
 
     context.log.info("Cycle %d, starting the measure", count);
+    if (expose_profiler === "true") {
+      context.log.info("Custom profiler start!");
+      await commands.profiler.start();
+    }
     await commands.measure.start(url);
 
     await commands.js.runAndWait(`
@@ -62,6 +67,10 @@ module.exports = async function(context, commands) {
       context.log.info("Waiting %d ms for data from speedometer...", wait_time);
       await commands.wait.byTime(wait_time);
       data_exists = await commands.js.run("return window.testDone;");
+    }
+    if (expose_profiler === "true") {
+      context.log.info("Custom profiler stop!");
+      await commands.profiler.stop();
     }
     if (
       !data_exists &&
