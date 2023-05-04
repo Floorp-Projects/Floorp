@@ -36,7 +36,7 @@
           "browser_style": {
             "type": "boolean",
             "optional": true,
-            "default": false
+            "description": "Deprecated in Manifest V3."
           },
           "default_area": {
             "description": "Defines the location the browserAction will appear by default.  The default location is navbar.",

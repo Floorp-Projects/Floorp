@@ -105,6 +105,7 @@ add_task(async function test_v3_action_context_menu() {
       action: {
         default_title: "Test Action",
         default_popup: "test.html",
+        // TODO bug 1830712: Remove this. Probably not even needed for the test.
         browser_style: true,
       },
     },
