@@ -123,9 +123,13 @@
   background-color: var(--theme-tab-toolbar-background);
 }
 
+.sources-list .tree .blackboxed {
+  color: #806414;
+}
+
 .sources-list .img.blackBox {
   mask-size: 13px;
-  background-color: var(--red-40);
+  background-color: #806414;
 }
 
 .sources-list .tree .label {
