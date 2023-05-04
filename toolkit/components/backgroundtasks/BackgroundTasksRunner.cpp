@@ -5,8 +5,9 @@
 #include "mozilla/BackgroundTasksRunner.h"
 
 #include "base/process_util.h"
-#include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/StaticPrefs_datareporting.h"
+#include "mozilla/StaticPrefs_telemetry.h"
+#include "mozilla/StaticPrefs_toolkit.h"
 #include "nsIFile.h"
 
 #ifdef XP_WIN
@@ -83,8 +84,16 @@ NS_IMETHODIMP BackgroundTasksRunner::RemoveDirectoryInDetachedProcess(
     sleep.AppendInt(testingSleepMs);
     argv.AppendElement(sleep);
   }
-  if (!aMetricsId.IsEmpty() &&
-      StaticPrefs::datareporting_healthreport_uploadEnabled()) {
+
+  bool telemetryEnabled =
+      StaticPrefs::datareporting_healthreport_uploadEnabled() &&
+      // Talos set this to not send telemetry but still enable the code path.
+      // But in this case we just disable it since this telemetry happens
+      // independently from the main process and thus shouldn't be relevant to
+      // performance tests.
+      StaticPrefs::telemetry_fog_test_localhost_port() != -1;
+
+  if (!aMetricsId.IsEmpty() && telemetryEnabled) {
     argv.AppendElement("--metrics-id");
     argv.AppendElement(aMetricsId);
   }
