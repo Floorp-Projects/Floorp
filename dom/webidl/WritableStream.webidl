@@ -7,9 +7,7 @@
  * https://streams.spec.whatwg.org/#ws-class-definition
  */
 
-[Exposed=*,
-//Transferable See Bug 1734240
-]
+[Exposed=*] // [Transferable] - See Bug 1562065
 interface WritableStream {
   [Throws]
   constructor(optional object underlyingSink, optional QueuingStrategy strategy = {});
