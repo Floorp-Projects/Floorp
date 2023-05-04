@@ -8,6 +8,9 @@ browser.jar:
     content/browser/firefoxview.mjs
     content/browser/firefoxview.css
     content/browser/helpers.mjs
+    content/browser/moz-tab-list.css
+    content/browser/moz-tab-list.mjs
+    content/browser/moz-tab-row.css
     content/browser/tab-pickup-container.mjs
     content/browser/tab-pickup-list.mjs
     content/browser/recently-closed-tabs.mjs
