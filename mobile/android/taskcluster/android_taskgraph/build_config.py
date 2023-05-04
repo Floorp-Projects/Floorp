@@ -24,11 +24,6 @@ def get_components():
     ]
 
 
-def get_version():
-    with open(os.path.join(PROJECT_DIR, "version.txt")) as fh:
-        return fh.read().strip()
-
-
 def get_path(component):
     return _read_build_config(ANDROID_COMPONENTS_DIR)["projects"][component]["path"]
 

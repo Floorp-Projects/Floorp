@@ -13,8 +13,6 @@ from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.yaml import load_yaml
 
-from ..release_promotion import read_version_file
-
 cached_load_yaml = memoize(load_yaml)
 
 
@@ -260,7 +258,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
             for key in platforms.keys():
                 resolve_keyed_by(platforms, key, job["label"], platform=platform)
 
-        version = read_version_file()
+        version = config.params["version"]
         upload_date = datetime.fromtimestamp(config.params["build_date"])
 
         if job["attributes"]["build-type"] == "fenix-nightly":
