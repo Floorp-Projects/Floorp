@@ -60,7 +60,7 @@ examples:
 
 static const std::string supported_features[] = {
     "multi-memory", "multi-value", "sign-extension", "saturating-float-to-int",
-    "exceptions",   "memory64",    "extended-const"};
+    "exceptions",   "memory64",    "extended-const", "simd"};
 
 static bool IsFeatureSupported(const std::string& feature) {
   return std::find(std::begin(supported_features), std::end(supported_features),
@@ -100,12 +100,13 @@ static void ParseOptions(int argc, char** argv) {
                        ConvertBackslashToSlash(&s_infile);
                      });
   parser.Parse(argc, argv);
+  s_write_c_options.features = &s_features;
 
   bool any_non_supported_feature = false;
 #define WABT_FEATURE(variable, flag, default_, help)   \
   any_non_supported_feature |=                         \
       (s_features.variable##_enabled() != default_) && \
-      !IsFeatureSupported(flag);
+      s_features.variable##_enabled() && !IsFeatureSupported(flag);
 #include "wabt/feature.def"
 #undef WABT_FEATURE
 

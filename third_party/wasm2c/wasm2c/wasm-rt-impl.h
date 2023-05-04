@@ -30,19 +30,6 @@ extern "C" {
 /** A setjmp buffer used for handling traps. */
 extern WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
 
-#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
-#define WASM_RT_LONGJMP_UNCHECKED(buf, val) siglongjmp(buf, val)
-#else
-#define WASM_RT_LONGJMP_UNCHECKED(buf, val) longjmp(buf, val)
-#endif
-
-#define WASM_RT_LONGJMP(buf, val)                                  \
-  /* Abort on failure as this may be called in the trap handler */ \
-  if (!((buf).initialized))                                        \
-    abort();                                                       \
-  (buf).initialized = false;                                       \
-  WASM_RT_LONGJMP_UNCHECKED((buf).buffer, val)
-
 #if WASM_RT_USE_STACK_DEPTH_COUNT
 /** Saved call stack depth that will be restored in case a trap occurs. */
 extern WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
