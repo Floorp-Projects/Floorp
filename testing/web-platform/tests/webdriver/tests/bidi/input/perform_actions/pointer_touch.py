@@ -1,6 +1,6 @@
 import pytest
 
-from webdriver.bidi.modules.input import Actions
+from webdriver.bidi.modules.input import Actions, get_element_origin
 
 from .. import get_events
 from . import get_inview_center_bidi
@@ -21,7 +21,7 @@ async def test_touch_pointer_properties(
     actions = Actions()
     (
         actions.add_pointer(pointer_type="touch")
-        .pointer_move(x=0, y=0, origin=pointerArea)
+        .pointer_move(x=0, y=0, origin=get_element_origin(pointerArea))
         .pointer_down(
             button=0,
             width=23,
@@ -34,7 +34,7 @@ async def test_touch_pointer_properties(
         .pointer_move(
             x=10,
             y=10,
-            origin=pointerArea,
+            origin=get_element_origin(pointerArea),
             width=39,
             height=35,
             pressure=0.91,
@@ -43,7 +43,7 @@ async def test_touch_pointer_properties(
             twist=345,
         )
         .pointer_up(button=0)
-        .pointer_move(x=80, y=50, origin=pointerArea)
+        .pointer_move(x=80, y=50, origin=get_element_origin(pointerArea))
     )
 
     await bidi_session.input.perform_actions(
@@ -98,7 +98,7 @@ async def test_touch_pointer_properties_tilt_twist(
     actions = Actions()
     (
         actions.add_pointer(pointer_type="touch")
-        .pointer_move(x=0, y=0, origin=pointerArea)
+        .pointer_move(x=0, y=0, origin=get_element_origin(pointerArea))
         .pointer_down(
             button=0,
             width=23,
@@ -111,7 +111,7 @@ async def test_touch_pointer_properties_tilt_twist(
         .pointer_move(
             x=10,
             y=10,
-            origin=pointerArea,
+            origin=get_element_origin(pointerArea),
             width=39,
             height=35,
             pressure=0.91,
@@ -120,7 +120,7 @@ async def test_touch_pointer_properties_tilt_twist(
             twist=345,
         )
         .pointer_up(button=0)
-        .pointer_move(x=80, y=50, origin=pointerArea)
+        .pointer_move(x=80, y=50, origin=get_element_origin(pointerArea))
     )
 
     await bidi_session.input.perform_actions(
