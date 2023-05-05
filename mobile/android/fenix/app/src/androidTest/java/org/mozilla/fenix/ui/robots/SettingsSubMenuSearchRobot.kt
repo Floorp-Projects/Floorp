@@ -29,7 +29,9 @@ import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.endsWith
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.hasCousin
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -118,16 +120,12 @@ class SettingsSubMenuSearchRobot {
             .perform(click())
     }
 
-    fun toggleShowSearchShortcuts() {
-        onView(withId(androidx.preference.R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText("Show search engines")),
-            ),
-        )
-
-        onView(withText("Show search engines"))
-            .perform(click())
-    }
+    fun toggleShowSearchShortcuts() =
+        itemContainingText(getStringResource(R.string.preferences_show_search_engines))
+            .also {
+                it.waitForExists(waitingTimeShort)
+                it.click()
+            }
 
     fun toggleVoiceSearch() {
         onView(withId(androidx.preference.R.id.recycler_view)).perform(
