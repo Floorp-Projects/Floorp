@@ -337,6 +337,16 @@ TRRLoadInfo::GetBrowsingContextID(uint64_t* aResult) {
 }
 
 NS_IMETHODIMP
+TRRLoadInfo::GetWorkerAssociatedBrowsingContextID(uint64_t* aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetWorkerAssociatedBrowsingContextID(uint64_t aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TRRLoadInfo::GetFrameBrowsingContextID(uint64_t* aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -348,6 +358,12 @@ TRRLoadInfo::GetTargetBrowsingContextID(uint64_t* aResult) {
 
 NS_IMETHODIMP
 TRRLoadInfo::GetBrowsingContext(dom::BrowsingContext** aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::GetWorkerAssociatedBrowsingContext(
+    dom::BrowsingContext** aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
