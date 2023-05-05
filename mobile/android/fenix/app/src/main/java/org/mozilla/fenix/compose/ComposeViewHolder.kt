@@ -6,7 +6,6 @@ package org.mozilla.fenix.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
@@ -38,9 +37,6 @@ abstract class ComposeViewHolder(
     open val allowPrivateTheme: Boolean = true
 
     init {
-        composeView.setViewCompositionStrategy(
-            ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed,
-        )
         composeView.setContent {
             FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = allowPrivateTheme)) {
                 Content()

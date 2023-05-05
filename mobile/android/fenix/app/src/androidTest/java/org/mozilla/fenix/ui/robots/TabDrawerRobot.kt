@@ -103,7 +103,7 @@ class TabDrawerRobot {
     fun verifyHalfExpandedRatio() = assertMinisculeHalfExpandedRatio()
     fun verifyBehaviorState(expectedState: Int) = assertBehaviorState(expectedState)
     fun verifyOpenedTabThumbnail() =
-        assertItemWithResIdExists(itemWithResId("$packageName:id/default_tab_thumbnail"))
+        assertItemWithResIdExists(itemWithResId("$packageName:id/mozac_browser_tabstray_thumbnail"))
 
     fun closeTab() {
         closeTabButton().waitForExists(waitingTime)

@@ -37,15 +37,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
-            android:id="@+id/default_tab_thumbnail"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:importantForAccessibility="no"
-            android:padding="22dp"
-            app:srcCompat="@drawable/mozac_ic_globe"
-            app:tint="?iconSecondary" />
-
         <mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
             android:id="@+id/mozac_browser_tabstray_thumbnail"
             android:layout_width="match_parent"
