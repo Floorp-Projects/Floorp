@@ -181,10 +181,6 @@ criteria = "safe-to-deploy"
 version = "0.7.6"
 criteria = "safe-to-deploy"
 
-[[exemptions.aho-corasick]]
-version = "0.7.18"
-criteria = "safe-to-deploy"
-
 [[exemptions.alsa]]
 version = "0.4.3"
 criteria = "safe-to-deploy"
@@ -231,10 +227,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.block]]
 version = "0.1.6"
-criteria = "safe-to-deploy"
-
-[[exemptions.byteorder]]
-version = "1.4.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.bytes]]
@@ -619,10 +611,6 @@ criteria = "safe-to-deploy"
 version = "0.1.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.memchr]]
-version = "2.5.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.memmap2]]
 version = "0.5.4"
 criteria = "safe-to-deploy"
@@ -815,14 +803,6 @@ criteria = "safe-to-deploy"
 version = "0.2.13"
 criteria = "safe-to-deploy"
 
-[[exemptions.regex]]
-version = "1.5.6"
-criteria = "safe-to-deploy"
-
-[[exemptions.regex-syntax]]
-version = "0.6.26"
-criteria = "safe-to-deploy"
-
 [[exemptions.remove_dir_all]]
 version = "0.5.3"
 criteria = "safe-to-deploy"
@@ -853,10 +833,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.rust_decimal]]
 version = "1.24.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.same-file]]
-version = "1.0.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.scopeguard]]
@@ -939,10 +915,6 @@ criteria = "safe-to-deploy"
 version = "3.3.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.termcolor]]
-version = "1.1.3"
-criteria = "safe-to-deploy"
-
 [[exemptions.terminal_size]]
 version = "0.1.17"
 criteria = "safe-to-deploy"
@@ -1019,10 +991,6 @@ criteria = "safe-to-deploy"
 version = "0.8.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.walkdir]]
-version = "2.3.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.warp]]
 version = "0.3.2"
 criteria = "safe-to-run"
@@ -1041,10 +1009,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.winapi-i686-pc-windows-gnu]]
 version = "0.4.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.winapi-util]]
-version = "0.1.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.winapi-x86_64-pc-windows-gnu]]
