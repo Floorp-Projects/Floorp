@@ -1635,16 +1635,8 @@ done:
     /* CN */ "TUBITAK Kamu SM SSL Kok Sertifikasi - Surum 1"
 
 #define TUBITAK1_NAME_CONSTRAINTS                                              \
-    "\x30\x65\xa0\x63"                                                         \
-    "\x30\x09\x82\x07" ".gov.tr"                                               \
-    "\x30\x09\x82\x07" ".k12.tr"                                               \
-    "\x30\x09\x82\x07" ".pol.tr"                                               \
-    "\x30\x09\x82\x07" ".mil.tr"                                               \
-    "\x30\x09\x82\x07" ".tsk.tr"                                               \
-    "\x30\x09\x82\x07" ".kep.tr"                                               \
-    "\x30\x09\x82\x07" ".bel.tr"                                               \
-    "\x30\x09\x82\x07" ".edu.tr"                                               \
-    "\x30\x09\x82\x07" ".org.tr"
+    "\x30\x09\xa0\x07"                                                         \
+    "\x30\x05\x82\x03" ".tr"
 
 /* clang-format on */
 
