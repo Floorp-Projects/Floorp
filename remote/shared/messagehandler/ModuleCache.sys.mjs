@@ -23,12 +23,12 @@ ChromeUtils.defineESModuleGetters(protocols.bidi, {
   // Additional protocols might use a different registry for their modules,
   // in which case this will no longer be a constant but will instead depend on
   // the protocol owning the MessageHandler. See Bug 1722464.
-  getModuleClass:
+  modules:
     "chrome://remote/content/webdriver-bidi/modules/ModuleRegistry.sys.mjs",
 });
 // eslint-disable-next-line mozilla/lazy-getter-object-name
 ChromeUtils.defineESModuleGetters(protocols.test, {
-  getModuleClass:
+  modules:
     "chrome://mochitests/content/browser/remote/shared/messagehandler/test/browser/resources/modules/ModuleRegistry.sys.mjs",
 });
 
@@ -66,32 +66,37 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
  * should simply be forwarded to the next layer of the network.
  */
 export class ModuleCache {
+  #messageHandler;
+  #messageHandlerType;
+  #modules;
+  #protocol;
+
   /*
    * @param {MessageHandler} messageHandler
    *     The MessageHandler instance which owns this ModuleCache instance.
    */
   constructor(messageHandler) {
-    this.messageHandler = messageHandler;
-    this._messageHandlerType = messageHandler.constructor.type;
+    this.#messageHandler = messageHandler;
+    this.#messageHandlerType = messageHandler.constructor.type;
+
+    // Map of absolute module paths to module instances.
+    this.#modules = new Map();
 
     // Use the module class from the WebDriverBiDi ModuleRegistry if we
     // are not using test modules.
-    this._protocol = Services.prefs.getBoolPref(
+    this.#protocol = Services.prefs.getBoolPref(
       "remote.messagehandler.modulecache.useBrowserTestRoot",
       false
     )
       ? protocols.test
       : protocols.bidi;
-
-    // Map of absolute module paths to module instances.
-    this._modules = new Map();
   }
 
   /**
    * Destroy all instantiated modules.
    */
   destroy() {
-    this._modules.forEach(module => module?.destroy());
+    this.#modules.forEach(module => module?.destroy());
   }
 
   /**
@@ -112,19 +117,19 @@ export class ModuleCache {
   getAllModuleClasses(moduleName, destination) {
     const destinationType = destination.type;
     const folders = [
-      this._getModuleFolder(this._messageHandlerType, destinationType),
+      this.#getModuleFolder(this.#messageHandlerType, destinationType),
     ];
 
     // Bug 1733242: Extend the implementation of this method to handle workers.
     // It assumes layers have at most one level of nesting, for instance
     // "root -> windowglobal", but it wouldn't work for something such as
     // "root -> windowglobal -> worker".
-    if (destinationType !== this._messageHandlerType) {
-      folders.push(this._getModuleFolder(destinationType, destinationType));
+    if (destinationType !== this.#messageHandlerType) {
+      folders.push(this.#getModuleFolder(destinationType, destinationType));
     }
 
     return folders
-      .map(folder => this._protocol.getModuleClass(moduleName, folder))
+      .map(folder => this.#getModuleClass(moduleName, folder))
       .filter(cls => !!cls);
   }
 
@@ -146,21 +151,21 @@ export class ModuleCache {
   getModuleInstance(moduleName, destination) {
     const key = `${moduleName}-${destination.type}`;
 
-    if (this._modules.has(key)) {
+    if (this.#modules.has(key)) {
       // If there is already a cached instance (potentially null) for the
       // module name + destination type pair, return it.
-      return this._modules.get(key);
+      return this.#modules.get(key);
     }
 
-    const moduleFolder = this._getModuleFolder(
-      this._messageHandlerType,
+    const moduleFolder = this.#getModuleFolder(
+      this.#messageHandlerType,
       destination.type
     );
-    const ModuleClass = this._protocol.getModuleClass(moduleName, moduleFolder);
+    const ModuleClass = this.#getModuleClass(moduleName, moduleFolder);
 
     let module = null;
     if (ModuleClass) {
-      module = new ModuleClass(this.messageHandler);
+      module = new ModuleClass(this.#messageHandler);
       lazy.logger.trace(
         `Module ${moduleFolder}/${moduleName}.jsm found for ${destination.type}`
       );
@@ -170,7 +175,7 @@ export class ModuleCache {
       );
     }
 
-    this._modules.set(key, module);
+    this.#modules.set(key, module);
     return module;
   }
 
@@ -190,10 +195,39 @@ export class ModuleCache {
   }
 
   toString() {
-    return `[object ${this.constructor.name} ${this.messageHandler.name}]`;
+    return `[object ${this.constructor.name} ${this.#messageHandler.name}]`;
   }
 
-  _getModuleFolder(originType, destinationType) {
+  /**
+   * Retrieve the module class matching the provided module name and folder.
+   *
+   * @param {string} moduleName
+   *     The name of the module to get the class for.
+   * @param {string} moduleFolder
+   *     A valid folder name for modules.
+   * @returns {Class=}
+   *     The class corresponding to the module name and folder, null if no match
+   *     was found.
+   * @throws {Error}
+   *     If the provided module folder is unexpected.
+   */
+  #getModuleClass = function(moduleName, moduleFolder) {
+    if (!this.#protocol.modules[moduleFolder]) {
+      throw new Error(
+        `Invalid module folder "${moduleFolder}", expected one of "${Object.keys(
+          this.#protocol.modules
+        )}"`
+      );
+    }
+
+    if (!this.#protocol.modules[moduleFolder][moduleName]) {
+      return null;
+    }
+
+    return this.#protocol.modules[moduleFolder][moduleName];
+  };
+
+  #getModuleFolder(originType, destinationType) {
     // root messages should always target the root layer.
     // NB: The idea here is just to avoid confusing the module cache when
     // trying to send to `root` from `windowglobal`. The general rule should
