@@ -205,20 +205,20 @@ win64/debug:
         fetch:
             - upx-3.95-win
 
-win64-hybrid/plain:
+win64-non-unified/plain:
     description: "Win64 Hybrid Plain"
     index:
         product: firefox
-        job-name: win64-hybrid-plain
+        job-name: win64-non-unified-plain
     treeherder:
         platform: windows2012-64/debug
-        symbol: Bp-hybrid
+        symbol: Bp-nu
         tier: 1
     worker-type: b-linux-gcp
     worker:
         max-run-time: 7200
         env:
-            PERFHERDER_EXTRA_OPTIONS: hybrid
+            PERFHERDER_EXTRA_OPTIONS: non-unified
     run:
         options: [append-env-variables-from-configs]
         actions: [get-secrets, build]
@@ -227,7 +227,7 @@ win64-hybrid/plain:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-        mozconfig-variant: hybrid
+        mozconfig-variant: non-unified
         extra-config:
             mozconfig_platform: win64
     use-sccache: true

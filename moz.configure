@@ -181,7 +181,7 @@ set_config("DEVELOPER_OPTIONS", developer_options)
 
 option(
     "--disable-unified-build",
-    help="Enable building modules that are not marked with `REQUIRES_UNIFIED_BUILD` in non unified context",
+    help="Enable building modules in non unified context",
 )
 
 set_config("ENABLE_UNIFIED_BUILD", True, when="--disable-unified-build")

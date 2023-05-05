@@ -53,23 +53,23 @@ macosx64/debug:
             - macosx64-sdk
             - sysroot-wasm32-wasi
 
-macosx64-hybrid/plain:
+macosx64-non-unified/plain:
     description: "MacOS X x64 Hybrid Cross-compile"
     index:
-        job-name: macosx64-hybrid
+        job-name: macosx64-non-unified
     treeherder:
         platform: osx-cross/plain
-        symbol: Bp-hybrid
+        symbol: Bp-nu
         tier: 1
     worker:
         max-run-time: 5400
         env:
-            PERFHERDER_EXTRA_OPTIONS: hybrid
+            PERFHERDER_EXTRA_OPTIONS: non-unified
     run:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
-        mozconfig-variant: hybrid
+        mozconfig-variant: non-unified
         extra-config:
             disable_package_metrics: true
     use-sccache: true
