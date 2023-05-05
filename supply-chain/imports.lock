@@ -64,6 +64,34 @@ user-id = 84794
 user-login = "jamienicol"
 user-name = "Jamie Nicol"
 
+[[publisher.headers]]
+version = "0.3.8"
+when = "2022-09-02"
+user-id = 359
+user-login = "seanmonstar"
+user-name = "Sean McArthur"
+
+[[publisher.httparse]]
+version = "1.8.0"
+when = "2022-08-30"
+user-id = 359
+user-login = "seanmonstar"
+user-name = "Sean McArthur"
+
+[[publisher.mime]]
+version = "0.3.16"
+when = "2020-01-07"
+user-id = 359
+user-login = "seanmonstar"
+user-name = "Sean McArthur"
+
+[[publisher.num_cpus]]
+version = "1.15.0"
+when = "2022-12-20"
+user-id = 359
+user-login = "seanmonstar"
+user-name = "Sean McArthur"
+
 [[publisher.ohttp]]
 version = "0.3.1"
 when = "2023-02-23"
