@@ -103,9 +103,16 @@ class NetworkEventStackTracesWatcher {
           channel = subject.QueryInterface(Ci.nsIWebSocketChannel);
           id = channel.serial;
         } catch (e3) {
-          // Channels which don't implement the above interfaces can appear here,
-          // such as nsIFileChannel. Ignore these channels.
-          return;
+          // Try if the channel is a nsIWorkerChannelInfo which is the substitute
+          // of the channel in the parent process.
+          try {
+            channel = subject.QueryInterface(Ci.nsIWorkerChannelInfo);
+            id = channel.channelId;
+          } catch (e4) {
+            // Channels which don't implement the above interfaces can appear here,
+            // such as nsIFileChannel. Ignore these channels.
+            return;
+          }
         }
       }
     }
