@@ -78,6 +78,8 @@ class FetchDriverObserver {
 
   virtual void OnReportPerformanceTiming() {}
 
+  virtual void OnNotifyNetworkMonitorAlternateStack(uint64_t aChannelID) {}
+
  protected:
   virtual ~FetchDriverObserver() = default;
 

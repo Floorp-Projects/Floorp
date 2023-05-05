@@ -152,6 +152,7 @@ class FetchService final : public nsIObserver {
     void OnDataAvailable() override;
     void FlushConsoleReport() override;
     void OnReportPerformanceTiming() override;
+    void OnNotifyNetworkMonitorAlternateStack(uint64_t aChannelID) override;
 
    private:
     ~FetchInstance() = default;
