@@ -3249,6 +3249,57 @@ security.doh.neterror:
       provider_key: TRR provider
       skip_reason: The reason why DoH request is failed
 
+security.doh.settings:
+  mode_changed:
+    objects: ["button"]
+    bug_numbers:
+      - 1829905
+    description: >
+      User changed the TRR mode in about:preferences#privacy settings
+      Value is id of the clicked button.
+    expiry_version: never
+    record_in_processes:
+      - main
+    release_channel_collection: opt-out
+    notification_emails:
+      - vgosu@mozilla.com
+      - necko@mozilla.com
+    products:
+      - firefox
+  warn_checkbox:
+    objects: ["checkbox"]
+    bug_numbers:
+      - 1829905
+    description: >
+      User clicked the Warn if a third party actively prevents secure DNS
+      checkbox in about:preferences#privacy.
+      Value is true or false, reflecting if box is checked or unchecked.
+    expiry_version: never
+    record_in_processes:
+      - main
+    release_channel_collection: opt-out
+    notification_emails:
+      - vgosu@mozilla.com
+      - necko@mozilla.com
+    products:
+      - firefox
+  provider_choice:
+    objects: ["value"]
+    bug_numbers:
+      - 1829905
+    description: >
+      User changed their DoH provider. Recorded value is URL of one of the
+      existing providers or "custom".
+    expiry_version: never
+    record_in_processes:
+      - main
+    release_channel_collection: opt-out
+    notification_emails:
+      - vgosu@mozilla.com
+      - necko@mozilla.com
+    products:
+      - firefox
+
 security.ui.certerror:
   load:
     objects: ["aboutcerterror"]
