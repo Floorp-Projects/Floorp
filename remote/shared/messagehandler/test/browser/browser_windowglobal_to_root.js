@@ -8,7 +8,14 @@ const { RootMessageHandler } = ChromeUtils.importESModule(
 );
 
 add_task(async function test_windowGlobal_to_root_command() {
-  const browsingContextId = gBrowser.selectedBrowser.browsingContext.id;
+  // Navigate to a page to make sure that the windowglobal modules run in a
+  // different process than the root module.
+  const tab = BrowserTestUtils.addTab(
+    gBrowser,
+    "https://example.com/document-builder.sjs?html=tab"
+  );
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  const browsingContextId = tab.linkedBrowser.browsingContext.id;
 
   const rootMessageHandler = createRootMessageHandler(
     "session-id-windowglobal-to-rootModule"
@@ -36,4 +43,5 @@ add_task(async function test_windowGlobal_to_root_command() {
   }
 
   rootMessageHandler.destroy();
+  gBrowser.removeTab(tab);
 });
