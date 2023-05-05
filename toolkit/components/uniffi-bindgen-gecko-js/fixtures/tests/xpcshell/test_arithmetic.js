@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Arithmetic = ChromeUtils.importESModule(
-  "resource://gre/modules/RustArithmetic.sys.mjs"
+const Arithmetic = ChromeUtils.import(
+  "resource://gre/modules/RustArithmetic.jsm"
 );
 
 add_task(async function() {
