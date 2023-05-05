@@ -4326,6 +4326,10 @@ void DrawTargetWebgl::BeginFrame(const IntRect& aPersistedRect) {
       if (aPersistedRect.IsEmpty()) {
         // If nothing needs to persist, just mark the WebGL context valid.
         mWebglValid = true;
+        // Even if the Skia framebuffer is marked clear, since the WebGL
+        // context is not valid, its contents may be out-of-date and not
+        // necessarily clear.
+        mIsClear = false;
       } else {
         FlushFromSkia();
       }
