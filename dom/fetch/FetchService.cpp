@@ -227,6 +227,8 @@ RefPtr<FetchServicePromises> FetchService::FetchInstance::Fetch() {
     if (args.mCSPEventListener) {
       mFetchDriver->SetCSPEventListener(args.mCSPEventListener);
     }
+    mFetchDriver->SetAssociatedBrowsingContextID(
+        args.mAssociatedBrowsingContextID);
   }
 
   mFetchDriver->EnableNetworkInterceptControl();
