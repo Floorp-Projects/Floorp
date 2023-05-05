@@ -570,6 +570,7 @@ class HomeScreenRobot {
         fun openSearch(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             navigationToolbar.waitForExists(waitingTime)
             navigationToolbar.click()
+            mDevice.waitForIdle()
 
             SearchRobot().interact()
             return SearchRobot.Transition()

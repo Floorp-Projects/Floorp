@@ -76,7 +76,6 @@ import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.gecko.util.ThreadUtils
 import java.io.File
 import java.util.Locale
-import java.util.regex.Pattern
 
 object TestHelper {
 
@@ -363,19 +362,8 @@ object TestHelper {
 
     // Permission deny dialogs differ on various Android APIs
     fun denyPermission() {
-        if (Build.VERSION.SDK_INT >= 23) {
-            mDevice.findObject(
-                By.text(
-                    when (Build.VERSION.SDK_INT) {
-                        Build.VERSION_CODES.R -> Pattern.compile(
-                            "DENY",
-                            Pattern.CASE_INSENSITIVE,
-                        )
-                        else -> Pattern.compile("Deny", Pattern.CASE_INSENSITIVE)
-                    },
-                ),
-            ).click()
-        }
+        mDevice.findObject(UiSelector().textContains("Deny")).waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().textContains("Deny")).click()
     }
 
     fun isTestLab(): Boolean {
