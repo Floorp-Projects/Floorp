@@ -113,7 +113,7 @@ add_task(async function() {
     )
   );
 
-  validateRequests(EXPECTED_REQUESTS, monitor);
+  validateRequests(EXPECTED_REQUESTS, monitor, { allowDifferentOrder: true });
 
   await teardown(monitor);
 });

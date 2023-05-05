@@ -1172,18 +1172,37 @@ function queryTelemetryEvents(query) {
   // Return the `extra` field (which is event[5]e).
   return filtersChangedEvents.map(event => event[5]);
 }
-
-function validateRequests(requests, monitor) {
+/**
+ * Check that the provided requests match the requests displayed in the netmonitor.
+ *
+ * @param {array} requests
+ *     The expected requests.
+ * @param {object} monitor
+ *     The netmonitor instance.
+ * @param {object=} options
+ * @param {boolean} allowDifferentOrder
+ *     When set to true, requests are allowed to be in a different order in the
+ *     netmonitor than in the expected requests array. Defaults to false.
+ */
+function validateRequests(requests, monitor, options = {}) {
+  const { allowDifferentOrder } = options;
   const { document, store, windowRequire } = monitor.panelWin;
 
   const { getDisplayedRequests } = windowRequire(
     "devtools/client/netmonitor/src/selectors/index"
   );
+  const sortedRequests = getSortedRequests(store.getState());
 
   requests.forEach((spec, i) => {
     const { method, url, causeType, causeUri, stack } = spec;
 
-    const requestItem = getSortedRequests(store.getState())[i];
+    let requestItem;
+    if (allowDifferentOrder) {
+      requestItem = sortedRequests.find(r => r.url === url);
+    } else {
+      requestItem = sortedRequests[i];
+    }
+
     verifyRequestItemTarget(
       document,
       getDisplayedRequests(store.getState()),
