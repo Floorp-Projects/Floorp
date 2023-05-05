@@ -10,6 +10,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   getMessageHandlerClass:
     "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  RootMessageHandler:
+    "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs",
 });
 
 const protocols = {
@@ -198,7 +200,7 @@ export class ModuleCache {
     // normally be "if the destination has a higher level than the origin, just
     // use the destination as target folder", but as we don't support other
     // levels than root & windowglobal, we can simplify this to this for now.
-    if (destinationType === "root") {
+    if (destinationType === lazy.RootMessageHandler.type) {
       return "root";
     }
 
