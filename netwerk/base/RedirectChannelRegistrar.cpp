@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RedirectChannelRegistrar.h"
+
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "nsThreadUtils.h"
 
@@ -26,14 +28,9 @@ RedirectChannelRegistrar::GetOrCreate() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!gSingleton) {
     gSingleton = new RedirectChannelRegistrar();
+    ClearOnShutdown(&gSingleton);
   }
   return do_AddRef(gSingleton);
-}
-
-// static
-void RedirectChannelRegistrar::Shutdown() {
-  MOZ_ASSERT(NS_IsMainThread());
-  gSingleton = nullptr;
 }
 
 NS_IMETHODIMP

@@ -6,10 +6,11 @@
 
 #include "BackgroundChannelRegistrar.h"
 
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPtr.h"
 #include "HttpBackgroundChannelParent.h"
 #include "HttpChannelParent.h"
 #include "nsXULAppAPI.h"
-#include "mozilla/StaticPtr.h"
 
 namespace {
 mozilla::StaticRefPtr<mozilla::net::BackgroundChannelRegistrar> gSingleton;
@@ -37,14 +38,9 @@ already_AddRefed<nsIBackgroundChannelRegistrar>
 BackgroundChannelRegistrar::GetOrCreate() {
   if (!gSingleton) {
     gSingleton = new BackgroundChannelRegistrar();
+    ClearOnShutdown(&gSingleton);
   }
   return do_AddRef(gSingleton);
-}
-
-// static
-void BackgroundChannelRegistrar::Shutdown() {
-  MOZ_ASSERT(NS_IsMainThread());
-  gSingleton = nullptr;
 }
 
 void BackgroundChannelRegistrar::NotifyChannelLinked(

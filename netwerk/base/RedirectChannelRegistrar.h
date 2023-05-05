@@ -29,9 +29,6 @@ class RedirectChannelRegistrar final : public nsIRedirectChannelRegistrar {
   // Singleton accessor
   static already_AddRefed<nsIRedirectChannelRegistrar> GetOrCreate();
 
-  // Cleanup the singleton instance on shutdown
-  static void Shutdown();
-
  protected:
   using ChannelHashtable = nsInterfaceHashtable<nsUint64HashKey, nsIChannel>;
   using ParentChannelHashtable =
