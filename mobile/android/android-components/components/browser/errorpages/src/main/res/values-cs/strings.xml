@@ -60,8 +60,6 @@ kdo se snaží vydávat za server.</li>
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Rozšířené…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[Server <label> <b>%1$s</b> má nastaveno bezpečnostní pravidlo HTTP Strict Transport Security (HSTS), které od aplikace <b>%2$s</b> vyžaduje používání pouze zabezpečeného spojení. Pro připojení k této stránce nelze udělit výjimku.]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[Server <label> <b>%1$s</b> má nastaveno bezpečnostní pravidlo HTTP Strict Transport Security (HSTS), které od aplikace <b>%2$s</b> vyžaduje používání pouze zabezpečeného spojení. Pro připojení k této stránce nelze udělit výjimku.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Zpátky</string>
@@ -90,7 +88,7 @@ kdo se snaží vydávat za server.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
-    <string name="mozac_browser_errorpages_connection_failure_title">Nelze se připojit</string>
+    <string name="mozac_browser_errorpages_connection_failure_title">Chyba spojení</string>
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
       <ul>
@@ -192,7 +190,7 @@ kdo se snaží vydávat za server.</li>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_no_internet_title">Připojení k Internetu není dostupné</string>
+    <string name="mozac_browser_errorpages_no_internet_title">Připojení k internetu není dostupné</string>
 
     <!-- The main body text of this error page. It will be shown beneath the title -->
     <string name="mozac_browser_errorpages_no_internet_message">Zkontrolujte připojení k síti nebo zkuste stránku za chvilku znovu načíst.</string>

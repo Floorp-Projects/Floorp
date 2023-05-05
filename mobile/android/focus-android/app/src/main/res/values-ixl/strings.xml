@@ -901,6 +901,27 @@
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">A’ kuxh unq’a vi’la’</string>
 
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Kat aq’alpul u majol tetz unq’a aq’one’ uve’ atik tzitza’.</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Sojsa-el kaajayil unq’a atinb’ale’</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Maj ivatz unq’a cookies</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Nasa’ la maj ivatz unq’a cookies?</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Kat yanyu u k’uchb’al tetze’</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">La kuy o’. At uma’l kam uva’ ni yansan u k’uchb’al tetze’.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">U atinb’ale’ uva’ eetz kuxh naaq’onvu stuul, ye’ kat kukola ni kuxh la uch kuq’aavisat u k’uchb’al tetze’.</string>
+
+    <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">La aalb’en tu Mozilla ti’ unq’a vee’ ni Yáñez’</string>
+
     <!-- Tracking protection bottom sheet -->
 
      <!-- Promote SearchWidget Dialog -->
