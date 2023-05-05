@@ -3,11 +3,10 @@ This import of nrappkit is a subset of the distribution at:
   nrappkit.sourceforge.net
 
 
-The last revision included in this import was on Nov 25, 2008.
-This import includes a small nunber of portability fixes that
-have been submitted to the upstream repository and are included
-in upstream.diff.
+The last revision included in this import was on Nov 25, 2008, version 1.0b2.
 
+The upstream project is now dead (no update since 2013), we can conisder this
+version as a fork.
 
 Out of the list in the README, we use:
 
@@ -16,7 +15,7 @@ Out of the list in the README, we use:
 - configurable logging system
 - event and timer handling
   [though partly reimplemented]
- 
+
 Also, we use a bunch of the generic utilities such as string handling,
 generic hash tables in C, yet another concrete type mapping, etc.
 
