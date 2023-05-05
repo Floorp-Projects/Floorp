@@ -347,7 +347,7 @@ function assertAdImpressionEvents(expectedAdImpressions) {
   }
 }
 
-async function assertAbandonmentEvent(expectedAbandonment) {
+function assertAbandonmentEvent(expectedAbandonment) {
   let recordedAbandonment = Glean.serp.abandonment.testGetValue() ?? [];
 
   Assert.equal(
