@@ -98,6 +98,7 @@ class FetchService final : public nsIObserver {
     Maybe<net::CookieJarSettingsArgs> mCookieJarSettings;
     bool mNeedOnDataAvailable;
     nsCOMPtr<nsICSPEventListener> mCSPEventListener;
+    uint64_t mAssociatedBrowsingContextID;
     nsCOMPtr<nsISerialEventTarget> mEventTarget;
     nsID mActorID;
   };
