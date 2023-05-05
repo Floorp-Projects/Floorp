@@ -585,6 +585,12 @@ var gPrivacyPane = {
         customInput.hidden = true;
         Services.prefs.setStringPref("network.trr.uri", menu.value);
       }
+      Services.telemetry.recordEvent(
+        "security.doh.settings",
+        "provider_choice",
+        "value",
+        menu.value
+      );
 
       // Update other menu too.
       let otherMode = mode == "dohEnabled" ? "dohStrict" : "dohEnabled";
@@ -741,9 +747,43 @@ var gPrivacyPane = {
    * Init DoH corresponding prefs
    */
   initDoH() {
+    Services.telemetry.setEventRecordingEnabled("security.doh.settings", true);
+
     setEventListener("dohDefaultArrow", "command", this.toggleExpansion);
     setEventListener("dohEnabledArrow", "command", this.toggleExpansion);
     setEventListener("dohStrictArrow", "command", this.toggleExpansion);
+
+    function modeButtonPressed(e) {
+      // Clicking the active mode again should not generate another event
+      if (
+        parseInt(e.target.value) == Preferences.get("network.trr.mode").value
+      ) {
+        return;
+      }
+      Services.telemetry.recordEvent(
+        "security.doh.settings",
+        "mode_changed",
+        "button",
+        e.target.id
+      );
+    }
+
+    setEventListener("dohDefaultRadio", "command", modeButtonPressed);
+    setEventListener("dohEnabledRadio", "command", modeButtonPressed);
+    setEventListener("dohStrictRadio", "command", modeButtonPressed);
+    setEventListener("dohOffRadio", "command", modeButtonPressed);
+
+    function warnCheckboxClicked(e) {
+      Services.telemetry.recordEvent(
+        "security.doh.settings",
+        "warn_checkbox",
+        "checkbox",
+        `${e.target.checked}`
+      );
+    }
+
+    setEventListener("dohWarnCheckbox1", "command", warnCheckboxClicked);
+    setEventListener("dohWarnCheckbox2", "command", warnCheckboxClicked);
 
     this.populateDoHResolverList("dohEnabled");
     this.populateDoHResolverList("dohStrict");
