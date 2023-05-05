@@ -102,11 +102,9 @@ void nsCounterUseNode::GetText(WritingMode aWM, CounterStyle* aStyle,
     }
   };
 
-  CounterStyle* resolvedStyle = nullptr;
   if (mForLegacyBullet) {
-    resolvedStyle = aStyle->ResolveFallbackFor(mValueAfter);
     nsAutoString prefix;
-    resolvedStyle->GetPrefix(mValueAfter, prefix);
+    aStyle->GetPrefix(prefix);
     aResult.Assign(prefix);
   }
 
@@ -135,10 +133,8 @@ void nsCounterUseNode::GetText(WritingMode aWM, CounterStyle* aStyle,
   }
 
   if (mForLegacyBullet) {
-    // resolvedStyle was initialized above when we handled the prefix.
-    MOZ_ASSERT(resolvedStyle);
     nsAutoString suffix;
-    resolvedStyle->GetSuffix(mValueAfter, suffix);
+    aStyle->GetSuffix(suffix);
     aResult.Append(suffix);
   }
 }
