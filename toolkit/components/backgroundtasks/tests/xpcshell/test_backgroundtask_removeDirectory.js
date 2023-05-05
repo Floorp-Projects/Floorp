@@ -27,12 +27,16 @@ add_task(async function test_simple() {
   extraDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
   equal(extraDir.exists(), true);
 
+  let outputLines = [];
   let exitCode = await do_backgroundtask("removeDirectory", {
     extraArgs: [do_get_profile().path, LEAF_NAME, "10", ".abc"],
+    onStdoutLine: line => outputLines.push(line),
   });
   equal(exitCode, EXIT_CODE.SUCCESS);
   equal(dir.exists(), false);
   equal(extraDir.exists(), false);
+
+  deepEqual([], outputLines, "Should not have logs by default");
 });
 
 add_task(async function test_no_extension() {

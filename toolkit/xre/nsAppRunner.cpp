@@ -3896,8 +3896,17 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
       CheckArg("backgroundtask", &backgroundTaskName, CheckArgFlag::None)) {
     backgroundTask = Some(backgroundTaskName);
 
+    CheckArgFlag checkArgFlag =
+#  ifdef XP_WIN
+        CheckArgFlag::None;  // attach-console is consumed below in
+                             // NS_CreateNativeAppSupport on Windows
+#  else
+        CheckArgFlag::RemoveArg;  // but not on non-Windows, so we consume it
+                                  // explicitly here
+#  endif
+
     if (BackgroundTasks::IsNoOutputTaskName(backgroundTask.ref()) &&
-        !CheckArgExists("attach-console") &&
+        !CheckArg("attach-console", nullptr, checkArgFlag) &&
         !EnvHasValue("MOZ_BACKGROUNDTASKS_IGNORE_NO_OUTPUT")) {
       // Suppress output, somewhat crudely.  We need to suppress stderr as well
       // as stdout because assertions, of which there are many, write to stderr.

@@ -215,6 +215,7 @@ bool BackgroundTasks::IsEphemeralProfileTaskName(const nsCString& aName) {
 
 bool BackgroundTasks::IsNoOutputTaskName(const nsCString& aName) {
   return aName.EqualsLiteral("pingsender") ||
+         aName.EqualsLiteral("removeDirectory") ||
          aName.EqualsLiteral("no_output");  // Just for testing.
 }
 

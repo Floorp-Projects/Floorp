@@ -98,6 +98,10 @@ NS_IMETHODIMP BackgroundTasksRunner::RemoveDirectoryInDetachedProcess(
     argv.AppendElement(aMetricsId);
   }
 
+#ifdef DEBUG
+  argv.AppendElement("--attach-console");
+#endif
+
   return RunInDetachedProcess("removeDirectory"_ns, argv);
 }
 
