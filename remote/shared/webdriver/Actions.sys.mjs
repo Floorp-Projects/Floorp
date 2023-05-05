@@ -446,19 +446,35 @@ class Origin {
 
   /**
    * @param {Element|string=} origin - Type of orgin, one of "viewport", "pointer", element or undefined.
+   * @param {object} actionOptions
+   * @param {Function} actionOptions.getElementFromElementOrigin
+   *     Optional function to use to retrieve an element from an ElementOrigin.
    *
    * @returns {Origin} - An origin object representing the origin.
    *
    * @throws {InvalidArgumentError}
    *     If <code>origin</code> isn't a valid origin.
    */
-  static fromJSON(origin) {
+  static fromJSON(origin, actionOptions) {
     if (origin === undefined || origin === "viewport") {
       return new ViewportOrigin();
     }
     if (origin === "pointer") {
       return new PointerOrigin();
     }
+
+    // Only the BiDi input module should provides a getElementFromElementOrigin
+    // callback and supports input.ElementOrigin origins as defined at:
+    //   https://w3c.github.io/webdriver-bidi/#type-input-origin
+    if (
+      origin?.type === "element" &&
+      actionOptions?.getElementFromElementOrigin
+    ) {
+      return new ElementOrigin(
+        actionOptions.getElementFromElementOrigin(origin)
+      );
+    }
+
     if (lazy.element.isElement(origin)) {
       return new ElementOrigin(origin);
     }
@@ -559,7 +575,7 @@ class Action {
    *     If any <code>actionSequence</code> or <code>actionItem</code>
    *     attributes are invalid.
    */
-  static fromJSON(type, id, actionItem) {
+  static fromJSON(type, id, actionItem, actionOptions) {
     const subtype = actionItem.type;
     const subtypeMap = actionTypes.get(type);
     if (subtypeMap === undefined) {
@@ -575,7 +591,7 @@ class Action {
         `Unknown subtype ${subtype} for type ${type}`
       );
     }
-    return cls.fromJSON(id, actionItem);
+    return cls.fromJSON(id, actionItem, actionOptions);
   }
 }
 
@@ -620,7 +636,7 @@ class PauseAction extends NullAction {
     return lazy.Sleep(ms);
   }
 
-  static fromJSON(id, actionItem) {
+  static fromJSON(id, actionItem, actionOptions) {
     const { duration } = actionItem;
     if (duration !== undefined) {
       lazy.assert.positiveInteger(
@@ -656,7 +672,7 @@ class KeyAction extends Action {
     return new KeyEventData(value);
   }
 
-  static fromJSON(id, actionItem) {
+  static fromJSON(id, actionItem, actionOptions) {
     // TODO countGraphemes
     // TODO key.value could be a single code point like "\uE012"
     // (see rawKey) or "grapheme cluster"
@@ -912,7 +928,7 @@ class PointerDownAction extends PointerAction {
     });
   }
 
-  static fromJSON(id, actionItem) {
+  static fromJSON(id, actionItem, actionOptions) {
     const props = PointerAction.validateCommon(actionItem);
     const { button } = actionItem;
     lazy.assert.positiveInteger(
@@ -966,7 +982,7 @@ class PointerUpAction extends PointerAction {
     });
   }
 
-  static fromJSON(id, actionItem) {
+  static fromJSON(id, actionItem, actionOptions) {
     const props = PointerAction.validateCommon(actionItem);
     const { button } = actionItem;
     lazy.assert.positiveInteger(
@@ -1067,7 +1083,7 @@ class PointerMoveAction extends PointerAction {
     inputSource.y = target[1];
   }
 
-  static fromJSON(id, actionItem) {
+  static fromJSON(id, actionItem, actionOptions) {
     const props = PointerAction.validateCommon(actionItem);
     const { duration, origin, x, y } = actionItem;
     if (duration !== undefined) {
@@ -1076,7 +1092,7 @@ class PointerMoveAction extends PointerAction {
         lazy.pprint`Expected 'duration' (${duration}) to be >= 0`
       );
     }
-    const originObject = Origin.fromJSON(origin);
+    const originObject = Origin.fromJSON(origin, actionOptions);
     lazy.assert.integer(x, lazy.pprint`Expected 'x' (${x}) to be an Integer`);
     lazy.assert.integer(y, lazy.pprint`Expected 'y' (${y}) to be an Integer`);
     props.duration = duration;
@@ -1119,7 +1135,7 @@ class WheelScrollAction extends WheelAction {
     this.deltaY = deltaY;
   }
 
-  static fromJSON(id, actionItem) {
+  static fromJSON(id, actionItem, actionOptions) {
     const { duration, origin, x, y, deltaX, deltaY } = actionItem;
     if (duration !== undefined) {
       lazy.assert.positiveInteger(
@@ -1127,7 +1143,7 @@ class WheelScrollAction extends WheelAction {
         lazy.pprint`Expected 'duration' (${duration}) to be >= 0`
       );
     }
-    const originObject = Origin.fromJSON(origin);
+    const originObject = Origin.fromJSON(origin, actionOptions);
     lazy.assert.integer(x, lazy.pprint`Expected 'x' (${x}) to be an Integer`);
     lazy.assert.integer(y, lazy.pprint`Expected 'y' (${y}) to be an Integer`);
     lazy.assert.integer(
@@ -1776,12 +1792,15 @@ action.Chain = class extends Array {
    * @param {State} state - Actions state.
    * @param {Array.<object>} actions - Array of objects that each
    * represent an action sequence.
+   * @param {object} actionOptions
+   * @param {Function} actionOptions.getElementFromElementOrigin
+   *     Optional function to use to retrieve an element from an ElementOrigin.
    * @returns {action.Chain} - Object that allows dispatching a chain
    * of actions.
    * @throws {InvalidArgumentError} - If actions doesn't correspond to
    * a valid action chain.
    */
-  static fromJSON(state, actions) {
+  static fromJSON(state, actions, actionOptions) {
     lazy.assert.array(
       actions,
       lazy.pprint`Expected 'actions' to be an array, got ${actions}`
@@ -1789,7 +1808,11 @@ action.Chain = class extends Array {
 
     const actionsByTick = new this();
     for (const actionSequence of actions) {
-      const inputSourceActions = Sequence.fromJSON(state, actionSequence);
+      const inputSourceActions = Sequence.fromJSON(
+        state,
+        actionSequence,
+        actionOptions
+      );
       for (let i = 0; i < inputSourceActions.length; i++) {
         // new tick
         if (actionsByTick.length < i + 1) {
@@ -1901,9 +1924,12 @@ class Sequence extends Array {
    * @param {State} state - Actions state.
    * @param {object} actionSequence
    *     Protocol representation of the actions for a specific input source.
+   * @param {object} actionOptions
+   * @param {Function} actionOptions.getElementFromElementOrigin
+   *     Optional function to use to retrieve an element from an ElementOrigin.
    * @returns {Array.<Array>} - Array of [InputSource?,Action|TouchActionGroup]
    */
-  static fromJSON(state, actionSequence) {
+  static fromJSON(state, actionSequence, actionOptions) {
     // used here to validate 'type' in addition to InputSource type below
     const { id, type, actions } = actionSequence;
 
@@ -1919,7 +1945,7 @@ class Sequence extends Array {
 
     const sequence = new this();
     for (const actionItem of actions) {
-      sequence.push(Action.fromJSON(type, id, actionItem));
+      sequence.push(Action.fromJSON(type, id, actionItem, actionOptions));
     }
 
     return sequence;

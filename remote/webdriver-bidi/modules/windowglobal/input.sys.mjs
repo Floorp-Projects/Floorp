@@ -8,6 +8,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   action: "chrome://remote/content/shared/webdriver/Actions.sys.mjs",
+  deserialize: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
 });
 
 class InputModule extends WindowGlobalBiDiModule {
@@ -28,7 +30,10 @@ class InputModule extends WindowGlobalBiDiModule {
         specCompatPointerOrigin: true,
       });
     }
-    const actionChain = lazy.action.Chain.fromJSON(this.#actionState, actions);
+
+    const actionChain = lazy.action.Chain.fromJSON(this.#actionState, actions, {
+      getElementFromElementOrigin: this.#getElementFromElementOrigin,
+    });
 
     await actionChain.dispatch(this.#actionState, this.messageHandler.window);
   }
@@ -40,6 +45,20 @@ class InputModule extends WindowGlobalBiDiModule {
     await this.#actionState.release(this.messageHandler.window);
     this.#actionState = null;
   }
+
+  #getElementFromElementOrigin = origin => {
+    const sharedReference = origin.element;
+    if (typeof sharedReference?.sharedId !== "string") {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected "origin.element" to be a SharedReference, got: ${sharedReference}`
+      );
+    }
+
+    const realm = this.messageHandler.getRealm();
+    return lazy.deserialize(realm, sharedReference, {
+      nodeCache: this.nodeCache,
+    });
+  };
 }
 
 export const input = InputModule;
