@@ -36,6 +36,110 @@ start = "2021-06-21"
 end = "2024-04-21"
 notes = "No unsafe code, rather straight-forward parser."
 
+[[wildcard-audits.cocoa]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 2396 # Josh Matthews (jdm)
+start = "2019-07-23"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.cocoa]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 5946 # Jeff Muizelaar (jrmuizel)
+start = "2022-11-01"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.cocoa-foundation]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 5946 # Jeff Muizelaar (jrmuizel)
+start = "2023-03-16"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.cocoa-foundation]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 2396 # Josh Matthews (jdm)
+start = "2020-07-20"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.core-foundation]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 2396 # Josh Matthews (jdm)
+start = "2019-11-12"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.core-foundation]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 5946 # Jeff Muizelaar (jrmuizel)
+start = "2019-03-29"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.core-foundation-sys]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 2396 # Josh Matthews (jdm)
+start = "2019-11-12"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.core-foundation-sys]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 5946 # Jeff Muizelaar (jrmuizel)
+start = "2020-10-14"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.core-graphics]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 2396 # Josh Matthews (jdm)
+start = "2019-10-28"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.core-graphics]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 5946 # Jeff Muizelaar (jrmuizel)
+start = "2020-12-08"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.core-graphics-types]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 2396 # Josh Matthews (jdm)
+start = "2020-07-20"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.core-text]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 2396 # Josh Matthews (jdm)
+start = "2019-03-29"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
+[[wildcard-audits.core-text]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 5946 # Jeff Muizelaar (jrmuizel)
+start = "2021-02-14"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
+
 [[wildcard-audits.etagere]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -74,6 +178,14 @@ criteria = "safe-to-deploy"
 user-id = 84794 # Jamie Nicol (jamienicol)
 start = "2020-04-07"
 end = "2024-04-25"
+
+[[wildcard-audits.io-surface]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 2396 # Josh Matthews (jdm)
+start = "2019-07-23"
+end = "2023-05-04"
+notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.marionette]]
 who = "Henrik Skupin <mail@hskupin.info>"
