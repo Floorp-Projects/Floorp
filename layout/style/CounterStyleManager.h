@@ -55,20 +55,8 @@ class CounterStyle {
   // styles are dependent for fallback.
   bool IsDependentStyle() const;
 
-  // Note: caller is responsible to handle range limits and fallback, so that
-  // the ordinal value passed to GetPrefix or GetSuffix is within the style's
-  // supported range.
-  void GetPrefix(CounterValue aOrdinal, nsAString& aResult) {
-    MOZ_ASSERT(IsOrdinalInRange(aOrdinal),
-               "caller should have handled range fallback");
-    GetPrefixInternal(aResult);
-  }
-  void GetSuffix(CounterValue aOrdinal, nsAString& aResult) {
-    MOZ_ASSERT(IsOrdinalInRange(aOrdinal),
-               "caller should have handled range fallback");
-    GetSuffixInternal(aResult);
-  }
-
+  virtual void GetPrefix(nsAString& aResult) = 0;
+  virtual void GetSuffix(nsAString& aResult) = 0;
   void GetCounterText(CounterValue aOrdinal, WritingMode aWritingMode,
                       nsAString& aResult, bool& aIsRTL);
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
@@ -106,19 +94,7 @@ class CounterStyle {
 
   virtual AnonymousCounterStyle* AsAnonymous() { return nullptr; }
 
-  /**
-   * This returns the counter-style that should handle the given ordinal value,
-   * following the fallback chain if necessary.
-   */
-  virtual CounterStyle* ResolveFallbackFor(CounterValue aOrdinal);
-
  protected:
-  friend class CustomCounterStyle;
-  // Get the style's prefix or suffix text, without checking range coverage or
-  // handling fallback (but following 'extends' relations as needed).
-  virtual void GetPrefixInternal(nsAString& aResult) = 0;
-  virtual void GetSuffixInternal(nsAString& aResult) = 0;
-
   const ListStyle mStyle;
 };
 
@@ -127,6 +103,8 @@ class AnonymousCounterStyle final : public CounterStyle {
   explicit AnonymousCounterStyle(const nsAString& aContent);
   AnonymousCounterStyle(StyleSymbolsType, nsTArray<nsString> aSymbols);
 
+  virtual void GetPrefix(nsAString& aResult) override;
+  virtual void GetSuffix(nsAString& aResult) override;
   virtual bool IsBullet() override;
 
   virtual void GetNegative(NegativeType& aResult) override;
@@ -149,10 +127,6 @@ class AnonymousCounterStyle final : public CounterStyle {
   StyleCounterSystem GetSystem() const;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnonymousCounterStyle)
-
- protected:
-  virtual void GetPrefixInternal(nsAString& aResult) override;
-  virtual void GetSuffixInternal(nsAString& aResult) override;
 
  private:
   ~AnonymousCounterStyle() = default;
