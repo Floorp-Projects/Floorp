@@ -140,8 +140,9 @@ HRESULT MFMediaEngineStream::GenerateStreamDescriptor(
       &mStreamDescriptor));
   RETURN_IF_FAILED(
       mStreamDescriptor->GetStreamIdentifier(&mStreamDescriptorId));
-
-  // TODO : set MF_SD_PROTECTED on descriptor when it's encrypted
+  if (IsEncrypted()) {
+    RETURN_IF_FAILED(mStreamDescriptor->SetUINT32(MF_SD_PROTECTED, 1));
+  }
   return S_OK;
 }
 
