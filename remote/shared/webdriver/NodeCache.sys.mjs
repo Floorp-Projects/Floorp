@@ -134,7 +134,7 @@ export class NodeCache {
   getNode(browsingContext, nodeId) {
     const nodeDetails = this.getReferenceDetails(nodeId);
 
-    // Check that the node reference is known, and is accociated with a
+    // Check that the node reference is known, and is associated with a
     // browsing context that shares the same browsing context group.
     if (
       nodeDetails === null ||
