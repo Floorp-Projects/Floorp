@@ -4,7 +4,7 @@
 [[wildcard-audits.audio_thread_priority]]
 who = "Paul Adenot <paul@paul.cx>"
 criteria = "safe-to-deploy"
-user-id = 1258 # Paul Adenot (padenot)
+user-id = 1258
 start = "2019-05-09"
 end = "2024-04-24"
 notes = """
@@ -23,7 +23,7 @@ notes = "Maintained by the CryptoEng team at Mozilla."
 [[wildcard-audits.bhttp]]
 who = "Martin Thomson <mt@lowentropy.net>"
 criteria = "safe-to-deploy"
-user-id = 128763 # Martin Thomson (martinthomson)
+user-id = 128763
 start = "2022-08-04"
 end = "2024-03-09"
 notes = "Though the code is safe to run and deploy, the code for processing HTTP/1.1 messages (the `read-http` feature, specifically) is not suited for deployment in real applications, either clients or servers.  Some features necessary for live deployment are not implemented, such as the proper handling of some types of response (e.g., a response to a HEAD request).  Software that processes HTTP/1.1 messages requires a large number of compatibility tweaks if it is to be deployed interoperably.  This feature only exists to support basic validation tools and is unlikely to be widely compatible."
@@ -31,119 +31,15 @@ notes = "Though the code is safe to run and deploy, the code for processing HTTP
 [[wildcard-audits.cexpr]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
-user-id = 3788 # Emilio Cobos Álvarez (emilio)
+user-id = 3788
 start = "2021-06-21"
 end = "2024-04-21"
 notes = "No unsafe code, rather straight-forward parser."
 
-[[wildcard-audits.cocoa]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 2396 # Josh Matthews (jdm)
-start = "2019-07-23"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.cocoa]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 5946 # Jeff Muizelaar (jrmuizel)
-start = "2022-11-01"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.cocoa-foundation]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 5946 # Jeff Muizelaar (jrmuizel)
-start = "2023-03-16"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.cocoa-foundation]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 2396 # Josh Matthews (jdm)
-start = "2020-07-20"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.core-foundation]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 2396 # Josh Matthews (jdm)
-start = "2019-11-12"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.core-foundation]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 5946 # Jeff Muizelaar (jrmuizel)
-start = "2019-03-29"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.core-foundation-sys]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 2396 # Josh Matthews (jdm)
-start = "2019-11-12"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.core-foundation-sys]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 5946 # Jeff Muizelaar (jrmuizel)
-start = "2020-10-14"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.core-graphics]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 2396 # Josh Matthews (jdm)
-start = "2019-10-28"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.core-graphics]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 5946 # Jeff Muizelaar (jrmuizel)
-start = "2020-12-08"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.core-graphics-types]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 2396 # Josh Matthews (jdm)
-start = "2020-07-20"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.core-text]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 2396 # Josh Matthews (jdm)
-start = "2019-03-29"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
-[[wildcard-audits.core-text]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 5946 # Jeff Muizelaar (jrmuizel)
-start = "2021-02-14"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
-
 [[wildcard-audits.etagere]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
-user-id = 1281 # Nicolas Silva (nical)
+user-id = 1281
 start = "2020-11-12"
 end = "2024-04-25"
 notes = "I am the author of this crate."
@@ -151,7 +47,7 @@ notes = "I am the author of this crate."
 [[wildcard-audits.euclid]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
-user-id = 1281 # Nicolas Silva (nical)
+user-id = 1281
 start = "2019-03-14"
 end = "2024-04-25"
 notes = "I wrote most of the commits in the euclid reprository and review every change that is not produced by me."
@@ -159,7 +55,7 @@ notes = "I wrote most of the commits in the euclid reprository and review every 
 [[wildcard-audits.glean]]
 who = "Chris H-C <chutten@mozilla.com>"
 criteria = "safe-to-deploy"
-user-id = 48 # Jan-Erik Rediger (badboy)
+user-id = 48
 start = "2020-11-10"
 end = "2024-02-24"
 notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
@@ -167,7 +63,7 @@ notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
 [[wildcard-audits.glean-core]]
 who = "Chris H-C <chutten@mozilla.com>"
 criteria = "safe-to-deploy"
-user-id = 48 # Jan-Erik Rediger (badboy)
+user-id = 48
 start = "2019-09-24"
 end = "2024-02-24"
 notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
@@ -175,17 +71,9 @@ notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
 [[wildcard-audits.glslopt]]
 who = "Jamie Nicol <jnicol@mozilla.com>"
 criteria = "safe-to-deploy"
-user-id = 84794 # Jamie Nicol (jamienicol)
+user-id = 84794
 start = "2020-04-07"
 end = "2024-04-25"
-
-[[wildcard-audits.io-surface]]
-who = "Bobby Holley <bobbyholley@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 2396 # Josh Matthews (jdm)
-start = "2019-07-23"
-end = "2023-05-04"
-notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
 [[wildcard-audits.marionette]]
 who = "Henrik Skupin <mail@hskupin.info>"
@@ -230,7 +118,7 @@ notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
 [[wildcard-audits.ohttp]]
 who = "Martin Thomson <mt@lowentropy.net>"
 criteria = "safe-to-deploy"
-user-id = 128763 # Martin Thomson (martinthomson)
+user-id = 128763
 start = "2022-08-04"
 end = "2024-03-09"
 notes = "This code contains two cryptographic back ends.  No unsafe code is contained if the Rust `hpke` crate is used (the `rust-hpke` feature).  Using NSS (the `nss` feature) involves extensive use of bindings to the native code provided by NSS.  This interface uses wrappers that attempt to add safety to a fundamentally very dangerous library, but those wrappers have only been validated for use following the needs of this crate."
@@ -238,42 +126,10 @@ notes = "This code contains two cryptographic back ends.  No unsafe code is cont
 [[wildcard-audits.rust_cascade]]
 who = "Dana Keeler <dkeeler@mozilla.com>"
 criteria = "safe-to-deploy"
-user-id = 57462 # Dana Keeler (mozkeeler)
+user-id = 57462
 start = "2019-11-15"
 end = "2024-04-24"
 notes = "Written and maintained by the security engineering team at Mozilla."
-
-[[wildcard-audits.unicode-normalization]]
-who = "Manish Goregaokar <manishsmail@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 1139 # Manish Goregaokar (Manishearth)
-start = "2019-11-06"
-end = "2024-05-03"
-notes = "All code written or reviewed by Manish"
-
-[[wildcard-audits.unicode-segmentation]]
-who = "Manish Goregaokar <manishsmail@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 1139 # Manish Goregaokar (Manishearth)
-start = "2019-05-15"
-end = "2024-05-03"
-notes = "All code written or reviewed by Manish"
-
-[[wildcard-audits.unicode-width]]
-who = "Manish Goregaokar <manishsmail@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 1139 # Manish Goregaokar (Manishearth)
-start = "2019-12-05"
-end = "2024-05-03"
-notes = "All code written or reviewed by Manish"
-
-[[wildcard-audits.unicode-xid]]
-who = "Manish Goregaokar <manishsmail@gmail.com>"
-criteria = "safe-to-deploy"
-user-id = 1139 # Manish Goregaokar (Manishearth)
-start = "2019-07-25"
-end = "2024-05-03"
-notes = "All code written or reviewed by Manish"
 
 [[wildcard-audits.webdriver]]
 who = "Henrik Skupin <mail@hskupin.info>"
@@ -3402,189 +3258,3 @@ delta = "0.6.2 -> 0.6.3"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "0.6.3 -> 0.6.4"
-
-[[trusted.aho-corasick]]
-criteria = "safe-to-deploy"
-user-id = 189 # Andrew Gallant (BurntSushi)
-start = "2019-03-28"
-end = "2024-05-03"
-
-[[trusted.async-trait]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-07-23"
-end = "2024-04-25"
-
-[[trusted.byteorder]]
-criteria = "safe-to-deploy"
-user-id = 189 # Andrew Gallant (BurntSushi)
-start = "2019-06-09"
-end = "2024-05-03"
-
-[[trusted.dtoa]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-05-02"
-end = "2024-04-25"
-
-[[trusted.headers]]
-criteria = "safe-to-deploy"
-user-id = 359 # Sean McArthur (seanmonstar)
-start = "2019-09-09"
-end = "2024-04-25"
-
-[[trusted.httparse]]
-criteria = "safe-to-deploy"
-user-id = 359 # Sean McArthur (seanmonstar)
-start = "2019-07-03"
-end = "2024-04-25"
-
-[[trusted.inherent]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-07-14"
-end = "2024-04-25"
-
-[[trusted.itoa]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-05-02"
-end = "2024-04-25"
-
-[[trusted.memchr]]
-criteria = "safe-to-deploy"
-user-id = 189 # Andrew Gallant (BurntSushi)
-start = "2019-07-07"
-end = "2024-05-03"
-
-[[trusted.mime]]
-criteria = "safe-to-deploy"
-user-id = 359 # Sean McArthur (seanmonstar)
-start = "2019-09-09"
-end = "2024-04-25"
-
-[[trusted.num_cpus]]
-criteria = "safe-to-deploy"
-user-id = 359 # Sean McArthur (seanmonstar)
-start = "2019-06-10"
-end = "2024-04-25"
-
-[[trusted.paste]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-03-19"
-end = "2024-04-25"
-
-[[trusted.proc-macro-hack]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-04-16"
-end = "2024-04-25"
-
-[[trusted.regex]]
-criteria = "safe-to-deploy"
-user-id = 189 # Andrew Gallant (BurntSushi)
-start = "2019-02-27"
-end = "2024-05-03"
-
-[[trusted.regex-syntax]]
-criteria = "safe-to-deploy"
-user-id = 189 # Andrew Gallant (BurntSushi)
-start = "2019-03-30"
-end = "2024-05-03"
-
-[[trusted.ryu]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-05-02"
-end = "2024-04-25"
-
-[[trusted.same-file]]
-criteria = "safe-to-deploy"
-user-id = 189 # Andrew Gallant (BurntSushi)
-start = "2019-07-16"
-end = "2024-05-03"
-
-[[trusted.serde]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-03-01"
-end = "2024-04-25"
-
-[[trusted.serde_bytes]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-02-25"
-end = "2024-04-25"
-
-[[trusted.serde_derive]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-03-01"
-end = "2024-04-25"
-
-[[trusted.serde_json]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-02-28"
-end = "2024-04-25"
-
-[[trusted.serde_repr]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-04-26"
-end = "2024-04-25"
-
-[[trusted.serde_yaml]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-05-02"
-end = "2024-04-25"
-
-[[trusted.syn]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-03-01"
-end = "2024-04-25"
-
-[[trusted.termcolor]]
-criteria = "safe-to-deploy"
-user-id = 189 # Andrew Gallant (BurntSushi)
-start = "2019-06-04"
-end = "2024-05-03"
-
-[[trusted.thiserror]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-10-09"
-end = "2024-04-25"
-
-[[trusted.thiserror-impl]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2019-10-09"
-end = "2024-04-25"
-
-[[trusted.threadbound]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2020-06-16"
-end = "2024-04-25"
-
-[[trusted.unicode-ident]]
-criteria = "safe-to-deploy"
-user-id = 3618 # David Tolnay (dtolnay)
-start = "2021-10-02"
-end = "2024-04-25"
-
-[[trusted.walkdir]]
-criteria = "safe-to-deploy"
-user-id = 189 # Andrew Gallant (BurntSushi)
-start = "2019-06-09"
-end = "2024-05-03"
-
-[[trusted.winapi-util]]
-criteria = "safe-to-deploy"
-user-id = 189 # Andrew Gallant (BurntSushi)
-start = "2020-01-11"
-end = "2024-05-03"
