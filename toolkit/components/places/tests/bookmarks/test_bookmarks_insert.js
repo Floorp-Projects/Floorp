@@ -62,6 +62,10 @@ add_task(async function invalid_input_throws() {
     () => PlacesUtils.bookmarks.insert({ dateAdded: Date.now() }),
     /Invalid value for property 'dateAdded'/
   );
+  Assert.throws(
+    () => PlacesUtils.bookmarks.insert({ dateAdded: new Date(NaN) }),
+    /Invalid value for property 'dateAdded'/
+  );
 
   Assert.throws(
     () => PlacesUtils.bookmarks.insert({ lastModified: -10 }),
@@ -75,9 +79,12 @@ add_task(async function invalid_input_throws() {
     () => PlacesUtils.bookmarks.insert({ lastModified: Date.now() }),
     /Invalid value for property 'lastModified'/
   );
-  let time = new Date();
+  Assert.throws(
+    () => PlacesUtils.bookmarks.insert({ lastModified: new Date(NaN) }),
+    /Invalid value for property 'lastModified'/
+  );
 
-  let past = new Date(time - 86400000);
+  let past = new Date(Date.now() - 86400000);
   Assert.throws(
     () => PlacesUtils.bookmarks.insert({ lastModified: past }),
     /Invalid value for property 'lastModified'/

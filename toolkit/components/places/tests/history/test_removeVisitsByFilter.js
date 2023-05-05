@@ -302,11 +302,16 @@ add_task(async function test_error_cases() {
   );
   Assert.throws(
     () => PlacesUtils.history.removeVisitsByFilter({ beginDate: "now" }),
-    /TypeError: Expected a Date/
+    /TypeError: Expected a valid Date/
   );
   Assert.throws(
     () => PlacesUtils.history.removeVisitsByFilter({ beginDate: Date.now() }),
-    /TypeError: Expected a Date/
+    /TypeError: Expected a valid Date/
+  );
+  Assert.throws(
+    () =>
+      PlacesUtils.history.removeVisitsByFilter({ beginDate: new Date(NaN) }),
+    /TypeError: Expected a valid Date/
   );
   Assert.throws(
     () =>

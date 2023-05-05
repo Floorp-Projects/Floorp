@@ -661,8 +661,13 @@ export var History = Object.freeze({
    * Throw if an object is not a Date object.
    */
   ensureDate(arg) {
-    if (!arg || typeof arg != "object" || arg.constructor.name != "Date") {
-      throw new TypeError("Expected a Date, got " + arg);
+    if (
+      !arg ||
+      typeof arg != "object" ||
+      arg.constructor.name != "Date" ||
+      isNaN(arg)
+    ) {
+      throw new TypeError("Expected a valid Date, got " + arg);
     }
   },
 

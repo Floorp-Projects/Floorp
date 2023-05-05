@@ -60,6 +60,11 @@ add_task(async function invalid_input_rejects() {
     () => PlacesUtils.bookmarks.insertTree(tree),
     /Invalid value for property 'dateAdded'/
   );
+  tree.children = [{ dateAdded: new Date(NaN) }];
+  await Assert.throws(
+    () => PlacesUtils.bookmarks.insertTree(tree),
+    /Invalid value for property 'dateAdded'/
+  );
 
   tree.children = [{ lastModified: -10 }];
   await Assert.throws(
@@ -77,7 +82,7 @@ add_task(async function invalid_input_rejects() {
     /Invalid value for property 'lastModified'/
   );
 
-  let time = new Date();
+  let time = Date.now();
   let future = new Date(time + 86400000);
   tree.children = [{ dateAdded: future, lastModified: time }];
   await Assert.throws(
