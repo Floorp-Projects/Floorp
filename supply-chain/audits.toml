@@ -4,7 +4,7 @@
 [[wildcard-audits.audio_thread_priority]]
 who = "Paul Adenot <paul@paul.cx>"
 criteria = "safe-to-deploy"
-user-id = 1258
+user-id = 1258 # Paul Adenot (padenot)
 start = "2019-05-09"
 end = "2024-04-24"
 notes = """
@@ -23,7 +23,7 @@ notes = "Maintained by the CryptoEng team at Mozilla."
 [[wildcard-audits.bhttp]]
 who = "Martin Thomson <mt@lowentropy.net>"
 criteria = "safe-to-deploy"
-user-id = 128763
+user-id = 128763 # Martin Thomson (martinthomson)
 start = "2022-08-04"
 end = "2024-03-09"
 notes = "Though the code is safe to run and deploy, the code for processing HTTP/1.1 messages (the `read-http` feature, specifically) is not suited for deployment in real applications, either clients or servers.  Some features necessary for live deployment are not implemented, such as the proper handling of some types of response (e.g., a response to a HEAD request).  Software that processes HTTP/1.1 messages requires a large number of compatibility tweaks if it is to be deployed interoperably.  This feature only exists to support basic validation tools and is unlikely to be widely compatible."
@@ -31,7 +31,7 @@ notes = "Though the code is safe to run and deploy, the code for processing HTTP
 [[wildcard-audits.cexpr]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
-user-id = 3788
+user-id = 3788 # Emilio Cobos Álvarez (emilio)
 start = "2021-06-21"
 end = "2024-04-21"
 notes = "No unsafe code, rather straight-forward parser."
@@ -39,7 +39,7 @@ notes = "No unsafe code, rather straight-forward parser."
 [[wildcard-audits.etagere]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
-user-id = 1281
+user-id = 1281 # Nicolas Silva (nical)
 start = "2020-11-12"
 end = "2024-04-25"
 notes = "I am the author of this crate."
@@ -47,7 +47,7 @@ notes = "I am the author of this crate."
 [[wildcard-audits.euclid]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
-user-id = 1281
+user-id = 1281 # Nicolas Silva (nical)
 start = "2019-03-14"
 end = "2024-04-25"
 notes = "I wrote most of the commits in the euclid reprository and review every change that is not produced by me."
@@ -55,7 +55,7 @@ notes = "I wrote most of the commits in the euclid reprository and review every 
 [[wildcard-audits.glean]]
 who = "Chris H-C <chutten@mozilla.com>"
 criteria = "safe-to-deploy"
-user-id = 48
+user-id = 48 # Jan-Erik Rediger (badboy)
 start = "2020-11-10"
 end = "2024-02-24"
 notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
@@ -63,7 +63,7 @@ notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
 [[wildcard-audits.glean-core]]
 who = "Chris H-C <chutten@mozilla.com>"
 criteria = "safe-to-deploy"
-user-id = 48
+user-id = 48 # Jan-Erik Rediger (badboy)
 start = "2019-09-24"
 end = "2024-02-24"
 notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
@@ -71,7 +71,7 @@ notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
 [[wildcard-audits.glslopt]]
 who = "Jamie Nicol <jnicol@mozilla.com>"
 criteria = "safe-to-deploy"
-user-id = 84794
+user-id = 84794 # Jamie Nicol (jamienicol)
 start = "2020-04-07"
 end = "2024-04-25"
 
@@ -118,7 +118,7 @@ notes = "Maintained by the DevTools team at Mozilla and has no unsafe code."
 [[wildcard-audits.ohttp]]
 who = "Martin Thomson <mt@lowentropy.net>"
 criteria = "safe-to-deploy"
-user-id = 128763
+user-id = 128763 # Martin Thomson (martinthomson)
 start = "2022-08-04"
 end = "2024-03-09"
 notes = "This code contains two cryptographic back ends.  No unsafe code is contained if the Rust `hpke` crate is used (the `rust-hpke` feature).  Using NSS (the `nss` feature) involves extensive use of bindings to the native code provided by NSS.  This interface uses wrappers that attempt to add safety to a fundamentally very dangerous library, but those wrappers have only been validated for use following the needs of this crate."
@@ -126,7 +126,7 @@ notes = "This code contains two cryptographic back ends.  No unsafe code is cont
 [[wildcard-audits.rust_cascade]]
 who = "Dana Keeler <dkeeler@mozilla.com>"
 criteria = "safe-to-deploy"
-user-id = 57462
+user-id = 57462 # Dana Keeler (mozkeeler)
 start = "2019-11-15"
 end = "2024-04-24"
 notes = "Written and maintained by the security engineering team at Mozilla."
