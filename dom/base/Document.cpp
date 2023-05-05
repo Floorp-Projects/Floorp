@@ -11926,50 +11926,48 @@ void Document::WillDispatchMutationEvent(nsINode* aTarget) {
 }
 
 void Document::MutationEventDispatched(nsINode* aTarget) {
-  --mSubtreeModifiedDepth;
-  if (mSubtreeModifiedDepth == 0) {
-    int32_t count = mSubtreeModifiedTargets.Count();
-    if (!count) {
-      return;
-    }
+  if (--mSubtreeModifiedDepth) {
+    return;
+  }
 
-    nsPIDOMWindowInner* window = GetInnerWindow();
-    if (window &&
-        !window->HasMutationListeners(NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
-      mSubtreeModifiedTargets.Clear();
-      return;
-    }
+  int32_t count = mSubtreeModifiedTargets.Count();
+  if (!count) {
+    return;
+  }
 
-    nsCOMArray<nsINode> realTargets;
-    for (int32_t i = 0; i < count; ++i) {
-      nsINode* possibleTarget = mSubtreeModifiedTargets[i];
-      if (possibleTarget && possibleTarget->ChromeOnlyAccess()) {
-        continue;
-      }
-
-      nsINode* commonAncestor = nullptr;
-      int32_t realTargetCount = realTargets.Count();
-      for (int32_t j = 0; j < realTargetCount; ++j) {
-        commonAncestor = nsContentUtils::GetClosestCommonInclusiveAncestor(
-            possibleTarget, realTargets[j]);
-        if (commonAncestor) {
-          realTargets.ReplaceObjectAt(commonAncestor, j);
-          break;
-        }
-      }
-      if (!commonAncestor) {
-        realTargets.AppendObject(possibleTarget);
-      }
-    }
-
+  nsPIDOMWindowInner* window = GetInnerWindow();
+  if (window &&
+      !window->HasMutationListeners(NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED)) {
     mSubtreeModifiedTargets.Clear();
+    return;
+  }
 
-    int32_t realTargetCount = realTargets.Count();
-    for (int32_t k = 0; k < realTargetCount; ++k) {
-      InternalMutationEvent mutation(true, eLegacySubtreeModified);
-      (new AsyncEventDispatcher(realTargets[k], mutation))
-          ->RunDOMEventWhenSafe();
+  nsCOMArray<nsINode> realTargets;
+  for (nsINode* possibleTarget : mSubtreeModifiedTargets) {
+    if (possibleTarget->ChromeOnlyAccess()) {
+      continue;
     }
+
+    nsINode* commonAncestor = nullptr;
+    int32_t realTargetCount = realTargets.Count();
+    for (int32_t j = 0; j < realTargetCount; ++j) {
+      commonAncestor = nsContentUtils::GetClosestCommonInclusiveAncestor(
+          possibleTarget, realTargets[j]);
+      if (commonAncestor) {
+        realTargets.ReplaceObjectAt(commonAncestor, j);
+        break;
+      }
+    }
+    if (!commonAncestor) {
+      realTargets.AppendObject(possibleTarget);
+    }
+  }
+
+  mSubtreeModifiedTargets.Clear();
+
+  for (nsINode* target : realTargets) {
+    InternalMutationEvent mutation(true, eLegacySubtreeModified);
+    (new AsyncEventDispatcher(target, mutation))->RunDOMEventWhenSafe();
   }
 }
 
