@@ -435,6 +435,19 @@ yellow = submarine
         self.assertEqual(len(parser.tests), 0)
         self.assertTrue(len(parser.manifests()) == 1)
 
+    def test_manifest_with_invalid_condition(self):
+        """
+        Ensure a skip-if or similar condition with an assignment in it
+        causes errors.
+        """
+
+        parser = ManifestParser()
+        manifest = os.path.join(here, "broken-skip-if.ini")
+        with self.assertRaisesRegex(
+            Exception, "Should not assign in skip-if condition for DEFAULT"
+        ):
+            parser.read(manifest)
+
 
 if __name__ == "__main__":
     mozunit.main()
