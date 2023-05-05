@@ -130,5 +130,6 @@ def fixSymbols(
 
 
 if __name__ == "__main__":
+    bpsyms = os.environ.get("BREAKPAD_SYMBOLS_PATH", None)
     for line in sys.stdin:
-        sys.stdout.write(fixSymbols(line))
+        sys.stdout.write(fixSymbols(line, breakpadSymsDir=bpsyms))
