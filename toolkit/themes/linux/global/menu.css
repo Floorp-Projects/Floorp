@@ -205,6 +205,12 @@ menuseparator {
   menuseparator {
     appearance: none;
     margin-block: 2px;
-    border-top: 1px solid color-mix(in srgb, ThreeDShadow 50%, transparent 50%);
+    border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  }
+
+  @media (prefers-contrast) {
+    menuseparator {
+      border-top-color: var(--panel-border-color);
+    }
   }
 }

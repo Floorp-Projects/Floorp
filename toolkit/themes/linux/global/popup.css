@@ -24,6 +24,13 @@ panel {
   -moz-window-input-region-margin: var(--panel-shadow-margin);
 }
 
+@media (prefers-contrast) {
+  menupopup,
+  panel {
+    --panel-border-color: color-mix(in srgb, currentColor 60%, transparent);
+  }
+}
+
 @media (-moz-gtk-non-native-menus) {
   menupopup,
   panel {
