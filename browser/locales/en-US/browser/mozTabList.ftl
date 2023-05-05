@@ -37,6 +37,7 @@ mztabrow-open-in-window = Open in New Window
     .accesskey = N
 mztabrow-open-in-private-window = Open in New Private Window
     .accesskey = P
+# “Bookmark” is a verb, as in "Bookmark this page" (add to bookmarks).
 mztabrow-add-bookmark = Bookmark…
     .accesskey = B
 mztabrow-save-to-pocket = Save to { -pocket-brand-name }
