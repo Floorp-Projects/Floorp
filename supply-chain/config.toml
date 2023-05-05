@@ -269,26 +269,6 @@ criteria = "safe-to-deploy"
 version = "0.16.0"
 criteria = "safe-to-run"
 
-[[exemptions.core-foundation]]
-version = "0.9.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.core-foundation-sys]]
-version = "0.8.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.core-graphics]]
-version = "0.22.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.core-graphics-types]]
-version = "0.1.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.core-text]]
-version = "19.2.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.coreaudio-sys]]
 version = "0.2.10"
 criteria = "safe-to-deploy"
