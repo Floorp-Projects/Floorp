@@ -36,14 +36,10 @@ Building outside of the unified environment
 
 As described above, unified builds can cause source files to implicitly depend on each other, which
 not only causes unexpected build failures but also can cause issues when using source-analysis tools.
-To combat this, we'll use a "hybrid" build that attempts to perform a build with as many files compiled
+To combat this, we'll use a "non-unified" build that attempts to perform a build with as many files compiled
 individually as possible.
 
-Due to the implicit dependency problem, not all modules are able to be compiled in a non-unified
-environment yet. To designate these for the hybrid build, the ``REQUIRES_UNIFIED_BUILD`` option can be
-set in their corresponding ``moz.build`` file.
-
-To build in the hybrid mode, set the following flag in your ``mozconfig``:
+To build in the non unified mode, set the following flag in your ``mozconfig``:
 
 ``ac_add_options --disable-unified-build``
 

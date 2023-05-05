@@ -1121,9 +1121,7 @@ class UnifiedSources(BaseSources):
             self, context, static_files, generated_files, canonical_suffix
         )
 
-        unified_build = context.config.substs.get(
-            "ENABLE_UNIFIED_BUILD", False
-        ) or context.get("REQUIRES_UNIFIED_BUILD", False)
+        unified_build = context.config.substs.get("ENABLE_UNIFIED_BUILD", False)
         files_per_unified_file = (
             context.get("FILES_PER_UNIFIED_FILE", 16) if unified_build else 1
         )
