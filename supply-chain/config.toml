@@ -533,10 +533,6 @@ criteria = "safe-to-deploy"
 version = "0.7.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.headers]]
-version = "0.3.7"
-criteria = "safe-to-run"
-
 [[exemptions.hermit-abi]]
 version = "0.1.19"
 criteria = "safe-to-deploy"
@@ -544,10 +540,6 @@ criteria = "safe-to-deploy"
 [[exemptions.hexf-parse]]
 version = "0.2.1"
 criteria = "safe-to-deploy"
-
-[[exemptions.httparse]]
-version = "1.7.1"
-criteria = "safe-to-run"
 
 [[exemptions.ident_case]]
 version = "1.0.1"
@@ -663,10 +655,6 @@ criteria = "safe-to-deploy"
 version = "0.7.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.mime]]
-version = "0.3.16"
-criteria = "safe-to-deploy"
-
 [[exemptions.mime_guess]]
 version = "2.0.4"
 criteria = "safe-to-deploy"
@@ -717,10 +705,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.ntapi]]
 version = "0.3.7"
-criteria = "safe-to-deploy"
-
-[[exemptions.num_cpus]]
-version = "1.13.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.objc]]
