@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { logEvenNumbers, logEvenNumbersMainThread } = ChromeUtils.import(
-  "resource://gre/modules/RustFixtureCallbacks.jsm"
+const { logEvenNumbers, logEvenNumbersMainThread } = ChromeUtils.importESModule(
+  "resource://gre/modules/RustFixtureCallbacks.sys.mjs"
 );
 
 class Logger {
