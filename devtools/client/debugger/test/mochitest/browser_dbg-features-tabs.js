@@ -40,6 +40,19 @@ add_task(async function() {
   // Some sources are loaded from the same URL and only one tab will be opened for them
   is(countTabs(dbg), uniqueUrls.size, "Got a tab for each distinct source URL");
 
+  await reload(dbg, ...INTEGRATION_TEST_PAGE_SOURCES);
+
+  await waitFor(
+    () => countTabs(dbg) == uniqueUrls.size,
+    "Wait for tab count to be fully restored"
+  );
+
+  is(
+    countTabs(dbg),
+    uniqueUrls.size,
+    "Still get the same number of tabs after reload"
+  );
+
   for (const source of displayedSources) {
     info(`Closing '${source.url}' from ${source.thread}`);
     await closeTab(dbg, source);
