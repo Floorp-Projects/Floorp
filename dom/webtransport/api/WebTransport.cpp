@@ -634,8 +634,8 @@ already_AddRefed<Promise> WebTransport::CreateBidirectionalStream(
   // Step 2: If transport.[[State]] is "closed" or "failed", return a new
   // rejected promise with an InvalidStateError.
   if (mState == WebTransportState::CLOSED ||
-      mState == WebTransportState::FAILED) {
-    aRv.ThrowInvalidStateError("WebTransport close or failed");
+      mState == WebTransportState::FAILED || !mChild) {
+    aRv.ThrowInvalidStateError("WebTransport closed or failed");
     return nullptr;
   }
 
@@ -656,6 +656,10 @@ already_AddRefed<Promise> WebTransport::CreateBidirectionalStream(
       [self = RefPtr{this}, promise](
           BidirectionalStreamResponse&& aPipes) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
         LOG(("CreateBidirectionalStream response"));
+        if (BidirectionalStreamResponse::Tnsresult == aPipes.type()) {
+          promise->MaybeReject(aPipes.get_nsresult());
+          return;
+        }
         // Step 5.2.1: If transport.[[State]] is "closed" or "failed",
         // reject p with an InvalidStateError and abort these steps.
         if (BidirectionalStreamResponse::Tnsresult == aPipes.type()) {
@@ -700,8 +704,8 @@ already_AddRefed<Promise> WebTransport::CreateUnidirectionalStream(
   // Step 2: If transport.[[State]] is "closed" or "failed", return a new
   // rejected promise with an InvalidStateError.
   if (mState == WebTransportState::CLOSED ||
-      mState == WebTransportState::FAILED) {
-    aRv.ThrowInvalidStateError("WebTransport close or failed");
+      mState == WebTransportState::FAILED || !mChild) {
+    aRv.ThrowInvalidStateError("WebTransport closed or failed");
     return nullptr;
   }
 
@@ -723,6 +727,10 @@ already_AddRefed<Promise> WebTransport::CreateUnidirectionalStream(
       [self = RefPtr{this}, promise](UnidirectionalStreamResponse&& aResponse)
           MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             LOG(("CreateUnidirectionalStream response"));
+            if (UnidirectionalStreamResponse::Tnsresult == aResponse.type()) {
+              promise->MaybeReject(aResponse.get_nsresult());
+              return;
+            }
             // Step 5.1: Let internalStream be the result of creating an
             // outgoing unidirectional stream with transport.[[Session]].
             // Step 5.2: Queue a network task with transport to run the

@@ -356,7 +356,7 @@ void WebTransportSessionProxy::CreateStreamInternal(
     case WebTransportSessionProxyState::DONE: {
       nsCOMPtr<nsIWebTransportStreamCallback> cb(callback);
       NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-          "WebTransportSessionProxy::CreateOutgoingUnidirectionalStream",
+          "WebTransportSessionProxy::CreateStreamInternal",
           [cb{std::move(cb)}]() {
             cb->OnError(nsIWebTransport::INVALID_STATE_ERROR);
           }));
