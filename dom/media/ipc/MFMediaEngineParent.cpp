@@ -148,7 +148,9 @@ void MFMediaEngineParent::CreateMediaEngine() {
       MakeAndInitialize<MFMediaEngineExtension>(&mMediaEngineExtension));
   RETURN_VOID_IF_FAILED(creationAttributes->SetUnknown(
       MF_MEDIA_ENGINE_EXTENSION, mMediaEngineExtension.Get()));
-  // TODO : SET MF_MEDIA_ENGINE_CONTENT_PROTECTION_FLAGS
+  RETURN_VOID_IF_FAILED(
+      creationAttributes->SetUINT32(MF_MEDIA_ENGINE_CONTENT_PROTECTION_FLAGS,
+                                    MF_MEDIA_ENGINE_ENABLE_PROTECTED_CONTENT));
   if (mDXGIDeviceManager) {
     RETURN_VOID_IF_FAILED(creationAttributes->SetUnknown(
         MF_MEDIA_ENGINE_DXGI_MANAGER, mDXGIDeviceManager.Get()));
