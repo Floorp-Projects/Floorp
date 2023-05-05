@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const modules = {
+export const modules = {
   root: {},
   "windowglobal-in-root": {},
   windowglobal: {},
@@ -42,33 +42,3 @@ ChromeUtils.defineESModuleGetters(modules.windowglobal, {
   script:
     "chrome://remote/content/webdriver-bidi/modules/windowglobal/script.sys.mjs",
 });
-
-/**
- * Retrieve the WebDriver BiDi module class matching the provided module name
- * and folder.
- *
- * @param {string} moduleName
- *     The name of the module to get the class for.
- * @param {string} moduleFolder
- *     A valid folder name for modules.
- * @returns {Class=}
- *     The class corresponding to the module name and folder, null if no match
- *     was found.
- * @throws {Error}
- *     If the provided module folder is unexpected.
- */
-export const getModuleClass = function(moduleName, moduleFolder) {
-  if (!modules[moduleFolder]) {
-    throw new Error(
-      `Invalid module folder "${moduleFolder}", expected one of "${Object.keys(
-        modules
-      )}"`
-    );
-  }
-
-  if (!modules[moduleFolder][moduleName]) {
-    return null;
-  }
-
-  return modules[moduleFolder][moduleName];
-};
