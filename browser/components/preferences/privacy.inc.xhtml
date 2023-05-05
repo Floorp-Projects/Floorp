@@ -984,21 +984,19 @@
            data-l10n-id="collection-privacy-notice"/>
   </description>
 #ifdef MOZ_DATA_REPORTING
-  <description>
-    <hbox id="telemetry-container" class="info-box-container smaller-font-size" hidden="true">
-      <hbox class="info-icon-container">
-        <html:img class="info-icon"></html:img>
-      </hbox>
-      <hbox align="center" flex="1">
-        <html:span id="telemetryDisabledDescription" class="tail-with-learn-more"
-                   data-l10n-id="collection-health-report-telemetry-disabled"/>
-        <html:a is="moz-support-link"
-                id="telemetryDataDeletionLearnMore"
-                class="learnMore text-link"
-                data-l10n-id="collection-health-report-telemetry-disabled-link"/>
-      </hbox>
+  <hbox id="telemetry-container" class="info-box-container smaller-font-size" hidden="true">
+    <hbox class="info-icon-container">
+      <html:img class="info-icon"></html:img>
     </hbox>
-  </description>
+    <description>
+      <html:span id="telemetryDisabledDescription" class="tail-with-learn-more"
+                 data-l10n-id="collection-health-report-telemetry-disabled"/>
+      <html:a is="moz-support-link"
+              id="telemetryDataDeletionLearnMore"
+              class="learnMore"
+              data-l10n-id="collection-health-report-telemetry-disabled-link"/>
+    </description>
+  </hbox>
   <vbox data-subcategory="reports">
     <description flex="1">
       <checkbox id="submitHealthReportBox"
