@@ -3316,9 +3316,8 @@ void gfxFont::PostShapingFixup(DrawTarget* aDrawTarget, const char16_t* aText,
     const Metrics& metrics = GetMetrics(aVertical ? nsFontMetrics::eVertical
                                                   : nsFontMetrics::eHorizontal);
     if (metrics.maxAdvance > metrics.aveCharWidth) {
-      float synBoldOffset = GetSyntheticBoldOffset() * CalcXScale(aDrawTarget);
-      aShapedText->AdjustAdvancesForSyntheticBold(synBoldOffset, aOffset,
-                                                  aLength);
+      aShapedText->AdjustAdvancesForSyntheticBold(GetSyntheticBoldOffset(),
+                                                  aOffset, aLength);
     }
   }
 }
