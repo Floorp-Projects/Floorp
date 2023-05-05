@@ -15,7 +15,7 @@ object FocusVersions {
         const val annotation = "1.6.0"
         const val appcompat = "1.6.1"
         const val arch = "2.1.0"
-        const val browser = "1.4.0"
+        const val browser = "1.5.0"
         const val cardview = "1.0.0"
         const val compose = "1.4.3"
         const val constraint_layout = "2.1.4"
