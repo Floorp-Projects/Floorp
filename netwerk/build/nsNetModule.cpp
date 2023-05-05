@@ -22,7 +22,6 @@
 #include "nsStandardURL.h"
 #include "mozilla/net/BackgroundChannelRegistrar.h"
 #include "mozilla/net/NeckoChild.h"
-#include "RedirectChannelRegistrar.h"
 #ifdef MOZ_AUTH_EXTENSION
 #  include "nsAuthGSSAPI.h"
 #endif
@@ -234,10 +233,6 @@ void nsNetShutdown() {
   mozilla::net::WebSocketChannel::Shutdown();
 
   mozilla::net::Http2CompressionCleanup();
-
-  mozilla::net::RedirectChannelRegistrar::Shutdown();
-
-  mozilla::net::BackgroundChannelRegistrar::Shutdown();
 
 #ifdef MOZ_AUTH_EXTENSION
   nsAuthGSSAPI::Shutdown();
