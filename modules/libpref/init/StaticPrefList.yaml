@@ -7494,7 +7494,7 @@
 # compilations
 - name: javascript.options.jithints
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
