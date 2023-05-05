@@ -703,6 +703,7 @@ class TestTypeConversions(BaseStructuredTest):
             "stack",
             {},
             [],
+            None,
             "unexpected",
         )
         self.assertRaises(TypeError, self.logger.test_status, "test1", test="test2")
