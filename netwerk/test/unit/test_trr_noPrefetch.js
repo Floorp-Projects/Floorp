@@ -34,7 +34,24 @@ add_setup(async function setup() {
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
+  // We need to define both A and AAAA responses, otherwise
+  // we might race and pick up the skip reason for the other request.
   await trrServer.registerDoHAnswers(`myfoo.test`, "A", {
+    answers: [],
+  });
+  await trrServer.registerDoHAnswers(`myfoo.test`, "AAAA", {
+    answers: [],
+  });
+
+  // myfoo2.test will return sever error as it's not defined
+
+  // return nxdomain for this one
+  await trrServer.registerDoHAnswers(`myfoo3.test`, "A", {
+    flags: 0x03,
+    answers: [],
+  });
+  await trrServer.registerDoHAnswers(`myfoo3.test`, "AAAA", {
+    flags: 0x03,
     answers: [],
   });
 
@@ -68,6 +85,42 @@ add_task(async function test_failure() {
   equal(
     req.QueryInterface(Ci.nsIHttpChannelInternal).trrSkipReason,
     Ci.nsITRRSkipReason.TRR_NO_ANSWERS
+  );
+
+  req = await new Promise(resolve => {
+    let chan = NetUtil.newChannel({
+      uri: `http://myfoo2.test/`,
+      loadUsingSystemPrincipal: true,
+    }).QueryInterface(Ci.nsIHttpChannel);
+    chan.asyncOpen(new ChannelListener(resolve, null, CL_EXPECT_FAILURE));
+  });
+
+  equal(req.status, Cr.NS_ERROR_UNKNOWN_HOST);
+  equal(
+    req.QueryInterface(Ci.nsIHttpChannelInternal).effectiveTRRMode,
+    Ci.nsIRequest.TRR_ONLY_MODE
+  );
+  equal(
+    req.QueryInterface(Ci.nsIHttpChannelInternal).trrSkipReason,
+    Ci.nsITRRSkipReason.TRR_RCODE_FAIL
+  );
+
+  req = await new Promise(resolve => {
+    let chan = NetUtil.newChannel({
+      uri: `http://myfoo3.test/`,
+      loadUsingSystemPrincipal: true,
+    }).QueryInterface(Ci.nsIHttpChannel);
+    chan.asyncOpen(new ChannelListener(resolve, null, CL_EXPECT_FAILURE));
+  });
+
+  equal(req.status, Cr.NS_ERROR_UNKNOWN_HOST);
+  equal(
+    req.QueryInterface(Ci.nsIHttpChannelInternal).effectiveTRRMode,
+    Ci.nsIRequest.TRR_ONLY_MODE
+  );
+  equal(
+    req.QueryInterface(Ci.nsIHttpChannelInternal).trrSkipReason,
+    Ci.nsITRRSkipReason.TRR_NXDOMAIN
   );
 });
 
