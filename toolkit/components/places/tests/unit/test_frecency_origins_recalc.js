@@ -40,9 +40,9 @@ add_task(async function test() {
   );
 
   // Remove only one visit (otherwise the page would be orphaned).
-  await PlacesUtils.history.removeByFilter({
-    beginDate: new Date(now - 10000),
-    endDate: new Date(now + 10000),
+  await PlacesUtils.history.removeVisitsByFilter({
+    beginDate: new Date(now.valueOf() - 10000),
+    endDate: new Date(now.valueOf() + 10000),
   });
   Assert.equal(
     (
