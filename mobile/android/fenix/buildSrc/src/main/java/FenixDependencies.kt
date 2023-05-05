@@ -26,7 +26,7 @@ object FenixVersions {
     const val androidx_benchmark = "1.1.1"
     const val androidx_biometric = "1.1.0"
     const val androidx_coordinator_layout = "1.1.0"
-    const val androidx_constraint_layout = "2.0.4"
+    const val androidx_constraint_layout = "2.1.4"
     const val androidx_preference = "1.1.1"
     const val androidx_profileinstaller = "1.2.2"
     const val androidx_legacy = "1.0.0"
