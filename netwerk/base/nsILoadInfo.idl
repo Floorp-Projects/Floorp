@@ -801,6 +801,18 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute BrowsingContext browsingContext;
 
   /**
+   * The BrowsingContext which the worker is associated.
+   *
+   * Note that this could be 0 if the load is not triggered in a WorkerScope.
+   * This value is only set and used in the parent process for some sitautions
+   * the channel is created in the parent process for Workers. Such as fetch().
+   * In content process, it is always 0.
+   * This value would not be propagated through IPC.
+   */
+  [infallible] attribute unsigned long long workerAssociatedBrowsingContextID;
+  [infallible] readonly attribute BrowsingContext workerAssociatedBrowsingContext;
+
+  /**
    * Only when the element being loaded is <frame src="foo.html">
    * (or, more generally, if the element QIs to nsFrameLoaderOwner),
    * the frameBrowsingContext is the browsing context containing the
