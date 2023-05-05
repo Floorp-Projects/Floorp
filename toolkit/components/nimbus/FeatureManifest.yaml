@@ -83,6 +83,10 @@ search:
       type: string
       setPref: browser.search.param.google_channel_row
       description: A string pref set by Nimbus tests for Rest of World search cohort
+    serpEventTelemetryEnabled:
+      type: boolean
+      setPref: browser.search.serpEventTelemetry.enabled
+      description: Whether the Glean SERP event telemetry is enabled.
 
 urlbar:
   description: The Address Bar
