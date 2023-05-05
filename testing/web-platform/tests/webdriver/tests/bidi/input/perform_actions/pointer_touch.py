@@ -14,7 +14,7 @@ async def test_touch_pointer_properties(
     await load_static_test_page(page="test_actions_pointer.html")
 
     pointerArea = await get_element("#pointerArea")
-    center = await get_inview_center(
+    center = await get_inview_center_bidi(
         bidi_session, context=top_context, element=pointerArea
     )
 
@@ -91,7 +91,7 @@ async def test_touch_pointer_properties_tilt_twist(
     await load_static_test_page(page="test_actions_pointer.html")
 
     pointerArea = await get_element("#pointerArea")
-    center = await get_inview_center(
+    center = await get_inview_center_bidi(
         bidi_session, context=top_context, element=pointerArea
     )
 
