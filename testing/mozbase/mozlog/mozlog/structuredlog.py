@@ -34,12 +34,18 @@ Allowed actions, and subfields:
   suite_start
       tests  - List of test names
       name - Name for the suite
+      run_info - Dictionary of run properties
+
+  add_subsuite
+      name - Name for the subsuite (must be unique)
+      run_info - Updates to the suite run_info (optional)
 
   suite_end
 
   test_start
       test - ID for the test
       path - Relative path to test (optional)
+      subsuite - Name of the subsuite to which test belongs (optional)
 
   test_end
       test - ID for the test
@@ -50,6 +56,7 @@ Allowed actions, and subfields:
       extra - Dictionary of harness-specific extra information e.g. debug info
       known_intermittent - List of known intermittent statuses that should
                            not fail a test. eg. ['FAIL', 'TIMEOUT']
+      subsuite - Name of the subsuite to which test belongs (optional)
 
   test_status
       test - ID for the test
@@ -60,16 +67,20 @@ Allowed actions, and subfields:
                                  or absent if the subtest got the expected status
       known_intermittent - List of known intermittent statuses that should
                            not fail a test. eg. ['FAIL', 'TIMEOUT']
+      subsuite - Name of the subsuite to which test belongs (optional)
 
   process_output
       process - PID of the process
       command - Command line of the process
       data - Output data from the process
+      test - ID of the test that the process was running (optional)
+      subsuite - Name of the subsuite that the process was running (optional)
 
   assertion_count
       count - Number of assertions produced
       min_expected - Minimum expected number of assertions
       max_expected - Maximum expected number of assertions
+      subsuite - Name of the subsuite for the tests that ran (optional)
 
   lsan_leak
       frames - List of stack frames from the leak report
@@ -77,11 +88,13 @@ Allowed actions, and subfields:
               (e.g. a directory name)
       allowed_match - A stack frame in the list that matched a rule meaning the
                       leak is expected
+      subsuite - Name of the subsuite for the tests that ran (optional)
 
   lsan_summary
       bytes - Number of bytes leaked
       allocations - Number of allocations
       allowed - Boolean indicating whether all detected leaks matched allow rules
+      subsuite - Name of the subsuite for the tests that ran (optional)
 
   mozleak_object
      process - Process that leaked
@@ -90,6 +103,7 @@ Allowed actions, and subfields:
      scope - An identifier for the set of tests run during the browser session
              (e.g. a directory name)
      allowed - Boolean indicating whether the leak was permitted
+     subsuite - Name of the subsuite for the tests that ran (optional)
 
   log
       level [CRITICAL | ERROR | WARNING |
@@ -161,6 +175,7 @@ class LoggerState(object):
 
     def reset(self):
         self.handlers = []
+        self.subsuites = set()
         self.running_tests = set()
         self.suite_started = False
         self.component_states = {}
@@ -274,6 +289,10 @@ class StructuredLogger(object):
         if data is None:
             data = {}
 
+        if data.get("subsuite") and data["subsuite"] not in self._state.subsuites:
+            self.error(f"Unrecognised subsuite {data['subsuite']}")
+            return
+
         log_data = self._make_log_data(action, data)
         self._handle_log(log_data)
 
@@ -357,21 +376,48 @@ class StructuredLogger(object):
 
         self._log_data("suite_start", data)
 
+    @log_action(
+        Unicode("name"),
+        Dict(Any, "run_info", default=None, optional=True),
+    )
+    def add_subsuite(self, data):
+        """Log a add_subsuite message
+
+        :param str name: Name to identify the subsuite.
+        :param dict run_info: Optional information about the subsuite. This updates the suite run_info.
+        """
+        if data["name"] in self._state.subsuites:
+            return
+        run_info = data.get("run_info", {"subsuite": data["name"]})
+        if "subsuite" not in run_info:
+            run_info = run_info.copy()
+            run_info["subsuite"] = data["name"]
+        data["run_info"] = run_info
+        self._state.subsuites.add(data["name"])
+        self._log_data("add_subsuite", data)
+
     @log_action(Dict(Any, "extra", default=None, optional=True))
     def suite_end(self, data):
         """Log a suite_end message"""
         if not self._ensure_suite_state("suite_end", data):
             return
 
+        self._state.subsuites.clear()
+
         self._log_data("suite_end", data)
 
-    @log_action(TestId("test"), Unicode("path", default=None, optional=True))
+    @log_action(
+        TestId("test"),
+        Unicode("path", default=None, optional=True),
+        Unicode("subsuite", default=None, optional=True),
+    )
     def test_start(self, data):
         """Log a test_start message
 
         :param test: Identifier of the test that will run.
         :param path: Path to test relative to some base (typically the root of
                      the source tree).
+        :param subsuite: Optional name of the subsuite to which the test belongs.
         """
         if not self._state.suite_started:
             self.error(
@@ -393,6 +439,7 @@ class StructuredLogger(object):
         Unicode("stack", default=None, optional=True),
         Dict(Any, "extra", default=None, optional=True),
         List(SubStatus, "known_intermittent", default=None, optional=True),
+        Unicode("subsuite", default=None, optional=True),
     )
     def test_status(self, data):
         """
@@ -403,9 +450,11 @@ class StructuredLogger(object):
         :param subtest: Name of the subtest.
         :param status: Status string indicating the subtest result
         :param expected: Status string indicating the expected subtest result.
-        :param message: String containing a message associated with the result.
-        :param stack: a stack trace encountered during test execution.
-        :param extra: suite-specific data associated with the test result.
+        :param message: Optional string containing a message associated with the result.
+        :param stack: Optional stack trace encountered during test execution.
+        :param extra: Optional suite-specific data associated with the test result.
+        :param known_intermittent: Optional list of string expected intermittent statuses
+        :param subsuite: Optional name of the subsuite to which the test belongs.
         """
 
         if data["expected"] == data["status"] or data["status"] == "SKIP":
@@ -428,6 +477,7 @@ class StructuredLogger(object):
         Unicode("stack", default=None, optional=True),
         Dict(Any, "extra", default=None, optional=True),
         List(Status, "known_intermittent", default=None, optional=True),
+        Unicode("subsuite", default=None, optional=True),
     )
     def test_end(self, data):
         """
@@ -439,9 +489,10 @@ class StructuredLogger(object):
         :param test: Identifier of the test that produced the result.
         :param status: Status string indicating the test result
         :param expected: Status string indicating the expected test result.
-        :param message: String containing a message associated with the result.
-        :param stack: a stack trace encountered during test execution.
-        :param extra: suite-specific data associated with the test result.
+        :param message: Optonal string containing a message associated with the result.
+        :param stack: Optional stack trace encountered during test execution.
+        :param extra: Optional suite-specific data associated with the test result.
+        :param subsuite: Optional name of the subsuite to which the test belongs.
         """
 
         if data["expected"] == data["status"] or data["status"] == "SKIP":
@@ -460,6 +511,8 @@ class StructuredLogger(object):
         Unicode("process"),
         Unicode("data"),
         Unicode("command", default=None, optional=True),
+        TestId("test", default=None, optional=True),
+        Unicode("subsuite", default=None, optional=True),
     )
     def process_output(self, data):
         """Log output from a managed process.
@@ -467,8 +520,10 @@ class StructuredLogger(object):
         :param process: A unique identifier for the process producing the output
                         (typically the pid)
         :param data: The output to log
-        :param command: A string representing the full command line used to start
+        :param command: Optional string representing the full command line used to start
                         the process.
+        :param test: Optional ID of the test which the process was running.
+        :param subsuite: Optional name of the subsuite which the process was running.
         """
         self._log_data("process_output", data)
 
@@ -484,6 +539,7 @@ class StructuredLogger(object):
         Unicode("reason", default=None, optional=True),
         Unicode("java_stack", default=None, optional=True),
         List(Unicode, "stackwalk_errors", default=None),
+        Unicode("subsuite", default=None, optional=True),
     )
     def crash(self, data):
         if data["stackwalk_errors"] is None:
@@ -497,14 +553,19 @@ class StructuredLogger(object):
     def valgrind_error(self, data):
         self._log_data("valgrind_error", data)
 
-    @log_action(Unicode("process"), Unicode("command", default=None, optional=True))
+    @log_action(
+        Unicode("process"),
+        Unicode("command", default=None, optional=True),
+        Unicode("subsuite", default=None, optional=True),
+    )
     def process_start(self, data):
         """Log start event of a process.
 
         :param process: A unique identifier for the process producing the
                         output (typically the pid)
-        :param command: A string representing the full command line used to
+        :param command: Optional string representing the full command line used to
                         start the process.
+        :param subsuite: Optional name of the subsuite using the process.
         """
         self._log_data("process_start", data)
 
@@ -512,6 +573,7 @@ class StructuredLogger(object):
         Unicode("process"),
         Int("exitcode"),
         Unicode("command", default=None, optional=True),
+        Unicode("subsuite", default=None, optional=True),
     )
     def process_exit(self, data):
         """Log exit event of a process.
@@ -519,18 +581,26 @@ class StructuredLogger(object):
         :param process: A unique identifier for the process producing the
                         output (typically the pid)
         :param exitcode: the exit code
-        :param command: A string representing the full command line used to
+        :param command: Optional string representing the full command line used to
                         start the process.
+        :param subsuite: Optional name of the subsuite using the process.
         """
         self._log_data("process_exit", data)
 
-    @log_action(TestId("test"), Int("count"), Int("min_expected"), Int("max_expected"))
+    @log_action(
+        TestId("test"),
+        Int("count"),
+        Int("min_expected"),
+        Int("max_expected"),
+        Unicode("subsuite", default=None, optional=True),
+    )
     def assertion_count(self, data):
         """Log count of assertions produced when running a test.
 
-        :param count: - Number of assertions produced
-        :param min_expected: - Minimum expected number of assertions
-        :param max_expected: - Maximum expected number of assertions
+        :param count: Number of assertions produced
+        :param min_expected: Minimum expected number of assertions
+        :param max_expected: Maximum expected number of assertions
+        :param subsuite: Optional name of the subsuite for the tests that ran
         """
         self._log_data("assertion_count", data)
 
@@ -538,6 +608,7 @@ class StructuredLogger(object):
         List(Unicode, "frames"),
         Unicode("scope", optional=True, default=None),
         Unicode("allowed_match", optional=True, default=None),
+        Unicode("subsuite", default=None, optional=True),
     )
     def lsan_leak(self, data):
         self._log_data("lsan_leak", data)
@@ -546,6 +617,7 @@ class StructuredLogger(object):
         Int("bytes"),
         Int("allocations"),
         Boolean("allowed", optional=True, default=False),
+        Unicode("subsuite", default=None, optional=True),
     )
     def lsan_summary(self, data):
         self._log_data("lsan_summary", data)
@@ -556,6 +628,7 @@ class StructuredLogger(object):
         Unicode("name"),
         Unicode("scope", optional=True, default=None),
         Boolean("allowed", optional=True, default=False),
+        Unicode("subsuite", default=None, optional=True),
     )
     def mozleak_object(self, data):
         self._log_data("mozleak_object", data)
@@ -568,6 +641,7 @@ class StructuredLogger(object):
         Unicode("scope", optional=True, default=None),
         Boolean("induced_crash", optional=True, default=False),
         Boolean("ignore_missing", optional=True, default=False),
+        Unicode("subsuite", default=None, optional=True),
     )
     def mozleak_total(self, data):
         self._log_data("mozleak_total", data)
