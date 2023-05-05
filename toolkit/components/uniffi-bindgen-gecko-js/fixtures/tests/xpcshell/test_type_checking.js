@@ -1,17 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Arithmetic = ChromeUtils.importESModule(
-  "resource://gre/modules/RustArithmetic.sys.mjs"
+const Arithmetic = ChromeUtils.import(
+  "resource://gre/modules/RustArithmetic.jsm"
 );
-const Geometry = ChromeUtils.importESModule(
-  "resource://gre/modules/RustGeometry.sys.mjs"
-);
-const TodoList = ChromeUtils.importESModule(
-  "resource://gre/modules/RustTodolist.sys.mjs"
-);
-const Rondpoint = ChromeUtils.importESModule(
-  "resource://gre/modules/RustRondpoint.sys.mjs"
+const Geometry = ChromeUtils.import("resource://gre/modules/RustGeometry.jsm");
+
+const TodoList = ChromeUtils.import("resource://gre/modules/RustTodolist.jsm");
+const Rondpoint = ChromeUtils.import(
+  "resource://gre/modules/RustRondpoint.jsm"
 );
 const { UniFFITypeError } = ChromeUtils.importESModule(
   "resource://gre/modules/UniFFI.sys.mjs"
