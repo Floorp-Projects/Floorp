@@ -54,7 +54,7 @@ object Versions {
     const val compose_compiler = "1.4.7"
 
     object AndroidX {
-        const val activityCompose = "1.4.0"
+        const val activityCompose = "1.7.1"
         const val annotation = "1.6.0"
         const val appcompat = "1.6.1"
         const val autofill = "1.1.0"
