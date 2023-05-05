@@ -41,7 +41,7 @@ macosx64-sdk-13.0:
     run:
         script: unpack-sdk.py
         arguments:
-            - https://swdist.apple.com/content/downloads/38/50/012-70652-A_2ZHIRHCHLN/f8b81s6tzlzrj0z67ynydjx4x1lwhr08ab/CLTools_macOSNMOS_SDK.pkg
+            - https://swcdn.apple.com/content/downloads/38/50/012-70652-A_2ZHIRHCHLN/f8b81s6tzlzrj0z67ynydjx4x1lwhr08ab/CLTools_macOSNMOS_SDK.pkg
             - 06f4a045854c456a553a5ee6acf678fbe26c06296fc68054ae918c206134aa20
             - Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX13.0.sdk.tar.zst
