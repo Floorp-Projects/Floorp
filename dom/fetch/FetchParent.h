@@ -72,6 +72,8 @@ class FetchParent final : public PFetchParent {
 
   void OnReportPerformanceTiming(const ResponseTiming&& aTiming);
 
+  void OnNotifyNetworkMonitorAlternateStack(uint64_t aChannelID);
+
  private:
   ~FetchParent();
 
