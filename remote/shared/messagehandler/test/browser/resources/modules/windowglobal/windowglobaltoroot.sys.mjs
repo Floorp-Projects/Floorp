@@ -6,6 +6,11 @@ import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys
 import { RootMessageHandler } from "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs";
 
 class WindowGlobalToRootModule extends Module {
+  constructor(messageHandler) {
+    super(messageHandler);
+    this.#assertContentProcess();
+  }
+
   destroy() {}
 
   /**
@@ -27,6 +32,15 @@ class WindowGlobalToRootModule extends Module {
       moduleName: "windowglobaltoroot",
       commandName: "getValueFromRoot",
     });
+  }
+
+  #assertContentProcess() {
+    const isContent =
+      Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
+
+    if (!isContent) {
+      throw new Error("Can only run in a content process");
+    }
   }
 }
 

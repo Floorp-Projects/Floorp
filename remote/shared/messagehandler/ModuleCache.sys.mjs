@@ -116,8 +116,12 @@ export class ModuleCache {
    */
   getAllModuleClasses(moduleName, destination) {
     const destinationType = destination.type;
-    const folders = [
-      this.#getModuleFolder(this.#messageHandlerType, destinationType),
+    const classes = [
+      this.#getModuleClass(
+        moduleName,
+        this.#messageHandlerType,
+        destinationType
+      ),
     ];
 
     // Bug 1733242: Extend the implementation of this method to handle workers.
@@ -125,12 +129,12 @@ export class ModuleCache {
     // "root -> windowglobal", but it wouldn't work for something such as
     // "root -> windowglobal -> worker".
     if (destinationType !== this.#messageHandlerType) {
-      folders.push(this.#getModuleFolder(destinationType, destinationType));
+      classes.push(
+        this.#getModuleClass(moduleName, destinationType, destinationType)
+      );
     }
 
-    return folders
-      .map(folder => this.#getModuleClass(moduleName, folder))
-      .filter(cls => !!cls);
+    return classes.filter(cls => !!cls);
   }
 
   /**
@@ -157,22 +161,15 @@ export class ModuleCache {
       return this.#modules.get(key);
     }
 
-    const moduleFolder = this.#getModuleFolder(
+    const ModuleClass = this.#getModuleClass(
+      moduleName,
       this.#messageHandlerType,
       destination.type
     );
-    const ModuleClass = this.#getModuleClass(moduleName, moduleFolder);
 
     let module = null;
     if (ModuleClass) {
       module = new ModuleClass(this.#messageHandler);
-      lazy.logger.trace(
-        `Module ${moduleFolder}/${moduleName}.jsm found for ${destination.type}`
-      );
-    } else {
-      lazy.logger.trace(
-        `Module ${moduleFolder}/${moduleName}.jsm not found for ${destination.type}`
-      );
     }
 
     this.#modules.set(key, module);
@@ -203,15 +200,28 @@ export class ModuleCache {
    *
    * @param {string} moduleName
    *     The name of the module to get the class for.
-   * @param {string} moduleFolder
-   *     A valid folder name for modules.
+   * @param {string} originType
+   *     The MessageHandler type from where the command comes.
+   * @param {string} destinationType
+   *     The MessageHandler type where the command should go to.
    * @returns {Class=}
    *     The class corresponding to the module name and folder, null if no match
    *     was found.
    * @throws {Error}
    *     If the provided module folder is unexpected.
    */
-  #getModuleClass = function(moduleName, moduleFolder) {
+  #getModuleClass = function(moduleName, originType, destinationType) {
+    if (
+      destinationType === lazy.RootMessageHandler.type &&
+      originType !== destinationType
+    ) {
+      // If we are trying to reach the root layer from a lower layer, no module
+      // class should attempt to handle the command in the current layer and
+      // the command should be forwarded unconditionally.
+      return null;
+    }
+
+    const moduleFolder = this.#getModuleFolder(originType, destinationType);
     if (!this.#protocol.modules[moduleFolder]) {
       throw new Error(
         `Invalid module folder "${moduleFolder}", expected one of "${Object.keys(
@@ -220,24 +230,25 @@ export class ModuleCache {
       );
     }
 
-    if (!this.#protocol.modules[moduleFolder][moduleName]) {
-      return null;
+    let moduleClass = null;
+    if (this.#protocol.modules[moduleFolder][moduleName]) {
+      moduleClass = this.#protocol.modules[moduleFolder][moduleName];
     }
 
-    return this.#protocol.modules[moduleFolder][moduleName];
+    if (moduleClass) {
+      lazy.logger.trace(
+        `Module ${moduleFolder}/${moduleName}.jsm found for ${destinationType}`
+      );
+    } else {
+      lazy.logger.trace(
+        `Module ${moduleFolder}/${moduleName}.jsm not found for ${destinationType}`
+      );
+    }
+
+    return moduleClass;
   };
 
   #getModuleFolder(originType, destinationType) {
-    // root messages should always target the root layer.
-    // NB: The idea here is just to avoid confusing the module cache when
-    // trying to send to `root` from `windowglobal`. The general rule should
-    // normally be "if the destination has a higher level than the origin, just
-    // use the destination as target folder", but as we don't support other
-    // levels than root & windowglobal, we can simplify this to this for now.
-    if (destinationType === lazy.RootMessageHandler.type) {
-      return "root";
-    }
-
     const originPath = lazy.getMessageHandlerClass(originType).modulePath;
     if (originType === destinationType) {
       // If the command is targeting the current type, the module is expected to

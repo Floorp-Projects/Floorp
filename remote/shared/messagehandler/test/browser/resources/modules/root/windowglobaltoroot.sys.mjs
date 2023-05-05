@@ -12,7 +12,17 @@ class WindowGlobalToRootModule extends Module {
    */
 
   getValueFromRoot() {
+    this.#assertParentProcess();
     return "root-value-called-from-windowglobal";
+  }
+
+  #assertParentProcess() {
+    const isParent =
+      Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT;
+
+    if (!isParent) {
+      throw new Error("Can only run in the parent process");
+    }
   }
 }
 
