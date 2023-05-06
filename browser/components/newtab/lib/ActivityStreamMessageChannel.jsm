@@ -108,8 +108,12 @@ class ActivityStreamMessageChannel {
     // that its likely time to refresh the cache.
     lazy.AboutHomeStartupCache.onPreloadedNewTabMessage();
 
-    for (let { actor } of this.loadedTabs.values()) {
-      actor.sendAsyncMessage(this.outgoingMessageName, action);
+    for (let browser of this.loadedTabs.keys()) {
+      browser.sendMessageToActor(
+        this.outgoingMessageName,
+        action,
+        "AboutNewTab"
+      );
     }
   }
 
@@ -122,7 +126,11 @@ class ActivityStreamMessageChannel {
     const targetId = action.meta && action.meta.toTarget;
     const target = this.getTargetById(targetId);
     try {
-      target.sendAsyncMessage(this.outgoingMessageName, action);
+      target.sendMessageToActor(
+        this.outgoingMessageName,
+        action,
+        "AboutNewTab"
+      );
     } catch (e) {
       // The target page is closed/closing by the user or test, so just ignore.
     }
@@ -141,17 +149,17 @@ class ActivityStreamMessageChannel {
   }
 
   /**
-   * getTargetById - Retrieve the message target by portID, if it exists
+   * getIdByTarget - Retrieve the id of a message target, if it exists in this.targets
    *
-   * @param  {string} id A portID
-   * @return {obj|null} The message target, if it exists.
+   * @param  {obj} targetObj A message target
+   * @return {string|null} The unique id of the target, if it exists.
    */
   getTargetById(id) {
     this.validatePortID(id);
 
-    for (let { portID, actor } of this.loadedTabs.values()) {
+    for (let { portID, browser } of this.loadedTabs.values()) {
       if (portID === id) {
-        return actor;
+        return browser;
       }
     }
     return null;
@@ -168,11 +176,15 @@ class ActivityStreamMessageChannel {
     // the cache.
     lazy.AboutHomeStartupCache.onPreloadedNewTabMessage();
 
-    const preloadedActors = this.getPreloadedActors();
-    if (preloadedActors && action.data) {
-      for (let preloadedActor of preloadedActors) {
+    const preloadedBrowsers = this.getPreloadedBrowsers();
+    if (preloadedBrowsers && action.data) {
+      for (let preloadedBrowser of preloadedBrowsers) {
         try {
-          preloadedActor.sendAsyncMessage(this.outgoingMessageName, action);
+          preloadedBrowser.sendMessageToActor(
+            this.outgoingMessageName,
+            action,
+            "AboutNewTab"
+          );
         } catch (e) {
           // The preloaded page is no longer available, so just ignore.
         }
@@ -181,19 +193,19 @@ class ActivityStreamMessageChannel {
   }
 
   /**
-   * getPreloadedActors - Retrieve the preloaded actors
+   * getPreloadedBrowsers - Retrieve the preloaded browsers
    *
-   * @return {Array|null} An array of actors belonging to the preloaded browsers, or null
+   * @return {Array|null} An array of browsers belonging to the preloaded browsers, or null
    *                      if there aren't any preloaded browsers
    */
-  getPreloadedActors() {
-    let preloadedActors = [];
-    for (let { actor, browser } of this.loadedTabs.values()) {
+  getPreloadedBrowsers() {
+    let preloadedBrowsers = [];
+    for (let browser of this.loadedTabs.keys()) {
       if (this.isPreloadedBrowser(browser)) {
-        preloadedActors.push(actor);
+        preloadedBrowsers.push(browser);
       }
     }
-    return preloadedActors.length ? preloadedActors : null;
+    return preloadedBrowsers.length ? preloadedBrowsers : null;
   }
 
   /**
@@ -212,7 +224,6 @@ class ActivityStreamMessageChannel {
     // Some pages might have already loaded, so we won't get the usual message
     for (const loadedTab of this.loadedTabs.values()) {
       let simulatedDetails = {
-        actor: loadedTab.actor,
         browser: loadedTab.browser,
         browsingContext: loadedTab.browsingContext,
         portID: loadedTab.portID,
@@ -242,7 +253,7 @@ class ActivityStreamMessageChannel {
    * @param  {obj} tabDetails details about a loaded tab
    *
    * tabDetails contains:
-   *   actor, browser, browsingContext, portID, url
+   *   browser, browsingContext, portID, url
    */
   onNewTabInit(msg, tabDetails) {
     this.onActionFromContent(
