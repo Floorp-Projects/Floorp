@@ -2136,6 +2136,11 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
 
       // We need to be able to transform from local space into texture space.
       Matrix invMatrix = surfacePattern.mMatrix;
+      // If drawing a pre-transformed vertex range, then we need to ensure the
+      // user-space pattern is still transformed to screen-space.
+      if (aVertexRange && !aTransformed) {
+        invMatrix *= currentTransform;
+      }
       if (!invMatrix.Invert()) {
         break;
       }
