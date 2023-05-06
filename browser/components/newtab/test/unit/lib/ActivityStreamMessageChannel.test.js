@@ -18,11 +18,13 @@ const OPTIONS = [
 // Create an object containing details about a tab as expected within
 // the loaded tabs map in ActivityStreamMessageChannel.jsm.
 function getTabDetails(portID, url = "about:newtab", extraArgs = {}) {
+  let actor = {
+    portID,
+    sendAsyncMessage: sinon.spy(),
+  };
   let browser = {
     getAttribute: () => (extraArgs.preloaded ? "preloaded" : ""),
     ownerGlobal: {},
-    sendMessageToActor: sinon.spy(),
-    portID,
   };
   let browsingContext = {
     top: {
@@ -32,6 +34,7 @@ function getTabDetails(portID, url = "about:newtab", extraArgs = {}) {
 
   let data = {
     data: {
+      actor,
       browser,
       browsingContext,
       portID,
@@ -179,7 +182,7 @@ describe("ActivityStreamMessageChannel", () => {
       it("should get an id if it exists", () => {
         let msg = getTabDetails("foo:1");
         mm.loadedTabs.set(msg.data.browser, msg.data);
-        assert.equal(mm.getTargetById("foo:1"), msg.data.browser);
+        assert.equal(mm.getTargetById("foo:1"), msg.data.actor);
       });
       it("should return null if the target doesn't exist", () => {
         let msg = getTabDetails("foo:2");
@@ -187,23 +190,23 @@ describe("ActivityStreamMessageChannel", () => {
         assert.equal(mm.getTargetById("bar:3"), null);
       });
     });
-    describe("#getPreloadedBrowsers", () => {
-      it("should get a preloaded browser if it exists", () => {
+    describe("#getPreloadedActors", () => {
+      it("should get a preloaded actor if it exists", () => {
         let msg = getTabDetails("foo:3", null, { preloaded: true });
         mm.loadedTabs.set(msg.data.browser, msg.data);
-        assert.equal(mm.getPreloadedBrowsers()[0].portID, "foo:3");
+        assert.equal(mm.getPreloadedActors()[0].portID, "foo:3");
       });
-      it("should get all the preloaded browsers across windows if they exist", () => {
+      it("should get all the preloaded actors across windows if they exist", () => {
         let msg = getTabDetails("foo:4a", null, { preloaded: true });
         mm.loadedTabs.set(msg.data.browser, msg.data);
         msg = getTabDetails("foo:4b", null, { preloaded: true });
         mm.loadedTabs.set(msg.data.browser, msg.data);
-        assert.equal(mm.getPreloadedBrowsers().length, 2);
+        assert.equal(mm.getPreloadedActors().length, 2);
       });
-      it("should return null if there is no preloaded browser", () => {
+      it("should return null if there is no preloaded actor", () => {
         let msg = getTabDetails("foo:5");
         mm.loadedTabs.set(msg.data.browser, msg.data);
-        assert.equal(mm.getPreloadedBrowsers(), null);
+        assert.equal(mm.getPreloadedActors(), null);
       });
     });
     describe("#onNewTabInit", () => {
@@ -299,7 +302,7 @@ describe("ActivityStreamMessageChannel", () => {
         const action = ac.AlsoToOneContent({ type: "HELLO" }, "foo:6");
         mm.send(action);
         assert.calledWith(
-          msg.data.browser.sendMessageToActor,
+          msg.data.actor.sendAsyncMessage,
           DEFAULT_OPTIONS.outgoingMessageName,
           action
         );
@@ -318,7 +321,7 @@ describe("ActivityStreamMessageChannel", () => {
         const action = ac.BroadcastToContent({ type: "HELLO" });
         mm.broadcast(action);
         assert.calledWith(
-          msg.data.browser.sendMessageToActor,
+          msg.data.actor.sendAsyncMessage,
           DEFAULT_OPTIONS.outgoingMessageName,
           action
         );
@@ -331,7 +334,7 @@ describe("ActivityStreamMessageChannel", () => {
         const action = ac.AlsoToPreloaded({ type: "HELLO", data: 10 });
         mm.sendToPreloaded(action);
         assert.calledWith(
-          msg.data.browser.sendMessageToActor,
+          msg.data.actor.sendAsyncMessage,
           DEFAULT_OPTIONS.outgoingMessageName,
           action
         );
@@ -344,15 +347,15 @@ describe("ActivityStreamMessageChannel", () => {
         mm.loadedTabs.set(msg2.data.browser, msg2.data);
 
         mm.sendToPreloaded(ac.AlsoToPreloaded({ type: "HELLO", data: 10 }));
-        assert.calledOnce(msg1.data.browser.sendMessageToActor);
-        assert.calledOnce(msg2.data.browser.sendMessageToActor);
+        assert.calledOnce(msg1.data.actor.sendAsyncMessage);
+        assert.calledOnce(msg2.data.actor.sendAsyncMessage);
       });
       it("should not send the message to the preloaded browser if there's no data and a preloaded browser does not exists", () => {
         let msg = getTabDetails("foo:11");
         mm.loadedTabs.set(msg.data.browser, msg.data);
         const action = ac.AlsoToPreloaded({ type: "HELLO" });
         mm.sendToPreloaded(action);
-        assert.notCalled(msg.data.browser.sendMessageToActor);
+        assert.notCalled(msg.data.actor.sendAsyncMessage);
       });
     });
   });

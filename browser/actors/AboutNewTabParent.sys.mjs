@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 // A mapping of loaded new tab pages, where the mapping is:
-//   browser -> { browser, browsingContext, portID, url, loaded }
+//   browser -> { actor, browser, browsingContext, portID, url, loaded }
 let gLoadedTabs = new Map();
 
 export class AboutNewTabParent extends JSWindowActorParent {
@@ -39,13 +39,15 @@ export class AboutNewTabParent extends JSWindowActorParent {
         break;
 
       case "Init": {
-        let browsingContext = message.target.browsingContext;
+        let actor = message.target;
+        let browsingContext = actor.browsingContext;
         let browser = browsingContext.top.embedderElement;
         if (!browser) {
           return;
         }
 
         let tabDetails = {
+          actor,
           browser,
           browsingContext,
           portID: message.data.portID,
