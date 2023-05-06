@@ -5,19 +5,20 @@
 #include "WebrtcMediaDataEncoderCodec.h"
 
 #include "AnnexB.h"
+#include "api/video_codecs/h264_profile_level_id.h"
 #include "ImageContainer.h"
+#include "media/base/media_constants.h"
 #include "MediaData.h"
-#include "PEMFactory.h"
-#include "VideoUtils.h"
+#include "modules/video_coding/utility/vp8_header_parser.h"
+#include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/media/MediaUtils.h"
-#include "api/video_codecs/h264_profile_level_id.h"
-#include "media/base/media_constants.h"
+#include "mozilla/StaticPrefs_media.h"
+#include "PEMFactory.h"
 #include "system_wrappers/include/clock.h"
-#include "modules/video_coding/utility/vp8_header_parser.h"
-#include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -164,6 +165,15 @@ int32_t WebrtcMediaDataEncoder::InitEncode(
     return WEBRTC_VIDEO_CODEC_ERR_SIMULCAST_PARAMETERS_NOT_SUPPORTED;
   }
 
+  // TODO: enable max output size setting when supported.
+  if (aCodecSettings->codecType == webrtc::VideoCodecType::kVideoCodecH264 &&
+      !(mFormatParams.count(cricket::kH264FmtpPacketizationMode) == 1 &&
+        mFormatParams.at(cricket::kH264FmtpPacketizationMode) == "1")) {
+    LOG("Some platform encoders don't support setting max output size."
+        " Falling back to SW");
+    return WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE;
+  }
+
   if (mEncoder) {
     // Clean existing encoder.
     Shutdown();
@@ -210,9 +220,11 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
   if (!SetupConfig(aCodecSettings)) {
     return nullptr;
   }
-  LOG("Request platform encoder for %s, bitRate=%u bps, frameRate=%u",
+  const bool swOnly = StaticPrefs::media_webrtc_platformencoder_sw_only();
+  LOG("Request platform encoder for %s, bitRate=%u bps, frameRate=%u"
+      ", sw-only=%d",
       mInfo.mMimeType.get(), mBitrateAdjuster.GetTargetBitrateBps(),
-      aCodecSettings->maxFramerate);
+      aCodecSettings->maxFramerate, swOnly);
 
   size_t keyframeInterval = 1;
   switch (aCodecSettings->codecType) {
@@ -268,7 +280,7 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unsupported codec type");
   }
-  return mFactory->CreateEncoder(params);
+  return mFactory->CreateEncoder(params, swOnly);
 }
 
 WebrtcVideoEncoder::EncoderInfo WebrtcMediaDataEncoder::GetEncoderInfo() const {
