@@ -621,6 +621,14 @@ WebTransportSessionProxy::OnStopRequest(nsIRequest* aRequest,
     }
     pendingEvents = std::move(mPendingEvents);
     pendingCreateStreamEvents = std::move(mPendingCreateStreamEvents);
+    if (!pendingCreateStreamEvents.IsEmpty()) {
+      if (NS_SUCCEEDED(aStatus) &&
+          (mState == WebTransportSessionProxyState::DONE ||
+           mState == WebTransportSessionProxyState::SESSION_CLOSE_PENDING)) {
+        aStatus = NS_ERROR_FAILURE;
+      }
+    }
+
     mStopRequestCalled = true;
   }
 
@@ -633,7 +641,7 @@ WebTransportSessionProxy::OnStopRequest(nsIRequest* aRequest,
             event(status);
           }
         }));
-  }
+  }  // otherwise let the CreateStreams just go away
 
   if (listener) {
     if (succeeded) {
