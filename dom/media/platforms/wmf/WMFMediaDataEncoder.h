@@ -16,14 +16,13 @@
 
 namespace mozilla {
 
+bool CanCreateWMFEncoder(MediaDataEncoder::CodecType aCodec);
+
 template <typename ConfigType>
 class WMFMediaDataEncoder final : public MediaDataEncoder {
  public:
-  WMFMediaDataEncoder(const ConfigType& aConfig, RefPtr<TaskQueue> aTaskQueue,
-                      const bool aHardwareNotAllowed)
-      : mConfig(aConfig),
-        mTaskQueue(aTaskQueue),
-        mHardwareNotAllowed(aHardwareNotAllowed) {
+  WMFMediaDataEncoder(const ConfigType& aConfig, RefPtr<TaskQueue> aTaskQueue)
+      : mConfig(aConfig), mTaskQueue(aTaskQueue) {
     MOZ_ASSERT(mTaskQueue);
   }
 
@@ -116,7 +115,7 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
           __func__);
     }
 
-    RefPtr<MFTEncoder> encoder = new MFTEncoder(mHardwareNotAllowed);
+    RefPtr<MFTEncoder> encoder = new MFTEncoder();
     HRESULT hr;
     mscom::EnsureMTA([&]() { hr = InitMFTEncoder(encoder); });
 
@@ -326,7 +325,6 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
 
   const ConfigType mConfig;
   const RefPtr<TaskQueue> mTaskQueue;
-  const bool mHardwareNotAllowed;
   RefPtr<MFTEncoder> mEncoder;
   // SPS/PPS NALUs for realtime usage, avcC otherwise.
   RefPtr<MediaByteBuffer> mConfigData;
