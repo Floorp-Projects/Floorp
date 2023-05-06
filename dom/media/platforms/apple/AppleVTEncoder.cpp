@@ -27,11 +27,10 @@ extern LazyLogModule sPEMLog;
   MOZ_LOG(sPEMLog, mozilla::LogLevel::Debug, \
           ("[AppleVTEncoder] %s: " fmt, __func__, ##__VA_ARGS__))
 
-static CFDictionaryRef BuildEncoderSpec(const bool aHardwareNotAllowed) {
+static CFDictionaryRef BuildEncoderSpec() {
   const void* keys[] = {
       kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder};
-  const void* values[] = {aHardwareNotAllowed ? kCFBooleanFalse
-                                              : kCFBooleanTrue};
+  const void* values[] = {kCFBooleanTrue};
 
   static_assert(ArrayLength(keys) == ArrayLength(values),
                 "Non matching keys/values array size");
@@ -97,7 +96,7 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
     return InitPromise::CreateAndReject(NS_ERROR_ILLEGAL_VALUE, __func__);
   }
 
-  AutoCFRelease<CFDictionaryRef> spec(BuildEncoderSpec(mHardwareNotAllowed));
+  AutoCFRelease<CFDictionaryRef> spec(BuildEncoderSpec());
   AutoCFRelease<CFDictionaryRef> srcBufferAttr(
       BuildSourceImageBufferAttributes());
   if (!srcBufferAttr) {

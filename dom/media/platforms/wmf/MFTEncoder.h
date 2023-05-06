@@ -22,9 +22,6 @@ class MFTEncoder final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFTEncoder)
 
-  explicit MFTEncoder(const bool aHardwareNotAllowed)
-      : mHardwareNotAllowed(aHardwareNotAllowed) {}
-
   HRESULT Create(const GUID& aSubtype);
   HRESULT Destroy();
   HRESULT SetMediaTypes(IMFMediaType* aInputType, IMFMediaType* aOutputType);
@@ -114,7 +111,6 @@ class MFTEncoder final {
   HRESULT ProcessInput();
   HRESULT ProcessOutput();
 
-  const bool mHardwareNotAllowed;
   RefPtr<IMFTransform> mEncoder;
   // For MFT object creation. See
   // https://docs.microsoft.com/en-us/windows/win32/medfound/activation-objects

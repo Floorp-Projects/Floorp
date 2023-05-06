@@ -16,9 +16,9 @@ bool AppleEncoderModule::SupportsMimeType(const nsACString& aMimeType) const {
 }
 
 already_AddRefed<MediaDataEncoder> AppleEncoderModule::CreateVideoEncoder(
-    const CreateEncoderParams& aParams, const bool aHardwareNotAllowed) const {
-  RefPtr<MediaDataEncoder> encoder(new AppleVTEncoder(
-      aParams.ToH264Config(), aParams.mTaskQueue, aHardwareNotAllowed));
+    const CreateEncoderParams& aParams) const {
+  RefPtr<MediaDataEncoder> encoder(
+      new AppleVTEncoder(aParams.ToH264Config(), aParams.mTaskQueue));
   return encoder.forget();
 }
 

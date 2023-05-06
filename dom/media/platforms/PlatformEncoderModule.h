@@ -30,8 +30,7 @@ class PlatformEncoderModule {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PlatformEncoderModule)
 
   virtual already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
-      const CreateEncoderParams& aParams,
-      const bool aHardwareNotAllowed) const {
+      const CreateEncoderParams& aParams) const {
     return nullptr;
   };
 
