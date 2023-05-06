@@ -12,6 +12,11 @@
     border-top: none;
   }
 
+  #tabbrowser-tabpanels{
+    background: var(--toolbar-bgcolor) !important;
+    background-color: var(--toolbar-bgcolor) !important;
+  }
+
   :root[inDOMFullscreen] :is(.browserContainer),
   :root[inFullscreen]:not([macOSNativeFullscreen]) :is(.browserContainer) {
     border: none !important;
