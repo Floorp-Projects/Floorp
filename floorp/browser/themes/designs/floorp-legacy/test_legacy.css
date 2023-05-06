@@ -244,8 +244,8 @@
   background-color: #f7f7f7 !important;
 }
 
-:root[lwt-default-theme-in-dark-mode="true"] #tabbrowser-tabpanels,
-:root[style*="--lwt-accent-color: rgb(28, 27, 34)"] #tabbrowser-tabpanels {
+:where(:root[lwt-default-theme-in-dark-mode="true"] #tabbrowser-tabpanels,
+:root[style*="--lwt-accent-color: rgb(28, 27, 34)"] #tabbrowser-tabpanels) {
   background-color: #252525 !important;
 }
 
@@ -1617,10 +1617,10 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
   background-color: var(--toolbarbutton-hover-background) !important;
 }
 
-#tabbrowser-tabs tab:last-of-type{
+#tabbrowser-tabs tab:not(#browser *):last-of-type{
   margin-right: 8px !important;
 }
-#tabbrowser-tabs [floorp-lastVisibleTab]{
+#tabbrowser-tabs [floorp-lastVisibleTab]:not(#browser *){
   margin-right: 8px !important;
 }
 #firefox-view-button+#tabbrowser-tabs tab:first-of-type:not(#browser *){
@@ -1873,7 +1873,7 @@ toolbarbutton[part="scrollbutton-down"] {
   --tab-label-mask-size: 0.5em !important;
 }
 
-.tab-content {
+:where(.tab-content) {
   padding-inline: var(--inline-tab-padding) 0 !important;
   position: relative !important;
   overflow: hidden !important;
@@ -2114,7 +2114,7 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="che
 
 
 /* clipped tabs */
-#tabbrowser-tabs[closebuttons=activetab] .tab-content:not([pinned]) {
+:where(#tabbrowser-tabs[closebuttons=activetab] .tab-content:not([pinned]))) {
   padding-inline-start: 8px !important;
 }
 
