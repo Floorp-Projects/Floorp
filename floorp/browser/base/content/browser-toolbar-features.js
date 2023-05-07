@@ -8,7 +8,8 @@ const { SessionStore } = ChromeUtils.import("resource:///modules/sessionstore/Se
 
 async function UCTFirst(){
   const widgetId = "undo-closed-tab";
-  if (CustomizableUI.getWidget(widgetId)) return;
+  if (CustomizableUI.getWidget(widgetId) &&
+      CustomizableUI.getWidget(widgetId).type != "custom") return;
   const l10n = new Localization(["browser/floorp.ftl"])
   const l10n_text = await l10n.formatValue("undo-closed-tab") ?? "Undo close tab"
   CustomizableUI.createWidget({
@@ -80,7 +81,8 @@ const setNowTime = () => {
 
 const createClockWidget = () => {
   const id = "toolbarItemClock";
-  if (!CustomizableUI.getWidget(id)) {
+  if (!CustomizableUI.getWidget(id) ||
+      CustomizableUI.getWidget(id).type == "custom") {
     const vanilla = "--:--"
     CustomizableUI.createWidget({
       id: id,
