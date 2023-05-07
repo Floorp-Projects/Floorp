@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Gauti duomenis iš iškarpinės</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Įvesti duomenis į iškarpinę</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Blokuoti turinį bet kuriame puslapyje</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Atsiųsti failus bei skaityti ir keisti naršyklės atsiuntimų žurnalą</string>
     <!-- Description for downloads_open permission. -->

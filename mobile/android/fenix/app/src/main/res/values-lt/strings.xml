@@ -12,9 +12,17 @@
     <string name="content_description_private_browsing_button">Įjungti privatųjį naršymą</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Išjungti privatųjį naršymą</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Ieškokite arba įveskite adresą</string>
 
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Ieškoti žurnale</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Ieškoti adresyne</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Ieškoti kortelėse</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Įveskite ieškomą tekstą</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Čia bus rodomos jūsų atvertos kortelės.</string>
 
@@ -38,15 +46,12 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Paskiausi adresyno įrašai</string>
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Paskiausiai įtraukti adresyno įrašai</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">Rodyti viską</string>
+    <string name="recently_saved_title">Paskiausiai įtraukta</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Rodyti visą adresyną</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Visų įtrauktų adresyno įrašų rodymo mygtukas</string>
+
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Pašalinti</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">„%1$s“ kūrėjai yra „Mozilla“.</string>
@@ -57,22 +62,24 @@
     <string name="private_browsing_placeholder_description_2">„%1$s“ išvalo jūsų paieškos ir naršymo žurnalą iš privačiųjų kortelių kai jas užveriate, arba išjungiate programą. Nors tai ir nesuteikia jums anonimiškumo internete, taip lengviau galite išlaikyti savo privatumą nuo kitų šį įrenginį naudojančių asmenų.</string>
     <string name="private_browsing_common_myths">Dažni mitai apie privatųjį naršymą</string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message">Pridėję leistuką galėsite atverti privačias korteles iš pradžios ekrano.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Pridėti leistuką</string>
-
-    <!-- Text for the negative button -->
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Įtraukti į pradžios ekraną</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Ačiū, ne</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Galite leisti „Firefox“ automatiškai atverti saitus iš kitų programų.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Galite nustatyti, kad „%1$s“ automatiškai atidarytų nuorodas programose.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Eiti į nustatymus</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Paslėpti</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Mūsų galingiausia privatumo funkcija, izoliuojanti tarp svetainių veikiančius stebėjimo elementus.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Sužinokite apie visapusišką slapukų apsaugą</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Reikia kameros prieigos. Eikite į „Android“ nustatymus, bakstelėkite „leidimus“, tada bakstelėkite „leisti“.</string>
@@ -95,8 +102,9 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Užverti automatiškai po mėnesio?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">„Firefox“ gali užverti korteles, kuriomis paskutinį mėnesį nesinaudojote.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">„%1$s“ gali užverti korteles, kuriomis paskutinį mėnesį nesinaudojote.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Užverti</string>
 
@@ -118,15 +126,16 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Mygtukas visų paskiausių kortelių rodymui</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Rodyti visas paskiausias korteles</string>
-    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
-        The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Jūsų paieška „%1$s“</string>
 
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">Svetainių: %d</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Peržiūrėti visas sinchronizuotas korteles</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Sinchronizuotas įrenginys</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Pašalinti</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Pašalinti</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -137,8 +146,6 @@
     <string name="recently_visited_menu_item_remove">Pašalinti</string>
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">Rodyti visus ankstesnius tyrinėjimus</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Rodyti visų ankstesnių tyrinėjimų mygtuką</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -151,6 +158,8 @@
     <string name="browser_menu_stop">Stabdyti</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Priedai</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Paskyros informacija</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Čia nėra jokių priedų</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -167,8 +176,6 @@
     <string name="browser_menu_add_to_homescreen">Įtraukti į pradžios ekraną</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Įdiegti</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Sinchronizuotos kortelės</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Sinchronizuoti iš naujo</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -201,8 +208,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Keisti</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Tvarkyti pradžią</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Tvarkyti pradžios tinklalapį</string>
     <!-- Browser Toolbar -->
@@ -234,38 +239,15 @@
     <string name="search_suggestions_onboarding_title">Leisti paieškos siūlymus privačiojo naršymo seansuose?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">„%s“ perduos jūsų numatytajai ieškyklei viską, ką rašote adreso lauke.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">Sužinoti daugiau</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Ieškoti „%s“</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Ieškokite tiesiai iš adreso lauko</string>
 
-    <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_title_2">Kas naujo „Firefox“</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Dabar lengviau tęsti nuo ten, kur baigėte.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_section_home_title_2">Suasmenintas „Firefox“ pradžios tinklalapis</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Pereikite prie atvertų kortelių, adresyno, ir naršymo istorijos.</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Švarios, tvarkingos kortelės</string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Išvalykite kortelių netvarką su pagerintu išdėstymu ir automatiniu kortelių užvėrimu.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Paskiausios paieškos</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Peržiūrėkite savo paskiausias paieškas iš pradžios tinklalapio ir kortelių.</string>
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Paieškos nustatymai</string>
 
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Suasmenintame „Firefox“ pradžios tinklalapyje dabar lengviau tęsti nuo ten, kur baigėte. Raskite paskiausias korteles, adresyno įrašus, ir paieškos rezultatus.</string>
-
-    <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Atverti naują „Firefox“ kortelę</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Ieškoti</string>
     <!-- Text preview for larger sized widgets -->
@@ -310,6 +292,7 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Jei leisite, privačios kortelės bus matomos kartu su kitomis atvertomis programomis</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Pridėti privačiojo naršymo leistuką</string>
+
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Pritaikymas neįgaliesiems</string>
     <!-- Preference to override the Firefox Account server -->
@@ -330,8 +313,6 @@
     <string name="preferences_gestures">Gestai</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Tinkinimas</string>
-    <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Sinchronizuokite adresyną, žurnalą, ir daugiau naudodami „Firefox“ paskyrą</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">„Firefox“ paskyra</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -397,8 +378,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Paskiausiai lankyta</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Fonai</string>
@@ -412,15 +391,6 @@
     <string name="wallpaper_updated_snackbar_message">Fonas pakeistas!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Rodyti</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Pakeisti foną, bakstelėjus ant logotipo</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Pakeisti foną, bakstelėjus ant „Firefox“ pradžios logotipo</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Pereikite tarp paveikslėlių neišeidami iš pradžios tinklalapio.</string>
-    <!-- This is the accessibility content description for the wallpapers functionality. Users are
-    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">„Firefox“ logotipas – pakeisti programos foną, mygtukas</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -503,10 +473,6 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Leidžia „Mozillai“ diegti ir vykdyti tyrimus</string>
 
-    <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Įjungti „Sync“</string>
-
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Prisijungti iš naujo</string>
     <!-- Preference for removing FxA account -->
@@ -565,13 +531,6 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Užverti</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site">%d svetainė</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites">%d svetainės</string>
-
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Paskiausiai užvertos kortelės</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -594,10 +553,6 @@
     <string name="tab_view_list">Sąrašas</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Tinklelis</string>
-    <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Paieškos grupės</string>
-    <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Grupuoti susijusias svetaines kartu</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Užverti korteles</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -641,8 +596,6 @@
     <string name="studies_remove">Pašalinti</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktyvūs</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string name="studies_description">„Firefox“ retkarčiais gali įdiegti ir vykdyti tyrimus.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Sužinoti daugiau</string>
     <!-- Dialog message shown after removing a study -->
@@ -701,8 +654,6 @@
     <string name="open_tabs_menu">Atvertų kortelių meniu</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Įtraukti korteles į rinkinį</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Kortelės meniu</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Pašalinti rinkinį</string>
     <!-- Text for the menu button to rename a collection -->
@@ -722,12 +673,7 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">„%1$s“ (privačioji veiksena)</string>
 
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Kitos kortelės</string>
-
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Įveskite ieškomą tekstą</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Įveskite ieškomą tekstą</string>
     <!-- Text for the button to clear all history -->
@@ -883,8 +829,6 @@
     <string name="phone_feature_blocked_by_android">Blokuoja „Android“</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Išimtys</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Įjungta</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Išjungta</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -970,11 +914,9 @@
     <string name="share_link_all_apps_subheader">Visi veiksmai</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Paskiausiai naudota</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">Prisijungti sinchronizavimui</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Prisijungti prie „Sync“</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Siųsti į visus įrenginius</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Prisijungti prie „Sync“</string>
@@ -1003,12 +945,6 @@
     <string name="notification_pbm_delete_text_2">Užverti privačiąsias korteles</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Rinkodara</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">„%1$s“ yra sparti ir privati</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">Paskirkite „%1$s“ numatytąja naršykle</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1021,8 +957,6 @@
     <string name="snackbar_tabs_closed">Kortelės užvertos</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Adresynas papildytas!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Įtraukta į mėgstamiausias svetaines!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privačioji kortelė užverta</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1101,8 +1035,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Išeiti</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Bus pašalinti visi jūsų naršymo duomenys.</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">„%s“ pašalins pasirinktus naršymo duomenis.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1114,50 +1046,11 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Šalinami naršymo duomenys…</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">„Firefox Preview“ dabar tapo „Firefox Nightly“</string>
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">„Firefox Nightly“ yra atnaujinama kiekvieną naktį ir turi naujų bandomųjų funkcijų.
-        Dėl to ji gali būti mažiau stabili. Atsisiųskite mūsų „beta“ naršyklę, jeigu norite stabilesnio veikimo.</string>
-
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Gaukite „Firefox Beta“, skirtą „Android“</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">„Firefox Nightly“ pasikeitė</string>
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">Ši programa nebegaus saugumo atnaujinimų. Nenaudokite šios programos, ir pereikite prie naujosios „Nightly“.
-        \n\nNorėdami perkelti savo adresyną, prisijungimus, ir žurnalą į kitą programą, susikurkite „Firefox“ paskyrą.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">Pereiti prie naujosios „Nightly“</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">„Firefox Nightly“ pasikeitė</string>
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ši programa nebegaus saugumo atnaujinimų. Pereikite prie naujosios „Nightly“, ir nenaudokite šios programos.
-        \n\nNorėdami perkelti savo adresyną, prisijungimus, ir žurnalą į kitą programą, susikurkite „Firefox“ paskyrą.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">Atsisiųsti naująją „Nightly“</string>
-
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Sveiki, čia „%s“!</string>
-
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Sinchronizuokite „Firefox“ duomenis tarp įrenginių</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">Turėkite savo „Firefox“ adresyną, žurnalą, ir slaptažodžius šiame įrenginyje.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Kurti paskyrą</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">„Sync“ įjungta</string>
 
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Visada veikiantis privatumas</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string name="onboarding_tracking_protection_description_3">„Firefox“ automatiškai blokuoja kompanijų bandymus sekti jūsų veiklą internete.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standartinė (numatytoji)</string>
     <!-- text for standard blocking option button description -->
@@ -1169,13 +1062,6 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Blokuojama daugiau stebėjimų elementų, tad tinklalapiai įkeliami sparčiau, tačiau gali sutrikti dalis funkcionalumo.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Pasirinkite priemonių juostos vietą</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Pasidėkite priemonių juostą patogiai. Palikite ją apačioje, arba perkelkite į viršų.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Jūsų privatumas</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">Mes sukūrėme „%s“ siekdami jums suteikti pasirinkimą, kuo dalinatės internete, ir kuo su mumis.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Mūsų privatumo pranešimas</string>
 
@@ -1233,21 +1119,21 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Išplėsta apsauga nuo stebėjimo</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Nebūkite stebimi naršant</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Nebūkite stebimi naršant</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Jūsų duomenys skirti tik jums. „%s“ saugo jus nuo daugelio dažniausių stebėjimo elementų, stebinčių jūsų veiklą internete.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Jūsų duomenys skirti tik jums. „%s“ saugo jus nuo daugelio dažniausių stebėjimo elementų, stebinčių jūsų veiklą internete.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Sužinoti daugiau</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standartinė (numatytoji)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Subalansuota privatumui ir našumui. Tinklalapiai įkeliami įprastai.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Subalansuota privatumui ir našumui. Tinklalapiai įkeliami įprastai.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ką blokuoja numatytoji apsauga nuo stebėjimo</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Griežta</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Blokuojama daugiau stebėjimų elementų, tad tinklalapiai įkeliami sparčiau, tačiau gali sutrikti dalis funkcionalumo.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Blokuojama daugiau stebėjimų elementų, tad tinklalapiai įkeliami sparčiau, tačiau gali sutrikti dalis funkcionalumo.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ką blokuoja griežta apsauga nuo stebėjimo</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1467,7 +1353,6 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Prisijungimų rūšiavimo meniu</string>
 
-    <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Mokėjimo kortelės</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1484,6 +1369,7 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Tvarkyti įrašytas korteles</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Pridėti kortelę</string>
     <!-- Title of the "Edit card" screen -->
@@ -1506,7 +1392,7 @@
     <string name="credit_cards_menu_save">Įrašyti</string>
     <!-- The text for the "Save" button for saving a credit card -->
     <string name="credit_cards_save_button">Įrašyti</string>
-    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
     <string name="credit_cards_cancel_button">Atsisakyti</string>
 
     <!-- Title of the "Saved cards" screen -->
@@ -1553,7 +1439,7 @@
     <string name="search_add_custom_engine_search_string_hint">Paieškos eilutės struktūra</string>
 
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Vietoje užklausos įrašykite „%s“. Pvz.:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Vietoje užklausos įrašykite „%s“. Pvz.:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Informacija apie tinkinamą ieškyklę</string>
@@ -1572,19 +1458,6 @@
     <string name="search_edit_custom_engine_success_message">Įrašyta „%s“</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Pašalinta „%s“</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Sveiki, čia naujoji „%s“</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Jūsų laukia visiškai perdaryta naršyklė, su pagerintu našumu ir naudingesniu funkcionalumu.\n\nPalaukite, kol mes atnaujiname „%s“ su jūsų</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Atnaujinama „%s“…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Paleisti „%s“</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Perkėlimas baigtas</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">slaptažodžiais</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Norėdami tai leisti:</string>
@@ -1614,10 +1487,6 @@
     <string name="no_site_exceptions">Nėra išimčių svetainėms</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ar tikrai norite pašalinti šį adresyno įrašą?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Įtraukti į mėgst. svetaines</string>
-    <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">Pašalinti iš lankomiausių svetainių</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Tai liudija: %1$s</string>
@@ -1682,24 +1551,14 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Nėra atvertų kortelių</string>
 
-    <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Pasiekta lankomiausių svetainių riba</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">Norėdami pridėti naują lankomą svetainę, pašalinkite esamą. Palaikykite nuspaudę ant svetainės, ir pasirinkite „pašalinti“.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Gerai, supratau</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Lankomiausios svetainės</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Leistukai</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Pavadinimas</string>
-	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">Lankomiausios svetainės pavadinimas</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Gerai</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Atsisakyti</string>
@@ -1728,25 +1587,6 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Automatinis užvėrimas įjungtas</string>
 
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header_1">Padėkite tobulinti „Firefox“</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content">Kodėl išjungėte neaktyvias korteles?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_not_understand">Aš nesuprantu, kaip tai veikia</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_it_myself">Aš noriu pats užverti senas korteles</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option_1">Dviejų savaičių laikotarpis yra per ilgas</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option_1">Dviejų savaičių laikotarpis yra per trumpas</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button">Siųsti</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description">Užverti</string>
-
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Leiskite saitams iš svetainių, el. laiškų, ir žinučių būti automatiškai atvertiems per „Firefox“.</string>
 
@@ -1769,10 +1609,9 @@
     <string name="pocket_stories_categories_header">Straipsniai pagal temas</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Atrasti daugiau</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string name="pocket_stories_feature_title">Veikia su „Pocket“</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">„Firefox“ šeimos dalis. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Sužinoti daugiau</string>
-</resources>
+
+    </resources>

@@ -20,6 +20,8 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Borrouse o seu historial de navegación.</string>
 
+    <string name="feedback_erase2">Borrouse o historial de navegación</string>
+
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
     <string name="search_hint">Buscar %1$s</string>
 
@@ -43,6 +45,11 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Engadir á páxina inicial</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Engadir aos atallos</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Retirar dos atallos</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Novidades</string>
     <string name="menu_settings">Axustes</string>
@@ -56,6 +63,13 @@
          blocking of trackers for the current browsing session - for example if the current website
          doesn't work correctly with blocked content. -->
     <string name="menu_trackers_blocked_title">Elementos bloqueados</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Desactivar esta opción pode solucionar algúns problemas do sitio</string>
+
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Desactive para corrixir algúns sitios</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
@@ -89,6 +103,12 @@
     <string name="shortcut_erase_long_label">Borrar o historial de navegación</string>
 
 
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Borrar e abrir %1$s</string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privacidade e seguranza</string>
 
@@ -104,6 +124,9 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Sobre o %1$s, axuda</string>
 
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Protección mellorada contra o rastrexo</string>
+
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Contido web</string>
 
@@ -112,6 +135,9 @@
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Xeral</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Navegador predeterminado, idioma</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Uso e recollida de datos</string>
@@ -127,6 +153,9 @@
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Predeterminado</string>
 
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Buscador</string>
+
     <!-- Text that is shown below a "switch" preference that is enabled. -->
     <string name="preference_state_on">Activado</string>
 
@@ -136,14 +165,43 @@
     <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
     <string name="preference_subitem_autocomplete">Completado automático do URL</string>
 
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Para os sitios máis populares</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">Actíveo para que %s complete automaticamente máis de 450 URL populares na barra de enderezos.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Para os sitios que engada</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Activar para que %s complete automaticamente os seus URL favoritos.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Xestionar os sitios</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Xestionar os sitios</string>
+
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Engadir URL personalizado</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">A súa lista para completar automaticamente:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Engadir o URL</string>
 
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Engadir URL personalizado</string>
 
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">Engadir URL personalizado</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Engadir a ligazón para completar automaticamente</string>
 
     <!-- Preference category for settings about cookies and site data -->
     <string name="preference_category_cookies">Cookies e datos do sitio</string>
@@ -200,7 +258,14 @@
     <string name="preference_privacy_block_content_summary2">A activación pode causar que algunhas páxinas se comporten de forma inesperada</string>
     <string name="preference_privacy_category_cookies">Bloquear as cookies</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Non, grazas</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bloquear só rastros de seguimento de terceiras partes</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Só bloquea as cookies de terceiros</string>
+
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Bloquear os rastros entre sitios</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Si, por favor</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Usar a pegada dixital para desbloquear o aplicativo</string>
@@ -249,6 +314,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Buscadores instalados</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Escolla un buscador</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Restaurar os buscadores predeterminados</string>
 
@@ -257,6 +325,11 @@
     <string name="preference_search_add2">+ Engadir outro buscador</string>
     <string name="preference_search_remove_title">Retirar buscadores</string>
     <string name="preference_search_remove">Retirar</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Engadir outro buscador</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Seleccione o seu buscador preferido:</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Engadir buscador</string>
@@ -308,6 +381,10 @@
 
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Máis opcións</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Botón de máis opcións</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="content_description_forward">Avanzar no historial</string>
@@ -409,8 +486,14 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Engadir</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">SI</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Cancelar</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">NON</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
