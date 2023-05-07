@@ -42,6 +42,29 @@ Cc["@mozilla.org/network/native-dns-override;1"]
   .getService(Ci.nsINativeDNSResolverOverride)
   .addIPOverride("mozilla.cloudflare-dns.com", "127.0.0.1");
 
+async function clearEvents() {
+  Services.telemetry.clearEvents();
+  await TestUtils.waitForCondition(() => {
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_ALL_CHANNELS,
+      true
+    ).parent;
+    return !events || !events.length;
+  });
+}
+
+async function getEvent(filter1, filter2) {
+  let event = await TestUtils.waitForCondition(() => {
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_ALL_CHANNELS,
+      true
+    ).parent;
+    return events?.find(e => e[1] == filter1 && e[2] == filter2);
+  }, "recorded telemetry for the load");
+  event.shift();
+  return event;
+}
+
 async function resetPrefs() {
   await DoHTestUtils.resetRemoteSettingsConfig();
   await DoHController._uninit();
@@ -64,6 +87,10 @@ registerCleanupFunction(async () => {
 });
 
 add_setup(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["toolkit.telemetry.testing.overrideProductsCheck", true]],
+  });
+
   await DoHTestUtils.resetRemoteSettingsConfig();
 });
 
@@ -171,6 +198,7 @@ async function testWithProperties(props, startTime) {
   }
 
   if (props.clickMode) {
+    await clearEvents();
     info(
       Date.now() -
         startTime +
@@ -190,12 +218,20 @@ async function testWithProperties(props, startTime) {
     let win = doc.ownerGlobal;
     EventUtils.synthesizeMouseAtCenter(option, {}, win);
     info(
-      Date.now() -
-        startTime +
-        ": testWithProperties: clickMode, mouse click synthesized"
+      `${Date.now() - startTime} : testWithProperties: clickMode=${
+        props.clickMode
+      }, mouse click synthesized`
     );
+    let clickEvent = await getEvent("security.doh.settings", "mode_changed");
+    Assert.deepEqual(clickEvent, [
+      "security.doh.settings",
+      "mode_changed",
+      "button",
+      props.clickMode,
+    ]);
   }
   if (props.hasOwnProperty("selectResolver")) {
+    await clearEvents();
     info(
       Date.now() -
         startTime +
@@ -210,6 +246,16 @@ async function testWithProperties(props, startTime) {
         startTime +
         ": testWithProperties: selectResolver, item value set and events dispatched"
     );
+    let choiceEvent = await getEvent(
+      "security.doh.settings",
+      "provider_choice"
+    );
+    Assert.deepEqual(choiceEvent, [
+      "security.doh.settings",
+      "provider_choice",
+      "value",
+      props.selectResolver,
+    ]);
   }
   if (props.hasOwnProperty("inputUriKeys")) {
     info(
@@ -755,4 +801,46 @@ add_task(async function testEnterprisePolicy() {
       });
     }
   );
+});
+
+add_task(async function clickWarnButton() {
+  Services.prefs.setBoolPref(
+    "network.trr_ui.show_fallback_warning_option",
+    true
+  );
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  let doc = gBrowser.selectedBrowser.contentDocument;
+
+  await clearEvents();
+  let checkbox = doc.getElementById("dohWarnCheckbox1");
+  checkbox.click();
+
+  let event = await getEvent("security.doh.settings", "warn_checkbox");
+  Assert.deepEqual(event, [
+    "security.doh.settings",
+    "warn_checkbox",
+    "checkbox",
+    "true",
+  ]);
+  Assert.equal(
+    Services.prefs.getBoolPref("network.trr.display_fallback_warning"),
+    true,
+    "Clicking the checkbox should change the pref"
+  );
+
+  checkbox.click();
+  event = await getEvent("security.doh.settings", "warn_checkbox");
+  Assert.deepEqual(event, [
+    "security.doh.settings",
+    "warn_checkbox",
+    "checkbox",
+    "false",
+  ]);
+  Assert.equal(
+    Services.prefs.getBoolPref("network.trr.display_fallback_warning"),
+    false,
+    "Clicking the checkbox should change the pref"
+  );
+  gBrowser.removeCurrentTab();
 });
