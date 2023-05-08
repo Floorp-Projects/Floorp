@@ -19,17 +19,17 @@ let SUGGESTIONS_DATA = [
   {
     keywords: ["aaa", "bbb"],
     isSponsored: false,
-    score: 2 * RemoteSettingsClient.DEFAULT_SUGGESTION_SCORE,
+    score: 2 * QuickSuggestRemoteSettings.DEFAULT_SUGGESTION_SCORE,
   },
   {
     keywords: ["bbb"],
     isSponsored: true,
-    score: 4 * RemoteSettingsClient.DEFAULT_SUGGESTION_SCORE,
+    score: 4 * QuickSuggestRemoteSettings.DEFAULT_SUGGESTION_SCORE,
   },
   {
     keywords: ["bbb"],
     isSponsored: false,
-    score: 3 * RemoteSettingsClient.DEFAULT_SUGGESTION_SCORE,
+    score: 3 * QuickSuggestRemoteSettings.DEFAULT_SUGGESTION_SCORE,
   },
   {
     keywords: ["ccc"],
@@ -38,7 +38,7 @@ let SUGGESTIONS_DATA = [
 ];
 
 // Test cases. In this object, keywords map to subtest cases. For each keyword,
-// the test calls `fetch(keyword)` and checks that the indexes (relative to
+// the test calls `query(keyword)` and checks that the indexes (relative to
 // `SUGGESTIONS_DATA`) of the returned quick suggest results are the ones in
 // `expectedIndexes`. Then the test does a series of urlbar searches using the
 // keyword as the search string, one search per object in `searches`. Sponsored
@@ -131,6 +131,8 @@ let TESTS = {
 
 add_task(async function() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
 
   // Create results and suggestions based on `SUGGESTIONS_DATA`.
   let qsResults = [];
@@ -161,10 +163,11 @@ add_task(async function() {
       score:
         typeof score == "number"
           ? score
-          : RemoteSettingsClient.DEFAULT_SUGGESTION_SCORE,
+          : QuickSuggestRemoteSettings.DEFAULT_SUGGESTION_SCORE,
       source: "remote-settings",
       icon: null,
       position: undefined,
+      provider: "AdmWikipedia",
     };
     delete qsSuggestion.keywords;
     delete qsSuggestion.id;
@@ -215,36 +218,15 @@ add_task(async function() {
 
     let { expectedIndexes, searches } = test;
 
-    // Call `fetch()`.
+    // Call `query()`.
     Assert.deepEqual(
-      await QuickSuggest.remoteSettings.fetch(keyword),
+      await QuickSuggestRemoteSettings.query(keyword),
       expectedIndexes.map(i => ({
         ...qsSuggestions[i],
         full_keyword: keyword,
       })),
-      `fetch() for ${keyword}`
+      `query() for keyword ${keyword}`
     );
-
-    // Make sure the expected result object(s) are stored correctly.
-    let mapValue = QuickSuggest.remoteSettings._test_resultsByKeyword.get(
-      keyword
-    );
-    if (expectedIndexes.length == 1) {
-      Assert.ok(!Array.isArray(mapValue), "The map value is not an array");
-      Assert.deepEqual(
-        mapValue,
-        qsResults[expectedIndexes[0]],
-        "The map value is the expected result object"
-      );
-    } else {
-      Assert.ok(Array.isArray(mapValue), "The map value is an array");
-      Assert.greater(mapValue.length, 0, "The array is not empty");
-      Assert.deepEqual(
-        mapValue,
-        expectedIndexes.map(i => qsResults[i]),
-        "The map value is the expected array of result objects"
-      );
-    }
 
     // Now do a urlbar search for the keyword with all possible combinations of
     // sponsored and non-sponsored suggestions enabled and disabled.
@@ -288,5 +270,8 @@ add_task(async function() {
         await check_results({ context, matches });
       }
     }
+
+    UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+    UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   }
 });
