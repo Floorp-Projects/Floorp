@@ -2,10 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
-import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys.mjs";
+"use strict";
 
-export var WindowSize = {
+var EXPORTED_SYMBOLS = ["WindowSize"];
+
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
+const { BrowserTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
+);
+
+var WindowSize = {
   init(libDir) {
     Services.prefs.setBoolPref("browser.fullscreen.autohide", false);
   },
