@@ -4303,31 +4303,17 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
 }
 
 void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
-  Register obj = ToRegister(lir->object());
+  Register object = ToRegister(lir->object());
   ValueOperand rhs = ToValue(lir, LMegamorphicStoreSlot::RhsIndex);
-  Register temp0 = ToRegister(lir->temp0());
-  Register temp1 = ToRegister(lir->temp1());
-  Register temp2 = ToRegister(lir->temp2());
+  Register temp = ToRegister(lir->temp0());
 
-  masm.Push(rhs);
-  masm.moveStackPtrTo(temp0);
+  pushArg(Imm32(lir->mir()->strict()));
+  pushArg(rhs);
+  pushArg(lir->mir()->name(), temp);
+  pushArg(object);
 
-  using Fn =
-      bool (*)(JSContext * cx, JSObject * obj, PropertyKey id, Value * val);
-  masm.setupAlignedABICall();
-  masm.loadJSContext(temp1);
-  masm.passABIArg(temp1);
-  masm.passABIArg(obj);
-  masm.movePtr(ImmGCPtr(lir->mir()->name()), temp2);
-  masm.passABIArg(temp2);
-  masm.passABIArg(temp0);
-  masm.callWithABI<Fn, SetNativeDataPropertyPure>();
-
-  MOZ_ASSERT(!rhs.aliases(temp0));
-  masm.storeCallPointerResult(temp0);
-  masm.Pop(rhs);
-
-  bailoutIfFalseBool(temp0, lir->snapshot());
+  using Fn = bool (*)(JSContext*, HandleObject, HandleId, HandleValue, bool);
+  callVM<Fn, SetPropertyMegamorphic<true>>(lir);
 }
 
 void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {

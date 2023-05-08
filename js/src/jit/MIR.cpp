@@ -6333,12 +6333,6 @@ MDefinition::AliasType MGuardShape::mightAlias(const MDefinition* store) const {
           return AliasType::NoAlias;
         }
         break;
-      case MDefinition::Opcode::MegamorphicStoreSlot:
-        if (store->toMegamorphicStoreSlot()->object()->skipObjectGuards() ==
-            receiverObject) {
-          return AliasType::NoAlias;
-        }
-        break;
       default:
         break;
     }
@@ -6423,21 +6417,6 @@ bool MMegamorphicLoadSlot::congruentTo(const MDefinition* ins) const {
 AliasSet MMegamorphicLoadSlot::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
                         AliasSet::DynamicSlot);
-}
-
-bool MMegamorphicStoreSlot::congruentTo(const MDefinition* ins) const {
-  if (!ins->isMegamorphicStoreSlot()) {
-    return false;
-  }
-  if (ins->toMegamorphicStoreSlot()->name() != name()) {
-    return false;
-  }
-  return congruentIfOperandsEqual(ins);
-}
-
-AliasSet MMegamorphicStoreSlot::getAliasSet() const {
-  return AliasSet::Store(AliasSet::ObjectFields | AliasSet::FixedSlot |
-                         AliasSet::DynamicSlot);
 }
 
 bool MMegamorphicHasProp::congruentTo(const MDefinition* ins) const {

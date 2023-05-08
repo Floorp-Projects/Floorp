@@ -7585,48 +7585,27 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
 
 bool CacheIRCompiler::emitMegamorphicStoreSlot(ObjOperandId objId,
                                                uint32_t idOffset,
-                                               ValOperandId rhsId) {
+                                               ValOperandId rhsId,
+                                               bool strict) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
   Register obj = allocator.useRegister(masm, objId);
+  ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
   StubFieldOffset id(idOffset, StubField::Type::Id);
-  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+  AutoScratchRegister scratch(allocator, masm);
 
-  AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
+  callvm.prepare();
 
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
+  masm.Push(Imm32(strict));
   masm.Push(val);
-  masm.moveStackPtrTo(val.scratchReg());
+  emitLoadStubField(id, scratch);
+  masm.Push(scratch);
+  masm.Push(obj);
 
-  LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
-                               liveVolatileFloatRegs());
-  volatileRegs.takeUnchecked(scratch1);
-  volatileRegs.takeUnchecked(scratch2);
-  volatileRegs.takeUnchecked(val);
-  masm.PushRegsInMask(volatileRegs);
-
-  using Fn =
-      bool (*)(JSContext* cx, JSObject* obj, PropertyKey id, Value* val);
-  masm.setupUnalignedABICall(scratch1);
-  masm.loadJSContext(scratch1);
-  masm.passABIArg(scratch1);
-  masm.passABIArg(obj);
-  emitLoadStubField(id, scratch2);
-  masm.passABIArg(scratch2);
-  masm.passABIArg(val.scratchReg());
-  masm.callWithABI<Fn, SetNativeDataPropertyPure>();
-
-  masm.storeCallPointerResult(scratch1);
-  masm.PopRegsInMask(volatileRegs);
-
-  masm.loadValue(Address(masm.getStackPointer(), 0), val);
-  masm.adjustStack(sizeof(Value));
-
-  masm.branchIfFalseBool(scratch1, failure->label());
+  using Fn = bool (*)(JSContext*, HandleObject, HandleId, HandleValue, bool);
+  callvm.callNoResult<Fn, SetPropertyMegamorphic<false>>();
   return true;
 }
 
