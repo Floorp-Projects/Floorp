@@ -951,10 +951,6 @@ void RemoteAccessible::DocType(nsString& aType) {
   Unused << mDoc->SendDocType(mID, &aType);
 }
 
-void RemoteAccessible::Title(nsString& aTitle) {
-  Unused << mDoc->SendTitle(mID, &aTitle);
-}
-
 void RemoteAccessible::MimeType(nsString aMime) {
   Unused << mDoc->SendMimeType(mID, &aMime);
 }

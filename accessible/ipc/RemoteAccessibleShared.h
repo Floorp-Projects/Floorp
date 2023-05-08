@@ -176,7 +176,6 @@ virtual nsIntRect BoundsInCSSPixels() const override;
 
 virtual void Language(nsAString& aLocale) override;
 void DocType(nsString& aType);
-void Title(nsString& aTitle);
 void MimeType(nsString aMime);
 void URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
                         nsString& aMimeType);
