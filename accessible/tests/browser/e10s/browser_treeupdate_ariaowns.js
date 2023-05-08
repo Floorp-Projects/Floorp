@@ -323,3 +323,99 @@ addAccessibleTask(
     });
   }
 );
+
+// Verify that removing the parent of a DOM-sibling aria-owned child keeps the
+// formerly-owned child in the tree.
+addAccessibleTask(
+  `<input id='x'></input><div aria-owns='x'></div>`,
+  async function(browser, accDoc) {
+    testAccessibleTree(accDoc, {
+      DOCUMENT: [{ SECTION: [{ ENTRY: [] }] }],
+    });
+
+    info("Removing the div that aria-owns a DOM sibling");
+    let onReorder = waitForEvent(EVENT_REORDER, accDoc);
+    await invokeContentTask(browser, [], () => {
+      content.document.querySelector("div").remove();
+    });
+    await onReorder;
+
+    info("Verifying that the formerly-owned child is still present");
+    testAccessibleTree(accDoc, {
+      DOCUMENT: [{ ENTRY: [] }],
+    });
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
+);
+
+// Verify that removing the parent of multiple DOM-sibling aria-owned children
+// keeps all formerly-owned children in the tree.
+addAccessibleTask(
+  `<input id='x'></input><input id='y'><div aria-owns='x y'></div>`,
+  async function(browser, accDoc) {
+    testAccessibleTree(accDoc, {
+      DOCUMENT: [
+        {
+          SECTION: [{ ENTRY: [] }, { ENTRY: [] }],
+        },
+      ],
+    });
+
+    info("Removing the div that aria-owns DOM siblings");
+    let onReorder = waitForEvent(EVENT_REORDER, accDoc);
+    await invokeContentTask(browser, [], () => {
+      content.document.querySelector("div").remove();
+    });
+    await onReorder;
+
+    info("Verifying that the formerly-owned children are still present");
+    testAccessibleTree(accDoc, {
+      DOCUMENT: [{ ENTRY: [] }, { ENTRY: [] }],
+    });
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
+);
+
+// Verify that reordering owned elements by changing the aria-owns attribute
+// properly reorders owned elements.
+addAccessibleTask(
+  `
+<div id="container" aria-owns="b d c a">
+  <div id="a" role="button"></div>
+  <div id="b" role="checkbox"></div>
+</div>
+<div id="c" role="radio"></div>
+<div id="d"></div>`,
+  async function(browser, accDoc) {
+    testAccessibleTree(accDoc, {
+      DOCUMENT: [
+        {
+          SECTION: [
+            { CHECKBUTTON: [] }, // b
+            { SECTION: [] }, // d
+            { RADIOBUTTON: [] }, // c
+            { PUSHBUTTON: [] }, // a
+          ],
+        },
+      ],
+    });
+
+    info("Removing the div that aria-owns other elements");
+    let onReorder = waitForEvent(EVENT_REORDER, accDoc);
+    await invokeContentTask(browser, [], () => {
+      content.document.querySelector("#container").remove();
+    });
+    await onReorder;
+
+    info(
+      "Verify DOM children are removed, order of remaining elements is correct"
+    );
+    testAccessibleTree(accDoc, {
+      DOCUMENT: [
+        { RADIOBUTTON: [] }, // c
+        { SECTION: [] }, // d
+      ],
+    });
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
+);
