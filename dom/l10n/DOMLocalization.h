@@ -61,6 +61,9 @@ class DOMLocalization : public intl::Localization {
                      ErrorResult& aRv);
   void GetAttributes(Element& aElement, L10nIdArgs& aResult, ErrorResult& aRv);
 
+  void SetArgs(JSContext* aCx, Element& aElement,
+               const Optional<JS::Handle<JSObject*>>& aArgs, ErrorResult& aRv);
+
   already_AddRefed<Promise> TranslateFragment(nsINode& aNode, ErrorResult& aRv);
 
   already_AddRefed<Promise> TranslateElements(
