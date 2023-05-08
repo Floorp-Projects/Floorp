@@ -723,16 +723,23 @@ export class _ExperimentManager {
    * @returns {Promise<{[branchName: string]: string}>} An object where
    * the keys are branch names and the values are user IDs that will enroll
    * a user for that particular branch. Also includes a `notInExperiment` value
-   * that will not enroll the user in the experiment
+   * that will not enroll the user in the experiment if not 100% enrollment.
    */
-  async generateTestIds({ slug, branches, namespace, start, count, total }) {
+  async generateTestIds(recipe) {
+    // Older recipe structure had bucket config values at the top level while
+    // newer recipes group them into a bucketConfig object
+    const { slug, branches, namespace, start, count, total } = {
+      ...recipe,
+      ...recipe.bucketConfig,
+    };
     const branchValues = {};
+    const includeNot = count < total;
 
     if (!slug || !namespace) {
       throw new Error(`slug, namespace not in expected format`);
     }
 
-    if (!(start < total && count < total)) {
+    if (!(start < total && count <= total)) {
       throw new Error("Must include start, count, and total as integers");
     }
 
@@ -744,7 +751,7 @@ export class _ExperimentManager {
       throw new Error("branches parameter not in expected format");
     }
 
-    while (Object.keys(branchValues).length < branches.length + 1) {
+    while (Object.keys(branchValues).length < branches.length + includeNot) {
       const id = lazy.NormandyUtils.generateUuid();
       const enrolls = await lazy.Sampling.bucketSample(
         [id, namespace],
