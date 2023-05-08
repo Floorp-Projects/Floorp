@@ -553,12 +553,12 @@ if CONFIG["CPU_ARCH"].startswith("ppc"):
     SOURCES["nsTextFragmentVMX.cpp"].flags += CONFIG["PPC_VMX_FLAGS"]
 
 EXTRA_JS_MODULES += [
-    "ContentAreaDropListener.jsm",
-    "DOMRequestHelper.jsm",
+    "ContentAreaDropListener.sys.mjs",
+    "DOMRequestHelper.sys.mjs",
     "IndexedDBHelper.sys.mjs",
-    "LocationHelper.jsm",
-    "ProcessSelector.jsm",
-    "SlowScriptDebug.jsm",
+    "LocationHelper.sys.mjs",
+    "ProcessSelector.sys.mjs",
+    "SlowScriptDebug.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

@@ -4,7 +4,7 @@
 
 // Fills up aProcesses until max and then selects randomly from the available
 // ones.
-function RandomSelector() {}
+export function RandomSelector() {}
 
 RandomSelector.prototype = {
   classID: Components.ID("{c616fcfd-9737-41f1-aa74-cee72a38f91b}"),
@@ -21,7 +21,7 @@ RandomSelector.prototype = {
 
 // Fills up aProcesses until max and then selects one from the available
 // ones that host the least number of tabs.
-function MinTabSelector() {}
+export function MinTabSelector() {}
 
 MinTabSelector.prototype = {
   classID: Components.ID("{2dc08eaf-6eef-4394-b1df-a3a927c1290b}"),
@@ -56,5 +56,3 @@ MinTabSelector.prototype = {
     return candidate;
   },
 };
-
-var EXPORTED_SYMBOLS = ["RandomSelector", "MinTabSelector"];

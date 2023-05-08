@@ -9,7 +9,7 @@
 // access the uri. This prevents, for example, a source document from tricking
 // the user into dragging a chrome url.
 
-function ContentAreaDropListener() {}
+export function ContentAreaDropListener() {}
 
 ContentAreaDropListener.prototype = {
   classID: Components.ID("{1f34bc80-1bc7-11d6-a384-d705dd0746fc}"),
@@ -327,5 +327,3 @@ ContentAreaDropListener.prototype = {
     );
   },
 };
-
-var EXPORTED_SYMBOLS = ["ContentAreaDropListener"];
