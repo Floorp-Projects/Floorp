@@ -402,6 +402,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Feature gate pref for weather suggestions in the urlbar.
   ["weather.featureGate", false],
 
+  // When false, the weather suggestion will not be fetched when a VPN is
+  // detected. When true, it will be fetched anyway.
+  ["weather.ignoreVPN", false],
+
   // The minimum prefix length of a weather keyword the user must type to
   // trigger the suggestion. 0 means the min length should be taken from Nimbus
   // or remote settings.
