@@ -653,6 +653,39 @@ void nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                                  aNotify);
 }
 
+void nsGenericHTMLElement::AfterSetPopoverAttr() {
+  const nsAttrValue* newValue = GetParsedAttr(nsGkAtoms::popover);
+
+  // https://html.spec.whatwg.org/multipage/popover.html#attr-popover
+  PopoverState newState;
+  if (newValue) {
+    if (newValue->Type() == nsAttrValue::eEnum) {
+      newState = static_cast<dom::PopoverState>(newValue->GetEnumValue());
+    } else {
+      // The invalid value default is the manual state
+      newState = PopoverState::Manual;
+    }
+  } else {
+    // The missing value default is the no popover state.
+    newState = PopoverState::None;
+  }
+  PopoverState oldState = GetPopoverState();
+  if (newState != oldState) {
+    if (oldState != PopoverState::None) {
+      HidePopoverInternal(/* aFocusPreviousElement = */ true,
+                          /* aFireEvents = */ true, IgnoreErrors());
+    }
+    // Bug 1831081: `newState` might here differ from `GetPopoverState()`.
+    if (newState != PopoverState::None) {
+      EnsurePopoverData().SetPopoverState(newState);
+      PopoverPseudoStateUpdate(false, true);
+    } else {
+      ClearPopoverData();
+      RemoveStates(ElementState::POPOVER_OPEN);
+    }
+  }
+}
+
 void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                         const nsAttrValue* aValue,
                                         const nsAttrValue* aOldValue,
@@ -667,33 +700,9 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       SyncEditorsOnSubtree(this);
     } else if (aName == nsGkAtoms::popover &&
                StaticPrefs::dom_element_popover_enabled()) {
-      // https://html.spec.whatwg.org/multipage/popover.html#attr-popover
-      PopoverState newState;
-      if (aValue) {
-        if (aValue->Type() == nsAttrValue::eEnum) {
-          newState = static_cast<dom::PopoverState>(aValue->GetEnumValue());
-        } else {
-          // The invalid value default is the manual state
-          newState = PopoverState::Manual;
-        }
-      } else {
-        // The missing value default is the no popover state.
-        newState = PopoverState::None;
-      }
-      PopoverState oldState = GetPopoverState();
-      if (newState != oldState) {
-        if (oldState != PopoverState::None) {
-          HidePopoverInternal(/* aFocusPreviousElement = */ true,
-                              /* aFireEvents = */ false, IgnoreErrors());
-        }
-        if (newState != PopoverState::None) {
-          EnsurePopoverData().SetPopoverState(newState);
-          PopoverPseudoStateUpdate(false, true);
-        } else {
-          ClearPopoverData();
-          RemoveStates(ElementState::POPOVER_OPEN);
-        }
-      }
+      nsContentUtils::AddScriptRunner(
+          NewRunnableMethod("nsGenericHTMLElement::AfterSetPopoverAttr", this,
+                            &nsGenericHTMLElement::AfterSetPopoverAttr));
     } else if (aName == nsGkAtoms::dir) {
       Directionality dir = eDir_LTR;
       // A boolean tracking whether we need to recompute our directionality.
