@@ -380,41 +380,17 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "WebSocket", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "WebTransport",
-    insecureContext: false,
-    nightly: true,
-  },
+  { name: "WebTransport", insecureContext: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "WebTransportBidirectionalStream",
-    insecureContext: false,
-    nightly: true,
-  },
+  { name: "WebTransportBidirectionalStream", insecureContext: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "WebTransportDatagramDuplexStream",
-    insecureContext: false,
-    nightly: true,
-  },
+  { name: "WebTransportDatagramDuplexStream", insecureContext: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "WebTransportError",
-    insecureContext: false,
-    nightly: true,
-  },
+  { name: "WebTransportError", insecureContext: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "WebTransportReceiveStream",
-    insecureContext: false,
-    nightly: true,
-  },
+  { name: "WebTransportReceiveStream", insecureContext: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "WebTransportSendStream",
-    insecureContext: false,
-    nightly: true,
-  },
+  { name: "WebTransportSendStream", insecureContext: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Worker", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
