@@ -83,12 +83,12 @@ class NavigationToolbarRobot {
             false -> {
                 assertFalse(
                     mDevice.findObject(UiSelector().resourceId("$packageName:id/fill_link_from_clipboard"))
-                        .waitForExists(waitingTime),
+                        .waitForExists(waitingTimeShort),
                 )
 
                 assertFalse(
                     mDevice.findObject(UiSelector().resourceId("$packageName:id/clipboard_url").text(link))
-                        .waitForExists(waitingTime),
+                        .waitForExists(waitingTimeShort),
                 )
             }
         }

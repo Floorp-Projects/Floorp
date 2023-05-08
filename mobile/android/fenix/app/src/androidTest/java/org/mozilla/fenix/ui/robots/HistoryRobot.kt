@@ -24,8 +24,8 @@ import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -107,13 +107,13 @@ class HistoryRobot {
             assertTrue(
                 mDevice.findObject(UiSelector().text(searchTerm))
                     .getFromParent(UiSelector().text("$groupSize sites"))
-                    .waitForExists(TestAssetHelper.waitingTimeShort),
+                    .waitForExists(waitingTimeShort),
             )
         } else {
             assertFalse(
                 mDevice.findObject(UiSelector().text(searchTerm))
                     .getFromParent(UiSelector().text("$groupSize sites"))
-                    .waitForExists(TestAssetHelper.waitingTimeShort),
+                    .waitForExists(waitingTimeShort),
             )
         }
     }
@@ -175,7 +175,7 @@ private fun assertHistoryItemExists(shouldExist: Boolean, item: String) {
     if (shouldExist) {
         assertTrue(mDevice.findObject(UiSelector().textContains(item)).waitForExists(waitingTime))
     } else {
-        assertFalse(mDevice.findObject(UiSelector().textContains(item)).waitForExists(waitingTime))
+        assertFalse(mDevice.findObject(UiSelector().textContains(item)).waitForExists(waitingTimeShort))
     }
 }
 

@@ -22,6 +22,7 @@ import org.hamcrest.Matchers.contains
 import org.junit.Assert.assertFalse
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
@@ -59,7 +60,7 @@ class SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot {
         } else {
             assertFalse(
                 mDevice.findObject(UiSelector().textContains(siteUrl))
-                    .waitForExists(waitingTime),
+                    .waitForExists(waitingTimeShort),
             )
         }
     }

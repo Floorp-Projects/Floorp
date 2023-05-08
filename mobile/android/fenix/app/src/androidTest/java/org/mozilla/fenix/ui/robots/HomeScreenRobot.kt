@@ -290,7 +290,7 @@ class HomeScreenRobot {
             ).getChild(
                 UiSelector()
                     .textContains(sponsoredShortcutTitle),
-            ).waitForExists(waitingTime),
+            ).waitForExists(waitingTimeShort),
         )
     fun verifyNotExistingSponsoredTopSitesList() = assertSponsoredTopSitesNotDisplayed()
     fun verifyExistingTopSitesTabs(title: String) = assertExistingTopSitesTabs(title)
@@ -380,7 +380,7 @@ class HomeScreenRobot {
                         .textContains(
                             getStringResource(R.string.pocket_stories_header_1),
                         ),
-                ).waitForExists(waitingTime),
+                ).waitForExists(waitingTimeShort),
             )
         }
     }
@@ -437,7 +437,7 @@ class HomeScreenRobot {
                         .textContains(
                             getStringResource(R.string.pocket_stories_categories_header),
                         ),
-                ).waitForExists(waitingTime),
+                ).waitForExists(waitingTimeShort),
             )
         }
     }
@@ -481,7 +481,7 @@ class HomeScreenRobot {
                 mDevice.findObject(
                     UiSelector()
                         .textContains("Customize homepage"),
-                ).waitForExists(waitingTime),
+                ).waitForExists(waitingTimeShort),
             )
         }
     }
@@ -980,7 +980,7 @@ private fun assertNotExistingTopSitesList(title: String) {
             UiSelector()
                 .resourceId("$packageName:id/top_site_title")
                 .textContains(title),
-        ).waitForExists(waitingTime),
+        ).waitForExists(waitingTimeShort),
     )
 }
 
@@ -990,7 +990,7 @@ private fun assertSponsoredTopSitesNotDisplayed() {
             UiSelector()
                 .resourceId("$packageName:id/top_site_subtitle")
                 .textContains(getStringResource(R.string.top_sites_sponsored_label)),
-        ).waitForExists(waitingTime),
+        ).waitForExists(waitingTimeShort),
     )
 }
 
@@ -1024,7 +1024,7 @@ private fun assertJumpBackInShowAllButton() =
 
 private fun assertRecentlyVisitedSectionIsDisplayed() = assertTrue(recentlyVisitedSection().waitForExists(waitingTime))
 
-private fun assertRecentlyVisitedSectionIsNotDisplayed() = assertFalse(recentlyVisitedSection().waitForExists(waitingTime))
+private fun assertRecentlyVisitedSectionIsNotDisplayed() = assertFalse(recentlyVisitedSection().waitForExists(waitingTimeShort))
 
 private fun assertRecentBookmarksSectionIsDisplayed() =
     assertTrue(recentBookmarksSection().waitForExists(waitingTime))
@@ -1034,7 +1034,7 @@ private fun assertRecentBookmarksSectionIsNotDisplayed() =
 
 private fun assertPocketSectionIsDisplayed() = assertTrue(pocketSection().waitForExists(waitingTime))
 
-private fun assertPocketSectionIsNotDisplayed() = assertFalse(pocketSection().waitForExists(waitingTime))
+private fun assertPocketSectionIsNotDisplayed() = assertFalse(pocketSection().waitForExists(waitingTimeShort))
 
 private fun saveTabsToCollectionButton() = onView(withId(R.id.add_tabs_to_collections_button))
 

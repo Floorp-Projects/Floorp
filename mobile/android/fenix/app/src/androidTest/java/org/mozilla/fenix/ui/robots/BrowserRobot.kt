@@ -51,6 +51,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -640,7 +641,7 @@ class BrowserRobot {
             mDevice.findObject(
                 UiSelector()
                     .text("Selected date is: $currentDate"),
-            ).waitForExists(waitingTime),
+            ).waitForExists(waitingTimeShort),
         )
     }
 
@@ -743,7 +744,7 @@ class BrowserRobot {
             mDevice.findObject(
                 UiSelector()
                     .text("Selected date is: $hour:$minute"),
-            ).waitForExists(waitingTime),
+            ).waitForExists(waitingTimeShort),
         )
     }
 
@@ -752,7 +753,7 @@ class BrowserRobot {
             mDevice.findObject(
                 UiSelector()
                     .text("Selected date is: $hexValue"),
-            ).waitForExists(waitingTime),
+            ).waitForExists(waitingTimeShort),
         )
     }
 

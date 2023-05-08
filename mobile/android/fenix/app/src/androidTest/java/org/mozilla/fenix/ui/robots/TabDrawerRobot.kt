@@ -450,7 +450,7 @@ private fun assertExistingOpenTabs(vararg tabTitles: String) {
 private fun assertNoExistingOpenTabs(vararg tabTitles: String) {
     for (title in tabTitles) {
         assertFalse(
-            tabItem(title).waitForExists(waitingTimeLong),
+            tabItem(title).waitForExists(waitingTimeShort),
         )
     }
 }

@@ -385,7 +385,7 @@ private fun assertBookmarkFolderIsNotCreated(title: String) {
         mDevice.findObject(
             UiSelector()
                 .textContains(title),
-        ).waitForExists(waitingTime),
+        ).waitForExists(waitingTimeShort),
     )
 }
 
@@ -417,7 +417,7 @@ private fun assertBookmarkIsDeleted(expectedTitle: String) {
             UiSelector()
                 .resourceId("$packageName:id/title")
                 .textContains(expectedTitle),
-        ).waitForExists(waitingTime),
+        ).waitForExists(waitingTimeShort),
     )
 }
 private fun assertUndoDeleteSnackBarButton() =

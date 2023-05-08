@@ -63,7 +63,7 @@ class SearchRobot {
         if (enabled) {
             assertTrue(voiceSearchButton.waitForExists(waitingTime))
         } else {
-            assertFalse(voiceSearchButton.waitForExists(waitingTime))
+            assertFalse(voiceSearchButton.waitForExists(waitingTimeShort))
         }
     }
 
@@ -144,7 +144,7 @@ class SearchRobot {
         for (searchSuggestion in searchSuggestions) {
             assertFalse(
                 mDevice.findObject(UiSelector().textContains(searchSuggestion))
-                    .waitForExists(waitingTime),
+                    .waitForExists(waitingTimeShort),
             )
         }
     }
