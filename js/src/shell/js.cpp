@@ -11088,7 +11088,7 @@ int main(int argc, char** argv) {
 
   // Use a larger jemalloc page cache. This should match the value for browser
   // foreground processes in ContentChild::RecvNotifyProcessPriorityChanged.
-  moz_set_max_dirty_page_modifier(3);
+  moz_set_max_dirty_page_modifier(4);
 
   OptionParser op("Usage: {progname} [options] [[script] scriptArgs*]");
   if (!InitOptionParser(op)) {
