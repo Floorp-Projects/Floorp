@@ -36,6 +36,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/StaticStrings.h"
 #include "vm/TypedArrayObject.h"
+#include "vm/Watchtower.h"
 #include "wasm/WasmGcObject.h"
 
 #include "debugger/DebugAPI-inl.h"
@@ -2071,7 +2072,8 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
 
   if constexpr (UseCache) {
     if (res && obj->shape()->isShared() &&
-        resultSlot < SharedPropMap::MaxPropsForNonDictionary) {
+        resultSlot < SharedPropMap::MaxPropsForNonDictionary &&
+        !Watchtower::watchesPropertyAdd(obj)) {
       TaggedSlotOffset offset = obj->getTaggedSlotOffset(resultSlot);
       uint32_t newCapacity = 0;
       if (!(resultSlot < obj->numFixedSlots() ||
