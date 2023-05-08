@@ -532,9 +532,11 @@ void SurfaceTextureHost::DeallocateDeviceData() {
 
 void SurfaceTextureHost::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
+  bool isRemoteTexture = !!(mFlags & TextureFlags::REMOTE_TEXTURE);
   RefPtr<wr::RenderTextureHost> texture =
       new wr::RenderAndroidSurfaceTextureHost(
-          mSurfTex, mSize, mFormat, mContinuousUpdate, mTransformOverride);
+          mSurfTex, mSize, mFormat, mContinuousUpdate, mTransformOverride,
+          isRemoteTexture);
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }

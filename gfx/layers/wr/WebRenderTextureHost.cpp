@@ -116,7 +116,8 @@ void WebRenderTextureHost::NotifyNotUsed() {
 
 void WebRenderTextureHost::MaybeNotifyForUse(wr::TransactionBuilder& aTxn) {
 #if defined(MOZ_WIDGET_ANDROID)
-  if (IsWrappingSurfaceTextureHost()) {
+  if (IsWrappingSurfaceTextureHost() &&
+      !mWrappedTextureHost->AsRemoteTextureHostWrapper()) {
     wr::RenderThread::Get()->NotifyForUse(GetExternalImageKey());
     aTxn.Notify(wr::Checkpoint::FrameTexturesUpdated,
                 MakeUnique<ScheduleHandleRenderTextureOps>());
