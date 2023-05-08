@@ -52,7 +52,7 @@ const EXPECTED_BEST_MATCH_URLBAR_RESULT = {
   heuristic: false,
   isBestMatch: true,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+    telemetryType: "adm_sponsored",
     url: "http://example.com/",
     originalUrl: "http://example.com/",
     title: "Fullkeyword title",
@@ -84,7 +84,7 @@ const EXPECTED_NON_BEST_MATCH_URLBAR_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+    telemetryType: "adm_sponsored",
     url: "http://example.com/",
     originalUrl: "http://example.com/",
     title: "Fullkeyword title",
@@ -118,7 +118,7 @@ const EXPECTED_BEST_MATCH_POSITION_URLBAR_RESULT = {
   heuristic: false,
   isBestMatch: true,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+    telemetryType: "adm_sponsored",
     url: "http://example.com/best-match-position",
     originalUrl: "http://example.com/best-match-position",
     title: `${BEST_MATCH_POSITION_SEARCH_STRING} title`,
@@ -470,12 +470,10 @@ add_task(async function heuristicDeduplication() {
     heuristic: false,
     isBestMatch: true,
     payload: {
-      subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NAVIGATIONAL,
+      telemetryType: "top_picks",
       url: "http://example.com/",
-      originalUrl: "http://example.com/",
       title: "Navigational suggestion",
       isSponsored: false,
-      sponsoredBlockId: 0,
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
         id: UrlbarPrefs.get("resultMenu")
@@ -490,7 +488,6 @@ add_task(async function heuristicDeduplication() {
       },
       displayUrl: "http://example.com",
       source: "merino",
-      requestId: "request_id",
       dupedHeuristic: false,
     },
   };

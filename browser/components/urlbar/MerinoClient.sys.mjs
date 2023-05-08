@@ -155,14 +155,14 @@ export class MerinoClient {
     // don't hit the network.
     let endpointString = lazy.UrlbarPrefs.get("merinoEndpointURL");
     if (!endpointString) {
-      return null;
+      return [];
     }
     let url;
     try {
       url = new URL(endpointString);
     } catch (error) {
       this.logger.error("Error creating endpoint URL: " + error);
-      return null;
+      return [];
     }
     url.searchParams.set(SEARCH_PARAMS.QUERY, query);
     url.searchParams.set(SEARCH_PARAMS.SESSION_ID, this.#sessionID);

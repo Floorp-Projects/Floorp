@@ -39,7 +39,7 @@ const EXPECTED_SPONSORED_URLBAR_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+    telemetryType: "adm_sponsored",
     url: "http://example.com/sponsored",
     originalUrl: "http://example.com/sponsored",
     displayUrl: "http://example.com/sponsored",
@@ -73,7 +73,7 @@ const EXPECTED_NONSPONSORED_URLBAR_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NONSPONSORED,
+    telemetryType: "adm_nonsponsored",
     url: "http://example.com/nonsponsored",
     originalUrl: "http://example.com/nonsponsored",
     displayUrl: "http://example.com/nonsponsored",

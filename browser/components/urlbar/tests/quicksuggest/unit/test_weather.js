@@ -998,9 +998,7 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         heuristic: false,
         payload: {
-          subtype: isSponsored
-            ? UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED
-            : UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NONSPONSORED,
+          telemetryType: isSponsored ? "adm_sponsored" : "adm_nonsponsored",
           qsSuggestion: keyword,
           title: "Suggestion",
           url: "http://example.com/",

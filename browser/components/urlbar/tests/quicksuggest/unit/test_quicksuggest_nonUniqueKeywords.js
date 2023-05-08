@@ -177,9 +177,7 @@ add_task(async function() {
       heuristic: false,
       payload: {
         isSponsored,
-        subtype: isSponsored
-          ? UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED
-          : UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NONSPONSORED,
+        telemetryType: isSponsored ? "adm_sponsored" : "adm_nonsponsored",
         sponsoredBlockId: qsResult.id,
         url: qsResult.url,
         originalUrl: qsResult.url,

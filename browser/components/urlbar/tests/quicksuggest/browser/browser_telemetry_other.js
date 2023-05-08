@@ -280,50 +280,6 @@ add_task(async function bestmatchLearnMore() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Tests the Nimbus exposure event gets recorded after a quick suggest result
-// impression.
-add_task(async function nimbusExposure() {
-  await QuickSuggestTestUtils.clearExposureEvent();
-
-  await QuickSuggestTestUtils.withExperiment({
-    valueOverrides: {
-      quickSuggestEnabled: true,
-      quickSuggestShouldShowOnboardingDialog: false,
-    },
-    callback: async () => {
-      // No exposure event should be recorded after only enrolling.
-      await QuickSuggestTestUtils.assertExposureEvent(false);
-
-      // Do a search that doesn't trigger a quick suggest result. No exposure
-      // event should be recorded.
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        value: "nimbusExposure no result",
-        fireInputEvent: true,
-      });
-      await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
-      await UrlbarTestUtils.promisePopupClose(window);
-      QuickSuggestTestUtils.assertExposureEvent(false);
-
-      // Do a search that does trigger a quick suggest result. The exposure
-      // event should be recorded.
-      await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        value: "sponsored",
-        fireInputEvent: true,
-      });
-      await QuickSuggestTestUtils.assertIsQuickSuggest({
-        window,
-        index: 1,
-        url: REMOTE_SETTINGS_RESULTS[0].url,
-      });
-      await QuickSuggestTestUtils.assertExposureEvent(true, "control");
-
-      await UrlbarTestUtils.promisePopupClose(window);
-    },
-  });
-});
-
 // Simulates the race on startup between telemetry environment initialization
 // and the initial update of the Suggest scenario. After startup is done,
 // telemetry environment should record the correct values for startup prefs.

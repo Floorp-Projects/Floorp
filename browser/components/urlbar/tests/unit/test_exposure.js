@@ -37,7 +37,7 @@ const EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+    telemetryType: "adm_sponsored",
     qsSuggestion: "test",
     title: "frabbits",
     url: "http://test.com/q=frabbits",
@@ -70,7 +70,7 @@ const EXPECTED_NON_SPONSORED_REMOTE_SETTINGS_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NONSPONSORED,
+    telemetryType: "adm_nonsponsored",
     qsSuggestion: "non_sponsored",
     title: "frabbits",
     url: "http://test.com/q=frabbits",
@@ -121,7 +121,7 @@ add_setup(async function test_setup() {
 
 add_task(async function testExposureCheck() {
   UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", true);
-  UrlbarPrefs.set("exposureResults", "rs_suggest_sponsor");
+  UrlbarPrefs.set("exposureResults", "rs_adm_sponsored");
   UrlbarPrefs.set("showExposureResults", true);
 
   let context = createContext("test", {
@@ -134,16 +134,13 @@ add_task(async function testExposureCheck() {
     matches: [EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT],
   });
 
-  Assert.equal(context.results[0].exposureResultType, "rs_suggest_sponsor");
+  Assert.equal(context.results[0].exposureResultType, "rs_adm_sponsored");
   Assert.equal(context.results[0].exposureResultHidden, false);
 });
 
 add_task(async function testExposureCheckMultiple() {
   UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", true);
-  UrlbarPrefs.set(
-    "exposureResults",
-    "rs_suggest_sponsor,rs_suggest_non_sponsor"
-  );
+  UrlbarPrefs.set("exposureResults", "rs_adm_sponsored,rs_adm_nonsponsored");
   UrlbarPrefs.set("showExposureResults", true);
 
   let context = createContext("test", {
@@ -156,7 +153,7 @@ add_task(async function testExposureCheckMultiple() {
     matches: [EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT],
   });
 
-  Assert.equal(context.results[0].exposureResultType, "rs_suggest_sponsor");
+  Assert.equal(context.results[0].exposureResultType, "rs_adm_sponsored");
   Assert.equal(context.results[0].exposureResultHidden, false);
 
   context = createContext("non_sponsored", {
@@ -169,13 +166,13 @@ add_task(async function testExposureCheckMultiple() {
     matches: [EXPECTED_NON_SPONSORED_REMOTE_SETTINGS_RESULT],
   });
 
-  Assert.equal(context.results[0].exposureResultType, "rs_suggest_non_sponsor");
+  Assert.equal(context.results[0].exposureResultType, "rs_adm_nonsponsored");
   Assert.equal(context.results[0].exposureResultHidden, false);
 });
 
 add_task(async function exposureDisplayFiltering() {
   UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", true);
-  UrlbarPrefs.set("exposureResults", "rs_suggest_sponsor");
+  UrlbarPrefs.set("exposureResults", "rs_adm_sponsored");
   UrlbarPrefs.set("showExposureResults", false);
 
   let context = createContext("test", {
@@ -188,6 +185,6 @@ add_task(async function exposureDisplayFiltering() {
     matches: [EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT],
   });
 
-  Assert.equal(context.results[0].exposureResultType, "rs_suggest_sponsor");
+  Assert.equal(context.results[0].exposureResultType, "rs_adm_sponsored");
   Assert.equal(context.results[0].exposureResultHidden, true);
 });

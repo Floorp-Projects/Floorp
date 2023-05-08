@@ -84,7 +84,7 @@ add_task(async function top_pick() {
         {
           groups: "heuristic,top_pick,search_suggest,search_suggest",
           results:
-            "search_engine,rs_suggest_sponsor,search_suggest,search_suggest",
+            "search_engine,rs_adm_sponsored,search_suggest,search_suggest",
           n_results: 4,
         },
       ]),
@@ -166,7 +166,7 @@ add_task(async function suggest() {
       assertAbandonmentTelemetry([
         {
           groups: "heuristic,suggest",
-          results: "search_engine,rs_suggest_non_sponsor",
+          results: "search_engine,rs_adm_nonsponsored",
           n_results: 2,
         },
       ]),

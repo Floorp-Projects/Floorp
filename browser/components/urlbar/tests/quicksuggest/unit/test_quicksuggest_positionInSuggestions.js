@@ -146,9 +146,7 @@ function createExpectedQuickSuggestResult(suggest) {
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     payload: {
-      subtype: isSponsored
-        ? UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED
-        : UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NONSPONSORED,
+      telemetryType: isSponsored ? "adm_sponsored" : "adm_nonsponsored",
       qsSuggestion: suggest.keywords[0],
       title: suggest.title,
       url: suggest.url,

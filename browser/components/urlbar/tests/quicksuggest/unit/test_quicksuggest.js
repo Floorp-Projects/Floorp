@@ -80,7 +80,7 @@ const EXPECTED_SPONSORED_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+    telemetryType: "adm_sponsored",
     qsSuggestion: "frab",
     title: "frabbits",
     url: "http://test.com/q=frabbits",
@@ -114,7 +114,7 @@ const EXPECTED_NONSPONSORED_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NONSPONSORED,
+    telemetryType: "adm_nonsponsored",
     qsSuggestion: "nonspon",
     title: "Non-Sponsored",
     url: "http://test.com/?q=nonsponsored",
@@ -148,7 +148,7 @@ const EXPECTED_HTTP_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+    telemetryType: "adm_sponsored",
     qsSuggestion: HTTP_SEARCH_STRING,
     title: "http suggestion",
     url: "http://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
@@ -182,7 +182,7 @@ const EXPECTED_HTTPS_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+    telemetryType: "adm_sponsored",
     qsSuggestion: HTTPS_SEARCH_STRING,
     title: "https suggestion",
     url: "https://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
@@ -1000,7 +1000,7 @@ add_task(async function dedupeAgainstURL_timestamps() {
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     payload: {
-      subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+      telemetryType: "adm_sponsored",
       originalUrl: TIMESTAMP_SUGGESTION_URL,
       qsSuggestion: TIMESTAMP_SEARCH_STRING,
       title: "Timestamp suggestion",
