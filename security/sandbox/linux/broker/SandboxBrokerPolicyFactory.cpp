@@ -773,6 +773,8 @@ UniquePtr<SandboxBroker::Policy> SandboxBrokerPolicyFactory::GetContentPolicy(
   const int level = GetEffectiveContentSandboxLevel();
   // The file broker is used at level 2 and up.
   if (level <= 1) {
+    // Level 1 has been removed.
+    MOZ_ASSERT(level == 0);
     return nullptr;
   }
 

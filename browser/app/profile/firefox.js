@@ -1313,7 +1313,7 @@ pref("browser.bookmarks.editDialog.delayedApply.enabled", true);
   // This pref is introduced as part of bug 742434, the naming is inspired from
   // its Windows/Mac counterpart, but on Linux it's an integer which means:
   // 0 -> "no sandbox"
-  // 1 -> "content sandbox using seccomp-bpf when available" + ipc restrictions
+  // 1 -> no longer used; level will be clamped to 2
   // 2 -> "seccomp-bpf + write file broker"
   // 3 -> "seccomp-bpf + read/write file brokering"
   // 4 -> all of the above + network/socket restrictions + chroot
