@@ -21,6 +21,10 @@ var start = "Time: " + new Date;
 try {
   var options = parse_options([
     {
+      name: '--verbose',
+      type: 'bool'
+    },
+    {
       name: 'inputs',
       dest: 'rawcalls_filenames',
       nargs: '+'
@@ -51,18 +55,24 @@ try {
     },
   ]);
 } catch {
-  printErr("Usage: computeGCFunctions.js <rawcalls1.txt> <rawcalls2.txt>... --outputs <out:callgraph.txt> <out:gcFunctions.txt> <out:gcFunctions.lst> <out:gcEdges.txt> <out:limitedFunctions.lst>");
+  printErr("Usage: computeGCFunctions.js [--verbose] <rawcalls1.txt> <rawcalls2.txt>... --outputs <out:callgraph.txt> <out:gcFunctions.txt> <out:gcFunctions.lst> <out:gcEdges.txt> <out:limitedFunctions.lst>");
   quit(1);
 };
+
+function info(message) {
+  if (options.verbose) {
+    printErr(message);
+  }
+}
 
 var {
   gcFunctions,
   functions,
   calleesOf,
   limitedFunctions
-} = loadCallgraph(options.rawcalls_filenames);
+} = loadCallgraph(options.rawcalls_filenames, options.verbose);
 
-printErr("Writing " + options.gcFunctions);
+info("Writing " + options.gcFunctions);
 redirect(options.gcFunctions);
 
 for (var name in gcFunctions) {
@@ -83,7 +93,7 @@ for (var name in gcFunctions) {
     }
 }
 
-printErr("Writing " + options.gcFunctionsList);
+info("Writing " + options.gcFunctionsList);
 redirect(options.gcFunctionsList);
 for (var name in gcFunctions) {
     if (name in functions.readableName) {
@@ -94,10 +104,10 @@ for (var name in gcFunctions) {
     }
 }
 
-printErr("Writing " + options.limitedFunctions);
+info("Writing " + options.limitedFunctions);
 redirect(options.limitedFunctions);
 print(JSON.stringify(limitedFunctions, null, 4));
 
-printErr("Writing " + options.callgraph);
+info("Writing " + options.callgraph);
 redirect(options.callgraph);
 saveCallgraph(functions, calleesOf);

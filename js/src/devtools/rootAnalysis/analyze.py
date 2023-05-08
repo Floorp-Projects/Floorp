@@ -35,12 +35,20 @@ class MultiInput(str):
     pass
 
 
+# Construct a new environment by merging in some settings needed for running the individual scripts.
 def env(config):
-    e = dict(os.environ)
-    e["PATH"] = ":".join(p for p in (config.get("sixgill_bin"), e["PATH"]) if p)
-    e["XDB"] = "%(sixgill_bin)s/xdb.so" % config
-    e["SOURCE"] = config["source"]
-    return e
+    # Add config['sixgill_bin'] to $PATH if not already there.
+    path = os.environ["PATH"].split(":")
+    if dir := config.get("sixgill_bin"):
+        if dir not in path:
+            path.insert(0, dir)
+
+    return dict(
+        os.environ,
+        PATH=":".join(path),
+        XDB=f"{config['sixgill_bin']}/xdb.so",
+        SOURCE=config["source"],
+    )
 
 
 def fill(command, config):
@@ -68,30 +76,45 @@ def fill(command, config):
     return tuple(filled)
 
 
-def print_command(command, outfile=None, env=None):
-    output = " ".join(quote(s) for s in command)
-    if outfile:
-        output += " > " + outfile
+def print_command(job, config, env=None):
+    # Display a command to run that has roughly the same effect as what was
+    # actually run. The actual command uses temporary files that get renamed at
+    # the end, and run some commands in parallel chunks. The printed command
+    # will substitute in the actual output and run in a single chunk, so that
+    # it is easier to cut & paste and add a --function flag for debugging.
+    cfg = dict(config, n=1, i=1, jobs=1)
+    cmd = job_command_with_final_output_names(job)
+    cmd = fill(cmd, cfg)
+
+    cmd = [quote(s) for s in cmd]
+    if outfile := job.get("redirect-output"):
+        cmd.extend([">", quote(outfile.format(**cfg))])
+    if HOME := os.environ.get("HOME"):
+        cmd = [s.replace(HOME, "~") for s in cmd]
+
     if env:
-        changed = {}
+        # Try to keep the command as short as possible by only displaying
+        # modified environment variable settings.
         e = os.environ
-        for key, value in env.items():
-            if (key not in e) or (e[key] != value):
-                changed[key] = value
+        changed = {key: value for key, value in env.items() if value != e.get(key)}
         if changed:
-            outputs = []
+            settings = []
             for key, value in changed.items():
                 if key in e and e[key] in value:
+                    # Display modifications as V=prefix${V}suffix when
+                    # possible. This can make a huge different for $PATH.
                     start = value.index(e[key])
                     end = start + len(e[key])
-                    outputs.append(
-                        '%s="%s${%s}%s"' % (key, value[:start], key, value[end:])
-                    )
+                    setting = '%s="%s${%s}%s"' % (key, value[:start], key, value[end:])
                 else:
-                    outputs.append("%s='%s'" % (key, value))
-            output = " ".join(outputs) + " " + output
+                    setting = '%s="%s"' % (key, value)
+                if HOME:
+                    setting = setting.replace(HOME, "$HOME")
+                settings.append(setting)
 
-    print(output)
+            cmd = settings + cmd
+
+    print("  " + " ".join(cmd))
 
 
 JOBS = {
@@ -101,7 +124,7 @@ JOBS = {
             "{js}",
             "{analysis_scriptdir}/computeCallgraph.js",
             "{typeInfo}",
-            Output("rawcalls"),
+            Output("{rawcalls}"),
             "{i}",
             "{n}",
         ],
@@ -114,10 +137,10 @@ JOBS = {
             "{analysis_scriptdir}/computeGCFunctions.js",
             MultiInput("{rawcalls}"),
             "--outputs",
-            Output("callgraph"),
-            Output("gcFunctions"),
-            Output("gcFunctions_list"),
-            Output("limitedFunctions_list"),
+            Output("{callgraph}"),
+            Output("{gcFunctions}"),
+            Output("{gcFunctions_list}"),
+            Output("{limitedFunctions_list}"),
         ],
         "outputs": [
             "callgraph.txt",
@@ -130,8 +153,8 @@ JOBS = {
         "command": [
             "{js}",
             "{analysis_scriptdir}/computeGCTypes.js",
-            Output("gcTypes"),
-            Output("typeInfo"),
+            Output("{gcTypes}"),
+            Output("{typeInfo}"),
         ],
         "outputs": ["gcTypes.txt", "typeInfo.txt"],
     },
@@ -159,7 +182,7 @@ JOBS = {
             "{js}",
             "{analysis_scriptdir}/mergeJSON.js",
             MultiInput("{hazards}"),
-            Output("all_hazards"),
+            Output("{all_hazards}"),
         ],
         "outputs": ["rootingHazards.json"],
     },
@@ -169,10 +192,10 @@ JOBS = {
             "{analysis_scriptdir}/explain.py",
             "{all_hazards}",
             "{gcFunctions}",
-            Output("explained_hazards"),
-            Output("unnecessary"),
-            Output("refs"),
-            Output("html"),
+            Output("{explained_hazards}"),
+            Output("{unnecessary}"),
+            Output("{refs}"),
+            Output("{html}"),
         ],
         "outputs": ["hazards.txt", "unnecessary.txt", "refs.txt", "hazards.html"],
     },
@@ -195,6 +218,14 @@ def out_indexes(command):
             i += 1
 
 
+def job_command_with_final_output_names(job):
+    outfiles = job.get("outputs", [])
+    command = list(job["command"])
+    for (i, j, name) in out_indexes(job["command"]):
+        command[j] = outfiles[i]
+    return command
+
+
 def run_job(name, config):
     job = JOBS[name]
     outs = job.get("outputs") or job.get("redirect-output")
@@ -212,6 +243,9 @@ def run_job(name, config):
         info = spawn_command(cmd, job, name, config)
         jobs[info["proc"].pid] = info
 
+    if config["verbose"] > 0:
+        print_command(job, config, env=env(config))
+
     final_status = 0
     while jobs:
         pid, status = os.wait()
@@ -224,7 +258,7 @@ def run_job(name, config):
         # Rename the temporary files to their final names.
         for (temp, final) in info["rename_map"].items():
             try:
-                if config["verbose"]:
+                if config["verbose"] > 1:
                     print("Renaming %s -> %s" % (temp, final))
                 os.rename(temp, final)
             except OSError:
@@ -243,27 +277,16 @@ def spawn_command(cmdspec, job, name, config):
         final_outfile = job["redirect-output"].format(**config)
         rename_map[stdout_filename] = final_outfile
         command = cmdspec
-        if config["verbose"]:
-            print_command(cmdspec, outfile=final_outfile, env=env(config))
     else:
-        outfiles = job["outputs"]
-        outfiles = fill(outfiles, config)
+        outfiles = fill(job["outputs"], config)
         stdout_filename = None
-
-        # To print the supposedly-executed command, replace the Outputs in the
-        # command with final output file names. (The actual command will be
-        # using temporary files that get renamed at the end.)
-        if config["verbose"]:
-            pc = list(cmdspec)
-            for (i, j, name) in out_indexes(cmdspec):
-                pc[j] = outfiles[i]
-            print_command(pc, env=env(config))
 
         # Replace the Outputs with temporary filenames, and record a mapping
         # from those temp names to their actual final names that will be used
         # if the command succeeds.
         command = list(cmdspec)
-        for (i, j, name) in out_indexes(cmdspec):
+        for (i, j, raw_name) in out_indexes(cmdspec):
+            [name] = fill([raw_name], config)
             command[j] = "{}.tmp{}".format(name, config.get("i", ""))
             rename_map[command[j]] = outfiles[i]
 
@@ -275,7 +298,7 @@ def spawn_command(cmdspec, job, name, config):
     else:
         info["proc"] = Popen(command, env=env(config))
 
-    if config["verbose"]:
+    if config["verbose"] > 1:
         print("Spawned process {}".format(info["proc"].pid))
 
     return info
@@ -346,7 +369,7 @@ parser.add_argument(
     "-v",
     action="count",
     default=1,
-    help="Display cut & paste commands to run individual steps",
+    help="Display cut & paste commands to run individual steps (give twice for more output)",
 )
 parser.add_argument("--quiet", "-q", action="count", default=0, help="Suppress output")
 
@@ -356,11 +379,14 @@ args.verbose = max(0, args.verbose - args.quiet)
 for default in defaults:
     try:
         execfile(default, config)
-        if args.verbose:
+        if args.verbose > 1:
             print("Loaded %s" % default)
     except Exception:
         pass
 
+# execfile() used config as the globals for running the
+# defaults.py script, and will have set a __builtins__ key as a side effect.
+del config["__builtins__"]
 data = config.copy()
 
 for k, v in vars(args).items():
@@ -407,9 +433,11 @@ for step in steps:
         data[step] = job["redirect-output"]
     elif "outputs" in job and "command" in job:
         outfiles = job["outputs"]
+        num_outputs = 0
         for (i, j, name) in out_indexes(job["command"]):
-            data[name] = outfiles[i]
-        num_outputs = len(list(out_indexes(job["command"])))
+            # Trim the {curly brackets} off of the output keys.
+            data[name[1:-1]] = outfiles[i]
+            num_outputs += 1
         assert (
             len(outfiles) == num_outputs
         ), 'step "%s": mismatched number of output files (%d) and params (%d)' % (
