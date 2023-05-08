@@ -182,7 +182,7 @@ linux64-custom-v8:
         toolchain-artifact: public/build/d8.tar.zst
 
 linux64-custom-car:
-    description: "Custom chromium build"
+    description: "Custom chromium-as-release build for Linux"
     treeherder:
         symbol: TL(custom-car)
     worker:
@@ -192,20 +192,54 @@ linux64-custom-car:
         script: build-custom-car-linux.sh
         arguments: [
             car_linux.tar.zst,
-            is_debug=false,
-            v8_symbol_level=0,
-            target_cpu="x64",
-            enable_nacl=false,
-            symbol_level=0,
             blink_symbol_level=0,
-            is_component_build=false,
-            dcheck_always_on=false,
-            is_chrome_branded=false,
-            is_official_build=true,
             chrome_pgo_phase=2,
-            enable_resource_allowlist_generation=false
+            dcheck_always_on=false,
+            enable_nacl=false,
+            enable_resource_allowlist_generation=false,
+            is_chrome_branded=false,
+            is_clang=true,
+            is_component_build=false,
+            is_debug=false,
+            is_official_build=true,
+            symbol_level=0,
+            target_cpu="x64",
+            v8_symbol_level=0
         ]
         toolchain-artifact: public/build/car_linux.tar.zst
+
+win64-custom-car:
+    description: "Custom chromium-as-release build for Windows"
+    treeherder:
+        symbol: TW64(custom-car)
+    worker-type: b-win2012
+    worker:
+        max-run-time: 16200
+        env:
+            MSYSTEM: "MINGW64"
+    run:
+        script: build-custom-car-win64.sh
+        arguments: [
+            car_win64.tar.zst,
+            blink_symbol_level=0,
+            chrome_pgo_phase=2,
+            dcheck_always_on=false,
+            enable_nacl=false,
+            enable_resource_allowlist_generation=false,
+            is_chrome_branded=false,
+            is_clang=true,
+            is_component_build=false,
+            is_debug=false,
+            is_official_build=true,
+            symbol_level=0,
+            target_cpu=\"x64\",
+            use_v8_context_snapshot=false,
+            v8_symbol_level=0
+        ]
+        toolchain-artifact: public/build/car_win64.tar.zst
+    fetches:
+        toolchain:
+            - win64-vs2022
 
 browsertime:
     description: "npm install browsertime node_modules"
