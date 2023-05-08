@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const ExternalTypes = ChromeUtils.import(
-  "resource://gre/modules/RustExternalTypes.jsm"
+const ExternalTypes = ChromeUtils.importESModule(
+  "resource://gre/modules/RustExternalTypes.sys.mjs"
 );
 
 add_task(async function() {
