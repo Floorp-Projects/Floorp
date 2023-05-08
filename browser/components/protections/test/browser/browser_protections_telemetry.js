@@ -207,7 +207,7 @@ add_task(async function checkTelemetryClickEvents() {
   });
 
   // Add user logins.
-  await Services.logins.addLoginAsync(TEST_LOGIN1);
+  Services.logins.addLogin(TEST_LOGIN1);
   await BrowserTestUtils.reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const managePasswordsButton = await ContentTaskUtils.waitForCondition(

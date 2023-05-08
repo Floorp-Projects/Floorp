@@ -10,6 +10,26 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
+
+<script>
+var chromeScript = runChecksAfterCommonInit();
+
+var setupScript = runInParent(function setup() {
+  var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                           Ci.nsILoginInfo, "init");
+  assert.ok(nsLoginInfo != null, "nsLoginInfo constructor");
+
+  var login1 = new nsLoginInfo("https://example.com", "", null,
+                               "tempuser1", "temppass1", "uname", "pword");
+
+  // try/catch in case someone runs the tests manually, twice.
+  try {
+    Services.logins.addLogin(login1);
+  } catch (e) {
+    assert.ok(false, "addLogin threw: " + e);
+  }
+});
+</script>
 <p id="display"></p>
 
 <div id="content">
@@ -22,7 +42,7 @@
 
 /** Test for Login Manager: form field autofill in sandboxed documents (null principal) **/
 
-const sandboxed = document.getElementById("sandboxed");
+let sandboxed = document.getElementById("sandboxed");
 let uname;
 let pword;
 
@@ -30,14 +50,10 @@ function promiseExecuteSoon() {
   return new Promise(SimpleTest.executeSoon);
 }
 
-add_setup(async () => {
-  await setStoredLoginsAsync(["https://example.com", "", null, "tempuser1", "temppass1", "uname", "pword"]);
-});
-
 add_task(async function test_no_autofill_in_form() {
   sandboxed.src = "form_basic.html";
-  const frameWindow = SpecialPowers.wrap(sandboxed).contentWindow;
-  const DOMFormHasPasswordPromise = new Promise(resolve => {
+  let frameWindow = SpecialPowers.wrap(sandboxed).contentWindow;
+  let DOMFormHasPasswordPromise = new Promise(resolve => {
     SpecialPowers.addChromeEventListener("DOMFormHasPassword", function onDFHP() {
       SpecialPowers.removeChromeEventListener("DOMFormHasPassword", onDFHP);
       resolve();
@@ -50,7 +66,7 @@ add_task(async function test_no_autofill_in_form() {
   }, "Check frame is loaded");
   info("frame loaded");
   await DOMFormHasPasswordPromise;
-  const frameDoc = SpecialPowers.wrap(sandboxed).contentDocument;
+  let frameDoc = SpecialPowers.wrap(sandboxed).contentDocument;
 
   uname = frameDoc.getElementById("form-basic-username");
   pword = frameDoc.getElementById("form-basic-password");
@@ -72,8 +88,8 @@ add_task(async function test_no_autofill_in_form() {
 
 add_task(async function test_no_autofill_outside_form() {
   sandboxed.src = "formless_basic.html";
-  const frameWindow = SpecialPowers.wrap(sandboxed).contentWindow;
-  const DOMInputPasswordAddedPromise = new Promise(resolve => {
+  let frameWindow = SpecialPowers.wrap(sandboxed).contentWindow;
+  let DOMInputPasswordAddedPromise = new Promise(resolve => {
     SpecialPowers.addChromeEventListener("DOMInputPasswordAdded", function onDIPA() {
       SpecialPowers.removeChromeEventListener("DOMInputPasswordAdded", onDIPA);
       resolve();
@@ -86,7 +102,7 @@ add_task(async function test_no_autofill_outside_form() {
   }, "Check frame is loaded");
   info("frame loaded");
   await DOMInputPasswordAddedPromise;
-  const frameDoc = SpecialPowers.wrap(sandboxed).contentDocument;
+  let frameDoc = SpecialPowers.wrap(sandboxed).contentDocument;
 
   uname = frameDoc.getElementById("form-basic-username");
   pword = frameDoc.getElementById("form-basic-password");

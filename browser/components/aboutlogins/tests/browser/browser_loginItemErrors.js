@@ -21,7 +21,7 @@ add_task(async function test_showLoginItemErrors() {
     "user2",
     "pass2"
   );
-  LOGIN_TO_UPDATE = await Services.logins.addLoginAsync(LOGIN_TO_UPDATE);
+  LOGIN_TO_UPDATE = Services.logins.addLogin(LOGIN_TO_UPDATE);
   EXPECTED_ERROR_MESSAGE = "This login already exists.";
   const LOGIN_UPDATES = {
     origin: "https://example.com",

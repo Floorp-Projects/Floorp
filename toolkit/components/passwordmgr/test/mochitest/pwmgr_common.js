@@ -183,117 +183,6 @@ function getPasswordEditedMessage() {
 }
 
 /**
- * Create a login form and insert into contents dom (identified by id
- * `content`). If the form (identified by its number) is already present in the
- * dom, it gets replaced.
- *
- * @param {number} [num = 1] - number of the form, used as id, eg `form1`
- * @param {string} [action = ""] - action attribute of the form
- * @param {string} [autocomplete  = null] - forms autocomplete attribute. Default is none
- * @param {object} [username = {}] - object describing attributes to the username field:
- * @param {string} [username.id = null] - id of the field
- * @param {string} [username.name = "uname"] - name attribute
- * @param {string} [username.type = "text"] - type of the field
- * @param {string} [username.value = null] - initial value of the field
- * @param {string} [username.autocomplete = null] - autocomplete attribute
- * @param {object} [password = {}] - an object describing attributes to the password field. If falsy, do not create a password field
- * @param {string} [password.id = null] - id of the field
- * @param {string} [password.name = "pword"] - name attribute
- * @param {string} [password.type = "password"] - type of the field
- * @param {string} [password.value = null] - initial value of the field
- * @param {string} [password.label = null] - if present, wrap field in a label containing its value
- * @param {string} [password.autocomplete = null] - autocomplete attribute
- *
- * @return {HTMLDomElement} the form
- */
-function createLoginForm({
-  num = 1,
-  action = "",
-  autocomplete = null,
-  username = {},
-  password = {},
-} = {}) {
-  username.id ||= null;
-  username.name ||= "uname";
-  username.type ||= "text";
-  username.value ||= null;
-  username.autocomplete ||= null;
-  password.id ||= null;
-  password.name ||= "pword";
-  password.type ||= "password";
-  password.value ||= null;
-  password.label ||= null;
-  password.autocomplete ||= null;
-
-  info(
-    `Creating login form ${JSON.stringify({ num, action, username, password })}`
-  );
-
-  const form = document.createElement("form");
-  form.id = `form${num}`;
-  form.action = action;
-  form.onsubmit = () => false;
-
-  if (autocomplete != null) {
-    form.setAttribute("autocomplete", autocomplete);
-  }
-
-  const usernameInput = document.createElement("input");
-  if (username.id != null) {
-    usernameInput.id = username.id;
-  }
-  usernameInput.type = username.type;
-  usernameInput.name = username.name;
-  if (username.value != null) {
-    usernameInput.value = username.value;
-  }
-  if (username.autocomplete != null) {
-    usernameInput.setAttribute("autocomplete", username.autocomplete);
-  }
-  form.appendChild(usernameInput);
-
-  if (password) {
-    const passwordInput = document.createElement("input");
-    if (password.id != null) {
-      passwordInput.id = password.id;
-    }
-    passwordInput.type = password.type;
-    passwordInput.name = password.name;
-    if (password.value != null) {
-      passwordInput.value = password.value;
-    }
-    if (password.autocomplete != null) {
-      passwordInput.setAttribute("autocomplete", password.autocomplete);
-    }
-    if (password.label != null) {
-      const passwordLabel = document.createElement("label");
-      passwordLabel.innerText = password.label;
-      passwordLabel.appendChild(passwordInput);
-      form.appendChild(passwordLabel);
-    } else {
-      form.appendChild(passwordInput);
-    }
-  }
-
-  const submitButton = document.createElement("button");
-  submitButton.type = "submit";
-  submitButton.name = "submit";
-  submitButton.innerText = "Submit";
-  form.appendChild(submitButton);
-
-  const content = document.getElementById("content");
-
-  const oldForm = document.getElementById(form.id);
-  if (oldForm) {
-    content.replaceChild(form, oldForm);
-  } else {
-    content.appendChild(form);
-  }
-
-  return form;
-}
-
-/**
  * Check for expected username/password in form.
  * @see `checkForm` below for a similar function.
  */
@@ -814,52 +703,31 @@ function runInParent(aFunctionOrURL) {
   return chromeScript;
 }
 
-/** Manage logins in parent chrome process.
- * */
-function manageLoginsInParent() {
-  return runInParent(function addLoginsInParentInner() {
+/** Initialize with a list of logins. The logins are added within the parent chrome process.
+ * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
+ *                          that would be passed to nsLoginInfo.init().
+ */
+function addLoginsInParent(...aLogins) {
+  let script = runInParent(function addLoginsInParentInner() {
     /* eslint-env mozilla/chrome-script */
-    addMessageListener("removeAllUserFacingLogins", () => {
-      Services.logins.removeAllUserFacingLogins();
-    });
-
-    /* eslint-env mozilla/chrome-script */
-    addMessageListener("addLogins", async logins => {
+    addMessageListener("addLogins", logins => {
       let nsLoginInfo = Components.Constructor(
         "@mozilla.org/login-manager/loginInfo;1",
         Ci.nsILoginInfo,
         "init"
       );
 
-      const loginInfos = logins.map(login => new nsLoginInfo(...login));
-      try {
-        await Services.logins.addLogins(loginInfos);
-      } catch (e) {
-        assert.ok(false, "addLogins threw: " + e);
+      for (let login of logins) {
+        let loginInfo = new nsLoginInfo(...login);
+        try {
+          Services.logins.addLogin(loginInfo);
+        } catch (e) {
+          assert.ok(false, "addLogin threw: " + e);
+        }
       }
     });
   });
-}
-
-/** Initialize with a list of logins. The logins are added within the parent chrome process.
- * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
- *                          that would be passed to nsLoginInfo.init().
- */
-async function addLoginsInParent(...aLogins) {
-  const script = manageLoginsInParent();
-  await script.sendQuery("addLogins", aLogins);
-  return script;
-}
-
-/** Initialize with a list of logins, after removing all user facing logins.
- * The logins are added within the parent chrome process.
- * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
- *                          that would be passed to nsLoginInfo.init().
- */
-async function setStoredLoginsAsync(...aLogins) {
-  const script = manageLoginsInParent();
-  script.sendQuery("removeAllUserFacingLogins");
-  await script.sendQuery("addLogins", aLogins);
+  script.sendQuery("addLogins", aLogins);
   return script;
 }
 
