@@ -449,6 +449,10 @@ Result BinaryReaderIR::TopLabelExpr(LabelNode** label, Expr** expr) {
   CHECK_RESULT(TopLabel(label));
   LabelNode* parent_label;
   CHECK_RESULT(GetLabelAt(&parent_label, 1));
+  if (parent_label->exprs->empty()) {
+    PrintError("TopLabelExpr: parent label has empty expr list");
+    return Result::Error;
+  }
   *expr = &parent_label->exprs->back();
   return Result::Ok;
 }
@@ -1217,6 +1221,10 @@ Result BinaryReaderIR::OnUnreachableExpr() {
 
 Result BinaryReaderIR::EndFunctionBody(Index index) {
   current_func_ = nullptr;
+  if (!label_stack_.empty()) {
+    PrintError("function %" PRIindex " missing end marker", index);
+    return Result::Error;
+  }
   return Result::Ok;
 }
 
@@ -1297,6 +1305,10 @@ Result BinaryReaderIR::BeginElemSegmentInitExpr(Index index) {
 }
 
 Result BinaryReaderIR::EndInitExpr() {
+  if (!label_stack_.empty()) {
+    PrintError("init expression missing end marker");
+    return Result::Error;
+  }
   return Result::Ok;
 }
 
