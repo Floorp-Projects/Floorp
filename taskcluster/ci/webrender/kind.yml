@@ -215,7 +215,7 @@ jobs:
 
     windows:
         description: Runs WebRender CI tests on a Windows worker
-        worker-type: win10-64-2004-ssd
+        worker-type: win11-64-2009-source
         worker:
             max-run-time: 5400
             env:
@@ -230,7 +230,7 @@ jobs:
             use-caches: false
             command: '$GECKO_PATH/taskcluster/scripts/misc/wrench-windows-tests.sh'
         treeherder:
-            platform: windows10-64-2004-qr/release
+            platform: windows11-64-2009-qr/release
             symbol: WR(wrench)
         when:
             files-changed:
