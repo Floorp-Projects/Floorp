@@ -175,6 +175,12 @@
     </popupnotification>
 
     <popupnotification id="identity-credential-notification" hidden="true">
+      <popupnotificationheader id="identity-credential-header" orient="horizontal" hidden="true">
+        <html:div class="identity-credential-header-container">
+          <html:img class="identity-credential-header-icon"></html:img>
+          <span id="identity-credential-header-text"></span>
+        </html:div>
+      </popupnotificationheader>
       <popupnotificationcontent id="identity-credential-provider" orient="vertical">
         <html:div id="identity-credential-provider-selector-container">
         </html:div>
@@ -210,7 +216,7 @@
 
     <popupnotification id="relay-integration-offer-notification" hidden="true">
       <popupnotificationcontent orient="vertical">
-        <html:div>    
+        <html:div>
           <html:p data-l10n-id="firefox-relay-offer-why-relay"></html:p>
           <html:p data-l10n-id="firefox-relay-offer-how-we-integrate"></html:p>
           <html:p id="firefox-relay-offer-what-relay-does" data-l10n-id="firefox-relay-offer-what-relay-does" data-l10n-args='{"sitename": "", "useremail": ""}'></html:p>
