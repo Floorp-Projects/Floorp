@@ -356,6 +356,14 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         background:
           "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
         progress_bar: true,
+        migrate_start: {
+          action: {},
+        },
+        migrate_close: {
+          action: {
+            navigate: true,
+          },
+        },
         secondary_button: {
           label: {
             string_id: "mr2022-onboarding-secondary-skip-button-label",
