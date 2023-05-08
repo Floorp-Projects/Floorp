@@ -56,7 +56,8 @@ bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
     return false;
   }
 
-  if (!aDocument->ShouldResistFingerprinting()) {
+  if (!aDocument->ShouldResistFingerprinting(
+          RFPTarget::CanvasImageExtractionPrompt)) {
     return true;
   }
 
