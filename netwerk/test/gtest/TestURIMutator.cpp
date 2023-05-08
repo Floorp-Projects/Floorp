@@ -90,6 +90,41 @@ TEST(TestURIMutator, Mutator)
   rv = mutator.Finalize(uri3);
   ASSERT_EQ(rv, NS_ERROR_NOT_AVAILABLE);
   ASSERT_TRUE(uri3 == nullptr);
+
+  // Make sure changing scheme updates the default port
+  rv = NS_NewURI(getter_AddRefs(uri),
+                 "https://example.org:80/path?query#ref"_ns);
+  ASSERT_EQ(rv, NS_OK);
+  rv = NS_MutateURI(uri).SetScheme("http"_ns).Finalize(uri);
+  ASSERT_EQ(rv, NS_OK);
+  rv = uri->GetSpec(out);
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(out, "http://example.org/path?query#ref"_ns);
+  int32_t port;
+  rv = uri->GetPort(&port);
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(port, -1);
+  rv = uri->GetFilePath(out);
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(out, "/path"_ns);
+  rv = uri->GetQuery(out);
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(out, "query"_ns);
+  rv = uri->GetRef(out);
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(out, "ref"_ns);
+
+  // Make sure changing scheme does not change non-default port
+  rv = NS_NewURI(getter_AddRefs(uri), "https://example.org:123"_ns);
+  ASSERT_EQ(rv, NS_OK);
+  rv = NS_MutateURI(uri).SetScheme("http"_ns).Finalize(uri);
+  ASSERT_EQ(rv, NS_OK);
+  rv = uri->GetSpec(out);
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(out, "http://example.org:123/"_ns);
+  rv = uri->GetPort(&port);
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(port, 123);
 }
 
 extern MOZ_THREAD_LOCAL(uint32_t) gTlsURLRecursionCount;
