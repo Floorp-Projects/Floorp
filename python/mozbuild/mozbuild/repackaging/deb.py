@@ -4,6 +4,7 @@
 
 import datetime
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -16,7 +17,9 @@ from string import Template
 
 import mozfile
 import mozpack.path as mozpath
+import requests
 from mozilla_version.gecko import GeckoVersion
+from redo import retry
 
 from mozbuild.repackaging.application_ini import get_application_ini_values
 
@@ -28,6 +31,13 @@ class NoDebPackageFound(Exception):
         super().__init__(
             f"No {deb_file_path} package found after calling dpkg-buildpackage"
         )
+
+
+class HgServerError(Exception):
+    """Raised when Hg responds with an error code that is not 404 (i.e. when there is an outage)"""
+
+    def __init__(self, msg) -> None:
+        super().__init__(msg)
 
 
 _DEB_ARCH = {
@@ -44,8 +54,19 @@ _DEB_ARCH = {
 _DEB_DIST = "jessie"
 
 
-def repackage_deb(infile, output, template_dir, arch, version, build_number):
-
+def repackage_deb(
+    log,
+    infile,
+    output,
+    template_dir,
+    arch,
+    version,
+    build_number,
+    release_product,
+    release_type,
+    fluent_localization,
+    fluent_resource_loader,
+):
     if not tarfile.is_tarfile(infile):
         raise Exception("Input file %s is not a valid tarfile." % infile)
 
@@ -72,6 +93,15 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
             f.write("This is a packaged app.\n")
 
         _inject_deb_distribution_folder(source_dir, app_name)
+        _inject_deb_desktop_entry_file(
+            log,
+            source_dir,
+            build_variables,
+            release_product,
+            release_type,
+            fluent_localization,
+            fluent_resource_loader,
+        )
         _generate_deb_archive(
             source_dir,
             target_dir=tmpdir,
@@ -255,6 +285,339 @@ def _inject_deb_distribution_folder(source_dir, app_name):
             mozpath.join(git_clone_dir, "desktop/deb/distribution"),
             mozpath.join(source_dir, app_name.lower(), "distribution"),
         )
+
+
+def _inject_deb_desktop_entry_file(
+    log,
+    source_dir,
+    build_variables,
+    release_product,
+    release_type,
+    fluent_localization,
+    fluent_resource_loader,
+):
+    desktop_entry_file_text = _generate_browser_desktop_entry_file_text(
+        log,
+        build_variables,
+        release_product,
+        release_type,
+        fluent_localization,
+        fluent_resource_loader,
+    )
+    desktop_entry_file_filename = f"{build_variables['DEB_PKG_NAME']}.desktop"
+    os.makedirs(mozpath.join(source_dir, "debian"), exist_ok=True)
+    with open(
+        mozpath.join(source_dir, "debian", desktop_entry_file_filename), "w"
+    ) as f:
+        f.write(desktop_entry_file_text)
+
+
+def _generate_browser_desktop_entry_file_text(
+    log,
+    build_variables,
+    release_product,
+    release_type,
+    fluent_localization,
+    fluent_resource_loader,
+):
+    localizations = _create_fluent_localizations(
+        fluent_resource_loader, fluent_localization, release_type, release_product, log
+    )
+    desktop_entry = _generate_browser_desktop_entry(build_variables, localizations)
+    desktop_entry_file_text = "\n".join(desktop_entry)
+    return desktop_entry_file_text
+
+
+def _create_fluent_localizations(
+    fluent_resource_loader, fluent_localization, release_type, release_product, log
+):
+    brand_fluent_filename = "brand.ftl"
+    l10n_central_url = "https://hg.mozilla.org/l10n-central"
+    desktop_entry_fluent_filename = "linuxDesktopEntry.ftl"
+
+    l10n_dir = tempfile.mkdtemp()
+
+    loader = fluent_resource_loader(os.path.join(l10n_dir, "{locale}"))
+
+    localizations = {}
+    linux_l10n_changesets = _load_linux_l10n_changesets(
+        "browser/locales/l10n-changesets.json"
+    )
+    locales = ["en-US"]
+    locales.extend(linux_l10n_changesets.keys())
+    en_US_brand_fluent_filename = _get_en_US_brand_fluent_filename(
+        brand_fluent_filename, release_type, release_product
+    )
+
+    for locale in locales:
+        locale_dir = os.path.join(l10n_dir, locale)
+        os.mkdir(locale_dir)
+        localized_desktop_entry_filename = os.path.join(
+            locale_dir, desktop_entry_fluent_filename
+        )
+        if locale == "en-US":
+            en_US_desktop_entry_fluent_filename = os.path.join(
+                "browser/locales/en-US/browser", desktop_entry_fluent_filename
+            )
+            shutil.copyfile(
+                en_US_desktop_entry_fluent_filename,
+                localized_desktop_entry_filename,
+            )
+        else:
+            non_en_US_desktop_entry_fluent_filename = os.path.join(
+                "browser/browser", desktop_entry_fluent_filename
+            )
+            non_en_US_fluent_resource_file_url = os.path.join(
+                l10n_central_url,
+                locale,
+                "raw-file",
+                linux_l10n_changesets[locale]["revision"],
+                non_en_US_desktop_entry_fluent_filename,
+            )
+            response = requests.get(non_en_US_fluent_resource_file_url)
+            response = retry(
+                requests.get,
+                args=[non_en_US_fluent_resource_file_url],
+                attempts=5,
+                sleeptime=3,
+                jitter=2,
+            )
+            mgs = "Missing {fluent_resource_file_name} for {locale}: received HTTP {status_code} for GET {resource_file_url}"
+            params = {
+                "fluent_resource_file_name": desktop_entry_fluent_filename,
+                "locale": locale,
+                "resource_file_url": non_en_US_fluent_resource_file_url,
+                "status_code": response.status_code,
+            }
+            action = "repackage-deb"
+            if response.status_code == 404:
+                log(
+                    logging.WARNING,
+                    action,
+                    params,
+                    mgs,
+                )
+                continue
+            if response.status_code != 200:
+                log(
+                    logging.ERROR,
+                    action,
+                    params,
+                    mgs,
+                )
+                raise HgServerError(mgs.format(**params))
+
+            with open(localized_desktop_entry_filename, "w", encoding="utf-8") as f:
+                f.write(response.text)
+
+        shutil.copyfile(
+            en_US_brand_fluent_filename,
+            os.path.join(locale_dir, brand_fluent_filename),
+        )
+
+        fallbacks = [locale]
+        if locale != "en-US":
+            fallbacks.append("en-US")
+        localizations[locale] = fluent_localization(
+            fallbacks, [desktop_entry_fluent_filename, brand_fluent_filename], loader
+        )
+
+    return localizations
+
+
+def _get_en_US_brand_fluent_filename(
+    brand_fluent_filename, release_type, release_product
+):
+    branding_fluent_filename_template = os.path.join(
+        "browser/branding/{brand}/locales/en-US", brand_fluent_filename
+    )
+    if release_type == "nightly":
+        return branding_fluent_filename_template.format(brand="nightly")
+    elif release_type == "beta" and release_product == "firefox":
+        return branding_fluent_filename_template.format(brand="official")
+    elif release_type == "beta" and release_product == "devedition":
+        return branding_fluent_filename_template.format(brand="aurora")
+    else:
+        return branding_fluent_filename_template.format(brand="unofficial")
+
+
+def _load_linux_l10n_changesets(l10n_changesets_filename):
+    with open(l10n_changesets_filename) as l10n_changesets_file:
+        l10n_changesets = json.load(l10n_changesets_file)
+        return {
+            locale: changeset
+            for locale, changeset in l10n_changesets.items()
+            if any(platform.startswith("linux") for platform in changeset["platforms"])
+        }
+
+
+def _generate_browser_desktop_entry(build_variables, localizations):
+    mime_types = [
+        "application/json",
+        "application/pdf",
+        "application/rdf+xml",
+        "application/rss+xml",
+        "application/x-xpinstall",
+        "application/xhtml+xml",
+        "application/xml",
+        "audio/flac",
+        "audio/ogg",
+        "audio/webm",
+        "image/avif",
+        "image/gif",
+        "image/jpeg",
+        "image/png",
+        "image/svg+xml",
+        "image/webp",
+        "text/html",
+        "text/xml",
+        "video/ogg",
+        "video/webm",
+        "x-scheme-handler/chrome",
+        "x-scheme-handler/http",
+        "x-scheme-handler/https",
+    ]
+
+    categories = [
+        "GNOME",
+        "GTK",
+        "Network",
+        "WebBrowser",
+    ]
+
+    actions = [
+        {
+            "name": "new-window",
+            "message": "desktop-action-new-window-name",
+            "command": f"{build_variables['DEB_PKG_NAME']} --new-window %u",
+        },
+        {
+            "name": "new-private-window",
+            "message": "desktop-action-new-private-window-name",
+            "command": f"{build_variables['DEB_PKG_NAME']} --private-window %u",
+        },
+        {
+            "name": "open-profile-manager",
+            "message": "desktop-action-open-profile-manager",
+            "command": f"{build_variables['DEB_PKG_NAME']} --ProfileManager",
+        },
+    ]
+
+    desktop_entry = _desktop_entry_section(
+        "Desktop Entry",
+        [
+            {
+                "key": "Version",
+                "value": "1.0",
+            },
+            {
+                "key": "Type",
+                "value": "Application",
+            },
+            {
+                "key": "Exec",
+                "value": f"{build_variables['DEB_PKG_NAME']} %u",
+            },
+            {
+                "key": "Terminal",
+                "value": "false",
+            },
+            {
+                "key": "X-MultipleArgs",
+                "value": "false",
+            },
+            {
+                "key": "Icon",
+                "value": build_variables["DEB_PKG_NAME"],
+            },
+            {
+                "key": "StartupWMClass",
+                "value": build_variables["DEB_PKG_NAME"],
+            },
+            {
+                "key": "Categories",
+                "value": _desktop_entry_list(categories),
+            },
+            {
+                "key": "MimeType",
+                "value": _desktop_entry_list(mime_types),
+            },
+            {
+                "key": "StartupNotify",
+                "value": "true",
+            },
+            {
+                "key": "Actions",
+                "value": _desktop_entry_list([action["name"] for action in actions]),
+            },
+            {"key": "Name", "value": "desktop-entry-name", "l10n": True},
+            {"key": "Comment", "value": "desktop-entry-comment", "l10n": True},
+            {"key": "GenericName", "value": "desktop-entry-generic-name", "l10n": True},
+            {"key": "Keywords", "value": "desktop-entry-keywords", "l10n": True},
+            {
+                "key": "X-GNOME-FullName",
+                "value": "desktop-entry-x-gnome-full-name",
+                "l10n": True,
+            },
+        ],
+        localizations,
+    )
+
+    for action in actions:
+        desktop_entry.extend(
+            _desktop_entry_section(
+                f"Desktop Action {action['name']}",
+                [
+                    {
+                        "key": "Name",
+                        "value": action["message"],
+                        "l10n": True,
+                    },
+                    {
+                        "key": "Exec",
+                        "value": action["command"],
+                    },
+                ],
+                localizations,
+            )
+        )
+
+    return desktop_entry
+
+
+def _desktop_entry_list(iterable):
+    delimiter = ";"
+    return f"{delimiter.join(iterable)}{delimiter}"
+
+
+def _desktop_entry_attribute(key, value, locale=None, localizations=None):
+    if not locale and not localizations:
+        return f"{key}={value}"
+    if locale and locale == "en-US":
+        return f"{key}={localizations[locale].format_value(value)}"
+    else:
+        return f"{key}[{locale.replace('-', '_')}]={localizations[locale].format_value(value)}"
+
+
+def _desktop_entry_section(header, attributes, localizations):
+    desktop_entry_section = [f"[{header}]"]
+    l10n_attributes = [attribute for attribute in attributes if attribute.get("l10n")]
+    non_l10n_attributes = [
+        attribute for attribute in attributes if not attribute.get("l10n")
+    ]
+    for attribute in non_l10n_attributes:
+        desktop_entry_section.append(
+            _desktop_entry_attribute(attribute["key"], attribute["value"])
+        )
+    for attribute in l10n_attributes:
+        for locale in localizations:
+            desktop_entry_section.append(
+                _desktop_entry_attribute(
+                    attribute["key"], attribute["value"], locale, localizations
+                )
+            )
+    desktop_entry_section.append("")
+    return desktop_entry_section
 
 
 def _generate_deb_archive(
