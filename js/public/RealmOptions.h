@@ -210,6 +210,14 @@ class JS_PUBLIC_API RealmCreationOptions {
     arrayGrouping_ = flag;
     return *this;
   }
+
+  bool getWellFormedUnicodeStringsEnabled() const {
+    return wellFormedUnicodeStrings_;
+  }
+  RealmCreationOptions& setWellFormedUnicodeStringsEnabled(bool flag) {
+    wellFormedUnicodeStrings_ = flag;
+    return *this;
+  }
 #endif
 
   bool getArrayFromAsyncEnabled() const { return arrayFromAsync_; }
@@ -279,6 +287,8 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool shadowRealms_ = false;
 #ifdef NIGHTLY_BUILD
   bool arrayGrouping_ = false;
+  // Pref for String.prototype.{is,to}WellFormed() methods.
+  bool wellFormedUnicodeStrings_ = false;
 #endif
   bool arrayFromAsync_ = false;
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
