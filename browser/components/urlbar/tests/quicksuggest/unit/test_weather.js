@@ -1106,6 +1106,16 @@ add_task(async function vpn() {
   await QuickSuggest.weather._test_fetch();
   Assert.ok(!QuickSuggest.weather.suggestion, "Suggestion should be null");
 
+  // Set `weather.ignoreVPN` and fetch again. It should complete successfully.
+  UrlbarPrefs.set("weather.ignoreVPN", true);
+  await QuickSuggest.weather._test_fetch();
+  Assert.ok(QuickSuggest.weather.suggestion, "Suggestion should be fetched");
+
+  // Clear the pref and fetch again. It should set the suggestion back to null.
+  UrlbarPrefs.clear("weather.ignoreVPN");
+  await QuickSuggest.weather._test_fetch();
+  Assert.ok(!QuickSuggest.weather.suggestion, "Suggestion should be null");
+
   // Simulate the link status changing. Since the mock link service still
   // indicates a VPN is detected, the suggestion should remain null.
   let fetchPromise = QuickSuggest.weather.waitForFetches();
