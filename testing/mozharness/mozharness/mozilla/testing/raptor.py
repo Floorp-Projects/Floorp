@@ -842,7 +842,10 @@ class Raptor(
                 mac: ["chrome-mac", "Chromium.app", "Contents", "MacOS", "Chromium"],
                 win: ["chrome-win", "Chrome.exe"],
             },
-            chromium_release: {linux: ["chromium", "Default", "chrome"]},
+            chromium_release: {
+                linux: ["chromium", "Default", "chrome"],
+                win: ["chromium", "Default", "chrome.exe"],
+            },
         }
 
         if self.app not in available_chromium_dists:
