@@ -16,6 +16,8 @@ kind-dependencies:
 job-defaults:
     run-on-projects: []
     shipping-phase: push
+    worker:
+        max-run-time: 2700
 
 jobs:
     devedition-push-to-release:
