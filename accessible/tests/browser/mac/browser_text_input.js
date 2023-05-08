@@ -549,10 +549,12 @@ addAccessibleTask(
 <textarea id="hard">ab
 cd
 ef</textarea>
-<div id="wrapped" contenteditable style="width: 1ch;">a b c</div>
+<div role="textbox" id="wrapped" contenteditable style="width: 1ch;">a b c</div>
   `,
   async function(browser, docAcc) {
+    let hard = getNativeInterface(docAcc, "hard");
     await focusIntoInput(docAcc, "hard");
+    is(hard.getAttributeValue("AXInsertionPointLineNumber"), 0);
     let event = await synthKeyAndTestSelectionChanged(
       "KEY_ArrowDown",
       null,
@@ -565,6 +567,7 @@ ef</textarea>
       }
     );
     testSelectionEventLine(event, "cd");
+    is(hard.getAttributeValue("AXInsertionPointLineNumber"), 1);
     event = await synthKeyAndTestSelectionChanged(
       "KEY_ArrowDown",
       null,
@@ -577,8 +580,11 @@ ef</textarea>
       }
     );
     testSelectionEventLine(event, "ef");
+    is(hard.getAttributeValue("AXInsertionPointLineNumber"), 2);
 
+    let wrapped = getNativeInterface(docAcc, "wrapped");
     await focusIntoInput(docAcc, "wrapped");
+    is(wrapped.getAttributeValue("AXInsertionPointLineNumber"), 0);
     event = await synthKeyAndTestSelectionChanged(
       "KEY_ArrowDown",
       null,
@@ -591,6 +597,7 @@ ef</textarea>
       }
     );
     testSelectionEventLine(event, "b ");
+    is(wrapped.getAttributeValue("AXInsertionPointLineNumber"), 1);
     event = await synthKeyAndTestSelectionChanged(
       "KEY_ArrowDown",
       null,
@@ -603,6 +610,7 @@ ef</textarea>
       }
     );
     testSelectionEventLine(event, "c");
+    is(wrapped.getAttributeValue("AXInsertionPointLineNumber"), 2);
   },
   { chrome: true, topLevel: true }
 );
