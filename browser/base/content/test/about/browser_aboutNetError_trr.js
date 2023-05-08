@@ -3,6 +3,14 @@
 
 "use strict";
 
+// See bug 1831731. This test should not actually try to create a connection to
+// the real DoH endpoint. But that may happen when clearing the proxy type, and
+// sometimes even in the next test.
+// To prevent that we override the IP to a local address.
+Cc["@mozilla.org/network/native-dns-override;1"]
+  .getService(Ci.nsINativeDNSResolverOverride)
+  .addIPOverride("mozilla.cloudflare-dns.com", "127.0.0.1");
+
 let oldProxyType = Services.prefs.getIntPref("network.proxy.type");
 function resetPrefs() {
   Services.prefs.clearUserPref("network.trr.mode");
