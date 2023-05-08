@@ -190,19 +190,19 @@ function DatePicker(context) {
       ];
       // Update MonthYear state and toggle visibility for sighted users
       // and for assistive technology:
-      this.context.monthYearView.hidden = !isMonthPickerVisible;
-      for (let el of calendarEls) {
-        el.hidden = isMonthPickerVisible;
-      }
-      this.context.monthYearNav.toggleAttribute(
-        "monthPickerVisible",
-        isMonthPickerVisible
-      );
       if (isMonthPickerVisible) {
         this.state.months = dateKeeper.getMonths();
         this.state.years = dateKeeper.getYears();
+        this.context.monthYearView.hidden = false;
+        for (let el of calendarEls) {
+          el.hidden = true;
+        }
       } else {
         this.state.days = dateKeeper.getDays();
+        this.context.monthYearView.hidden = true;
+        for (let el of calendarEls) {
+          el.hidden = false;
+        }
       }
 
       this.components.monthYear.setProps({
