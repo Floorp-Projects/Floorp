@@ -1650,16 +1650,12 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPureImpl(
   }
 }
 
-bool GetNativeDataPropertyByNamePure(JSContext* cx, JSObject* obj,
-                                     PropertyName* name,
-                                     MegamorphicCacheEntry* entry, Value* vp) {
+bool GetNativeDataPropertyPureWithCacheLookup(JSContext* cx, JSObject* obj,
+                                              PropertyKey id,
+                                              MegamorphicCacheEntry* entry,
+                                              Value* vp) {
   AutoUnsafeCallWithABI unsafe;
 
-  jsid id = NameToId(name);
-
-#ifndef JS_CODEGEN_X86
-  MOZ_ASSERT_IF(JitOptions.enableWatchtowerMegamorphic, entry);
-#else
   // If we're on x86, we didn't have enough registers to populate this
   // directly in Baseline JITted code, so we do the lookup here.
   if (JitOptions.enableWatchtowerMegamorphic) {
@@ -1690,13 +1686,12 @@ bool GetNativeDataPropertyByNamePure(JSContext* cx, JSObject* obj,
       MOZ_ASSERT(entry->isMissingOwnProperty());
     }
   }
-#endif
 
   return GetNativeDataPropertyPureImpl(cx, obj, id, entry, vp);
 }
 
-bool GetNativeDataPropertyByIdPure(JSContext* cx, JSObject* obj, PropertyKey id,
-                                   MegamorphicCacheEntry* entry, Value* vp) {
+bool GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyKey id,
+                               MegamorphicCacheEntry* entry, Value* vp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT_IF(JitOptions.enableWatchtowerMegamorphic, entry);
   return GetNativeDataPropertyPureImpl(cx, obj, id, entry, vp);
@@ -1770,7 +1765,7 @@ bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj,
   return GetNativeDataPropertyPureImpl(cx, obj, id, entry, res);
 }
 
-bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
+bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyKey id,
                                Value* val) {
   AutoUnsafeCallWithABI unsafe;
 
@@ -1780,7 +1775,7 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
 
   NativeObject* nobj = &obj->as<NativeObject>();
   uint32_t index;
-  PropMap* map = nobj->shape()->lookup(cx, NameToId(name), &index);
+  PropMap* map = nobj->shape()->lookup(cx, id, &index);
   if (!map) {
     return false;
   }
@@ -2891,7 +2886,7 @@ void AssertMapObjectHash(JSContext* cx, MapObject* obj, const Value* value,
   MOZ_ASSERT(actualHash == HashValue(cx, obj->getData(), value));
 }
 
-void AssertPropertyLookup(NativeObject* obj, PropertyName* id, uint32_t slot) {
+void AssertPropertyLookup(NativeObject* obj, PropertyKey id, uint32_t slot) {
   AutoUnsafeCallWithABI unsafe;
 #ifdef DEBUG
   mozilla::Maybe<PropertyInfo> prop = obj->lookupPure(id);
