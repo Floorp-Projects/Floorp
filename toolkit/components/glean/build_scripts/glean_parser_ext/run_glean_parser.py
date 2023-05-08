@@ -75,11 +75,6 @@ def parse_with_options(input_files, options):
     # Derived heavily from glean_parser.translate.translate.
     # Adapted to how mozbuild sends us a fd, and to expire on versions not dates.
 
-    # Lint the yaml first, then lint the metrics.
-    if lint.lint_yaml_files(input_files, parser_config=options):
-        # Warnings are Errors
-        raise ParserError("linter found problems")
-
     all_objs = parser.parse_objects(input_files, options)
     if util.report_validation_errors(all_objs):
         raise ParserError("found validation errors during parse")

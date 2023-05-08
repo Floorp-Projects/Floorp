@@ -11,12 +11,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  LocationHelper: "resource://gre/modules/LocationHelper.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LocationHelper: "resource://gre/modules/LocationHelper.jsm",
 });
 
 // GeolocationPositionError has no interface object, so we can't use that here.

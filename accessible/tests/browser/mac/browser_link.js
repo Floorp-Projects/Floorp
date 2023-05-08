@@ -200,7 +200,7 @@ addAccessibleTask(
       link4
         .getAttributeValue("AXLinkedUIElements")[0]
         .getAttributeValue("AXTitle"),
-      "",
+      null,
       "Link 4 is linked to the heading"
     );
     is(

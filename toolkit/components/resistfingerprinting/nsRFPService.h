@@ -10,7 +10,9 @@
 #include "ErrorList.h"
 #include "PLDHashTable.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/gfx/Types.h"
 #include "nsHashtablesFwd.h"
+#include "nsICookieJarSettings.h"
 #include "nsIObserver.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
@@ -265,6 +267,12 @@ class nsRFPService final : public nsIObserver {
   static Maybe<nsTArray<uint8_t>> GenerateKey(nsIURI* aTopLevelURI,
                                               bool aIsPrivate);
 
+  // The method to add random noises to the image data based on the random key
+  // of the given cookieJarSettings.
+  static nsresult RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
+                                  uint8_t* aData, uint32_t aSize,
+                                  mozilla::gfx::SurfaceFormat aSurfaceFormat);
+
   // --------------------------------------------------------------------------
 
  private:
@@ -311,6 +319,12 @@ class nsRFPService final : public nsIObserver {
   static void TypeToText(TimerPrecisionType aType, nsACString& aText);
 
   // --------------------------------------------------------------------------
+
+  // A helper function to generate canvas key from the given image data and
+  // randomization key.
+  static nsresult GenerateCanvasKeyFromImageData(
+      nsICookieJarSettings* aCookieJarSettings, uint8_t* aImageData,
+      uint32_t aSize, nsTArray<uint8_t>& aCanvasKey);
 
   // Generate the session key if it hasn't been generated.
   nsresult EnsureSessionKey(bool aIsPrivate);

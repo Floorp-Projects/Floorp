@@ -36,7 +36,6 @@ add_task(async function test_updateFeatureState_pref() {
   let spy = sandbox.spy(QuickSuggest, "_updateFeatureState");
 
   UrlbarPrefs.set("quicksuggest.enabled", false);
-  await QuickSuggest.remoteSettings.readyPromise;
   Assert.equal(
     spy.callCount,
     1,
@@ -44,7 +43,6 @@ add_task(async function test_updateFeatureState_pref() {
   );
 
   UrlbarPrefs.clear("quicksuggest.enabled");
-  await QuickSuggest.remoteSettings.readyPromise;
   Assert.equal(
     spy.callCount,
     2,

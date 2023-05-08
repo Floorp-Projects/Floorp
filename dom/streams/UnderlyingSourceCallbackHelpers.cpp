@@ -282,12 +282,12 @@ InputToReadableStreamAlgorithms::OnInputStreamReady(
     return NS_OK;
   }
 
-  // Enqueuing triggers read request chunk steps which may execute JS, trigger
-  // another OnInputStreamReady, and close the stream. Let's be careful here.
+  // Enqueuing triggers read request chunk steps which may execute JS, but:
+  // 1. The nsIAsyncInputStream should hold the reference of `this` so it should
+  // be safe from cycle collection
+  // 2. AsyncWait is called after enqueuing and thus OnInputStreamReady can't be
+  // synchronously called again
   //
-  // XXX(krosylight): But it shouldn't happen, nsIAsyncInputStream
-  // implementations should prevent such synchronous reentrance by nullifying
-  // the callback member first before calling it. (Bug 1827418)
   // That said, it's generally good to be cautious as there's no guarantee that
   // the interface is implemented in a safest way.
   MOZ_DIAGNOSTIC_ASSERT(mPullPromise);
@@ -295,10 +295,6 @@ InputToReadableStreamAlgorithms::OnInputStreamReady(
     mPullPromise->MaybeResolveWithUndefined();
     mPullPromise = nullptr;
   }
-
-  // The previous call can execute JS (even up to running a nested event
-  // loop), so |mState| can't be asserted to have any particular value, even
-  // if the previous call succeeds.
 
   return NS_OK;
 }
@@ -341,15 +337,6 @@ void InputToReadableStreamAlgorithms::WriteIntoReadRequestBuffer(
 
   if (written == 0) {
     CloseAndReleaseObjects(aCx, aStream);
-    return;
-  }
-
-  // Subscribe WAIT_CLOSURE_ONLY so that OnInputStreamReady can be called when
-  // mInput is closed.
-  rv = mInput->AsyncWait(nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0,
-                         mOwningEventTarget);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    ErrorPropagation(aCx, aStream, rv);
     return;
   }
 
@@ -397,6 +384,18 @@ void InputToReadableStreamAlgorithms::EnqueueChunkWithSizeIntoStream(
   JS::Rooted<JS::Value> chunkValue(aCx);
   chunkValue.setObject(*chunk);
   aStream->EnqueueNative(aCx, chunkValue, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Subscribe WAIT_CLOSURE_ONLY so that OnInputStreamReady can be called when
+  // mInput is closed.
+  nsresult rv = mInput->AsyncWait(nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0,
+                                  mOwningEventTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 }
 
 void InputToReadableStreamAlgorithms::CloseAndReleaseObjects(

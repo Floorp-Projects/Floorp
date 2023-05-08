@@ -55,7 +55,6 @@ void ScrollToPoint(uint32_t aScrollType, int32_t aX, int32_t aY);
 
 void Announce(const nsString& aAnnouncement, uint16_t aPriority);
 
-int32_t CaretLineNumber();
 virtual int32_t CaretOffset() const override;
 
 virtual void TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
@@ -176,7 +175,6 @@ virtual nsIntRect BoundsInCSSPixels() const override;
 
 virtual void Language(nsAString& aLocale) override;
 void DocType(nsString& aType);
-void Title(nsString& aTitle);
 void MimeType(nsString aMime);
 void URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
                         nsString& aMimeType);

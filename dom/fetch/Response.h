@@ -105,6 +105,12 @@ class Response final : public FetchBody<Response>, public nsWrapperCache {
                                              uint16_t aStatus,
                                              ErrorResult& aRv);
 
+  static already_AddRefed<Response> CreateFromJson(const GlobalObject&,
+                                                   JSContext*,
+                                                   JS::Handle<JS::Value>,
+                                                   const ResponseInit&,
+                                                   ErrorResult&);
+
   static already_AddRefed<Response> Constructor(
       const GlobalObject& aGlobal,
       const Nullable<fetch::ResponseBodyInit>& aBody, const ResponseInit& aInit,
@@ -135,6 +141,12 @@ class Response final : public FetchBody<Response>, public nsWrapperCache {
   }
 
  private:
+  static already_AddRefed<Response> CreateAndInitializeAResponse(
+      const GlobalObject& aGlobal,
+      const Nullable<fetch::ResponseBodyInit>& aBody,
+      const nsACString& aDefaultContentType, const ResponseInit& aInit,
+      ErrorResult& aRv);
+
   ~Response();
 
   SafeRefPtr<InternalResponse> mInternalResponse;

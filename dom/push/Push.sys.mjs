@@ -4,9 +4,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { DOMRequestIpcHelper } = ChromeUtils.import(
-  "resource://gre/modules/DOMRequestHelper.jsm"
-);
+import { DOMRequestIpcHelper } from "resource://gre/modules/DOMRequestHelper.sys.mjs";
 
 const lazy = {};
 

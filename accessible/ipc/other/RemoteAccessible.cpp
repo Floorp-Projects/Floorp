@@ -159,8 +159,13 @@ void RemoteAccessible::Announce(const nsString& aAnnouncement,
 }
 
 int32_t RemoteAccessible::CaretLineNumber() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    MOZ_ASSERT(IsHyperText(), "is not hypertext?");
+    return RemoteAccessibleBase<RemoteAccessible>::CaretLineNumber();
+  }
+
   int32_t line = -1;
-  Unused << mDoc->SendCaretOffset(mID, &line);
+  Unused << mDoc->SendCaretLineNumber(mID, &line);
   return line;
 }
 
@@ -949,10 +954,6 @@ void RemoteAccessible::Language(nsAString& aLocale) {
 
 void RemoteAccessible::DocType(nsString& aType) {
   Unused << mDoc->SendDocType(mID, &aType);
-}
-
-void RemoteAccessible::Title(nsString& aTitle) {
-  Unused << mDoc->SendTitle(mID, &aTitle);
 }
 
 void RemoteAccessible::MimeType(nsString aMime) {

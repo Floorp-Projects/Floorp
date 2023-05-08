@@ -27,8 +27,9 @@ add_task(async function() {
     response.setHeader("Cache-Control", "max-age=10000", false);
     response.setStatusLine(metadata.httpVersion, 200, "OK");
     response.setHeader("Content-Type", "image/png", false);
-    var body =
-      "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII=";
+    var body = atob(
+      "iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII="
+    );
     response.bodyOutputStream.write(body, body.length);
   });
 

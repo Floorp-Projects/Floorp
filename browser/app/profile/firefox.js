@@ -410,6 +410,15 @@ pref("browser.urlbar.suggest.calculator",           false);
 // Feature gate pref for weather suggestions in the urlbar.
 pref("browser.urlbar.weather.featureGate", false);
 
+// When false, the weather suggestion will not be fetched when a VPN is
+// detected. When true, it will be fetched anyway.
+pref("browser.urlbar.weather.ignoreVPN", false);
+
+// The minimum prefix length of a weather keyword the user must type to trigger
+// the suggestion. 0 means the min length should be taken from Nimbus or remote
+// settings.
+pref("browser.urlbar.weather.minKeywordLength", 0);
+
 // If `browser.urlbar.weather.featureGate` is true, this controls whether
 // weather suggestions are turned on.
 pref("browser.urlbar.suggest.weather", true);

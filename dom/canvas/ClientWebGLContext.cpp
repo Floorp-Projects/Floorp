@@ -1252,6 +1252,12 @@ UniquePtr<uint8_t[]> ClientWebGLContext::GetImageBuffer(
 
   const auto& premultAlpha = mNotLost->info.options.premultipliedAlpha;
   *out_imageSize = dataSurface->GetSize();
+
+  if (ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+    return gfxUtils::GetImageBufferWithRandomNoise(
+        dataSurface, premultAlpha, GetCookieJarSettings(), out_format);
+  }
+
   return gfxUtils::GetImageBuffer(dataSurface, premultAlpha, out_format);
 }
 
@@ -1266,6 +1272,13 @@ ClientWebGLContext::GetInputStream(const char* mimeType,
 
   RefPtr<gfx::DataSourceSurface> dataSurface = snapshot->GetDataSurface();
   const auto& premultAlpha = mNotLost->info.options.premultipliedAlpha;
+
+  if (ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+    return gfxUtils::GetInputStreamWithRandomNoise(
+        dataSurface, premultAlpha, mimeType, encoderOptions,
+        GetCookieJarSettings(), out_stream);
+  }
+
   return gfxUtils::GetInputStream(dataSurface, premultAlpha, mimeType,
                                   encoderOptions, out_stream);
 }
@@ -5757,17 +5770,6 @@ void ClientWebGLContext::ProvokingVertex(const GLenum rawMode) const {
 }
 
 // -
-
-bool ClientWebGLContext::ShouldResistFingerprinting() const {
-  if (mCanvasElement) {
-    return mCanvasElement->OwnerDoc()->ShouldResistFingerprinting();
-  }
-  if (mOffscreenCanvas) {
-    return mOffscreenCanvas->ShouldResistFingerprinting();
-  }
-  // Last resort, just check the global preference
-  return nsContentUtils::ShouldResistFingerprinting("Fallback");
-}
 
 uint32_t ClientWebGLContext::GetPrincipalHashValue() const {
   if (mCanvasElement) {
