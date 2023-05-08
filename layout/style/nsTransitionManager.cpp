@@ -429,11 +429,13 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     // Negative delays are essentially part of the transition
     // function, so reduce them along with the duration, but don't
     // reduce positive delays.
-    if (delay < 0.0f) {
+    if (delay < 0.0f && std::isfinite(delay)) {
       delay *= valuePortion;
     }
 
-    duration *= valuePortion;
+    if (std::isfinite(duration)) {
+      duration *= valuePortion;
+    }
 
     startForReversingTest = oldTransition->ToValue();
     reversePortion = valuePortion;
