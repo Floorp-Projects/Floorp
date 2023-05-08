@@ -64,6 +64,7 @@
 #include "nsTStringRepr.h"
 #include "nsXPCOM.h"
 
+#include "nsICookieJarSettings.h"
 #include "nsICryptoHash.h"
 #include "nsIGlobalObject.h"
 #include "nsIObserverService.h"
@@ -1330,4 +1331,111 @@ Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIURI* aTopLevelURI,
   }
 
   return key;
+}
+
+// static
+nsresult nsRFPService::GenerateCanvasKeyFromImageData(
+    nsICookieJarSettings* aCookieJarSettings, uint8_t* aImageData,
+    uint32_t aSize, nsTArray<uint8_t>& aCanvasKey) {
+  NS_ENSURE_ARG_POINTER(aCookieJarSettings);
+
+  nsTArray<uint8_t> randomKey;
+  nsresult rv =
+      aCookieJarSettings->GetFingerprintingRandomizationKey(randomKey);
+
+  // There is no random key for this cookieJarSettings. This means that the
+  // randomization is disabled. So, we can bail out from here without doing
+  // anything.
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Generate the key for randomizing the canvas data using hMAC. The key is
+  // based on the random key of the document and the canvas data itself. So,
+  // different canvas would have different keys.
+  HMAC hmac;
+
+  rv = hmac.Begin(SEC_OID_SHA256, Span(randomKey));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = hmac.Update(aImageData, aSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = hmac.End(aCanvasKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+// static
+nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
+                                       uint8_t* aData, uint32_t aSize,
+                                       gfx::SurfaceFormat aSurfaceFormat) {
+  NS_ENSURE_ARG_POINTER(aData);
+
+  if (!aCookieJarSettings) {
+    return NS_OK;
+  }
+
+  if (aSize == 0) {
+    return NS_OK;
+  }
+
+  nsTArray<uint8_t> canvasKey;
+  nsresult rv = GenerateCanvasKeyFromImageData(aCookieJarSettings, aData, aSize,
+                                               canvasKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Calculate the number of pixels based on the given data size. One pixel uses
+  // 4 bytes that contains ARGB information.
+  uint32_t pixelCnt = aSize / 4;
+
+  // Generate random values that will decide the RGB channel and the pixel
+  // position that we are going to introduce the noises. The channel and
+  // position are predictable to ensure we have a consistant result with the
+  // same canvas in the same browsing session.
+
+  // Seed and create the first random number generator which will be used to
+  // select RGB channel and the pixel position. The seed is the first half of
+  // the canvas key.
+  non_crypto::XorShift128PlusRNG rng1(
+      *reinterpret_cast<uint64_t*>(canvasKey.Elements()),
+      *reinterpret_cast<uint64_t*>(canvasKey.Elements() + 8));
+
+  // Use the last 8 bits as the number of noises.
+  uint8_t rnd3 = canvasKey.LastElement();
+
+  // Clear the last 8 bits.
+  canvasKey.ReplaceElementAt(canvasKey.Length() - 1, 0);
+
+  // Use the remaining 120 bits to seed and create the second random number
+  // generator. The random number will be used to decided the noise bit that
+  // will be added to the lowest order bit of the channel of the pixel.
+  non_crypto::XorShift128PlusRNG rng2(
+      *reinterpret_cast<uint64_t*>(canvasKey.Elements() + 16),
+      *reinterpret_cast<uint64_t*>(canvasKey.Elements() + 24));
+
+  // Ensure at least 16 random changes may occur.
+  uint8_t numNoises = std::clamp<uint8_t>(rnd3, 15, 255);
+
+  for (uint8_t i = 0; i <= numNoises; i++) {
+    // Choose which RGB channel to add a noise. The pixel data is in either
+    // the BGRA or the ARGB format depending on the endianess. To choose the
+    // color channel we need to add the offset according the endianess.
+    uint32_t channel;
+    if (aSurfaceFormat == gfx::SurfaceFormat::B8G8R8A8) {
+      channel = rng1.next() % 3;
+    } else if (aSurfaceFormat == gfx::SurfaceFormat::A8R8G8B8) {
+      channel = rng1.next() % 3 + 1;
+    } else {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    uint32_t idx = 4 * (rng1.next() % pixelCnt) + channel;
+    uint8_t bit = rng2.next();
+
+    aData[idx] = aData[idx] ^ (bit & 0x1);
+  }
+
+  return NS_OK;
 }
