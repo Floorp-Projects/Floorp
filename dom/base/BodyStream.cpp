@@ -275,16 +275,6 @@ void BodyStream::WriteIntoReadRequestBuffer(JSContext* aCx,
     return;
   }
 
-  // Subscribe WAIT_CLOSURE_ONLY so that OnInputStreamReady can be called when
-  // mInputStream is closed.
-  rv = mInputStream->AsyncWait(this, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0,
-                               mOwningEventTarget);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    ErrorPropagation(aCx, aStream, rv);
-    return;
-  }
-  mAsyncWaitWorkerRef = mWorkerRef;
-
   // All good.
 }
 
@@ -412,6 +402,19 @@ void BodyStream::EnqueueChunkWithSizeIntoStream(JSContext* aCx,
   JS::Rooted<JS::Value> chunkValue(aCx);
   chunkValue.setObject(*chunk);
   aStream->EnqueueNative(aCx, chunkValue, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // Subscribe WAIT_CLOSURE_ONLY so that OnInputStreamReady can be called when
+  // mInputStream is closed.
+  nsresult rv = mInputStream->AsyncWait(
+      this, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0, mOwningEventTarget);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+  mAsyncWaitWorkerRef = mWorkerRef;
 }
 
 NS_IMETHODIMP
@@ -469,11 +472,15 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     return NS_OK;
   }
 
-  // The previous call can execute JS (even up to running a nested event
-  // loop, including calling this OnInputStreamReady again before it ends, see
-  // the above nsAutoMicroTask), so |mPullPromise| can't be asserted to have any
-  // particular value, even if the previous call succeeds.
-  MOZ_ASSERT_IF(!mPullPromise, IsClosed());
+  // Enqueuing triggers read request chunk steps which may execute JS, but:
+  // 1. The nsIAsyncInputStream should hold the reference of `this` so it should
+  // be safe from cycle collection
+  // 2. AsyncWait is called after enqueuing and thus OnInputStreamReady can't be
+  // synchronously called again
+  //
+  // That said, it's generally good to be cautious as there's no guarantee that
+  // the interface is implemented in a safest way.
+  MOZ_DIAGNOSTIC_ASSERT(mPullPromise);
   if (mPullPromise) {
     mPullPromise->MaybeResolveWithUndefined();
     mPullPromise = nullptr;
