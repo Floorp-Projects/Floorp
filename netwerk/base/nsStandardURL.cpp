@@ -1770,6 +1770,17 @@ nsresult nsStandardURL::SetScheme(const nsACString& input) {
   // XXX the string code unfortunately doesn't provide a ToLowerCase
   //     that operates on a substring.
   net_ToLowerCase((char*)mSpec.get(), mScheme.mLen);
+
+  // If the scheme changes the default port also changes.
+  if (Scheme() == "http"_ns || Scheme() == "ws"_ns) {
+    mDefaultPort = 80;
+  } else if (Scheme() == "https"_ns || Scheme() == "wss"_ns) {
+    mDefaultPort = 443;
+  }
+  if (mPort == mDefaultPort) {
+    MOZ_ALWAYS_SUCCEEDS(SetPort(-1));
+  }
+
   return NS_OK;
 }
 
