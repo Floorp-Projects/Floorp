@@ -12,6 +12,7 @@
 #include "nsIInputStream.h"
 #include "nsIDocShell.h"
 #include "nsRefreshObservers.h"
+#include "nsRFPService.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/Maybe.h"
@@ -29,6 +30,7 @@
     }                                                \
   }
 
+class nsICookieJarSettings;
 class nsIDocShell;
 class nsIPrincipal;
 class nsRefreshDriver;
@@ -81,6 +83,8 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   void AddPostRefreshObserverIfNecessary();
 
   nsIGlobalObject* GetParentObject() const;
+
+  nsICookieJarSettings* GetCookieJarSettings() const;
 
   nsIPrincipal* PrincipalOrNull() const;
 
@@ -210,6 +214,14 @@ class nsICanvasRenderingContextInternal : public nsISupports,
 
   void DoSecurityCheck(nsIPrincipal* aPrincipal, bool forceWriteOnly,
                        bool CORSUsed);
+
+  // Checking if fingerprinting protection is enable for the given target. Note
+  // that we need to use unknown target as the default value for the WebGL
+  // callsites that haven't cut over to use RFPTarget.
+  //
+  // The default unknown target should be removed in Bug 1829635.
+  bool ShouldResistFingerprinting(
+      mozilla::RFPTarget aTarget = mozilla::RFPTarget::Unknown) const;
 
  protected:
   RefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;

@@ -28,13 +28,14 @@ class gfxASurface;
 class gfxDrawable;
 class gfxTextRun;
 struct gfxQuad;
+class nsICookieJarSettings;
 class nsIInputStream;
 class nsIGfxInfo;
 
 namespace mozilla {
 namespace dom {
 class Element;
-}
+}  // namespace dom
 namespace layers {
 class WebRenderBridgeChild;
 class GlyphArray;
@@ -397,11 +398,20 @@ class gfxUtils {
       DataSourceSurface* aSurface, bool aIsAlphaPremultiplied,
       int32_t* outFormat);
 
+  static mozilla::UniquePtr<uint8_t[]> GetImageBufferWithRandomNoise(
+      DataSourceSurface* aSurface, bool aIsAlphaPremultiplied,
+      nsICookieJarSettings* aCookieJarSettings, int32_t* outFormat);
+
   static nsresult GetInputStream(DataSourceSurface* aSurface,
                                  bool aIsAlphaPremultiplied,
                                  const char* aMimeType,
                                  const nsAString& aEncoderOptions,
                                  nsIInputStream** outStream);
+
+  static nsresult GetInputStreamWithRandomNoise(
+      DataSourceSurface* aSurface, bool aIsAlphaPremultiplied,
+      const char* aMimeType, const nsAString& aEncoderOptions,
+      nsICookieJarSettings* aCookieJarSettings, nsIInputStream** outStream);
 
   static void RemoveShaderCacheFromDiskIfNecessary();
 

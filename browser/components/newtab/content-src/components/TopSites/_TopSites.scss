@@ -16,6 +16,10 @@ $letter-fallback-color: $white;
   margin: 0 (-$half-base-gutter);
   padding: 0;
 
+  a {
+    text-decoration: none;
+  }
+
   &:not(.dnd-active) {
     .top-site-outer:is(.active, :focus, :hover) {
       background: var(--newtab-element-hover-color);

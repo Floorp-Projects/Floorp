@@ -318,7 +318,6 @@ child:
 
   [Nested=inside_sync] sync Language(uint64_t aID) returns(nsString aLocale);
   [Nested=inside_sync] sync DocType(uint64_t aID) returns(nsString aType);
-  [Nested=inside_sync] sync Title(uint64_t aID) returns(nsString aTitle);
   [Nested=inside_sync] sync MimeType(uint64_t aID) returns(nsString aMime);
   [Nested=inside_sync] sync URLDocTypeMimeType(uint64_t aID) returns(nsString aURL, nsString aDocType, nsString aMimeType);
 

@@ -402,6 +402,15 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Feature gate pref for weather suggestions in the urlbar.
   ["weather.featureGate", false],
 
+  // When false, the weather suggestion will not be fetched when a VPN is
+  // detected. When true, it will be fetched anyway.
+  ["weather.ignoreVPN", false],
+
+  // The minimum prefix length of a weather keyword the user must type to
+  // trigger the suggestion. 0 means the min length should be taken from Nimbus
+  // or remote settings.
+  ["weather.minKeywordLength", 0],
+
   // Feature gate pref for trending suggestions in the urlbar.
   ["trending.featureGate", false],
 
@@ -436,6 +445,7 @@ const NIMBUS_DEFAULTS = {
   recordNavigationalSuggestionTelemetry: false,
   weatherKeywords: null,
   weatherKeywordsMinimumLength: 0,
+  weatherKeywordsMinimumLengthCap: 0,
 };
 
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined
@@ -1240,6 +1250,22 @@ class Preferences {
    */
   addObserver(observer) {
     this._observerWeakRefs.push(Cu.getWeakReference(observer));
+  }
+
+  /**
+   * Removes a preference observer.
+   *
+   * @param {object} observer
+   *   An observer previously added with `addObserver()`.
+   */
+  removeObserver(observer) {
+    for (let i = 0; i < this._observerWeakRefs.length; i++) {
+      let obs = this._observerWeakRefs[i].get();
+      if (obs && obs == observer) {
+        this._observerWeakRefs.splice(i, 1);
+        break;
+      }
+    }
   }
 
   /**

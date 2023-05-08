@@ -10,6 +10,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  QuickSuggestRemoteSettings:
+    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
@@ -62,8 +64,49 @@ export class Weather extends BaseFeature {
     return this.#keywords;
   }
 
+  /**
+   * @returns {number}
+   *   The minimum prefix length of a weather keyword the user must type to
+   *   trigger the suggestion. Note that the strings returned from `keywords`
+   *   already take this into account. The min length is determined from the
+   *   first source below whose value is non-zero. If no source has a non-zero
+   *   value, zero will be returned and `this.keywords` will be null, which
+   *   means the suggestion should be shown on zero prefix.
+   *
+   *   1. The `weather.minKeywordLength` pref, which is set when the user
+   *      increments the min length
+   *   2. `weatherKeywordsMinimumLength` in Nimbus
+   *   3. `min_keyword_length` in remote settings
+   */
+  get minKeywordLength() {
+    let minLength =
+      lazy.UrlbarPrefs.get("weather.minKeywordLength") ||
+      lazy.UrlbarPrefs.get("weatherKeywordsMinimumLength") ||
+      this.#rsData?.min_keyword_length ||
+      0;
+    return Math.max(minLength, 0);
+  }
+
+  /**
+   * @returns {boolean}
+   *   Weather the min keyword length can be incremented. A cap on the min
+   *   length can be set in remote settings and Nimbus.
+   */
+  get canIncrementMinKeywordLength() {
+    let cap =
+      lazy.UrlbarPrefs.get("weatherKeywordsMinimumLengthCap") ||
+      this.#rsData?.min_keyword_length_cap ||
+      0;
+    return !cap || this.minKeywordLength < cap;
+  }
+
   update() {
     super.update();
+
+    // This method is called by `QuickSuggest` in a
+    // `NimbusFeatures.urlbar.onUpdate()` callback, when a change occurs to a
+    // Nimbus variable or to a pref that's a fallback for a Nimbus variable.
+    // A keyword-related variable or pref may have changed, so update keywords.
     if (this.isEnabled) {
       this.#updateKeywords();
     }
@@ -74,6 +117,21 @@ export class Weather extends BaseFeature {
       this.#init();
     } else {
       this.#uninit();
+    }
+  }
+
+  /**
+   * Increments the minimum prefix length of a weather keyword the user must
+   * type to trigger the suggestion, if possible. A cap on the min length can be
+   * set in remote settings and Nimbus, and if the cap has been reached, the
+   * length is not incremented.
+   */
+  incrementMinKeywordLength() {
+    if (this.canIncrementMinKeywordLength) {
+      lazy.UrlbarPrefs.set(
+        "weather.minKeywordLength",
+        this.minKeywordLength + 1
+      );
     }
   }
 
@@ -91,7 +149,23 @@ export class Weather extends BaseFeature {
     return this.#waitForFetchesDeferred.promise;
   }
 
+  async onRemoteSettingsSync(rs) {
+    this.logger.debug("Loading weather remote settings");
+    let records = await rs.get({ filters: { type: "weather" } });
+    if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+      return;
+    }
+
+    this.logger.debug("Got weather records: " + JSON.stringify(records));
+    this.#rsData = records?.[0]?.weather;
+    this.#updateKeywords();
+  }
+
   get #vpnDetected() {
+    if (lazy.UrlbarPrefs.get("weather.ignoreVPN")) {
+      return false;
+    }
+
     let linkService =
       this._test_linkService ||
       Cc["@mozilla.org/network/network-link-service;1"].getService(
@@ -113,6 +187,8 @@ export class Weather extends BaseFeature {
     this.#merino = new lazy.MerinoClient(this.constructor.name);
     this.#fetch();
     this.#updateKeywords();
+    lazy.UrlbarPrefs.addObserver(this);
+    lazy.QuickSuggestRemoteSettings.register(this);
     for (let notif of Object.values(NOTIFICATIONS)) {
       Services.obs.addObserver(this, notif);
     }
@@ -123,6 +199,8 @@ export class Weather extends BaseFeature {
       Services.obs.removeObserver(this, notif);
     }
     lazy.clearTimeout(this.#fetchTimer);
+    lazy.QuickSuggestRemoteSettings.unregister(this);
+    lazy.UrlbarPrefs.removeObserver(this);
     this.#merino = null;
     this.#suggestion = null;
     this.#fetchTimer = 0;
@@ -262,22 +340,37 @@ export class Weather extends BaseFeature {
   }
 
   #updateKeywords() {
-    let fullKeywords = lazy.UrlbarPrefs.get("weatherKeywords");
-    let minLength = lazy.UrlbarPrefs.get("weatherKeywordsMinimumLength");
+    // Get the full keywords and minimum keyword length, preferring Nimbus over
+    // remote settings.
+    let fullKeywords =
+      lazy.UrlbarPrefs.get("weatherKeywords") ?? this.#rsData?.keywords;
+    let minLength = this.minKeywordLength;
+
     if (!fullKeywords || !minLength) {
+      this.logger.debug(
+        "Keywords or min length not defined, using zero prefix"
+      );
       this.#keywords = null;
       return;
     }
 
-    this.#keywords = new Set();
+    this.logger.debug(
+      "Updating keywords: " + JSON.stringify({ fullKeywords, minLength })
+    );
 
     // Create keywords that are prefixes of the full keywords starting at the
     // specified minimum length.
+    this.#keywords = new Set();
     for (let full of fullKeywords) {
-      this.#keywords.add(full);
-      for (let i = minLength; i < full.length; i++) {
+      for (let i = minLength; i <= full.length; i++) {
         this.#keywords.add(full.substring(0, i));
       }
+    }
+  }
+
+  onPrefChanged(pref) {
+    if (pref == "weather.minKeywordLength") {
+      this.#updateKeywords();
     }
   }
 
@@ -345,6 +438,11 @@ export class Weather extends BaseFeature {
     await this.#fetch();
   }
 
+  _test_setRsData(data) {
+    this.#rsData = data;
+    this.#updateKeywords();
+  }
+
   _test_setSuggestionToNull() {
     this.#suggestion = null;
   }
@@ -361,6 +459,7 @@ export class Weather extends BaseFeature {
   #lastFetchTimeMs = 0;
   #merino = null;
   #pendingFetchCount = 0;
+  #rsData = null;
   #suggestion = null;
   #timeoutMs = MERINO_TIMEOUT_MS;
   #waitForFetchesDeferred = null;

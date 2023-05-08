@@ -94,3 +94,4 @@ MSG_DEF(MSG_URL_NOT_LOADABLE, 2, true, JSEXN_TYPEERR, "{0}Access to '{1}' from s
 MSG_DEF(MSG_ONE_OFF_TYPEERR, 2, true, JSEXN_TYPEERR, "{0}{1}")
 MSG_DEF(MSG_ONE_OFF_RANGEERR, 2, true, JSEXN_RANGEERR, "{0}{1}")
 MSG_DEF(MSG_NO_CODECS_PARAMETER, 2, true, JSEXN_TYPEERR, "{0}The provided type '{1}' does not have a 'codecs' parameter.")
+MSG_DEF(MSG_JSON_INVALID_VALUE, 1, true, JSEXN_TYPEERR, "{0}Value could not be serialized as JSON.")

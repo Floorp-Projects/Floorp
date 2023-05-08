@@ -3,6 +3,20 @@
     {
       "stash": {
         "blocked": [
+          "info@tabmanager.com:1.0",
+          "{0de86fd2-b9cd-43bf-8be9-7d6c6b60da43}:0.1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1683195628442,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1683203710385,
+      "id": "72028e83-9ddc-444d-9899-8269fc6055c2",
+      "last_modified": 1683203850025
+    },
+    {
+      "stash": {
+        "blocked": [
           "{ff7f3168-970d-4f59-8007-560a154e13d9}:1.0.8",
           "{2a113868-cb48-49c4-8638-87066e4f1d9b}:1.0.0",
           "{f7bcc6a5-63ec-4637-86b4-6272c2d9850f}:1.0.8",
@@ -1459,5 +1473,5 @@
       "last_modified": 1673354326131
     }
   ],
-  "timestamp": 1682534253272
+  "timestamp": 1683203850025
 }

@@ -395,8 +395,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
                                                nsString* aLocale) override;
   virtual mozilla::ipc::IPCResult RecvDocType(const uint64_t& aID,
                                               nsString* aType) override;
-  virtual mozilla::ipc::IPCResult RecvTitle(const uint64_t& aID,
-                                            nsString* aTitle) override;
   virtual mozilla::ipc::IPCResult RecvMimeType(const uint64_t& aID,
                                                nsString* aMime) override;
   virtual mozilla::ipc::IPCResult RecvURLDocTypeMimeType(

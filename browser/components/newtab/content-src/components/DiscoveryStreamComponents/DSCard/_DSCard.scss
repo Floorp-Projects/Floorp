@@ -127,6 +127,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
     height: 100%;
     display: flex;
     flex-direction: column;
+    text-decoration: none;
 
     &:hover {
       header {

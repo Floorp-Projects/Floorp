@@ -36,7 +36,7 @@ class DOMArena {
   friend class DocGroup;
   DOMArena() {
     arena_params_t params;
-    params.mMaxDirtyIncreaseOverride = 5;
+    params.mMaxDirtyIncreaseOverride = 7;
     mArenaId = moz_create_arena_with_params(&params);
   }
 

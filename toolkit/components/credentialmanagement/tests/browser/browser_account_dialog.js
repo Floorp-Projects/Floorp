@@ -72,9 +72,7 @@ add_task(async function test_single_acccount_dialog() {
     "Label includes the account email"
   );
 
-  let title = document.querySelector(
-    'description[popupid="identity-credential"]'
-  );
+  let title = document.getElementById("identity-credential-header-text");
   ok(
     title.textContent.includes("idp.example"),
     "Popup title includes the IDP Site"
@@ -392,6 +390,19 @@ add_task(async function test_multiple_acccount_show_picture() {
       accounts_endpoint: "",
       client_metadata_endpoint: "",
       id_assertion_endpoint: "",
+      privacy_policy_url: "https://idp.example/privacy-policy.html",
+      terms_of_service_url: "https://idp.example/terms-of-service.html",
+      branding: {
+        background_color: "0x6200ee",
+        color: "0xffffff",
+        icons: [
+          {
+            size: 256,
+            url:
+              "https://example.net/browser/toolkit/components/credentialmanagement/tests/browser/custom.svg",
+          },
+        ],
+      },
     }
   );
 
@@ -415,6 +426,18 @@ add_task(async function test_multiple_acccount_show_picture() {
       "data:image/svg+xml;base64,PCEtLSBUaGlzIFNvdXJjZSBDb2RlIEZvcm0gaXMgc3ViamVjdCB0byB0aGUgdGVybXMgb2YgdGhlIE1vemlsbGEgUHVibGljCiAgIC0gTGljZW5zZSwgdi4gMi4wLiBJZiBhIGNvcHkgb2YgdGhlIE1QTCB3YXMgbm90IGRpc3RyaWJ1dGVkIHdpdGggdGhpcwogICAtIGZpbGUsIFlvdSBjYW4gb2J0YWluIG9uZSBhdCBodHRwOi8vbW96aWxsYS5vcmcvTVBMLzIuMC8uIC0tPgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDE2IDE2IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9ImNvbnRleHQtZmlsbCIgZmlsbC1vcGFjaXR5PSJjb250ZXh0LWZpbGwtb3BhY2l0eSI+CiAgPHBhdGggZD0iTS42MjUgMTNhLjYyNS42MjUgMCAwIDEgMC0xLjI1bDMuMjUgMEE0Ljg4IDQuODggMCAwIDAgOC43NSA2Ljg3NWwwLS4yNWEuNjI1LjYyNSAwIDAgMSAxLjI1IDBsMCAuMjVBNi4xMzIgNi4xMzIgMCAwIDEgMy44NzUgMTNsLTMuMjUgMHoiLz"
     ),
     "The first icon matches the custom.svg"
+  );
+
+  const headerIcon = document.getElementsByClassName(
+    "identity-credential-header-icon"
+  )[0];
+
+  ok(BrowserTestUtils.is_visible(headerIcon), "Header Icon is showing");
+  ok(
+    headerIcon.src.startsWith(
+      "data:image/svg+xml;base64,PCEtLSBUaGlzIFNvdXJjZSBDb2RlIEZvcm0gaXMgc3ViamVjdCB0byB0aGUgdGVybXMgb2YgdGhlIE1vemlsbGEgUHVibGljCiAgIC0gTGljZW5zZSwgdi4gMi4wLiBJZiBhIGNvcHkgb2YgdGhlIE1QTCB3YXMgbm90IGRpc3RyaWJ1dGVkIHdpdGggdGhpcwogICAtIGZpbGUsIFlvdSBjYW4gb2J0YWluIG9uZSBhdCBodHRwOi8vbW96aWxsYS5vcmcvTVBMLzIuMC8uIC0tPgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDE2IDE2IiB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9ImNvbnRleHQtZmlsbCIgZmlsbC1vcGFjaXR5PSJjb250ZXh0LWZpbGwtb3BhY2l0eSI+CiAgPHBhdGggZD0iTS42MjUgMTNhLjYyNS42MjUgMCAwIDEgMC0xLjI1bDMuMjUgMEE0Ljg4IDQuODggMCAwIDAgOC43NSA2Ljg3NWwwLS4yNWEuNjI1LjYyNSAwIDAgMSAxLjI1IDBsMCAuMjVBNi4xMzIgNi4xMzIgMCAwIDEgMy44NzUgMTNsLTMuMjUgMHoiLz"
+    ),
+    "The header icon matches the icon resource from manifest"
   );
 
   // Click Continue

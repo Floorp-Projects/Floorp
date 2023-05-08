@@ -59,7 +59,7 @@ $ds-width: 936px;
       font-weight: 500;
 
       &:is(:focus, :hover) {
-        text-decoration: underline;
+        text-decoration: none;
       }
     }
   }

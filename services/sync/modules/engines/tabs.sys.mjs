@@ -5,11 +5,9 @@
 const STORAGE_VERSION = 1; // This needs to be kept in-sync with the rust storage version
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import { SyncEngine, Tracker } from "resource://services-sync/engines.sys.mjs";
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
-
 import {
   SCORE_INCREMENT_SMALL,
   STATUS_OK,
@@ -17,7 +15,6 @@ import {
 } from "resource://services-sync/constants.sys.mjs";
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 import { Async } from "resource://services-common/async.sys.mjs";
-
 import {
   SyncRecord,
   SyncTelemetry,
@@ -32,10 +29,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  TabsStore: "resource://gre/modules/RustTabs.jsm",
+  TabsStore: "resource://gre/modules/RustTabs.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
