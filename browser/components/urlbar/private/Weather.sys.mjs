@@ -278,19 +278,32 @@ export class Weather extends BaseFeature {
   }
 
   #updateKeywords() {
-    // TODO: Fall back to #rsData if Nimbus vars aren't defined
+    // Get the full keywords and minimum keyword length, preferring Nimbus over
+    // remote settings.
+    let fullKeywords =
+      lazy.UrlbarPrefs.get("weatherKeywords") ?? this.#rsData?.keywords;
 
-    let fullKeywords = lazy.UrlbarPrefs.get("weatherKeywords");
-    let minLength = lazy.UrlbarPrefs.get("weatherKeywordsMinimumLength");
+    let minLength =
+      lazy.UrlbarPrefs.get("weatherKeywordsMinimumLength") ||
+      this.#rsData?.min_keyword_length ||
+      0;
+    minLength = Math.max(minLength, 0);
+
     if (!fullKeywords || !minLength) {
+      this.logger.debug(
+        "Keywords or min length not defined, using zero prefix"
+      );
       this.#keywords = null;
       return;
     }
 
-    this.#keywords = new Set();
+    this.logger.debug(
+      "Updating keywords: " + JSON.stringify({ fullKeywords, minLength })
+    );
 
     // Create keywords that are prefixes of the full keywords starting at the
     // specified minimum length.
+    this.#keywords = new Set();
     for (let full of fullKeywords) {
       this.#keywords.add(full);
       for (let i = minLength; i < full.length; i++) {
@@ -361,6 +374,11 @@ export class Weather extends BaseFeature {
 
   async _test_fetch() {
     await this.#fetch();
+  }
+
+  _test_setRsData(data) {
+    this.#rsData = data;
+    this.#updateKeywords();
   }
 
   _test_setSuggestionToNull() {
