@@ -223,7 +223,8 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 }
 
 static StyleXTextScale InitialTextScale(const Document& aDoc) {
-  if (nsContentUtils::IsChromeDoc(&aDoc)) {
+  if (nsContentUtils::IsChromeDoc(&aDoc) ||
+      nsContentUtils::IsPDFJS(aDoc.NodePrincipal())) {
     return StyleXTextScale::ZoomOnly;
   }
   return StyleXTextScale::All;
