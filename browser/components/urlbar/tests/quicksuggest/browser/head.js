@@ -449,7 +449,7 @@ async function doImpressionOnlyTest({
  *       The expected recorded event.
  *     {Array} pings
  *       A list of expected recorded custom telemetry pings. If no pings are
- *       expected, pass an empty array.
+ *       expected, leave this undefined or pass an empty array.
  * @param {Function} options.showSuggestion
  *   This function should open the view and show the suggestion.
  */
@@ -507,8 +507,9 @@ async function doSelectableTest({
   info("Checking events. Expected: " + JSON.stringify([expected.event]));
   QuickSuggestTestUtils.assertEvents([expected.event]);
 
-  info("Checking pings. Expected: " + JSON.stringify(expected.pings));
-  QuickSuggestTestUtils.assertPings(spy, expected.pings);
+  let expectedPings = expected.pings ?? [];
+  info("Checking pings. Expected: " + JSON.stringify(expectedPings));
+  QuickSuggestTestUtils.assertPings(spy, expectedPings);
 
   if (className == "urlbarView-button-block") {
     await QuickSuggest.blockedSuggestions.clear();

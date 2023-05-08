@@ -485,6 +485,7 @@ class MockMerinoServer {
         request_id: "request_id",
         suggestions: [
           {
+            provider: "adm",
             full_keyword: "full_keyword",
             title: "title",
             url: "url",

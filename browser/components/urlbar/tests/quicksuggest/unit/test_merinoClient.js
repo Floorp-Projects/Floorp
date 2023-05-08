@@ -563,7 +563,7 @@ add_task(async function nimbus() {
 
   // First, with the endpoint pref set to an empty string, make sure no Merino
   // suggestion are returned.
-  await fetchAndCheckSuggestions({ expected: null });
+  await fetchAndCheckSuggestions({ expected: [] });
 
   // Now install an experiment that sets the endpoint and other Merino-related
   // variables. Make sure a suggestion is returned and the request includes the

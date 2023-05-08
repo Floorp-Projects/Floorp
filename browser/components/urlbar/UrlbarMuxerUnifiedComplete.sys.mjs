@@ -662,8 +662,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       let heuristicUrl = state.context.heuristicResult?.payload.url;
       if (
         heuristicUrl &&
-        result.payload.subtype ==
-          lazy.UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NAVIGATIONAL &&
+        result.payload.telemetryType == "top_picks" &&
         !lazy.UrlbarPrefs.get("experimental.hideHeuristic")
       ) {
         let opts = {

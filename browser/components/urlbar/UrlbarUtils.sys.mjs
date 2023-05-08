@@ -24,8 +24,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarProviderInterventions:
     "resource:///modules/UrlbarProviderInterventions.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderSearchTips:
     "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
@@ -1218,14 +1216,15 @@ export var UrlbarUtils = {
           return "visiturl";
         }
         if (result.providerName == "UrlbarProviderQuickSuggest") {
-          // In legacy telemetry "quicksuggest" is used as the type for both
-          // sponsored and non-sponsored suggestions.
-          return result.payload.subtype ==
-            lazy.UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED ||
-            result.payload.subtype ==
-              lazy.UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NONSPONSORED
-            ? "quicksuggest"
-            : result.payload.subtype;
+          // Don't add any more `urlbar.picked` legacy telemetry if possible!
+          // Return "quicksuggest" here and rely on Glean instead.
+          switch (result.payload.telemetryType) {
+            case "top_picks":
+              return "navigational";
+            case "wikipedia":
+              return "dynamic_wikipedia";
+          }
+          return "quicksuggest";
         }
         return result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
           ? "bookmark"
@@ -1420,10 +1419,7 @@ export var UrlbarUtils = {
           if (source == "remote-settings") {
             source = "rs";
           }
-          return `${source}_${result.payload.subtype}`;
-        }
-        if (result.providerName === "Weather") {
-          return "weather";
+          return `${source}_${result.payload.telemetryType}`;
         }
         if (result.providerName === "UrlbarProviderTopSites") {
           return "top_site";
@@ -1611,9 +1607,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       isSponsored: {
         type: "boolean",
       },
-      merinoProvider: {
-        type: "string",
-      },
       originalUrl: {
         type: "string",
       },
@@ -1655,6 +1648,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
         items: {
           type: "string",
         },
+      },
+      telemetryType: {
+        type: "string",
       },
       title: {
         type: "string",

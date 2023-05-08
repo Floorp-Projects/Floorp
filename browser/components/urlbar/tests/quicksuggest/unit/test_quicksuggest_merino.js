@@ -30,7 +30,7 @@ const EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+    telemetryType: "adm_sponsored",
     qsSuggestion: SEARCH_STRING,
     title: "frabbits",
     url: "http://test.com/q=frabbits",
@@ -63,7 +63,7 @@ const EXPECTED_MERINO_URLBAR_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
-    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+    telemetryType: "adm_sponsored",
     qsSuggestion: "full_keyword",
     title: "title",
     url: "url",
@@ -421,6 +421,7 @@ add_task(async function multipleMerinoSuggestions() {
 
   MerinoTestUtils.server.response.body.suggestions = [
     {
+      provider: "adm",
       full_keyword: "multipleMerinoSuggestions 0 full_keyword",
       title: "multipleMerinoSuggestions 0 title",
       url: "multipleMerinoSuggestions 0 url",
@@ -433,6 +434,7 @@ add_task(async function multipleMerinoSuggestions() {
       score: 0.1,
     },
     {
+      provider: "adm",
       full_keyword: "multipleMerinoSuggestions 1 full_keyword",
       title: "multipleMerinoSuggestions 1 title",
       url: "multipleMerinoSuggestions 1 url",
@@ -445,6 +447,7 @@ add_task(async function multipleMerinoSuggestions() {
       score: 1,
     },
     {
+      provider: "adm",
       full_keyword: "multipleMerinoSuggestions 2 full_keyword",
       title: "multipleMerinoSuggestions 2 title",
       url: "multipleMerinoSuggestions 2 url",
@@ -470,7 +473,7 @@ add_task(async function multipleMerinoSuggestions() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         heuristic: false,
         payload: {
-          subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
+          telemetryType: "adm_sponsored",
           qsSuggestion: "multipleMerinoSuggestions 1 full_keyword",
           title: "multipleMerinoSuggestions 1 title",
           url: "multipleMerinoSuggestions 1 url",
@@ -680,6 +683,7 @@ add_task(async function topPick() {
   UrlbarPrefs.set("suggest.bestmatch", true);
 
   let topPickSuggestion = createSuggestion(2, 2);
+  topPickSuggestion.provider = "top_picks";
   topPickSuggestion.is_top_pick = true;
 
   MerinoTestUtils.server.response.body = {
@@ -704,15 +708,11 @@ add_task(async function topPick() {
         heuristic: false,
         isBestMatch: true,
         payload: {
-          subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NAVIGATIONAL,
+          telemetryType: "top_picks",
           title: "multipleMerinoSuggestions 2 title",
           url: "multipleMerinoSuggestions 2 url",
-          originalUrl: "multipleMerinoSuggestions 2 url",
           icon: "multipleMerinoSuggestions 2 icon",
-          sponsoredImpressionUrl: "multipleMerinoSuggestions 2 impression_url",
-          sponsoredClickUrl: "multipleMerinoSuggestions 2 click_url",
-          sponsoredBlockId: 2,
-          sponsoredAdvertiser: "multipleMerinoSuggestions 2 advertiser",
+          qsSuggestion: "multipleMerinoSuggestions 2 full_keyword",
           isSponsored: true,
           helpUrl: QuickSuggest.HELP_URL,
           helpL10n: {
@@ -727,7 +727,6 @@ add_task(async function topPick() {
               : "firefox-suggest-urlbar-block",
           },
           displayUrl: "multipleMerinoSuggestions 2 url",
-          requestId: "request_id",
           source: "merino",
         },
       },

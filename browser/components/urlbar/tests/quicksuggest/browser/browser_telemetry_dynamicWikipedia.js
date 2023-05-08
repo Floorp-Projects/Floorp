@@ -55,19 +55,6 @@ add_task(async function() {
           position: position.toString(),
         },
       },
-      ping: {
-        type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
-        payload: {
-          match_type,
-          position,
-          is_clicked: false,
-          improve_suggest_experience_checked: true,
-          block_id: MERINO_SUGGESTION.block_id,
-          advertiser: MERINO_SUGGESTION.advertiser,
-          request_id: MerinoTestUtils.server.response.body.request_id,
-          source: "merino",
-        },
-      },
     },
     selectables: {
       // click
@@ -87,33 +74,6 @@ add_task(async function() {
             position: position.toString(),
           },
         },
-        pings: [
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
-            payload: {
-              match_type,
-              position,
-              is_clicked: true,
-              improve_suggest_experience_checked: true,
-              block_id: MERINO_SUGGESTION.block_id,
-              advertiser: MERINO_SUGGESTION.advertiser,
-              request_id: MerinoTestUtils.server.response.body.request_id,
-              source: "merino",
-            },
-          },
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
-            payload: {
-              match_type,
-              position,
-              improve_suggest_experience_checked: true,
-              block_id: MERINO_SUGGESTION.block_id,
-              advertiser: MERINO_SUGGESTION.advertiser,
-              request_id: MerinoTestUtils.server.response.body.request_id,
-              source: "merino",
-            },
-          },
-        ],
       },
       // block
       "urlbarView-button-block": {
@@ -131,34 +91,6 @@ add_task(async function() {
             position: position.toString(),
           },
         },
-        pings: [
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
-            payload: {
-              match_type,
-              position,
-              is_clicked: false,
-              improve_suggest_experience_checked: true,
-              block_id: MERINO_SUGGESTION.block_id,
-              advertiser: MERINO_SUGGESTION.advertiser,
-              request_id: MerinoTestUtils.server.response.body.request_id,
-              source: "merino",
-            },
-          },
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK,
-            payload: {
-              match_type,
-              position,
-              improve_suggest_experience_checked: true,
-              block_id: MERINO_SUGGESTION.block_id,
-              advertiser: MERINO_SUGGESTION.advertiser,
-              iab_category: MERINO_SUGGESTION.iab_category,
-              request_id: MerinoTestUtils.server.response.body.request_id,
-              source: "merino",
-            },
-          },
-        ],
       },
       // help
       "urlbarView-button-help": {
@@ -176,21 +108,6 @@ add_task(async function() {
             position: position.toString(),
           },
         },
-        pings: [
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
-            payload: {
-              match_type,
-              position,
-              is_clicked: false,
-              improve_suggest_experience_checked: true,
-              block_id: MERINO_SUGGESTION.block_id,
-              advertiser: MERINO_SUGGESTION.advertiser,
-              request_id: MerinoTestUtils.server.response.body.request_id,
-              source: "merino",
-            },
-          },
-        ],
       },
     },
   });
