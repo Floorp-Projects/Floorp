@@ -450,7 +450,7 @@
 }
 
 .urlbarView-row[type=tip][tip-type=dismissalAcknowledgment] {
-  padding-block: 0 6px;
+  padding-block: 6px;
 }
 
 /* Row label (a.k.a. group label) */

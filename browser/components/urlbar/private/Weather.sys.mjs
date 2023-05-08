@@ -64,8 +64,49 @@ export class Weather extends BaseFeature {
     return this.#keywords;
   }
 
+  /**
+   * @returns {number}
+   *   The minimum prefix length of a weather keyword the user must type to
+   *   trigger the suggestion. Note that the strings returned from `keywords`
+   *   already take this into account. The min length is determined from the
+   *   first source below whose value is non-zero. If no source has a non-zero
+   *   value, zero will be returned and `this.keywords` will be null, which
+   *   means the suggestion should be shown on zero prefix.
+   *
+   *   1. The `weather.minKeywordLength` pref, which is set when the user
+   *      increments the min length
+   *   2. `weatherKeywordsMinimumLength` in Nimbus
+   *   3. `min_keyword_length` in remote settings
+   */
+  get minKeywordLength() {
+    let minLength =
+      lazy.UrlbarPrefs.get("weather.minKeywordLength") ||
+      lazy.UrlbarPrefs.get("weatherKeywordsMinimumLength") ||
+      this.#rsData?.min_keyword_length ||
+      0;
+    return Math.max(minLength, 0);
+  }
+
+  /**
+   * @returns {boolean}
+   *   Weather the min keyword length can be incremented. A cap on the min
+   *   length can be set in remote settings and Nimbus.
+   */
+  get canIncrementMinKeywordLength() {
+    let cap =
+      lazy.UrlbarPrefs.get("weatherKeywordsMinimumLengthCap") ||
+      this.#rsData?.min_keyword_length_cap ||
+      0;
+    return !cap || this.minKeywordLength < cap;
+  }
+
   update() {
     super.update();
+
+    // This method is called by `QuickSuggest` in a
+    // `NimbusFeatures.urlbar.onUpdate()` callback, when a change occurs to a
+    // Nimbus variable or to a pref that's a fallback for a Nimbus variable.
+    // A keyword-related variable or pref may have changed, so update keywords.
     if (this.isEnabled) {
       this.#updateKeywords();
     }
@@ -76,6 +117,21 @@ export class Weather extends BaseFeature {
       this.#init();
     } else {
       this.#uninit();
+    }
+  }
+
+  /**
+   * Increments the minimum prefix length of a weather keyword the user must
+   * type to trigger the suggestion, if possible. A cap on the min length can be
+   * set in remote settings and Nimbus, and if the cap has been reached, the
+   * length is not incremented.
+   */
+  incrementMinKeywordLength() {
+    if (this.canIncrementMinKeywordLength) {
+      lazy.UrlbarPrefs.set(
+        "weather.minKeywordLength",
+        this.minKeywordLength + 1
+      );
     }
   }
 
@@ -127,6 +183,7 @@ export class Weather extends BaseFeature {
     this.#merino = new lazy.MerinoClient(this.constructor.name);
     this.#fetch();
     this.#updateKeywords();
+    lazy.UrlbarPrefs.addObserver(this);
     lazy.QuickSuggestRemoteSettings.register(this);
     for (let notif of Object.values(NOTIFICATIONS)) {
       Services.obs.addObserver(this, notif);
@@ -139,6 +196,7 @@ export class Weather extends BaseFeature {
     }
     lazy.clearTimeout(this.#fetchTimer);
     lazy.QuickSuggestRemoteSettings.unregister(this);
+    lazy.UrlbarPrefs.removeObserver(this);
     this.#merino = null;
     this.#suggestion = null;
     this.#fetchTimer = 0;
@@ -282,12 +340,7 @@ export class Weather extends BaseFeature {
     // remote settings.
     let fullKeywords =
       lazy.UrlbarPrefs.get("weatherKeywords") ?? this.#rsData?.keywords;
-
-    let minLength =
-      lazy.UrlbarPrefs.get("weatherKeywordsMinimumLength") ||
-      this.#rsData?.min_keyword_length ||
-      0;
-    minLength = Math.max(minLength, 0);
+    let minLength = this.minKeywordLength;
 
     if (!fullKeywords || !minLength) {
       this.logger.debug(
@@ -305,10 +358,15 @@ export class Weather extends BaseFeature {
     // specified minimum length.
     this.#keywords = new Set();
     for (let full of fullKeywords) {
-      this.#keywords.add(full);
-      for (let i = minLength; i < full.length; i++) {
+      for (let i = minLength; i <= full.length; i++) {
         this.#keywords.add(full.substring(0, i));
       }
+    }
+  }
+
+  onPrefChanged(pref) {
+    if (pref == "weather.minKeywordLength") {
+      this.#updateKeywords();
     }
   }
 

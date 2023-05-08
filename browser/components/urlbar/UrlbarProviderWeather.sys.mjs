@@ -279,19 +279,25 @@ class ProviderWeather extends UrlbarProvider {
   }
 
   getResultCommands(result) {
-    return [
+    let commands = [
       {
         name: RESULT_MENU_COMMAND.INACCURATE_LOCATION,
         l10n: {
           id: "firefox-suggest-weather-command-inaccurate-location",
         },
       },
-      {
+    ];
+
+    if (lazy.QuickSuggest.weather.canIncrementMinKeywordLength) {
+      commands.push({
         name: RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY,
         l10n: {
           id: "firefox-suggest-weather-command-show-less-frequently",
         },
-      },
+      });
+    }
+
+    commands.push(
       {
         l10n: {
           id: "firefox-suggest-weather-command-dont-show-this",
@@ -317,8 +323,10 @@ class ProviderWeather extends UrlbarProvider {
         l10n: {
           id: "urlbar-result-menu-learn-more-about-firefox-suggest",
         },
-      },
-    ];
+      }
+    );
+
+    return commands;
   }
 
   /**
@@ -567,7 +575,6 @@ class ProviderWeather extends UrlbarProvider {
       case RESULT_MENU_COMMAND.NOT_RELEVANT:
         this.logger.info("Dismissing weather result");
         lazy.UrlbarPrefs.set("suggest.weather", false);
-        queryContext.view.controller.removeResult(result);
         queryContext.view.acknowledgeDismissal(result);
         break;
       case RESULT_MENU_COMMAND.INACCURATE_LOCATION:
@@ -578,8 +585,8 @@ class ProviderWeather extends UrlbarProvider {
         queryContext.view.acknowledgeFeedback(result);
         break;
       case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
-        // TODO: Increment required keyword length
         queryContext.view.acknowledgeFeedback(result);
+        lazy.QuickSuggest.weather.incrementMinKeywordLength();
         break;
     }
   }

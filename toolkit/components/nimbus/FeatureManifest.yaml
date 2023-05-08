@@ -255,20 +255,34 @@ urlbar:
       description: >-
         An array of full keyword strings that will trigger the weather
         suggestion when the user types them in the address bar. If absent or
-        null, the weather suggestion will be triggered on zero prefix. See also
+        null, Firefox will fall back to the weather keywords defined in remote
+        settings. If neither Nimbus nor remote settings defines any keywords,
+        the weather suggestion will be triggered on zero prefix. See also
         `weatherKeywordsMinimumLength`.
     weatherKeywordsMinimumLength:
       type: int
       description: >-
         If defined and non-zero, the weather suggestion will be triggered by
         typing any prefix of a full weather keyword when the prefix is at least
-        `weatherKeywordsMinimumLength` characters long. If this value is larger
-        than the length of a particular keyword, the user can still trigger the
-        suggestion by typing the keyword but they must type the full
-        keyword. So, to require the user to type only full keywords to trigger
-        the suggestion, set this to a value larger than the length of all
-        keywords. If this variable is absent or zero, the suggestion will be
-        triggered on zero prefix. See also `weatherKeywords`.
+        `weatherKeywordsMinimumLength` characters long. If this variable is
+        absent or zero, Firefox will fall back to the minimum length defined in
+        remote settings. If neither Nimbus nor remote settings defines a minimum
+        length, the weather suggestion will be triggered on zero prefix. See
+        also `weatherKeywords`.
+    weatherKeywordsMinimumLengthCap:
+      type: int
+      description: >-
+        If defined and non-zero, the user will not be able to increment the
+        minimum keyword length beyond this value. e.g., if this value is 6, the
+        current minimum length is 5, and the user clicks "Show less frequently",
+        then the minimum length will be incremented to 6, the "Show less
+        frequently" command will be hidden, and the user can continue to trigger
+        the weather suggestion by typing 6 characters, but they will not be able
+        to increment the minimum length any further. If this variable is absent
+        or zero, Firefox will fall back to the cap defined in remote settings.
+        If neither Nimbus nor remote settings defines a cap, no cap will be
+        used, and the user will be able to increment the minimum length without
+        any limit.
 
 aboutwelcome:
   description: "The about:welcome page"
