@@ -12,7 +12,7 @@ job-defaults:
         by-platform:
             linux1804-64.*: t-linux-xlarge-source
             macosx1015-64.*: t-osx-1015-r8
-            windows10-64.*: win10-64-2004-source
+            windows11-64.*: win11-64-2009-source
     worker:
         by-platform:
             linux1804-64.*:
@@ -55,7 +55,7 @@ fog:
     platform:
         - linux1804-64/opt
         - macosx1015-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: fp
@@ -71,7 +71,7 @@ mach:
     platform:
         - linux1804-64/opt
         - macosx1015-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: mach
@@ -87,7 +87,7 @@ marionette-harness:
     description: testing/marionette/harness unit tests
     platform:
         - linux1804-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: mnh
@@ -158,7 +158,7 @@ mozbase:
     platform:
         - linux1804-64/opt
         - macosx1015-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: mb
@@ -188,7 +188,7 @@ mozlint:
     platform:
         - linux1804-64/opt
         - macosx1015-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: mozlint
@@ -201,7 +201,7 @@ mozlint:
             by-platform:
                 linux1804-64/opt: toolchain-linux64-clang-tidy
                 macosx1015-64/opt: toolchain-macosx64-clang-tidy
-                windows10-64/opt: toolchain-win64-clang-tidy
+                windows11-64/opt: toolchain-win64-clang-tidy
     fetches:
         toolchain:
             by-platform:
@@ -211,7 +211,7 @@ mozlint:
                 macosx1015-64/opt:
                     - macosx64-node
                     - macosx64-rust
-                windows10-64/opt:
+                windows11-64/opt:
                     - win64-node
                     - win64-rust
         clang-tidy:
@@ -238,7 +238,7 @@ mozterm:
     description: python/mozterm unit tests
     platform:
         - linux1804-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: term
@@ -254,7 +254,7 @@ mozversioncontrol:
     platform:
         - linux1804-64/opt
         - macosx1015-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: vcs
@@ -270,7 +270,7 @@ raptor:
     platform:
         - linux1804-64/opt
         - macosx1015-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: rap
@@ -349,7 +349,7 @@ tryselect:
     description: tools/tryselect unit tests
     platform:
         - linux1804-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: try
@@ -368,7 +368,7 @@ mozbuild:
     platform:
         - linux1804-64/opt
         - macosx1015-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: mbu
@@ -382,7 +382,7 @@ mozbuild:
                     - linux64-node-12
                 macosx1015-64/opt:
                     - macosx64-node-12
-                windows10-64/opt:
+                windows11-64/opt:
                     - win64-node-12
                     - win64-mozmake
     when:
@@ -406,7 +406,7 @@ mozperftest:
     platform:
         - linux1804-64/opt
         - macosx1015-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     treeherder:
         symbol: mpu
     run:
@@ -418,7 +418,7 @@ mozperftest:
                     - linux64-node
                 macosx1015-64/opt:
                     - macosx64-node
-                windows10-64/opt:
+                windows11-64/opt:
                     - win64-node
     when:
         files-changed:
@@ -473,7 +473,7 @@ condprof:
     platform:
         - linux1804-64/opt
         - macosx1015-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: condprof
@@ -489,7 +489,7 @@ featuregates:
     description: featuregates Python unit tests
     platform:
         - linux1804-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: fg
@@ -501,7 +501,7 @@ featuregates:
             by-platform:
                 linux1804-64/opt:
                     - linux64-node
-                windows10-64/opt:
+                windows11-64/opt:
                     - win64-node
     when:
         files-changed:
@@ -509,7 +509,7 @@ featuregates:
 
 talos:
     description: testing/talos unit tests
-    platform: windows10-64/opt
+    platform: windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: tal
@@ -564,7 +564,7 @@ telemetry-python:
     platform:
         - linux1804-64/opt
         - macosx1015-64/opt
-        - windows10-64/opt
+        - windows11-64/opt
     python-version: [3]
     treeherder:
         symbol: tp
@@ -578,7 +578,7 @@ telemetry-python:
                     - linux64-node
                 macosx1015-64/opt:
                     - macosx64-node
-                windows10-64/opt:
+                windows11-64/opt:
                     - win64-node
     when:
         files-changed:
