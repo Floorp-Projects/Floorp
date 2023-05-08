@@ -18,6 +18,7 @@ import { CTAParagraph } from "./CTAParagraph";
 import { HeroImage } from "./HeroImage";
 import { OnboardingVideo } from "./OnboardingVideo";
 import { AdditionalCTA } from "./AdditionalCTA";
+import { EmbeddedMigrationWizard } from "./EmbeddedMigrationWizard";
 
 export const MultiStageProtonScreen = props => {
   const { autoAdvance, handleAction, order } = props;
@@ -227,9 +228,7 @@ export class ProtonScreen extends React.PureComponent {
           />
         ) : null}
         {content.tiles && content.tiles.type === "migration-wizard" ? (
-          <migration-wizard auto-request-state="">
-            <panel-list />
-          </migration-wizard>
+          <EmbeddedMigrationWizard handleAction={this.props.handleAction} />
         ) : null}
       </React.Fragment>
     );

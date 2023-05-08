@@ -338,6 +338,7 @@ export class WelcomeScreen extends React.PureComponent {
     let { props } = this;
     const value =
       event.currentTarget.value ?? event.currentTarget.getAttribute("value");
+    const source = event.source || value;
     let targetContent =
       props.content[value] ||
       props.content.tiles ||
@@ -347,13 +348,13 @@ export class WelcomeScreen extends React.PureComponent {
       return;
     }
     // Send telemetry before waiting on actions
-    AboutWelcomeUtils.sendActionTelemetry(props.messageId, value, event.name);
+    AboutWelcomeUtils.sendActionTelemetry(props.messageId, source, event.name);
 
     // Send additional telemetry if a messaging surface like feature callout is
     // dismissed via the dismiss button. Other causes of dismissal will be
     // handled separately by the messaging surface's own code.
     if (value === "dismiss_button" && !event.name) {
-      AboutWelcomeUtils.sendDismissTelemetry(props.messageId, value);
+      AboutWelcomeUtils.sendDismissTelemetry(props.messageId, source);
     }
 
     let { action } = targetContent;
