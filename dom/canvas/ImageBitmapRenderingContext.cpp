@@ -7,6 +7,7 @@
 #include "gfxPlatform.h"
 #include "gfx2DGlue.h"
 #include "mozilla/dom/ImageBitmapRenderingContextBinding.h"
+#include "mozilla/gfx/Types.h"
 #include "nsComponentManagerUtils.h"
 #include "nsRegion.h"
 #include "ImageContainer.h"
@@ -167,7 +168,15 @@ mozilla::UniquePtr<uint8_t[]> ImageBitmapRenderingContext::GetImageBuffer(
 
   *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
   *aImageSize = data->GetSize();
-  return gfx::SurfaceToPackedBGRA(data);
+
+  UniquePtr<uint8_t[]> ret = gfx::SurfaceToPackedBGRA(data);
+
+  if (ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+    nsRFPService::RandomizePixels(GetCookieJarSettings(), ret.get(),
+                                  GetWidth() * GetHeight() * 4,
+                                  gfx::SurfaceFormat::A8R8G8B8_UINT32);
+  }
+  return ret;
 }
 
 NS_IMETHODIMP

@@ -30,6 +30,7 @@
     }                                                \
   }
 
+class nsICookieJarSettings;
 class nsIDocShell;
 class nsIPrincipal;
 class nsRefreshDriver;
@@ -82,6 +83,8 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   void AddPostRefreshObserverIfNecessary();
 
   nsIGlobalObject* GetParentObject() const;
+
+  nsICookieJarSettings* GetCookieJarSettings() const;
 
   nsIPrincipal* PrincipalOrNull() const;
 

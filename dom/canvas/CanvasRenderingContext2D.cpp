@@ -33,6 +33,7 @@
 
 #include "nsPrintfCString.h"
 
+#include "nsRFPService.h"
 #include "nsReadableUtils.h"
 
 #include "nsColor.h"
@@ -1866,6 +1867,12 @@ UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
   }
 
   mBufferProvider->ReturnSnapshot(snapshot.forget());
+
+  if (ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+    nsRFPService::RandomizePixels(GetCookieJarSettings(), ret.get(),
+                                  GetWidth() * GetHeight() * 4,
+                                  SurfaceFormat::A8R8G8B8_UINT32);
+  }
 
   return ret;
 }
@@ -4741,6 +4748,7 @@ bool CanvasRenderingContext2D::IsPointInStroke(
   if (mPathTransformWillUpdate) {
     return mPath->StrokeContainsPoint(strokeOptions, Point(aX, aY), mPathToDS);
   }
+
   return mPath->StrokeContainsPoint(strokeOptions, Point(aX, aY),
                                     mTarget->GetTransform());
 }
@@ -5670,6 +5678,13 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     uint32_t srcStride = rawData.mStride;
     uint8_t* src =
         rawData.mData + srcReadRect.y * srcStride + srcReadRect.x * 4;
+
+    // Apply the random noises if canvan randomization is enabled.
+    if (ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+      nsRFPService::RandomizePixels(GetCookieJarSettings(), src,
+                                    GetWidth() * GetHeight() * 4,
+                                    SurfaceFormat::A8R8G8B8_UINT32);
+    }
 
     uint8_t* dst = data + dstWriteRect.y * (aWidth * 4) + dstWriteRect.x * 4;
 
