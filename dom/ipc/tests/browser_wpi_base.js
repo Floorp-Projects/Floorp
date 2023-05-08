@@ -190,7 +190,7 @@ const heuristics = [
         Ci.nsILoginInfo,
         "init"
       );
-      Services.logins.addLogin(
+      await Services.logins.addLoginAsync(
         new LoginInfo(COM_ORIGIN, "", null, "username", "password", "", "")
       );
 
