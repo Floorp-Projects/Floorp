@@ -2540,8 +2540,9 @@ void MacroAssembler::extractCurrentIndexAndKindFromIterator(Register iterator,
   and32(Imm32(PropertyIndex::IndexMask), outIndex);
 }
 
+template <typename IdType>
 void MacroAssembler::emitMegamorphicCachedSetSlot(
-    ValueOperand id, Register obj, Register scratch1,
+    IdType id, Register obj, Register scratch1,
 #ifndef JS_CODEGEN_X86  // See MegamorphicSetElement in LIROps.yaml
     Register scratch2, Register scratch3,
 #endif
@@ -2565,8 +2566,14 @@ void MacroAssembler::emitMegamorphicCachedSetSlot(
   rshiftPtr(Imm32(MegamorphicSetPropCache::ShapeHashShift2), scratch2);
   xorPtr(scratch2, scratch3);
 
-  loadAtomOrSymbolAndHash(id, scratch1, scratch2, &cacheMiss);
-  addPtr(scratch2, scratch3);
+  if constexpr (std::is_same<IdType, ValueOperand>::value) {
+    loadAtomOrSymbolAndHash(id, scratch1, scratch2, &cacheMiss);
+    addPtr(scratch2, scratch3);
+  } else {
+    static_assert(std::is_same<IdType, PropertyKey>::value);
+    addPtr(Imm32(HashAtomOrSymbolPropertyKey(id)), scratch3);
+    movePropertyKey(id, scratch1);
+  }
 
   // scratch3 %= MegamorphicSetPropCache::NumEntries
   constexpr size_t cacheSize = MegamorphicSetPropCache::NumEntries;
@@ -2699,6 +2706,22 @@ void MacroAssembler::emitMegamorphicCachedSetSlot(
   popValue(value);
 #endif
 }
+
+template void MacroAssembler::emitMegamorphicCachedSetSlot<PropertyKey>(
+    PropertyKey id, Register obj, Register scratch1,
+#ifndef JS_CODEGEN_X86  // See MegamorphicSetElement in LIROps.yaml
+    Register scratch2, Register scratch3,
+#endif
+    ValueOperand value, Label* cacheHit,
+    void (*emitPreBarrier)(MacroAssembler&, const Address&, MIRType));
+
+template void MacroAssembler::emitMegamorphicCachedSetSlot<ValueOperand>(
+    ValueOperand id, Register obj, Register scratch1,
+#ifndef JS_CODEGEN_X86  // See MegamorphicSetElement in LIROps.yaml
+    Register scratch2, Register scratch3,
+#endif
+    ValueOperand value, Label* cacheHit,
+    void (*emitPreBarrier)(MacroAssembler&, const Address&, MIRType));
 
 void MacroAssembler::guardNonNegativeIntPtrToInt32(Register reg, Label* fail) {
 #ifdef DEBUG
