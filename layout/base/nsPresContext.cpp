@@ -755,6 +755,12 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
 bool nsPresContext::UpdateFontVisibility() {
   FontVisibility oldValue = mFontVisibility;
 
+  // Chrome presContext is allowed access to all fonts.
+  if (IsChrome()) {
+    mFontVisibility = FontVisibility::User;
+    return mFontVisibility != oldValue;
+  }
+
   // Is this a private browsing context?
   bool isPrivate = false;
   if (nsCOMPtr<nsILoadContext> loadContext = mDocument->GetLoadContext()) {
