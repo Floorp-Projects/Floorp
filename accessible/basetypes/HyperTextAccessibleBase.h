@@ -84,6 +84,12 @@ class HyperTextAccessibleBase {
   virtual void SetCaretOffset(int32_t aOffset) = 0;
 
   /**
+   * Provide the line number for the caret.
+   * @return 1-based index for the line number with the caret
+   */
+  virtual int32_t CaretLineNumber();
+
+  /**
    * Transform magic offset into text offset.
    */
   index_t ConvertMagicOffset(int32_t aOffset) const;
