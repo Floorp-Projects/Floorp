@@ -175,6 +175,26 @@ void DOMLocalization::GetAttributes(Element& aElement, L10nIdArgs& aResult,
   }
 }
 
+void DOMLocalization::SetArgs(JSContext* aCx, Element& aElement,
+                              const Optional<JS::Handle<JSObject*>>& aArgs,
+                              ErrorResult& aRv) {
+  if (aArgs.WasPassed() && aArgs.Value()) {
+    nsAutoString data;
+    JS::Rooted<JS::Value> val(aCx, JS::ObjectValue(*aArgs.Value()));
+    if (!nsContentUtils::StringifyJSON(aCx, val, data,
+                                       UndefinedIsNullStringLiteral)) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
+    if (!aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::datal10nargs, data,
+                              eCaseMatters)) {
+      aElement.SetAttr(kNameSpaceID_None, nsGkAtoms::datal10nargs, data, true);
+    }
+  } else {
+    aElement.UnsetAttr(kNameSpaceID_None, nsGkAtoms::datal10nargs, true);
+  }
+}
+
 already_AddRefed<Promise> DOMLocalization::TranslateFragment(nsINode& aNode,
                                                              ErrorResult& aRv) {
   Sequence<OwningNonNull<Element>> elements;
