@@ -10,6 +10,10 @@ loadRelativeToScript('callgraph.js');
 
 var options = parse_options([
     {
+        name: '--verbose',
+        type: 'bool'
+    },
+    {
         name: '--function',
         type: 'string'
     },
@@ -266,7 +270,9 @@ for (const [csu, methods] of virtualDeclarations) {
 var xdb = xdbLibrary();
 xdb.open("src_body.xdb");
 
-printErr("Finished loading data structures");
+if (options.verbose) {
+    printErr("Finished loading data structures");
+}
 
 var minStream = xdb.min_data_stream();
 var maxStream = xdb.max_data_stream();

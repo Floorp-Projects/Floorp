@@ -13,6 +13,7 @@ from html import escape
 SRCDIR = pathlib.Path(__file__).parent.parent.parent.absolute()
 
 parser = argparse.ArgumentParser(description="Process some integers.")
+parser.add_argument("--verbose", type=bool, default=False)
 parser.add_argument("rootingHazards", nargs="?", default="rootingHazards.txt")
 parser.add_argument("gcFunctions", nargs="?", default="gcFunctions.txt")
 parser.add_argument("hazards", nargs="?", default="hazards.txt")
@@ -294,10 +295,12 @@ try:
 except IOError as e:
     print("Failed: %s" % str(e))
 
-print("Wrote %s" % args.hazards)
-print("Wrote %s" % args.extra)
-print("Wrote %s" % args.refs)
-print("Wrote %s" % args.html)
+if args.verbose:
+    print("Wrote %s" % args.hazards)
+    print("Wrote %s" % args.extra)
+    print("Wrote %s" % args.refs)
+    print("Wrote %s" % args.html)
+
 print(
     "Found %d hazards %d unsafe references %d missing"
     % (num_hazards, num_refs, num_missing)

@@ -107,7 +107,7 @@ function generate_callgraph(rawCallees) {
 }
 
 // Returns object mapping mangled => reason for GCing
-function loadRawCallgraphFile(file)
+function loadRawCallgraphFile(file, verbose)
 {
     const functions = {
         // "Map" from identifier to mangled name, or sometimes to a Class.Field name.
@@ -205,7 +205,9 @@ function loadRawCallgraphFile(file)
         }
     }
 
-    printErr("Loaded " + file);
+    if (verbose) {
+        printErr("Loaded[verbose=" + verbose + "] " + file);
+    }
 
     return {
         fieldCallAttrs,
@@ -220,10 +222,10 @@ function loadRawCallgraphFile(file)
 // Take a set of rawcalls filenames (as in, the raw callgraph data output by
 // computeCallgraph.js) and combine them into a global callgraph, renumbering
 // the IDs as needed.
-function mergeRawCallgraphs(filenames) {
+function mergeRawCallgraphs(filenames, verbose) {
     let d;
     for (const filename of filenames) {
-        const raw = loadRawCallgraphFile(filename);
+        const raw = loadRawCallgraphFile(filename, verbose);
         if (!d) {
             d = raw;
             continue;
@@ -276,7 +278,7 @@ function mergeRawCallgraphs(filenames) {
     return d;
 }
 
-function loadCallgraph(files)
+function loadCallgraph(files, verbose)
 {
     const {
         fieldCallAttrs,
@@ -285,7 +287,7 @@ function loadCallgraph(files)
         indirectCalls,
         rawCallees,
         functions
-    } = mergeRawCallgraphs(files);
+    } = mergeRawCallgraphs(files, verbose);
 
     assert(ID.jscode == functions.mangledToId["(js-code)"]);
     assert(ID.anyfunc == functions.mangledToId["(any-function)"]);
