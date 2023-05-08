@@ -6,7 +6,7 @@ const {
   TodoEntry,
   getDefaultList,
   setDefaultList,
-} = ChromeUtils.import("resource://gre/modules/RustTodolist.jsm");
+} = ChromeUtils.importESModule("resource://gre/modules/RustTodolist.sys.mjs");
 
 add_task(async function() {
   const todo = await TodoList.init();

@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Geometry = ChromeUtils.import("resource://gre/modules/RustGeometry.jsm");
+const Geometry = ChromeUtils.importESModule(
+  "resource://gre/modules/RustGeometry.sys.mjs"
+);
 
 add_task(async function() {
   const ln1 = new Geometry.Line(
