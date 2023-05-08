@@ -2,17 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 // Various parts here are run in the content process.
 /* global content */
 
-var EXPORTED_SYMBOLS = ["Preferences"];
+import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 
-const { TestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TestUtils.sys.mjs"
-);
-var Preferences = {
+export var Preferences = {
   init(libDir) {
     let panes = [
       ["paneGeneral"],
