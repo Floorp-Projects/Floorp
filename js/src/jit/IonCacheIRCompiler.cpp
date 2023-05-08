@@ -1653,13 +1653,11 @@ bool IonCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
   enterStubFrame(masm, save);
 
   masm.Push(Imm32(strict));
-  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
   masm.Push(val);
   masm.Push(idVal);
   masm.Push(obj);
 
-  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
-                      HandleValue, bool);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
   callVM<Fn, SetElementMegamorphic>(masm);
   return true;
 }
