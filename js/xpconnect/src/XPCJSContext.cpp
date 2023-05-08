@@ -780,6 +780,7 @@ static mozilla::Atomic<bool> sIteratorHelpersEnabled(false);
 static mozilla::Atomic<bool> sShadowRealmsEnabled(false);
 #ifdef NIGHTLY_BUILD
 static mozilla::Atomic<bool> sArrayGroupingEnabled(false);
+static mozilla::Atomic<bool> sWellFormedUnicodeStringsEnabled(false);
 #endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 static mozilla::Atomic<bool> sChangeArrayByCopyEnabled(false);
@@ -813,6 +814,7 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setShadowRealmsEnabled(sShadowRealmsEnabled)
 #ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(sArrayGroupingEnabled)
+      .setWellFormedUnicodeStringsEnabled(sWellFormedUnicodeStringsEnabled)
 #endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       .setChangeArrayByCopyEnabled(sChangeArrayByCopyEnabled)
@@ -1009,6 +1011,8 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
   sArrayGroupingEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.array_grouping");
+  sWellFormedUnicodeStringsEnabled = Preferences::GetBool(
+      JS_OPTIONS_DOT_STR "experimental.well_formed_unicode_strings");
 #endif
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
