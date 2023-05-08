@@ -753,23 +753,24 @@
       setButtons(buttons) {
         this._buttons = buttons;
         for (let button of buttons) {
-          let link = button.link || button.supportPage;
+          let link = button.link;
           let localeId = button["l10n-id"];
+          if (!link && button.supportPage) {
+            link =
+              Services.urlFormatter.formatURLPref("app.support.baseURL") +
+              button.supportPage;
+            if (!button.label && !localeId) {
+              localeId = "notification-learnmore-default-label";
+            }
+          }
 
           let buttonElem;
-          if (button.hasOwnProperty("supportPage")) {
-            window.ensureCustomElements("moz-support-link");
-            buttonElem = document.createElement("a", {
-              is: "moz-support-link",
-            });
-            buttonElem.classList.add("notification-link");
-            buttonElem.setAttribute("support-page", button.supportPage);
-          } else if (link) {
+          if (link) {
             buttonElem = document.createXULElement("label", {
               is: "text-link",
             });
             buttonElem.setAttribute("href", link);
-            buttonElem.classList.add("notification-link", "text-link");
+            buttonElem.classList.add("notification-link");
           } else {
             buttonElem = document.createXULElement(
               "button",
