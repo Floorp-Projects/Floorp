@@ -378,6 +378,23 @@ win64-vs2019:
             - build/vs/vs2019.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
 
+win64-vs2022:
+    description: "VS 2022"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TW64(msvc2022)
+    worker:
+        env:
+            MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
+    run:
+        script: get_vs.py
+        arguments:
+            - build/vs/vs2022.yaml
+        resources:
+            - build/vs/vs2022.yaml
+        toolchain-artifact: project/gecko/vs/vs.tar.zst
+
 linux64-afl-instrumentation-2.5:
     description: "AFL instrumentation toolchain build"
     treeherder:
