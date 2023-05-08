@@ -7,14 +7,14 @@ add_setup(async function() {
     username: "username1",
     password: "password1",
   });
-  await Services.logins.addLoginAsync(login);
+  Services.logins.addLogin(login);
   login = LoginTestUtils.testData.formLogin({
     origin: "https://example.org",
     formActionOrigin: "https://example.org",
     username: "username2",
     password: "password2",
   });
-  await Services.logins.addLoginAsync(login);
+  Services.logins.addLogin(login);
 });
 
 // Verify that the autocomplete popup opens when the username field in autofocused.

@@ -166,7 +166,7 @@ add_task(async function test_doorhanger_dismissal_on_change() {
         "form-basic-username",
         "form-basic-password"
       );
-      await Services.logins.addLoginAsync(login);
+      Services.logins.addLogin(login);
 
       let passwordFilledPromise = listenForTestNotification(
         "PasswordEditedOrGenerated"

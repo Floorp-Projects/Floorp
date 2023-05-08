@@ -29,7 +29,9 @@ add_task(async function test_initialize() {
     Services.prefs.clearUserPref("signon.showAutoCompleteFooter");
   });
 
-  await Services.logins.addLogins(loginList());
+  for (let login of loginList()) {
+    Services.logins.addLogin(login);
+  }
 });
 
 add_task(async function test_autocomplete_footer_onclick() {
