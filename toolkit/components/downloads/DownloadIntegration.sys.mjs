@@ -519,11 +519,10 @@ export var DownloadIntegration = {
     // the application to hang, or other performance issues.
     // The stream created in this way is forward-compatible with all the
     // current and future versions of Windows.
-    const url = aDownload.source.originalUrl || aDownload.source.url;
     if (AppConstants.platform == "win" && this._shouldSaveZoneInformation()) {
       let zone;
       try {
-        zone = lazy.gDownloadPlatform.mapUrlToZone(url);
+        zone = lazy.gDownloadPlatform.mapUrlToZone(aDownload.source.url);
       } catch (e) {
         // Default to Internet Zone if mapUrlToZone failed for
         // whatever reason.
@@ -535,7 +534,7 @@ export var DownloadIntegration = {
         let path = aDownload.target.path + ":Zone.Identifier";
         try {
           let zoneId = "[ZoneTransfer]\r\nZoneId=" + zone + "\r\n";
-          let { isPrivate, referrerInfo } = aDownload.source;
+          let { url, isPrivate, referrerInfo } = aDownload.source;
           if (!isPrivate) {
             let referrer = referrerInfo
               ? referrerInfo.computedReferrerSpec
@@ -601,7 +600,7 @@ export var DownloadIntegration = {
     }
 
     await lazy.gDownloadPlatform.downloadDone(
-      lazy.NetUtil.newURI(url),
+      lazy.NetUtil.newURI(aDownload.source.url),
       aReferrer,
       new lazy.FileUtils.File(aDownload.target.path),
       aDownload.contentType,
