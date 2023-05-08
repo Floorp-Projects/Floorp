@@ -640,7 +640,7 @@ const CFR_MESSAGES = [
     content: {
       layout: "short_message",
       category: "cfrFeatures",
-      anchor_id: "tracking-protection-icon-box",
+      anchor_id: "tracking-protection-icon-container",
       skip_address_bar_notifier: true,
       bucket_id: "CFR_MILESTONE_MESSAGE",
       heading_text: { string_id: "cfr-doorhanger-milestone-heading2" },

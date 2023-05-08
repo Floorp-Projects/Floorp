@@ -15,7 +15,7 @@ const InflightAssetsMessageProvider = {
         id: "MILESTONE_MESSAGE",
         groups: ["cfr"],
         content: {
-          anchor_id: "tracking-protection-icon-box",
+          anchor_id: "tracking-protection-icon-container",
           bucket_id: "CFR_MILESTONE_MESSAGE",
           buttons: {
             primary: {
@@ -63,7 +63,7 @@ const InflightAssetsMessageProvider = {
         id: "MILESTONE_MESSAGE_87",
         groups: ["cfr"],
         content: {
-          anchor_id: "tracking-protection-icon-box",
+          anchor_id: "tracking-protection-icon-container",
           bucket_id: "CFR_MILESTONE_MESSAGE",
           buttons: {
             primary: {
