@@ -138,9 +138,11 @@ var tests = [
   // test security delay - too early
   {
     id: "Test#4",
-    run() {
+    async run() {
       // Set the security delay to 100s
-      PopupNotifications.buttonDelay = 100000;
+      await SpecialPowers.pushPrefEnv({
+        set: [["security.notification_enable_delay", 100000]],
+      });
 
       this.notifyObj = new BasicNotification(this.id);
       showNotification(this.notifyObj);
@@ -168,9 +170,12 @@ var tests = [
   // test security delay - after delay
   {
     id: "Test#5",
-    run() {
+    async run() {
       // Set the security delay to 10ms
-      PopupNotifications.buttonDelay = 10;
+
+      await SpecialPowers.pushPrefEnv({
+        set: [["security.notification_enable_delay", 10]],
+      });
 
       this.notifyObj = new BasicNotification(this.id);
       showNotification(this.notifyObj);
@@ -192,7 +197,6 @@ var tests = [
         !this.notifyObj.dismissalCallbackTriggered,
         "dismissal callback was not triggered"
       );
-      PopupNotifications.buttonDelay = PREF_SECURITY_DELAY_INITIAL;
     },
   },
   // reload removes notification

@@ -5,6 +5,7 @@
 import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
 
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const NOTIFICATION_EVENT_DISMISSED = "dismissed";
 const NOTIFICATION_EVENT_REMOVED = "removed";
@@ -31,6 +32,9 @@ const TELEMETRY_STAT_OPEN_SUBMENU = 10;
 const TELEMETRY_STAT_LEARN_MORE = 11;
 
 const TELEMETRY_STAT_REOPENED_OFFSET = 20;
+const lazy = {};
+
+XPCOMUtils.defineLazyPreferenceGetter(lazy, "buttonDelay", PREF_SECURITY_DELAY);
 
 var popupNotificationsMap = new WeakMap();
 var gNotificationParents = new WeakMap();
@@ -238,7 +242,6 @@ export function PopupNotifications(tabbrowser, panel, iconBox, options = {}) {
   this.panel = panel;
   this.tabbrowser = tabbrowser;
   this.iconBox = iconBox;
-  this.buttonDelay = Services.prefs.getIntPref(PREF_SECURITY_DELAY);
 
   this.panel.addEventListener("popuphidden", this, true);
   this.panel.classList.add("popup-notification-panel", "panel-no-padding");
@@ -1883,7 +1886,7 @@ PopupNotifications.prototype = {
 
       let timeSinceShown =
         this.window.performance.now() - notification.timeShown;
-      if (timeSinceShown < this.buttonDelay) {
+      if (timeSinceShown < lazy.buttonDelay) {
         Services.console.logStringMessage(
           "PopupNotifications._onButtonEvent: " +
             "Button click happened before the security delay: " +
