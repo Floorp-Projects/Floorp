@@ -162,6 +162,10 @@ export class Weather extends BaseFeature {
   }
 
   get #vpnDetected() {
+    if (lazy.UrlbarPrefs.get("weather.ignoreVPN")) {
+      return false;
+    }
+
     let linkService =
       this._test_linkService ||
       Cc["@mozilla.org/network/network-link-service;1"].getService(
