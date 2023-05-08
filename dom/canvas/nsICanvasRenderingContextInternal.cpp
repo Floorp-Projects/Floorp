@@ -72,3 +72,15 @@ void nsICanvasRenderingContextInternal::DoSecurityCheck(
                                                    aForceWriteOnly, aCORSUsed);
   }
 }
+
+bool nsICanvasRenderingContextInternal::ShouldResistFingerprinting(
+    mozilla::RFPTarget aTarget) const {
+  if (mCanvasElement) {
+    return mCanvasElement->OwnerDoc()->ShouldResistFingerprinting(aTarget);
+  }
+  if (mOffscreenCanvas) {
+    return mOffscreenCanvas->ShouldResistFingerprinting(aTarget);
+  }
+  // Last resort, just check the global preference
+  return nsContentUtils::ShouldResistFingerprinting("Fallback", aTarget);
+}

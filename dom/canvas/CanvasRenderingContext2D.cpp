@@ -4659,8 +4659,8 @@ bool CanvasRenderingContext2D::IsPointInPath(
                                                aSubjectPrincipal)) {
       return false;
     }
-  } else if (mOffscreenCanvas &&
-             mOffscreenCanvas->ShouldResistFingerprinting()) {
+  } else if (mOffscreenCanvas && mOffscreenCanvas->ShouldResistFingerprinting(
+                                     RFPTarget::CanvasImageExtractionPrompt)) {
     return false;
   }
 
@@ -4722,8 +4722,8 @@ bool CanvasRenderingContext2D::IsPointInStroke(
                                                aSubjectPrincipal)) {
       return false;
     }
-  } else if (mOffscreenCanvas &&
-             mOffscreenCanvas->ShouldResistFingerprinting()) {
+  } else if (mOffscreenCanvas && mOffscreenCanvas->ShouldResistFingerprinting(
+                                     RFPTarget::CanvasImageExtractionPrompt)) {
     return false;
   }
 
@@ -5644,7 +5644,8 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx,
                                                             aSubjectPrincipal);
   } else if (mOffscreenCanvas) {
-    usePlaceholder = mOffscreenCanvas->ShouldResistFingerprinting();
+    usePlaceholder = mOffscreenCanvas->ShouldResistFingerprinting(
+        RFPTarget::CanvasImageExtractionPrompt);
   }
 
   do {
