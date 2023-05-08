@@ -139,8 +139,6 @@ bool nsTransitionManager::DoUpdateTransitions(
   // properties to transition), but for which we didn't just start the
   // transition.  This can happen delay and duration are both zero, or
   // because the new value is not interpolable.
-  // Note that we also do the latter set of work in
-  // nsTransitionManager::PruneCompletedTransitions.
   if (aElementTransitions) {
     bool checkProperties =
         aStyle.GetTransitionProperty(0) != eCSSPropertyExtra_all_properties;
@@ -162,33 +160,20 @@ bool nsTransitionManager::DoUpdateTransitions(
     do {
       --i;
       CSSTransition* anim = animations[i];
-      // properties no longer in 'transition-property'
-      if ((checkProperties &&
-           !allTransitionProperties.HasProperty(anim->TransitionProperty())) ||
-          // properties whose computed values changed but for which we
-          // did not start a new transition (because delay and
-          // duration are both zero, or because the new value is not
-          // interpolable); a new transition would have anim->ToValue()
-          // matching currentValue
-          !ExtractNonDiscreteComputedValue(anim->TransitionProperty(),
-                                           aNewStyle, currentValue) ||
+      const nsCSSPropertyID property = anim->TransitionProperty();
+      if (
+          // Properties no longer in `transition-property`.
+          (checkProperties && !allTransitionProperties.HasProperty(property)) ||
+          // Properties whose computed values changed but for which we did not
+          // start a new transition (because delay and duration are both zero,
+          // or because the new value is not interpolable); a new transition
+          // would have anim->ToValue() matching currentValue.
+          !ExtractNonDiscreteComputedValue(property, aNewStyle, currentValue) ||
           currentValue != anim->ToValue()) {
-        // stop the transition
-        if (anim->HasCurrentEffect()) {
-          EffectSet* effectSet = EffectSet::Get(aElement, aPseudoType);
-          if (effectSet) {
-            effectSet->UpdateAnimationGeneration(mPresContext);
-          }
-        }
-        anim->CancelFromStyle(PostRestyleMode::IfNeeded);
-        animations.RemoveElementAt(i);
+        // Stop the transition.
+        DoCancelTransition(aElement, aPseudoType, aElementTransitions, i);
       }
     } while (i != 0);
-
-    if (animations.IsEmpty()) {
-      aElementTransitions->Destroy();
-      aElementTransitions = nullptr;
-    }
   }
 
   return startedAny;
@@ -363,22 +348,8 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
       // in-progress value (which is particularly easy to cause when we're
       // currently in the 'transition-delay').  It also might happen because we
       // just got a style change to a value that can't be interpolated.
-      OwningCSSTransitionPtrArray& animations =
-          aElementTransitions->mAnimations;
-      animations[currentIndex]->CancelFromStyle(PostRestyleMode::IfNeeded);
-      oldTransition = nullptr;  // Clear pointer so it doesn't dangle
-      animations.RemoveElementAt(currentIndex);
-      EffectSet* effectSet = EffectSet::Get(aElement, aPseudoType);
-      if (effectSet) {
-        effectSet->UpdateAnimationGeneration(mPresContext);
-      }
-
-      if (animations.IsEmpty()) {
-        aElementTransitions->Destroy();
-        // |aElementTransitions| is now a dangling pointer!
-        aElementTransitions = nullptr;
-      }
-      // GetAnimationRule already called RestyleForAnimation.
+      DoCancelTransition(aElement, aPseudoType, aElementTransitions,
+                         currentIndex);
     }
     return false;
   }
@@ -508,3 +479,26 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
 
   return true;
 }
+
+void nsTransitionManager::DoCancelTransition(
+    dom::Element* aElement, PseudoStyleType aPseudoType,
+    CSSTransitionCollection*& aElementTransitions, size_t aIndex) {
+  MOZ_ASSERT(aElementTransitions);
+  OwningCSSTransitionPtrArray& transitions = aElementTransitions->mAnimations;
+  CSSTransition* transition = transitions[aIndex];
+
+  if (transition->HasCurrentEffect()) {
+    if (auto* effectSet = EffectSet::Get(aElement, aPseudoType)) {
+      effectSet->UpdateAnimationGeneration(mPresContext);
+    }
+  }
+  transition->CancelFromStyle(PostRestyleMode::IfNeeded);
+  transitions.RemoveElementAt(aIndex);
+
+  if (transitions.IsEmpty()) {
+    aElementTransitions->Destroy();
+    // |aElementTransitions| is now a dangling pointer!
+    aElementTransitions = nullptr;
+  }
+}
+
