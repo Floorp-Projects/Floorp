@@ -67,6 +67,11 @@ class nsTransitionManager final
       const mozilla::ComputedStyle& aOldStyle,
       const mozilla::ComputedStyle& aNewStyle,
       nsCSSPropertyIDSet& aPropertiesChecked);
+
+  void DoCancelTransition(mozilla::dom::Element* aElement,
+                          mozilla::PseudoStyleType aPseudoType,
+                          CSSTransitionCollection*& aElementTransitions,
+                          size_t aIndex);
 };
 
 #endif /* !defined(nsTransitionManager_h_) */
