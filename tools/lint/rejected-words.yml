@@ -68,7 +68,7 @@ avoid-blacklist-and-whitelist:
         - browser/extensions/screenshots/background/main.js
         - browser/extensions/webcompat/shims/nielsen.js
         - browser/modules/SitePermissions.jsm
-        - browser/tools/mozscreenshots/mozscreenshots/extension/configurations/PermissionPrompts.sys.mjs
+        - browser/tools/mozscreenshots/mozscreenshots/extension/configurations/PermissionPrompts.jsm
         - build/clang-plugin/CustomMatchers.h
         - build/clang-plugin/FopenUsageChecker.cpp
         - build/clang-plugin/NaNExprChecker.cpp

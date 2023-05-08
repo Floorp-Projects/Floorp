@@ -4,9 +4,7 @@
 
 "use strict";
 
-const { TestRunner } = ChromeUtils.importESModule(
-  "resource://test/TestRunner.sys.mjs"
-);
+const { TestRunner } = ChromeUtils.import("resource://test/TestRunner.jsm");
 
 add_task(async function capture() {
   equal(TestRunner.findComma("Toolbars,Devs"), 8);

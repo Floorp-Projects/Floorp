@@ -2,8 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+"use strict";
+
+var EXPORTED_SYMBOLS = ["Screenshot"];
+
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
 // See LOG_LEVELS in Console.sys.mjs. Common examples: "All", "Info", "Warn", &
@@ -22,7 +30,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
-export var Screenshot = {
+var Screenshot = {
   _extensionPath: null,
   _path: null,
   _imagePrefix: "",

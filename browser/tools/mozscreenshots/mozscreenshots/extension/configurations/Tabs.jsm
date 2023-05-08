@@ -2,14 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
+var EXPORTED_SYMBOLS = ["Tabs"];
+
 const CUST_TAB = "chrome://browser/skin/customize.svg";
 const PREFS_TAB = "chrome://global/skin/icons/settings.svg";
 const DEFAULT_FAVICON_TAB = `data:text/html,<meta%20charset="utf-8"><title>No%20favicon</title>`;
 
-import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
-import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
+const { TestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TestUtils.sys.mjs"
+);
 
-export var Tabs = {
+var Tabs = {
   init(libDir) {},
 
   configurations: {
