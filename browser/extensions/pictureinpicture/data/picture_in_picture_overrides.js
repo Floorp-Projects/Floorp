@@ -206,7 +206,13 @@ let AVAILABLE_PIP_OVERRIDES;
     },
 
     tubi: {
-      "https://*.tubitv.com/*": {
+      "https://*.tubitv.com/live*": {
+        videoWrapperScriptPath: "video-wrappers/tubilive.js",
+      },
+      "https://*.tubitv.com/movies*": {
+        videoWrapperScriptPath: "video-wrappers/tubi.js",
+      },
+      "https://*.tubitv.com/tv-shows*": {
         videoWrapperScriptPath: "video-wrappers/tubi.js",
       },
     },
