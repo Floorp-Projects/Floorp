@@ -11,16 +11,6 @@
 </head>
 <body>
 Login Manager test: autocomplete due to multiple matching logins
-
-<script>
-runChecksAfterCommonInit(false);
-
-let origin = window.location.origin;
-addLoginsInParent(
-  [origin, "https://autocomplete:8888", null, "name", "pass", "uname", "pword"],
-  [origin, "https://autocomplete:8888", null, "Name", "Pass", "uname", "pword"],
-  [origin, "https://autocomplete:8888", null, "USER", "PASS", "uname", "pword"]);
-</script>
 <p id="display"></p>
 
 <!-- we presumably can't hide the content for this test. -->
@@ -37,6 +27,7 @@ addLoginsInParent(
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
+runChecksAfterCommonInit(false);
 
 /** Test for Login Manager: autocomplete due to multiple matching logins **/
 
@@ -50,6 +41,14 @@ function restoreForm() {
   uname.focus();
 }
 
+add_setup(async () => {
+  const origin = window.location.origin;
+  await addLoginsInParent(
+    [origin, "https://autocomplete:8888", null, "name", "pass", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "Name", "Pass", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "USER", "PASS", "uname", "pword"]
+  );
+})
 
 add_task(async function test_empty_first_entry() {
   /* test 1 */
@@ -65,7 +64,7 @@ add_task(async function test_empty_first_entry() {
   checkAutoCompleteResults(items, ["name", "Name", "USER"], "example.com", "initial");
 
   // Check first entry
-  let index0Promise = notifySelectedIndex(0);
+  const index0Promise = notifySelectedIndex(0);
   synthesizeKey("KEY_ArrowDown");
   await index0Promise;
   checkLoginForm(uname, "", pword, ""); // value shouldn't update
