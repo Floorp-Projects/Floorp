@@ -10,6 +10,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  QuickSuggestRemoteSettings:
+    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
@@ -91,6 +93,18 @@ export class Weather extends BaseFeature {
     return this.#waitForFetchesDeferred.promise;
   }
 
+  async onRemoteSettingsSync(rs) {
+    this.logger.debug("Loading weather remote settings");
+    let records = await rs.get({ filters: { type: "weather" } });
+    if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+      return;
+    }
+
+    this.logger.debug("Got weather records: " + JSON.stringify(records));
+    this.#rsData = records?.[0]?.weather;
+    this.#updateKeywords();
+  }
+
   get #vpnDetected() {
     let linkService =
       this._test_linkService ||
@@ -113,6 +127,7 @@ export class Weather extends BaseFeature {
     this.#merino = new lazy.MerinoClient(this.constructor.name);
     this.#fetch();
     this.#updateKeywords();
+    lazy.QuickSuggestRemoteSettings.register(this);
     for (let notif of Object.values(NOTIFICATIONS)) {
       Services.obs.addObserver(this, notif);
     }
@@ -123,6 +138,7 @@ export class Weather extends BaseFeature {
       Services.obs.removeObserver(this, notif);
     }
     lazy.clearTimeout(this.#fetchTimer);
+    lazy.QuickSuggestRemoteSettings.unregister(this);
     this.#merino = null;
     this.#suggestion = null;
     this.#fetchTimer = 0;
@@ -262,6 +278,8 @@ export class Weather extends BaseFeature {
   }
 
   #updateKeywords() {
+    // TODO: Fall back to #rsData if Nimbus vars aren't defined
+
     let fullKeywords = lazy.UrlbarPrefs.get("weatherKeywords");
     let minLength = lazy.UrlbarPrefs.get("weatherKeywordsMinimumLength");
     if (!fullKeywords || !minLength) {
@@ -361,6 +379,7 @@ export class Weather extends BaseFeature {
   #lastFetchTimeMs = 0;
   #merino = null;
   #pendingFetchCount = 0;
+  #rsData = null;
   #suggestion = null;
   #timeoutMs = MERINO_TIMEOUT_MS;
   #waitForFetchesDeferred = null;

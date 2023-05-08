@@ -1,0 +1,387 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
+});
+
+const RS_COLLECTION = "quicksuggest";
+
+// Default score for remote settings suggestions.
+const DEFAULT_SUGGESTION_SCORE = 0.2;
+
+// Entries are added to `SuggestionsMap` map in chunks, and each chunk will add
+// at most this many entries.
+const SUGGESTIONS_MAP_CHUNK_SIZE = 1000;
+
+const TELEMETRY_LATENCY = "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
+
+/**
+ * Manages quick suggest remote settings data.
+ */
+class _QuickSuggestRemoteSettings {
+  /**
+   * @returns {number}
+   *   The default score for remote settings suggestions, a value in the range
+   *   [0, 1]. All suggestions require a score that can be used for comparison,
+   *   so if a remote settings suggestion does not have one, it's assigned this
+   *   value.
+   */
+  get DEFAULT_SUGGESTION_SCORE() {
+    return DEFAULT_SUGGESTION_SCORE;
+  }
+
+  constructor() {
+    this.#emitter = new lazy.EventEmitter();
+  }
+
+  /**
+   * @returns {RemoteSettings}
+   *   The underlying `RemoteSettings` client object.
+   */
+  get rs() {
+    return this.#rs;
+  }
+
+  /**
+   * @returns {EventEmitter}
+   *   The client will emit events on this object.
+   */
+  get emitter() {
+    return this.#emitter;
+  }
+
+  /**
+   * @returns {object}
+   *   Global quick suggest configuration stored in remote settings. When the
+   *   config changes the `emitter` property will emit a "config-set" event. The
+   *   config is an object that looks like this:
+   *
+   *   {
+   *     best_match: {
+   *       min_search_string_length,
+   *       blocked_suggestion_ids,
+   *     },
+   *     impression_caps: {
+   *       nonsponsored: {
+   *         lifetime,
+   *         custom: [
+   *           { interval_s, max_count },
+   *         ],
+   *       },
+   *       sponsored: {
+   *         lifetime,
+   *         custom: [
+   *           { interval_s, max_count },
+   *         ],
+   *       },
+   *     },
+   *   }
+   */
+  get config() {
+    return this.#config;
+  }
+
+  get logger() {
+    if (!this.#logger) {
+      this.#logger = lazy.UrlbarUtils.getLogger({
+        prefix: "QuickSuggestRemoteSettings",
+      });
+    }
+    return this.#logger;
+  }
+
+  /**
+   * Registers a quick suggest feature that uses remote settings.
+   *
+   * @param {BaseFeature} feature
+   *   An instance of a `BaseFeature` subclass. See `BaseFeature` for methods
+   *   that the subclass must implement.
+   */
+  register(feature) {
+    this.logger.debug("Registering feature: " + feature.name);
+    this.#features.add(feature);
+    if (this.#features.size == 1) {
+      this.#enableSettings(true);
+    }
+    this.#syncFeature(feature);
+  }
+
+  /**
+   * Unregisters a quick suggest feature that uses remote settings.
+   *
+   * @param {BaseFeature} feature
+   *   An instance of a `BaseFeature` subclass.
+   */
+  unregister(feature) {
+    this.logger.debug("Unregistering feature: " + feature.name);
+    this.#features.delete(feature);
+    if (!this.#features.size) {
+      this.#enableSettings(false);
+    }
+  }
+
+  /**
+   * Queries remote settings suggestions from all registered features.
+   *
+   * @param {string} searchString
+   *   The search string.
+   * @returns {Array}
+   *   The remote settings suggestions. If there are no matches, an empty array
+   *   is returned.
+   */
+  async query(searchString) {
+    let suggestions;
+    let stopwatchInstance = {};
+    TelemetryStopwatch.start(TELEMETRY_LATENCY, stopwatchInstance);
+    try {
+      suggestions = await this.#queryHelper(searchString);
+      TelemetryStopwatch.finish(TELEMETRY_LATENCY, stopwatchInstance);
+    } catch (error) {
+      TelemetryStopwatch.cancel(TELEMETRY_LATENCY, stopwatchInstance);
+      this.logger.error("Query error: " + error);
+    }
+
+    return suggestions || [];
+  }
+
+  async #queryHelper(searchString) {
+    this.logger.info("Handling query: " + JSON.stringify(searchString));
+
+    let results = await Promise.all(
+      [...this.#features].map(async feature => {
+        let suggestions = await feature.queryRemoteSettings(searchString);
+        return [feature, suggestions ?? []];
+      })
+    );
+
+    let allSuggestions = [];
+    for (let [feature, suggestions] of results) {
+      for (let suggestion of suggestions) {
+        suggestion.source = "remote-settings";
+        suggestion.provider = feature.name;
+        if (typeof suggestion.score != "number") {
+          suggestion.score = DEFAULT_SUGGESTION_SCORE;
+        }
+        allSuggestions.push(suggestion);
+      }
+    }
+
+    return allSuggestions;
+  }
+
+  async #enableSettings(enabled) {
+    if (enabled && !this.#rs) {
+      this.logger.debug("Creating RemoteSettings client");
+      this.#onSettingsSync = event => this.#syncAll({ event });
+      this.#rs = lazy.RemoteSettings(RS_COLLECTION);
+      this.#rs.on("sync", this.#onSettingsSync);
+      await this.#syncConfig();
+    } else if (!enabled && this.#rs) {
+      this.logger.debug("Destroying RemoteSettings client");
+      this.#rs.off("sync", this.#onSettingsSync);
+      this.#rs = null;
+      this.#onSettingsSync = null;
+    }
+  }
+
+  async #syncConfig() {
+    if (this._test_ignoreSettingsSync) {
+      return;
+    }
+
+    this.logger.debug("Syncing config");
+    let rs = this.#rs;
+
+    let configArray = await rs.get({ filters: { type: "configuration" } });
+    if (rs != this.#rs || this._test_ignoreSettingsSync) {
+      return;
+    }
+
+    this.logger.debug("Got config array: " + JSON.stringify(configArray));
+    this.#setConfig(configArray?.[0]?.configuration || {});
+  }
+
+  async #syncFeature(feature) {
+    if (this._test_ignoreSettingsSync) {
+      return;
+    }
+
+    this.logger.debug("Syncing feature: " + feature.name);
+    await feature.onRemoteSettingsSync(this.#rs);
+  }
+
+  async #syncAll({ event = null } = {}) {
+    if (this._test_ignoreSettingsSync) {
+      return;
+    }
+
+    this.logger.debug("Syncing all");
+    let rs = this.#rs;
+
+    // Remove local files of deleted records
+    if (event?.data?.deleted) {
+      await Promise.all(
+        event.data.deleted
+          .filter(d => d.attachment)
+          .map(entry =>
+            Promise.all([
+              this.#rs.attachments.deleteDownloaded(entry), // type: data
+              this.#rs.attachments.deleteFromDisk(entry), // type: icon
+            ])
+          )
+      );
+      if (rs != this.#rs || this._test_ignoreSettingsSync) {
+        return;
+      }
+    }
+
+    let promises = [this.#syncConfig()];
+    for (let feature of this.#features) {
+      promises.push(this.#syncFeature(feature));
+    }
+    await Promise.all(promises);
+  }
+
+  /**
+   * Sets the quick suggest config and emits a "config-set" event.
+   *
+   * @param {object} config
+   *   The config object.
+   */
+  #setConfig(config) {
+    config ??= {};
+    this.logger.debug("Setting config: " + JSON.stringify(config));
+    this.#config = config;
+    this.#emitter.emit("config-set");
+  }
+
+  get _test_rs() {
+    return this.#rs;
+  }
+
+  _test_setConfig(config) {
+    this.#setConfig(config);
+  }
+
+  // The `RemoteSettings` client.
+  #rs = null;
+
+  // Registered `BaseFeature` instances.
+  #features = new Set();
+
+  // Configuration data synced from remote settings. See the `config` getter.
+  #config = {};
+
+  #emitter = null;
+  #logger = null;
+  #onSettingsSync = null;
+}
+
+export var QuickSuggestRemoteSettings = new _QuickSuggestRemoteSettings();
+
+/**
+ * A wrapper around `Map` that handles quick suggest suggestions from remote
+ * settings. It maps keywords to suggestions. It has two benefits over `Map`:
+ *
+ * - The main benefit is that map entries are added in batches on idle to avoid
+ *   blocking the main thread for too long, since there can be many suggestions
+ *   and keywords.
+ * - A secondary benefit is that the interface is tailored to quick suggest
+ *   suggestions, which have a `keywords` property.
+ */
+export class SuggestionsMap {
+  /**
+   * Returns the list of suggestions for a keyword.
+   *
+   * @param {string} keyword
+   *   The keyword.
+   * @returns {Array}
+   *   The array of suggestions for the keyword. If the keyword isn't in the
+   *   map, the array will be empty.
+   */
+  get(keyword) {
+    let object = this.#suggestionsByKeyword.get(keyword.toLocaleLowerCase());
+    if (!object) {
+      return [];
+    }
+    return Array.isArray(object) ? object : [object];
+  }
+
+  /**
+   * Adds a list of suggestion objects to the results map. Each suggestion must
+   * have a `keywords` property.
+   *
+   * @param {Array} suggestions
+   *   Array of suggestion objects.
+   */
+  async add(suggestions) {
+    // There can be many suggestions, and each suggestion can have many
+    // keywords. To avoid blocking the main thread for too long, update the map
+    // in chunks, and to avoid blocking the UI and other higher priority work,
+    // do each chunk only when the main thread is idle. During each chunk, we'll
+    // add at most `chunkSize` entries to the map.
+    let suggestionIndex = 0;
+    let keywordIndex = 0;
+
+    // Keep adding chunks until all suggestions have been fully added.
+    while (suggestionIndex < suggestions.length) {
+      await new Promise(resolve => {
+        Services.tm.idleDispatchToMainThread(() => {
+          // Keep updating the map until the current chunk is done.
+          let indexInChunk = 0;
+          while (
+            indexInChunk < SuggestionsMap.chunkSize &&
+            suggestionIndex < suggestions.length
+          ) {
+            let suggestion = suggestions[suggestionIndex];
+            if (keywordIndex == suggestion.keywords.length) {
+              suggestionIndex++;
+              keywordIndex = 0;
+              continue;
+            }
+            // If the keyword's only suggestion is `suggestion`, store it
+            // directly as the value. Otherwise store an array of suggestions.
+            // For details, see the `#suggestionsByKeyword` comment.
+            let keyword = suggestion.keywords[keywordIndex];
+            let object = this.#suggestionsByKeyword.get(keyword);
+            if (!object) {
+              this.#suggestionsByKeyword.set(keyword, suggestion);
+            } else if (!Array.isArray(object)) {
+              this.#suggestionsByKeyword.set(keyword, [object, suggestion]);
+            } else {
+              object.push(suggestion);
+            }
+            keywordIndex++;
+            indexInChunk++;
+          }
+
+          // The current chunk is done.
+          resolve();
+        });
+      });
+    }
+  }
+
+  clear() {
+    this.#suggestionsByKeyword.clear();
+  }
+
+  // Maps each keyword in the dataset to one or more suggestions for the
+  // keyword. If only one suggestion uses a keyword, the keyword's value in the
+  // map will be the suggestion object. If more than one suggestion uses the
+  // keyword, the value will be an array of the suggestions. The reason for not
+  // always using an array is that we expect the vast majority of keywords to be
+  // used by only one suggestion, and since there are potentially very many
+  // keywords and suggestions and we keep them in memory all the time, we want
+  // to save as much memory as possible.
+  #suggestionsByKeyword = new Map();
+
+  // This is only defined as a property so that tests can override it.
+  static chunkSize = SUGGESTIONS_MAP_CHUNK_SIZE;
+}
