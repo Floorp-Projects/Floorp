@@ -140,7 +140,34 @@ accessibility.getAccessible = async function(element) {
   }
 
   // First, wait for accessibility to be ready for the element's document.
+  // We do not use a timeout here because we can guarantee that the document
+  // accessible will be ready eventually, even if it takes a while.
   await waitForDocumentAccessibility(element.ownerDocument);
+
+  const acc = accessibility.service.getAccessibleFor(element);
+  if (acc) {
+    return acc;
+  }
+
+  // The Accessible doesn't exist yet. This can happen because a11y tree
+  // mutations happen during refresh driver ticks. Wait for a11y events,
+  // checking after each event to see if the Accessible exists yet and returning
+  // it if it does. Stop waiting after a short timeout because the Accessible
+  // might never be created and we want to report a failure without breaking
+  // subsequent tests.
+  try {
+    await lazy.waitForObserverTopic("accessible-event", {
+      checkFn: subject => {
+        return !!accessibility.service.getAccessibleFor(element);
+      },
+      timeout: 100,
+    });
+  } catch (e) {
+    // Don't treat a timeout as an error. We will most likely return null below.
+    if (!(e instanceof lazy.error.TimeoutError)) {
+      throw e;
+    }
+  }
   return accessibility.service.getAccessibleFor(element);
 };
 
