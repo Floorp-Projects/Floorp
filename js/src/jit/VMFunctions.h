@@ -571,12 +571,11 @@ bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
                                GetterSetter* getterSetter);
 
 bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
-                           HandleValue value, HandleValue receiver,
-                           bool strict);
+                           HandleValue value, bool strict);
 
 bool SetElementMegamorphicCached(JSContext* cx, HandleObject obj,
                                  HandleValue index, HandleValue value,
-                                 HandleValue receiver, bool strict);
+                                 bool strict);
 
 JSString* TypeOfNameObject(JSObject* obj, JSRuntime* rt);
 
