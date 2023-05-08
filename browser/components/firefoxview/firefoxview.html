@@ -15,11 +15,11 @@
     <link rel="localization" href="toolkit/branding/accounts.ftl"/>
     <link rel="localization" href="toolkit/branding/brandings.ftl"/>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
-    <link rel="stylesheet" href="chrome://browser/content/firefoxview.css">
-    <script type="module" src="chrome://browser/content/tab-pickup-container.mjs"></script>
-    <script type="module" src="chrome://browser/content/firefoxview.mjs"></script>
-    <script type="module" src="chrome://browser/content/recently-closed-tabs.mjs"></script>
-    <script type="module" src="chrome://browser/content/tab-pickup-list.mjs"></script>
+    <link rel="stylesheet" href="chrome://browser/content/firefoxview/firefoxview.css">
+    <script type="module" src="chrome://browser/content/firefoxview/tab-pickup-container.mjs"></script>
+    <script type="module" src="chrome://browser/content/firefoxview/firefoxview.mjs"></script>
+    <script type="module" src="chrome://browser/content/firefoxview/recently-closed-tabs.mjs"></script>
+    <script type="module" src="chrome://browser/content/firefoxview/tab-pickup-list.mjs"></script>
     <script src="chrome://browser/content/contentTheme.js"></script>
   </head>
 
@@ -113,7 +113,7 @@
             <ol hidden="true" class="synced-tabs-list"></ol>
           </tab-pickup-list>
           <div hidden id="synced-tabs-placeholder" class="placeholder-content">
-            <img id="tab-pickup-empty-image" src="chrome://browser/content/tab-pickup-empty.svg" role="presentation" alt=""/>
+            <img id="tab-pickup-empty-image" src="chrome://browser/content/firefoxview/tab-pickup-empty.svg" role="presentation" alt=""/>
             <div class="placeholder-text">
               <h4 data-l10n-id="firefoxview-synced-tabs-placeholder-header" class="placeholder-header"></h4>
               <p data-l10n-id="firefoxview-synced-tabs-placeholder-body" class="placeholder-body"></p>
