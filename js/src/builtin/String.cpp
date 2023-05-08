@@ -66,10 +66,13 @@ using JS::SymbolCode;
 
 using mozilla::AsciiAlphanumericToNumber;
 using mozilla::CheckedInt;
+using mozilla::EnsureUtf16ValiditySpan;
 using mozilla::IsAsciiHexDigit;
 using mozilla::PodCopy;
 using mozilla::RangedPtr;
 using mozilla::SIMD;
+using mozilla::Span;
+using mozilla::Utf16ValidUpTo;
 
 using JS::AutoCheckCannotGC;
 using JS::AutoStableStringChars;
@@ -1561,6 +1564,119 @@ static bool str_normalize(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 #endif  // JS_HAS_INTL_API
+
+#ifdef NIGHTLY_BUILD
+/**
+ * IsStringWellFormedUnicode ( string )
+ * https://tc39.es/ecma262/#sec-isstringwellformedunicode
+ */
+static bool IsStringWellFormedUnicode(JSContext* cx, HandleString str,
+                                      bool* isWellFormedOut) {
+  MOZ_ASSERT(isWellFormedOut);
+  *isWellFormedOut = false;
+
+  JSLinearString* linear = str->ensureLinear(cx);
+  if (!linear) {
+    return false;
+  }
+
+  // Latin1 chars are well-formed.
+  if (linear->hasLatin1Chars()) {
+    *isWellFormedOut = true;
+    return true;
+  }
+
+  {
+    AutoCheckCannotGC nogc;
+    size_t len = linear->length();
+    *isWellFormedOut =
+        Utf16ValidUpTo(Span{linear->twoByteChars(nogc), len}) == len;
+  }
+  return true;
+}
+
+/**
+ * Well-Formed Unicode Strings (Stage 3 proposal)
+ *
+ * String.prototype.isWellFormed
+ * https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed
+ */
+static bool str_isWellFormed(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype", "isWellFormed");
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1. Let O be ? RequireObjectCoercible(this value).
+  // Step 2. Let S be ? ToString(O).
+  RootedString str(cx,
+                   ToStringForStringFunction(cx, "isWellFormed", args.thisv()));
+  if (!str) {
+    return false;
+  }
+
+  // Step 3. Return IsStringWellFormedUnicode(S).
+  bool isWellFormed;
+  if (!IsStringWellFormedUnicode(cx, str, &isWellFormed)) {
+    return false;
+  }
+
+  args.rval().setBoolean(isWellFormed);
+  return true;
+}
+
+/**
+ * Well-Formed Unicode Strings (Stage 3 proposal)
+ *
+ * String.prototype.toWellFormed
+ * https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed
+ */
+static bool str_toWellFormed(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype", "toWellFormed");
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1. Let O be ? RequireObjectCoercible(this value).
+  // Step 2. Let S be ? ToString(O).
+  RootedString str(cx,
+                   ToStringForStringFunction(cx, "toWellFormed", args.thisv()));
+  if (!str) {
+    return false;
+  }
+
+  // If the string itself is well-formed, return it.
+  bool isWellFormed;
+  if (!IsStringWellFormedUnicode(cx, str, &isWellFormed)) {
+    return false;
+  }
+  if (isWellFormed) {
+    args.rval().setString(str);
+    return true;
+  }
+
+  // Step 3. Let strLen be the length of S.
+  size_t len = str->length();
+
+  // Step 4-6
+  auto buffer = cx->make_pod_arena_array<char16_t>(js::StringBufferArena, len);
+  if (!buffer) {
+    return false;
+  }
+
+  {
+    AutoCheckCannotGC nogc;
+    JSLinearString* linear = str->ensureLinear(cx);
+    PodCopy(buffer.get(), linear->twoByteChars(nogc), len);
+    EnsureUtf16ValiditySpan(Span{buffer.get(), len});
+  }
+
+  JSString* result = NewString<CanGC>(cx, std::move(buffer), len);
+  if (!result) {
+    return false;
+  }
+
+  // Step 7. Return result.
+  args.rval().setString(result);
+  return true;
+}
+#endif  // NIGHTLY_BUILD
 
 static bool str_charAt(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "String.prototype", "charAt");
@@ -3550,6 +3666,10 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("repeat", "String_repeat", 1, 0),
 #if JS_HAS_INTL_API
     JS_FN("normalize", str_normalize, 0, 0),
+#endif
+#ifdef NIGHTLY_BUILD
+    JS_FN("isWellFormed", str_isWellFormed, 0, 0),
+    JS_FN("toWellFormed", str_toWellFormed, 0, 0),
 #endif
 
     /* Perl-ish methods (search is actually Python-esque). */
