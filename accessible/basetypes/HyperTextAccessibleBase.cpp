@@ -625,6 +625,33 @@ int32_t HyperTextAccessibleBase::CaretOffset() const {
   return htOffset;
 }
 
+int32_t HyperTextAccessibleBase::CaretLineNumber() {
+  TextLeafPoint point = TextLeafPoint::GetCaret(const_cast<Accessible*>(Acc()))
+                            .ActualizeCaret(/* aAdjustAtEndOfLine */ false);
+  if (point.mOffset == 0 && point.mAcc == Acc()) {
+    MOZ_ASSERT(CharacterCount() == 0);
+    // If a text box is empty, there will be no children, so point.mAcc will be
+    // this HyperText.
+    return 1;
+  }
+
+  if (!point.mAcc ||
+      (point.mAcc != Acc() && !Acc()->IsAncestorOf(point.mAcc))) {
+    // The caret is not within this HyperText.
+    return -1;
+  }
+
+  TextLeafPoint firstPointInThis = TextLeafPoint(Acc(), 0);
+  int32_t lineNumber = 1;
+  for (TextLeafPoint line = point; line && firstPointInThis < line;
+       line = line.FindBoundary(nsIAccessibleText::BOUNDARY_LINE_START,
+                                eDirPrevious)) {
+    lineNumber++;
+  }
+
+  return lineNumber;
+}
+
 bool HyperTextAccessibleBase::IsValidOffset(int32_t aOffset) {
   index_t offset = ConvertMagicOffset(aOffset);
   return offset.IsValid() && offset <= CharacterCount();

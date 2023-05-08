@@ -183,11 +183,7 @@ class HyperTextAccessible : public AccessibleWrap,
   virtual int32_t CaretOffset() const override;
   virtual void SetCaretOffset(int32_t aOffset) override;
 
-  /**
-   * Provide the line number for the caret.
-   * @return 1-based index for the line number with the caret
-   */
-  int32_t CaretLineNumber();
+  virtual int32_t CaretLineNumber() override;
 
   /**
    * Return the caret rect and the widget containing the caret within this

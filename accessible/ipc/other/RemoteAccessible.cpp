@@ -159,8 +159,13 @@ void RemoteAccessible::Announce(const nsString& aAnnouncement,
 }
 
 int32_t RemoteAccessible::CaretLineNumber() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    MOZ_ASSERT(IsHyperText(), "is not hypertext?");
+    return RemoteAccessibleBase<RemoteAccessible>::CaretLineNumber();
+  }
+
   int32_t line = -1;
-  Unused << mDoc->SendCaretOffset(mID, &line);
+  Unused << mDoc->SendCaretLineNumber(mID, &line);
   return line;
 }
 
