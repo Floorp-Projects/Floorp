@@ -33,7 +33,3 @@ for k, v in graphite_defines:
 AllowCompilerWarnings()
 
 FINAL_LIBRARY = 'gkmedias'
-
-# provide a custom header that overrides malloc() and friends,
-# to ensure safe OOM handling. Don't do this in the wasm sandbox.
-DEFINES['GRAPHITE2_CUSTOM_HEADER'] = '"MozGrMalloc.h"'
