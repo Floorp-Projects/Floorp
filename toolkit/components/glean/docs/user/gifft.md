@@ -31,23 +31,23 @@ This compatibility table explains which Telemetry probe types can be mirrors for
 
 | Glean Metric Type | Telementry Probe Type |
 | ----------------- | --------------------- |
-| [boolean](https://mozilla.github.io/glean/book/user/metrics/boolean.html) | [Scalar of kind: boolean](/toolkit/components/telemetry/collection/scalars.rst) |
-| [labeled_boolean](https://mozilla.github.io/glean/book/user/metrics/labeled_booleans.html) | [Keyed scalar of kind: boolean](/toolkit/components/telemetry/collection/scalars.rst) |
-| [counter](https://mozilla.github.io/glean/book/user/metrics/counter.html) | [Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst) |
-| [labeled_counter](https://mozilla.github.io/glean/book/user/metrics/labeled_counters.html) | [Keyed Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst) |
-| [string](https://mozilla.github.io/glean/book/user/metrics/string.html) | [Scalar of kind: string](/toolkit/components/telemetry/collection/scalars.rst) |
-| [labeled_string](https://mozilla.github.io/glean/book/user/metrics/labeled_strings.html) | *No Supported Telemetry Type* |
-| [string_list](https://mozilla.github.io/glean/book/user/metrics/string_list.html) | [Keyed Scalar of kind: boolean](/toolkit/components/telemetry/collection/scalars.rst). The keys are the strings. The values are all `true`. Calling `Set` on the labeled_string is not mirrored (since there's no way to remove keys from a keyed scalar of kind boolean). Doing so will log a warning. |
-| [timespan](https://mozilla.github.io/glean/book/user/metrics/timespan.html) | [Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst). The value is in units of milliseconds. |
-| [timing_distribution](https://mozilla.github.io/glean/book/user/metrics/timing_distribution.html) | [Histogram of kind "linear" or "exponential"](/toolkit/components/telemetry/collection/histograms.rst#exponential). Samples will be in units of milliseconts. |
-| [memory_distribution](https://mozilla.github.io/glean/book/user/metrics/memory_distribution.html) | [Histogram of kind "linear" or "exponential"](/toolkit/components/telemetry/collection/histograms.rst#exponential). Samples will be in `memory_unit` units. |
-| [custom_distribution](https://mozilla.github.io/glean/book/user/metrics/custom_distribution.html) | [Histogram of kind "linear" or "exponential"](/toolkit/components/telemetry/collection/histograms.rst#exponential). Samples will be used as is. Ensure the bucket count and range match. |
-| [uuid](https://mozilla.github.io/glean/book/user/metrics/uuid.html) | [Scalar of kind: string](/toolkit/components/telemetry/collection/scalars.rst). Value will be in canonical 8-4-4-4-12 format. Value is not guaranteed to be valid, and invalid values may be present in the mirrored scalar while the uuid metric remains empty. Calling `GenerateAndSet` on the uuid is not mirrored, and will log a warning. |
-| [url](https://mozilla.github.io/glean/book/user/metrics/url.html) | [Scalar of kind: string](/toolkit/components/telemetry/collection/scalars.rst). The stringified Url will be cropped to the maximum length allowed by the legacy type. |
-| [datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) | [Scalar of kind: string](/toolkit/components/telemetry/collection/scalars.rst). Value will be in ISO8601 format. |
-| [events](https://mozilla.github.io/glean/book/user/metrics/event.html) | [Events](/toolkit/components/telemetry/collection/events.rst). The `value` field will be left empty.  |
-| [quantity](https://mozilla.github.io/glean/book/user/metrics/quantity.html) | [Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst) |
-| [rate](https://mozilla.github.io/glean/book/user/metrics/rate.html) | [Keyed Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst). The keys are "numerator" and "denominator". Does not work for `rate` metrics with external denominators. |
+| [boolean](https://mozilla.github.io/glean/book/reference/metrics/boolean.html) | [Scalar of kind: boolean](/toolkit/components/telemetry/collection/scalars.rst) |
+| [labeled_boolean](https://mozilla.github.io/glean/book/reference/metrics/labeled_booleans.html) | [Keyed scalar of kind: boolean](/toolkit/components/telemetry/collection/scalars.rst) |
+| [counter](https://mozilla.github.io/glean/book/reference/metrics/counter.html) | [Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst) |
+| [labeled_counter](https://mozilla.github.io/glean/book/reference/metrics/labeled_counters.html) | [Keyed Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst) |
+| [string](https://mozilla.github.io/glean/book/reference/metrics/string.html) | [Scalar of kind: string](/toolkit/components/telemetry/collection/scalars.rst) |
+| [labeled_string](https://mozilla.github.io/glean/book/reference/metrics/labeled_strings.html) | *No Supported Telemetry Type* |
+| [string_list](https://mozilla.github.io/glean/book/reference/metrics/string_list.html) | [Keyed Scalar of kind: boolean](/toolkit/components/telemetry/collection/scalars.rst). The keys are the strings. The values are all `true`. Calling `Set` on the labeled_string is not mirrored (since there's no way to remove keys from a keyed scalar of kind boolean). Doing so will log a warning. |
+| [timespan](https://mozilla.github.io/glean/book/reference/metrics/timespan.html) | [Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst). The value is in units of milliseconds. |
+| [timing_distribution](https://mozilla.github.io/glean/book/reference/metrics/timing_distribution.html) | [Histogram of kind "linear" or "exponential"](/toolkit/components/telemetry/collection/histograms.rst#exponential). Samples will be in units of milliseconts. |
+| [memory_distribution](https://mozilla.github.io/glean/book/reference/metrics/memory_distribution.html) | [Histogram of kind "linear" or "exponential"](/toolkit/components/telemetry/collection/histograms.rst#exponential). Samples will be in `memory_unit` units. |
+| [custom_distribution](https://mozilla.github.io/glean/book/reference/metrics/custom_distribution.html) | [Histogram of kind "linear" or "exponential"](/toolkit/components/telemetry/collection/histograms.rst#exponential). Samples will be used as is. Ensure the bucket count and range match. |
+| [uuid](https://mozilla.github.io/glean/book/reference/metrics/uuid.html) | [Scalar of kind: string](/toolkit/components/telemetry/collection/scalars.rst). Value will be in canonical 8-4-4-4-12 format. Value is not guaranteed to be valid, and invalid values may be present in the mirrored scalar while the uuid metric remains empty. Calling `GenerateAndSet` on the uuid is not mirrored, and will log a warning. |
+| [url](https://mozilla.github.io/glean/book/reference/metrics/url.html) | [Scalar of kind: string](/toolkit/components/telemetry/collection/scalars.rst). The stringified Url will be cropped to the maximum length allowed by the legacy type. |
+| [datetime](https://mozilla.github.io/glean/book/reference/metrics/datetime.html) | [Scalar of kind: string](/toolkit/components/telemetry/collection/scalars.rst). Value will be in ISO8601 format. |
+| [events](https://mozilla.github.io/glean/book/reference/metrics/event.html) | [Events](/toolkit/components/telemetry/collection/events.rst). The `value` field will be left empty.  |
+| [quantity](https://mozilla.github.io/glean/book/reference/metrics/quantity.html) | [Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst) |
+| [rate](https://mozilla.github.io/glean/book/reference/metrics/rate.html) | [Keyed Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst). The keys are "numerator" and "denominator". Does not work for `rate` metrics with external denominators. |
 
 ### The `telemetry_mirror` property in `metrics.yaml`
 
@@ -113,7 +113,7 @@ Glean and Telemetry both send their built-in pings on their own schedules.
 This means the values present in these pings may not agree since they reflect state at different time.
 
 For example, if you are measuring "Number of Monitors" with a
-[`quantity`](https://mozilla.github.io/glean/book/user/metrics/quantity.html)
+[`quantity`](https://mozilla.github.io/glean/book/reference/metrics/quantity.html)
 sent by default in the Glean "metrics" ping mirrored to a
 [Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst)
 sent by default in the Telemetry "main" ping,
@@ -131,22 +131,24 @@ the schedules could line up exactly or be entirely unrelated.
 Labeled metrics supported by GIFFT
 (`labeled_boolean` and `labeled_counter`)
 adhere to the Glean SDK's
-[label format](https://mozilla.github.io/glean/book/user/metrics/index.html#label-format).
+[label format](https://mozilla.github.io/glean/book/reference/metrics/index.html#label-format).
 
 Keyed Scalars, on the other hand, do not have a concept of an "Invalid key".
 Firefox Telemetry will accept just about any sequence of bytes as a key.
 
 This means that a label deemed invalid by the Glean SDK may appear in the mirrored probe's data.
-For example, using `InvalidLabel` as a label that doesn't conform to the format
-(it has upper-case letters)
-see that the `labeled_boolean` metric
-[correctly ascribes it to `__other__`](https://mozilla.github.io/glean/book/user/metrics/index.html#labeled-metrics)
+For example, using 72 "1" characters as a label that doesn't conform to the format
+(it is longer than 71 printable ASCII characters).
+See that the `labeled_boolean` metric
+[correctly ascribes it to `__other__`](https://mozilla.github.io/glean/book/reference/metrics/index.html#labeled-metrics)
 whereas the mirrored Keyed Scalar with kind boolean stores and retrieves it without change:
 ```js
-Glean.testOnly.mirrorsForLabeledBools.InvalidLabel.set(true);
+Glean.testOnly.mirrorsForLabeledBools["1".repeat(72)].set(true);
 Assert.equal(true, Glean.testOnly.mirrorsForLabeledBools.__other__.testGetValue());
+// The above actually throws NS_ERROR_LOSS_OF_SIGNIFICANT_DATA because it also records
+// an invalid_label error. But you get the idea.
 let snapshot = Services.telemetry.getSnapshotForKeyedScalars().parent;
-Assert.equal(true, snapshot["telemetry.test.mirror_for_labeled_bool"]["InvalidLabel"]);
+Assert.equal(true, snapshot["telemetry.test.mirror_for_labeled_bool"]["1".repeat(72)]);
 ```
 
 ### Telemetry Events
