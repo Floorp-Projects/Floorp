@@ -129,11 +129,16 @@ def set_test_manifests(config, tasks):
 
             # look in the 'other' manifests
             for m in input_paths:
+                man = m
+                if m.startswith("testing/web-platform/tests/"):
+                    man = m.split("testing/web-platform/tests")[-1]
+                    if man in task["test-manifests"]["active"]:
+                        remaining_manifests.append(man)
                 for tm in task["test-manifests"]["other_dirs"]:
                     matched_dirs = [
                         dp
                         for dp in task["test-manifests"]["other_dirs"].get(tm)
-                        if dp.startswith(m)
+                        if dp.startswith(man)
                     ]
                     if matched_dirs:
                         if tm not in task["test-manifests"]["active"]:
