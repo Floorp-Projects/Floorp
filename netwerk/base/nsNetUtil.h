@@ -1039,6 +1039,7 @@ enum ASDestination : uint8_t {
 
 void ParseAsValue(const nsAString& aValue, nsAttrValue& aResult);
 nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue);
+bool IsScriptLikeOrInvalid(const nsAString& aAs);
 
 bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
                        const nsAString& aMedia,
