@@ -2,17 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { require } from "resource://devtools/shared/loader/Loader.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["DevTools"];
-
-const { require } = ChromeUtils.importESModule(
-  "resource://devtools/shared/loader/Loader.sys.mjs"
-);
 const { gDevTools } = require("devtools/client/framework/devtools");
-const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 async function showToolboxForSelectedTab(toolId, hostType) {
   const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
@@ -24,7 +18,7 @@ function selectToolbox(toolbox) {
   return toolbox.win.document.querySelector("#toolbox-container");
 }
 
-var DevTools = {
+export var DevTools = {
   init(libDir) {
     let panels = [
       "options",

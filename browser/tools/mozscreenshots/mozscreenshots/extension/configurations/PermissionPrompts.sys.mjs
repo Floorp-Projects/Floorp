@@ -2,22 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 // Various parts here are run in the content process.
 /* global content */
 
-var EXPORTED_SYMBOLS = ["PermissionPrompts"];
-
-const { BrowserTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/BrowserTestUtils.sys.mjs"
-);
+import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys.mjs";
 
 const URL =
   "https://test1.example.com/browser/browser/tools/mozscreenshots/mozscreenshots/extension/mozscreenshots/browser/resources/lib/permissionPrompts.html";
 let lastTab = null;
 
-var PermissionPrompts = {
+export var PermissionPrompts = {
   init(libDir) {
     Services.prefs.setBoolPref("media.navigator.permission.fake", true);
     Services.prefs.setBoolPref("extensions.install.requireBuiltInCerts", false);
