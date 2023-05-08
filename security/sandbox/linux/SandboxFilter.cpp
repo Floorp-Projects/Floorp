@@ -1354,40 +1354,10 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       return Allow();
     }
 
-    // Level 1 allows direct filesystem access; higher levels use
-    // brokering (by falling through to the main policy and delegating
-    // to SandboxPolicyCommon).
-    if (BelowLevel(2)) {
-      MOZ_ASSERT(mBroker == nullptr);
-      switch (sysno) {
-#ifdef __NR_open
-        case __NR_open:
-        case __NR_access:
-        CASES_FOR_stat:
-        CASES_FOR_lstat:
-        case __NR_chmod:
-        case __NR_link:
-        case __NR_mkdir:
-        case __NR_symlink:
-        case __NR_rename:
-        case __NR_rmdir:
-        case __NR_unlink:
-        case __NR_readlink:
-#endif
-        case __NR_openat:
-        case __NR_faccessat:
-        case __NR_faccessat2:
-        CASES_FOR_fstatat:
-        case __NR_fchmodat:
-        case __NR_linkat:
-        case __NR_mkdirat:
-        case __NR_symlinkat:
-        case __NR_renameat:
-        case __NR_unlinkat:
-        case __NR_readlinkat:
-          return Allow();
-      }
-    }
+    // Level 1 has been removed.  If seccomp-bpf is used, then we're
+    // necessarily at level >= 2 and filesystem access is brokered.
+    MOZ_ASSERT(!BelowLevel(2));
+    MOZ_ASSERT(mBroker);
 
     switch (sysno) {
 #ifdef DESKTOP
