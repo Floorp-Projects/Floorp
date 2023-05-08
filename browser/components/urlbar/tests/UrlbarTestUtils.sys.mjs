@@ -333,6 +333,77 @@ export var UrlbarTestUtils = {
   },
 
   /**
+   * Opens the result menu of a specific result and clicks a menu item with a
+   * specified command name.
+   *
+   * @param {object} win
+   *   The window containing the urlbar.
+   * @param {string|Array} commandOrArray
+   *   If the command is in the top-level result menu, set this to the command
+   *   name. If it's in a submenu, set this to an array where each element i is
+   *   a selector that can be used to click the i'th menu item that opens a
+   *   submenu, and the last element is the command name.
+   * @param {object} options
+   *   The options object.
+   * @param {number} options.resultIndex
+   *   The index of the result. Defaults to the current selected index.
+   * @param {boolean} options.openByMouse
+   *   Whether to open the menu by mouse or keyboard.
+   */
+  async openResultMenuAndClickItem(
+    win,
+    commandOrArray,
+    {
+      resultIndex = win.gURLBar.view.selectedRowIndex,
+      openByMouse = false,
+    } = {}
+  ) {
+    await this.openResultMenu(win, { resultIndex, byMouse: openByMouse });
+
+    let selectors = Array.isArray(commandOrArray)
+      ? commandOrArray
+      : [commandOrArray];
+
+    let command = selectors.pop();
+
+    // Open the sequence of submenus that contains the command.
+    for (let selector of selectors) {
+      let menuitem = win.gURLBar.view.resultMenu.querySelector(selector);
+      if (!menuitem) {
+        throw new Error("Menu item not found for selector: " + selector);
+      }
+
+      this._testScope?.info("Clicking menu item with selector: " + selector);
+      let promisePopup = lazy.BrowserTestUtils.waitForEvent(
+        win.gURLBar.view.resultMenu,
+        "popupshown"
+      );
+      this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, win);
+      this._testScope?.info("Waiting for submenu popupshown event");
+      await promisePopup;
+      this._testScope?.info("Got the submenu popupshown event");
+    }
+
+    // Now click the command.
+    let menuitem = win.gURLBar.view.resultMenu.querySelector(
+      `menuitem[data-command=${command}]`
+    );
+    if (!menuitem) {
+      throw new Error("Menu item not found for command: " + command);
+    }
+
+    this._testScope?.info("Clicking menu item with command: " + command);
+    let promiseCommand = lazy.BrowserTestUtils.waitForEvent(
+      win.gURLBar.view.resultMenu,
+      "command"
+    );
+    this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, win);
+    this._testScope?.info("Waiting for command event");
+    await promiseCommand;
+    this._testScope?.info("Got the command event");
+  },
+
+  /**
    * Returns true if the oneOffSearchButtons are visible.
    *
    * @param {object} win The window containing the urlbar
