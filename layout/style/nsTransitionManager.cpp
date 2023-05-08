@@ -70,6 +70,38 @@ bool nsTransitionManager::UpdateTransitions(dom::Element* aElement,
                              collection, aOldStyle, aNewStyle);
 }
 
+// This function expands the shorthands and "all" keyword specified in
+// transition-property, and then execute |aHandler| on the expanded longhand.
+// |aHandler| should be a lamda function which accepts nsCSSPropertyID.
+template <typename T>
+static void ExpandTransitionProperty(nsCSSPropertyID aProperty, T aHandler) {
+  if (aProperty == eCSSPropertyExtra_no_properties ||
+      aProperty == eCSSPropertyExtra_variable ||
+      aProperty == eCSSProperty_UNKNOWN) {
+    // Nothing to do.
+    return;
+  }
+
+  // FIXME(emilio): This should probably just use the "all" shorthand id, and we
+  // should probably remove eCSSPropertyExtra_all_properties.
+  if (aProperty == eCSSPropertyExtra_all_properties) {
+    for (nsCSSPropertyID p = nsCSSPropertyID(0);
+         p < eCSSProperty_COUNT_no_shorthands; p = nsCSSPropertyID(p + 1)) {
+      if (!nsCSSProps::IsEnabled(p, CSSEnabledState::ForAllContent)) {
+        continue;
+      }
+      aHandler(p);
+    }
+  } else if (nsCSSProps::IsShorthand(aProperty)) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, aProperty,
+                                         CSSEnabledState::ForAllContent) {
+      aHandler(*subprop);
+    }
+  } else {
+    aHandler(aProperty);
+  }
+}
+
 bool nsTransitionManager::DoUpdateTransitions(
     const nsStyleUIReset& aStyle, dom::Element* aElement,
     PseudoStyleType aPseudoType, CSSTransitionCollection*& aElementTransitions,
@@ -90,41 +122,14 @@ bool nsTransitionManager::DoUpdateTransitions(
       continue;
     }
 
-    nsCSSPropertyID property = aStyle.GetTransitionProperty(i);
-    if (property == eCSSPropertyExtra_no_properties ||
-        property == eCSSPropertyExtra_variable ||
-        property == eCSSProperty_UNKNOWN) {
-      // Nothing to do.
-      continue;
-    }
-    // We might have something to transition.  See if any of the
-    // properties in question changed and are animatable.
-    // FIXME: Would be good to find a way to share code between this
-    // interpretation of transition-property and the one below.
-    // FIXME(emilio): This should probably just use the "all" shorthand id, and
-    // we should probably remove eCSSPropertyExtra_all_properties.
-    if (property == eCSSPropertyExtra_all_properties) {
-      for (nsCSSPropertyID p = nsCSSPropertyID(0);
-           p < eCSSProperty_COUNT_no_shorthands; p = nsCSSPropertyID(p + 1)) {
-        if (!nsCSSProps::IsEnabled(p, CSSEnabledState::ForAllContent)) {
-          continue;
-        }
-        startedAny |= ConsiderInitiatingTransition(
-            p, aStyle, i, aElement, aPseudoType, aElementTransitions, aOldStyle,
-            aNewStyle, propertiesChecked);
-      }
-    } else if (nsCSSProps::IsShorthand(property)) {
-      CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property,
-                                           CSSEnabledState::ForAllContent) {
-        startedAny |= ConsiderInitiatingTransition(
-            *subprop, aStyle, i, aElement, aPseudoType, aElementTransitions,
-            aOldStyle, aNewStyle, propertiesChecked);
-      }
-    } else {
-      startedAny |= ConsiderInitiatingTransition(
-          property, aStyle, i, aElement, aPseudoType, aElementTransitions,
-          aOldStyle, aNewStyle, propertiesChecked);
-    }
+    ExpandTransitionProperty(
+        aStyle.GetTransitionProperty(i), [&](nsCSSPropertyID aProperty) {
+          // We might have something to transition.  See if any of the
+          // properties in question changed and are animatable.
+          startedAny |= ConsiderInitiatingTransition(
+              aProperty, aStyle, i, aElement, aPseudoType, aElementTransitions,
+              aOldStyle, aNewStyle, propertiesChecked);
+        });
   }
 
   // Stop any transitions for properties that are no longer in
@@ -142,30 +147,11 @@ bool nsTransitionManager::DoUpdateTransitions(
     nsCSSPropertyIDSet allTransitionProperties;
     if (checkProperties) {
       for (uint32_t i = aStyle.mTransitionPropertyCount; i-- != 0;) {
-        // FIXME: Would be good to find a way to share code between this
-        // interpretation of transition-property and the one above.
-        nsCSSPropertyID property = aStyle.GetTransitionProperty(i);
-        if (property == eCSSPropertyExtra_no_properties ||
-            property == eCSSPropertyExtra_variable ||
-            property == eCSSProperty_UNKNOWN) {
-          // Nothing to do, but need to exclude this from cases below.
-        } else if (property == eCSSPropertyExtra_all_properties) {
-          for (nsCSSPropertyID p = nsCSSPropertyID(0);
-               p < eCSSProperty_COUNT_no_shorthands;
-               p = nsCSSPropertyID(p + 1)) {
-            allTransitionProperties.AddProperty(
-                nsCSSProps::Physicalize(p, aNewStyle));
-          }
-        } else if (nsCSSProps::IsShorthand(property)) {
-          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property,
-                                               CSSEnabledState::ForAllContent) {
-            auto p = nsCSSProps::Physicalize(*subprop, aNewStyle);
-            allTransitionProperties.AddProperty(p);
-          }
-        } else {
-          allTransitionProperties.AddProperty(
-              nsCSSProps::Physicalize(property, aNewStyle));
-        }
+        ExpandTransitionProperty(
+            aStyle.GetTransitionProperty(i), [&](nsCSSPropertyID aProperty) {
+              allTransitionProperties.AddProperty(
+                  nsCSSProps::Physicalize(aProperty, aNewStyle));
+            });
       }
     }
 
