@@ -361,15 +361,14 @@ menupopup::part(drop-indicator) {
 /* Override theme colors since the picker uses extra colors that
    themes cannot set */
 #DateTimePickerPanel {
-  color-scheme: light;
   --arrowpanel-background: Field;
   --arrowpanel-color: FieldText;
+  --arrowpanel-border-color: ThreeDShadow;
 }
 
-@media (-moz-content-prefers-color-scheme: dark) and (not (prefers-contrast)) {
-  #DateTimePickerPanel {
-    color-scheme: dark;
-  }
+#DateTimePickerPanel[side="top"],
+#DateTimePickerPanel[side="bottom"] {
+  margin-inline: 0;
 }
 
 #widget-overflow .webextension-popup-browser {
