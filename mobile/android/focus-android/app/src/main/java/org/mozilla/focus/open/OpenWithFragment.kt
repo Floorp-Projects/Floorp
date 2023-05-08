@@ -1,154 +1,150 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.focus.open;
+package org.mozilla.focus.open
 
-import android.annotation.SuppressLint;
-import android.app.Dialog;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.net.Uri;
-import android.os.Bundle;
-import android.view.ContextThemeWrapper;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
+import android.annotation.SuppressLint
+import android.app.Dialog
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.net.Uri
+import android.os.Bundle
+import android.view.ContextThemeWrapper
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.annotation.LayoutRes
+import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.fragment.app.commit
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import mozilla.components.support.utils.ext.getParcelableArrayCompat
+import mozilla.components.support.utils.ext.getParcelableCompat
+import org.mozilla.focus.GleanMetrics.OpenWith.ListItemTappedExtra
+import org.mozilla.focus.GleanMetrics.OpenWith.listItemTapped
+import org.mozilla.focus.R
+import org.mozilla.focus.ext.isTablet
+import org.mozilla.focus.open.AppAdapter.OnAppSelectedListener
+import org.mozilla.focus.telemetry.TelemetryWrapper.openFirefoxEvent
 
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatDialogFragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
-
-import org.mozilla.focus.GleanMetrics.OpenWith;
-import org.mozilla.focus.R;
-import org.mozilla.focus.ext.ContextKt;
-import org.mozilla.focus.telemetry.TelemetryWrapper;
-
-public class OpenWithFragment extends AppCompatDialogFragment implements AppAdapter.OnAppSelectedListener {
-    public static final String FRAGMENT_TAG = "open_with";
-
-    private static final String ARGUMENT_KEY_APPS = "apps";
-    private static final String ARGUMENT_URL = "url";
-    private static final String ARGUMENT_STORE = "store";
-
-    public static OpenWithFragment newInstance(ActivityInfo[] apps, String url, ActivityInfo store) {
-        final Bundle arguments = new Bundle();
-        arguments.putParcelableArray(ARGUMENT_KEY_APPS, apps);
-        arguments.putString(ARGUMENT_URL, url);
-        arguments.putParcelable(ARGUMENT_STORE, store);
-
-        final OpenWithFragment fragment = new OpenWithFragment();
-        fragment.setArguments(arguments);
-
-        return fragment;
+/**
+ * [AppCompatDialogFragment] used to display open in app options.
+ */
+class OpenWithFragment : AppCompatDialogFragment(), OnAppSelectedListener {
+    override fun onPause() {
+        requireActivity().supportFragmentManager.commit(allowStateLoss = true) {
+            remove(this@OpenWithFragment)
+        }
+        super.onPause()
     }
 
-    @Override
-    public void onPause() {
-        getActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .remove(this)
-                .commitAllowingStateLoss();
-
-        super.onPause();
-    }
-
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        ContextThemeWrapper wrapper = new ContextThemeWrapper(getContext(), android.R.style.Theme_Material_Light);
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val wrapper = ContextThemeWrapper(context, android.R.style.Theme_Material_Light)
 
         @SuppressLint("InflateParams") // This View will have it's params ignored anyway:
-        final View view = LayoutInflater.from(wrapper).inflate(R.layout.fragment_open_with, null);
+        val view = LayoutInflater.from(wrapper).inflate(R.layout.fragment_open_with, null)
+        val dialog: Dialog = CustomWidthBottomSheetDialog(wrapper)
+        dialog.setContentView(view)
+        val appList = view.findViewById<RecyclerView>(R.id.apps)
+        appList.layoutManager = LinearLayoutManager(
+            wrapper,
+            RecyclerView.VERTICAL,
+            false,
+        )
+        val adapter = requireArguments().getParcelableArrayCompat(ARGUMENT_KEY_APPS, ActivityInfo::class.java)
+            ?.let { infoArray ->
+                AppAdapter(
+                    wrapper,
+                    infoArray,
+                    requireArguments().getParcelableCompat(ARGUMENT_STORE, ActivityInfo::class.java),
+                )
+            }
 
-        final Dialog dialog = new CustomWidthBottomSheetDialog(wrapper);
-        dialog.setContentView(view);
-
-        final RecyclerView appList = view.findViewById(R.id.apps);
-        appList.setLayoutManager(new LinearLayoutManager(wrapper, RecyclerView.VERTICAL, false));
-
-        AppAdapter adapter = new AppAdapter(
-                wrapper,
-                (ActivityInfo[]) getArguments().getParcelableArray(ARGUMENT_KEY_APPS),
-                getArguments().getParcelable(ARGUMENT_STORE));
-        adapter.setOnAppSelectedListener(this);
-        appList.setAdapter(adapter);
-
-        return dialog;
+        adapter?.setOnAppSelectedListener(this)
+        appList.adapter = adapter
+        return dialog
     }
 
-    static class CustomWidthBottomSheetDialog extends BottomSheetDialog {
-        private View contentView;
-
-        private CustomWidthBottomSheetDialog(@NonNull Context context) {
-            super(context);
-        }
-
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
+    internal class CustomWidthBottomSheetDialog(context: Context) : BottomSheetDialog(context) {
+        private var contentView: View? = null
+        override fun onCreate(savedInstanceState: Bundle?) {
+            super.onCreate(savedInstanceState)
 
             // The support library makes the bottomsheet full width on all devices (and then uses a 16:9
             // keyline). On tablets, the system bottom sheets use a narrower width - lets do that too:
-            if (ContextKt.isTablet(getContext())) {
-                int width = getContext().getResources().getDimensionPixelSize(R.dimen.tablet_bottom_sheet_width);
-                final Window window = getWindow();
-                if (window != null) {
-                    window.setLayout(width, ViewGroup.LayoutParams.MATCH_PARENT);
-                }
+            if (context.isTablet()) {
+                val width =
+                    context.resources.getDimensionPixelSize(R.dimen.tablet_bottom_sheet_width)
+                val window = window
+                window?.setLayout(width, ViewGroup.LayoutParams.MATCH_PARENT)
             }
         }
 
-        @Override
-        public void setContentView(View contentView) {
-            super.setContentView(contentView);
-
-            this.contentView = contentView;
+        override fun setContentView(view: View) {
+            super.setContentView(view)
+            contentView = view
         }
 
-        @Override
-        public void setContentView(@LayoutRes int layoutResId) {
-            throw new IllegalStateException("CustomWidthBottomSheetDialog only supports setContentView(View)");
+        override fun setContentView(@LayoutRes layoutResID: Int) {
+            throw IllegalStateException("CustomWidthBottomSheetDialog only supports setContentView(View)")
         }
 
-        @Override
-        public void setContentView(View view, ViewGroup.LayoutParams params) {
-            throw new IllegalStateException("CustomWidthBottomSheetDialog only supports setContentView(View)");
+        override fun setContentView(view: View, params: ViewGroup.LayoutParams?) {
+            throw IllegalStateException("CustomWidthBottomSheetDialog only supports setContentView(View)")
         }
 
-        @Override
-        public void show() {
-            if (ContextKt.isTablet(getContext())) {
-                final int peekHeight = getContext().getResources().getDimensionPixelSize(R.dimen.tablet_bottom_sheet_peekheight);
-
-                BottomSheetBehavior<View> bsBehaviour = BottomSheetBehavior.from((View) contentView.getParent());
-                bsBehaviour.setPeekHeight(peekHeight);
+        override fun show() {
+            if (context.isTablet()) {
+                val peekHeight =
+                    context.resources.getDimensionPixelSize(R.dimen.tablet_bottom_sheet_peekheight)
+                val bsBehaviour = BottomSheetBehavior.from(
+                    contentView!!.parent as View,
+                )
+                bsBehaviour.peekHeight = peekHeight
             }
-
-            super.show();
+            super.show()
         }
     }
 
-    @Override
-    public void onAppSelected(AppAdapter.App app) {
-        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getArguments().getString(ARGUMENT_URL)));
-        intent.setClassName(app.getPackageName(), app.getActivityName());
-        startActivity(intent);
+    override fun onAppSelected(app: AppAdapter.App) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(requireArguments().getString(ARGUMENT_URL)))
+        intent.setClassName(app.packageName, app.activityName)
+        startActivity(intent)
 
-        OpenWith.INSTANCE.listItemTapped().record(new OpenWith.ListItemTappedExtra(app.getPackageName().contains("mozilla")));
+        listItemTapped.record(ListItemTappedExtra(app.packageName.contains("mozilla")))
 
-        if (app.getPackageName().contains("firefox")) {
-            TelemetryWrapper.openFirefoxEvent();
+        if (app.packageName.contains("firefox")) {
+            openFirefoxEvent()
         }
 
-        dismiss();
+        dismiss()
+    }
+
+    companion object {
+        const val FRAGMENT_TAG = "open_with"
+        private const val ARGUMENT_KEY_APPS = "apps"
+        private const val ARGUMENT_URL = "url"
+        private const val ARGUMENT_STORE = "store"
+
+        /**
+         * Creates a new instance of [AppCompatDialogFragment].
+         */
+        fun newInstance(
+            apps: Array<ActivityInfo?>?,
+            url: String?,
+            store: ActivityInfo?,
+        ): OpenWithFragment {
+            val arguments = Bundle()
+            arguments.putParcelableArray(ARGUMENT_KEY_APPS, apps)
+            arguments.putString(ARGUMENT_URL, url)
+            arguments.putParcelable(ARGUMENT_STORE, store)
+            val fragment = OpenWithFragment()
+            fragment.arguments = arguments
+            return fragment
+        }
     }
 }

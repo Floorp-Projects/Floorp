@@ -1,131 +1,114 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+package org.mozilla.focus.open
 
-package org.mozilla.focus.open;
+import android.content.Context
+import android.content.pm.ActivityInfo
+import android.graphics.drawable.Drawable
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 
-import android.content.Context;
-import android.content.pm.ActivityInfo;
-import android.graphics.drawable.Drawable;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+/**
+ * An adapter for displaying app items in the [OpenWithFragment] dialog.
+ * This will display browser apps and an item that can be used for installing Firefox,
+ * if it is not already installed on the device.
+ *
+ * @param infoArray List of browser apps.
+ * @param store Store app for installing Firefox.
+ */
+class AppAdapter(context: Context, infoArray: Array<ActivityInfo>, store: ActivityInfo?) :
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    /**
+     * Class for an app installed on the device.
+     */
+    class App(private val context: Context, private val info: ActivityInfo) {
+        val label: String = info.loadLabel(context.packageManager).toString()
 
-import androidx.recyclerview.widget.RecyclerView;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
-public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-    static class App {
-        private final Context context;
-        private final ActivityInfo info;
-        private final String label;
-
-        public App(Context context, ActivityInfo info) {
-            this.context = context;
-            this.info = info;
-            this.label = info.loadLabel(context.getPackageManager()).toString();
+        /**
+         * Retrieve the current graphical icon associated with the app.
+         */
+        fun loadIcon(): Drawable {
+            return info.loadIcon(context.packageManager)
         }
 
-        public String getLabel() {
-            return label;
-        }
-
-        public Drawable loadIcon() {
-            return info.loadIcon(context.getPackageManager());
-        }
-
-        public String getPackageName() {
-            return info.packageName;
-        }
-
-        public String getActivityName() {
-            return info.name;
-        }
-
+        val packageName: String
+            get() = info.packageName
+        val activityName: String
+            get() = info.name
     }
 
+    /**
+     * Interface for setting a listener for an [App] item.
+     */
     interface OnAppSelectedListener {
-        void onAppSelected(App app);
+        /**
+         * Action to be performed on an item from [AppAdapter] list being clicked.
+         */
+        fun onAppSelected(app: App)
     }
 
-    private final List<App> apps;
-    private final App store;
-    private OnAppSelectedListener listener;
+    private val apps: List<App>
+    private val store: App?
+    private var listener: OnAppSelectedListener? = null
 
-    public AppAdapter(Context context, ActivityInfo[] infoArray, ActivityInfo store) {
-        final List<App> apps = new ArrayList<>(infoArray.length);
-
-        for (ActivityInfo info : infoArray) {
-            apps.add(new App(context, info));
-        }
-
-        Collections.sort(apps, new Comparator<App>() {
-            @Override
-            public int compare(App app1, App app2) {
-                return app1.getLabel().compareTo(app2.getLabel());
-            }
-        });
-
-        this.apps = apps;
-        this.store = store != null ? new App(context, store) : null;
+    init {
+        this.apps = infoArray.map { App(context, it) }
+            .sortedWith { app1, app2 -> app1.label.compareTo(app2.label) }
+        this.store = if (store != null) App(context, store) else null
     }
 
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
         if (viewType == AppViewHolder.LAYOUT_ID) {
-            return new AppViewHolder(
-                    inflater.inflate(AppViewHolder.LAYOUT_ID, parent, false));
+            return AppViewHolder(
+                inflater.inflate(AppViewHolder.LAYOUT_ID, parent, false),
+            )
         } else if (viewType == InstallBannerViewHolder.LAYOUT_ID) {
-            return new InstallBannerViewHolder(
-                    inflater.inflate(InstallBannerViewHolder.LAYOUT_ID, parent, false));
+            return InstallBannerViewHolder(
+                inflater.inflate(InstallBannerViewHolder.LAYOUT_ID, parent, false),
+            )
         }
-
-        throw new IllegalStateException("Unknown view type: " + viewType);
+        throw IllegalStateException("Unknown view type: $viewType")
     }
 
-    /* package */ void setOnAppSelectedListener(OnAppSelectedListener listener) {
-        this.listener = listener;
+    /**
+     * Sets the listener for the [AppAdapter].
+     */
+    fun setOnAppSelectedListener(listener: OnAppSelectedListener?) {
+        this.listener = listener
     }
 
-    @Override
-    public int getItemViewType(int position) {
-        if (position < apps.size()) {
-            return AppViewHolder.LAYOUT_ID;
+    override fun getItemViewType(position: Int): Int {
+        return if (position < apps.size) {
+            AppViewHolder.LAYOUT_ID
         } else {
-            return InstallBannerViewHolder.LAYOUT_ID;
+            InstallBannerViewHolder.LAYOUT_ID
         }
     }
 
-    @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        final int itemViewType = holder.getItemViewType();
-
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val itemViewType = holder.itemViewType
         if (itemViewType == AppViewHolder.LAYOUT_ID) {
-            bindApp(holder, position);
+            bindApp(holder, position)
         } else if (itemViewType == InstallBannerViewHolder.LAYOUT_ID) {
-            bindInstallBanner(holder);
+            bindInstallBanner(holder)
         }
     }
 
-    private void bindApp(RecyclerView.ViewHolder holder, int position) {
-        final AppViewHolder appViewHolder = (AppViewHolder) holder;
-        final App app = apps.get(position);
-
-        appViewHolder.bind(app, listener);
+    private fun bindApp(holder: RecyclerView.ViewHolder, position: Int) {
+        val appViewHolder = holder as AppViewHolder
+        val app = apps[position]
+        appViewHolder.bind(app, listener)
     }
 
-    private void bindInstallBanner(RecyclerView.ViewHolder holder) {
-        final InstallBannerViewHolder installViewHolder = (InstallBannerViewHolder) holder;
-        installViewHolder.bind(store);
+    private fun bindInstallBanner(holder: RecyclerView.ViewHolder) {
+        val installViewHolder = holder as InstallBannerViewHolder
+        store?.let { installViewHolder.bind(it) }
     }
 
-    @Override
-    public int getItemCount() {
-        return apps.size() + (store != null ? 1 : 0);
+    override fun getItemCount(): Int {
+        return apps.size + if (store != null) 1 else 0
     }
 }
