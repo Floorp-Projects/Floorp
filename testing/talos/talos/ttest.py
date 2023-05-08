@@ -144,6 +144,10 @@ class TTest(object):
             if test_config.get("perfherder_framework", None) is not None:
                 test_results.framework = test_config["perfherder_framework"]
 
+            if browser_config.get("browser_version", None) is not None:
+                test_results.browser_name = browser_config["browser_name"]
+                test_results.browser_version = browser_config["browser_version"]
+
             # reinstall any file whose stability we need to ensure across
             # the cycles
             if test_config.get("reinstall", ""):
