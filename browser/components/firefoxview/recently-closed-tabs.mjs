@@ -237,7 +237,7 @@ class RecentlyClosedTabsList extends MozLitElement {
       >
         <img
           id="recently-closed-empty-image"
-          src="chrome://browser/content/firefoxview/recently-closed-empty.svg"
+          src="chrome://browser/content/recently-closed-empty.svg"
           role="presentation"
           alt=""
         />

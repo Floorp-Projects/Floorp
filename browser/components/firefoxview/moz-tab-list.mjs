@@ -186,7 +186,7 @@ export default class MozTabList extends MozLitElement {
   // Use a relative URL in storybook to get faster reloads on style changes.
   static stylesheetUrl = window.IS_STORYBOOK
     ? "./moz-tab-list.css"
-    : "chrome://browser/content/firefoxview/moz-tab-list.css";
+    : "chrome://browser/content/moz-tab-list.css";
 
   render() {
     this.tabItems = this.tabItems.slice(0, this.maxTabsLength);
@@ -311,7 +311,7 @@ export class MozTabRow extends MozLitElement {
   // Use a relative URL in storybook to get faster reloads on style changes.
   static stylesheetUrl = window.IS_STORYBOOK
     ? "./moz-tab-row.css"
-    : "chrome://browser/content/firefoxview/moz-tab-row.css";
+    : "chrome://browser/content/moz-tab-row.css";
 
   dateFluentArgs(timestamp, dateTimeFormat) {
     if (dateTimeFormat === "date" || dateTimeFormat === "dateTime") {
