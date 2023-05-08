@@ -42,8 +42,8 @@ menucaption {
   }
 }
 
-menu:where([_moz-menuactive="true"]),
-menuitem:where([_moz-menuactive="true"]) {
+menu:where([_moz-menuactive]:not([disabled])),
+menuitem:where([_moz-menuactive]:not([disabled])) {
   color: -moz-menuhovertext;
   background-color: -moz-menuhover;
 }
