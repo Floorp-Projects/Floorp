@@ -1166,8 +1166,15 @@ These record the telemetry metrics during the Firefox onboarding experience.
   "locale": "en-US",
   "experiments": {},
   "release_channel": "default",
-  "addon_version": "20200330194034"
-  "message_id": ["DEFAULT_ABOUTWELCOME" | "DEFAULT_ABOUTWELCOME_AW_GET_STARTED" | "DEFAULT_ABOUTWELCOME_SITES" | "DEFAULT_ABOUTWELCOME_AW_IMPORT_SETTINGS" | "DEFAULT_ABOUTWELCOME_AW_CHOOSE_THEME", "RTAMO_DEFAULT_WELCOME"],
+  "addon_version": "20200330194034",
+  "message_id": [
+    | "DEFAULT_ABOUTWELCOME"
+    | "DEFAULT_ABOUTWELCOME_AW_GET_STARTED"
+    | "DEFAULT_ABOUTWELCOME_SITES"
+    | "DEFAULT_ABOUTWELCOME_AW_IMPORT_SETTINGS"
+    | "DEFAULT_ABOUTWELCOME_AW_CHOOSE_THEME"
+    | "RTAMO_DEFAULT_WELCOME"
+  ],
   "event": "IMPRESSION",
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
   "event_context": { "page": "about:welcome" },
@@ -1192,8 +1199,13 @@ These record the telemetry metrics during the Firefox onboarding experience.
   "locale": "en-US",
   "experiments": {},
   "release_channel": "default",
-  "addon_version": "20200330194034"
-  "message_id": ["DEFAULT_ABOUTWELCOME_AW_GET_STARTED" | "DEFAULT_ABOUTWELCOME_AW_IMPORT_SETTINGS" | "DEFAULT_ABOUTWELCOME_AW_CHOOSE_THEME" | "RTAMO_DEFAULT_WELCOME"],
+  "addon_version": "20200330194034",
+  "message_id": [
+    | "DEFAULT_ABOUTWELCOME_AW_GET_STARTED"
+    | "DEFAULT_ABOUTWELCOME_AW_IMPORT_SETTINGS"
+    | "DEFAULT_ABOUTWELCOME_AW_CHOOSE_THEME"
+    | "RTAMO_DEFAULT_WELCOME"
+  ],
   "event": "CLICK_BUTTION",
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
   "event_context": { "page": "about:welcome", "source": ["primary_button" | "secondary_button"] },
@@ -1218,7 +1230,7 @@ These record the telemetry metrics during the Firefox onboarding experience.
   "locale": "en-US",
   "experiments": {},
   "release_channel": "default",
-  "addon_version": "20200330194034"
+  "addon_version": "20200330194034",
   "message_id": "RTAMO_DEFAULT_WELCOME",
   "event": "INSTALL",
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
@@ -1235,6 +1247,26 @@ These record the telemetry metrics during the Firefox onboarding experience.
 }
 ```
 
+### Onboarding embedded migration interactions
+
+```js
+{
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "version": "76.0a1",
+  "locale": "en-US",
+  "experiments": {},
+  "release_channel": "default",
+  "addon_version": "20200330194034",
+  "message_id": "MR_WELCOME_DEFAULT_0_AW_IMPORT_SETTINGS_EMBEDDED",
+  "event": "CLICK_BUTTION",
+  "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
+  "event_context": {
+    "page": "about:welcome",
+    "source": ["primary_button" | "migrate_close"],
+  }
+}
+```
+
 ### Onboarding session end ping
 
 ```js
@@ -1244,12 +1276,19 @@ These record the telemetry metrics during the Firefox onboarding experience.
   "locale": "en-US",
   "experiments": {},
   "release_channel": "default",
-  "addon_version": "20200330194034"
+  "addon_version": "20200330194034",
   "message_id": "DEFAULT_ABOUTWELCOME",
   "event": "SESSION_END",
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
-  "event_context": { "page": "about:welcome", "reason":
-    ["welcome-window-closed" | "welcome-tab-closed" | "app-shut-down" | "address-bar-navigated"]},
+  "event_context": {
+    "page": "about:welcome",
+    "reason": [
+      | "welcome-window-closed"
+      | "welcome-tab-closed"
+      | "app-shut-down"
+      | "address-bar-navigated"
+    ]
+  },
   "attribution": {
     "source": "mozilla.org",
     "medium": "referral",
