@@ -2387,7 +2387,7 @@ bool nsContentUtils::ShouldResistFingerprinting(
   // will check the parent's principal
   nsIPrincipal* principal = aLoadInfo->GetLoadingPrincipal();
 
-  MOZ_ASSERT_IF(principal,
+  MOZ_ASSERT_IF(principal && !principal->IsSystemPrincipal(),
                 BasePrincipal::Cast(principal)->OriginAttributesRef() ==
                     aLoadInfo->GetOriginAttributes());
   return ShouldResistFingerprinting_dangerous(principal, "Internal Call",
