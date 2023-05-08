@@ -19,11 +19,10 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 // Quick suggest features. On init, QuickSuggest creates an instance of each and
 // keeps it in the `#features` map. See `BaseFeature`.
 const FEATURES = {
+  AdmWikipedia: "resource:///modules/urlbar/private/AdmWikipedia.sys.mjs",
   BlockedSuggestions:
     "resource:///modules/urlbar/private/BlockedSuggestions.sys.mjs",
   ImpressionCaps: "resource:///modules/urlbar/private/ImpressionCaps.sys.mjs",
-  RemoteSettingsClient:
-    "resource:///modules/urlbar/private/RemoteSettingsClient.sys.mjs",
   Weather: "resource:///modules/urlbar/private/Weather.sys.mjs",
 };
 
@@ -98,15 +97,6 @@ class _QuickSuggest {
   }
 
   /**
-   * @returns {RemoteSettingsClient}
-   *   Quick suggest's remote settings client, which manages configuration and
-   *   suggestions stored in remote settings.
-   */
-  get remoteSettings() {
-    return this.#features.RemoteSettingsClient;
-  }
-
-  /**
    * @returns {BlockedSuggestions}
    *   The blocked suggestions feature.
    */
@@ -170,6 +160,18 @@ class _QuickSuggest {
     this._updateFeatureState();
     lazy.NimbusFeatures.urlbar.onUpdate(() => this._updateFeatureState());
     lazy.UrlbarPrefs.addObserver(this);
+  }
+
+  /**
+   * Returns a quick suggest feature by name.
+   *
+   * @param {string} name
+   *   The name of the feature's JS class.
+   * @returns {BaseFeature}
+   *   The feature object, an instance of a subclass of `BaseFeature`.
+   */
+  getFeature(name) {
+    return this.#features[name];
   }
 
   /**

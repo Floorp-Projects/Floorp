@@ -26,10 +26,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
  *   place, without mixing it with unrelated code and cluttering up
  *   `QuickSuggest`. You can also test it in isolation from `QuickSuggest`.
  *
- * - Your feature will automatically get its own logger.
+ * - Remote settings management. You can register your feature with
+ *   `QuickSuggestRemoteSettings` and it will be called at appropriate times to
+ *   sync from remote settings.
  *
- * If your feature can't benefit from these advantages, especially the first,
- * feel free to implement it directly in `QuickSuggest`.
+ * - If your feature also serves suggestions from remote settings, you can
+ *   implement one method, `queryRemoteSettings()`, to hook into
+ *   `UrlbarProviderQuickSuggest`.
+ *
+ * - Your feature will automatically get its own logger.
  *
  * To register your subclass with `QuickSuggest`, add it to the `FEATURES` const
  * in QuickSuggest.sys.mjs.
@@ -70,13 +75,60 @@ export class BaseFeature {
   }
 
   /**
+   * If the feature manages suggestions from remote settings that should be
+   * returned by UrlbarProviderQuickSuggest, the subclass should override this
+   * method. It should return remote settings suggestions matching the given
+   * search string.
+   *
+   * @param {string} searchString
+   *   The search string.
+   * @returns {Array}
+   *   An array of matching suggestions, or null if not implemented.
+   */
+  async queryRemoteSettings(searchString) {
+    return null;
+  }
+
+  /**
+   * If the feature manages data in remote settings, the subclass should
+   * override this method. It should fetch the data and build whatever data
+   * structures are necessary to support the feature.
+   *
+   * @param {RemoteSettings} rs
+   *   The `RemoteSettings` client object.
+   */
+  async onRemoteSettingsSync(rs) {}
+
+  /**
+   * If the feature corresponds to a type of suggestion, the subclass should
+   * override this method. It should return a new `UrlbarResult` for a given
+   * suggestion, which can come from either remote settings or Merino.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   *   The query context.
+   * @param {object} suggestion
+   *   The suggestion from either remote settings or Merino.
+   * @param {string} searchString
+   *   The search string that was used to fetch the suggestion. It may be
+   *   different from `queryContext.searchString` due to trimming, lower-casing,
+   *   etc. This is included as a param in case it's useful.
+   * @returns {UrlbarResult}
+   *   A new result for the suggestion.
+   */
+  makeResult(queryContext, suggestion, searchString) {
+    return null;
+  }
+
+  // Methods not designed for overriding below
+
+  /**
    * @returns {Logger}
    *   The feature's logger.
    */
   get logger() {
     if (!this._logger) {
       this._logger = lazy.UrlbarUtils.getLogger({
-        prefix: `QuickSuggest.${this.constructor.name}`,
+        prefix: `QuickSuggest.${this.name}`,
       });
     }
     return this._logger;
@@ -89,6 +141,14 @@ export class BaseFeature {
    */
   get isEnabled() {
     return this.#isEnabled;
+  }
+
+  /**
+   * @returns {string}
+   *   The feature's name.
+   */
+  get name() {
+    return this.constructor.name;
   }
 
   /**

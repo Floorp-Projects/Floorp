@@ -15,12 +15,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  QuickSuggestRemoteSettings:
+    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
@@ -201,29 +204,23 @@ class _QuickSuggestTestUtils {
    *   otherwise.
    */
   async ensureQuickSuggestInit({
-    remoteSettingsResults = null,
+    remoteSettingsResults = [],
     merinoSuggestions = null,
     config = DEFAULT_CONFIG,
   } = {}) {
+    lazy.QuickSuggestRemoteSettings._test_ignoreSettingsSync = true;
+
     this.info?.("ensureQuickSuggestInit calling QuickSuggest.init()");
     lazy.QuickSuggest.init();
 
-    this.info?.("ensureQuickSuggestInit awaiting remoteSettings.readyPromise");
-    let { remoteSettings } = lazy.QuickSuggest;
-    await remoteSettings.readyPromise;
-    this.info?.(
-      "ensureQuickSuggestInit done awaiting remoteSettings.readyPromise"
-    );
-
     this.setConfig(config);
 
-    // Set up the remote settings client. Ignore remote settings syncs that
-    // occur during the test. Clear its results and add the test results.
-    remoteSettings._test_ignoreSettingsSync = true;
-    remoteSettings._test_resultsByKeyword.clear();
+    // Clear remote settings suggestions and add the test suggestions.
+    let admWikipedia = lazy.QuickSuggest.getFeature("AdmWikipedia");
+    admWikipedia._test_suggestionsMap.clear();
     if (remoteSettingsResults) {
       this.info?.("ensureQuickSuggestInit adding remote settings results");
-      await remoteSettings._test_addResults(remoteSettingsResults);
+      await admWikipedia._test_suggestionsMap.add(remoteSettingsResults);
       this.info?.("ensureQuickSuggestInit done adding remote settings results");
     }
 
@@ -239,8 +236,8 @@ class _QuickSuggestTestUtils {
     let cleanup = async () => {
       this.info?.("ensureQuickSuggestInit starting cleanup");
       this.setConfig(DEFAULT_CONFIG);
-      delete remoteSettings._test_ignoreSettingsSync;
-      remoteSettings._test_resultsByKeyword.clear();
+      delete lazy.QuickSuggestRemoteSettings._test_ignoreSettingsSync;
+      admWikipedia._test_suggestionsMap.clear();
       if (merinoSuggestions) {
         lazy.UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
       }
@@ -260,9 +257,9 @@ class _QuickSuggestTestUtils {
    *   Array of remote settings result objects.
    */
   async setRemoteSettingsResults(results) {
-    let { remoteSettings } = lazy.QuickSuggest;
-    remoteSettings._test_resultsByKeyword.clear();
-    await remoteSettings._test_addResults(results);
+    let admWikipedia = lazy.QuickSuggest.getFeature("AdmWikipedia");
+    admWikipedia._test_suggestionsMap.clear();
+    await admWikipedia._test_suggestionsMap.add(results);
   }
 
   /**
@@ -271,10 +268,10 @@ class _QuickSuggestTestUtils {
    *
    * @param {object} config
    *   The config to be applied. See
-   *   {@link QuickSuggestRemoteSettingsClient._setConfig}
+   *   {@link QuickSuggestRemoteSettings._test_setConfig}
    */
   setConfig(config) {
-    lazy.QuickSuggest.remoteSettings._test_setConfig(config);
+    lazy.QuickSuggestRemoteSettings._test_setConfig(config);
   }
 
   /**
@@ -291,7 +288,7 @@ class _QuickSuggestTestUtils {
    * @see {@link setConfig}
    */
   async withConfig({ config, callback }) {
-    let original = lazy.QuickSuggest.remoteSettings.config;
+    let original = lazy.QuickSuggestRemoteSettings.config;
     this.setConfig(config);
     await callback();
     this.setConfig(original);

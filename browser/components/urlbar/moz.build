@@ -57,10 +57,11 @@ EXTRA_JS_MODULES += [
 ]
 
 EXTRA_JS_MODULES["urlbar/private"] += [
+    "private/AdmWikipedia.sys.mjs",
     "private/BaseFeature.sys.mjs",
     "private/BlockedSuggestions.sys.mjs",
     "private/ImpressionCaps.sys.mjs",
-    "private/RemoteSettingsClient.sys.mjs",
+    "private/QuickSuggestRemoteSettings.sys.mjs",
     "private/Weather.sys.mjs",
 ]
 

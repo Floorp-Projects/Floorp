@@ -15,6 +15,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  QuickSuggestRemoteSettings:
+    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
@@ -137,7 +139,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     // There are two sources for quick suggest: remote settings and Merino.
     let promises = [];
     if (lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled")) {
-      promises.push(lazy.QuickSuggest.remoteSettings.fetch(searchString));
+      promises.push(lazy.QuickSuggestRemoteSettings.query(searchString));
     }
     if (
       lazy.UrlbarPrefs.get("merinoEnabled") &&
@@ -228,14 +230,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
   #makeResult(queryContext, suggestion) {
     let result;
     switch (suggestion.provider) {
-      case "adm":
-        result = this.#makeAdmResult(queryContext, suggestion);
+      case "adm": // Merino
+      case "AdmWikipedia": // remote settings
+        result = lazy.QuickSuggest.getFeature("AdmWikipedia").makeResult(
+          queryContext,
+          suggestion,
+          this._trimmedSearchString
+        );
         break;
       default:
-        if (!suggestion.provider && suggestion.source == "remote-settings") {
-          result = this.#makeAdmResult(queryContext, suggestion);
-          break;
-        }
         result = this.#makeDefaultResult(queryContext, suggestion);
         break;
     }
@@ -257,88 +260,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
             : "quickSuggestNonSponsoredIndex"
         );
       }
-    }
-
-    return result;
-  }
-
-  #makeAdmResult(queryContext, suggestion) {
-    // Replace the suggestion's template substrings, but first save the original
-    // URL before its timestamp template is replaced.
-    let originalUrl = suggestion.url;
-    lazy.QuickSuggest.replaceSuggestionTemplates(suggestion);
-
-    let payload = {
-      originalUrl,
-      url: suggestion.url,
-      icon: suggestion.icon,
-      isSponsored: suggestion.is_sponsored,
-      source: suggestion.source,
-      telemetryType: suggestion.is_sponsored
-        ? "adm_sponsored"
-        : "adm_nonsponsored",
-      requestId: suggestion.request_id,
-      urlTimestampIndex: suggestion.urlTimestampIndex,
-      sponsoredImpressionUrl: suggestion.impression_url,
-      sponsoredClickUrl: suggestion.click_url,
-      sponsoredBlockId: suggestion.block_id,
-      sponsoredAdvertiser: suggestion.advertiser,
-      sponsoredIabCategory: suggestion.iab_category,
-      helpUrl: lazy.QuickSuggest.HELP_URL,
-      helpL10n: {
-        id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-      },
-      blockL10n: {
-        id: "urlbar-result-menu-dismiss-firefox-suggest",
-      },
-    };
-
-    // Determine if the suggestion itself is a best match.
-    let isSuggestionBestMatch = false;
-    if (lazy.QuickSuggest.remoteSettings.config.best_match) {
-      let { best_match } = lazy.QuickSuggest.remoteSettings.config;
-      let searchString = this._trimmedSearchString;
-      isSuggestionBestMatch =
-        best_match.min_search_string_length <= searchString.length &&
-        !best_match.blocked_suggestion_ids.includes(suggestion.block_id);
-    }
-
-    // Determine if the urlbar result should be a best match.
-    let isResultBestMatch =
-      isSuggestionBestMatch &&
-      lazy.UrlbarPrefs.get("bestMatchEnabled") &&
-      lazy.UrlbarPrefs.get("suggest.bestmatch");
-    if (isResultBestMatch) {
-      // Show the result as a best match. Best match titles don't include the
-      // `full_keyword`, and the user's search string is highlighted.
-      payload.title = [suggestion.title, UrlbarUtils.HIGHLIGHT.TYPED];
-    } else {
-      // Show the result as a usual quick suggest. Include the `full_keyword`
-      // and highlight the parts that aren't in the search string.
-      payload.title = suggestion.title;
-      payload.qsSuggestion = [
-        suggestion.full_keyword,
-        UrlbarUtils.HIGHLIGHT.SUGGESTED,
-      ];
-    }
-    payload.isBlockable = lazy.UrlbarPrefs.get(
-      isResultBestMatch
-        ? "bestMatchBlockingEnabled"
-        : "quickSuggestBlockingEnabled"
-    );
-
-    let result = new lazy.UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.URL,
-      UrlbarUtils.RESULT_SOURCE.SEARCH,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-        queryContext.tokens,
-        payload
-      )
-    );
-
-    if (isResultBestMatch) {
-      result.isBestMatch = true;
-      result.suggestedIndex = 1;
     }
 
     return result;
