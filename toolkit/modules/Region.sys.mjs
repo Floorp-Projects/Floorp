@@ -11,11 +11,8 @@ import { RemoteSettings } from "resource://services-settings/remote-settings.sys
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  LocationHelper: "resource://gre/modules/LocationHelper.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LocationHelper: "resource://gre/modules/LocationHelper.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

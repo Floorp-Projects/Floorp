@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-function SlowScriptDebug() {}
+export function SlowScriptDebug() {}
 
 SlowScriptDebug.prototype = {
   classDescription: "Slow script debug handler",
@@ -24,5 +22,3 @@ SlowScriptDebug.prototype = {
     this._remoteActivationHandler = cb;
   },
 };
-
-var EXPORTED_SYMBOLS = ["SlowScriptDebug"];

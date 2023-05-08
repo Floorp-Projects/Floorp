@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["LocationHelper"];
-
 function isPublic(ap) {
   let mask = "_nomap";
   let result = ap.ssid.indexOf(mask, ap.ssid.length - mask.length);
@@ -25,7 +21,7 @@ function encode(ap) {
  * Location Services.
  */
 
-class LocationHelper {
+export class LocationHelper {
   static formatWifiAccessPoints(accessPoints) {
     return accessPoints
       .filter(isPublic)

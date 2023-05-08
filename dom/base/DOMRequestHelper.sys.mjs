@@ -16,9 +16,7 @@
  * to the child side of frame and process message manager and removing them
  * when needed.
  */
-var EXPORTED_SYMBOLS = ["DOMRequestIpcHelper"];
-
-function DOMRequestIpcHelper() {
+export function DOMRequestIpcHelper() {
   // _listeners keeps a list of messages for which we added a listener and the
   // kind of listener that we added (strong or weak). It's an object of this
   // form:
