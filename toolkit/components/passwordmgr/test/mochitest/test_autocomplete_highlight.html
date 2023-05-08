@@ -11,12 +11,7 @@
 </head>
 <body>
 <p id="display"></p>
-<div id="content">
-  <form id="form1" action="https://autocomplete" onsubmit="return false;">
-    <input  type="text"       id="uname">
-    <input  type="password"   id="pword">
-    <button type="submit">Submit</button>
-  </form>
+<div id="content"></div>
 <pre id="test">
 <script>
 const { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
@@ -32,46 +27,46 @@ add_setup(async () => {
 });
 
 add_task(async function test_field_highlight_on_autocomplete() {
-  // Test username autocomplete.
-  const username = document.getElementById("uname");
-  const password = document.getElementById("pword");
+  const form = createLoginForm({
+    action: "https://autocomplete"
+  });
 
-  await openPopupOn(username);
+  await openPopupOn(form.uname);
   synthesizeKey("KEY_ArrowDown");
   await synthesizeKey("KEY_Enter");
 
   await ContentTaskUtils.waitForCondition(() => {
-    return username.matches(":autofill")
+    return form.uname.matches(":autofill")
   }, "Highlight was successfully applied to the username field on username autocomplete");
 
-  ok(password.matches(":autofill"),
+  ok(form.pword.matches(":autofill"),
      "Highlight was successfully applied to the password field on username autocomplete");
 
   // Clear existing highlight on login fields. We check by pressing the tab key after backspace
   // (by shifting focus to the next element) because the tab key was known to cause a bug where the
   // highlight is applied once again. See Bug 1526522.
-  username.focus();
+  form.uname.focus();
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
-  ok(!username.matches(":autofill"),
+  ok(!form.uname.matches(":autofill"),
      "Highlight was successfully removed on the username field");
 
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
-  ok(!password.matches(":autofill"),
+  ok(!form.pword.matches(":autofill"),
      "Highlight was successfully removed on the password field");
 
   // Clear login fields.
-  username.value = "";
-  password.value = "";
+  form.uname.value = "";
+  form.pword.value = "";
 
   // Test password field autocomplete.
-  await openPopupOn(password);
+  await openPopupOn(form.pword);
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
 
   await ContentTaskUtils.waitForCondition(() => {
-    return password.matches(":autofill");
+    return form.pword.matches(":autofill");
   }, "Highlight was successfully applied to the password field on password autocomplete");
 
   // Clear existing highlight on the password field. We check by pressing the tab key after backspace
@@ -80,12 +75,12 @@ add_task(async function test_field_highlight_on_autocomplete() {
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
 
-  ok(!password.matches(":autofill"),
+  ok(!form.pword.matches(":autofill"),
      "Highlight was successfully removed on the password field");
 
   // Clear login fields.
-  username.value = "";
-  password.value = "";
+  form.uname.value = "";
+  form.pword.value = "";
 });
 </script>
 </body>

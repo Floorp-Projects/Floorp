@@ -12,128 +12,21 @@
 <body>
 Login Manager test: multiple login autocomplete
 
-<script>
-var chromeScript = runChecksAfterCommonInit();
-
-// Temporarily allow use of eval() in this test.
-SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
-
-function addLoginsInParent(...aLogins) {
-  let script = runInParent(function addLoginsInParentInner() {
-    let loginsMap = {};
-
-    let initialCount = 5;
-
-    addMessageListener("initLogins", async logins => {
-      let nsLoginInfo = Components.Constructor(
-        "@mozilla.org/login-manager/loginInfo;1",
-        Ci.nsILoginInfo,
-        "init"
-      );
-
-      for (let login of logins) {
-        let loginInfo = new nsLoginInfo(...login[1]);
-
-        // Only add the first 'initialCount' number of logins.
-        if (initialCount-- > 0) {
-          try {
-            await Services.logins.addLoginAsync(loginInfo);
-          } catch (e) {
-            assert.ok(false, "addLogin threw: " + e);
-          }
-        }
-        loginsMap[login[0]] = loginInfo;
-      }
-    });
-
-    addMessageListener("addLogin", async loginVariableName => {
-      let login = loginsMap[loginVariableName];
-      assert.ok(!!login, "Login to add is defined: " + loginVariableName);
-      await Services.logins.addLoginAsync(login);
-    });
-    addMessageListener("removeLogin", loginVariableName => {
-      let login = loginsMap[loginVariableName];
-      assert.ok(!!login, "Login to delete is defined: " + loginVariableName);
-      Services.logins.removeLogin(login);
-    });
-  });
-  script.sendQuery("initLogins", aLogins);
-  return script;
-}
-
-
-let origin = window.location.origin;
-let setupScript = addLoginsInParent(
-  // login0 has no username, so should be filtered out from the autocomplete list.
-  ["login0", [origin, "https://autocomplete:8888", null,
-              "", "user0pass", "", "pword"]],
-
-  ["login1", [origin, "https://autocomplete:8888", null,
-              "tempuser1", "temppass1", "uname", "pword"]],
-
-  ["login2", [origin, "https://autocomplete:8888", null,
-              "testuser2", "testpass2", "uname", "pword"]],
-
-  ["login3", [origin, "https://autocomplete:8888", null,
-              "testuser3", "testpass3", "uname", "pword"]],
-
-  ["login4", [origin, "https://autocomplete:8888", null,
-              "zzzuser4", "zzzpass4", "uname", "pword"]],
-
-  ["login5", [origin, "https://autocomplete2", null,
-              "singleuser5", "singlepass5", "uname", "pword"]],
-
-  ["login6A", [origin, "https://autocomplete3", null,
-               "form7user1", "form7pass1", "uname", "pword"]],
-  ["login6B", [origin, "https://autocomplete3", null,
-               "form7user2", "form7pass2", "uname", "pword"]],
-
-  ["login7", [origin, "https://autocomplete4", null,
-              "form8user", "form8pass", "uname", "pword"]],
-
-  ["login8A", [origin, "https://autocomplete5", null,
-               "form9userAB", "form9pass", "uname", "pword"]],
-  ["login8B", [origin, "https://autocomplete5", null,
-               "form9userAAB", "form9pass", "uname", "pword"]],
-  ["login8C", [origin, "https://autocomplete5", null,
-               "form9userAABzz", "form9pass", "uname", "pword"]],
-
-  ["login10", [origin, "https://autocomplete7", null,
-               "testuser10", "testpass10", "uname", "pword"]],
-
-  ["login11", [origin, origin, null, "testuser11", "testpass11", "uname", "pword"]],
-
-  ["login12", [origin, "https://autocomplete8", null,
-               "testuser12", "testpass12", "uname", "pword"]]);
-</script>
 <p id="display"></p>
 
 <!-- we presumably can't hide the content for this test. -->
-<div id="content">
-
-  <!-- form1 tests multiple matching logins -->
-  <!-- other forms test single logins, with autocomplete=off set -->
-  <form id="form1" action="https://autocomplete:8888/formtest.js" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-</div>
+<div id="content"></div>
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: multiple login autocomplete. **/
 
-let uname = getFormElementByName(1, "uname");
-let pword = getFormElementByName(1, "pword");
-
 // Restore the form to the default state.
-function restoreForm() {
-  uname.value = "";
-  pword.value = "";
-  uname.focus();
+function restoreForm(form) {
+  form.uname.value = "";
+  form.pword.value = "";
+  form.uname.focus();
 }
 
 function sendFakeAutocompleteEvent(element) {
@@ -157,236 +50,298 @@ add_setup(async () => {
   listenForUnexpectedPopupShown();
 });
 
-add_task(async function test_form1_initial_empty() {
+add_task(async function form1_initial_empty() {
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
   await SimpleTest.promiseFocus(window);
 
   // Make sure initial form is empty.
-  checkLoginForm(uname, "", pword, "");
+  checkLoginForm(form.uname, "", form.pword, "");
   let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
 });
 
-add_task(async function test_form1_menuitems() {
+add_task(async function form1_menuitems() {
+  await setStoredLoginsAsync(
+    // login 0 has no username, so should be filtered out from the autocomplete list.
+    [location.origin, "https://autocomplete:8888", null, "", "pass0", "", "pword"],
+
+    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
+    [location.origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
   await SimpleTest.promiseFocus(window);
   // Trigger autocomplete popup
-  restoreForm();
+  form.uname.focus();
   const autocompleteItems = await popupByArrowDown();
 
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
-  let expectedMenuItems = ["tempuser1",
-                           "testuser2",
-                           "testuser3",
-                           "zzzuser4"];
+  let expectedMenuItems = ["user-1",
+                           "user-2",
+                           "user-3"];
   checkAutoCompleteResults(autocompleteItems, expectedMenuItems,
                            window.location.host, "Check all menuitems are displayed correctly.");
 
   let acEvents = await getTelemetryEvents({ process: "parent", filterProps: TelemetryFilterPropsAC, clear: true });
   is(acEvents.length, 1, "One autocomplete event");
-  checkACTelemetryEvent(acEvents[0], uname, {
+  checkACTelemetryEvent(acEvents[0], form.uname, {
     "hadPrevious": "0",
     "login": expectedMenuItems.length + "",
     "loginsFooter": "1"
   });
 
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update just by opening
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update just by opening
   synthesizeKey("KEY_Escape");
   await promiseACPopupClosed();
-  checkLoginForm(uname, "", pword, "");
+  checkLoginForm(form.uname, "", form.pword, "");
 });
 
-add_task(async function test_form1_first_entry() {
+add_task(async function form1_first_entry() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
+  await promiseFormsProcessedInSameProcess();
   await SimpleTest.promiseFocus(window);
   // Trigger autocomplete popup
-  restoreForm();
+  form.uname.focus();
   await popupByArrowDown();
-
   let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
-
   synthesizeKey("KEY_ArrowDown"); // first
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update just by selecting
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update just by selecting
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "tempuser1", pword, "temppass1");
+  checkLoginForm(form.uname, "user-1", form.pword, "pass-1");
 });
 
-add_task(async function test_form1_second_entry() {
+add_task(async function form1_second_entry() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
+  await promiseFormsProcessedInSameProcess();
   // Trigger autocomplete popup
-  restoreForm();
+  form.uname.focus();
   await popupByArrowDown();
-
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "testuser2", pword, "testpass2");
+  checkLoginForm(form.uname, "user-2", form.pword, "pass-2");
 });
 
-add_task(async function test_form1_third_entry() {
-  // Trigger autocomplete popup
-  restoreForm();
-  await popupByArrowDown();
-
-  synthesizeKey("KEY_ArrowDown"); // first
-  synthesizeKey("KEY_ArrowDown"); // second
-  synthesizeKey("KEY_ArrowDown"); // third
-  synthesizeKey("KEY_Enter");
+add_task(async function form1_wraparound_first_entry() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
   await promiseFormsProcessedInSameProcess();
-  await promiseACPopupClosed();
-  checkLoginForm(uname, "testuser3", pword, "testpass3");
-});
-
-add_task(async function test_form1_fourth_entry() {
   // Trigger autocomplete popup
-  restoreForm();
+  form.uname.focus();
   await popupByArrowDown();
-
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
-  synthesizeKey("KEY_ArrowDown"); // third
-  synthesizeKey("KEY_ArrowDown"); // fourth
-  synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
-  await promiseACPopupClosed();
-  checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
-});
-
-add_task(async function test_form1_wraparound_first_entry() {
-  // Trigger autocomplete popup
-  restoreForm();
-  await spinEventLoop(); // let focus happen
-  await popupByArrowDown();
-
-  synthesizeKey("KEY_ArrowDown"); // first
-  synthesizeKey("KEY_ArrowDown"); // second
-  synthesizeKey("KEY_ArrowDown"); // third
-  synthesizeKey("KEY_ArrowDown"); // fourth
   synthesizeKey("KEY_ArrowDown"); // footer
   synthesizeKey("KEY_ArrowDown"); // deselects
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "tempuser1", pword, "temppass1");
+  checkLoginForm(form.uname, "user-1", form.pword, "pass-1");
 });
 
-add_task(async function test_form1_wraparound_up_last_entry() {
+add_task(async function form1_wraparound_up_last_entry() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
+  await promiseFormsProcessedInSameProcess();
   // Trigger autocomplete popup
-  restoreForm();
+  form.uname.focus();
   await popupByArrowDown();
-
   synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_ArrowUp"); // last (fourth)
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
+  checkLoginForm(form.uname, "user-2", form.pword, "pass-2");
 });
 
-add_task(async function test_form1_wraparound_down_up_up() {
+add_task(async function form1_wraparound_down_up_up() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
+  await promiseFormsProcessedInSameProcess();
   // Trigger autocomplete popup
-  restoreForm();
+  form.uname.focus();
   await popupByArrowDown();
-
   synthesizeKey("KEY_ArrowDown"); // select first entry
   synthesizeKey("KEY_ArrowUp"); // selects nothing!
   synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_ArrowUp"); // select last entry
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
+  checkLoginForm(form.uname, "user-2", form.pword, "pass-2");
 });
 
-add_task(async function test_form1_wraparound_up_last() {
-  restoreForm();
+add_task(async function form1_wraparound_up_last() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
+  await promiseFormsProcessedInSameProcess();
+  // Trigger autocomplete popup
+  form.uname.focus();
   await popupByArrowDown();
-
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowUp"); // deselects
+  synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_ArrowUp"); // last entry
-  synthesizeKey("KEY_ArrowUp");
-  synthesizeKey("KEY_ArrowUp");
-  synthesizeKey("KEY_ArrowUp");
   synthesizeKey("KEY_ArrowUp"); // first entry
   synthesizeKey("KEY_ArrowUp"); // deselects
   synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_ArrowUp"); // last entry
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
+  checkLoginForm(form.uname, "user-2", form.pword, "pass-2");
 });
 
-add_task(async function test_form1_fill_username_without_autofill_right() {
-  restoreForm();
+add_task(async function form1_fill_username_without_autofill_right() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
+  await promiseFormsProcessedInSameProcess();
+  // Trigger autocomplete popup
+  form.uname.focus();
   await popupByArrowDown();
-
   // Set first entry w/o triggering autocomplete
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowRight");
   await promiseACPopupClosed();
-  checkLoginForm(uname, "tempuser1", pword, ""); // empty password
+  checkLoginForm(form.uname, "user-1", form.pword, ""); // empty password
 });
 
-add_task(async function test_form1_fill_username_without_autofill_left() {
-  restoreForm();
+add_task(async function form1_fill_username_without_autofill_left() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
+  await promiseFormsProcessedInSameProcess();
+  // Trigger autocomplete popup
+  form.uname.focus();
   await popupByArrowDown();
-
   // Set first entry w/o triggering autocomplete
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowLeft");
   await promiseACPopupClosed();
-  checkLoginForm(uname, "tempuser1", pword, ""); // empty password
+  checkLoginForm(form.uname, "user-1", form.pword, ""); // empty password
 });
 
-add_task(async function test_form1_pageup_first() {
-  restoreForm();
+add_task(async function form1_pageup_first() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
+  await promiseFormsProcessedInSameProcess();
+  // Trigger autocomplete popup
+  form.uname.focus();
   await popupByArrowDown();
-
   // Check first entry (page up)
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_PageUp"); // first
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "tempuser1", pword, "temppass1");
+  checkLoginForm(form.uname, "user-1", form.pword, "pass-1");
 });
 
-add_task(async function test_form1_pagedown_last() {
-  restoreForm();
+add_task(async function form1_pagedown_last() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
+  await promiseFormsProcessedInSameProcess();
+  // Trigger autocomplete popup
+  form.uname.focus();
   await popupByArrowDown();
-
   /* test 13 */
   // Check last entry (page down)
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_PageDown"); // footer
   synthesizeKey("KEY_ArrowUp"); // last
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
+  checkLoginForm(form.uname, "user-2", form.pword, "pass-2");
 });
 
-add_task(async function test_form1_untrusted_event() {
-  restoreForm();
-  await spinEventLoop();
-
+add_task(async function form1_untrusted_event() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
+  await promiseFormsProcessedInSameProcess();
+  // Trigger autocomplete popup
+  form.uname.focus();
+  await popupByArrowDown();
   // Send a fake (untrusted) event.
-  checkLoginForm(uname, "", pword, "");
-  uname.value = "zzzuser4";
-  sendFakeAutocompleteEvent(uname);
-  await spinEventLoop();
-  checkLoginForm(uname, "zzzuser4", pword, "");
+  checkLoginForm(form.uname, "", form.pword, "");
+  form.uname.value = "user-2";
+  sendFakeAutocompleteEvent(form.uname);
+  checkLoginForm(form.uname, "user-2", form.pword, "");
 });
 
-add_task(async function test_form1_delete() {
-  restoreForm();
+add_task(async function form1_delete() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
+  await promiseFormsProcessedInSameProcess();
+  // Trigger autocomplete popup
+  form.uname.focus();
   await popupByArrowDown();
 
   // XXX tried sending character "t" before/during dropdown to test
@@ -394,370 +349,325 @@ add_task(async function test_form1_delete() {
   // Setting uname.value didn't seem to work either. This works with a human
   // driver, so I'm not sure what's up.
 
-  // Delete the first entry (of 4), "tempuser1"
+  // Delete the first entry (of 3), "user-1"
   synthesizeKey("KEY_ArrowDown");
-  let numLogins = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
-  is(numLogins, 5, "Correct number of logins before deleting one");
+  const numLoginsBeforeDeletion = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
+  is(numLoginsBeforeDeletion, 3, "Correct number of logins before deleting one");
 
-  let countChangedPromise = notifyMenuChanged(4);
-  var deletionPromise = promiseStorageChanged(["removeLogin"]);
+  const countChangedPromise = notifyMenuChanged(3);
+  const deletionPromise = promiseStorageChanged(["removeLogin"]);
   // On OS X, shift-backspace and shift-delete work, just delete does not.
   // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
   synthesizeKey("KEY_Delete", {shiftKey: true});
   await deletionPromise;
 
-  checkLoginForm(uname, "", pword, "");
-  numLogins = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
-  is(numLogins, 4, "Correct number of logins after deleting one");
+  checkLoginForm(form.uname, "", form.pword, "");
+  const numLoginsAfterDeletion = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
+  is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
   await countChangedPromise;
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "testuser2", pword, "testpass2");
+  checkLoginForm(form.uname, "user-2", form.pword, "pass-2");
 });
 
-add_task(async function test_form1_first_after_deletion() {
-  restoreForm();
-  await popupByArrowDown();
-
-  // Check the new first entry (of 3)
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_Enter");
+add_task(async function form1_delete_second() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
   await promiseFormsProcessedInSameProcess();
-  await promiseACPopupClosed();
-  checkLoginForm(uname, "testuser2", pword, "testpass2");
-});
-
-add_task(async function test_form1_delete_second() {
-  restoreForm();
+  // Trigger autocomplete popup
+  form.uname.focus();
   await popupByArrowDown();
 
-  // Delete the second entry (of 3), "testuser3"
+  // Delete the second entry (of 3), "user-2"
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Delete", {shiftKey: true});
-  checkLoginForm(uname, "", pword, "");
-  let numLogins = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
-  is(numLogins, 3, "Correct number of logins after deleting one");
+  checkLoginForm(form.uname, "", form.pword, "");
+  const numLoginsAfterDeletion = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
+  is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
   synthesizeKey("KEY_Enter");
-  await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
+  checkLoginForm(form.uname, "user-3", form.pword, "pass-3");
 });
 
-add_task(async function test_form1_first_after_deletion2() {
-  restoreForm();
-  await popupByArrowDown();
-
-  // Check the new first entry (of 2)
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_Enter");
+add_task(async function form1_delete_last() {
+  await setStoredLoginsAsync(
+    [origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
+    [origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888/formtest.js"
+  });
   await promiseFormsProcessedInSameProcess();
-  await promiseACPopupClosed();
-  checkLoginForm(uname, "testuser2", pword, "testpass2");
-});
-
-add_task(async function test_form1_delete_last() {
-  restoreForm();
+  // Trigger autocomplete popup
+  form.uname.focus();
   await popupByArrowDown();
 
   /* test 54 */
-  // Delete the last entry (of 2), "zzzuser4"
+  // Delete the last entry (of 3), "user-3"
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_ArrowDown");
+  const numLoginsBeforeDeletion = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
+  is(numLoginsBeforeDeletion, 3, "Correct number of logins before deleting one");
   synthesizeKey("KEY_Delete", {shiftKey: true});
-  checkLoginForm(uname, "", pword, "");
-  let numLogins = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
-  is(numLogins, 2, "Correct number of logins after deleting one");
+  checkLoginForm(form.uname, "", form.pword, "");
+  const numLoginsAfterDeletion = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
+  is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
+  await promiseACPopupClosed();
+  checkLoginForm(form.uname, "user-1", form.pword, "pass-1");
+});
+
+// Tests for single-user forms for ignoring autocomplete=off */
+
+add_task(async function form_default() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete2"
+  });
   await promiseFormsProcessedInSameProcess();
-  await promiseACPopupClosed();
-  checkLoginForm(uname, "testuser2", pword, "testpass2");
+
+  checkLoginForm(form.uname, "user", form.pword, "pass");
 });
 
-add_task(async function test_form1_first_after_3_deletions() {
-  restoreForm();
-  await popupByArrowDown();
-
-  // Check the only remaining entry
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_Enter");
+add_task(async function password_autocomplete_off() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete2",
+    password: {
+      autocomplete: "off"
+    }
+  });
   await promiseFormsProcessedInSameProcess();
-  await promiseACPopupClosed();
-  checkLoginForm(uname, "testuser2", pword, "testpass2");
-});
 
-add_task(async function test_form1_check_only_entry_remaining() {
-  restoreForm();
-  await popupByArrowDown();
+  checkLoginForm(form.uname, "user", form.pword, "pass");
 
-  /* test 56 */
-  // Delete the only remaining entry, "testuser2"
-  synthesizeKey("KEY_ArrowDown");
-  let storageChanged = promiseStorageChanged(["removeLogin", "removeLogin", "addLogin"]);
-  synthesizeKey("KEY_Delete", {shiftKey: true});
-  checkLoginForm(uname, "", pword, "");
-  let numLogins = await LoginManager.countLogins(origin, "https://autocomplete:8888", null);
-  is(numLogins, 1, "Correct number of logins after deleting one");
-
-  // remove the logins for the previous tests
-  setupScript.sendAsyncMessage("removeLogin", "login0");
-  setupScript.sendAsyncMessage("addLogin", "login5");
-  await storageChanged;
-
-  // ensure the popup is closed for the next test
-  synthesizeKey("KEY_Escape");
-  await promiseACPopupClosed();
-});
-
-/* Tests for single-user forms for ignoring autocomplete=off */
-add_task(async function test_form2() {
-  await setFormAndWaitForFieldFilled(`
-    <form id="form2" action="https://autocomplete2" onsubmit="return false;">
-      <input  type="text"       name="uname">
-      <input  type="password"   name="pword" autocomplete="off">
-      <button type="submit">Submit</button>
-    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
-
-  // Turn our attention to form2
-  uname = getFormElementByName(2, "uname");
-  pword = getFormElementByName(2, "pword");
-  checkLoginForm(uname, "singleuser5", pword, "singlepass5");
-
-  restoreForm();
+  // Trigger autocomplete popup
+  form.uname.value = "";
+  form.pword.value = "";
+  form.uname.focus();
   await popupByArrowDown();
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "singleuser5", pword, "singlepass5");
+  checkLoginForm(form.uname, "user", form.pword, "pass");
 });
 
-add_task(async function test_form3() {
-  await setFormAndWaitForFieldFilled(`
-    <form id="form3" action="https://autocomplete2" onsubmit="return false;">
-      <input  type="text"       name="uname" autocomplete="off">
-      <input  type="password"   name="pword">
-      <button type="submit">Submit</button>
-    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
+add_task(async function username_autocomplete_off() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete2",
+    username: {
+      autocomplete: "off"
+    }
+  });
+  await promiseFormsProcessedInSameProcess();
+  checkLoginForm(form.uname, "user", form.pword, "pass");
 
-  uname = getFormElementByName(3, "uname");
-  pword = getFormElementByName(3, "pword");
-  checkLoginForm(uname, "singleuser5", pword, "singlepass5");
-  restoreForm();
+  restoreForm(form);
   await popupByArrowDown();
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "singleuser5", pword, "singlepass5");
+  checkLoginForm(form.uname, "user", form.pword, "pass");
 });
 
-add_task(async function test_form4() {
-  await setFormAndWaitForFieldFilled(`
-    <form id="form4" action="https://autocomplete2" onsubmit="return false;" autocomplete="off">
-      <input  type="text"       name="uname">
-      <input  type="password"   name="pword">
-      <button type="submit">Submit</button>
-    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
+add_task(async function form_autocomplete_off() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete2",
+    autocomplete: "off"
+  });
+  await promiseFormsProcessedInSameProcess();
 
-  uname = getFormElementByName(4, "uname");
-  pword = getFormElementByName(4, "pword");
-  checkLoginForm(uname, "singleuser5", pword, "singlepass5");
-  restoreForm();
+  checkLoginForm(form.uname, "user", form.pword, "pass");
+  restoreForm(form);
   await popupByArrowDown();
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "singleuser5", pword, "singlepass5");
+  checkLoginForm(form.uname, "user", form.pword, "pass");
 });
 
-add_task(async function test_form5() {
-  await setFormAndWaitForFieldFilled(`
-    <form id="form5" action="https://autocomplete2" onsubmit="return false;">
-      <input  type="text"       name="uname" autocomplete="off">
-      <input  type="password"   name="pword" autocomplete="off">
-      <button type="submit">Submit</button>
-    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
+add_task(async function username_and_password_autocomplete_off() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete2",
+    username: {
+      autocomplete: "off"
+    },
+    password: {
+      autocomplete: "off"
+    }
+  });
+  await promiseFormsProcessedInSameProcess();
 
-  uname = getFormElementByName(5, "uname");
-  pword = getFormElementByName(5, "pword");
-  checkLoginForm(uname, "singleuser5", pword, "singlepass5");
-  restoreForm();
+  checkLoginForm(form.uname, "user", form.pword, "pass");
+  restoreForm(form);
   await popupByArrowDown();
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "singleuser5", pword, "singlepass5");
+  checkLoginForm(form.uname, "user", form.pword, "pass");
 });
 
-add_task(async function test_form6() {
-  await setFormAndWaitForFieldFilled(`
-    <!-- control -->
-    <form id="form6" action="https://autocomplete2" onsubmit="return false;">
-      <input  type="text"       name="uname">
-      <input  type="password"   name="pword">
-      <button type="submit">Submit</button>
-    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
+add_task(async function changing_username_does_not_touch_password() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete2",
+    username: {
+      autocomplete: "off"
+    },
+    password: {
+      autocomplete: "off"
+    }
+  });
+  await promiseFormsProcessedInSameProcess();
 
-  // (this is a control, w/o autocomplete=off, to ensure the login
-  // that was being suppressed would have been filled in otherwise)
-  uname = getFormElementByName(6, "uname");
-  pword = getFormElementByName(6, "pword");
-  checkLoginForm(uname, "singleuser5", pword, "singlepass5");
-});
+  checkLoginForm(form.uname, "user", form.pword, "pass");
 
-add_task(async function test_form6_changeUsername() {
   // Test that the password field remains filled in after changing
   // the username.
-  uname.focus();
+  form.uname.focus();
   synthesizeKey("KEY_ArrowRight");
   synthesizeKey("X", {shiftKey: true});
   // Trigger the 'blur' event on uname
-  pword.focus();
+  form.pword.focus();
   await spinEventLoop();
-  checkLoginForm(uname, "singleuser5X", pword, "singlepass5");
-  uname.focus();
-
-  let storageChanged = promiseStorageChanged(["removeLogin"]);
-  setupScript.sendAsyncMessage("removeLogin", "login5");
-  await storageChanged;
+  checkLoginForm(form.uname, "userX", form.pword, "pass");
 });
 
-add_task(async function test_form7() {
-  let storageChanged = promiseStorageChanged(["addLogin", "addLogin"]);
-  setupScript.sendAsyncMessage("addLogin", "login6A");
-  setupScript.sendAsyncMessage("addLogin", "login6B");
-  await storageChanged;
-  await setFormAndWaitForFieldFilled(`
-    <!-- This form will be manipulated to insert a different username field. -->
-    <form id="form7" action="https://autocomplete3" onsubmit="return false;">
-      <input  type="text"       name="uname">
-      <input  type="password"   name="pword">
-      <button type="submit">Submit</button>
-    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: ""});
+add_task(async function form7() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete3", null, "user-1", "pass-1", "uname", "pword"],
+    [location.origin, "https://autocomplete3", null, "user-2", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete3"
+  });
+  await promiseFormsProcessedInSameProcess();
 
-  uname = getFormElementByName(7, "uname");
-  pword = getFormElementByName(7, "pword");
-  checkLoginForm(uname, "", pword, "");
+  checkLoginForm(form.uname, "", form.pword, "");
 
   // Insert a new username field into the form. We'll then make sure
   // that invoking the autocomplete doesn't try to fill the form.
-  var newField = document.createElement("input");
+  const newField = document.createElement("input");
   newField.setAttribute("type", "text");
   newField.setAttribute("name", "uname2");
-  pword.parentNode.insertBefore(newField, pword);
-  is(getFormElementByName(7, "uname2").value, "", "Verifying empty uname2");
-
-  // Delete login6B. It was created just to prevent filling in a login
-  // automatically, removing it makes it more likely that we'll catch a
-  // future regression with form filling here.
-  storageChanged = promiseStorageChanged(["removeLogin"]);
-  setupScript.sendAsyncMessage("removeLogin", "login6B");
-  await storageChanged;
+  form.insertBefore(newField, form.pword);
+  await spinEventLoop();
+  is(newField.value, "", "Verifying empty uname2");
 });
 
-add_task(async function test_form7_2() {
-  restoreForm();
+add_task(async function form7_2() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete3", null, "user", "pass", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete3"
+  });
+  await promiseFormsProcessedInSameProcess();
 
+  // Insert a new username field into the form. We'll then make sure
+  // that invoking the autocomplete doesn't try to fill the form.
+  const newField = document.createElement("input");
+  newField.setAttribute("type", "text");
+  newField.setAttribute("name", "uname2");
+  form.insertBefore(newField, form.pword);
+
+  restoreForm(form);
   const autocompleteItems = await popupByArrowDown();
   checkAutoCompleteResults(autocompleteItems,
-                           ["form7user1"],
+                           ["user"],
                            window.location.host,
                            "Check dropdown is showing all logins while field is blank");
 
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   // The form changes, so we expect the old username field to get the
   // selected autocomplete value, but neither the new username field nor
   // the password field should have any values filled in.
-  await SimpleTest.promiseWaitForCondition(() => uname.value == "form7user1",
+  await SimpleTest.promiseWaitForCondition(() => form.uname.value == "user",
                                            "Wait for username to get filled");
   await promiseACPopupClosed();
-  checkLoginForm(uname, "form7user1", pword, "");
-  is(getFormElementByName(7, "uname2").value, "", "Verifying empty uname2");
-  restoreForm(); // clear field, so reloading test doesn't fail
-
-  let storageChanged = promiseStorageChanged(["removeLogin"]);
-  setupScript.sendAsyncMessage("removeLogin", "login6A");
-  await storageChanged;
+  checkLoginForm(form.uname, "user", form.pword, "");
+  is(newField.value, "", "Verifying empty uname2");
 });
 
-add_task(async function test_form8() {
-  let storageChanged = promiseStorageChanged(["addLogin"]);
-  setupScript.sendAsyncMessage("addLogin", "login7");
-  await storageChanged;
-  await setFormAndWaitForFieldFilled(`
-    <!-- This form will be manipulated to insert a different username field. -->
-    <form id="form7" action="https://autocomplete3" onsubmit="return false;">
-      <input  type="text"       name="uname">
-      <input  type="password"   name="pword">
-      <button type="submit">Submit</button>
-    </form>
-    <!-- test for no autofill after onblur with blank username -->
-    <form id="form8" action="https://autocomplete4" onsubmit="return false;">
-      <input  type="text"       name="uname">
-      <input  type="password"   name="pword">
-      <button type="submit">Submit</button>
-    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "form8user", formId: "form8"});
+add_task(async function form8() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete", null, "user", "pass", "uname", "pword"]
+  );
+  const form1 = createLoginForm({
+    num: 1,
+    action: "https://autocomplete-other"
+  });
+  const form2 = createLoginForm({
+    num: 2,
+    action: "https://autocomplete"
+  });
+  await promiseFormsProcessedInSameProcess(2);
 
-  uname = getFormElementByName(8, "uname");
-  pword = getFormElementByName(8, "pword");
-  checkLoginForm(uname, "form8user", pword, "form8pass");
-  restoreForm();
+  checkLoginForm(form2.uname, "user", form2.pword, "pass");
+
+  restoreForm(form2);
+  checkLoginForm(form2.uname, "", form2.pword, "");
+
+  form1.uname.focus();
+  checkLoginForm(form2.uname, "", form2.pword, "");
 });
 
-add_task(async function test_form8_blur() {
-  checkLoginForm(uname, "", pword, "");
-  // Focus the previous form to trigger a blur.
-  getFormElementByName(7, "uname").focus();
-});
+add_task(async function form9_filtering() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete", null, "form9userAB", "pass-1", "uname", "pword"],
+    [location.origin, "https://autocomplete", null, "form9userAAB", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete"
+  });
+  await promiseFormsProcessedInSameProcess();
 
-add_task(async function test_form8_2() {
-  checkLoginForm(uname, "", pword, "");
-  restoreForm();
-});
-
-add_task(async function test_form8_3() {
-  checkLoginForm(uname, "", pword, "");
-  let storageChanged = promiseStorageChanged(["removeLogin", "addLogin", "addLogin"]);
-  setupScript.sendAsyncMessage("removeLogin", "login7");
-  setupScript.sendAsyncMessage("addLogin", "login8A");
-  setupScript.sendAsyncMessage("addLogin", "login8B");
-  await storageChanged;
-});
-
-add_task(async function test_form9_filtering() {
-  await setFormAndWaitForFieldFilled(`
-    <!-- test autocomplete dropdown -->
-    <form id="form9" action="https://autocomplete5" onsubmit="return false;">
-      <input  type="text"       name="uname">
-      <input  type="password"   name="pword">
-      <button type="submit">Submit</button>
-    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: ""});
-
-  // Turn our attention to form9 to test the dropdown - bug 497541
-  uname = getFormElementByName(9, "uname");
-  pword = getFormElementByName(9, "pword");
-  let results = await popupBy(() => uname.focus());
+  let results = await popupBy(() => form.uname.focus());
   checkAutoCompleteResults(results,
                            ["form9userAAB", "form9userAB"],
                            window.location.host,
@@ -770,93 +680,95 @@ add_task(async function test_form9_filtering() {
                            window.location.host,
                            "Check dropdown is showing login with only one 'A'");
 
-  checkLoginForm(uname, "form9userAB", pword, "");
-  uname.focus();
+  checkLoginForm(form.uname, "form9userAB", form.pword, "");
+  form.uname.focus();
   synthesizeKey("KEY_ArrowLeft");
   results = await popupBy(() => synthesizeKey("A", {shiftKey: true}));
 
-  checkLoginForm(uname, "form9userAAB", pword, "");
+  checkLoginForm(form.uname, "form9userAAB", form.pword, "");
   checkAutoCompleteResults(results, ["form9userAAB"],
                            window.location.host, "Check dropdown is updated after inserting 'A'");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "form9userAAB", pword, "form9pass");
+  checkLoginForm(form.uname, "form9userAAB", form.pword, "pass-2");
 });
 
-add_task(async function test_form9_autocomplete_cache() {
-  // Note that this addLogin call will only be seen by the autocomplete
-  // attempt for the synthesizeKey if we do not successfully cache the
-  // autocomplete results.
-  let storageChanged = promiseStorageChanged(["addLogin"]);
-  setupScript.sendAsyncMessage("addLogin", "login8C");
-  await storageChanged;
-  uname.focus();
-  let promise1 = notifyMenuChanged(1);
+add_task(async function form9_autocomplete_cache() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete", null, "form9userAB", "pass-1", "uname", "pword"],
+    [location.origin, "https://autocomplete", null, "form9userAAB", "pass-2", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete"
+  });
+  await promiseFormsProcessedInSameProcess();
+
+  await popupBy(() => form.uname.focus());
+
+  await addLoginsInParent(
+    [location.origin, "https://autocomplete", null, "form9userAABzz", "pass-3", "uname", "pword"]
+  );
+
+  const promise1 = notifyMenuChanged(1);
   sendString("z");
-  let results = await promise1;
-  checkAutoCompleteResults(results, [], window.location.host,
+  const results1 = await promise1;
+  checkAutoCompleteResults(results1, [], window.location.host,
                            "Check popup does not have any login items");
 
   // check that empty results are cached - bug 496466
-  promise1 = notifyMenuChanged(1);
+  const promise2 = notifyMenuChanged(1);
   sendString("z");
-  results = await promise1;
-  checkAutoCompleteResults(results, [], window.location.host,
+  const results2 = await promise2;
+  checkAutoCompleteResults(results2, [], window.location.host,
                            "Check popup only has the footer when it opens");
 });
 
-add_task(async function test_form11_formless() {
-  let storageChanged = promiseStorageChanged(["removeLogin", "removeLogin", "removeLogin", "addLogin"]);
-  setupScript.sendAsyncMessage("removeLogin", "login8A");
-  setupScript.sendAsyncMessage("removeLogin", "login8B");
-  setupScript.sendAsyncMessage("removeLogin", "login8C");
-  setupScript.sendAsyncMessage("addLogin", "login11");
-  await storageChanged;
-  await setFormAndWaitForFieldFilled(`
-    <!-- tests <form>-less autocomplete -->
-    <div id="form11">
-      <input  type="text"       name="uname" id="uname">
-      <input  type="password"   name="pword" id="pword">
-      <button type="submit">Submit</button>
-    </div>`, {fieldSelector: `input[name="uname"]`, fieldValue: "testuser11"});
+add_task(async function form11_formless() {
+  await setStoredLoginsAsync(
+    [location.origin, location.origin, null, "user", "pass", "uname", "pword"]
+  );
+  const form = createLoginForm();
+  await promiseFormsProcessedInSameProcess();
 
   // Test form-less autocomplete
-  uname = getFormElementByName(11, "uname");
-  pword = getFormElementByName(11, "pword");
-  restoreForm();
-  checkLoginForm(uname, "", pword, "");
+  restoreForm(form);
+  checkLoginForm(form.uname, "", form.pword, "");
   await popupByArrowDown();
 
   // Trigger autocomplete
   synthesizeKey("KEY_ArrowDown");
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update
-  let processedPromise = promiseFormsProcessedInSameProcess();
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
+  const processedPromise = promiseFormsProcessedInSameProcess();
   synthesizeKey("KEY_Enter");
   await processedPromise;
   await promiseACPopupClosed();
-  checkLoginForm(uname, "testuser11", pword, "testpass11");
+  checkLoginForm(form.uname, "user", form.pword, "pass");
 });
 
-add_task(async function test_form11_open_on_trusted_focus() {
-  uname = getFormElementByName(11, "uname");
-  pword = getFormElementByName(11, "pword");
-  uname.value = "";
-  pword.value = "";
+add_task(async function form11_open_on_trusted_focus() {
+  await setStoredLoginsAsync(
+    [location.origin, location.origin, null, "user", "pass", "uname", "pword"]
+  );
+  const form = createLoginForm();
+  await promiseFormsProcessedInSameProcess();
+
+  form.uname.value = "";
+  form.pword.value = "";
 
   // Move focus to the password field so we can test the first click on the
   // username field.
-  pword.focus();
-  checkLoginForm(uname, "", pword, "");
+  form.pword.focus();
+  checkLoginForm(form.uname, "", form.pword, "");
   const firePrivEventPromise = new Promise((resolve) => {
-    uname.addEventListener("click", (e) => {
+    form.uname.addEventListener("click", (e) => {
       ok(e.isTrusted, "Ensure event is trusted");
       resolve();
     });
   });
   await popupBy(async () => {
-    synthesizeMouseAtCenter(uname, {});
+    synthesizeMouseAtCenter(form.uname, {});
     await firePrivEventPromise;
   });
   synthesizeKey("KEY_ArrowDown");
@@ -864,23 +776,19 @@ add_task(async function test_form11_open_on_trusted_focus() {
   synthesizeKey("KEY_Enter");
   await processedPromise;
   await promiseACPopupClosed();
-  checkLoginForm(uname, "testuser11", pword, "testpass11");
-  let storageChanged = promiseStorageChanged(["removeLogin"]);
-  setupScript.sendAsyncMessage("removeLogin", "login11");
-  await storageChanged;
+  checkLoginForm(form.uname, "user", form.pword, "pass");
 });
 
-add_task(async function test_form12_recipes() {
-  let storageChanged = promiseStorageChanged(["addLogin"]);
-  setupScript.sendAsyncMessage("addLogin", "login10");
-  await storageChanged;
-  await setFormAndWaitForFieldFilled(`
-    <!-- test for onUsernameInput recipe testing -->
-    <form id="form12" action="https://autocomplete7" onsubmit="return false;">
-      <input  type="text"   name="1">
-      <input  type="text"   name="2">
-      <button type="submit">Submit</button>
-    </form>`, {fieldSelector: `input[name="1"]`, fieldValue: ""});
+add_task(async function form12_recipes() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete", null, "user", "pass", "uname", "pword"]
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete",
+    password: {
+      type: "text"
+    }
+  });
 
   await loadRecipes({
     siteRecipes: [{
@@ -889,97 +797,98 @@ add_task(async function test_form12_recipes() {
       "passwordSelector": "input[name='2']",
     }],
   });
-  uname = getFormElementByName(12, "1");
-  pword = getFormElementByName(12, "2");
 
   // First test DOMAutocomplete
   // Switch the password field to type=password so _fillForm marks the username
   // field for autocomplete.
-  pword.type = "password";
+  form.pword.type = "password";
   await promiseFormsProcessedInSameProcess();
-  restoreForm();
-  checkLoginForm(uname, "", pword, "");
+  restoreForm(form);
+  checkLoginForm(form.uname, "", form.pword, "");
   await popupByArrowDown();
 
   synthesizeKey("KEY_ArrowDown");
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
   await promiseACPopupClosed();
-  checkLoginForm(uname, "testuser10", pword, "testpass10");
+  checkLoginForm(form.uname, "user", form.pword, "pass");
 
   // Now test recipes with blur on the username field.
-  restoreForm();
-  checkLoginForm(uname, "", pword, "");
-  uname.value = "testuser10";
-  checkLoginForm(uname, "testuser10", pword, "");
+  restoreForm(form);
+  checkLoginForm(form.uname, "", form.pword, "");
+  form.uname.value = "user";
+  checkLoginForm(form.uname, "user", form.pword, "");
   synthesizeKey("KEY_Tab");
   await promiseFormsProcessedInSameProcess();
-  checkLoginForm(uname, "testuser10", pword, "testpass10");
+  checkLoginForm(form.uname, "user", form.pword, "pass");
   await resetRecipes();
 });
 
-add_task(async function test_form13_stays_open_upon_empty_search() {
-  await setFormAndWaitForFieldFilled(`
-    <!-- test not closing when the search string (.value) becomes empty -->
-    <form id="form13" action="http://autocomplete:8888/formtest.js" onsubmit="return false;">
-      <input  type="text"       name="uname" value="prefilled">
-      <input  type="password"   name="pword" value="prefilled">
-      <button type="submit">Submit</button>
-    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "prefilled"});
+add_task(async function form13_stays_open_upon_empty_search() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete:8888", null, "", "pass", "", "pword"],
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete:8888",
+    username: {
+      value: "prefilled"
+    },
+    password: {
+      value: "prefilled"
+    }
+  });
+  await promiseFormsProcessedInSameProcess();
 
-  uname = getFormElementByName(13, "uname");
-  pword = getFormElementByName(13, "pword");
-  checkLoginForm(uname, "prefilled", pword, "prefilled");
+  checkLoginForm(form.uname, "prefilled", form.pword, "prefilled");
 
-  uname.scrollIntoView();
-  await popupBy(() => synthesizeMouseAtCenter(uname, {}));
-  uname.select();
+  form.uname.scrollIntoView();
+  await popupBy(() => synthesizeMouseAtCenter(form.uname, {}));
+  form.uname.select();
   synthesizeKey("KEY_Delete");
 
   await spinEventLoop();
   let popupState = await getPopupState();
   is(popupState.open, true, "Check popup is still open");
-  checkLoginForm(uname, "", pword, "prefilled");
+  checkLoginForm(form.uname, "", form.pword, "prefilled");
 
   info("testing password field");
-  synthesizeMouseAtCenter(pword, {});
-  pword.select();
+  synthesizeMouseAtCenter(form.pword, {});
+  form.pword.select();
   popupState = await getPopupState();
   is(popupState.open, false, "Check popup closed since password field isn't empty");
   await popupBy(() => synthesizeKey("KEY_Delete"));
-  checkLoginForm(uname, "", pword, "");
-
-  // ensure the popup is closed for the next test
-  synthesizeKey("KEY_Escape");
-  await promiseACPopupClosed();
+  checkLoginForm(form.uname, "", form.pword, "");
 });
 
-add_task(async function test_form14_username_only() {
+add_task(async function form14_username_only() {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete", null, "user", "pass", "uname", "pword"],
+  );
+  const form = createLoginForm({
+    action: "https://autocomplete",
+    autocomplete: "off",
+    username: {
+      value: "prefilled",
+      type: "email",
+      autocomplete: "username"
+    }
+  });
+  await promiseFormsProcessedInSameProcess();
+
   await SimpleTest.promiseFocus(window);
-  let storageChanged = promiseStorageChanged(["removeLogin", "addLogin"]);
-  setupScript.sendAsyncMessage("removeLogin", "login10");
-  setupScript.sendAsyncMessage("addLogin", "login12");
-  await storageChanged;
 
-  await setFormAndWaitForFieldFilled(`
-    <form id="form14" action="https://autocomplete8" onsubmit="return false;" autocomplete="off">
-      <input  type="email"       name="uname" autocomplete="username" value="prefilled">
-      <button type="submit">Submit</button>
-    </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "prefilled"});
-
-  uname = getFormElementByName(14, "uname");
-  pword = {value: ""};
-  checkLoginForm(uname, "prefilled", pword, "");
-  restoreForm();
+  const pword = { value: "" };
+  checkLoginForm(form.uname, "prefilled", pword, "");
+  restoreForm(form);
   await popupByArrowDown();
 
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update
+  checkLoginForm(form.uname, "", pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseACPopupClosed();
-  checkLoginForm(uname, "testuser12", pword, "");
+  checkLoginForm(form.uname, "user", pword, "");
 });
 </script>
 </pre>
