@@ -25,6 +25,6 @@ async function rewriteUserAgentHeader(e) {
 }
 
 browser.webRequest.onBeforeSendHeaders.addListener(rewriteUserAgentHeader,
-                                          {urls: ["https://ablaze.one/*","https://floorp.ablaze.one/*", "https://support.ablaze.one/", "https://ss1.xrea.com/menkuri.s270.xrea.com/*"]},
+                                          {urls: ["https://ablaze.one/*","https://floorp.ablaze.one/*", "https://floorp.app/*", "https://support.ablaze.one/", "https://ss1.xrea.com/menkuri.s270.xrea.com/*"]},
                                           ["blocking", "requestHeaders"]);
                                           
