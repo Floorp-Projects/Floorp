@@ -4,11 +4,17 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 114.0.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v113..main)
+# 115.0.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v114..main)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+
+# 114.0.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v113..releases_v114)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v114/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v114/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v114/android-components/.config.yml)
 
 * * **browser-state**
   * 🌟 Added `DownloadState`.`openInApp` to indicate whether or not the file associated with the download should be opened in a third party app after downloaded successfully, for more information see [bug 1829371](https://bugzilla.mozilla.org/show_bug.cgi?id=1829371) and [bug 1829372](https://bugzilla.mozilla.org/show_bug.cgi?id=1829372).
