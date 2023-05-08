@@ -34,7 +34,7 @@
     <a href=".github/workflow.md">Explore the docs »</a>
     <br />
     <br />
-    <a href="https://floorp.ablaze.one">Official Site</a>
+    <a href="https://floorp.app">Official Site</a>
     ・
     <a href="https://github.com/Floorp-Projects/Floorp">Source code</a>
     ・

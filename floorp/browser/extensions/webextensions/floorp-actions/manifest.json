@@ -3,7 +3,7 @@
   "name": "Floorp Actions",
   "description": "Controls Floorp future from Gesturefy",
   "version": "1.0",
-  "homepage_url": "https://floorp.ablaze.one",
+  "homepage_url": "https://floorp.app",
   "background": {
     "scripts": [
       "background.js"

@@ -5,7 +5,7 @@
 // This file contains branding-specific prefs.
 
 pref("startup.homepage_override_url", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
-pref("startup.homepage_welcome_url", "https://floorp.ablaze.one/");
+pref("startup.homepage_welcome_url", "https://floorp.app/");
 pref("startup.homepage_welcome_url.additional", "https://docs.ablaze.one/floorp_privacy_policy/");
 // Interval: Time between checks for a new version (in seconds)
 pref("app.update.interval", 43200); // 12 hours
@@ -16,7 +16,7 @@ pref("app.update.promptWaitTime", 691200);
 // app.update.url.details: a default value for the "More information about this
 // update" link supplied in the "An update is available" page of the update
 // wizard.
-pref("app.update.url.manual", "https://floorp.ablaze.one");
+pref("app.update.url.manual", "https://floorp.app");
 pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
 pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
 pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
