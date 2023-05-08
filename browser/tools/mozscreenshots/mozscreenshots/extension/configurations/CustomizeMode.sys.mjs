@@ -2,15 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["CustomizeMode"];
-
-const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
-
-var CustomizeMode = {
+export var CustomizeMode = {
   init(libDir) {},
 
   configurations: {

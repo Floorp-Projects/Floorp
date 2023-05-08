@@ -2,36 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["TestRunner"];
-
 const APPLY_CONFIG_TIMEOUT_MS = 60 * 1000;
 const HOME_PAGE = "resource://mozscreenshots/lib/mozscreenshots.html";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
-const { Rect } = ChromeUtils.importESModule(
-  "resource://gre/modules/Geometry.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
+import { Rect } from "resource://gre/modules/Geometry.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.sys.mjs",
+  // Screenshot.sys.mjs must be imported this way for xpcshell tests to work
+  Screenshot: "resource://mozscreenshots/Screenshot.sys.mjs",
 });
-// Screenshot.jsm must be imported this way for xpcshell tests to work
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Screenshot",
-  "resource://mozscreenshots/Screenshot.jsm"
-);
 
-var TestRunner = {
+export var TestRunner = {
   combos: null,
   completedCombos: 0,
   currentComboIndex: 0,

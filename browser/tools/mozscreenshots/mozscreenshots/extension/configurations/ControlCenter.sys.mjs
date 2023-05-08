@@ -2,23 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
+import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["ControlCenter"];
-
-const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
-const { BrowserTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/BrowserTestUtils.sys.mjs"
-);
 const { SitePermissions } = ChromeUtils.import(
   "resource:///modules/SitePermissions.jsm"
 );
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 let { UrlClassifierTestUtils } = ChromeUtils.import(
   "resource://testing-common/UrlClassifierTestUtils.jsm"
@@ -38,7 +29,7 @@ const MIXED_ACTIVE_CONTENT_URL = `https://example.com/${RESOURCE_PATH}/mixed_act
 const MIXED_PASSIVE_CONTENT_URL = `https://example.com/${RESOURCE_PATH}/mixed_passive.html`;
 const TRACKING_PAGE = `http://tracking.example.org/${RESOURCE_PATH}/tracking.html`;
 
-var ControlCenter = {
+export var ControlCenter = {
   init(libDir) {},
 
   configurations: {
