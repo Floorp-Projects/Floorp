@@ -358,7 +358,11 @@ def get_raptor_test_list(args, oskey):
                 # subtest comes from matching test ini file name, so add it
                 tests_to_run.append(next_test)
 
-    if args.collect_perfstats and "chrom" not in args.app.lower():
+    if args.collect_perfstats and args.app.lower() not in (
+        "chrome",
+        "chromium",
+        "custom-car",
+    ):
         for next_test in tests_to_run:
             next_test["perfstats"] = "true"
 
