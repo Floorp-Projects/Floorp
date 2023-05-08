@@ -155,6 +155,7 @@
 #include "nsHashKeys.h"
 #include "nsIAsyncInputStream.h"
 #include "nsID.h"
+#include "nsIDUtils.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsIEventTarget.h"
 #include "nsIFile.h"
@@ -558,36 +559,6 @@ nsresult ClampResultCode(nsresult aResultCode) {
 
   IDB_REPORT_INTERNAL_ERR();
   return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-}
-
-nsAutoString GetDatabaseFilenameBase(const nsAString& aDatabaseName) {
-  nsAutoString databaseFilenameBase;
-
-  // WARNING: do not change this hash function. See the comment in HashName()
-  // for details.
-  databaseFilenameBase.AppendInt(HashName(aDatabaseName));
-
-  nsAutoCString escapedName;
-  if (!NS_Escape(NS_ConvertUTF16toUTF8(aDatabaseName), escapedName,
-                 url_XPAlphas)) {
-    MOZ_CRASH("Can't escape database name!");
-  }
-
-  const char* forwardIter = escapedName.BeginReading();
-  const char* backwardIter = escapedName.EndReading() - 1;
-
-  nsAutoCString substring;
-  while (forwardIter <= backwardIter && substring.Length() < 21) {
-    if (substring.Length() % 2) {
-      substring.Append(*backwardIter--);
-    } else {
-      substring.Append(*forwardIter++);
-    }
-  }
-
-  databaseFilenameBase.AppendASCII(substring.get(), substring.Length());
-
-  return databaseFilenameBase;
 }
 
 Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
@@ -5833,6 +5804,23 @@ StaticAutoPtr<TelemetryIdHashtable> gTelemetryIdHashtable;
 // Protects all reads and writes to gTelemetryIdHashtable.
 StaticAutoPtr<Mutex> gTelemetryIdMutex;
 
+// For private browsing, maps the raw database names provided by content to a
+// replacement UUID in order to avoid exposing the name of the database on
+// disk or a directly derived value, such as the non-private-browsing
+// representation. This mapping will be the same for all databases with the
+// same name across all storage keys/origins for the lifetime of the IDB
+// QuotaClient. In tests, the QuotaClient may be created and destroyed multiple
+// times, but for normal browser use the QuotaClient will last until the
+// browser shuts down. Bug 1831835 will improve this implementation to avoid
+// using the same mapping across storage keys and to deal with the resulting
+// lifecycle issues of the additional memory use.
+using StorageDatabaseNameHashtable = nsTHashMap<nsString, nsString>;
+
+StaticAutoPtr<StorageDatabaseNameHashtable> gStorageDatabaseNameHashtable;
+
+// Protects all reads and writes to gStorageDatabaseNameHashtable.
+StaticAutoPtr<Mutex> gStorageDatabaseNameMutex;
+
 #ifdef DEBUG
 
 StaticRefPtr<DEBUGThreadSlower> gDEBUGThreadSlower;
@@ -6024,6 +6012,54 @@ uint32_t TelemetryIdForFile(nsIFile* aFile) {
     // We're locked, no need for atomics.
     return sNextId++;
   });
+}
+
+nsAutoString GetDatabaseFilenameBase(const nsAString& aDatabaseName,
+                                     bool aIsPrivate) {
+  nsAutoString databaseFilenameBase;
+
+  if (aIsPrivate) {
+    MOZ_DIAGNOSTIC_ASSERT(gStorageDatabaseNameMutex);
+
+    MutexAutoLock lock(*gStorageDatabaseNameMutex);
+
+    if (!gStorageDatabaseNameHashtable) {
+      gStorageDatabaseNameHashtable = new StorageDatabaseNameHashtable();
+    }
+
+    databaseFilenameBase.Append(
+        gStorageDatabaseNameHashtable->LookupOrInsertWith(aDatabaseName, []() {
+          return NSID_TrimBracketsUTF16(nsID::GenerateUUID());
+        }));
+
+    return databaseFilenameBase;
+  }
+
+  // WARNING: do not change this hash function. See the comment in HashName()
+  // for details.
+  databaseFilenameBase.AppendInt(HashName(aDatabaseName));
+
+  nsAutoCString escapedName;
+  if (!NS_Escape(NS_ConvertUTF16toUTF8(aDatabaseName), escapedName,
+                 url_XPAlphas)) {
+    MOZ_CRASH("Can't escape database name!");
+  }
+
+  const char* forwardIter = escapedName.BeginReading();
+  const char* backwardIter = escapedName.EndReading() - 1;
+
+  nsAutoCString substring;
+  while (forwardIter <= backwardIter && substring.Length() < 21) {
+    if (substring.Length() % 2) {
+      substring.Append(*backwardIter--);
+    } else {
+      substring.Append(*forwardIter++);
+    }
+  }
+
+  databaseFilenameBase.AppendASCII(substring.get(), substring.Length());
+
+  return databaseFilenameBase;
 }
 
 const CommonIndexOpenCursorParams& GetCommonIndexOpenCursorParams(
@@ -11991,6 +12027,8 @@ QuotaClient::QuotaClient() : mDeleteTimer(NS_NewTimer()) {
   // properly synchronized.
   gTelemetryIdMutex = new Mutex("IndexedDB gTelemetryIdMutex");
 
+  gStorageDatabaseNameMutex = new Mutex("IndexedDB gStorageDatabaseNameMutex");
+
   sInstance = this;
 }
 
@@ -12004,6 +12042,9 @@ QuotaClient::~QuotaClient() {
   // QuotaClient has gone away.
   gTelemetryIdHashtable = nullptr;
   gTelemetryIdMutex = nullptr;
+
+  gStorageDatabaseNameHashtable = nullptr;
+  gStorageDatabaseNameMutex = nullptr;
 
   sInstance = nullptr;
 }
@@ -14968,8 +15009,10 @@ nsresult FactoryOp::FinishOpen() {
         QM_TRY(MOZ_TO_RESULT(dbFile->Append(
             NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME))));
 
-        QM_TRY(MOZ_TO_RESULT(dbFile->Append(
-            GetDatabaseFilenameBase(metadata.name()) + kSQLiteSuffix)));
+        QM_TRY(MOZ_TO_RESULT(
+            dbFile->Append(GetDatabaseFilenameBase(metadata.name(),
+                                                   mOriginMetadata.mIsPrivate) +
+                           kSQLiteSuffix)));
 
         QM_TRY_RETURN(
             MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, dbFile, GetPath));
@@ -15196,7 +15239,8 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
 #endif
   }
 
-  const auto databaseFilenameBase = GetDatabaseFilenameBase(databaseName);
+  const auto databaseFilenameBase =
+      GetDatabaseFilenameBase(databaseName, mOriginMetadata.mIsPrivate);
 
   QM_TRY_INSPECT(const auto& markerFile,
                  CloneFileAndAppend(*dbDirectory, kIdbDeletionMarkerFilePrefix +
@@ -16358,7 +16402,8 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
   QM_TRY_UNWRAP(mDatabaseDirectoryPath, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                                             nsString, directory, GetPath));
 
-  mDatabaseFilenameBase = GetDatabaseFilenameBase(databaseName);
+  mDatabaseFilenameBase =
+      GetDatabaseFilenameBase(databaseName, mOriginMetadata.mIsPrivate);
 
   QM_TRY_INSPECT(
       const auto& dbFile,
