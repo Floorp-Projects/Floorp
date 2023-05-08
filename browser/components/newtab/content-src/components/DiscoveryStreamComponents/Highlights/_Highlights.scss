@@ -30,6 +30,10 @@
           line-height: $line-height;
           max-height: $line-height;
         }
+
+        a {
+          text-decoration: none;
+        }
       }
     }
   }

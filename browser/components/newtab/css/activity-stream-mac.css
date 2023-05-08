@@ -290,10 +290,6 @@ h2 {
   font-weight: normal;
 }
 
-a {
-  text-decoration: none;
-}
-
 .inner-border {
   border: 1px solid var(--newtab-border-color);
   border-radius: 3px;
@@ -531,6 +527,9 @@ main.has-snippet {
   list-style: none;
   margin: 0 -16px;
   padding: 0;
+}
+.top-sites-list a {
+  text-decoration: none;
 }
 .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) {
   background: var(--newtab-element-hover-color);
@@ -1863,6 +1862,7 @@ main.has-snippet {
   background-size: 16px;
   padding-inline-start: 21px;
   margin-bottom: 20px;
+  text-decoration: underline;
 }
 @media (forced-colors: active) {
   .home-section .external-link {
@@ -1874,7 +1874,7 @@ main.has-snippet {
   background-position-x: right;
 }
 .home-section .external-link:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .home-section .section .sponsored-checkbox:focus-visible,
@@ -2626,7 +2626,7 @@ main.has-snippet {
   font-weight: 500;
 }
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a:is(:focus, :hover) {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .ds-onboarding,
@@ -3067,6 +3067,9 @@ main.has-snippet {
   line-height: 20px;
   max-height: 20px;
 }
+.ds-highlights .section .section-list .card-outer a {
+  text-decoration: none;
+}
 .ds-highlights .hide-for-narrow {
   display: block;
 }
@@ -3115,7 +3118,7 @@ main.has-snippet {
   content: none;
 }
 .ds-navigation ul li a:hover, .ds-navigation ul li a:active {
-  text-decoration: underline;
+  text-decoration: none;
 }
 .ds-navigation ul li a:active {
   color: var(--newtab-primary-element-active-color);
@@ -3128,7 +3131,7 @@ main.has-snippet {
   float: inline-end;
 }
 .ds-navigation .ds-navigation-privacy:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 .ds-navigation.ds-navigation-new-topics {
   display: block;
@@ -3478,6 +3481,7 @@ main.has-snippet {
   height: 100%;
   display: flex;
   flex-direction: column;
+  text-decoration: none;
 }
 .ds-card .ds-card-link:hover header {
   color: var(--newtab-primary-action-background);
@@ -4020,7 +4024,7 @@ main.has-snippet {
   line-height: 24px;
 }
 .ds-privacy-link a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .ds-topics-widget {
