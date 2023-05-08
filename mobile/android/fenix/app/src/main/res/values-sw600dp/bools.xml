@@ -2,6 +2,11 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <bool name="tablet">true</bool>
+
+    <!-- Snackbar -->
+    <!-- Overriding the default snackbar width values set in the material library -->
+    <dimen tools:override="true" name="design_snackbar_min_width" tools:ignore="MissingDefaultResource, UnusedResources">328dp</dimen>
+    <dimen tools:override="true" name="design_snackbar_max_width" tools:ignore="MissingDefaultResource, UnusedResources">512dp</dimen>
 </resources>
