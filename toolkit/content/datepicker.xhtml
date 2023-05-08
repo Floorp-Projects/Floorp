@@ -24,6 +24,7 @@
         <div class="month-year-container">
           <button class="month-year" id="month-year-label" aria-live="polite" />
         </div>
+        <button class="next" data-l10n-id="date-picker-next" />
         <template id="spinner-template">
           <div class="spinner-container">
             <button class="up"/>
@@ -32,7 +33,6 @@
           </div>
         </template>
         <div class="month-year-view"></div>
-        <button class="next" data-l10n-id="date-picker-next" />
       </div>
       <table role="grid" aria-labelledby="month-year-label">
         <thead class="week-header"></thead>
@@ -47,6 +47,7 @@
   // initialized by the "DatePickerInit" event from datetimepopup.xml
   const root = document.getElementById("date-picker");
   new DatePicker({
+    monthYearNav: root.querySelector(".month-year-nav"),
     monthYear: root.querySelector(".month-year"),
     monthYearView: root.querySelector(".month-year-view"),
     buttonPrev: root.querySelector(".prev"),
