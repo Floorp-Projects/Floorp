@@ -16,35 +16,42 @@ Login Manager test: logins with non-matching formActionOrigin appear in autocomp
 const chromeScript = runChecksAfterCommonInit();
 </script>
 <p id="display"></p>
-
 <!-- we presumably can't hide the content for this test. -->
-<div id="content">
-
-  <!-- form1 tests multiple matching logins -->
-  <form id="form1" action="https://autocomplete:8888/formtest.js" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-</div>
+<div id="content"></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+function createForm () {
+  const form = document.createElement("form");
+  form.action = "https://autocomplete:8888/formtest.js";
+
+  const usernameInput = document.createElement("input");
+  usernameInput.type = "text";
+  usernameInput.name = "uname";
+  form.appendChild(usernameInput);
+
+  const passwordInput = document.createElement("input");
+  passwordInput.type = "password";
+  passwordInput.name = "pword";
+  form.appendChild(passwordInput);
+
+  const submitButton = document.createElement("button");
+  submitButton.type = "submit";
+  submitButton.name = "submit";
+  submitButton.innerText = "Submit";
+  form.appendChild(submitButton);
+
+  const content = document.getElementById("content");
+
+  if (content.firstChild) {
+    content.replaceChild(form, content.firstChild);
+  } else {
+    content.appendChild(form);
+  }
+
+  return form;
+}
 
 /** Test for Login Manager: multiple login autocomplete. **/
-
-const uname = getFormElementByName(1, "uname");
-const pword = getFormElementByName(1, "pword");
-
-// Restore the form to the default state.
-function restoreForm() {
-  uname.value = "";
-  pword.value = "";
-  uname.focus();
-}
-
-function spinEventLoop() {
-  return Promise.resolve();
-}
 
 add_setup(async () => {
   await addLoginsInParent(
@@ -54,10 +61,12 @@ add_setup(async () => {
 });
 
 add_task(async function test_form1_initial_empty() {
+  const form = createForm();
+
   await SimpleTest.promiseFocus(window);
 
   // Make sure initial form is empty.
-  checkLoginForm(uname, "", pword, "");
+  checkLoginForm(form.uname, "", form.pword, "");
   const popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
 });
@@ -67,9 +76,15 @@ add_task(async function test_form1_initial_empty() {
  * in the autocomplete popup.
  */
 add_task(async function test_form1_menu_shows_logins_for_different_formActionOrigin() {
+  const form = createForm();
+
   await SimpleTest.promiseFocus(window);
+
   // Trigger autocomplete popup
-  restoreForm();
+  form.uname.value = "";
+  form.pword.value = "";
+  form.uname.focus();
+
   const autocompleteItems = await popupByArrowDown();
 
   const popupState = await getPopupState();
@@ -79,11 +94,11 @@ add_task(async function test_form1_menu_shows_logins_for_different_formActionOri
   checkAutoCompleteResults(autocompleteItems, expectedMenuItems, window.location.host, "Check all menuitems are displayed correctly.");
 
   synthesizeKey("KEY_ArrowDown"); // first item
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update just by selecting
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update just by selecting
 
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
-  checkLoginForm(uname, "dfsu1", pword, "dfsp1");
+  checkLoginForm(form.uname, "dfsu1", form.pword, "dfsp1");
 });
 </script>
 </pre>
