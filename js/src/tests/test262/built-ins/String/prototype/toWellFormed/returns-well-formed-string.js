@@ -1,4 +1,4 @@
-// |reftest| skip -- String.prototype.toWellFormed is not supported
+// |reftest| shell-option(--enable-well-formed-unicode-strings) skip-if(!String.prototype.toWellFormed||!xulRuntime.shell) -- String.prototype.toWellFormed is not enabled unconditionally, requires shell-options
 // Copyright (C) 2022 Jordan Harband. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
