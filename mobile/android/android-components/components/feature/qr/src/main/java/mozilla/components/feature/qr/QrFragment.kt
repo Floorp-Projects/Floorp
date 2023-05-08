@@ -72,6 +72,7 @@ import java.util.Comparator
 import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
@@ -466,14 +467,18 @@ class QrFragment : Fragment() {
     internal fun closeCamera() {
         try {
             cameraOpenCloseLock.acquire()
-            captureSession?.close()
-            captureSession = null
             cameraDevice?.close()
             cameraDevice = null
             imageReader?.close()
             imageReader = null
+
+            // captureSession should be closed as a last step in case background executor terminated
+            captureSession?.close()
+            captureSession = null
         } catch (e: InterruptedException) {
             throw IllegalStateException("Interrupted while trying to lock camera closing.", e)
+        } catch (e: RejectedExecutionException) { // This exception was found in automated testing
+            logger.error("backgroundExecutor terminated", e)
         } finally {
             cameraOpenCloseLock.release()
         }
