@@ -36,17 +36,6 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["security.notification_enable_delay", TEST_SECURITY_DELAY]],
   });
-  // The delay pref is stored on the PopupNotifications on init. Since a
-  // previous test may have already called PopupNotifications we need to update
-  // its internal field to account for the pref change.
-  // This can be removed once we switch PopupNotifications over to use a lazy
-  // pref getter, see Bug 1830925.
-  let originalButtonDelay = PopupNotifications.buttonDelay;
-  PopupNotifications.buttonDelay = TEST_SECURITY_DELAY;
-  // After the test revert buttonDelay to its original value.
-  registerCleanupFunction(async function() {
-    PopupNotifications.buttonDelay = originalButtonDelay;
-  });
 });
 
 /**
@@ -62,7 +51,7 @@ add_task(async function test_timeShownMultipleNotifications() {
    * We need to wait for the value performance.now() to be larger than the
    * security delay in order to observe the bug. Only then does the
    * timeSinceShown check in PopupNotifications.sys.mjs lead to a timeSinceShown
-   * value that is unconditionally greater than this.buttonDelay for
+   * value that is unconditionally greater than lazy.buttonDelay for
    * notification.timeShown = null = 0.
    * See: https://searchfox.org/mozilla-central/rev/f32d5f3949a3f4f185122142b29f2e3ab776836e/toolkit/modules/PopupNotifications.sys.mjs#1870-1872
    *

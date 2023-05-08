@@ -41,10 +41,6 @@ function promiseTabLoadEvent(tab, url) {
   return BrowserTestUtils.browserLoaded(browser, false, url);
 }
 
-const PREF_SECURITY_DELAY_INITIAL = Services.prefs.getIntPref(
-  "security.notification_enable_delay"
-);
-
 // Tests that call setup() should have a `tests` array defined for the actual
 // tests to be run.
 /* global tests */
@@ -55,7 +51,6 @@ function setup() {
   );
   registerCleanupFunction(() => {
     gBrowser.removeTab(gBrowser.selectedTab);
-    PopupNotifications.buttonDelay = PREF_SECURITY_DELAY_INITIAL;
   });
 }
 
