@@ -36,6 +36,7 @@ class Apps(ClassificationEnum):
     FENIX = {"value": "fenix", "index": 4}
     CHROME_M = {"value": "chrome-m", "index": 5}
     SAFARI = {"value": "safari", "index": 6}
+    CHROMIUM_RELEASE = {"value": "custom-car", "index": 7}
 
 
 class Suites(ClassificationEnum):
@@ -66,6 +67,10 @@ def check_for_android(android=False, **kwargs):
 
 def check_for_chrome(chrome=False, **kwargs):
     return chrome
+
+
+def check_for_custom_car(custom_car=False, **kwargs):
+    return custom_car
 
 
 def check_for_safari(safari=False, **kwargs):
@@ -118,7 +123,7 @@ class ClassificationProvider:
     def apps(self):
         return {
             Apps.FIREFOX.value: {
-                "query": "!chrom !geckoview !fenix !safari",
+                "query": "!chrom !geckoview !fenix !safari !custom-car",
                 "platforms": [Platforms.DESKTOP.value],
             },
             Apps.CHROME.value: {
@@ -153,6 +158,12 @@ class ClassificationProvider:
                 "restriction": check_for_safari,
                 "platforms": [Platforms.MACOSX.value],
             },
+            Apps.CHROMIUM_RELEASE.value: {
+                "query": "'custom-car",
+                "negation": "!custom-car",
+                "restriction": check_for_custom_car,
+                "platforms": [Platforms.LINUX.value],
+            },
         }
 
     @property
@@ -175,7 +186,14 @@ class ClassificationProvider:
                 "negation": "!live",
                 "restriction": check_for_live_sites,
                 "platforms": [Platforms.DESKTOP.value, Platforms.ANDROID.value],
-                "apps": list(self.apps.keys()),
+                "apps": [  # XXX No live CaR tests
+                    Apps.FIREFOX.value,
+                    Apps.CHROME.value,
+                    Apps.CHROMIUM.value,
+                    Apps.FENIX.value,
+                    Apps.GECKOVIEW.value,
+                    Apps.SAFARI.value,
+                ],
             },
             Variants.PROFILING.value: {
                 "query": "'profil",
@@ -259,6 +277,7 @@ class ClassificationProvider:
                         Apps.CHROMIUM.value,
                         Apps.FENIX.value,
                         Apps.GECKOVIEW.value,
+                        Apps.CHROMIUM_RELEASE.value,
                     ],
                 },
                 "tasks": [],
