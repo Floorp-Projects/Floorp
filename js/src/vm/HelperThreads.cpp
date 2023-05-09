@@ -611,11 +611,7 @@ void ParseTask::runTask(AutoLockHelperThreadState& lock) {
 
   AutoUnlockHelperThreadState unlock(lock);
 
-  JSContext* cx = TlsContext.get();
-
-  fc_.linkWithJSContext(cx);
-
-  parse(cx, &fc_);
+  parse(&fc_);
 
   fc_.nameCollectionPool().purge();
 }
@@ -657,7 +653,7 @@ struct CompileToStencilTask : public ParseTask {
   CompileToStencilTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
                        JS::OffThreadCompileCallback callback,
                        void* callbackData);
-  void parse(JSContext* cx, FrontendContext* fc) override;
+  void parse(FrontendContext* fc) override;
 };
 
 template <typename Unit>
@@ -667,7 +663,7 @@ struct CompileModuleToStencilTask : public ParseTask {
   CompileModuleToStencilTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
                              JS::OffThreadCompileCallback callback,
                              void* callbackData);
-  void parse(JSContext* cx, FrontendContext* fc) override;
+  void parse(FrontendContext* fc) override;
 };
 
 struct DecodeStencilTask : public ParseTask {
@@ -675,7 +671,7 @@ struct DecodeStencilTask : public ParseTask {
 
   DecodeStencilTask(JSContext* cx, const JS::TranscodeRange& range,
                     JS::OffThreadCompileCallback callback, void* callbackData);
-  void parse(JSContext* cx, FrontendContext* fc) override;
+  void parse(FrontendContext* fc) override;
 };
 
 struct MultiStencilsDecodeTask : public ParseTask {
@@ -684,7 +680,7 @@ struct MultiStencilsDecodeTask : public ParseTask {
   MultiStencilsDecodeTask(JSContext* cx, JS::TranscodeSources& sources,
                           JS::OffThreadCompileCallback callback,
                           void* callbackData);
-  void parse(JSContext* cx, FrontendContext* fc) override;
+  void parse(FrontendContext* fc) override;
 };
 
 template <typename Unit>
@@ -695,7 +691,7 @@ CompileToStencilTask<Unit>::CompileToStencilTask(
       data(std::move(srcBuf)) {}
 
 template <typename Unit>
-void CompileToStencilTask<Unit>::parse(JSContext* cx, FrontendContext* fc) {
+void CompileToStencilTask<Unit>::parse(FrontendContext* fc) {
   stencil_ = JS::CompileGlobalScriptToStencil(fc, options, stackLimit, data,
                                               compileStorage_);
   if (!stencil_) {
@@ -718,8 +714,7 @@ CompileModuleToStencilTask<Unit>::CompileModuleToStencilTask(
       data(std::move(srcBuf)) {}
 
 template <typename Unit>
-void CompileModuleToStencilTask<Unit>::parse(JSContext* cx,
-                                             FrontendContext* fc) {
+void CompileModuleToStencilTask<Unit>::parse(FrontendContext* fc) {
   stencil_ = JS::CompileModuleScriptToStencil(fc, options, stackLimit, data,
                                               compileStorage_);
   if (!stencil_) {
@@ -743,7 +738,7 @@ DecodeStencilTask::DecodeStencilTask(JSContext* cx,
   MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
 }
 
-void DecodeStencilTask::parse(JSContext* cx, FrontendContext* fc) {
+void DecodeStencilTask::parse(FrontendContext* fc) {
   if (!compileStorage_.allocateInput(fc, options)) {
     return;
   }
@@ -778,7 +773,7 @@ MultiStencilsDecodeTask::MultiStencilsDecodeTask(
     : ParseTask(ParseTaskKind::MultiStencilsDecode, cx, callback, callbackData),
       sources(&sources) {}
 
-void MultiStencilsDecodeTask::parse(JSContext* cx, FrontendContext* fc) {
+void MultiStencilsDecodeTask::parse(FrontendContext* fc) {
   if (!stencils.reserve(sources->length())) {
     ReportOutOfMemory(fc);  // This sets |outOfMemory|.
     return;
