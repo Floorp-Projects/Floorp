@@ -36,7 +36,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
     @Suppress("LongMethod")
     override fun onCreateDialog(bundle: Bundle?): AlertDialog {
         AddToHomeScreen.dialogDisplayed.record(NoExtras())
-        val url = requireArguments().getString(URL)
+        val url = requireArguments().getString(URL)!!
         val title = requireArguments().getString(TITLE)
         val blockingEnabled = requireArguments().getBoolean(BLOCKING_ENABLED)
         val requestDesktop = requireArguments().getBoolean(REQUEST_DESKTOP)
@@ -50,7 +50,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         val iconView = dialogView.findViewById<ImageView>(R.id.homescreen_icon)
         requireContext().components.icons.loadIntoView(
             iconView,
-            IconRequest(url.toString(), isPrivate = true),
+            IconRequest(url, isPrivate = true),
         )
 
         val blockIcon = dialogView.findViewById<ImageView>(R.id.homescreen_dialog_block_icon)
@@ -74,7 +74,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
     private fun setButtons(
         parentView: View,
         editableTitle: EditText,
-        iconUrl: String?,
+        iconUrl: String,
         blockingEnabled: Boolean,
         requestDesktop: Boolean,
         initialTitle: String?,
@@ -94,7 +94,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
 
         addToHomescreenDialogConfirmButton.setOnClickListener {
             HomeScreen.installShortCut(
-                context,
+                requireContext(),
                 IconGenerator.generateLauncherIcon(requireContext(), iconUrl),
                 iconUrl,
                 editableTitle.text.toString().trim { it <= ' ' },
