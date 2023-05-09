@@ -209,10 +209,6 @@ criteria = "safe-to-deploy"
 version = "4.0.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.atomic]]
-version = "0.4.6"
-criteria = "safe-to-deploy"
-
 [[exemptions.bincode]]
 version = "1.3.3"
 criteria = "safe-to-deploy"
@@ -521,10 +517,6 @@ criteria = "safe-to-deploy"
 version = "1.3.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.libc]]
-version = "0.2.126"
-criteria = "safe-to-deploy"
-
 [[exemptions.libdbus-sys]]
 version = "0.2.2"
 criteria = "safe-to-deploy"
@@ -552,10 +544,6 @@ version = "0.11.2"
 criteria = "safe-to-deploy"
 suggest = false
 notes = "This crate is forked from another crate and not developed in-house. Given that LMDB-backed RKV is going away, we will probably never bother auditing this"
-
-[[exemptions.lock_api]]
-version = "0.4.7"
-criteria = "safe-to-deploy"
 
 [[exemptions.mach]]
 version = "0.3.2"
@@ -659,14 +647,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.packed_simd_2]]
 version = "0.3.7"
-criteria = "safe-to-deploy"
-
-[[exemptions.parking_lot]]
-version = "0.11.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.parking_lot_core]]
-version = "0.8.5"
 criteria = "safe-to-deploy"
 
 [[exemptions.phf]]
@@ -775,10 +755,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.rust_decimal]]
 version = "1.24.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.scopeguard]]
-version = "1.1.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.scroll]]
