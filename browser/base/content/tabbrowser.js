@@ -4372,6 +4372,29 @@
     },
 
     /**
+     * Handles opening a new tab with mouse middleclick.
+     * @param node
+     * @param event
+     *        The click event
+     */
+    handleNewTabMiddleClick(node, event) {
+      // We should be using the disabled property here instead of the attribute,
+      // but some elements that this function is used with don't support it (e.g.
+      // menuitem).
+      if (node.getAttribute("disabled") == "true") {
+        return;
+      } // Do nothing
+
+      if (event.button == 1) {
+        BrowserOpenTab({ event });
+        // Stop the propagation of the click event, to prevent the event from being
+        // handled more than once.
+        // E.g. see https://bugzilla.mozilla.org/show_bug.cgi?id=1657992#c4
+        event.stopPropagation();
+      }
+    },
+
+    /**
      * Finds the tab that we will blur to if we blur aTab.
      * @param   aTab
      *          The tab we would blur
