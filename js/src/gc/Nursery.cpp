@@ -318,7 +318,7 @@ void js::Nursery::enable() {
   }
 #endif
 
-  updateZoneAllocFlags();
+  updateAllZoneAllocFlags();
 
   // This should always succeed after the first time it's called.
   MOZ_ALWAYS_TRUE(gc->storeBuffer().enable());
@@ -366,40 +366,68 @@ void js::Nursery::disable() {
   currentBigIntEnd_ = 0;
   position_ = 0;
   gc->storeBuffer().disable();
-  updateZoneAllocFlags();
+
+  updateAllZoneAllocFlags();
 }
 
 void js::Nursery::enableStrings() {
   MOZ_ASSERT(isEmpty());
   canAllocateStrings_ = true;
   currentStringEnd_ = currentEnd_;
-  updateZoneAllocFlags();
+  updateAllZoneAllocFlags();
 }
 
 void js::Nursery::disableStrings() {
   MOZ_ASSERT(isEmpty());
   canAllocateStrings_ = false;
   currentStringEnd_ = 0;
-  updateZoneAllocFlags();
+  updateAllZoneAllocFlags();
 }
 
 void js::Nursery::enableBigInts() {
   MOZ_ASSERT(isEmpty());
   canAllocateBigInts_ = true;
   currentBigIntEnd_ = currentEnd_;
-  updateZoneAllocFlags();
+  updateAllZoneAllocFlags();
 }
 
 void js::Nursery::disableBigInts() {
   MOZ_ASSERT(isEmpty());
   canAllocateBigInts_ = false;
   currentBigIntEnd_ = 0;
-  updateZoneAllocFlags();
+  updateAllZoneAllocFlags();
 }
 
-void js::Nursery::updateZoneAllocFlags() {
+void js::Nursery::updateAllZoneAllocFlags() {
   for (AllZonesIter zone(gc); !zone.done(); zone.next()) {
-    zone->updateNurseryAllocFlags(*this);
+    updateAllocFlagsForZone(zone);
+  }
+}
+
+void js::Nursery::updateAllocFlagsForZone(JS::Zone* zone) {
+  bool prevAllocObjects = zone->allocNurseryObjects();
+  bool prevAllocStrings = zone->allocNurseryStrings();
+  bool prevAllocBigInts = zone->allocNurseryBigInts();
+
+  zone->updateNurseryAllocFlags(*this);
+
+  if (zone->allocNurseryObjects() != prevAllocObjects ||
+      zone->allocNurseryStrings() != prevAllocStrings ||
+      zone->allocNurseryBigInts() != prevAllocBigInts) {
+    discardJitCodeForZone(zone);
+  }
+}
+
+void js::Nursery::discardJitCodeForZone(JS::Zone* zone) {
+  CancelOffThreadIonCompile(zone);
+
+  zone->forceDiscardJitCode(runtime()->gcContext());
+
+  for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
+    if (jit::JitRealm* jitRealm = r->jitRealm()) {
+      jitRealm->discardStubs();
+      jitRealm->setStringsCanBeInNursery(zone->allocNurseryStrings());
+    }
   }
 }
 
@@ -1566,23 +1594,13 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
                                  zone->allocNurseryBigInts() &&
                                  zone->tenuredBigInts >= 30 * 1000;
     if (disableNurseryStrings || disableNurseryBigInts) {
-      CancelOffThreadIonCompile(zone);
-      zone->forceDiscardJitCode(rt->gcContext());
-      for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
-        if (jit::JitRealm* jitRealm = r->jitRealm()) {
-          jitRealm->discardStubs();
-          if (disableNurseryStrings) {
-            jitRealm->setStringsCanBeInNursery(false);
-          }
-        }
-      }
       if (disableNurseryStrings) {
         zone->nurseryStringsDisabled = true;
       }
       if (disableNurseryBigInts) {
         zone->nurseryBigIntsDisabled = true;
       }
-      zone->updateNurseryAllocFlags(*this);
+      updateAllocFlagsForZone(zone);
     }
     numStringsTenured += zoneTenuredStrings;
     numBigIntsTenured += zone->tenuredBigInts;
