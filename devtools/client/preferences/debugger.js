@@ -62,7 +62,6 @@ pref("devtools.debugger.log-event-breakpoints", false);
 pref("devtools.debugger.javascript-tracing-log-method", "console");
 
 pref("devtools.debugger.features.wasm", true);
-pref("devtools.debugger.features.shortcuts", true);
 pref("devtools.debugger.features.root", true);
 pref("devtools.debugger.features.column-breakpoints", true);
 pref("devtools.debugger.features.chrome-scopes", false);
