@@ -211,6 +211,13 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.jobserver]]
+version = "0.1.25"
+when = "2022-09-23"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
 [[publisher.libc]]
 version = "0.2.132"
 when = "2022-08-16"
@@ -421,6 +428,13 @@ user-id = 6741
 user-login = "Darksonn"
 user-name = "Alice Ryhl"
 
+[[publisher.toml]]
+version = "0.5.7"
+when = "2020-10-11"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
+
 [[publisher.unicode-ident]]
 version = "1.0.6"
 when = "2022-12-17"
@@ -455,6 +469,13 @@ when = "2021-03-22"
 user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
+
+[[publisher.wasi]]
+version = "0.11.0+wasi-snapshot-preview1"
+when = "2022-01-19"
+user-id = 1
+user-login = "alexcrichton"
+user-name = "Alex Crichton"
 
 [[publisher.winapi-util]]
 version = "0.1.5"
