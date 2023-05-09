@@ -159,7 +159,7 @@ def setup_vscode(command_context, interactive):
         },
         # Note, the top-level editor settings are left as default to allow the
         # user's defaults (if any) to take effect.
-        "[javascript][javascriptreact][typescript][typescriptreact]": {
+        "[javascript][javascriptreact][typescript][typescriptreact][json]": {
             "editor.defaultFormatter": "esbenp.prettier-vscode",
             "editor.formatOnSave": True,
         },
@@ -197,6 +197,14 @@ def setup_vscode(command_context, interactive):
             prompt_prefix = (
                 "\n**WARNING**: Parsing of existing settings file failed. "
                 "Existing settings will be lost!"
+            )
+
+        # If we've got an old section with the formatting configuration, remove it
+        # so that we effectively "upgrade" the user to include json from the new
+        # settings. The user is presented with the diffs so should spot any issues.
+        if "[javascript][javascriptreact][typescript][typescriptreact]" in old_settings:
+            old_settings.pop(
+                "[javascript][javascriptreact][typescript][typescriptreact]"
             )
 
         settings = {**old_settings, **new_settings}

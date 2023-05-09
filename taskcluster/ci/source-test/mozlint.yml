@@ -105,8 +105,10 @@ eslint:
             # Files that are likely audited.
             - '**/*.js'
             - '**/*.jsm'
+            - '**/*.json'
             - '**/*.jsx'
             - '**/*.mjs'
+            - '**/*.sjs'
             - '**/*.html'
             - '**/*.xhtml'
             - '**/*.xml'

@@ -14,6 +14,7 @@ devtools/client/shared/sourceeditor/test/codemirror/
 devtools/client/shared/vendor/
 devtools/client/inspector/markup/test/helper_diff.js
 devtools/shared/acorn/
+devtools/shared/compatibility/dataset/css-properties.json
 devtools/shared/heapsnapshot/CoreDump.pb.cc
 devtools/shared/heapsnapshot/CoreDump.pb.h
 devtools/shared/jsbeautify/
@@ -148,6 +149,7 @@ other-licenses/
 parser/expat/
 remote/cdp/test/browser/chrome-remote-interface.js
 remote/test/puppeteer/
+security/manager/tools/log_list.json
 security/nss/
 security/sandbox/chromium/
 security/sandbox/chromium-shim/
