@@ -322,7 +322,8 @@ h2 {
 .actions {
   border-top: 1px solid var(--newtab-border-color);
   display: flex;
-  flex-flow: row wrap;
+  flex-direction: row;
+  flex-wrap: wrap;
   justify-content: flex-start;
   margin: 0;
   padding: 15px 25px 0;
@@ -2535,44 +2536,57 @@ main.has-snippet {
   --gridColumnGap: 48px;
   --gridRowGap: 24px;
   grid-template-columns: repeat(12, 1fr);
-  grid-gap: var(--gridRowGap) var(--gridColumnGap);
+  grid-column-gap: var(--gridColumnGap);
+  grid-row-gap: var(--gridRowGap);
   margin: 0 auto;
 }
 .discovery-stream.ds-layout .ds-column-12 {
-  grid-column: auto span 12;
+  grid-column-start: auto;
+  grid-column-end: span 12;
 }
 .discovery-stream.ds-layout .ds-column-11 {
-  grid-column: auto span 11;
+  grid-column-start: auto;
+  grid-column-end: span 11;
 }
 .discovery-stream.ds-layout .ds-column-10 {
-  grid-column: auto span 10;
+  grid-column-start: auto;
+  grid-column-end: span 10;
 }
 .discovery-stream.ds-layout .ds-column-9 {
-  grid-column: auto span 9;
+  grid-column-start: auto;
+  grid-column-end: span 9;
 }
 .discovery-stream.ds-layout .ds-column-8 {
-  grid-column: auto span 8;
+  grid-column-start: auto;
+  grid-column-end: span 8;
 }
 .discovery-stream.ds-layout .ds-column-7 {
-  grid-column: auto span 7;
+  grid-column-start: auto;
+  grid-column-end: span 7;
 }
 .discovery-stream.ds-layout .ds-column-6 {
-  grid-column: auto span 6;
+  grid-column-start: auto;
+  grid-column-end: span 6;
 }
 .discovery-stream.ds-layout .ds-column-5 {
-  grid-column: auto span 5;
+  grid-column-start: auto;
+  grid-column-end: span 5;
 }
 .discovery-stream.ds-layout .ds-column-4 {
-  grid-column: auto span 4;
+  grid-column-start: auto;
+  grid-column-end: span 4;
 }
 .discovery-stream.ds-layout .ds-column-3 {
-  grid-column: auto span 3;
+  grid-column-start: auto;
+  grid-column-end: span 3;
 }
 .discovery-stream.ds-layout .ds-column-2 {
-  grid-column: auto span 2;
+  grid-column-start: auto;
+  grid-column-end: span 2;
 }
 .discovery-stream.ds-layout .ds-column-1 {
-  grid-column: auto span 1;
+  grid-column-start: auto;
+  grid-column-end: span 1;
 }
 .discovery-stream.ds-layout .ds-column-grid {
   display: grid;
