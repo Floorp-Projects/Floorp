@@ -7,34 +7,17 @@ runHeuristicsTest(
     {
       fixturePath: "Payment.html",
       expectedResult: [
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-name"
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-month"
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-year"
-            },
+        {
+          default: {
+            reason: "fathom",
+          },
+          fields: [
+            { fieldName: "cc-number" },
+            { fieldName: "cc-name" },
+            { fieldName: "cc-exp-month", reason: "regex-heuristic" },
+            { fieldName: "cc-exp-year", reason: "regex-heuristic" },
           ],
-        ],
+        },
       ],
     },
   ],

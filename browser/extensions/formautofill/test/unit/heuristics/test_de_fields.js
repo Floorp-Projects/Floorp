@@ -7,74 +7,24 @@ runHeuristicsTest(
     {
       fixturePath: "heuristics_de_fields.html",
       expectedResult: [
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-type",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-month",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-year",
-            },
+        {
+          fields: [
+            { fieldName: "cc-name",      reason: "fathom" },
+            { fieldName: "cc-type",      reason: "regex-heuristic" },
+            { fieldName: "cc-number",    reason: "fathom" },
+            { fieldName: "cc-exp-month", reason: "regex-heuristic" },
+            { fieldName: "cc-exp-year",  reason: "regex-heuristic" },
           ],
-        ],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-type",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-month",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-year",
-            },
+        },
+        {
+          fields: [
+            { fieldName: "cc-name",      reason: "fathom" },
+            { fieldName: "cc-type",      reason: "regex-heuristic" },
+            { fieldName: "cc-number",    reason: "fathom" },
+            { fieldName: "cc-exp-month", reason: "regex-heuristic" },
+            { fieldName: "cc-exp-year",  reason: "regex-heuristic" },
           ],
-        ],
+        },
       ],
     },
   ],

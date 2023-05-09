@@ -7,140 +7,103 @@ runHeuristicsTest(
     {
       fixturePath: "YourInformation.html",
       expectedResult: [
-        [
-          [
-            {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"}, // ac-off
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
-            // {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-month"}, // select
-            // {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-day"}, // select
-            // {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-year"},
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "tel"}, // ac-off
+            { fieldName: "email" },
+            // { fieldName: "bday-month"}, // select
+            // { fieldName: "bday-day"}, // select
+            // { fieldName: "bday-year"},
           ],
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-type",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp",
-            },
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
+        },
+        {
+          default: {
+            reason: "fathom",
+          },
+          fields: [
+            { fieldName: "cc-type", reason: "regex-heuristic" },
+            { fieldName: "cc-number" },
+            { fieldName: "cc-exp", reason: "regex-heuristic" },
+            // { fieldName: "cc-csc"},
           ],
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number", // txtQvcGiftCardNumber
-            },
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "cc-number" }, // txtQvcGiftCardNumber
           ],
-        ],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "email" },
           ],
-        ],
+        },
       ],
     },
     {
       fixturePath: "PaymentMethod.html",
       expectedResult: [
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel"
-            }, // ac-off
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-month"}, // select
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-day"}, // select
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-year"}, // select
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "tel" }, // ac-off
+            { fieldName: "email" },
+            // { fieldName: "bday-month"}, // select
+            // { fieldName: "bday-day"}, // select
+            // { fieldName: "bday-year"}, // select
           ],
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-type",
-            }, // ac-off
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            }, // ac-off
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp",
-            },
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
+        },
+        {
+          default: {
+            reason: "fathom",
+          },
+          fields: [
+            { fieldName: "cc-type", reason: "regex-heuristic" }, // ac-off
+            { fieldName: "cc-number" }, // ac-off
+            { fieldName: "cc-exp", reason: "regex-heuristic" },
+            // { fieldName: "cc-csc"},
           ],
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number", // txtQvcGiftCardNumber
-            }, // ac-off
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "cc-number" }, // txtQvcGiftCardNumbe, ac-off
           ],
-        ],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "email" },
           ],
-        ],
+        },
       ],
     },
     {
       fixturePath: "SignIn.html",
       expectedResult: [
-        [],
-        [
-          [
-            // Sign in
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
+        {
+          // Sign in
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "email" },
           ],
-        ],
-        [],
+        },
       ],
     },
   ],

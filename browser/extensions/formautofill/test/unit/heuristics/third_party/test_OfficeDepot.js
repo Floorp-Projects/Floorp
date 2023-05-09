@@ -7,219 +7,77 @@ runHeuristicsTest(
     {
       fixturePath: "ShippingAddress.html",
       expectedResult: [
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "given-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "family-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "organization",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line1",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line2",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "postal-code",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level2",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level1",
-            }, // state
-
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-area-code",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-local-prefix",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-local-suffix",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-extension",
-            },
-
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "given-name" },
+            { fieldName: "family-name" },
+            { fieldName: "organization" },
+            { fieldName: "address-line1" },
+            { fieldName: "address-line2" },
+            { fieldName: "postal-code" },
+            { fieldName: "address-level2" },
+            { fieldName: "address-level1" }, // state
+            { fieldName: "tel-area-code" },
+            { fieldName: "tel-local-prefix" },
+            { fieldName: "tel-local-suffix" },
+            { fieldName: "tel-extension" },
+            { fieldName: "email" },
           ],
-        ],
-        [],
+        },
       ],
     },
     {
       fixturePath: "Payment.html",
       expectedResult: [
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "given-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "family-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "organization",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line1",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line2",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "postal-code",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level2",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level1",
-            }, // state
-
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-area-code",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-local-prefix",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-local-suffix",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-extension",
-            },
-
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "given-name" },
+            { fieldName: "family-name" },
+            { fieldName: "organization" },
+            { fieldName: "address-line1" },
+            { fieldName: "address-line2" },
+            { fieldName: "postal-code" },
+            { fieldName: "address-level2" },
+            { fieldName: "address-level1" }, // state
+            { fieldName: "tel-area-code" },
+            { fieldName: "tel-local-prefix" },
+            { fieldName: "tel-local-suffix" },
+            { fieldName: "tel-extension" },
+            { fieldName: "email" },
           ],
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-month",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-year",
-            },
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "cc-exp-month" },
+            { fieldName: "cc-exp-year" },
             // FIXME: bug 1392950 - the membership number should not be detected
             // as cc-number.
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
+            { fieldName: "cc-number" },
           ],
-        ],
+        },
       ],
     },
     {
       fixturePath: "SignIn.html",
       expectedResult: [
-        [
-          // ac-off
-          [
-            { 
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email"
-            },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            // ac-off
+            { fieldName: "email" }
           ]
-          
-        ],
+        },
       ],
     },
   ],

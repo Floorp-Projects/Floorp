@@ -7,165 +7,91 @@ runHeuristicsTest(
     {
       fixturePath: "Checkout.html",
       expectedResult: [
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "postal-code",
-            },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "postal-code" },
           ],
-        ],
-        [],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "password"}, // ac-off
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "email" },
+            // { fieldName: "password"}, // ac-off
           ],
-        ],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "given-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "family-name",
-            },
-             // ac-off
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email"
-            },
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "password"},
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "password"}, // ac-off
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "given-name" },
+            { fieldName: "family-name" },
+            { fieldName: "email" }, // ac-off
+            // { fieldName: "password"},
+            // { fieldName: "password"}, // ac-off
           ],
-        ],
+        },
       ],
     },
     {
       fixturePath: "Payment.html",
       expectedResult: [
-        [],
-        [
-          [
-            {
-              section: "section-payment",
-              addressType: "",
-              contactType: "",
-              fieldName: "given-name",
-            },
-            {
-              section: "section-payment",
-              addressType: "",
-              contactType: "",
-              fieldName: "family-name",
-            },
-            {
-              section: "section-payment",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel",
-            },
+        {
+          default: {
+            reason: "autocomplete",
+            section: "section-payment",
+          },
+          fields: [
+            { fieldName: "given-name" },
+            { fieldName: "family-name" },
+            { fieldName: "tel" },
           ],
-          [
-            {
-              section: "section-payment",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "section-payment",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-month",
-            },
-            {
-              section: "section-payment",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-year",
-            },
-            //        {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
+        },
+        {
+          default: {
+            reason: "autocomplete",
+            section: "section-payment",
+          },
+          fields: [
+            { fieldName: "cc-number" },
+            { fieldName: "cc-exp-month" },
+            { fieldName: "cc-exp-year" },
+            // { fieldName: "cc-csc"},
           ],
-        ],
+        },
       ],
     },
     {
       fixturePath: "Shipping.html",
       expectedResult: [
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "postal-code",
-            },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "postal-code" },
           ],
-        ],
-        [],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "given-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "family-name",
-            },
-            { section: "", addressType: "", contactType: "", fieldName: "tel" },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line1",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line2",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level2",
-            }, // city
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level1",
-            }, // state
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "postal-code",
-            },
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "given-name" },
+            { fieldName: "family-name" },
+            { fieldName: "tel" },
+            { fieldName: "address-line1" },
+            { fieldName: "address-line2" },
+            { fieldName: "address-level2" }, // city
+            { fieldName: "address-level1" }, // state
+            { fieldName: "postal-code" },
           ],
-        ],
+        },
       ],
     },
   ],
