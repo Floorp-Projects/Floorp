@@ -22,7 +22,6 @@ if (isNode()) {
   pref("devtools.debugger.ignore-caught-exceptions", true);
   pref("devtools.debugger.call-stack-visible", true);
   pref("devtools.debugger.scopes-visible", true);
-  pref("devtools.debugger.component-visible", false);
   pref("devtools.debugger.threads-visible", true);
   pref("devtools.debugger.expressions-visible", false);
   pref("devtools.debugger.xhr-breakpoints-visible", false);
@@ -45,10 +44,8 @@ if (isNode()) {
   pref("devtools.debugger.log-actions", true);
   pref("devtools.debugger.log-event-breakpoints", false);
   pref("devtools.debugger.javascript-tracing-log-method", "console");
-  pref("devtools.debugger.features.async-stepping", false);
   pref("devtools.debugger.features.wasm", true);
   pref("devtools.debugger.features.map-scopes", true);
-  pref("devtools.debugger.features.remove-command-bar-options", true);
   pref("devtools.debugger.features.code-folding", false);
   pref("devtools.debugger.features.command-click", false);
   pref("devtools.debugger.features.column-breakpoints", true);
@@ -78,7 +75,6 @@ export const prefs = new PrefsHelper("devtools", {
   ignoreCaughtExceptions: ["Bool", "debugger.ignore-caught-exceptions"],
   callStackVisible: ["Bool", "debugger.call-stack-visible"],
   scopesVisible: ["Bool", "debugger.scopes-visible"],
-  componentVisible: ["Bool", "debugger.component-visible"],
   threadsVisible: ["Bool", "debugger.threads-visible"],
   breakpointsVisible: ["Bool", "debugger.breakpoints-visible"],
   expressionsVisible: ["Bool", "debugger.expressions-visible"],
@@ -120,11 +116,9 @@ export const prefs = new PrefsHelper("devtools", {
 prefs.cursorBlinkRate = Services.prefs.getIntPref("ui.caretBlinkTime", 530);
 
 export const features = new PrefsHelper("devtools.debugger.features", {
-  asyncStepping: ["Bool", "async-stepping"],
   wasm: ["Bool", "wasm"],
   columnBreakpoints: ["Bool", "column-breakpoints"],
   mapScopes: ["Bool", "map-scopes"],
-  removeCommandBarOptions: ["Bool", "remove-command-bar-options"],
   outline: ["Bool", "outline"],
   codeFolding: ["Bool", "code-folding"],
   autocompleteExpression: ["Bool", "autocomplete-expressions"],

@@ -16,26 +16,16 @@ pref("devtools.debugger.remote-timeout", 20000);
 pref("devtools.debugger.pause-on-exceptions", false);
 pref("devtools.debugger.ignore-caught-exceptions", true);
 pref("devtools.debugger.pause-on-caught-exceptions", true);
-pref("devtools.debugger.pretty-print-enabled", true);
 pref("devtools.debugger.alphabetize-outline", false);
 pref("devtools.debugger.auto-pretty-print", false);
-pref("devtools.debugger.auto-black-box", true);
-pref("devtools.debugger.workers", false);
 
 // The debugger pref's schema defaults to 0 so that it can be managed
 // by utils/prefs.js in verifySchema. Bug 1565485
 pref("devtools.debugger.prefs-schema-version", 0);
-pref("devtools.debugger.ui.panes-workers-and-sources-width", 200);
-pref("devtools.debugger.ui.panes-instruments-width", 300);
-pref("devtools.debugger.ui.panes-visible-on-startup", false);
-pref("devtools.debugger.ui.variables-sorting-enabled", true);
-pref("devtools.debugger.ui.variables-only-enum-visible", false);
-pref("devtools.debugger.ui.variables-searchbox-visible", false);
 pref("devtools.debugger.ui.framework-grouping-on", true);
 pref("devtools.debugger.ui.editor-wrapping", false);
 pref("devtools.debugger.call-stack-visible", true);
 pref("devtools.debugger.scopes-visible", true);
-pref("devtools.debugger.component-visible", false);
 pref("devtools.debugger.threads-visible", true);
 pref("devtools.debugger.breakpoints-visible", true);
 pref("devtools.debugger.expressions-visible", false);
@@ -63,14 +53,10 @@ pref("devtools.debugger.javascript-tracing-log-method", "console");
 
 pref("devtools.debugger.features.wasm", true);
 pref("devtools.debugger.features.column-breakpoints", true);
-pref("devtools.debugger.features.chrome-scopes", false);
 pref("devtools.debugger.features.map-scopes", true);
-pref("devtools.debugger.features.remove-command-bar-options", false);
-pref("devtools.debugger.features.code-coverage", false);
 pref("devtools.debugger.features.code-folding", false);
 pref("devtools.debugger.features.command-click", false);
 pref("devtools.debugger.features.component-pane", false);
-pref("devtools.debugger.features.async-stepping", false);
 pref("devtools.debugger.features.autocomplete-expressions", false);
 pref("devtools.debugger.features.map-expression-bindings", true);
 pref("devtools.debugger.features.xhr-breakpoints", true);
