@@ -89,15 +89,6 @@ interface GPUAdapterInfo {
     readonly attribute DOMString architecture;
     readonly attribute DOMString device;
     readonly attribute DOMString description;
-
-    // Non-standard; see <https://bugzilla.mozilla.org/show_bug.cgi?id=1831994>.
-    [ChromeOnly] readonly attribute DOMString wgpuName;
-    [ChromeOnly] readonly attribute unsigned long wgpuVendor;
-    [ChromeOnly] readonly attribute unsigned long wgpuDevice;
-    [ChromeOnly] readonly attribute DOMString wgpuDeviceType;
-    [ChromeOnly] readonly attribute DOMString wgpuDriver;
-    [ChromeOnly] readonly attribute DOMString wgpuDriverInfo;
-    [ChromeOnly] readonly attribute DOMString wgpuBackend;
 };
 
 [Pref="dom.webgpu.enabled",
