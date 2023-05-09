@@ -716,8 +716,11 @@ function bindCommands(isCmd, dbgGlobal, bindSelf, frame, helpers) {
         name => !!dbgGlobal.getOwnPropertyDescriptor(name)
       );
     }
-    // if we do not have the command key as a prefix, screenshot is disabled by default
-    helpersToDisable.push("screenshot");
+    // if we do not have the command key as a prefix, some commands are only accessible
+    // with the command key prefix and should be disabled here to prevent exposing them as JS variable/method.
+    helpersToDisable.push(
+      ...WebConsoleCommandsManager.getColonOnlyCommandNames()
+    );
   }
 
   for (const helper of helpersToDisable) {
