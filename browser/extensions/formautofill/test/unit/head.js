@@ -293,12 +293,15 @@ async function runHeuristicsTest(patterns, fixturePathPrefix) {
 
   patterns.forEach(testPattern => {
     add_task(async function() {
-      info("Starting test fixture: " + testPattern.fixturePath);
-      const file = do_get_file(fixturePathPrefix + testPattern.fixturePath);
-      const doc = MockDocument.createTestDocumentFromFile(
-        "http://localhost:8080/test/",
-        file
-      );
+      info(`Starting test fixture: ${testPattern.fixturePath ?? ""}`);
+
+      const url = "http://localhost:8080/test/";
+      const doc = testPattern.fixtureData
+        ? MockDocument.createTestDocument(url, testPattern.fixtureData)
+        : MockDocument.createTestDocumentFromFile(
+            url,
+            do_get_file(fixturePathPrefix + testPattern.fixturePath)
+          );
 
       let forms = [...doc.querySelectorAll("input, select")].reduce(
         (acc, field) => {
