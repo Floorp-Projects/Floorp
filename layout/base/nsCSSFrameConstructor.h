@@ -1254,7 +1254,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    * the frame.
    *
    * Note that this does not add PageValuesProperty to the frame when not in a
-   * paginated context, or if layout.css.named_pages.enabled is set to false.
+   * paginated context, or if layout.css.named-pages.enabled is set to false.
    */
   class MOZ_RAII AutoFrameConstructionPageName final {
     nsFrameConstructorState& mState;

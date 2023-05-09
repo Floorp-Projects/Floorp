@@ -209,7 +209,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
                "mCanHaveClassABreakpoints set during non-paginated reflow.");
     MOZ_ASSERT(StaticPrefs::layout_css_named_pages_enabled(),
                "mCanHaveClassABreakpoints should not be set when "
-               "layout.css.named_pages.enabled is false");
+               "layout.css.named-pages.enabled is false");
   }
 
   {

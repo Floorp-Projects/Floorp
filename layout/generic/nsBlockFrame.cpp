@@ -2672,7 +2672,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
                "reflow");
     MOZ_ASSERT(StaticPrefs::layout_css_named_pages_enabled(),
                "canBreakForPageNames should not be set when "
-               "layout.css.named_pages.enabled is false");
+               "layout.css.named-pages.enabled is false");
   }
 
   // Reflow the lines that are already ours
