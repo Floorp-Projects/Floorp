@@ -75,6 +75,23 @@ rtcrtpsender.setparameters:
       - webrtc-telemetry-alerts@mozilla.com
     expires: 116
 
+  blame_no_getparameters:
+    type: labeled_counter
+    description: >
+      The number of RTCRtpSenders that have warned at least once about
+      a `setParameters` call because `[[LastReturnedParameters]]` was not set,
+      broken down by the eTLD+1 of the site. (ie; there was not a recent
+      enough call to `getParameters`) Collected only on EARLY_BETA_OR_EARLIER.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1831343
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1831343
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 120
+
   warn_length_changed:
     type: rate
     description: >
@@ -91,6 +108,23 @@ rtcrtpsender.setparameters:
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
     expires: 116
+
+  blame_length_changed:
+    type: labeled_counter
+    description: >
+      The number of RTCRtpSenders that have warned at least once about a
+      `setParameters` call that attempted to change the number of encodings,
+      broken down by the eTLD+1 of the site. Collected only on
+      EARLY_BETA_OR_EARLIER.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1831343
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1831343
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 120
 
   warn_rid_changed:
     type: rate
@@ -127,6 +161,22 @@ rtcrtpsender.setparameters:
       - webrtc-telemetry-alerts@mozilla.com
     expires: 116
 
+  blame_no_transactionid:
+    type: labeled_counter
+    description: >
+      The number of RTCRtpSenders that have warned at least once about a
+      `setParameters` call that did not set the transactionId field, broken down
+      by the eTLD+1 of the site. Collected only on EARLY_BETA_OR_EARLIER.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1831343
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1831343
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 120
+
   warn_stale_transactionid:
     type: rate
     description: >
@@ -143,6 +193,22 @@ rtcrtpsender.setparameters:
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
     expires: 116
+
+  blame_stale_transactionid:
+    type: labeled_counter
+    description: >
+      The number of RTCRtpSenders that have warned at least once about a
+      `setParameters` call that used a stale transaction id, broken down by the
+      eTLD+1 of the site. Collected only on EARLY_BETA_OR_EARLIER.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1831343
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1831343
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 120
 
   fail_length_changed:
     type: rate

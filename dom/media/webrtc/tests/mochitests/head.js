@@ -991,8 +991,11 @@ const getTurnHostname = turnUrl => {
   return hostAndMaybePort.split(":")[0];
 };
 
-// Yo dawg I heard you like Proxies
+// Yo dawg I heard you like yo dawg I heard you like Proxies
 // Example: let value = await GleanTest.category.metric.testGetValue();
+// For labeled metrics:
+//    let value = await GleanTest.category.metric["label"].testGetValue();
+// Please don't try to use the string "testGetValue" as a label.
 const GleanTest = new Proxy(
   {},
   {
@@ -1001,21 +1004,48 @@ const GleanTest = new Proxy(
         {},
         {
           get(target, metricName, receiver) {
-            return {
-              // The only API we actually implement right now.
-              async testGetValue() {
-                return SpecialPowers.spawnChrome(
-                  [categoryName, metricName],
-                  async (categoryName, metricName) => {
-                    await Services.fog.testFlushAllChildren();
-                    const window = this.browsingContext.topChromeWindow;
-                    return window.Glean[categoryName][
-                      metricName
-                    ].testGetValue();
-                  }
-                );
+            return new Proxy(
+              {
+                async testGetValue() {
+                  return SpecialPowers.spawnChrome(
+                    [categoryName, metricName],
+                    async (categoryName, metricName) => {
+                      await Services.fog.testFlushAllChildren();
+                      const window = this.browsingContext.topChromeWindow;
+                      return window.Glean[categoryName][
+                        metricName
+                      ].testGetValue();
+                    }
+                  );
+                },
               },
-            };
+              {
+                get(target, prop, receiver) {
+                  // The only prop that will be there is testGetValue, but we
+                  // might add more later.
+                  if (prop in target) {
+                    return target[prop];
+                  }
+
+                  // |prop| must be a label?
+                  const label = prop;
+                  return {
+                    async testGetValue() {
+                      return SpecialPowers.spawnChrome(
+                        [categoryName, metricName, label],
+                        async (categoryName, metricName, label) => {
+                          await Services.fog.testFlushAllChildren();
+                          const window = this.browsingContext.topChromeWindow;
+                          return window.Glean[categoryName][metricName][
+                            label
+                          ].testGetValue();
+                        }
+                      );
+                    },
+                  };
+                },
+              }
+            );
           },
         }
       );
