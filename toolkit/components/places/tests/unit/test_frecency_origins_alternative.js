@@ -45,10 +45,11 @@ add_task(async function test_normal_init() {
     !Services.prefs.getBoolPref(altFrecency.pref),
     "Check the pref is disabled by default"
   );
-  Assert.equal(
-    await PlacesUtils.metadata.get(altFrecency.key, 0),
-    0,
-    "Check there's no version stored"
+  Assert.ok(
+    ObjectUtils.isEmpty(
+      await PlacesUtils.metadata.get(altFrecency.key, Object.create(null))
+    ),
+    "Check there's no variables stored"
   );
 });
 
@@ -87,7 +88,8 @@ add_task(
       "Check the pref is enabled"
     );
     Assert.equal(
-      await PlacesUtils.metadata.get(altFrecency.key, 0),
+      (await PlacesUtils.metadata.get(altFrecency.key, Object.create(null)))
+        .version,
       altFrecency.version,
       "Check the algorithm version has been stored"
     );
@@ -123,7 +125,12 @@ add_task(
     );
 
     // It doesn't matter that the version is, it just have to be different.
-    await PlacesUtils.metadata.set(altFrecency.key, 999);
+    let variables = await PlacesUtils.metadata.get(
+      altFrecency.key,
+      Object.create(null)
+    );
+    variables.version = 999;
+    await PlacesUtils.metadata.set(altFrecency.key, variables);
 
     let promiseInitialRecalc = TestUtils.topicObserved(
       "test-origins-alternative-frecency-first-recalc"
@@ -145,10 +152,64 @@ add_task(
       Services.prefs.getBoolPref(altFrecency.pref),
       "Check the pref is enabled"
     );
-    Assert.equal(
-      await PlacesUtils.metadata.get(altFrecency.key, 0),
+    Assert.deepEqual(
+      (await PlacesUtils.metadata.get(altFrecency.key, Object.create(null)))
+        .version,
       altFrecency.version,
       "Check the algorithm version has been stored"
+    );
+
+    await promiseInitialRecalc;
+  }
+);
+
+add_task(
+  {
+    pref_set: [[altFrecency.pref, true]],
+  },
+  async function test_different_variables() {
+    let origins = await getAllOrigins();
+    Assert.ok(
+      origins.every(o => o.recalc_alt_frecency == 0),
+      "All the entries should not need recalculation"
+    );
+
+    // Change variables.
+    let variables = await PlacesUtils.metadata.get(
+      altFrecency.key,
+      Object.create(null)
+    );
+    Assert.greater(Object.keys(variables).length, 1);
+    Assert.ok("version" in variables, "At least the version is always present");
+    await PlacesUtils.metadata.set(altFrecency.key, {
+      version: altFrecency.version,
+      someVar: 1,
+    });
+
+    let promiseInitialRecalc = TestUtils.topicObserved(
+      "test-origins-alternative-frecency-first-recalc"
+    );
+    await restartRecalculator();
+
+    // Check alternative frecency has been marked for recalculation.
+    // Note just after init we reculate a chunk, and this test code is expected
+    // to run before that... though we can't be sure, so if this starts failing
+    // intermittently we'll have to add more synchronization test code.
+    origins = await getAllOrigins();
+    Assert.ok(
+      origins.every(o => o.recalc_alt_frecency == 1),
+      "All the entries have been marked for recalc"
+    );
+
+    // Ensure moz_meta has been updated.
+    Assert.ok(
+      Services.prefs.getBoolPref(altFrecency.pref),
+      "Check the pref is enabled"
+    );
+    Assert.deepEqual(
+      await PlacesUtils.metadata.get(altFrecency.key, Object.create(null)),
+      variables,
+      "Check the algorithm variables have been stored"
     );
 
     await promiseInitialRecalc;
@@ -163,7 +224,8 @@ add_task(async function test_disable() {
   );
 
   Assert.equal(
-    await PlacesUtils.metadata.get(altFrecency.key, 0),
+    (await PlacesUtils.metadata.get(altFrecency.key, Object.create(null)))
+      .version,
     altFrecency.version,
     "Check the algorithm version has been stored"
   );
@@ -182,9 +244,10 @@ add_task(async function test_disable() {
   );
 
   // Ensure moz_meta has been updated.
-  Assert.equal(
-    await PlacesUtils.metadata.get(altFrecency.key, 0),
-    0,
-    "Check the algorithm version has been removed"
+  Assert.ok(
+    ObjectUtils.isEmpty(
+      await PlacesUtils.metadata.get(altFrecency.key, Object.create(null))
+    ),
+    "Check the algorithm variables has been removed"
   );
 });
