@@ -1560,9 +1560,10 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
         allocThreshold ? double(zoneTenuredStrings) / double(zoneNurseryStrings)
                        : 0.0;
     bool disableNurseryStrings =
-        pretenureStr && zone->allocNurseryStrings &&
+        pretenureStr && zone->allocNurseryStrings() &&
         tenuredRate > tunables().pretenureStringThreshold();
-    bool disableNurseryBigInts = pretenureBigInt && zone->allocNurseryBigInts &&
+    bool disableNurseryBigInts = pretenureBigInt &&
+                                 zone->allocNurseryBigInts() &&
                                  zone->tenuredBigInts >= 30 * 1000;
     if (disableNurseryStrings || disableNurseryBigInts) {
       CancelOffThreadIonCompile(zone);

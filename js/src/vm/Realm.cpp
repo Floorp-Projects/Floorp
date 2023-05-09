@@ -135,7 +135,7 @@ bool Realm::ensureJitRealmExists(JSContext* cx) {
     return false;
   }
 
-  jitRealm->initialize(zone()->allocNurseryStrings);
+  jitRealm->initialize(zone()->allocNurseryStrings());
 
   jitRealm_ = std::move(jitRealm);
   return true;
