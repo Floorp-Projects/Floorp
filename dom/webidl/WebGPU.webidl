@@ -179,6 +179,7 @@ interface GPUBuffer {
     ArrayBuffer getMappedRange(optional GPUSize64 offset = 0, optional GPUSize64 size);
     [Throws]
     undefined unmap();
+
     [Throws]
     undefined destroy();
 };
