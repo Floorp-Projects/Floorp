@@ -62,7 +62,6 @@ if (isNode()) {
   pref("devtools.debugger.features.log-points", true);
   pref("devtools.debugger.features.inline-preview", true);
   pref("devtools.debugger.features.overlay-step-buttons", true);
-  pref("devtools.debugger.features.frame-step", true);
   pref("devtools.debugger.features.blackbox-lines", false);
   pref("devtools.debugger.features.javascript-tracing", false);
   pref("devtools.editor.tabsize", 2);
@@ -141,7 +140,6 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   showOverlay: ["Bool", "overlay"],
   inlinePreview: ["Bool", "inline-preview"],
   windowlessServiceWorkers: ["Bool", "windowless-service-workers"],
-  frameStep: ["Bool", "frame-step"],
   blackboxLines: ["Bool", "blackbox-lines"],
   javascriptTracing: ["Bool", "javascript-tracing"],
 });
