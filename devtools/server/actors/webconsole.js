@@ -60,7 +60,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["addWebConsoleCommands", "WebConsoleCommandsManager"],
+  ["WebConsoleCommandsManager"],
   "resource://devtools/server/actors/webconsole/commands/manager.js",
   true
 );
@@ -1349,78 +1349,6 @@ class WebConsoleActor extends Actor {
   }
 
   // End of request handlers.
-
-  /**
-   * Create an object with the API we expose to the Web Console during
-   * JavaScript evaluation.
-   * This object inherits properties and methods from the Web Console actor.
-   *
-   * @private
-   * @param object debuggerGlobal
-   *        A Debugger.Object that wraps a content global. This is used for the
-   *        Web Console Commands.
-   * @param string evalInput
-   *        String to evaluate.
-   * @param string selectedNodeActorID
-   *        The Node actor ID of the currently selected DOM Element, if any is selected.
-   *
-   * @return object
-   *         The same object as |this|, but with an added |sandbox| property.
-   *         The sandbox holds methods and properties that can be used as
-   *         bindings during JS evaluation.
-   */
-  _getWebConsoleCommands(debuggerGlobal, evalInput, selectedNodeActorID) {
-    const helpers = {
-      window: this.evalGlobal,
-      makeDebuggeeValue: debuggerGlobal.makeDebuggeeValue.bind(debuggerGlobal),
-      createValueGrip: this.createValueGrip.bind(this),
-      preprocessDebuggerObject: this.preprocessDebuggerObject.bind(this),
-      sandbox: Object.create(null),
-      helperResult: null,
-      consoleActor: this,
-      evalInput,
-    };
-    if (selectedNodeActorID) {
-      const actor = this.conn.getActor(selectedNodeActorID);
-      if (actor) {
-        helpers.selectedNode = actor.rawNode;
-      }
-    }
-    addWebConsoleCommands(helpers);
-
-    const evalGlobal = this.evalGlobal;
-    function maybeExport(obj, name) {
-      if (typeof obj[name] != "function") {
-        return;
-      }
-
-      // By default, chrome-implemented functions that are exposed to content
-      // refuse to accept arguments that are cross-origin for the caller. This
-      // is generally the safe thing, but causes problems for certain console
-      // helpers like cd(), where we users sometimes want to pass a cross-origin
-      // window. To circumvent this restriction, we use exportFunction along
-      // with a special option designed for this purpose. See bug 1051224.
-      obj[name] = Cu.exportFunction(obj[name], evalGlobal, {
-        allowCrossOriginArguments: true,
-      });
-    }
-    for (const name in helpers.sandbox) {
-      const desc = Object.getOwnPropertyDescriptor(helpers.sandbox, name);
-
-      // Workers don't have access to Cu so won't be able to exportFunction.
-      if (!isWorker) {
-        maybeExport(desc, "get");
-        maybeExport(desc, "set");
-        maybeExport(desc, "value");
-      }
-      if (desc.value) {
-        // Make sure the helpers can be used during eval.
-        desc.value = debuggerGlobal.makeDebuggeeValue(desc.value);
-      }
-      Object.defineProperty(helpers.sandbox, name, desc);
-    }
-    return helpers;
-  }
 
   // Event handlers for various listeners.
 

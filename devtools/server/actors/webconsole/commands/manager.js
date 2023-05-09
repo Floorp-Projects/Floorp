@@ -19,14 +19,11 @@ const WebConsoleCommandsManager = {
    * @param {string} name The command name (exemple: "$")
    * @param {(function|object)} command The command to register.
    *  It can be a function so the command is a function (like "$()"),
-   *  or it can also be a property descriptor to describe a getter / value (like
+   *  or it can also be a property descriptor to describe a getter(like
    *  "$0").
    *
    *  The command function or the command getter are passed a owner object as
    *  their first parameter (see the example below).
-   *
-   *  Note that setters don't work currently and "enumerable" and "configurable"
-   *  are forced to true.
    *
    * @example
    *
@@ -42,6 +39,14 @@ const WebConsoleCommandsManager = {
    *   });
    */
   register(name, command) {
+    if (
+      typeof command != "function" &&
+      !(typeof command == "object" && typeof command.get == "function")
+    ) {
+      throw new Error(
+        "Invalid web console command. It can only be a function, or an object with a function as 'get' attribute"
+      );
+    }
     this._registeredCommands.set(name, command);
   },
 
@@ -77,6 +82,116 @@ const WebConsoleCommandsManager = {
    */
   getColonOnlyCommandNames() {
     return ["screenshot"];
+  },
+
+  /**
+   * Map of all command objects keyed by command name.
+   * Commands object are the objects passed to register() method.
+   *
+   * @return {Map<string -> command>}
+   */
+  getAllCommands() {
+    return this._registeredCommands;
+  },
+
+  /**
+   * Create an object with the API we expose to the Web Console during
+   * JavaScript evaluation.
+   * This object inherits properties and methods from the Web Console actor.
+   *
+   * @param object consoleActor
+   *        The related web console actor evaluating some code.
+   * @param object debuggerGlobal
+   *        A Debugger.Object that wraps a content global. This is used for the
+   *        Web Console Commands.
+   * @param string evalInput
+   *        String to evaluate.
+   * @param string selectedNodeActorID
+   *        The Node actor ID of the currently selected DOM Element, if any is selected.
+   *
+   * @return object
+   *         Object with two properties:
+   *         - 'bindings', the object with all commands set as attribute on this object.
+   *         - 'getHelperResult', a live getter returning the additional data the last command
+   *           which executed want to convey to the frontend.
+   *           (The return value of commands isn't returned to the client but it only
+   *            returned to the code ran from console evaluation)
+   */
+  getWebConsoleCommands(
+    consoleActor,
+    debuggerGlobal,
+    evalInput,
+    selectedNodeActorID
+  ) {
+    const bindings = Object.create(null);
+
+    const owner = {
+      window: consoleActor.evalGlobal,
+      makeDebuggeeValue: debuggerGlobal.makeDebuggeeValue.bind(debuggerGlobal),
+      createValueGrip: consoleActor.createValueGrip.bind(consoleActor),
+      preprocessDebuggerObject: consoleActor.preprocessDebuggerObject.bind(
+        consoleActor
+      ),
+      helperResult: null,
+      consoleActor,
+      evalInput,
+    };
+    if (selectedNodeActorID) {
+      const actor = consoleActor.conn.getActor(selectedNodeActorID);
+      if (actor) {
+        owner.selectedNode = actor.rawNode;
+      }
+    }
+
+    const evalGlobal = consoleActor.evalGlobal;
+    function maybeExport(obj, name) {
+      if (typeof obj[name] != "function") {
+        return;
+      }
+
+      // By default, chrome-implemented functions that are exposed to content
+      // refuse to accept arguments that are cross-origin for the caller. This
+      // is generally the safe thing, but causes problems for certain console
+      // helpers like cd(), where we users sometimes want to pass a cross-origin
+      // window. To circumvent this restriction, we use exportFunction along
+      // with a special option designed for this purpose. See bug 1051224.
+      obj[name] = Cu.exportFunction(obj[name], evalGlobal, {
+        allowCrossOriginArguments: true,
+      });
+    }
+
+    // Not supporting extra commands in workers yet.  This should be possible to
+    // add one by one as long as they don't require jsm, Cu, etc.
+    const commands = isWorker ? [] : this.getAllCommands();
+    for (const [name, command] of commands) {
+      const descriptor = {
+        // We force the enumerability and the configurability (so the
+        // WebConsoleActor can reconfigure the property).
+        enumerable: true,
+        configurable: true,
+      };
+
+      if (typeof command === "function") {
+        // Function commands
+        descriptor.value = command.bind(undefined, owner);
+        maybeExport(descriptor, "value");
+        // Make sure the helpers can be used during eval.
+        descriptor.value = debuggerGlobal.makeDebuggeeValue(descriptor.value);
+      } else if (typeof command?.get === "function") {
+        // Getter commands
+        descriptor.get = command.get.bind(undefined, owner);
+        maybeExport(descriptor, "get");
+      }
+      Object.defineProperty(bindings, name, descriptor);
+    }
+
+    return {
+      // Use a method as commands will update owner.helperResult later
+      getHelperResult() {
+        return owner.helperResult;
+      },
+      bindings,
+    };
   },
 };
 
@@ -427,44 +542,3 @@ WebConsoleCommandsManager.register("unblock", function(owner, args = {}) {
     args,
   };
 });
-
-/**
- * (Internal only) Add the bindings to |owner.sandbox|.
- * This is intended to be used by the WebConsole actor only.
- *
- * @param object owner
- *        The owning object.
- */
-function addWebConsoleCommands(owner) {
-  // Not supporting extra commands in workers yet.  This should be possible to
-  // add one by one as long as they don't require jsm, Cu, etc.
-  const commands = isWorker
-    ? []
-    : WebConsoleCommandsManager._registeredCommands;
-  if (!owner) {
-    throw new Error("The owner is required");
-  }
-  for (const [name, command] of commands) {
-    if (typeof command === "function") {
-      owner.sandbox[name] = command.bind(undefined, owner);
-    } else if (typeof command === "object") {
-      const clone = Object.assign({}, command, {
-        // We force the enumerability and the configurability (so the
-        // WebConsoleActor can reconfigure the property).
-        enumerable: true,
-        configurable: true,
-      });
-
-      if (typeof command.get === "function") {
-        clone.get = command.get.bind(undefined, owner);
-      }
-      if (typeof command.set === "function") {
-        clone.set = command.set.bind(undefined, owner);
-      }
-
-      Object.defineProperty(owner.sandbox, name, clone);
-    }
-  }
-}
-
-exports.addWebConsoleCommands = addWebConsoleCommands;
