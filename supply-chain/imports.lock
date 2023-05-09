@@ -127,6 +127,13 @@ user-id = 1281
 user-login = "nical"
 user-name = "Nicolas Silva"
 
+[[publisher.flate2]]
+version = "1.0.24"
+when = "2022-05-28"
+user-id = 4333
+user-login = "joshtriplett"
+user-name = "Josh Triplett"
+
 [[publisher.freetype]]
 version = "0.7.0"
 when = "2020-07-14"

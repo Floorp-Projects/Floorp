@@ -3524,6 +3524,12 @@ user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-05-02"
 end = "2024-04-25"
 
+[[trusted.flate2]]
+criteria = "safe-to-deploy"
+user-id = 4333 # Josh Triplett (joshtriplett)
+start = "2020-09-30"
+end = "2024-05-05"
+
 [[trusted.headers]]
 criteria = "safe-to-deploy"
 user-id = 359 # Sean McArthur (seanmonstar)
