@@ -4,6 +4,13 @@
 
 "use strict";
 
+loader.lazyRequireGetter(
+  this,
+  ["isCommand"],
+  "resource://devtools/server/actors/webconsole/commands/parser.js",
+  true
+);
+
 /**
  * WebConsole commands manager.
  *
@@ -95,6 +102,19 @@ const WebConsoleCommandsManager = {
   },
 
   /**
+   * Is the command name possibly overriding a symbol which
+   * already exists in the paused frame, or global into which
+   * we are about to execute into?
+   */
+  _isCommandNameAlreadyInScope(name, frame, dbgGlobal) {
+    // Fallback on global scope when Debugger.Frame doesn't come along an Environment.
+    if (frame && frame.environment) {
+      return !!frame.environment.find(name);
+    }
+    return !!dbgGlobal.getOwnPropertyDescriptor(name);
+  },
+
+  /**
    * Create an object with the API we expose to the Web Console during
    * JavaScript evaluation.
    * This object inherits properties and methods from the Web Console actor.
@@ -104,6 +124,8 @@ const WebConsoleCommandsManager = {
    * @param object debuggerGlobal
    *        A Debugger.Object that wraps a content global. This is used for the
    *        Web Console Commands.
+   * @param object frame (optional)
+   *        The frame where the string was evaluated.
    * @param string evalInput
    *        String to evaluate.
    * @param string selectedNodeActorID
@@ -120,6 +142,7 @@ const WebConsoleCommandsManager = {
   getWebConsoleCommands(
     consoleActor,
     debuggerGlobal,
+    frame,
     evalInput,
     selectedNodeActorID
   ) {
@@ -163,7 +186,24 @@ const WebConsoleCommandsManager = {
     // Not supporting extra commands in workers yet.  This should be possible to
     // add one by one as long as they don't require jsm, Cu, etc.
     const commands = isWorker ? [] : this.getAllCommands();
+
+    // Is it a command evaluation, starting with ':' prefix?
+    const isCmd = isCommand(evalInput);
+
+    const colonOnlyCommandNames = this.getColonOnlyCommandNames();
     for (const [name, command] of commands) {
+      // When we are running command via `:` prefix, no user code is being ran and only the command executes,
+      // so always expose the commands as the command will try to call its JavaScript method (see getEvalInput).
+      // Otherwise, when we run user code, we want to avoid overriding existing symbols with commands.
+      // Also ignore commands which can only be run with the `:` prefix.
+      if (
+        !isCmd &&
+        (this._isCommandNameAlreadyInScope(name, frame, debuggerGlobal) ||
+          colonOnlyCommandNames.includes(name))
+      ) {
+        continue;
+      }
+
       const descriptor = {
         // We force the enumerability and the configurability (so the
         // WebConsoleActor can reconfigure the property).
