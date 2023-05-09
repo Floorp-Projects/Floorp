@@ -1566,10 +1566,7 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
                                  zone->tenuredBigInts >= 30 * 1000;
     if (disableNurseryStrings || disableNurseryBigInts) {
       CancelOffThreadIonCompile(zone);
-      bool preserving = zone->isPreservingCode();
-      zone->setPreservingCode(false);
-      zone->discardJitCode(rt->gcContext());
-      zone->setPreservingCode(preserving);
+      zone->forceDiscardJitCode(rt->gcContext());
       for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
         if (jit::JitRealm* jitRealm = r->jitRealm()) {
           jitRealm->discardStubs();
