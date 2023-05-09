@@ -9,7 +9,9 @@
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/webgpu/CanvasContext.h"
 #include "mozilla/dom/WebGPUBinding.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
 #include "TextureView.h"
+#include "Utility.h"
 
 namespace mozilla::webgpu {
 
@@ -91,7 +93,12 @@ Texture::Texture(Device* const aParent, RawId aId,
     : ChildOf(aParent),
       mId(aId),
       mFormat(aDesc.mFormat),
-      mBytesPerBlock(GetBytesPerBlock(aDesc.mFormat)) {}
+      mBytesPerBlock(GetBytesPerBlock(aDesc.mFormat)),
+      mSize(ConvertExtent(aDesc.mSize)),
+      mMipLevelCount(aDesc.mMipLevelCount),
+      mSampleCount(aDesc.mSampleCount),
+      mDimension(aDesc.mDimension),
+      mUsage(aDesc.mUsage) {}
 
 Texture::~Texture() { Cleanup(); }
 

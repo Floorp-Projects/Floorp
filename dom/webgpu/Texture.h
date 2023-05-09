@@ -6,22 +6,23 @@
 #ifndef GPU_Texture_H_
 #define GPU_Texture_H_
 
+#include <cstdint>
 #include "mozilla/WeakPtr.h"
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
 
 namespace mozilla {
 namespace dom {
 struct GPUTextureDescriptor;
 struct GPUTextureViewDescriptor;
+enum class GPUTextureDimension : uint8_t;
 enum class GPUTextureFormat : uint8_t;
+enum class GPUTextureUsageFlags : uint32_t;
 }  // namespace dom
 
 namespace webgpu {
-namespace ffi {
-struct WGPUTextureViewDescriptor;
-}  // namespace ffi
 
 class CanvasContext;
 class Device;
@@ -45,10 +46,25 @@ class Texture final : public ObjectBase, public ChildOf<Device> {
   virtual ~Texture();
   void Cleanup();
 
+  const ffi::WGPUExtent3d mSize;
+  const uint32_t mMipLevelCount;
+  const uint32_t mSampleCount;
+  const dom::GPUTextureDimension mDimension;
+  const uint32_t mUsage;
+
  public:
   already_AddRefed<TextureView> CreateView(
       const dom::GPUTextureViewDescriptor& aDesc);
   void Destroy();
+
+  uint32_t Width() const { return mSize.width; }
+  uint32_t Height() const { return mSize.height; }
+  uint32_t DepthOrArrayLayers() const { return mSize.depth_or_array_layers; }
+  uint32_t MipLevelCount() const { return mMipLevelCount; }
+  uint32_t SampleCount() const { return mSampleCount; }
+  dom::GPUTextureDimension Dimension() const { return mDimension; }
+  dom::GPUTextureFormat Format() const { return mFormat; }
+  uint32_t Usage() const { return mUsage; }
 };
 
 }  // namespace webgpu

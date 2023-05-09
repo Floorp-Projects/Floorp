@@ -234,6 +234,18 @@ interface GPUTexture {
     GPUTextureView createView(optional GPUTextureViewDescriptor descriptor = {});
 
     undefined destroy();
+
+    // TODO: s/unsigned long/GPUIntegerCoordinate: https://github.com/gpuweb/gpuweb/issues/4080
+    readonly attribute unsigned long width;
+    readonly attribute unsigned long height;
+    readonly attribute unsigned long depthOrArrayLayers;
+    readonly attribute unsigned long mipLevelCount;
+    // TODO: s/unsigned long/GPUSize32: https://github.com/gpuweb/gpuweb/issues/4080
+    readonly attribute unsigned long sampleCount;
+    readonly attribute GPUTextureDimension dimension;
+    readonly attribute GPUTextureFormat format;
+    // TODO: s/unsigned long/GPUSize32: https://github.com/gpuweb/gpuweb/issues/4080
+    readonly attribute unsigned long usage;
 };
 GPUTexture includes GPUObjectBase;
 

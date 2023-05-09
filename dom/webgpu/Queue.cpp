@@ -259,7 +259,7 @@ void Queue::CopyExternalImageToTexture(
     const dom::GPUImageCopyExternalImage& aSource,
     const dom::GPUImageCopyTextureTagged& aDestination,
     const dom::GPUExtent3D& aCopySize, ErrorResult& aRv) {
-  const auto dstFormat = ToWebGLTexelFormat(aDestination.mTexture->mFormat);
+  const auto dstFormat = ToWebGLTexelFormat(aDestination.mTexture->Format());
   if (dstFormat == WebGLTexelFormat::FormatNotSupportingAnyConversion) {
     aRv.ThrowInvalidStateError("Unsupported destination format");
     return;
