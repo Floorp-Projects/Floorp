@@ -2718,6 +2718,11 @@ criteria = "safe-to-run"
 delta = "0.1.11 -> 0.1.12"
 
 [[audits.toml]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.5.7 -> 0.5.9"
+
+[[audits.toml]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.5.9 -> 0.5.10"
@@ -3566,6 +3571,12 @@ user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-05-02"
 end = "2024-04-25"
 
+[[trusted.jobserver]]
+criteria = "safe-to-deploy"
+user-id = 1 # Alex Crichton (alexcrichton)
+start = "2019-03-15"
+end = "2024-05-05"
+
 [[trusted.libc]]
 criteria = "safe-to-deploy"
 user-id = 2915 # Amanieu d'Antras (Amanieu)
@@ -3734,6 +3745,12 @@ user-id = 6741 # Alice Ryhl (Darksonn)
 start = "2021-01-12"
 end = "2024-05-05"
 
+[[trusted.toml]]
+criteria = "safe-to-deploy"
+user-id = 1 # Alex Crichton (alexcrichton)
+start = "2019-05-16"
+end = "2024-05-06"
+
 [[trusted.unicode-ident]]
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
@@ -3745,6 +3762,12 @@ criteria = "safe-to-deploy"
 user-id = 189 # Andrew Gallant (BurntSushi)
 start = "2019-06-09"
 end = "2024-05-03"
+
+[[trusted.wasi]]
+criteria = "safe-to-deploy"
+user-id = 1 # Alex Crichton (alexcrichton)
+start = "2020-06-03"
+end = "2024-05-05"
 
 [[trusted.winapi-util]]
 criteria = "safe-to-deploy"
