@@ -7,8 +7,6 @@ sysroot=${artifact%.tar.*}
 # Make the wasi compiler-rt available to clang.
 env UPLOAD_DIR= $GECKO_PATH/taskcluster/scripts/misc/repack-clang.sh
 
-patch -d $MOZ_FETCHES_DIR/wasi-sdk -p1 < $(dirname $0)/wasi-sdk.patch
-
 cd $MOZ_FETCHES_DIR/wasi-sdk
 LLVM_PROJ_DIR=$MOZ_FETCHES_DIR/llvm-project
 
@@ -24,12 +22,9 @@ ln -s $MOZ_FETCHES_DIR/clang/bin build/install/wasi/bin
 ln -s llvm-ar build/install/wasi/bin/ar
 
 # Build wasi-libc, libc++ and libc++abi.
-# `BULK_MEMORY_SOURCES=` force-disables building things with -mbulk-memory,
-# which wasm2c doesn't support yet.
 do_make() {
   make \
     LLVM_PROJ_DIR=$LLVM_PROJ_DIR \
-    BULK_MEMORY_SOURCES= \
     PREFIX=/wasi \
     -j$(nproc) \
     $1
