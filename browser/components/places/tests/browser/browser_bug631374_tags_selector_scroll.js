@@ -5,14 +5,6 @@
 
 const TEST_URL = "about:buildconfig";
 
-add_task(async function test_instant_apply() {
-  await runTest(false);
-});
-
-add_task(async function test_delayed_apply() {
-  await runTest(true);
-});
-
 function scrolledIntoView(item, parentItem) {
   let itemRect = item.getBoundingClientRect();
   let parentItemRect = parentItem.getBoundingClientRect();
@@ -22,7 +14,7 @@ function scrolledIntoView(item, parentItem) {
   return pointInView(itemRect.top) || pointInView(itemRect.bottom);
 }
 
-async function runTest(delayedApply) {
+add_task(async function runTest() {
   await PlacesUtils.bookmarks.eraseEverything();
   let tags = [
     "a",
@@ -59,9 +51,6 @@ async function runTest(delayedApply) {
   });
   PlacesUtils.tagging.tagURI(uri2, tags);
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
-  });
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser: win.gBrowser,
@@ -142,8 +131,6 @@ async function runTest(delayedApply) {
     isnot(listItem, null, "Valid listItem found");
 
     tagsSelector.ensureElementIsVisible(listItem);
-    let items = [...tagsSelector.itemChildren];
-    let topTag = items.find(e => scrolledIntoView(e, tagsSelector)).label;
 
     ok(listItem.hasAttribute("checked"), "Item is checked " + i);
 
@@ -154,21 +141,6 @@ async function runTest(delayedApply) {
     );
     EventUtils.synthesizeMouseAtCenter(listItem.firstElementChild, {}, win);
     await promise;
-
-    if (!delayedApply) {
-      // The listbox is rebuilt, so we have to get the new element.
-      let topItem = [...tagsSelector.itemChildren].find(e => e.label == topTag);
-      ok(scrolledIntoView(topItem, tagsSelector), "Scroll position is correct");
-
-      let newItem = tagsSelector.selectedItem;
-      isnot(newItem, null, "Valid new listItem found");
-      ok(newItem.hasAttribute("checked"), "New listItem is checked " + i);
-      is(
-        tagsSelector.selectedItem.label,
-        tags[Math.min(i + 1, tags.length - 2)],
-        "The next tag is now selected"
-      );
-    }
   }
 
   let hiddenPromise = promisePopupHidden(bookmarkPanel);
@@ -177,7 +149,7 @@ async function runTest(delayedApply) {
   await hiddenPromise;
   // Cleanup.
   await PlacesUtils.bookmarks.remove(bm1);
-}
+});
 
 function openTagSelector(win) {
   let promise = BrowserTestUtils.waitForEvent(

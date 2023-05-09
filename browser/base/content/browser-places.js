@@ -32,7 +32,6 @@ ChromeUtils.defineModuleGetter(
 
 var StarUI = {
   _itemGuids: null,
-  _batching: false,
   _isNewBookmark: false,
   _isComposing: false,
   _autoCloseTimer: 0,
@@ -80,11 +79,7 @@ var StarUI = {
       case "popuphidden": {
         clearTimeout(this._autoCloseTimer);
         if (aEvent.originalTarget == this.panel) {
-          if (gEditItemOverlay.delayedApplyEnabled) {
-            this._handlePopupHiddenEvent().catch(console.error);
-          } else {
-            this._handlePopupHiddenEventInstantApply().catch(console.error);
-          }
+          this._handlePopupHiddenEvent().catch(console.error);
         }
         break;
       }
@@ -176,7 +171,7 @@ var StarUI = {
   },
 
   /**
-   * Handle popup hidden event in delayed apply mode.
+   * Handle popup hidden event.
    */
   async _handlePopupHiddenEvent() {
     const {
@@ -208,41 +203,6 @@ var StarUI = {
     await bookmarkState.save();
     if (this._isNewBookmark) {
       this.showConfirmation();
-    }
-  },
-
-  /**
-   * Handle popup hidden event in instant apply mode.
-   */
-  async _handlePopupHiddenEventInstantApply() {
-    const { selectedFolderGuid, didChangeFolder } = gEditItemOverlay;
-    gEditItemOverlay.uninitPanel(true);
-
-    // Capture _removeBookmarksOnPopupHidden and _itemGuids values. Reset them
-    // before we handle the next popup.
-    const removeBookmarksOnPopupHidden = this._removeBookmarksOnPopupHidden;
-    this._removeBookmarksOnPopupHidden = false;
-    const guidsForRemoval = this._itemGuids;
-    this._itemGuids = null;
-
-    if (this._batching) {
-      this.endBatch();
-    }
-
-    if (removeBookmarksOnPopupHidden && guidsForRemoval) {
-      if (this._isNewBookmark) {
-        await PlacesTransactions.undo();
-        return;
-      }
-      // Remove all bookmarks for the bookmark's url, this also removes
-      // the tags for the url.
-      await PlacesTransactions.Remove(guidsForRemoval).transact();
-    } else if (this._isNewBookmark) {
-      this.showConfirmation();
-    }
-
-    if (!removeBookmarksOnPopupHidden) {
-      await this._storeRecentlyUsedFolder(selectedFolderGuid, didChangeFolder);
     }
   },
 
@@ -285,10 +245,6 @@ var StarUI = {
     }
 
     this._setIconAndPreviewImage();
-
-    if (!gEditItemOverlay.delayedApplyEnabled) {
-      this.beginBatch();
-    }
 
     let onPanelReady = fn => {
       let target = this.panel;
@@ -351,40 +307,6 @@ var StarUI = {
   removeBookmarkButtonCommand: function SU_removeBookmarkButtonCommand() {
     this._removeBookmarksOnPopupHidden = true;
     this.panel.hidePopup();
-  },
-
-  // Matching the way it is used in the Library, editBookmarkOverlay implements
-  // an instant-apply UI, having no batched-Undo/Redo support.
-  // However, in this context (the Star UI) we have a Cancel button whose
-  // expected behavior is to undo all the operations done in the panel.
-  // Sometime in the future this needs to be reimplemented using a
-  // non-instant apply code path, but for the time being, we patch-around
-  // editBookmarkOverlay so that all of the actions done in the panel
-  // are treated by PlacesTransactions as a single batch.  To do so,
-  // we start a PlacesTransactions batch when the star UI panel is shown, and
-  // we keep the batch ongoing until the panel is hidden.
-  _batchBlockingDeferred: null,
-  beginBatch() {
-    if (this._batching) {
-      return;
-    }
-    this._batchBlockingDeferred = PromiseUtils.defer();
-    PlacesTransactions.batch(async () => {
-      // First await for the batch to be concluded.
-      await this._batchBlockingDeferred.promise;
-      // And then for any pending promises added in the meanwhile.
-      await Promise.all(gEditItemOverlay.transactionPromises);
-    });
-    this._batching = true;
-  },
-
-  endBatch() {
-    if (!this._batching) {
-      return;
-    }
-
-    this._batchBlockingDeferred.resolve();
-    this._batching = false;
   },
 
   async _storeRecentlyUsedFolder(selectedFolderGuid, didChangeFolder) {
@@ -514,17 +436,7 @@ var PlacesCommandHook = {
         console.error(e);
       }
 
-      if (showEditUI && !gEditItemOverlay.delayedApplyEnabled) {
-        // If we bookmark the page here but open right into a cancelable
-        // state (i.e. new bookmark in Library), start batching here so
-        // all of the actions can be undone in a single undo step.
-        StarUI.beginBatch();
-      }
-
-      if (
-        !gEditItemOverlay.delayedApplyEnabled ||
-        !StarUI.showForNewBookmarks
-      ) {
+      if (!StarUI.showForNewBookmarks) {
         info.guid = await PlacesTransactions.NewBookmark(info).transact();
       } else {
         info.guid = PlacesUtils.bookmarks.unsavedGuid;

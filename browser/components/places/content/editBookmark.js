@@ -1204,16 +1204,6 @@ var gEditItemOverlay = {
   },
 
   /**
-   * Flag which signals to consumers that this script is loaded, thus delayed
-   * apply logic should be used.
-   *
-   * @returns {boolean} Always true.
-   */
-  get delayedApplyEnabled() {
-    return true;
-  },
-
-  /**
    * State object for the bookmark(s) currently being edited.
    *
    * @returns {BookmarkState} The bookmark state.

@@ -240,12 +240,7 @@ XPCOMUtils.defineLazyScriptGetter(
 XPCOMUtils.defineLazyScriptGetter(
   this,
   "gEditItemOverlay",
-  Services.prefs.getBoolPref(
-    "browser.bookmarks.editDialog.delayedApply.enabled",
-    false
-  )
-    ? "chrome://browser/content/places/editBookmark.js"
-    : "chrome://browser/content/places/instantEditBookmark.js"
+  "chrome://browser/content/places/editBookmark.js"
 );
 XPCOMUtils.defineLazyScriptGetter(
   this,

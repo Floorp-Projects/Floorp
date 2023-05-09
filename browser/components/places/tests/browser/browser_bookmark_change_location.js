@@ -8,8 +8,8 @@
 "use strict";
 
 const TEST_URL = "about:buildconfig";
-const TEST_URL2 = "about:config";
-const TEST_URL3 = "about:credits";
+const TEST_URL2 = "about:credits";
+const TEST_URL3 = "about:config";
 
 // Setup.
 add_setup(async function() {
@@ -67,111 +67,84 @@ add_task(async function test_change_location_from_Toolbar() {
 
   let toolbarNode = getToolbarNodeForItemGuid(toolbarBookmark.guid);
 
-  add_task(
-    async function change_location_from_toolbar_dialog_instantEditBookmark() {
-      await SpecialPowers.pushPrefEnv({
-        set: [["browser.bookmarks.editDialog.delayedApply.enabled", false]],
+  await withBookmarksDialog(
+    false,
+    async function openPropertiesDialog() {
+      let placesContext = document.getElementById("placesContext");
+      let promisePopup = BrowserTestUtils.waitForEvent(
+        placesContext,
+        "popupshown"
+      );
+      EventUtils.synthesizeMouseAtCenter(toolbarNode, {
+        button: 2,
+        type: "contextmenu",
       });
-      await withBookmarksDialog(
-        false,
-        async function openPropertiesDialog() {
-          let placesContext = document.getElementById("placesContext");
-          let promisePopup = BrowserTestUtils.waitForEvent(
-            placesContext,
-            "popupshown"
-          );
-          EventUtils.synthesizeMouseAtCenter(toolbarNode, {
-            button: 2,
-            type: "contextmenu",
-          });
-          await promisePopup;
+      await promisePopup;
 
-          let properties = document.getElementById(
-            "placesContext_show_bookmark:info"
-          );
-          placesContext.activateItem(properties);
-        },
-        async function test(dialogWin) {
-          // Check the initial location.
-          let locationPicker = dialogWin.document.getElementById(
-            "editBMPanel_locationField"
-          );
-          Assert.equal(
-            locationPicker.value,
-            TEST_URL,
-            "InstantEditBookmark: The location is the expected one."
-          );
+      let properties = document.getElementById(
+        "placesContext_show_bookmark:info"
+      );
+      placesContext.activateItem(properties);
+    },
+    async function test(dialogWin) {
+      // Check the initial location.
+      let locationPicker = dialogWin.document.getElementById(
+        "editBMPanel_locationField"
+      );
+      Assert.equal(
+        locationPicker.value,
+        TEST_URL,
+        "EditBookmark: The current location is the expected one."
+      );
 
-          // To check whether the lastModified field will be updated correctly.
-          let lastModified = _getLastModified(toolbarBookmark.guid);
+      // To check whether the lastModified field will be updated correctly.
+      let lastModified = _getLastModified(toolbarBookmark.guid);
 
-          let promiseLocationChange = PlacesTestUtils.waitForNotification(
-            "bookmark-url-changed",
-            events => events.some(e => e.url === TEST_URL2)
-          );
-          // Update the "location" field.
-          fillBookmarkTextField(
-            "editBMPanel_locationField",
-            TEST_URL2,
-            dialogWin,
-            false
-          );
-          await TestUtils.waitForCondition(
-            () => locationPicker.value === TEST_URL2,
-            "InstantEditBookmark: The location is correct after update."
-          );
-          locationPicker.blur();
-          await promiseLocationChange;
+      // Update the "location" field.
+      fillBookmarkTextField(
+        "editBMPanel_locationField",
+        TEST_URL2,
+        dialogWin,
+        false
+      );
 
-          Assert.equal(
-            dialogWin.gEditItemOverlay.uri.spec,
-            TEST_URL2,
-            "InstantEditBookmark: The location is the expected one."
-          );
-          await TestUtils.waitForCondition(
-            () => _getLastModified(toolbarBookmark.guid) > lastModified,
-            "InstantEditBookmark: The lastModified will be greater than before updating."
-          );
+      locationPicker.blur();
 
-          locationPicker.focus();
-          // Confirm and close the dialog.
-          EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
+      Assert.equal(
+        locationPicker.value,
+        TEST_URL2,
+        "EditBookmark: The changed location is the expected one."
+      );
 
-          let updatedBm = await PlacesUtils.bookmarks.fetch(
-            toolbarBookmark.guid
-          );
-          Assert.equal(
-            updatedBm.url,
-            TEST_URL2,
-            "InstantEditBookmark: Should have updated the bookmark location in the database."
-          );
-        }
+      locationPicker.focus();
+      // Confirm and close the dialog.
+      EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
+
+      await TestUtils.waitForCondition(
+        () => _getLastModified(toolbarBookmark.guid) > lastModified,
+        "EditBookmark: The lastModified will be greater than before updating."
       );
     }
   );
 
-  add_task(async function change_location_from_toolbar_dialog_editBookmark() {
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.bookmarks.editDialog.delayedApply.enabled", true]],
-    });
+  let updatedBm = await PlacesUtils.bookmarks.fetch(toolbarBookmark.guid);
+  Assert.equal(
+    updatedBm.url,
+    TEST_URL2,
+    "EditBookmark: Should have updated the bookmark location in the database."
+  );
+});
+
+add_task(async function test_change_location_from_Sidebar() {
+  let bm = await PlacesUtils.bookmarks.fetch({ url: TEST_URL2 });
+
+  await withSidebarTree("bookmarks", async function(tree) {
+    tree.selectItems([bm.guid]);
+
     await withBookmarksDialog(
       false,
-      async function openPropertiesDialog() {
-        let placesContext = document.getElementById("placesContext");
-        let promisePopup = BrowserTestUtils.waitForEvent(
-          placesContext,
-          "popupshown"
-        );
-        EventUtils.synthesizeMouseAtCenter(toolbarNode, {
-          button: 2,
-          type: "contextmenu",
-        });
-        await promisePopup;
-
-        let properties = document.getElementById(
-          "placesContext_show_bookmark:info"
-        );
-        placesContext.activateItem(properties);
+      function openPropertiesDialog() {
+        tree.controller.doCommand("placesCmd_show:info");
       },
       async function test(dialogWin) {
         // Check the initial location.
@@ -181,11 +154,11 @@ add_task(async function test_change_location_from_Toolbar() {
         Assert.equal(
           locationPicker.value,
           TEST_URL2,
-          "EditBookmark: The current location is the expected one."
+          "Sidebar - EditBookmark: The current location is the expected one."
         );
 
         // To check whether the lastModified field will be updated correctly.
-        let lastModified = _getLastModified(toolbarBookmark.guid);
+        let lastModified = _getLastModified(bm.guid);
 
         // Update the "location" field.
         fillBookmarkTextField(
@@ -195,159 +168,28 @@ add_task(async function test_change_location_from_Toolbar() {
           false
         );
 
-        locationPicker.blur();
-
         Assert.equal(
           locationPicker.value,
           TEST_URL3,
-          "EditBookmark: The changed location is the expected one."
+          "Sidebar - EditBookmark: The location is changed in dialog for prefered one."
         );
 
-        locationPicker.focus();
         // Confirm and close the dialog.
         EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
 
         await TestUtils.waitForCondition(
-          () => _getLastModified(toolbarBookmark.guid) > lastModified,
-          "EditBookmark: The lastModified will be greater than before updating."
+          () => _getLastModified(bm.guid) > lastModified,
+          "Sidebar - EditBookmark: The lastModified will be greater than before updating."
         );
       }
     );
 
-    let updatedBm = await PlacesUtils.bookmarks.fetch(toolbarBookmark.guid);
+    let updatedBm = await PlacesUtils.bookmarks.fetch(bm.guid);
     Assert.equal(
       updatedBm.url,
       TEST_URL3,
-      "EditBookmark: Should have updated the bookmark location in the database."
+      "Sidebar - EditBookmark: Should have updated the bookmark location in the database."
     );
-  });
-
-  add_task(
-    async function instantEditBookmark_test_change_location_from_Sidebar() {
-      await SpecialPowers.pushPrefEnv({
-        set: [["browser.bookmarks.editDialog.delayedApply.enabled", false]],
-      });
-      let bm = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
-
-      await withSidebarTree("bookmarks", async function(tree) {
-        tree.selectItems([bm.guid]);
-
-        await withBookmarksDialog(
-          false,
-          function openPropertiesDialog() {
-            tree.controller.doCommand("placesCmd_show:info");
-          },
-          async function test(dialogWin) {
-            // Check the initial location.
-            let locationPicker = dialogWin.document.getElementById(
-              "editBMPanel_locationField"
-            );
-            Assert.equal(
-              locationPicker.value,
-              TEST_URL,
-              "Sidebar - InstantEditBookmark: The current location is the expected one."
-            );
-
-            // To check whether the lastModified field will be updated correctly.
-            let lastModified = _getLastModified(bm.guid);
-
-            let promiseLocationChange = PlacesTestUtils.waitForNotification(
-              "bookmark-url-changed",
-              events => events.some(e => e.url === TEST_URL3)
-            );
-
-            // Update the "location" field.
-            fillBookmarkTextField(
-              "editBMPanel_locationField",
-              TEST_URL3,
-              dialogWin,
-              false
-            );
-            await TestUtils.waitForCondition(
-              () => locationPicker.value === TEST_URL3,
-              "Sidebar - InstantEditBookmark: The location is correct after update."
-            );
-
-            // Confirm and close the dialog.
-            EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
-            await promiseLocationChange;
-
-            await TestUtils.waitForCondition(
-              () => _getLastModified(bm.guid) > lastModified,
-              "Sidebar - InstantEditBookmark: The lastModified will be greater than before updating."
-            );
-
-            let updatedBm = await PlacesUtils.bookmarks.fetch(bm.guid);
-            Assert.equal(
-              updatedBm.url,
-              TEST_URL3,
-              "Sidebar - InstantEditBookmark: Should have updated the bookmark location in the database."
-            );
-          }
-        );
-      });
-    }
-  );
-
-  add_task(async function editBookmark_test_change_location_from_Sidebar() {
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.bookmarks.editDialog.delayedApply.enabled", true]],
-    });
-    let bm = await PlacesUtils.bookmarks.fetch({ url: TEST_URL3 });
-
-    await withSidebarTree("bookmarks", async function(tree) {
-      tree.selectItems([bm.guid]);
-
-      await withBookmarksDialog(
-        false,
-        function openPropertiesDialog() {
-          tree.controller.doCommand("placesCmd_show:info");
-        },
-        async function test(dialogWin) {
-          // Check the initial location.
-          let locationPicker = dialogWin.document.getElementById(
-            "editBMPanel_locationField"
-          );
-          Assert.equal(
-            locationPicker.value,
-            TEST_URL3,
-            "Sidebar - EditBookmark: The current location is the expected one."
-          );
-
-          // To check whether the lastModified field will be updated correctly.
-          let lastModified = _getLastModified(bm.guid);
-
-          // Update the "location" field.
-          fillBookmarkTextField(
-            "editBMPanel_locationField",
-            TEST_URL2,
-            dialogWin,
-            false
-          );
-
-          Assert.equal(
-            locationPicker.value,
-            TEST_URL2,
-            "Sidebar - EditBookmark: The location is changed in dialog for prefered one."
-          );
-
-          // Confirm and close the dialog.
-          EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
-
-          await TestUtils.waitForCondition(
-            () => _getLastModified(bm.guid) > lastModified,
-            "Sidebar - EditBookmark: The lastModified will be greater than before updating."
-          );
-        }
-      );
-
-      let updatedBm = await PlacesUtils.bookmarks.fetch(bm.guid);
-      Assert.equal(
-        updatedBm.url,
-        TEST_URL2,
-        "Sidebar - EditBookmark: Should have updated the bookmark location in the database."
-      );
-    });
   });
 });
 
