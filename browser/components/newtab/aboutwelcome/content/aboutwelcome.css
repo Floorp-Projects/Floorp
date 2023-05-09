@@ -684,6 +684,9 @@ html {
   text-align: initial;
   align-items: initial;
 }
+.onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text:empty {
+  margin: 0;
+}
 .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text h1 {
   font-size: 24px;
   line-height: 1.2;
@@ -1473,7 +1476,8 @@ html {
 .onboardingContainer .dialog-initial .multi-select-container {
   transition-delay: 0.8s;
 }
-.onboardingContainer .dialog-initial .tiles-theme-section {
+.onboardingContainer .dialog-initial .tiles-theme-section,
+.onboardingContainer .dialog-initial migration-wizard {
   transition-delay: 0.9s;
 }
 .onboardingContainer .dialog-initial .primary,
@@ -1545,7 +1549,8 @@ html {
 .onboardingContainer.transition-in .screen .checkbox-container,
 .onboardingContainer.transition-in .screen .secondary,
 .onboardingContainer.transition-in .screen .secondary-cta:not(.top),
-.onboardingContainer.transition-in .screen .cta-link {
+.onboardingContainer.transition-in .screen .cta-link,
+.onboardingContainer.transition-in .screen migration-wizard {
   opacity: 0;
   translate: 0 calc(-1 * var(--translate));
 }
@@ -1568,7 +1573,8 @@ html {
   transition-delay: 0.1s;
 }
 .onboardingContainer.transition-out .screen:not(.dialog-last) .tiles-theme-section,
-.onboardingContainer.transition-out .screen:not(.dialog-last) .colorway-text {
+.onboardingContainer.transition-out .screen:not(.dialog-last) .colorway-text,
+.onboardingContainer.transition-out .screen:not(.dialog-last) migration-wizard {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.2s;
@@ -1595,11 +1601,14 @@ html {
   translate: 0 calc(2 * var(--translate));
   transition-delay: 0.4s;
 }
-
-migration-wizard {
+.onboardingContainer migration-wizard {
   width: unset;
+  transition: var(--transition);
 }
-
-migration-wizard::part(buttons) {
+.onboardingContainer migration-wizard::part(buttons) {
+  margin-top: 32px;
   justify-content: flex-start;
+}
+.onboardingContainer migration-wizard::part(deck) {
+  font-size: 0.83em;
 }
