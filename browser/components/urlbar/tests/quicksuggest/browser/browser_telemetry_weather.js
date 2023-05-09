@@ -13,7 +13,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 const suggestion_type = "weather";
 const match_type = "firefox-suggest";
-const index = 0;
+const index = 1;
 const position = index + 1;
 
 const { TELEMETRY_SCALARS: WEATHER_SCALARS } = UrlbarProviderWeather;
@@ -41,10 +41,10 @@ add_task(async function() {
     suggestion,
     providerName: UrlbarProviderWeather.name,
     showSuggestion: async () => {
-      await SimpleTest.promiseFocus(window);
-      await UrlbarTestUtils.promisePopupOpen(window, () =>
-        document.getElementById("Browser:OpenLocation").doCommand()
-      );
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: MerinoTestUtils.WEATHER_KEYWORD,
+      });
     },
     teardown: async () => {
       // Picking the block button sets this pref to false and disables weather
@@ -59,16 +59,9 @@ add_task(async function() {
         await fetchPromise;
       }
     },
-    // exposure
-    exposure: {
-      scalars: {
-        [WEATHER_SCALARS.EXPOSURE]: position,
-      },
-    },
     // impression-only
     impressionOnly: {
       scalars: {
-        [WEATHER_SCALARS.EXPOSURE]: position,
         [WEATHER_SCALARS.IMPRESSION]: position,
       },
       event: {
@@ -86,7 +79,6 @@ add_task(async function() {
       // click
       "urlbarView-row-inner": {
         scalars: {
-          [WEATHER_SCALARS.EXPOSURE]: position,
           [WEATHER_SCALARS.IMPRESSION]: position,
           [WEATHER_SCALARS.CLICK]: position,
         },
@@ -104,7 +96,6 @@ add_task(async function() {
       // block
       "urlbarView-button-block": {
         scalars: {
-          [WEATHER_SCALARS.EXPOSURE]: position,
           [WEATHER_SCALARS.IMPRESSION]: position,
           [WEATHER_SCALARS.BLOCK]: position,
         },
@@ -122,7 +113,6 @@ add_task(async function() {
       // help
       "urlbarView-button-help": {
         scalars: {
-          [WEATHER_SCALARS.EXPOSURE]: position,
           [WEATHER_SCALARS.IMPRESSION]: position,
           [WEATHER_SCALARS.HELP]: position,
         },
