@@ -6702,6 +6702,7 @@ first_session:
     metadata:
       tags:
         - Performance
+        - Attribution
   network:
     type: string
     send_in_pings:
@@ -6726,6 +6727,7 @@ first_session:
     metadata:
       tags:
         - Performance
+        - Attribution
   adgroup:
     type: string
     send_in_pings:
@@ -6750,6 +6752,7 @@ first_session:
     metadata:
       tags:
         - Telemetry
+        - Attribution
   creative:
     send_in_pings:
       - first-session
@@ -6774,6 +6777,7 @@ first_session:
     metadata:
       tags:
         - Performance
+        - Attribution
   distribution_id:
     type: string
     description: |
@@ -6817,11 +6821,13 @@ first_session:
     metadata:
       tags:
         - Performance
+        - Attribution
   adjust_attribution_time:
     type: timing_distribution
     time_unit: millisecond
     send_in_pings:
       - first-session
+      - metrics
     description: >
       The time that it takes to derive the attribution parameters by
       the Adjust SDK.
@@ -6829,6 +6835,123 @@ first_session:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1823492
     data_reviews:
       - https://github.com/mozilla-mobile/firefox-android/pull/1341#pullrequestreview-1354835757
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Performance
+        - Attribution
+play_store_attribution:
+  source:
+    type: string
+    send_in_pings:
+      - first-session
+    description: |
+      The name of the utm_source that is responsible for this installation.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832069
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1991#issuecomment-1545842578
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Attribution
+  medium:
+    type: string
+    send_in_pings:
+      - first-session
+    description: |
+      The name of the utm_medium that is responsible for this installation.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832069
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1991#issuecomment-1545842578
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Attribution
+  campaign:
+    type: string
+    send_in_pings:
+      - first-session
+    description: |
+      The name of the utm_campaign that is responsible for this installation.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832069
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1991#issuecomment-1545842578
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Attribution
+  term:
+    type: string
+    send_in_pings:
+      - first-session
+    description: |
+      The name of the utm_term that is responsible for this installation.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832069
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1991#issuecomment-1545842578
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Attribution
+  content:
+    type: string
+    send_in_pings:
+      - first-session
+    description: |
+      The name of the utm_content that is responsible for this installation.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832069
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1991#issuecomment-1545842578
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 124
+    metadata:
+      tags:
+        - Attribution
+  attribution_time:
+    type: timing_distribution
+    time_unit: millisecond
+    send_in_pings:
+      - metrics
+    description: >
+      The time that it takes to derive the attribution parameters by
+      the Google Play Install Referrer library.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832069
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1991#issuecomment-1545842578
     data_sensitivity:
       - technical
     notification_emails:

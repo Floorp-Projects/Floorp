@@ -213,6 +213,13 @@
     <string name="pref_key_adjust_adgroup" translatable="false">pref_key_adjust_adgroup</string>
     <string name="pref_key_adjust_creative" translatable="false">pref_key_adjust_creative</string>
 
+    <string name="pref_key_utm_params_known" translatable="false">pref_key_utm_params_known</string>
+    <string name="pref_key_utm_source" translatable="false">pref_key_utm_source</string>
+    <string name="pref_key_utm_medium" translatable="false">pref_key_utm_medium</string>
+    <string name="pref_key_utm_campaign" translatable="false">pref_key_utm_campaign</string>
+    <string name="pref_key_utm_term" translatable="false">pref_key_utm_term</string>
+    <string name="pref_key_utm_content" translatable="false">pref_key_utm_content</string>
+
     <string name="pref_key_contile_context_id" translatable="false">pref_key_contile_context_id</string>
 
     <!-- Wallpaper Settings -->

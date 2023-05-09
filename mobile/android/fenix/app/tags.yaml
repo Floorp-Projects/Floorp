@@ -18,6 +18,8 @@ Accounts:
 AndroidIntegration:
   description: Corresponds to the [Feature:AndroidIntegration](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AAndroidIntegration)
     label on GitHub.
+Attribution:
+  description: Corresponds to the attribution of an install derived from Google Play Store Install Referrer and the Adjust SDK.
 Autofill:
   description: Address and Credit Card autofill. Corresponds to the [Feature:Autofill](https://github.com/mozilla-mobile/fenix/issues?q=label%3AFeature%3AAutofill)
     label on GitHub.
