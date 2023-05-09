@@ -56,38 +56,6 @@ struct CompilationStorage {
   JS_HAZ_NON_GC_POINTER js::frontend::CompilationInput* input_ = nullptr;
   bool isBorrowed_ = false;
 
-  friend JS_PUBLIC_API already_AddRefed<JS::Stencil>
-  CompileGlobalScriptToStencil(JS::FrontendContext* fc,
-                               const JS::ReadOnlyCompileOptions& options,
-                               JS::NativeStackLimit stackLimit,
-                               JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-                               JS::CompilationStorage& compileStorage);
-
-  friend JS_PUBLIC_API already_AddRefed<JS::Stencil>
-  CompileGlobalScriptToStencil(JS::FrontendContext* fc,
-                               const JS::ReadOnlyCompileOptions& options,
-                               JS::NativeStackLimit stackLimit,
-                               JS::SourceText<char16_t>& srcBuf,
-                               JS::CompilationStorage& compileStorage);
-
-  friend JS_PUBLIC_API already_AddRefed<JS::Stencil>
-  CompileModuleScriptToStencil(JS::FrontendContext* fc,
-                               const JS::ReadOnlyCompileOptions& options,
-                               JS::NativeStackLimit stackLimit,
-                               JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-                               JS::CompilationStorage& compileStorage);
-
-  friend JS_PUBLIC_API already_AddRefed<JS::Stencil>
-  CompileModuleScriptToStencil(JS::FrontendContext* fc,
-                               const JS::ReadOnlyCompileOptions& options,
-                               JS::NativeStackLimit stackLimit,
-                               JS::SourceText<char16_t>& srcBuf,
-                               JS::CompilationStorage& compileStorage);
-
-  friend JS_PUBLIC_API bool PrepareForInstantiate(
-      JS::FrontendContext* fc, JS::CompilationStorage& compileStorage,
-      JS::Stencil& stencil, JS::InstantiationStorage& storage);
-
  public:
   CompilationStorage() = default;
   explicit CompilationStorage(js::frontend::CompilationInput* input)
