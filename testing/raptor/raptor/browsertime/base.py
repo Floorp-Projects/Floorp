@@ -610,7 +610,7 @@ class Browsertime(Perftest):
 
         return False
 
-    def _compute_process_timeout(self, test, timeout):
+    def _compute_process_timeout(self, test, timeout, cmd):
         if self.debug_mode:
             return sys.maxsize
 
@@ -641,7 +641,17 @@ class Browsertime(Perftest):
 
         # browsertime also handles restarting the browser/running all of the browser cycles;
         # so we need to multiply our bt_timeout by the number of browser cycles
-        bt_timeout = bt_timeout * int(test.get("browser_cycles", 1))
+        iterations = int(test.get("browser_cycles", 1))
+        for i, entry in enumerate(cmd):
+            if entry == "--iterations":
+                try:
+                    iterations = int(cmd[i + 1])
+                    break
+                except ValueError:
+                    raise Exception(
+                        f"Received a non-int value for the iterations: {cmd[i+1]}"
+                    )
+        bt_timeout = bt_timeout * iterations
 
         # if geckoProfile enabled, give browser more time for profiling
         if self.config["gecko_profile"] is True:
@@ -801,7 +811,7 @@ class Browsertime(Perftest):
 
                 return _line_handler
 
-            proc_timeout = self._compute_process_timeout(test, timeout)
+            proc_timeout = self._compute_process_timeout(test, timeout, cmd)
             output_timeout = BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT
             if self.benchmark:
                 output_timeout = BROWSERTIME_BENCHMARK_OUTPUT_TIMEOUT
