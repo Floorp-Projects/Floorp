@@ -135,4 +135,13 @@ class AutofillCryptoTest {
         assertNull(crypto.decrypt(badKey, encrypted))
         assertNull(crypto.decrypt(corruptKey, encrypted))
     }
+
+    @Test
+    fun `decrypt scrubbed card`() = runTest {
+        val crypto = AutofillCrypto(testContext, securePrefs, mock())
+        val key = crypto.getOrGenerateKey()
+        // if a key was previously lost we will wipe the card numbers.
+        val encrypted = CreditCardNumber.Encrypted("")
+        assertNull(crypto.decrypt(key, encrypted))
+    }
 }

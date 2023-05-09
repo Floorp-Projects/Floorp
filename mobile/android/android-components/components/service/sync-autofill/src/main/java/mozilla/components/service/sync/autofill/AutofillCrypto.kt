@@ -51,6 +51,10 @@ class AutofillCrypto(
         key: ManagedKey,
         encryptedCardNumber: CreditCardNumber.Encrypted,
     ): CreditCardNumber.Plaintext? {
+        if (encryptedCardNumber.number.isEmpty()) {
+            logger.info("Skipping decryption of previously scrubbed CC number")
+            return null
+        }
         return try {
             CreditCardNumber.Plaintext(decryptString(key.key, encryptedCardNumber.number))
         } catch (e: AutofillApiException) {
