@@ -2783,7 +2783,7 @@
 # Enable indexedDB in private browsing mode with encryption
 - name: dom.indexedDB.privateBrowsing.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether or not indexedDB test mode is enabled.
