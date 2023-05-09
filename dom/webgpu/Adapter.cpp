@@ -37,6 +37,8 @@ Maybe<uint32_t> Adapter::MakeFeatureBits(
       bits |= WGPUFeatures_TEXTURE_COMPRESSION_BC;
     } else if (feature == dom::GPUFeatureName::Indirect_first_instance) {
       bits |= WGPUFeatures_INDIRECT_FIRST_INSTANCE;
+    } else if (feature == dom::GPUFeatureName::Depth32float_stencil8) {
+      bits |= WGPUFeatures_DEPTH32FLOAT_STENCIL8;
     } else {
       NS_WARNING(
           nsPrintfCString("Requested feature bit '%d' is not recognized.",
@@ -70,6 +72,10 @@ Adapter::Adapter(Instance* const aParent, WebGPUChild* const aBridge,
   if (aInfo.features & WGPUFeatures_INDIRECT_FIRST_INSTANCE) {
     dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(
         mFeatures, u"indirect-first-instance"_ns, result);
+  }
+  if (aInfo.features & WGPUFeatures_DEPTH32FLOAT_STENCIL8) {
+    dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(
+        mFeatures, u"depth32float-stencil8"_ns, result);
   }
 }
 

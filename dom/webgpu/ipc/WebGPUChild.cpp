@@ -214,6 +214,9 @@ static ffi::WGPUTextureFormat ConvertTextureFormat(
     case dom::GPUTextureFormat::Depth24plus_stencil8:
       result.tag = ffi::WGPUTextureFormat_Depth24PlusStencil8;
       break;
+    case dom::GPUTextureFormat::Depth32float_stencil8:
+      result.tag = ffi::WGPUTextureFormat_Depth32FloatStencil8;
+      break;
     case dom::GPUTextureFormat::EndGuard_:
       MOZ_ASSERT_UNREACHABLE();
   }
