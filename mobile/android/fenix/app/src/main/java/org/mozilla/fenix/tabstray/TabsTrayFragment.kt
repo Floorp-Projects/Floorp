@@ -260,6 +260,21 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                         onSyncedTabClick = tabsTrayInteractor::onSyncedTabClicked,
                         onSaveToCollectionClick = tabsTrayInteractor::onAddSelectedTabsToCollectionClicked,
                         onShareSelectedTabsClick = tabsTrayInteractor::onShareSelectedTabs,
+                        onShareAllTabsClick = {
+                            TabsTray.shareAllTabs.record(NoExtras())
+                            navigationInteractor.onShareTabsOfTypeClicked(
+                                private = tabsTrayStore.state.selectedPage == Page.PrivateTabs,
+                            )
+                        },
+                        onTabSettingsClick = navigationInteractor::onTabSettingsClicked,
+                        onRecentlyClosedClick = navigationInteractor::onOpenRecentlyClosedClicked,
+                        onAccountSettingsClick = navigationInteractor::onAccountSettingsClicked,
+                        onDeleteAllTabsClick = {
+                            TabsTray.closeAllTabs.record(NoExtras())
+                            navigationInteractor.onCloseAllTabsClicked(
+                                private = tabsTrayStore.state.selectedPage == Page.PrivateTabs,
+                            )
+                        },
                     )
                 }
             }

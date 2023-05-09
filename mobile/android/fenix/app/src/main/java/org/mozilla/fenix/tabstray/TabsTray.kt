@@ -29,6 +29,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
@@ -75,6 +76,11 @@ import mozilla.components.browser.storage.sync.Tab as SyncTab
  * the multi select banner.
  * @param onShareSelectedTabsClick Invoked when the user clicks on the share button from the
  * multi select banner.
+ * @param onShareAllTabsClick Invoked when the user clicks on the share all tabs banner menu item.
+ * @param onTabSettingsClick Invoked when the user clicks on the tab settings banner menu item.
+ * @param onRecentlyClosedClick Invoked when the user clicks on the recently closed banner menu item.
+ * @param onAccountSettingsClick Invoked when the user clicks on the account settings banner menu item.
+ * @param onDeleteAllTabsClick Invoked when the user clicks on the close all tabs banner menu item.
  */
 @OptIn(ExperimentalPagerApi::class)
 @Suppress("LongMethod", "LongParameterList", "ComplexMethod")
@@ -102,9 +108,16 @@ fun TabsTray(
     onSyncedTabClick: (SyncTab) -> Unit,
     onSaveToCollectionClick: () -> Unit,
     onShareSelectedTabsClick: () -> Unit,
+    onShareAllTabsClick: () -> Unit,
+    onTabSettingsClick: () -> Unit,
+    onRecentlyClosedClick: () -> Unit,
+    onAccountSettingsClick: () -> Unit,
+    onDeleteAllTabsClick: () -> Unit,
 ) {
     val normalTabCount = browserStore
         .observeAsComposableState { state -> state.normalTabs.size }.value ?: 0
+    val privateTabCount = browserStore
+        .observeAsComposableState { state -> state.privateTabs.size }.value ?: 0
     val multiselectMode = tabsTrayStore
         .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
     val selectedPage = tabsTrayStore
@@ -141,11 +154,18 @@ fun TabsTray(
                 selectMode = multiselectMode,
                 selectedPage = selectedPage,
                 normalTabCount = normalTabCount,
+                privateTabCount = privateTabCount,
                 isInDebugMode = isInDebugMode,
                 onTabPageIndicatorClicked = onTabPageClick,
                 onExitSelectModeClick = { tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode) },
                 onSaveToCollectionClick = onSaveToCollectionClick,
                 onShareSelectedTabsClick = onShareSelectedTabsClick,
+                onEnterMultiselectModeClick = { tabsTrayStore.dispatch(TabsTrayAction.EnterSelectMode) },
+                onShareAllTabsClick = onShareAllTabsClick,
+                onTabSettingsClick = onTabSettingsClick,
+                onRecentlyClosedClick = onRecentlyClosedClick,
+                onAccountSettingsClick = onAccountSettingsClick,
+                onDeleteAllTabsClick = onDeleteAllTabsClick,
             )
         }
 
@@ -500,6 +520,11 @@ private fun TabsTrayPreviewRoot(
             onSyncedTabClick = {},
             onSaveToCollectionClick = {},
             onShareSelectedTabsClick = {},
+            onShareAllTabsClick = {},
+            onTabSettingsClick = {},
+            onRecentlyClosedClick = {},
+            onAccountSettingsClick = {},
+            onDeleteAllTabsClick = {},
         )
     }
 }
