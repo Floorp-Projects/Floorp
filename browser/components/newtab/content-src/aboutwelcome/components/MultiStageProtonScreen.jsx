@@ -421,22 +421,26 @@ export class ProtonScreen extends React.PureComponent {
 
             <div className="main-content-inner">
               <div className={`welcome-text ${content.title_style || ""}`}>
-                <Localized text={content.title}>
-                  <h1 id="mainContentHeader" />
-                </Localized>
-                <Localized text={content.subtitle}>
-                  <h2
-                    data-l10n-args={JSON.stringify({
-                      "addon-name": this.props.addonName,
-                      ...this.props.appAndSystemLocaleInfo?.displayNames,
-                    })}
-                    aria-flowto={
-                      this.props.messageId?.includes("FEATURE_TOUR")
-                        ? "steps"
-                        : ""
-                    }
-                  />
-                </Localized>
+                {content.title ? (
+                  <Localized text={content.title}>
+                    <h1 id="mainContentHeader" />
+                  </Localized>
+                ) : null}
+                {content.subtitle ? (
+                  <Localized text={content.subtitle}>
+                    <h2
+                      data-l10n-args={JSON.stringify({
+                        "addon-name": this.props.addonName,
+                        ...this.props.appAndSystemLocaleInfo?.displayNames,
+                      })}
+                      aria-flowto={
+                        this.props.messageId?.includes("FEATURE_TOUR")
+                          ? "steps"
+                          : ""
+                      }
+                    />
+                  </Localized>
+                ) : null}
                 {content.cta_paragraph ? (
                   <CTAParagraph
                     content={content.cta_paragraph}
