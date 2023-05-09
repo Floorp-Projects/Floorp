@@ -85,6 +85,13 @@ user-id = 5946
 user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
+[[publisher.dogear]]
+version = "0.4.0"
+when = "2019-09-16"
+user-id = 27901
+user-login = "linabutler"
+user-name = "Lina Butler"
+
 [[publisher.dtoa]]
 version = "0.4.8"
 when = "2021-03-29"
@@ -105,6 +112,20 @@ when = "2022-04-04"
 user-id = 1281
 user-login = "nical"
 user-name = "Nicolas Silva"
+
+[[publisher.freetype]]
+version = "0.7.0"
+when = "2020-07-14"
+user-id = 2396
+user-login = "jdm"
+user-name = "Josh Matthews"
+
+[[publisher.gleam]]
+version = "0.15.0"
+when = "2023-04-21"
+user-id = 5946
+user-login = "jrmuizel"
+user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
 version = "52.6.0"

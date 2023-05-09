@@ -365,18 +365,6 @@ criteria = "safe-to-deploy"
 version = "0.8.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.dogear]]
-version = "0.4.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.dtoa-short]]
-version = "0.3.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.dwrote]]
-version = "0.11.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.enumset]]
 version = "1.0.11"
 criteria = "safe-to-deploy"
@@ -417,10 +405,6 @@ criteria = "safe-to-deploy"
 version = "0.6.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.freetype]]
-version = "0.7.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.fs-err]]
 version = "2.7.0"
 criteria = "safe-to-deploy"
@@ -459,10 +443,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.gl_generator]]
 version = "0.14.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.gleam]]
-version = "0.13.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.glob]]
@@ -567,13 +547,11 @@ criteria = "safe-to-deploy"
 version = "0.1.1"
 criteria = "safe-to-run"
 
-[[exemptions.lmdb-rkv]]
-version = "0.14.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.lmdb-rkv-sys]]
 version = "0.11.2"
 criteria = "safe-to-deploy"
+suggest = false
+notes = "This crate is forked from another crate and not developed in-house. Given that LMDB-backed RKV is going away, we will probably never bother auditing this"
 
 [[exemptions.lock_api]]
 version = "0.4.7"
@@ -625,10 +603,6 @@ criteria = "safe-to-run"
 
 [[exemptions.miow]]
 version = "0.3.7"
-criteria = "safe-to-deploy"
-
-[[exemptions.moz_cbor]]
-version = "0.1.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.murmurhash3]]
@@ -767,10 +741,6 @@ criteria = "safe-to-deploy"
 version = "0.6.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.range-alloc]]
-version = "0.1.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.redox_syscall]]
 version = "0.2.13"
 criteria = "safe-to-deploy"
@@ -853,10 +823,6 @@ criteria = "safe-to-run"
 
 [[exemptions.siphasher]]
 version = "0.3.10"
-criteria = "safe-to-deploy"
-
-[[exemptions.smallbitvec]]
-version = "2.5.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.smallvec]]
