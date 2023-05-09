@@ -7163,7 +7163,7 @@ static bool ClearMarkQueue(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool NurseryStringsEnabled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(cx->zone()->allocNurseryStrings);
+  args.rval().setBoolean(cx->zone()->allocNurseryStrings());
   return true;
 }
 
