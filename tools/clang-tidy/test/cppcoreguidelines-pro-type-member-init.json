@@ -1,1 +1,8 @@
-[["warning", "uninitialized record type: 'y'", "cppcoreguidelines-pro-type-member-init"], {"reliability": "medium"}]
+[
+  [
+    "warning",
+    "uninitialized record type: 'y'",
+    "cppcoreguidelines-pro-type-member-init"
+  ],
+  { "reliability": "medium" }
+]

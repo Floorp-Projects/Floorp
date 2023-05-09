@@ -10,9 +10,7 @@
   },
   "content_scripts": [
     {
-      "matches": [
-            "*://*.example.com/*"
-       ],
+      "matches": ["*://*.example.com/*"],
       "js": ["messaging.js"]
     }
   ],

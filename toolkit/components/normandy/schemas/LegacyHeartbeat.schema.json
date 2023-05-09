@@ -10,21 +10,14 @@
       "properties": {
         "repeatOption": {
           "type": "string",
-          "enum": [
-            "once",
-            "xdays",
-            "nag"
-          ],
+          "enum": ["once", "xdays", "nag"],
           "description": "Determines how often a prompt is shown executes.",
           "default": "once"
         },
         "repeatEvery": {
           "description": "For repeatOption=xdays, how often (in days) the prompt is displayed.",
           "default": null,
-          "type": [
-            "number",
-            "null"
-          ]
+          "type": ["number", "null"]
         },
         "includeTelemetryUUID": {
           "type": "boolean",
@@ -42,10 +35,7 @@
         "engagementButtonLabel": {
           "description": "Text for the engagement button. If specified, this button will be shown instead of rating stars.",
           "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "thanksMessage": {
           "description": "Thanks message to show to the user after they've rated Firefox",
@@ -54,26 +44,17 @@
         "postAnswerUrl": {
           "description": "URL to redirect the user to after rating Firefox or clicking the engagement button",
           "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "learnMoreMessage": {
           "description": "Message to show to the user to learn more",
           "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "learnMoreUrl": {
           "description": "URL to show to the user when they click Learn More",
           "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         }
       },
       "required": [
@@ -87,8 +68,6 @@
       "additionalProperties": false
     }
   },
-  "required": [
-    "survey"
-  ],
+  "required": ["survey"],
   "additionalProperties": false
 }

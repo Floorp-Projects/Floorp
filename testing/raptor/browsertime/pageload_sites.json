@@ -154,9 +154,15 @@
       "name": "buzzfeed",
       "test_url": "https://www.buzzfeed.com/",
       "secondary_url": "https://www.buzzfeed.com/quizzes",
-      "test_cmds":  [
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[2]/div/button[2]"],
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[3]/div[2]/button"]
+      "test_cmds": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div/div/div[2]/div/button[2]"
+        ],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div/div/div[3]/div[2]/button"
+        ]
       ]
     },
     {
@@ -172,9 +178,12 @@
         "media.allowed-to-play.enabled": false,
         "media.block-autoplay-until-in-foreground": true
       },
-      "test_cmds":  [
+      "test_cmds": [
         ["click.byXpathAndWait", "//*[@id='onetrust-pc-btn-handler']"],
-        ["click.byXpathAndWait", "/html/body/div[13]/div[2]/div/section/div[17]/button[2]"]
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[13]/div[2]/div/section/div[17]/button[2]"
+        ]
       ]
     },
     {
@@ -182,18 +191,27 @@
       "name": "ebay",
       "test_url": "https://www.ebay.com/",
       "secondary_url": "https://www.ebay.com/deals",
-      "test_cmds":  [
-        ["click.byXpathAndWait", "/html/body/div[5]/div[1]/div[2]/div[2]/div[2]/a"],
-        ["click.byXpathAndWait", "/html/body/div[4]/div/div[2]/section[3]/section/button"]
+      "test_cmds": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[5]/div[1]/div[2]/div[2]/div[2]/a"
+        ],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[4]/div/div[2]/section[3]/section/button"
+        ]
       ]
     },
     {
       "login": false,
       "name": "espn",
       "test_url": "http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words",
-      "test_cmds":  [
+      "test_cmds": [
         ["click.byXpathAndWait", "//*[@id='onetrust-pc-btn-handler']"],
-        ["click.byXpathAndWait", "/html/body/div[10]/div[2]/div[3]/div[1]/button"]
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[10]/div[2]/div[3]/div[1]/button"
+        ]
       ]
     },
     {
@@ -207,9 +225,15 @@
       "name": "facebook",
       "test_url": "https://www.facebook.com",
       "secondary_url": "https://www.facebook.com/marketplace/?ref=bookmark",
-      "test_cmds":  [
-        ["click.byXpathAndWait", "/html/body/div[3]/div[2]/div/div/div/div/div[3]/button[1]"],
-        ["click.byXpathAndWait", "/html/body/div[3]/div[2]/div/div/div/div/div[3]/button[1]"]
+      "test_cmds": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[3]/div[2]/div/div/div/div/div[3]/button[1]"
+        ],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[3]/div[2]/div/div/div/div/div[3]/button[1]"
+        ]
       ]
     },
     {
@@ -231,7 +255,7 @@
       "login": false,
       "name": "fandom",
       "test_url": "https://www.fandom.com/articles/fallout-76-will-live-and-die-on-the-creativity-of-its-playerbase",
-      "test_cmds":  [
+      "test_cmds": [
         ["click.byXpathAndWait", "/html/body/div[9]/div/div/div[2]/div[1]"],
         ["click.byXpathAndWait", "/html/body/div[9]/div/div/div[2]/div[2]"]
       ]
@@ -240,9 +264,15 @@
       "login": true,
       "name": "google",
       "test_url": "https://www.google.com/search?hl=en&q=barack+obama&cad=h",
-      "test_cmds":  [
-        ["click.byXpathAndWait", "/html/body/div[3]/div[3]/span/div/div/div/div[3]/button[1]/div"],
-        ["click.byXpathAndWait", "/html/body/c-wiz/div/div/div/div[2]/form/div/button/div[2]"]
+      "test_cmds": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[3]/div[3]/span/div/div/div/div[3]/button[1]/div"
+        ],
+        [
+          "click.byXpathAndWait",
+          "/html/body/c-wiz/div/div/div/div[2]/form/div/button/div[2]"
+        ]
       ]
     },
     {
@@ -255,9 +285,7 @@
       "login": true,
       "name": "google-mail",
       "test_url": "https://mail.google.com/",
-      "test_cmds":  [
-        ["click.byXpathAndWait", "/html/body/div/div/span[2]/a[2]"]
-      ]
+      "test_cmds": [["click.byXpathAndWait", "/html/body/div/div/span[2]/a[2]"]]
     },
     {
       "login": false,
@@ -276,19 +304,25 @@
       "name": "imgur",
       "test_url": "https://imgur.com/gallery/m5tYJL6",
       "inject_deterministic": false,
-      "test_cmds":  [
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[2]/div/button[2]"],
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div/div[3]/div[2]/button"]
+      "test_cmds": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div/div/div[2]/div/button[2]"
+        ],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div/div/div[3]/div[2]/button"
+        ]
       ],
       "secondary_url": "https://imgur.com/gallery/rCXZUil",
       "preferences": {
-         "media.autoplay.default": 5,
-         "media.autoplay.ask-permission": true,
-         "media.autoplay.blocking_policy": 1,
-         "media.autoplay.block-webaudio": true,
-         "media.allowed-to-play.enabled": false,
-         "media.block-autoplay-until-in-foreground": true
-       }
+        "media.autoplay.default": 5,
+        "media.autoplay.ask-permission": true,
+        "media.autoplay.blocking_policy": 1,
+        "media.autoplay.block-webaudio": true,
+        "media.allowed-to-play.enabled": false,
+        "media.block-autoplay-until-in-foreground": true
+      }
     },
     {
       "login": true,
@@ -306,12 +340,27 @@
       "name": "microsoft",
       "test_url": "https://www.microsoft.com/en-us/",
       "secondary_url": "https://support.microsoft.com/en-us",
-      "test_cmds":  [
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div[2]/div/div/div/div[2]/button[2]"],
-        ["click.byXpath", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[2]/div/div/div[2]/label"],
-        ["click.byXpath", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[3]/div/div/div[2]/label"],
-        ["click.byXpath", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[4]/div/div/div[2]/label"],
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/div[2]/button[1]"]
+      "test_cmds": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div/div[2]/div/div/div/div[2]/button[2]"
+        ],
+        [
+          "click.byXpath",
+          "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[2]/div/div/div[2]/label"
+        ],
+        [
+          "click.byXpath",
+          "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[3]/div/div/div[2]/label"
+        ],
+        [
+          "click.byXpath",
+          "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/form/dl/dt[4]/div/div/div[2]/label"
+        ],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div/div[2]/div/div/div[2]/div[2]/div/div[2]/button[1]"
+        ]
       ]
     },
     {
@@ -325,9 +374,15 @@
       "name": "nytimes",
       "test_url": "https://www.nytimes.com/2020/02/19/opinion/surprise-medical-bill.html",
       "secondary_url": "https://www.nytimes.com/section/opinion/columnists",
-      "test_cmds":  [
-        ["click.byXpathAndWait", "/html/body/div/div/div[2]/div/div[2]/div/div/div[1]/div[3]/div[3]/a"],
-        ["click.byXpathAndWait", "//*[@id='opt-out-of-new-york-times-nonessential-trackers']"]
+      "test_cmds": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/div/div/div[2]/div/div[2]/div/div/div[1]/div[3]/div[3]/a"
+        ],
+        [
+          "click.byXpathAndWait",
+          "//*[@id='opt-out-of-new-york-times-nonessential-trackers']"
+        ]
       ]
     },
     {
@@ -357,8 +412,11 @@
       "name": "reddit",
       "test_url": "https://www.reddit.com/r/technology/comments/9sqwyh/we_posed_as_100_senators_to_run_ads_on_facebook/",
       "secondary_url": "https://www.reddit.com/r/technology/",
-      "test_cmds":  [
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[3]/div[1]/section/div/section/section/form[1]/button"]
+      "test_cmds": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div[2]/div[3]/div[1]/section/div/section/section/form[1]/button"
+        ]
       ]
     },
     {
@@ -373,16 +431,22 @@
       "test_url": "https://www.twitch.tv/videos/894226211",
       "secondary_url": "https://www.twitch.tv/gmashley",
       "preferences": {
-         "media.autoplay.default": 5,
-         "media.autoplay.ask-permission": true,
-         "media.autoplay.blocking_policy": 1,
-         "media.autoplay.block-webaudio": true,
-         "media.allowed-to-play.enabled": false,
-         "media.block-autoplay-until-in-foreground": true
-       },
-      "test_cmds":  [
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[1]/div/div/div[3]/div/button/div/div/div"],
-        ["click.byXpathAndWait", "/html/body/div[3]/div/div/div/div/div/div[1]/div[2]/div/button/div/div"]
+        "media.autoplay.default": 5,
+        "media.autoplay.ask-permission": true,
+        "media.autoplay.blocking_policy": 1,
+        "media.autoplay.block-webaudio": true,
+        "media.allowed-to-play.enabled": false,
+        "media.block-autoplay-until-in-foreground": true
+      },
+      "test_cmds": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div[2]/div[1]/div/div/div[3]/div/button/div/div/div"
+        ],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[3]/div/div/div/div/div/div[1]/div[2]/div/button/div/div"
+        ]
       ]
     },
     {
@@ -395,7 +459,7 @@
       "name": "wikia",
       "test_url": "https://marvel.fandom.com/wiki/Black_Panther",
       "secondary_url": "https://marvel.fandom.com/wiki/Celestials",
-      "test_cmds":  [
+      "test_cmds": [
         ["click.byXpathAndWait", "/html/body/div[6]/div/div/div[2]/div[1]"],
         ["click.byXpathAndWait", "/html/body/div[7]/div/div/div[2]/div[2]"]
       ]
@@ -416,12 +480,27 @@
       "name": "youtube",
       "test_url": "https://www.youtube.com",
       "secondary_url": "https://www.youtube.com/watch?v=JrdEMERq8MA",
-      "test_cmds ":  [
-        ["click.byXpathAndWait", "/html/body/ytd-app/ytd-consent-bump-v2-lightbox/tp-yt-paper-dialog/div[4]/div[2]/div[5]/div[2]/ytd-button-renderer[1]/a"],
-        ["click.byXpath", "/html/body/c-wiz/div/div/div/div[2]/div[2]/div[2]/div/div[2]/div[1]/div/button"],
-        ["click.byXpath", "/html/body/c-wiz/div/div/div/div[2]/div[3]/div[2]/div/div[2]/div[1]/div/button"],
-        ["click.byXpath", "/html/body/c-wiz/div/div/div/div[2]/div[4]/div[2]/div[2]/div/div[2]/div[1]/div/button"],
-        ["click.byXpathAndWait", "/html/body/c-wiz/div/div/div/div[2]/form/div/button/div[2]"]
+      "test_cmds ": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/ytd-app/ytd-consent-bump-v2-lightbox/tp-yt-paper-dialog/div[4]/div[2]/div[5]/div[2]/ytd-button-renderer[1]/a"
+        ],
+        [
+          "click.byXpath",
+          "/html/body/c-wiz/div/div/div/div[2]/div[2]/div[2]/div/div[2]/div[1]/div/button"
+        ],
+        [
+          "click.byXpath",
+          "/html/body/c-wiz/div/div/div/div[2]/div[3]/div[2]/div/div[2]/div[1]/div/button"
+        ],
+        [
+          "click.byXpath",
+          "/html/body/c-wiz/div/div/div/div[2]/div[4]/div[2]/div[2]/div/div[2]/div[1]/div/button"
+        ],
+        [
+          "click.byXpathAndWait",
+          "/html/body/c-wiz/div/div/div/div[2]/form/div/button/div[2]"
+        ]
       ]
     },
     {
@@ -429,13 +508,16 @@
       "name": "cnn-nav",
       "test_url": "https://www.cnn.com/",
       "type": "interactive",
-      "test_cmds":  [
+      "test_cmds": [
         ["measure.start", "landing"],
         ["navigate", "https://www.cnn.com"],
         ["wait.byTime", 4000],
         ["measure.stop", ""],
         ["measure.start", "world"],
-        ["click.byXpathAndWait", "/html/body/div[5]/div/div/header/div/div[1]/div/div[2]/nav/ul/li[2]/a"],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[5]/div/div/header/div/div[1]/div/div[2]/nav/ul/li[2]/a"
+        ],
         ["wait.byTime", 1000],
         ["measure.stop", ""]
       ]
@@ -445,13 +527,19 @@
       "name": "reddit-billgates-ama",
       "test_url": "https://www.reddit.com/",
       "type": "interactive",
-      "test_cmds":  [
+      "test_cmds": [
         ["measure.start", "billg-ama"],
-        ["navigate", "https://www.reddit.com/r/IAmA/comments/m8n4vt/im_bill_gates_cochair_of_the_bill_and_melinda/"],
+        [
+          "navigate",
+          "https://www.reddit.com/r/IAmA/comments/m8n4vt/im_bill_gates_cochair_of_the_bill_and_melinda/"
+        ],
         ["wait.byTime", 5000],
         ["measure.stop", ""],
         ["measure.start", "members"],
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div[3]/div[2]/div/div[1]/div/div[4]/div[1]/div"],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div[2]/div[2]/div/div[3]/div[2]/div/div[1]/div/div[4]/div[1]/div"
+        ],
         ["wait.byTime", 1000],
         ["measure.stop", ""]
       ]
@@ -461,25 +549,37 @@
       "name": "reddit-billgates-post",
       "test_url": "https://www.reddit.com/user/thisisbillgates/",
       "type": "interactive",
-      "test_cmds":  [
+      "test_cmds": [
         ["measure.start", "billg"],
         ["navigate", "https://www.reddit.com/user/thisisbillgates/"],
         ["wait.byTime", 5000],
         ["measure.stop", ""],
         ["measure.start", "posts"],
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[2]"],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[2]"
+        ],
         ["wait.byTime", 15000],
         ["measure.stop", ""],
         ["measure.start", "comments"],
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[3]"],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[3]"
+        ],
         ["wait.byTime", 15000],
         ["measure.stop", ""],
         ["measure.start", "hot"],
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[2]"],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[2]"
+        ],
         ["wait.byTime", 15000],
         ["measure.stop", ""],
         ["measure.start", "top"],
-        ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[3]"],
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[3]"
+        ],
         ["wait.byTime", 15000],
         ["measure.stop", ""]
       ]
@@ -489,7 +589,7 @@
       "name": "facebook-nav",
       "test_url": "https://www.facebook.com/",
       "type": "interactive",
-      "test_cmds":  [
+      "test_cmds": [
         ["navigate", "https://www.facebook.com/login"],
         ["wait.byTime", 30000],
         ["measure.start", "landing"],

@@ -1,1 +1,8 @@
-[["warning", "narrowing conversion from 'double' to 'int'", "cppcoreguidelines-narrowing-conversions"], {"reliability": "high"}]
+[
+  [
+    "warning",
+    "narrowing conversion from 'double' to 'int'",
+    "cppcoreguidelines-narrowing-conversions"
+  ],
+  { "reliability": "high" }
+]

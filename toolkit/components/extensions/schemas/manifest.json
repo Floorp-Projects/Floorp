@@ -101,12 +101,12 @@
 
         "$import": "ManifestBase",
         "properties": {
-          "minimum_chrome_version":{
+          "minimum_chrome_version": {
             "type": "string",
             "optional": true
           },
 
-          "minimum_opera_version":{
+          "minimum_opera_version": {
             "type": "string",
             "optional": true
           },
@@ -311,7 +311,7 @@
                       "type": "array",
                       "items": {
                         "choices": [
-                          {"$ref": "ExtensionID" },
+                          { "$ref": "ExtensionID" },
                           { "type": "string", "enum": ["*"] }
                         ]
                       }
@@ -469,9 +469,7 @@
         "choices": [
           {
             "type": "string",
-            "enum": [
-              "idle"
-            ]
+            "enum": ["idle"]
           }
         ]
       },
@@ -502,9 +500,7 @@
         "choices": [
           {
             "type": "string",
-            "enum": [
-              "mozillaAddons"
-            ]
+            "enum": ["mozillaAddons"]
           }
         ]
       },
@@ -515,11 +511,7 @@
           { "$ref": "PermissionPrivileged" },
           {
             "type": "string",
-            "enum": [
-              "alarms",
-              "storage",
-              "unlimitedStorage"
-            ]
+            "enum": ["alarms", "storage", "unlimitedStorage"]
           }
         ]
       },
@@ -532,20 +524,14 @@
       },
       {
         "id": "PermissionOrOrigin",
-        "choices": [
-          { "$ref": "Permission" },
-          { "$ref": "MatchPattern" }
-        ]
+        "choices": [{ "$ref": "Permission" }, { "$ref": "MatchPattern" }]
       },
       {
         "id": "SitePermission",
         "choices": [
           {
             "type": "string",
-            "enum": [
-              "midi",
-              "midi-sysex"
-            ]
+            "enum": ["midi", "midi-sysex"]
           }
         ]
       },
@@ -736,8 +722,16 @@
             "description": "The list of JS files to inject",
             "items": { "$ref": "ExtensionURL" }
           },
-          "all_frames": {"type": "boolean", "optional": true, "description": "If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."},
-          "match_about_blank": {"type": "boolean", "optional": true, "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."},
+          "all_frames": {
+            "type": "boolean",
+            "optional": true,
+            "description": "If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."
+          },
+          "match_about_blank": {
+            "type": "boolean",
+            "optional": true,
+            "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."
+          },
           "run_at": {
             "$ref": "extensionTypes.RunAt",
             "optional": true,

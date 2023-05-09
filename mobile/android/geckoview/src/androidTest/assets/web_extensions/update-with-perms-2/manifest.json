@@ -3,7 +3,7 @@
   "name": "update",
   "browser_specific_settings": {
     "gecko": {
-        "id": "update-with-perms@example.com"
+      "id": "update-with-perms@example.com"
     }
   },
   "version": "2.0",
@@ -14,7 +14,5 @@
       "js": ["borderify.js"]
     }
   ],
-  "permissions": [
-    "tabs"
-  ]
+  "permissions": ["tabs"]
 }

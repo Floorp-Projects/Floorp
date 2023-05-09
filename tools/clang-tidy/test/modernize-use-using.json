@@ -1,1 +1,5 @@
-[["warning", "use 'using' instead of 'typedef'", "modernize-use-using"], ["warning", "use 'using' instead of 'typedef'", "modernize-use-using"], {"reliability": "high"}]
+[
+  ["warning", "use 'using' instead of 'typedef'", "modernize-use-using"],
+  ["warning", "use 'using' instead of 'typedef'", "modernize-use-using"],
+  { "reliability": "high" }
+]

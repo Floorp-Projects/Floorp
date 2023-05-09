@@ -1,8 +1,15 @@
-["trigger", ".",
-{
+[
+  "trigger",
+  ".",
+  {
     "name": "rebuild-taskgraph-cache",
     "expression": ["match", "taskcluster/**", "wholename"],
-    "command": ["./mach", "python", "-c", "from tryselect.tasks import generate_tasks; generate_tasks()"],
+    "command": [
+      "./mach",
+      "python",
+      "-c",
+      "from tryselect.tasks import generate_tasks; generate_tasks()"
+    ],
     "append_files": false
-}
+  }
 ]

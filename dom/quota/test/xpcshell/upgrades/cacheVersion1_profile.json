@@ -20,7 +20,7 @@
                     "dir": true,
                     "entries": [{ "name": "data.sdb", "dir": false }]
                   },
-                  { "name": ".metadata-v2", "dir":false }
+                  { "name": ".metadata-v2", "dir": false }
                 ]
               }
             ]
@@ -50,7 +50,7 @@
                     "dir": true,
                     "entries": [{ "name": "data.sdb", "dir": false }]
                   },
-                  { "name": ".metadata-v2", "dir":false }
+                  { "name": ".metadata-v2", "dir": false }
                 ]
               }
             ]

@@ -8,12 +8,12 @@
     "types": [
       {
         "$extend": "PermissionNoPrompt",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "theme"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["theme"]
+          }
+        ]
       },
       {
         "id": "ThemeColor",
@@ -151,7 +151,7 @@
               "toolbar_text": {
                 "$ref": "ThemeColor",
                 "optional": true,
-                 "description": "This color property is an alias of 'bookmark_text'."
+                "description": "This color property is an alias of 'bookmark_text'."
               },
               "bookmark_text": {
                 "$ref": "ThemeColor",
@@ -195,8 +195,8 @@
                 "optional": true
               },
               "button_background_hover": {
-               "$ref": "ThemeColor",
-               "optional": true
+                "$ref": "ThemeColor",
+                "optional": true
               },
               "button_background_active": {
                 "$ref": "ThemeColor",
@@ -266,7 +266,7 @@
                 "$ref": "ThemeColor",
                 "optional": true
               },
-			        "toolbar_field_highlight": {
+              "toolbar_field_highlight": {
                 "$ref": "ThemeColor",
                 "optional": true
               },
@@ -286,10 +286,20 @@
                 "items": {
                   "type": "string",
                   "enum": [
-                    "bottom", "center", "left", "right", "top",
-                    "center bottom", "center center", "center top",
-                    "left bottom", "left center", "left top",
-                    "right bottom", "right center", "right top"
+                    "bottom",
+                    "center",
+                    "left",
+                    "right",
+                    "top",
+                    "center bottom",
+                    "center center",
+                    "center top",
+                    "left bottom",
+                    "left center",
+                    "left top",
+                    "right bottom",
+                    "right center",
+                    "right top"
                   ]
                 },
                 "maxItems": 15,

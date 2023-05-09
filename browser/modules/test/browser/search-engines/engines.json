@@ -2,23 +2,27 @@
   "data": [
     {
       "webExtension": {
-        "id":"basic@search.mozilla.org"
+        "id": "basic@search.mozilla.org"
       },
       "telemetryId": "telemetry",
-      "appliesTo": [{
-        "included": { "everywhere": true },
-        "default": "yes",
-        "sendAttributionRequest": true
-      }]
+      "appliesTo": [
+        {
+          "included": { "everywhere": true },
+          "default": "yes",
+          "sendAttributionRequest": true
+        }
+      ]
     },
     {
       "webExtension": {
-        "id":"simple@search.mozilla.org"
+        "id": "simple@search.mozilla.org"
       },
-      "appliesTo": [{
-        "included": { "everywhere": true },
-        "default": "yes"
-      }]
+      "appliesTo": [
+        {
+          "included": { "everywhere": true },
+          "default": "yes"
+        }
+      ]
     }
   ]
 }

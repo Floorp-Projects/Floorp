@@ -8,12 +8,12 @@
     "types": [
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "topSites"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["topSites"]
+          }
+        ]
       }
     ]
   },
@@ -43,10 +43,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "url",
-              "search"
-            ],
+            "enum": ["url", "search"],
             "optional": true,
             "default": "url",
             "description": "The entry type, either <code>url</code> for a normal page link, or <code>search</code> for a search shortcut."

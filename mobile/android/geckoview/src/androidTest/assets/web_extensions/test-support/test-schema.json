@@ -13,13 +13,13 @@
             "name": "oldPrefs",
             "type": "object",
             "properties": {},
-            "additionalProperties": {"type": "any"}
+            "additionalProperties": { "type": "any" }
           },
           {
             "name": "newPrefs",
             "type": "object",
             "properties": {},
-            "additionalProperties": {"type": "any"}
+            "additionalProperties": { "type": "any" }
           }
         ]
       },
@@ -153,14 +153,14 @@
         ]
       },
       {
-        "name":  "getAllBrowserPids",
+        "name": "getAllBrowserPids",
         "type": "function",
         "async": true,
         "description": "Gets the list of pids of the running browser processes",
         "parameters": []
       },
       {
-        "name":  "getProfilePath",
+        "name": "getProfilePath",
         "type": "function",
         "async": true,
         "description": "Gets the path of the current profile",
@@ -235,7 +235,7 @@
       },
 
       {
-        "name":  "triggerCookieBannerDetected",
+        "name": "triggerCookieBannerDetected",
         "type": "function",
         "async": true,
         "description": "Simulates a cookie banner detection",
@@ -248,7 +248,7 @@
       },
 
       {
-        "name":  "triggerCookieBannerHandled",
+        "name": "triggerCookieBannerHandled",
         "type": "function",
         "async": true,
         "description": "Simulates a cookie banner handling",

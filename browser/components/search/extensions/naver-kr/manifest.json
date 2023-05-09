@@ -12,9 +12,7 @@
   "icons": {
     "16": "favicon.ico"
   },
-  "web_accessible_resources": [
-    "favicon.ico"
-  ],
+  "web_accessible_resources": ["favicon.ico"],
   "chrome_settings_overrides": {
     "search_provider": {
       "name": "네이버",

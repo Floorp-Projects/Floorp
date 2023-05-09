@@ -4,12 +4,12 @@
     "types": [
       {
         "$extend": "PermissionPrivileged",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "networkStatus"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["networkStatus"]
+          }
+        ]
       }
     ]
   },

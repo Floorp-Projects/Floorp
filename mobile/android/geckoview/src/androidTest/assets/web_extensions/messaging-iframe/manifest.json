@@ -10,9 +10,7 @@
   },
   "content_scripts": [
     {
-      "matches": [
-            "*://localhost/*"
-       ],
+      "matches": ["*://localhost/*"],
       "js": ["messaging.js"],
       "all_frames": true
     }

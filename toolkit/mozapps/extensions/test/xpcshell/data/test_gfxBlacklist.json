@@ -3,11 +3,7 @@
     "blockID": "g35",
     "os": "WINNT 6.1",
     "vendor": "0xabcd",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.2202 ",
@@ -16,11 +12,7 @@
   {
     "os": "WINNT 6.0",
     "vendor": "0xdcba",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " DIRECT3D_9_LAYERS ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.2202 ",
@@ -30,11 +22,7 @@
     "blockID": "g36",
     "os": "WINNT 6.1",
     "vendor": "0xabab",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.2202 ",
@@ -43,11 +31,7 @@
   {
     "os": "WINNT 6.1",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.1111 ",
@@ -56,33 +40,21 @@
   {
     "os": "Darwin 13",
     "vendor": "0xabcd",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DRIVER_VERSION "
   },
   {
     "os": "Linux",
     "vendor": "0xabcd",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DRIVER_VERSION "
   },
   {
     "os": "Android",
     "vendor": "abcd",
-    "devices": [
-      "wxyz",
-      "asdf",
-      "erty"
-    ],
+    "devices": ["wxyz", "asdf", "erty"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 5 ",
@@ -91,11 +63,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop",
-      "vbnm",
-      "hjkl"
-    ],
+    "devices": ["uiop", "vbnm", "hjkl"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 5 ",
@@ -104,10 +72,7 @@
   {
     "os": "Android",
     "vendor": "abab",
-    "devices": [
-      "ghjk",
-      "cvbn"
-    ],
+    "devices": ["ghjk", "cvbn"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 7 ",
@@ -116,72 +81,56 @@
   {
     "os": "WINNT 6.1",
     "vendor": "0xabcd",
-    "devices": [
-      "0x6666"
-    ],
+    "devices": ["0x6666"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DEVICE "
   },
   {
     "os": "Darwin 13",
     "vendor": "0xabcd",
-    "devices": [
-      "0x6666"
-    ],
+    "devices": ["0x6666"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DEVICE "
   },
   {
     "os": "Linux",
     "vendor": "0xabcd",
-    "devices": [
-      "0x6666"
-    ],
+    "devices": ["0x6666"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DEVICE "
   },
   {
     "os": "Android",
     "vendor": "0xabcd",
-    "devices": [
-      "0x6666"
-    ],
+    "devices": ["0x6666"],
     "feature": " DIRECT2D ",
     "featureStatus": " BLOCKED_DEVICE "
   },
   {
     "os": "WINNT 6.1",
     "vendor": "0xabcd",
-    "devices": [
-      "0x6666"
-    ],
+    "devices": ["0x6666"],
     "feature": " WEBRENDER ",
     "featureStatus": " BLOCKED_DEVICE "
   },
   {
     "os": "Darwin 13",
     "vendor": "0xabcd",
-    "devices": [
-      "0x6666"
-    ],
+    "devices": ["0x6666"],
     "feature": " WEBRENDER ",
     "featureStatus": " BLOCKED_DEVICE "
   },
   {
     "os": "Linux",
     "vendor": "0xabcd",
-    "devices": [
-      "0x6666"
-    ],
+    "devices": ["0x6666"],
     "feature": " WEBRENDER ",
     "featureStatus": " BLOCKED_DEVICE "
   },
   {
     "os": "Android",
     "vendor": "0xabcd",
-    "devices": [
-      "0x6666"
-    ],
+    "devices": ["0x6666"],
     "feature": " WEBRENDER ",
     "featureStatus": " BLOCKED_DEVICE "
   },
@@ -189,11 +138,7 @@
   {
     "os": "All",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " DIRECT3D_11_LAYERS ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.1112 ",
@@ -204,11 +149,7 @@
   {
     "os": "All",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " OPENGL_LAYERS ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.50.322.1000 ",
@@ -219,11 +160,7 @@
   {
     "os": "All",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " DIRECT3D_11_ANGLE ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.1000 ",
@@ -234,11 +171,7 @@
   {
     "os": "All",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " HARDWARE_VIDEO_DECODING ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 7.82.322.1000 ",
@@ -249,11 +182,7 @@
   {
     "os": "All",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " WEBRTC_HW_ACCELERATION_H264 ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.1112 ",
@@ -264,11 +193,7 @@
   {
     "os": "All",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " WEBRTC_HW_ACCELERATION_DECODE ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.1000 ",
@@ -279,11 +204,7 @@
   {
     "os": "All",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " WEBRTC_HW_ACCELERATION_ENCODE ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.1112 ",
@@ -293,11 +214,7 @@
   {
     "os": "All",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " WEBGL_MSAA ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.1000 ",
@@ -308,11 +225,7 @@
   {
     "os": "All",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " WEBGL_ANGLE ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.1000 ",
@@ -323,11 +236,7 @@
   {
     "os": "All",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " WEBGL2 ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.1000 ",
@@ -338,11 +247,7 @@
   {
     "os": "All",
     "vendor": "0xdcdc",
-    "devices": [
-      "0x2783",
-      "0x1234",
-      "0x2782"
-    ],
+    "devices": ["0x2783", "0x1234", "0x2782"],
     "feature": " CANVAS2D_ACCELERATION ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.1000 ",
@@ -353,9 +258,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop"
-    ],
+    "devices": ["uiop"],
     "feature": " DIRECT3D_11_LAYERS ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 5 ",
@@ -366,9 +269,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop"
-    ],
+    "devices": ["uiop"],
     "feature": " OPENGL_LAYERS ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 6 ",
@@ -379,9 +280,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop"
-    ],
+    "devices": ["uiop"],
     "feature": " DIRECT3D_11_ANGLE ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 5 ",
@@ -392,9 +291,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop"
-    ],
+    "devices": ["uiop"],
     "feature": " HARDWARE_VIDEO_DECODING ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 5 ",
@@ -405,9 +302,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop"
-    ],
+    "devices": ["uiop"],
     "feature": " WEBRTC_HW_ACCELERATION_H264 ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 6 ",
@@ -418,9 +313,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop"
-    ],
+    "devices": ["uiop"],
     "feature": " WEBRTC_HW_ACCELERATION_DECODE ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 5 ",
@@ -431,9 +324,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop"
-    ],
+    "devices": ["uiop"],
     "feature": " WEBRTC_HW_ACCELERATION_ENCODE ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 6 ",
@@ -443,9 +334,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop"
-    ],
+    "devices": ["uiop"],
     "feature": " WEBGL_MSAA ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 5 ",
@@ -456,9 +345,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop"
-    ],
+    "devices": ["uiop"],
     "feature": " WEBGL_ANGLE ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 5 ",
@@ -469,9 +356,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop"
-    ],
+    "devices": ["uiop"],
     "feature": " WEBGL2 ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 5 ",
@@ -482,9 +367,7 @@
   {
     "os": "Android",
     "vendor": "dcdc",
-    "devices": [
-      "uiop"
-    ],
+    "devices": ["uiop"],
     "feature": " CANVAS2D_ACCELERATION ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 5 ",

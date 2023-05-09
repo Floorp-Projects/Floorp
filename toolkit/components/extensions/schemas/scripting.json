@@ -8,10 +8,12 @@
     "types": [
       {
         "$extend": "OptionalPermissionNoPrompt",
-        "choices": [{
-          "type": "string",
-          "enum": ["scripting"]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["scripting"]
+          }
+        ]
       }
     ]
   },

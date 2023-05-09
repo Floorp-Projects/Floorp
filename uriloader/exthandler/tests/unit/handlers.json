@@ -6,9 +6,7 @@
     "example/type.handleinternally": {
       "unknownProperty": "preserved",
       "action": 3,
-      "extensions": [
-        "example_one"
-      ]
+      "extensions": ["example_one"]
     },
     "example/type.savetodisk": {
       "action": 0,
@@ -19,10 +17,7 @@
           "uriTemplate": "https://www.example.com/?url=%s"
         }
       ],
-      "extensions": [
-        "example_two",
-        "example_three"
-      ]
+      "extensions": ["example_two", "example_three"]
     },
     "example/type.usehelperapp": {
       "action": 2,
@@ -41,10 +36,7 @@
           "uriTemplate": "http://www.example.com/?id=2&url=%s"
         }
       ],
-      "extensions": [
-        "example_two",
-        "example_three"
-      ]
+      "extensions": ["example_two", "example_three"]
     },
     "example/type.usesystemdefault": {
       "action": 4,

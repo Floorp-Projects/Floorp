@@ -46,15 +46,23 @@
             "description": "The list of JS files to inject",
             "items": { "$ref": "extensionTypes.ExtensionFileOrCode" }
           },
-          "allFrames": {"type": "boolean", "optional": true, "description": "If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."},
-          "matchAboutBlank": {"type": "boolean", "optional": true, "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."},
+          "allFrames": {
+            "type": "boolean",
+            "optional": true,
+            "description": "If allFrames is <code>true</code>, implies that the JavaScript or CSS should be injected into all frames of current page. By default, it's <code>false</code> and is only injected into the top frame."
+          },
+          "matchAboutBlank": {
+            "type": "boolean",
+            "optional": true,
+            "description": "If matchAboutBlank is true, then the code is also injected in about:blank and about:srcdoc frames if your extension has access to its parent document. Code cannot be inserted in top-level about:-frames. By default it is <code>false</code>."
+          },
           "runAt": {
             "$ref": "extensionTypes.RunAt",
             "optional": true,
             "description": "The soonest that the JavaScript or CSS will be injected into the tab. Defaults to \"document_idle\"."
           },
           "cookieStoreId": {
-            "choices": [ 
+            "choices": [
               {
                 "type": "array",
                 "minItems": 1,
@@ -62,7 +70,7 @@
               },
               {
                 "type": "string"
-              }          
+              }
             ],
             "optional": true,
             "description": "limit the set of matched tabs to those that belong to the given cookie store id"

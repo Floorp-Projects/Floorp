@@ -3,9 +3,7 @@
   "$id": "file:///Spotlight.schema.json",
   "title": "Spotlight",
   "description": "A template with an image, title, content and two buttons.",
-  "allOf": [
-    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
-  ],
+  "allOf": [{ "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }],
   "type": "object",
   "properties": {
     "content": {

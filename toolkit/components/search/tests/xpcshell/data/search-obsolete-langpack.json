@@ -29,9 +29,7 @@
       "_urls": [
         {
           "template": "https://example.com/search",
-          "rels": [
-            "searchform"
-          ],
+          "rels": ["searchform"],
           "resultDomain": "example.com",
           "params": []
         }
@@ -48,9 +46,7 @@
       "_urls": [
         {
           "template": "https://example1.com/search",
-          "rels": [
-            "searchform"
-          ],
+          "rels": ["searchform"],
           "resultDomain": "example1.com",
           "params": []
         }
@@ -67,9 +63,7 @@
       "_urls": [
         {
           "template": "https://example2.com/search",
-          "rels": [
-            "searchform"
-          ],
+          "rels": ["searchform"],
           "resultDomain": "example2.com",
           "params": []
         }
@@ -86,9 +80,7 @@
       "_urls": [
         {
           "template": "https://example3.com/search",
-          "rels": [
-            "searchform"
-          ],
+          "rels": ["searchform"],
           "resultDomain": "example3.com",
           "params": []
         }

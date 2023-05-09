@@ -1,32 +1,32 @@
 {
-    "win7": {
-        "screen_resolution": {
-            "x": 1280,
-            "y": 1024 
-        },
-        "mouse_position": {
-            "x": 1010,
-            "y": 10
-        }
+  "win7": {
+    "screen_resolution": {
+      "x": 1280,
+      "y": 1024
     },
-    "win10-hw": {
-        "screen_resolution": {
-            "x": 1920,
-            "y": 1080
-        },
-        "mouse_position": {
-            "x": 1010,
-            "y": 10
-        }
-    },
-    "win10-vm": {
-        "screen_resolution": {
-            "x": 2560,
-            "y": 1440
-        },
-        "mouse_position": {
-            "x": 1010,
-            "y": 10
-        }
+    "mouse_position": {
+      "x": 1010,
+      "y": 10
     }
+  },
+  "win10-hw": {
+    "screen_resolution": {
+      "x": 1920,
+      "y": 1080
+    },
+    "mouse_position": {
+      "x": 1010,
+      "y": 10
+    }
+  },
+  "win10-vm": {
+    "screen_resolution": {
+      "x": 2560,
+      "y": 1440
+    },
+    "mouse_position": {
+      "x": 1010,
+      "y": 10
+    }
+  }
 }
