@@ -792,13 +792,18 @@ var dataProviders = {
 
       desc.isFallbackAdapter = adapter.isFallbackAdapter;
 
-      const adapterInfo = await adapter.requestAdapterInfo();
-      // We can't directly enumerate properties of instances of `GPUAdapterInfo`s, so use the prototype instead.
-      const adapterInfoObj = {};
-      for (const k of Object.keys(Object.getPrototypeOf(adapterInfo)).sort()) {
-        adapterInfoObj[k] = adapterInfo[k];
+      desc.name = adapter.name;
+      if (desc.name === undefined) {
+        desc.name = null; // JSON has no `undefined`.
       }
-      desc[`requestAdapterInfo()`] = adapterInfoObj;
+
+      if (adapter.requestAdapterInfo) {
+        // Firefox doesn't have this yet.
+        const info = await adapter.requestAdapterInfo();
+        desc[`requestAdapterInfo()`] = info;
+      } else {
+        desc.requestAdapterInfo = null;
+      }
 
       desc.features = Array.from(adapter.features).sort();
 
