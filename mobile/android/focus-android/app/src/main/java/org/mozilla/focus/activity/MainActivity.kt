@@ -34,6 +34,7 @@ import mozilla.components.support.ktx.android.view.getWindowInsetsController
 import mozilla.components.support.locale.LocaleAwareAppCompatActivity
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.StatusBarUtils
+import org.mozilla.experiments.nimbus.initializeTooling
 import org.mozilla.focus.GleanMetrics.AppOpened
 import org.mozilla.focus.GleanMetrics.Notifications
 import org.mozilla.focus.R
@@ -86,6 +87,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        components.experiments.initializeTooling(applicationContext, intent)
         installSplashScreen()
 
         updateSecureWindowFlags()
