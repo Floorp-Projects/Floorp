@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import argparse
 import hashlib
 import json
@@ -433,17 +435,18 @@ def artifact_toolchain(
                 repo = mozversioncontrol.get_repository_object(
                     command_context.topsrcdir
                 )
-                changed_files = set(repo.get_outgoing_files()) | set(
-                    repo.get_changed_files()
-                )
-                if changed_files:
-                    command_context.log(
-                        logging.ERROR,
-                        "artifact",
-                        {},
-                        "Hint: consider reverting your local changes "
-                        "to the following files: %s" % sorted(changed_files),
+                if not isinstance(repo, mozversioncontrol.SrcRepository):
+                    changed_files = set(repo.get_outgoing_files()) | set(
+                        repo.get_changed_files()
                     )
+                    if changed_files:
+                        command_context.log(
+                            logging.ERROR,
+                            "artifact",
+                            {},
+                            "Hint: consider reverting your local changes "
+                            "to the following files: %s" % sorted(changed_files),
+                        )
                 if "TASKCLUSTER_ROOT_URL" in os.environ:
                     command_context.log(
                         logging.ERROR,
