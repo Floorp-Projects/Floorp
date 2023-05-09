@@ -3,37 +3,47 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
+  --border-style: 0.1rem solid;
   --border-radius: 0.3rem;
-
-  --border: 0.1rem solid FieldText;
-  --border-active-color: FieldText;
-  --fill-color: color-mix(in srgb, FieldText 20%, transparent);
-  --today-fill-color: color-mix(in srgb, FieldText 10%, transparent);
-  --button-fill-color-active: color-mix(in srgb, FieldText 20%, transparent);
-
-  --selected-font-color: SelectedItemText;
-  --selected-fill-color: SelectedItem;
+  --border-color: ButtonBorder;
+  --button-color: ButtonText;
+  --button-color-hover: SelectedItemText;
+  --button-color-active: SelectedItem;
+  --button-background: ButtonFace;
+  --button-background-hover: SelectedItem;
+  --button-background-active: SelectedItemText;
+  --button-border-hover: SelectedItem;
+  --button-border-active: SelectedItem;
+  --today-background: Mark;
+  --today-color: MarkText;
+  --navigation-arrow-color-hover: SelectedItemText;
+  --navigation-arrow-color-active: SelectedItem;
+  --navigation-arrow-background-hover: SelectedItem;
+  --navigation-arrow-background-active: SelectedItemText;
+  --navigation-arrow-border-hover: SelectedItem;
+  --navigation-arrow-border-active: SelectedItem;
+  --navigation-arrow-fill-opacity: 1;
+  --navigation-arrow-fill-opacity-hover: 1;
+  --navigation-arrow-fill-opacity-active: 1;
+  --calendar-item-background-hover: color-mix(in srgb, FieldText 20%, transparent);
 
   /* Use -moz-activehyperlinktext to get a system color that
      by default will be closest to Red */
   --weekend-font-color: -moz-activehyperlinktext;
 
-  --disabled-fill-color: ButtonShadow;
-
-  --disabled-opacity: 0.2;
+  --disabled-background-color: ButtonShadow;
 
   /* TODO: these need to be in sync (ish) with DateTimePickerPanel.sys.mjs */
   font-size: 10px;
   --font-size-default: 1.1rem;
   --spinner-width: 3rem;
-  --spinner-margin-top-bottom: 0.4rem;
+  --spinner-margin-block: 0.4rem;
   --spinner-item-height: 2.4rem;
   --spinner-item-margin-bottom: 0.1rem;
-  --spinner-button-height: 1.2rem;
+  --spinner-button-height: 1.8rem;
   --colon-width: 2rem;
   --day-period-spacing-width: 1rem;
-  --calendar-width: 23rem;
-  --date-picker-item-height: 2.5rem;
+  --date-picker-item-height: 2.4rem;
   --date-picker-item-width: 3.3rem;
 
   /* We need to hide the scroll bar but maintain its scrolling
@@ -43,124 +53,153 @@
 
 @media not (prefers-contrast) {
   :root {
-    --border: 0.1rem solid color-mix(in srgb, FieldText 65%, transparent);
-    --border-active-color: color-mix(in srgb, FieldText 80%, transparent);
-    --fill-color: color-mix(in srgb, FieldText 20%, transparent);
-    --today-fill-color: color-mix(in srgb, FieldText 30%, transparent);
-    --button-fill-color-active: color-mix(in srgb, FieldText 30%, transparent);
+    --border-color: color-mix(in srgb, FieldText 65%, transparent);
+    --button-color: inherit;
+    --button-color-hover: inherit;
+    --button-color-active: inherit;
+    --button-background: color-mix(in srgb, FieldText 10%, transparent);
+    --button-background-hover: color-mix(in srgb, FieldText 20%, transparent);
+    --button-background-active: color-mix(in srgb, FieldText 30%, transparent);
+    --button-border-hover: var(--border-color);
+    --button-border-active: var(--border-color);
+    --today-background: color-mix(in srgb, FieldText 30%, transparent);
+    --today-color: inherit;
+    --navigation-arrow-color-hover: inherit;
+    --navigation-arrow-color-active: inherit;
+    --navigation-arrow-background-hover: transparent;
+    --navigation-arrow-background-active: transparent;
+    --navigation-arrow-border-hover: transparent;
+    --navigation-arrow-border-active: transparent;
+    --navigation-arrow-fill-opacity: 0.5;
+    --navigation-arrow-fill-opacity-hover: 0.8;
+    --navigation-arrow-fill-opacity-active: 1;
   }
 }
-
 
 body {
   margin: 0;
   font: message-box;
   font-size: var(--font-size-default);
-  background: Field;
+  background-color: Field;
   color: FieldText;
 }
 
 button {
   appearance: none;
+  padding: 0;
+  color: var(--button-color);
   background: none;
-  border: none;
+  background-color: var(--button-background);
+  background-repeat: no-repeat;
+  background-position: center;
+  border: var(--border-style) var(--border-color);
+  border-radius: var(--border-radius);
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+}
+
+button:where(:hover) {
+  color: var(--button-color-hover);
+  background-color: var(--button-background-hover);
+  border-color: var(--button-border-hover);
+}
+
+button:where(:hover.active) {
+  color: var(--button-color-active);
+  background-color: var(--button-background-active);
+  border-color: var(--button-border-active);
+}
+
+button:focus-visible {
+  outline: 0.2rem solid SelectedItem;
+  outline-offset: 0.2rem;
 }
 
 #date-picker {
-  /* 3px are enough for outlines not to overflow our viewport. */
-  padding: 3px;
+  /* Add some padding so outlines would not overflow our viewport. */
+  padding: 0.4rem;
 }
 
 .month-year-nav {
   display: flex;
-  height: 2.4rem;
+  justify-content: space-between;
   margin-bottom: 0.8rem;
-  justify-content: space-evenly;
+}
+
+.month-year-nav[monthPickerVisible] {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.month-year-nav > button,
+.spinner-container > button {
+  background-color: transparent;
+  border-color: transparent;
+  fill-opacity: var(--navigation-arrow-fill-opacity);
 }
 
 .month-year-nav > button {
-  width: 3rem;
-  height: var(--date-picker-item-height);
-  margin: 0.1rem;
-  -moz-context-properties: fill, fill-opacity;
-  fill: FieldText;
-  fill-opacity: .5;
+  height: 2.4rem;
+  width: 2.4rem;
 }
 
-.month-year-nav > button:hover {
-  fill-opacity: .8;
+.month-year-nav > button:hover,
+.spinner-container > button:hover {
+  color: var(--navigation-arrow-color-hover);
+  background-color: var(--navigation-arrow-background-hover);
+  border-color: var(--navigation-arrow-border-hover);
+  fill-opacity: var(--navigation-arrow-fill-opacity-hover);
 }
 
-.month-year-nav > button.active {
-  fill-opacity: 1;
+.month-year-nav > button:hover.active,
+.spinner-container > button:hover.active {
+  color: var(--navigation-arrow-color-active);
+  background-color: var(--navigation-arrow-background-active);
+  border-color: var(--navigation-arrow-border-active);
+  fill-opacity: var(--navigation-arrow-fill-opacity-active);
 }
 
 .month-year-nav > button.prev:dir(ltr),
 .month-year-nav > button.next:dir(rtl) {
-  background: url("chrome://global/skin/icons/arrow-left.svg") no-repeat center;
+  background-image: url("chrome://global/skin/icons/arrow-left.svg");
 }
 
 .month-year-nav > button.prev:dir(rtl),
 .month-year-nav > button.next:dir(ltr) {
-  background: url("chrome://global/skin/icons/arrow-right.svg") no-repeat center;
-}
-
-.month-year-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 17.1rem;
-  height: var(--date-picker-item-height);
-  z-index: 10;
-}
-
-.month-year-container {
-  margin-block: 0;
+  background-image: url("chrome://global/skin/icons/arrow-right.svg");
 }
 
 button.month-year {
   font-size: 1.3rem;
-  border: var(--border);
-  color: inherit;
-  border-radius: 0.3rem;
-  padding-top: 0.2rem;
-  padding-bottom: 0.3rem;
+  height: var(--date-picker-item-height);
+  padding-block: 0.2rem 0.3rem;
   padding-inline: 1.2rem 2.6rem;
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+  background-position-x: right 0.5rem;
+}
+
+@media not (prefers-contrast) {
+  button.month-year {
+    fill-opacity: .5;
+  }
+}
+
+button.month-year:dir(rtl) {
+  background-position-x: left 0.5rem;
 }
 
 button.month-year:hover {
-  background: var(--fill-color);
+  color: var(--button-color-hover);
+  background-color: var(--button-background-hover);
+  border-color: var(--button-border-hover);
 }
 
 button.month-year.active {
-  border-color: var(--border-active-color);
-  background: var(--button-fill-color-active);
-}
-
-button.month-year::after {
-  position: absolute;
-  content: "";
-  width: 2.6rem;
-  height: 1.6rem;
-  background: url("chrome://global/skin/icons/arrow-down.svg") no-repeat 50% 50%;
-  -moz-context-properties: fill, fill-opacity;
-  fill: FieldText;
-  fill-opacity: .5;
-}
-
-button.month-year.active::after {
-  background: url("chrome://global/skin/icons/arrow-up.svg") no-repeat 50% 50%;
-}
-
-.month-year-view {
-  position: absolute;
-  z-index: 5;
-  padding-top: 3.2rem;
-  inset: 0;
-  background-color: window;
-  color: windowtext;
-  opacity: 1;
-  transition: opacity 0.15s;
+  color: var(--button-color-active);
+  background-color: var(--button-background-active);
+  border-color: var(--button-border-active);
+  background-image: url("chrome://global/skin/icons/arrow-up.svg");
 }
 
 .month-year-view > .spinner-container {
@@ -178,21 +217,15 @@ button.month-year.active::after {
   order: 2;
 }
 
-.calendar-container {
-  cursor: default;
-}
-
 .calendar-container > table:not([hidden]) {
   display: flex;
   flex-direction: column;
-  width: var(--calendar-width);
   border-spacing: inherit;
 }
 
 .week-header > tr,
 .days-view > tr {
   display: flex;
-  flex-direction: row;
 }
 
 .week-header > tr > th {
@@ -201,86 +234,76 @@ button.month-year.active::after {
 
 .days-view {
   min-height: 15rem;
-  position: relative;
 }
 
 .week-header > tr > th,
 .days-view > tr > td {
-  padding: 0;
-  font-weight: inherit;
-}
-
-.week-header > tr > th,
-.days-view > tr > td {
-  align-items: center;
   display: flex;
-  height: var(--date-picker-item-height);
-  position: relative;
+  align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  font-weight: inherit;
+  height: var(--date-picker-item-height);
   width: var(--date-picker-item-width);
-  margin-inline: 0.1rem;
+  margin: 0.2rem;
+  padding: 0;
+  border: var(--border-style) transparent;
+  border-radius: var(--border-radius);
+}
+
+.days-view > tr > td:hover,
+.spinner-container > .spinner > div:hover {
+  background-color: var(--calendar-item-background-hover);
+  border-color: var(--border-color);
 }
 
 .days-view > tr > td:focus-visible {
-  z-index: 1;
+  outline: 0.2rem solid SelectedItem;
+  outline-offset: 0.2rem;
+}
+
+.days-view > tr > td.today {
+  background-color: var(--today-background);
+  color: var(--today-color);
+  border-color: transparent;
+  font-weight: bold;
+}
+
+.days-view > tr > td.today:hover {
+  border-color: var(--border-color);
+}
+
+.days-view > tr > td.selection,
+.spinner-container > .spinner:not(.scrolling) > div.selection {
+  background-color: SelectedItem;
+  color: SelectedItemText;
+  border-color: transparent;
 }
 
 .days-view > tr > td.outside {
   opacity: .5;
 }
 
+.days-view > tr > td.out-of-range,
+.days-view > tr > td.off-step {
+  background-color: var(--disabled-background-color);
+  border-color: transparent;
+}
+
 .weekend {
   color: var(--weekend-font-color);
 }
 
-.days-view > tr > td.weekend.outside {
-  opacity: .5;
-}
-
-.days-view > tr > td.out-of-range,
-.days-view > tr > td.off-step {
-  background: var(--disabled-fill-color);
-}
-
-.days-view > tr > td.today {
-  font-weight: bold;
-}
-
-.days-view > tr > td.out-of-range::before,
-.days-view > tr > td.off-step::before {
-  display: none;
-}
-
-.days-view > tr > td:hover::before,
-.days-view > tr > td.select::before,
-.days-view > tr > td.today::before {
-  position: absolute;
-  inset: 5%;
-  z-index: -10;
-  border-radius: var(--border-radius);
-}
-
 #clear-button {
   height: var(--date-picker-item-height);
-  background-color: var(--fill-color);
-  color: inherit;
   font-size: 1.3rem;
   margin-top: 0.8rem;
-  border: var(--border);
-  border-radius: var(--border-radius);
   padding-inline: 1.2rem;
-}
-
-#clear-button:hover {
-  background-color: var(--selected-font-color);
-  color: var(--selected-fill-color);
-  border-color: var(--selected-fill-color);
 }
 
 #time-picker,
 .month-year-view:not([hidden]) {
   display: flex;
-  flex-direction: row;
   justify-content: center;
 }
 
@@ -292,25 +315,14 @@ button.month-year.active::after {
 
 .spinner-container > button {
   height: var(--spinner-button-height);
-  -moz-context-properties: fill, fill-opacity;
-  fill: FieldText;
-  fill-opacity: .5;
-}
-
-.spinner-container > button:hover {
-  fill-opacity: .8;
-}
-
-.spinner-container > button.active {
-  fill-opacity: 1;
 }
 
 .spinner-container > button.up {
-  background: url("chrome://global/skin/icons/arrow-up.svg") no-repeat 50% 50%;
+  background-image: url("chrome://global/skin/icons/arrow-up.svg");
 }
 
 .spinner-container > button.down {
-  background: url("chrome://global/skin/icons/arrow-down.svg") no-repeat 50% 50%;
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
 }
 
 .spinner-container.hide-buttons > button {
@@ -319,9 +331,8 @@ button.month-year.active::after {
 
 .spinner-container > .spinner {
   position: relative;
-  width: 100%;
-  margin: var(--spinner-margin-top-bottom) 0;
-  cursor: default;
+  margin-block: var(--spinner-margin-block);
+  border-radius: var(--border-radius);
   overflow-y: scroll;
   scrollbar-width: none;
   scroll-snap-type: both mandatory;
@@ -333,65 +344,29 @@ button.month-year.active::after {
   }
 }
 
+.spinner-container > .spinner:focus-visible {
+  outline: 0.2rem solid SelectedItem;
+  outline-offset: 0.2rem;
+}
+
 .spinner-container > .spinner > div {
+  display: flex;
+  place-content: center;
+  align-items: center;
   box-sizing: border-box;
-  position: relative;
-  text-align: center;
-  padding: calc((var(--spinner-item-height) - var(--font-size-default)) / 2) 0;
   margin-bottom: var(--spinner-item-margin-bottom);
   height: var(--spinner-item-height);
+  border: var(--border-style) transparent;
+  border-radius: var(--border-radius);
   user-select: none;
   scroll-snap-align: start;
 }
 
-.spinner-container > .spinner > div::before,
-.calendar-container .days-view > tr > td::before {
-  position: absolute;
-  inset: 5%;
-  z-index: -1;
-  border-radius: var(--border-radius);
-}
-
-.spinner-container > .spinner > div:hover::before,
-.calendar-container .days-view > tr > td:hover::before {
-  background: var(--fill-color);
-  border: var(--border);
-  content: "";
-}
-
-.calendar-container .days-view > tr > td.today::before {
-  background: var(--today-fill-color);
-  border: var(--border);
-  content: "";
-}
-
-@media not (prefers-contrast) {
-  .calendar-container .days-view > tr > td.today::before {
-    border-width: 0;
-  }
-}
-
-.spinner-container > .spinner:not(.scrolling) > div.selection,
-.calendar-container .days-view > tr > td.selection {
-  color: var(--selected-font-color);
-}
-
-.spinner-container > .spinner > div.selection::before,
-.calendar-container .days-view > tr > td.selection::before {
-  background: var(--selected-fill-color);
-  border: none;
-  content: "";
-}
-
-.spinner-container > .spinner > div.disabled::before,
-.spinner-container > .spinner.scrolling > div.selection::before,
-.spinner-container > .spinner.scrolling > div:hover::before {
-  display: none;
-}
-
 .spinner-container > .spinner > div.disabled {
-  opacity: var(--disabled-opacity);
+  visibility: hidden;
 }
+
+/* Used only in <input type="time"> */
 
 .colon {
   display: flex;
@@ -399,6 +374,7 @@ button.month-year.active::after {
   align-items: center;
   width: var(--colon-width);
   margin-bottom: 0.3rem;
+  cursor: default;
 }
 
 .spacer {
