@@ -153,6 +153,13 @@ class MIRGenerator final {
   bool stringsCanBeInNursery_;
   bool bigIntsCanBeInNursery_;
 
+  bool disableLICM_ = false;
+
+ public:
+  void disableLICM() { disableLICM_ = true; }
+  bool licmEnabled() const;
+
+ private:
   uint64_t minWasmHeapLength_;
 
   IonPerfSpewer wasmPerfSpewer_;

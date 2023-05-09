@@ -2492,7 +2492,16 @@ void WarpBuilder::buildCheckLexicalOp(BytecodeLocation loc) {
   current->push(lexicalCheck);
 
   if (snapshot().bailoutInfo().failedLexicalCheck()) {
+    // If we have previously had a failed lexical check in Ion, we want to avoid
+    // hoisting any lexical checks, which can cause spurious failures. In this
+    // case, we also have to be careful not to hoist any loads of this lexical
+    // past the check. For unaliased lexical variables, we can set the local
+    // slot to create a dependency (see below). For aliased lexicals, that
+    // doesn't work, so we disable LICM instead.
     lexicalCheck->setNotMovable();
+    if (op == JSOp::CheckAliasedLexical) {
+      mirGen().disableLICM();
+    }
   }
 
   if (op == JSOp::CheckLexical) {
