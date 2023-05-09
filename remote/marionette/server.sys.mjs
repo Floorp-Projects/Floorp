@@ -15,6 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.sys.mjs",
   Message: "chrome://remote/content/marionette/message.sys.mjs",
+  PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   Response: "chrome://remote/content/marionette/message.sys.mjs",
 });
 
@@ -68,13 +69,21 @@ export class TCPListener {
   set acceptConnections(value) {
     if (value) {
       if (!this.socket) {
-        try {
-          const flags = KeepWhenOffline | LoopbackOnly;
-          const backlog = 1;
-          this.socket = new lazy.ServerSocket(this.port, flags, backlog);
-        } catch (e) {
-          throw new Error(`Could not bind to port ${this.port} (${e.name})`);
-        }
+        lazy.PollPromise(
+          (resolve, reject) => {
+            try {
+              const flags = KeepWhenOffline | LoopbackOnly;
+              const backlog = 1;
+              this.socket = new lazy.ServerSocket(this.port, flags, backlog);
+              resolve();
+            } catch (e) {
+              const message = `Could not bind to port ${this.port} (${e.name})`;
+              lazy.logger.debug(message);
+              reject(message);
+            }
+          },
+          { interval: 250, timeout: 5000 }
+        );
 
         this.port = this.socket.port;
 
