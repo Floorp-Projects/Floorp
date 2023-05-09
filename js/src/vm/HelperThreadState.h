@@ -539,7 +539,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
 
   bool init(JSContext* cx, const JS::ReadOnlyCompileOptions& options);
 
-  void moveGCOutputInto(JS::InstantiationStorage& storage);
+  void moveInstantiationStorageInto(JS::InstantiationStorage& storage);
 
   void activate(JSRuntime* rt);
   void deactivate(JSRuntime* rt);
