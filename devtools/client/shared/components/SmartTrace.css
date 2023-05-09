@@ -147,7 +147,6 @@
 
 .group .img.arrow {
     mask: url("chrome://devtools/content/debugger/images/arrow.svg");
-    mask-size: auto;
     margin-inline-end: 4px;
     background-color: var(--theme-icon-dimmed-color);
     width: 10px;

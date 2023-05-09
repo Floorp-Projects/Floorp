@@ -184,7 +184,6 @@ a.perf-photon-button:focus {
   min-width: 186px;
   padding-block: 3px;
   padding-inline: 5px;
-  border: 1px solid transparent;
 
   /* Presentational: */
   appearance: none;

@@ -498,7 +498,6 @@
 
 .message.network .message-body .status {
   flex: none;
-  cursor: default;
   margin-left: 1ch;
   cursor: default;
 }
