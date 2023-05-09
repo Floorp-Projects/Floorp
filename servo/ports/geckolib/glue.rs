@@ -90,7 +90,7 @@ use style::gecko_bindings::structs::{
     RawServoMozDocumentRule, RawServoNamespaceRule, RawServoPageRule, RawServoStyleSheetContents,
     RawServoSupportsRule, ServoCssRules,
 };
-use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, Strong};
+use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, HasFFI, Strong};
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::global_style_data::{
     GlobalStyleData, StyleThreadPool, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL,
@@ -2070,7 +2070,7 @@ fn with_maybe_worker_shared_lock<R>(func: impl FnOnce(&SharedRwLock) -> R) -> R 
     }
 }
 
-fn read_locked_arc<T, R, F>(raw: &<Locked<T> as HasArcFFI>::FFIType, func: F) -> R
+fn read_locked_arc<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
 where
     Locked<T>: HasArcFFI,
     F: FnOnce(&T) -> R,
@@ -2081,7 +2081,7 @@ where
     func(Locked::<T>::as_arc(&raw).read_with(&guard))
 }
 
-fn read_locked_arc_worker<T, R, F>(raw: &<Locked<T> as HasArcFFI>::FFIType, func: F) -> R
+fn read_locked_arc_worker<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
 where
     Locked<T>: HasArcFFI,
     F: FnOnce(&T) -> R,
@@ -2093,7 +2093,7 @@ where
 }
 
 #[cfg(debug_assertions)]
-unsafe fn read_locked_arc_unchecked<T, R, F>(raw: &<Locked<T> as HasArcFFI>::FFIType, func: F) -> R
+unsafe fn read_locked_arc_unchecked<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
 where
     Locked<T>: HasArcFFI,
     F: FnOnce(&T) -> R,
@@ -2103,7 +2103,7 @@ where
 }
 
 #[cfg(not(debug_assertions))]
-unsafe fn read_locked_arc_unchecked<T, R, F>(raw: &<Locked<T>>::FFIType, func: F) -> R
+unsafe fn read_locked_arc_unchecked<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
 where
     Locked<T>: HasArcFFI,
     F: FnOnce(&T) -> R,
@@ -2112,7 +2112,7 @@ where
     func(Locked::<T>::as_arc(&raw).read_unchecked())
 }
 
-fn write_locked_arc<T, R, F>(raw: &<Locked<T> as HasArcFFI>::FFIType, func: F) -> R
+fn write_locked_arc<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
 where
     Locked<T>: HasArcFFI,
     F: FnOnce(&mut T) -> R,
@@ -2123,7 +2123,7 @@ where
     func(Locked::<T>::as_arc(&raw).write_with(&mut guard))
 }
 
-fn write_locked_arc_worker<T, R, F>(raw: &<Locked<T> as HasArcFFI>::FFIType, func: F) -> R
+fn write_locked_arc_worker<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
 where
     Locked<T>: HasArcFFI,
     F: FnOnce(&mut T) -> R,
