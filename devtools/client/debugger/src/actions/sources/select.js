@@ -11,7 +11,6 @@ import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
 
 import { setSymbols } from "./symbols";
 import { setInScopeLines } from "../ast";
-import { updateActiveFileSearch } from "../ui";
 import { togglePrettyPrint } from "./prettyPrint";
 import { addTab, closeTab } from "../tabs";
 import { loadSourceText } from "./loadSourceText";
@@ -121,7 +120,6 @@ export function selectSource(cx, source, sourceActor) {
 export function selectLocation(cx, location, { keepContext = true } = {}) {
   return async thunkArgs => {
     const { dispatch, getState, client } = thunkArgs;
-    const currentSource = getSelectedSource(getState());
 
     if (!client) {
       // No connection, do nothing. This happens when the debugger is
@@ -201,12 +199,6 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
 
     if (getIsCurrentThreadPaused(getState())) {
       await dispatch(mapDisplayNames(cx));
-    }
-
-    // If a new source is selected update the file search results
-    const newSource = getSelectedSource(getState());
-    if (currentSource && currentSource !== newSource) {
-      dispatch(updateActiveFileSearch(cx));
     }
   };
 }
