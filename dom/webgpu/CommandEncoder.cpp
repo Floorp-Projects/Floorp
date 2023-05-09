@@ -11,6 +11,7 @@
 #include "ComputePassEncoder.h"
 #include "Device.h"
 #include "RenderPassEncoder.h"
+#include "Utility.h"
 #include "mozilla/webgpu/CanvasContext.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "ipc/WebGPUChild.h"
@@ -63,35 +64,11 @@ void CommandEncoder::ConvertTextureCopyViewToFFI(
   }
 }
 
-void CommandEncoder::ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
-                                          ffi::WGPUExtent3d* aExtentFFI) {
-  *aExtentFFI = {};
-  if (aExtent.IsRangeEnforcedUnsignedLongSequence()) {
-    const auto& seq = aExtent.GetAsRangeEnforcedUnsignedLongSequence();
-    aExtentFFI->width = seq.Length() > 0 ? seq[0] : 0;
-    aExtentFFI->height = seq.Length() > 1 ? seq[1] : 1;
-    aExtentFFI->depth_or_array_layers = seq.Length() > 2 ? seq[2] : 1;
-  } else if (aExtent.IsGPUExtent3DDict()) {
-    const auto& dict = aExtent.GetAsGPUExtent3DDict();
-    aExtentFFI->width = dict.mWidth;
-    aExtentFFI->height = dict.mHeight;
-    aExtentFFI->depth_or_array_layers = dict.mDepthOrArrayLayers;
-  } else {
-    MOZ_CRASH("Unexpected extent type");
-  }
-}
-
 static ffi::WGPUImageCopyTexture ConvertTextureCopyView(
     const dom::GPUImageCopyTexture& aCopy) {
   ffi::WGPUImageCopyTexture view = {};
   CommandEncoder::ConvertTextureCopyViewToFFI(aCopy, &view);
   return view;
-}
-
-static ffi::WGPUExtent3d ConvertExtent(const dom::GPUExtent3D& aExtent) {
-  ffi::WGPUExtent3d extent = {};
-  CommandEncoder::ConvertExtent3DToFFI(aExtent, &extent);
-  return extent;
 }
 
 CommandEncoder::CommandEncoder(Device* const aParent,

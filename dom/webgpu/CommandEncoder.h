@@ -61,8 +61,6 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
   static void ConvertTextureCopyViewToFFI(
       const dom::GPUImageCopyTexture& aCopy,
       ffi::WGPUImageCopyTexture_TextureId* aViewFFI);
-  static void ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
-                                   ffi::WGPUExtent3d* aExtentFFI);
 
  private:
   ~CommandEncoder();
