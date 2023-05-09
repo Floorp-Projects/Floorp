@@ -3756,6 +3756,24 @@ nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue) {
   return nsIContentPolicy::TYPE_INVALID;
 }
 
+// TODO: implement this using nsAttrValue's destination enums when support for
+// the new destinations is added; see this diff for a possible start:
+// https://phabricator.services.mozilla.com/D172368?vs=705114&id=708720
+bool IsScriptLikeOrInvalid(const nsAString& aAs) {
+  return !(
+      aAs.LowerCaseEqualsASCII("fetch") || aAs.LowerCaseEqualsASCII("audio") ||
+      aAs.LowerCaseEqualsASCII("document") ||
+      aAs.LowerCaseEqualsASCII("embed") || aAs.LowerCaseEqualsASCII("font") ||
+      aAs.LowerCaseEqualsASCII("frame") || aAs.LowerCaseEqualsASCII("iframe") ||
+      aAs.LowerCaseEqualsASCII("image") ||
+      aAs.LowerCaseEqualsASCII("manifest") ||
+      aAs.LowerCaseEqualsASCII("object") ||
+      aAs.LowerCaseEqualsASCII("report") || aAs.LowerCaseEqualsASCII("style") ||
+      aAs.LowerCaseEqualsASCII("track") || aAs.LowerCaseEqualsASCII("video") ||
+      aAs.LowerCaseEqualsASCII("webidentity") ||
+      aAs.LowerCaseEqualsASCII("xslt"));
+}
+
 bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
                        const nsAString& aMedia,
                        mozilla::dom::Document* aDocument) {
