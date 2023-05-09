@@ -544,7 +544,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   void activate(JSRuntime* rt);
   void deactivate(JSRuntime* rt);
 
-  virtual void parse(JSContext* cx, FrontendContext* fc) = 0;
+  virtual void parse(FrontendContext* fc) = 0;
 
   bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
 
