@@ -727,8 +727,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
    */
   void CloseRequestWithError(const ProgressEventType aType);
 
-  bool mInLoadProgressEvent;
-
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
 
