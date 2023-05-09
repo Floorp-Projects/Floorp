@@ -985,6 +985,8 @@ pub struct Capabilities {
     pub supports_render_target_invalidate: bool,
     /// Whether the driver can reliably upload data to R8 format textures.
     pub supports_r8_texture_upload: bool,
+    /// Whether the extension QCOM_tiled_rendering is supported.
+    pub supports_qcom_tiled_rendering: bool,
     /// Whether clip-masking is supported natively by the GL implementation
     /// rather than emulated in shaders.
     pub uses_native_clip_mask: bool,
@@ -1839,6 +1841,12 @@ impl Device {
             true
         };
 
+        // We have encountered rendering errors on a variety of Adreno GPUs specifically on driver
+        // version V@0490, so block this extension on that driver version.
+        let supports_qcom_tiled_rendering =
+            supports_extension(&extensions, "GL_QCOM_tiled_rendering")
+                && !(is_adreno && version_string.contains("V@0490"));
+
         // On some Adreno 3xx devices the vertex array object must be unbound and rebound after
         // an attached buffer has been orphaned.
         let requires_vao_rebind_after_orphaning = is_adreno_3xx;
@@ -1876,6 +1884,7 @@ impl Device {
                 prefers_clear_scissor,
                 supports_render_target_invalidate,
                 supports_r8_texture_upload,
+                supports_qcom_tiled_rendering,
                 uses_native_clip_mask,
                 uses_native_antialiasing,
                 supports_image_external_essl3,
