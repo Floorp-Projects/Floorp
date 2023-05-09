@@ -6,7 +6,7 @@
 
 loader.lazyRequireGetter(
   this,
-  ["validCommands"],
+  ["WebConsoleCommandsManager"],
   "resource://devtools/server/actors/webconsole/commands/manager.js",
   true
 );
@@ -75,7 +75,10 @@ function formatArgs(args) {
 function createToken(string) {
   if (isCommand(string)) {
     const value = string.replace(COMMAND_PREFIX, "");
-    if (!value || !validCommands.includes(value)) {
+    if (
+      !value ||
+      !WebConsoleCommandsManager.getAllColonCommandNames().includes(value)
+    ) {
       throw Error(`'${value}' is not a valid command`);
     }
     return { type: COMMAND, value };

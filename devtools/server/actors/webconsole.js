@@ -60,7 +60,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["addWebConsoleCommands", "validCommands", "WebConsoleCommandsManager"],
+  ["addWebConsoleCommands", "WebConsoleCommandsManager"],
   "resource://devtools/server/actors/webconsole/commands/manager.js",
   true
 );
@@ -1204,7 +1204,7 @@ class WebConsoleActor extends Actor {
 
     if (isCommand(reqText)) {
       matchProp = reqText;
-      matches = validCommands
+      matches = WebConsoleCommandsManager.getAllColonCommandNames()
         .filter(c => `:${c}`.startsWith(reqText))
         .map(c => `:${c}`);
     } else {
@@ -1263,9 +1263,13 @@ class WebConsoleActor extends Actor {
       // We only return commands and keywords when we are not dealing with a property or
       // element access.
       if (matchProp && !lastNonAlphaIsDot && !isElementAccess) {
+        const colonOnlyCommands = WebConsoleCommandsManager.getColonOnlyCommandNames();
         for (const name of WebConsoleCommandsManager.getAllCommandNames()) {
-          // filter out `screenshot` command as it is inaccessible without the `:` prefix
-          if (name !== "screenshot" && name.startsWith(result.matchProp)) {
+          // Filter out commands like `screenshot` as it is inaccessible without the `:` prefix
+          if (
+            !colonOnlyCommands.includes(name) &&
+            name.startsWith(result.matchProp)
+          ) {
             matches.add(name);
           }
         }

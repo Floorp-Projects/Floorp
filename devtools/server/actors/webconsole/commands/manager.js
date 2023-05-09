@@ -53,6 +53,31 @@ const WebConsoleCommandsManager = {
   getAllCommandNames() {
     return [...this._registeredCommands.keys()];
   },
+
+  /**
+   * There is two types of "commands" here.
+   *
+   * - Functions or variables exposed in the scope of the evaluated string from the WebConsole input.
+   *   Example: $(), $0, copy(), clear(),...
+   * - "True commands", which can also be ran from the WebConsole input with ":" prefix.
+   *   Example: this list of commands.
+   *   Note that some "true commands" are not exposed as function (see getColonOnlyCommandNames).
+   *
+   * The following list distinguish these "true commands" from the first category.
+   * It especially avoid any JavaScript evaluation when the frontend tries to execute
+   * a string starting with ':' character.
+   */
+  getAllColonCommandNames() {
+    return ["block", "help", "history", "screenshot", "unblock"];
+  },
+
+  /**
+   * Some commands are not exposed in the scope of the evaluated string,
+   * and can only be used via `:command-name`.
+   */
+  getColonOnlyCommandNames() {
+    return ["screenshot"];
+  },
 };
 
 exports.WebConsoleCommandsManager = WebConsoleCommandsManager;
@@ -63,22 +88,6 @@ exports.WebConsoleCommandsManager = WebConsoleCommandsManager;
  * A list of helper functions used by Firebug can be found here:
  *   http://getfirebug.com/wiki/index.php/Command_Line_API
  */
-
-/**
- * There is two types of "commands" here.
- *
- * - Functions or variables exposed in the scope of the evaluated string from the WebConsole input.
- *   Example: $(), $0, copy(), clear(),...
- * - "True commands", which are not exposed to JavaScript and can only be ran from the WebConsole input
- *   with ":" prefix.
- *   Example: :screenshot, :help, ...
- *
- * The following list distinguish these "true commands" from the first category.
- * It especially avoid any JavaScript evaluation when the frontend tries to execute
- * a string starting with ':' character.
- */
-const validCommands = ["block", "help", "history", "screenshot", "unblock"];
-exports.validCommands = validCommands;
 
 /**
  * Find a node by ID.
