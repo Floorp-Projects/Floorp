@@ -24,6 +24,7 @@ const TELEMETRY_PREFIX = "contextual.services.quicksuggest";
 const TELEMETRY_SCALARS = {
   BLOCK: `${TELEMETRY_PREFIX}.block_weather`,
   CLICK: `${TELEMETRY_PREFIX}.click_weather`,
+  EXPOSURE: `${TELEMETRY_PREFIX}.exposure_weather`,
   HELP: `${TELEMETRY_PREFIX}.help_weather`,
   IMPRESSION: `${TELEMETRY_PREFIX}.impression_weather`,
 };
@@ -212,10 +213,11 @@ class ProviderWeather extends UrlbarProvider {
 
     let { keywords } = lazy.QuickSuggest.weather;
     if (!keywords) {
-      return false;
+      // Show the suggestion only on zero prefix (empty search string).
+      return !queryContext.searchString;
     }
 
-    return keywords.has(queryContext.searchString.trim().toLocaleLowerCase());
+    return keywords.has(queryContext.searchString.trim());
   }
 
   /**
@@ -416,6 +418,15 @@ class ProviderWeather extends UrlbarProvider {
         },
       },
     };
+  }
+
+  onResultsShown(queryContext, results) {
+    Services.telemetry.keyedScalarAdd(
+      TELEMETRY_SCALARS.EXPOSURE,
+      // Telemetry indexes are 1-based.
+      results[0].rowIndex + 1,
+      1
+    );
   }
 
   onEngagement(isPrivate, state, queryContext, details) {
