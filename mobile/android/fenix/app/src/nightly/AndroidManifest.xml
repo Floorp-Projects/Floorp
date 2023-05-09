@@ -10,11 +10,8 @@
         <service
             android:name=".customtabs.CustomTabsService"
             android:exported="true">
-        <!-- Trusted Web Activities are currently only supported in nightly. -->
-            <intent-filter tools:node="removeAll" />
             <intent-filter>
                 <action android:name="android.support.customtabs.action.CustomTabsService" />
-                <category android:name="androidx.browser.trusted.category.TrustedWebActivities" />
             </intent-filter>
         </service>
 

@@ -317,7 +317,6 @@
             tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="android.support.customtabs.action.CustomTabsService" />
-                <category android:name="androidx.browser.trusted.category.TrustedWebActivities" />
             </intent-filter>
         </service>
 
