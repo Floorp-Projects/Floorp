@@ -703,7 +703,7 @@ bool NativeObject::tryUnshiftDenseElements(uint32_t count) {
 //
 //   * preserve amortized O(N) time to add N elements;
 //   * minimize the number of unused elements beyond an array's length, and
-//   * provide at least SLOT_CAPACITY_MIN elements no matter what (so adding
+//   * provide at least ELEMENT_CAPACITY_MIN elements no matter what (so adding
 //     the first several elements to small arrays only needs one allocation).
 //
 // Note: the structure and behavior of this method follow along with
@@ -738,8 +738,8 @@ bool NativeObject::goodElementsAllocationAmount(JSContext* cx,
       amount = length + ObjectElements::VALUES_PER_HEADER;
     }
 
-    if (amount < SLOT_CAPACITY_MIN) {
-      amount = SLOT_CAPACITY_MIN;
+    if (amount < ELEMENT_CAPACITY_MIN) {
+      amount = ELEMENT_CAPACITY_MIN;
     }
 
     *goodAmount = amount;
