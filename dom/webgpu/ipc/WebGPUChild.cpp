@@ -127,6 +127,9 @@ static ffi::WGPUTextureFormat ConvertTextureFormat(
     case dom::GPUTextureFormat::Bgra8unorm_srgb:
       result.tag = ffi::WGPUTextureFormat_Bgra8UnormSrgb;
       break;
+    case dom::GPUTextureFormat::Rgb9e5ufloat:
+      result.tag = ffi::WGPUTextureFormat_Rgb9e5Ufloat;
+      break;
     case dom::GPUTextureFormat::Rgb10a2unorm:
       result.tag = ffi::WGPUTextureFormat_Rgb10a2Unorm;
       break;
