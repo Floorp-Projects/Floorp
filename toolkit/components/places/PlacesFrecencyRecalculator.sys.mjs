@@ -18,6 +18,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "ObjectUtils",
+  "resource://gre/modules/ObjectUtils.jsm"
+);
+
 XPCOMUtils.defineLazyGetter(lazy, "logger", function() {
   return lazy.PlacesUtils.getLogger({ prefix: "FrecencyRecalculator" });
 });
@@ -63,8 +69,9 @@ const ORIGINS_ALT_FRECENCY_PREF =
   "places.frecency.origins.alternative.featureGate";
 // Current version of alternative origins frecency.
 //  ! IMPORTANT: Always bump this up when making changes to the algorithm.
-const ORIGINS_ALT_FRECENCY_VERSION = 1;
-// Key used to track the alternative frecency version in the moz_meta table.
+const ORIGINS_ALT_FRECENCY_VERSION = 2;
+// Key used to store a descriptor object for the alternative frecency in the
+// moz_meta table.
 const ORIGINS_ALT_FRECENCY_META_KEY = "origin_alternative_frecency";
 
 export class PlacesFrecencyRecalculator {
@@ -323,9 +330,22 @@ class AlternativeFrecencyHelper {
   initializedDeferred = lazy.PromiseUtils.defer();
   #recalculator = null;
   #useOriginsAlternativeFrecency = false;
+  /**
+   * Store an object containing variables influencing the calculation.
+   * Any change to this object will cause a full recalculation on restart.
+   */
+  #variables = null;
 
   constructor(recalculator) {
     this.#recalculator = recalculator;
+    this.#variables = {
+      version: ORIGINS_ALT_FRECENCY_VERSION,
+      // Frecencies of pages are ignored after these many days.
+      daysCutOff: Services.prefs.getIntPref(
+        "places.frecency.origins.alternative.daysCutOff",
+        90
+      ),
+    };
 
     this.#kickOffOriginsAlternativeFrecency()
       .catch(console.error)
@@ -343,9 +363,9 @@ class AlternativeFrecencyHelper {
 
     // Now check the state cached in the moz_meta table. If there's no state we
     // assume alternative frecency is disabled.
-    let alternativeFrecencyVersion = await lazy.PlacesUtils.metadata.get(
+    let storedVariables = await lazy.PlacesUtils.metadata.get(
       ORIGINS_ALT_FRECENCY_META_KEY,
-      0
+      Object.create(null)
     );
 
     // Check whether this is the first-run, that happens when the alternative
@@ -353,9 +373,9 @@ class AlternativeFrecencyHelper {
     // was bumped up. We should recalc all origins alternative frecency.
     if (
       this.#useOriginsAlternativeFrecency &&
-      (!alternativeFrecencyVersion ||
-        alternativeFrecencyVersion != ORIGINS_ALT_FRECENCY_VERSION)
+      !lazy.ObjectUtils.deepEqual(this.#variables, storedVariables)
     ) {
+      lazy.logger.trace("Origins alternative frecency must be recalculated");
       await lazy.PlacesUtils.withConnectionWrapper(
         "PlacesFrecencyRecalculator :: Alternative Origins Frecency Set Recalc",
         async db => {
@@ -364,7 +384,7 @@ class AlternativeFrecencyHelper {
       );
       await lazy.PlacesUtils.metadata.set(
         ORIGINS_ALT_FRECENCY_META_KEY,
-        ORIGINS_ALT_FRECENCY_VERSION
+        this.#variables
       );
 
       // Unblock recalculateSomeOriginsAlternativeFrecencies().
@@ -385,7 +405,8 @@ class AlternativeFrecencyHelper {
       return;
     }
 
-    if (!this.#useOriginsAlternativeFrecency && alternativeFrecencyVersion) {
+    if (!this.#useOriginsAlternativeFrecency && storedVariables) {
+      lazy.logger.trace("Origins alternative frecency clean up");
       // Clear alternative frecency to save on space.
       await lazy.PlacesUtils.withConnectionWrapper(
         "PlacesFrecencyRecalculator :: Alternative Origins Frecency Set Null",
@@ -419,22 +440,18 @@ class AlternativeFrecencyHelper {
     );
     let affectedCount = 0;
     let db = await lazy.PlacesUtils.promiseUnsafeWritableDBConnection();
-    await db.executeTransaction(async function() {
+    await db.executeTransaction(async () => {
       let affected = await db.executeCached(
         `
         UPDATE moz_origins
         SET alt_frecency = (
-          WITH
-          groups AS (
-            SELECT
-              h.frecency AS frecency,
-              NTILE(4) OVER (ORDER BY h.frecency DESC) AS n
-            FROM moz_places h
-            WHERE origin_id = moz_origins.id
-              AND last_visit_date >
-              strftime('%s','now','localtime','start of day','-90 day','utc') * 1000000
-          )
-          SELECT min(frecency) FROM groups WHERE n = 1
+          SELECT sum(frecency)
+          FROM moz_places h
+          WHERE origin_id = moz_origins.id
+          AND last_visit_date >
+            strftime('%s','now','localtime','start of day','-${
+              this.#variables.daysCutOff
+            } day','utc') * 1000000
         ), recalc_alt_frecency = 0
         WHERE id IN (
           SELECT id FROM moz_origins
