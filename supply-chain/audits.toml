@@ -140,6 +140,14 @@ start = "2021-02-14"
 end = "2023-05-04"
 notes = "I've reviewed every source contribution that was neither authored nor reviewed by Mozilla."
 
+[[wildcard-audits.dogear]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 27901 # Lina Butler (linabutler)
+start = "2019-03-04"
+end = "2024-05-05"
+notes = "Lina developed this crate as Mozilla staff."
+
 [[wildcard-audits.etagere]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -155,6 +163,38 @@ user-id = 1281 # Nicolas Silva (nical)
 start = "2019-03-14"
 end = "2024-04-25"
 notes = "I wrote most of the commits in the euclid reprository and review every change that is not produced by me."
+
+[[wildcard-audits.freetype]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 2396 # Josh Matthews (jdm)
+start = "2020-02-28"
+end = "2023-05-04"
+notes = "All code written or reviewed by Mozilla staff."
+
+[[wildcard-audits.gleam]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 2396 # Josh Matthews (jdm)
+start = "2019-03-18"
+end = "2023-05-04"
+notes = "All code written or reviewed by Mozilla."
+
+[[wildcard-audits.gleam]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 5946 # Jeff Muizelaar (jrmuizel)
+start = "2023-04-21"
+end = "2023-05-04"
+notes = "All code written or reviewed by Mozilla."
+
+[[wildcard-audits.gleam]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 1039
+start = "2019-03-01"
+end = "2023-05-04"
+notes = "All code written or reviewed by Mozilla."
 
 [[wildcard-audits.glean]]
 who = "Chris H-C <chutten@mozilla.com>"
@@ -970,6 +1010,17 @@ criteria = "safe-to-deploy"
 delta = "0.4.0 -> 0.5.0"
 notes = "The repository for this crate belongs in the Mozilla org."
 
+[[audits.dtoa-short]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.3.3"
+
+[[audits.dwrote]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.11.0"
+notes = "All code written or reviewed by Mozilla staff."
+
 [[audits.either]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -1565,6 +1616,12 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "0.5.4 -> 0.5.6"
 
+[[audits.lmdb-rkv]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.14.0"
+notes = "Victor and Myk developed this crate at Mozilla."
+
 [[audits.lock_api]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -1680,6 +1737,12 @@ delta = "0.5.3 -> 0.6.2"
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-run"
 delta = "0.6.21 -> 0.6.23"
+
+[[audits.moz_cbor]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.1.2"
+notes = "Developed by Mozilla staff."
 
 [[audits.naga]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
@@ -2105,6 +2168,12 @@ criteria = "safe-to-deploy"
 delta = "0.6.3 -> 0.6.4"
 
 [[audits.range-alloc]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.1.2"
+notes = "Dzmitry authored this crate while he was staff at Mozilla."
+
+[[audits.range-alloc]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.1.2 -> 0.1.3"
@@ -2478,6 +2547,17 @@ delta = "0.4.6 -> 0.4.7"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.4.7 -> 0.4.8"
+
+[[audits.smallbitvec]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "2.5.0"
+notes = "All code written or reviewed by Mozilla staff."
+
+[[audits.smallbitvec]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "2.5.0 -> 2.5.1"
 
 [[audits.smallvec]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
