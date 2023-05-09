@@ -392,6 +392,10 @@ static bool IsObjectEscaped(MDefinition* ins, MInstruction* newObject,
       case MDefinition::Opcode::ConstantProto:
         break;
 
+      // We definitely don't need barriers for objects that don't exist.
+      case MDefinition::Opcode::AssertCanElidePostWriteBarrier:
+        break;
+
       default:
         JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
         return true;
@@ -461,6 +465,8 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitCompare(MCompare* ins);
   void visitConstantProto(MConstantProto* ins);
   void visitIsObject(MIsObject* ins);
+  void visitAssertCanElidePostWriteBarrier(
+      MAssertCanElidePostWriteBarrier* ins);
 };
 
 /* static */ const char ObjectMemoryView::phaseName[] =
@@ -954,6 +960,15 @@ void ObjectMemoryView::visitIsObject(MIsObject* ins) {
   ins->replaceAllUsesWith(cst);
 
   // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ObjectMemoryView::visitAssertCanElidePostWriteBarrier(
+    MAssertCanElidePostWriteBarrier* ins) {
+  if (ins->object() != obj_) {
+    return;
+  }
+
   ins->block()->discard(ins);
 }
 
