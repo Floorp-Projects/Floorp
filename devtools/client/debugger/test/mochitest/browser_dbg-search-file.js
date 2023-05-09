@@ -27,7 +27,6 @@ add_task(async function() {
   info("Search for `con` in the script");
   type(dbg, "con");
   await waitForSearchState(dbg);
-  await waitForDispatch(dbg.store, "UPDATE_SEARCH_RESULTS");
 
   // All the lines in the script that include `con`
   const linesWithResults = [
@@ -144,8 +143,4 @@ function getCursorPositionLine(dbg) {
   // where N is the line number, and C the column number
   const line = innerText.substring(1, innerText.indexOf(","));
   return parseInt(line, 10);
-}
-
-function waitForSearchState(dbg) {
-  return waitForState(dbg, () => getCM(dbg).state.search);
 }

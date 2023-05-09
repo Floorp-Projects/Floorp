@@ -244,3 +244,11 @@ function getRange(start, end) {
   }
   return range;
 }
+
+/**
+ * Wait for CodeMirror to start searching
+ */
+function waitForSearchState(dbg) {
+  const cm = getCM(dbg);
+  return waitFor(() => cm.state.search);
+}

@@ -14,7 +14,6 @@ export { getBreakpointSources } from "./breakpointSources";
 export * from "./event-listeners";
 export * from "./exceptions";
 export * from "./expressions";
-export * from "./file-search";
 export { getCallStackFrames } from "./getCallStackFrames";
 export { isLineInScope } from "./isLineInScope";
 export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
