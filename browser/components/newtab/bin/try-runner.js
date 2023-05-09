@@ -8,7 +8,7 @@
  * which are run via taskcluster node(debugger).
  *
  * Forked from
- * https://searchfox.org/mozilla-central/source/devtools/client/debugger/bin/try-runner.js
+ * https://searchfox.org/mozilla-central/rev/c3453c7a0427eb27d467e1582f821f402aed9850/devtools/client/debugger/bin/try-runner.js
  */
 
 const { execFileSync } = require("child_process");
@@ -49,6 +49,8 @@ function logStart(name) {
   console.log(`TEST START | ${name}`);
 }
 
+const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+
 function checkBundles() {
   logStart("checkBundles");
 
@@ -63,7 +65,7 @@ function checkBundles() {
   let ASbefore = readFileSync(ASbundle, "utf8");
   let AWbefore = readFileSync(AWbundle, "utf8");
 
-  let bundleExitCode = execOut("npm", ["run", "bundle"]).exitCode;
+  let bundleExitCode = execOut(npmCommand, ["run", "bundle"]).exitCode;
 
   let ASafter = readFileSync(ASbundle, "utf8");
   let AWafter = readFileSync(AWbundle, "utf8");
@@ -88,7 +90,7 @@ function karma() {
   logStart("karma");
 
   const errors = [];
-  const { exitCode, out } = execOut("npm", [
+  const { exitCode, out } = execOut(npmCommand, [
     "run",
     "testmc:unit",
     // , "--", "--log-level", "--verbose",
@@ -141,37 +143,52 @@ function karma() {
   return errors.length === 0 && !exitCode;
 }
 
-function sasslint() {
-  logStart("sasslint");
-  const { exitCode, out } = execOut("npm", [
+function stylelint() {
+  logStart("stylelint");
+  const { exitCode, out } = execOut(npmCommand, [
     "run",
     "--silent",
-    "lint:sasslint",
+    "lint:stylelint",
     "--",
-    "--format",
+    "--formatter",
     "json",
   ]);
 
-  // Successful exit and no output means sasslint passed.
+  // Successful exit and no output means stylelint passed.
   if (!exitCode && !out.length) {
     return true;
   }
 
   let fileObjects = JSON.parse(out);
-  let filesWithIssues = fileObjects.filter(
-    file => file.warningCount || file.errorCount
-  );
 
   let errs = [];
   let errorString;
-  filesWithIssues.forEach(file => {
-    file.messages.forEach(messageObj => {
-      errorString = `${file.filePath}(${messageObj.line}, ${messageObj.column}): ${messageObj.message} (${messageObj.ruleId})`;
-      errs.push(errorString);
-    });
-  });
+  for (const file of fileObjects) {
+    let fileErrs = [];
+    for (const warningObj of file.warnings) {
+      let relativePath = path.relative(
+        path.join(__dirname, ".."),
+        path.join(...file.source.split("/"))
+      );
+      errorString = `${relativePath}(${warningObj.line}, ${warningObj.column}): ${warningObj.text}`;
+      fileErrs.push(errorString);
+    }
+    for (const warningObj of file.invalidOptionWarnings) {
+      errorString = `config: ${warningObj.text}`;
+      fileErrs.push(errorString);
+    }
+    for (const warningObj of file.parseErrors) {
+      errorString = `construct-specific parser error: ${warningObj.text}`;
+      fileErrs.push(errorString);
+    }
+    if (fileErrs.length) {
+      errs.push(...fileErrs);
+    } else if (file.errored) {
+      errs.push(`unknown error: ${file.source}`);
+    }
+  }
 
-  const errors = logErrors("sasslint", errs);
+  const errors = logErrors("stylelint", errs);
 
   // Pass if there's no detected errors and nothing unexpected.
   return errors.length === 0 && !exitCode;
@@ -195,7 +212,7 @@ function zipCodeCoverage() {
 }
 
 const tests = {};
-const success = [checkBundles, karma, zipCodeCoverage, sasslint].every(
+const success = [checkBundles, karma, zipCodeCoverage, stylelint].every(
   t => (tests[t.name] = t())
 );
 console.log(tests);

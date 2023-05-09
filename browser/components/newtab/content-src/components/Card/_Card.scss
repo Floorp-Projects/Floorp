@@ -2,6 +2,7 @@
 
 .card-outer {
   @include context-menu-button;
+
   background: var(--newtab-background-color-secondary);
   border-radius: $border-radius-new;
   display: inline-block;
@@ -63,6 +64,7 @@
 
   &:is(:hover, :focus, .active):not(.placeholder) {
     @include context-menu-button-hover;
+
     outline: none;
 
     .card-title {
@@ -137,7 +139,7 @@
     overflow: hidden;
     padding-bottom: 4px;
     text-overflow: ellipsis;
-    text-transform: uppercase; // sass-lint:disable-line no-disallowed-properties
+    text-transform: uppercase;
     white-space: nowrap;
   }
 
@@ -189,6 +191,7 @@
     // Wide layout styles
     @media (min-width: $break-point-widest) {
       $line-height: 23px;
+
       height: $card-height-large;
 
       .card-preview-image-outer {
@@ -272,6 +275,7 @@
     .card-context {
       $icon-size: 16px;
       $container-size: 32px;
+
       background-color: var(--newtab-background-color-secondary);
       border-radius: math.div($container-size, 2);
       clip-path: inset(-1px -1px $container-size - ($card-height-compact - $card-preview-image-height-compact - 2 * $card-detail-vertical-spacing));

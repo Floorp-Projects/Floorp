@@ -277,7 +277,7 @@ body,
 
 body {
   background-color: var(--newtab-background-color);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Ubuntu, "Helvetica Neue", sans-serif;
   font-size: 16px;
 }
 
@@ -322,8 +322,7 @@ h2 {
 .actions {
   border-top: 1px solid var(--newtab-border-color);
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
   justify-content: flex-start;
   margin: 0;
   padding: 15px 25px 0;
@@ -1184,11 +1183,11 @@ main.has-snippet {
   margin-bottom: 48px;
 }
 .search-wrapper .logo-and-wordmark .logo {
-  background: url("chrome://branding/content/about-logo.png") no-repeat center;
-  background-size: 82px;
   display: inline-block;
   height: 82px;
   width: 82px;
+  background: url("chrome://branding/content/about-logo.png") no-repeat center;
+  background-size: 82px;
 }
 @media (min-resolution: 2x) {
   .search-wrapper .logo-and-wordmark .logo {
@@ -1369,10 +1368,7 @@ main.has-snippet {
   height: 100%;
   opacity: 0;
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
 }
 .search-handoff-button .fake-textbox {
   opacity: 0.54;
@@ -2507,7 +2503,7 @@ main.has-snippet {
 .pocket-logged-in-cta .cta-text {
   font-weight: normal;
   font-size: 13px;
-  line-height: 1.230769231;
+  line-height: 1.2307692308;
 }
 .pocket-logged-in-cta .pocket-cta-button,
 .pocket-logged-in-cta .cta-text {
@@ -2518,7 +2514,7 @@ main.has-snippet {
   display: flex;
   align-items: center;
   white-space: nowrap;
-  line-height: 1.230769231;
+  line-height: 1.2307692308;
 }
 .more-recommendations::after {
   background: url("chrome://global/skin/icons/arrow-right-12.svg") no-repeat center center;
@@ -2539,57 +2535,44 @@ main.has-snippet {
   --gridColumnGap: 48px;
   --gridRowGap: 24px;
   grid-template-columns: repeat(12, 1fr);
-  grid-column-gap: var(--gridColumnGap);
-  grid-row-gap: var(--gridRowGap);
+  grid-gap: var(--gridRowGap) var(--gridColumnGap);
   margin: 0 auto;
 }
 .discovery-stream.ds-layout .ds-column-12 {
-  grid-column-start: auto;
-  grid-column-end: span 12;
+  grid-column: auto span 12;
 }
 .discovery-stream.ds-layout .ds-column-11 {
-  grid-column-start: auto;
-  grid-column-end: span 11;
+  grid-column: auto span 11;
 }
 .discovery-stream.ds-layout .ds-column-10 {
-  grid-column-start: auto;
-  grid-column-end: span 10;
+  grid-column: auto span 10;
 }
 .discovery-stream.ds-layout .ds-column-9 {
-  grid-column-start: auto;
-  grid-column-end: span 9;
+  grid-column: auto span 9;
 }
 .discovery-stream.ds-layout .ds-column-8 {
-  grid-column-start: auto;
-  grid-column-end: span 8;
+  grid-column: auto span 8;
 }
 .discovery-stream.ds-layout .ds-column-7 {
-  grid-column-start: auto;
-  grid-column-end: span 7;
+  grid-column: auto span 7;
 }
 .discovery-stream.ds-layout .ds-column-6 {
-  grid-column-start: auto;
-  grid-column-end: span 6;
+  grid-column: auto span 6;
 }
 .discovery-stream.ds-layout .ds-column-5 {
-  grid-column-start: auto;
-  grid-column-end: span 5;
+  grid-column: auto span 5;
 }
 .discovery-stream.ds-layout .ds-column-4 {
-  grid-column-start: auto;
-  grid-column-end: span 4;
+  grid-column: auto span 4;
 }
 .discovery-stream.ds-layout .ds-column-3 {
-  grid-column-start: auto;
-  grid-column-end: span 3;
+  grid-column: auto span 3;
 }
 .discovery-stream.ds-layout .ds-column-2 {
-  grid-column-start: auto;
-  grid-column-end: span 2;
+  grid-column: auto span 2;
 }
 .discovery-stream.ds-layout .ds-column-1 {
-  grid-column-start: auto;
-  grid-column-end: span 1;
+  grid-column: auto span 1;
 }
 .discovery-stream.ds-layout .ds-column-grid {
   display: grid;
@@ -4527,12 +4510,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   font-style: normal;
   background: var(--newtab-text-emphasis-background);
 }
-.SimpleSnippet.bold .donation-form-url,
-.SimpleSnippet.bold .donation-amount, .SimpleSnippet.takeover .donation-form-url,
-.SimpleSnippet.takeover .donation-amount {
-  padding-top: 8px;
-  padding-bottom: 8px;
-}
 .SimpleSnippet.bold {
   height: 176px;
 }
@@ -4582,7 +4559,12 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
 .SimpleSnippet.tall .icon {
   margin-inline-end: 20px;
 }
-.SimpleSnippet.takeover .icon, .SimpleSnippet.bold .icon {
+.SimpleSnippet.bold .donation-form-url,
+.SimpleSnippet.bold .donation-amount, .SimpleSnippet.takeover .donation-form-url,
+.SimpleSnippet.takeover .donation-amount {
+  padding-block: 8px;
+}
+.SimpleSnippet.bold .icon, .SimpleSnippet.takeover .icon {
   margin-inline-end: 20px;
 }
 .SimpleSnippet .icon {

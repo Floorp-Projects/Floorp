@@ -338,9 +338,9 @@ html {
   --grey-subtitle-1: #696977;
   --mr-welcome-background-color: #F8F6F4;
   --mr-screen-heading-color: var(--in-content-text-color);
-  --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.2) 0%, rgba(2, 144, 238, 0.2) 100%);
+  --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 20%) 0%, rgba(2, 144, 238, 20%) 100%);
   --mr-screen-background-color: #F8F6F4;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Ubuntu, "Helvetica Neue", sans-serif;
   font-size: 16px;
   position: relative;
   text-align: center;
@@ -351,7 +351,7 @@ html {
   .onboardingContainer {
     --grey-subtitle-1: #FFF;
     --mr-welcome-background-color: #333336;
-    --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.3) 0%, rgba(2, 144, 238, 0.3) 100%);
+    --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 30%) 0%, rgba(2, 144, 238, 30%) 100%);
     --mr-screen-background-color: #62697A;
   }
 }
@@ -559,10 +559,7 @@ html {
   width: 800px;
   height: 550px;
   border-radius: 8px;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   margin: auto;
   pointer-events: none;
 }

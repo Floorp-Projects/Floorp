@@ -43,6 +43,7 @@ $letter-fallback-color: $white;
       @include context-menu-open-left;
     }
   }
+
   @media (min-width: $break-point-medium) and (max-width: $break-point-medium + $card-width) {
     :nth-child(4n+3) {
       @include context-menu-open-left;
@@ -55,6 +56,7 @@ $letter-fallback-color: $white;
       @include context-menu-open-left;
     }
   }
+
   @media (min-width: $break-point-large) and (max-width: $break-point-large + $card-width) {
     :nth-child(6n+5) {
       @include context-menu-open-left;
@@ -67,6 +69,7 @@ $letter-fallback-color: $white;
       @include context-menu-open-left;
     }
   }
+
   @media (min-width: $break-point-widest) and (max-width: $break-point-widest + $card-width) {
     :nth-child(8n+7) {
       @include context-menu-open-left;
@@ -101,7 +104,6 @@ $letter-fallback-color: $white;
   width: 120px;
   padding: 20px $half-base-gutter 4px;
   border-radius: 8px;
-
   display: inline-block;
 
   // container for context menu
@@ -144,7 +146,7 @@ $letter-fallback-color: $white;
     }
   }
 
-  .tile { // sass-lint:disable-block property-sort-order
+  .tile {
     border-radius: $top-sites-border-radius;
     box-shadow: $shadow-card;
     background-color: var(--newtab-background-color-secondary);
@@ -152,7 +154,6 @@ $letter-fallback-color: $white;
     margin: 0 auto;
     height: $top-sites-size;
     width: $top-sites-size;
-
     cursor: pointer;
     position: relative;
 
@@ -162,7 +163,7 @@ $letter-fallback-color: $white;
     display: flex;
     font-size: 32px;
     font-weight: 200;
-    text-transform: uppercase; // sass-lint:disable-line no-disallowed-properties
+    text-transform: uppercase;
 
     .icon-wrapper {
       border-radius: 4px;
@@ -176,7 +177,7 @@ $letter-fallback-color: $white;
 
       &.letter-fallback::before {
         content: attr(data-fallback);
-        text-transform: uppercase; // sass-lint:disable-line no-disallowed-properties
+        text-transform: uppercase;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -564,7 +565,7 @@ $letter-fallback-color: $white;
   // checkmark
   [type='checkbox']:not(:checked) + label::after,
   [type='checkbox']:checked + label::after {
-    background: url('chrome://global/skin/icons/check.svg') no-repeat center center; // sass-lint:disable-line no-url-domains
+    background: url('chrome://global/skin/icons/check.svg') no-repeat center center;
     content: '';
     height: 21px;
     left: $checkbox-offset;
@@ -604,7 +605,7 @@ $letter-fallback-color: $white;
   }
 }
 
-//used for tooltips below form element
+// used for tooltips below form element
 @keyframes fade-up-tt {
   0% {
     opacity: 0;

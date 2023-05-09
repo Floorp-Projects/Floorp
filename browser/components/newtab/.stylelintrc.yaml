@@ -1,0 +1,70 @@
+extends: stylelint-config-standard-scss
+customSyntax: postcss-scss
+defaultSeverity: warning
+rules:
+  at-rule-disallowed-list:
+    - - debug
+      - warn
+      - error
+    - message: Clean up %s directives before committing
+  at-rule-no-vendor-prefix: null
+  color-function-notation: null
+  color-hex-case: upper
+  comment-empty-line-before:
+    - always
+    - except:
+        - first-nested
+      ignore:
+        - after-comment
+        - stylelint-commands
+  custom-property-empty-line-before: null
+  custom-property-pattern: null
+  declaration-block-no-duplicate-properties:
+    - true
+    - severity: error
+  declaration-no-important:
+    - true
+    - severity: error
+  function-url-no-scheme-relative:
+    - true
+    - severity: error
+  indentation: 2
+  keyframes-name-pattern: null
+  max-nesting-depth:
+    - 8
+    - ignore:
+        - blockless-at-rules
+        - pseudo-classes
+      severity: error
+  media-feature-name-no-vendor-prefix: null
+  no-descending-specificity: null
+  no-eol-whitespace: true
+  no-missing-end-of-source-newline: true
+  number-leading-zero: always
+  number-no-trailing-zeros: true
+  property-disallowed-list:
+    - - margin-left
+      - margin-right
+    - message: Use margin-inline instead of %s
+      severity: error
+  property-no-unknown:
+    - true
+    - severity: error
+  property-no-vendor-prefix: null
+  scss/dollar-variable-empty-line-before: null
+  scss/double-slash-comment-empty-line-before:
+    - always
+    - except:
+        - first-nested
+      ignore:
+        - between-comments
+        - stylelint-commands
+        - inside-block
+  selector-class-pattern: null
+  selector-no-vendor-prefix: null
+  string-quotes:
+    - single
+    - avoidEscape: true
+      severity: error
+  value-keyword-case: null
+  value-no-vendor-prefix: null
