@@ -205,3 +205,83 @@ add_task(async function test_sessions_get_recently_closed_tabs() {
 
   await extension.unload();
 });
+
+add_task(
+  async function test_sessions_get_recently_closed_for_loading_non_web_controlled_blank_page() {
+    info("Prepare extension that calls browser.sessions.getRecentlyClosed()");
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        permissions: ["sessions", "tabs"],
+      },
+      background: async () => {
+        browser.test.onMessage.addListener(async msg => {
+          if (msg == "check-sessions") {
+            let recentlyClosed = await browser.sessions.getRecentlyClosed();
+            browser.test.sendMessage("recentlyClosed", recentlyClosed);
+          }
+        });
+      },
+    });
+
+    info(
+      "Open a page having a link for non web controlled page in _blank target"
+    );
+    const testRoot = getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "https://example.com"
+    );
+    let url = `${testRoot}file_has_non_web_controlled_blank_page_link.html`;
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+    BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, url);
+    await BrowserTestUtils.browserLoaded(
+      win.gBrowser.selectedBrowser,
+      false,
+      url
+    );
+
+    info("Open the non web controlled page in _blank target");
+    let onNewTabOpened = new Promise(resolve =>
+      win.gBrowser.addTabsProgressListener({
+        onStateChange(browser, webProgress, request, stateFlags, status) {
+          if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
+            win.gBrowser.removeTabsProgressListener(this);
+            resolve(win.gBrowser.getTabForBrowser(browser));
+          }
+        },
+      })
+    );
+    let targetUrl = await SpecialPowers.spawn(
+      win.gBrowser.selectedBrowser,
+      [],
+      () => {
+        const target = content.document.querySelector("a");
+        EventUtils.synthesizeMouseAtCenter(target, {}, content);
+        return target.href;
+      }
+    );
+    let tab = await onNewTabOpened;
+
+    info("Remove tab while loading to get getRecentlyClosed()");
+    await extension.startup();
+    let sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
+    BrowserTestUtils.removeTab(tab);
+    await sessionUpdatePromise;
+
+    info("Check the result of getRecentlyClosed()");
+    extension.sendMessage("check-sessions");
+    let recentlyClosed = await extension.awaitMessage("recentlyClosed");
+    checkTabInfo(
+      {
+        index: 1,
+        url: targetUrl,
+        title: targetUrl,
+        favIconUrl: undefined,
+        selected: undefined,
+      },
+      recentlyClosed[0].tab
+    );
+
+    await extension.unload();
+    await BrowserTestUtils.closeWindow(win);
+  }
+);
