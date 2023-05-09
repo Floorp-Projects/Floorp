@@ -483,6 +483,7 @@ xpcom/io/crc32c.c
 # When this is implemented, we'll update the configuration below (bug 1825508)
 ##############################################################################
 
+.gradle/
 browser/components/newtab/logs/
 browser/components/newtab/node_modules/
 browser/components/storybook/storybook-static/
