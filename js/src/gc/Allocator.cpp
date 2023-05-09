@@ -33,11 +33,11 @@ using namespace js;
 using namespace gc;
 
 void Zone::updateNurseryAllocFlags(const Nursery& nursery) {
-  allocNurseryObjects = nursery.isEnabled();
-  allocNurseryStrings = nursery.isEnabled() && nursery.canAllocateStrings() &&
-                        !nurseryStringsDisabled;
-  allocNurseryBigInts = nursery.isEnabled() && nursery.canAllocateBigInts() &&
-                        !nurseryBigIntsDisabled;
+  allocNurseryObjects_ = nursery.isEnabled();
+  allocNurseryStrings_ = nursery.isEnabled() && nursery.canAllocateStrings() &&
+                         !nurseryStringsDisabled;
+  allocNurseryBigInts_ = nursery.isEnabled() && nursery.canAllocateBigInts() &&
+                         !nurseryBigIntsDisabled;
 }
 
 template <AllowGC allowGC /* = CanGC */>
@@ -63,7 +63,7 @@ void* gc::CellAllocator::AllocateObjectCell(JSContext* cx, AllocKind kind,
     return nullptr;
   }
 
-  if (heap != TenuredHeap && cx->zone()->allocNurseryObjects) {
+  if (heap != TenuredHeap && cx->zone()->allocNurseryObjects()) {
     if (!site) {
       site = cx->zone()->unknownAllocSite(JS::TraceKind::Object);
     }
@@ -140,7 +140,7 @@ void* GCRuntime::tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
 
     // Exceeding gcMaxBytes while tenuring can disable the Nursery, and
     // other heuristics can disable nursery strings for this zone.
-    if (cx->nursery().isEnabled() && cx->zone()->allocNurseryStrings) {
+    if (cx->nursery().isEnabled() && cx->zone()->allocNurseryStrings()) {
       return cx->nursery().allocateString(site, thingSize);
     }
   }
@@ -162,7 +162,7 @@ void* gc::CellAllocator::AllocateStringCell(JSContext* cx, AllocKind kind,
     return nullptr;
   }
 
-  if (heap != TenuredHeap && cx->zone()->allocNurseryStrings) {
+  if (heap != TenuredHeap && cx->zone()->allocNurseryStrings()) {
     void* ptr = rt->gc.tryNewNurseryStringCell<allowGC>(cx, size, kind);
     if (ptr) {
       return ptr;
@@ -208,7 +208,7 @@ void* GCRuntime::tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
 
     // Exceeding gcMaxBytes while tenuring can disable the Nursery, and
     // other heuristics can disable nursery BigInts for this zone.
-    if (cx->nursery().isEnabled() && cx->zone()->allocNurseryBigInts) {
+    if (cx->nursery().isEnabled() && cx->zone()->allocNurseryBigInts()) {
       return cx->nursery().allocateBigInt(site, thingSize);
     }
   }
@@ -229,7 +229,7 @@ void* gc::CellAllocator::AllocateBigIntCell(JSContext* cx, InitialHeap heap) {
     return nullptr;
   }
 
-  if (heap != TenuredHeap && cx->zone()->allocNurseryBigInts) {
+  if (heap != TenuredHeap && cx->zone()->allocNurseryBigInts()) {
     void* ptr = rt->gc.tryNewNurseryBigIntCell<allowGC>(cx, size, kind);
     if (ptr) {
       return ptr;
