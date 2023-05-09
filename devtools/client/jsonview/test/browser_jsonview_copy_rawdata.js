@@ -5,7 +5,7 @@
 
 const TEST_JSON_URL = URL_ROOT + "simple_json.json";
 
-const jsonText = '{"name": "value"}\n';
+const jsonText = '{ "name": "value" }\n';
 const prettyJson = '{\n  "name": "value"\n}';
 
 add_task(async function() {
