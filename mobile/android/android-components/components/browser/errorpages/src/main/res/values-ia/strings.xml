@@ -18,7 +18,7 @@
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       <ul>
         <li>Le pagina que tu tenta vider non pote esser monstrate perque le authenticitate del datos recipite non poteva esser verificate.</li>
-        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
+        <li>Continge le proprietarios del sito web pro informar les de iste problema.</li>
       </ul>
     
 ]]></string>
@@ -62,10 +62,6 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avantiate…</string>
 
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> ha un politica de securitate appellate HTTP Strict Transport Security (HSTS), le qual significa que <b>%2$s</b> solo pote connecter se a illo de maniera secur. Tu non pote adder un exception pro visitar iste sito.
-    ]]></string>
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> ha un politica de securitate appellate HTTP Strict Transport Security (HSTS), le qual significa que <b>%2$s</b> solo pote connecter se a illo de maniera secur. Tu non pote adder un exception pro visitar iste sito. </label>
@@ -168,7 +164,7 @@
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
 <ul>
-  <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
+  <li>Continge le proprietarios del sito web pro informar les de iste problema.</li>
 </ul>
 ]]></string>
 
@@ -179,7 +175,7 @@
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
       <p>Le pagina que tu tenta vider non pote esser monstrate perque un error in le transmission de datos ha essite detegite.</p>
       <ul>
-        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
+        <li>Continge le proprietarios del sito web pro informar les de iste problema.</li>
       </ul>
     ]]></string>
 
@@ -188,7 +184,7 @@
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
       <p>Le pagina que tu tenta vider non pote esser monstrate perque un error in le transmission de datos ha essite detegite.</p>
       <ul>
-        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
+        <li>Continge le proprietarios del sito web pro informar les de iste problema.</li>
       </ul>
     ]]></string>
 
@@ -198,7 +194,7 @@
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
       <p>Le pagina que tu tenta vider non pote esser monstrate perque illo usa un forma de compression non valide o non supportate.</p>
       <ul>
-        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
+        <li>Continge le proprietarios del sito web pro informar les de iste problema.</li>
       </ul>
     ]]></string>
 
