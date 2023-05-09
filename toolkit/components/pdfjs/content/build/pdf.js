@@ -942,7 +942,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.6.164',
+    apiVersion: '3.7.11',
     data,
     password,
     disableAutoFetch,
@@ -2614,9 +2614,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.6.164';
+const version = '3.7.11';
 exports.version = version;
-const build = 'a24e11a91';
+const build = '8f2d8f62f';
 exports.build = build;
 
 /***/ }),
@@ -11295,6 +11295,14 @@ class WidgetAnnotationElement extends AnnotationElement {
     }
     return this.container;
   }
+  showElementAndHideCanvas(element) {
+    if (this.data.hasOwnCanvas) {
+      if (element.previousSibling?.nodeName === "CANVAS") {
+        element.previousSibling.hidden = true;
+      }
+      element.hidden = false;
+    }
+  }
   _getKeyModifier(event) {
     const {
       isWin,
@@ -11428,6 +11436,9 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
           element.style.overflowX = "hidden";
         }
       }
+      if (this.data.hasOwnCanvas) {
+        element.hidden = true;
+      }
       GetElementsByNameSet.add(element);
       element.setAttribute("data-element-id", id);
       element.disabled = this.data.readOnly;
@@ -11469,6 +11480,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
           elementData.commitKey = 1;
         });
         element.addEventListener("updatefromsandbox", jsEvent => {
+          this.showElementAndHideCanvas(jsEvent.target);
           const actions = {
             value(event) {
               elementData.userValue = event.detail.value ?? "";
@@ -13252,8 +13264,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.6.164';
-const pdfjsBuild = 'a24e11a91';
+const pdfjsVersion = '3.7.11';
+const pdfjsBuild = '8f2d8f62f';
 })();
 
 /******/ 	return __webpack_exports__;
