@@ -1002,13 +1002,14 @@ extern JS_PUBLIC_API bool WasIncrementalGC(JSRuntime* rt);
 
 /*
  * Generational GC:
- *
- * Note: Generational GC is not yet enabled by default. The following class
- *       is non-functional unless SpiderMonkey was configured with
- *       --enable-gcgenerational.
  */
 
-/** Ensure that generational GC is disabled within some scope. */
+/**
+ * Ensure that generational GC is disabled within some scope.
+ *
+ * This evicts the nursery and discards JIT code so it is not a lightweight
+ * operation.
+ */
 class JS_PUBLIC_API AutoDisableGenerationalGC {
   JSContext* cx;
 

@@ -58,6 +58,7 @@ JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSContext* cx)
     cx->nursery().disable();
   }
   ++cx->generationalDisabled;
+  MOZ_ASSERT(cx->nursery().isEmpty());
 }
 
 JS::AutoDisableGenerationalGC::~AutoDisableGenerationalGC() {
