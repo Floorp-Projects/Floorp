@@ -16,6 +16,8 @@ struct GPUComputePassDescriptor;
 template <typename T>
 class Sequence;
 using GPUExtent3D = RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
+using OwningGPUExtent3D =
+    OwningRangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict;
 }  // namespace dom
 namespace webgpu {
 namespace ffi {
@@ -25,7 +27,12 @@ struct WGPUExtent3d;
 void ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
                           ffi::WGPUExtent3d* aExtentFFI);
 
+void ConvertExtent3DToFFI(const dom::OwningGPUExtent3D& aExtent,
+                          ffi::WGPUExtent3d* aExtentFFI);
+
 ffi::WGPUExtent3d ConvertExtent(const dom::GPUExtent3D& aExtent);
+
+ffi::WGPUExtent3d ConvertExtent(const dom::OwningGPUExtent3D& aExtent);
 
 }  // namespace webgpu
 }  // namespace mozilla
