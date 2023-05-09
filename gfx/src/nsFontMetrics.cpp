@@ -256,6 +256,10 @@ nscoord nsFontMetrics::AveCharWidth() const {
   return CEIL_TO_TWIPS(GetMetrics(this).aveCharWidth);
 }
 
+nscoord nsFontMetrics::ZeroOrAveCharWidth() const {
+  return CEIL_TO_TWIPS(GetMetrics(this).ZeroOrAveCharWidth());
+}
+
 nscoord nsFontMetrics::SpaceWidth() const {
   // For vertical text with mixed or sideways orientation, we want the
   // width of a horizontal space (even if we're using vertical line-spacing
