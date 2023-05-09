@@ -4,7 +4,7 @@ import {mkdir, readFile, stat, writeFile} from 'fs/promises';
 import {tmpdir} from 'os';
 import {dirname, join} from 'path';
 
-import {glob} from 'glob';
+import glob from 'glob';
 
 interface JobContext {
   name: string;

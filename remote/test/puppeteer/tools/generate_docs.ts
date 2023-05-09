@@ -73,9 +73,17 @@ function spliceIntoSection(
         continue;
       }
       if (versionsArchived.includes(puppeteerVersion.substring(1))) {
-        buffer.push(
-          `  * Chromium ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](https://github.com/puppeteer/puppeteer/blob/${puppeteerVersion}/docs/api/index.md)`
-        );
+        if (semver.gte(puppeteerVersion, '20.0.0')) {
+          buffer.push(
+            `  * [Chrome for Testing](https://goo.gle/chrome-for-testing) ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](https://pptr.dev/${puppeteerVersion.slice(
+              1
+            )})`
+          );
+        } else {
+          buffer.push(
+            `  * Chromium ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](https://github.com/puppeteer/puppeteer/blob/${puppeteerVersion}/docs/api/index.md)`
+          );
+        }
       } else if (semver.lt(puppeteerVersion, '15.0.0')) {
         buffer.push(
           `  * Chromium ${chromiumVersion} - [Puppeteer ${puppeteerVersion}](https://github.com/puppeteer/puppeteer/blob/${puppeteerVersion}/docs/api.md)`
@@ -107,7 +115,7 @@ function spliceIntoSection(
   await Promise.all([job1, job2]);
 
   // Generate documentation
-  job('', async ({inputs, outputs}) => {
+  const puppeteerDocs = job('', async ({inputs, outputs}) => {
     await rm(outputs[0]!, {recursive: true, force: true});
     generateDocs(inputs[0]!, outputs[0]!);
     spawnAndLog('prettier', '--ignore-path', 'none', '--write', 'docs');
@@ -117,5 +125,28 @@ function spliceIntoSection(
       'tools/internal/custom_markdown_documenter.ts',
     ])
     .outputs(['docs/api'])
+    .build();
+
+  const browsersDocs = job('', async ({inputs, outputs}) => {
+    await rm(outputs[0]!, {recursive: true, force: true});
+    generateDocs(inputs[0]!, outputs[0]!);
+    spawnAndLog('prettier', '--ignore-path', 'none', '--write', 'docs');
+  })
+    .inputs([
+      'docs/browsers.api.json',
+      'tools/internal/custom_markdown_documenter.ts',
+    ])
+    .outputs(['docs/browsers-api'])
+    .build();
+
+  await Promise.all([puppeteerDocs, browsersDocs]);
+
+  await job('', async ({inputs, outputs}) => {
+    const readme = await readFile(inputs[1]!, 'utf-8');
+    const index = await readFile(inputs[0]!, 'utf-8');
+    await writeFile(outputs[0]!, index.replace('# API Reference\n', readme));
+  })
+    .inputs(['docs/browsers-api/index.md', 'packages/browsers/README.md'])
+    .outputs(['docs/browsers-api/index.md'])
     .build();
 })();

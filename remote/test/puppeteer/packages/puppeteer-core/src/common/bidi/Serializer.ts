@@ -1,9 +1,26 @@
+/**
+ * Copyright 2023 Google Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
 
 import {debugError, isDate, isPlainObject, isRegExp} from '../util.js';
 
+import {Context} from './Context.js';
+import {ElementHandle} from './ElementHandle.js';
 import {JSHandle} from './JSHandle.js';
-import {Page} from './Page.js';
 
 /**
  * @internal
@@ -130,10 +147,13 @@ export class BidiSerializer {
 
   static serialize(
     arg: unknown,
-    context: Page
+    context: Context
   ): Bidi.CommonDataTypes.LocalOrRemoteValue {
     // TODO: See use case of LazyArgs
-    const objectHandle = arg && arg instanceof JSHandle ? arg : null;
+    const objectHandle =
+      arg && (arg instanceof JSHandle || arg instanceof ElementHandle)
+        ? arg
+        : null;
     if (objectHandle) {
       if (objectHandle.context() !== context) {
         throw new Error(
@@ -143,7 +163,7 @@ export class BidiSerializer {
       if (objectHandle.disposed) {
         throw new Error('JSHandle is disposed!');
       }
-      return objectHandle.bidiObject();
+      return objectHandle.remoteValue();
     }
 
     return BidiSerializer.serializeRemoveValue(arg);

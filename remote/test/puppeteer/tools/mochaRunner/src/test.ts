@@ -13,26 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import assert from 'assert/strict';
-import test from 'node:test';
+import assert from 'node:assert/strict';
+import {describe, test} from 'node:test';
 
 import {TestExpectation} from './types.js';
-import {filterByParameters, getTestResultForFailure} from './utils.js';
+import {
+  filterByParameters,
+  getTestResultForFailure,
+  isWildCardPattern,
+  testIdMatchesExpectationPattern,
+} from './utils.js';
 import {getFilename, extendProcessEnv} from './utils.js';
 
-test('extendProcessEnv', () => {
+void test('extendProcessEnv', () => {
   const env = extendProcessEnv([{TEST: 'TEST'}, {TEST2: 'TEST2'}]);
   assert.equal(env['TEST'], 'TEST');
   assert.equal(env['TEST2'], 'TEST2');
 });
 
-test('getFilename', () => {
+void test('getFilename', () => {
   assert.equal(getFilename('/etc/test.ts'), 'test');
   assert.equal(getFilename('/etc/test.js'), 'test');
 });
 
-test('getTestResultForFailure', () => {
+void test('getTestResultForFailure', () => {
   assert.equal(
     getTestResultForFailure({err: {code: 'ERR_MOCHA_TIMEOUT'}}),
     'TIMEOUT'
@@ -40,7 +44,7 @@ test('getTestResultForFailure', () => {
   assert.equal(getTestResultForFailure({err: {code: 'ERROR'}}), 'FAIL');
 });
 
-test('filterByParameters', () => {
+void test('filterByParameters', () => {
   const expectations: TestExpectation[] = [
     {
       testIdPattern:
@@ -60,4 +64,71 @@ test('filterByParameters', () => {
     1
   );
   assert.equal(filterByParameters(expectations, ['other']).length, 0);
+});
+
+void test('isWildCardPattern', () => {
+  assert.equal(isWildCardPattern(''), false);
+  assert.equal(isWildCardPattern('a'), false);
+  assert.equal(isWildCardPattern('*'), true);
+
+  assert.equal(isWildCardPattern('[queryHandler.spec]'), false);
+  assert.equal(isWildCardPattern('[queryHandler.spec] *'), true);
+  assert.equal(isWildCardPattern(' [queryHandler.spec] '), false);
+
+  assert.equal(isWildCardPattern('[queryHandler.spec] Query'), false);
+  assert.equal(isWildCardPattern('[queryHandler.spec] Page *'), true);
+  assert.equal(isWildCardPattern('[queryHandler.spec] Page Page.goto *'), true);
+});
+
+describe('testIdMatchesExpectationPattern', () => {
+  const expectations: Array<[string, boolean]> = [
+    ['', false],
+    ['*', true],
+    ['* should work', true],
+    ['* Page.setContent *', true],
+    ['* should work as expected', false],
+    ['Page.setContent *', false],
+    ['[page.spec]', false],
+    ['[page.spec] *', true],
+    ['[page.spec] Page *', true],
+    ['[page.spec] Page Page.setContent *', true],
+    ['[page.spec] Page Page.setContent should work', true],
+    ['[page.spec] Page * should work', true],
+    ['[page.spec] * Page.setContent *', true],
+    ['[jshandle.spec] *', false],
+    ['[jshandle.spec] JSHandle should work', false],
+  ];
+
+  void test('with MochaTest', () => {
+    const test = {
+      title: 'should work',
+      file: 'page.spec.ts',
+      fullTitle() {
+        return 'Page Page.setContent should work';
+      },
+    } as any;
+
+    for (const [pattern, expected] of expectations) {
+      assert.equal(
+        testIdMatchesExpectationPattern(test, pattern),
+        expected,
+        `Expected "${pattern}" to yield "${expected}"`
+      );
+    }
+  });
+  void test('with MochaTestResult', () => {
+    const test = {
+      title: 'should work',
+      file: 'page.spec.ts',
+      fullTitle: 'Page Page.setContent should work',
+    } as any;
+
+    for (const [pattern, expected] of expectations) {
+      assert.equal(
+        testIdMatchesExpectationPattern(test, pattern),
+        expected,
+        `Expected "${pattern}" to yield "${expected}"`
+      );
+    }
+  });
 });

@@ -19,12 +19,13 @@ import {Protocol} from 'devtools-protocol';
 import {CDPSession} from '../common/Connection.js';
 import {ExecutionContext} from '../common/ExecutionContext.js';
 import {Frame} from '../common/Frame.js';
-import {MouseButton} from '../common/Input.js';
+import {MouseClickOptions} from '../common/Input.js';
 import {WaitForSelectorOptions} from '../common/IsolatedWorld.js';
 import {
   ElementFor,
   EvaluateFuncWith,
   HandleFor,
+  HandleOr,
   NodeFor,
 } from '../common/types.js';
 import {KeyInput} from '../common/USKeyboardLayout.js';
@@ -75,21 +76,7 @@ export interface Offset {
 /**
  * @public
  */
-export interface ClickOptions {
-  /**
-   * Time to wait between `mousedown` and `mouseup` in milliseconds.
-   *
-   * @defaultValue 0
-   */
-  delay?: number;
-  /**
-   * @defaultValue 'left'
-   */
-  button?: MouseButton;
-  /**
-   * @defaultValue 1
-   */
-  clickCount?: number;
+export interface ClickOptions extends MouseClickOptions {
   /**
    * Offset for the clickable point relative to the top-left corner of the border box.
    */
@@ -158,8 +145,108 @@ export class ElementHandle<
   /**
    * @internal
    */
-  constructor() {
+  protected handle;
+
+  /**
+   * @internal
+   */
+  constructor(handle: JSHandle<ElementType>) {
     super();
+    this.handle = handle;
+  }
+
+  /**
+   * @internal
+   */
+  override get id(): string | undefined {
+    return this.handle.id;
+  }
+
+  /**
+   * @internal
+   */
+  override get disposed(): boolean {
+    return this.handle.disposed;
+  }
+
+  /**
+   * @internal
+   */
+  override async getProperty<K extends keyof ElementType>(
+    propertyName: HandleOr<K>
+  ): Promise<HandleFor<ElementType[K]>>;
+  /**
+   * @internal
+   */
+  override async getProperty(propertyName: string): Promise<JSHandle<unknown>>;
+  override async getProperty<K extends keyof ElementType>(
+    propertyName: HandleOr<K>
+  ): Promise<HandleFor<ElementType[K]>> {
+    return this.handle.getProperty(propertyName);
+  }
+
+  /**
+   * @internal
+   */
+  override async getProperties(): Promise<Map<string, JSHandle>> {
+    return this.handle.getProperties();
+  }
+
+  /**
+   * @internal
+   */
+  override async evaluate<
+    Params extends unknown[],
+    Func extends EvaluateFuncWith<ElementType, Params> = EvaluateFuncWith<
+      ElementType,
+      Params
+    >
+  >(
+    pageFunction: Func | string,
+    ...args: Params
+  ): Promise<Awaited<ReturnType<Func>>> {
+    return this.handle.evaluate(pageFunction, ...args);
+  }
+
+  /**
+   * @internal
+   */
+  override evaluateHandle<
+    Params extends unknown[],
+    Func extends EvaluateFuncWith<ElementType, Params> = EvaluateFuncWith<
+      ElementType,
+      Params
+    >
+  >(
+    pageFunction: Func | string,
+    ...args: Params
+  ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
+    return this.handle.evaluateHandle(pageFunction, ...args);
+  }
+
+  /**
+   * @internal
+   */
+  override async jsonValue(): Promise<ElementType> {
+    return this.handle.jsonValue();
+  }
+
+  /**
+   * @internal
+   */
+  override toString(): string {
+    return this.handle.toString();
+  }
+
+  /**
+   * @internal
+   */
+  override async dispose(): Promise<void> {
+    return await this.handle.dispose();
+  }
+
+  override asElement(): ElementHandle<ElementType> {
+    return this;
   }
 
   /**
@@ -368,6 +455,22 @@ export class ElementHandle<
   }
 
   /**
+   * Checks if an element is visible using the same mechanism as
+   * {@link ElementHandle.waitForSelector}.
+   */
+  async isVisible(): Promise<boolean> {
+    throw new Error('Not implemented.');
+  }
+
+  /**
+   * Checks if an element is hidden using the same mechanism as
+   * {@link ElementHandle.waitForSelector}.
+   */
+  async isHidden(): Promise<boolean> {
+    throw new Error('Not implemented.');
+  }
+
+  /**
    * @deprecated Use {@link ElementHandle.waitForSelector} with the `xpath`
    * prefix.
    *
@@ -383,6 +486,7 @@ export class ElementHandle<
    * If `xpath` starts with `//` instead of `.//`, the dot will be appended
    * automatically.
    *
+   * @example
    * This method works across navigation.
    *
    * ```ts
@@ -468,10 +572,6 @@ export class ElementHandle<
     throw new Error('Not implemented');
   }
 
-  override asElement(): ElementHandle<ElementType> | null {
-    return this;
-  }
-
   /**
    * Resolves to the content frame for element handles referencing
    * iframe nodes, or null otherwise
@@ -490,7 +590,7 @@ export class ElementHandle<
 
   /**
    * This method scrolls element into view if needed, and then
-   * uses {@link Page.mouse} to hover over the center of the element.
+   * uses {@link Page} to hover over the center of the element.
    * If the element is detached from DOM, the method throws an error.
    */
   async hover(this: ElementHandle<Element>): Promise<void> {
@@ -499,7 +599,7 @@ export class ElementHandle<
 
   /**
    * This method scrolls element into view if needed, and then
-   * uses {@link Page.mouse} to click in the center of the element.
+   * uses {@link Page | Page.mouse} to click in the center of the element.
    * If the element is detached from DOM, the method throws an error.
    */
   async click(
@@ -588,18 +688,19 @@ export class ElementHandle<
   }
 
   /**
-   * This method expects `elementHandle` to point to an
-   * {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input | input element}.
+   * Sets the value of an
+   * {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input | input element}
+   * to the given file paths.
    *
-   * @param filePaths - Sets the value of the file input to these paths.
-   * If a path is relative, then it is resolved against the
+   * @remarks This will not validate whether the file paths exists. Also, if a
+   * path is relative, then it is resolved against the
    * {@link https://nodejs.org/api/process.html#process_process_cwd | current working directory}.
-   * Note for locals script connecting to remote chrome environments,
-   * paths must be absolute.
+   * For locals script connecting to remote chrome environments, paths must be
+   * absolute.
    */
   async uploadFile(
     this: ElementHandle<HTMLInputElement>,
-    ...filePaths: string[]
+    ...paths: string[]
   ): Promise<void>;
   async uploadFile(this: ElementHandle<HTMLInputElement>): Promise<void> {
     throw new Error('Not implemented');
@@ -655,6 +756,8 @@ export class ElementHandle<
    * await elementHandle.type('some text');
    * await elementHandle.press('Enter');
    * ```
+   *
+   * @param options - Delay in milliseconds. Defaults to 0.
    */
   async type(text: string, options?: {delay: number}): Promise<void>;
   async type(): Promise<void> {
@@ -702,7 +805,7 @@ export class ElementHandle<
 
   /**
    * This method scrolls element into view if needed, and then uses
-   * {@link Page.screenshot} to take a screenshot of the element.
+   * {@link Page.(screenshot:3) } to take a screenshot of the element.
    * If the element is detached from DOM, the method throws an error.
    */
   async screenshot(
@@ -714,15 +817,101 @@ export class ElementHandle<
   }
 
   /**
-   * Resolves to true if the element is visible in the current viewport.
+   * @internal
+   */
+  protected async assertConnectedElement(): Promise<void> {
+    const error = await this.evaluate(
+      async (element): Promise<string | undefined> => {
+        if (!element.isConnected) {
+          return 'Node is detached from document';
+        }
+        if (element.nodeType !== Node.ELEMENT_NODE) {
+          return 'Node is not of type HTMLElement';
+        }
+        return;
+      }
+    );
+
+    if (error) {
+      throw new Error(error);
+    }
+  }
+
+  /**
+   * Resolves to true if the element is visible in the current viewport. If an
+   * element is an SVG, we check if the svg owner element is in the viewport
+   * instead. See https://crbug.com/963246.
+   *
+   * @param options - Threshold for the intersection between 0 (no intersection) and 1
+   * (full intersection). Defaults to 1.
    */
   async isIntersectingViewport(
     this: ElementHandle<Element>,
     options?: {
       threshold?: number;
     }
-  ): Promise<boolean>;
-  async isIntersectingViewport(): Promise<boolean> {
+  ): Promise<boolean> {
+    await this.assertConnectedElement();
+
+    const {threshold = 0} = options ?? {};
+    const svgHandle = await this.#asSVGElementHandle(this);
+    const intersectionTarget: ElementHandle<Element> = svgHandle
+      ? await this.#getOwnerSVGElement(svgHandle)
+      : this;
+
+    try {
+      return await intersectionTarget.evaluate(async (element, threshold) => {
+        const visibleRatio = await new Promise<number>(resolve => {
+          const observer = new IntersectionObserver(entries => {
+            resolve(entries[0]!.intersectionRatio);
+            observer.disconnect();
+          });
+          observer.observe(element);
+        });
+        return threshold === 1 ? visibleRatio === 1 : visibleRatio > threshold;
+      }, threshold);
+    } finally {
+      if (intersectionTarget !== this) {
+        await intersectionTarget.dispose();
+      }
+    }
+  }
+
+  /**
+   * Scrolls the element into view using either the automation protocol client
+   * or by calling element.scrollIntoView.
+   */
+  async scrollIntoView(this: ElementHandle<Element>): Promise<void> {
     throw new Error('Not implemented');
+  }
+
+  /**
+   * Returns true if an element is an SVGElement (included svg, path, rect
+   * etc.).
+   */
+  async #asSVGElementHandle(
+    handle: ElementHandle<Element>
+  ): Promise<ElementHandle<SVGElement> | null> {
+    if (
+      await handle.evaluate(element => {
+        return element instanceof SVGElement;
+      })
+    ) {
+      return handle as ElementHandle<SVGElement>;
+    } else {
+      return null;
+    }
+  }
+
+  async #getOwnerSVGElement(
+    handle: ElementHandle<SVGElement>
+  ): Promise<ElementHandle<SVGSVGElement>> {
+    // SVGSVGElement.ownerSVGElement === null.
+    return await handle.evaluateHandle(element => {
+      if (element instanceof SVGSVGElement) {
+        return element;
+      }
+      return element.ownerSVGElement!;
+    });
   }
 }

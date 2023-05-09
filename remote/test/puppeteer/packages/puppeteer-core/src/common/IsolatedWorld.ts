@@ -16,7 +16,7 @@
 
 import {Protocol} from 'devtools-protocol';
 
-import type {ElementHandle} from '../api/ElementHandle.js';
+import type {ClickOptions, ElementHandle} from '../api/ElementHandle.js';
 import {JSHandle} from '../api/JSHandle.js';
 import {assert} from '../util/assert.js';
 import {createDeferredPromise} from '../util/DeferredPromise.js';
@@ -26,7 +26,6 @@ import {CDPSession} from './Connection.js';
 import {ExecutionContext} from './ExecutionContext.js';
 import {Frame} from './Frame.js';
 import {FrameManager} from './FrameManager.js';
-import {MouseButton} from './Input.js';
 import {MAIN_WORLD, PUPPETEER_WORLD} from './IsolatedWorlds.js';
 import {LifecycleWatcher, PuppeteerLifeCycleEvent} from './LifecycleWatcher.js';
 import {TimeoutSettings} from './TimeoutSettings.js';
@@ -38,7 +37,12 @@ import {
   InnerLazyParams,
   NodeFor,
 } from './types.js';
-import {addPageBinding, createJSHandle, debugError} from './util.js';
+import {
+  addPageBinding,
+  createJSHandle,
+  debugError,
+  setPageContent,
+} from './util.js';
 import {TaskManager, WaitTask} from './WaitTask.js';
 
 /**
@@ -64,9 +68,13 @@ export interface WaitForSelectorOptions {
    *
    * The default value can be changed by using {@link Page.setDefaultTimeout}
    *
-   * @defaultValue `30000` (30 seconds)
+   * @defaultValue `30_000` (30 seconds)
    */
   timeout?: number;
+  /**
+   * A signal object that allows you to cancel a waitForSelector call.
+   */
+  signal?: AbortSignal;
 }
 
 /**
@@ -141,7 +149,7 @@ export class IsolatedWorld {
   setContext(context: ExecutionContext): void {
     this.#contextBindings.clear();
     this.#context.resolve(context);
-    this.#taskManager.rerunAll();
+    void this.#taskManager.rerunAll();
   }
 
   hasContext(): boolean {
@@ -276,13 +284,9 @@ export class IsolatedWorld {
       waitUntil = ['load'],
       timeout = this.#timeoutSettings.navigationTimeout(),
     } = options;
-    // We rely upon the fact that document.open() will reset frame lifecycle with "init"
-    // lifecycle event. @see https://crrev.com/608658
-    await this.evaluate(html => {
-      document.open();
-      document.write(html);
-      document.close();
-    }, html);
+
+    await setPageContent(this, html);
+
     const watcher = new LifecycleWatcher(
       this.#frameManager,
       this.#frame,
@@ -301,7 +305,7 @@ export class IsolatedWorld {
 
   async click(
     selector: string,
-    options: {delay?: number; button?: MouseButton; clickCount?: number}
+    options: Readonly<ClickOptions> = {}
   ): Promise<void> {
     const handle = await this.$(selector);
     assert(handle, `No element found for selector: ${selector}`);
@@ -430,6 +434,7 @@ export class IsolatedWorld {
       polling?: 'raf' | 'mutation' | number;
       timeout?: number;
       root?: ElementHandle<Node>;
+      signal?: AbortSignal;
     } = {},
     ...args: Params
   ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
@@ -437,6 +442,7 @@ export class IsolatedWorld {
       polling = 'raf',
       timeout = this.#timeoutSettings.timeout(),
       root,
+      signal,
     } = options;
     if (typeof polling === 'number' && polling < 0) {
       throw new Error('Cannot poll with non-positive interval');
@@ -447,6 +453,7 @@ export class IsolatedWorld {
         polling,
         root,
         timeout,
+        signal,
       },
       pageFunction as unknown as
         | ((...args: unknown[]) => Promise<Awaited<ReturnType<Func>>>)

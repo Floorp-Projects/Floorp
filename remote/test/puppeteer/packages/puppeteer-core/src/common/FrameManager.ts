@@ -21,6 +21,7 @@ import {assert} from '../util/assert.js';
 import {isErrorLike} from '../util/ErrorLike.js';
 
 import {CDPSession, isTargetClosedError} from './Connection.js';
+import {DeviceRequestPromptManager} from './DeviceRequestPrompt.js';
 import {EventEmitter} from './EventEmitter.js';
 import {EVALUATION_SCRIPT_URL, ExecutionContext} from './ExecutionContext.js';
 import {Frame} from './Frame.js';
@@ -77,6 +78,11 @@ export class FrameManager extends EventEmitter {
    */
   #frameNavigatedReceived = new Set<string>();
 
+  #deviceRequestPromptManagerMap = new WeakMap<
+    CDPSession,
+    DeviceRequestPromptManager
+  >();
+
   get timeoutSettings(): TimeoutSettings {
     return this.#timeoutSettings;
   }
@@ -109,7 +115,7 @@ export class FrameManager extends EventEmitter {
     });
     session.on('Page.frameNavigated', event => {
       this.#frameNavigatedReceived.add(event.frame.id);
-      this.#onFrameNavigated(event.frame);
+      void this.#onFrameNavigated(event.frame);
     });
     session.on('Page.navigatedWithinDocument', event => {
       this.#onFrameNavigatedWithinDocument(event.frameId, event.url);
@@ -216,7 +222,19 @@ export class FrameManager extends EventEmitter {
       frame.updateClient(target._session()!);
     }
     this.setupEventListeners(target._session()!);
-    this.initialize(target._session());
+    void this.initialize(target._session());
+  }
+
+  /**
+   * @internal
+   */
+  _deviceRequestPromptManager(client: CDPSession): DeviceRequestPromptManager {
+    let manager = this.#deviceRequestPromptManagerMap.get(client);
+    if (manager === undefined) {
+      manager = new DeviceRequestPromptManager(client, this.#timeoutSettings);
+      this.#deviceRequestPromptManagerMap.set(client, manager);
+    }
+    return manager;
   }
 
   #onLifecycleEvent(event: Protocol.Page.LifecycleEventEvent): void {
@@ -257,7 +275,7 @@ export class FrameManager extends EventEmitter {
       );
     }
     if (!this.#frameNavigatedReceived.has(frameTree.frame.id)) {
-      this.#onFrameNavigated(frameTree.frame);
+      void this.#onFrameNavigated(frameTree.frame);
     } else {
       this.#frameNavigatedReceived.delete(frameTree.frame.id);
     }

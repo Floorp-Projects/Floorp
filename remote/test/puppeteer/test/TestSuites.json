@@ -3,31 +3,31 @@
     {
       "id": "chrome-headless",
       "platforms": ["linux", "win32", "darwin"],
-      "parameters": ["chrome", "headless"],
+      "parameters": ["chrome", "headless", "cdp"],
       "expectedLineCoverage": 93
     },
     {
       "id": "chrome-headful",
       "platforms": ["linux"],
-      "parameters": ["chrome", "headful"],
+      "parameters": ["chrome", "headful", "cdp"],
       "expectedLineCoverage": 93
     },
     {
       "id": "chrome-new-headless",
       "platforms": ["linux"],
-      "parameters": ["chrome", "new-headless"],
+      "parameters": ["chrome", "new-headless", "cdp"],
       "expectedLineCoverage": 93
     },
     {
       "id": "firefox-headless",
       "platforms": ["linux", "darwin"],
-      "parameters": ["firefox", "headless"],
+      "parameters": ["firefox", "headless", "cdp"],
       "expectedLineCoverage": 80
     },
     {
       "id": "firefox-headful",
       "platforms": ["linux"],
-      "parameters": ["firefox", "headful"],
+      "parameters": ["firefox", "headful", "cdp"],
       "expectedLineCoverage": 80
     },
     {
@@ -43,7 +43,7 @@
       "expectedLineCoverage": 56
     }
   ],
-  "parameterDefinitons": {
+  "parameterDefinitions": {
     "chrome": {
       "PUPPETEER_PRODUCT": "chrome"
     },
@@ -51,7 +51,8 @@
       "PUPPETEER_PRODUCT": "firefox"
     },
     "headless": {
-      "HEADLESS": "true"
+      "HEADLESS": "true",
+      "PUPPETEER_LOGLEVEL": "silent"
     },
     "headful": {
       "HEADLESS": "false"
@@ -61,6 +62,7 @@
     },
     "webDriverBiDi": {
       "PUPPETEER_PROTOCOL": "webDriverBiDi"
-    }
+    },
+    "cdp": {}
   }
 }

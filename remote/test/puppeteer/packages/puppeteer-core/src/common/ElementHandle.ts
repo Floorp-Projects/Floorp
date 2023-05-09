@@ -25,7 +25,6 @@ import {
   Point,
   PressOptions,
 } from '../api/ElementHandle.js';
-import {JSHandle} from '../api/JSHandle.js';
 import {Page, ScreenshotOptions} from '../api/Page.js';
 import {assert} from '../util/assert.js';
 import {AsyncIterableUtil} from '../util/AsyncIterableUtil.js';
@@ -36,15 +35,11 @@ import {Frame} from './Frame.js';
 import {FrameManager} from './FrameManager.js';
 import {getQueryHandlerAndSelector} from './GetQueryHandler.js';
 import {WaitForSelectorOptions} from './IsolatedWorld.js';
+import {PUPPETEER_WORLD} from './IsolatedWorlds.js';
 import {CDPJSHandle} from './JSHandle.js';
+import {LazyArg} from './LazyArg.js';
 import {CDPPage} from './Page.js';
-import {
-  ElementFor,
-  EvaluateFuncWith,
-  HandleFor,
-  HandleOr,
-  NodeFor,
-} from './types.js';
+import {ElementFor, EvaluateFuncWith, HandleFor, NodeFor} from './types.js';
 import {KeyInput} from './USKeyboardLayout.js';
 import {debugError, isString} from './util.js';
 
@@ -69,15 +64,14 @@ export class CDPElementHandle<
   ElementType extends Node = Element
 > extends ElementHandle<ElementType> {
   #frame: Frame;
-  #jsHandle: CDPJSHandle<ElementType>;
+  declare handle: CDPJSHandle<ElementType>;
 
   constructor(
     context: ExecutionContext,
     remoteObject: Protocol.Runtime.RemoteObject,
     frame: Frame
   ) {
-    super();
-    this.#jsHandle = new CDPJSHandle(context, remoteObject);
+    super(new CDPJSHandle(context, remoteObject));
     this.#frame = frame;
   }
 
@@ -85,48 +79,18 @@ export class CDPElementHandle<
    * @internal
    */
   override executionContext(): ExecutionContext {
-    return this.#jsHandle.executionContext();
+    return this.handle.executionContext();
   }
 
   /**
    * @internal
    */
   override get client(): CDPSession {
-    return this.#jsHandle.client;
-  }
-
-  override get id(): string | undefined {
-    return this.#jsHandle.id;
+    return this.handle.client;
   }
 
   override remoteObject(): Protocol.Runtime.RemoteObject {
-    return this.#jsHandle.remoteObject();
-  }
-
-  override async evaluate<
-    Params extends unknown[],
-    Func extends EvaluateFuncWith<ElementType, Params> = EvaluateFuncWith<
-      ElementType,
-      Params
-    >
-  >(
-    pageFunction: Func | string,
-    ...args: Params
-  ): Promise<Awaited<ReturnType<Func>>> {
-    return this.executionContext().evaluate(pageFunction, this, ...args);
-  }
-
-  override evaluateHandle<
-    Params extends unknown[],
-    Func extends EvaluateFuncWith<ElementType, Params> = EvaluateFuncWith<
-      ElementType,
-      Params
-    >
-  >(
-    pageFunction: Func | string,
-    ...args: Params
-  ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
-    return this.executionContext().evaluateHandle(pageFunction, this, ...args);
+    return this.handle.remoteObject();
   }
 
   get #frameManager(): FrameManager {
@@ -139,40 +103,6 @@ export class CDPElementHandle<
 
   override get frame(): Frame {
     return this.#frame;
-  }
-
-  override get disposed(): boolean {
-    return this.#jsHandle.disposed;
-  }
-
-  override async getProperty<K extends keyof ElementType>(
-    propertyName: HandleOr<K>
-  ): Promise<HandleFor<ElementType[K]>>;
-  override async getProperty(propertyName: string): Promise<JSHandle<unknown>>;
-  override async getProperty<K extends keyof ElementType>(
-    propertyName: HandleOr<K>
-  ): Promise<HandleFor<ElementType[K]>> {
-    return this.#jsHandle.getProperty(propertyName);
-  }
-
-  override async getProperties(): Promise<Map<string, JSHandle>> {
-    return this.#jsHandle.getProperties();
-  }
-
-  override asElement(): CDPElementHandle<ElementType> | null {
-    return this;
-  }
-
-  override async jsonValue(): Promise<ElementType> {
-    return this.#jsHandle.jsonValue();
-  }
-
-  override toString(): string {
-    return this.#jsHandle.toString();
-  }
-
-  override async dispose(): Promise<void> {
-    return await this.#jsHandle.dispose();
   }
 
   override async $<Selector extends string>(
@@ -281,6 +211,32 @@ export class CDPElementHandle<
     return this.waitForSelector(`xpath/${xpath}`, options);
   }
 
+  async #checkVisibility(visibility: boolean): Promise<boolean> {
+    const element = await this.frame.worlds[PUPPETEER_WORLD].adoptHandle(this);
+    try {
+      return await this.frame.worlds[PUPPETEER_WORLD].evaluate(
+        async (PuppeteerUtil, element, visibility) => {
+          return Boolean(PuppeteerUtil.checkVisibility(element, visibility));
+        },
+        LazyArg.create(context => {
+          return context.puppeteerUtil;
+        }),
+        element,
+        visibility
+      );
+    } finally {
+      await element.dispose();
+    }
+  }
+
+  override async isVisible(): Promise<boolean> {
+    return this.#checkVisibility(true);
+  }
+
+  override async isHidden(): Promise<boolean> {
+    return this.#checkVisibility(false);
+  }
+
   override async toElement<
     K extends keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap
   >(tagName: K): Promise<HandleFor<ElementFor<K>>> {
@@ -303,56 +259,42 @@ export class CDPElementHandle<
     return this.#frameManager.frame(nodeInfo.node.frameId);
   }
 
-  async #scrollIntoViewIfNeeded(
+  override async scrollIntoView(
     this: CDPElementHandle<Element>
   ): Promise<void> {
-    const error = await this.evaluate(
-      async (element): Promise<string | undefined> => {
-        if (!element.isConnected) {
-          return 'Node is detached from document';
-        }
-        if (element.nodeType !== Node.ELEMENT_NODE) {
-          return 'Node is not of type HTMLElement';
-        }
-        return;
-      }
-    );
-
-    if (error) {
-      throw new Error(error);
-    }
+    await this.assertConnectedElement();
 
     try {
       await this.client.send('DOM.scrollIntoViewIfNeeded', {
         objectId: this.remoteObject().objectId,
       });
-    } catch (_err) {
+    } catch (error) {
+      debugError(error);
       // Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
-      await this.evaluate(
-        async (element, pageJavascriptEnabled): Promise<void> => {
-          const visibleRatio = async () => {
-            return await new Promise(resolve => {
-              const observer = new IntersectionObserver(entries => {
-                resolve(entries[0]!.intersectionRatio);
-                observer.disconnect();
-              });
-              observer.observe(element);
-            });
-          };
-          if (!pageJavascriptEnabled || (await visibleRatio()) !== 1.0) {
-            element.scrollIntoView({
-              block: 'center',
-              inline: 'center',
-              // @ts-expect-error Chrome still supports behavior: instant but
-              // it's not in the spec so TS shouts We don't want to make this
-              // breaking change in Puppeteer yet so we'll ignore the line.
-              behavior: 'instant',
-            });
-          }
-        },
-        this.#page.isJavaScriptEnabled()
-      );
+      await this.evaluate(async (element): Promise<void> => {
+        element.scrollIntoView({
+          block: 'center',
+          inline: 'center',
+          // @ts-expect-error Chrome still supports behavior: instant but
+          // it's not in the spec so TS shouts We don't want to make this
+          // breaking change in Puppeteer yet so we'll ignore the line.
+          behavior: 'instant',
+        });
+      });
     }
+  }
+
+  async #scrollIntoViewIfNeeded(
+    this: CDPElementHandle<Element>
+  ): Promise<void> {
+    if (
+      await this.isIntersectingViewport({
+        threshold: 1,
+      })
+    ) {
+      return;
+    }
+    await this.scrollIntoView();
   }
 
   async #getOOPIFOffsets(
@@ -503,7 +445,7 @@ export class CDPElementHandle<
    */
   override async click(
     this: CDPElementHandle<Element>,
-    options: ClickOptions = {}
+    options: Readonly<ClickOptions> = {}
   ): Promise<void> {
     await this.#scrollIntoViewIfNeeded();
     const {x, y} = await this.clickablePoint(options.offset);
@@ -818,25 +760,6 @@ export class CDPElementHandle<
     }
 
     return imageData;
-  }
-
-  override async isIntersectingViewport(
-    this: CDPElementHandle<Element>,
-    options?: {
-      threshold?: number;
-    }
-  ): Promise<boolean> {
-    const {threshold = 0} = options ?? {};
-    return await this.evaluate(async (element, threshold) => {
-      const visibleRatio = await new Promise<number>(resolve => {
-        const observer = new IntersectionObserver(entries => {
-          resolve(entries[0]!.intersectionRatio);
-          observer.disconnect();
-        });
-        observer.observe(element);
-      });
-      return threshold === 1 ? visibleRatio === 1 : visibleRatio > threshold;
-    }, threshold);
   }
 }
 

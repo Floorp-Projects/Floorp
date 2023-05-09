@@ -17,7 +17,7 @@
 import Mocha from 'mocha';
 import commonInterface from 'mocha/lib/interfaces/common';
 
-import {getTestId} from './utils.js';
+import {testIdMatchesExpectationPattern} from './utils.js';
 
 type SuiteFunction = ((this: Mocha.Suite) => void) | undefined;
 type ExclusiveSuiteFunction = (this: Mocha.Suite) => void;
@@ -28,18 +28,10 @@ const skippedTests: Array<{testIdPattern: string; skip: true}> = process.env[
   ? JSON.parse(process.env['PUPPETEER_SKIPPED_TEST_CONFIG'])
   : [];
 
-skippedTests.reverse();
-
 function shouldSkipTest(test: Mocha.Test): boolean {
-  const testIdForFileName = getTestId(test.file!);
-  const testIdForTestName = getTestId(test.file!, test.fullTitle());
   // TODO: more efficient lookup.
   const definition = skippedTests.find(skippedTest => {
-    return (
-      '' === skippedTest.testIdPattern ||
-      testIdForFileName === skippedTest.testIdPattern ||
-      testIdForTestName === skippedTest.testIdPattern
-    );
+    return testIdMatchesExpectationPattern(test, skippedTest.testIdPattern);
   });
   if (definition && definition.skip) {
     return true;
@@ -74,6 +66,7 @@ function customBDDInterface(suite: Mocha.Suite) {
           title: title,
           file: file,
           fn: fn,
+          isOnly: true,
         });
       };
 
@@ -89,12 +82,21 @@ function customBDDInterface(suite: Mocha.Suite) {
       // @ts-ignore
       context['describe'] = describe;
 
-      function it(title: string, fn: Mocha.TestFunction) {
+      function it(title: string, fn: Mocha.TestFunction, itOnly = false) {
         const suite = suites[0]!;
         const test = new Mocha.Test(title, suite.isPending() ? undefined : fn);
         test.file = file;
         test.parent = suite;
-        if (shouldSkipTest(test)) {
+
+        const describeOnly = Boolean(
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          suite.parent?._onlySuites.find(child => {
+            return child === suite;
+          })
+        );
+
+        if (shouldSkipTest(test) && !(itOnly || describeOnly)) {
           const test = new Mocha.Test(title);
           test.file = file;
           suite.addTest(test);
@@ -106,7 +108,10 @@ function customBDDInterface(suite: Mocha.Suite) {
       }
 
       it.only = function (title: string, fn: Mocha.TestFunction) {
-        return common.test.only(mocha, context['it'](title, fn));
+        return common.test.only(
+          mocha,
+          (context['it'] as typeof it)(title, fn, true)
+        );
       };
 
       it.skip = function (title: string) {

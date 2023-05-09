@@ -16,16 +16,20 @@
 
 import {Protocol} from 'devtools-protocol';
 
-import {ElementHandle} from '../api/ElementHandle.js';
-import {Page} from '../api/Page.js';
+import {type ClickOptions, ElementHandle} from '../api/ElementHandle.js';
+import {HTTPResponse} from '../api/HTTPResponse.js';
+import {Page, WaitTimeoutOptions} from '../api/Page.js';
+import {assert} from '../util/assert.js';
 import {isErrorLike} from '../util/ErrorLike.js';
 
 import {CDPSession} from './Connection.js';
+import {
+  DeviceRequestPrompt,
+  DeviceRequestPromptManager,
+} from './DeviceRequestPrompt.js';
 import {ExecutionContext} from './ExecutionContext.js';
 import {FrameManager} from './FrameManager.js';
 import {getQueryHandlerAndSelector} from './GetQueryHandler.js';
-import {HTTPResponse} from './HTTPResponse.js';
-import {MouseButton} from './Input.js';
 import {
   IsolatedWorld,
   IsolatedWorldChart,
@@ -35,7 +39,7 @@ import {MAIN_WORLD, PUPPETEER_WORLD} from './IsolatedWorlds.js';
 import {LazyArg} from './LazyArg.js';
 import {LifecycleWatcher, PuppeteerLifeCycleEvent} from './LifecycleWatcher.js';
 import {EvaluateFunc, EvaluateFuncWith, HandleFor, NodeFor} from './types.js';
-import {importFS} from './util.js';
+import {importFSPromises} from './util.js';
 
 /**
  * @public
@@ -60,6 +64,10 @@ export interface FrameWaitForFunctionOptions {
    * using {@link Page.setDefaultTimeout}.
    */
   timeout?: number;
+  /**
+   * A signal object that allows you to cancel a waitForFunction call.
+   */
+  signal?: AbortSignal;
 }
 
 /**
@@ -236,14 +244,14 @@ export class Frame {
   }
 
   /**
-   * @returns The page associated with the frame.
+   * The page associated with the frame.
    */
   page(): Page {
     return this._frameManager.page();
   }
 
   /**
-   * @returns `true` if the frame is an out-of-process (OOP) frame. Otherwise,
+   * Is `true` if the frame is an out-of-process (OOP) frame. Otherwise,
    * `false`.
    */
   isOOPFrame(): boolean {
@@ -709,7 +717,7 @@ export class Frame {
   }
 
   /**
-   * @returns The full HTML contents of the frame, including the DOCTYPE.
+   * The full HTML contents of the frame, including the DOCTYPE.
    */
   async content(): Promise<string> {
     return this.worlds[PUPPETEER_WORLD].content();
@@ -733,7 +741,7 @@ export class Frame {
   }
 
   /**
-   * @returns The frame's `name` attribute as specified in the tag.
+   * The frame's `name` attribute as specified in the tag.
    *
    * @remarks
    * If the name is empty, it returns the `id` attribute instead.
@@ -747,28 +755,28 @@ export class Frame {
   }
 
   /**
-   * @returns The frame's URL.
+   * The frame's URL.
    */
   url(): string {
     return this.#url;
   }
 
   /**
-   * @returns The parent frame, if any. Detached and main frames return `null`.
+   * The parent frame, if any. Detached and main frames return `null`.
    */
   parentFrame(): Frame | null {
     return this._frameManager._frameTree.parentFrame(this._id) || null;
   }
 
   /**
-   * @returns An array of child frames.
+   * An array of child frames.
    */
   childFrames(): Frame[] {
     return this._frameManager._frameTree.childFrames(this._id);
   }
 
   /**
-   * @returns `true` if the frame has been detached. Otherwise, `false`.
+   * Is`true` if the frame has been detached. Otherwise, `false`.
    */
   isDetached(): boolean {
     return this.#detached;
@@ -793,17 +801,7 @@ export class Frame {
     }
 
     if (path) {
-      let fs;
-      try {
-        fs = (await import('fs')).promises;
-      } catch (error) {
-        if (error instanceof TypeError) {
-          throw new Error(
-            'Can only pass a file path in a Node-like environment.'
-          );
-        }
-        throw error;
-      }
+      const fs = await importFSPromises();
       content = await fs.readFile(path, 'utf8');
       content += `//# sourceURL=${path.replace(/\n/g, '')}`;
     }
@@ -878,17 +876,7 @@ export class Frame {
     }
 
     if (path) {
-      let fs: typeof import('fs').promises;
-      try {
-        fs = (await importFS()).promises;
-      } catch (error) {
-        if (error instanceof TypeError) {
-          throw new Error(
-            'Can only pass a file path in a Node-like environment.'
-          );
-        }
-        throw error;
-      }
+      const fs = await importFSPromises();
 
       content = await fs.readFile(path, 'utf8');
       content += '/*# sourceURL=' + path.replace(/\n/g, '') + '*/';
@@ -959,11 +947,7 @@ export class Frame {
    */
   async click(
     selector: string,
-    options: {
-      delay?: number;
-      button?: MouseButton;
-      clickCount?: number;
-    } = {}
+    options: Readonly<ClickOptions> = {}
   ): Promise<void> {
     return this.worlds[PUPPETEER_WORLD].click(selector, options);
   }
@@ -1077,10 +1061,51 @@ export class Frame {
   }
 
   /**
-   * @returns the frame's title.
+   * The frame's title.
    */
   async title(): Promise<string> {
     return this.worlds[PUPPETEER_WORLD].title();
+  }
+
+  /**
+   * @internal
+   */
+  _deviceRequestPromptManager(): DeviceRequestPromptManager {
+    if (this.isOOPFrame()) {
+      return this._frameManager._deviceRequestPromptManager(this.#client);
+    }
+    const parentFrame = this.parentFrame();
+    assert(parentFrame !== null);
+    return parentFrame._deviceRequestPromptManager();
+  }
+
+  /**
+   * This method is typically coupled with an action that triggers a device
+   * request from an api such as WebBluetooth.
+   *
+   * :::caution
+   *
+   * This must be called before the device request is made. It will not return a
+   * currently active device prompt.
+   *
+   * :::
+   *
+   * @example
+   *
+   * ```ts
+   * const [devicePrompt] = Promise.all([
+   *   frame.waitForDevicePrompt(),
+   *   frame.click('#connect-bluetooth'),
+   * ]);
+   * await devicePrompt.select(
+   *   await devicePrompt.waitForDevice(({name}) => name.includes('My Device'))
+   * );
+   * ```
+   */
+  waitForDevicePrompt(
+    options: WaitTimeoutOptions = {}
+  ): Promise<DeviceRequestPrompt> {
+    return this._deviceRequestPromptManager().waitForDevicePrompt(options);
   }
 
   /**

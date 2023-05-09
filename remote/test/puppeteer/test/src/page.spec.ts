@@ -30,7 +30,7 @@ import {
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
 } from './mocha-utils.js';
-import utils, {attachFrame, waitEvent} from './utils.js';
+import {attachFrame, detachFrame, waitEvent} from './utils.js';
 
 describe('Page', function () {
   setupTestBrowserHooks();
@@ -124,10 +124,7 @@ describe('Page', function () {
     it('should fire when expected', async () => {
       const {page} = getTestState();
 
-      await Promise.all([
-        page.goto('about:blank'),
-        utils.waitEvent(page, 'load'),
-      ]);
+      await Promise.all([page.goto('about:blank'), waitEvent(page, 'load')]);
     });
   });
 
@@ -188,16 +185,16 @@ describe('Page', function () {
     it('should throw when page crashes', async () => {
       const {page, isChrome} = getTestState();
 
-      let error!: Error;
-      page.on('error', err => {
-        return (error = err);
-      });
+      let navigate: Promise<unknown>;
       if (isChrome) {
-        page.goto('chrome://crash').catch(() => {});
+        navigate = page.goto('chrome://crash').catch(() => {});
       } else {
-        page.goto('about:crashcontent').catch(() => {});
+        navigate = page.goto('about:crashcontent').catch(() => {});
       }
-      await waitEvent(page, 'error');
+      const [error] = await Promise.all([
+        waitEvent<Error>(page, 'error'),
+        navigate,
+      ]);
       expect(error.message).toBe('Page crashed!');
     });
   });
@@ -207,9 +204,7 @@ describe('Page', function () {
       const {page} = getTestState();
 
       const [popup] = await Promise.all([
-        new Promise<Page>(x => {
-          return page.once('popup', x);
-        }),
+        waitEvent<Page>(page, 'popup'),
         page.evaluate(() => {
           return window.open('about:blank');
         }),
@@ -229,9 +224,7 @@ describe('Page', function () {
       const {page} = getTestState();
 
       const [popup] = await Promise.all([
-        new Promise<Page>(x => {
-          return page.once('popup', x);
-        }),
+        waitEvent<Page>(page, 'popup'),
         page.evaluate(() => {
           return window.open('about:blank', undefined, 'noopener');
         }),
@@ -253,9 +246,7 @@ describe('Page', function () {
       await page.goto(server.EMPTY_PAGE);
       await page.setContent('<a target=_blank href="/one-style.html">yo</a>');
       const [popup] = await Promise.all([
-        new Promise<Page>(x => {
-          return page.once('popup', x);
-        }),
+        waitEvent<Page>(page, 'popup'),
         page.click('a'),
       ]);
       expect(
@@ -277,9 +268,7 @@ describe('Page', function () {
         '<a target=_blank rel=opener href="/one-style.html">yo</a>'
       );
       const [popup] = await Promise.all([
-        new Promise<Page>(x => {
-          return page.once('popup', x);
-        }),
+        waitEvent<Page>(page, 'popup'),
         page.click('a'),
       ]);
       expect(
@@ -301,9 +290,7 @@ describe('Page', function () {
         '<a target=_blank rel=noopener href="/one-style.html">yo</a>'
       );
       const [popup] = await Promise.all([
-        new Promise<Page>(x => {
-          return page.once('popup', x);
-        }),
+        waitEvent<Page>(page, 'popup'),
         page.$eval('a', a => {
           return (a as HTMLAnchorElement).click();
         }),
@@ -327,9 +314,7 @@ describe('Page', function () {
         '<a target=_blank rel=noopener href="/one-style.html">yo</a>'
       );
       const [popup] = await Promise.all([
-        new Promise<Page>(x => {
-          return page.once('popup', x);
-        }),
+        waitEvent<Page>(page, 'popup'),
         page.click('a'),
       ]);
       expect(
@@ -645,15 +630,11 @@ describe('Page', function () {
     it('should work', async () => {
       const {page} = getTestState();
 
-      let message!: ConsoleMessage;
-      page.once('console', m => {
-        return (message = m);
-      });
-      await Promise.all([
+      const [message] = await Promise.all([
+        waitEvent<ConsoleMessage>(page, 'console'),
         page.evaluate(() => {
           return console.log('hello', 5, {foo: 'bar'});
         }),
-        waitEvent(page, 'console'),
       ]);
       expect(message.text()).toEqual('hello 5 JSHandle@object');
       expect(message.type()).toEqual('log');
@@ -723,15 +704,11 @@ describe('Page', function () {
     it('should not fail for window object', async () => {
       const {page} = getTestState();
 
-      let message!: ConsoleMessage;
-      page.once('console', msg => {
-        return (message = msg);
-      });
-      await Promise.all([
+      const [message] = await Promise.all([
+        waitEvent<ConsoleMessage>(page, 'console'),
         page.evaluate(() => {
           return console.error(window);
         }),
-        waitEvent(page, 'console'),
       ]);
       expect(message.text()).toBe('JSHandle@object');
     });
@@ -857,11 +834,11 @@ describe('Page', function () {
     it('metrics event fired on console.timeStamp', async () => {
       const {page} = getTestState();
 
-      const metricsPromise = new Promise<{metrics: Metrics; title: string}>(
-        fulfill => {
-          return page.once('metrics', fulfill);
-        }
+      const metricsPromise = waitEvent<{metrics: Metrics; title: string}>(
+        page,
+        'metrics'
       );
+
       await page.evaluate(() => {
         return console.timeStamp('test42');
       });
@@ -902,9 +879,9 @@ describe('Page', function () {
       const [request] = await Promise.all([
         page.waitForRequest(server.PREFIX + '/digits/2.png'),
         page.evaluate(() => {
-          fetch('/digits/1.png');
-          fetch('/digits/2.png');
-          fetch('/digits/3.png');
+          void fetch('/digits/1.png');
+          void fetch('/digits/2.png');
+          void fetch('/digits/3.png');
         }),
       ]);
       expect(request.url()).toBe(server.PREFIX + '/digits/2.png');
@@ -918,9 +895,9 @@ describe('Page', function () {
           return request.url() === server.PREFIX + '/digits/2.png';
         }),
         page.evaluate(() => {
-          fetch('/digits/1.png');
-          fetch('/digits/2.png');
-          fetch('/digits/3.png');
+          void fetch('/digits/1.png');
+          void fetch('/digits/2.png');
+          void fetch('/digits/3.png');
         }),
       ]);
       expect(request.url()).toBe(server.PREFIX + '/digits/2.png');
@@ -934,9 +911,9 @@ describe('Page', function () {
           return request.url() === server.PREFIX + '/digits/2.png';
         }),
         page.evaluate(() => {
-          fetch('/digits/1.png');
-          fetch('/digits/2.png');
-          fetch('/digits/3.png');
+          void fetch('/digits/1.png');
+          void fetch('/digits/2.png');
+          void fetch('/digits/3.png');
         }),
       ]);
       expect(request.url()).toBe(server.PREFIX + '/digits/2.png');
@@ -979,9 +956,9 @@ describe('Page', function () {
         page.waitForRequest(server.PREFIX + '/digits/2.png', {timeout: 0}),
         page.evaluate(() => {
           return setTimeout(() => {
-            fetch('/digits/1.png');
-            fetch('/digits/2.png');
-            fetch('/digits/3.png');
+            void fetch('/digits/1.png');
+            void fetch('/digits/2.png');
+            void fetch('/digits/3.png');
           }, 50);
         }),
       ]);
@@ -997,9 +974,9 @@ describe('Page', function () {
       const [response] = await Promise.all([
         page.waitForResponse(server.PREFIX + '/digits/2.png'),
         page.evaluate(() => {
-          fetch('/digits/1.png');
-          fetch('/digits/2.png');
-          fetch('/digits/3.png');
+          void fetch('/digits/1.png');
+          void fetch('/digits/2.png');
+          void fetch('/digits/3.png');
         }),
       ]);
       expect(response.url()).toBe(server.PREFIX + '/digits/2.png');
@@ -1043,9 +1020,9 @@ describe('Page', function () {
           return response.url() === server.PREFIX + '/digits/2.png';
         }),
         page.evaluate(() => {
-          fetch('/digits/1.png');
-          fetch('/digits/2.png');
-          fetch('/digits/3.png');
+          void fetch('/digits/1.png');
+          void fetch('/digits/2.png');
+          void fetch('/digits/3.png');
         }),
       ]);
       expect(response.url()).toBe(server.PREFIX + '/digits/2.png');
@@ -1058,9 +1035,9 @@ describe('Page', function () {
           return response.url() === server.PREFIX + '/digits/2.png';
         }),
         page.evaluate(() => {
-          fetch('/digits/1.png');
-          fetch('/digits/2.png');
-          fetch('/digits/3.png');
+          void fetch('/digits/1.png');
+          void fetch('/digits/2.png');
+          void fetch('/digits/3.png');
         }),
       ]);
       expect(response.url()).toBe(server.PREFIX + '/digits/2.png');
@@ -1073,9 +1050,9 @@ describe('Page', function () {
         page.waitForResponse(server.PREFIX + '/digits/2.png', {timeout: 0}),
         page.evaluate(() => {
           return setTimeout(() => {
-            fetch('/digits/1.png');
-            fetch('/digits/2.png');
-            fetch('/digits/3.png');
+            void fetch('/digits/1.png');
+            void fetch('/digits/2.png');
+            void fetch('/digits/3.png');
           }, 50);
         }),
       ]);
@@ -1158,13 +1135,28 @@ describe('Page', function () {
         page.waitForNetworkIdle({timeout: 0}),
         page.evaluate(() => {
           return setTimeout(() => {
-            fetch('/digits/1.png');
-            fetch('/digits/2.png');
-            fetch('/digits/3.png');
+            void fetch('/digits/1.png');
+            void fetch('/digits/2.png');
+            void fetch('/digits/3.png');
           }, 50);
         }),
       ]);
       expect(result).toBe(undefined);
+    });
+    it('should work with aborted requests', async () => {
+      const {page, server} = getTestState();
+
+      await page.goto(server.PREFIX + '/abort-request.html');
+
+      const element = await page.$(`#abort`);
+      await element!.click();
+
+      let error = false;
+      await page.waitForNetworkIdle().catch(() => {
+        return (error = true);
+      });
+
+      expect(error).toBe(false);
     });
   });
 
@@ -1284,11 +1276,11 @@ describe('Page', function () {
       const {page, server} = getTestState();
 
       await page.goto(server.EMPTY_PAGE);
-      await utils.attachFrame(page, 'frame1', server.EMPTY_PAGE);
+      await attachFrame(page, 'frame1', server.EMPTY_PAGE);
       await page.exposeFunction('compute', function (a: number, b: number) {
         return Promise.resolve(a * b);
       });
-      await utils.detachFrame(page, 'frame1');
+      await detachFrame(page, 'frame1');
 
       await expect(
         page.evaluate(async function () {
@@ -1330,13 +1322,9 @@ describe('Page', function () {
     it('should fire', async () => {
       const {page, server} = getTestState();
 
-      let error!: Error;
-      page.once('pageerror', e => {
-        return (error = e);
-      });
-      await Promise.all([
+      const [error] = await Promise.all([
+        waitEvent<Error>(page, 'pageerror'),
         page.goto(server.PREFIX + '/error.html'),
-        waitEvent(page, 'pageerror'),
       ]);
       expect(error.message).toContain('Fancy');
     });
@@ -1369,7 +1357,7 @@ describe('Page', function () {
       await page.setUserAgent('foobar');
       const [request] = await Promise.all([
         server.waitForRequest('/empty.html'),
-        utils.attachFrame(page, 'frame1', server.EMPTY_PAGE),
+        attachFrame(page, 'frame1', server.EMPTY_PAGE),
       ]);
       expect(request.headers['user-agent']).toBe('foobar');
     });
@@ -2039,28 +2027,19 @@ describe('Page', function () {
     });
   });
 
-  describe('printing to PDF', function () {
+  describe('Page.pdf', function () {
     it('can print to PDF and save to file', async () => {
-      // Printing to pdf is currently only supported in headless
-      const {isHeadless, page} = getTestState();
-
-      if (!isHeadless) {
-        return;
-      }
+      const {page, server} = getTestState();
 
       const outputFile = __dirname + '/../assets/output.pdf';
+      await page.goto(server.PREFIX + '/pdf.html');
       await page.pdf({path: outputFile});
       expect(fs.readFileSync(outputFile).byteLength).toBeGreaterThan(0);
       fs.unlinkSync(outputFile);
     });
 
     it('can print to PDF and stream the result', async () => {
-      // Printing to pdf is currently only supported in headless
-      const {isHeadless, page} = getTestState();
-
-      if (!isHeadless) {
-        return;
-      }
+      const {page} = getTestState();
 
       const stream = await page.createPDFStream();
       let size = 0;
@@ -2071,10 +2050,7 @@ describe('Page', function () {
     });
 
     it('should respect timeout', async () => {
-      const {isHeadless, page, server} = getTestState();
-      if (!isHeadless) {
-        return;
-      }
+      const {page, server} = getTestState();
 
       await page.goto(server.PREFIX + '/pdf.html');
 
@@ -2220,7 +2196,7 @@ describe('Page', function () {
         'black',
         'magenta'
       );
-      expect(result.length).toEqual(1);
+      expect(result).toHaveLength(1);
     });
     it('should return [] on no values', async () => {
       const {page, server} = getTestState();
@@ -2313,9 +2289,7 @@ describe('Page', function () {
         return ((window as any)['newPage'] = window.open('about:blank'));
       });
       const newPage = await newPagePromise;
-      const closedPromise = new Promise(x => {
-        return newPage.on('close', x);
-      });
+      const closedPromise = waitEvent(newPage, 'close');
       await page.evaluate(() => {
         return (window as any)['newPage'].close();
       });
@@ -2325,9 +2299,7 @@ describe('Page', function () {
       const {context} = getTestState();
 
       const newPage = await context.newPage();
-      const closedPromise = new Promise(x => {
-        return newPage.on('close', x);
-      });
+      const closedPromise = waitEvent(newPage, 'close');
       await newPage.close();
       await closedPromise;
     });

@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 
 import {TestServer} from '@pptr/testserver';
 import {Protocol} from 'devtools-protocol';
 import expect from 'expect';
 import * as Mocha from 'mocha';
+import puppeteer from 'puppeteer/lib/cjs/puppeteer/puppeteer.js';
 import {Browser} from 'puppeteer-core/internal/api/Browser.js';
 import {BrowserContext} from 'puppeteer-core/internal/api/BrowserContext.js';
 import {Page} from 'puppeteer-core/internal/api/Page.js';
@@ -32,9 +33,8 @@ import {
   PuppeteerLaunchOptions,
   PuppeteerNode,
 } from 'puppeteer-core/internal/node/PuppeteerNode.js';
+import {rmSync} from 'puppeteer-core/internal/node/util/fs.js';
 import {isErrorLike} from 'puppeteer-core/internal/util/ErrorLike.js';
-import puppeteer from 'puppeteer/lib/cjs/puppeteer/puppeteer.js';
-import rimraf from 'rimraf';
 import sinon from 'sinon';
 
 import {extendExpectWithToBeGolden} from './utils.js';
@@ -119,22 +119,12 @@ const defaultBrowserOptions = Object.assign(
   }
 })();
 
-declare module 'expect/build/types' {
-  interface Matchers<R> {
-    toBeGolden(x: string): R;
-  }
-}
-
 const setupGoldenAssertions = (): void => {
-  let suffix = product.toLowerCase();
-  if (suffix === 'chrome') {
-    // TODO: to avoid moving golden folders.
-    suffix = 'chromium';
-  }
+  const suffix = product.toLowerCase();
   const GOLDEN_DIR = path.join(__dirname, `../golden-${suffix}`);
   const OUTPUT_DIR = path.join(__dirname, `../output-${suffix}`);
   if (fs.existsSync(OUTPUT_DIR)) {
-    rimraf.sync(OUTPUT_DIR);
+    rmSync(OUTPUT_DIR);
   }
   extendExpectWithToBeGolden(GOLDEN_DIR, OUTPUT_DIR);
 };

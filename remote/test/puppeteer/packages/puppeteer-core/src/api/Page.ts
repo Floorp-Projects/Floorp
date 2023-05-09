@@ -18,10 +18,13 @@ import type {Readable} from 'stream';
 
 import {Protocol} from 'devtools-protocol';
 
+import type {HTTPRequest} from '../api/HTTPRequest.js';
+import type {HTTPResponse} from '../api/HTTPResponse.js';
 import type {Accessibility} from '../common/Accessibility.js';
 import type {ConsoleMessage} from '../common/ConsoleMessage.js';
 import type {Coverage} from '../common/Coverage.js';
 import {Device} from '../common/Device.js';
+import {DeviceRequestPrompt} from '../common/DeviceRequestPrompt.js';
 import type {Dialog} from '../common/Dialog.js';
 import {EventEmitter, Handler} from '../common/EventEmitter.js';
 import type {FileChooser} from '../common/FileChooser.js';
@@ -31,18 +34,16 @@ import type {
   FrameAddStyleTagOptions,
   FrameWaitForFunctionOptions,
 } from '../common/Frame.js';
-import type {HTTPRequest} from '../common/HTTPRequest.js';
-import type {HTTPResponse} from '../common/HTTPResponse.js';
-import type {
-  Keyboard,
-  Mouse,
-  MouseButton,
-  Touchscreen,
-} from '../common/Input.js';
+import type {Keyboard, Mouse, Touchscreen} from '../common/Input.js';
 import type {WaitForSelectorOptions} from '../common/IsolatedWorld.js';
 import type {PuppeteerLifeCycleEvent} from '../common/LifecycleWatcher.js';
 import type {Credentials, NetworkConditions} from '../common/NetworkManager.js';
-import type {PDFOptions} from '../common/PDFOptions.js';
+import {
+  LowerCasePaperFormat,
+  paperFormats,
+  ParsedPDFOptions,
+  PDFOptions,
+} from '../common/PDFOptions.js';
 import type {Viewport} from '../common/PuppeteerViewport.js';
 import type {Target} from '../common/Target.js';
 import type {Tracing} from '../common/Tracing.js';
@@ -52,11 +53,13 @@ import type {
   HandleFor,
   NodeFor,
 } from '../common/types.js';
+import {importFSPromises, isNumber, isString} from '../common/util.js';
 import type {WebWorker} from '../common/WebWorker.js';
+import {assert} from '../util/assert.js';
 
 import type {Browser} from './Browser.js';
 import type {BrowserContext} from './BrowserContext.js';
-import type {ElementHandle} from './ElementHandle.js';
+import type {ClickOptions, ElementHandle} from './ElementHandle.js';
 import type {JSHandle} from './JSHandle.js';
 
 /**
@@ -145,7 +148,7 @@ export interface ScreenshotClip {
   width: number;
   height: number;
   /**
-   * @defaultValue 1
+   * @defaultValue `1`
    */
   scale?: number;
 }
@@ -208,7 +211,6 @@ export interface ScreenshotOptions {
 export const enum PageEmittedEvents {
   /**
    * Emitted when the page closes.
-   * @eventProperty
    */
   Close = 'close',
   /**
@@ -386,7 +388,7 @@ export interface PageEventObject {
 /**
  * Page provides methods to interact with a single tab or
  * {@link https://developer.chrome.com/extensions/background_pages | extension background page}
- * in Chromium.
+ * in the browser.
  *
  * :::note
  *
@@ -443,14 +445,14 @@ export class Page extends EventEmitter {
   }
 
   /**
-   * @returns `true` if drag events are being intercepted, `false` otherwise.
+   * `true` if drag events are being intercepted, `false` otherwise.
    */
   isDragInterceptionEnabled(): boolean {
     throw new Error('Not implemented');
   }
 
   /**
-   * @returns `true` if the page has JavaScript enabled, `false` otherwise.
+   * `true` if the page has JavaScript enabled, `false` otherwise.
    */
   isJavaScriptEnabled(): boolean {
     throw new Error('Not implemented');
@@ -519,7 +521,7 @@ export class Page extends EventEmitter {
    * :::
    *
    * @remarks
-   * In non-headless Chromium, this method results in the native file picker
+   * In the "headful" browser, this method results in the native file picker
    * dialog `not showing up` for the user.
    *
    * @example
@@ -559,7 +561,7 @@ export class Page extends EventEmitter {
   }
 
   /**
-   * @returns A target this page was created from.
+   * A target this page was created from.
    */
   target(): Target {
     throw new Error('Not implemented');
@@ -580,7 +582,7 @@ export class Page extends EventEmitter {
   }
 
   /**
-   * @returns The page's main frame.
+   * The page's main frame.
    *
    * @remarks
    * Page is guaranteed to have a main frame which persists during navigations.
@@ -589,35 +591,50 @@ export class Page extends EventEmitter {
     throw new Error('Not implemented');
   }
 
+  /**
+   * {@inheritDoc Keyboard}
+   */
   get keyboard(): Keyboard {
     throw new Error('Not implemented');
   }
 
+  /**
+   * {@inheritDoc Touchscreen}
+   */
   get touchscreen(): Touchscreen {
     throw new Error('Not implemented');
   }
 
+  /**
+   * {@inheritDoc Coverage}
+   */
   get coverage(): Coverage {
     throw new Error('Not implemented');
   }
 
+  /**
+   * {@inheritDoc Tracing}
+   */
   get tracing(): Tracing {
     throw new Error('Not implemented');
   }
 
+  /**
+   * {@inheritDoc Accessibility}
+   */
   get accessibility(): Accessibility {
     throw new Error('Not implemented');
   }
 
   /**
-   * @returns An array of all frames attached to the page.
+   * An array of all frames attached to the page.
    */
   frames(): Frame[] {
     throw new Error('Not implemented');
   }
 
   /**
-   * @returns all of the dedicated {@link
+   * All of the dedicated {@link
    * https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API |
    * WebWorkers} associated with the page.
    *
@@ -759,7 +776,7 @@ export class Page extends EventEmitter {
   }
 
   /**
-   * @returns Maximum time in milliseconds.
+   * Maximum time in milliseconds.
    */
   getDefaultTimeout(): number {
     throw new Error('Not implemented');
@@ -1121,7 +1138,7 @@ export class Page extends EventEmitter {
    * a `<style type="text/css">` tag with the content.
    *
    * Shortcut for
-   * {@link Frame.addStyleTag | page.mainFrame().addStyleTag(options)}.
+   * {@link Frame.(addStyleTag:2) | page.mainFrame().addStyleTag(options)}.
    *
    * @returns An {@link ElementHandle | element handle} to the injected `<link>`
    * or `<style>` element.
@@ -1270,7 +1287,9 @@ export class Page extends EventEmitter {
   }
 
   /**
-   * @returns Object containing metrics as key/value pairs.
+   * Object containing metrics as key/value pairs.
+   *
+   * @returns
    *
    * - `Timestamp` : The timestamp when the metrics sample was taken.
    *
@@ -1308,8 +1327,7 @@ export class Page extends EventEmitter {
   }
 
   /**
-   *
-   * @returns
+   * The page's URL.
    * @remarks Shortcut for
    * {@link Frame.url | page.mainFrame().url()}.
    */
@@ -1317,11 +1335,16 @@ export class Page extends EventEmitter {
     throw new Error('Not implemented');
   }
 
+  /**
+   * The full HTML contents of the page, including the DOCTYPE.
+   */
   async content(): Promise<string> {
     throw new Error('Not implemented');
   }
 
   /**
+   * Set the content of the page.
+   *
    * @param html - HTML markup to assign to the page.
    * @param options - Parameters that has some properties.
    * @remarks
@@ -1941,6 +1964,8 @@ export class Page extends EventEmitter {
   }
 
   /**
+   * Current page viewport settings.
+   *
    * @returns
    *
    * - `width`: page's width in pixels
@@ -2068,7 +2093,7 @@ export class Page extends EventEmitter {
    * Toggles ignoring cache for each request based on the enabled state. By
    * default, caching is enabled.
    * @param enabled - sets the `enabled` state of cache
-   * @defaultValue true
+   * @defaultValue `true`
    */
   async setCacheEnabled(enabled?: boolean): Promise<void>;
   async setCacheEnabled(): Promise<void> {
@@ -2076,6 +2101,24 @@ export class Page extends EventEmitter {
   }
 
   /**
+   * @internal
+   */
+  async _maybeWriteBufferToFile(
+    path: string | undefined,
+    buffer: Buffer
+  ): Promise<void> {
+    if (!path) {
+      return;
+    }
+
+    const fs = await importFSPromises();
+
+    await fs.writeFile(path, buffer);
+  }
+
+  /**
+   * Captures screenshot of the current page.
+   *
    * @remarks
    * Options object which might have the following properties:
    *
@@ -2119,8 +2162,6 @@ export class Page extends EventEmitter {
    *   headful mode and ignores page viewport (but not browser window's
    *   bounds). Defaults to `true`.
    *
-   * NOTE: Screenshots take at least 1/6 second on OS X. See
-   * {@link https://crbug.com/741689} for discussion.
    * @returns Promise which resolves to buffer or a base64 string (depending on
    * the value of `encoding`) with captured screenshot.
    */
@@ -2136,10 +2177,63 @@ export class Page extends EventEmitter {
   }
 
   /**
+   * @internal
+   */
+  _getPDFOptions(
+    options: PDFOptions = {},
+    lengthUnit: 'in' | 'cm' = 'in'
+  ): ParsedPDFOptions {
+    const defaults = {
+      scale: 1,
+      displayHeaderFooter: false,
+      headerTemplate: '',
+      footerTemplate: '',
+      printBackground: false,
+      landscape: false,
+      pageRanges: '',
+      preferCSSPageSize: false,
+      omitBackground: false,
+      timeout: 30000,
+    };
+
+    let width = 8.5;
+    let height = 11;
+    if (options.format) {
+      const format =
+        paperFormats[options.format.toLowerCase() as LowerCasePaperFormat];
+      assert(format, 'Unknown paper format: ' + options.format);
+      width = format.width;
+      height = format.height;
+    } else {
+      width = convertPrintParameterToInches(options.width, lengthUnit) ?? width;
+      height =
+        convertPrintParameterToInches(options.height, lengthUnit) ?? height;
+    }
+
+    const margin = {
+      top: convertPrintParameterToInches(options.margin?.top, lengthUnit) || 0,
+      left:
+        convertPrintParameterToInches(options.margin?.left, lengthUnit) || 0,
+      bottom:
+        convertPrintParameterToInches(options.margin?.bottom, lengthUnit) || 0,
+      right:
+        convertPrintParameterToInches(options.margin?.right, lengthUnit) || 0,
+    };
+
+    const output = {
+      ...defaults,
+      ...options,
+      width,
+      height,
+      margin,
+    };
+
+    return output;
+  }
+
+  /**
    * Generates a PDF of the page with the `print` CSS media type.
    * @remarks
-   *
-   * NOTE: PDF generation is only supported in Chrome headless mode.
    *
    * To generate a PDF with the `screen` media type, call
    * {@link Page.emulateMediaType | `page.emulateMediaType('screen')`} before
@@ -2158,8 +2252,7 @@ export class Page extends EventEmitter {
   }
 
   /**
-   * @param options -
-   * @returns
+   * {@inheritDoc Page.createPDFStream}
    */
   async pdf(options?: PDFOptions): Promise<Buffer>;
   async pdf(): Promise<Buffer> {
@@ -2167,7 +2260,8 @@ export class Page extends EventEmitter {
   }
 
   /**
-   * @returns The page's title
+   * The page's title
+   *
    * @remarks
    * Shortcut for {@link Frame.title | page.mainFrame().title()}.
    */
@@ -2188,13 +2282,16 @@ export class Page extends EventEmitter {
     throw new Error('Not implemented');
   }
 
+  /**
+   * {@inheritDoc Mouse}
+   */
   get mouse(): Mouse {
     throw new Error('Not implemented');
   }
 
   /**
    * This method fetches an element with `selector`, scrolls it into view if
-   * needed, and then uses {@link Page.mouse} to click in the center of the
+   * needed, and then uses {@link Page | Page.mouse} to click in the center of the
    * element. If there's no element matching `selector`, the method throws an
    * error.
    * @remarks Bear in mind that if `click()` triggers a navigation event and
@@ -2217,14 +2314,7 @@ export class Page extends EventEmitter {
    * successfully clicked. The Promise will be rejected if there is no element
    * matching `selector`.
    */
-  click(
-    selector: string,
-    options?: {
-      delay?: number;
-      button?: MouseButton;
-      clickCount?: number;
-    }
-  ): Promise<void>;
+  click(selector: string, options?: Readonly<ClickOptions>): Promise<void>;
   click(): Promise<void> {
     throw new Error('Not implemented');
   }
@@ -2249,7 +2339,8 @@ export class Page extends EventEmitter {
 
   /**
    * This method fetches an element with `selector`, scrolls it into view if
-   * needed, and then uses {@link Page.mouse} to hover over the center of the element.
+   * needed, and then uses {@link Page | Page.mouse}
+   * to hover over the center of the element.
    * If there's no element matching `selector`, the method throws an error.
    * @param selector - A
    * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector}
@@ -2296,7 +2387,8 @@ export class Page extends EventEmitter {
 
   /**
    * This method fetches an element with `selector`, scrolls it into view if
-   * needed, and then uses {@link Page.touchscreen} to tap in the center of the element.
+   * needed, and then uses {@link Page | Page.touchscreen}
+   * to tap in the center of the element.
    * If there's no element matching `selector`, the method throws an error.
    * @param selector - A
    * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | Selector}
@@ -2375,6 +2467,7 @@ export class Page extends EventEmitter {
    * the `selector` doesn't appear after the `timeout` milliseconds of waiting, the
    * function will throw.
    *
+   * @example
    * This method works across navigations:
    *
    * ```ts
@@ -2435,6 +2528,7 @@ export class Page extends EventEmitter {
    * the `xpath` doesn't appear after the `timeout` milliseconds of waiting, the
    * function will throw.
    *
+   * @example
    * This method works across navigation
    *
    * ```ts
@@ -2558,6 +2652,36 @@ export class Page extends EventEmitter {
   >(): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
     throw new Error('Not implemented');
   }
+
+  /**
+   * This method is typically coupled with an action that triggers a device
+   * request from an api such as WebBluetooth.
+   *
+   * :::caution
+   *
+   * This must be called before the device request is made. It will not return a
+   * currently active device prompt.
+   *
+   * :::
+   *
+   * @example
+   *
+   * ```ts
+   * const [devicePrompt] = Promise.all([
+   *   page.waitForDevicePrompt(),
+   *   page.click('#connect-bluetooth'),
+   * ]);
+   * await devicePrompt.select(
+   *   await devicePrompt.waitForDevice(({name}) => name.includes('My Device'))
+   * );
+   * ```
+   */
+  waitForDevicePrompt(
+    options?: WaitTimeoutOptions
+  ): Promise<DeviceRequestPrompt>;
+  waitForDevicePrompt(): Promise<DeviceRequestPrompt> {
+    throw new Error('Not implemented');
+  }
 }
 
 /**
@@ -2588,3 +2712,37 @@ export const unitToPixels = {
   cm: 37.8,
   mm: 3.78,
 };
+
+function convertPrintParameterToInches(
+  parameter?: string | number,
+  lengthUnit: 'in' | 'cm' = 'in'
+): number | undefined {
+  if (typeof parameter === 'undefined') {
+    return undefined;
+  }
+  let pixels;
+  if (isNumber(parameter)) {
+    // Treat numbers as pixel values to be aligned with phantom's paperSize.
+    pixels = parameter;
+  } else if (isString(parameter)) {
+    const text = parameter;
+    let unit = text.substring(text.length - 2).toLowerCase();
+    let valueText = '';
+    if (unit in unitToPixels) {
+      valueText = text.substring(0, text.length - 2);
+    } else {
+      // In case of unknown unit try to parse the whole parameter as number of pixels.
+      // This is consistent with phantom's paperSize behavior.
+      unit = 'px';
+      valueText = text;
+    }
+    const value = Number(valueText);
+    assert(!isNaN(value), 'Failed to parse parameter value: ' + text);
+    pixels = value * unitToPixels[unit as keyof typeof unitToPixels];
+  } else {
+    throw new Error(
+      'page.pdf() Cannot handle parameter type: ' + typeof parameter
+    );
+  }
+  return pixels / unitToPixels[lengthUnit];
+}
