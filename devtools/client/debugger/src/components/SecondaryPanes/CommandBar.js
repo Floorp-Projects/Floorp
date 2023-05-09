@@ -174,7 +174,7 @@ class CommandBar extends Component {
         "stepIn",
         className,
         L10N.getFormatStr("stepInTooltip", formatKey("stepIn")),
-        isDisabled || (features.frameStep && !topFrameSelected)
+        isDisabled || !topFrameSelected
       ),
       debugBtn(
         () => this.props.stepOut(),
