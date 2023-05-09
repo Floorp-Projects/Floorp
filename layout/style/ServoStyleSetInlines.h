@@ -13,8 +13,8 @@
 namespace mozilla {
 
 nscoord ServoStyleSet::EvaluateSourceSizeList(
-    const RawServoSourceSizeList* aSourceSizeList) const {
-  return Servo_SourceSizeList_Evaluate(mRawSet.get(), aSourceSizeList);
+    const StyleSourceSizeList* aSourceSizeList) const {
+  return Servo_SourceSizeList_Evaluate(mRawData.get(), aSourceSizeList);
 }
 
 already_AddRefed<ComputedStyle> ServoStyleSet::ResolveServoStyle(

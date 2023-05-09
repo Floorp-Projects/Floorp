@@ -34,7 +34,6 @@
 #  include <atomic>
 
 struct RawServoAnimationValueTable;
-struct RawServoAnimationValueMap;
 
 class nsAtom;
 class nsIFrame;
@@ -203,7 +202,7 @@ using StyleMatrixTransformOperator =
 #  include "mozilla/ServoArcTypeList.h"
 #  undef SERVO_ARC_TYPE
 
-#  define SERVO_BOXED_TYPE(name_, type_) using Style##type_ = type_;
+#  define SERVO_BOXED_TYPE(name_, type_) struct Style##type_;
 #  include "mozilla/ServoBoxedTypeList.h"
 #  undef SERVO_BOXED_TYPE
 

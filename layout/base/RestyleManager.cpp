@@ -3272,7 +3272,7 @@ void RestyleManager::ProcessAllPendingAttributeAndStateInvalidations() {
     // Servo data for the element might have been dropped. (e.g. by removing
     // from its document)
     if (key->HasFlag(ELEMENT_HAS_SNAPSHOT)) {
-      Servo_ProcessInvalidations(StyleSet()->RawSet(), key, &mSnapshots);
+      Servo_ProcessInvalidations(StyleSet()->RawData(), key, &mSnapshots);
     }
   }
   ClearSnapshots();

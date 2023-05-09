@@ -842,8 +842,8 @@ void Animation::CommitStyles(ErrorResult& aRv) {
   }
 
   // Get the computed animation values
-  UniquePtr<RawServoAnimationValueMap> animationValues =
-      Servo_AnimationValueMap_Create().Consume();
+  UniquePtr<StyleAnimationValueMap> animationValues(
+      Servo_AnimationValueMap_Create());
   if (!presContext->EffectCompositor()->ComposeServoAnimationRuleForEffect(
           *keyframeEffect, CascadeLevel(), animationValues.get())) {
     NS_WARNING("Failed to compose animation style to commit");
@@ -1382,7 +1382,7 @@ void Animation::WillComposeStyle() {
   }
 }
 
-void Animation::ComposeStyle(RawServoAnimationValueMap& aComposeResult,
+void Animation::ComposeStyle(StyleAnimationValueMap& aComposeResult,
                              const nsCSSPropertyIDSet& aPropertiesToSkip) {
   if (!mEffect) {
     return;

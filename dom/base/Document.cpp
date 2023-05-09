@@ -1474,7 +1474,7 @@ Document::Document(const char* aContentType)
 
   // Create these unconditionally, they will be used to warn about the `zoom`
   // property, even if use counters are disabled.
-  mStyleUseCounters = Servo_UseCounters_Create().Consume();
+  mStyleUseCounters.reset(Servo_UseCounters_Create());
 
   SetContentType(nsDependentCString(aContentType));
 

@@ -487,7 +487,7 @@ Gecko_GetActiveLinkAttrDeclarationBlock(const Element* aElement) {
 
 bool Gecko_GetAnimationRule(const Element* aElement,
                             EffectCompositor::CascadeLevel aCascadeLevel,
-                            RawServoAnimationValueMap* aAnimationValues) {
+                            StyleAnimationValueMap* aAnimationValues) {
   MOZ_ASSERT(aElement);
 
   Document* doc = aElement->GetComposedDoc();
@@ -1500,8 +1500,8 @@ NS_IMPL_THREADSAFE_FFI_REFCOUNTING(SheetLoadDataHolder, SheetLoadDataHolder);
 void Gecko_StyleSheet_FinishAsyncParse(
     SheetLoadDataHolder* aData,
     StyleStrong<RawServoStyleSheetContents> aSheetContents,
-    StyleOwnedOrNull<StyleUseCounters> aUseCounters) {
-  UniquePtr<StyleUseCounters> useCounters = aUseCounters.Consume();
+    StyleUseCounters* aUseCounters) {
+  UniquePtr<StyleUseCounters> useCounters(aUseCounters);
   RefPtr<SheetLoadDataHolder> loadData = aData;
   RefPtr<RawServoStyleSheetContents> sheetContents = aSheetContents.Consume();
   NS_DispatchToMainThreadQueue(
