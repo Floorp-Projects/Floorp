@@ -9,7 +9,6 @@ export * from "../ui";
 export { onMouseOver } from "./token-events";
 
 import { createEditor } from "./create-editor";
-import { findNext, findPrev } from "./source-search";
 
 import { isWasm, lineToWasmOffset, wasmOffsetToLine } from "../wasm";
 import { createLocation } from "../location";
@@ -49,17 +48,6 @@ export function endOperation() {
   }
 
   codeMirror.endOperation();
-}
-
-export function traverseResults(e, ctx, query, dir, modifiers) {
-  e.stopPropagation();
-  e.preventDefault();
-
-  if (dir == "prev") {
-    findPrev(ctx, query, true, modifiers);
-  } else if (dir == "next") {
-    findNext(ctx, query, true, modifiers);
-  }
 }
 
 export function toEditorLine(sourceId, lineOrOffset) {
