@@ -1694,9 +1694,7 @@ bool nsContentSecurityManager::CrossOriginEmbedderPolicyAllowsCredentials(
   if (loadInfo->GetExternalContentPolicyType() ==
           ExtContentPolicy::TYPE_DOCUMENT ||
       loadInfo->GetExternalContentPolicyType() ==
-          ExtContentPolicy::TYPE_SUBDOCUMENT ||
-      loadInfo->GetExternalContentPolicyType() ==
-          ExtContentPolicy::TYPE_WEBSOCKET) {
+          ExtContentPolicy::TYPE_SUBDOCUMENT) {
     return true;
   }
 
