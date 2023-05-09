@@ -2519,8 +2519,8 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   masm.bind(&matchResultJoin);
 
   MOZ_ASSERT(nativeTemplateObj.numFixedSlots() == 0);
-  // Dynamic slot count is always one less than a power of 2.
-  MOZ_ASSERT(nativeTemplateObj.numDynamicSlots() == 3);
+  // Dynamic slot count is always two less than a power of 2.
+  MOZ_ASSERT(nativeTemplateObj.numDynamicSlots() == 6);
   static_assert(RegExpRealm::MatchResultObjectIndexSlot == 0,
                 "First slot holds the 'index' property");
   static_assert(RegExpRealm::MatchResultObjectInputSlot == 1,

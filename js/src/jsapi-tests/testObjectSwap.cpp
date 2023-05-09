@@ -20,6 +20,7 @@
 #include "jsapi-tests/tests.h"
 #include "vm/PlainObject.h"
 
+#include "gc/Zone-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;
@@ -38,6 +39,7 @@ struct ObjectConfig {
   const JSClass* clasp;
   bool isNative;
   bool nurseryAllocated;
+  bool hasUniqueId;
   union {
     NativeConfig native;
     ProxyConfig proxy;
@@ -106,6 +108,15 @@ BEGIN_TEST(testObjectSwap) {
                   GetLocation(obj1), obj2.get(), GetLocation(obj2));
         }
 
+        uint64_t uid1 = 0;
+        if (config1.hasUniqueId) {
+          uid1 = cx->zone()->getUniqueIdInfallible(obj1);
+        }
+        uint64_t uid2 = 0;
+        if (config2.hasUniqueId) {
+          uid2 = cx->zone()->getUniqueIdInfallible(obj2);
+        }
+
         {
           AutoEnterOOMUnsafeRegion oomUnsafe;
           JSObject::swap(cx, obj1, obj2, oomUnsafe);
@@ -113,6 +124,9 @@ BEGIN_TEST(testObjectSwap) {
 
         CHECK(CheckObject(obj1, config2, id2));
         CHECK(CheckObject(obj2, config1, id1));
+
+        CHECK(CheckUniqueIds(obj1, config1.hasUniqueId, uid1, obj2,
+                             config2.hasUniqueId, uid2));
       }
 
       if (Verbose) {
@@ -131,46 +145,47 @@ ObjectConfigVector CreateObjectConfigs() {
   ObjectConfigVector configs;
 
   ObjectConfig config;
-  config.isNative = true;
-  config.native = NativeConfig{0, false};
 
-  for (const JSClass& jsClass : TestDOMClasses) {
-    config.clasp = &jsClass;
+  for (bool nurseryAllocated : {false, true}) {
+    config.nurseryAllocated = nurseryAllocated;
 
-    for (uint32_t propCount : TestPropertyCounts) {
-      config.native.propCount = propCount;
+    for (bool hasUniqueId : {false, true}) {
+      config.hasUniqueId = hasUniqueId;
 
-      for (uint32_t elementCount : TestElementCounts) {
-        config.native.elementCount = elementCount;
+      config.isNative = true;
+      config.native = NativeConfig{0, false};
 
-        for (bool nurseryAllocated : {false, true}) {
-          config.nurseryAllocated = nurseryAllocated;
+      for (const JSClass& jsClass : TestDOMClasses) {
+        config.clasp = &jsClass;
 
-          for (bool inDictionaryMode : {false, true}) {
-            if (inDictionaryMode && propCount == 0) {
-              continue;
+        for (uint32_t propCount : TestPropertyCounts) {
+          config.native.propCount = propCount;
+
+          for (uint32_t elementCount : TestElementCounts) {
+            config.native.elementCount = elementCount;
+
+            for (bool inDictionaryMode : {false, true}) {
+              if (inDictionaryMode && propCount == 0) {
+                continue;
+              }
+
+              config.native.inDictionaryMode = inDictionaryMode;
+              MOZ_RELEASE_ASSERT(configs.append(config));
             }
-
-            config.native.inDictionaryMode = inDictionaryMode;
-            MOZ_RELEASE_ASSERT(configs.append(config));
           }
         }
       }
-    }
-  }
 
-  config.isNative = false;
-  config.proxy = ProxyConfig{false};
+      config.isNative = false;
+      config.proxy = ProxyConfig{false};
 
-  for (const JSClass& jsClass : TestProxyClasses) {
-    config.clasp = &jsClass;
+      for (const JSClass& jsClass : TestProxyClasses) {
+        config.clasp = &jsClass;
 
-    for (bool nurseryAllocated : {false, true}) {
-      config.nurseryAllocated = nurseryAllocated;
-
-      for (bool inlineValues : {true, false}) {
-        config.proxy.inlineValues = inlineValues;
-        MOZ_RELEASE_ASSERT(configs.append(config));
+        for (bool inlineValues : {true, false}) {
+          config.proxy.inlineValues = inlineValues;
+          MOZ_RELEASE_ASSERT(configs.append(config));
+        }
       }
     }
   }
@@ -187,7 +202,17 @@ uint32_t nextId = 0;
 
 JSObject* CreateObject(const ObjectConfig& config, uint32_t* idOut) {
   *idOut = nextId;
-  return config.isNative ? CreateNativeObject(config) : CreateProxy(config);
+  JSObject* obj =
+      config.isNative ? CreateNativeObject(config) : CreateProxy(config);
+
+  if (config.hasUniqueId) {
+    uint64_t unused;
+    if (!obj->zone()->getOrCreateUniqueId(obj, &unused)) {
+      return nullptr;
+    }
+  }
+
+  return obj;
 }
 
 JSObject* CreateNativeObject(const ObjectConfig& config) {
@@ -361,6 +386,41 @@ bool CheckObject(HandleObject obj, const ObjectConfig& config, uint32_t id) {
     }
   }
 
+  return true;
+}
+
+bool CheckUniqueIds(HandleObject obj1, bool hasUniqueId1, uint64_t uid1,
+                    HandleObject obj2, bool hasUniqueId2, uint64_t uid2) {
+  if (uid1 && uid2) {
+    MOZ_RELEASE_ASSERT(uid1 != uid2);
+  }
+
+  // Check unique IDs are NOT swapped.
+  CHECK(CheckUniqueId(obj1, hasUniqueId1, uid1));
+  CHECK(CheckUniqueId(obj2, hasUniqueId2, uid2));
+
+  // Check unique IDs are different if present.
+  Zone* zone = cx->zone();
+  if (zone->hasUniqueId(obj1) && zone->hasUniqueId(obj2)) {
+    CHECK(zone->getUniqueIdInfallible(obj1) !=
+          zone->getUniqueIdInfallible(obj2));
+  }
+
+  return true;
+}
+
+bool CheckUniqueId(HandleObject obj, bool hasUniqueId, uint64_t uid) {
+  Zone* zone = obj->zone();
+  if (hasUniqueId) {
+    CHECK(zone->hasUniqueId(obj));
+    CHECK(zone->getUniqueIdInfallible(obj) == uid);
+  } else {
+    // Swap may add a unique ID to an object.
+  }
+
+  if (obj->is<NativeObject>()) {
+    CHECK(!zone->uniqueIds().has(obj));
+  }
   return true;
 }
 

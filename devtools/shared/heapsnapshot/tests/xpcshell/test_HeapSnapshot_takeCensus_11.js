@@ -24,12 +24,25 @@ function doLiveAndOfflineCensus(g, dbg, opts) {
   };
 }
 
+function getMarkerSize(g, dbg) {
+  dbg.memory.allocationSamplingProbability = 1;
+  dbg.memory.trackingAllocationSites = true;
+  g.eval("var hold = allocationMarker();");
+  dbg.memory.trackingAllocationSites = false;
+  const live = dbg.memory.takeCensus({
+    breakdown: { by: "objectClass", then: { by: "count" } },
+  });
+  g.hold = null;
+  equal(live.AllocationMarker.count, 1);
+  return live.AllocationMarker.bytes;
+}
+
 function run_test() {
   const g = newGlobal();
   const dbg = new Debugger(g);
 
   g.eval("this.markers = []");
-  const markerSize = byteSize(allocationMarker());
+  const markerSize = getMarkerSize(g, dbg);
 
   // First, test that we get the same counts and sizes as we allocate and retain
   // more things.

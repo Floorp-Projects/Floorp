@@ -69,7 +69,7 @@ HeapSlot* const js::emptyObjectElementsShared = reinterpret_cast<HeapSlot*>(
 
 struct EmptyObjectSlots : public ObjectSlots {
   explicit constexpr EmptyObjectSlots(size_t dictionarySlotSpan)
-      : ObjectSlots(0, dictionarySlotSpan) {}
+      : ObjectSlots(0, dictionarySlotSpan, NoUniqueIdInSharedEmptySlots) {}
 };
 
 static constexpr EmptyObjectSlots emptyObjectSlotsHeaders[17] = {
@@ -229,10 +229,26 @@ mozilla::Maybe<PropertyInfo> js::NativeObject::lookupPure(jsid id) {
   return mozilla::Nothing();
 }
 
+bool NativeObject::setUniqueId(JSContext* cx, uint64_t uid) {
+  MOZ_ASSERT(!hasUniqueId());
+  MOZ_ASSERT(!zone()->hasUniqueId(this));
+
+  return setOrUpdateUniqueId(cx, uid);
+}
+
+bool NativeObject::setOrUpdateUniqueId(JSContext* cx, uint64_t uid) {
+  if (!hasDynamicSlots() && !allocateSlots(cx, 0)) {
+    return false;
+  }
+
+  getSlotsHeader()->setUniqueId(uid);
+
+  return true;
+}
+
 bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
                              uint32_t newCapacity) {
   MOZ_ASSERT(newCapacity > oldCapacity);
-  MOZ_ASSERT_IF(!is<ArrayObject>(), newCapacity >= SLOT_CAPACITY_MIN);
 
   /*
    * Slot capacities are determined by the span of allocated objects. Due to
@@ -245,6 +261,8 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
   if (!hasDynamicSlots()) {
     return allocateSlots(cx, newCapacity);
   }
+
+  uint64_t uid = maybeUniqueId();
 
   uint32_t newAllocated = ObjectSlots::allocCount(newCapacity);
 
@@ -263,7 +281,7 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
   }
 
   auto* newHeaderSlots =
-      new (allocation) ObjectSlots(newCapacity, dictionarySpan);
+      new (allocation) ObjectSlots(newCapacity, dictionarySpan, uid);
   slots_ = newHeaderSlots->slots();
 
   Debug_SetSlotRangeToCrashOnTouch(slots_ + oldCapacity,
@@ -296,14 +314,15 @@ bool NativeObject::allocateInitialSlots(JSContext* cx, uint32_t capacity) {
   uint32_t count = ObjectSlots::allocCount(capacity);
   HeapSlot* allocation = AllocateObjectBuffer<HeapSlot>(cx, this, count);
   if (!allocation) {
-    // The new object will be unreachable, but we still have to make it safe for
-    // finalization. Also we must check for it during GC compartment checks (see
-    // IsPartiallyInitializedObject).
+    // The new object will be unreachable, but we still have to make it safe
+    // for finalization. Also we must check for it during GC compartment
+    // checks (see IsPartiallyInitializedObject).
     initEmptyDynamicSlots();
     return false;
   }
 
-  auto* headerSlots = new (allocation) ObjectSlots(capacity, 0);
+  auto* headerSlots = new (allocation)
+      ObjectSlots(capacity, 0, ObjectSlots::NoUniqueIdInDynamicSlots);
   slots_ = headerSlots->slots();
 
   Debug_SetSlotRangeToCrashOnTouch(slots_, capacity);
@@ -318,6 +337,7 @@ bool NativeObject::allocateInitialSlots(JSContext* cx, uint32_t capacity) {
 }
 
 bool NativeObject::allocateSlots(JSContext* cx, uint32_t newCapacity) {
+  MOZ_ASSERT(!hasUniqueId());
   MOZ_ASSERT(!hasDynamicSlots());
 
   uint32_t newAllocated = ObjectSlots::allocCount(newCapacity);
@@ -329,8 +349,8 @@ bool NativeObject::allocateSlots(JSContext* cx, uint32_t newCapacity) {
     return false;
   }
 
-  auto* newHeaderSlots =
-      new (allocation) ObjectSlots(newCapacity, dictionarySpan);
+  auto* newHeaderSlots = new (allocation) ObjectSlots(
+      newCapacity, dictionarySpan, ObjectSlots::NoUniqueIdInDynamicSlots);
   slots_ = newHeaderSlots->slots();
 
   Debug_SetSlotRangeToCrashOnTouch(slots_, newCapacity);
@@ -396,15 +416,18 @@ static inline void FreeSlots(JSContext* cx, NativeObject* obj,
 
 void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
                                uint32_t newCapacity) {
+  MOZ_ASSERT(hasDynamicSlots());
   MOZ_ASSERT(newCapacity < oldCapacity);
   MOZ_ASSERT(oldCapacity == getSlotsHeader()->capacity());
 
   ObjectSlots* oldHeaderSlots = ObjectSlots::fromSlots(slots_);
   MOZ_ASSERT(oldHeaderSlots->capacity() == oldCapacity);
 
+  uint64_t uid = maybeUniqueId();
+
   uint32_t oldAllocated = ObjectSlots::allocCount(oldCapacity);
 
-  if (newCapacity == 0) {
+  if (newCapacity == 0 && uid == 0) {
     size_t nbytes = ObjectSlots::allocSize(oldCapacity);
     RemoveCellMemory(this, nbytes, MemoryUse::ObjectSlots);
     FreeSlots(cx, this, oldHeaderSlots, nbytes);
@@ -413,7 +436,8 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
     return;
   }
 
-  MOZ_ASSERT_IF(!is<ArrayObject>(), newCapacity >= SLOT_CAPACITY_MIN);
+  MOZ_ASSERT_IF(!is<ArrayObject>() && !hasUniqueId(),
+                newCapacity >= SLOT_CAPACITY_MIN);
 
   uint32_t dictionarySpan = getSlotsHeader()->dictionarySlotSpan();
 
@@ -437,7 +461,7 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
                 MemoryUse::ObjectSlots);
 
   auto* newHeaderSlots =
-      new (allocation) ObjectSlots(newCapacity, dictionarySpan);
+      new (allocation) ObjectSlots(newCapacity, dictionarySpan, uid);
   slots_ = newHeaderSlots->slots();
 }
 

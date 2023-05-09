@@ -40,6 +40,16 @@ extern bool js::IsExtendedPrimitive(const JSObject& obj);
 
 namespace js {
 
+constexpr ObjectSlots::ObjectSlots(uint32_t capacity,
+                                   uint32_t dictionarySlotSpan,
+                                   uint64_t maybeUniqueId)
+    : capacity_(capacity),
+      dictionarySlotSpan_(dictionarySlotSpan),
+      maybeUniqueId_(maybeUniqueId) {
+  MOZ_ASSERT(this->capacity() == capacity);
+  MOZ_ASSERT(this->dictionarySlotSpan() == dictionarySlotSpan);
+}
+
 inline uint32_t NativeObject::numFixedSlotsMaybeForwarded() const {
   return gc::MaybeForwarded(JSObject::shape())->asNative().numFixedSlots();
 }
@@ -515,9 +525,13 @@ MOZ_ALWAYS_INLINE void NativeObject::setEmptyDynamicSlots(
     uint32_t dictionarySlotSpan) {
   MOZ_ASSERT_IF(!inDictionaryMode(), dictionarySlotSpan == 0);
   MOZ_ASSERT(dictionarySlotSpan <= MAX_FIXED_SLOTS);
+
   slots_ = emptyObjectSlotsForDictionaryObject[dictionarySlotSpan];
+
   MOZ_ASSERT(getSlotsHeader()->capacity() == 0);
   MOZ_ASSERT(getSlotsHeader()->dictionarySlotSpan() == dictionarySlotSpan);
+  MOZ_ASSERT(!hasDynamicSlots());
+  MOZ_ASSERT(!hasUniqueId());
 }
 
 MOZ_ALWAYS_INLINE bool NativeObject::setShapeAndAddNewSlots(
