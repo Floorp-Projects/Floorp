@@ -1368,12 +1368,17 @@ class WebConsoleActor extends Actor {
    * @param object debuggerGlobal
    *        A Debugger.Object that wraps a content global. This is used for the
    *        Web Console Commands.
+   * @param string evalInput
+   *        String to evaluate.
+   * @param string selectedNodeActorID
+   *        The Node actor ID of the currently selected DOM Element, if any is selected.
+   *
    * @return object
    *         The same object as |this|, but with an added |sandbox| property.
    *         The sandbox holds methods and properties that can be used as
    *         bindings during JS evaluation.
    */
-  _getWebConsoleCommands(debuggerGlobal) {
+  _getWebConsoleCommands(debuggerGlobal, evalInput, selectedNodeActorID) {
     const helpers = {
       window: this.evalGlobal,
       makeDebuggeeValue: debuggerGlobal.makeDebuggeeValue.bind(debuggerGlobal),
@@ -1382,7 +1387,14 @@ class WebConsoleActor extends Actor {
       sandbox: Object.create(null),
       helperResult: null,
       consoleActor: this,
+      evalInput,
     };
+    if (selectedNodeActorID) {
+      const actor = this.conn.getActor(selectedNodeActorID);
+      if (actor) {
+        helpers.selectedNode = actor.rawNode;
+      }
+    }
     addWebConsoleCommands(helpers);
 
     const evalGlobal = this.evalGlobal;

@@ -125,7 +125,12 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     dbg,
     webConsole
   );
-  const helpers = getHelpers(dbgGlobal, options, webConsole);
+
+  const helpers = webConsole._getWebConsoleCommands(
+    dbgGlobal,
+    string,
+    options.selectedNodeActor
+  );
   let { bindings, helperCache } = bindCommands(
     isCommand(string),
     dbgGlobal,
@@ -138,8 +143,6 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     bindings = { ...(bindings || {}), ...options.bindings };
   }
 
-  // Ready to evaluate the string.
-  helpers.evalInput = string;
   const evalOptions = {};
 
   const urlOption =
@@ -189,6 +192,7 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     );
   }
 
+  // Retrieve the result of commands, if any ran
   const { helperResult } = helpers;
 
   // Clean up helpers helpers and bindings
@@ -673,19 +677,6 @@ function getDbgGlobal(options, dbg, webConsole) {
   // jsVal appropriately for the evaluation compartment.
   const bindSelf = dbgGlobal.makeDebuggeeValue(jsVal);
   return { bindSelf, dbgGlobal, evalGlobal };
-}
-
-function getHelpers(dbgGlobal, options, webConsole) {
-  // Get the Web Console commands for the given debugger global.
-  const helpers = webConsole._getWebConsoleCommands(dbgGlobal);
-  if (options.selectedNodeActor) {
-    const actor = webConsole.conn.getActor(options.selectedNodeActor);
-    if (actor) {
-      helpers.selectedNode = actor.rawNode;
-    }
-  }
-
-  return helpers;
 }
 
 function cleanupBindings(bindings, helperCache) {
