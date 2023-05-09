@@ -130,7 +130,7 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     string,
     options.selectedNodeActor
   );
-  let { bindings, helperCache } = bindCommands(
+  let bindings = bindCommands(
     isCommand(string),
     dbgGlobal,
     bindSelf,
@@ -190,11 +190,6 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
       string
     );
   }
-
-  // Clean up helpers helpers and bindings
-  delete helpers.evalInput;
-  delete helpers.selectedNode;
-  cleanupBindings(bindings, helperCache);
 
   return {
     result,
@@ -675,16 +670,6 @@ function getDbgGlobal(options, dbg, webConsole) {
   return { bindSelf, dbgGlobal, evalGlobal };
 }
 
-function cleanupBindings(bindings, helperCache) {
-  // Replaces bindings that were overwritten with commands saved in the helperCache
-  for (const [helperName, helper] of Object.entries(helperCache)) {
-    bindings[helperName] = helper;
-  }
-
-  if (bindings._self) {
-    delete bindings._self;
-  }
-}
 
 function bindCommands(isCmd, dbgGlobal, bindSelf, frame, bindings) {
   if (bindSelf) {
@@ -696,7 +681,6 @@ function bindCommands(isCmd, dbgGlobal, bindSelf, frame, bindings) {
   const availableCommands = WebConsoleCommandsManager.getAllCommandNames();
 
   let helpersToDisable = [];
-  const helperCache = {};
 
   // do not override command functions if we are using the command key `:`
   // before the command string
@@ -719,8 +703,7 @@ function bindCommands(isCmd, dbgGlobal, bindSelf, frame, bindings) {
   }
 
   for (const helper of helpersToDisable) {
-    helperCache[helper] = bindings[helper];
     delete bindings[helper];
   }
-  return { bindings, helperCache };
+  return bindings;
 }
