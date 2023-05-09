@@ -727,7 +727,8 @@ class alignas(TypicalCacheLineSize) Nursery {
     size_t tenuredBytes;
     size_t tenuredCells;
   };
-  CollectionResult doCollection(JS::GCOptions options, JS::GCReason reason);
+  CollectionResult doCollection(gc::AutoGCSession& session,
+                                JS::GCOptions options, JS::GCReason reason);
   void traceRoots(gc::AutoGCSession& session, TenuringTracer& mover);
 
   size_t doPretenuring(JSRuntime* rt, JS::GCReason reason,

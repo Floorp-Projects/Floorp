@@ -1146,6 +1146,8 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
     return;
   }
 
+  AutoGCSession session(gc, JS::HeapState::MinorCollecting);
+
 #ifdef JS_GC_ZEAL
   if (gc->hasZealMode(ZealMode::CheckNursery)) {
     for (auto canary = lastCanary_; canary; canary = canary->next) {
@@ -1178,7 +1180,7 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   // old empty state.
   bool wasEmpty = isEmpty();
   if (!wasEmpty) {
-    CollectionResult result = doCollection(options, reason);
+    CollectionResult result = doCollection(session, options, reason);
     // Don't include chunk headers when calculating nursery space, since this
     // space does not represent data that can be tenured
     MOZ_ASSERT(result.tenuredBytes <=
@@ -1381,10 +1383,10 @@ void js::Nursery::freeTrailerBlocks(void) {
   mallocedBlockCache_.preen(0.05 * float(capacity() / (1024 * 1024)));
 }
 
-js::Nursery::CollectionResult js::Nursery::doCollection(JS::GCOptions options,
+js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
+                                                        JS::GCOptions options,
                                                         JS::GCReason reason) {
   JSRuntime* rt = runtime();
-  AutoGCSession session(gc, JS::HeapState::MinorCollecting);
   AutoSetThreadIsPerformingGC performingGC(rt->gcContext());
   AutoStopVerifyingBarriers av(rt, false);
   AutoDisableProxyCheck disableStrictProxyChecking;
@@ -1542,7 +1544,6 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
                             reason, JS::GCReason::FULL_CELL_PTR_BIGINT_BUFFER);
   }
 
-  mozilla::Maybe<AutoGCSession> session;
   uint32_t numStringsTenured = 0;
   uint32_t numBigIntsTenured = 0;
   for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
@@ -1564,9 +1565,6 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
     bool disableNurseryBigInts = pretenureBigInt && zone->allocNurseryBigInts &&
                                  zone->tenuredBigInts >= 30 * 1000;
     if (disableNurseryStrings || disableNurseryBigInts) {
-      if (!session.isSome()) {
-        session.emplace(gc, JS::HeapState::MinorCollecting);
-      }
       CancelOffThreadIonCompile(zone);
       bool preserving = zone->isPreservingCode();
       zone->setPreservingCode(false);
@@ -1592,7 +1590,6 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
     numBigIntsTenured += zone->tenuredBigInts;
     zone->tenuredBigInts = 0;
   }
-  session.reset();  // End the minor GC session, if running one.
   stats().setStat(gcstats::STAT_STRINGS_TENURED, numStringsTenured);
   stats().setStat(gcstats::STAT_BIGINTS_TENURED, numBigIntsTenured);
 
