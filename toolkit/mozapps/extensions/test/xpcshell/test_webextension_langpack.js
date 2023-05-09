@@ -20,13 +20,18 @@ const ID = "langpack-und@test.mozilla.org";
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+// Langpacks versions follow the following convention:
+// <firefox major>.<firefox minor>.YYYYMMDD.HHmmss
+// with no leading zeros allowed (as enforced per version format, see MDN doc page at https://mzl.la/3M6L15y).
+//
+// See https://searchfox.org/mozilla-central/rev/26790fe/python/mozbuild/mozbuild/action/langpack_manifest.py#388-398
 var server = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
 AddonTestUtils.registerJSON(server, "/test_update_langpack.json", {
   addons: {
     "langpack-und@test.mozilla.org": {
       updates: [
         {
-          version: "1.0",
+          version: "58.0.20230105.121014",
           applications: {
             gecko: {
               strict_min_version: "58.0",
@@ -35,9 +40,43 @@ AddonTestUtils.registerJSON(server, "/test_update_langpack.json", {
           },
         },
         {
-          version: "2.0",
+          version: "60.0.20230207.112555",
           update_link:
             "http://example.com/addons/langpack-und@test.mozilla.org.xpi",
+          applications: {
+            gecko: {
+              strict_min_version: "60.0",
+              strict_max_version: "60.*",
+            },
+          },
+        },
+        {
+          version: "60.1.20230309.91233",
+          update_link:
+            "http://example.com/addons/dotrelease/langpack-und@test.mozilla.org.xpi",
+          applications: {
+            gecko: {
+              strict_min_version: "60.0",
+              strict_max_version: "60.*",
+            },
+          },
+        },
+      ],
+    },
+  },
+});
+
+// A second update url, which is included in the last of the langpack
+// version from the previous one (and used to cover the staging of a
+// langpack from one dotrelease to another).
+AddonTestUtils.registerJSON(server, "/test_update_langpack2.json", {
+  addons: {
+    "langpack-und@test.mozilla.org": {
+      updates: [
+        {
+          version: "60.2.20230319.94511",
+          update_link:
+            "http://example.com/addons/dotrelease2/langpack-und@test.mozilla.org.xpi",
           applications: {
             gecko: {
               strict_min_version: "60.0",
@@ -89,7 +128,7 @@ const ADDONS = {
       "message = Value from .properties\n",
     "manifest.json": {
       name: "und Language Pack",
-      version: "1.0",
+      version: "58.0.20230105.121014",
       manifest_version: 2,
       browser_specific_settings: {
         gecko: {
@@ -121,15 +160,49 @@ const ADDONS = {
 
 // clone the extension so we can create an update.
 const langpack_update = JSON.parse(JSON.stringify(ADDONS.langpack_1));
-langpack_update["manifest.json"].version = "2.0";
+langpack_update["manifest.json"].version = "60.0.20230207.112555";
 langpack_update["manifest.json"].browser_specific_settings.gecko = {
   id: ID,
   strict_min_version: "60.0",
   strict_max_version: "60.*",
+  update_url: "http://example.com/test_update_langpack.json",
+};
+
+const langpack_update_dotrelease = JSON.parse(
+  JSON.stringify(ADDONS.langpack_1)
+);
+langpack_update_dotrelease["manifest.json"].version = "60.1.20230309.91233";
+langpack_update_dotrelease["manifest.json"].browser_specific_settings.gecko = {
+  id: ID,
+  strict_min_version: "60.0",
+  strict_max_version: "60.*",
+  update_url: "http://example.com/test_update_langpack2.json",
+};
+
+// Another langpack for another dot release part of the same major version as the previous one.
+const langpack_update_dotrelease2 = JSON.parse(
+  JSON.stringify(ADDONS.langpack_1)
+);
+langpack_update_dotrelease2["manifest.json"].version = "60.2.20230319.94511";
+langpack_update_dotrelease2["manifest.json"].browser_specific_settings.gecko = {
+  id: ID,
+  strict_min_version: "60.0",
+  strict_max_version: "60.*",
+  update_url: "http://example.com/test_update_langpack2.json",
 };
 
 let xpi = AddonTestUtils.createTempXPIFile(langpack_update);
 server.registerFile(`/addons/${ID}.xpi`, xpi);
+
+let xpiDotRelease = AddonTestUtils.createTempXPIFile(
+  langpack_update_dotrelease
+);
+server.registerFile(`/addons/dotrelease/${ID}.xpi`, xpiDotRelease);
+
+let xpiDotRelease2 = AddonTestUtils.createTempXPIFile(
+  langpack_update_dotrelease2
+);
+server.registerFile(`/addons/dotrelease2/${ID}.xpi`, xpiDotRelease2);
 
 function promiseLangpackStartup() {
   return new Promise(resolve => {
@@ -430,7 +503,7 @@ add_task(async function test_after_app_update() {
   addon = await promiseAddonByID(ID);
   Assert.ok(!addon.isActive);
   Assert.ok(addon.appDisabled);
-  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.version, "58.0.20230105.121014");
 
   let update = await promiseFindAddonUpdates(addon);
   Assert.ok(update.updateAvailable, "update is available");
@@ -448,7 +521,7 @@ add_task(async function test_after_app_update() {
 
   addon = await promiseAddonByID(ID);
   Assert.ok(addon.isActive);
-  Assert.equal(addon.version, "2.0");
+  Assert.equal(addon.version, "60.1.20230309.91233");
 
   await addon.uninstall();
   await promiseShutdownManager();
@@ -478,12 +551,30 @@ add_task(async function test_staged_langpack_for_app_update() {
   Assert.ok(addon.isActive);
   await promiseLocaleChanged(["und"]);
 
+  // Mimick a major release update happening while a
+  // langpack from a dotrelease what already available
+  // (and then assert that the dotrelease langpack
+  // is the one staged and then installed on browser
+  // restart)
   await AddonManager.stageLangpacksForAppUpdate("60");
   await promiseRestartManager("60");
 
   addon = await promiseAddonByID(ID);
   Assert.ok(addon.isActive);
-  Assert.equal(addon.version, "2.0");
+  Assert.equal(addon.version, "60.1.20230309.91233");
+
+  // Mimick a second dotrelease update, along with
+  // staging of the langpacks released along with it
+  // (then assert that the langpack for the second
+  // dotrelease is staged and then installed on
+  // browser restart).
+  await promiseRestartManager("60.1");
+  await AddonManager.stageLangpacksForAppUpdate("60.2");
+  await promiseRestartManager("60.2");
+
+  addon = await promiseAddonByID(ID);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.version, "60.2.20230319.94511");
 
   await addon.uninstall();
   await promiseShutdownManager();
@@ -511,7 +602,7 @@ add_task(async function test_staged_langpack_for_app_update_fail() {
 
   addon = await promiseAddonByID(ID);
   Assert.ok(addon.isActive);
-  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.version, "58.0.20230105.121014");
 
   await addon.uninstall();
   await promiseShutdownManager();
@@ -538,7 +629,7 @@ add_task(async function test_staged_langpack_for_app_update_not_found() {
 
   addon = await promiseAddonByID(ID);
   Assert.ok(!addon.isActive);
-  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.version, "58.0.20230105.121014");
 
   await addon.uninstall();
   await promiseShutdownManager();
