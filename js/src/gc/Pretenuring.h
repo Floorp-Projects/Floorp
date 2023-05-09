@@ -334,11 +334,9 @@ class PretenuringNursery {
   void* addressOfAllocatedSites() { return &allocatedSites; }
 
  private:
-  class MaybeGCSession;
   void processSite(GCRuntime* gc, AllocSite* site, size_t& sitesActive,
                    size_t& sitesPretenured, size_t& sitesInvalidated,
-                   MaybeGCSession& session, bool reportInfo,
-                   size_t reportThreshold);
+                   bool reportInfo, size_t reportThreshold);
   void processCatchAllSite(AllocSite* site, bool reportInfo,
                            size_t reportThreshold);
   void updateAllocCounts(AllocSite* site);
