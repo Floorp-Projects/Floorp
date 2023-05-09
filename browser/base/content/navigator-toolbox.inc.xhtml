@@ -69,7 +69,7 @@
                 <toolbarbutton id="tabs-newtab-button"
                                class="toolbarbutton-1"
                                command="cmd_newNavigatorTab"
-                               onclick="gBrowser.handleNewTabMiddleClick(this, event);"
+                               onclick="checkForMiddleClick(this, event);"
                                tooltip="dynamic-shortcut-tooltip"/>
                 <spacer class="closing-tabs-spacer" style="width: 0;"/>
               </hbox>
@@ -81,7 +81,7 @@
                          class="toolbarbutton-1 chromeclass-toolbar-additional"
                          data-l10n-id="tabs-toolbar-new-tab"
                          command="cmd_newNavigatorTab"
-                         onclick="gBrowser.handleNewTabMiddleClick(this, event);"
+                         onclick="checkForMiddleClick(this, event);"
                          tooltip="dynamic-shortcut-tooltip"
                          ondrop="newTabButtonObserver.onDrop(event)"
                          ondragover="newTabButtonObserver.onDragOver(event)"
