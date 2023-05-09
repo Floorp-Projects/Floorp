@@ -439,7 +439,12 @@ Changelog
   Firefox 110.0
     Introduced. [Bug 1806765_]
 
+  Firefox 114.0
+    Removed since the weather suggestion is no longer triggered on zero prefix.
+    [Bug 1831971_]
+
 .. _1806765: https://bugzilla.mozilla.org/show_bug.cgi?id=1806765
+.. _1831971: https://bugzilla.mozilla.org/show_bug.cgi?id=1831971
 
 contextual.services.quicksuggest.help
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -620,7 +620,7 @@ add_task(async function selected_result_weather() {
   await MerinoTestUtils.initWeather();
 
   await doTest(async browser => {
-    await openPopup("");
+    await openPopup(MerinoTestUtils.WEATHER_KEYWORD);
     await selectRowByProvider("Weather");
     await doEnter();
 
@@ -629,7 +629,7 @@ add_task(async function selected_result_weather() {
         selected_result: "weather",
         selected_result_subtype: "",
         provider: "Weather",
-        results: "weather",
+        results: "search_engine,weather",
       },
     ]);
   });

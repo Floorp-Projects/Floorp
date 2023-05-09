@@ -242,13 +242,10 @@ urlbar:
       description: >-
         Feature gate that controls whether all aspects of the weather suggestion
         feature are exposed to the user. See also `weatherKeywords` and
-        `weatherKeywordsMinimumLength`. In summary: To make the weather
-        suggestion triggered on keywords, set `weatherFeatureGate` to true,
-        `weatherKeywords` to an array of full keyword strings, and
-        `weatherKeywordsMinimumLength` to a non-zero integer. To make the
-        suggestion triggered on zero prefix, set `weatherFeatureGate` to true
-        and leave out both `weatherKeywords` and `weatherKeywordsMinimumLength`.
-        To turn off the weather suggestion feature, leave out all
+        `weatherKeywordsMinimumLength`. In summary: To enable the weather
+        suggestion, set `weatherFeatureGate` to true, `weatherKeywords` to an
+        array of full keyword strings, and `weatherKeywordsMinimumLength` to a
+        non-zero integer. To disable the weather suggestion, leave out all
         weather-related variables.
     weatherKeywords:
       type: json
@@ -257,7 +254,7 @@ urlbar:
         suggestion when the user types them in the address bar. If absent or
         null, Firefox will fall back to the weather keywords defined in remote
         settings. If neither Nimbus nor remote settings defines any keywords,
-        the weather suggestion will be triggered on zero prefix. See also
+        the weather suggestion will be disabled. See also
         `weatherKeywordsMinimumLength`.
     weatherKeywordsMinimumLength:
       type: int
@@ -267,8 +264,8 @@ urlbar:
         `weatherKeywordsMinimumLength` characters long. If this variable is
         absent or zero, Firefox will fall back to the minimum length defined in
         remote settings. If neither Nimbus nor remote settings defines a minimum
-        length, the weather suggestion will be triggered on zero prefix. See
-        also `weatherKeywords`.
+        length, only full keywords will trigger the suggestion. See also
+        `weatherKeywords`.
     weatherKeywordsMinimumLengthCap:
       type: int
       description: >-

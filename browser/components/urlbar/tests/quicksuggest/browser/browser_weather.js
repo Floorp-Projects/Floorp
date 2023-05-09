@@ -26,7 +26,7 @@ add_task(async function test_weather_result_selection() {
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: "",
+    value: MerinoTestUtils.WEATHER_KEYWORD,
   });
 
   info(`Select the weather result`);
@@ -127,7 +127,7 @@ add_task(async function showLessFrequently() {
   gURLBar.view.resultMenu.hidePopup(true);
 
   await UrlbarTestUtils.promisePopupClose(window);
-  QuickSuggest.weather._test_setRsData(null);
+  QuickSuggest.weather._test_setRsData(MerinoTestUtils.WEATHER_RS_DATA);
   UrlbarPrefs.clear("weather.minKeywordLength");
 });
 
@@ -145,12 +145,12 @@ async function doDismissTest(command) {
   // Trigger the suggestion.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: "",
+    value: MerinoTestUtils.WEATHER_KEYWORD,
   });
 
   let resultCount = UrlbarTestUtils.getResultCount(window);
 
-  let resultIndex = 0;
+  let resultIndex = 1;
   let details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
   Assert.equal(
     details.result.providerName,

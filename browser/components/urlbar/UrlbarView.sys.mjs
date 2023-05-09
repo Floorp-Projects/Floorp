@@ -2722,21 +2722,6 @@ export class UrlbarView {
     );
 
     Services.telemetry.scalarAdd(ZERO_PREFIX_SCALAR_EXPOSURE, 1);
-
-    // Weather suggestion telemetry needs to be recorded when the zero-prefix
-    // view is shown. Ideally this logic would be general to all providers.
-    // Relying on `visibleResults` here means we assume `onQueryFinished()` has
-    // been called by this point and `visibleResults` accurately reflects the
-    // visible rows at the end of the zero-prefix query.
-    let weatherResults = this.visibleResults.filter(
-      r => r.providerName == lazy.UrlbarProviderWeather.name
-    );
-    if (weatherResults.length) {
-      lazy.UrlbarProviderWeather.onResultsShown(
-        this.#queryContext,
-        weatherResults
-      );
-    }
   }
 
   /**
