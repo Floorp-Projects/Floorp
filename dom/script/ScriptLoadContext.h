@@ -62,9 +62,10 @@ class Element;
  *        the script does not need to be fetched first.
  *    * mIsXSLT
  *        Set if we are in an XSLT request.
- *    * TODO: mIsPreload (will be moved from ScriptFetchOptions)
+ *    * mIsPreload
  *        Set for scripts that are preloaded in a
- *        <link rel="preload" as="script"> element.
+ *        <link rel="preload" as="script"> or <link rel="modulepreload">
+ *        element.
  *
  * In addition to describing how the ScriptLoadRequest will be loaded by the
  * DOM ScriptLoader, the ScriptLoadContext contains fields that facilitate
@@ -113,7 +114,7 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
     eDeferred,
     eAsync,
     eLinkPreload  // this is a load initiated by <link rel="preload"
-                  // as="script"> tag
+                  // as="script"> or <link rel="modulepreload"> tag
   };
 
   void SetScriptMode(bool aDeferAttr, bool aAsyncAttr, bool aLinkPreload);
