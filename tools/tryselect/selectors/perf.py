@@ -126,6 +126,14 @@ class PerfParser(CompareParser):
             },
         ],
         [
+            ["--custom-car"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Show tests available for Custom Chromium-as-Release (disabled by default).",
+            },
+        ],
+        [
             ["--safari"],
             {
                 "action": "store_true",
