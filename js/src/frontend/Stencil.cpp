@@ -2739,16 +2739,15 @@ bool CompilationStencil::serializeStencils(JSContext* cx,
   return true;
 }
 
-bool CompilationStencil::deserializeStencils(FrontendContext* fc,
-                                             CompilationInput& input,
-                                             const JS::TranscodeRange& range,
-                                             bool* succeededOut) {
+bool CompilationStencil::deserializeStencils(
+    FrontendContext* fc, const JS::ReadOnlyCompileOptions& compileOptions,
+    const JS::TranscodeRange& range, bool* succeededOut) {
   if (succeededOut) {
     *succeededOut = false;
   }
   MOZ_ASSERT(parserAtomData.empty());
   XDRStencilDecoder decoder(fc, range);
-  JS::DecodeOptions options(input.options);
+  JS::DecodeOptions options(compileOptions);
 
   XDRResult res = decoder.codeStencil(options, *this);
   if (res.isErr()) {
