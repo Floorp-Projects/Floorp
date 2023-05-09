@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* stylelint-disable property-no-vendor-prefix */
-/* stylelint-disable property-no-vendor-prefix */
 
 /* Global */
 html,
@@ -31,7 +30,6 @@ body * {
   text-align: left;
 }
 
-/* stylelint-disable property-no-vendor-prefix */
 /* Buttons */
 button.browser-style,
 select.browser-style {
@@ -346,7 +344,6 @@ textarea.browser-style:invalid:not(:focus) {
     0 0 0 4px rgba(251, 0, 34, 0.3);
 }
 
-/* stylelint-disable property-no-vendor-prefix */
 .panel-section {
   display: flex;
   flex-direction: row;

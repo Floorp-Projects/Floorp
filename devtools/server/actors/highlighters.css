@@ -715,7 +715,6 @@
   user-select: none;
 
   color: var(--text-color);
-  border-radius: 2px;
   box-shadow: var(--toolbar-box-shadow);
   background-color: var(--toolbar-background);
   border: 1px solid var(--toolbar-border);
@@ -729,7 +728,6 @@
   margin: 8px 4px 6px 6px;
   width: 16px;
   height: 16px;
-  mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
   mask-size: 16px 16px;
@@ -768,7 +766,6 @@
 
 :-moz-native-anonymous button.paused-dbg-resume-button {
   margin-right: 6px;
-  margin-right: 6px;
   mask-image: url(chrome://devtools/content/shared/images/resume.svg);
   padding: 0;
 }
@@ -782,8 +779,6 @@
 :-moz-native-anonymous .paused-dbg-reason {
   padding: 3px 16px;
   margin: 8px 0px;
-  line-height: 20px;
-  font-size: 18px;
   font: var(--highlighter-font-family);
   font-size: var(--highlighter-font-size);
 }
@@ -825,7 +820,6 @@
   gap: 8px;
 
   padding: 8px 16px;
-  font-size: 24px;
 
   color: var(--text-color);
   box-shadow: var(--toolbar-box-shadow);

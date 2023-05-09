@@ -340,6 +340,8 @@ toolbar[brighttext]:-moz-lwtheme {
   from {
     transform: translateX(0);
   }
+  /* Bug 1831300 is on file for this. */
+  /* stylelint-disable-next-line keyframe-block-no-duplicate-selectors */
   from {
     transform: translateX(-832px);
   }

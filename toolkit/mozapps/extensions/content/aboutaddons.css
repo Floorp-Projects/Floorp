@@ -358,7 +358,6 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
 
 .theme-enable-button {
   min-width: auto;
-  height: auto;
   font-size: 13px;
   min-height: auto;
   height: 24px;

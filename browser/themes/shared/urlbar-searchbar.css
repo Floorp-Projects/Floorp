@@ -607,7 +607,6 @@
 
 #urlbar-zoom-button {
   appearance: none;
-  color: inherit;
   font-size: .8em;
   padding: 3px 7px;
   border-radius: var(--urlbar-icon-border-radius);

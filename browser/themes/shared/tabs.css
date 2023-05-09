@@ -7,8 +7,6 @@
 :root {
   --tab-min-height: 36px;
   --inline-tab-padding: 8px;
-  /* Value for --in-content-page-background in in-content/common.inc.css */
-  --tabpanel-background-color: #f9f9fa;
   --tab-border-radius: 4px;
   --tab-shadow-max-size: 6px;
   --tab-block-margin: 4px;

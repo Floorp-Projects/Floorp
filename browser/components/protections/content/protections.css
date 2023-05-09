@@ -292,12 +292,11 @@ a.hidden,
   -moz-context-properties: fill;
   fill: var(--gear-icon-fill);
   background: url("chrome://global/skin/icons/settings.svg") no-repeat 0;
-  font-size: 0.75em;
   cursor: pointer;
   width: max-content;
   color: var(--in-content-deemphasized-text);
   margin-block: 6px 0;
-  font-size: 12px;
+  font-size: 0.8em;
   padding-block: 4px;
   padding-inline: 24px 4px;
 }

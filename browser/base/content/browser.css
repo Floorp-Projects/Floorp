@@ -43,11 +43,6 @@ body {
   min-height: 0;
 }
 
-.browserContainer {
-  /* .browserContainer only contains the devtools when docked horizontally */
-  min-height: 0;
-}
-
 /* We set large flex on both containers to allow the devtools toolbox to
  * set a flex value itself. We don't want the toolbox to actually take up free
  * space, but we do want it to collapse when the window shrinks, and with
@@ -60,6 +55,9 @@ body {
   flex: 10000 10000;
   /* To contain the status panel */
   position: relative;
+
+  /* .browserContainer only contains the devtools when docked horizontally */
+  min-height: 0;
 }
 
 .browserStack {

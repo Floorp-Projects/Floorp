@@ -395,7 +395,7 @@ table[rules][rules="groups"] > thead,
 table[rules][rules="groups"] > tbody {
   border-block-start-width: thin;
   border-block-end-width: thin;
-  border-block-start-style: solid;
+  /* Note: `-end` is missing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1832101 */
   border-block-start-style: solid;
 }
 

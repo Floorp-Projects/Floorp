@@ -186,7 +186,7 @@
   display: block;
   width: 2px;
   position: absolute;
-  background-image: linear-gradient(0, #9059ff 0%, #ff4aa2 52.08%, #ffbd4f 100%);
+  background-image: linear-gradient(0deg, #9059ff 0%, #ff4aa2 52.08%, #ffbd4f 100%);
   top: 0;
   inset-inline-start: 0;
   height: 100%;
