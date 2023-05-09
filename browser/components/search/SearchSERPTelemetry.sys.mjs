@@ -653,6 +653,11 @@ class TelemetryHandler {
     if (!searchProviderInfo) {
       return null;
     }
+    // Some URLs can match provider info but also be the provider's homepage
+    // instead of a SERP.
+    // e.g. https://example.com/ vs. https://example.com/?foo=bar
+    // To check this, we look for the presence of the query parameter
+    // that contains a search term.
     let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
     if (!queries.get(searchProviderInfo.queryParamName)) {
       return null;
