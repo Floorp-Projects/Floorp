@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {randomUUID} from 'crypto';
 import fs from 'fs';
 import {spawn, SpawnOptions} from 'node:child_process';
 import os from 'os';
@@ -31,10 +32,12 @@ import {
 import {
   extendProcessEnv,
   filterByPlatform,
-  prettyPrintJSON,
   readJSON,
   filterByParameters,
   getExpectationUpdates,
+  printSuggestions,
+  RecommendedExpectation,
+  writeJSON,
 } from './utils.js';
 
 function getApplicableTestSuites(
@@ -77,6 +80,9 @@ async function main() {
   let statsFilename = '';
   if (statsFilenameIdx !== -1) {
     statsFilename = process.argv[statsFilenameIdx + 1] as string;
+    if (statsFilename.includes('INSERTID')) {
+      statsFilename = statsFilename.replace(/INSERTID/gi, randomUUID());
+    }
   }
 
   const platform = zPlatform.parse(os.platform());
@@ -97,7 +103,7 @@ async function main() {
   }
 
   let fail = false;
-  const recommendations = [];
+  const recommendations: RecommendedExpectation[] = [];
   try {
     for (const suite of applicableSuites) {
       const parameters = suite.parameters;
@@ -105,11 +111,24 @@ async function main() {
       const applicableExpectations = filterByParameters(
         filterByPlatform(expectations, platform),
         parameters
-      );
+      ).reverse();
+
+      // Add more logging when the GitHub Action Debugging option is set
+      // https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
+      const githubActionDebugging = process.env['RUNNER_DEBUG']
+        ? {
+            DEBUG: 'puppeteer:*',
+            EXTRA_LAUNCH_OPTIONS: JSON.stringify({
+              extraPrefsFirefox: {
+                'remote.log.level': 'Trace',
+              },
+            }),
+          }
+        : {};
 
       const env = extendProcessEnv([
         ...parameters.map(param => {
-          return parsedSuitesFile.parameterDefinitons[param];
+          return parsedSuitesFile.parameterDefinitions[param];
         }),
         {
           PUPPETEER_SKIPPED_TEST_CONFIG: JSON.stringify(
@@ -121,6 +140,7 @@ async function main() {
             })
           ),
         },
+        githubActionDebugging,
       ]);
 
       const tmpDir = fs.mkdtempSync(
@@ -186,19 +206,21 @@ async function main() {
       console.log('Finished', JSON.stringify(parameters));
       try {
         const results = readJSON(tmpFilename) as MochaResults;
-        const recommendation = getExpectationUpdates(
-          results,
-          applicableExpectations,
-          {
-            platforms: [os.platform()],
-            parameters,
-          }
-        );
-        if (recommendation.length > 0) {
+        const updates = getExpectationUpdates(results, applicableExpectations, {
+          platforms: [os.platform()],
+          parameters,
+        });
+        results.parameters = parameters;
+        results.platform = platform;
+        results.date = new Date().toISOString();
+        if (updates.length > 0) {
           fail = true;
-          recommendations.push(...recommendation);
+          recommendations.push(...updates);
+          results.updates = updates;
+          writeJSON(tmpFilename, results);
         } else {
           console.log('Test run matches expectations');
+          writeJSON(tmpFilename, results);
           continue;
         }
       } catch (err) {
@@ -211,45 +233,21 @@ async function main() {
     console.error(err);
   } finally {
     if (!noSuggestions) {
-      const toAdd = recommendations.filter(item => {
-        return item.action === 'add';
-      });
-      if (toAdd.length) {
-        console.log(
-          'Add the following to TestExpectations.json to ignore the error:'
-        );
-        prettyPrintJSON(
-          toAdd.map(item => {
-            return item.expectation;
-          })
-        );
-      }
-      const toRemove = recommendations.filter(item => {
-        return item.action === 'remove';
-      });
-      if (toRemove.length) {
-        console.log(
-          'Remove the following from the TestExpectations.json to ignore the error:'
-        );
-        prettyPrintJSON(
-          toRemove.map(item => {
-            return item.expectation;
-          })
-        );
-      }
-      const toUpdate = recommendations.filter(item => {
-        return item.action === 'update';
-      });
-      if (toUpdate.length) {
-        console.log(
-          'Update the following expectations in the TestExpecations.json to ignore the error:'
-        );
-        prettyPrintJSON(
-          toUpdate.map(item => {
-            return item.expectation;
-          })
-        );
-      }
+      printSuggestions(
+        recommendations,
+        'add',
+        'Add the following to TestExpectations.json to ignore the error:'
+      );
+      printSuggestions(
+        recommendations,
+        'remove',
+        'Remove the following from the TestExpectations.json to ignore the error:'
+      );
+      printSuggestions(
+        recommendations,
+        'update',
+        'Update the following expectations in the TestExpectations.json to ignore the error:'
+      );
     }
     process.exit(fail ? 1 : 0);
   }

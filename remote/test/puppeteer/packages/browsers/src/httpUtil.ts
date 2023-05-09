@@ -48,7 +48,7 @@ export function httpRequest(
     protocol: url.protocol,
     hostname: url.hostname,
     port: url.port,
-    path: url.pathname,
+    path: url.pathname + url.search,
     method,
     headers: keepAlive ? {Connection: 'keep-alive'} : undefined,
   };
@@ -61,6 +61,8 @@ export function httpRequest(
       options.hostname = proxy.hostname;
       options.protocol = proxy.protocol;
       options.port = proxy.port;
+      options.headers ??= {};
+      options.headers['Host'] ||= url.host;
     } else {
       options.agent = createHttpsProxyAgent({
         host: proxy.host,

@@ -14,52 +14,72 @@
  * limitations under the License.
  */
 
+import type {Readable} from 'stream';
+
 import * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
 
-import {Page as PageBase, PageEmittedEvents} from '../../api/Page.js';
-import {stringifyFunction} from '../../util/Function.js';
+import {HTTPResponse} from '../../api/HTTPResponse.js';
+import {
+  Page as PageBase,
+  PageEmittedEvents,
+  ScreenshotOptions,
+  WaitForOptions,
+} from '../../api/Page.js';
+import {isErrorLike} from '../../util/ErrorLike.js';
 import {ConsoleMessage, ConsoleMessageLocation} from '../ConsoleMessage.js';
-import type {EvaluateFunc, HandleFor} from '../types.js';
-import {isString} from '../util.js';
+import {Handler} from '../EventEmitter.js';
+import {PDFOptions} from '../PDFOptions.js';
+import {Viewport} from '../PuppeteerViewport.js';
+import {EvaluateFunc, HandleFor} from '../types.js';
+import {debugError, waitWithTimeout} from '../util.js';
 
-import {Connection} from './Connection.js';
-import {JSHandle} from './JSHandle.js';
+import {Context, getBidiHandle} from './Context.js';
 import {BidiSerializer} from './Serializer.js';
 
 /**
  * @internal
  */
 export class Page extends PageBase {
-  #connection: Connection;
-  #subscribedEvents = [
-    'log.entryAdded',
-  ] as Bidi.Session.SubscribeParameters['events'];
-  _contextId: string;
+  #context: Context;
+  #subscribedEvents = new Map<string, Handler<any>>([
+    ['log.entryAdded', this.#onLogEntryAdded.bind(this)],
+    ['browsingContext.load', this.#onLoad.bind(this)],
+    ['browsingContext.domContentLoaded', this.#onDOMLoad.bind(this)],
+  ]) as Map<Bidi.Session.SubscribeParametersEvent, Handler>;
+  #viewport: Viewport | null = null;
 
-  constructor(connection: Connection, contextId: string) {
+  constructor(context: Context) {
     super();
-    this.#connection = connection;
-    this._contextId = contextId;
+    this.#context = context;
 
-    // TODO: Investigate an implementation similar to CDPSession
-    this.connection.send('session.subscribe', {
-      events: this.#subscribedEvents,
-      contexts: [this._contextId],
-    });
+    this.#context.connection
+      .send('session.subscribe', {
+        events: [
+          ...this.#subscribedEvents.keys(),
+        ] as Bidi.Session.SubscribeParameters['events'],
+        contexts: [this.#context.id],
+      })
+      .catch(error => {
+        if (isErrorLike(error) && !error.message.includes('Target closed')) {
+          throw error;
+        }
+      });
 
-    this.connection.on('log.entryAdded', this.#onLogEntryAdded.bind(this));
+    for (const [event, subscriber] of this.#subscribedEvents) {
+      this.#context.on(event, subscriber);
+    }
   }
 
   #onLogEntryAdded(event: Bidi.Log.LogEntry): void {
     if (isConsoleLogEntry(event)) {
       const args = event.args.map(arg => {
-        return getBidiHandle(this, arg);
+        return getBidiHandle(this.#context, arg);
       });
 
       const text = args
         .reduce((value, arg) => {
           const parsedValue = arg.isPrimitiveValue
-            ? BidiSerializer.deserialize(arg.bidiObject())
+            ? BidiSerializer.deserialize(arg.remoteValue())
             : arg.toString();
           return `${value} ${parsedValue}`;
         }, '')
@@ -75,33 +95,53 @@ export class Page extends PageBase {
         )
       );
     } else if (isJavaScriptLogEntry(event)) {
-      this.emit(
-        PageEmittedEvents.Console,
-        new ConsoleMessage(
-          event.level as any,
-          event.text ?? '',
-          [],
-          getStackTraceLocations(event.stackTrace)
-        )
+      let message = event.text ?? '';
+
+      if (event.stackTrace) {
+        for (const callFrame of event.stackTrace.callFrames) {
+          const location =
+            callFrame.url +
+            ':' +
+            callFrame.lineNumber +
+            ':' +
+            callFrame.columnNumber;
+          const functionName = callFrame.functionName || '<anonymous>';
+          message += `\n    at ${functionName} (${location})`;
+        }
+      }
+
+      const error = new Error(message);
+      error.stack = ''; // Don't capture Puppeteer stacktrace.
+
+      this.emit(PageEmittedEvents.PageError, error);
+    } else {
+      debugError(
+        `Unhandled LogEntry with type "${event.type}", text "${event.text}" and level "${event.level}"`
       );
     }
   }
 
-  override async close(): Promise<void> {
-    await this.#connection.send('browsingContext.close', {
-      context: this._contextId,
-    });
-
-    this.connection.send('session.unsubscribe', {
-      events: this.#subscribedEvents,
-      contexts: [this._contextId],
-    });
-
-    this.connection.off('log.entryAdded', this.#onLogEntryAdded.bind(this));
+  #onLoad(_event: Bidi.BrowsingContext.NavigationInfo): void {
+    this.emit(PageEmittedEvents.Load);
   }
 
-  get connection(): Connection {
-    return this.#connection;
+  #onDOMLoad(_event: Bidi.BrowsingContext.NavigationInfo): void {
+    this.emit(PageEmittedEvents.DOMContentLoaded);
+  }
+
+  override async close(): Promise<void> {
+    await this.#context.connection.send('session.unsubscribe', {
+      events: [...this.#subscribedEvents.keys()],
+      contexts: [this.#context.id],
+    });
+
+    await this.#context.connection.send('browsingContext.close', {
+      context: this.#context.id,
+    });
+
+    for (const [event, subscriber] of this.#subscribedEvents) {
+      this.#context.off(event, subscriber);
+    }
   }
 
   override async evaluateHandle<
@@ -111,7 +151,7 @@ export class Page extends PageBase {
     pageFunction: Func | string,
     ...args: Params
   ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
-    return this.#evaluate(false, pageFunction, ...args);
+    return this.#context.evaluateHandle(pageFunction, ...args);
   }
 
   override async evaluate<
@@ -121,83 +161,159 @@ export class Page extends PageBase {
     pageFunction: Func | string,
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>> {
-    return this.#evaluate(true, pageFunction, ...args);
+    return this.#context.evaluate(pageFunction, ...args);
   }
 
-  async #evaluate<
-    Params extends unknown[],
-    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
-  >(
-    returnByValue: true,
-    pageFunction: Func | string,
-    ...args: Params
-  ): Promise<Awaited<ReturnType<Func>>>;
-  async #evaluate<
-    Params extends unknown[],
-    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
-  >(
-    returnByValue: false,
-    pageFunction: Func | string,
-    ...args: Params
-  ): Promise<HandleFor<Awaited<ReturnType<Func>>>>;
-  async #evaluate<
-    Params extends unknown[],
-    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
-  >(
-    returnByValue: boolean,
-    pageFunction: Func | string,
-    ...args: Params
-  ): Promise<HandleFor<Awaited<ReturnType<Func>>> | Awaited<ReturnType<Func>>> {
-    let responsePromise;
-    const resultOwnership = returnByValue ? 'none' : 'root';
-    if (isString(pageFunction)) {
-      responsePromise = this.#connection.send('script.evaluate', {
-        expression: pageFunction,
-        target: {context: this._contextId},
-        resultOwnership,
-        awaitPromise: true,
-      });
-    } else {
-      responsePromise = this.#connection.send('script.callFunction', {
-        functionDeclaration: stringifyFunction(pageFunction),
-        arguments: await Promise.all(
-          args.map(arg => {
-            return BidiSerializer.serialize(arg, this);
-          })
-        ),
-        target: {context: this._contextId},
-        resultOwnership,
-        awaitPromise: true,
-      });
+  override async goto(
+    url: string,
+    options?: WaitForOptions & {
+      referer?: string | undefined;
+      referrerPolicy?: string | undefined;
+    }
+  ): Promise<HTTPResponse | null> {
+    return this.#context.goto(url, options);
+  }
+
+  override url(): string {
+    return this.#context.url();
+  }
+
+  override setDefaultNavigationTimeout(timeout: number): void {
+    this.#context._timeoutSettings.setDefaultNavigationTimeout(timeout);
+  }
+
+  override setDefaultTimeout(timeout: number): void {
+    this.#context._timeoutSettings.setDefaultTimeout(timeout);
+  }
+
+  override async setContent(
+    html: string,
+    options: WaitForOptions = {}
+  ): Promise<void> {
+    await this.#context.setContent(html, options);
+  }
+
+  override async content(): Promise<string> {
+    return await this.evaluate(() => {
+      let retVal = '';
+      if (document.doctype) {
+        retVal = new XMLSerializer().serializeToString(document.doctype);
+      }
+      if (document.documentElement) {
+        retVal += document.documentElement.outerHTML;
+      }
+      return retVal;
+    });
+  }
+
+  override async setViewport(viewport: Viewport): Promise<void> {
+    // TODO: use BiDi commands when available.
+    const mobile = false;
+    const width = viewport.width;
+    const height = viewport.height;
+    const deviceScaleFactor = 1;
+    const screenOrientation = {angle: 0, type: 'portraitPrimary'};
+
+    await this.#context.sendCDPCommand('Emulation.setDeviceMetricsOverride', {
+      mobile,
+      width,
+      height,
+      deviceScaleFactor,
+      screenOrientation,
+    });
+
+    this.#viewport = viewport;
+  }
+
+  override viewport(): Viewport | null {
+    return this.#viewport;
+  }
+
+  override async pdf(options: PDFOptions = {}): Promise<Buffer> {
+    const {path = undefined} = options;
+    const {
+      printBackground: background,
+      margin,
+      landscape,
+      width,
+      height,
+      pageRanges,
+      scale,
+      preferCSSPageSize,
+      timeout,
+    } = this._getPDFOptions(options, 'cm');
+    const {result} = await waitWithTimeout(
+      this.#context.connection.send('browsingContext.print', {
+        context: this.#context._contextId,
+        background,
+        margin,
+        orientation: landscape ? 'landscape' : 'portrait',
+        page: {
+          width,
+          height,
+        },
+        pageRanges: pageRanges.split(', '),
+        scale,
+        shrinkToFit: !preferCSSPageSize,
+      }),
+      'browsingContext.print',
+      timeout
+    );
+
+    const buffer = Buffer.from(result.data, 'base64');
+
+    await this._maybeWriteBufferToFile(path, buffer);
+
+    return buffer;
+  }
+
+  override async createPDFStream(
+    options?: PDFOptions | undefined
+  ): Promise<Readable> {
+    const buffer = await this.pdf(options);
+    try {
+      const {Readable} = await import('stream');
+      return Readable.from(buffer);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error(
+          'Can only pass a file path in a Node-like environment.'
+        );
+      }
+      throw error;
+    }
+  }
+
+  override screenshot(
+    options: ScreenshotOptions & {encoding: 'base64'}
+  ): Promise<string>;
+  override screenshot(
+    options?: ScreenshotOptions & {encoding?: 'binary'}
+  ): never;
+  override async screenshot(
+    options: ScreenshotOptions = {}
+  ): Promise<Buffer | string> {
+    const {path = undefined, encoding, ...args} = options;
+    if (Object.keys(args).length >= 1) {
+      throw new Error('BiDi only supports "encoding" and "path" options');
     }
 
-    const {result} = await responsePromise;
+    const {result} = await this.#context.connection.send(
+      'browsingContext.captureScreenshot',
+      {
+        context: this.#context._contextId,
+      }
+    );
 
-    if ('type' in result && result.type === 'exception') {
-      throw new Error(result.exceptionDetails.text);
+    if (encoding === 'base64') {
+      return result.data;
     }
 
-    return returnByValue
-      ? BidiSerializer.deserialize(result.result)
-      : getBidiHandle(this, result.result);
-  }
-}
+    const buffer = Buffer.from(result.data, 'base64');
+    await this._maybeWriteBufferToFile(path, buffer);
 
-/**
- * @internal
- */
-export function getBidiHandle(
-  context: Page,
-  result: Bidi.CommonDataTypes.RemoteValue
-): JSHandle {
-  if (
-    (result.type === 'node' || result.type === 'window') &&
-    context._contextId
-  ) {
-    // TODO: Implement ElementHandle
-    return new JSHandle(context, result);
+    return buffer;
   }
-  return new JSHandle(context, result);
 }
 
 function isConsoleLogEntry(
@@ -212,7 +328,9 @@ function isJavaScriptLogEntry(
   return event.type === 'javascript';
 }
 
-function getStackTraceLocations(stackTrace?: Bidi.Script.StackTrace) {
+function getStackTraceLocations(
+  stackTrace?: Bidi.Script.StackTrace
+): ConsoleMessageLocation[] {
   const stackTraceLocations: ConsoleMessageLocation[] = [];
   if (stackTrace) {
     for (const callFrame of stackTrace.callFrames) {

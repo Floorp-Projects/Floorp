@@ -25,7 +25,7 @@ import {
   setupTestPageAndContextHooks,
   shortWaitForArrayToHaveAtLeastNElements,
 } from './mocha-utils.js';
-import utils from './utils.js';
+import {attachFrame} from './utils.js';
 
 describe('ElementHandle specs', function () {
   setupTestBrowserHooks();
@@ -103,7 +103,7 @@ describe('ElementHandle specs', function () {
       await page.goto(server.PREFIX + '/resetcss.html');
 
       // Step 1: Add Frame and position it absolutely.
-      await utils.attachFrame(page, 'frame1', server.PREFIX + '/resetcss.html');
+      await attachFrame(page, 'frame1', server.PREFIX + '/resetcss.html');
       await page.evaluate(() => {
         const frame = document.querySelector<HTMLElement>('#frame1')!;
         frame.style.position = 'absolute';
@@ -134,19 +134,19 @@ describe('ElementHandle specs', function () {
       const box = (await divHandle.boxModel())!;
       expect(box.width).toBe(6);
       expect(box.height).toBe(7);
-      expect(box.margin[0]!).toEqual({
+      expect(box.margin[0]).toEqual({
         x: 1 + 4, // frame.left + div.left
         y: 2 + 5,
       });
-      expect(box.border[0]!).toEqual({
+      expect(box.border[0]).toEqual({
         x: 1 + 4 + 3, // frame.left + div.left + div.margin-left
         y: 2 + 5,
       });
-      expect(box.padding[0]!).toEqual({
+      expect(box.padding[0]).toEqual({
         x: 1 + 4 + 3 + 1, // frame.left + div.left + div.marginLeft + div.borderLeft
         y: 2 + 5,
       });
-      expect(box.content[0]!).toEqual({
+      expect(box.content[0]).toEqual({
         x: 1 + 4 + 3 + 1 + 2, // frame.left + div.left + div.marginLeft + div.borderLeft + dif.paddingLeft
         y: 2 + 5,
       });
@@ -166,10 +166,25 @@ describe('ElementHandle specs', function () {
       const {page, server} = getTestState();
 
       await page.goto(server.EMPTY_PAGE);
-      await utils.attachFrame(page, 'frame1', server.EMPTY_PAGE);
+      await attachFrame(page, 'frame1', server.EMPTY_PAGE);
       const elementHandle = (await page.$('#frame1'))!;
       const frame = await elementHandle.contentFrame();
-      expect(frame).toBe(page.frames()[1]!);
+      expect(frame).toBe(page.frames()[1]);
+    });
+  });
+
+  describe('ElementHandle.isVisible and ElementHandle.isHidden', function () {
+    it('should work', async () => {
+      const {page} = getTestState();
+      await page.setContent('<div style="display: none">text</div>');
+      const element = (await page.waitForSelector('div'))!;
+      await expect(element.isVisible()).resolves.toBeFalsy();
+      await expect(element.isHidden()).resolves.toBeTruthy();
+      await element.evaluate(e => {
+        e.style.removeProperty('display');
+      });
+      await expect(element.isVisible()).resolves.toBeTruthy();
+      await expect(element.isHidden()).resolves.toBeFalsy();
     });
   });
 
@@ -486,6 +501,56 @@ describe('ElementHandle specs', function () {
         })
       ).toBe(true);
     });
+    it('should work with svg elements', async () => {
+      const {page, server} = getTestState();
+
+      await page.goto(server.PREFIX + '/inline-svg.html');
+      const visibleCircle = await page.$('circle');
+      const visibleSvg = await page.$('svg');
+      expect(
+        await visibleCircle!.isIntersectingViewport({
+          threshold: 1,
+        })
+      ).toBe(true);
+      expect(
+        await visibleCircle!.isIntersectingViewport({
+          threshold: 0,
+        })
+      ).toBe(true);
+      expect(
+        await visibleSvg!.isIntersectingViewport({
+          threshold: 1,
+        })
+      ).toBe(true);
+      expect(
+        await visibleSvg!.isIntersectingViewport({
+          threshold: 0,
+        })
+      ).toBe(true);
+
+      const invisibleCircle = await page.$('div circle');
+      const invisibleSvg = await page.$('div svg');
+      expect(
+        await invisibleCircle!.isIntersectingViewport({
+          threshold: 1,
+        })
+      ).toBe(false);
+      expect(
+        await invisibleCircle!.isIntersectingViewport({
+          threshold: 0,
+        })
+      ).toBe(false);
+      expect(
+        await invisibleSvg!.isIntersectingViewport({
+          threshold: 1,
+        })
+      ).toBe(false);
+      expect(
+        await invisibleSvg!.isIntersectingViewport({
+          threshold: 0,
+        })
+      ).toBe(false);
+    });
   });
 
   describe('Custom queries', function () {
@@ -672,7 +737,7 @@ describe('ElementHandle specs', function () {
       expect(element).toBeDefined();
 
       const elements = await page.$$('getByClass/foo');
-      expect(elements.length).toBe(3);
+      expect(elements).toHaveLength(3);
     });
     it('should eval when both queryOne and queryAll are registered', async () => {
       const {page} = getTestState();

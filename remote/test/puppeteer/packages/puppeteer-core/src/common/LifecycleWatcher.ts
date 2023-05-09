@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {HTTPResponse} from '../api/HTTPResponse.js';
 import {assert} from '../util/assert.js';
 import {
   DeferredPromise,
@@ -25,7 +26,6 @@ import {TimeoutError} from './Errors.js';
 import {Frame} from './Frame.js';
 import {FrameManager, FrameManagerEmittedEvents} from './FrameManager.js';
 import {HTTPRequest} from './HTTPRequest.js';
-import {HTTPResponse} from './HTTPResponse.js';
 import {NetworkManagerEmittedEvents} from './NetworkManager.js';
 import {
   addEventListener,
@@ -74,27 +74,10 @@ export class LifecycleWatcher {
   #eventListeners: PuppeteerEventListener[];
   #initialLoaderId: string;
 
-  #sameDocumentNavigationCompleteCallback: (x?: Error) => void = noop;
-  #sameDocumentNavigationPromise = new Promise<Error | undefined>(fulfill => {
-    this.#sameDocumentNavigationCompleteCallback = fulfill;
-  });
-
-  #lifecycleCallback: () => void = noop;
-  #lifecyclePromise: Promise<void> = new Promise(fulfill => {
-    this.#lifecycleCallback = fulfill;
-  });
-
-  #newDocumentNavigationCompleteCallback: (x?: Error) => void = noop;
-  #newDocumentNavigationPromise: Promise<Error | undefined> = new Promise(
-    fulfill => {
-      this.#newDocumentNavigationCompleteCallback = fulfill;
-    }
-  );
-
-  #terminationCallback: (x?: Error) => void = noop;
-  #terminationPromise: Promise<Error | undefined> = new Promise(fulfill => {
-    this.#terminationCallback = fulfill;
-  });
+  #sameDocumentNavigationPromise = createDeferredPromise<Error | undefined>();
+  #lifecyclePromise = createDeferredPromise<void>();
+  #newDocumentNavigationPromise = createDeferredPromise<Error | undefined>();
+  #terminationPromise = createDeferredPromise<Error | undefined>();
 
   #timeoutPromise: Promise<TimeoutError | undefined>;
 
@@ -211,8 +194,7 @@ export class LifecycleWatcher {
 
   #onFrameDetached(frame: Frame): void {
     if (this.#frame === frame) {
-      this.#terminationCallback.call(
-        null,
+      this.#terminationPromise.resolve(
         new Error('Navigating frame was detached')
       );
       return;
@@ -227,7 +209,7 @@ export class LifecycleWatcher {
   }
 
   #terminate(error: Error): void {
-    this.#terminationCallback.call(null, error);
+    this.#terminationPromise.resolve(error);
   }
 
   sameDocumentNavigationPromise(): Promise<Error | undefined> {
@@ -286,12 +268,12 @@ export class LifecycleWatcher {
     if (!checkLifecycle(this.#frame, this.#expectedLifecycle)) {
       return;
     }
-    this.#lifecycleCallback();
+    this.#lifecyclePromise.resolve();
     if (this.#hasSameDocumentNavigation) {
-      this.#sameDocumentNavigationCompleteCallback();
+      this.#sameDocumentNavigationPromise.resolve(undefined);
     }
     if (this.#swapped || this.#frame._loaderId !== this.#initialLoaderId) {
-      this.#newDocumentNavigationCompleteCallback();
+      this.#newDocumentNavigationPromise.resolve(undefined);
     }
 
     function checkLifecycle(

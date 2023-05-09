@@ -33,10 +33,21 @@ const puppeteer = new PuppeteerNode({
 });
 
 export const {
+  /**
+   * @public
+   */
   connect,
-  createBrowserFetcher,
+  /**
+   * @public
+   */
   defaultArgs,
+  /**
+   * @public
+   */
   executablePath,
+  /**
+   * @public
+   */
   launch,
 } = puppeteer;
 

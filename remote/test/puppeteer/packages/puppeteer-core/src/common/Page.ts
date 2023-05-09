@@ -20,7 +20,9 @@ import {Protocol} from 'devtools-protocol';
 
 import type {Browser} from '../api/Browser.js';
 import type {BrowserContext} from '../api/BrowserContext.js';
-import {ElementHandle} from '../api/ElementHandle.js';
+import {ClickOptions, ElementHandle} from '../api/ElementHandle.js';
+import {HTTPRequest} from '../api/HTTPRequest.js';
+import {HTTPResponse} from '../api/HTTPResponse.js';
 import {JSHandle} from '../api/JSHandle.js';
 import {
   GeolocationOptions,
@@ -49,6 +51,7 @@ import {
 } from './Connection.js';
 import {ConsoleMessage, ConsoleMessageType} from './ConsoleMessage.js';
 import {Coverage} from './Coverage.js';
+import {DeviceRequestPrompt} from './DeviceRequestPrompt.js';
 import {Dialog} from './Dialog.js';
 import {EmulationManager} from './EmulationManager.js';
 import {FileChooser} from './FileChooser.js';
@@ -59,9 +62,7 @@ import {
   FrameWaitForFunctionOptions,
 } from './Frame.js';
 import {FrameManager, FrameManagerEmittedEvents} from './FrameManager.js';
-import {HTTPRequest} from './HTTPRequest.js';
-import {HTTPResponse} from './HTTPResponse.js';
-import {Keyboard, Mouse, MouseButton, Touchscreen} from './Input.js';
+import {Keyboard, Mouse, Touchscreen} from './Input.js';
 import {WaitForSelectorOptions} from './IsolatedWorld.js';
 import {MAIN_WORLD} from './IsolatedWorlds.js';
 import {
@@ -69,7 +70,7 @@ import {
   NetworkConditions,
   NetworkManagerEmittedEvents,
 } from './NetworkManager.js';
-import {LowerCasePaperFormat, PDFOptions, _paperFormats} from './PDFOptions.js';
+import {PDFOptions} from './PDFOptions.js';
 import {Viewport} from './PuppeteerViewport.js';
 import {Target} from './Target.js';
 import {TargetManagerEmittedEvents} from './TargetManager.js';
@@ -90,8 +91,6 @@ import {
   getExceptionMessage,
   getReadableAsBuffer,
   getReadableFromProtocolStream,
-  importFS,
-  isNumber,
   isString,
   pageBindingInitString,
   releaseObject,
@@ -254,7 +253,7 @@ export class CDPPage extends Page {
     client.on('Page.fileChooserOpened', event => {
       return this.#onFileChooser(event);
     });
-    this.#target._isClosedPromise.then(() => {
+    void this.#target._isClosedPromise.then(() => {
       this.#target
         ._targetManager()
         .removeTargetInterceptor(this.#client, this.#onAttachedToTarget);
@@ -822,7 +821,7 @@ export class CDPPage extends Page {
     }
     const textTokens = [];
     for (const arg of args) {
-      const remoteObject = arg.remoteObject() as Protocol.Runtime.RemoteObject;
+      const remoteObject = arg.remoteObject();
       if (remoteObject.objectId) {
         textTokens.push(arg.toString());
       } else {
@@ -990,10 +989,7 @@ export class CDPPage extends Page {
 
     const networkManager = this.#frameManager.networkManager;
 
-    let idleResolveCallback: () => void;
-    const idlePromise = new Promise<void>(resolve => {
-      idleResolveCallback = resolve;
-    });
+    const idlePromise = createDeferredPromise<void>();
 
     let abortRejectCallback: (error: Error) => void;
     const abortPromise = new Promise<Error>((_, reject) => {
@@ -1001,10 +997,6 @@ export class CDPPage extends Page {
     });
 
     let idleTimer: NodeJS.Timeout;
-    const onIdle = () => {
-      return idleResolveCallback();
-    };
-
     const cleanup = () => {
       idleTimer && clearTimeout(idleTimer);
       abortRejectCallback(new Error('abort'));
@@ -1013,7 +1005,7 @@ export class CDPPage extends Page {
     const evaluate = () => {
       idleTimer && clearTimeout(idleTimer);
       if (networkManager.numRequestsInProgress() === 0) {
-        idleTimer = setTimeout(onIdle, idleTime);
+        idleTimer = setTimeout(idlePromise.resolve, idleTime);
       }
     };
 
@@ -1037,6 +1029,7 @@ export class CDPPage extends Page {
     const eventPromises = [
       listenToEvent(NetworkManagerEmittedEvents.Request),
       listenToEvent(NetworkManagerEmittedEvents.Response),
+      listenToEvent(NetworkManagerEmittedEvents.RequestFailed),
     ];
 
     await Promise.race([
@@ -1446,24 +1439,13 @@ export class CDPPage extends Page {
       await this.setViewport(this.#viewport);
     }
 
-    const buffer =
-      options.encoding === 'base64'
-        ? result.data
-        : Buffer.from(result.data, 'base64');
-
-    if (options.path) {
-      try {
-        const fs = (await importFS()).promises;
-        await fs.writeFile(options.path, buffer);
-      } catch (error) {
-        if (error instanceof TypeError) {
-          throw new Error(
-            'Screenshots can only be written to a file path in a Node-like environment.'
-          );
-        }
-        throw error;
-      }
+    if (options.encoding === 'base64') {
+      return result.data;
     }
+
+    const buffer = Buffer.from(result.data, 'base64');
+    await this._maybeWriteBufferToFile(options.path, buffer);
+
     return buffer;
 
     function processClip(clip: ScreenshotClip): ScreenshotClip {
@@ -1477,37 +1459,20 @@ export class CDPPage extends Page {
 
   override async createPDFStream(options: PDFOptions = {}): Promise<Readable> {
     const {
-      scale = 1,
-      displayHeaderFooter = false,
-      headerTemplate = '',
-      footerTemplate = '',
-      printBackground = false,
-      landscape = false,
-      pageRanges = '',
-      preferCSSPageSize = false,
-      margin = {},
-      omitBackground = false,
-      timeout = 30000,
-    } = options;
-
-    let paperWidth = 8.5;
-    let paperHeight = 11;
-    if (options.format) {
-      const format =
-        _paperFormats[options.format.toLowerCase() as LowerCasePaperFormat];
-      assert(format, 'Unknown paper format: ' + options.format);
-      paperWidth = format.width;
-      paperHeight = format.height;
-    } else {
-      paperWidth = convertPrintParameterToInches(options.width) || paperWidth;
-      paperHeight =
-        convertPrintParameterToInches(options.height) || paperHeight;
-    }
-
-    const marginTop = convertPrintParameterToInches(margin.top) || 0;
-    const marginLeft = convertPrintParameterToInches(margin.left) || 0;
-    const marginBottom = convertPrintParameterToInches(margin.bottom) || 0;
-    const marginRight = convertPrintParameterToInches(margin.right) || 0;
+      landscape,
+      displayHeaderFooter,
+      headerTemplate,
+      footerTemplate,
+      printBackground,
+      scale,
+      width: paperWidth,
+      height: paperHeight,
+      margin,
+      pageRanges,
+      preferCSSPageSize,
+      omitBackground,
+      timeout,
+    } = this._getPDFOptions(options);
 
     if (omitBackground) {
       await this.#setTransparentBackgroundColor();
@@ -1523,10 +1488,10 @@ export class CDPPage extends Page {
       scale,
       paperWidth,
       paperHeight,
-      marginTop,
-      marginBottom,
-      marginLeft,
-      marginRight,
+      marginTop: margin.top,
+      marginBottom: margin.bottom,
+      marginLeft: margin.left,
+      marginRight: margin.right,
       pageRanges,
       preferCSSPageSize,
     });
@@ -1586,11 +1551,7 @@ export class CDPPage extends Page {
 
   override click(
     selector: string,
-    options: {
-      delay?: number;
-      button?: MouseButton;
-      clickCount?: number;
-    } = {}
+    options: Readonly<ClickOptions> = {}
   ): Promise<void> {
     return this.mainFrame().click(selector, options);
   }
@@ -1647,6 +1608,35 @@ export class CDPPage extends Page {
   ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
     return this.mainFrame().waitForFunction(pageFunction, options, ...args);
   }
+
+  /**
+   * This method is typically coupled with an action that triggers a device
+   * request from an api such as WebBluetooth.
+   *
+   * :::caution
+   *
+   * This must be called before the device request is made. It will not return a
+   * currently active device prompt.
+   *
+   * :::
+   *
+   * @example
+   *
+   * ```ts
+   * const [devicePrompt] = Promise.all([
+   *   page.waitForDevicePrompt(),
+   *   page.click('#connect-bluetooth'),
+   * ]);
+   * await devicePrompt.select(
+   *   await devicePrompt.waitForDevice(({name}) => name.includes('My Device'))
+   * );
+   * ```
+   */
+  override waitForDevicePrompt(
+    options: WaitTimeoutOptions = {}
+  ): Promise<DeviceRequestPrompt> {
+    return this.mainFrame().waitForDevicePrompt(options);
+  }
 }
 
 const supportedMetrics = new Set<string>([
@@ -1664,43 +1654,3 @@ const supportedMetrics = new Set<string>([
   'JSHeapUsedSize',
   'JSHeapTotalSize',
 ]);
-
-const unitToPixels = {
-  px: 1,
-  in: 96,
-  cm: 37.8,
-  mm: 3.78,
-};
-
-function convertPrintParameterToInches(
-  parameter?: string | number
-): number | undefined {
-  if (typeof parameter === 'undefined') {
-    return undefined;
-  }
-  let pixels;
-  if (isNumber(parameter)) {
-    // Treat numbers as pixel values to be aligned with phantom's paperSize.
-    pixels = parameter;
-  } else if (isString(parameter)) {
-    const text = parameter;
-    let unit = text.substring(text.length - 2).toLowerCase();
-    let valueText = '';
-    if (unit in unitToPixels) {
-      valueText = text.substring(0, text.length - 2);
-    } else {
-      // In case of unknown unit try to parse the whole parameter as number of pixels.
-      // This is consistent with phantom's paperSize behavior.
-      unit = 'px';
-      valueText = text;
-    }
-    const value = Number(valueText);
-    assert(!isNaN(value), 'Failed to parse parameter value: ' + text);
-    pixels = value * unitToPixels[unit as keyof typeof unitToPixels];
-  } else {
-    throw new Error(
-      'page.pdf() Cannot handle parameter type: ' + typeof parameter
-    );
-  }
-  return pixels / 96;
-}

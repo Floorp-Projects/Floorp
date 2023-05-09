@@ -25,7 +25,13 @@ import {Product} from '../common/Product.js';
 export interface BrowserLaunchArgumentOptions {
   /**
    * Whether to run the browser in headless mode.
-   * @defaultValue true
+   *
+   * @remarks
+   * In the future `headless: true` will be equivalent to `headless: 'new'`.
+   * You can read more about the change {@link https://developer.chrome.com/articles/new-headless/ | here}.
+   * Consider opting in early by setting the value to `"new"`.
+   *
+   * @defaultValue `true`
    */
   headless?: boolean | 'new';
   /**
@@ -41,7 +47,7 @@ export interface BrowserLaunchArgumentOptions {
    */
   devtools?: boolean;
   /**
-   *
+   * Specify the debugging port number to use
    */
   debuggingPort?: number;
   /**
@@ -77,7 +83,7 @@ export interface LaunchOptions {
    * If `true`, do not use `puppeteer.defaultArgs()` when creating a browser. If
    * an array is provided, these args will be filtered out. Use this with care -
    * you probably want the default arguments Puppeteer uses.
-   * @defaultValue false
+   * @defaultValue `false`
    */
   ignoreDefaultArgs?: boolean | string[];
   /**
@@ -98,13 +104,13 @@ export interface LaunchOptions {
   /**
    * Maximum time in milliseconds to wait for the browser to start.
    * Pass `0` to disable the timeout.
-   * @defaultValue 30000 (30 seconds).
+   * @defaultValue `30_000` (30 seconds).
    */
   timeout?: number;
   /**
    * If true, pipes the browser process stdout and stderr to `process.stdout`
    * and `process.stderr`.
-   * @defaultValue false
+   * @defaultValue `false`
    */
   dumpio?: boolean;
   /**
@@ -114,7 +120,7 @@ export interface LaunchOptions {
   env?: Record<string, string | undefined>;
   /**
    * Connect to a browser over a pipe instead of a WebSocket.
-   * @defaultValue false
+   * @defaultValue `false`
    */
   pipe?: boolean;
   /**
@@ -129,7 +135,7 @@ export interface LaunchOptions {
   /**
    * Whether to wait for the initial page to be ready.
    * Useful when a user explicitly disables that (e.g. `--no-startup-window` for Chrome).
-   * @defaultValue true
+   * @defaultValue `true`
    */
   waitForInitialPage?: boolean;
 }

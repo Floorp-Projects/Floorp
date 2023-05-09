@@ -254,6 +254,14 @@ class MochaOutputHandler(object):
         finally:
             self.logger.process_output(self.pid, line, command="npm")
 
+    def testExpectation(self, testIdPattern, expected_name):
+        if testIdPattern.find("*") == -1:
+            return expected_name == testIdPattern
+        else:
+            return re.compile(re.escape(testIdPattern).replace("\*", ".*")).search(
+                expected_name
+            )
+
     def process_event(self, event):
         if isinstance(event, list) and len(event) > 1:
             status = self.status_map.get(event[0])
@@ -282,39 +290,13 @@ class MochaOutputHandler(object):
             expected_item = next(
                 (
                     expectation
-                    for expectation in list(self.expected)
-                    if expectation["testIdPattern"] == expected_name
+                    for expectation in reversed(list(self.expected))
+                    if self.testExpectation(expectation["testIdPattern"], expected_name)
                 ),
                 None,
             )
             if expected_item is None:
-                # if there is no expectation data for a specific test case,
-                # try to find data for a whole file.
-                expected_item_for_file = next(
-                    (
-                        expectation
-                        for expectation in list(self.expected)
-                        if expectation["testIdPattern"] == f"[{test_file_name}]"
-                    ),
-                    None,
-                )
-                if expected_item_for_file is None:
-                    # if there is no expectation data for the file,
-                    # try to find data for all tests.
-                    expected_item_for_all_tests = next(
-                        (
-                            expectation
-                            for expectation in list(self.expected)
-                            if expectation["testIdPattern"] == ""
-                        ),
-                        None,
-                    )
-                    if expected_item_for_all_tests is None:
-                        expected = ["PASS"]
-                    else:
-                        expected = expected_item_for_all_tests["expectations"]
-                else:
-                    expected = expected_item_for_file["expectations"]
+                expected = ["PASS"]
             else:
                 expected = expected_item["expectations"]
             # mozlog doesn't really allow unexpected skip,
@@ -603,7 +585,8 @@ def is_relevant_expectation(
         is_expected_product = "firefox" not in parameters
 
     if with_bidi is True:
-        is_expected_protocol = "webDriverBiDi" in parameters
+        is_expected_protocol = "cdp" not in parameters
+        is_headless = "True"
     else:
         is_expected_protocol = "webDriverBiDi" not in parameters
 

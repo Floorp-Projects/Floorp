@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import https, {RequestOptions} from 'https';
-import URL from 'url';
-
-import createHttpsProxyAgent, {HttpsProxyAgentOptions} from 'https-proxy-agent';
-import ProgressBar from 'progress';
-import {getProxyForUrl} from 'proxy-from-env';
-import {PuppeteerNode} from 'puppeteer-core/internal/node/PuppeteerNode.js';
+import {
+  install,
+  Browser,
+  resolveBuildId,
+  makeProgressCallback,
+  detectBrowserPlatform,
+} from '@puppeteer/browsers';
+import {Product} from 'puppeteer-core';
 import {PUPPETEER_REVISIONS} from 'puppeteer-core/internal/revisions.js';
 
 import {getConfiguration} from '../getConfiguration.js';
@@ -29,7 +30,7 @@ import {getConfiguration} from '../getConfiguration.js';
  * @internal
  */
 const supportedProducts = {
-  chrome: 'Chromium',
+  chrome: 'Chrome',
   firefox: 'Firefox Nightly',
 } as const;
 
@@ -37,168 +38,61 @@ const supportedProducts = {
  * @internal
  */
 export async function downloadBrowser(): Promise<void> {
+  overrideProxy();
+
   const configuration = getConfiguration();
   if (configuration.skipDownload) {
     logPolitely('**INFO** Skipping browser download as instructed.');
     return;
   }
 
-  const puppeteer = new PuppeteerNode({configuration, isPuppeteerCore: false});
+  const downloadHost = configuration.downloadHost;
+
+  const platform = detectBrowserPlatform();
+  if (!platform) {
+    throw new Error('The current platform is not supported.');
+  }
 
   const product = configuration.defaultProduct!;
-  const browserFetcher = puppeteer.createBrowserFetcher();
+  const browser = productToBrowser(product);
 
-  let revision = configuration.browserRevision;
+  const unresolvedBuildId =
+    configuration.browserRevision || PUPPETEER_REVISIONS[product] || 'latest';
 
-  if (!revision) {
-    switch (product) {
-      case 'chrome':
-        revision = PUPPETEER_REVISIONS.chromium;
-        break;
-      case 'firefox':
-        revision = PUPPETEER_REVISIONS.firefox;
-        revision = await getFirefoxNightlyVersion();
-        break;
-    }
-  }
+  const buildId = await resolveBuildId(browser, platform, unresolvedBuildId);
 
-  await fetchBinary(revision);
-
-  function fetchBinary(revision: string) {
-    const revisionInfo = browserFetcher.revisionInfo(revision);
-
-    // Do nothing if the revision is already downloaded.
-    if (revisionInfo.local) {
-      logPolitely(
-        `${supportedProducts[product]} is already in ${revisionInfo.folderPath}; skipping download.`
-      );
-      return;
-    }
-
-    // Override current environment proxy settings with npm configuration, if any.
-    const NPM_HTTPS_PROXY =
-      process.env['npm_config_https_proxy'] || process.env['npm_config_proxy'];
-    const NPM_HTTP_PROXY =
-      process.env['npm_config_http_proxy'] || process.env['npm_config_proxy'];
-    const NPM_NO_PROXY = process.env['npm_config_no_proxy'];
-
-    if (NPM_HTTPS_PROXY) {
-      process.env['HTTPS_PROXY'] = NPM_HTTPS_PROXY;
-    }
-    if (NPM_HTTP_PROXY) {
-      process.env['HTTP_PROXY'] = NPM_HTTP_PROXY;
-    }
-    if (NPM_NO_PROXY) {
-      process.env['NO_PROXY'] = NPM_NO_PROXY;
-    }
-
-    function onSuccess(localRevisions: string[]): void {
-      logPolitely(
-        `${supportedProducts[product]} (${revisionInfo.revision}) downloaded to ${revisionInfo.folderPath}`
-      );
-      const otherRevisions = localRevisions.filter(revision => {
-        return revision !== revisionInfo.revision;
-      });
-      if (otherRevisions.length) {
-        logPolitely(
-          `Other installed ${
-            supportedProducts[product]
-          } browsers in ${browserFetcher.getDownloadPath()} include: ${otherRevisions.join(
-            ', '
-          )}. Remove old revisions from ${browserFetcher.getDownloadPath()} if you don't need them.`
-        );
-      }
-    }
-
-    function onError(error: Error) {
-      console.error(
-        `ERROR: Failed to set up ${supportedProducts[product]} r${revision}! Set "PUPPETEER_SKIP_DOWNLOAD" env variable to skip download.`
-      );
-      console.error(error);
-      process.exit(1);
-    }
-
-    let progressBar: ProgressBar | null = null;
-    let lastDownloadedBytes = 0;
-    function onProgress(downloadedBytes: number, totalBytes: number) {
-      if (!progressBar) {
-        progressBar = new ProgressBar(
-          `Downloading ${
-            supportedProducts[product]
-          } r${revision} - ${toMegabytes(totalBytes)} [:bar] :percent :etas `,
-          {
-            complete: '=',
-            incomplete: ' ',
-            width: 20,
-            total: totalBytes,
-          }
-        );
-      }
-      const delta = downloadedBytes - lastDownloadedBytes;
-      lastDownloadedBytes = downloadedBytes;
-      progressBar.tick(delta);
-    }
-
-    return browserFetcher
-      .download(revisionInfo.revision, onProgress)
-      .then(() => {
-        return browserFetcher.localRevisions();
-      })
-      .then(onSuccess)
-      .catch(onError);
-  }
-
-  function toMegabytes(bytes: number) {
-    const mb = bytes / 1024 / 1024;
-    return `${Math.round(mb * 10) / 10} Mb`;
-  }
-
-  async function getFirefoxNightlyVersion(): Promise<string> {
-    const firefoxVersionsUrl =
-      'https://product-details.mozilla.org/1.0/firefox_versions.json';
-
-    const proxyURL = getProxyForUrl(firefoxVersionsUrl);
-
-    const requestOptions: RequestOptions = {};
-
-    if (proxyURL) {
-      const parsedProxyURL = URL.parse(proxyURL);
-
-      const proxyOptions = {
-        ...parsedProxyURL,
-        secureProxy: parsedProxyURL.protocol === 'https:',
-      } as HttpsProxyAgentOptions;
-
-      requestOptions.agent = createHttpsProxyAgent(proxyOptions);
-      requestOptions.rejectUnauthorized = false;
-    }
-
-    const promise = new Promise<string>((resolve, reject) => {
-      let data = '';
-      logPolitely(
-        `Requesting latest Firefox Nightly version from ${firefoxVersionsUrl}`
-      );
-      https
-        .get(firefoxVersionsUrl, requestOptions, r => {
-          if (r.statusCode && r.statusCode >= 400) {
-            return reject(new Error(`Got status code ${r.statusCode}`));
-          }
-          r.on('data', chunk => {
-            data += chunk;
-          });
-          r.on('end', () => {
-            try {
-              const versions = JSON.parse(data);
-              return resolve(versions.FIREFOX_NIGHTLY);
-            } catch {
-              return reject(new Error('Firefox version not found'));
-            }
-          });
-        })
-        .on('error', reject);
+  try {
+    const result = await install({
+      browser,
+      cacheDir: configuration.cacheDirectory!,
+      platform,
+      buildId,
+      downloadProgressCallback: makeProgressCallback(browser, buildId),
+      // TODO: remove downloadHost in favour of baseDownloadUrl. The "host" of
+      // Firefox is already a URL and not a host. This would be a breaking change.
+      baseUrl: downloadHost,
     });
-    return promise;
+
+    logPolitely(
+      `${supportedProducts[product]} (${result.buildId}) downloaded to ${result.path}`
+    );
+  } catch (error) {
+    console.error(
+      `ERROR: Failed to set up ${supportedProducts[product]} r${buildId}! Set "PUPPETEER_SKIP_DOWNLOAD" env variable to skip download.`
+    );
+    console.error(error);
+    process.exit(1);
   }
+}
+
+function productToBrowser(product?: Product) {
+  switch (product) {
+    case 'chrome':
+      return Browser.CHROME;
+    case 'firefox':
+      return Browser.FIREFOX;
+  }
+  return Browser.CHROME;
 }
 
 /**
@@ -211,5 +105,27 @@ function logPolitely(toBeLogged: unknown): void {
   // eslint-disable-next-line no-console
   if (!logLevelDisplay) {
     console.log(toBeLogged);
+  }
+}
+
+/**
+ * @internal
+ */
+function overrideProxy() {
+  // Override current environment proxy settings with npm configuration, if any.
+  const NPM_HTTPS_PROXY =
+    process.env['npm_config_https_proxy'] || process.env['npm_config_proxy'];
+  const NPM_HTTP_PROXY =
+    process.env['npm_config_http_proxy'] || process.env['npm_config_proxy'];
+  const NPM_NO_PROXY = process.env['npm_config_no_proxy'];
+
+  if (NPM_HTTPS_PROXY) {
+    process.env['HTTPS_PROXY'] = NPM_HTTPS_PROXY;
+  }
+  if (NPM_HTTP_PROXY) {
+    process.env['HTTP_PROXY'] = NPM_HTTP_PROXY;
+  }
+  if (NPM_NO_PROXY) {
+    process.env['NO_PROXY'] = NPM_NO_PROXY;
   }
 }

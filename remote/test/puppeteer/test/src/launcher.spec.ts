@@ -14,26 +14,20 @@
  * limitations under the License.
  */
 import fs from 'fs';
+import {mkdtemp, readFile, writeFile} from 'fs/promises';
 import os from 'os';
 import path from 'path';
 import {TLSSocket} from 'tls';
-import {promisify} from 'util';
 
 import {Protocol} from 'devtools-protocol';
 import expect from 'expect';
-import {BrowserFetcher, TimeoutError} from 'puppeteer';
+import {TimeoutError} from 'puppeteer';
 import {Page} from 'puppeteer-core/internal/api/Page.js';
-import rimraf from 'rimraf';
+import {rmSync} from 'puppeteer-core/internal/node/util/fs.js';
 import sinon from 'sinon';
 
 import {getTestState, itOnlyRegularInstall} from './mocha-utils.js';
-import utils from './utils.js';
-
-const mkdtempAsync = promisify(fs.mkdtemp);
-const readFileAsync = promisify(fs.readFile);
-const rmAsync = promisify(rimraf);
-const statAsync = promisify(fs.stat);
-const writeFileAsync = promisify(fs.writeFile);
+import {dumpFrames, waitEvent} from './utils.js';
 
 const TMP_FOLDER = path.join(os.tmpdir(), 'pptr_tmp_folder-');
 const FIREFOX_TIMEOUT = 30 * 1000;
@@ -44,95 +38,6 @@ describe('Launcher specs', function () {
   }
 
   describe('Puppeteer', function () {
-    describe('BrowserFetcher', function () {
-      it('should download and extract chrome linux binary', async () => {
-        const {server} = getTestState();
-
-        const downloadsFolder = await mkdtempAsync(TMP_FOLDER);
-        const browserFetcher = new BrowserFetcher({
-          platform: 'linux',
-          path: downloadsFolder,
-          host: server.PREFIX,
-        });
-        const expectedRevision = '123456';
-        let revisionInfo = browserFetcher.revisionInfo(expectedRevision);
-        server.setRoute(
-          revisionInfo.url.substring(server.PREFIX.length),
-          (req, res) => {
-            server.serveFile(req, res, '/chromium-linux.zip');
-          }
-        );
-
-        expect(revisionInfo.local).toBe(false);
-        expect(browserFetcher.platform()).toBe('linux');
-        expect(browserFetcher.product()).toBe('chrome');
-        expect(!!browserFetcher.host()).toBe(true);
-        expect(await browserFetcher.canDownload('100000')).toBe(false);
-        expect(await browserFetcher.canDownload(expectedRevision)).toBe(true);
-
-        revisionInfo = (await browserFetcher.download(expectedRevision))!;
-        expect(revisionInfo.local).toBe(true);
-        expect(await readFileAsync(revisionInfo.executablePath, 'utf8')).toBe(
-          'LINUX BINARY\n'
-        );
-        const expectedPermissions = os.platform() === 'win32' ? 0o666 : 0o755;
-        expect(
-          (await statAsync(revisionInfo.executablePath)).mode & 0o777
-        ).toBe(expectedPermissions);
-        expect(await browserFetcher.localRevisions()).toEqual([
-          expectedRevision,
-        ]);
-        await browserFetcher.remove(expectedRevision);
-        expect(await browserFetcher.localRevisions()).toEqual([]);
-        await rmAsync(downloadsFolder);
-      });
-      it('should download and extract firefox linux binary', async () => {
-        const {server} = getTestState();
-
-        const downloadsFolder = await mkdtempAsync(TMP_FOLDER);
-        const browserFetcher = new BrowserFetcher({
-          platform: 'linux',
-          path: downloadsFolder,
-          host: server.PREFIX,
-          product: 'firefox',
-        });
-        const expectedVersion = '75.0a1';
-        let revisionInfo = browserFetcher.revisionInfo(expectedVersion);
-        server.setRoute(
-          revisionInfo.url.substring(server.PREFIX.length),
-          (req, res) => {
-            server.serveFile(
-              req,
-              res,
-              `/firefox-${expectedVersion}.en-US.linux-x86_64.tar.bz2`
-            );
-          }
-        );
-
-        expect(revisionInfo.local).toBe(false);
-        expect(browserFetcher.platform()).toBe('linux');
-        expect(browserFetcher.product()).toBe('firefox');
-        expect(await browserFetcher.canDownload('100000')).toBe(false);
-        expect(await browserFetcher.canDownload(expectedVersion)).toBe(true);
-
-        revisionInfo = (await browserFetcher.download(expectedVersion))!;
-        expect(revisionInfo.local).toBe(true);
-        expect(await readFileAsync(revisionInfo.executablePath, 'utf8')).toBe(
-          'FIREFOX LINUX BINARY\n'
-        );
-        const expectedPermissions = os.platform() === 'win32' ? 0o666 : 0o755;
-        expect(
-          (await statAsync(revisionInfo.executablePath)).mode & 0o777
-        ).toBe(expectedPermissions);
-        expect(await browserFetcher.localRevisions()).toEqual([
-          expectedVersion,
-        ]);
-        await browserFetcher.remove(expectedVersion);
-        expect(await browserFetcher.localRevisions()).toEqual([]);
-        await rmAsync(downloadsFolder);
-      });
-    });
-
     describe('Browser.disconnect', function () {
       it('should reject navigation when browser closes', async () => {
         const {server, puppeteer, defaultBrowserOptions} = getTestState();
@@ -241,7 +146,7 @@ describe('Launcher specs', function () {
       it('userDataDir option', async () => {
         const {defaultBrowserOptions, puppeteer} = getTestState();
 
-        const userDataDir = await mkdtempAsync(TMP_FOLDER);
+        const userDataDir = await mkdtemp(TMP_FOLDER);
         const options = Object.assign({userDataDir}, defaultBrowserOptions);
         const browser = await puppeteer.launch(options);
         // Open a page to make sure its functional.
@@ -250,7 +155,9 @@ describe('Launcher specs', function () {
         await browser.close();
         expect(fs.readdirSync(userDataDir).length).toBeGreaterThan(0);
         // This might throw. See https://github.com/puppeteer/puppeteer/issues/2778
-        await rmAsync(userDataDir).catch(() => {});
+        try {
+          rmSync(userDataDir);
+        } catch {}
       });
       it('tmp profile should be cleaned up', async () => {
         const {defaultBrowserOptions, puppeteer} = getTestState();
@@ -264,12 +171,12 @@ describe('Launcher specs', function () {
         puppeteer.configuration.temporaryDirectory = testTmpDir;
 
         // Path should be empty before starting the browser.
-        expect(fs.readdirSync(testTmpDir).length).toEqual(0);
+        expect(fs.readdirSync(testTmpDir)).toHaveLength(0);
         const browser = await puppeteer.launch(defaultBrowserOptions);
 
         // One profile folder should have been created at this moment.
         const profiles = fs.readdirSync(testTmpDir);
-        expect(profiles.length).toEqual(1);
+        expect(profiles).toHaveLength(1);
         expect(profiles[0]?.startsWith('puppeteer_dev_chrome_profile-')).toBe(
           true
         );
@@ -278,7 +185,7 @@ describe('Launcher specs', function () {
         await browser.newPage();
         await browser.close();
         // Profile should be deleted after closing the browser
-        expect(fs.readdirSync(testTmpDir).length).toEqual(0);
+        expect(fs.readdirSync(testTmpDir)).toHaveLength(0);
 
         // Restore env var
         puppeteer.configuration.temporaryDirectory = oldTmpDir;
@@ -286,11 +193,11 @@ describe('Launcher specs', function () {
       it('userDataDir option restores preferences', async () => {
         const {defaultBrowserOptions, puppeteer} = getTestState();
 
-        const userDataDir = await mkdtempAsync(TMP_FOLDER);
+        const userDataDir = await mkdtemp(TMP_FOLDER);
 
         const prefsJSPath = path.join(userDataDir, 'prefs.js');
         const prefsJSContent = 'user_pref("browser.warnOnQuit", true)';
-        await writeFileAsync(prefsJSPath, prefsJSContent);
+        await writeFile(prefsJSPath, prefsJSContent);
 
         const options = Object.assign({userDataDir}, defaultBrowserOptions);
         const browser = await puppeteer.launch(options);
@@ -300,15 +207,17 @@ describe('Launcher specs', function () {
         await browser.close();
         expect(fs.readdirSync(userDataDir).length).toBeGreaterThan(0);
 
-        expect(await readFileAsync(prefsJSPath, 'utf8')).toBe(prefsJSContent);
+        expect(await readFile(prefsJSPath, 'utf8')).toBe(prefsJSContent);
 
         // This might throw. See https://github.com/puppeteer/puppeteer/issues/2778
-        await rmAsync(userDataDir).catch(() => {});
+        try {
+          rmSync(userDataDir);
+        } catch {}
       });
       it('userDataDir argument', async () => {
         const {isChrome, puppeteer, defaultBrowserOptions} = getTestState();
 
-        const userDataDir = await mkdtempAsync(TMP_FOLDER);
+        const userDataDir = await mkdtemp(TMP_FOLDER);
         const options = Object.assign({}, defaultBrowserOptions);
         if (isChrome) {
           options.args = [
@@ -327,13 +236,15 @@ describe('Launcher specs', function () {
         await browser.close();
         expect(fs.readdirSync(userDataDir).length).toBeGreaterThan(0);
         // This might throw. See https://github.com/puppeteer/puppeteer/issues/2778
-        await rmAsync(userDataDir).catch(() => {});
+        try {
+          rmSync(userDataDir);
+        } catch {}
       });
       it('userDataDir argument with non-existent dir', async () => {
         const {isChrome, puppeteer, defaultBrowserOptions} = getTestState();
 
-        const userDataDir = await mkdtempAsync(TMP_FOLDER);
-        await rmAsync(userDataDir);
+        const userDataDir = await mkdtemp(TMP_FOLDER);
+        rmSync(userDataDir);
         const options = Object.assign({}, defaultBrowserOptions);
         if (isChrome) {
           options.args = [
@@ -352,12 +263,14 @@ describe('Launcher specs', function () {
         await browser.close();
         expect(fs.readdirSync(userDataDir).length).toBeGreaterThan(0);
         // This might throw. See https://github.com/puppeteer/puppeteer/issues/2778
-        await rmAsync(userDataDir).catch(() => {});
+        try {
+          rmSync(userDataDir);
+        } catch {}
       });
       it('userDataDir option should restore state', async () => {
         const {server, puppeteer, defaultBrowserOptions} = getTestState();
 
-        const userDataDir = await mkdtempAsync(TMP_FOLDER);
+        const userDataDir = await mkdtemp(TMP_FOLDER);
         const options = Object.assign({userDataDir}, defaultBrowserOptions);
         const browser = await puppeteer.launch(options);
         const page = await browser.newPage();
@@ -377,12 +290,14 @@ describe('Launcher specs', function () {
         ).toBe('hello');
         await browser2.close();
         // This might throw. See https://github.com/puppeteer/puppeteer/issues/2778
-        await rmAsync(userDataDir).catch(() => {});
+        try {
+          rmSync(userDataDir);
+        } catch {}
       });
       it('userDataDir option should restore cookies', async () => {
         const {server, puppeteer, defaultBrowserOptions} = getTestState();
 
-        const userDataDir = await mkdtempAsync(TMP_FOLDER);
+        const userDataDir = await mkdtemp(TMP_FOLDER);
         const options = Object.assign({userDataDir}, defaultBrowserOptions);
         const browser = await puppeteer.launch(options);
         const page = await browser.newPage();
@@ -403,7 +318,9 @@ describe('Launcher specs', function () {
         ).toBe('doSomethingOnlyOnce=true');
         await browser2.close();
         // This might throw. See https://github.com/puppeteer/puppeteer/issues/2778
-        await rmAsync(userDataDir).catch(() => {});
+        try {
+          rmSync(userDataDir);
+        } catch {}
       });
       it('should return the default arguments', async () => {
         const {isChrome, isFirefox, puppeteer} = getTestState();
@@ -458,10 +375,13 @@ describe('Launcher specs', function () {
         const options = Object.assign({}, defaultBrowserOptions);
         options.ignoreDefaultArgs = true;
         const browser = await puppeteer.launch(options);
-        const page = await browser.newPage();
-        expect(await page.evaluate('11 * 11')).toBe(121);
-        await page.close();
-        await browser.close();
+        try {
+          const page = await browser.newPage();
+          expect(await page.evaluate('11 * 11')).toBe(121);
+          await page.close();
+        } finally {
+          await browser.close();
+        }
       });
       it('should filter out ignored default arguments in Chrome', async () => {
         const {defaultBrowserOptions, puppeteer} = getTestState();
@@ -516,7 +436,7 @@ describe('Launcher specs', function () {
         options.args = [server.EMPTY_PAGE].concat(options.args || []);
         const browser = await puppeteer.launch(options);
         const pages = await browser.pages();
-        expect(pages.length).toBe(1);
+        expect(pages).toHaveLength(1);
         const page = pages[0]!;
         if (page.url() !== server.EMPTY_PAGE) {
           await page.waitForNavigation();
@@ -621,7 +541,7 @@ describe('Launcher specs', function () {
         };
         const browser = await puppeteer.launch(options);
         const pages = await browser.pages();
-        expect(pages.length).toBe(0);
+        expect(pages).toHaveLength(0);
         await browser.close();
       });
     });
@@ -677,7 +597,7 @@ describe('Launcher specs', function () {
           browserWSEndpoint: originalBrowser.wsEndpoint(),
         });
         await Promise.all([
-          utils.waitEvent(originalBrowser, 'disconnected'),
+          waitEvent(originalBrowser, 'disconnected'),
           remoteBrowser.close(),
         ]);
       });
@@ -695,7 +615,7 @@ describe('Launcher specs', function () {
           browserWSEndpoint: originalBrowser.wsEndpoint(),
         });
         await Promise.all([
-          utils.waitEvent(originalBrowser, 'disconnected'),
+          waitEvent(originalBrowser, 'disconnected'),
           remoteBrowser.close(),
         ]);
       });
@@ -739,7 +659,7 @@ describe('Launcher specs', function () {
         });
         try {
           const targets = browser.targets();
-          expect(targets.length).toEqual(1);
+          expect(targets).toHaveLength(1);
           expect(
             targets.find(target => {
               return target.type() === 'page';
@@ -799,7 +719,7 @@ describe('Launcher specs', function () {
         const restoredPage = pages.find(page => {
           return page.url() === server.PREFIX + '/frames/nested-frames.html';
         })!;
-        expect(utils.dumpFrames(restoredPage.mainFrame())).toEqual([
+        expect(dumpFrames(restoredPage.mainFrame())).toEqual([
           'http://localhost:<PORT>/frames/nested-frames.html',
           '    http://localhost:<PORT>/frames/two-frames.html (2frames)',
           '        http://localhost:<PORT>/frames/frame.html (uno)',
@@ -903,68 +823,6 @@ describe('Launcher specs', function () {
           }
         });
       });
-
-      describe('when the product is chrome, platform is not darwin, and arch is arm64', () => {
-        describe('and the executable exists', () => {
-          it('returns /usr/bin/chromium-browser', async () => {
-            const {puppeteer} = getTestState();
-            const osPlatformStub = sinon.stub(os, 'platform').returns('linux');
-            const osArchStub = sinon.stub(os, 'arch').returns('arm64');
-            const fsExistsStub = sinon.stub(fs, 'existsSync');
-            fsExistsStub.withArgs('/usr/bin/chromium-browser').returns(true);
-
-            const executablePath = puppeteer.executablePath();
-
-            expect(executablePath).toEqual('/usr/bin/chromium-browser');
-
-            osPlatformStub.restore();
-            osArchStub.restore();
-            fsExistsStub.restore();
-          });
-          describe('and the executable path is configured', () => {
-            const sandbox = sinon.createSandbox();
-
-            beforeEach(() => {
-              const {puppeteer} = getTestState();
-              sandbox
-                .stub(puppeteer.configuration, 'executablePath')
-                .value('SOME_CUSTOM_EXECUTABLE');
-            });
-
-            afterEach(() => {
-              sandbox.restore();
-            });
-
-            it('its value is used', async () => {
-              const {puppeteer} = getTestState();
-              try {
-                puppeteer.executablePath();
-              } catch (error) {
-                expect((error as Error).message).toContain(
-                  'SOME_CUSTOM_EXECUTABLE'
-                );
-              }
-            });
-          });
-        });
-        describe('and the executable does not exist', () => {
-          it('does not return /usr/bin/chromium-browser', async () => {
-            const {puppeteer} = getTestState();
-            const osPlatformStub = sinon.stub(os, 'platform').returns('linux');
-            const osArchStub = sinon.stub(os, 'arch').returns('arm64');
-            const fsExistsStub = sinon.stub(fs, 'existsSync');
-            fsExistsStub.withArgs('/usr/bin/chromium-browser').returns(false);
-
-            expect(() => {
-              return puppeteer.executablePath();
-            }).toThrowError();
-
-            osPlatformStub.restore();
-            osArchStub.restore();
-            fsExistsStub.restore();
-          });
-        });
-      });
     });
   });
 
@@ -1017,7 +875,7 @@ describe('Launcher specs', function () {
       });
 
       await Promise.all([
-        utils.waitEvent(remoteBrowser2, 'disconnected'),
+        waitEvent(remoteBrowser2, 'disconnected'),
         remoteBrowser2.disconnect(),
       ]);
 
@@ -1026,8 +884,8 @@ describe('Launcher specs', function () {
       expect(disconnectedRemote2).toBe(1);
 
       await Promise.all([
-        utils.waitEvent(remoteBrowser1, 'disconnected'),
-        utils.waitEvent(originalBrowser, 'disconnected'),
+        waitEvent(remoteBrowser1, 'disconnected'),
+        waitEvent(originalBrowser, 'disconnected'),
         originalBrowser.close(),
       ]);
 

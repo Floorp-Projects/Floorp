@@ -24,17 +24,20 @@
  * necessary.
  */
 
-const {execSync} = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
 // Need to ensure TS is compiled before loading the installer
 if (!fs.existsSync(path.join(__dirname, 'lib'))) {
-  console.log('It seems we are installing from the git repo.');
-  console.log('Building install tools from scratch...');
-  execSync('npm run build --workspace puppeteer');
+  console.warn(
+    'Skipping browser installation because the Puppeteer build is not available. Run `npm install` again after you have re-built Puppeteer.'
+  );
+  process.exit(0);
 }
 
-const {downloadBrowser} = require('puppeteer/internal/node/install.js');
-
-downloadBrowser();
+try {
+  const {downloadBrowser} = require('puppeteer/internal/node/install.js');
+  downloadBrowser();
+} catch (err) {
+  console.warn('Browser download failed', err);
+}

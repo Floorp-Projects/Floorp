@@ -18,18 +18,19 @@ import {ServerResponse} from 'http';
 
 import expect from 'expect';
 import {TimeoutError} from 'puppeteer';
-import {HTTPRequest} from 'puppeteer-core/internal/common/HTTPRequest.js';
+import {HTTPRequest} from 'puppeteer-core/internal/api/HTTPRequest.js';
 
 import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
 } from './mocha-utils.js';
-import utils from './utils.js';
+import {attachFrame, isFavicon, waitEvent} from './utils.js';
 
 describe('navigation', function () {
   setupTestBrowserHooks();
   setupTestPageAndContextHooks();
+
   describe('Page.goto', function () {
     it('should work', async () => {
       const {page, server} = getTestState();
@@ -183,9 +184,9 @@ describe('navigation', function () {
         expect(error.message).toContain('SSL_ERROR_UNKNOWN');
       }
 
-      expect(requests.length).toBe(2);
-      expect(requests[0]!).toBe('request');
-      expect(requests[1]!).toBe('requestfailed');
+      expect(requests).toHaveLength(2);
+      expect(requests[0]).toBe('request');
+      expect(requests[1]).toBe('requestfailed');
     });
     it('should fail when navigating to bad SSL after redirects', async () => {
       const {page, server, httpsServer, isChrome} = getTestState();
@@ -361,10 +362,14 @@ describe('navigation', function () {
         server.waitForRequest('/fetch-request-a.js'),
         server.waitForRequest('/fetch-request-b.js'),
         server.waitForRequest('/fetch-request-c.js'),
-      ]);
-      const secondFetchResourceRequested = server.waitForRequest(
-        '/fetch-request-d.js'
-      );
+      ]).catch(() => {
+        // Ignore Error that arise from test server during hooks
+      });
+      const secondFetchResourceRequested = server
+        .waitForRequest('/fetch-request-d.js')
+        .catch(() => {
+          // Ignore Error that arise from test server during hooks
+        });
 
       // Navigate to a page which loads immediately and then does a bunch of
       // requests via javascript's fetch method.
@@ -378,9 +383,7 @@ describe('navigation', function () {
       });
 
       // Wait for the page's 'load' event.
-      await new Promise(fulfill => {
-        return page.once('load', fulfill);
-      });
+      await waitEvent(page, 'load');
       expect(navigationFinished).toBe(false);
 
       // Wait for the initial three resources to be requested.
@@ -413,7 +416,9 @@ describe('navigation', function () {
       // Expect navigation to succeed.
       expect(response.ok()).toBe(true);
     });
-    it('should not leak listeners during navigation', async () => {
+    it('should not leak listeners during navigation', async function () {
+      this.timeout(25_000);
+
       const {page, server} = getTestState();
 
       let warning = null;
@@ -427,7 +432,9 @@ describe('navigation', function () {
       process.removeListener('warning', warningHandler);
       expect(warning).toBe(null);
     });
-    it('should not leak listeners during bad navigation', async () => {
+    it('should not leak listeners during bad navigation', async function () {
+      this.timeout(25_000);
+
       const {page} = getTestState();
 
       let warning = null;
@@ -443,7 +450,9 @@ describe('navigation', function () {
       process.removeListener('warning', warningHandler);
       expect(warning).toBe(null);
     });
-    it('should not leak listeners during navigation of 11 pages', async () => {
+    it('should not leak listeners during navigation of 11 pages', async function () {
+      this.timeout(25_000);
+
       const {context, server} = getTestState();
 
       let warning = null;
@@ -466,12 +475,12 @@ describe('navigation', function () {
 
       const requests: HTTPRequest[] = [];
       page.on('request', request => {
-        return !utils.isFavicon(request) && requests.push(request);
+        return !isFavicon(request) && requests.push(request);
       });
       const dataURL = 'data:text/html,<div>yo</div>';
       const response = (await page.goto(dataURL))!;
       expect(response.status()).toBe(200);
-      expect(requests.length).toBe(1);
+      expect(requests).toHaveLength(1);
       expect(requests[0]!.url()).toBe(dataURL);
     });
     it('should navigate to URL with hash and fire requests without hash', async () => {
@@ -479,12 +488,12 @@ describe('navigation', function () {
 
       const requests: HTTPRequest[] = [];
       page.on('request', request => {
-        return !utils.isFavicon(request) && requests.push(request);
+        return !isFavicon(request) && requests.push(request);
       });
       const response = (await page.goto(server.EMPTY_PAGE + '#hash'))!;
       expect(response.status()).toBe(200);
       expect(response.url()).toBe(server.EMPTY_PAGE);
-      expect(requests.length).toBe(1);
+      expect(requests).toHaveLength(1);
       expect(requests[0]!.url()).toBe(server.EMPTY_PAGE);
     });
     it('should work with self requesting page', async () => {
@@ -509,13 +518,17 @@ describe('navigation', function () {
     it('should send referer', async () => {
       const {page, server} = getTestState();
 
-      const [request1, request2] = await Promise.all([
+      const requests = Promise.all([
         server.waitForRequest('/grid.html'),
         server.waitForRequest('/digits/1.png'),
         page.goto(server.PREFIX + '/grid.html', {
           referer: 'http://google.com/',
         }),
-      ]);
+      ]).catch(() => {
+        return [];
+      });
+
+      const [request1, request2] = await requests;
       expect(request1.headers['referer']).toBe('http://google.com/');
       // Make sure subresources do not inherit referer.
       expect(request2.headers['referer']).toBe(server.PREFIX + '/grid.html');
@@ -530,7 +543,9 @@ describe('navigation', function () {
         page.goto(server.PREFIX + '/grid.html', {
           referrerPolicy: 'no-referer',
         }),
-      ]);
+      ]).catch(() => {
+        return [];
+      });
       expect(request1.headers['referer']).toBeUndefined();
       expect(request2.headers['referer']).toBe(server.PREFIX + '/grid.html');
     });
@@ -571,7 +586,7 @@ describe('navigation', function () {
           return (bothFired = true);
         });
 
-      await server.waitForRequest('/one-style.css');
+      await server.waitForRequest('/one-style.css').catch(() => {});
       await domContentLoadedPromise;
       expect(bothFired).toBe(false);
       response.end();
@@ -659,13 +674,9 @@ describe('navigation', function () {
       const navigationPromise = page.goto(
         server.PREFIX + '/frames/one-frame.html'
       );
-      const frame = await utils.waitEvent(page, 'frameattached');
-      await new Promise<void>(fulfill => {
-        page.on('framenavigated', f => {
-          if (f === frame) {
-            fulfill();
-          }
-        });
+      const frame = await waitEvent(page, 'frameattached');
+      await waitEvent(page, 'framenavigated', f => {
+        return f === frame;
       });
       await Promise.all([
         frame.evaluate(() => {
@@ -723,7 +734,7 @@ describe('navigation', function () {
 
       const response = (await page.frames()[1]!.goto(server.EMPTY_PAGE))!;
       expect(response.ok()).toBe(true);
-      expect(response.frame()).toBe(page.frames()[1]!);
+      expect(response.frame()).toBe(page.frames()[1]);
     });
     it('should reject when frame detaches', async () => {
       const {page, server} = getTestState();
@@ -737,7 +748,7 @@ describe('navigation', function () {
         .catch(error_ => {
           return error_;
         });
-      await server.waitForRequest('/empty.html');
+      await server.waitForRequest('/empty.html').catch(() => {});
 
       await page.$eval('iframe', frame => {
         return frame.remove();
@@ -748,14 +759,14 @@ describe('navigation', function () {
     it('should return matching responses', async () => {
       const {page, server} = getTestState();
 
-      // Disable cache: otherwise, chromium will cache similar requests.
+      // Disable cache: otherwise, the browser will cache similar requests.
       await page.setCacheEnabled(false);
       await page.goto(server.EMPTY_PAGE);
       // Attach three frames.
       const frames = await Promise.all([
-        utils.attachFrame(page, 'frame1', server.EMPTY_PAGE),
-        utils.attachFrame(page, 'frame2', server.EMPTY_PAGE),
-        utils.attachFrame(page, 'frame3', server.EMPTY_PAGE),
+        attachFrame(page, 'frame1', server.EMPTY_PAGE),
+        attachFrame(page, 'frame2', server.EMPTY_PAGE),
+        attachFrame(page, 'frame3', server.EMPTY_PAGE),
       ]);
       // Navigate all frames to the same URL.
       const serverResponses: ServerResponse[] = [];
