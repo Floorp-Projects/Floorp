@@ -4,14 +4,12 @@
 
 import datetime
 import json
-import logging
 import os
 import tarfile
 import tempfile
 import zipfile
 from contextlib import nullcontext as does_not_raise
-from io import StringIO
-from unittest.mock import MagicMock, Mock, call
+from unittest.mock import MagicMock, call
 
 import mozpack.path as mozpath
 import mozunit
@@ -227,141 +225,6 @@ def test_inject_deb_distribution_folder(monkeypatch):
     monkeypatch.setattr(deb.shutil, "copytree", mock_copytree)
 
     deb._inject_deb_distribution_folder("/source_dir", "Firefox")
-
-
-ZH_TW_FTL = """\
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-
-# These messages are used by the Firefox ".desktop" file on Linux.
-# https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
-
-# The entry name is the label on the desktop icon, among other things.
-desktop-entry-name = { -brand-shortcut-name }
-# The comment usually appears as a tooltip when hovering over application menu entry.
-desktop-entry-comment = 瀏覽全球資訊網
-desktop-entry-generic-name = 網頁瀏覽器
-# Keywords are search terms used to find this application.
-# The string is a list of keywords separated by semicolons:
-# - Do NOT replace semicolons with other punctuation signs.
-# - The list MUST end with a semicolon.
-desktop-entry-keywords = 網際網路;網路;瀏覽器;網頁;上網;Internet;WWW;Browser;Web;Explorer;
-
-## Actions are visible in a context menu after right clicking the
-## taskbar icon, possibly other places depending on the environment.
-
-desktop-action-new-window-name = 開新視窗
-desktop-action-new-private-window-name = 開新隱私視窗
-"""
-
-DESKTOP_ENTRY_FILE_TEXT = """\
-[Desktop Entry]
-Version=1.0
-Type=Application
-Exec=firefox-nightly %u
-Terminal=false
-X-MultipleArgs=false
-Icon=firefox-nightly
-StartupWMClass=firefox-nightly
-Categories=GNOME;GTK;Network;WebBrowser;
-MimeType=application/json;application/pdf;application/rdf+xml;application/rss+xml;application/x-xpinstall;application/xhtml+xml;application/xml;audio/flac;audio/ogg;audio/webm;image/avif;image/gif;image/jpeg;image/png;image/svg+xml;image/webp;text/html;text/xml;video/ogg;video/webm;x-scheme-handler/chrome;x-scheme-handler/http;x-scheme-handler/https;
-StartupNotify=true
-Actions=new-window;new-private-window;open-profile-manager;
-Name=en-US-desktop-entry-name
-Name[zh_TW]=zh-TW-desktop-entry-name
-Comment=en-US-desktop-entry-comment
-Comment[zh_TW]=zh-TW-desktop-entry-comment
-GenericName=en-US-desktop-entry-generic-name
-GenericName[zh_TW]=zh-TW-desktop-entry-generic-name
-Keywords=en-US-desktop-entry-keywords
-Keywords[zh_TW]=zh-TW-desktop-entry-keywords
-X-GNOME-FullName=en-US-desktop-entry-x-gnome-full-name
-X-GNOME-FullName[zh_TW]=zh-TW-desktop-entry-x-gnome-full-name
-
-[Desktop Action new-window]
-Exec=firefox-nightly --new-window %u
-Name=en-US-desktop-action-new-window-name
-Name[zh_TW]=zh-TW-desktop-action-new-window-name
-
-[Desktop Action new-private-window]
-Exec=firefox-nightly --private-window %u
-Name=en-US-desktop-action-new-private-window-name
-Name[zh_TW]=zh-TW-desktop-action-new-private-window-name
-
-[Desktop Action open-profile-manager]
-Exec=firefox-nightly --ProfileManager
-Name=en-US-desktop-action-open-profile-manager
-Name[zh_TW]=zh-TW-desktop-action-open-profile-manager
-"""
-
-
-def test_generate_deb_desktop_entry_file_text(monkeypatch):
-    def responsive(url):
-        if "zh-TW" in url:
-            return Mock(
-                **{
-                    "status_code": 200,
-                    "text": ZH_TW_FTL,
-                }
-            )
-        return Mock(**{"status_code": 404})
-
-    monkeypatch.setattr(deb.requests, "get", responsive)
-
-    output_stream = StringIO()
-    logger = logging.getLogger("mozbuild:test:repackaging")
-    logger.setLevel(logging.DEBUG)
-    stream_handler = logging.StreamHandler(output_stream)
-    logger.addHandler(stream_handler)
-
-    def log(level, action, params, format_str):
-        logger.log(
-            level,
-            format_str.format(**params),
-            extra={"action": action, "params": params},
-        )
-
-    build_variables = {
-        "DEB_PKG_NAME": "firefox-nightly",
-    }
-    release_product = "firefox"
-    release_type = "nightly"
-
-    def fluent_localization(locales, resources, loader):
-        def format_value(resource):
-            return f"{locales[0]}-{resource}"
-
-        return Mock(**{"format_value": format_value})
-
-    fluent_resource_loader = Mock()
-
-    desktop_entry_file_text = deb._generate_browser_desktop_entry_file_text(
-        log,
-        build_variables,
-        release_product,
-        release_type,
-        fluent_localization,
-        fluent_resource_loader,
-    )
-
-    assert desktop_entry_file_text == DESKTOP_ENTRY_FILE_TEXT
-
-    def outage(url):
-        return Mock(**{"status_code": 500})
-
-    monkeypatch.setattr(deb.requests, "get", outage)
-
-    with pytest.raises(deb.HgServerError):
-        desktop_entry_file_text = deb._generate_browser_desktop_entry_file_text(
-            log,
-            build_variables,
-            release_product,
-            release_type,
-            fluent_localization,
-            fluent_resource_loader,
-        )
 
 
 @pytest.mark.parametrize(
