@@ -43,7 +43,7 @@ static inline gc::AllocKind NewObjectGCKind() { return gc::AllocKind::OBJECT4; }
 MOZ_ALWAYS_INLINE uint32_t js::NativeObject::numDynamicSlots() const {
   uint32_t slots = getSlotsHeader()->capacity();
   MOZ_ASSERT(slots == calculateDynamicSlots());
-  MOZ_ASSERT_IF(hasDynamicSlots(), slots != 0);
+  MOZ_ASSERT_IF(hasDynamicSlots() && !hasUniqueId(), slots != 0);
 
   return slots;
 }

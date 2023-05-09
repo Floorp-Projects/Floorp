@@ -600,11 +600,15 @@ size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
 
   Zone* zone = src->nurseryZone();
   size_t count = src->numDynamicSlots();
+
+  uint64_t uid = src->maybeUniqueId();
+
   size_t allocSize = ObjectSlots::allocSize(count);
 
-  if (!nursery().isInside(src->slots_)) {
+  ObjectSlots* srcHeader = src->getSlotsHeader();
+  if (!nursery().isInside(srcHeader)) {
     AddCellMemory(dst, allocSize, MemoryUse::ObjectSlots);
-    nursery().removeMallocedBufferDuringMinorGC(src->getSlotsHeader());
+    nursery().removeMallocedBufferDuringMinorGC(srcHeader);
     return 0;
   }
 
@@ -617,14 +621,16 @@ size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
     }
 
     ObjectSlots* slotsHeader = new (allocation)
-        ObjectSlots(count, src->getSlotsHeader()->dictionarySlotSpan());
+        ObjectSlots(count, srcHeader->dictionarySlotSpan(), uid);
     dst->slots_ = slotsHeader->slots();
   }
 
   AddCellMemory(dst, allocSize, MemoryUse::ObjectSlots);
 
   PodCopy(dst->slots_, src->slots_, count);
-  nursery().setSlotsForwardingPointer(src->slots_, dst->slots_, count);
+  if (count) {
+    nursery().setSlotsForwardingPointer(src->slots_, dst->slots_, count);
+  }
 
   return allocSize;
 }

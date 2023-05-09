@@ -67,6 +67,7 @@
 #endif
 #include "wasm/WasmGcObject.h"
 
+#include "gc/Zone-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/Interpreter-inl.h"
@@ -1080,6 +1081,7 @@ bool NativeObject::fixupAfterSwap(JSContext* cx, Handle<NativeObject*> obj,
   uint32_t oldDictionarySlotSpan =
       obj->inDictionaryMode() ? slotValues.length() : 0;
 
+  MOZ_ASSERT(!obj->hasUniqueId());
   size_t ndynamic =
       calculateDynamicSlots(nfixed, slotValues.length(), obj->getClass());
   size_t currentSlots = obj->getSlotsHeader()->capacity();
@@ -1254,16 +1256,45 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
 
   unsigned r = NotifyGCPreSwap(a, b);
 
-  bool aIsProxyWithInlineValues =
-      a->is<ProxyObject>() && a->as<ProxyObject>().usingInlineValueArray();
-  bool bIsProxyWithInlineValues =
-      b->is<ProxyObject>() && b->as<ProxyObject>().usingInlineValueArray();
+  ProxyObject* pa = a->is<ProxyObject>() ? &a->as<ProxyObject>() : nullptr;
+  ProxyObject* pb = b->is<ProxyObject>() ? &b->as<ProxyObject>() : nullptr;
+  bool aIsProxyWithInlineValues = pa && pa->usingInlineValueArray();
+  bool bIsProxyWithInlineValues = pb && pb->usingInlineValueArray();
 
   bool aIsUsedAsPrototype = a->isUsedAsPrototype();
   bool bIsUsedAsPrototype = b->isUsedAsPrototype();
 
   // Swap element associations.
   Zone* zone = a->zone();
+
+  // Record any associated unique IDs and prepare for swap.
+  //
+  // Note that unique IDs are NOT swapped but remain associated with the
+  // original address.
+  uint64_t aid = 0;
+  uint64_t bid = 0;
+  (void)zone->maybeGetUniqueId(a, &aid);
+  (void)zone->maybeGetUniqueId(b, &bid);
+  NativeObject* na = a->is<NativeObject>() ? &a->as<NativeObject>() : nullptr;
+  NativeObject* nb = b->is<NativeObject>() ? &b->as<NativeObject>() : nullptr;
+  if ((aid || bid) && (na || nb)) {
+    // We can't remove unique IDs from native objects when they are swapped with
+    // objects without an ID. Instead ensure they both have IDs so we always
+    // have something to overwrite the old ID with.
+    if (!zone->getOrCreateUniqueId(a, &aid) ||
+        !zone->getOrCreateUniqueId(b, &bid)) {
+      oomUnsafe.crash("Failed to create unique ID during swap");
+    }
+
+    // IDs stored in NativeObjects could shadow those stored in the zone
+    // table. Remove any zone table IDs first.
+    if (pa && aid) {
+      zone->removeUniqueId(a);
+    }
+    if (pb && bid) {
+      zone->removeUniqueId(b);
+    }
+  }
 
   gc::AllocKind ka = SwappableObjectAllocKind(a);
   gc::AllocKind kb = SwappableObjectAllocKind(b);
@@ -1305,8 +1336,6 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
     // objects.
     RootedValueVector avals(cx);
     RootedValueVector bvals(cx);
-    NativeObject* na = a->is<NativeObject>() ? &a->as<NativeObject>() : nullptr;
-    NativeObject* nb = b->is<NativeObject>() ? &b->as<NativeObject>() : nullptr;
     if (na && !na->prepareForSwap(cx, &avals)) {
       oomUnsafe.crash("NativeObject::prepareForSwap");
     }
@@ -1315,8 +1344,6 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
     }
 
     // Do the same for proxy value arrays.
-    ProxyObject* pa = a->is<ProxyObject>() ? &a->as<ProxyObject>() : nullptr;
-    ProxyObject* pb = b->is<ProxyObject>() ? &b->as<ProxyObject>() : nullptr;
     if (pa && !pa->prepareForSwap(cx, &avals)) {
       oomUnsafe.crash("ProxyObject::prepareForSwap");
     }
@@ -1359,6 +1386,16 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
       oomUnsafe.crash("setIsUsedAsPrototype");
     }
   }
+
+  // Restore original unique IDs.
+  if ((aid || bid) && (na || nb)) {
+    if ((aid && !zone->setOrUpdateUniqueId(cx, a, aid)) ||
+        (bid && !zone->setOrUpdateUniqueId(cx, b, bid))) {
+      oomUnsafe.crash("Failed to set unique ID after swap");
+    }
+  }
+  MOZ_ASSERT_IF(aid, zone->getUniqueIdInfallible(a) == aid);
+  MOZ_ASSERT_IF(bid, zone->getUniqueIdInfallible(b) == bid);
 
   /*
    * We need a write barrier here. If |a| was marked and |b| was not, then

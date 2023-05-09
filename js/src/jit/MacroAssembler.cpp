@@ -341,6 +341,8 @@ void MacroAssembler::nurseryAllocateObject(Register result, Register temp,
     store32(
         Imm32(0),
         Address(result, thingSize + ObjectSlots::offsetOfDictionarySlotSpan()));
+    store64(Imm64(ObjectSlots::NoUniqueIdInDynamicSlots),
+            Address(result, thingSize + ObjectSlots::offsetOfMaybeUniqueId()));
     computeEffectiveAddress(
         Address(result, thingSize + ObjectSlots::offsetOfSlots()), temp);
     storePtr(temp, Address(result, NativeObject::offsetOfSlots()));
