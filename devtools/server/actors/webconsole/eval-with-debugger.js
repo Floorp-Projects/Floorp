@@ -127,19 +127,23 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
   const helpers = WebConsoleCommandsManager.getWebConsoleCommands(
     webConsole,
     dbgGlobal,
+    frame,
     string,
     options.selectedNodeActor
   );
-  let bindings = bindCommands(
-    isCommand(string),
-    dbgGlobal,
-    bindSelf,
-    frame,
-    helpers.bindings
-  );
+  let { bindings } = helpers;
 
+  // '_self' refers to the JS object references via options.selectedObjectActor.
+  // This isn't exposed on typical console evaluation, but only when "Store As Global"
+  // runs an invisible script storing `_self` into `temp${i}`.
+  if (bindSelf) {
+    bindings._self = bindSelf;
+  }
+
+  // Log points calls this method from the server side and pass additional variables
+  // to be exposed to the evaluated JS string
   if (options.bindings) {
-    bindings = { ...(bindings || {}), ...options.bindings };
+    bindings = { ...bindings, ...options.bindings };
   }
 
   const evalOptions = {};
@@ -668,42 +672,4 @@ function getDbgGlobal(options, dbg, webConsole) {
   // jsVal appropriately for the evaluation compartment.
   const bindSelf = dbgGlobal.makeDebuggeeValue(jsVal);
   return { bindSelf, dbgGlobal, evalGlobal };
-}
-
-
-function bindCommands(isCmd, dbgGlobal, bindSelf, frame, bindings) {
-  if (bindSelf) {
-    bindings._self = bindSelf;
-  }
-  // Check if the Debugger.Frame or Debugger.Object for the global include any of the
-  // helper function we set. We will not overwrite these functions with the Web Console
-  // commands.
-  const availableCommands = WebConsoleCommandsManager.getAllCommandNames();
-
-  let helpersToDisable = [];
-
-  // do not override command functions if we are using the command key `:`
-  // before the command string
-  if (!isCmd) {
-    if (frame) {
-      const env = frame.environment;
-      if (env) {
-        helpersToDisable = availableCommands.filter(name => !!env.find(name));
-      }
-    } else {
-      helpersToDisable = availableCommands.filter(
-        name => !!dbgGlobal.getOwnPropertyDescriptor(name)
-      );
-    }
-    // if we do not have the command key as a prefix, some commands are only accessible
-    // with the command key prefix and should be disabled here to prevent exposing them as JS variable/method.
-    helpersToDisable.push(
-      ...WebConsoleCommandsManager.getColonOnlyCommandNames()
-    );
-  }
-
-  for (const helper of helpersToDisable) {
-    delete bindings[helper];
-  }
-  return bindings;
 }
