@@ -15,9 +15,7 @@ var { CanonicalJSON } = ChromeUtils.import(
   "resource://gre/modules/CanonicalJSON.jsm"
 );
 var { Log } = ChromeUtils.importESModule("resource://gre/modules/Log.sys.mjs");
-var { ObjectUtils } = ChromeUtils.import(
-  "resource://gre/modules/ObjectUtils.jsm"
-);
+
 var { PlacesSyncUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesSyncUtils.sys.mjs"
 );
