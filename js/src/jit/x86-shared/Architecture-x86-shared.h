@@ -246,8 +246,7 @@ class FloatRegisters {
       ((1 << X86Encoding::xmm0) | (1 << X86Encoding::xmm1) |
        (1 << X86Encoding::xmm2) | (1 << X86Encoding::xmm3) |
        (1 << X86Encoding::xmm4) | (1 << X86Encoding::xmm5)) *
-          SpreadScalar |
-      AllPhysMask * SpreadVector;
+      Spread;
 #else
   static const SetType VolatileMask = AllMask;
 #endif
