@@ -11,17 +11,17 @@ add_task(async function() {
   const commands = await CommandsFactory.forTab(tab);
   await commands.targetCommand.startListening();
 
-  // Fetch WebConsoleCommands so that it is available for next Content Tasks
+  // Fetch WebConsoleCommandsManager so that it is available for next Content Tasks
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     const { require } = ChromeUtils.importESModule(
       "resource://devtools/shared/loader/Loader.sys.mjs"
     );
     const {
-      WebConsoleCommands,
-    } = require("resource://devtools/server/actors/webconsole/utils.js");
+      WebConsoleCommandsManager,
+    } = require("resource://devtools/server/actors/webconsole/commands/manager.js");
 
     // Bind the symbol on this in order to make it available for next tasks
-    this.WebConsoleCommands = WebConsoleCommands;
+    this.WebConsoleCommandsManager = WebConsoleCommandsManager;
   });
 
   await registerNewCommand(commands);
@@ -38,13 +38,13 @@ async function evaluateJSAndCheckResult(commands, input, expected) {
 
 async function registerNewCommand(commands) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    this.WebConsoleCommands.register("setFoo", (owner, value) => {
+    this.WebConsoleCommandsManager.register("setFoo", (owner, value) => {
       owner.window.foo = value;
       return "ok";
     });
 
     ok(
-      this.WebConsoleCommands.hasCommand("setFoo"),
+      this.WebConsoleCommandsManager.hasCommand("setFoo"),
       "The command should be registered"
     );
   });
@@ -62,7 +62,7 @@ async function registerNewCommand(commands) {
 
 async function wrapCommand(commands) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    const origKeys = this.WebConsoleCommands.getCommand("keys");
+    const origKeys = this.WebConsoleCommandsManager.getCommand("keys");
 
     const newKeys = (...args) => {
       const [, arg0] = args;
@@ -72,9 +72,9 @@ async function wrapCommand(commands) {
       return origKeys(...args);
     };
 
-    this.WebConsoleCommands.register("keys", newKeys);
+    this.WebConsoleCommandsManager.register("keys", newKeys);
     is(
-      this.WebConsoleCommands.getCommand("keys"),
+      this.WebConsoleCommandsManager.getCommand("keys"),
       newKeys,
       "the keys() command should have been replaced"
     );
@@ -98,9 +98,9 @@ async function wrapCommand(commands) {
   });
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    this.WebConsoleCommands.register("keys", this.origKeys);
+    this.WebConsoleCommandsManager.register("keys", this.origKeys);
     is(
-      this.WebConsoleCommands.getCommand("keys"),
+      this.WebConsoleCommandsManager.getCommand("keys"),
       this.origKeys,
       "the keys() command should be restored"
     );
@@ -110,7 +110,7 @@ async function wrapCommand(commands) {
 
 async function unregisterCommand(commands) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    this.WebConsoleCommands.unregister("setFoo");
+    this.WebConsoleCommandsManager.unregister("setFoo");
   });
 
   await evaluateJSAndCheckResult(commands, "setFoo", {
@@ -124,7 +124,7 @@ async function unregisterCommand(commands) {
 
 async function registerAccessor(commands) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    this.WebConsoleCommands.register("$foo", {
+    this.WebConsoleCommandsManager.register("$foo", {
       get(owner) {
         const foo = owner.window.document.getElementById("quack");
         return owner.makeDebuggeeValue(foo);
@@ -144,9 +144,9 @@ async function registerAccessor(commands) {
       ">o_/",
       '#foo textContent should equal to ">o_/"'
     );
-    this.WebConsoleCommands.unregister("$foo");
+    this.WebConsoleCommandsManager.unregister("$foo");
     ok(
-      !this.WebConsoleCommands.hasCommand("$foo"),
+      !this.WebConsoleCommandsManager.hasCommand("$foo"),
       "$foo should be unregistered"
     );
   });
@@ -154,7 +154,10 @@ async function registerAccessor(commands) {
 
 async function unregisterAfterOverridingTwice(commands) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    this.WebConsoleCommands.register("keys", (owner, obj) => "command 1");
+    this.WebConsoleCommandsManager.register(
+      "keys",
+      (owner, obj) => "command 1"
+    );
   });
 
   info("checking the value of the first override");
@@ -163,8 +166,8 @@ async function unregisterAfterOverridingTwice(commands) {
   });
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    const orig = this.WebConsoleCommands.getCommand("keys");
-    this.WebConsoleCommands.register("keys", (owner, obj) => {
+    const orig = this.WebConsoleCommandsManager.getCommand("keys");
+    this.WebConsoleCommandsManager.register("keys", (owner, obj) => {
       if (obj === "quack") {
         return "bang!";
       }
@@ -181,7 +184,7 @@ async function unregisterAfterOverridingTwice(commands) {
   });
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    this.WebConsoleCommands.unregister("keys");
+    this.WebConsoleCommandsManager.unregister("keys");
   });
 
   info(

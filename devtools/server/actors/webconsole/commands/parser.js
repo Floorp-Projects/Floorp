@@ -4,7 +4,12 @@
 
 "use strict";
 
-const validCommands = ["block", "help", "history", "screenshot", "unblock"];
+loader.lazyRequireGetter(
+  this,
+  ["validCommands"],
+  "resource://devtools/server/actors/webconsole/commands/manager.js",
+  true
+);
 
 const COMMAND = "command";
 const KEY = "key";
@@ -242,4 +247,3 @@ function getTypedValue(value) {
 
 exports.formatCommand = formatCommand;
 exports.isCommand = isCommand;
-exports.validCommands = validCommands;

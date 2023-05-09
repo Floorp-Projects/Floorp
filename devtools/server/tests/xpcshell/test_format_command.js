@@ -5,7 +5,7 @@
 
 const {
   formatCommand,
-} = require("resource://devtools/server/actors/webconsole/commands.js");
+} = require("resource://devtools/server/actors/webconsole/commands/parser.js");
 
 const testcases = [
   { input: ":help", expectedOutput: "help()" },

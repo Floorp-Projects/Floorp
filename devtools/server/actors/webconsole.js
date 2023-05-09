@@ -48,14 +48,20 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["isCommand", "validCommands"],
-  "resource://devtools/server/actors/webconsole/commands.js",
+  ["isCommand"],
+  "resource://devtools/server/actors/webconsole/commands/parser.js",
   true
 );
 loader.lazyRequireGetter(
   this,
-  ["addWebConsoleCommands", "CONSOLE_WORKER_IDS", "WebConsoleUtils"],
+  ["CONSOLE_WORKER_IDS", "WebConsoleUtils"],
   "resource://devtools/server/actors/webconsole/utils.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  ["addWebConsoleCommands", "validCommands"],
+  "resource://devtools/server/actors/webconsole/commands/manager.js",
   true
 );
 loader.lazyRequireGetter(
