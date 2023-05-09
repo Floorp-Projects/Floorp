@@ -266,6 +266,7 @@ def run_prettier(cmd_args, config, fix):
             if not file:
                 continue
 
+            file = os.path.abspath(file)
             results.append(
                 result.from_config(
                     config,
