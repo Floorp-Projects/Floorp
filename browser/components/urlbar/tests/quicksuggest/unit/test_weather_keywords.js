@@ -21,12 +21,12 @@ add_task(async function init() {
 // * Settings data: none
 // * Nimbus values: none
 // * Min keyword length pref: none
-// * Expected: zero prefix
+// * Expected: no suggestion
 add_task(async function() {
   await doKeywordsTest({
     desc: "No data",
     tests: {
-      "": true,
+      "": false,
       w: false,
       we: false,
       wea: false,
@@ -49,13 +49,13 @@ add_task(async function() {
 // * Settings data: empty
 // * Nimbus values: none
 // * Min keyword length pref: none
-// * Expected: zero prefix
+// * Expected: no suggestion
 add_task(async function() {
   await doKeywordsTest({
     desc: "Empty settings",
     settingsData: {},
     tests: {
-      "": true,
+      "": false,
       w: false,
       we: false,
       wea: false,
@@ -78,7 +78,7 @@ add_task(async function() {
 // * Settings data: keywords only
 // * Nimbus values: none
 // * Min keyword length pref: none
-// * Expected: zero prefix
+// * Expected: full keywords only
 add_task(async function() {
   await doKeywordsTest({
     desc: "Settings only, keywords only",
@@ -86,14 +86,14 @@ add_task(async function() {
       keywords: ["weather", "forecast"],
     },
     tests: {
-      "": true,
+      "": false,
       w: false,
       we: false,
       wea: false,
       weat: false,
       weath: false,
       weathe: false,
-      weather: false,
+      weather: true,
       f: false,
       fo: false,
       for: false,
@@ -101,7 +101,7 @@ add_task(async function() {
       forec: false,
       foreca: false,
       forecas: false,
-      forecast: false,
+      forecast: true,
     },
   });
 });
@@ -109,7 +109,7 @@ add_task(async function() {
 // * Settings data: keywords and min keyword length = 0
 // * Nimbus values: none
 // * Min keyword length pref: none
-// * Expected: zero prefix
+// * Expected: full keywords only
 add_task(async function() {
   await doKeywordsTest({
     desc: "Settings only, min keyword length = 0",
@@ -118,14 +118,14 @@ add_task(async function() {
       min_keyword_length: 0,
     },
     tests: {
-      "": true,
+      "": false,
       w: false,
       we: false,
       wea: false,
       weat: false,
       weath: false,
       weathe: false,
-      weather: false,
+      weather: true,
       f: false,
       fo: false,
       for: false,
@@ -133,7 +133,7 @@ add_task(async function() {
       forec: false,
       foreca: false,
       forecas: false,
-      forecast: false,
+      forecast: true,
     },
   });
 });
@@ -239,14 +239,14 @@ add_task(async function() {
 // * Settings data: empty
 // * Nimbus values: empty
 // * Min keyword length pref: none
-// * Expected: zero prefix
+// * Expected: no suggestion
 add_task(async function() {
   await doKeywordsTest({
     desc: "Settings: empty; Nimbus: empty",
     settingsData: {},
     nimbusValues: {},
     tests: {
-      "": true,
+      "": false,
       w: false,
       we: false,
       wea: false,
@@ -269,7 +269,7 @@ add_task(async function() {
 // * Settings data: keywords only
 // * Nimbus values: keywords only
 // * Min keyword length pref: none
-// * Expected: zero prefix
+// * Expected: full keywords in Nimbus
 add_task(async function() {
   await doKeywordsTest({
     desc: "Settings: keywords; Nimbus: keywords",
@@ -280,7 +280,7 @@ add_task(async function() {
       weatherKeywords: ["forecast"],
     },
     tests: {
-      "": true,
+      "": false,
       w: false,
       we: false,
       wea: false,
@@ -295,7 +295,7 @@ add_task(async function() {
       forec: false,
       foreca: false,
       forecas: false,
-      forecast: false,
+      forecast: true,
     },
   });
 });
@@ -303,7 +303,7 @@ add_task(async function() {
 // * Settings data: keywords and min keyword length = 0
 // * Nimbus values: keywords only
 // * Min keyword length pref: none
-// * Expected: zero prefix
+// * Expected: full keywords in Nimbus
 add_task(async function() {
   await doKeywordsTest({
     desc: "Settings: keywords, min keyword length = 0; Nimbus: keywords",
@@ -315,7 +315,7 @@ add_task(async function() {
       weatherKeywords: ["forecast"],
     },
     tests: {
-      "": true,
+      "": false,
       w: false,
       we: false,
       wea: false,
@@ -330,7 +330,7 @@ add_task(async function() {
       forec: false,
       foreca: false,
       forecas: false,
-      forecast: false,
+      forecast: true,
     },
   });
 });
@@ -523,7 +523,7 @@ add_task(async function() {
 // * Settings data: none
 // * Nimbus values: keywords only
 // * Min keyword length pref: none
-// * Expected: zero prefix
+// * Expected: full keywords
 add_task(async function() {
   await doKeywordsTest({
     desc: "Settings: none; Nimbus: keywords",
@@ -531,14 +531,14 @@ add_task(async function() {
       weatherKeywords: ["weather", "forecast"],
     },
     tests: {
-      "": true,
+      "": false,
       w: false,
       we: false,
       wea: false,
       weat: false,
       weath: false,
       weathe: false,
-      weather: false,
+      weather: true,
       f: false,
       fo: false,
       for: false,
@@ -546,7 +546,7 @@ add_task(async function() {
       forec: false,
       foreca: false,
       forecas: false,
-      forecast: false,
+      forecast: true,
     },
   });
 });
@@ -554,7 +554,7 @@ add_task(async function() {
 // * Settings data: none
 // * Nimbus values: keywords and min keyword length = 0
 // * Min keyword length pref: none
-// * Expected: zero prefix
+// * Expected: full keywords
 add_task(async function() {
   await doKeywordsTest({
     desc: "Settings: none; Nimbus: keywords, min keyword length = 0",
@@ -563,14 +563,14 @@ add_task(async function() {
       weatherKeywordsMinimumLength: 0,
     },
     tests: {
-      "": true,
+      "": false,
       w: false,
       we: false,
       wea: false,
       weat: false,
       weath: false,
       weathe: false,
-      weather: false,
+      weather: true,
       f: false,
       fo: false,
       for: false,
@@ -578,7 +578,7 @@ add_task(async function() {
       forec: false,
       foreca: false,
       forecas: false,
-      forecast: false,
+      forecast: true,
     },
   });
 });
@@ -702,6 +702,25 @@ add_task(async function leadingAndTrailingSpaces() {
   });
 });
 
+add_task(async function caseInsensitive() {
+  await doKeywordsTest({
+    desc: "Case insensitive",
+    settingsData: {
+      keywords: ["weather"],
+      min_keyword_length: 3,
+    },
+    tests: {
+      wea: true,
+      WEA: true,
+      Wea: true,
+      WeA: true,
+      WEATHER: true,
+      Weather: true,
+      WeAtHeR: true,
+    },
+  });
+});
+
 async function doKeywordsTest({
   desc,
   tests,
@@ -712,6 +731,16 @@ async function doKeywordsTest({
   info("Doing keywords test: " + desc);
   info(JSON.stringify({ nimbusValues, settingsData, minKeywordLength }));
 
+  // If a suggestion hasn't already been fetched and the data contains keywords,
+  // a fetch will start. Wait for it to finish below.
+  let fetchPromise;
+  if (
+    !QuickSuggest.weather.suggestion &&
+    (nimbusValues?.weatherKeywords || settingsData?.keywords)
+  ) {
+    fetchPromise = QuickSuggest.weather.waitForFetches();
+  }
+
   let nimbusCleanup;
   if (nimbusValues) {
     nimbusCleanup = await UrlbarTestUtils.initNimbusFeature(nimbusValues);
@@ -721,6 +750,13 @@ async function doKeywordsTest({
 
   if (minKeywordLength) {
     UrlbarPrefs.set("weather.minKeywordLength", minKeywordLength);
+  }
+
+  if (fetchPromise) {
+    info("Waiting for fetch");
+    assertFetchingStarted({ pendingFetchCount: 1 });
+    await fetchPromise;
+    info("Got fetch");
   }
 
   for (let [searchString, expected] of Object.entries(tests)) {
@@ -743,97 +779,15 @@ async function doKeywordsTest({
   }
 
   await nimbusCleanup?.();
-  QuickSuggest.weather._test_setRsData(null);
-  UrlbarPrefs.clear("weather.minKeywordLength");
-}
 
-// When a Nimbus experiment isn't active, the suggestion should be triggered on
-// zero prefix. Installing and uninstalling an experiment should update the
-// keywords.
-add_task(async function zeroPrefix_withoutNimbus() {
-  info("1. Doing searches before installing experiment and setting keyword");
-  await check_results({
-    context: createContext("", {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [makeExpectedResult()],
-  });
-  await check_results({
-    context: createContext("weather", {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [],
-  });
-
-  let cleanup = await UrlbarTestUtils.initNimbusFeature({
-    weatherKeywords: ["weather"],
-    weatherKeywordsMinimumLength: 1,
-  });
-
-  info("2. Doing searches after installing experiment and setting keyword");
-  await check_results({
-    context: createContext("", {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [],
-  });
-  await check_results({
-    context: createContext("weather", {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [makeExpectedResult({ suggestedIndex: 1 })],
-  });
-
-  await cleanup();
-
-  info("3. Doing searches after uninstalling experiment");
-  await check_results({
-    context: createContext("", {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [makeExpectedResult()],
-  });
-  await check_results({
-    context: createContext("weather", {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [],
-  });
-});
-
-// When the zero-prefix suggestion is enabled, search strings with only spaces
-// or that start with spaces should not trigger a weather suggestion.
-add_task(async function zeroPrefix_spacesInSearchString() {
-  for (let searchString of [" ", "  ", "   ", " doesn't match anything"]) {
-    await check_results({
-      context: createContext(searchString, {
-        providers: [UrlbarProviderWeather.name],
-        isPrivate: false,
-      }),
-      matches: [],
-    });
+  fetchPromise = null;
+  if (!QuickSuggest.weather.suggestion) {
+    fetchPromise = QuickSuggest.weather.waitForFetches();
   }
-});
-
-// When the zero-prefix suggestion is enabled, a weather suggestion should not
-// be returned for a non-empty search string.
-add_task(async function zeroPrefix_nonEmptySearchString() {
-  // Do a search.
-  let context = createContext("this shouldn't match anything", {
-    providers: [UrlbarProviderWeather.name],
-    isPrivate: false,
-  });
-  await check_results({
-    context,
-    matches: [],
-  });
-});
+  QuickSuggest.weather._test_setRsData(MerinoTestUtils.WEATHER_RS_DATA);
+  UrlbarPrefs.clear("weather.minKeywordLength");
+  await fetchPromise;
+}
 
 // When a sponsored quick suggest result matches the same keyword as the weather
 // result, the weather result should be shown and the quick suggest result
@@ -1270,12 +1224,27 @@ async function doIncrementTest({ desc, setup, tests }) {
 
   let { nimbusValues, settingsData } = setup;
 
+  let fetchPromise;
+  if (
+    !QuickSuggest.weather.suggestion &&
+    (nimbusValues?.weatherKeywords || settingsData?.keywords)
+  ) {
+    fetchPromise = QuickSuggest.weather.waitForFetches();
+  }
+
   let nimbusCleanup;
   if (nimbusValues) {
     nimbusCleanup = await UrlbarTestUtils.initNimbusFeature(nimbusValues);
   }
 
   QuickSuggest.weather._test_setRsData(settingsData);
+
+  if (fetchPromise) {
+    info("Waiting for fetch");
+    assertFetchingStarted({ pendingFetchCount: 1 });
+    await fetchPromise;
+    info("Got fetch");
+  }
 
   for (let { minKeywordLength, canIncrement, searches } of tests) {
     info(
@@ -1321,8 +1290,14 @@ async function doIncrementTest({ desc, setup, tests }) {
   }
 
   await nimbusCleanup?.();
-  QuickSuggest.weather._test_setRsData(null);
+
+  fetchPromise = null;
+  if (!QuickSuggest.weather.suggestion) {
+    fetchPromise = QuickSuggest.weather.waitForFetches();
+  }
+  QuickSuggest.weather._test_setRsData(MerinoTestUtils.WEATHER_RS_DATA);
   UrlbarPrefs.clear("weather.minKeywordLength");
+  await fetchPromise;
 }
 
 function makeExpectedResult({
@@ -1369,4 +1344,20 @@ function makeExpectedResult({
       shouldNavigate: true,
     },
   };
+}
+
+function assertFetchingStarted() {
+  info("Asserting fetching has started");
+
+  Assert.notEqual(
+    QuickSuggest.weather._test_fetchTimer,
+    0,
+    "Fetch timer is non-zero"
+  );
+  Assert.ok(QuickSuggest.weather._test_merino, "Merino client is non-null");
+  Assert.equal(
+    QuickSuggest.weather._test_pendingFetchCount,
+    1,
+    "Expected pending fetch count"
+  );
 }
