@@ -67,7 +67,8 @@ h2 {
 .actions {
   border-top: $border-secondary;
   display: flex;
-  flex-flow: row wrap;
+  flex-direction: row;
+  flex-wrap: wrap;
   justify-content: flex-start;
   margin: 0;
   padding: 15px 25px 0;
