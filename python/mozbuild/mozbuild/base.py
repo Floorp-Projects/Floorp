@@ -482,7 +482,12 @@ class MozbuildObject(ProcessExecutionMixin):
         except InvalidRepoPath:
             repo = None
 
-        if repo and not vcs_revision and repo.sparse_checkout_present():
+        if (
+            repo
+            and repo != "SOURCE"
+            and not vcs_revision
+            and repo.sparse_checkout_present()
+        ):
             vcs_revision = "."
 
         if vcs_revision is None:

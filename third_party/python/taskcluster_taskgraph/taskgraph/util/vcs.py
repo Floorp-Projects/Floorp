@@ -504,8 +504,10 @@ def get_repository(path):
             return HgRepository(path)
         elif os.path.exists(os.path.join(path, ".git")):
             return GitRepository(path)
+        elif os.path.exists(os.path.join(path, "moz.configure")):
+            return None
 
-    raise RuntimeError("Current directory is neither a git or hg repository")
+    raise RuntimeError("Current directory is neither a git or hg repository, nor a release source")
 
 
 def find_hg_revision_push_info(repository, revision):
