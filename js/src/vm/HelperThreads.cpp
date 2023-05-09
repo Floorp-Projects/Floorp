@@ -24,6 +24,7 @@
 #include "jit/JitScript.h"
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::DecodeOptions, JS::ReadOnlyCompileOptions
 #include "js/ContextOptions.h"  // JS::ContextOptions
+#include "js/experimental/CompileScript.h"
 #include "js/experimental/JSStencil.h"
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
 #include "js/HelperThreadAPI.h"
@@ -543,18 +544,12 @@ bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options) {
   MOZ_ASSERT_IF(this->options.allocateInstantiationStorage,
                 kind != ParseTaskKind::MultiStencilsDecode);
 
-  if (this->options.allocateInstantiationStorage) {
-    gcOutput_ = cx->make_unique<frontend::CompilationGCOutput>();
-    if (!gcOutput_) {
-      return false;
-    }
-  }
-
   return true;
 }
 
 void ParseTask::moveGCOutputInto(JS::InstantiationStorage& storage) {
-  storage.gcOutput_ = gcOutput_.release();
+  storage.gcOutput_ = instantiationStorage_.gcOutput_;
+  instantiationStorage_.gcOutput_ = nullptr;
 }
 
 ParseTask::~ParseTask() {
@@ -568,28 +563,24 @@ void ParseTask::trace(JSTracer* trc) {
     return;
   }
 
-  if (stencilInput_) {
-    stencilInput_->trace(trc);
-  }
-
-  if (gcOutput_) {
-    gcOutput_->trace(trc);
-  }
+  compileStorage_.trace(trc);
+  instantiationStorage_.trace(trc);
 }
 
 size_t ParseTask::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
-  size_t stencilInputSize =
-      stencilInput_ ? stencilInput_->sizeOfIncludingThis(mallocSizeOf) : 0;
+  size_t compileStorageSize = compileStorage_.sizeOfIncludingThis(mallocSizeOf);
   size_t stencilSize =
       stencil_ ? stencil_->sizeOfIncludingThis(mallocSizeOf) : 0;
   size_t gcOutputSize =
-      gcOutput_ ? gcOutput_->sizeOfExcludingThis(mallocSizeOf) : 0;
+      instantiationStorage_.gcOutput_
+          ? instantiationStorage_.gcOutput_->sizeOfExcludingThis(mallocSizeOf)
+          : 0;
 
   // TODO: 'errors' requires adding support to `CompileError`. They are not
   // common though.
 
-  return options.sizeOfExcludingThis(mallocSizeOf) + stencilInputSize +
+  return options.sizeOfExcludingThis(mallocSizeOf) + compileStorageSize +
          stencilSize + gcOutputSize;
 }
 
@@ -617,20 +608,14 @@ static inline JS::NativeStackLimit GetStackLimit() {
 void ParseTask::runTask(AutoLockHelperThreadState& lock) {
   stackLimit = GetStackLimit();
 
-  AutoSetHelperThreadContext usesContext(contextOptions, lock);
-
   AutoUnlockHelperThreadState unlock(lock);
 
   JSContext* cx = TlsContext.get();
 
-  AutoSetContextRuntime ascr(runtime);
   fc_.linkWithJSContext(cx);
 
   parse(cx, &fc_);
 
-  MOZ_ASSERT(cx->tempLifoAlloc().isEmpty());
-  cx->tempLifoAlloc().freeAll();
-  cx->frontendCollectionPool().purge();
   fc_.nameCollectionPool().purge();
 }
 
@@ -710,29 +695,15 @@ CompileToStencilTask<Unit>::CompileToStencilTask(
 
 template <typename Unit>
 void CompileToStencilTask<Unit>::parse(JSContext* cx, FrontendContext* fc) {
-  MOZ_ASSERT(cx->isHelperThreadContext());
-
-  ScopeKind scopeKind =
-      options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
-
-  stencilInput_ =
-      fc->getAllocator()->make_unique<frontend::CompilationInput>(options);
-  if (!stencilInput_) {
-    return;
-  }
-
-  frontend::NoScopeBindingCache scopeCache;
-  js::LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-  stencil_ = frontend::CompileGlobalScriptToStencil(
-      cx, fc, stackLimit, tempLifoAlloc, *stencilInput_, &scopeCache, data,
-      scopeKind);
+  stencil_ = JS::CompileGlobalScriptToStencil(fc, options, stackLimit, data,
+                                              compileStorage_);
   if (!stencil_) {
     return;
   }
 
   if (options.allocateInstantiationStorage) {
-    if (!frontend::PrepareForInstantiate(cx, fc, *stencilInput_, *stencil_,
-                                         *gcOutput_)) {
+    if (!JS::PrepareForInstantiate(fc, compileStorage_, *stencil_,
+                                   instantiationStorage_)) {
       stencil_ = nullptr;
     }
   }
@@ -748,25 +719,15 @@ CompileModuleToStencilTask<Unit>::CompileModuleToStencilTask(
 template <typename Unit>
 void CompileModuleToStencilTask<Unit>::parse(JSContext* cx,
                                              FrontendContext* fc) {
-  MOZ_ASSERT(cx->isHelperThreadContext());
-
-  stencilInput_ =
-      fc->getAllocator()->make_unique<frontend::CompilationInput>(options);
-  if (!stencilInput_) {
-    return;
-  }
-
-  frontend::NoScopeBindingCache scopeCache;
-  stencil_ =
-      frontend::ParseModuleToStencil(cx, fc, stackLimit, cx->tempLifoAlloc(),
-                                     *stencilInput_, &scopeCache, data);
+  stencil_ = JS::CompileModuleScriptToStencil(fc, options, stackLimit, data,
+                                              compileStorage_);
   if (!stencil_) {
     return;
   }
 
   if (options.allocateInstantiationStorage) {
-    if (!frontend::PrepareForInstantiate(cx, fc, *stencilInput_, *stencil_,
-                                         *gcOutput_)) {
+    if (!JS::PrepareForInstantiate(fc, compileStorage_, *stencil_,
+                                   instantiationStorage_)) {
       stencil_ = nullptr;
     }
   }
@@ -782,19 +743,15 @@ DecodeStencilTask::DecodeStencilTask(JSContext* cx,
 }
 
 void DecodeStencilTask::parse(JSContext* cx, FrontendContext* fc) {
-  MOZ_ASSERT(cx->isHelperThreadContext());
-
-  stencilInput_ =
-      fc->getAllocator()->make_unique<frontend::CompilationInput>(options);
-  if (!stencilInput_) {
+  if (!compileStorage_.allocateInput(fc, options)) {
     return;
   }
-  if (!stencilInput_->initForGlobal(fc)) {
+  if (!compileStorage_.getInput().initForGlobal(fc)) {
     return;
   }
 
   stencil_ = fc->getAllocator()->new_<frontend::CompilationStencil>(
-      stencilInput_->source);
+      compileStorage_.getInput().source);
   if (!stencil_) {
     return;
   }
@@ -807,8 +764,8 @@ void DecodeStencilTask::parse(JSContext* cx, FrontendContext* fc) {
   }
 
   if (options.allocateInstantiationStorage) {
-    if (!frontend::PrepareForInstantiate(cx, fc, *stencilInput_, *stencil_,
-                                         *gcOutput_)) {
+    if (!JS::PrepareForInstantiate(fc, compileStorage_, *stencil_,
+                                   instantiationStorage_)) {
       stencil_ = nullptr;
     }
   }
@@ -821,8 +778,6 @@ MultiStencilsDecodeTask::MultiStencilsDecodeTask(
       sources(&sources) {}
 
 void MultiStencilsDecodeTask::parse(JSContext* cx, FrontendContext* fc) {
-  MOZ_ASSERT(cx->isHelperThreadContext());
-
   if (!stencils.reserve(sources->length())) {
     ReportOutOfMemory(fc);  // This sets |outOfMemory|.
     return;
@@ -2352,7 +2307,7 @@ GlobalHelperThreadState::finishStencilTask(JSContext* cx,
     return nullptr;
   }
 
-  MOZ_ASSERT(parseTask->stencilInput_.get());
+  MOZ_ASSERT(parseTask->compileStorage_.hasInput());
   MOZ_ASSERT(parseTask->stencil_.get());
 
   if (storage) {

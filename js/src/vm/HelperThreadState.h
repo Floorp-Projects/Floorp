@@ -23,7 +23,8 @@
 #include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput
 #include "frontend/FrontendContext.h"
 #include "js/CompileOptions.h"
-#include "js/experimental/JSStencil.h"
+#include "js/experimental/CompileScript.h"  // JS::CompilationStorage
+#include "js/experimental/JSStencil.h"      // JS::InstantiationStorage
 #include "js/HelperThreadAPI.h"
 #include "js/Stack.h"  // JS::NativeStackLimit
 #include "js/TypeDecls.h"
@@ -522,12 +523,12 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   mozilla::Vector<RefPtr<JS::Stencil>> stencils;
 
   // The input of the compilation.
-  UniquePtr<frontend::CompilationInput> stencilInput_;
+  JS::CompilationStorage compileStorage_;
 
   // The output of the compilation/decode task.
   RefPtr<frontend::CompilationStencil> stencil_;
 
-  UniquePtr<frontend::CompilationGCOutput> gcOutput_;
+  JS::InstantiationStorage instantiationStorage_;
 
   // Record any errors happening while parsing or generating bytecode.
   FrontendContext fc_;

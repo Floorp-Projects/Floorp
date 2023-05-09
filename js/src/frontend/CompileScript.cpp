@@ -36,10 +36,24 @@ JS_PUBLIC_API bool JS::SetSupportedImportAssertions(
 }
 
 JS::CompilationStorage::~CompilationStorage() {
-  if (input_) {
+  if (input_ && !isBorrowed_) {
     js_delete(input_);
     input_ = nullptr;
   }
+}
+
+size_t JS::CompilationStorage::sizeOfIncludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  size_t sizeOfCompilationInput =
+      input_ ? input_->sizeOfExcludingThis(mallocSizeOf) : 0;
+  return mallocSizeOf(this) + sizeOfCompilationInput;
+}
+
+bool JS::CompilationStorage::allocateInput(
+    FrontendContext* fc, const JS::ReadOnlyCompileOptions& options) {
+  MOZ_ASSERT(!input_);
+  input_ = fc->getAllocator()->new_<frontend::CompilationInput>(options);
+  return !!input_;
 }
 
 void JS::CompilationStorage::trace(JSTracer* trc) {
