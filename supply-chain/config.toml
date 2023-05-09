@@ -477,10 +477,6 @@ criteria = "safe-to-deploy"
 version = "1.0.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.indexmap]]
-version = "1.8.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.instant]]
 version = "0.1.12"
 criteria = "safe-to-deploy"
