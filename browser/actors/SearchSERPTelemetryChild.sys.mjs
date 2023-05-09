@@ -989,7 +989,7 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
    * @param {object} event The event details.
    */
   handleEvent(event) {
-    if (!this._getProviderInfoForUrl(this.document.documentURI)) {
+    if (!this.#urlIsSERP(this.document.documentURI)) {
       return;
     }
     switch (event.type) {
@@ -1030,6 +1030,22 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         break;
       }
     }
+  }
+
+  #urlIsSERP(url) {
+    let provider = this._getProviderInfoForUrl(this.document.documentURI);
+    if (provider) {
+      // Some URLs can match provider info but also be the provider's homepage
+      // instead of a SERP.
+      // e.g. https://example.com/ vs. https://example.com/?foo=bar
+      // To check this, we look for the presence of the query parameter
+      // that contains a search term.
+      let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
+      if (queries.has(provider.queryParamName)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   #clearListeners() {
