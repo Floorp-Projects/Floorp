@@ -1212,8 +1212,10 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
   const bool shouldRecordCounters =
       aLoader.GetDocument() && aLoader.GetDocument()->GetStyleUseCounters();
   if (!AllowParallelParse(aLoader, Inner().mURLData)) {
-    UniquePtr<StyleUseCounters> counters =
-        shouldRecordCounters ? Servo_UseCounters_Create().Consume() : nullptr;
+    UniquePtr<StyleUseCounters> counters;
+    if (shouldRecordCounters) {
+      counters.reset(Servo_UseCounters_Create());
+    }
 
     RefPtr<RawServoStyleSheetContents> contents =
         Servo_StyleSheet_FromUTF8Bytes(
@@ -1490,7 +1492,7 @@ void StyleSheet::SetSharedContents(const ServoCssRules* aSharedRules) {
   // which we don't have.
 }
 
-const ServoCssRules* StyleSheet::ToShared(RawServoSharedMemoryBuilder* aBuilder,
+const ServoCssRules* StyleSheet::ToShared(StyleSharedMemoryBuilder* aBuilder,
                                           nsCString& aErrorMessage) {
   // Assert some things we assume when creating a StyleSheet using shared
   // memory.

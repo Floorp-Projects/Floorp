@@ -408,7 +408,7 @@ class Animation : public DOMEventTargetHelper,
    * Any properties contained in |aPropertiesToSkip| will not be added or
    * updated in |aComposeResult|.
    */
-  void ComposeStyle(RawServoAnimationValueMap& aComposeResult,
+  void ComposeStyle(StyleAnimationValueMap& aComposeResult,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
   void NotifyEffectTimingUpdated();

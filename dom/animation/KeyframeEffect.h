@@ -272,7 +272,7 @@ class KeyframeEffect : public AnimationEffect {
   // Updates |aComposeResult| with the animation values produced by this
   // AnimationEffect for the current time except any properties contained
   // in |aPropertiesToSkip|.
-  void ComposeStyle(RawServoAnimationValueMap& aComposeResult,
+  void ComposeStyle(StyleAnimationValueMap& aComposeResult,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
   // Returns true if at least one property is being animated on compositor.
@@ -470,7 +470,7 @@ class KeyframeEffect : public AnimationEffect {
  private:
   nsChangeHint mCumulativeChangeHint = nsChangeHint{0};
 
-  void ComposeStyleRule(RawServoAnimationValueMap& aAnimationValues,
+  void ComposeStyleRule(StyleAnimationValueMap& aAnimationValues,
                         const AnimationProperty& aProperty,
                         const AnimationPropertySegment& aSegment,
                         const ComputedTiming& aComputedTiming);

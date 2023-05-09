@@ -537,8 +537,6 @@ cbindgen-types = [
     { gecko = "StyleMasonryItemOrder", servo = "crate::values::specified::MasonryItemOrder" },
     { gecko = "StyleTextTransform", servo = "crate::values::computed::TextTransform" },
     { gecko = "StyleTextUnderlinePosition", servo = "crate::values::computed::TextUnderlinePosition" },
-    { gecko = "StyleOwned", servo = "crate::gecko_bindings::sugar::ownership::Owned" },
-    { gecko = "StyleOwnedOrNull", servo = "crate::gecko_bindings::sugar::ownership::OwnedOrNull" },
     { gecko = "StyleStrong", servo = "crate::gecko_bindings::sugar::ownership::Strong" },
     { gecko = "StyleGenericFontFamily", servo = "crate::values::computed::font::GenericFontFamily" },
     { gecko = "StyleGenericPosition", servo = "crate::values::generics::position::GenericPosition" },
@@ -648,6 +646,9 @@ cbindgen-types = [
     { gecko = "StyleBoolInteger", servo = "crate::values::computed::BoolInteger" },
     { gecko = "StyleTime", servo = "crate::values::computed::Time" },
     { gecko = "StyleXTextScale", servo = "crate::values::computed::XTextScale" },
+    { gecko = "StyleAnimationValueMap", servo = "crate::properties::animated_properties::AnimationValueMap" },
+    { gecko = "StyleAuthorStyles", servo = "crate::gecko::data::AuthorStyles" },
+    { gecko = "StyleUseCounters", servo = "crate::use_counters::UseCounters" },
 ]
 
 mapped-generic-types = [

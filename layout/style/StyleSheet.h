@@ -32,10 +32,9 @@ namespace mozilla {
 class ServoCSSRuleList;
 class ServoStyleSet;
 
-typedef MozPromise</* Dummy */ bool,
-                   /* Dummy */ bool,
-                   /* IsExclusive = */ true>
-    StyleSheetParsePromise;
+using StyleSheetParsePromise = MozPromise</* Dummy */ bool,
+                                          /* Dummy */ bool,
+                                          /* IsExclusive = */ true>;
 
 enum class StyleRuleChangeKind : uint32_t;
 
@@ -441,7 +440,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // by aBuilder.  Returns the pointer into the buffer that the sheet contents
   // were stored at.  (The returned pointer is to an Arc<Locked<Rules>> value,
   // or null, with a filled in aErrorMessage, on failure.)
-  const ServoCssRules* ToShared(RawServoSharedMemoryBuilder* aBuilder,
+  const ServoCssRules* ToShared(StyleSharedMemoryBuilder* aBuilder,
                                 nsCString& aErrorMessage);
 
   // Sets the contents of this style sheet to the specified aSharedRules
@@ -472,7 +471,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   }
 
   const StyleSheet& OutermostSheet() const {
-    auto* current = this;
+    const auto* current = this;
     while (current->mParentSheet) {
       MOZ_ASSERT(!current->mDocumentOrShadowRoot,
                  "Shouldn't be set on child sheets");

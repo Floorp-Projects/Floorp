@@ -15,8 +15,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheetInlines.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -122,10 +121,10 @@ void MediaList::Delete(const nsACString& aOldMedium, ErrorResult& aRv) {
 }
 
 bool MediaList::Matches(const Document& aDocument) const {
-  const RawServoStyleSet* rawSet =
-      aDocument.StyleSetForPresShellOrMediaQueryEvaluation()->RawSet();
-  MOZ_ASSERT(rawSet, "The RawServoStyleSet should be valid!");
-  return Servo_MediaList_Matches(mRawList, rawSet);
+  const auto* rawData =
+      aDocument.StyleSetForPresShellOrMediaQueryEvaluation()->RawData();
+  MOZ_ASSERT(rawData, "The per doc data should be valid!");
+  return Servo_MediaList_Matches(mRawList, rawData);
 }
 
 void MediaList::Append(const nsACString& aNewMedium, ErrorResult& aRv) {
@@ -171,5 +170,4 @@ bool MediaList::IsReadOnly() const {
   return mStyleSheet && mStyleSheet->IsReadOnly();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

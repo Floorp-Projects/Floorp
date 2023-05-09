@@ -16,10 +16,10 @@
 class nsIPrincipal;
 class nsIURI;
 struct RawServoStyleSheetContents;
-struct StyleUseCounters;
 
 namespace mozilla {
 class StyleSheet;
+struct StyleUseCounters;
 struct URLExtraData;
 
 /**

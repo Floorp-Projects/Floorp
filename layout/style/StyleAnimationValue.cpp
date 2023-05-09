@@ -144,11 +144,11 @@ MatrixScales AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
   return transform2d.ScaleFactors();
 }
 
-void AnimationValue::SerializeSpecifiedValue(nsCSSPropertyID aProperty,
-                                             const RawServoStyleSet* aRawSet,
-                                             nsACString& aString) const {
+void AnimationValue::SerializeSpecifiedValue(
+    nsCSSPropertyID aProperty, const StylePerDocumentStyleData* aRawData,
+    nsACString& aString) const {
   MOZ_ASSERT(mServo);
-  Servo_AnimationValue_Serialize(mServo, aProperty, aRawSet, &aString);
+  Servo_AnimationValue_Serialize(mServo, aProperty, aRawData, &aString);
 }
 
 bool AnimationValue::IsInterpolableWith(nsCSSPropertyID aProperty,

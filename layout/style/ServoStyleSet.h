@@ -151,10 +151,10 @@ class ServoStyleSet {
   // The SourceSizeList parameter can be null, in which case it will return
   // 100vw.
   inline nscoord EvaluateSourceSizeList(
-      const RawServoSourceSizeList* aSourceSizeList) const;
+      const StyleSourceSizeList* aSourceSizeList) const;
 
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
-  const RawServoStyleSet* RawSet() const { return mRawSet.get(); }
+  const StylePerDocumentStyleData* RawData() const { return mRawData.get(); }
 
   bool GetAuthorStyleDisabled() const { return mAuthorStyleDisabled; }
 
@@ -623,7 +623,7 @@ class ServoStyleSet {
   // The owner document of this style set. Never null, and always outlives the
   // StyleSet.
   dom::Document* mDocument;
-  UniquePtr<RawServoStyleSet> mRawSet;
+  UniquePtr<StylePerDocumentStyleData> mRawData;
 
   // Map from raw Servo style rule to Gecko's wrapper object.
   // Constructed lazily when requested by devtools.

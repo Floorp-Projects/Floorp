@@ -55,10 +55,10 @@ class nsNodeSupportsWeakRefTearoff;
 class nsDOMMutationObserver;
 class nsRange;
 class nsWindowSizes;
-struct RawServoSelectorList;
 
 namespace mozilla {
 class EventListenerManager;
+struct StyleSelectorList;
 template <typename T>
 class Maybe;
 class PresShell;
@@ -2291,7 +2291,7 @@ class nsINode : public mozilla::dom::EventTarget {
    * Note that the selector list returned here is owned by the owner doc's
    * selector cache.
    */
-  const RawServoSelectorList* ParseSelectorList(
+  const mozilla::StyleSelectorList* ParseSelectorList(
       const nsACString& aSelectorString, mozilla::ErrorResult&);
 
  public:

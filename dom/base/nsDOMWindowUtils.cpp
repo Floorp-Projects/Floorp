@@ -3255,7 +3255,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
   }
   nsAutoCString result;
   Servo_AnimationValue_Serialize(value, propertyID,
-                                 presShell->StyleSet()->RawSet(), &result);
+                                 presShell->StyleSet()->RawData(), &result);
   CopyUTF8toUTF16(result, aResult);
   return NS_OK;
 }

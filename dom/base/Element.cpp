@@ -3406,7 +3406,7 @@ nsresult Element::CopyInnerTo(Element* aDst, ReparseAttributes aReparse) {
 Element* Element::Closest(const nsACString& aSelector, ErrorResult& aResult) {
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("Element::Closest",
                                         LAYOUT_SelectorQuery, aSelector);
-  const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
+  const StyleSelectorList* list = ParseSelectorList(aSelector, aResult);
   if (!list) {
     return nullptr;
   }
@@ -3417,7 +3417,7 @@ Element* Element::Closest(const nsACString& aSelector, ErrorResult& aResult) {
 bool Element::Matches(const nsACString& aSelector, ErrorResult& aResult) {
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("Element::Matches",
                                         LAYOUT_SelectorQuery, aSelector);
-  const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
+  const StyleSelectorList* list = ParseSelectorList(aSelector, aResult);
   if (!list) {
     return false;
   }

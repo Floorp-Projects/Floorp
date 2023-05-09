@@ -120,7 +120,7 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::SheetLoadDataHolder,
 void Gecko_StyleSheet_FinishAsyncParse(
     mozilla::css::SheetLoadDataHolder* data,
     mozilla::StyleStrong<RawServoStyleSheetContents> sheet_contents,
-    mozilla::StyleOwnedOrNull<StyleUseCounters> use_counters);
+    mozilla::StyleUseCounters* use_counters);
 
 mozilla::StyleSheet* Gecko_LoadStyleSheet(
     mozilla::css::Loader* loader, mozilla::StyleSheet* parent,
@@ -210,7 +210,7 @@ bool Gecko_VisitedStylesEnabled(const mozilla::dom::Document*);
 bool Gecko_GetAnimationRule(
     const mozilla::dom::Element* aElementOrPseudo,
     mozilla::EffectCompositor::CascadeLevel aCascadeLevel,
-    RawServoAnimationValueMap* aAnimationValues);
+    mozilla::StyleAnimationValueMap* aAnimationValues);
 
 bool Gecko_StyleAnimationsEquals(
     const nsStyleAutoArray<mozilla::StyleAnimation>*,

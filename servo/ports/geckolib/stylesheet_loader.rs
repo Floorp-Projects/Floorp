@@ -13,7 +13,7 @@ use style::gecko_bindings::structs::{Loader, LoaderReusableStyleSheets};
 use style::gecko_bindings::structs::{
     SheetLoadData, SheetLoadDataHolder, StyleSheet as DomStyleSheet,
 };
-use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasBoxFFI, OwnedOrNull};
+use style::gecko_bindings::sugar::ownership::FFIArcHelpers;
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::global_style_data::GLOBAL_STYLE_DATA;
 use style::media_queries::MediaList;
@@ -151,16 +151,11 @@ impl AsyncStylesheetParser {
             /* sanitized_output = */ None,
         );
 
-        let use_counters = match use_counters {
-            Some(c) => c.into_ffi().maybe(),
-            None => OwnedOrNull::null(),
-        };
-
         unsafe {
             bindings::Gecko_StyleSheet_FinishAsyncParse(
                 self.load_data.get(),
                 sheet.into_strong(),
-                use_counters,
+                use_counters.map_or(std::ptr::null_mut(), Box::into_raw),
             );
         }
     }

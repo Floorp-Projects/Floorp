@@ -786,8 +786,6 @@ struct IMENotification final {
     bool mCausedBySelectionEvent;
     bool mOccurredDuringComposition;
 
-    // FYI: Cannot we make these methods inline because of an include hell of
-    //      RawServoAnimationValueMap
     void SetWritingMode(const WritingMode& aWritingMode);
     WritingMode GetWritingMode() const;
 

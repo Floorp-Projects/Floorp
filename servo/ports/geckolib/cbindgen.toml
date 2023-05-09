@@ -72,6 +72,8 @@ prefix = "Style"
 exclude = [
   "NS_LogCtor",
   "NS_LogDtor",
+  "SelectorList",
+  "AuthorStyles",
 ]
 include = [
   "AnimationTimeline",
@@ -291,7 +293,6 @@ renaming_overrides_prefixing = true
 "nsCSSPropertyIDSet" = "nsCSSPropertyIDSet"
 "nsCSSValueSharedList" = "nsCSSValueSharedList"
 "AnimationPropertySegment" = "AnimationPropertySegment"
-"RawServoAnimationValueMap" = "RawServoAnimationValueMap"
 "RawServoAnimationValueTable" = "RawServoAnimationValueTable"
 "nsCSSUnit" = "nsCSSUnit"
 "ParsingMode" = "ParsingMode"

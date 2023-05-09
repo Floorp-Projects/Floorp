@@ -509,7 +509,7 @@ nsresult nsComputedDOMStyle::GetPropertyValue(
 
   MOZ_ASSERT(entry->mGetter == &nsComputedDOMStyle::DummyGetter);
   Servo_GetResolvedValue(mComputedStyle, aPropID,
-                         mPresShell->StyleSet()->RawSet(), mElement, &aReturn);
+                         mPresShell->StyleSet()->RawData(), mElement, &aReturn);
   return NS_OK;
 }
 

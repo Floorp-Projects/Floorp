@@ -611,11 +611,10 @@ void KeyframeEffect::WillComposeStyle() {
   mCurrentIterationOnLastCompose = computedTiming.mCurrentIteration;
 }
 
-void KeyframeEffect::ComposeStyleRule(
-    RawServoAnimationValueMap& aAnimationValues,
-    const AnimationProperty& aProperty,
-    const AnimationPropertySegment& aSegment,
-    const ComputedTiming& aComputedTiming) {
+void KeyframeEffect::ComposeStyleRule(StyleAnimationValueMap& aAnimationValues,
+                                      const AnimationProperty& aProperty,
+                                      const AnimationPropertySegment& aSegment,
+                                      const ComputedTiming& aComputedTiming) {
   auto* opaqueTable =
       reinterpret_cast<RawServoAnimationValueTable*>(&mBaseValues);
   Servo_AnimationCompose(&aAnimationValues, opaqueTable, aProperty.mProperty,
@@ -623,7 +622,7 @@ void KeyframeEffect::ComposeStyleRule(
                          &aComputedTiming, mEffectOptions.mIterationComposite);
 }
 
-void KeyframeEffect::ComposeStyle(RawServoAnimationValueMap& aComposeResult,
+void KeyframeEffect::ComposeStyle(StyleAnimationValueMap& aComposeResult,
                                   const nsCSSPropertyIDSet& aPropertiesToSkip) {
   ComputedTiming computedTiming = GetComputedTiming();
 
@@ -1049,14 +1048,14 @@ already_AddRefed<const ComputedStyle> KeyframeEffect::GetTargetComputedStyle(
 
 #ifdef DEBUG
 void DumpAnimationProperties(
-    const RawServoStyleSet* aRawSet,
+    const StylePerDocumentStyleData* aRawData,
     nsTArray<AnimationProperty>& aAnimationProperties) {
   for (auto& p : aAnimationProperties) {
     printf("%s\n", nsCString(nsCSSProps::GetStringValue(p.mProperty)).get());
     for (auto& s : p.mSegments) {
       nsAutoCString fromValue, toValue;
-      s.mFromValue.SerializeSpecifiedValue(p.mProperty, aRawSet, fromValue);
-      s.mToValue.SerializeSpecifiedValue(p.mProperty, aRawSet, toValue);
+      s.mFromValue.SerializeSpecifiedValue(p.mProperty, aRawData, fromValue);
+      s.mToValue.SerializeSpecifiedValue(p.mProperty, aRawData, toValue);
       printf("  %f..%f: %s..%s\n", s.mFromKey, s.mToKey, fromValue.get(),
              toValue.get());
     }
@@ -1140,12 +1139,13 @@ static void CreatePropertyValue(
     nsCSSPropertyID aProperty, float aOffset,
     const Maybe<StyleComputedTimingFunction>& aTimingFunction,
     const AnimationValue& aValue, dom::CompositeOperation aComposite,
-    const RawServoStyleSet* aRawSet, AnimationPropertyValueDetails& aResult) {
+    const StylePerDocumentStyleData* aRawData,
+    AnimationPropertyValueDetails& aResult) {
   aResult.mOffset = aOffset;
 
   if (!aValue.IsNull()) {
     nsAutoCString stringValue;
-    aValue.SerializeSpecifiedValue(aProperty, aRawSet, stringValue);
+    aValue.SerializeSpecifiedValue(aProperty, aRawData, stringValue);
     aResult.mValue.Construct(stringValue);
   }
 
@@ -1161,8 +1161,8 @@ static void CreatePropertyValue(
 
 void KeyframeEffect::GetProperties(
     nsTArray<AnimationPropertyDetails>& aProperties, ErrorResult& aRv) const {
-  const RawServoStyleSet* rawSet =
-      mDocument->StyleSetForPresShellOrMediaQueryEvaluation()->RawSet();
+  const StylePerDocumentStyleData* rawData =
+      mDocument->StyleSetForPresShellOrMediaQueryEvaluation()->RawData();
 
   for (const AnimationProperty& property : mProperties) {
     AnimationPropertyDetails propertyDetails;
@@ -1189,7 +1189,7 @@ void KeyframeEffect::GetProperties(
       binding_detail::FastAnimationPropertyValueDetails fromValue;
       CreatePropertyValue(property.mProperty, segment.mFromKey,
                           segment.mTimingFunction, segment.mFromValue,
-                          segment.mFromComposite, rawSet, fromValue);
+                          segment.mFromComposite, rawData, fromValue);
       // We don't apply timing functions for zero-length segments, so
       // don't return one here.
       if (segment.mFromKey == segment.mToKey) {
@@ -1213,7 +1213,7 @@ void KeyframeEffect::GetProperties(
           property.mSegments[segmentIdx + 1].mFromValue != segment.mToValue) {
         binding_detail::FastAnimationPropertyValueDetails toValue;
         CreatePropertyValue(property.mProperty, segment.mToKey, Nothing(),
-                            segment.mToValue, segment.mToComposite, rawSet,
+                            segment.mToValue, segment.mToComposite, rawData,
                             toValue);
         // It doesn't really make sense to have a timing function on the
         // last property value or before a sudden jump so we just drop the
@@ -1267,8 +1267,8 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
     computedStyle = GetTargetComputedStyle(Flush::Style);
   }
 
-  const RawServoStyleSet* rawSet =
-      mDocument->StyleSetForPresShellOrMediaQueryEvaluation()->RawSet();
+  const StylePerDocumentStyleData* rawData =
+      mDocument->StyleSetForPresShellOrMediaQueryEvaluation()->RawData();
 
   for (const Keyframe& keyframe : mKeyframes) {
     // Set up a dictionary object for the explicit members
@@ -1320,14 +1320,14 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
       if (propertyValue.mServoDeclarationBlock) {
         Servo_DeclarationBlock_SerializeOneValue(
             propertyValue.mServoDeclarationBlock, propertyValue.mProperty,
-            &stringValue, computedStyle, customProperties, rawSet);
+            &stringValue, computedStyle, customProperties, rawData);
       } else {
         RawServoAnimationValue* value =
             mBaseValues.GetWeak(propertyValue.mProperty);
 
         if (value) {
-          Servo_AnimationValue_Serialize(value, propertyValue.mProperty, rawSet,
-                                         &stringValue);
+          Servo_AnimationValue_Serialize(value, propertyValue.mProperty,
+                                         rawData, &stringValue);
         }
       }
 

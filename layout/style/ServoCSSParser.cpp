@@ -26,7 +26,7 @@ bool ServoCSSParser::ComputeColor(ServoStyleSet* aStyleSet,
                                   const nsACString& aValue,
                                   nscolor* aResultColor, bool* aWasCurrentColor,
                                   css::Loader* aLoader) {
-  return Servo_ComputeColor(aStyleSet ? aStyleSet->RawSet() : nullptr,
+  return Servo_ComputeColor(aStyleSet ? aStyleSet->RawData() : nullptr,
                             aCurrentColor, &aValue, aResultColor,
                             aWasCurrentColor, aLoader);
 }

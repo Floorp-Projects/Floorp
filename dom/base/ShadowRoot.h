@@ -186,11 +186,9 @@ class ShadowRoot final : public DocumentFragment,
 
   const nsTArray<const Element*>& Parts() const { return mParts; }
 
-  const RawServoAuthorStyles* GetServoStyles() const {
-    return mServoStyles.get();
-  }
+  const StyleAuthorStyles* GetServoStyles() const { return mServoStyles.get(); }
 
-  RawServoAuthorStyles* GetServoStyles() { return mServoStyles.get(); }
+  StyleAuthorStyles* GetServoStyles() { return mServoStyles.get(); }
 
   mozilla::ServoStyleRuleMap& ServoStyleRuleMap();
 
@@ -290,7 +288,7 @@ class ShadowRoot final : public DocumentFragment,
   const SlotAssignmentMode mSlotAssignment;
 
   // The computed data from the style sheets.
-  UniquePtr<RawServoAuthorStyles> mServoStyles;
+  UniquePtr<StyleAuthorStyles> mServoStyles;
   UniquePtr<mozilla::ServoStyleRuleMap> mStyleRuleMap;
 
   using SlotArray = TreeOrderedArray<HTMLSlotElement>;

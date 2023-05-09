@@ -43,7 +43,7 @@ extern "C" {
       const ServoCssRules* rules, uint32_t index, uint32_t* line,       \
       uint32_t* column);                                                \
   void Servo_StyleSet_##type_##RuleChanged(                             \
-      const RawServoStyleSet*, const RawServo##type_##Rule*,            \
+      const StylePerDocumentStyleData*, const RawServo##type_##Rule*,   \
       const StyleDomStyleSheet*, StyleRuleChangeKind);                  \
   BASIC_RULE_FUNCS_WITHOUT_GETTER(type_##Rule)
 
