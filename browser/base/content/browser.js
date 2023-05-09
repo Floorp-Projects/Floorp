@@ -7638,12 +7638,23 @@ var WebAuthnPromptHelper = {
 
   prompt_for_password(origin, wasInvalid, retriesLeft, aPassword) {
     let dialogText;
-    if (wasInvalid) {
-      dialogText = this._l10n.formatValueSync("webauthn-pin-invalid-prompt", {
-        retriesLeft,
-      });
-    } else {
+    if (!wasInvalid) {
       dialogText = this._l10n.formatValueSync("webauthn-pin-required-prompt");
+    } else if (retriesLeft < 0 || retriesLeft > 3) {
+      // The token will need to be power cycled after three incorrect attempts,
+      // so we show a short error message that does not include retriesLeft. It
+      // would be confusing to display retriesLeft at this point, as the user
+      // will feel that they only get three attempts.
+      dialogText = this._l10n.formatValueSync(
+        "webauthn-pin-invalid-short-prompt"
+      );
+    } else {
+      // The user is close to having their PIN permanently blocked. Show a more
+      // severe warning that includes the retriesLeft counter.
+      dialogText = this._l10n.formatValueSync(
+        "webauthn-pin-invalid-long-prompt",
+        { retriesLeft }
+      );
     }
 
     let res = Services.prompt.promptPasswordBC(
