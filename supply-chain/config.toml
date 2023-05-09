@@ -521,10 +521,6 @@ criteria = "safe-to-deploy"
 version = "0.7.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.iovec]]
-version = "0.1.4"
-criteria = "safe-to-deploy"
-
 [[exemptions.itertools]]
 version = "0.10.3"
 criteria = "safe-to-deploy"
@@ -618,10 +614,6 @@ criteria = "safe-to-deploy"
 [[exemptions.miniz_oxide]]
 version = "0.5.3"
 criteria = "safe-to-deploy"
-
-[[exemptions.mio]]
-version = "0.6.23"
-criteria = "safe-to-run"
 
 [[exemptions.mio]]
 version = "0.8.0"

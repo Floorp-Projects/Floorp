@@ -148,6 +148,13 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.iovec]]
+version = "0.1.4"
+when = "2019-10-09"
+user-id = 10
+user-login = "carllerche"
+user-name = "Carl Lerche"
+
 [[publisher.itoa]]
 version = "1.0.5"
 when = "2022-12-17"
@@ -168,6 +175,13 @@ when = "2020-01-07"
 user-id = 359
 user-login = "seanmonstar"
 user-name = "Sean McArthur"
+
+[[publisher.mio]]
+version = "0.6.21"
+when = "2019-11-27"
+user-id = 10
+user-login = "carllerche"
+user-name = "Carl Lerche"
 
 [[publisher.num_cpus]]
 version = "1.15.0"
