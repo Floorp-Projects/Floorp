@@ -8,12 +8,12 @@
     "types": [
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "history"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["history"]
+          }
+        ]
       }
     ]
   },
@@ -25,7 +25,19 @@
       {
         "id": "TransitionType",
         "type": "string",
-        "enum": ["link", "typed", "auto_bookmark", "auto_subframe", "manual_subframe", "generated", "auto_toplevel", "form_submit", "reload", "keyword", "keyword_generated"],
+        "enum": [
+          "link",
+          "typed",
+          "auto_bookmark",
+          "auto_subframe",
+          "manual_subframe",
+          "generated",
+          "auto_toplevel",
+          "form_submit",
+          "reload",
+          "keyword",
+          "keyword_generated"
+        ],
         "description": "The $(topic:transition-types)[transition type] for this visit from its referrer."
       },
       {

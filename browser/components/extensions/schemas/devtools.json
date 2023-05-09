@@ -13,12 +13,12 @@
       },
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "devtools"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["devtools"]
+          }
+        ]
       }
     ]
   },

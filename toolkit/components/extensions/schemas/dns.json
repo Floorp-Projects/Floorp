@@ -4,12 +4,12 @@
     "types": [
       {
         "$extend": "PermissionNoPrompt",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "dns"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["dns"]
+          }
+        ]
       }
     ]
   },

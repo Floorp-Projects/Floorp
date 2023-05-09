@@ -11,9 +11,5 @@
   "background": {
     "scripts": ["download.js"]
   },
-  "permissions": [
-    "downloads",
-    "geckoViewAddons",
-    "nativeMessaging"
-  ]
+  "permissions": ["downloads", "geckoViewAddons", "nativeMessaging"]
 }

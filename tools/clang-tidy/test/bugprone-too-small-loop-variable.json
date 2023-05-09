@@ -1,1 +1,8 @@
-[["warning", "loop variable has narrower type 'short' than iteration's upper bound 'long'", "bugprone-too-small-loop-variable"], {"reliability": "high"}]
+[
+  [
+    "warning",
+    "loop variable has narrower type 'short' than iteration's upper bound 'long'",
+    "bugprone-too-small-loop-variable"
+  ],
+  { "reliability": "high" }
+]

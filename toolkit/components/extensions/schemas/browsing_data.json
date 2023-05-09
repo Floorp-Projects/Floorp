@@ -8,12 +8,12 @@
     "types": [
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "browsingData"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["browsingData"]
+          }
+        ]
       }
     ]
   },
@@ -34,7 +34,7 @@
           },
           "hostnames": {
             "type": "array",
-            "items": {"type": "string", "format": "hostname"},
+            "items": { "type": "string", "format": "hostname" },
             "optional": true,
             "description": "Only remove data associated with these hostnames (only applies to cookies and localStorage)."
           },

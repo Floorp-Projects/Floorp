@@ -8,17 +8,17 @@
     "types": [
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "management"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["management"]
+          }
+        ]
       }
     ]
   },
   {
-    "namespace":"management",
+    "namespace": "management",
     "description": "The <code>browser.management</code> API provides ways to manage the list of extensions that are installed and running.",
     "types": [
       {
@@ -128,7 +128,7 @@
             "description": "Returns a list of API based permissions.",
             "type": "array",
             "optional": true,
-            "items" : {
+            "items": {
               "type": "string"
             }
           },
@@ -136,7 +136,7 @@
             "description": "Returns a list of host based permissions.",
             "type": "array",
             "optional": true,
-            "items" : {
+            "items": {
               "type": "string"
             }
           },

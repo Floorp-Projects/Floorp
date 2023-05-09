@@ -1,1 +1,8 @@
-[["warning", "Null pointer passed to 1st parameter expecting 'nonnull'", "clang-analyzer-core.NonNullParamChecker"], {"reliability": "high"}]
+[
+  [
+    "warning",
+    "Null pointer passed to 1st parameter expecting 'nonnull'",
+    "clang-analyzer-core.NonNullParamChecker"
+  ],
+  { "reliability": "high" }
+]

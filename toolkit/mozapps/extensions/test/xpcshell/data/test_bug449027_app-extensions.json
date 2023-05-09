@@ -7,9 +7,7 @@
   {
     "_comment": "Always blocked",
     "guid": "test_bug449027_3@tests.mozilla.org",
-    "versionRange": [
-      {}
-    ]
+    "versionRange": [{}]
   },
   {
     "_comment": "Not blocked since neither version range matches",
@@ -120,9 +118,7 @@
     "guid": "test_bug449027_13@tests.mozilla.org",
     "versionRange": [
       {
-        "targetApplication": [
-          {}
-        ]
+        "targetApplication": [{}]
       }
     ]
   },

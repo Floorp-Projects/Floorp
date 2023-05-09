@@ -98,7 +98,12 @@
         "async": "callback",
         "description": "Shows the page action. The page action is shown whenever the tab is selected.",
         "parameters": [
-          {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."},
+          {
+            "type": "integer",
+            "name": "tabId",
+            "minimum": 0,
+            "description": "The id of the tab for which you want to modify the page action."
+          },
           {
             "type": "function",
             "name": "callback",
@@ -113,7 +118,12 @@
         "async": "callback",
         "description": "Hides the page action.",
         "parameters": [
-          {"type": "integer", "name": "tabId", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."},
+          {
+            "type": "integer",
+            "name": "tabId",
+            "minimum": 0,
+            "description": "The id of the tab for which you want to modify the page action."
+          },
           {
             "type": "function",
             "name": "callback",
@@ -149,12 +159,13 @@
             "name": "details",
             "type": "object",
             "properties": {
-              "tabId": {"type": "integer", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."},
+              "tabId": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "The id of the tab for which you want to modify the page action."
+              },
               "title": {
-                "choices": [
-                  {"type": "string"},
-                  {"type": "null"}
-                ],
+                "choices": [{ "type": "string" }, { "type": "null" }],
                 "description": "The tooltip string."
               }
             }
@@ -199,14 +210,18 @@
             "name": "details",
             "type": "object",
             "properties": {
-              "tabId": {"type": "integer", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."},
+              "tabId": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "The id of the tab for which you want to modify the page action."
+              },
               "imageData": {
                 "choices": [
                   { "$ref": "ImageDataType" },
                   {
                     "type": "object",
                     "patternProperties": {
-                      "^[1-9]\\d*$": {"$ref": "ImageDataType"}
+                      "^[1-9]\\d*$": { "$ref": "ImageDataType" }
                     }
                   }
                 ],
@@ -246,12 +261,13 @@
             "name": "details",
             "type": "object",
             "properties": {
-              "tabId": {"type": "integer", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."},
+              "tabId": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "The id of the tab for which you want to modify the page action."
+              },
               "popup": {
-                "choices": [
-                  {"type": "string"},
-                  {"type": "null"}
-                ],
+                "choices": [{ "type": "string" }, { "type": "null" }],
                 "description": "The html file to show in a popup.  If set to the empty string (''), no popup is shown."
               }
             }

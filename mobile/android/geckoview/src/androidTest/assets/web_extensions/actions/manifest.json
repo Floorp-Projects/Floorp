@@ -10,11 +10,13 @@
   },
   "browser_action": {
     "default_title": "Test action default",
-    "theme_icons": [{
-      "light": "button/beasts-32-light.png",
-      "dark": "button/beasts-32.png",
-      "size": 32
-    }]
+    "theme_icons": [
+      {
+        "light": "button/beasts-32-light.png",
+        "dark": "button/beasts-32.png",
+        "size": 32
+      }
+    ]
   },
   "page_action": {
     "default_title": "Test action default",

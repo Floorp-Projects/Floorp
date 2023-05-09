@@ -3,9 +3,7 @@
   "$id": "file:///ExtensionDoorhanger.schema.json",
   "title": "ExtensionDoorhanger",
   "description": "A template with a heading, addon icon, title and description. No markup allowed.",
-  "allOf": [
-    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
-  ],
+  "allOf": [{ "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }],
   "type": "object",
   "properties": {
     "content": {
@@ -273,8 +271,8 @@
                                 "description": "URL used in combination with the primary action dispatched."
                               }
                             ]
-                            }
                           }
+                        }
                       }
                     }
                   }
@@ -285,20 +283,11 @@
         }
       },
       "additionalProperties": true,
-      "required": [
-        "layout",
-        "bucket_id",
-        "heading_text",
-        "text",
-        "buttons"
-      ],
+      "required": ["layout", "bucket_id", "heading_text", "text", "buttons"],
       "if": {
         "properties": {
           "skip_address_bar_notifier": {
-            "anyOf": [
-              { "const": "false" },
-              { "const": null }
-            ]
+            "anyOf": [{ "const": "false" }, { "const": null }]
           }
         }
       },

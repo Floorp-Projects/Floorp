@@ -1,4 +1,5 @@
-{ "tests": {
+{
+  "tests": {
     "test_bookmark_conflict.js": {},
     "test_sync.js": {},
     "test_prefs.js": {},
@@ -21,15 +22,13 @@
     "test_bookmarks_in_same_named_folder.js": {},
     "test_client_wipe.js": {},
     "test_special_tabs.js": {},
-    "test_addon_restartless_xpi.js": {"disabled": "Bug 1498974"},
-    "test_addon_webext_xpi.js": {"disabled": "Bug 1498974"},
-    "test_addon_reconciling.js": {"disabled": "Bug 1498974"},
-    "test_addon_wipe.js": {"disabled": "Bug 1498974"},
+    "test_addon_restartless_xpi.js": { "disabled": "Bug 1498974" },
+    "test_addon_webext_xpi.js": { "disabled": "Bug 1498974" },
+    "test_addon_reconciling.js": { "disabled": "Bug 1498974" },
+    "test_addon_wipe.js": { "disabled": "Bug 1498974" },
     "test_existing_bookmarks.js": {},
     "test_addresses.js": {},
     "test_creditcards.js": {},
     "test_extstorage.js": {}
   }
 }
-
-

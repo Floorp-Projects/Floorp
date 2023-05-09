@@ -1,5 +1,12 @@
 {
-  "TYPES": [ "phones", "tablets", "laptops", "televisions", "consoles", "watches" ],
+  "TYPES": [
+    "phones",
+    "tablets",
+    "laptops",
+    "televisions",
+    "consoles",
+    "watches"
+  ],
   "phones": [
     {
       "name": "Firefox OS Flame",

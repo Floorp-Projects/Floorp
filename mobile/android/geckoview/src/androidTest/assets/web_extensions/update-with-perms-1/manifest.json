@@ -3,8 +3,8 @@
   "name": "update",
   "browser_specific_settings": {
     "gecko": {
-        "id": "update-with-perms@example.com",
-        "update_url": "https://example.org/tests/junit/update_manifest.json"
+      "id": "update-with-perms@example.com",
+      "update_url": "https://example.org/tests/junit/update_manifest.json"
     }
   },
   "version": "1.0",

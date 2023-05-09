@@ -8,21 +8,21 @@
     "types": [
       {
         "$extend": "PermissionNoPrompt",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "menus",
-            "contextMenus"
-          ]
-        }]
-      }, {
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["menus", "contextMenus"]
+          }
+        ]
+      },
+      {
         "$extend": "OptionalPermissionNoPrompt",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "menus.overrideContext"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["menus.overrideContext"]
+          }
+        ]
       }
     ]
   },
@@ -49,7 +49,22 @@
         "choices": [
           {
             "type": "string",
-            "enum": ["all", "page", "frame", "selection", "link", "editable", "password", "image", "video", "audio", "launcher", "bookmark", "tab", "tools_menu"]
+            "enum": [
+              "all",
+              "page",
+              "frame",
+              "selection",
+              "link",
+              "editable",
+              "password",
+              "image",
+              "video",
+              "audio",
+              "launcher",
+              "bookmark",
+              "tab",
+              "tools_menu"
+            ]
           },
           {
             "type": "string",
@@ -75,17 +90,11 @@
         "description": "Information sent when a context menu item is clicked.",
         "properties": {
           "menuItemId": {
-            "choices": [
-              { "type": "integer" },
-              { "type": "string" }
-            ],
+            "choices": [{ "type": "integer" }, { "type": "string" }],
             "description": "The ID of the menu item that was clicked."
           },
           "parentMenuItemId": {
-            "choices": [
-              { "type": "integer" },
-              { "type": "string" }
-            ],
+            "choices": [{ "type": "integer" }, { "type": "string" }],
             "optional": true,
             "description": "The parent ID, if any, for the item clicked."
           },
@@ -120,10 +129,10 @@
             "description": "The URL of the page where the menu item was clicked. This property is not set if the click occured in a context where there is no current page, such as in a launcher context menu."
           },
           "frameId": {
-           "type": "integer",
-           "optional": true,
-           "minimum": 0,
-           "description": "The id of the frame of the element where the context menu was clicked."
+            "type": "integer",
+            "optional": true,
+            "minimum": 0,
+            "description": "The id of the frame of the element where the context menu was clicked."
           },
           "frameUrl": {
             "type": "string",
@@ -181,10 +190,7 @@
         "type": "function",
         "description": "Creates a new context menu item. Note that if an error occurs during creation, you may not find out until the creation callback fires (the details will be in $(ref:runtime.lastError)).",
         "returns": {
-          "choices": [
-            { "type": "integer" },
-            { "type": "string" }
-          ],
+          "choices": [{ "type": "integer" }, { "type": "string" }],
           "description": "The ID of the newly created item."
         },
         "parameters": [
@@ -204,9 +210,9 @@
               },
               "icons": {
                 "type": "object",
-                "optional" : true,
-                "patternProperties" : {
-                  "^[1-9]\\d*$": { "type" : "string" }
+                "optional": true,
+                "patternProperties": {
+                  "^[1-9]\\d*$": { "type": "string" }
                 }
               },
               "title": {
@@ -261,22 +267,19 @@
                 ]
               },
               "parentId": {
-                "choices": [
-                  { "type": "integer" },
-                  { "type": "string" }
-                ],
+                "choices": [{ "type": "integer" }, { "type": "string" }],
                 "optional": true,
                 "description": "The ID of a parent menu item; this makes the item a child of a previously added item."
               },
               "documentUrlPatterns": {
                 "type": "array",
-                "items": {"type": "string"},
+                "items": { "type": "string" },
                 "optional": true,
                 "description": "Lets you restrict the item to apply only to documents whose URL matches one of the given patterns. (This applies to frames as well.) For details on the format of a pattern, see $(topic:match_patterns)[Match Patterns]."
               },
               "targetUrlPatterns": {
                 "type": "array",
-                "items": {"type": "string"},
+                "items": { "type": "string" },
                 "optional": true,
                 "description": "Similar to documentUrlPatterns, but lets you filter based on the src attribute of img/audio/video tags and the href of anchor tags."
               },
@@ -290,13 +293,21 @@
                   { "type": "string" },
                   {
                     "type": "string",
-                    "enum": ["_execute_browser_action", "_execute_page_action", "_execute_sidebar_action"],
+                    "enum": [
+                      "_execute_browser_action",
+                      "_execute_page_action",
+                      "_execute_sidebar_action"
+                    ],
                     "max_manifest_version": 2,
                     "description": "Manifest V2 supports internal commands _execute_page_action, _execute_browser_action and _execute_sidebar_action."
                   },
                   {
                     "type": "string",
-                    "enum": ["_execute_action", "_execute_page_action", "_execute_sidebar_action"],
+                    "enum": [
+                      "_execute_action",
+                      "_execute_page_action",
+                      "_execute_sidebar_action"
+                    ],
                     "min_manifest_version": 3,
                     "description": "Manifest V3 supports internal commands _execute_page_action, _execute_action and _execute_sidebar_action."
                   }
@@ -322,10 +333,7 @@
         "async": "callback",
         "parameters": [
           {
-            "choices": [
-              { "type": "integer" },
-              { "type": "string" }
-            ],
+            "choices": [{ "type": "integer" }, { "type": "string" }],
             "name": "id",
             "description": "The ID of the item to update."
           },
@@ -341,8 +349,8 @@
               "icons": {
                 "type": "object",
                 "optional": "omit-key-if-missing",
-                "patternProperties" : {
-                  "^[1-9]\\d*$": { "type" : "string" }
+                "patternProperties": {
+                  "^[1-9]\\d*$": { "type": "string" }
                 }
               },
               "title": {
@@ -391,21 +399,18 @@
                 ]
               },
               "parentId": {
-                "choices": [
-                  { "type": "integer" },
-                  { "type": "string" }
-                ],
+                "choices": [{ "type": "integer" }, { "type": "string" }],
                 "optional": true,
                 "description": "Note: You cannot change an item to be a child of one of its own descendants."
               },
               "documentUrlPatterns": {
                 "type": "array",
-                "items": {"type": "string"},
+                "items": { "type": "string" },
                 "optional": true
               },
               "targetUrlPatterns": {
                 "type": "array",
-                "items": {"type": "string"},
+                "items": { "type": "string" },
                 "optional": true
               },
               "enabled": {
@@ -430,10 +435,7 @@
         "async": "callback",
         "parameters": [
           {
-            "choices": [
-              { "type": "integer" },
-              { "type": "string" }
-            ],
+            "choices": [{ "type": "integer" }, { "type": "string" }],
             "name": "menuItemId",
             "description": "The ID of the context menu item to remove."
           },
@@ -540,16 +542,13 @@
                 "description": "A list of IDs of the menu items that were shown.",
                 "type": "array",
                 "items": {
-                  "choices": [
-                    { "type": "integer" },
-                    { "type": "string" }
-                  ]
+                  "choices": [{ "type": "integer" }, { "type": "string" }]
                 }
               },
               "contexts": {
                 "description": "A list of all contexts that apply to the menu.",
                 "type": "array",
-                "items": {"$ref": "ContextType"}
+                "items": { "$ref": "ContextType" }
               },
               "viewType": {
                 "$ref": "extension.ViewType",

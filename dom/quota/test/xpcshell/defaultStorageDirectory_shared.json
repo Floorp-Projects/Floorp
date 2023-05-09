@@ -77,7 +77,7 @@
         "name": "storage",
         "dir": true,
         "entries": [
-          {"name":"ls-archive.sqlite","dir":false},
+          { "name": "ls-archive.sqlite", "dir": false },
           {
             "name": "permanent",
             "dir": true,
@@ -90,17 +90,13 @@
             "name": "default",
             "dir": true,
             "todo": "Add entry invalid+++example.com once bug 1594075 is fixed",
-            "entries": [
-              { "name": "foo.bar", "dir": false }
-            ]
+            "entries": [{ "name": "foo.bar", "dir": false }]
           },
           {
             "name": "temporary",
             "dir": true,
             "todo": "Add entry invalid+++example.com once bug 1594075 is fixed",
-            "entries": [
-              { "name": "foo.bar", "dir": false }
-            ]
+            "entries": [{ "name": "foo.bar", "dir": false }]
           }
         ]
       }
@@ -113,7 +109,7 @@
         "name": "storage",
         "dir": true,
         "entries": [
-          {"name":"ls-archive.sqlite","dir":false},
+          { "name": "ls-archive.sqlite", "dir": false },
           {
             "name": "permanent",
             "dir": true,

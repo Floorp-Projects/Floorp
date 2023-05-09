@@ -4,12 +4,12 @@
     "types": [
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "pkcs11"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["pkcs11"]
+          }
+        ]
       }
     ]
   },

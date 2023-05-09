@@ -35,8 +35,10 @@
     },
     "text": {
       "allOf": [
-        {"$ref": "#/definitions/richText"},
-        {"description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"}
+        { "$ref": "#/definitions/richText" },
+        {
+          "description": "Main body text of snippet. HTML subset allowed: i, b, u, strong, em, br"
+        }
       ]
     },
     "text_color": {
@@ -87,8 +89,8 @@
     },
     "title": {
       "allOf": [
-        {"$ref": "#/definitions/plainText"},
-        {"description": "Snippet title displayed before snippet text"}
+        { "$ref": "#/definitions/plainText" },
+        { "description": "Snippet title displayed before snippet text" }
       ]
     },
     "title_icon": {
@@ -101,8 +103,10 @@
     },
     "button_label": {
       "allOf": [
-        {"$ref": "#/definitions/plainText"},
-        {"description": "Text for a button next to main snippet text that links to button_url. Requires button_url."}
+        { "$ref": "#/definitions/plainText" },
+        {
+          "description": "Text for a button next to main snippet text that links to button_url. Requires button_url."
+        }
       ]
     },
     "button_color": {
@@ -134,8 +138,8 @@
       "additionalProperties": {
         "url": {
           "allOf": [
-            {"$ref": "#/definitions/link_url"},
-            {"description": "The url where the link points to."}
+            { "$ref": "#/definitions/link_url" },
+            { "description": "The url where the link points to." }
           ]
         },
         "metric": {
@@ -150,10 +154,18 @@
     }
   },
   "additionalProperties": false,
-  "required": ["text", "donation_form_url", "donation_amount_first", "donation_amount_second", "donation_amount_third", "donation_amount_fourth", "button_label", "currency_code"],
+  "required": [
+    "text",
+    "donation_form_url",
+    "donation_amount_first",
+    "donation_amount_second",
+    "donation_amount_third",
+    "donation_amount_fourth",
+    "button_label",
+    "currency_code"
+  ],
   "dependencies": {
     "button_color": ["button_label"],
     "button_background_color": ["button_label"]
   }
 }
-

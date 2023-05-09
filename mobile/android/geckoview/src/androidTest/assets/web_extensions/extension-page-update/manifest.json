@@ -17,10 +17,5 @@
       "run_at": "document_idle"
     }
   ],
-  "permissions": [
-    "geckoViewAddons",
-    "nativeMessaging",
-    "tabs",
-    "<all_urls>"
-  ]
+  "permissions": ["geckoViewAddons", "nativeMessaging", "tabs", "<all_urls>"]
 }

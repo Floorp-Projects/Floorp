@@ -21,9 +21,7 @@
               },
               "type": {
                 "type": "string",
-                "enum": [
-                  "pkcs11", "stdio"
-                ]
+                "enum": ["pkcs11", "stdio"]
               },
               "allowed_extensions": {
                 "type": "array",
@@ -51,9 +49,7 @@
               },
               "type": {
                 "type": "string",
-                "enum": [
-                  "storage"
-                ]
+                "enum": ["storage"]
               }
             }
           }

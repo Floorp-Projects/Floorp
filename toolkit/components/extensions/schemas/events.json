@@ -19,18 +19,18 @@
           },
           "tags": {
             "type": "array",
-            "items": {"type": "string"},
+            "items": { "type": "string" },
             "optional": true,
-            "description":  "Tags can be used to annotate rules and perform operations on sets of rules."
+            "description": "Tags can be used to annotate rules and perform operations on sets of rules."
           },
           "conditions": {
             "type": "array",
-            "items": {"type": "any"},
+            "items": { "type": "any" },
             "description": "List of conditions that can trigger the actions."
           },
           "actions": {
             "type": "array",
-            "items": {"type": "any"},
+            "items": { "type": "any" },
             "description": "List of actions that are triggered if one of the condtions is fulfilled."
           },
           "priority": {
@@ -112,7 +112,7 @@
               {
                 "name": "rules",
                 "type": "array",
-                "items": {"$ref": "Rule"},
+                "items": { "$ref": "Rule" },
                 "description": "Rules to be registered. These do not replace previously registered rules."
               },
               {
@@ -123,7 +123,7 @@
                   {
                     "name": "rules",
                     "type": "array",
-                    "items": {"$ref": "Rule"},
+                    "items": { "$ref": "Rule" },
                     "description": "Rules that were registered, the optional parameters are filled with values."
                   }
                 ],
@@ -151,7 +151,7 @@
                 "name": "ruleIdentifiers",
                 "optional": true,
                 "type": "array",
-                "items": {"type": "string"},
+                "items": { "type": "string" },
                 "description": "If an array is passed, only rules with identifiers contained in this array are returned."
               },
               {
@@ -161,7 +161,7 @@
                   {
                     "name": "rules",
                     "type": "array",
-                    "items": {"$ref": "Rule"},
+                    "items": { "$ref": "Rule" },
                     "description": "Rules that were registered, the optional parameters are filled with values."
                   }
                 ],
@@ -189,7 +189,7 @@
                 "name": "ruleIdentifiers",
                 "optional": true,
                 "type": "array",
-                "items": {"type": "string"},
+                "items": { "type": "string" },
                 "description": "If an array is passed, only rules with identifiers contained in this array are unregistered."
               },
               {
@@ -310,8 +310,14 @@
             "optional": true,
             "items": {
               "choices": [
-                {"type": "integer", "description": "A specific port."},
-                {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "integer"}, "description": "A pair of integers identiying the start and end (both inclusive) of a port range."}
+                { "type": "integer", "description": "A specific port." },
+                {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": { "type": "integer" },
+                  "description": "A pair of integers identiying the start and end (both inclusive) of a port range."
+                }
               ]
             }
           }

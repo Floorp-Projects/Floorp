@@ -10,18 +10,14 @@
       "test-macosx1014-64/debug-*",
       "test-macosx1014-64/opt-*"
     ],
-    "accessible/tests/browser/scroll/browser.ini": [
-      "test-linux1804-64/opt-*"
-    ],
+    "accessible/tests/browser/scroll/browser.ini": ["test-linux1804-64/opt-*"],
     "accessible/tests/browser/states/browser.ini": [
       "test-windows11-64-2009-qr/opt-*"
     ],
     "accessible/tests/browser/telemetry/browser.ini": [
       "test-windows11-64-2009/opt-*"
     ],
-    "accessible/tests/mochitest/a11y.ini": [
-      "test-linux1804-64-qr/opt-*-1proc"
-    ],
+    "accessible/tests/mochitest/a11y.ini": ["test-linux1804-64-qr/opt-*-1proc"],
     "accessible/tests/mochitest/actions/a11y.ini": [
       "test-windows11-64-2009/opt-*-1proc"
     ],
@@ -357,9 +353,7 @@
       "test-linux1804-64/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "caps/tests/mochitest/chrome.ini": [
-      "test-linux1804-64/opt-*-1proc"
-    ],
+    "caps/tests/mochitest/chrome.ini": ["test-linux1804-64/opt-*-1proc"],
     "devtools/client/aboutdebugging/test/browser/browser.ini": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*"
@@ -493,19 +487,13 @@
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*"
     ],
-    "dom/abort/tests/mochitest.ini": [
-      "test-linux1804-64/opt-*"
-    ],
+    "dom/abort/tests/mochitest.ini": ["test-linux1804-64/opt-*"],
     "dom/animation/test/mochitest.ini": [
       "test-windows11-64-2009-qr/debug-*",
       "test-linux1804-64-qr/opt-*"
     ],
-    "dom/base/test/chrome.ini": [
-      "test-linux1804-64/debug-*-spi-nw-1proc"
-    ],
-    "dom/base/test/chrome/chrome.ini": [
-      "test-windows11-64-2009/opt-*-1proc"
-    ],
+    "dom/base/test/chrome.ini": ["test-linux1804-64/debug-*-spi-nw-1proc"],
+    "dom/base/test/chrome/chrome.ini": ["test-windows11-64-2009/opt-*-1proc"],
     "dom/base/test/mochitest.ini": [
       "test-linux1804-64/debug-*",
       "test-linux1804-64-qr/debug-*",
@@ -516,41 +504,27 @@
       "test-android-em-7.0-x86_64/opt-geckoview-*",
       "test-windows7-32/debug-*"
     ],
-    "dom/broadcastchannel/tests/browser.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "dom/broadcastchannel/tests/browser.ini": ["test-windows11-64-2009/opt-*"],
     "dom/canvas/test/webgl-conf/generated-mochitest.ini": [
       "test-windows11-64-2009/opt-*"
     ],
     "dom/canvas/test/webgl-mochitest/mochitest.ini": [
       "test-linux1804-64/opt-*"
     ],
-    "dom/console/tests/mochitest.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "dom/console/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
     "dom/credentialmanagement/tests/browser/browser.ini": [
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/file/ipc/tests/mochitest.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "dom/file/ipc/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
     "dom/file/tests/xpcshell.ini": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*",
       "test-android-em-7.0-x86_64/opt-geckoview-*"
     ],
-    "dom/filesystem/tests/mochitest.ini": [
-      "test-windows11-64-2009-qr/opt-*"
-    ],
-    "dom/html/reftests/autofocus/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
-    "dom/html/test/browser.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
-    "dom/html/test/forms/mochitest.ini": [
-      "test-linux1804-64/opt-*"
-    ],
+    "dom/filesystem/tests/mochitest.ini": ["test-windows11-64-2009-qr/opt-*"],
+    "dom/html/reftests/autofocus/reftest.list": ["test-linux1804-64/opt-*"],
+    "dom/html/test/browser.ini": ["test-windows11-64-2009/opt-*"],
+    "dom/html/test/forms/mochitest.ini": ["test-linux1804-64/opt-*"],
     "dom/html/test/mochitest.ini": [
       "test-linux1804-64/debug-*",
       "test-windows11-64-2009/opt-*",
@@ -569,12 +543,8 @@
     "dom/ipc/tests/JSWindowActor/browser.ini": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "dom/ipc/tests/browser.ini": [
-      "test-windows7-32/opt-*"
-    ],
-    "dom/ipc/tests/chrome.ini": [
-      "test-linux1804-64/debug-*-spi-nw-1proc"
-    ],
+    "dom/ipc/tests/browser.ini": ["test-windows7-32/opt-*"],
+    "dom/ipc/tests/chrome.ini": ["test-linux1804-64/debug-*-spi-nw-1proc"],
     "dom/ipc/tests/xpcshell.ini": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64-qr/opt-*",
@@ -587,9 +557,7 @@
     "dom/l10n/tests/mochitest/chrome.ini": [
       "test-linux1804-64/debug-*-spi-nw-1proc"
     ],
-    "dom/localstorage/test/unit/xpcshell.ini": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "dom/localstorage/test/unit/xpcshell.ini": ["test-linux1804-64-qr/opt-*"],
     "dom/media/mediacontrol/tests/browser.ini": [
       "test-windows11-64-2009-qr/opt-*"
     ],
@@ -598,9 +566,7 @@
       "test-windows11-64-2009-qr/debug-*-spi",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "dom/media/test/crashtests/crashtests.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "dom/media/test/crashtests/crashtests.list": ["test-linux1804-64/opt-*"],
     "dom/media/test/mochitest.ini": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009/opt-*-spi",
@@ -622,15 +588,9 @@
       "test-macosx1014-64/opt-*-spi",
       "test-windows7-32/debug-*"
     ],
-    "dom/media/webvtt/tests/xpcshell.ini": [
-      "test-linux1804-64-qr/opt-*"
-    ],
-    "dom/network/tests/chrome.ini": [
-      "test-linux1804-64-qr/opt-*-1proc"
-    ],
-    "dom/performance/tests/mochitest.ini": [
-      "test-linux1804-64/opt-*"
-    ],
+    "dom/media/webvtt/tests/xpcshell.ini": ["test-linux1804-64-qr/opt-*"],
+    "dom/network/tests/chrome.ini": ["test-linux1804-64-qr/opt-*-1proc"],
+    "dom/performance/tests/mochitest.ini": ["test-linux1804-64/opt-*"],
     "dom/permission/tests/mochitest.ini": [
       "test-linux1804-64/opt-*",
       "test-windows11-64-2009-qr/opt-*"
@@ -648,9 +608,7 @@
     "dom/presentation/tests/xpcshell/xpcshell.ini": [
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/promise/tests/mochitest.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "dom/promise/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
     "dom/push/test/mochitest.ini": [
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64-qr/debug-*",
@@ -661,19 +619,13 @@
       "test-linux1804-64-qr/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/reporting/tests/browser.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "dom/reporting/tests/browser.ini": ["test-windows11-64-2009/opt-*"],
     "dom/security/test/csp/mochitest.ini": [
       "test-linux1804-64-qr/debug-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/security/test/general/browser.ini": [
-      "test-linux1804-64/debug-*"
-    ],
-    "dom/security/test/general/mochitest.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "dom/security/test/general/browser.ini": ["test-linux1804-64/debug-*"],
+    "dom/security/test/general/mochitest.ini": ["test-windows11-64-2009/opt-*"],
     "dom/security/test/https-only/browser.ini": [
       "test-windows11-64-2009/debug-*",
       "test-linux1804-64/opt-*"
@@ -681,12 +633,8 @@
     "dom/security/test/mixedcontentblocker/browser.ini": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "dom/security/test/unit/xpcshell.ini": [
-      "test-linux1804-64/debug-*-spi-nw"
-    ],
-    "dom/serviceworkers/test/browser.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "dom/security/test/unit/xpcshell.ini": ["test-linux1804-64/debug-*-spi-nw"],
+    "dom/serviceworkers/test/browser.ini": ["test-windows11-64-2009/opt-*"],
     "dom/serviceworkers/test/mochitest.ini": [
       "test-linux1804-64-qr/opt-*",
       "test-windows11-64-2009-qr/opt-*"
@@ -727,9 +675,7 @@
     "dom/tests/mochitest/fetch/mochitest.ini": [
       "test-windows11-64-2009-qr/debug-*"
     ],
-    "dom/tests/mochitest/gamepad/mochitest.ini": [
-      "test-linux1804-64/opt-*"
-    ],
+    "dom/tests/mochitest/gamepad/mochitest.ini": ["test-linux1804-64/opt-*"],
     "dom/tests/mochitest/general/mochitest.ini": [
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64-tsan/opt-*"
@@ -750,19 +696,13 @@
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "dom/url/tests/browser.ini": [
-      "test-windows7-32/opt-*"
-    ],
-    "dom/webauthn/tests/mochitest.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "dom/url/tests/browser.ini": ["test-windows7-32/opt-*"],
+    "dom/webauthn/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
     "dom/webgpu/mochitest/mochitest.ini": [
       "test-linux1804-64-qr/opt-*",
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/websocket/tests/chrome.ini": [
-      "test-linux1804-64-qr/opt-*-1proc"
-    ],
+    "dom/websocket/tests/chrome.ini": ["test-linux1804-64-qr/opt-*-1proc"],
     "dom/websocket/tests/mochitest.ini": [
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64-qr/debug-*",
@@ -771,35 +711,21 @@
     "dom/websocket/tests/websocket_hybi/mochitest.ini": [
       "test-windows11-64-2009/opt-*"
     ],
-    "dom/workers/test/browser.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
-    "dom/workers/test/mochitest.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "dom/workers/test/browser.ini": ["test-windows11-64-2009/opt-*"],
+    "dom/workers/test/mochitest.ini": ["test-windows11-64-2009/opt-*"],
     "dom/worklet/tests/mochitest.ini": [
       "test-linux1804-64/debug-*",
       "test-linux1804-64/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "dom/xhr/tests/mochitest.ini": [
-      "test-windows11-64-2009-qr/opt-*"
-    ],
-    "dom/xslt/tests/mochitest/mochitest.ini": [
-      "test-linux1804-64/opt-*"
-    ],
+    "dom/xhr/tests/mochitest.ini": ["test-windows11-64-2009-qr/opt-*"],
+    "dom/xslt/tests/mochitest/mochitest.ini": ["test-linux1804-64/opt-*"],
     "editor/libeditor/tests/chrome.ini": [
       "test-linux1804-64/debug-*-spi-nw-1proc"
     ],
-    "editor/libeditor/tests/mochitest.ini": [
-      "test-windows11-64-2009-qr/opt-*"
-    ],
-    "editor/reftests/xul/reftest.list": [
-      "test-linux1804-64-qr/opt-*"
-    ],
-    "editor/spellchecker/tests/mochitest.ini": [
-      "test-linux1804-64/opt-*"
-    ],
+    "editor/libeditor/tests/mochitest.ini": ["test-windows11-64-2009-qr/opt-*"],
+    "editor/reftests/xul/reftest.list": ["test-linux1804-64-qr/opt-*"],
+    "editor/spellchecker/tests/mochitest.ini": ["test-linux1804-64/opt-*"],
     "extensions/permissions/test/unit/xpcshell.ini": [
       "test-windows7-32/opt-*",
       "test-windows11-64-2009/debug-*",
@@ -826,19 +752,13 @@
       "test-android-em-7.0-x86_64/opt-geckoview-*",
       "test-android-em-7.0-x86_64-qr/opt-geckoview-*"
     ],
-    "gfx/tests/crashtests/crashtests.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "gfx/tests/crashtests/crashtests.list": ["test-linux1804-64/opt-*"],
     "image/test/mochitest/mochitest.ini": [
       "test-windows11-64-2009/opt-*",
       "test-android-em-7.0-x86_64-qr/opt-geckoview-*"
     ],
-    "image/test/unit/xpcshell.ini": [
-      "test-linux1804-64/opt-*"
-    ],
-    "intl/uconv/tests/mochitest.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "image/test/unit/xpcshell.ini": ["test-linux1804-64/opt-*"],
+    "intl/uconv/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
     "js/xpconnect/tests/chrome/chrome.ini": [
       "test-windows11-64-2009/debug-*-1proc"
     ],
@@ -847,9 +767,7 @@
       "test-linux1804-64/debug-*-spi-nw",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "layout/base/tests/browser.ini": [
-      "test-windows11-64-2009-qr/opt-*"
-    ],
+    "layout/base/tests/browser.ini": ["test-windows11-64-2009-qr/opt-*"],
     "layout/base/tests/mochitest.ini": [
       "test-windows11-64-2009/opt-*",
       "test-windows11-64-2009-qr/debug-*",
@@ -868,18 +786,10 @@
     "layout/inspector/tests/chrome/chrome.ini": [
       "test-linux1804-64/debug-*-1proc"
     ],
-    "layout/inspector/tests/mochitest.ini": [
-      "test-linux1804-64/opt-*"
-    ],
-    "layout/mathml/tests/mochitest.ini": [
-      "test-linux1804-64/opt-*"
-    ],
-    "layout/reftests/async-scrolling/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
-    "layout/reftests/border-image/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/inspector/tests/mochitest.ini": ["test-linux1804-64/opt-*"],
+    "layout/mathml/tests/mochitest.ini": ["test-linux1804-64/opt-*"],
+    "layout/reftests/async-scrolling/reftest.list": ["test-linux1804-64/opt-*"],
+    "layout/reftests/border-image/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/box-shadow/reftest.list": [
       "test-linux1804-64-qr/debug-*-swr"
     ],
@@ -887,18 +797,14 @@
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64-qr/debug-*-swr"
     ],
-    "layout/reftests/canvas/reftest.list": [
-      "test-windows11-64-2009-qr/opt-*"
-    ],
+    "layout/reftests/canvas/reftest.list": ["test-windows11-64-2009-qr/opt-*"],
     "layout/reftests/counters/reftest.list": [
       "test-windows11-64-2009-qr/opt-*"
     ],
     "layout/reftests/css-animations/reftest.list": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "layout/reftests/css-calc/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/css-calc/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/css-default/submit-button/reftest.list": [
       "test-linux1804-64/opt-*"
     ],
@@ -911,9 +817,7 @@
     "layout/reftests/css-gradients/reftest.list": [
       "test-windows11-64-2009/opt-*"
     ],
-    "layout/reftests/css-grid/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/css-grid/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/css-invalid/fieldset/reftest.list": [
       "test-linux1804-64/opt-*"
     ],
@@ -923,21 +827,13 @@
     "layout/reftests/css-mediaqueries/reftest.list": [
       "test-linux1804-64/opt-*"
     ],
-    "layout/reftests/css-optional/reftest.list": [
-      "test-linux1804-64-qr/opt-*"
-    ],
-    "layout/reftests/css-required/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/css-optional/reftest.list": ["test-linux1804-64-qr/opt-*"],
+    "layout/reftests/css-required/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/css-scroll-snap/reftest.list": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "layout/reftests/css-scrollbars/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
-    "layout/reftests/css-selectors/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/css-scrollbars/reftest.list": ["test-linux1804-64/opt-*"],
+    "layout/reftests/css-selectors/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/css-submit-invalid/button-submit/reftest.list": [
       "test-linux1804-64-qr/opt-*"
     ],
@@ -950,9 +846,7 @@
     "layout/reftests/css-ui-valid/output/reftest.list": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "layout/reftests/css-variables/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/css-variables/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/display-list/reftest.list": [
       "test-windows11-64-2009-qr/opt-*"
     ],
@@ -966,9 +860,7 @@
       "test-linux1804-64-qr/debug-*-swr",
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "layout/reftests/font-matching/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/font-matching/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/forms/input/datetime/reftest.list": [
       "test-linux1804-64/opt-*"
     ],
@@ -976,51 +868,31 @@
       "test-linux1804-64/opt-*",
       "test-linux1804-64-qr/debug-*-swr"
     ],
-    "layout/reftests/forms/output/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
-    "layout/reftests/forms/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/forms/output/reftest.list": ["test-linux1804-64/opt-*"],
+    "layout/reftests/forms/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/high-contrast/reftest.list": [
       "test-linux1804-64-qr/debug-*"
     ],
-    "layout/reftests/image-element/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
-    "layout/reftests/image-region/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
-    "layout/reftests/image/reftest.list": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "layout/reftests/image-element/reftest.list": ["test-linux1804-64/opt-*"],
+    "layout/reftests/image-region/reftest.list": ["test-linux1804-64/opt-*"],
+    "layout/reftests/image/reftest.list": ["test-windows11-64-2009/opt-*"],
     "layout/reftests/invalidation/reftest.list": [
       "test-linux1804-64-qr/debug-*-swr"
     ],
-    "layout/reftests/marquee/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
-    "layout/reftests/mathml/reftest.list": [
-      "test-windows11-64-2009/opt-*"
-    ],
+    "layout/reftests/marquee/reftest.list": ["test-linux1804-64/opt-*"],
+    "layout/reftests/mathml/reftest.list": ["test-windows11-64-2009/opt-*"],
     "layout/reftests/meta-viewport/reftest.list": [
       "test-linux1804-64-qr/debug-*-swr"
     ],
-    "layout/reftests/outline/reftest.list": [
-      "test-linux1804-64-qr/opt-*"
-    ],
-    "layout/reftests/pixel-rounding/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/outline/reftest.list": ["test-linux1804-64-qr/opt-*"],
+    "layout/reftests/pixel-rounding/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/position-dynamic-changes/vertical/reftest_border_abspos.list": [
       "test-linux1804-64/opt-*"
     ],
     "layout/reftests/position-dynamic-changes/vertical/reftest_margin_parent.list": [
       "test-linux1804-64/opt-*"
     ],
-    "layout/reftests/position-sticky/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/position-sticky/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/printing/reftest.list": [
       "test-windows11-64-2009-qr/debug-*",
       "test-windows11-64-2009-qr/opt-*"
@@ -1039,18 +911,14 @@
       "test-linux1804-64/opt-*",
       "test-linux1804-64-qr/debug-*"
     ],
-    "layout/reftests/svg/text/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/svg/text/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/table-anonymous-boxes/reftest.list": [
       "test-windows11-64-2009-qr/opt-*"
     ],
     "layout/reftests/table-background/reftest.list": [
       "test-linux1804-64/opt-*"
     ],
-    "layout/reftests/table-html/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/table-html/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/transform-3d/reftest.list": [
       "test-linux1804-64-qr/debug-*-swr"
     ],
@@ -1058,18 +926,12 @@
       "test-windows7-32/opt-*",
       "test-linux1804-64-qr/debug-*-swr"
     ],
-    "layout/reftests/usercss/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "layout/reftests/usercss/reftest.list": ["test-linux1804-64/opt-*"],
     "layout/reftests/web-animations/reftest.list": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "layout/reftests/writing-mode/reftest.list": [
-      "test-linux1804-64-qr/opt-*"
-    ],
-    "layout/style/crashtests/crashtests.list": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "layout/reftests/writing-mode/reftest.list": ["test-linux1804-64-qr/opt-*"],
+    "layout/style/crashtests/crashtests.list": ["test-linux1804-64-qr/opt-*"],
     "layout/style/test/mochitest.ini": [
       "test-linux1804-64/debug-*",
       "test-linux1804-64/opt-*",
@@ -1077,24 +939,14 @@
       "test-android-em-7.0-x86_64/opt-geckoview-*",
       "test-android-em-7.0-x86_64/debug-geckoview-*"
     ],
-    "layout/svg/tests/mochitest.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
-    "layout/xul/test/browser.ini": [
-      "test-windows11-64-2009-qr/opt-*"
-    ],
-    "layout/xul/test/chrome.ini": [
-      "test-windows11-64-2009/opt-*-1proc"
-    ],
+    "layout/svg/tests/mochitest.ini": ["test-windows11-64-2009/opt-*"],
+    "layout/xul/test/browser.ini": ["test-windows11-64-2009-qr/opt-*"],
+    "layout/xul/test/chrome.ini": ["test-windows11-64-2009/opt-*-1proc"],
     "mobile/android/components/extensions/test/mochitest/mochitest.ini": [
       "test-android-em-7.0-x86_64/opt-geckoview-*"
     ],
-    "modules/libpref/test/unit/xpcshell.ini": [
-      "test-windows11-64-2009/opt-*"
-    ],
-    "netwerk/test/browser/browser.ini": [
-      "test-windows11-64-2009-qr/opt-*"
-    ],
+    "modules/libpref/test/unit/xpcshell.ini": ["test-windows11-64-2009/opt-*"],
+    "netwerk/test/browser/browser.ini": ["test-windows11-64-2009-qr/opt-*"],
     "netwerk/test/httpserver/test/xpcshell.ini": [
       "test-windows11-64-2009/opt-*"
     ],
@@ -1166,9 +1018,7 @@
     "startupcache/test/browser/browser.ini": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "testing/crashtest/sanity/crashtests.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "testing/crashtest/sanity/crashtests.list": ["test-linux1804-64/opt-*"],
     "testing/mochitest/chrome/chrome.ini": [
       "test-windows11-64-2009/opt-*-1proc"
     ],
@@ -1199,18 +1049,12 @@
     "testing/web-platform/tests/WebIDL/ecmascript-binding": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/acid/acid2": [
-      "test-linux1804-64-qr/opt-*"
-    ],
-    "testing/web-platform/tests/apng": [
-      "test-linux1804-64/opt-*"
-    ],
+    "testing/web-platform/tests/acid/acid2": ["test-linux1804-64-qr/opt-*"],
+    "testing/web-platform/tests/apng": ["test-linux1804-64/opt-*"],
     "testing/web-platform/tests/clipboard-apis/permissions": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/compat": [
-      "test-windows11-64-2009-qr/opt-*"
-    ],
+    "testing/web-platform/tests/compat": ["test-windows11-64-2009-qr/opt-*"],
     "testing/web-platform/tests/content-security-policy/default-src": [
       "test-linux1804-64/opt-*"
     ],
@@ -1274,18 +1118,12 @@
     "testing/web-platform/tests/css/selectors": [
       "test-windows11-64-2009/opt-*"
     ],
-    "testing/web-platform/tests/dom/nodes": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "testing/web-platform/tests/dom/nodes": ["test-linux1804-64-qr/opt-*"],
     "testing/web-platform/tests/encoding/streams": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/event-timing": [
-      "test-linux1804-64/opt-*"
-    ],
-    "testing/web-platform/tests/fetch/api/basic": [
-      "test-linux1804-64/opt-*"
-    ],
+    "testing/web-platform/tests/event-timing": ["test-linux1804-64/opt-*"],
+    "testing/web-platform/tests/fetch/api/basic": ["test-linux1804-64/opt-*"],
     "testing/web-platform/tests/fetch/api/response": [
       "test-linux1804-64-qr/opt-*"
     ],
@@ -1295,12 +1133,8 @@
     "testing/web-platform/tests/fetch/range": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/focus": [
-      "test-windows11-64-2009-qr/opt-*"
-    ],
-    "testing/web-platform/tests/fullscreen/api": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "testing/web-platform/tests/focus": ["test-windows11-64-2009-qr/opt-*"],
+    "testing/web-platform/tests/fullscreen/api": ["test-linux1804-64-qr/opt-*"],
     "testing/web-platform/tests/fullscreen/rendering": [
       "test-linux1804-64/opt-*"
     ],
@@ -1316,9 +1150,7 @@
     "testing/web-platform/tests/html/cross-origin-embedder-policy": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/html/dom": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "testing/web-platform/tests/html/dom": ["test-linux1804-64-qr/opt-*"],
     "testing/web-platform/tests/html/rendering/non-replaced-elements": [
       "test-windows11-64-2009/opt-*-print-*",
       "test-linux1804-64-qr/opt-*"
@@ -1341,12 +1173,8 @@
     "testing/web-platform/tests/infrastructure/webdriver/tests": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/loading": [
-      "test-linux1804-64/opt-*"
-    ],
-    "testing/web-platform/tests/media-source": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "testing/web-platform/tests/loading": ["test-linux1804-64/opt-*"],
+    "testing/web-platform/tests/media-source": ["test-linux1804-64-qr/opt-*"],
     "testing/web-platform/tests/mediacapture-record": [
       "test-linux1804-64-qr/opt-*"
     ],
@@ -1357,9 +1185,7 @@
       "test-linux1804-64/opt-*",
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/mixed-content": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "testing/web-platform/tests/mixed-content": ["test-linux1804-64-qr/opt-*"],
     "testing/web-platform/tests/mixed-content/gen/top.http-rp": [
       "test-windows11-64-2009/opt-*"
     ],
@@ -1376,21 +1202,15 @@
       "test-linux1804-64/opt-*",
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/page-lifecycle": [
-      "test-linux1804-64/opt-*"
-    ],
-    "testing/web-platform/tests/page-visibility": [
-      "test-linux1804-64/opt-*"
-    ],
+    "testing/web-platform/tests/page-lifecycle": ["test-linux1804-64/opt-*"],
+    "testing/web-platform/tests/page-visibility": ["test-linux1804-64/opt-*"],
     "testing/web-platform/tests/picture-in-picture": [
       "test-linux1804-64-qr/opt-*"
     ],
     "testing/web-platform/tests/pointerevents/pointerlock": [
       "test-windows11-64-2009-qr/opt-*"
     ],
-    "testing/web-platform/tests/quirks": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "testing/web-platform/tests/quirks": ["test-linux1804-64-qr/opt-*"],
     "testing/web-platform/tests/resize-observer": [
       "test-windows11-64-2009/opt-*"
     ],
@@ -1398,9 +1218,7 @@
       "test-linux1804-64/opt-*",
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/screen-capture": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "testing/web-platform/tests/screen-capture": ["test-linux1804-64-qr/opt-*"],
     "testing/web-platform/tests/service-workers/cache-storage": [
       "test-linux1804-64-qr/opt-*"
     ],
@@ -1413,51 +1231,29 @@
     "testing/web-platform/tests/shadow-dom/declarative": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/speech-api": [
-      "test-linux1804-64/opt-*"
-    ],
-    "testing/web-platform/tests/streams": [
-      "test-windows11-64-2009-qr/opt-*"
-    ],
+    "testing/web-platform/tests/speech-api": ["test-linux1804-64/opt-*"],
+    "testing/web-platform/tests/streams": ["test-windows11-64-2009-qr/opt-*"],
     "testing/web-platform/tests/streams/readable-streams": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/svg": [
-      "test-linux1804-64-qr/opt-*"
-    ],
-    "testing/web-platform/tests/svg/animations": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "testing/web-platform/tests/svg": ["test-linux1804-64-qr/opt-*"],
+    "testing/web-platform/tests/svg/animations": ["test-linux1804-64-qr/opt-*"],
     "testing/web-platform/tests/svg/painting/reftests": [
       "test-linux1804-64-qr/opt-*-print-*"
     ],
-    "testing/web-platform/tests/svg/render": [
-      "test-linux1804-64-qr/opt-*"
-    ],
-    "testing/web-platform/tests/uievents/mouse": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "testing/web-platform/tests/svg/render": ["test-linux1804-64-qr/opt-*"],
+    "testing/web-platform/tests/uievents/mouse": ["test-linux1804-64-qr/opt-*"],
     "testing/web-platform/tests/upgrade-insecure-requests/gen/top.http-rp": [
       "test-linux1804-64-qr/opt-*"
     ],
     "testing/web-platform/tests/upgrade-insecure-requests/gen/top.meta": [
       "test-linux1804-64-qr/opt-*"
     ],
-    "testing/web-platform/tests/video-rvfc": [
-      "test-linux1804-64/opt-*"
-    ],
-    "testing/web-platform/tests/wasm/webapi": [
-      "test-linux1804-64/opt-*"
-    ],
-    "testing/web-platform/tests/web-animations": [
-      "test-linux1804-64/opt-*"
-    ],
-    "testing/web-platform/tests/web-locks": [
-      "test-windows11-64-2009-qr/opt-*"
-    ],
-    "testing/web-platform/tests/web-share": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "testing/web-platform/tests/video-rvfc": ["test-linux1804-64/opt-*"],
+    "testing/web-platform/tests/wasm/webapi": ["test-linux1804-64/opt-*"],
+    "testing/web-platform/tests/web-animations": ["test-linux1804-64/opt-*"],
+    "testing/web-platform/tests/web-locks": ["test-windows11-64-2009-qr/opt-*"],
+    "testing/web-platform/tests/web-share": ["test-linux1804-64-qr/opt-*"],
     "testing/web-platform/tests/webdriver/tests/accept_alert": [
       "test-windows11-64-2009-qr/opt-*"
     ],
@@ -1655,18 +1451,10 @@
     "testing/web-platform/tests/webmessaging/with-options": [
       "test-linux1804-64/opt-*"
     ],
-    "testing/web-platform/tests/webrtc": [
-      "test-linux1804-64-qr/opt-*"
-    ],
-    "testing/web-platform/tests/websockets": [
-      "test-linux1804-64/opt-*"
-    ],
-    "testing/web-platform/tests/worklets": [
-      "test-linux1804-64/opt-*"
-    ],
-    "testing/web-platform/tests/xhr": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "testing/web-platform/tests/webrtc": ["test-linux1804-64-qr/opt-*"],
+    "testing/web-platform/tests/websockets": ["test-linux1804-64/opt-*"],
+    "testing/web-platform/tests/worklets": ["test-linux1804-64/opt-*"],
+    "testing/web-platform/tests/xhr": ["test-linux1804-64-qr/opt-*"],
     "toolkit/components/aboutprocesses/tests/browser/browser.ini": [
       "test-linux1804-64/debug-*-spi-nw",
       "test-windows11-64-2009/opt-*"
@@ -1874,9 +1662,7 @@
       "test-windows11-64-2009/opt-*",
       "test-linux1804-64/opt-*"
     ],
-    "toolkit/content/tests/reftests/reftest.list": [
-      "test-linux1804-64/opt-*"
-    ],
+    "toolkit/content/tests/reftests/reftest.list": ["test-linux1804-64/opt-*"],
     "toolkit/content/tests/widgets/chrome.ini": [
       "test-windows11-64-2009/opt-*-1proc"
     ],
@@ -1946,9 +1732,7 @@
     "uriloader/exthandler/tests/unit/xpcshell.ini": [
       "test-linux1804-64/debug-*-spi-nw"
     ],
-    "widget/reftests/reftest.list": [
-      "test-linux1804-64-qr/opt-*"
-    ],
+    "widget/reftests/reftest.list": ["test-linux1804-64-qr/opt-*"],
     "widget/tests/chrome.ini": [
       "test-windows7-32/opt-*-1proc",
       "test-linux1804-64-qr/opt-*-1proc"
@@ -1957,9 +1741,7 @@
       "test-windows11-64-2009-qr/opt-*",
       "test-linux1804-64-tsan/opt-*"
     ],
-    "xpcom/tests/unit/xpcshell.ini": [
-      "test-windows11-64-2009/opt-*"
-    ]
+    "xpcom/tests/unit/xpcshell.ini": ["test-windows11-64-2009/opt-*"]
   },
   "groups": {
     "/IndexedDB/key-generators": 0.61,

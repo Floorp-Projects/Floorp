@@ -7,8 +7,5 @@
       "id": "extension-page-restoring@tests.mozilla.org"
     }
   },
-  "permissions": [
-    "geckoViewAddons",
-    "nativeMessaging"
-  ]
+  "permissions": ["geckoViewAddons", "nativeMessaging"]
 }

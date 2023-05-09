@@ -3,7 +3,7 @@
   "name": "update",
   "browser_specific_settings": {
     "gecko": {
-        "id": "update-postpone@example.com"
+      "id": "update-postpone@example.com"
     }
   },
   "version": "2.0",

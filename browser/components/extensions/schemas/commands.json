@@ -6,7 +6,7 @@
   {
     "namespace": "manifest",
     "types": [
-     {
+      {
         "id": "KeyName",
         "type": "string",
         "format": "manifestShortcutKey"
@@ -81,7 +81,7 @@
         "id": "Command",
         "type": "object",
         "properties": {
-          "name":        {
+          "name": {
             "type": "string",
             "optional": true,
             "description": "The name of the Extension Command"
@@ -127,7 +127,7 @@
               "name": {
                 "type": "string",
                 "description": "The name of the command."
-                },
+              },
               "description": {
                 "type": "string",
                 "optional": true,

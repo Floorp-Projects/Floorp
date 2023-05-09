@@ -3,9 +3,7 @@
   "$id": "file:///InfoBar.schema.json",
   "title": "InfoBar",
   "description": "A template with an image, test and buttons.",
-  "allOf": [
-    { "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }
-  ],
+  "allOf": [{ "$ref": "file:///FxMSCommon.schema.json#/$defs/Message" }],
   "type": "object",
   "properties": {
     "content": {

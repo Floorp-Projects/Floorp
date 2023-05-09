@@ -4,13 +4,9 @@
     "DontCheckDefaultBrowser": true,
 
     "FlashPlugin": {
-      "Allow": [
-        "https://www.example.com"
-      ],
+      "Allow": ["https://www.example.com"],
 
-      "Block": [
-        "https://www.example.org"
-      ]
+      "Block": ["https://www.example.org"]
     },
 
     "CreateMasterPassword": false

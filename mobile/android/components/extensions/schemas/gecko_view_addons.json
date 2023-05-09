@@ -4,13 +4,12 @@
     "types": [
       {
         "$extend": "PermissionPrivileged",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "geckoViewAddons",
-            "nativeMessagingFromContent"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["geckoViewAddons", "nativeMessagingFromContent"]
+          }
+        ]
       }
     ]
   }

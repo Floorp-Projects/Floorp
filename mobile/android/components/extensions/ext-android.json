@@ -4,10 +4,7 @@
     "schema": "chrome://extensions/content/schemas/browser_action.json",
     "scopes": ["addon_parent"],
     "manifest": ["browser_action", "action"],
-    "paths": [
-      ["browserAction"],
-      ["action"]
-    ]
+    "paths": [["browserAction"], ["action"]]
   },
   "browsingData": {
     "url": "chrome://extensions/content/parent/ext-browsingData.js",

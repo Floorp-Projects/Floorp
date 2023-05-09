@@ -336,8 +336,8 @@
             "name": "iconPath",
             "description": "Path of the panel's icon relative to the extension directory, or an empty string to use the default extension icon as the panel icon.",
             "choices": [
-              {"type": "string", "enum": [""]},
-              {"$ref": "manifest.ExtensionURL"}
+              { "type": "string", "enum": [""] },
+              { "$ref": "manifest.ExtensionURL" }
             ]
           },
           {

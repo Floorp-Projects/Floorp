@@ -8,8 +8,7 @@
     "client": false,
     "firefoxProxy": false
   },
-  "features": {
-  },
+  "features": {},
   "firefox": {
     "proxyHost": "localhost:9000",
     "webSocketConnection": false,

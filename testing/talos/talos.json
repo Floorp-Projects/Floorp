@@ -1,92 +1,109 @@
 {
-    "suites": {
-        "bcv": {
-            "tests": ["basic_compositor_video"]
-        },
-        "chromez": {
-            "tests": ["about_preferences_basic", "tresize"]
-        },
-        "dromaeojs": {
-            "tests": ["dromaeo_css", "kraken"]
-        },
-        "other": {
-            "tests": ["a11yr", "ts_paint", "twinopen", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup", "startup_about_home_paint", "pdfpaint", "cross_origin_pageload", "startup_about_home_paint_cached"]
-        },
-        "sessionrestore-many-windows": {
-            "tests": ["sessionrestore_many_windows"]
-        },
-        "g1": {
-            "tests": ["tp5o_scroll"],
-            "pagesets_name": "tp5n.zip"
-        },
-        "damp": {
-            "tests": ["damp"],
-            "pagesets_name": "tp5n.zip",
-            "extra_prefs": ["talos.damp.suite=all"]
-        },
-        "damp-inspector": {
-            "tests": ["damp"],
-            "pagesets_name": "tp5n.zip",
-            "extra_prefs": ["talos.damp.suite=inspector"]
-        },
-        "damp-webconsole": {
-            "tests": ["damp"],
-            "pagesets_name": "tp5n.zip",
-            "extra_prefs": ["talos.damp.suite=webconsole"]
-        },
-        "damp-other": {
-            "tests": ["damp"],
-            "pagesets_name": "tp5n.zip",
-            "extra_prefs": ["talos.damp.suite=other"]
-        },
-        "tabswitch": {
-            "tests": ["tabswitch"],
-            "pagesets_name": "tp5n.zip"
-        },
-        "g3": {
-            "tests": ["dromaeo_dom"]
-        },
-        "g4": {
-            "tests": ["displaylist_mutate", "rasterflood_svg", "rasterflood_gradient"]
-        },
-        "g5": {
-            "tests": ["ts_paint_webext", "tp5o_webext"],
-            "pagesets_name": "tp5n.zip"
-        },
-        "motionmark": {
-            "tests": ["motionmark_animometer", "motionmark_htmlsuite", "JetStream", "ARES6"],
-            "benchmark_zip": "jetstream.zip"
-        },
-        "svgr": {
-            "tests": ["tsvgx", "tsvgr_opacity", "tscrollx", "tsvg_static", "tart"]
-        },
-        "perf-reftest": {
-            "tests": ["perf_reftest"]
-        },
-        "perf-reftest-singletons": {
-            "tests": ["perf_reftest_singletons"]
-        },
-        "tp5o": {
-            "tests": ["tp5o"],
-            "pagesets_name": "tp5n.zip"
-        },
-        "webgl": {
-            "tests": ["glterrain", "glvideo", "motionmark_webgl"]
-        },
-        "xperf": {
-            "tests": ["tp5n"],
-            "pagesets_name": "tp5n.zip",
-            "talos_options": [
-                "--xperf_path",
-                "\"c:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/xperf.exe\""
-            ]
-        },
-        "h1": {
-            "tests": ["ts_paint_heavy"]
-        },
-        "realworld-webextensions": {
-            "tests": ["startup_about_home_paint_realworld_webextensions"],
-            "webextensions_zip": "webextensions.zip"
-        }
+  "suites": {
+    "bcv": {
+      "tests": ["basic_compositor_video"]
+    },
+    "chromez": {
+      "tests": ["about_preferences_basic", "tresize"]
+    },
+    "dromaeojs": {
+      "tests": ["dromaeo_css", "kraken"]
+    },
+    "other": {
+      "tests": [
+        "a11yr",
+        "ts_paint",
+        "twinopen",
+        "sessionrestore",
+        "sessionrestore_no_auto_restore",
+        "tabpaint",
+        "cpstartup",
+        "startup_about_home_paint",
+        "pdfpaint",
+        "cross_origin_pageload",
+        "startup_about_home_paint_cached"
+      ]
+    },
+    "sessionrestore-many-windows": {
+      "tests": ["sessionrestore_many_windows"]
+    },
+    "g1": {
+      "tests": ["tp5o_scroll"],
+      "pagesets_name": "tp5n.zip"
+    },
+    "damp": {
+      "tests": ["damp"],
+      "pagesets_name": "tp5n.zip",
+      "extra_prefs": ["talos.damp.suite=all"]
+    },
+    "damp-inspector": {
+      "tests": ["damp"],
+      "pagesets_name": "tp5n.zip",
+      "extra_prefs": ["talos.damp.suite=inspector"]
+    },
+    "damp-webconsole": {
+      "tests": ["damp"],
+      "pagesets_name": "tp5n.zip",
+      "extra_prefs": ["talos.damp.suite=webconsole"]
+    },
+    "damp-other": {
+      "tests": ["damp"],
+      "pagesets_name": "tp5n.zip",
+      "extra_prefs": ["talos.damp.suite=other"]
+    },
+    "tabswitch": {
+      "tests": ["tabswitch"],
+      "pagesets_name": "tp5n.zip"
+    },
+    "g3": {
+      "tests": ["dromaeo_dom"]
+    },
+    "g4": {
+      "tests": ["displaylist_mutate", "rasterflood_svg", "rasterflood_gradient"]
+    },
+    "g5": {
+      "tests": ["ts_paint_webext", "tp5o_webext"],
+      "pagesets_name": "tp5n.zip"
+    },
+    "motionmark": {
+      "tests": [
+        "motionmark_animometer",
+        "motionmark_htmlsuite",
+        "JetStream",
+        "ARES6"
+      ],
+      "benchmark_zip": "jetstream.zip"
+    },
+    "svgr": {
+      "tests": ["tsvgx", "tsvgr_opacity", "tscrollx", "tsvg_static", "tart"]
+    },
+    "perf-reftest": {
+      "tests": ["perf_reftest"]
+    },
+    "perf-reftest-singletons": {
+      "tests": ["perf_reftest_singletons"]
+    },
+    "tp5o": {
+      "tests": ["tp5o"],
+      "pagesets_name": "tp5n.zip"
+    },
+    "webgl": {
+      "tests": ["glterrain", "glvideo", "motionmark_webgl"]
+    },
+    "xperf": {
+      "tests": ["tp5n"],
+      "pagesets_name": "tp5n.zip",
+      "talos_options": [
+        "--xperf_path",
+        "\"c:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/xperf.exe\""
+      ]
+    },
+    "h1": {
+      "tests": ["ts_paint_heavy"]
+    },
+    "realworld-webextensions": {
+      "tests": ["startup_about_home_paint_realworld_webextensions"],
+      "webextensions_zip": "webextensions.zip"
     }
+  }
 }

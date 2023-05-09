@@ -13,19 +13,10 @@
     "ui:title": "Domains"
   },
   "cookies": {
-    "ui:order": [
-      "optOut",
-      "optIn"
-    ]
+    "ui:order": ["optOut", "optIn"]
   },
   "filter_expression": {
     "ui:title": "RemoteSettings Filter Expression"
   },
-  "ui:order": [
-    "id",
-    "domains",
-    "cookies",
-    "click",
-    "filter_expression"
-  ]
+  "ui:order": ["id", "domains", "cookies", "click", "filter_expression"]
 }

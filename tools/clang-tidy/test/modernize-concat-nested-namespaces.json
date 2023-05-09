@@ -1,1 +1,8 @@
-[["warning", "nested namespaces can be concatenated", "modernize-concat-nested-namespaces"], {"reliability": "high"}]
+[
+  [
+    "warning",
+    "nested namespaces can be concatenated",
+    "modernize-concat-nested-namespaces"
+  ],
+  { "reliability": "high" }
+]

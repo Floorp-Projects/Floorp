@@ -1,15 +1,17 @@
 [
   {
     "namespace": "manifest",
-    "types": [{
-      "$extend": "PermissionPrivileged",
-      "choices": [{
-        "type": "string",
-        "enum": [
-          "activityLog"
+    "types": [
+      {
+        "$extend": "PermissionPrivileged",
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["activityLog"]
+          }
         ]
-      }]
-    }]
+      }
+    ]
   },
   {
     "namespace": "activityLog",
@@ -31,13 +33,25 @@
               },
               "type": {
                 "type": "string",
-                "enum": ["api_call", "api_event", "content_script", "user_script"],
+                "enum": [
+                  "api_call",
+                  "api_event",
+                  "content_script",
+                  "user_script"
+                ],
                 "description": "The type of log entry.  api_call is a function call made by the extension and api_event is an event callback to the extension.  content_script is logged when a content script is injected."
               },
               "viewType": {
                 "type": "string",
                 "optional": true,
-                "enum": ["background", "popup", "sidebar", "tab", "devtools_page", "devtools_panel"],
+                "enum": [
+                  "background",
+                  "popup",
+                  "sidebar",
+                  "tab",
+                  "devtools_page",
+                  "devtools_panel"
+                ],
                 "description": "The type of view where the activity occurred.  Content scripts will not have a viewType."
               },
               "name": {

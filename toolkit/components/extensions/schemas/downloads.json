@@ -4,13 +4,12 @@
     "types": [
       {
         "$extend": "OptionalPermission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "downloads",
-            "downloads.open"
-          ]
-        }]
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["downloads", "downloads.open"]
+          }
+        ]
       }
     ]
   },
@@ -21,11 +20,7 @@
       {
         "id": "FilenameConflictAction",
         "type": "string",
-        "enum": [
-          "uniquify",
-          "overwrite",
-          "prompt"
-        ]
+        "enum": ["uniquify", "overwrite", "prompt"]
       },
       {
         "id": "InterruptReason",
@@ -75,11 +70,7 @@
       {
         "id": "State",
         "type": "string",
-        "enum": [
-          "in_progress",
-          "interrupted",
-          "complete"
-        ],
+        "enum": ["in_progress", "interrupted", "complete"],
         "description": "<dl><dt>in_progress</dt><dd>The download is currently receiving data from the server.</dd><dt>interrupted</dt><dd>An error broke the connection with the file host.</dd><dt>complete</dt><dd>The download completed successfully.</dd></dl>These string constants will never change, however the set of States may change."
       },
       {
@@ -409,10 +400,7 @@
               },
               "method": {
                 "description": "The HTTP method to use if the URL uses the HTTP[S] protocol.",
-                "enum": [
-                  "GET",
-                  "POST"
-                ],
+                "enum": ["GET", "POST"],
                 "optional": true,
                 "type": "string"
               },
@@ -667,7 +655,7 @@
             "name": "callback",
             "type": "function",
             "optional": true,
-            "parameters": [ ]
+            "parameters": []
           }
         ]
       },
@@ -684,7 +672,7 @@
             "name": "callback",
             "type": "function",
             "optional": true,
-            "parameters": [ ]
+            "parameters": []
           }
         ],
         "type": "function"

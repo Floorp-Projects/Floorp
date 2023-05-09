@@ -15,17 +15,14 @@
       "_urls": [
         {
           "template": "http://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}",
-          "rels": [
-          ],
+          "rels": [],
           "type": "application/x-suggestions+json",
-          "params": [
-          ]
+          "params": []
         },
         {
           "template": "http://www.google.com/search",
           "resultDomain": "google.com",
-          "rels": [
-          ],
+          "rels": [],
           "params": [
             {
               "name": "q",

@@ -13,25 +13,49 @@
           },
           "protocol": {
             "description": "The protocol the site wishes to handle, specified as a string. For example, you can register to handle SMS text message links by registering to handle the \"sms\" scheme.",
-            "choices": [{
-              "type": "string",
-              "enum": [
-                "bitcoin", "dat", "dweb", "ftp", "geo", "gopher", "im", "ipfs", "ipns", "irc", "ircs", "magnet",
-                "mailto", "matrix", "mms", "news", "nntp", "sip", "sms", "smsto", "ssb", "ssh",
-                "tel", "urn", "webcal", "wtai", "xmpp"
-              ]
-            }, {
-              "type": "string",
-              "pattern": "^(ext|web)\\+[a-z0-9.+-]+$"
-            }]
+            "choices": [
+              {
+                "type": "string",
+                "enum": [
+                  "bitcoin",
+                  "dat",
+                  "dweb",
+                  "ftp",
+                  "geo",
+                  "gopher",
+                  "im",
+                  "ipfs",
+                  "ipns",
+                  "irc",
+                  "ircs",
+                  "magnet",
+                  "mailto",
+                  "matrix",
+                  "mms",
+                  "news",
+                  "nntp",
+                  "sip",
+                  "sms",
+                  "smsto",
+                  "ssb",
+                  "ssh",
+                  "tel",
+                  "urn",
+                  "webcal",
+                  "wtai",
+                  "xmpp"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^(ext|web)\\+[a-z0-9.+-]+$"
+              }
+            ]
           },
           "uriTemplate": {
             "description": "The URL of the handler, as a string. This string should include \"%s\" as a placeholder which will be replaced with the escaped URL of the document to be handled. This URL might be a true URL, or it could be a phone number, email address, or so forth.",
             "preprocess": "localize",
-            "choices": [
-              {"$ref": "ExtensionURL"},
-              {"$ref": "HttpURL"}
-            ]
+            "choices": [{ "$ref": "ExtensionURL" }, { "$ref": "HttpURL" }]
           }
         }
       },
@@ -42,7 +66,7 @@
             "description": "A list of protocol handler definitions.",
             "optional": true,
             "type": "array",
-            "items": {"$ref": "ProtocolHandler"}
+            "items": { "$ref": "ProtocolHandler" }
           }
         }
       }
