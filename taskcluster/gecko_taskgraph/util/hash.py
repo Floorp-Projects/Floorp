@@ -21,19 +21,7 @@ def hash_path(path):
 
 @memoize
 def get_file_finder(base_path):
-    from pathlib import Path
-
-    repo = get_repository_object(base_path)
-    if repo:
-        files = repo.get_tracked_files_finder(base_path)
-        if files:
-            return files
-        else:
-            return None
-    else:
-        return get_repository_object(Path(base_path)).get_tracked_files_finder(
-            base_path
-        )
+    return get_repository_object(base_path).get_tracked_files_finder()
 
 
 def hash_paths(base_path, patterns):
@@ -48,21 +36,19 @@ def hash_paths(base_path, patterns):
     finder = get_file_finder(base_path)
     h = hashlib.sha256()
     files = {}
-    if finder:
-        for pattern in patterns:
-            found = list(finder.find(pattern))
-            if found:
-                files.update(found)
-            else:
-                raise Exception("%s did not match anything" % pattern)
-        for path in sorted(files.keys()):
-            if path.endswith((".pyc", ".pyd", ".pyo")):
-                continue
-            h.update(
-                "{} {}\n".format(
-                    hash_path(mozpath.abspath(mozpath.join(base_path, path))),
-                    mozpath.normsep(path),
-                ).encode("utf-8")
-            )
-
+    for pattern in patterns:
+        found = list(finder.find(pattern))
+        if found:
+            files.update(found)
+        else:
+            raise Exception("%s did not match anything" % pattern)
+    for path in sorted(files.keys()):
+        if path.endswith((".pyc", ".pyd", ".pyo")):
+            continue
+        h.update(
+            "{} {}\n".format(
+                hash_path(mozpath.abspath(mozpath.join(base_path, path))),
+                mozpath.normsep(path),
+            ).encode("utf-8")
+        )
     return h.hexdigest()
