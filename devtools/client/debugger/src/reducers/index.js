@@ -17,7 +17,6 @@ import breakpoints, { initialBreakpointsState } from "./breakpoints";
 import pendingBreakpoints from "./pending-breakpoints";
 import pause, { initialPauseState } from "./pause";
 import ui, { initialUIState } from "./ui";
-import fileSearch, { initialFileSearchState } from "./file-search";
 import ast, { initialASTState } from "./ast";
 import preview, { initialPreviewState } from "./preview";
 import projectTextSearch, {
@@ -50,7 +49,6 @@ export function initialState() {
     pendingBreakpoints: {},
     pause: initialPauseState(),
     ui: initialUIState(),
-    fileSearch: initialFileSearchState(),
     ast: initialASTState(),
     projectTextSearch: initialProjectTextSearchState(),
     quickOpen: initialQuickOpenState(),
@@ -74,7 +72,6 @@ export default {
   pendingBreakpoints,
   pause,
   ui,
-  fileSearch,
   ast,
   projectTextSearch,
   quickOpen,

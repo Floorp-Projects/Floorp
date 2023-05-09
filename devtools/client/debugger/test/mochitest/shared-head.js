@@ -1717,6 +1717,7 @@ const selectors = {
   sourceTreeRootNode: ".sources-panel .node .window",
   sourceTreeFolderNode: ".sources-panel .node .folder",
   excludePatternsInput: ".project-text-search .exclude-patterns-field input",
+  fileSearchInput: ".search-bar input",
 };
 
 function getSelector(elementName, ...args) {

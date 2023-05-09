@@ -9,14 +9,11 @@ import actions from "../../actions";
 import {
   getActiveSearch,
   getSelectedSource,
-  getSelectedLocation,
-  getSettledSourceTextContent,
-  getFileSearchQuery,
-  getFileSearchResults,
   getContext,
+  getSelectedSourceTextContent,
+  getSearchOptions,
 } from "../../selectors";
 
-import { removeOverlay } from "../../utils/editor";
 import { searchKeys } from "../../constants";
 import { scrollList } from "../../utils/result-list";
 
@@ -25,6 +22,15 @@ import "./SearchInFileBar.css";
 
 const { PluralForm } = require("devtools/shared/plural-form");
 const { debounce } = require("devtools/shared/debounce");
+import { renderWasmText } from "../../utils/wasm";
+import {
+  clearSearch,
+  find,
+  findNext,
+  findPrev,
+  removeOverlay,
+} from "../../utils/editor";
+import { isFulfilled } from "../../utils/async-value";
 
 function getSearchShortcut() {
   return L10N.getStr("sourceSearch.search.key2");
@@ -34,10 +40,14 @@ class SearchInFileBar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      query: props.query,
+      query: "",
       selectedResultIndex: 0,
-      count: 0,
-      index: -1,
+      results: {
+        matches: [],
+        matchIndex: -1,
+        count: 0,
+        index: -1,
+      },
       inputFocused: false,
     };
   }
@@ -46,16 +56,13 @@ class SearchInFileBar extends Component {
     return {
       closeFileSearch: PropTypes.func.isRequired,
       cx: PropTypes.object.isRequired,
-      doSearch: PropTypes.func.isRequired,
       editor: PropTypes.object,
       modifiers: PropTypes.object.isRequired,
-      query: PropTypes.string.isRequired,
       searchInFileEnabled: PropTypes.bool.isRequired,
-      searchResults: PropTypes.object.isRequired,
-      selectedContentLoaded: PropTypes.bool.isRequired,
+      selectedSourceTextContent: PropTypes.bool.isRequired,
       selectedSource: PropTypes.object.isRequired,
       setActiveSearch: PropTypes.func.isRequired,
-      traverseResults: PropTypes.func.isRequired,
+      querySearchWorker: PropTypes.func.isRequired,
     };
   }
 
@@ -70,7 +77,7 @@ class SearchInFileBar extends Component {
 
   // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
   UNSAFE_componentWillReceiveProps(nextProps) {
-    const { query } = this.props;
+    const { query } = this.state;
     // If a new source is selected update the file search results
     if (
       this.props.selectedSource &&
@@ -103,28 +110,22 @@ class SearchInFileBar extends Component {
   };
 
   clearSearch = () => {
-    const { editor: ed, query } = this.props;
+    const { editor: ed } = this.props;
     if (ed) {
       const ctx = { ed, cm: ed.codeMirror };
-      removeOverlay(ctx, query);
+      removeOverlay(ctx, this.state.query);
     }
   };
 
   closeSearch = e => {
-    const {
-      cx,
-      closeFileSearch,
-      editor,
-      searchInFileEnabled,
-      query,
-    } = this.props;
+    const { cx, closeFileSearch, editor, searchInFileEnabled } = this.props;
     this.clearSearch();
     if (editor && searchInFileEnabled) {
       closeFileSearch(cx, editor);
       e.stopPropagation();
       e.preventDefault();
     }
-    this.setState({ query, inputFocused: false });
+    this.setState({ inputFocused: false });
   };
 
   toggleSearch = e => {
@@ -151,16 +152,57 @@ class SearchInFileBar extends Component {
     }
   };
 
-  doSearch = (query, focusFirstResult = true) => {
-    const { cx, selectedSource, selectedContentLoaded } = this.props;
-    if (!selectedSource || !selectedContentLoaded) {
+  doSearch = async (query, focusFirstResult = true) => {
+    const { editor, modifiers, selectedSourceTextContent } = this.props;
+    if (
+      !editor ||
+      !selectedSourceTextContent ||
+      !isFulfilled(selectedSourceTextContent) ||
+      !modifiers
+    ) {
+      return;
+    }
+    const selectedContent = selectedSourceTextContent.value;
+
+    const ctx = { ed: editor, cm: editor.codeMirror };
+
+    if (!query) {
+      clearSearch(ctx.cm, query);
       return;
     }
 
-    this.props.doSearch(cx, query, this.props.editor, focusFirstResult);
+    let text;
+    if (selectedContent.type === "wasm") {
+      text = renderWasmText(this.props.selectedSource.id, selectedContent).join(
+        "\n"
+      );
+    } else {
+      text = selectedContent.value;
+    }
+
+    const matches = await this.props.querySearchWorker(query, text, modifiers);
+
+    const res = find(ctx, query, true, modifiers, focusFirstResult);
+    if (!res) {
+      return;
+    }
+
+    const { ch, line } = res;
+
+    const matchIndex = matches.findIndex(
+      elm => elm.line === line && elm.ch === ch
+    );
+    this.setState({
+      results: {
+        matches,
+        matchIndex,
+        count: matches.length,
+        index: ch,
+      },
+    });
   };
 
-  traverseResults = (e, rev) => {
+  traverseResults = (e, reverse = false) => {
     e.stopPropagation();
     e.preventDefault();
     const { editor } = this.props;
@@ -168,7 +210,37 @@ class SearchInFileBar extends Component {
     if (!editor) {
       return;
     }
-    this.props.traverseResults(this.props.cx, rev, editor);
+
+    const ctx = { ed: editor, cm: editor.codeMirror };
+
+    const { modifiers } = this.props;
+    const { query } = this.state;
+    const { matches } = this.state.results;
+
+    if (query === "" && !this.props.searchInFileEnabled) {
+      this.props.setActiveSearch("file");
+    }
+
+    if (modifiers) {
+      const findArgs = [ctx, query, true, modifiers];
+      const results = reverse ? findPrev(...findArgs) : findNext(...findArgs);
+
+      if (!results) {
+        return;
+      }
+      const { ch, line } = results;
+      const matchIndex = matches.findIndex(
+        elm => elm.line === line && elm.ch === ch
+      );
+      this.setState({
+        results: {
+          matches,
+          matchIndex,
+          count: matches.length,
+          index: ch,
+        },
+      });
+    }
   };
 
   // Handlers
@@ -205,9 +277,9 @@ class SearchInFileBar extends Component {
   // Renderers
   buildSummaryMsg() {
     const {
-      searchResults: { matchIndex, count, index },
       query,
-    } = this.props;
+      results: { matchIndex, count, index },
+    } = this.state;
 
     if (query.trim() == "") {
       return "";
@@ -231,16 +303,16 @@ class SearchInFileBar extends Component {
   shouldShowErrorEmoji() {
     const {
       query,
-      searchResults: { count },
-    } = this.props;
+      results: { count },
+    } = this.state;
     return !!query && !count;
   }
 
   render() {
+    const { searchInFileEnabled } = this.props;
     const {
-      searchResults: { count },
-      searchInFileEnabled,
-    } = this.props;
+      results: { count },
+    } = this.state;
 
     if (!searchInFileEnabled) {
       return <div />;
@@ -281,17 +353,13 @@ SearchInFileBar.contextTypes = {
 
 const mapStateToProps = (state, p) => {
   const selectedSource = getSelectedSource(state);
-  const selectedLocation = getSelectedLocation(state);
 
   return {
     cx: getContext(state),
     searchInFileEnabled: getActiveSearch(state) === "file",
     selectedSource,
-    selectedContentLoaded: selectedLocation
-      ? !!getSettledSourceTextContent(state, selectedLocation)
-      : false,
-    query: getFileSearchQuery(state),
-    searchResults: getFileSearchResults(state),
+    selectedSourceTextContent: getSelectedSourceTextContent(state),
+    modifiers: getSearchOptions(state, "file-search"),
   };
 };
 
@@ -299,6 +367,5 @@ export default connect(mapStateToProps, {
   setFileSearchQuery: actions.setFileSearchQuery,
   setActiveSearch: actions.setActiveSearch,
   closeFileSearch: actions.closeFileSearch,
-  doSearch: actions.doSearch,
-  traverseResults: actions.traverseResults,
+  querySearchWorker: actions.querySearchWorker,
 })(SearchInFileBar);

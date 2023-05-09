@@ -54,14 +54,12 @@ add_task(async function() {
 
   // Ensure there is a match for the new term
   pressKey(dbg, "Enter");
+  await waitFor(() => cm.state.search.posFrom.line === 0);
   is(cm.state.search.posFrom.line, 0);
   pressKey(dbg, "Enter");
+  await waitFor(() => cm.state.search.posFrom.line === 1);
   is(cm.state.search.posFrom.line, 1);
 });
-
-function waitForSearchState(dbg) {
-  return waitForState(dbg, () => getCM(dbg).state.search);
-}
 
 function getFocusedEl(dbg) {
   const doc = dbg.win.document;
