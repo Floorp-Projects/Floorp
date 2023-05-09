@@ -77,7 +77,6 @@ pref("devtools.debugger.features.xhr-breakpoints", true);
 pref("devtools.debugger.features.event-listeners-breakpoints", true);
 pref("devtools.debugger.features.dom-mutation-breakpoints", true);
 pref("devtools.debugger.features.log-points", true);
-pref("devtools.debugger.features.overlay", true);
 pref("devtools.debugger.features.inline-preview", true);
 pref("devtools.debugger.features.blackbox-lines", false);
 pref("devtools.debugger.features.javascript-tracing", false);
