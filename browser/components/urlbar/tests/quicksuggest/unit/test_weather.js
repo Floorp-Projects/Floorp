@@ -59,7 +59,7 @@ async function doBasicDisableAndEnableTest(pref) {
   });
 
   // No suggestion should be returned for a search.
-  let context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+  let context = createContext("", {
     providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
@@ -104,7 +104,7 @@ async function doBasicDisableAndEnableTest(pref) {
   });
 
   // The suggestion should be returned for a search.
-  context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+  context = createContext("", {
     providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
@@ -113,65 +113,6 @@ async function doBasicDisableAndEnableTest(pref) {
     matches: [makeExpectedResult()],
   });
 }
-
-add_task(async function keywordsNotDefined() {
-  // Sanity check initial state.
-  assertEnabled({
-    message: "Sanity check initial state",
-    hasSuggestion: true,
-    pendingFetchCount: 0,
-  });
-
-  // Set RS data without any keywords. Fetching should immediately stop.
-  QuickSuggest.weather._test_setRsData({});
-  assertDisabled({
-    message: "After setting RS data without keywords",
-    pendingFetchCount: 0,
-  });
-
-  // No suggestion should be returned for a search.
-  let context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
-    providers: [UrlbarProviderWeather.name],
-    isPrivate: false,
-  });
-  await check_results({
-    context,
-    matches: [],
-  });
-
-  // Set keywords. Fetching should immediately start.
-  info("Setting keywords");
-  let fetchPromise = QuickSuggest.weather.waitForFetches();
-  QuickSuggest.weather._test_setRsData(MerinoTestUtils.WEATHER_RS_DATA);
-  assertEnabled({
-    message: "Immediately after setting keywords",
-    hasSuggestion: false,
-    pendingFetchCount: 1,
-  });
-
-  await fetchPromise;
-  assertEnabled({
-    message: "After awaiting fetch",
-    hasSuggestion: true,
-    pendingFetchCount: 0,
-  });
-
-  Assert.equal(
-    QuickSuggest.weather._test_merino.lastFetchStatus,
-    "success",
-    "The request successfully finished"
-  );
-
-  // The suggestion should be returned for a search.
-  context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
-    providers: [UrlbarProviderWeather.name],
-    isPrivate: false,
-  });
-  await check_results({
-    context,
-    matches: [makeExpectedResult()],
-  });
-});
 
 // Disables and re-enables the feature without waiting for any intermediate
 // fetches to complete, using the following steps:
@@ -333,7 +274,7 @@ add_task(async function noSuggestion() {
     client: QuickSuggest.weather._test_merino,
   });
 
-  let context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+  let context = createContext("", {
     providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
@@ -394,7 +335,7 @@ add_task(async function networkError() {
     client: QuickSuggest.weather._test_merino,
   });
 
-  let context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+  let context = createContext("", {
     providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
@@ -446,7 +387,7 @@ add_task(async function httpError() {
     client: QuickSuggest.weather._test_merino,
   });
 
-  let context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+  let context = createContext("", {
     providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
@@ -512,7 +453,7 @@ add_task(async function clientTimeout() {
     client: QuickSuggest.weather._test_merino,
   });
 
-  let context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+  let context = createContext("", {
     providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
@@ -650,7 +591,7 @@ async function doLocaleTest({ shouldRunTask, osUnit, unitsByLocale }) {
     await QuickSuggestTestUtils.withLocales([locale], async () => {
       info("Checking locale: " + locale);
       await check_results({
-        context: createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+        context: createContext("", {
           providers: [UrlbarProviderWeather.name],
           isPrivate: false,
         }),
@@ -662,7 +603,7 @@ async function doLocaleTest({ shouldRunTask, osUnit, unitsByLocale }) {
       );
       Services.prefs.setBoolPref("intl.regional_prefs.use_os_locales", true);
       await check_results({
-        context: createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+        context: createContext("", {
           providers: [UrlbarProviderWeather.name],
           isPrivate: false,
         }),
@@ -687,7 +628,7 @@ add_task(async function block() {
   );
 
   // Do a search so we can get an actual result.
-  let context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+  let context = createContext("", {
     providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
@@ -708,7 +649,7 @@ add_task(async function block() {
   );
 
   // Do a second search. Nothing should be returned.
-  context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
+  context = createContext("", {
     providers: [UrlbarProviderWeather.name],
     isPrivate: false,
   });
@@ -1099,9 +1040,6 @@ async function doManyNotificationsTest(notifications) {
 
   // Clear the server's list of received requests.
   MerinoTestUtils.server.reset();
-  MerinoTestUtils.server.response.body.suggestions = [
-    MerinoTestUtils.WEATHER_SUGGESTION,
-  ];
 
   // Send the notifications.
   for (let [topic, data] of notifications) {
@@ -1199,85 +1137,6 @@ add_task(async function vpn() {
   delete QuickSuggest.weather._test_linkService;
 });
 
-// When a Nimbus experiment is installed, it should override the remote settings
-// config.
-add_task(async function nimbusOverride() {
-  // Sanity check initial state.
-  assertEnabled({
-    message: "Sanity check initial state",
-    hasSuggestion: true,
-    pendingFetchCount: 0,
-  });
-
-  // Verify a search works as expected with the default remote settings config.
-  await check_results({
-    context: createContext(MerinoTestUtils.WEATHER_KEYWORD, {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [makeExpectedResult()],
-  });
-
-  // Install an experiment with a different keyword and min length.
-  let nimbusCleanup = await UrlbarTestUtils.initNimbusFeature({
-    weatherKeywords: ["nimbusoverride"],
-    weatherKeywordsMinimumLength: "nimbus".length,
-  });
-
-  // The usual default keyword shouldn't match.
-  await check_results({
-    context: createContext(MerinoTestUtils.WEATHER_KEYWORD, {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [],
-  });
-
-  // The new keyword from Nimbus should match.
-  await check_results({
-    context: createContext("nimbusoverride", {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [makeExpectedResult()],
-  });
-  await check_results({
-    context: createContext("nimbus", {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [makeExpectedResult()],
-  });
-
-  // Uninstall the experiment.
-  await nimbusCleanup();
-
-  // The usual default keyword should match again.
-  await check_results({
-    context: createContext(MerinoTestUtils.WEATHER_KEYWORD, {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [makeExpectedResult()],
-  });
-
-  // The keywords from Nimbus shouldn't match anymore.
-  await check_results({
-    context: createContext("nimbusoverride", {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [],
-  });
-  await check_results({
-    context: createContext("nimbus", {
-      providers: [UrlbarProviderWeather.name],
-      isPrivate: false,
-    }),
-    matches: [],
-  });
-});
-
 function assertEnabled({ message, hasSuggestion, pendingFetchCount }) {
   info("Asserting feature is enabled");
   if (message) {
@@ -1331,7 +1190,7 @@ function assertDisabled({ message, pendingFetchCount }) {
 }
 
 function makeExpectedResult({
-  suggestedIndex = 1,
+  suggestedIndex = 0,
   temperatureUnit = undefined,
 } = {}) {
   if (!temperatureUnit) {
