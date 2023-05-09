@@ -8872,23 +8872,6 @@ contextual.services.quicksuggest:
       - 'firefox'
     record_in_processes:
       - main
-  exposure_weather:
-    bug_numbers:
-      - 1806765
-    description: >
-      A keyed uint recording how many times the user has been exposed to a
-      Firefox Suggest weather result in the urlbar. The key is the 1-based index
-      of each result.
-    expires: never
-    kind: uint
-    keyed: true
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
 
 power:
   cpu_time_bogus_values:

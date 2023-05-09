@@ -6,6 +6,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  QuickSuggestRemoteSettings:
+    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
@@ -53,6 +55,12 @@ const RESPONSE_HISTOGRAM_VALUES = {
   network_error: 2,
   http_error: 3,
   no_suggestion: 4,
+};
+
+const WEATHER_KEYWORD = "weather";
+
+const WEATHER_RS_DATA = {
+  keywords: [WEATHER_KEYWORD],
 };
 
 const WEATHER_SUGGESTION = {
@@ -145,6 +153,24 @@ class _MerinoTestUtils {
    */
   get SEARCH_PARAMS() {
     return SEARCH_PARAMS;
+  }
+
+  /**
+   * @returns {string}
+   *   The weather keyword in `WEATHER_RS_DATA`. Can be used as a search string
+   *   to match the weather suggestion.
+   */
+  get WEATHER_KEYWORD() {
+    return WEATHER_KEYWORD;
+  }
+
+  /**
+   * @returns {object}
+   *   Default remote settings data that sets up `WEATHER_KEYWORD` as the
+   *   keyword for the weather suggestion.
+   */
+  get WEATHER_RS_DATA() {
+    return { ...WEATHER_RS_DATA };
   }
 
   /**
@@ -296,11 +322,13 @@ class _MerinoTestUtils {
     await this.server.start();
     this.server.response.body.suggestions = [WEATHER_SUGGESTION];
 
+    lazy.QuickSuggestRemoteSettings._test_ignoreSettingsSync = true;
     lazy.QuickSuggest.weather._test_fetchIntervalMs = WEATHER_FETCH_INTERVAL_MS;
 
     // Enabling weather will trigger a fetch. Wait for it to finish so the
     // suggestion is ready when this function returns.
     let fetchPromise = lazy.QuickSuggest.weather.waitForFetches();
+    lazy.QuickSuggest.weather._test_setRsData({ ...WEATHER_RS_DATA });
     lazy.UrlbarPrefs.set("weather.featureGate", true);
     lazy.UrlbarPrefs.set("suggest.weather", true);
     await fetchPromise;
