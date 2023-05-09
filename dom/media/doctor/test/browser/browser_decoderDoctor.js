@@ -96,15 +96,39 @@ async function test_decoder_doctor_notification(
           return;
         }
         ok(notification, "Got decoder-doctor-notification notification");
-
+        if (label?.l10nId) {
+          // Without the following statement, the
+          // test_cannot_initialize_pulseaudio
+          // will permanently fail on Linux.
+          if (label.l10nId === "moz-support-link-text") {
+            MozXULElement.insertFTLIfNeeded(
+              "browser/components/mozSupportLink.ftl"
+            );
+          }
+          label = await document.l10n.formatValue(label.l10nId);
+        }
+        if (isLink) {
+          let link = notification.messageText.querySelector("a");
+          if (link) {
+            // Seems to be a Windows specific quirk, but without this
+            // mutation observer the notification.messageText.textContent
+            // will not be updated. This will cause consistent failures
+            // on Windows.
+            await BrowserTestUtils.waitForMutationCondition(
+              link,
+              { childList: true },
+              () => link.textContent.trim()
+            );
+          }
+        }
         is(
           notification.messageText.textContent,
-          notificationMessage + (isLink && label ? " " : ""),
+          notificationMessage + (isLink && label ? ` ${label}` : ""),
           "notification message should match expectation"
         );
 
         let button = notification.buttonContainer.querySelector("button");
-        let link = notification.messageText.querySelector(".text-link");
+        let link = notification.messageText.querySelector("a");
         if (!label) {
           ok(!button, "There should not be a button");
           ok(!link, "There should not be a link");
@@ -113,11 +137,7 @@ async function test_decoder_doctor_notification(
 
         if (isLink) {
           ok(!button, "There should not be a button");
-          is(
-            link.getAttribute("value"),
-            label,
-            `notification link should be '${label}'`
-          );
+          is(link.innerText, label, `notification link should be '${label}'`);
           ok(
             !link.hasAttribute("accesskey"),
             "notification link should not have accesskey"
@@ -225,7 +245,7 @@ add_task(async function test_platform_decoder_not_found() {
       formats: "testFormat",
     },
     message,
-    isLinux ? "" : gNavigatorBundle.getString("decoder.noCodecs.button"),
+    isLinux ? "" : { l10nId: "moz-support-link-text" },
     isLinux ? "" : gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
     true,
     tab_checker_for_sumo("fix-video-audio-problems-firefox-windows")
@@ -242,7 +262,7 @@ add_task(async function test_cannot_initialize_pulseaudio() {
   await test_decoder_doctor_notification(
     { type: "cannot-initialize-pulseaudio", formats: "testFormat" },
     message,
-    gNavigatorBundle.getString("decoder.noCodecs.button"),
+    { l10nId: "moz-support-link-text" },
     gNavigatorBundle.getString("decoder.noCodecs.accesskey"),
     true,
     tab_checker_for_sumo("fix-common-audio-and-video-issues")
