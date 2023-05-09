@@ -1549,6 +1549,7 @@ var PanelView = class extends AssociatedToNode {
         localName == "toolbarbutton" ||
         localName == "checkbox" ||
         localName == "a" ||
+        localName == "moz-toggle" ||
         node.classList.contains("text-link") ||
         (!arrowKey && isNavigableWithTabOnly)
       ) {
@@ -1823,7 +1824,7 @@ var PanelView = class extends AssociatedToNode {
           break;
         }
         let button = this.selectedElement;
-        if (!button) {
+        if (!button || button?.localName == "moz-toggle") {
           break;
         }
         stop();

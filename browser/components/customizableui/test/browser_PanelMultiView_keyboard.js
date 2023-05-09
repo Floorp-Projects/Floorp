@@ -33,6 +33,7 @@ let gBrowserView;
 let gBrowserBrowser;
 let gIframeView;
 let gIframeIframe;
+let gToggle;
 
 async function openPopup() {
   let shown = BrowserTestUtils.waitForEvent(gMainView, "ViewShown");
@@ -149,6 +150,9 @@ add_setup(async function() {
   gLink.innerText = "gLink";
   gLink.id = "gLink";
   gMainView.appendChild(gLink);
+  await window.ensureCustomElements("moz-toggle");
+  gToggle = document.createElement("moz-toggle");
+  gMainView.appendChild(gToggle);
 
   gMainTabOrder = [
     gMainButton1,
@@ -160,6 +164,7 @@ add_setup(async function() {
     gCheckbox,
     gNamespacedLink,
     gLink,
+    gToggle,
   ];
   gMainArrowOrder = [
     gMainButton1,
@@ -168,6 +173,7 @@ add_setup(async function() {
     gCheckbox,
     gNamespacedLink,
     gLink,
+    gToggle,
   ];
 
   gSubView = document.createXULElement("panelview");
@@ -556,5 +562,21 @@ add_task(async function testArowsContext() {
   let hidden = BrowserTestUtils.waitForEvent(gMainContext, "popuphidden");
   gMainContext.hidePopup();
   await hidden;
+  await hidePopup();
+});
+
+add_task(async function testMozToggle() {
+  await openPopup();
+  is(gToggle.pressed, false, "The toggle is not pressed initially.");
+  // Focus the toggle via keyboard navigation.
+  while (document.activeElement !== gToggle) {
+    EventUtils.synthesizeKey("KEY_Tab");
+  }
+  EventUtils.synthesizeKey(" ");
+  await gToggle.updateComplete;
+  is(gToggle.pressed, true, "Toggle pressed state changes via spacebar.");
+  EventUtils.synthesizeKey("KEY_Enter");
+  await gToggle.updateComplete;
+  is(gToggle.pressed, false, "Toggle pressed state changes via enter.");
   await hidePopup();
 });
