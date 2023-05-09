@@ -76,65 +76,14 @@ add_task(async function test_cancel_with_no_changes() {
       "The second bookmark should still exist"
     );
 
-    if (
-      !Services.prefs.getBoolPref(
-        "browser.bookmarks.editDialog.delayedApply.enabled",
-        false
-      )
-    ) {
-      Assert.ok(
-        PlacesTransactions.undo.notCalled,
-        "undo should not have been called"
-      );
-    }
-  });
-});
-
-add_task(async function test_cancel_with_changes_instantEditBookmark() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", false]],
-  });
-  await withSidebarTree("bookmarks", async tree => {
-    tree.selectItems([bookmarks[1].guid]);
-
-    // Now open the bookmarks dialog and cancel it.
-    await withBookmarksDialog(
-      true,
-      function openDialog() {
-        tree.controller.doCommand("placesCmd_show:info");
-      },
-      async function test(dialogWin) {
-        let acceptButton = dialogWin.document
-          .getElementById("bookmarkpropertiesdialog")
-          .getButton("accept");
-        await TestUtils.waitForCondition(
-          () => !acceptButton.disabled,
-          "InstantEditBookmark:The accept button should be enabled"
-        );
-
-        let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
-          "bookmark-title-changed",
-          events => events.some(e => e.title === "n")
-        );
-
-        fillBookmarkTextField("editBMPanel_namePicker", "n", dialogWin);
-
-        // The dialog is instant apply.
-        await promiseTitleChangeNotification;
-      }
-    );
-
-    await TestUtils.waitForCondition(
-      () => PlacesTransactions.undo.calledOnce,
-      "InstantEditBookmark: undo should have been called once."
+    Assert.ok(
+      PlacesTransactions.undo.notCalled,
+      "undo should not have been called"
     );
   });
 });
 
-add_task(async function test_cancel_with_changes_editBookmark() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", true]],
-  });
+add_task(async function test_cancel_with_changes() {
   await withSidebarTree("bookmarks", async tree => {
     tree.selectItems([bookmarks[1].guid]);
 
@@ -170,7 +119,7 @@ add_task(async function test_cancel_with_changes_editBookmark() {
     let oldBookmark = await PlacesUtils.bookmarks.fetch(bookmarks[1].guid);
     Assert.equal(
       oldBookmark.title,
-      "n",
+      "bm2",
       "EditBookmark: The title hasn't been changed"
     );
   });

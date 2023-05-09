@@ -19,10 +19,6 @@ let editBookmarkPanelRemoveButtonRect;
 const TEST_URL = "data:text/html,<html><body></body></html>";
 
 add_setup(async function() {
-  // Panel must be instant apply for tests to pass.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", false]],
-  });
   win = await BrowserTestUtils.openNewBrowserWindow();
 
   win.StarUI._createPanelIfNeeded();
@@ -36,6 +32,7 @@ add_setup(async function() {
   );
 
   registerCleanupFunction(async () => {
+    delete win.StarUI._closePanelQuickForTesting;
     await BrowserTestUtils.closeWindow(win);
   });
 });
@@ -45,12 +42,14 @@ function mouseout() {
     bookmarkPanel,
     "mouseout"
   );
+  EventUtils.synthesizeNativeMouseEvent({
+    type: "mousemove",
+    target: win.gURLBar.textbox,
+    offsetX: 0,
+    offsetY: 0,
+    win,
+  });
   EventUtils.synthesizeMouse(bookmarkPanel, 0, 0, { type: "mouseout" }, win);
-  EventUtils.synthesizeMouseAtCenter(
-    gURLBar.textbox,
-    { type: "mousemove" },
-    win
-  );
   info("Waiting for mouseout event");
   return mouseOutPromise;
 }
@@ -105,11 +104,6 @@ async function test_bookmarks_popup({
         if (popupEditFn) {
           await popupEditFn();
         }
-        let bookmarks = [];
-        await PlacesUtils.bookmarks.fetch({ url: TEST_URL }, bm =>
-          bookmarks.push(bm)
-        );
-        Assert.equal(bookmarks.length, 1, "Only one bookmark should exist");
         Assert.equal(
           bookmarkStar.getAttribute("starred"),
           "true",
@@ -136,29 +130,52 @@ async function test_bookmarks_popup({
         }
 
         let defaultLocation = await PlacesUIUtils.defaultParentGuid;
-        let bookmarkRemovedPromise = Promise.resolve();
-        if (isBookmarkRemoved) {
-          bookmarkRemovedPromise = PlacesTestUtils.waitForNotification(
-            "bookmark-removed",
-            events =>
+        const promises = [];
+        if (isNewBookmark && !isBookmarkRemoved) {
+          // Expect new bookmark to be created.
+          promises.push(
+            PlacesTestUtils.waitForNotification("bookmark-added", events =>
               events.some(
-                event =>
-                  event.parentGuid == defaultLocation && TEST_URL == event.url
+                ({ parentGuid, url }) =>
+                  parentGuid == defaultLocation && TEST_URL == url
               )
+            )
+          );
+        }
+        if (!isNewBookmark && isBookmarkRemoved) {
+          // Expect existing bookmark to be removed.
+          promises.push(
+            PlacesTestUtils.waitForNotification("bookmark-removed", events =>
+              events.some(
+                ({ parentGuid, url }) =>
+                  parentGuid == defaultLocation && TEST_URL == url
+              )
+            )
           );
         }
 
-        let hiddenPromise = promisePopupHidden(bookmarkPanel);
+        promises.push(promisePopupHidden(bookmarkPanel));
         if (popupHideFn) {
           await popupHideFn();
+        } else {
+          // Move the mouse out of the way so that the panel will auto-close.
+          await mouseout();
         }
-        await Promise.all([hiddenPromise, bookmarkRemovedPromise]);
+        await Promise.all(promises);
 
         Assert.equal(
           bookmarkStar.hasAttribute("starred"),
           !isBookmarkRemoved,
           "Page is starred after closing"
         );
+
+        // Count number of bookmarks.
+        let count = 0;
+        await PlacesUtils.bookmarks.fetch({ url: TEST_URL }, () => count++);
+        const message = isBookmarkRemoved
+          ? "No bookmark should exist"
+          : "Only one bookmark should exist";
+        Assert.equal(count, isBookmarkRemoved ? 0 : 1, message);
       } finally {
         let bookmark = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
         Assert.equal(
@@ -616,20 +633,14 @@ add_task(async function ctrl_d_new_bookmark_mousedown_mouseout_no_autoclose() {
 
 add_task(async function enter_during_autocomplete_should_prevent_autoclose() {
   await test_bookmarks_popup({
-    isNewBookmark: true,
+    isNewBookmark: false,
     async popupShowFn(browser) {
+      PlacesUtils.tagging.tagURI(makeURI(TEST_URL), ["Abc"]);
       EventUtils.synthesizeKey("d", { accelKey: true }, win);
     },
     async popupEditFn() {
-      let tagsField = win.document.getElementById("editBMPanel_tagsField");
-      tagsField.value = "";
-      tagsField.focus();
-
-      // Register a tag into the DB.
-      EventUtils.sendString("Abc", win);
-      tagsField.blur();
-
       // Start autocomplete with the registered tag.
+      let tagsField = win.document.getElementById("editBMPanel_tagsField");
       tagsField.value = "";
       let popup = win.document.getElementById("editBMPanel_tagsAutocomplete");
       let promiseShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
@@ -654,26 +665,20 @@ add_task(async function enter_during_autocomplete_should_prevent_autoclose() {
     popupHideFn() {
       EventUtils.synthesizeKey("KEY_Escape", {}, win);
     },
-    isBookmarkRemoved: true,
+    isBookmarkRemoved: false,
   });
 });
 
 add_task(async function escape_during_autocomplete_should_prevent_autoclose() {
   await test_bookmarks_popup({
-    isNewBookmark: true,
+    isNewBookmark: false,
     async popupShowFn(browser) {
+      PlacesUtils.tagging.tagURI(makeURI(TEST_URL), ["Abc"]);
       EventUtils.synthesizeKey("d", { accelKey: true }, win);
     },
     async popupEditFn() {
-      let tagsField = win.document.getElementById("editBMPanel_tagsField");
-      tagsField.value = "";
-      tagsField.focus();
-
-      // Register a tag into the DB.
-      EventUtils.sendString("Abc", win);
-      tagsField.blur();
-
       // Start autocomplete with the registered tag.
+      let tagsField = win.document.getElementById("editBMPanel_tagsField");
       tagsField.value = "";
       let popup = win.document.getElementById("editBMPanel_tagsAutocomplete");
       let promiseShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
@@ -701,10 +706,6 @@ add_task(async function escape_during_autocomplete_should_prevent_autoclose() {
     popupHideFn() {
       EventUtils.synthesizeKey("KEY_Escape", {}, win);
     },
-    isBookmarkRemoved: true,
+    isBookmarkRemoved: false,
   });
-});
-
-registerCleanupFunction(function() {
-  delete StarUI._closePanelQuickForTesting;
 });

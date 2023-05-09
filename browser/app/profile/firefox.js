@@ -1272,9 +1272,6 @@ pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
 // The number of recently selected folders in the edit bookmarks dialog.
 pref("browser.bookmarks.editDialog.maxRecentFolders", 7);
 
-// Whether the Edit Bookmark dialog is delayed-apply.
-pref("browser.bookmarks.editDialog.delayedApply.enabled", true);
-
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   // This controls the strength of the Windows content process sandbox for
   // testing purposes. This will require a restart.

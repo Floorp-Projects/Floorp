@@ -12,9 +12,6 @@ add_setup(async function() {
   Services.prefs.clearUserPref(LOCATION_PREF);
   await PlacesUtils.bookmarks.eraseEverything();
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", false]],
-  });
   win = await BrowserTestUtils.openNewBrowserWindow();
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser: win.gBrowser,
@@ -46,14 +43,8 @@ async function cancelBookmarkCreationInPanel() {
   );
   // Confirm and close the dialog.
 
-  let guid = win.gEditItemOverlay._paneInfo.itemGuid;
-  let promiseRemoved = PlacesTestUtils.waitForNotification(
-    "bookmark-removed",
-    events => events.some(e => e.guid == guid)
-  );
   win.document.getElementById("editBookmarkPanelRemoveButton").click();
   await hiddenPromise;
-  await promiseRemoved;
 }
 
 /**
@@ -178,15 +169,10 @@ add_task(async function test_change_location_panel() {
   EventUtils.synthesizeMouseAtCenter(menuList, {}, win);
   await promisePopup;
 
-  let itemGuid = win.gEditItemOverlay._paneInfo.itemGuid;
-  // Make sure we wait for the move to complete.
-  let itemMovedPromise = PlacesTestUtils.waitForNotification(
-    "bookmark-moved",
-    events =>
-      events.some(
-        e =>
-          e.guid === itemGuid && e.parentGuid === PlacesUtils.bookmarks.menuGuid
-      )
+  // Make sure we wait for the bookmark to be added.
+  let itemAddedPromise = PlacesTestUtils.waitForNotification(
+    "bookmark-added",
+    events => events.some(({ url }) => url === TEST_URL)
   );
 
   // Wait for the pref to change
@@ -204,8 +190,6 @@ add_task(async function test_change_location_panel() {
     "Should select the menu folder item"
   );
 
-  info("Waiting for item to move.");
-  await itemMovedPromise;
   info("Waiting for transactions to finish.");
   await Promise.all(win.gEditItemOverlay.transactionPromises);
   info("Moved; waiting to hide panel.");
@@ -213,6 +197,8 @@ add_task(async function test_change_location_panel() {
   await hideBookmarksPanel(win);
   info("Waiting for pref change.");
   await prefChangedPromise;
+  info("Waiting for item to be added.");
+  await itemAddedPromise;
 
   // Check that it's in the menu, and remove the bookmark:
   let bm = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });

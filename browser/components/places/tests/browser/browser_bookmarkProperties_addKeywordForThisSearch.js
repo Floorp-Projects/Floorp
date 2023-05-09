@@ -3,24 +3,9 @@
 const TEST_URL =
   "http://mochi.test:8888/browser/browser/components/places/tests/browser/keyword_form.html";
 
-function closeHandler(dialogWin, delayedApply) {
-  if (delayedApply) {
-    // We are in delayed apply mode, thus cancelling dialog will not produce a
-    // bookmark-removed notification.
-    return PlacesUtils.bookmarks.eraseEverything();
-  }
-  let savedItemId = dialogWin.gEditItemOverlay.itemId;
-  return PlacesTestUtils.waitForNotification("bookmark-removed", events =>
-    events.some(event => event.id === savedItemId)
-  );
-}
-
 let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
 
-async function add_keyword(delayedApply) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
-  });
+add_task(async function add_keyword() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -34,7 +19,7 @@ async function add_keyword(delayedApply) {
       );
 
       await withBookmarksDialog(
-        !delayedApply,
+        false,
         function() {
           AddKeywordForSearchField();
           contentAreaContextMenu.hidePopup();
@@ -54,9 +39,7 @@ async function add_keyword(delayedApply) {
 
           Assert.ok(!acceptBtn.disabled, "Accept button is enabled");
 
-          if (delayedApply) {
-            acceptBtn.click();
-          }
+          acceptBtn.click();
           await promiseKeywordNotification;
 
           // After the notification, the keywords cache will update asynchronously.
@@ -99,24 +82,13 @@ async function add_keyword(delayedApply) {
           );
           Assert.equal(data.url, TEST_URL, "getShortcutOrURI URL is correct");
         },
-        dialogWin => closeHandler(dialogWin, delayedApply)
+        () => PlacesUtils.bookmarks.eraseEverything()
       );
     }
   );
-}
-
-add_task(async function add_keyword_instant_apply() {
-  await add_keyword(false);
 });
 
-add_task(async function add_keyword_delayed_apply() {
-  await add_keyword(true);
-});
-
-async function reopen_same_field(delayedApply) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
-  });
+add_task(async function reopen_same_field() {
   await PlacesUtils.keywords.insert({
     url: TEST_URL,
     keyword: "kw",
@@ -155,24 +127,13 @@ async function reopen_same_field(delayedApply) {
             .getButton("accept");
           ok(!acceptBtn.disabled, "Accept button is enabled");
         },
-        dialogWin => closeHandler(dialogWin, delayedApply)
+        () => PlacesUtils.bookmarks.eraseEverything()
       );
     }
   );
-}
-
-add_task(async function reopen_same_field_instant_apply() {
-  await reopen_same_field(false);
 });
 
-add_task(async function reopen_same_field_delayed_apply() {
-  await reopen_same_field(true);
-});
-
-async function open_other_field(delayedApply) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
-  });
+add_task(async function open_other_field() {
   await PlacesUtils.keywords.insert({
     url: TEST_URL,
     keyword: "kw2",
@@ -212,18 +173,10 @@ async function open_other_field(delayedApply) {
           );
           is(elt.value, "");
         },
-        dialogWin => closeHandler(dialogWin, delayedApply)
+        () => PlacesUtils.bookmarks.eraseEverything()
       );
     }
   );
-}
-
-add_task(async function open_other_field_instant_apply() {
-  await open_other_field(false);
-});
-
-add_task(async function open_other_field_delayed_apply() {
-  await open_other_field(true);
 });
 
 function getPostDataString(stream) {

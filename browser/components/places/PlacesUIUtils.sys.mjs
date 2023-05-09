@@ -567,49 +567,6 @@ export var PlacesUIUtils = {
     let features = "centerscreen,chrome,modal,resizable=no";
     let bookmarkGuid;
 
-    if (
-      !Services.prefs.getBoolPref(
-        "browser.bookmarks.editDialog.delayedApply.enabled",
-        false
-      )
-    ) {
-      // Set the transaction manager into batching mode.
-      let topUndoEntry = lazy.PlacesTransactions.topUndoEntry;
-      let batchBlockingDeferred = lazy.PromiseUtils.defer();
-      let batchCompletePromise = lazy.PlacesTransactions.batch(async () => {
-        await batchBlockingDeferred.promise;
-      });
-
-      if (!aParentWindow) {
-        aParentWindow = Services.wm.getMostRecentWindow(null);
-      }
-
-      if (aParentWindow.gDialogBox) {
-        await aParentWindow.gDialogBox.open(dialogURL, aInfo);
-      } else {
-        aParentWindow.openDialog(dialogURL, "", features, aInfo);
-      }
-
-      bookmarkGuid =
-        ("bookmarkGuid" in aInfo && aInfo.bookmarkGuid) || undefined;
-
-      batchBlockingDeferred.resolve();
-
-      // Ensure the batch has completed before we start the undo/resolve
-      // the deferred promise.
-      await batchCompletePromise.catch(console.error);
-
-      if (
-        !bookmarkGuid &&
-        topUndoEntry != lazy.PlacesTransactions.topUndoEntry
-      ) {
-        await lazy.PlacesTransactions.undo().catch(console.error);
-      }
-
-      this.lastBookmarkDialogDeferred.resolve(bookmarkGuid);
-      return bookmarkGuid;
-    }
-
     if (!aParentWindow) {
       aParentWindow = Services.wm.getMostRecentWindow(null);
     }

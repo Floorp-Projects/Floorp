@@ -8,11 +8,7 @@
 
 const TEST_URLS = ["about:buildconfig", "about:robots"];
 
-async function test_bulk_tag_from_library(delayedApply) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
-  });
-
+add_task(async function test_bulk_tag_from_library() {
   // Create multiple bookmarks.
   for (const url of TEST_URLS) {
     await PlacesUtils.bookmarks.insert({
@@ -36,7 +32,7 @@ async function test_bulk_tag_from_library(delayedApply) {
       events.some(evt => evt.url === url)
     )
   );
-  const tag = delayedApply ? "delayed, tag" : "instant, tag";
+  const tag = "some, tag";
   const tagWithDuplicates = `${tag}, tag`;
   fillBookmarkTextField("editBMPanel_tagsField", tagWithDuplicates, library);
   await Promise.all(promiseAllTagsChanged);
@@ -50,26 +46,14 @@ async function test_bulk_tag_from_library(delayedApply) {
   for (const url of TEST_URLS) {
     Assert.deepEqual(
       PlacesUtils.tagging.getTagsForURI(Services.io.newURI(url)),
-      delayedApply ? ["delayed", "tag"] : ["instant", "tag"],
+      ["some", "tag"],
       url + " should have the correct tags."
     );
   }
   await cleanupFn();
-}
-
-add_task(async function test_bulk_tag_from_library_instant_apply() {
-  await test_bulk_tag_from_library(false);
-});
-
-add_task(async function test_bulk_tag_from_library_delayed_apply() {
-  await test_bulk_tag_from_library(true);
 });
 
 add_task(async function test_bulk_tag_tags_selector() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", true]],
-  });
-
   // Create multiple bookmarks with a common tag.
   for (const [i, url] of TEST_URLS.entries()) {
     await PlacesUtils.bookmarks.insert({
