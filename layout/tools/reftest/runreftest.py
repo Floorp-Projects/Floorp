@@ -253,7 +253,7 @@ class ReftestResolver(object):
                 rv = [
                     (
                         os.path.join(dirname, default_manifest),
-                        r".*(?:/|\\)%s(?:[#?].*)?$" % pathname.replace("?", "\?"),
+                        r".*%s(?:[#?].*)?$" % pathname.replace("?", "\?"),
                     )
                 ]
 
@@ -1100,10 +1100,14 @@ class RefTest(object):
         self.log.suite_start(ids_by_manifest, name=options.suite)
 
         overall = 0
+        status = -1
         for manifest, tests in tests_by_manifest.items():
             self.log.info("Running tests in {}".format(manifest))
             status = run(tests=tests)
             overall = overall or status
+        if status == -1:
+            # we didn't run anything
+            overall = 1
 
         self.log.suite_end(extra={"results": self.outputHandler.results})
         return overall
