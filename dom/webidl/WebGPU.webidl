@@ -377,9 +377,6 @@ enum GPUTextureFormat {
     "bc6h-rgb-float",
     "bc7-rgba-unorm",
     "bc7-rgba-unorm-srgb",
-
-    // "depth24unorm-stencil8" feature
-    //"depth24unorm-stencil8",
 };
 
 [Pref="dom.webgpu.enabled",
