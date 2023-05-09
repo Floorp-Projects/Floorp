@@ -469,7 +469,6 @@ class ThreadActor extends Actor {
 
   async showOverlay() {
     if (
-      this._options.shouldShowOverlay &&
       this.isPaused() &&
       this._canShowOverlay() &&
       this._parent.on &&

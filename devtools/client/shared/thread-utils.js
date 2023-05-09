@@ -25,9 +25,6 @@ exports.getThreadOptions = async function() {
     ignoreCaughtExceptions: Services.prefs.getBoolPref(
       "devtools.debugger.ignore-caught-exceptions"
     ),
-    shouldShowOverlay: Services.prefs.getBoolPref(
-      "devtools.debugger.features.overlay"
-    ),
     shouldIncludeSavedFrames: Services.prefs.getBoolPref(
       "devtools.debugger.features.async-captured-stacks"
     ),

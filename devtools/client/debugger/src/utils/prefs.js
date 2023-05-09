@@ -61,7 +61,6 @@ if (isNode()) {
   pref("devtools.debugger.features.dom-mutation-breakpoints", true);
   pref("devtools.debugger.features.log-points", true);
   pref("devtools.debugger.features.inline-preview", true);
-  pref("devtools.debugger.features.overlay-step-buttons", true);
   pref("devtools.debugger.features.blackbox-lines", false);
   pref("devtools.debugger.features.javascript-tracing", false);
   pref("devtools.editor.tabsize", 2);
@@ -137,7 +136,6 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   domMutationBreakpoints: ["Bool", "dom-mutation-breakpoints"],
   logPoints: ["Bool", "log-points"],
   commandClick: ["Bool", "command-click"],
-  showOverlay: ["Bool", "overlay"],
   inlinePreview: ["Bool", "inline-preview"],
   windowlessServiceWorkers: ["Bool", "windowless-service-workers"],
   blackboxLines: ["Bool", "blackbox-lines"],
