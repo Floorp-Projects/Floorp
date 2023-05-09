@@ -95,7 +95,7 @@ class SecondaryPanes extends Component {
       toggleEventLogging: PropTypes.func.isRequired,
       resetBreakpointsPaneState: PropTypes.func.isRequired,
       toggleMapScopes: PropTypes.func.isRequired,
-      workers: PropTypes.array.isRequired,
+      threads: PropTypes.array.isRequired,
       removeAllBreakpoints: PropTypes.func.isRequired,
       removeAllXHRBreakpoints: PropTypes.func.isRequired,
     };
@@ -309,9 +309,9 @@ class SecondaryPanes extends Component {
       header: L10N.getStr("threadsHeader"),
       className: "threads-pane",
       component: <Threads />,
-      opened: prefs.workersVisible,
+      opened: prefs.threadsVisible,
       onToggle: opened => {
-        prefs.workersVisible = opened;
+        prefs.threadsVisible = opened;
       },
     };
   }
@@ -388,7 +388,7 @@ class SecondaryPanes extends Component {
     const { horizontal, hasFrames } = this.props;
 
     if (horizontal) {
-      if (features.workers && this.props.workers.length) {
+      if (this.props.threads.length) {
         items.push(this.getThreadsItem());
       }
 
@@ -425,7 +425,7 @@ class SecondaryPanes extends Component {
     }
 
     const items = [];
-    if (features.workers && this.props.workers.length) {
+    if (this.props.threads.length) {
       items.push(this.getThreadsItem());
     }
 
@@ -521,7 +521,7 @@ const mapStateToProps = state => {
     mapScopesEnabled: isMapScopesEnabled(state),
     shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
     shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
-    workers: getThreads(state),
+    threads: getThreads(state),
     skipPausing: getSkipPausing(state),
     logEventBreakpoints: shouldLogEventBreakpoints(state),
     source: selectedFrame && selectedFrame.location.source,
