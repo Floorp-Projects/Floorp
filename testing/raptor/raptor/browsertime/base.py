@@ -227,7 +227,7 @@ class Browsertime(Perftest):
                 # --browsertime-arg options
                 browsertime_script = None
                 for option in self.browsertime_user_args:
-                    arg, val = option.split("=")
+                    arg, val = option.split("=", 1)
                     if arg in ("test_script", "url"):
                         browsertime_script = val
                 if browsertime_script is None:
@@ -505,7 +505,7 @@ class Browsertime(Perftest):
         # Add any user-specified flags here, let them override anything
         # with no restrictions
         for user_arg in self.browsertime_user_args:
-            arg, val = user_arg.split("=")
+            arg, val = user_arg.split("=", 1)
             priority1_options.extend([f"--{arg}", val])
 
         # In this code block we check if any priority 1 arguments are in conflict with a
