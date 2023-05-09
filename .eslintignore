@@ -11,6 +11,10 @@
 !.prettierrc.js
 !.babel-eslint.rc.js
 
+# For now, skip all json files for ESLint, these will still be run through
+# Prettier.
+**/*.json
+
 # Always ignore node_modules.
 **/node_modules/
 
@@ -102,10 +106,13 @@ devtools/server/tests/xpcshell/sourcemapped.js
 devtools/client/performance-new/shared/profiler_get_symbols.js
 
 # Testing syntax error
+devtools/client/aboutdebugging/test/browser/resources/bad-extensions/invalid-json/manifest.json
+devtools/client/jsonview/test/invalid_json.json
 devtools/client/webconsole/test/browser/test-syntaxerror-worklet.js
 
 # devtools specific format test file
 devtools/server/tests/xpcshell/xpcshell_debugging_script.js
+devtools/shared/webconsole/test/browser/data.json
 
 # Generated
 dom/canvas/test/webgl-conf/generated/
@@ -117,6 +124,7 @@ dom/svg/test/test_SVG_namespace_ids.html
 
 # Strange encodings
 dom/base/test/file_bug687859-16.js
+dom/base/test/file_bug707142_utf-16.json
 dom/encoding/test/test_utf16_files.html
 dom/encoding/test/file_utf16_be_bom.js
 dom/encoding/test/file_utf16_le_bom.js
@@ -134,6 +142,7 @@ dom/base/test/jsmodules/test_syntaxErrorInline.html
 dom/base/test/jsmodules/test_syntaxErrorInlineAsync.html
 dom/base/test/test_bug687859.html
 dom/media/webrtc/tests/mochitests/identity/idp-bad.js
+dom/security/test/general/file_nonscript.json
 dom/serviceworkers/test/file_js_cache_syntax_error.js
 dom/serviceworkers/test/parse_error_worker.js
 dom/tests/mochitest/bugs/test_bug531176.html
@@ -159,6 +168,9 @@ js/xpconnect/tests/unit/
 
 # Fuzzing code for testing only, targeting the JS shell
 js/src/fuzz-tests/
+
+# Template file
+mobile/android/docs/geckoview/assets/js/search-data.json
 
 # Uses `#filter substitution`
 mobile/android/app/mobile.js
@@ -199,9 +211,13 @@ servo/
 # Test files that we don't want to lint (preprocessed, minified etc)
 testing/condprofile/condprof/tests/profile
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
+testing/mozharness/configs/test/test_malformed.json
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
 testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js
 testing/talos/talos/tests/devtools/addon/content/pages/
+# Python json.
+testing/talos/talos/unittests/test_talosconfig_browser_config.json
+testing/talos/talos/unittests/test_talosconfig_test_config.json
 # Runing Talos may extract data here, see bug 1435677.
 testing/talos/talos/tests/tp5n/
 testing/talos/talos/fis/tp5n/
@@ -211,8 +227,10 @@ testing/web-platform/
 
 # toolkit/ exclusions
 
-# Intentionally invalid JS
+# Intentionally invalid files
 toolkit/components/workerloader/tests/moduleF-syntax-error.js
+toolkit/components/enterprisepolicies/tests/browser/config_broken_json.json
+toolkit/mozapps/extensions/test/xpcshell/data/test_AddonRepository_fail.json
 
 # Built files
 toolkit/components/pdfjs/content/build
