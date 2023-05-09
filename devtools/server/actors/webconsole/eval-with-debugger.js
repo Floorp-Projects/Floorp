@@ -13,20 +13,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 loader.lazyRequireGetter(
   this,
-  "formatCommand",
-  "resource://devtools/server/actors/webconsole/commands.js",
+  ["formatCommand", "isCommand"],
+  "resource://devtools/server/actors/webconsole/commands/parser.js",
   true
 );
 loader.lazyRequireGetter(
   this,
-  "isCommand",
-  "resource://devtools/server/actors/webconsole/commands.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "WebConsoleCommands",
-  "resource://devtools/server/actors/webconsole/utils.js",
+  "WebConsoleCommandsManager",
+  "resource://devtools/server/actors/webconsole/commands/manager.js",
   true
 );
 
@@ -713,7 +707,9 @@ function bindCommands(isCmd, dbgGlobal, bindSelf, frame, helpers) {
   // Check if the Debugger.Frame or Debugger.Object for the global include any of the
   // helper function we set. We will not overwrite these functions with the Web Console
   // commands.
-  const availableHelpers = [...WebConsoleCommands._originalCommands.keys()];
+  const availableHelpers = [
+    ...WebConsoleCommandsManager._originalCommands.keys(),
+  ];
 
   let helpersToDisable = [];
   const helperCache = {};
