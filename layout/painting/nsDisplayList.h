@@ -18,7 +18,6 @@
 #include "FrameMetrics.h"
 #include "HitTestInfo.h"
 #include "ImgDrawResult.h"
-#include "LayerState.h"
 #include "RetainedDisplayListHelpers.h"
 #include "Units.h"
 #include "gfxContext.h"
