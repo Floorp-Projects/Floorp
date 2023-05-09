@@ -2,6 +2,7 @@
   ul {
     margin: 0;
     padding: 0;
+
     @media (min-width: $break-point-large) {
       display: inline;
       padding-inline-start: 12px;

@@ -23,14 +23,15 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     margin-bottom: 48px;
 
     .logo {
-      background: url('chrome://branding/content/about-logo.png') no-repeat center;
-      background-size: $logo-size;
-      @media (min-resolution: 2x) {
-        background-image: url('chrome://branding/content/about-logo@2x.png');
-      }
       display: inline-block;
       height: $logo-size;
       width: $logo-size;
+      background: url('chrome://branding/content/about-logo.png') no-repeat center;
+      background-size: $logo-size;
+
+      @media (min-resolution: 2x) {
+        background-image: url('chrome://branding/content/about-logo@2x.png');
+      }
     }
 
     .wordmark {
@@ -239,10 +240,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     height: 100%;
     opacity: 0;
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
   }
 
   .fake-textbox {
@@ -284,10 +282,10 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       $search-height: 45px;
       $search-icon-size: 24px;
       $search-icon-padding: 16px;
+      $search-header-bar-height: 95px;
 
       border-bottom: solid 1px var(--newtab-border-color);
       padding: 27px 0;
-      $search-header-bar-height: 95px;
       background-color: var(--newtab-overlay-color);
       min-height: $search-header-bar-height;
       left: 0;

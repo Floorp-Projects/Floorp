@@ -1,4 +1,3 @@
-// sass-lint:disable no-css-comments
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -74,23 +73,21 @@ html {
 }
 
 .onboardingContainer {
-  // sass-lint:disable no-color-literals
-
   --grey-subtitle-1: #696977;
   --mr-welcome-background-color: #F8F6F4;
   --mr-screen-heading-color: var(--in-content-text-color);
-  --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.2) 0%, rgba(2, 144, 238, 0.2) 100%);
+  --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 20%) 0%, rgba(2, 144, 238, 20%) 100%);
   --mr-screen-background-color: #F8F6F4;
 
   @media (prefers-color-scheme: dark) {
     --grey-subtitle-1: #FFF;
     --mr-welcome-background-color: #333336;
-    --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.3) 0%, rgba(2, 144, 238, 0.3) 100%);
+    --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 30%) 0%, rgba(2, 144, 238, 30%) 100%);
     --mr-screen-background-color: #62697A;
   }
 
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu',
-  'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Ubuntu,
+    'Helvetica Neue', sans-serif;
   font-size: 16px;
   position: relative;
   text-align: center;
@@ -99,6 +96,7 @@ html {
   @media (prefers-contrast) {
     --mr-screen-background-color: buttontext;
     --mr-screen-heading-color: buttonface;
+
     background-color: var(--in-content-page-background);
   }
 
@@ -150,7 +148,7 @@ html {
   .main-content {
     background-color: var(--in-content-page-background);
     border-radius: 20px;
-    box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 20%);
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -202,8 +200,7 @@ html {
   }
 
   @mixin secondary-cta-styles {
-    // sass-lint:disable-block no-important
-    background-color: var(--in-content-button-background) !important;
+    background-color: var(--in-content-button-background) !important; // stylelint-disable-line declaration-no-important
     border: 1px solid var(--in-content-button-border-color);
     line-height: 12px;
     font-size: 0.72em;
@@ -212,8 +209,7 @@ html {
 
     &:hover {
       text-decoration: none;
-      // sass-lint:disable-block no-important
-      background-color: var(--in-content-button-background-hover) !important;
+      background-color: var(--in-content-button-background-hover) !important; // stylelint-disable-line declaration-no-important
       color: var(--in-content-button-text-color-hover);
     }
   }
@@ -225,6 +221,7 @@ html {
     height: 100%;
     min-height: 500px;
     overflow: hidden;
+
     --in-content-link-color: var(--in-content-primary-button-background);
     --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
     --in-content-link-color-active: var(--in-content-primary-button-background-active);
@@ -259,7 +256,7 @@ html {
     }
 
     &[pos='center'] {
-      background-color: rgba(21, 20, 26, 0.5);
+      background-color: rgba(21, 20, 26, 50%);
       min-width: $main-section-width;
 
       &.with-noodles {
@@ -285,7 +282,7 @@ html {
         .main-content {
           background-color: var(--mr-welcome-background-color);
           border-radius: 8px;
-          box-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
+          box-shadow: 0 2px 14px rgba(58, 57, 68, 20%);
           padding: 44px 85px 20px;
 
           .welcome-text {
@@ -313,10 +310,12 @@ html {
 
           .secondary-cta {
             @include arrow-icon-styles;
+
             justify-content: end;
 
             .secondary {
               @include secondary-cta-styles;
+
               color: var(--in-content-button-text-color);
             }
           }
@@ -353,14 +352,11 @@ html {
       &::before {
         content: '';
         position: absolute;
-        box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 20%);
         width: $split-section-width + $split-section-width;
         height: $split-screen-height;
         border-radius: 8px;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        inset: 0;
         margin: auto;
         pointer-events: none;
       }
@@ -466,6 +462,7 @@ html {
               .secondary {
                 @include secondary-cta-styles;
               }
+
               @include arrow-icon-styles;
             }
           }
@@ -534,6 +531,7 @@ html {
 
       .section-secondary {
         --mr-secondary-position: center center / auto 350px;
+
         border-radius: 8px 0 0 8px;
         margin: auto 0 auto auto;
         display: flex;
@@ -634,6 +632,7 @@ html {
         .section-secondary {
           --mr-secondary-background-position-y: top;
           --mr-secondary-position: center var(--mr-secondary-background-position-y) / 75%;
+
           border-radius: 8px 8px 0 0;
           margin: auto auto 0;
           height: $small-secondary-section-height;
@@ -843,9 +842,11 @@ html {
         background-image: linear-gradient(90deg, #9059FF, #FF4AA2, #FF8C00, #FF4AA2, #9059FF);
         background-clip: text;
         background-size: 200%;
+
         @media (prefers-contrast: no-preference) {
           color: transparent;
         }
+
         @media (prefers-color-scheme: dark) {
           background-image: linear-gradient(90deg, #C688FF, #FF84C0, #FFBD4F, #FF84C0, #C688FF);
 
@@ -958,7 +959,7 @@ html {
     border: 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 5px; // sass-lint:disable-line no-misspelled-properties
+    gap: 5px;
     justify-content: space-evenly;
     margin-inline: 10px;
     padding: 10px;
@@ -1091,7 +1092,7 @@ html {
 
       &:hover,
       &:focus {
-        background-color: rgba(217, 217, 227, 0.3);
+        background-color: rgba(217, 217, 227, 30%);
         border-radius: 4px;
       }
     }
@@ -1132,7 +1133,6 @@ html {
   }
 
   .mobile-downloads {
-
     .qr-code-image {
       margin: 24px 0 10px;
       width: 113px;
@@ -1421,7 +1421,7 @@ html {
       margin: auto;
     }
 
-    //Position of noodles on second screen
+    // Position of noodles on second screen
     .outline-L {
       width: 87px;
       height: 80px;
@@ -1540,7 +1540,6 @@ html {
     }
 
     .dialog-initial {
-
       .main-content,
       .dismiss-button {
         translate: 0 calc(-2 * var(--translate));

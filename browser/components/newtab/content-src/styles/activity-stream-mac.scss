@@ -1,10 +1,8 @@
-// sass-lint:disable no-css-comments
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* This is the mac variant */
-// sass-lint:enable no-css-comments
 
 $os-infopanel-arrow-height: 10px;
 $os-infopanel-arrow-offset-end: 7px;
@@ -14,4 +12,5 @@ $os-infopanel-arrow-width: 18px;
   -moz-osx-font-smoothing: grayscale;
 }
 
+// stylelint-disable-next-line no-invalid-position-at-import-rule
 @import './activity-stream';

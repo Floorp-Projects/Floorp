@@ -6,7 +6,6 @@
 
 $max-z-index: 2147483647;
 
-// sass-lint:disable no-color-literals
 .onboardingContainer.featureCallout {
   // See _feature-callout-theme.scss for the theme mixins and
   // FeatureCallout.sys.mjs for the color values
@@ -72,9 +71,8 @@ $max-z-index: 2147483647;
         .brand-logo {
           margin: 30px 45px 0;
 
-          // This may not work for all future messages, 
-          // so we may want to make flipping the logo 
-          // image in RTL mode configurable
+          // This may not work for all future messages, so we may want to make
+          // flipping the logo image in RTL mode configurable
           &:dir(rtl) {
             transform: rotateY(180deg);
           }
@@ -116,7 +114,7 @@ $max-z-index: 2147483647;
           position: relative;
           overflow: hidden;
           border: 1px solid var(--fc-border);
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 15%);
           border-radius: 4px;
           padding-top: 0;
           // Subtract 4px, the block margin of buttons
@@ -243,7 +241,7 @@ $max-z-index: 2147483647;
   &.callout-arrow::after {
     background: transparent;
     outline: 1px solid var(--fc-border);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 15%);
     z-index: -1;
   }
 

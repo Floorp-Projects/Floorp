@@ -4,15 +4,14 @@ $ds-width: 936px;
   $columns: 12;
   --gridColumnGap: 48px;
   --gridRowGap: 24px;
+
   grid-template-columns: repeat($columns, 1fr);
-  grid-column-gap: var(--gridColumnGap);
-  grid-row-gap: var(--gridRowGap);
+  grid-gap: var(--gridRowGap) var(--gridColumnGap);
   margin: 0 auto;
 
   @while $columns > 0 {
     .ds-column-#{$columns} {
-      grid-column-start: auto;
-      grid-column-end: span $columns;
+      grid-column: auto span $columns;
     }
 
     $columns: $columns - 1;

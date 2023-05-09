@@ -38,9 +38,9 @@ scripts:
   lint:
     codespell: (cd $npm_package_config_mc_root && ./mach lint -l codespell $npm_package_config_newtab_path)
     eslint: (cd $npm_package_config_mc_root && ./mach lint -l eslint $npm_package_config_newtab_path)
-    l10n: (cd $npm_package_config_mc_root && ./mach lint -l l10n --warnings browser/locales/en-US/browser/newtab)
+    l10n: (cd $npm_package_config_mc_root && ./mach lint -l l10n --warnings soft browser/locales/en-US/browser/newtab)
     license: (cd $npm_package_config_mc_root && ./mach lint -l license $npm_package_config_newtab_path)
-    sasslint: sass-lint -v -q
+    stylelint: stylelint content-src/**/*.scss --quiet-deprecation-warnings
 
   # test: Run all tests once
   test: =>testmc
@@ -55,3 +55,4 @@ scripts:
     # Note that since we're currently running eslint-plugin-prettier,
     # running fix:eslint will also reformat changed JS files using prettier.
     eslint: =>lint:eslint -- --fix
+    stylelint: =>lint:stylelint -- --fix

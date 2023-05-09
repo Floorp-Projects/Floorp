@@ -3,8 +3,8 @@ $header-font-size: 17;
 $header-line-height: 24;
 $excerpt-font-size: 14;
 $excerpt-line-height: 20;
-$ds-card-image-gradient-fade: rgba(0, 0, 0, 0);
-$ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
+$ds-card-image-gradient-fade: rgba(0, 0, 0, 0%);
+$ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
 
 .ds-card {
   display: flex;
@@ -165,6 +165,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
     .title {
       // show only 3 lines of copy
       @include limit-visible-lines(3, $header-line-height, $header-font-size);
+
       font-weight: 600;
     }
 

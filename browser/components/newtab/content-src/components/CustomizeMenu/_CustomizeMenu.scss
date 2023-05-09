@@ -158,6 +158,7 @@
       fill: var(--newtab-primary-element-text-color);
       background: url('chrome://global/skin/icons/check.svg') center no-repeat;
       background-color: var(--newtab-primary-action-background);
+
       @media (forced-colors: active) {
         fill: $black;
       }

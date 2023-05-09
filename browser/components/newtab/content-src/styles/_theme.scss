@@ -19,7 +19,7 @@ $shadow-primary: 0 0 0 5px var(--newtab-element-secondary-color);
 $shadow-secondary: 0 1px 4px 0 $grey-90-20;
 $shadow-large: 0 2px 14px 0 $black-20;
 $shadow-focus: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
-$shadow-card: 0 2px 6px rgba(0, 0, 0, 0.15);
+$shadow-card: 0 2px 6px rgba(0, 0, 0, 15%);
 $shadow-image-inset: inset 0 0 0 0.5px $black-15;
 
 // Default theme
@@ -60,7 +60,7 @@ $shadow-image-inset: inset 0 0 0 0.5px $black-15;
   --newtab-text-emphasis-background: #{$yellow-50};
   --newtab-text-emphasis-text-color: #{$grey-90};
 
-  @include textbox-focus(var(--newtab-primary-action-background)); // sass-lint:disable-line mixins-before-declarations
+  @include textbox-focus(var(--newtab-primary-action-background));
 
   // Buttons
   --newtab-button-secondary-color: inherit;
