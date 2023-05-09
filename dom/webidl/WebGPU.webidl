@@ -166,6 +166,13 @@ GPUDevice includes GPUObjectBase;
 [Pref="dom.webgpu.enabled",
  Exposed=(Window /* ,DedicatedWorker */), SecureContext]
 interface GPUBuffer {
+    // TODO: s/unsigned long long/GPUSize64/: https://github.com/gpuweb/gpuweb/issues/4080
+    readonly attribute unsigned long long size;
+    // TODO: s/unsigned long/GPUBufferUsageFlags/: https://github.com/gpuweb/gpuweb/issues/4080
+    readonly attribute unsigned long usage;
+
+    readonly attribute GPUBufferMapState mapState;
+
     [NewObject]
     Promise<undefined> mapAsync(GPUMapModeFlags mode, optional GPUSize64 offset = 0, optional GPUSize64 size);
     [NewObject, Throws]
@@ -176,6 +183,12 @@ interface GPUBuffer {
     undefined destroy();
 };
 GPUBuffer includes GPUObjectBase;
+
+enum GPUBufferMapState {
+    "unmapped",
+    "pending",
+    "mapped"
+};
 
 dictionary GPUBufferDescriptor : GPUObjectDescriptorBase {
     required GPUSize64 size;
