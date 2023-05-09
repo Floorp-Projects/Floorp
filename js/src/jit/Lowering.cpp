@@ -2824,7 +2824,6 @@ void LIRGenerator::visitInt32ToIntPtr(MInt32ToIntPtr* ins) {
   // If the result is only used by instructions that expect a bounds-checked
   // index, we must have eliminated or hoisted a bounds check and we can assume
   // the index is non-negative. This lets us generate more efficient code.
-  // In debug builds we verify this non-negative assumption at runtime.
   if (ins->canBeNegative()) {
     bool canBeNegative = false;
     for (MUseDefIterator iter(ins); iter; iter++) {
@@ -2846,13 +2845,7 @@ void LIRGenerator::visitInt32ToIntPtr(MInt32ToIntPtr* ins) {
     auto* lir = new (alloc()) LInt32ToIntPtr(useAnyAtStart(input));
     define(lir, ins);
   } else {
-#  ifdef DEBUG
-    auto* lir = new (alloc()) LInt32ToIntPtr(useRegisterAtStart(input));
-    defineReuseInput(lir, ins, 0);
-#  else
-    // In non-debug mode this is a no-op.
     redefine(ins, input);
-#  endif
   }
 #else
   // On 32-bit platforms this is a no-op.

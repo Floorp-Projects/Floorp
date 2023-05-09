@@ -1178,24 +1178,10 @@ void CodeGenerator::visitFloat32ToInt32(LFloat32ToInt32* lir) {
 
 void CodeGenerator::visitInt32ToIntPtr(LInt32ToIntPtr* lir) {
 #ifdef JS_64BIT
+  // This LIR instruction is only used if the input can be negative.
+  MOZ_ASSERT(lir->mir()->canBeNegative());
+
   Register output = ToRegister(lir->output());
-
-  // This is a no-op if the input can't be negative. In debug builds assert
-  // (1) the upper 32 bits are zero and (2) the value <= INT32_MAX so that sign
-  // extension isn't needed.
-  if (!lir->mir()->canBeNegative()) {
-    MOZ_ASSERT(ToRegister(lir->input()) == output);
-#  ifdef DEBUG
-    Label ok;
-    masm.branchPtr(Assembler::BelowOrEqual, output, ImmWord(INT32_MAX), &ok);
-    masm.assumeUnreachable("LInt32ToIntPtr: unexpected range for value");
-    masm.bind(&ok);
-#  else
-    MOZ_CRASH("Not used in non-debug mode");
-#  endif
-    return;
-  }
-
   const LAllocation* input = lir->input();
   if (input->isRegister()) {
     masm.move32SignExtendToPtr(ToRegister(input), output);
