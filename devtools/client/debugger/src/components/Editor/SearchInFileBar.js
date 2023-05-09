@@ -68,6 +68,20 @@ class SearchInFileBar extends Component {
     this.doSearch.cancel();
   }
 
+  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    const { query } = this.props;
+    // If a new source is selected update the file search results
+    if (
+      this.props.selectedSource &&
+      nextProps.selectedSource !== this.props.selectedSource &&
+      this.props.searchInFileEnabled &&
+      query
+    ) {
+      this.doSearch(query, false);
+    }
+  }
+
   componentDidMount() {
     // overwrite this.doSearch with debounced version to
     // reduce frequency of queries
@@ -137,13 +151,13 @@ class SearchInFileBar extends Component {
     }
   };
 
-  doSearch = query => {
+  doSearch = (query, focusFirstResult = true) => {
     const { cx, selectedSource, selectedContentLoaded } = this.props;
     if (!selectedSource || !selectedContentLoaded) {
       return;
     }
 
-    this.props.doSearch(cx, query, this.props.editor);
+    this.props.doSearch(cx, query, this.props.editor, focusFirstResult);
   };
 
   traverseResults = (e, rev) => {

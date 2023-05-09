@@ -8,7 +8,6 @@ import {
   getQuickOpenEnabled,
   getSource,
   getSourceContent,
-  getFileSearchQuery,
   getMainThread,
 } from "../selectors";
 import { selectSource } from "../actions/sources/select";
@@ -17,7 +16,6 @@ import {
   getLocationsInViewport,
   updateDocuments,
 } from "../utils/editor";
-import { searchContents } from "./file-search";
 import { copyToTheClipboard } from "../utils/clipboard";
 import { isFulfilled } from "../utils/async-value";
 
@@ -47,17 +45,6 @@ export function setActiveSearch(activeSearch) {
       type: "TOGGLE_ACTIVE_SEARCH",
       value: activeSearch,
     });
-  };
-}
-
-export function updateActiveFileSearch(cx) {
-  return ({ dispatch, getState }) => {
-    const isFileSearchOpen = getActiveSearch(getState()) === "file";
-    const fileSearchQuery = getFileSearchQuery(getState());
-    if (isFileSearchOpen && fileSearchQuery) {
-      const editor = getEditor();
-      dispatch(searchContents(cx, fileSearchQuery, editor, false));
-    }
   };
 }
 

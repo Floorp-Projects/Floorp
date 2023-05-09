@@ -27,7 +27,7 @@ import {
 } from "./ui";
 import { isFulfilled } from "../utils/async-value";
 
-export function doSearch(cx, query, editor) {
+export function doSearch(cx, query, editor, focusFirstResult) {
   return ({ getState, dispatch }) => {
     const sourceTextContent = getSelectedSourceTextContent(getState());
     if (!sourceTextContent) {
@@ -35,7 +35,7 @@ export function doSearch(cx, query, editor) {
     }
 
     dispatch(setFileSearchQuery(cx, query));
-    dispatch(searchContents(cx, query, editor));
+    dispatch(searchContents(cx, query, editor, focusFirstResult));
   };
 }
 
