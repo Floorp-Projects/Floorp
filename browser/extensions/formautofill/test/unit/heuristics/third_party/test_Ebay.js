@@ -7,34 +7,17 @@ runHeuristicsTest(
     {
       fixturePath: "Checkout_Payment_FR.html",
       expectedResult: [
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp"
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-given-name"
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-family-name"
-            },
+        {
+          default: {
+            reason: "autocomplete",
+          },
+          fields: [
+            { fieldName: "cc-number" },
+            { fieldName: "cc-exp" },
+            { fieldName: "cc-given-name" },
+            { fieldName: "cc-family-name" },
           ],
-        ],
+        },
       ],
     },
   ],

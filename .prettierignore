@@ -286,6 +286,7 @@ browser/components/pocket/content/panels/js/vendor/
 browser/components/storybook/node_modules/
 browser/extensions/formautofill/content/third-party/
 browser/extensions/formautofill/test/fixtures/third_party/
+browser/extensions/formautofill/test/unit/heuristics/
 browser/extensions/screenshots/build/raven.js
 devtools/client/inspector/markup/test/lib_*
 devtools/client/jsonview/lib/require.js

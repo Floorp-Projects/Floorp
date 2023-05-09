@@ -7,155 +7,88 @@ runHeuristicsTest(
     {
       fixturePath: "Checkout_ShippingAddress.html",
       expectedResult: [
-        [], // Search form
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "given-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "family-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "street-address",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level2",
-            }, // city
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level1",
-            }, // state
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "postal-code",
-            },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "given-name" },
+            { fieldName: "family-name" },
+            { fieldName: "street-address" },
+            { fieldName: "address-level2" }, // city
+            { fieldName: "address-level1" }, // state
+            { fieldName: "postal-code" },
           ],
-        ],
-        [
-          [
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
             // Sign up
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
+            { fieldName: "email" },
           ],
-        ],
-        [
-          [
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
             // unknown
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
-            { section: "", addressType: "", contactType: "", fieldName: "tel" },
+            { fieldName: "email" },
+            { fieldName: "tel" },
           ],
-        ],
+        },
       ],
     },
     {
       fixturePath: "Checkout_Payment.html",
       expectedResult: [
-        [], // Search form
-        [
-          [
-            // Sign up
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "email" },
           ],
-        ],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "given-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "family-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "street-address",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level2",
-            }, // city
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level1",
-            }, // state
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "postal-code",
-            },
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "given-name" },
+            { fieldName: "family-name" },
+            { fieldName: "street-address" },
+            { fieldName: "address-level2" }, // city
+            { fieldName: "address-level1" }, // state
+            { fieldName: "postal-code" },
           ],
-        ],
-        [
-          [
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
             // unknown
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
-            { section: "", addressType: "", contactType: "", fieldName: "tel" },
+            { fieldName: "email" },
+            { fieldName: "tel" },
           ],
-        ],
+        },
       ],
     },
     {
       fixturePath: "SignIn.html",
       expectedResult: [
-        [
-          [
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
             // Sign in
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
+            { fieldName: "email" },
           ],
-        ],
+        },
       ],
     },
   ],

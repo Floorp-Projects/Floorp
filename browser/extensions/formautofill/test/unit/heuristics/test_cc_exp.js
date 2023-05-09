@@ -7,104 +7,50 @@ runHeuristicsTest(
     {
       fixturePath: "heuristics_cc_exp.html",
       expectedResult: [
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-month",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-year",
-            },
+        {
+          description: "form1",
+          default: {
+            reason: "autocomplete",
+          },
+          fields: [
+            { fieldName: "cc-name" },
+            { fieldName: "cc-number" },
+            { fieldName: "cc-exp-month" },
+            { fieldName: "cc-exp-year" },
           ],
-        ],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp",
-            },
+        },
+        {
+          description: "form2",
+          default: {
+            reason: "autocomplete",
+          },
+          fields: [
+            { fieldName: "cc-number" },
+            { fieldName: "cc-exp" },
           ],
-        ],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp",
-            },
+        },
+        {
+          description: "form3",
+          fields: [
+            { fieldName: "cc-number", reason: "autocomplete" },
+            { fieldName: "cc-exp", reason: "regex-heuristic" },
           ],
-        ],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-month",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-year",
-            },
+        },
+        {
+          description: "form4",
+          fields: [
+            { fieldName: "cc-number", reason: "autocomplete" },
+            { fieldName: "cc-exp-month", reason: "regex-heuristic" },
+            { fieldName: "cc-exp-year", reason: "regex-heuristic" },
           ],
-        ],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-month",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-year",
-            },
+        },
+        {
+          description: "form5",
+          fields: [
+            { fieldName: "cc-exp-month", reason: "regex-heuristic" },
+            { fieldName: "cc-exp-year", reason: "regex-heuristic" },
           ],
-        ],
+        },
       ],
     },
   ],

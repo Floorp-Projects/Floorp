@@ -7,172 +7,61 @@ runHeuristicsTest(
     {
       fixturePath: "autocomplete_basic.html",
       expectedResult: [
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "organization",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "street-address",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level2",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level1",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "postal-code",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "country",
-            },
-            { section: "", addressType: "", contactType: "", fieldName: "tel" },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
+        {
+          default: {
+            reason: "autocomplete",
+          },
+          fields: [
+            { fieldName: "organization" },
+            { fieldName: "street-address" },
+            { fieldName: "address-level2" },
+            { fieldName: "address-level1" },
+            { fieldName: "postal-code" },
+            { fieldName: "country" },
+            { fieldName: "tel" },
+            { fieldName: "email" },
           ],
-        ],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "organization",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line1",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line2",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line3",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level2",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level1",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "postal-code",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "country",
-            },
-            { section: "", addressType: "", contactType: "", fieldName: "tel" },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email",
-            },
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "organization" },
+            { fieldName: "address-line1" },
+            { fieldName: "address-line2" },
+            { fieldName: "address-line3" },
+            { fieldName: "address-level2" },
+            { fieldName: "address-level1" },
+            { fieldName: "postal-code" },
+            { fieldName: "country" },
+            { fieldName: "tel" },
+            { fieldName: "email" },
           ],
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-month",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp-year",
-            },
+        },
+        {
+          default: {
+            reason: "autocomplete",
+          },
+          fields: [
+            { fieldName: "cc-number" },
+            { fieldName: "cc-name" },
+            { fieldName: "cc-exp-month" },
+            { fieldName: "cc-exp-year" },
           ],
-        ],
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line1",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-level2",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line2",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "organization",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line3",
-            },
+        },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "address-line1" },
+            { fieldName: "address-level2" },
+            { fieldName: "address-line2" },
+            { fieldName: "organization" },
+            { fieldName: "address-line3" },
           ],
-        ],
+        },
       ],
     },
   ],

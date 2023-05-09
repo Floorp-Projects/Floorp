@@ -10,28 +10,16 @@ runHeuristicsTest(
     {
       fixturePath: "heuristics_fr_fields.html",
       expectedResult: [
-        [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-exp",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-name",
-            },
+        {
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "cc-number", reason: "fathom" },
+            { fieldName: "cc-exp" },
+            { fieldName: "cc-name" },
           ],
-        ],
+        },
       ],
     },
   ],
