@@ -124,6 +124,15 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         }
     }
 
+    private fun updateCheckboxes(deleteInProgress: Boolean = false) {
+        runIfFragmentIsAttached {
+            getCheckboxes().forEach {
+                it.isEnabled = !deleteInProgress
+                binding.deleteData.alpha = if (!deleteInProgress) ENABLED_ALPHA else DISABLED_ALPHA
+            }
+        }
+    }
+
     private fun askToDelete() {
         runIfFragmentIsAttached {
             AlertDialog.Builder(requireContext()).apply {
@@ -171,6 +180,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
 
     private fun startDeletion() {
         updateDeleteButton(deleteInProgress = true)
+        updateCheckboxes(deleteInProgress = true)
         binding.progressBar.visibility = View.VISIBLE
         binding.deleteBrowsingDataWrapper.isEnabled = false
         binding.deleteBrowsingDataWrapper.isClickable = false
@@ -179,6 +189,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
 
     private fun finishDeletion() {
         updateDeleteButton(deleteInProgress = false)
+        updateCheckboxes(deleteInProgress = false)
         val popAfter = binding.openTabsItem.isChecked
         binding.progressBar.visibility = View.GONE
         binding.deleteBrowsingDataWrapper.isEnabled = true
