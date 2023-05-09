@@ -34,7 +34,7 @@
 @import url("chrome://devtools/content/debugger/src/components/Editor/Preview.css");
 @import url("chrome://devtools/content/debugger/src/components/Editor/Preview/Popup.css");
 @import url("chrome://devtools/content/debugger/src/components/Editor/HighlightCalls.css");
-@import url("chrome://devtools/content/debugger/src/components/Editor/SearchBar.css");
+@import url("chrome://devtools/content/debugger/src/components/Editor/SearchInFileBar.css");
 @import url("chrome://devtools/content/debugger/src/components/Editor/Tabs.css");
 @import url("chrome://devtools/content/debugger/src/components/PrimaryPanes/Outline.css");
 @import url("chrome://devtools/content/debugger/src/components/PrimaryPanes/OutlineFilter.css");

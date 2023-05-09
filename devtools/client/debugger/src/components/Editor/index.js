@@ -48,7 +48,7 @@ import {
 // Redux actions
 import actions from "../../actions";
 
-import SearchBar from "./SearchBar";
+import SearchInFileBar from "./SearchInFileBar";
 import HighlightLines from "./HighlightLines";
 import Preview from "./Preview";
 import Breakpoints from "./Breakpoints";
@@ -134,7 +134,7 @@ class Editor extends PureComponent {
       symbols: PropTypes.object,
       startPanelSize: PropTypes.number.isRequired,
       endPanelSize: PropTypes.number.isRequired,
-      searchOn: PropTypes.bool.isRequired,
+      searchInFileEnabled: PropTypes.bool.isRequired,
       inlinePreviewEnabled: PropTypes.bool.isRequired,
       editorWrappingEnabled: PropTypes.bool.isRequired,
       skipPausing: PropTypes.bool.isRequired,
@@ -644,9 +644,9 @@ class Editor extends PureComponent {
   }
 
   getInlineEditorStyles() {
-    const { searchOn } = this.props;
+    const { searchInFileEnabled } = this.props;
 
-    if (searchOn) {
+    if (searchInFileEnabled) {
       return {
         height: `calc(100% - ${cssVars.searchbarHeight})`,
       };
@@ -706,14 +706,12 @@ class Editor extends PureComponent {
     );
   }
 
-  renderSearchBar() {
-    const { editor } = this.state;
-
+  renderSearchInFileBar() {
     if (!this.props.selectedSource) {
       return null;
     }
 
-    return <SearchBar editor={editor} />;
+    return <SearchInFileBar editor={this.state.editor} />;
   }
 
   render() {
@@ -730,7 +728,7 @@ class Editor extends PureComponent {
           className="editor-mount devtools-monospace"
           style={this.getInlineEditorStyles()}
         />
-        {this.renderSearchBar()}
+        {this.renderSearchInFileBar()}
         {this.renderItems()}
       </div>
     );
@@ -753,7 +751,7 @@ const mapStateToProps = state => {
     selectedSourceIsBlackBoxed: selectedSource
       ? isSourceBlackBoxed(state, selectedSource)
       : null,
-    searchOn: getActiveSearch(state) === "file",
+    searchInFileEnabled: getActiveSearch(state) === "file",
     conditionalPanelLocation: getConditionalPanelLocation(state),
     symbols: getSymbols(state, selectedLocation),
     isPaused: getIsCurrentThreadPaused(state),
