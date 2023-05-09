@@ -314,9 +314,9 @@ var whitelist = [
 
   // Should be removed in bug 1824826 when moz-tab-list is used in Firefox View
   { file: "resource://app/localization/en-US/browser/mozTabList.ftl" },
-  { file: "chrome://browser/content/moz-tab-list.css" },
-  { file: "chrome://browser/content/moz-tab-list.mjs" },
-  { file: "chrome://browser/content/moz-tab-row.css" },
+  { file: "chrome://browser/content/firefoxview/moz-tab-list.css" },
+  { file: "chrome://browser/content/firefoxview/moz-tab-list.mjs" },
+  { file: "chrome://browser/content/firefoxview/moz-tab-row.css" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
