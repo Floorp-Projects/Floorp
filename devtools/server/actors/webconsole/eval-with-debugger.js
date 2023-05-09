@@ -698,7 +698,7 @@ function bindCommands(isCmd, dbgGlobal, bindSelf, frame, helpers) {
   // Check if the Debugger.Frame or Debugger.Object for the global include any of the
   // helper function we set. We will not overwrite these functions with the Web Console
   // commands.
-  const availableHelpers = WebConsoleCommandsManager.getAllCommandNames();
+  const availableCommands = WebConsoleCommandsManager.getAllCommandNames();
 
   let helpersToDisable = [];
   const helperCache = {};
@@ -709,10 +709,10 @@ function bindCommands(isCmd, dbgGlobal, bindSelf, frame, helpers) {
     if (frame) {
       const env = frame.environment;
       if (env) {
-        helpersToDisable = availableHelpers.filter(name => !!env.find(name));
+        helpersToDisable = availableCommands.filter(name => !!env.find(name));
       }
     } else {
-      helpersToDisable = availableHelpers.filter(
+      helpersToDisable = availableCommands.filter(
         name => !!dbgGlobal.getOwnPropertyDescriptor(name)
       );
     }

@@ -60,7 +60,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["addWebConsoleCommands", "validCommands"],
+  ["addWebConsoleCommands", "validCommands", "WebConsoleCommandsManager"],
   "resource://devtools/server/actors/webconsole/commands/manager.js",
   true
 );
@@ -326,13 +326,6 @@ class WebConsoleActor extends Actor {
    */
   consoleReflowListener = null;
 
-  /**
-   * The Web Console Commands names cache.
-   * @private
-   * @type array
-   */
-  _webConsoleCommandsCache = null;
-
   grip() {
     return { actor: this.actorID };
   }
@@ -353,7 +346,6 @@ class WebConsoleActor extends Actor {
       this._onChangedToplevelDocument
     );
 
-    this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
     this._evalGlobal = null;
     this.dbg = null;
@@ -1211,14 +1203,9 @@ class WebConsoleActor extends Actor {
     const reqText = text.substr(0, cursor);
 
     if (isCommand(reqText)) {
-      const commandsCache = this._getWebConsoleCommandsCache();
       matchProp = reqText;
       matches = validCommands
-        .filter(
-          c =>
-            `:${c}`.startsWith(reqText) &&
-            commandsCache.find(n => `:${n}`.startsWith(reqText))
-        )
+        .filter(c => `:${c}`.startsWith(reqText))
         .map(c => `:${c}`);
     } else {
       // This is the case of the paused debugger
@@ -1276,12 +1263,12 @@ class WebConsoleActor extends Actor {
       // We only return commands and keywords when we are not dealing with a property or
       // element access.
       if (matchProp && !lastNonAlphaIsDot && !isElementAccess) {
-        this._getWebConsoleCommandsCache().forEach(n => {
+        for (const name of WebConsoleCommandsManager.getAllCommandNames()) {
           // filter out `screenshot` command as it is inaccessible without the `:` prefix
-          if (n !== "screenshot" && n.startsWith(result.matchProp)) {
-            matches.add(n);
+          if (name !== "screenshot" && name.startsWith(result.matchProp)) {
+            matches.add(name);
           }
-        });
+        }
 
         for (const keyword of RESERVED_JS_KEYWORDS) {
           if (keyword.startsWith(result.matchProp)) {
@@ -1429,19 +1416,6 @@ class WebConsoleActor extends Actor {
       Object.defineProperty(helpers.sandbox, name, desc);
     }
     return helpers;
-  }
-
-  _getWebConsoleCommandsCache() {
-    if (!this._webConsoleCommandsCache) {
-      const helpers = {
-        sandbox: Object.create(null),
-      };
-      addWebConsoleCommands(helpers);
-      this._webConsoleCommandsCache = Object.getOwnPropertyNames(
-        helpers.sandbox
-      );
-    }
-    return this._webConsoleCommandsCache;
   }
 
   // Event handlers for various listeners.
