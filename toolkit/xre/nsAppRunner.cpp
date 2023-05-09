@@ -3865,6 +3865,29 @@ static void MaybeAddCPUMicrocodeCrashAnnotation() {
 #endif
 }
 
+#if defined(MOZ_BACKGROUNDTASKS)
+static void SetupConsoleForBackgroundTask(
+    const nsCString& aBackgroundTaskName) {
+  // We do not suppress output on Windows because:
+  // 1. Background task subprocesses launched via LaunchApp() does not attach to
+  //    the console.
+  // 2. Suppressing output intermittently causes failures on when running
+  //    multiple tasks (see bug 1831631)
+#  ifndef XP_WIN
+  if (BackgroundTasks::IsNoOutputTaskName(aBackgroundTaskName) &&
+      !CheckArg("attach-console") &&
+      !EnvHasValue("MOZ_BACKGROUNDTASKS_IGNORE_NO_OUTPUT")) {
+    // Suppress output, somewhat crudely.  We need to suppress stderr as well
+    // as stdout because assertions, of which there are many, write to stderr.
+    Unused << freopen("/dev/null", "w", stdout);
+    Unused << freopen("/dev/null", "w", stderr);
+    return;
+  }
+#  endif
+  printf_stderr("*** You are running in background task mode. ***\n");
+}
+#endif
+
 /*
  * XRE_mainInit - Initial setup and command line parameter processing.
  * Main() will exit early if either return value != 0 or if aExitFlag is
@@ -3896,30 +3919,7 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
       CheckArg("backgroundtask", &backgroundTaskName, CheckArgFlag::None)) {
     backgroundTask = Some(backgroundTaskName);
 
-    CheckArgFlag checkArgFlag =
-#  ifdef XP_WIN
-        CheckArgFlag::None;  // attach-console is consumed below in
-                             // NS_CreateNativeAppSupport on Windows
-#  else
-        CheckArgFlag::RemoveArg;  // but not on non-Windows, so we consume it
-                                  // explicitly here
-#  endif
-
-    if (BackgroundTasks::IsNoOutputTaskName(backgroundTask.ref()) &&
-        !CheckArg("attach-console", nullptr, checkArgFlag) &&
-        !EnvHasValue("MOZ_BACKGROUNDTASKS_IGNORE_NO_OUTPUT")) {
-      // Suppress output, somewhat crudely.  We need to suppress stderr as well
-      // as stdout because assertions, of which there are many, write to stderr.
-#  ifdef XP_WIN
-      Unused << freopen("nul:", "w", stdout);
-      Unused << freopen("nul:", "w", stderr);
-#  else
-      Unused << freopen("/dev/null", "w", stdout);
-      Unused << freopen("/dev/null", "w", stderr);
-#  endif
-    } else {
-      printf_stderr("*** You are running in background task mode. ***\n");
-    }
+    SetupConsoleForBackgroundTask(backgroundTask.ref());
   }
 
   BackgroundTasks::Init(backgroundTask);
