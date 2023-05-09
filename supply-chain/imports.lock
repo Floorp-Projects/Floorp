@@ -267,6 +267,13 @@ user-id = 128763
 user-login = "martinthomson"
 user-name = "Martin Thomson"
 
+[[publisher.ordered-float]]
+version = "3.4.0"
+when = "2022-11-06"
+user-id = 2017
+user-login = "mbrubeck"
+user-name = "Matt Brubeck"
+
 [[publisher.parking_lot]]
 version = "0.11.2"
 when = "2021-08-27"
@@ -378,6 +385,13 @@ when = "2022-07-16"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
+
+[[publisher.smallvec]]
+version = "1.10.0"
+when = "2022-10-02"
+user-id = 2017
+user-login = "mbrubeck"
+user-name = "Matt Brubeck"
 
 [[publisher.syn]]
 version = "1.0.107"
