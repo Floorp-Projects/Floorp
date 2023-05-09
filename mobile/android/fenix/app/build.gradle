@@ -32,11 +32,6 @@ android {
         testBuildType project.property("testBuildType")
     }
 
-    // This allows overriding the target activity for MozillaOnline builds, which happens
-    // as part of the defaultConfig below, and applies to all other configurations (Nightly,
-    // Beta, and Release.)
-    def targetActivity = "HomeActivity"
-
     defaultConfig {
         applicationId "org.mozilla"
         minSdkVersion Config.minSdkVersion
@@ -68,8 +63,13 @@ android {
                 "}"
         // This should be the base URL used to call the AMO API.
         buildConfigField "String", "AMO_SERVER_URL", "\"https://services.addons.mozilla.org\""
+
         def deepLinkSchemeValue = "fenix-dev"
         buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
+
+        // This allows overriding the target activity for MozillaOnline builds, which happens
+        // as part of the defaultConfig below.
+        def targetActivity = "HomeActivity"
 
         // Build flag for "Mozilla Online" variants. See `Config.isMozillaOnline`.
         if (project.hasProperty("mozillaOnline") || gradle.hasProperty("localProperties.mozillaOnline")) {
@@ -78,6 +78,7 @@ android {
         } else {
             buildConfigField "boolean", "MOZILLA_ONLINE", "false"
         }
+
         manifestPlaceholders = [
                 "targetActivity": targetActivity,
                 "deepLinkScheme": deepLinkSchemeValue
@@ -118,46 +119,43 @@ android {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
             def deepLinkSchemeValue = "fenix-nightly"
             buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
-            manifestPlaceholders = [
-                    "deepLinkScheme": deepLinkSchemeValue,
-                    "targetActivity": targetActivity
-            ]
+            manifestPlaceholders.putAll([
+                    "deepLinkScheme": deepLinkSchemeValue
+            ])
         }
         beta releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
             applicationIdSuffix ".firefox_beta"
             def deepLinkSchemeValue = "fenix-beta"
             buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
-            manifestPlaceholders = [
+            manifestPlaceholders.putAll([
                     // This release type is meant to replace Firefox (Beta channel) and therefore needs to inherit
                     // its sharedUserId for all eternity. See:
-                    // https://searchfox.org/mozilla-central/search?q=moz_android_shared_id&case=false&regexp=false&path=
+                    // https://searchfox.org/mozilla-esr68/search?q=moz_android_shared_id&case=false&regexp=false&path=
                     // Shipping an app update without sharedUserId can have
                     // fatal consequences. For example see:
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
                     "sharedUserId": "org.mozilla.firefox.sharedID",
                     "deepLinkScheme": deepLinkSchemeValue,
-                    "targetActivity": targetActivity
-            ]
+            ])
         }
         release releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
             applicationIdSuffix ".firefox"
             def deepLinkSchemeValue = "fenix"
             buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
-            manifestPlaceholders = [
+            manifestPlaceholders.putAll([
                     // This release type is meant to replace Firefox (Release channel) and therefore needs to inherit
                     // its sharedUserId for all eternity. See:
-                    // https://searchfox.org/mozilla-central/search?q=moz_android_shared_id&case=false&regexp=false&path=
+                    // https://searchfox.org/mozilla-esr68/search?q=moz_android_shared_id&case=false&regexp=false&path=
                     // Shipping an app update without sharedUserId can have
                     // fatal consequences. For example see:
                     //  - https://issuetracker.google.com/issues/36924841
                     //  - https://issuetracker.google.com/issues/36905922
                     "sharedUserId": "org.mozilla.firefox.sharedID",
                     "deepLinkScheme": deepLinkSchemeValue,
-                    "targetActivity": targetActivity,
-            ]
+            ])
         }
         benchmark releaseTemplate >> {
             initWith buildTypes.nightly
