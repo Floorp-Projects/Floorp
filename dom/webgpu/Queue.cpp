@@ -20,6 +20,7 @@
 #include "mozilla/dom/WebGLTexelConversions.h"
 #include "mozilla/dom/WebGLTypes.h"
 #include "nsLayoutUtils.h"
+#include "Utility.h"
 
 namespace mozilla::webgpu {
 
@@ -173,7 +174,7 @@ void Queue::WriteTexture(const dom::GPUImageCopyTexture& aDestination,
   CommandEncoder::ConvertTextureDataLayoutToFFI(aDataLayout, &dataLayout);
   dataLayout.offset = 0;  // our Shmem has the contents starting from 0.
   ffi::WGPUExtent3d extent = {};
-  CommandEncoder::ConvertExtent3DToFFI(aSize, &extent);
+  ConvertExtent3DToFFI(aSize, &extent);
 
   uint8_t* dataContents = nullptr;
   uint64_t contentsSize = 0;
@@ -364,7 +365,7 @@ void Queue::CopyExternalImageToTexture(
   }
 
   ffi::WGPUExtent3d extent = {};
-  CommandEncoder::ConvertExtent3DToFFI(aCopySize, &extent);
+  ConvertExtent3DToFFI(aCopySize, &extent);
   if (extent.depth_or_array_layers > 1) {
     aRv.ThrowOperationError("Depth is greater than 1");
     return;
