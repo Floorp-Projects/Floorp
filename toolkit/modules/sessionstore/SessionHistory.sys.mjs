@@ -165,7 +165,8 @@ var SessionHistoryInternal = {
             browsingContext.mostRecentLoadingSessionHistoryEntry
           ),
         ],
-        index: 0,
+        // Set 1 to the index, as the array of session entries is 1-based.
+        index: 1,
         fromIdx: -1,
         requestedIndex: browsingContext.sessionHistory.requestedIndex + 1,
       };
