@@ -358,6 +358,9 @@ enum GPUTextureFormat {
     "depth24plus-stencil8",
     "depth32float",
 
+    // "depth32float-stencil8" feature
+    "depth32float-stencil8",
+
     // BC compressed formats usable if "texture-compression-bc" is both
     // supported by the device/user agent and enabled in requestDevice.
     "bc1-rgba-unorm",
@@ -377,9 +380,6 @@ enum GPUTextureFormat {
 
     // "depth24unorm-stencil8" feature
     //"depth24unorm-stencil8",
-
-    // "depth32float-stencil8" feature
-    //"depth32float-stencil8",
 };
 
 [Pref="dom.webgpu.enabled",
