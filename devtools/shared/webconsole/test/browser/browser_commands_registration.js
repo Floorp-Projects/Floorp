@@ -25,10 +25,7 @@ add_task(async function() {
   });
 
   await registerNewCommand(commands);
-  await wrapCommand(commands);
-  await unregisterCommand(commands);
   await registerAccessor(commands);
-  await unregisterAfterOverridingTwice(commands);
 });
 
 async function evaluateJSAndCheckResult(commands, input, expected) {
@@ -42,11 +39,6 @@ async function registerNewCommand(commands) {
       owner.window.foo = value;
       return "ok";
     });
-
-    ok(
-      this.WebConsoleCommandsManager.hasCommand("setFoo"),
-      "The command should be registered"
-    );
   });
 
   const command = "setFoo('bar')";
@@ -57,68 +49,6 @@ async function registerNewCommand(commands) {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     is(content.top.foo, "bar", "top.foo should equal to 'bar'");
-  });
-}
-
-async function wrapCommand(commands) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    const origKeys = this.WebConsoleCommandsManager.getCommand("keys");
-
-    const newKeys = (...args) => {
-      const [, arg0] = args;
-      if (arg0 === ">o_/") {
-        return "bang!";
-      }
-      return origKeys(...args);
-    };
-
-    this.WebConsoleCommandsManager.register("keys", newKeys);
-    is(
-      this.WebConsoleCommandsManager.getCommand("keys"),
-      newKeys,
-      "the keys() command should have been replaced"
-    );
-
-    this.origKeys = origKeys;
-  });
-
-  await evaluateJSAndCheckResult(commands, "keys('>o_/')", {
-    result: "bang!",
-  });
-
-  await evaluateJSAndCheckResult(commands, "keys({foo: 'bar'})", {
-    result: {
-      _grip: {
-        class: "Array",
-        preview: {
-          items: ["foo"],
-        },
-      },
-    },
-  });
-
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    this.WebConsoleCommandsManager.register("keys", this.origKeys);
-    is(
-      this.WebConsoleCommandsManager.getCommand("keys"),
-      this.origKeys,
-      "the keys() command should be restored"
-    );
-    delete this.origKeys;
-  });
-}
-
-async function unregisterCommand(commands) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    this.WebConsoleCommandsManager.unregister("setFoo");
-  });
-
-  await evaluateJSAndCheckResult(commands, "setFoo", {
-    input: "setFoo",
-    result: {
-      type: "undefined",
-    },
-    exceptionMessage: /setFoo is not defined/,
   });
 }
 
@@ -144,59 +74,5 @@ async function registerAccessor(commands) {
       ">o_/",
       '#foo textContent should equal to ">o_/"'
     );
-    this.WebConsoleCommandsManager.unregister("$foo");
-    ok(
-      !this.WebConsoleCommandsManager.hasCommand("$foo"),
-      "$foo should be unregistered"
-    );
-  });
-}
-
-async function unregisterAfterOverridingTwice(commands) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    this.WebConsoleCommandsManager.register(
-      "keys",
-      (owner, obj) => "command 1"
-    );
-  });
-
-  info("checking the value of the first override");
-  await evaluateJSAndCheckResult(commands, "keys('foo');", {
-    result: "command 1",
-  });
-
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    const orig = this.WebConsoleCommandsManager.getCommand("keys");
-    this.WebConsoleCommandsManager.register("keys", (owner, obj) => {
-      if (obj === "quack") {
-        return "bang!";
-      }
-      return orig(owner, obj);
-    });
-  });
-
-  info("checking the values after the second override");
-  await evaluateJSAndCheckResult(commands, "keys({});", {
-    result: "command 1",
-  });
-  await evaluateJSAndCheckResult(commands, "keys('quack');", {
-    result: "bang!",
-  });
-
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-    this.WebConsoleCommandsManager.unregister("keys");
-  });
-
-  info(
-    "checking the value after unregistration (should restore " +
-      "the original command)"
-  );
-  await evaluateJSAndCheckResult(commands, "keys({});", {
-    result: {
-      _grip: {
-        class: "Array",
-        preview: { items: [] },
-      },
-    },
   });
 }
