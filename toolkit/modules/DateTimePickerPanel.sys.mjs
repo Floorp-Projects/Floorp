@@ -9,7 +9,7 @@ export var DateTimePickerPanel = class {
     this.TIME_PICKER_WIDTH = "13em";
     this.TIME_PICKER_HEIGHT = "22em";
     this.DATE_PICKER_WIDTH = "24em";
-    this.DATE_PICKER_HEIGHT = "25em";
+    this.DATE_PICKER_HEIGHT = "27em";
   }
 
   get dateTimePopupFrame() {
