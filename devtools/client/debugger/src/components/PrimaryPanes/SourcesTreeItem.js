@@ -20,7 +20,6 @@ import actions from "../../actions";
 
 import { shouldBlackbox, sourceTypes } from "../../utils/source";
 import { copyToTheClipboard } from "../../utils/clipboard";
-import { features } from "../../utils/prefs";
 import { saveAsLocalFile } from "../../utils/utils";
 
 const classnames = require("devtools/client/shared/classnames.js");
@@ -130,30 +129,28 @@ class SourceTreeItem extends Component {
     if (item.type != "source") {
       this.addCollapseExpandAllOptions(menuOptions, item);
 
-      if (features.root) {
-        const { cx, depth, projectRoot } = this.props;
+      const { cx, depth, projectRoot } = this.props;
 
-        if (projectRoot == item.uniquePath) {
-          menuOptions.push({
-            id: "node-remove-directory-root",
-            label: removeDirectoryRootLabel,
-            disabled: false,
-            click: () => this.props.clearProjectDirectoryRoot(cx),
-          });
-        } else {
-          menuOptions.push({
-            id: "node-set-directory-root",
-            label: setDirectoryRootLabel,
-            accesskey: setDirectoryRootKey,
-            disabled: false,
-            click: () =>
-              this.props.setProjectDirectoryRoot(
-                cx,
-                item.uniquePath,
-                this.renderItemName(depth)
-              ),
-          });
-        }
+      if (projectRoot == item.uniquePath) {
+        menuOptions.push({
+          id: "node-remove-directory-root",
+          label: removeDirectoryRootLabel,
+          disabled: false,
+          click: () => this.props.clearProjectDirectoryRoot(cx),
+        });
+      } else {
+        menuOptions.push({
+          id: "node-set-directory-root",
+          label: setDirectoryRootLabel,
+          accesskey: setDirectoryRootKey,
+          disabled: false,
+          click: () =>
+            this.props.setProjectDirectoryRoot(
+              cx,
+              item.uniquePath,
+              this.renderItemName(depth)
+            ),
+        });
       }
 
       this.addBlackboxAllOption(menuOptions, item);
