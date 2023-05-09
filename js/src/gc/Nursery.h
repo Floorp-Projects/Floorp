@@ -712,7 +712,9 @@ class alignas(TypicalCacheLineSize) Nursery {
 
   const js::gc::GCSchedulingTunables& tunables() const;
 
-  void updateZoneAllocFlags();
+  void updateAllZoneAllocFlags();
+  void updateAllocFlagsForZone(JS::Zone* zone);
+  void discardJitCodeForZone(JS::Zone* zone);
 
   // Common internal allocator function.
   void* allocate(size_t size);
@@ -789,6 +791,7 @@ class alignas(TypicalCacheLineSize) Nursery {
   mozilla::TimeStamp collectionStartTime() const;
   mozilla::TimeStamp lastCollectionEndTime() const;
 
+  friend class gc::GCRuntime;
   friend class TenuringTracer;
   friend class gc::MinorCollectionTracer;
   friend class jit::MacroAssembler;

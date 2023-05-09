@@ -3290,19 +3290,10 @@ void GCRuntime::maybeStopPretenuring() {
     size_t numStrings = zone->markedStrings + zone->finalizedStrings;
     double rate = double(zone->finalizedStrings) / double(numStrings);
     if (rate > tunables.stopPretenureStringThreshold()) {
-      CancelOffThreadIonCompile(zone);
-      zone->forceDiscardJitCode(rt->gcContext());
-      for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
-        if (jit::JitRealm* jitRealm = r->jitRealm()) {
-          jitRealm->discardStubs();
-          jitRealm->setStringsCanBeInNursery(true);
-        }
-      }
-
       zone->markedStrings = 0;
       zone->finalizedStrings = 0;
       zone->nurseryStringsDisabled = false;
-      zone->updateNurseryAllocFlags(nursery());
+      nursery().updateAllocFlagsForZone(zone);
     }
   }
 }
