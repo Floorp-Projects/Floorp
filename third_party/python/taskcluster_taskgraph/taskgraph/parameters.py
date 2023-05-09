@@ -80,46 +80,76 @@ def get_version(repo_path):
 def _get_defaults(repo_root=None):
     repo_path = repo_root or os.getcwd()
     repo = get_repository(repo_path)
-    try:
-        repo_url = repo.get_url()
-        parsed_url = mozilla_repo_urls.parse(repo_url)
-        project = parsed_url.repo_name
-    except (
-        CalledProcessError,
-        mozilla_repo_urls.errors.InvalidRepoUrlError,
-        mozilla_repo_urls.errors.UnsupportedPlatformError,
-    ):
-        repo_url = ""
-        project = ""
+    if repo:
+        try:
+            repo_url = repo.get_url()
+            parsed_url = mozilla_repo_urls.parse(repo_url)
+            project = parsed_url.repo_name
+        except (
+            CalledProcessError,
+            mozilla_repo_urls.errors.InvalidRepoUrlError,
+            mozilla_repo_urls.errors.UnsupportedPlatformError,
+        ):
+            repo_url = ""
+            project = ""
 
-    return {
-        "base_repository": repo_url,
-        "base_ref": "",
-        "base_rev": "",
-        "build_date": int(time.time()),
-        "build_number": 1,
-        "do_not_optimize": [],
-        "enable_always_target": True,
-        "existing_tasks": {},
-        "filters": ["target_tasks_method"],
-        "head_ref": repo.branch or repo.head_rev,
-        "head_repository": repo_url,
-        "head_rev": repo.head_rev,
-        "head_tag": "",
-        "level": "3",
-        "moz_build_date": datetime.now().strftime("%Y%m%d%H%M%S"),
-        "next_version": None,
-        "optimize_strategies": None,
-        "optimize_target_tasks": True,
-        "owner": "nobody@mozilla.com",
-        "project": project,
-        "pushdate": int(time.time()),
-        "pushlog_id": "0",
-        "repository_type": repo.tool,
-        "target_tasks_method": "default",
-        "tasks_for": "",
-        "version": get_version(repo_path),
-    }
+        return {
+            "base_repository": repo_url,
+            "base_ref": "",
+            "base_rev": "",
+            "build_date": int(time.time()),
+            "build_number": 1,
+            "do_not_optimize": [],
+            "enable_always_target": True,
+            "existing_tasks": {},
+            "filters": ["target_tasks_method"],
+            "head_ref": repo.branch or repo.head_rev,
+            "head_repository": repo_url,
+            "head_rev": repo.head_rev,
+            "head_tag": "",
+            "level": "3",
+            "moz_build_date": datetime.now().strftime("%Y%m%d%H%M%S"),
+            "next_version": None,
+            "optimize_strategies": None,
+            "optimize_target_tasks": True,
+            "owner": "nobody@mozilla.com",
+            "project": project,
+            "pushdate": int(time.time()),
+            "pushlog_id": "0",
+            "repository_type": repo.tool,
+            "target_tasks_method": "default",
+            "tasks_for": "",
+            "version": get_version(repo_path),
+        }
+    else:
+        return {
+            "base_repository": "SOURCE",
+            "base_ref": "",
+            "base_rev": "",
+            "build_date": int(time.time()),
+            "build_number": 1,
+            "do_not_optimize": [],
+            "enable_always_target": True,
+            "existing_tasks": {},
+            "filters": ["target_tasks_method"],
+            "head_ref": "",
+            "head_repository": "",
+            "head_rev": "",
+            "head_tag": "",
+            "level": "3",
+            "moz_build_date": datetime.now().strftime("%Y%m%d%H%M%S"),
+            "next_version": None,
+            "optimize_strategies": None,
+            "optimize_target_tasks": True,
+            "owner": "nobody@mozilla.com",
+            "project": "",
+            "pushdate": int(time.time()),
+            "pushlog_id": "0",
+            "repository_type": "",
+            "target_tasks_method": "default",
+            "tasks_for": "",
+            "version": "",
+        }
 
 
 defaults_functions = [_get_defaults]
@@ -195,13 +225,14 @@ class Parameters(ReadOnlyDict):
     @staticmethod
     def _fill_defaults(repo_root=None, **kwargs):
         defaults = {}
-        for fn in defaults_functions:
-            defaults.update(fn(repo_root))
+        if repo_root != "SOURCE":
+            for fn in defaults_functions:
+                defaults.update(fn(repo_root))
 
-        for name, default in defaults.items():
-            if name not in kwargs:
-                kwargs[name] = default
-        return kwargs
+            for name, default in defaults.items():
+                if name not in kwargs:
+                    kwargs[name] = default
+            return kwargs
 
     def check(self):
         schema = (
