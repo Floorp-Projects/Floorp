@@ -92,9 +92,9 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
   bridge->InstanceRequestAdapter(aOptions)->Then(
       GetCurrentSerialEventTarget(), __func__,
       [promise, instance, bridge](ipc::ByteBuf aInfoBuf) {
-        ffi::WGPUAdapterInformation info = {};
-        ffi::wgpu_client_adapter_extract_info(ToFFI(&aInfoBuf), &info);
-        MOZ_ASSERT(info.id != 0);
+        auto info = std::make_shared<ffi::WGPUAdapterInformation>();
+        ffi::wgpu_client_adapter_extract_info(ToFFI(&aInfoBuf), info.get());
+        MOZ_ASSERT(info->id != 0);
         RefPtr<Adapter> adapter = new Adapter(instance, bridge, info);
         promise->MaybeResolve(adapter);
       },
