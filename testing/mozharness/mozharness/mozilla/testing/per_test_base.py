@@ -198,7 +198,7 @@ class SingleTestMixin(object):
                 )
                 continue
 
-            if entry[2] is not None:
+            if entry[2] is not None and "about:" not in entry[2]:
                 # Test name substitution, for reftest reference file handling:
                 #  - if both test and reference modified, run the test file
                 #  - if only reference modified, run the test file
