@@ -107,8 +107,6 @@ function isObject(value) {
  *         - frame: (optional) the frame where the string was evaluated.
  *         - global: the Debugger.Object for the global where the string was evaluated in.
  *         - result: the result of the evaluation.
- *         - helperResult: any result coming from a Web Console commands
- *         function.
  */
 exports.evalWithDebugger = function(string, options = {}, webConsole) {
   if (isCommand(string.trim()) && options.eager) {
@@ -126,7 +124,8 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     webConsole
   );
 
-  const helpers = webConsole._getWebConsoleCommands(
+  const helpers = WebConsoleCommandsManager.getWebConsoleCommands(
+    webConsole,
     dbgGlobal,
     string,
     options.selectedNodeActor
@@ -136,7 +135,7 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     dbgGlobal,
     bindSelf,
     frame,
-    helpers
+    helpers.bindings
   );
 
   if (options.bindings) {
@@ -192,18 +191,15 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     );
   }
 
-  // Retrieve the result of commands, if any ran
-  const { helperResult } = helpers;
-
   // Clean up helpers helpers and bindings
   delete helpers.evalInput;
-  delete helpers.helperResult;
   delete helpers.selectedNode;
   cleanupBindings(bindings, helperCache);
 
   return {
     result,
-    helperResult,
+    // Retrieve the result of commands, if any ran
+    helperResult: helpers.getHelperResult(),
     dbg,
     frame,
     dbgGlobal,
@@ -690,8 +686,7 @@ function cleanupBindings(bindings, helperCache) {
   }
 }
 
-function bindCommands(isCmd, dbgGlobal, bindSelf, frame, helpers) {
-  const bindings = helpers.sandbox;
+function bindCommands(isCmd, dbgGlobal, bindSelf, frame, bindings) {
   if (bindSelf) {
     bindings._self = bindSelf;
   }
