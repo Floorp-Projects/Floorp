@@ -10,8 +10,8 @@
 
 namespace mozilla::webgpu {
 
-void ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
-                          ffi::WGPUExtent3d* aExtentFFI) {
+template <typename E>
+void ConvertToExtent3D(const E& aExtent, ffi::WGPUExtent3d* aExtentFFI) {
   *aExtentFFI = {};
   if (aExtent.IsRangeEnforcedUnsignedLongSequence()) {
     const auto& seq = aExtent.GetAsRangeEnforcedUnsignedLongSequence();
@@ -28,9 +28,25 @@ void ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
   }
 }
 
+void ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
+                          ffi::WGPUExtent3d* aExtentFFI) {
+  ConvertToExtent3D(aExtent, aExtentFFI);
+}
+
+void ConvertExtent3DToFFI(const dom::OwningGPUExtent3D& aExtent,
+                          ffi::WGPUExtent3d* aExtentFFI) {
+  ConvertToExtent3D(aExtent, aExtentFFI);
+}
+
 ffi::WGPUExtent3d ConvertExtent(const dom::GPUExtent3D& aExtent) {
   ffi::WGPUExtent3d extent = {};
-  ConvertExtent3DToFFI(aExtent, &extent);
+  ConvertToExtent3D(aExtent, &extent);
+  return extent;
+}
+
+ffi::WGPUExtent3d ConvertExtent(const dom::OwningGPUExtent3D& aExtent) {
+  ffi::WGPUExtent3d extent = {};
+  ConvertToExtent3D(aExtent, &extent);
   return extent;
 }
 
