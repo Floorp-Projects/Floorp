@@ -50,6 +50,13 @@ user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
+[[publisher.bytes]]
+version = "1.4.0"
+when = "2023-01-31"
+user-id = 6741
+user-login = "Darksonn"
+user-name = "Alice Ryhl"
+
 [[publisher.cexpr]]
 version = "0.6.0"
 when = "2021-10-11"
@@ -385,6 +392,20 @@ when = "2022-12-17"
 user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
+
+[[publisher.tokio-macros]]
+version = "1.8.0"
+when = "2022-06-04"
+user-id = 6741
+user-login = "Darksonn"
+user-name = "Alice Ryhl"
+
+[[publisher.tokio-util]]
+version = "0.7.2"
+when = "2022-05-15"
+user-id = 6741
+user-login = "Darksonn"
+user-name = "Alice Ryhl"
 
 [[publisher.unicode-ident]]
 version = "1.0.6"

@@ -225,10 +225,6 @@ criteria = "safe-to-deploy"
 version = "0.1.6"
 criteria = "safe-to-deploy"
 
-[[exemptions.bytes]]
-version = "1.1.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.cache-padded]]
 version = "1.2.0"
 criteria = "safe-to-deploy"
@@ -851,14 +847,6 @@ criteria = "safe-to-run"
 
 [[exemptions.tokio]]
 version = "1.17.0"
-criteria = "safe-to-run"
-
-[[exemptions.tokio-macros]]
-version = "1.8.0"
-criteria = "safe-to-run"
-
-[[exemptions.tokio-util]]
-version = "0.7.2"
 criteria = "safe-to-run"
 
 [[exemptions.toml]]
