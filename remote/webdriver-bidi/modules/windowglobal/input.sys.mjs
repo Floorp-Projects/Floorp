@@ -31,10 +31,8 @@ class InputModule extends WindowGlobalBiDiModule {
       });
     }
 
-    const actionChain = lazy.action.Chain.fromJSON(this.#actionState, actions, {
-      getElementFromElementOrigin: this.#getElementFromElementOrigin,
-    });
-
+    await this.#deserializeActionOrigins(actions);
+    const actionChain = lazy.action.Chain.fromJSON(this.#actionState, actions);
     await actionChain.dispatch(this.#actionState, this.messageHandler.window);
   }
 
@@ -46,7 +44,39 @@ class InputModule extends WindowGlobalBiDiModule {
     this.#actionState = null;
   }
 
-  #getElementFromElementOrigin = origin => {
+  /**
+   * In the provided array of input.SourceActions, replace all origins matching
+   * the input.ElementOrigin production with the Element corresponding to this
+   * origin.
+   *
+   * Note that this method replaces the content of the `actions` in place, and
+   * does not return a new array.
+   *
+   * @param {Array<input.SourceActions>} actions
+   *     The array of SourceActions to deserialize.
+   * @returns {Promise}
+   *     A promise which resolves when all ElementOrigin origins have been
+   *     deserialized.
+   */
+  async #deserializeActionOrigins(actions) {
+    const promises = [];
+    for (const actionsByTick of actions) {
+      for (const action of actionsByTick.actions) {
+        if (action.origin?.type === "element") {
+          promises.push(
+            (async () => {
+              action.origin = await this.#getElementFromElementOrigin(
+                action.origin
+              );
+            })()
+          );
+        }
+      }
+    }
+    return Promise.all(promises);
+  }
+
+  async #getElementFromElementOrigin(origin) {
     const sharedReference = origin.element;
     if (typeof sharedReference?.sharedId !== "string") {
       throw new lazy.error.InvalidArgumentError(
@@ -58,7 +88,7 @@ class InputModule extends WindowGlobalBiDiModule {
     return lazy.deserialize(realm, sharedReference, {
       nodeCache: this.nodeCache,
     });
-  };
+  }
 }
 
 export const input = InputModule;
