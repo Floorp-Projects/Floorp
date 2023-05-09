@@ -12,6 +12,7 @@ import subprocess
 from contextlib import redirect_stdout
 from datetime import datetime, timedelta
 
+from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozversioncontrol import get_repository_object
 
@@ -35,7 +36,7 @@ from .perfselector.utils import LogProcessor
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
-cache_file = pathlib.Path(build.statedir, "try_perf_revision_cache.json")
+cache_file = pathlib.Path(get_state_dir(), "try_perf_revision_cache.json")
 
 PERFHERDER_BASE_URL = (
     "https://treeherder.mozilla.org/perfherder/"
