@@ -243,10 +243,6 @@ PACKAGE_FORMATS = {
             "{version_display}",
             "--build-number",
             "{build_number}",
-            "--release-product",
-            "{release_product}",
-            "--release-type",
-            "{release_type}",
         ],
         "inputs": {
             "input": "target{archive_format}",
@@ -458,8 +454,6 @@ def make_job_description(config, jobs):
                 "version_display": config.params["version"],
                 "mar-channel-id": attributes["mar-channel-id"],
                 "build_number": config.params["build_number"],
-                "release_product": config.params["release_product"],
-                "release_type": config.params["release_type"],
             }
             # Allow us to replace `args` as well, but specifying things expanded in mozharness
             # without breaking .format and without allowing unknown through.
