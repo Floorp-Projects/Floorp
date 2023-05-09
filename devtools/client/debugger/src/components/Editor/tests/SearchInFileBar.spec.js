@@ -7,12 +7,12 @@ import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
 
 import { shallow } from "enzyme";
-import SearchBar from "../SearchBar";
+import SearchInFileBar from "../SearchInFileBar";
 import "../../../workers/search";
 import "../../../utils/editor";
 import { searchKeys } from "../../../constants";
 
-const SearchBarComponent = SearchBar.WrappedComponent;
+const SearchInFileBarComponent = SearchInFileBar.WrappedComponent;
 
 jest.mock("../../../workers/search", () => ({
   WorkerDispatcher() {
@@ -30,7 +30,7 @@ jest.mock("../../../utils/editor", () => ({
 function generateDefaults() {
   return {
     query: "",
-    searchOn: true,
+    searchInFileEnabled: true,
     symbolSearchOn: true,
     editor: {},
     searchResults: { count: 0 },
@@ -79,7 +79,7 @@ function render(overrides = {}) {
   const props = { ...defaults, ...overrides };
   const component = shallow(
     <Provider store={store}>
-      <SearchBarComponent {...props} />
+      <SearchInFileBarComponent {...props} />
     </Provider>,
     {
       disableLifecycleMethods: true,
@@ -88,7 +88,7 @@ function render(overrides = {}) {
   return { component, props };
 }
 
-describe("SearchBar", () => {
+describe("SearchInFileBar", () => {
   it("should render", () => {
     const { component } = render();
     expect(component).toMatchSnapshot();

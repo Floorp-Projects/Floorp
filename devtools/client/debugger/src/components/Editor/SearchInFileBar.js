@@ -21,7 +21,7 @@ import { searchKeys } from "../../constants";
 import { scrollList } from "../../utils/result-list";
 
 import SearchInput from "../shared/SearchInput";
-import "./SearchBar.css";
+import "./SearchInFileBar.css";
 
 const { PluralForm } = require("devtools/shared/plural-form");
 const { debounce } = require("devtools/shared/debounce");
@@ -30,7 +30,7 @@ function getSearchShortcut() {
   return L10N.getStr("sourceSearch.search.key2");
 }
 
-class SearchBar extends Component {
+class SearchInFileBar extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -50,7 +50,7 @@ class SearchBar extends Component {
       editor: PropTypes.object,
       modifiers: PropTypes.object.isRequired,
       query: PropTypes.string.isRequired,
-      searchOn: PropTypes.bool.isRequired,
+      searchInFileEnabled: PropTypes.bool.isRequired,
       searchResults: PropTypes.object.isRequired,
       selectedContentLoaded: PropTypes.bool.isRequired,
       selectedSource: PropTypes.object.isRequired,
@@ -97,9 +97,15 @@ class SearchBar extends Component {
   };
 
   closeSearch = e => {
-    const { cx, closeFileSearch, editor, searchOn, query } = this.props;
+    const {
+      cx,
+      closeFileSearch,
+      editor,
+      searchInFileEnabled,
+      query,
+    } = this.props;
     this.clearSearch();
-    if (editor && searchOn) {
+    if (editor && searchInFileEnabled) {
       closeFileSearch(cx, editor);
       e.stopPropagation();
       e.preventDefault();
@@ -110,16 +116,16 @@ class SearchBar extends Component {
   toggleSearch = e => {
     e.stopPropagation();
     e.preventDefault();
-    const { editor, searchOn, setActiveSearch } = this.props;
+    const { editor, searchInFileEnabled, setActiveSearch } = this.props;
 
     // Set inputFocused to false, so that search query is highlighted whenever search shortcut is used, even if the input already has focus.
     this.setState({ inputFocused: false });
 
-    if (!searchOn) {
+    if (!searchInFileEnabled) {
       setActiveSearch("file");
     }
 
-    if (this.props.searchOn && editor) {
+    if (searchInFileEnabled && editor) {
       const query = editor.codeMirror.getSelection() || this.state.query;
 
       if (query !== "") {
@@ -219,10 +225,10 @@ class SearchBar extends Component {
   render() {
     const {
       searchResults: { count },
-      searchOn,
+      searchInFileEnabled,
     } = this.props;
 
-    if (!searchOn) {
+    if (!searchInFileEnabled) {
       return <div />;
     }
 
@@ -255,7 +261,7 @@ class SearchBar extends Component {
   }
 }
 
-SearchBar.contextTypes = {
+SearchInFileBar.contextTypes = {
   shortcuts: PropTypes.object,
 };
 
@@ -265,7 +271,7 @@ const mapStateToProps = (state, p) => {
 
   return {
     cx: getContext(state),
-    searchOn: getActiveSearch(state) === "file",
+    searchInFileEnabled: getActiveSearch(state) === "file",
     selectedSource,
     selectedContentLoaded: selectedLocation
       ? !!getSettledSourceTextContent(state, selectedLocation)
@@ -281,4 +287,4 @@ export default connect(mapStateToProps, {
   closeFileSearch: actions.closeFileSearch,
   doSearch: actions.doSearch,
   traverseResults: actions.traverseResults,
-})(SearchBar);
+})(SearchInFileBar);

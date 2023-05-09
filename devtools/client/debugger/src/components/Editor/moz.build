@@ -28,7 +28,7 @@ CompiledModules(
     "InlinePreview.js",
     "InlinePreviewRow.js",
     "InlinePreviews.js",
-    "SearchBar.js",
+    "SearchInFileBar.js",
     "Tab.js",
     "Tabs.js",
 )
