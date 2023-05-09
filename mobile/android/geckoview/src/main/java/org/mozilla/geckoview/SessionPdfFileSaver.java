@@ -45,16 +45,22 @@ public final class SessionPdfFileSaver {
    * @param data The pdf data.
    * @param filename The file name.
    * @param originalUrl The original url for the file.
+   * @param skipConfirmation Whether to skip the confirmation dialog.
+   * @param requestExternalApp Whether to request an external app to open the file.
    * @return a response used to "download" the pdf.
    */
   public static @Nullable WebResponse createResponse(
       @NonNull final byte[] data,
       @NonNull final String filename,
-      @NonNull final String originalUrl) {
+      @NonNull final String originalUrl,
+      final boolean skipConfirmation,
+      final boolean requestExternalApp) {
     try {
       return new WebResponse.Builder(originalUrl)
           .statusCode(200)
           .body(new ByteArrayInputStream(data))
+          .skipConfirmation(skipConfirmation)
+          .requestExternalApp(requestExternalApp)
           .addHeader("Content-Type", "application/pdf")
           .addHeader("Content-Length", Integer.toString(data.length))
           .addHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"")

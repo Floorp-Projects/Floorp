@@ -13,6 +13,12 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v115
+- Changed [`SessionPdfFileSaver.createResponse`][115.1] to response of saving PDF to accept two additional
+  arguments: `skipConfirmation` and `requestExternalApp`.
+
+[115.1]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(byte[], String, String, boolean, boolean)
+
 ## v114
 - Add [`SessionPdfFileSaver.createResponse`][114.1] to response of saving PDF.
 - Added [`requestExternalApp`][114.2] and [`skipConfirmation`][114.3] with builder fields on a WebResponse to request that a downloaded file be opened in an external application or to skip a confirmation, respectively.
@@ -1355,4 +1361,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 0345baae42369dfaee76ce5f7420526ca21b6b8f
+[api-version]: d92814f695c89fa6024a6e65d958614fd2953828
