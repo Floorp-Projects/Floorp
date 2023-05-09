@@ -9,12 +9,18 @@ const TEST_URI = `
   <style type="text/css">
     @import url(${URL_ROOT_COM_SSL}doc_conditional_import.css) screen and (width > 10px);
     @import url(${URL_ROOT_COM_SSL}doc_imported_named_layer.css) layer(importedLayer) (height > 42px);
+    @import url(${URL_ROOT_COM_SSL}doc_conditional_import.css) supports(display: flex);
+    @import url(${URL_ROOT_COM_SSL}doc_conditional_import.css) supports(display: flex) screen and (width > 10px);
+    @import url(${URL_ROOT_COM_SSL}doc_imported_named_layer.css) layer(importedLayerTwo) supports(display: flex) screen and (width > 10px);
     @import url(${URL_ROOT_COM_SSL}doc_imported_no_layer.css);
   </style>
   <h1>Hello @import!</h1>
 `;
 
 add_task(async function() {
+  // Enable the pref for @import supports()
+  await pushPref("layout.css.import-supports.enabled", true);
+
   await addTab(
     "https://example.com/document-builder.sjs?html=" +
       encodeURIComponent(TEST_URI)
@@ -30,7 +36,34 @@ add_task(async function() {
     },
     {
       selector: `h1, [test-hint="imported-conditional"]`,
+      ancestorRulesData: [
+        "@import supports(display: flex) screen and (width > 10px)",
+      ],
+    },
+    {
+      selector: `h1, [test-hint="imported-conditional"]`,
+      ancestorRulesData: ["@import supports(display: flex)"],
+    },
+    {
+      selector: `h1, [test-hint="imported-conditional"]`,
       ancestorRulesData: ["@import screen and (width > 10px)"],
+    },
+    {
+      selector: `h1, [test-hint="imported-named-layer--no-rule-layer"]`,
+      ancestorRulesData: [
+        "@import supports(display: flex) screen and (width > 10px)",
+        "@layer importedLayerTwo",
+        "@media screen",
+      ],
+    },
+    {
+      selector: `h1, [test-hint="imported-named-layer--named-layer"]`,
+      ancestorRulesData: [
+        "@import supports(display: flex) screen and (width > 10px)",
+        "@layer importedLayerTwo",
+        "@media screen",
+        "@layer in-imported-stylesheet",
+      ],
     },
     {
       selector: `h1, [test-hint="imported-named-layer--no-rule-layer"]`,
