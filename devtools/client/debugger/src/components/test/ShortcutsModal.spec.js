@@ -10,7 +10,6 @@ function render(overrides = {}) {
   const props = {
     enabled: true,
     handleClose: jest.fn(),
-    additionalClass: "",
     ...overrides,
   };
   const component = shallow(<ShortcutsModal {...props} />);
@@ -29,14 +28,5 @@ describe("ShortcutsModal", () => {
       enabled: false,
     });
     expect(component.text()).toBe("");
-  });
-
-  it("renders with additional classname", () => {
-    const { component } = render({
-      additionalClass: "additional-class",
-    });
-    expect(
-      component.find(".shortcuts-content").hasClass("additional-class")
-    ).toEqual(true);
   });
 });

@@ -10,10 +10,11 @@ const classnames = require("devtools/client/shared/classnames.js");
 
 import "./ShortcutsModal.css";
 
+const isMacOS = Services.appinfo.OS === "Darwin";
+
 export class ShortcutsModal extends Component {
   static get propTypes() {
     return {
-      additionalClass: PropTypes.string.isRequired,
       enabled: PropTypes.bool.isRequired,
       handleClose: PropTypes.func.isRequired,
     };
@@ -97,9 +98,7 @@ export class ShortcutsModal extends Component {
 
   renderShortcutsContent() {
     return (
-      <div
-        className={classnames("shortcuts-content", this.props.additionalClass)}
-      >
+      <div className={classnames("shortcuts-content", isMacOS ? "mac" : "")}>
         <div className="shortcuts-section">
           <h2>{L10N.getStr("shortcuts.header.editor")}</h2>
           {this.renderEditorShortcuts()}

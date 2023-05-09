@@ -48,7 +48,6 @@ if (isNode()) {
   pref("devtools.debugger.features.workers", true);
   pref("devtools.debugger.features.async-stepping", false);
   pref("devtools.debugger.features.wasm", true);
-  pref("devtools.debugger.features.shortcuts", true);
   pref("devtools.debugger.features.root", true);
   pref("devtools.debugger.features.map-scopes", true);
   pref("devtools.debugger.features.remove-command-bar-options", true);
@@ -127,7 +126,6 @@ prefs.cursorBlinkRate = Services.prefs.getIntPref("ui.caretBlinkTime", 530);
 export const features = new PrefsHelper("devtools.debugger.features", {
   asyncStepping: ["Bool", "async-stepping"],
   wasm: ["Bool", "wasm"],
-  shortcuts: ["Bool", "shortcuts"],
   root: ["Bool", "root"],
   columnBreakpoints: ["Bool", "column-breakpoints"],
   mapScopes: ["Bool", "map-scopes"],

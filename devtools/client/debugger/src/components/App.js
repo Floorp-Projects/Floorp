@@ -5,7 +5,7 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "../utils/connect";
-import { prefs, features } from "../utils/prefs";
+import { prefs } from "../utils/prefs";
 import { primaryPaneTabs } from "../constants";
 import actions from "../actions";
 import A11yIntention from "./A11yIntention";
@@ -24,10 +24,6 @@ const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
 const AppErrorBoundary = require("devtools/client/shared/components/AppErrorBoundary");
 
 const shortcuts = new KeyShortcuts({ window });
-
-const { appinfo } = Services;
-
-const isMacOS = appinfo.OS === "Darwin";
 
 const horizontalLayoutBreakpoint = window.matchMedia("(min-width: 800px)");
 const verticalLayoutBreakpoint = window.matchMedia(
@@ -287,22 +283,6 @@ class App extends Component {
     );
   };
 
-  renderShortcutsModal() {
-    const additionalClass = isMacOS ? "mac" : "";
-
-    if (!features.shortcuts) {
-      return null;
-    }
-
-    return (
-      <ShortcutsModal
-        additionalClass={additionalClass}
-        enabled={this.state.shortcutsModalEnabled}
-        handleClose={() => this.toggleShortcutsModal()}
-      />
-    );
-  }
-
   render() {
     const { quickOpenEnabled } = this.props;
     return (
@@ -319,7 +299,10 @@ class App extends Component {
                 toggleShortcutsModal={() => this.toggleShortcutsModal()}
               />
             )}
-            {this.renderShortcutsModal()}
+            <ShortcutsModal
+              enabled={this.state.shortcutsModalEnabled}
+              handleClose={() => this.toggleShortcutsModal()}
+            />
           </A11yIntention>
         </AppErrorBoundary>
       </div>
