@@ -339,7 +339,7 @@ def test_compute_process_timeout(
     browsertime = ConcreteBrowsertime(
         post_startup_delay=DEFAULT_TIMEOUT, **browsertime_options
     )
-    bt_timeout = browsertime._compute_process_timeout(mock_test, timeout)
+    bt_timeout = browsertime._compute_process_timeout(mock_test, timeout, [])
     assert bt_timeout == expected_timeout
 
 
