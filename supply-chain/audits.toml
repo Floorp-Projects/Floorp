@@ -3775,6 +3775,12 @@ user-id = 189 # Andrew Gallant (BurntSushi)
 start = "2019-06-09"
 end = "2024-05-03"
 
+[[trusted.warp]]
+criteria = "safe-to-deploy"
+user-id = 359 # Sean McArthur (seanmonstar)
+start = "2019-03-20"
+end = "2024-05-08"
+
 [[trusted.wasi]]
 criteria = "safe-to-deploy"
 user-id = 1 # Alex Crichton (alexcrichton)

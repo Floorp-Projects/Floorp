@@ -857,10 +857,6 @@ criteria = "safe-to-deploy"
 version = "0.8.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.warp]]
-version = "0.3.2"
-criteria = "safe-to-run"
-
 [[exemptions.webrtc-sdp]]
 version = "0.3.9"
 criteria = "safe-to-deploy"
