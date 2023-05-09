@@ -547,7 +547,8 @@ bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options) {
   return true;
 }
 
-void ParseTask::moveGCOutputInto(JS::InstantiationStorage& storage) {
+void ParseTask::moveInstantiationStorageInto(
+    JS::InstantiationStorage& storage) {
   storage.gcOutput_ = instantiationStorage_.gcOutput_;
   instantiationStorage_.gcOutput_ = nullptr;
 }
@@ -2312,7 +2313,7 @@ GlobalHelperThreadState::finishStencilTask(JSContext* cx,
 
   if (storage) {
     MOZ_ASSERT(parseTask->options.allocateInstantiationStorage);
-    parseTask->moveGCOutputInto(*storage);
+    parseTask->moveInstantiationStorageInto(*storage);
   }
 
   return parseTask->stencil_.forget();
