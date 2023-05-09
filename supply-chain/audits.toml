@@ -1676,6 +1676,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.5.3 -> 0.6.2"
 
+[[audits.mio]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-run"
+delta = "0.6.21 -> 0.6.23"
+
 [[audits.naga]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -3445,6 +3450,12 @@ user-id = 3618 # David Tolnay (dtolnay)
 start = "2019-07-14"
 end = "2024-04-25"
 
+[[trusted.iovec]]
+criteria = "safe-to-deploy"
+user-id = 10 # Carl Lerche (carllerche)
+start = "2019-10-09"
+end = "2024-05-05"
+
 [[trusted.itoa]]
 criteria = "safe-to-deploy"
 user-id = 3618 # David Tolnay (dtolnay)
@@ -3462,6 +3473,12 @@ criteria = "safe-to-deploy"
 user-id = 359 # Sean McArthur (seanmonstar)
 start = "2019-09-09"
 end = "2024-04-25"
+
+[[trusted.mio]]
+criteria = "safe-to-deploy"
+user-id = 10 # Carl Lerche (carllerche)
+start = "2019-05-15"
+end = "2024-05-06"
 
 [[trusted.num_cpus]]
 criteria = "safe-to-deploy"
