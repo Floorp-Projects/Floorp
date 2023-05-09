@@ -327,6 +327,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void discardJitCode(JS::GCContext* gcx,
                       const DiscardOptions& options = DiscardOptions());
 
+  // Discard JIT code regardless of isPreservingCode().
+  void forceDiscardJitCode(JS::GCContext* gcx,
+                           const DiscardOptions& options = DiscardOptions());
+
   void resetAllocSitesAndInvalidate(bool resetNurserySites,
                                     bool resetPretenuredSites);
 
