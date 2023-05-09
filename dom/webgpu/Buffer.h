@@ -21,6 +21,7 @@ namespace dom {
 struct GPUBufferDescriptor;
 template <typename T>
 class Optional;
+enum class GPUBufferMapState : uint8_t;
 }  // namespace dom
 
 namespace webgpu {
@@ -58,6 +59,10 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   void Destroy(JSContext* aCx, ErrorResult& aRv);
 
   const RawId mId;
+
+  uint64_t Size() const { return mSize; }
+  uint32_t Usage() const { return mUsage; }
+  dom::GPUBufferMapState MapState() const;
 
  private:
   Buffer(Device* const aParent, RawId aId, BufferAddress aSize, uint32_t aUsage,

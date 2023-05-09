@@ -332,4 +332,17 @@ void Buffer::Destroy(JSContext* aCx, ErrorResult& aRv) {
   // examples
 }
 
+dom::GPUBufferMapState Buffer::MapState() const {
+  // Implementation reference:
+  // <https://gpuweb.github.io/gpuweb/#dom-gpubuffer-mapstate>.
+
+  if (mMapped) {
+    return dom::GPUBufferMapState::Mapped;
+  }
+  if (mMapRequest) {
+    return dom::GPUBufferMapState::Pending;
+  }
+  return dom::GPUBufferMapState::Unmapped;
+}
+
 }  // namespace mozilla::webgpu
