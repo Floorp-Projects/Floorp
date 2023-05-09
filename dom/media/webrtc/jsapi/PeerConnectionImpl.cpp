@@ -21,6 +21,7 @@
 #include "nsNetCID.h"
 #include "nsIIDNService.h"
 #include "nsILoadContext.h"
+#include "nsEffectiveTLDService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIPrefService.h"
@@ -362,9 +363,19 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
     mWindow->AddPeerConnection();
     mActiveOnWindow = true;
 
-    mRtxIsAllowed =
-        !HostnameInPref("media.peerconnection.video.use_rtx.blocklist",
-                        mWindow->GetDocumentURI());
+    if (mWindow->GetDocumentURI()) {
+      mWindow->GetDocumentURI()->GetAsciiHost(mHostname);
+      nsresult rv;
+      nsCOMPtr<nsIEffectiveTLDService> eTLDService(
+          do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv));
+      if (eTLDService) {
+        Unused << eTLDService->GetBaseDomain(mWindow->GetDocumentURI(), 0,
+                                             mEffectiveTLDPlus1);
+      }
+
+      mRtxIsAllowed = !HostnameInPref(
+          "media.peerconnection.video.use_rtx.blocklist", mHostname);
+    }
   }
 
   if (!mUuidGen->Generate(&mHandle)) {
@@ -2168,7 +2179,8 @@ void PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
   mPCObserver->OnPacket(level, type, sending, arrayBuffer, jrv);
 }
 
-bool PeerConnectionImpl::HostnameInPref(const char* aPref, nsIURI* aDocURI) {
+bool PeerConnectionImpl::HostnameInPref(const char* aPref,
+                                        const nsCString& aHostName) {
   auto HostInDomain = [](const nsCString& aHost, const nsCString& aPattern) {
     int32_t patternOffset = 0;
     int32_t hostOffset = 0;
@@ -2190,12 +2202,6 @@ bool PeerConnectionImpl::HostnameInPref(const char* aPref, nsIURI* aDocURI) {
     return hostRoot.EqualsIgnoreCase(aPattern.BeginReading() + patternOffset);
   };
 
-  if (!aDocURI) {
-    return false;
-  }
-
-  nsCString hostName;
-  aDocURI->GetAsciiHost(hostName);  // normalize UTF8 to ASCII equivalent
   nsCString domainList;
   nsresult nr = Preferences::GetCString(aPref, domainList);
 
@@ -2205,7 +2211,7 @@ bool PeerConnectionImpl::HostnameInPref(const char* aPref, nsIURI* aDocURI) {
 
   domainList.StripWhitespace();
 
-  if (domainList.IsEmpty() || hostName.IsEmpty()) {
+  if (domainList.IsEmpty() || aHostName.IsEmpty()) {
     return false;
   }
 
@@ -2221,10 +2227,10 @@ bool PeerConnectionImpl::HostnameInPref(const char* aPref, nsIURI* aDocURI) {
   // after converting from UTF8 to ASCII. Each domain
   // must match exactly or have a single leading '*.' wildcard.
   for (const nsACString& each : domainList.Split(',')) {
-    nsCString domainName;
-    rv = idnService->ConvertUTF8toACE(each, domainName);
+    nsCString domainPattern;
+    rv = idnService->ConvertUTF8toACE(each, domainPattern);
     if (NS_SUCCEEDED(rv)) {
-      if (HostInDomain(hostName, domainName)) {
+      if (HostInDomain(aHostName, domainPattern)) {
         return true;
       }
     } else {
@@ -4223,8 +4229,7 @@ bool PeerConnectionImpl::GetPrefObfuscateHostAddresses() const {
   obfuscate_host_addresses &=
       !MediaManager::Get()->IsActivelyCapturingOrHasAPermission(winId);
   obfuscate_host_addresses &= !PeerConnectionImpl::HostnameInPref(
-      "media.peerconnection.ice.obfuscate_host_addresses.blocklist",
-      mWindow->GetDocumentURI());
+      "media.peerconnection.ice.obfuscate_host_addresses.blocklist", mHostname);
   obfuscate_host_addresses &= XRE_IsContentProcess();
 
   return obfuscate_host_addresses;

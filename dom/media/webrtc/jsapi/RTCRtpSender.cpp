@@ -483,6 +483,10 @@ void RTCRtpSender::WarnAboutBadSetParameters(const nsCString& aError) {
   mPc->SendWarningToConsole(warning);
 }
 
+nsCString RTCRtpSender::GetEffectiveTLDPlus1() const {
+  return mPc->GetEffectiveTLDPlus1();
+}
+
 already_AddRefed<Promise> RTCRtpSender::SetParameters(
     const dom::RTCRtpSendParameters& aParameters, ErrorResult& aError) {
   dom::RTCRtpSendParameters paramsCopy(aParameters);
@@ -520,6 +524,11 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
         mHaveWarnedBecauseNoGetParameters = true;
         mozilla::glean::rtcrtpsender_setparameters::warn_no_getparameters
             .AddToNumerator(1);
+#ifdef EARLY_BETA_OR_EARLIER
+        mozilla::glean::rtcrtpsender_setparameters::blame_no_getparameters
+            .Get(GetEffectiveTLDPlus1())
+            .Add(1);
+#endif
       }
       WarnAboutBadSetParameters(error);
     } else {
@@ -584,6 +593,11 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
       mHaveWarnedBecauseEncodingCountChange = true;
       mozilla::glean::rtcrtpsender_setparameters::warn_length_changed
           .AddToNumerator(1);
+#ifdef EARLY_BETA_OR_EARLIER
+      mozilla::glean::rtcrtpsender_setparameters::blame_length_changed
+          .Get(GetEffectiveTLDPlus1())
+          .Add(1);
+#endif
     }
     WarnAboutBadSetParameters(error);
   } else {
@@ -621,6 +635,11 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
       mHaveWarnedBecauseNoTransactionId = true;
       mozilla::glean::rtcrtpsender_setparameters::warn_no_transactionid
           .AddToNumerator(1);
+#ifdef EARLY_BETA_OR_EARLIER
+      mozilla::glean::rtcrtpsender_setparameters::blame_no_transactionid
+          .Get(GetEffectiveTLDPlus1())
+          .Add(1);
+#endif
     }
     WarnAboutBadSetParameters(error);
   } else if (oldParams->mTransactionId != paramsCopy.mTransactionId) {
@@ -644,6 +663,11 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
       mHaveWarnedBecauseStaleTransactionId = true;
       mozilla::glean::rtcrtpsender_setparameters::warn_stale_transactionid
           .AddToNumerator(1);
+#ifdef EARLY_BETA_OR_EARLIER
+      mozilla::glean::rtcrtpsender_setparameters::blame_stale_transactionid
+          .Get(GetEffectiveTLDPlus1())
+          .Add(1);
+#endif
     }
     WarnAboutBadSetParameters(error);
   }
