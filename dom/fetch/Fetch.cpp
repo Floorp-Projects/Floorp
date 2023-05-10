@@ -1213,7 +1213,7 @@ template FetchBody<Request>::~FetchBody();
 template FetchBody<Response>::~FetchBody();
 
 template <class Derived>
-bool FetchBody<Derived>::GetBodyUsed(ErrorResult& aRv) const {
+bool FetchBody<Derived>::BodyUsed() const {
   if (mBodyUsed) {
     return true;
   }
@@ -1226,24 +1226,9 @@ bool FetchBody<Derived>::GetBodyUsed(ErrorResult& aRv) const {
   return false;
 }
 
-template bool FetchBody<Request>::GetBodyUsed(ErrorResult&) const;
+template bool FetchBody<Request>::BodyUsed() const;
 
-template bool FetchBody<Response>::GetBodyUsed(ErrorResult&) const;
-
-template <class Derived>
-bool FetchBody<Derived>::CheckBodyUsed() const {
-  IgnoredErrorResult result;
-  bool bodyUsed = GetBodyUsed(result);
-  if (result.Failed()) {
-    // Ignore the error.
-    return true;
-  }
-  return bodyUsed;
-}
-
-template bool FetchBody<Request>::CheckBodyUsed() const;
-
-template bool FetchBody<Response>::CheckBodyUsed() const;
+template bool FetchBody<Response>::BodyUsed() const;
 
 template <class Derived>
 void FetchBody<Derived>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv) {
@@ -1307,11 +1292,7 @@ already_AddRefed<Promise> FetchBody<Derived>::ConsumeBody(
     return promise.forget();
   }
 
-  bool bodyUsed = GetBodyUsed(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-  if (bodyUsed) {
+  if (BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return nullptr;
   }
@@ -1491,11 +1472,7 @@ already_AddRefed<ReadableStream> FetchBody<Derived>::GetBody(JSContext* aCx,
   RefPtr<ReadableStream> body(mReadableStreamBody);
 
   // If the body has been already consumed, we lock the stream.
-  bool bodyUsed = GetBodyUsed(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-  if (bodyUsed) {
+  if (BodyUsed()) {
     LockStream(aCx, body, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -1551,7 +1528,7 @@ void FetchBody<Derived>::MaybeTeeReadableStreamBody(
     ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(aStreamReader);
   MOZ_DIAGNOSTIC_ASSERT(aInputStream);
-  MOZ_DIAGNOSTIC_ASSERT(!CheckBodyUsed());
+  MOZ_DIAGNOSTIC_ASSERT(!BodyUsed());
 
   *aBodyOut = nullptr;
   *aStreamReader = nullptr;

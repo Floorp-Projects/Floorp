@@ -378,10 +378,7 @@ already_AddRefed<Response> Response::Constructor(
 }
 
 already_AddRefed<Response> Response::Clone(JSContext* aCx, ErrorResult& aRv) {
-  bool bodyUsed = GetBodyUsed(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
+  bool bodyUsed = BodyUsed();
 
   if (!bodyUsed && mReadableStreamBody) {
     bool locked = mReadableStreamBody->Locked();
@@ -429,7 +426,7 @@ already_AddRefed<Response> Response::Clone(JSContext* aCx, ErrorResult& aRv) {
 
 already_AddRefed<Response> Response::CloneUnfiltered(JSContext* aCx,
                                                      ErrorResult& aRv) {
-  if (GetBodyUsed(aRv)) {
+  if (BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return nullptr;
   }
@@ -469,7 +466,7 @@ already_AddRefed<Response> Response::CloneUnfiltered(JSContext* aCx,
 }
 
 void Response::SetBody(nsIInputStream* aBody, int64_t aBodySize) {
-  MOZ_ASSERT(!CheckBodyUsed());
+  MOZ_ASSERT(!BodyUsed());
   mInternalResponse->SetBody(aBody, aBodySize);
 }
 
