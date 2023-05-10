@@ -41,7 +41,7 @@ object FenixVersions {
     const val androidx_work = "2.7.1"
     const val androidx_datastore = "1.0.0"
     const val androidx_datastore_preferences = "1.0.0"
-    const val google_material = "1.2.1"
+    const val google_material = "1.9.0"
     const val google_accompanist = "0.28.0"
 
     const val adjust = "4.33.0"

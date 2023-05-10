@@ -44,6 +44,7 @@ dependencies {
     implementation ComponentsDependencies.kotlin_coroutines
 
     implementation ComponentsDependencies.androidx_browser
+    implementation ComponentsDependencies.androidx_drawerlayout
     implementation ComponentsDependencies.androidx_lifecycle_runtime
     implementation ComponentsDependencies.androidx_lifecycle_process
 
