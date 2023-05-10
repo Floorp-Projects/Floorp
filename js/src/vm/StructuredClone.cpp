@@ -3300,6 +3300,9 @@ bool JSStructuredCloneReader::readTransferMap() {
       }
       if (!callbacks->readTransfer(cx, this, tag, content, extraData, closure,
                                    &obj)) {
+        if (!cx->isExceptionPending()) {
+          ReportDataCloneError(cx, callbacks, JS_SCERR_TRANSFERABLE, closure);
+        }
         return false;
       }
       MOZ_ASSERT(obj);
