@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["BackgroundPageThumbs"];
-
 const DEFAULT_CAPTURE_TIMEOUT = 30000; // ms
 // For testing, the above timeout is excessive, and makes our tests overlong.
 const TESTING_CAPTURE_TIMEOUT = 5000; // ms
@@ -41,7 +39,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
 });
 
-const BackgroundPageThumbs = {
+export const BackgroundPageThumbs = {
   /**
    * Asynchronously captures a thumbnail of the given URL.
    *

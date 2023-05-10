@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PageThumbs", "PageThumbsStorage"];
-
 const PREF_STORAGE_VERSION = "browser.pagethumbnails.storage_version";
 const LATEST_STORAGE_VERSION = 3;
 
@@ -22,9 +18,8 @@ const MAX_THUMBNAIL_AGE_SECS = 172800; // 2 days == 60*60*24*2 == 172800 secs.
  */
 const THUMBNAIL_DIRECTORY = "thumbnails";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const { BasePromiseWorker } = ChromeUtils.import(
   "resource://gre/modules/PromiseWorker.jsm"
 );
@@ -83,7 +78,7 @@ const TaskUtils = {
  * Singleton providing functionality for capturing web page thumbnails and for
  * accessing them if already cached.
  */
-var PageThumbs = {
+export var PageThumbs = {
   _initialized: false,
 
   /**
@@ -560,7 +555,7 @@ var PageThumbs = {
   },
 };
 
-var PageThumbsStorage = {
+export var PageThumbsStorage = {
   ensurePath: function Storage_ensurePath() {
     // Create the directory (ignore any error if the directory
     // already exists). As all writes are done from the PageThumbsWorker

@@ -7,15 +7,13 @@
  * PageThumbs and BackgroundPageThumbs.
  */
 
-var EXPORTED_SYMBOLS = ["PageThumbUtils"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
 });
 
-var PageThumbUtils = {
+export var PageThumbUtils = {
   // The default thumbnail size for images
   THUMBNAIL_DEFAULT_SIZE: 448,
   // The default background color for page thumbnails.

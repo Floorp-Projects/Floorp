@@ -11,11 +11,11 @@ BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
 
 EXTRA_JS_MODULES += [
-    "BackgroundPageThumbs.jsm",
-    "PageThumbs.jsm",
-    "PageThumbsStorageService.jsm",
+    "BackgroundPageThumbs.sys.mjs",
+    "PageThumbs.sys.mjs",
+    "PageThumbsStorageService.sys.mjs",
     "PageThumbsWorker.js",
-    "PageThumbUtils.jsm",
+    "PageThumbUtils.sys.mjs",
 ]
 
 XPIDL_SOURCES += [

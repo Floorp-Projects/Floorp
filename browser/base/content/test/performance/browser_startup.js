@@ -61,7 +61,7 @@ const startupPhases = {
         "resource:///modules/ContentCrashHandlers.jsm",
         "resource:///modules/ShellService.sys.mjs",
         "resource://gre/modules/NewTabUtils.sys.mjs",
-        "resource://gre/modules/PageThumbs.jsm",
+        "resource://gre/modules/PageThumbs.sys.mjs",
         "resource://gre/modules/PlacesUtils.sys.mjs",
         "resource://gre/modules/Preferences.sys.mjs",
         "resource://gre/modules/SearchService.sys.mjs",
