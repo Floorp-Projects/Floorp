@@ -98,7 +98,7 @@
 # movable
 # =======
 # Defines the movable MIR flag for movable instructions. This is used for knowing
-# whether we can hoist an instruction.
+# if we can hoist an instruction.
 #   - attribute not specified (default): no code generated
 #   - true: adds setMovable call in opcode constructor
 #
@@ -455,7 +455,7 @@
   alias_set: custom
 
 # Load |arguments[index]| from a mapped or unmapped arguments object. Bails out
-# when any elements were overridden or deleted. Also bails out if the index is
+# if any elements were overridden or deleted. Also bails out if the index is
 # out of bounds.
 - name: LoadArgumentsObjectArg
   operands:
@@ -467,7 +467,7 @@
   alias_set: custom
 
 # Load |arguments[index]| from a mapped or unmapped arguments object. Bails out
-# when any elements were overridden or deleted. Returns undefined if the index is
+# if any elements were overridden or deleted. Returns undefined if the index is
 # out of bounds.
 - name: LoadArgumentsObjectArgHole
   operands:
