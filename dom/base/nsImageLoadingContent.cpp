@@ -102,7 +102,6 @@ nsImageLoadingContent::nsImageLoadingContent()
       mOutstandingDecodePromises(0),
       mRequestGeneration(0),
       mLoadingEnabled(true),
-      mIsImageStateForced(false),
       mLoading(false),
       // mBroken starts out true, since an image without a URI is broken....
       mBroken(true),
@@ -1200,12 +1199,6 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
   return NS_OK;
 }
 
-void nsImageLoadingContent::ForceImageState(bool aForce,
-                                            ElementState::InternalType aState) {
-  mIsImageStateForced = aForce;
-  mForcedImageState = ElementState(aState);
-}
-
 already_AddRefed<Promise> nsImageLoadingContent::RecognizeCurrentImageText(
     ErrorResult& aRv) {
   using widget::TextRecognition;
@@ -1354,10 +1347,6 @@ CSSIntSize nsImageLoadingContent::GetWidthHeightForImage() {
 }
 
 ElementState nsImageLoadingContent::ImageState() const {
-  if (mIsImageStateForced) {
-    return mForcedImageState;
-  }
-
   ElementState states;
 
   if (mBroken) {
