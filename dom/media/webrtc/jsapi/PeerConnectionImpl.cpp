@@ -347,7 +347,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       ,
       mPrivateWindow(false),
       mActiveOnWindow(false),
-      mTimestampMaker(mWindow),
+      mTimestampMaker(dom::RTCStatsTimestampMaker::Create(mWindow)),
       mIdGenerator(new RTCStatsIdGenerator()),
       listenPort(0),
       connectPort(0),
@@ -1689,7 +1689,7 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP) {
 
   mozilla::dom::RTCSdpHistoryEntryInternal sdpEntry;
   sdpEntry.mIsLocal = true;
-  sdpEntry.mTimestamp = mTimestampMaker.GetNow();
+  sdpEntry.mTimestamp = mTimestampMaker.GetNow().ToDom();
   sdpEntry.mSdp = NS_ConvertASCIItoUTF16(aSDP);
   auto appendHistory = [&]() {
     if (!mSdpHistory.AppendElement(sdpEntry, fallible)) {
@@ -1795,7 +1795,7 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
 
   mozilla::dom::RTCSdpHistoryEntryInternal sdpEntry;
   sdpEntry.mIsLocal = false;
-  sdpEntry.mTimestamp = mTimestampMaker.GetNow();
+  sdpEntry.mTimestamp = mTimestampMaker.GetNow().ToDom();
   sdpEntry.mSdp = NS_ConvertASCIItoUTF16(aSDP);
   auto appendHistory = [&]() {
     if (!mSdpHistory.AppendElement(sdpEntry, fallible)) {
@@ -3631,7 +3631,7 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
   }
 
   nsTArray<RefPtr<dom::RTCStatsPromise>> promises;
-  DOMHighResTimeStamp now = mTimestampMaker.GetNow();
+  DOMHighResTimeStamp now = mTimestampMaker.GetNow().ToDom();
 
   nsTArray<dom::RTCCodecStats> codecStats = GetCodecStats(now);
   std::set<std::string> transportIds;

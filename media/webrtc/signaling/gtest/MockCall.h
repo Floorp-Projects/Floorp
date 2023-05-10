@@ -358,7 +358,7 @@ class MockCallWrapper : public mozilla::WebrtcCallWrapper {
         nullptr, nullptr);
     auto wrapper = mozilla::MakeRefPtr<MockCallWrapper>(
         state, nullptr, nullptr, nullptr,
-        mozilla::dom::RTCStatsTimestampMaker(), nullptr);
+        mozilla::dom::RTCStatsTimestampMaker::Create(), nullptr);
     wrapper->SetCall(mozilla::WrapUnique(new MockCall(wrapper)));
     return wrapper;
   }

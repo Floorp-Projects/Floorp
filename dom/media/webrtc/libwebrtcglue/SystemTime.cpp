@@ -15,13 +15,13 @@ RTCStatsTimestampMakerRealtimeClock::RTCStatsTimestampMakerRealtimeClock(
     : mTimestampMaker(aTimestampMaker) {}
 
 webrtc::Timestamp RTCStatsTimestampMakerRealtimeClock::CurrentTime() {
-  return mTimestampMaker.GetNowRealtime();
+  return mTimestampMaker.GetNow().ToRealtime();
 }
 
 webrtc::NtpTime RTCStatsTimestampMakerRealtimeClock::ConvertTimestampToNtpTime(
     webrtc::Timestamp aRealtime) {
-  return CreateNtp(mTimestampMaker.ConvertRealtimeTo1Jan1970(aRealtime) +
-                   webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970));
+  return CreateNtp(
+      dom::RTCStatsTimestamp::FromRealtime(mTimestampMaker, aRealtime).ToNtp());
 }
 
 TimeStamp WebrtcSystemTimeBase() {

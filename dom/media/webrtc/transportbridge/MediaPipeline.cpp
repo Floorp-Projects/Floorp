@@ -357,7 +357,7 @@ void MediaPipeline::GetContributingSourceStats(
   ASSERT_ON_THREAD(mStsThread);
   // Get the expiry from now
   DOMHighResTimeStamp expiry =
-      RtpCSRCStats::GetExpiryFromTime(GetTimestampMaker().GetNow());
+      RtpCSRCStats::GetExpiryFromTime(GetTimestampMaker().GetNow().ToDom());
   for (auto info : mCsrcStats) {
     if (!info.second.Expired(expiry)) {
       RTCRTPContributingSourceStats stats;
@@ -545,16 +545,15 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
     return;
   }
 
-  webrtc::Timestamp now = GetTimestampMaker().GetNowRealtime();
-  DOMHighResTimeStamp jsNow = GetTimestampMaker().ReduceRealtimePrecision(now);
-  parsedPacket.set_arrival_time(now);
+  auto now = GetTimestampMaker().GetNow();
+  parsedPacket.set_arrival_time(now.ToRealtime());
   if (IsVideo()) {
     parsedPacket.set_payload_type_frequency(webrtc::kVideoPayloadTypeFrequency);
   }
 
   // Remove expired RtpCSRCStats
   if (!mCsrcStats.empty()) {
-    auto expiry = RtpCSRCStats::GetExpiryFromTime(jsNow);
+    auto expiry = RtpCSRCStats::GetExpiryFromTime(now.ToDom());
     for (auto p = mCsrcStats.begin(); p != mCsrcStats.end();) {
       if (p->second.Expired(expiry)) {
         p = mCsrcStats.erase(p);
@@ -571,9 +570,9 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
       if (csrcInfo == mCsrcStats.end()) {
         mCsrcStats.insert(
             std::make_pair(header.arrOfCSRCs[i],
-                           RtpCSRCStats(header.arrOfCSRCs[i], jsNow)));
+                           RtpCSRCStats(header.arrOfCSRCs[i], now.ToDom())));
       } else {
-        csrcInfo->second.SetTimestamp(jsNow);
+        csrcInfo->second.SetTimestamp(now.ToDom());
       }
     }
   }
