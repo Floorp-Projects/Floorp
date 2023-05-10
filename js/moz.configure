@@ -941,7 +941,7 @@ def wasm_moz_intgemm(value, target, no_experimental):
     if no_experimental:
         return
 
-    if value and target.cpu in ("x86", "x86_64"):
+    if value and target.cpu in ("x86", "x86_64", "aarch64"):
         return True
 
 

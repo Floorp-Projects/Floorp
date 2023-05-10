@@ -27,6 +27,8 @@
 #  define SUPPORTED_ARCHS xsimd::arch_list<xsimd::ssse3, xsimd::sse2>
 #elif defined(USE_SSE2)
 #  define SUPPORTED_ARCHS xsimd::arch_list<xsimd::sse2>
+#elif defined(USE_NEON) and defined(XSIMD_WITH_NEON64)
+#  define SUPPORTED_ARCHS xsimd::arch_list<xsimd::neon64>
 #else
 #  error no supported architecture
 #endif
