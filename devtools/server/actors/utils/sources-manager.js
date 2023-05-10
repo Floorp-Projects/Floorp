@@ -259,15 +259,9 @@ class SourcesManager extends EventEmitter {
    *        boxed or not.
    */
   isBlackBoxed(url, line, column) {
-    if (!this.blackBoxedSources.has(url)) {
-      return false;
-    }
-
     const ranges = this.blackBoxedSources.get(url);
-
-    // If we have an entry in the map, but it is falsy, the source is fully blackboxed.
     if (!ranges) {
-      return true;
+      return this.blackBoxedSources.has(url);
     }
 
     const range = ranges.find(r => isLocationInRange({ line, column }, r));

@@ -42,7 +42,6 @@ class TracerActor extends Actor {
   constructor(conn, targetActor) {
     super(conn, tracerSpec);
     this.targetActor = targetActor;
-    this.sourcesManager = this.targetActor.sourcesManager;
 
     // Flag used by CONSOLE_MESSAGE resources
     this.isChromeContext = /conn\d+\.parentProcessTarget\d+/.test(
@@ -128,19 +127,13 @@ class TracerActor extends Actor {
    *         Return true, if the JavaScriptTracer should log the frame to stdout.
    */
   onTracingFrame({ frame, depth, formatedDisplayName, prefix }) {
-    const { script } = frame;
-    const { lineNumber, columnNumber } = script.getOffsetMetadata(frame.offset);
-    const url = script.source.url;
-
-    // Ignore blackboxed sources
-    if (this.sourcesManager.isBlackBoxed(url, lineNumber, columnNumber)) {
-      return false;
-    }
-
     if (this.logMethod == LOG_METHODS.STDOUT) {
       // By returning true, we let JavaScriptTracer class log the message to stdout.
       return true;
     }
+
+    const { script } = frame;
+    const { lineNumber, columnNumber } = script.getOffsetMetadata(frame.offset);
 
     const args = [
       prefix + "—".repeat(depth + 1),
@@ -151,7 +144,7 @@ class TracerActor extends Actor {
 
     // Create a message object that fits Console Message Watcher expectations
     this.throttledConsoleMessages.push({
-      filename: url,
+      filename: script.source.url,
       lineNumber,
       columnNumber,
       arguments: args,
