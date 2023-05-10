@@ -1414,7 +1414,9 @@ export class LoginManagerParent extends JSWindowActorParent {
         existingLogin.password = formLogin.password;
       } else if (!autoSavedLogin) {
         lazy.log("Auto-saving new login with empty username.");
-        existingLogin = Services.logins.addLogin(formLoginWithoutUsername);
+        existingLogin = await Services.logins.addLoginAsync(
+          formLoginWithoutUsername
+        );
         // Remember the GUID where we saved the generated password so we can update
         // the login if the user later edits the generated password.
         generatedPW.storageGUID = existingLogin.guid;
