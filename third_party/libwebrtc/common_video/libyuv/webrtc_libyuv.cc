@@ -22,7 +22,6 @@ namespace webrtc {
 size_t CalcBufferSize(VideoType type, int width, int height) {
   RTC_DCHECK_GE(width, 0);
   RTC_DCHECK_GE(height, 0);
-  size_t buffer_size = 0;
   switch (type) {
     case VideoType::kI420:
     case VideoType::kNV21:
@@ -31,28 +30,24 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
     case VideoType::kNV12: {
       int half_width = (width + 1) >> 1;
       int half_height = (height + 1) >> 1;
-      buffer_size = width * height + half_width * half_height * 2;
-      break;
+      return width * height + half_width * half_height * 2;
     }
     case VideoType::kARGB4444:
     case VideoType::kRGB565:
     case VideoType::kARGB1555:
     case VideoType::kYUY2:
     case VideoType::kUYVY:
-      buffer_size = width * height * 2;
-      break;
+      return width * height * 2;
     case VideoType::kRGB24:
-      buffer_size = width * height * 3;
-      break;
+      return width * height * 3;
     case VideoType::kBGRA:
     case VideoType::kARGB:
-      buffer_size = width * height * 4;
-      break;
-    default:
-      RTC_DCHECK_NOTREACHED();
-      break;
+      return width * height * 4;
+    case VideoType::kMJPEG:
+    case VideoType::kUnknown:
   }
-  return buffer_size;
+  RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << type;
+  return 0;
 }
 
 int ExtractBuffer(const rtc::scoped_refptr<I420BufferInterface>& input_frame,
@@ -120,7 +115,7 @@ int ConvertVideoType(VideoType video_type) {
     case VideoType::kNV12:
       return libyuv::FOURCC_NV12;
   }
-  RTC_DCHECK_NOTREACHED();
+  RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << video_type;
   return libyuv::FOURCC_ANY;
 }
 
