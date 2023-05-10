@@ -640,6 +640,10 @@ package org.mozilla.geckoview {
     method @UiThread public void surfaceDestroyed();
   }
 
+  public static interface GeckoDisplay.NewSurfaceProvider {
+    method @UiThread public void requestNewSurface();
+  }
+
   public static final class GeckoDisplay.ScreenshotBuilder {
     method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder aspectPreservingSize(int);
     method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder bitmap(@Nullable Bitmap);
@@ -656,6 +660,7 @@ package org.mozilla.geckoview {
   public static class GeckoDisplay.SurfaceInfo.Builder {
     ctor public Builder(@NonNull Surface);
     method @NonNull @UiThread public GeckoDisplay.SurfaceInfo build();
+    method @NonNull @UiThread public GeckoDisplay.SurfaceInfo.Builder newSurfaceProvider(@Nullable GeckoDisplay.NewSurfaceProvider);
     method @NonNull @UiThread public GeckoDisplay.SurfaceInfo.Builder offset(int, int);
     method @NonNull @UiThread public GeckoDisplay.SurfaceInfo.Builder size(int, int);
     method @NonNull @UiThread public GeckoDisplay.SurfaceInfo.Builder surfaceControl(@Nullable SurfaceControl);
@@ -1655,7 +1660,7 @@ package org.mozilla.geckoview {
     method @AnyThread public static synchronized void setExternalContext(long);
   }
 
-  @UiThread public class GeckoView extends FrameLayout {
+  @UiThread public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfaceProvider {
     ctor public GeckoView(Context);
     ctor public GeckoView(Context, AttributeSet);
     method @NonNull @UiThread public GeckoResult<Bitmap> capturePixels();
