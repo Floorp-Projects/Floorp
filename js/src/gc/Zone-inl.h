@@ -11,21 +11,6 @@
 
 #include "vm/Runtime.h"
 
-static inline js::HashNumber UniqueIdToHash(uint64_t uid) {
-  return mozilla::HashGeneric(uid);
-}
-
-inline bool JS::Zone::maybeGetHashCode(js::gc::Cell* cell,
-                                       js::HashNumber* hashOut) {
-  uint64_t uid;
-  if (!maybeGetUniqueId(cell, &uid)) {
-    return false;
-  }
-
-  *hashOut = UniqueIdToHash(uid);
-  return true;
-}
-
 inline bool JS::Zone::maybeGetUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
   MOZ_ASSERT(uidp);
   MOZ_ASSERT(js::CurrentThreadCanAccessZone(this) ||
@@ -52,17 +37,6 @@ inline bool JS::Zone::maybeGetUniqueId(js::gc::Cell* cell, uint64_t* uidp) {
 
   *uidp = p->value();
 
-  return true;
-}
-
-inline bool JS::Zone::getOrCreateHashCode(js::gc::Cell* cell,
-                                          js::HashNumber* hashOut) {
-  uint64_t uid;
-  if (!getOrCreateUniqueId(cell, &uid)) {
-    return false;
-  }
-
-  *hashOut = UniqueIdToHash(uid);
   return true;
 }
 
@@ -134,10 +108,6 @@ inline bool JS::Zone::setOrUpdateUniqueId(JSContext* cx, js::gc::Cell* cell,
   }
 
   return uniqueIds().put(cell, uid);
-}
-
-inline js::HashNumber JS::Zone::getHashCodeInfallible(js::gc::Cell* cell) {
-  return UniqueIdToHash(getUniqueIdInfallible(cell));
 }
 
 inline uint64_t JS::Zone::getUniqueIdInfallible(js::gc::Cell* cell) {
