@@ -160,40 +160,9 @@ nsresult TextEditor::InsertDroppedDataTransferAsAction(
   return rv;
 }
 
-nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
-                                   DispatchPasteEvent aDispatchPasteEvent,
-                                   nsIPrincipal* aPrincipal) {
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
-                                          aPrincipal);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (aDispatchPasteEvent == DispatchPasteEvent::Yes) {
-    Result<ClipboardEventResult, nsresult> ret =
-        DispatchClipboardEventAndUpdateClipboard(ePaste, aClipboardType);
-    if (MOZ_UNLIKELY(ret.isErr())) {
-      NS_WARNING(
-          "EditorBase::DispatchClipboardEventAndUpdateClipboard(ePaste) "
-          "failed");
-      return EditorBase::ToGenericNSResult(ret.unwrapErr());
-    }
-    switch (ret.inspect()) {
-      case ClipboardEventResult::DoDefault:
-        break;
-      case ClipboardEventResult::DefaultPreventedOfPaste:
-      case ClipboardEventResult::IgnoredOrError:
-        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-      case ClipboardEventResult::CopyOrCutHandled:
-        MOZ_ASSERT_UNREACHABLE("Invalid result for ePaste");
-    }
-  } else {
-    // The caller must already have dispatched a "paste" event.
-    editActionData.NotifyOfDispatchingClipboardEvent();
-  }
-
-  if (!GetDocument()) {
-    NS_WARNING("The editor didn't have document, but ignored");
+nsresult TextEditor::HandlePaste(AutoEditActionDataSetter& aEditActionData,
+                                 int32_t aClipboardType) {
+  if (NS_WARN_IF(!GetDocument())) {
     return NS_OK;
   }
 
@@ -214,7 +183,7 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
       EditorUtils::CreateTransferableForPlainText(*GetDocument());
   if (maybeTransferable.isErr()) {
     NS_WARNING("EditorUtils::CreateTransferableForPlainText() failed");
-    return EditorBase::ToGenericNSResult(maybeTransferable.unwrapErr());
+    return maybeTransferable.unwrapErr();
   }
   nsCOMPtr<nsITransferable> transferable(maybeTransferable.unwrap());
   if (NS_WARN_IF(!transferable)) {
@@ -236,7 +205,7 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
   rv = InsertTextFromTransferable(transferable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "TextEditor::InsertTextFromTransferable() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  return rv;
 }
 
 nsresult TextEditor::PasteTransferableAsAction(nsITransferable* aTransferable,

@@ -124,14 +124,6 @@ class TextEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndOfDocument() final;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() final;
   NS_IMETHOD GetTextLength(uint32_t* aCount) final;
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
-    const nsresult rv =
-        TextEditor::PasteAsAction(aClipboardType, DispatchPasteEvent::Yes);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "HTMLEditor::PasteAsAction(DispatchPasteEvent::Yes) failed");
-    return rv;
-  }
 
   // Shouldn't be used internally, but we need these using declarations for
   // avoiding warnings of clang.
@@ -153,16 +145,6 @@ class TextEditor final : public EditorBase,
   HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) final;
 
   dom::EventTarget* GetDOMEventTarget() const final;
-
-  MOZ_CAN_RUN_SCRIPT nsresult
-  PasteAsAction(int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
-                nsIPrincipal* aPrincipal = nullptr) final;
-
-  // FIXME: Even if called with DispatchPasteEvent::Yes, this method does not
-  //        dispatch ePaste event.
-  MOZ_CAN_RUN_SCRIPT nsresult PasteAsQuotationAsAction(
-      int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
-      nsIPrincipal* aPrincipal = nullptr) final;
 
   MOZ_CAN_RUN_SCRIPT nsresult
   OnFocus(const nsINode& aOriginalEventTargetNode) final;
@@ -567,6 +549,11 @@ class TextEditor final : public EditorBase,
    * Make the given selection span the entire document.
    */
   MOZ_CAN_RUN_SCRIPT nsresult SelectEntireDocument() final;
+
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePaste(
+      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePasteAsQuotation(
+      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) final;

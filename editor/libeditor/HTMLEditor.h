@@ -233,19 +233,6 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult GetBackgroundColorState(bool* aMixed,
                                                       nsAString& aOutColor);
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
-    const nsresult rv =
-        HTMLEditor::PasteAsAction(aClipboardType, DispatchPasteEvent::Yes);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "HTMLEditor::PasteAsAction(DispatchPasteEvent::Yes) failed");
-    return rv;
-  }
-
-  MOZ_CAN_RUN_SCRIPT nsresult
-  PasteAsAction(int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
-                nsIPrincipal* aPrincipal = nullptr) final;
-
   /**
    * PasteNoFormattingAsAction() pastes content in clipboard without any style
    * information.
@@ -258,10 +245,6 @@ class HTMLEditor final : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT nsresult PasteNoFormattingAsAction(
       int32_t aSelectionType, nsIPrincipal* aPrincipal = nullptr);
-
-  MOZ_CAN_RUN_SCRIPT nsresult PasteAsQuotationAsAction(
-      int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
-      nsIPrincipal* aPrincipal = nullptr) final;
 
   bool CanPasteTransferable(nsITransferable* aTransferable) final;
 
@@ -3105,6 +3088,11 @@ class HTMLEditor final : public EditorBase,
    * element is not in <table> or <tr> element, this returns nullptr.
    */
   Result<RefPtr<Element>, nsresult> GetFirstSelectedCellElementInTable() const;
+
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePaste(
+      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePasteAsQuotation(
+      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
 
   /**
    * PasteInternal() pasts text with replacing selected content.

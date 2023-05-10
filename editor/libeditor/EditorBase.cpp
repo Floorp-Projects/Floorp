@@ -1767,7 +1767,97 @@ bool EditorBase::IsCopyCommandEnabled() const {
 }
 
 NS_IMETHODIMP EditorBase::Paste(int32_t aClipboardType) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  const nsresult rv = PasteAsAction(aClipboardType, DispatchPasteEvent::Yes);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::PasteAsAction(DispatchPasteEvent::Yes) failed");
+  return rv;
+}
+
+nsresult EditorBase::PasteAsAction(int32_t aClipboardType,
+                                   DispatchPasteEvent aDispatchPasteEvent,
+                                   nsIPrincipal* aPrincipal /* = nullptr */) {
+  if (IsHTMLEditor() && IsReadonly()) {
+    return NS_OK;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
+                                          aPrincipal);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  if (aDispatchPasteEvent == DispatchPasteEvent::Yes) {
+    Result<ClipboardEventResult, nsresult> ret =
+        DispatchClipboardEventAndUpdateClipboard(ePaste, aClipboardType);
+    if (MOZ_UNLIKELY(ret.isErr())) {
+      NS_WARNING(
+          "EditorBase::DispatchClipboardEventAndUpdateClipboard(ePaste) "
+          "failed");
+      return EditorBase::ToGenericNSResult(ret.unwrapErr());
+    }
+    switch (ret.inspect()) {
+      case ClipboardEventResult::DoDefault:
+        break;
+      case ClipboardEventResult::DefaultPreventedOfPaste:
+      case ClipboardEventResult::IgnoredOrError:
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      case ClipboardEventResult::CopyOrCutHandled:
+        MOZ_ASSERT_UNREACHABLE("Invalid result for ePaste");
+    }
+  } else {
+    // The caller must already have dispatched a "paste" event.
+    editActionData.NotifyOfDispatchingClipboardEvent();
+  }
+
+  nsresult rv = HandlePaste(editActionData, aClipboardType);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::HandlePaste() failed");
+  return EditorBase::ToGenericNSResult(rv);
+}
+
+nsresult EditorBase::PasteAsQuotationAsAction(
+    int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
+    nsIPrincipal* aPrincipal /* = nullptr */) {
+  MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
+             aClipboardType == nsIClipboard::kSelectionClipboard);
+
+  if (IsHTMLEditor() && IsReadonly()) {
+    return NS_OK;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePasteAsQuotation,
+                                          aPrincipal);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  if (aDispatchPasteEvent == DispatchPasteEvent::Yes) {
+    Result<ClipboardEventResult, nsresult> ret =
+        DispatchClipboardEventAndUpdateClipboard(ePaste, aClipboardType);
+    if (MOZ_UNLIKELY(ret.isErr())) {
+      NS_WARNING(
+          "EditorBase::DispatchClipboardEventAndUpdateClipboard(ePaste) "
+          "failed");
+      return EditorBase::ToGenericNSResult(ret.unwrapErr());
+    }
+    switch (ret.inspect()) {
+      case ClipboardEventResult::DoDefault:
+        break;
+      case ClipboardEventResult::DefaultPreventedOfPaste:
+      case ClipboardEventResult::IgnoredOrError:
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      case ClipboardEventResult::CopyOrCutHandled:
+        MOZ_ASSERT_UNREACHABLE("Invalid result for ePaste");
+    }
+  } else {
+    // The caller must already have dispatched a "paste" event.
+    editActionData.NotifyOfDispatchingClipboardEvent();
+  }
+
+  nsresult rv = HandlePasteAsQuotation(editActionData, aClipboardType);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::HandlePasteAsQuotation() failed");
+  return EditorBase::ToGenericNSResult(rv);
 }
 
 nsresult EditorBase::PrepareToInsertContent(
