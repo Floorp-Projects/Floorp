@@ -469,3 +469,71 @@
 .urlbarView-row[dynamicType=weather][selected] > .urlbarView-row-inner > .urlbarView-dynamic-weather-summary > .urlbarView-dynamic-weather-bottom {
   opacity: 1;
 }
+
+/* Addons suggestions */
+.urlbarView-dynamic-addons-content {
+  display: grid;
+  grid-template-areas: "icon header"
+                       "icon description"
+                       "icon footer";
+  align-items: center;
+  padding: 5px 4px;
+}
+
+.urlbarView-dynamic-addons-icon {
+  grid-area: icon;
+  width: 60px;
+  height: 60px;
+  margin-inline-end: 8px;
+}
+
+.urlbarView-dynamic-addons-header {
+  grid-area: header;
+}
+
+.urlbarView-dynamic-addons-description {
+  grid-area: description;
+  font-size: 0.85em;
+  color: var(--panel-description-color);
+  margin-block: 2px 9px;
+}
+
+.urlbarView-dynamic-addons-footer {
+  grid-area: footer;
+  display: flex;
+  align-items: center;
+}
+
+.urlbarView-dynamic-addons-ratingContainer {
+  width: calc(16px * 5);
+  height: 16px;
+  margin-inline-end: 9px;
+}
+
+.urlbarView-dynamic-addons-rating {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  fill: currentColor;
+  -moz-context-properties: fill;
+}
+
+.urlbarView-dynamic-addons-rating[fill="empty"] {
+  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#empty");
+}
+.urlbarView-dynamic-addons-rating[fill="half"] {
+  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#half");
+}
+.urlbarView-dynamic-addons-rating[fill="half"]:dir(rtl) {
+  transform: scaleX(-1);
+}
+.urlbarView-dynamic-addons-rating[fill="full"] {
+  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#full");
+}
+
+.urlbarView-dynamic-addons-reviews {
+  font-size: 0.85em;
+  color: var(--panel-description-color);
+}

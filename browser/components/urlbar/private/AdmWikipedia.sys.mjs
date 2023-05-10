@@ -116,6 +116,15 @@ export class AdmWikipedia extends BaseFeature {
   }
 
   makeResult(queryContext, suggestion, searchString) {
+    if (
+      (suggestion.is_sponsored &&
+        !lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")) ||
+      (!suggestion.is_sponsored &&
+        !lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))
+    ) {
+      return null;
+    }
+
     // Replace the suggestion's template substrings, but first save the original
     // URL before its timestamp template is replaced.
     let originalUrl = suggestion.url;
