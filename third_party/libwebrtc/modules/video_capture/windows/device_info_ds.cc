@@ -505,9 +505,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
       }
 
       if (hrVC == S_OK) {
-        LONGLONG* frameDurationList;
-        LONGLONG maxFPS;
-        long listSize;
+        LONGLONG* frameDurationList = NULL;
+        LONGLONG maxFPS = 0;
+        long listSize = 0;
         SIZE size;
         size.cx = capability.width;
         size.cy = capability.height;
@@ -520,9 +520,10 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
         hrVC = videoControlConfig->GetFrameRateList(
             outputCapturePin, tmp, size, &listSize, &frameDurationList);
 
-        // On some odd cameras, you may get a 0 for duration.
-        // GetMaxOfFrameArray returns the lowest duration (highest FPS)
-        if (hrVC == S_OK && listSize > 0 &&
+        // On some odd cameras, you may get a 0 for duration. Some others may
+        // not update the out vars. GetMaxOfFrameArray returns the lowest
+        // duration (highest FPS), or 0 if there was no list with elements.
+        if (hrVC == S_OK &&
             0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
           capability.maxFPS = static_cast<int>(10000000 / maxFPS);
           capability.supportFrameRateControl = true;
