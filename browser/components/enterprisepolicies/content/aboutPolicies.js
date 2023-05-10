@@ -293,6 +293,7 @@ function generateDocumentation() {
     Permissions: "Permissions2",
     BackgroundAppUpdate: "BackgroundAppUpdate2",
     WindowsSSO: "Windows10SSO",
+    SecurityDevices: "SecurityDevices2",
   };
 
   for (let policyName in schema.properties) {
