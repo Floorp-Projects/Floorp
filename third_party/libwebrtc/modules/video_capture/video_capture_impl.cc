@@ -136,11 +136,17 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
   TRACE_EVENT1("webrtc", "VC::IncomingFrame", "capture_time", captureTime);
 
   // Not encoded, convert to I420.
-  if (frameInfo.videoType != VideoType::kMJPEG &&
-      CalcBufferSize(frameInfo.videoType, width, abs(height)) !=
-          videoFrameLength) {
-    RTC_LOG(LS_ERROR) << "Wrong incoming frame length.";
-    return -1;
+  if (frameInfo.videoType != VideoType::kMJPEG) {
+    // Allow buffers larger than expected. On linux gstreamer allocates buffers
+    // page-aligned and v4l2loopback passes us the buffer size verbatim which
+    // for most cases is larger than expected.
+    // See https://github.com/umlaeute/v4l2loopback/issues/190.
+    if (auto size = CalcBufferSize(frameInfo.videoType, width, abs(height));
+        videoFrameLength < size) {
+      RTC_LOG(LS_ERROR) << "Wrong incoming frame length. Expected " << size
+                        << ", Got " << videoFrameLength << ".";
+      return -1;
+    }
   }
 
   int target_width = width;
