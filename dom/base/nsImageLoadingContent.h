@@ -65,9 +65,9 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   NS_DECL_NSIIMAGELOADINGCONTENT
 
   // Web IDL binding methods.
-  // Note that the XPCOM SetLoadingEnabled, ForceImageState methods are OK for
-  // Web IDL bindings to use as well, since none of them throw when called via
-  // the Web IDL bindings.
+  // Note that the XPCOM SetLoadingEnabled method is OK for Web IDL bindings
+  // to use as well, since it does not throw when called via the Web IDL
+  // bindings.
 
   bool LoadingEnabled() const { return mLoadingEnabled; }
   void AddObserver(imgINotificationObserver* aObserver);
@@ -91,14 +91,6 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    * we may reject any promises which require the document to be active.
    */
   void NotifyOwnerDocumentActivityChanged();
-
-  /**
-   * Enables/disables image state forcing. When |aForce| is true, we force
-   * nsImageLoadingContent::ImageState() to return |aState|. Call again with
-   * |aForce| as false to revert ImageState() to its original behaviour.
-   */
-  void ForceImageState(bool aForce,
-                       mozilla::dom::ElementState::InternalType aState);
 
   // Trigger text recognition for the current image request.
   already_AddRefed<mozilla::dom::Promise> RecognizeCurrentImageText(
@@ -541,12 +533,6 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    */
   nsTArray<RefPtr<mozilla::dom::Promise>> mDecodePromises;
 
-  /**
-   * When mIsImageStateForced is true, this holds the ImageState that we'll
-   * return in ImageState().
-   */
-  mozilla::dom::ElementState mForcedImageState;
-
   mozilla::TimeStamp mMostRecentRequestChange;
 
   /**
@@ -567,11 +553,6 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   uint32_t mRequestGeneration;
 
   bool mLoadingEnabled : 1;
-
-  /**
-   * When true, we return mForcedImageState from ImageState().
-   */
-  bool mIsImageStateForced : 1;
 
   /**
    * The state we had the last time we checked whether we needed to notify the
