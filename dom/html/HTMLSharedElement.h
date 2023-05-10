@@ -28,13 +28,13 @@ class HTMLSharedElement final : public nsGenericHTMLElement {
   }
 
   // nsIContent
-  virtual void DoneAddingChildren(bool aHaveNotified) override;
+  void DoneAddingChildren(bool aHaveNotified) override;
 
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(bool aNullParent = true) override;
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL API
   // HTMLParamElement
@@ -119,14 +119,11 @@ class HTMLSharedElement final : public nsGenericHTMLElement {
  protected:
   virtual ~HTMLSharedElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                            const nsAttrValue* aValue,
-                            const nsAttrValue* aOldValue,
-                            nsIPrincipal* aSubjectPrincipal,
-                            bool aNotify) override;
+  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 };
 
 }  // namespace mozilla::dom
