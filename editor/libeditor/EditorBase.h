@@ -762,12 +762,15 @@ class EditorBase : public nsIEditor,
    * Paste aTransferable at Selection.
    *
    * @param aTransferable       Must not be nullptr.
+   * @param aDispatchPasteEvent Yes if this should dispatch ePaste event
+   *                            before pasting.  Otherwise, No.
    * @param aPrincipal          Set subject principal if it may be called by
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
   MOZ_CAN_RUN_SCRIPT nsresult PasteTransferableAsAction(
-      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr);
+      nsITransferable* aTransferable, DispatchPasteEvent aDispatchPasteEvent,
+      nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * PasteAsQuotationAsAction() pastes content in clipboard as quotation.
