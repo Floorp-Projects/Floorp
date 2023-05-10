@@ -707,27 +707,25 @@ function runInParent(aFunctionOrURL) {
  * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
  *                          that would be passed to nsLoginInfo.init().
  */
-function addLoginsInParent(...aLogins) {
+async function addLoginsInParent(...aLogins) {
   let script = runInParent(function addLoginsInParentInner() {
     /* eslint-env mozilla/chrome-script */
-    addMessageListener("addLogins", logins => {
+    addMessageListener("addLogins", async logins => {
       let nsLoginInfo = Components.Constructor(
         "@mozilla.org/login-manager/loginInfo;1",
         Ci.nsILoginInfo,
         "init"
       );
 
-      for (let login of logins) {
-        let loginInfo = new nsLoginInfo(...login);
-        try {
-          Services.logins.addLogin(loginInfo);
-        } catch (e) {
-          assert.ok(false, "addLogin threw: " + e);
-        }
+      const loginInfos = logins.map(login => new nsLoginInfo(...login));
+      try {
+        await Services.logins.addLogins(loginInfos);
+      } catch (e) {
+        assert.ok(false, "addLogins threw: " + e);
       }
     });
   });
-  script.sendQuery("addLogins", aLogins);
+  await script.sendQuery("addLogins", aLogins);
   return script;
 }
 

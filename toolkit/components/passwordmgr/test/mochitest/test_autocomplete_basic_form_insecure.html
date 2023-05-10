@@ -12,9 +12,9 @@
 <body>
 
 <script>
-var chromeScript = runChecksAfterCommonInit();
+const chromeScript = runChecksAfterCommonInit();
 
-var setupScript = runInParent(function setup() {
+const setupScript = runInParent(async function setup() {
   // Create some logins just for this form, since we'll be deleting them.
   var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                            Ci.nsILoginInfo, "init");
@@ -62,23 +62,21 @@ var setupScript = runInParent(function setup() {
 
 
   // try/catch in case someone runs the tests manually, twice.
-  try {
-    Services.logins.addLogin(logins.login0);
-    Services.logins.addLogin(logins.login1);
-    Services.logins.addLogin(logins.login2);
-    Services.logins.addLogin(logins.login3);
-    Services.logins.addLogin(logins.login4);
-  } catch (e) {
-    assert.ok(false, "addLogin threw: " + e);
-  }
+  await Services.logins.addLogins([
+    logins.login0,
+    logins.login1,
+    logins.login2,
+    logins.login3,
+    logins.login4,
+  ]);
 
   addMessageListener("addLogin", loginVariableName => {
-    let login = logins[loginVariableName];
+    const login = logins[loginVariableName];
     assert.ok(!!login, "Login to add is defined: " + loginVariableName);
     Services.logins.addLogin(login);
   });
   addMessageListener("removeLogin", loginVariableName => {
-    let login = logins[loginVariableName];
+    const login = logins[loginVariableName];
     assert.ok(!!login, "Login to delete is defined: " + loginVariableName);
     Services.logins.removeLogin(login);
   });

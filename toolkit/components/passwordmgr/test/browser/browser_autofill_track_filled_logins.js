@@ -31,7 +31,7 @@ add_task(async function test() {
       "form-basic-username",
       "form-basic-password"
     );
-    login = Services.logins.addLogin(login);
+    login = await Services.logins.addLoginAsync(login);
     Assert.equal(
       login.timesUsed,
       1,

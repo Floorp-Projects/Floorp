@@ -30,7 +30,7 @@ add_setup(async function() {
     username: "username",
     password: "password",
   });
-  Services.logins.addLogin(login);
+  await Services.logins.addLoginAsync(login);
   LoginTestUtils.primaryPassword.enable();
 
   registerCleanupFunction(function() {
@@ -82,10 +82,10 @@ add_task(async function test_mpAutocompleteUIBusy() {
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
-  Services.tm.dispatchToMainThread(() => {
+  Services.tm.dispatchToMainThread(async () => {
     try {
       // Trigger a MP prompt in the new window by saving a login
-      Services.logins.addLogin(LoginTestUtils.testData.formLogin());
+      await Services.logins.addLoginAsync(LoginTestUtils.testData.formLogin());
     } catch (e) {
       // Handle throwing from MP cancellation
     }

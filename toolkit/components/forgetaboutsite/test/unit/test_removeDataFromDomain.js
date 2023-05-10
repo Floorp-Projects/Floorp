@@ -107,7 +107,7 @@ function check_disabled_host(aHost, aIsDisabled) {
  * @param aHost
  *        The host to add the login for.
  */
-function add_login(aHost) {
+async function add_login(aHost) {
   check_login_exists(aHost, false);
   let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
     Ci.nsILoginInfo
@@ -121,7 +121,7 @@ function add_login(aHost) {
     LOGIN_USERNAME_FIELD,
     LOGIN_PASSWORD_FIELD
   );
-  Services.logins.addLogin(login);
+  await Services.logins.addLoginAsync(login);
   check_login_exists(aHost, true);
 }
 
@@ -312,21 +312,21 @@ async function test_login_manager_disabled_hosts_not_cleared_with_uri_contains_d
 
 async function test_login_manager_logins_cleared_with_direct_match() {
   const TEST_HOST = "http://mozilla.org";
-  add_login(TEST_HOST);
+  await add_login(TEST_HOST);
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_login_exists(TEST_HOST, true);
 }
 
 async function test_login_manager_logins_cleared_with_subdomain() {
   const TEST_HOST = "http://www.mozilla.org";
-  add_login(TEST_HOST);
+  await add_login(TEST_HOST);
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_login_exists(TEST_HOST, true);
 }
 
 async function test_login_manager_logins_not_cleared_with_uri_contains_domain() {
   const TEST_HOST = "http://ilovemozilla.org";
-  add_login(TEST_HOST);
+  await add_login(TEST_HOST);
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_login_exists(TEST_HOST, true);
 

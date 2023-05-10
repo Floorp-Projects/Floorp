@@ -328,7 +328,7 @@ add_task(async function test_normal_popup_notification_3() {
   );
 
   Services.logins.removeAllUserFacingLogins();
-  Services.logins.addLogin(login);
+  await Services.logins.addLoginAsync(login);
   let allLogins = Services.logins.getAllLogins();
   // Sanity check the HTTP login exists.
   Assert.equal(allLogins.length, 1, "Should have the HTTP login");
@@ -387,7 +387,7 @@ add_task(async function test_private_popup_notification_3b() {
   );
 
   Services.logins.removeAllUserFacingLogins();
-  Services.logins.addLogin(login);
+  await Services.logins.addLoginAsync(login);
   let allLogins = Services.logins.getAllLogins();
   // Sanity check the HTTP login exists.
   Assert.equal(allLogins.length, 1, "Should have the HTTP login");
@@ -447,7 +447,7 @@ add_task(async function test_normal_new_password_4() {
       " add a new password: popup notification should appear"
   );
   Services.logins.removeAllUserFacingLogins();
-  Services.logins.addLogin(login);
+  await Services.logins.addLoginAsync(login);
   let allLogins = Services.logins.getAllLogins();
   // Sanity check the HTTP login exists.
   Assert.equal(allLogins.length, 1, "Should have the HTTP login");
@@ -620,7 +620,7 @@ add_task(async function test_normal_with_login_6() {
 
 add_task(async function test_normal_autofilled_7() {
   info("test 7: verify that the user/pass pair was autofilled");
-  Services.logins.addLogin(login);
+  await Services.logins.addLoginAsync(login);
 
   // Sanity check the HTTP login exists.
   Assert.equal(

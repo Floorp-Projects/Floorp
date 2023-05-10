@@ -34,14 +34,14 @@ add_task(async function test_storage_addLogin_nonascii() {
     usernameField: "field_" + String.fromCharCode(533, 537, 7570, 345),
     passwordField: "field_" + String.fromCharCode(421, 259, 349, 537),
   });
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
   await reloadAndCheckLoginsGen([loginInfo]);
 
   // Store the string "test" using similarly looking glyphs.
   loginInfo = TestData.authLogin({
     httpRealm: String.fromCharCode(355, 277, 349, 357),
   });
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
   await reloadAndCheckLoginsGen([loginInfo]);
 });
 
@@ -53,7 +53,7 @@ add_task(async function test_storage_addLogin_newlines() {
     username: "user\r\nname",
     password: "password\r\n",
   });
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
   await reloadAndCheckLoginsGen([loginInfo]);
 });
 
@@ -64,11 +64,11 @@ add_task(async function test_storage_addLogin_newlines() {
  */
 add_task(async function test_storage_addLogin_dot() {
   let loginInfo = TestData.formLogin({ origin: ".", passwordField: "." });
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
   await reloadAndCheckLoginsGen([loginInfo]);
 
   loginInfo = TestData.authLogin({ httpRealm: "." });
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
   await reloadAndCheckLoginsGen([loginInfo]);
 });
 
@@ -88,8 +88,6 @@ add_task(async function test_storage_addLogin_parentheses() {
     TestData.authLogin({ origin: "http://parens(example).example.com" }),
     TestData.authLogin({ origin: "http://parens)example(.example.com" }),
   ];
-  for (let loginInfo of loginList) {
-    Services.logins.addLogin(loginInfo);
-  }
+  await Services.logins.addLogins(loginList);
   await reloadAndCheckLoginsGen(loginList);
 });

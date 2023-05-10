@@ -23,14 +23,17 @@ const MAX_DATE_MS = 8640000000000000;
  *        This argument is passed to the "Assert.throws" test to determine which
  *        error is expected from the modification functions.
  */
-function checkLoginInvalid(aLoginInfo, aExpectedError) {
+async function checkLoginInvalid(aLoginInfo, aExpectedError) {
   // Try to add the new login, and verify that no data is stored.
-  Assert.throws(() => Services.logins.addLogin(aLoginInfo), aExpectedError);
+  await Assert.rejects(
+    Services.logins.addLoginAsync(aLoginInfo),
+    aExpectedError
+  );
   LoginTestUtils.checkLogins([]);
 
   // Add a login for the modification tests.
   let testLogin = TestData.formLogin({ origin: "http://modify.example.com" });
-  Services.logins.addLogin(testLogin);
+  await Services.logins.addLoginAsync(testLogin);
 
   // Try to modify the existing login using nsILoginInfo and nsIPropertyBag.
   Assert.throws(
@@ -87,16 +90,17 @@ function compareAttributes(objectA, objectB, attributes) {
 /**
  * Tests that adding logins to the database works.
  */
-add_task(function test_addLogin_removeLogin() {
+add_task(async function test_addLogin_removeLogin() {
   // Each login from the test data should be valid and added to the list.
-  for (let loginInfo of TestData.loginList()) {
-    Services.logins.addLogin(loginInfo);
-  }
+  await Services.logins.addLogins(TestData.loginList());
   LoginTestUtils.checkLogins(TestData.loginList());
 
   // Trying to add each login again should result in an error.
   for (let loginInfo of TestData.loginList()) {
-    Assert.throws(() => Services.logins.addLogin(loginInfo), /already exists/);
+    await Assert.rejects(
+      Services.logins.addLoginAsync(loginInfo),
+      /This login already exists./
+    );
   }
 
   // Removing each login should succeed.
@@ -183,64 +187,70 @@ add_task(async function event_data_includes_plaintext_username_and_password() {
  * The legacy case of an empty string in formActionOrigin and a null value in
  * httpRealm is also supported for storage at the moment.
  */
-add_task(function test_invalid_httpRealm_formActionOrigin() {
+add_task(async function test_invalid_httpRealm_formActionOrigin() {
   // httpRealm === null, formActionOrigin === null
-  checkLoginInvalid(
+  await checkLoginInvalid(
     TestData.formLogin({ formActionOrigin: null }),
     /without a httpRealm or formActionOrigin/
   );
 
   // httpRealm === "", formActionOrigin === null
-  checkLoginInvalid(
+  await checkLoginInvalid(
     TestData.authLogin({ httpRealm: "" }),
     /without a httpRealm or formActionOrigin/
   );
 
   // httpRealm === null, formActionOrigin === ""
   // TODO: This is not enforced for now.
-  // checkLoginInvalid(TestData.formLogin({ formActionOrigin: "" }),
+  // await checkLoginInvalid(TestData.formLogin({ formActionOrigin: "" }),
   //                   /without a httpRealm or formActionOrigin/);
 
   // httpRealm === "", formActionOrigin === ""
   let login = TestData.formLogin({ formActionOrigin: "" });
   login.httpRealm = "";
-  checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
+  await checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
 
   // !!httpRealm, !!formActionOrigin
   login = TestData.formLogin();
   login.httpRealm = "The HTTP Realm";
-  checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
+  await checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
 
   // httpRealm === "", !!formActionOrigin
   login = TestData.formLogin();
   login.httpRealm = "";
-  checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
+  await checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
 
   // !!httpRealm, formActionOrigin === ""
   login = TestData.authLogin();
   login.formActionOrigin = "";
-  checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
+  await checkLoginInvalid(login, /both a httpRealm and formActionOrigin/);
 });
 
 /**
  * Tests null or empty values in required login properties.
  */
-add_task(function test_missing_properties() {
-  checkLoginInvalid(
+add_task(async function test_missing_properties() {
+  await checkLoginInvalid(
     TestData.formLogin({ origin: null }),
     /null or empty origin/
   );
 
-  checkLoginInvalid(TestData.formLogin({ origin: "" }), /null or empty origin/);
+  await checkLoginInvalid(
+    TestData.formLogin({ origin: "" }),
+    /null or empty origin/
+  );
 
-  checkLoginInvalid(TestData.formLogin({ username: null }), /null username/);
+  await checkLoginInvalid(
+    TestData.formLogin({ username: null }),
+    /null username/
+  );
 
-  checkLoginInvalid(
+  await checkLoginInvalid(
     TestData.formLogin({ password: null }),
     /null or empty password/
   );
 
-  checkLoginInvalid(
+  await checkLoginInvalid(
     TestData.formLogin({ password: "" }),
     /null or empty password/
   );
@@ -249,7 +259,7 @@ add_task(function test_missing_properties() {
 /**
  * Tests invalid NUL characters in nsILoginInfo properties.
  */
-add_task(function test_invalid_characters() {
+add_task(async function test_invalid_characters() {
   let loginList = [
     TestData.authLogin({ origin: "http://null\0X.example.com" }),
     TestData.authLogin({ httpRealm: "realm\0" }),
@@ -261,7 +271,7 @@ add_task(function test_invalid_characters() {
     TestData.formLogin({ password: "pass\0word" }),
   ];
   for (let loginInfo of loginList) {
-    checkLoginInvalid(loginInfo, /login values can't contain nulls/);
+    await checkLoginInvalid(loginInfo, /login values can't contain nulls/);
   }
 });
 
@@ -278,10 +288,9 @@ add_task(function test_removeLogin_nonexisting() {
 /**
  * Tests removing all logins at once.
  */
-add_task(function test_removeAllUserFacingLogins() {
-  for (let loginInfo of TestData.loginList()) {
-    Services.logins.addLogin(loginInfo);
-  }
+add_task(async function test_removeAllUserFacingLogins() {
+  await Services.logins.addLogins(TestData.loginList());
+
   Services.logins.removeAllUserFacingLogins();
   LoginTestUtils.checkLogins([]);
 
@@ -292,7 +301,7 @@ add_task(function test_removeAllUserFacingLogins() {
 /**
  * Tests the modifyLogin function with an nsILoginInfo argument.
  */
-add_task(function test_modifyLogin_nsILoginInfo() {
+add_task(async function test_modifyLogin_nsILoginInfo() {
   let loginInfo = TestData.formLogin();
   let updatedLoginInfo = TestData.formLogin({
     username: "new username",
@@ -309,7 +318,7 @@ add_task(function test_modifyLogin_nsILoginInfo() {
   );
 
   // Add the first form login, then modify it to match the second.
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
   Services.logins.modifyLogin(loginInfo, updatedLoginInfo);
 
   // The data should now match the second login.
@@ -324,7 +333,7 @@ add_task(function test_modifyLogin_nsILoginInfo() {
   LoginTestUtils.checkLogins([differentLoginInfo]);
 
   // It is now possible to add a login with the old type and origin.
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
   LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
   // Modifying a login to match an existing one should not be possible.
@@ -340,7 +349,7 @@ add_task(function test_modifyLogin_nsILoginInfo() {
 /**
  * Tests the modifyLogin function with an nsIPropertyBag argument.
  */
-add_task(function test_modifyLogin_nsIProperyBag() {
+add_task(async function test_modifyLogin_nsIProperyBag() {
   let loginInfo = TestData.formLogin();
   let updatedLoginInfo = TestData.formLogin({
     username: "new username",
@@ -367,7 +376,7 @@ add_task(function test_modifyLogin_nsIProperyBag() {
 
   // Add the first form login, then modify it to match the second, changing
   // only some of its properties and checking the behavior with an empty string.
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
   Services.logins.modifyLogin(
     loginInfo,
     newPropertyBag({
@@ -405,7 +414,7 @@ add_task(function test_modifyLogin_nsIProperyBag() {
   LoginTestUtils.checkLogins([differentLoginInfo]);
 
   // It is now possible to add a login with the old type and origin.
-  Services.logins.addLogin(loginInfo);
+  await Services.logins.addLoginAsync(loginInfo);
   LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
   // Modifying a login to match an existing one should not be possible.
@@ -509,7 +518,7 @@ add_task(function test_deduplicate_keeps_most_recent() {
 /**
  * Tests handling when adding a login with bad date values
  */
-add_task(function test_addLogin_badDates() {
+add_task(async function test_addLogin_badDates() {
   LoginTestUtils.clearData();
 
   let now = Date.now();
@@ -524,7 +533,7 @@ add_task(function test_addLogin_badDates() {
     Assert.ok(!defaultsLogin[pname]);
   }
   Assert.ok(
-    !!Services.logins.addLogin(defaultsLogin),
+    !!(await Services.logins.addLoginAsync(defaultsLogin)),
     "Sanity check adding defaults formLogin"
   );
   Services.logins.removeAllUserFacingLogins();
@@ -537,7 +546,7 @@ add_task(function test_addLogin_badDates() {
       })
     );
     Assert.ok(
-      !!Services.logins.addLogin(loginInfo),
+      !!(await Services.logins.addLoginAsync(loginInfo)),
       "Check 0 value for " + pname
     );
     Services.logins.removeAllUserFacingLogins();
@@ -551,7 +560,7 @@ add_task(function test_addLogin_badDates() {
       })
     );
     Assert.ok(
-      !!Services.logins.addLogin(loginInfo),
+      !!(await Services.logins.addLoginAsync(loginInfo)),
       "Check -1 value for " + pname
     );
     Services.logins.removeAllUserFacingLogins();
@@ -564,8 +573,8 @@ add_task(function test_addLogin_badDates() {
         [pname]: MAX_DATE_MS + 1,
       })
     );
-    Assert.throws(
-      () => Services.logins.addLogin(loginInfo),
+    await Assert.rejects(
+      Services.logins.addLoginAsync(loginInfo),
       /invalid date properties/
     );
     Assert.equal(Services.logins.getAllLogins().length, 0);
@@ -583,33 +592,35 @@ add_task(async function test_addLogins_badDates() {
   let defaultsLogin = TestData.formLogin({
     username: "defaults",
   });
+  await Services.logins.addLoginAsync(defaultsLogin);
 
   // -11644473600000 is the value you get if you convert Dec 31 1600 16:07:02 to unix epoch time
   let timeCreatedLogin = TestData.formLogin({
     username: "tc",
     timeCreated: -11644473600000,
   });
+  await Assert.rejects(
+    Services.logins.addLoginAsync(timeCreatedLogin),
+    /Can\'t add a login with invalid date properties./
+  );
 
   let timeLastUsedLogin = TestData.formLogin({
     username: "tlu",
     timeLastUsed: -11644473600000,
   });
+  await Assert.rejects(
+    Services.logins.addLoginAsync(timeLastUsedLogin),
+    /Can\'t add a login with invalid date properties./
+  );
 
   let timePasswordChangedLogin = TestData.formLogin({
     username: "tpc",
     timePasswordChanged: -11644473600000,
   });
-
-  await Services.logins.addLogins([
-    defaultsLogin,
-    timeCreatedLogin,
-    timeLastUsedLogin,
-    timePasswordChangedLogin,
-  ]);
-
-  // none of the logins with invalid dates should have been added
-  let savedLogins = Services.logins.getAllLogins();
-  Assert.equal(savedLogins.length, 1);
+  await Assert.rejects(
+    Services.logins.addLoginAsync(timePasswordChangedLogin),
+    /Can\'t add a login with invalid date properties./
+  );
 
   Services.logins.removeAllUserFacingLogins();
 });
