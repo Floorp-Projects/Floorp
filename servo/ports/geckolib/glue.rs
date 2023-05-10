@@ -141,8 +141,9 @@ use style::values::distance::ComputeSquaredDistance;
 use style::values::generics::easing::BeforeFlag;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
+use style::values::specified::{AbsoluteLength, NoCalcLength};
 use style::values::{specified, AtomIdent, CustomIdent, KeyframesName};
-use style_traits::{CssWriter, ParsingMode, ToCss};
+use style_traits::{CssWriter, ParseError, ParsingMode, ToCss};
 use to_shmem::SharedMemoryBuilder;
 
 trait ClosureHelper {
@@ -5393,12 +5394,11 @@ pub extern "C" fn Servo_DeclarationBlock_SetPixelValue(
 ) {
     use style::properties::longhands::border_spacing::SpecifiedValue as BorderSpacing;
     use style::properties::PropertyDeclaration;
-    use style::values::generics::length::LengthPercentageOrAuto;
-    use style::values::generics::length::Size;
+    use style::values::generics::length::{LengthPercentageOrAuto, Size};
     use style::values::generics::NonNegative;
-    use style::values::specified::length::LengthPercentage;
-    use style::values::specified::length::NonNegativeLengthPercentage;
-    use style::values::specified::length::{NoCalcLength, NonNegativeLength};
+    use style::values::specified::length::{
+        LengthPercentage, NonNegativeLength, NonNegativeLengthPercentage,
+    };
     use style::values::specified::{BorderCornerRadius, BorderSideWidth};
 
     let long = get_longhand_from_id!(property);
@@ -5457,8 +5457,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     use style::properties::PropertyDeclaration;
     use style::values::generics::length::{LengthPercentageOrAuto, Size};
     use style::values::generics::NonNegative;
-    use style::values::specified::length::{AbsoluteLength, FontRelativeLength};
-    use style::values::specified::length::{LengthPercentage, NoCalcLength};
+    use style::values::specified::length::{FontRelativeLength, LengthPercentage};
     use style::values::specified::FontSize;
 
     let long = get_longhand_from_id!(property);
@@ -6660,8 +6659,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetCounterStyleRule(
     Atom::with(name, |name| {
         data.stylist
             .iter_extra_data_origins()
-            .filter_map(|(d, _)| d.counter_styles.get(name))
-            .next()
+            .find_map(|(d, _)| d.counter_styles.get(name))
             .map_or(ptr::null(), |rule| rule.as_borrowed())
     })
 }
@@ -7809,4 +7807,36 @@ pub extern "C" fn Servo_EasingFunctionAt(
     before_flag: BeforeFlag,
 ) -> f64 {
     easing_function.calculate_output(progress, before_flag, 1e-7)
+}
+
+fn parse_no_context<'i, F, R>(string: &'i str, parse: F) -> Result<R, ()>
+where
+    F: FnOnce(&ParserContext, &mut Parser<'i, '_>) -> Result<R, ParseError<'i>>,
+{
+    let context = ParserContext::new(
+        Origin::Author,
+        unsafe { dummy_url_data() },
+        None,
+        ParsingMode::DEFAULT,
+        QuirksMode::NoQuirks,
+        None,
+        None,
+    );
+    let mut input = ParserInput::new(string);
+    Parser::new(&mut input)
+        .parse_entirely(|i| parse(&context, i))
+        .map_err(|_| ())
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ParseAbsoluteLength(len: &nsACString, out: &mut f32) -> bool {
+    let value = parse_no_context(unsafe { len.as_str_unchecked() }, specified::Length::parse)
+        .and_then(|p| p.to_computed_pixel_length_without_context());
+    match value {
+        Ok(v) => {
+            *out = v;
+            true
+        },
+        Err(..) => false,
+    }
 }
