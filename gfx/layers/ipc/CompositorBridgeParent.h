@@ -563,8 +563,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
  public:
   void PauseComposition();
-  bool ResumeComposition();
-  bool ResumeCompositionAndResize(int x, int y, int width, int height);
+  void ResumeComposition();
+  void ResumeCompositionAndResize(int x, int y, int width, int height);
   bool IsPaused() { return mPaused; }
 
  protected:

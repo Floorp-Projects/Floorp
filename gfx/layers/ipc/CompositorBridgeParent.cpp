@@ -560,7 +560,7 @@ void CompositorBridgeParent::PauseComposition() {
   }
 }
 
-bool CompositorBridgeParent::ResumeComposition() {
+void CompositorBridgeParent::ResumeComposition() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread(),
              "ResumeComposition() can only be called on the compositor thread");
 
@@ -575,14 +575,13 @@ bool CompositorBridgeParent::ResumeComposition() {
         ANDROID_LOG_INFO, "CompositorBridgeParent",
         "Unable to renew compositor surface; remaining in paused state");
 #endif
-    return false;
+    return;
   }
 
   mPaused = false;
 
   mCompositorScheduler->ForceComposeToTarget(wr::RenderReasons::WIDGET, nullptr,
                                              nullptr);
-  return true;
 }
 
 void CompositorBridgeParent::SetEGLSurfaceRect(int x, int y, int width,
@@ -592,10 +591,10 @@ void CompositorBridgeParent::SetEGLSurfaceRect(int x, int y, int width,
   mEGLSurfaceSize.SizeTo(width, height);
 }
 
-bool CompositorBridgeParent::ResumeCompositionAndResize(int x, int y, int width,
+void CompositorBridgeParent::ResumeCompositionAndResize(int x, int y, int width,
                                                         int height) {
   SetEGLSurfaceRect(x, y, width, height);
-  return ResumeComposition();
+  ResumeComposition();
 }
 
 void CompositorBridgeParent::ScheduleComposition(wr::RenderReasons aReasons) {

@@ -16,6 +16,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
+import org.mozilla.gecko.annotation.WrapForJNI;
 
 /** Provides transparent access to either a SurfaceView or TextureView */
 public class SurfaceViewWrapper {
@@ -111,6 +112,27 @@ public class SurfaceViewWrapper {
   public View getView() {
     return mView;
   }
+
+  /**
+   * Returns whether the Surface's underlying BufferQueue has been abandoned.
+   *
+   * <p>On some devices a Surface obtained during the surfaceChanged callback can become abandoned
+   * by the time we attempt to use it, despite surfaceDestroyed not being called. Attempting to
+   * render in to such a Surface will fail. This function checks whether a Surface is in such state,
+   * allowing us to request a new Surface if so.
+   */
+  public static boolean isSurfaceAbandoned(final Surface surface) {
+    // If JNI hasn't been loaded yet we cannot check whether the Surface has been abandoned.
+    // Just assume the Surface is okay.
+    if (!GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
+      return false;
+    }
+
+    return isSurfaceAbandonedNative(surface);
+  }
+
+  @WrapForJNI(calledFrom = "ui", dispatchTo = "current", stubName = "IsSurfaceAbandoned")
+  private static native boolean isSurfaceAbandonedNative(final Surface surface);
 
   /**
    * Translates SurfaceTextureListener and SurfaceHolder.Callback into a common interface

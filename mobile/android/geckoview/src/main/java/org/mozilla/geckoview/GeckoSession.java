@@ -258,7 +258,6 @@ public class GeckoSession {
   private boolean mAttachedCompositor;
   private boolean mCompositorReady;
   private SurfaceInfo mSurfaceInfo;
-  private GeckoDisplay.NewSurfaceProvider mNewSurfaceProvider;
 
   // All fields of coordinates are in screen units.
   private int mLeft;
@@ -347,16 +346,6 @@ public class GeckoSession {
     @WrapForJNI(calledFrom = "ui")
     private void recvToolbarAnimatorMessage(final int message) {
       GeckoSession.this.handleCompositorMessage(message);
-    }
-
-    @WrapForJNI(calledFrom = "ui")
-    private void requestNewSurface() {
-      final GeckoDisplay.NewSurfaceProvider provider = GeckoSession.this.mNewSurfaceProvider;
-      if (provider != null) {
-        provider.requestNewSurface();
-      } else {
-        Log.w(LOGTAG, "Cannot request new Surface: No NewSurfaceProvider set.");
-      }
     }
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "current")
@@ -6271,7 +6260,6 @@ public class GeckoSession {
 
     mWidth = surfaceInfo.mWidth;
     mHeight = surfaceInfo.mHeight;
-    mNewSurfaceProvider = surfaceInfo.mNewSurfaceProvider;
 
     if (mCompositorReady) {
       mCompositor.syncResumeResizeCompositor(
@@ -6295,8 +6283,6 @@ public class GeckoSession {
 
   /* package */ void onSurfaceDestroyed() {
     ThreadUtils.assertOnUiThread();
-
-    mNewSurfaceProvider = null;
 
     if (mCompositorReady) {
       mCompositor.syncPauseCompositor();

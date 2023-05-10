@@ -28,9 +28,8 @@ parent:
   // Pause/resume the compositor. These are intended to be used on mobile, when
   // the compositor needs to pause/resume in lockstep with the application.
   sync Pause();
-  sync Resume() returns (bool aOutResumed);
-  sync ResumeAndResize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight)
-    returns (bool aOutResumed);
+  sync Resume();
+  sync ResumeAndResize(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight);
 
   async InvalidateAndRender();
   async MaxToolbarHeight(int32_t aHeight);
