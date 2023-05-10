@@ -178,6 +178,10 @@ function testSelectionEventLeftChar(event, expectedChar) {
 }
 
 function testSelectionEventLine(event, expectedLine) {
+  if (!expectedLine && !isCacheEnabled) {
+    todo(false, "Blank lines are broken with cache disabled");
+    return;
+  }
   const selStart = event.macIface.getParameterizedAttributeValue(
     "AXStartTextMarkerForTextMarkerRange",
     event.data.AXSelectedTextMarkerRange
@@ -548,7 +552,10 @@ addAccessibleTask(
   `
 <textarea id="hard">ab
 cd
-ef</textarea>
+ef
+
+gh
+</textarea>
 <div role="textbox" id="wrapped" contenteditable style="width: 1ch;">a b c</div>
   `,
   async function(browser, docAcc) {
@@ -581,6 +588,45 @@ ef</textarea>
     );
     testSelectionEventLine(event, "ef");
     is(hard.getAttributeValue("AXInsertionPointLineNumber"), 2);
+    event = await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowDown",
+      null,
+      "hard",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionNext,
+        AXTextSelectionGranularity: AXTextSelectionGranularityLine,
+      }
+    );
+    testSelectionEventLine(event, "");
+    is(hard.getAttributeValue("AXInsertionPointLineNumber"), 3);
+    event = await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowDown",
+      null,
+      "hard",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionNext,
+        AXTextSelectionGranularity: AXTextSelectionGranularityLine,
+      }
+    );
+    testSelectionEventLine(event, "gh");
+    is(hard.getAttributeValue("AXInsertionPointLineNumber"), 4);
+    event = await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowDown",
+      null,
+      "hard",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionNext,
+        AXTextSelectionGranularity: AXTextSelectionGranularityLine,
+      }
+    );
+    testSelectionEventLine(event, "");
+    is(hard.getAttributeValue("AXInsertionPointLineNumber"), 5);
 
     let wrapped = getNativeInterface(docAcc, "wrapped");
     await focusIntoInput(docAcc, "wrapped");
