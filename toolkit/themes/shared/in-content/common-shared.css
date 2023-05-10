@@ -12,7 +12,7 @@
   --in-content-page-color: rgb(21, 20, 26);
   --in-content-page-background: #fff;
   --in-content-text-color: var(--in-content-page-color);
-  --in-content-deemphasized-text: var(--text-color-deemphasized);
+  --in-content-deemphasized-text: color-mix(in srgb, currentColor 69%, transparent);
   --in-content-box-background: #fff;
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
   --in-content-box-border-color: color-mix(in srgb, currentColor 41%, transparent);
@@ -135,6 +135,7 @@
      * in-content privileged pages and plain-text documents). */
     --in-content-page-background: rgb(28,27,34);
     --in-content-page-color: rgb(251,251,254);
+    --in-content-deemphasized-text: color-mix(in srgb, currentColor 75%, transparent);
 
     --in-content-box-background: rgb(35, 34, 43);
     --in-content-box-background-odd: rgba(249,249,250,0.05);

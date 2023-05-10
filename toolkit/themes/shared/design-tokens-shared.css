@@ -43,7 +43,7 @@
   --focus-outline-width: 2px;
 
   /** Text **/
-  --text-color-deemphasized: color-mix(in srgb, currentColor 60%, transparent);
+  --text-color-deemphasized: unset;
 
   /** Size **/
   --size-item-small: 16px;
@@ -52,8 +52,7 @@
 
 
 @media (prefers-contrast) {
-  :root,
-  :host {
+  :root, :host {
     /* Button */
     --button-background-color: ButtonFace;
     --button-background-color-hover: ButtonFace;
@@ -64,14 +63,13 @@
     --color-canvas: Canvas;
 
     /* Text */
-    --text-color-deemphasized: inherit;
+    --text-color-deemphasized: CanvasText;
   }
 }
 
 @media (forced-colors) {
   /* Applies to Windows HCM only */
-  :root,
-  :host {
+  :root, host {
     /* Border */
     --border-interactive-color: ButtonText;
     --border-interactive-color-hover: SelectedItem;
@@ -87,8 +85,7 @@
 
 @media (forced-colors: none) and (prefers-contrast)  {
   /* Applies to macOS "increase contrast" only */
-  :root,
-  :host {
+  :root, host {
     /* Border */
     --border-interactive-color: AccentColor;
     --border-interactive-color-hover: ButtonText;
