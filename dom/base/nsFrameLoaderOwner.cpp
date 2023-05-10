@@ -356,10 +356,20 @@ void nsFrameLoaderOwner::RestoreFrameLoaderFromBFCache(
           ("nsFrameLoaderOwner::RestoreFrameLoaderFromBFCache: Replace "
            "frameloader"));
 
+  Maybe<bool> renderLayers;
+  if (mFrameLoader) {
+    if (auto* oldParent = mFrameLoader->GetBrowserParent()) {
+      renderLayers.emplace(oldParent->GetRenderLayers());
+    }
+  }
+
   mFrameLoader = aNewFrameLoader;
 
   if (auto* browserParent = mFrameLoader->GetBrowserParent()) {
     browserParent->AddWindowListeners();
+    if (renderLayers.isSome()) {
+      browserParent->SetRenderLayers(renderLayers.value());
+    }
   }
 
   RefPtr<Element> owner = do_QueryObject(this);
