@@ -407,6 +407,12 @@ pref("browser.urlbar.suggest.calculator",           false);
   pref("browser.urlbar.quickactions.showPrefs", true);
 #endif
 
+#if defined(EARLY_BETA_OR_EARLIER)
+  // Enable Trending suggestions.
+  pref("browser.urlbar.trending.featureGate", true);
+  pref("browser.urlbar.trending.requireSearchMode", false);
+#endif
+
 // Feature gate pref for weather suggestions in the urlbar.
 pref("browser.urlbar.weather.featureGate", false);
 

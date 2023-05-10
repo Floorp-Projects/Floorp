@@ -17,6 +17,7 @@ const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 const PRIVATE_ENABLED_PREF = "browser.search.suggest.enabled.private";
 const PRIVATE_SEARCH_PREF = "browser.search.separatePrivateDefault.ui.enabled";
 const TAB_TO_SEARCH_PREF = "browser.urlbar.suggest.engines";
+const TRENDING_PREF = "browser.urlbar.trending.featureGate";
 const QUICKACTIONS_PREF = "browser.urlbar.suggest.quickactions";
 const MAX_RICH_RESULTS_PREF = "browser.urlbar.maxRichResults";
 const MAX_FORM_HISTORY_PREF = "browser.urlbar.maxHistoricalSearchSuggestions";
@@ -149,12 +150,14 @@ add_task(async function setup() {
       Ci.nsISearchService.CHANGE_REASON_UNKNOWN
     );
     Services.prefs.clearUserPref(PRIVATE_SEARCH_PREF);
+    Services.prefs.clearUserPref(TRENDING_PREF);
     Services.prefs.clearUserPref(QUICKACTIONS_PREF);
     Services.prefs.clearUserPref(TAB_TO_SEARCH_PREF);
     sandbox.restore();
   });
   Services.search.setDefault(engine, Ci.nsISearchService.CHANGE_REASON_UNKNOWN);
   Services.prefs.setBoolPref(PRIVATE_SEARCH_PREF, false);
+  Services.prefs.setBoolPref(TRENDING_PREF, false);
   Services.prefs.setBoolPref(QUICKACTIONS_PREF, false);
   // Tab-to-search engines can introduce unexpected results, espescially because
   // they depend on real en-US engines.
