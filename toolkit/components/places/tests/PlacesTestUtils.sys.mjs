@@ -555,7 +555,48 @@ export var PlacesTestUtils = Object.freeze({
    * @throws If more than one result is found for the given conditions.
    */
   async getDatabaseValue(table, field, conditions) {
-    let whereClause = [];
+    let { fragment: where, params } = this._buildWhereClause(table, conditions);
+    let query = `SELECT ${field} FROM ${table} ${where}`;
+    let conn = await lazy.PlacesUtils.promiseDBConnection();
+    let rows = await conn.executeCached(query, params);
+    if (rows.length > 1) {
+      throw new Error(
+        "getDatabaseValue doesn't support returning multiple results"
+      );
+    }
+    return rows[0]?.getResultByName(field);
+  },
+
+  /**
+   * Updates a specified field in a database table, based on the given
+   * conditions.
+   * @param {string} table - The name of the database table to add to.
+   * @param {string} field - The name of the field to update the value for.
+   * @param {string} value - The value to set.
+   * @param {Object} conditions - An object containing the conditions to filter
+   * the query results. The keys represent the names of the columns to filter
+   * by, and the values represent the filter values.
+   * @return {Promise} A Promise that resolves to the number of affected rows.
+   * @throws If no rows were affected.
+   */
+  async updateDatabaseValue(table, field, value, conditions) {
+    let { fragment: where, params } = this._buildWhereClause(table, conditions);
+    let query = `UPDATE ${table} SET ${field} = :val ${where} RETURNING rowid`;
+    params.val = value;
+    return lazy.PlacesUtils.withConnectionWrapper(
+      "setDatabaseValue",
+      async conn => {
+        let rows = await conn.executeCached(query, params);
+        if (!rows.length) {
+          throw new Error("setDatabaseValue didn't update any value");
+        }
+        return rows.length;
+      }
+    );
+  },
+
+  _buildWhereClause(table, conditions) {
+    let fragments = [];
     let params = {};
     for (let [column, value] of Object.entries(conditions)) {
       if (column == "url") {
@@ -566,23 +607,15 @@ export var PlacesTestUtils = Object.freeze({
         }
       }
       if (column == "url" && table == "moz_places") {
-        whereClause.push("url_hash = hash(:url) AND url = :url");
+        fragments.push("url_hash = hash(:url) AND url = :url");
       } else {
-        whereClause.push(`${column} = :${column}`);
+        fragments.push(`${column} = :${column}`);
       }
       params[column] = value;
     }
-    let whereString = whereClause.length
-      ? `WHERE ${whereClause.join(" AND ")}`
-      : "";
-    let query = `SELECT ${field} FROM ${table} ${whereString}`;
-    let conn = await lazy.PlacesUtils.promiseDBConnection();
-    let rows = await conn.executeCached(query, params);
-    if (rows.length > 1) {
-      throw new Error(
-        "getDatabaseValue doesn't support returning multiple results"
-      );
-    }
-    return rows[0]?.getResultByName(field);
+    return {
+      fragment: fragments.length ? `WHERE ${fragments.join(" AND ")}` : "",
+      params,
+    };
   },
 });
