@@ -40,7 +40,7 @@ if (LoginHelper.improvedPasswordRulesEnabled) {
  * the test can start checking filled-in values. Tests that check observer
  * notifications might be confused by this.
  */
-function commonInit(selfFilling, testDependsOnDeprecatedLogin) {
+async function commonInit(selfFilling, testDependsOnDeprecatedLogin) {
   var pwmgr = Services.logins;
   assert.ok(pwmgr != null, "Access LoginManager");
 
@@ -69,7 +69,7 @@ function commonInit(selfFilling, testDependsOnDeprecatedLogin) {
       "uname",
       "pword"
     );
-    pwmgr.addLogin(login);
+    await pwmgr.addLoginAsync(login);
   }
 
   // Last sanity check
@@ -145,8 +145,11 @@ addMessageListener("cleanup", () => {
 
 addMessageListener(
   "setupParent",
-  ({ selfFilling = false, testDependsOnDeprecatedLogin = false } = {}) => {
-    commonInit(selfFilling, testDependsOnDeprecatedLogin);
+  async ({
+    selfFilling = false,
+    testDependsOnDeprecatedLogin = false,
+  } = {}) => {
+    await commonInit(selfFilling, testDependsOnDeprecatedLogin);
     sendAsyncMessage("doneSetup");
   }
 );

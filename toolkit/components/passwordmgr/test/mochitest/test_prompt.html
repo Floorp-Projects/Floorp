@@ -47,44 +47,15 @@ let prompter1 = new PrompterProxy(prompterParent);
 const defaultTitle = "the title";
 const defaultMsg = "the message";
 
-function initLogins() {
-  var login1, login2A, login2B, login2C, login2D, login2E;
-  login1  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  login2A = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  login2B = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  login2C = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  login2D = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  login2E = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-
-  login1.init("http://example.com", null, "http://example.com",
-              "", "examplepass", "", "");
-  login2A.init("http://example2.com", null, "http://example2.com",
-               "user1name", "user1pass", "", "");
-  login2B.init("http://example2.com", null, "http://example2.com",
-               "user2name", "user2pass", "", "");
-  login2C.init("http://example2.com", null, "http://example2.com",
-               "user3.name@host", "user3pass", "", "");
-  login2D.init("http://example2.com", null, "http://example2.com",
-               "100@beef", "user3pass", "", "");
-  login2E.init("http://example2.com", null, "http://example2.com",
-               "100%beef", "user3pass", "", "");
-
-  Services.logins.addLogin(login1);
-  Services.logins.addLogin(login2A);
-  Services.logins.addLogin(login2B);
-  Services.logins.addLogin(login2C);
-  Services.logins.addLogin(login2D);
-  Services.logins.addLogin(login2E);
-}
-
 add_setup(async () => {
-  runInParent(initLogins);
+    await addLoginsInParent(
+    ["http://example.com", null, "http://example.com", "", "examplepass", "", ""],
+    ["http://example2.com", null, "http://example2.com", "user1name", "user1pass", "", ""],
+    ["http://example2.com", null, "http://example2.com", "user2name", "user2pass", "", ""],
+    ["http://example2.com", null, "http://example2.com", "user3.name@host", "user3pass", "", ""],
+    ["http://example2.com", null, "http://example2.com", "100@beef", "user3pass", "", ""],
+    ["http://example2.com", null, "http://example2.com", "100%beef", "user3pass", "", ""]
+  );
 });
 
 add_task(async function test_prompt_accept() {
