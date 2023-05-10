@@ -5594,11 +5594,6 @@
   value: 1000
   mirror: always
 
-- name: general.utility-process.startup_timeout_ms
-  type: RelaxedAtomicInt32
-  value: 5000
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "geo."
 #---------------------------------------------------------------------------

@@ -93,34 +93,6 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
 
   mLaunchPhase = LaunchPhase::Waiting;
 
-  int32_t timeoutMs = StaticPrefs::general_utility_process_startup_timeout_ms();
-
-  // If one of the following environment variables are set we can
-  // effectively ignore the timeout - as we can guarantee the Utility
-  // process will be terminated
-  if (PR_GetEnv("MOZ_DEBUG_CHILD_PROCESS") ||
-      PR_GetEnv("MOZ_DEBUG_CHILD_PAUSE")) {
-    timeoutMs = 0;
-  }
-  if (timeoutMs) {
-    // We queue a delayed task. If that task runs before the
-    // WhenProcessHandleReady promise gets resolved, we will abort the launch.
-    GetMainThreadSerialEventTarget()->DelayedDispatch(
-        NS_NewRunnableFunction(
-            "UtilityProcessHost::Launchtimeout",
-            [this, liveToken = mLiveToken]() {
-              if (!*liveToken || mTimerChecked) {
-                // We have been deleted or the runnable has already started, we
-                // can abort.
-                return;
-              }
-              InitAfterConnect(false);
-              MOZ_ASSERT(mTimerChecked,
-                         "InitAfterConnect must have acted on the promise");
-            }),
-        timeoutMs);
-  }
-
   if (!GeckoChildProcessHost::AsyncLaunch(aExtraOpts)) {
     NS_WARNING("UtilityProcess AsyncLaunch failed, aborting.");
     mLaunchPhase = LaunchPhase::Complete;
@@ -147,11 +119,10 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessHost::LaunchPromise() {
           // already been rejected.
           return;
         }
-        if (mTimerChecked) {
-          // We hit the timeout earlier, abort.
+        if (mLaunchCompleted) {
           return;
         }
-        mTimerChecked = true;
+        mLaunchCompleted = true;
         if (aResult.IsReject()) {
           RejectPromise();
         }
@@ -349,7 +320,7 @@ void UtilityProcessHost::ResolvePromise() {
   }
   // We have already acted on the promise; the timeout runnable no longer needs
   // to interrupt anything.
-  mTimerChecked = true;
+  mLaunchCompleted = true;
 }
 
 void UtilityProcessHost::RejectPromise() {
@@ -363,7 +334,7 @@ void UtilityProcessHost::RejectPromise() {
   }
   // We have already acted on the promise; the timeout runnable no longer needs
   // to interrupt anything.
-  mTimerChecked = true;
+  mLaunchCompleted = true;
 }
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
