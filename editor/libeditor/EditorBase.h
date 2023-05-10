@@ -747,14 +747,15 @@ class EditorBase : public nsIEditor,
    *
    * @param aClipboardType      nsIClipboard::kGlobalClipboard or
    *                            nsIClipboard::kSelectionClipboard.
-   * @param aDispatchPasteEvent true if this should dispatch ePaste event
-   *                            before pasting.  Otherwise, false.
+   * @param aDispatchPasteEvent Yes if this should dispatch ePaste event
+   *                            before pasting.  Otherwise, No.
    * @param aPrincipal          Set subject principal if it may be called by
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
+  enum class DispatchPasteEvent { No, Yes };
   MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsAction(
-      int32_t aClipboardType, bool aDispatchPasteEvent,
+      int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
       nsIPrincipal* aPrincipal = nullptr) = 0;
 
   /**
@@ -777,14 +778,14 @@ class EditorBase : public nsIEditor,
    *
    * @param aClipboardType      nsIClipboard::kGlobalClipboard or
    *                            nsIClipboard::kSelectionClipboard.
-   * @param aDispatchPasteEvent true if this should dispatch ePaste event
-   *                            before pasting.  Otherwise, false.
+   * @param aDispatchPasteEvent Yes if this should dispatch ePaste event
+   *                            before pasting.  Otherwise, No.
    * @param aPrincipal          Set subject principal if it may be called by
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
   MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsQuotationAsAction(
-      int32_t aClipboardType, bool aDispatchPasteEvent,
+      int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
       nsIPrincipal* aPrincipal = nullptr) = 0;
 
  protected:  // May be used by friends.
