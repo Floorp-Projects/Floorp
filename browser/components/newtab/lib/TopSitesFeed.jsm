@@ -55,16 +55,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
   "Screenshots",
   "resource://activity-stream/lib/Screenshots.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PageThumbs",
-  "resource://gre/modules/PageThumbs.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

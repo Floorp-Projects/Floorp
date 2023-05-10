@@ -22,16 +22,11 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BinarySearch: "resource://gre/modules/BinarySearch.sys.mjs",
-  pktApi: "chrome://pocket/content/pktApi.sys.mjs",
+  PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Pocket: "chrome://pocket/content/Pocket.sys.mjs",
+  pktApi: "chrome://pocket/content/pktApi.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PageThumbs",
-  "resource://gre/modules/PageThumbs.jsm"
-);
 
 let BrowserWindowTracker;
 try {

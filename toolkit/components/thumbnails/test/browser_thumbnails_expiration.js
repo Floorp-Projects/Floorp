@@ -6,14 +6,10 @@ const URL1 = URL + "#1";
 const URL2 = URL + "#2";
 const URL3 = URL + "#3";
 
-var tmp = Cu.Sandbox(window, { wantGlobalProperties: ["ChromeUtils"] });
-Services.scriptloader.loadSubScript(
-  "resource://gre/modules/PageThumbs.jsm",
-  tmp
-);
-
 const EXPIRATION_MIN_CHUNK_SIZE = 50;
-const { PageThumbsExpiration } = tmp;
+const { PageThumbsExpiration } = ChromeUtils.importESModule(
+  "resource://gre/modules/PageThumbs.sys.mjs"
+);
 
 add_task(async function thumbnails_expiration() {
   // Create dummy URLs.

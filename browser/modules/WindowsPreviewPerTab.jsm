@@ -72,11 +72,9 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/image/tools;1",
   "imgITools"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PageThumbs",
-  "resource://gre/modules/PageThumbs.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PageThumbs: "resource://gre/modules/PageThumbs.sys.mjs",
+});
 
 // nsIURI -> imgIContainer
 function _imageFromURI(uri, privateMode, callback) {

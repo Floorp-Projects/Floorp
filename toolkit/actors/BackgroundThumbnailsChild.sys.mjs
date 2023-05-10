@@ -5,11 +5,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PageThumbUtils",
-  "resource://gre/modules/PageThumbUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PageThumbUtils: "resource://gre/modules/PageThumbUtils.sys.mjs",
+});
 
 // NOTE: Copied from nsSandboxFlags.h
 /**
