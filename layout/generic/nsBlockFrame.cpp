@@ -2056,16 +2056,22 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
       const nscoord maxBSize = aReflowInput.ComputedMaxBSize();
       if (maxBSize != NS_UNCONSTRAINEDSIZE &&
           aState.mConsumedBSize + bSize - borderPadding.BStart(wm) > maxBSize) {
-        nscoord bEnd = std::max(0, maxBSize - aState.mConsumedBSize) +
-                       borderPadding.BStart(wm);
-        // Note that |borderPadding| has GetSkipSides applied, so we ask
-        // aReflowInput for the actual value we'd use on a last fragment here:
-        bEnd += aReflowInput.ComputedLogicalBorderPadding(wm).BEnd(wm);
-        if (bEnd <= aReflowInput.AvailableBSize()) {
+        // Compute this fragment's block-size, with the max-block-size
+        // constraint taken into consideration.
+        const nscoord clampedBSizeWithoutEndBP =
+            std::max(0, maxBSize - aState.mConsumedBSize) +
+            borderPadding.BStart(wm);
+        const nscoord clampedBSize =
+            clampedBSizeWithoutEndBP + borderPadding.BEnd(wm);
+        if (clampedBSize <= aReflowInput.AvailableBSize()) {
           // We actually fit after applying `max-size` so we should be
           // Overflow-Incomplete instead.
-          bSize = bEnd;
+          bSize = clampedBSize;
           aState.mReflowStatus.SetOverflowIncomplete();
+        } else {
+          // We cannot fit after applying `max-size` with our block-end BP, so
+          // we should draw it in our next continuation.
+          bSize = clampedBSizeWithoutEndBP;
         }
       }
       finalSize.BSize(wm) = bSize;
