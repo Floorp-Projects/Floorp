@@ -14,6 +14,9 @@ clang_bindir=${MOZ_FETCHES_DIR}/clang/bin
 clang_libdir=${MOZ_FETCHES_DIR}/clang/lib
 python_src=${MOZ_FETCHES_DIR}/cpython-source
 
+# Make the compiler-rt available to clang.
+env UPLOAD_DIR= $GECKO_PATH/taskcluster/scripts/misc/repack-clang.sh
+
 # Setup environment
 export PATH=${clang_bindir}:${PATH}
 export CC=clang
