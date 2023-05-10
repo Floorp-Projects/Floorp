@@ -42,26 +42,40 @@ NS_IMETHODIMP nsWifiAccessPoint::GetSignal(int32_t* aSignal) {
   return NS_OK;
 }
 
-int nsWifiAccessPoint::Compare(const nsWifiAccessPoint& o) const {
-  int ret = strcmp(mMac, o.mMac);
-  if (ret) {
-    return ret;
+// Helper functions:
+
+bool AccessPointsEqual(nsCOMArray<nsWifiAccessPoint>& a,
+                       nsCOMArray<nsWifiAccessPoint>& b) {
+  if (a.Count() != b.Count()) {
+    LOG(("AccessPoint lists have different lengths\n"));
+    return false;
   }
-  if (mSsidLen != o.mSsidLen) {
-    return (mSsidLen < o.mSsidLen) ? -1 : 1;
+
+  for (int32_t i = 0; i < a.Count(); i++) {
+    LOG(("++ Looking for %s\n", a[i]->mSsid));
+    bool found = false;
+    for (int32_t j = 0; j < b.Count(); j++) {
+      LOG(("   %s->%s | %s->%s\n", a[i]->mSsid, b[j]->mSsid, a[i]->mMac,
+           b[j]->mMac));
+      if (!strcmp(a[i]->mSsid, b[j]->mSsid) &&
+          !strcmp(a[i]->mMac, b[j]->mMac) && a[i]->mSignal == b[j]->mSignal) {
+        found = true;
+      }
+    }
+    if (!found) return false;
   }
-  ret = strncmp(mSsid, o.mSsid, mSsidLen);
-  if (ret) {
-    return ret;
-  }
-  if (mSignal == o.mSignal) {
-    return 0;
-  }
-  return (mSignal < o.mSignal) ? -1 : 1;
+  LOG(("   match!\n"));
+  return true;
 }
 
-bool nsWifiAccessPoint::operator==(const nsWifiAccessPoint& o) const {
-  LOG(("nsWifiAccessPoint comparing %s->%s | %s->%s | %d -> %d\n", mSsid,
-       o.mSsid, mMac, o.mMac, mSignal, o.mSignal));
-  return Compare(o) == 0;
+void ReplaceArray(nsCOMArray<nsWifiAccessPoint>& a,
+                  nsCOMArray<nsWifiAccessPoint>& b) {
+  a.Clear();
+
+  // better way to copy?
+  for (int32_t i = 0; i < b.Count(); i++) {
+    a.AppendObject(b[i]);
+  }
+
+  b.Clear();
 }
