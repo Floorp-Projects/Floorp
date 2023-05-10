@@ -26,10 +26,10 @@ var script = SpecialPowers.loadChromeScript(() => {
 /* eslint-env mozilla/chrome-script */
   let ignoreCount = 0;
   function listener(msg) {
-    if(msg.message.includes("Content Security Policy: Ignoring ‘x-frame-options’ because of ‘frame-ancestors’ directive.")) {
+    if(msg.message.includes("Content-Security-Policy: Ignoring ‘x-frame-options’ because of ‘frame-ancestors’ directive.")) {
       ignoreCount++;
       if(ignoreCount == 2) {
-        ok(false, 'The "Content Security Policy: Ignoring ‘x-frame-options’ because of ‘frame-ancestors’ directive." warning should only appear once for the csp_testframe.');
+        ok(false, 'The "Content-Security-Policy: Ignoring ‘x-frame-options’ because of ‘frame-ancestors’ directive." warning should only appear once for the csp_testframe.');
       }
     }
   }

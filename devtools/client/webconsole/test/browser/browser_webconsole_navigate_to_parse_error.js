@@ -13,7 +13,7 @@ const TEST_VIOLATION =
   "test/browser/test-navigate-to-parse-error.html";
 
 const CSP_VIOLATION_MSG =
-  "Content Security Policy: Couldn\u2019t process unknown directive \u2018navigate-to\u2019";
+  "Content-Security-Policy: Couldn\u2019t process unknown directive \u2018navigate-to\u2019";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
