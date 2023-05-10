@@ -5,10 +5,6 @@
 "use strict";
 
 add_task(async function() {
-  await pushPref(
-    "devtools.debugger.features.event-listeners-breakpoints",
-    true
-  );
   await pushPref("apz.scrollend-event.content.enabled", true);
 
   const dbg = await initDebugger(
