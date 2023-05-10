@@ -15,11 +15,6 @@ export function makeBreakpointId(location) {
   return `${sourceId}:${line}:${columnString}`;
 }
 
-export function getLocationWithoutColumn(location) {
-  const { sourceId, line } = location;
-  return `${sourceId}:${line}`;
-}
-
 export function makePendingLocationId(location) {
   assertPendingLocation(location);
   const { sourceUrl, line, column } = location;

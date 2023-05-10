@@ -79,16 +79,11 @@ class Breakpoint extends PureComponent {
     }
 
     if (event.shiftKey) {
-      if (features.columnBreakpoints) {
-        breakpointActions.toggleBreakpointsAtLine(
-          cx,
-          !breakpoint.disabled,
-          selectedLocation.line
-        );
-        return;
-      }
-
-      breakpointActions.toggleDisabledBreakpoint(cx, breakpoint);
+      breakpointActions.toggleBreakpointsAtLine(
+        cx,
+        !breakpoint.disabled,
+        selectedLocation.line
+      );
       return;
     }
 

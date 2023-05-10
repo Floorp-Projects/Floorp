@@ -48,7 +48,6 @@ if (isNode()) {
   pref("devtools.debugger.features.map-scopes", true);
   pref("devtools.debugger.features.code-folding", false);
   pref("devtools.debugger.features.command-click", false);
-  pref("devtools.debugger.features.column-breakpoints", true);
   pref("devtools.debugger.features.component-pane", false);
   pref("devtools.debugger.features.autocomplete-expressions", false);
   pref("devtools.debugger.features.map-expression-bindings", true);
@@ -117,7 +116,6 @@ prefs.cursorBlinkRate = Services.prefs.getIntPref("ui.caretBlinkTime", 530);
 
 export const features = new PrefsHelper("devtools.debugger.features", {
   wasm: ["Bool", "wasm"],
-  columnBreakpoints: ["Bool", "column-breakpoints"],
   mapScopes: ["Bool", "map-scopes"],
   outline: ["Bool", "outline"],
   codeFolding: ["Bool", "code-folding"],

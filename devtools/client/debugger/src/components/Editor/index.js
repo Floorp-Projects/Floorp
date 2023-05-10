@@ -696,9 +696,7 @@ class Editor extends PureComponent {
           />
         }
         {conditionalPanelLocation ? <ConditionalPanel editor={editor} /> : null}
-        {features.columnBreakpoints ? (
-          <ColumnBreakpoints editor={editor} />
-        ) : null}
+        <ColumnBreakpoints editor={editor} />
         {isPaused && inlinePreviewEnabled ? (
           <InlinePreviews editor={editor} selectedSource={selectedSource} />
         ) : null}

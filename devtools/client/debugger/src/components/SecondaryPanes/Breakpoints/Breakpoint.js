@@ -11,13 +11,8 @@ import actions from "../../../actions";
 import showContextMenu from "./BreakpointsContextMenu";
 import { CloseButton } from "../../shared/Button";
 
-import {
-  getLocationWithoutColumn,
-  getSelectedText,
-  makeBreakpointId,
-} from "../../../utils/breakpoint";
+import { getSelectedText, makeBreakpointId } from "../../../utils/breakpoint";
 import { getSelectedLocation } from "../../../utils/selected-location";
-import { features } from "../../../utils/prefs";
 
 import {
   getBreakpointsList,
@@ -91,12 +86,8 @@ class Breakpoint extends PureComponent {
       return false;
     }
 
-    const bpId = features.columnBreakpoints
-      ? makeBreakpointId(this.selectedLocation)
-      : getLocationWithoutColumn(this.selectedLocation);
-    const frameId = features.columnBreakpoints
-      ? makeBreakpointId(frame.selectedLocation)
-      : getLocationWithoutColumn(frame.selectedLocation);
+    const bpId = makeBreakpointId(this.selectedLocation);
+    const frameId = makeBreakpointId(frame.selectedLocation);
     return bpId == frameId;
   }
 
@@ -105,7 +96,7 @@ class Breakpoint extends PureComponent {
     const { column, line } = this.selectedLocation;
 
     const isWasm = source?.isWasm;
-    const columnVal = features.columnBreakpoints && column ? `:${column}` : "";
+    const columnVal = column ? `:${column}` : "";
     const bpLocation = isWasm
       ? `0x${line.toString(16).toUpperCase()}`
       : `${line}${columnVal}`;
