@@ -195,7 +195,7 @@ let AVAILABLE_PIP_OVERRIDES;
 
     sonyliv: {
       "https://*.sonyliv.com/*": {
-        videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
+        videoWrapperScriptPath: "video-wrappers/sonyliv.js",
       },
     },
 
