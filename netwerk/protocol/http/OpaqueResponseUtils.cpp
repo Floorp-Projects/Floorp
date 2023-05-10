@@ -14,9 +14,12 @@
 #include "nsHttpResponseHead.h"
 #include "nsISupports.h"
 #include "nsMimeTypes.h"
+#include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsStringStream.h"
 #include "HttpBaseChannel.h"
+
+static mozilla::LazyLogModule gORBLog("ORB");
 
 #define LOGORB(msg, ...)            \
   MOZ_LOG(gORBLog, LogLevel::Debug, \
@@ -192,6 +195,52 @@ bool IsFirstPartialResponse(nsHttpResponseHead& aResponseHead) {
   return responseFirstBytePos == 0;
 }
 
+LogModule* GetORBLog() { return gORBLog; }
+
+OpaqueResponseFilter::OpaqueResponseFilter(nsIStreamListener* aNext)
+    : mNext(aNext) {
+  LOGORB();
+}
+
+NS_IMETHODIMP
+OpaqueResponseFilter::OnStartRequest(nsIRequest* aRequest) {
+  LOGORB();
+  nsCOMPtr<HttpBaseChannel> httpBaseChannel = do_QueryInterface(aRequest);
+  MOZ_ASSERT(httpBaseChannel);
+
+  nsHttpResponseHead* responseHead = httpBaseChannel->GetResponseHead();
+
+  if (responseHead) {
+    // Filtered opaque responses doesn't need headers, so we just drop them.
+    responseHead->ClearHeaders();
+  }
+
+  mNext->OnStartRequest(aRequest);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+OpaqueResponseFilter::OnDataAvailable(nsIRequest* aRequest,
+                                      nsIInputStream* aInputStream,
+                                      uint64_t aOffset, uint32_t aCount) {
+  LOGORB();
+  uint32_t result;
+  // No data for filtered opaque responses should reach the content process, so
+  // we just discard them.
+  return aInputStream->ReadSegments(NS_DiscardSegment, nullptr, aCount,
+                                    &result);
+}
+
+NS_IMETHODIMP
+OpaqueResponseFilter::OnStopRequest(nsIRequest* aRequest,
+                                    nsresult aStatusCode) {
+  LOGORB();
+  mNext->OnStopRequest(aRequest, aStatusCode);
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(OpaqueResponseFilter, nsIStreamListener, nsIRequestObserver)
+
 OpaqueResponseBlocker::OpaqueResponseBlocker(nsIStreamListener* aNext,
                                              HttpBaseChannel* aChannel,
                                              const nsCString& aContentType,
@@ -345,6 +394,17 @@ nsresult OpaqueResponseBlocker::EnsureOpaqueResponseIsAllowedAfterSniff(
   return ValidateJavaScript(httpBaseChannel, uri, loadInfo);
 }
 
+OpaqueResponse
+OpaqueResponseBlocker::EnsureOpaqueResponseIsAllowedAfterJavaScriptValidation(
+    HttpBaseChannel* aChannel, bool aAllow) {
+  if (aAllow) {
+    return OpaqueResponse::Allow;
+  }
+
+  return aChannel->BlockOrFilterOpaqueResponse(
+      this, u"Javascript validation failed"_ns, "Javascript validation failed");
+}
+
 static void RecordTelemetry(const TimeStamp& aStartOfValidation,
                             const TimeStamp& aStartOfJavaScriptValidation,
                             OpaqueResponseBlocker::ValidatorResult aResult) {
@@ -428,12 +488,27 @@ nsresult OpaqueResponseBlocker::ValidateJavaScript(HttpBaseChannel* aChannel,
                  uri->GetSpecOrDefault().get(),
                  aSharedData.isSome() ? "true" : "false"));
         bool allowed = aResult == ValidatorResult::JavaScript;
-        if (allowed) {
-          self->AllowResponse();
-        } else {
-          self->BlockResponse(channel, NS_ERROR_FAILURE);
-          channel->LogORBError(u"Javascript validation failed"_ns);
+        switch (self->EnsureOpaqueResponseIsAllowedAfterJavaScriptValidation(
+            channel, allowed)) {
+          case OpaqueResponse::Allow:
+            // It's possible that the JS validation failed for this request,
+            // however we decided that we need to filter the response instead
+            // of blocking. So we set allowed to true manually when that's the
+            // case.
+            allowed = true;
+            self->AllowResponse();
+            break;
+          case OpaqueResponse::Block:
+            self->BlockResponse(channel, NS_ERROR_FAILURE);
+            break;
+          default:
+            MOZ_ASSERT_UNREACHABLE(
+                "We should only ever have Allow or Block here.");
+            allowed = false;
+            self->BlockResponse(channel, NS_ERROR_FAILURE);
+            break;
         }
+
         self->ResolveAndProcessData(channel, allowed, aSharedData);
         if (aSharedData.isSome()) {
           self->mJSValidator->DeallocShmem(aSharedData.ref());
@@ -468,6 +543,18 @@ void OpaqueResponseBlocker::BlockResponse(HttpBaseChannel* aChannel,
   aChannel->SetChannelBlockedByOpaqueResponse();
   aChannel->CancelWithReason(mStatus,
                              "OpaqueResponseBlocker::BlockResponse"_ns);
+}
+
+void OpaqueResponseBlocker::FilterResponse() {
+  MOZ_ASSERT(mState == State::Sniffing);
+
+  if (mShouldFilter) {
+    return;
+  }
+
+  mShouldFilter = true;
+
+  mNext = new OpaqueResponseFilter(mNext);
 }
 
 void OpaqueResponseBlocker::ResolveAndProcessData(

@@ -52,6 +52,7 @@
 #include "nsContentSecurityManager.h"
 #include "nsContentSecurityUtils.h"
 #include "nsContentUtils.h"
+#include "nsDebug.h"
 #include "nsEscape.h"
 #include "nsGlobalWindowOuter.h"
 #include "nsHttpChannel.h"
@@ -104,9 +105,9 @@
 #include "nsQueryObject.h"
 
 using mozilla::dom::RequestMode;
-extern mozilla::LazyLogModule gORBLog;
-#define LOGORB(msg, ...)            \
-  MOZ_LOG(gORBLog, LogLevel::Debug, \
+
+#define LOGORB(msg, ...)                \
+  MOZ_LOG(GetORBLog(), LogLevel::Debug, \
           ("%s: %p " msg, __func__, this, ##__VA_ARGS__))
 
 namespace mozilla {
@@ -183,6 +184,17 @@ class AddHeadersToChannelVisitor final : public nsIHttpHeaderVisitor {
 };
 
 NS_IMPL_ISUPPORTS(AddHeadersToChannelVisitor, nsIHttpHeaderVisitor)
+
+static OpaqueResponseFilterFetch ConfiguredFilterFetchResponseBehaviour() {
+  uint32_t pref = StaticPrefs::
+      browser_opaqueResponseBlocking_filterFetchResponse_DoNotUseDirectly();
+  if (NS_WARN_IF(pref >
+                 static_cast<uint32_t>(OpaqueResponseFilterFetch::All))) {
+    return OpaqueResponseFilterFetch::All;
+  }
+
+  return static_cast<OpaqueResponseFilterFetch>(pref);
+}
 
 HttpBaseChannel::HttpBaseChannel()
     : mReportCollector(new ConsoleReportCollector()),
@@ -3017,6 +3029,19 @@ nsresult HttpBaseChannel::ValidateMIMEType() {
   return NS_OK;
 }
 
+bool HttpBaseChannel::ShouldFilterOpaqueResponse(
+    OpaqueResponseFilterFetch aFilterType) const {
+  MOZ_DIAGNOSTIC_ASSERT(ShouldBlockOpaqueResponse());
+
+  if (!mLoadInfo || ConfiguredFilterFetchResponseBehaviour() != aFilterType) {
+    return false;
+  }
+
+  // We should filter a response in the parent if it is opaque and is the result
+  // of a fetch() function from the Fetch specification.
+  return mLoadInfo->InternalContentPolicyType() == nsIContentPolicy::TYPE_FETCH;
+}
+
 bool HttpBaseChannel::ShouldBlockOpaqueResponse() const {
   if (!mURI || !mResponseHead || !mLoadInfo) {
     // if there is no uri, no response head or no loadInfo, then there is
@@ -3036,6 +3061,7 @@ bool HttpBaseChannel::ShouldBlockOpaqueResponse() const {
   // Check if the response is a opaque response, which means requestMode should
   // be RequestMode::No_cors and responseType should be ResponseType::Opaque.
   nsContentPolicyType contentPolicy = mLoadInfo->InternalContentPolicyType();
+
   // Skip the RequestMode would be RequestMode::Navigate
   if (contentPolicy == nsIContentPolicy::TYPE_DOCUMENT ||
       contentPolicy == nsIContentPolicy::TYPE_SUBDOCUMENT ||
@@ -3102,6 +3128,41 @@ bool HttpBaseChannel::ShouldBlockOpaqueResponse() const {
   return true;
 }
 
+OpaqueResponse HttpBaseChannel::BlockOrFilterOpaqueResponse(
+    OpaqueResponseBlocker* aORB, const nsAString& aReason, const char* aFormat,
+    ...) {
+  const bool shouldFilter =
+      ShouldFilterOpaqueResponse(OpaqueResponseFilterFetch::BlockedByORB);
+
+  if (MOZ_UNLIKELY(MOZ_LOG_TEST(GetORBLog(), LogLevel::Debug))) {
+    va_list ap;
+    va_start(ap, aFormat);
+    nsVprintfCString logString(aFormat, ap);
+    va_end(ap);
+
+    LOGORB("%s: %s", shouldFilter ? "Filtered" : "Blocked", logString.get());
+  }
+
+  if (shouldFilter) {
+    // The existence of `mORB` depends on `BlockOrFilterOpaqueResponse` being
+    // called before or after sniffing has completed.
+    // Another requirement is that `OpaqueResponseFilter` must come after
+    // `OpaqueResponseBlocker`, which is why in the case of having an
+    // `OpaqueResponseBlocker` we let it handle creating an
+    // `OpaqueResponseFilter`.
+    if (aORB) {
+      MOZ_DIAGNOSTIC_ASSERT(!mORB || aORB == mORB);
+      aORB->FilterResponse();
+    } else {
+      mListener = new OpaqueResponseFilter(mListener);
+    }
+    return OpaqueResponse::Allow;
+  }
+
+  LogORBError(aReason);
+  return OpaqueResponse::Block;
+}
+
 // The specification for ORB is currently being written:
 // https://whatpr.org/fetch/1442.html#orb-algorithm
 // The `opaque-response-safelist check` is implemented in:
@@ -3113,13 +3174,40 @@ OpaqueResponse
 HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
+  // https://whatpr.org/fetch/1442.html#http-fetch, step 6.4
+  if (!ShouldBlockOpaqueResponse()) {
+    return OpaqueResponse::Allow;
+  }
+
+  // Regardless of if ORB is enabled or not, we check if we should filter the
+  // response in the parent. This way data won't reach a content process that
+  // will create a filtered `Response` object. This is enabled when
+  // 'browser.opaqueResponseBlocking.filterFetchResponse' is
+  // `OpaqueResponseFilterFetch::All`.
+  // See https://fetch.spec.whatwg.org/#concept-filtered-response-opaque
+  if (ShouldFilterOpaqueResponse(OpaqueResponseFilterFetch::All)) {
+    mListener = new OpaqueResponseFilter(mListener);
+
+    // If we're filtering a response in the parent, there will be no data to
+    // determine if it should be blocked or not so the only option we have is to
+    // allow it.
+    return OpaqueResponse::Allow;
+  }
+
   if (!mCachedOpaqueResponseBlockingPref) {
     return OpaqueResponse::Allow;
   }
 
-  // https://whatpr.org/fetch/1442.html#http-fetch, step 6.4
-  if (!ShouldBlockOpaqueResponse()) {
-    return OpaqueResponse::Allow;
+  // If ORB is enabled, we check if we should filter the response in the parent.
+  // This way data won't reach a content process that will create a filtered
+  // `Response` object. We allow ORB to determine if the response should be
+  // blocked or filtered, but regardless no data should reach the content
+  // process. This is enabled when
+  // 'browser.opaqueResponseBlocking.filterFetchResponse' is
+  // `OpaqueResponseFilterFetch::AllowedByORB`.
+  // See https://fetch.spec.whatwg.org/#concept-filtered-response-opaque
+  if (ShouldFilterOpaqueResponse(OpaqueResponseFilterFetch::AllowedByORB)) {
+    mListener = new OpaqueResponseFilter(mListener);
   }
 
   Telemetry::ScalarAdd(
@@ -3147,24 +3235,22 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
       // Step 3.1
       return OpaqueResponse::Allow;
     case OpaqueResponseBlockedReason::BLOCKED_BLOCKLISTED_NEVER_SNIFFED:
-      // Step 3.2
-      LOGORB("Blocked: BLOCKED_BLOCKLISTED_NEVER_SNIFFED");
-      LogORBError(
-          u"mimeType is an opaque-blocklisted-never-sniffed MIME type"_ns);
-      return OpaqueResponse::Block;
+      return BlockOrFilterOpaqueResponse(
+          mORB, u"mimeType is an opaque-blocklisted-never-sniffed MIME type"_ns,
+          "BLOCKED_BLOCKLISTED_NEVER_SNIFFED");
     case OpaqueResponseBlockedReason::BLOCKED_206_AND_BLOCKLISTED:
       // Step 3.3
-      LOGORB("Blocked: BLOCKED_206_AND_BLOCKEDLISTED");
-      LogORBError(
-          u"response's status is 206 and mimeType is an opaque-blocklisted MIME type"_ns);
-      return OpaqueResponse::Block;
+      return BlockOrFilterOpaqueResponse(
+          mORB,
+          u"response's status is 206 and mimeType is an opaque-blocklisted MIME type"_ns,
+          "BLOCKED_206_AND_BLOCKEDLISTED");
     case OpaqueResponseBlockedReason::
         BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN:
       // Step 3.4
-      LOGORB("Blocked: BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN");
-      LogORBError(
-          u"nosniff is true and mimeType is an opaque-blocklisted MIME type or its essence is 'text/plain'"_ns);
-      return OpaqueResponse::Block;
+      return BlockOrFilterOpaqueResponse(
+          mORB,
+          u"nosniff is true and mimeType is an opaque-blocklisted MIME type or its essence is 'text/plain'"_ns,
+          "BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN");
     default:
       break;
   }
@@ -3185,9 +3271,9 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
   // Step 5
   if (mResponseHead->Status() == 206 &&
       !IsFirstPartialResponse(*mResponseHead)) {
-    LOGORB("Blocked: Is not a valid partial response given 0");
-    LogORBError(u"response status is 206 and not first partial response"_ns);
-    return OpaqueResponse::Block;
+    return BlockOrFilterOpaqueResponse(
+        mORB, u"response status is 206 and not first partial response"_ns,
+        "Is not a valid partial response given 0");
   }
 
   // Setup for steps 6, 7, 8 and 10.
@@ -3242,25 +3328,22 @@ OpaqueResponse HttpBaseChannel::PerformOpaqueResponseSafelistCheckAfterSniff(
   bool isMediaRequest;
   mLoadInfo->GetIsMediaRequest(&isMediaRequest);
   if (isMediaRequest) {
-    LOGORB("Blocked: media request");
-    LogORBError(u"after sniff: media request"_ns);
-    return OpaqueResponse::Block;
+    return BlockOrFilterOpaqueResponse(mORB, u"after sniff: media request"_ns,
+                                       "media request");
   }
 
   // Step 11
   if (aNoSniff) {
-    LOGORB("Blocked: nosniff");
-    LogORBError(u"after sniff: nosniff is true"_ns);
-    return OpaqueResponse::Block;
+    return BlockOrFilterOpaqueResponse(mORB, u"after sniff: nosniff is true"_ns,
+                                       "nosniff");
   }
 
   // Step 12
   if (mResponseHead &&
       (mResponseHead->Status() < 200 || mResponseHead->Status() > 299)) {
-    LOGORB("Blocked: status code (%d) is not allowed ",
-           mResponseHead->Status());
-    LogORBError(u"after sniff: status code is not in allowed range"_ns);
-    return OpaqueResponse::Block;
+    return BlockOrFilterOpaqueResponse(
+        mORB, u"after sniff: status code is not in allowed range"_ns,
+        "status code (%d) is not allowed", mResponseHead->Status());
   }
 
   // Step 13
@@ -3273,10 +3356,10 @@ OpaqueResponse HttpBaseChannel::PerformOpaqueResponseSafelistCheckAfterSniff(
   if (StringBeginsWith(aContentType, "image/"_ns) ||
       StringBeginsWith(aContentType, "video/"_ns) ||
       StringBeginsWith(aContentType, "audio/"_ns)) {
-    LOGORB("Blocked: ContentType is image/video/audio");
-    LogORBError(
-        u"after sniff: content-type declares image/video/audio, but sniffing fails"_ns);
-    return OpaqueResponse::Block;
+    return BlockOrFilterOpaqueResponse(
+        mORB,
+        u"after sniff: content-type declares image/video/audio, but sniffing fails"_ns,
+        "ContentType is image/video/audio");
   }
 
   return OpaqueResponse::Sniff;

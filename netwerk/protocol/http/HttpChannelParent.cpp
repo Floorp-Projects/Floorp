@@ -1211,7 +1211,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     responseHead = &cleanedUpResponseHead;
   }
 
-  if (chan && chan->ChannelBlockedByOpaqueResponse() &&
+  if (chan->ChannelBlockedByOpaqueResponse() &&
       chan->CachedOpaqueResponseBlockingPref()) {
     responseHead->ClearHeaders();
   }
