@@ -639,13 +639,13 @@ bool GfxInfo::FireGLXTestProcess() {
   return true;
 }
 
-#ifdef MOZ_WAYLAND
 void GfxInfo::GetDataVAAPI() {
   if (mIsVAAPISupported.isSome()) {
     return;
   }
   mIsVAAPISupported = Some(false);
 
+#ifdef MOZ_WAYLAND
   char* vaapiData = nullptr;
   auto free = mozilla::MakeScopeExit([&] { g_free((void*)vaapiData); });
 
@@ -706,8 +706,8 @@ void GfxInfo::GetDataVAAPI() {
       return;
     }
   }
-}
 #endif
+}
 
 const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (!sDriverInfo->Length()) {
@@ -1135,9 +1135,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(
   // Probe VA-API on supported devices only
   if (aFeature == nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING &&
       *aStatus == nsIGfxInfo::FEATURE_STATUS_OK) {
-#ifdef MOZ_WAYLAND
     GetDataVAAPI();
-#endif
     if (!mIsVAAPISupported.value()) {
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST;
       aFailureId = "FEATURE_FAILURE_VIDEO_DECODING_TEST_FAILED";
