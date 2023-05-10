@@ -129,8 +129,8 @@ class Service : public mozIStorageService,
   // The order of these members should match the order of Init calls in
   // initialize(), to ensure that the unregistration takes place in the reverse
   // order.
-  AutoVFSRegistration mTelemetrySqliteVFS;
-  AutoVFSRegistration mTelemetryExclSqliteVFS;
+  AutoVFSRegistration mBaseSqliteVFS;
+  AutoVFSRegistration mBaseExclSqliteVFS;
   AutoVFSRegistration mQuotaSqliteVFS;
   AutoVFSRegistration mObfuscatingSqliteVFS;
   AutoVFSRegistration mReadOnlyNoLockSqliteVFS;

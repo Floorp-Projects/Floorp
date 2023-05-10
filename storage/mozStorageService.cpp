@@ -305,8 +305,8 @@ void Service::minimizeMemory() {
   }
 }
 
-UniquePtr<sqlite3_vfs> ConstructTelemetryVFS(bool);
-const char* GetTelemetryVFSName(bool);
+UniquePtr<sqlite3_vfs> ConstructBaseVFS(bool);
+const char* GetBaseVFSName(bool);
 
 UniquePtr<sqlite3_vfs> ConstructQuotaVFS(const char* aBaseVFSName);
 const char* GetQuotaVFSName();
@@ -339,25 +339,25 @@ nsresult Service::initialize() {
    *                               /         \
    *                             /             \
    *                           /                 \
-   *                  telemetry-vfs-excl   telemetry-vfs
+   *                     base-vfs-excl        base-vfs
    *                          / \               / \
    *                        /     \           /     \
    *                      /         \       /         \
    *                 unix-excl     win32  unix       win32
    */
 
-  rc = mTelemetrySqliteVFS.Init(ConstructTelemetryVFS(false));
+  rc = mBaseSqliteVFS.Init(ConstructBaseVFS(false));
   if (rc != SQLITE_OK) {
     return convertResultCode(rc);
   }
 
-  rc = mTelemetryExclSqliteVFS.Init(ConstructTelemetryVFS(true));
+  rc = mBaseExclSqliteVFS.Init(ConstructBaseVFS(true));
   if (rc != SQLITE_OK) {
     return convertResultCode(rc);
   }
 
-  rc = mQuotaSqliteVFS.Init(ConstructQuotaVFS(GetTelemetryVFSName(
-      StaticPrefs::storage_sqlite_exclusiveLock_enabled())));
+  rc = mQuotaSqliteVFS.Init(ConstructQuotaVFS(
+      GetBaseVFSName(StaticPrefs::storage_sqlite_exclusiveLock_enabled())));
   if (rc != SQLITE_OK) {
     return convertResultCode(rc);
   }

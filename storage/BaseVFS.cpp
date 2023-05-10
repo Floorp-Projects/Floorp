@@ -479,11 +479,11 @@ static const char* xNextSystemCall(sqlite3_vfs* vfs, const char* zName) {
 namespace mozilla {
 namespace storage {
 
-const char* GetTelemetryVFSName(bool exclusive) {
-  return exclusive ? "telemetry-vfs-excl" : "telemetry-vfs";
+const char* GetBaseVFSName(bool exclusive) {
+  return exclusive ? "base-vfs-excl" : "base-vfs";
 }
 
-UniquePtr<sqlite3_vfs> ConstructTelemetryVFS(bool exclusive) {
+UniquePtr<sqlite3_vfs> ConstructBaseVFS(bool exclusive) {
 #if defined(XP_WIN)
 #  define EXPECTED_VFS "win32"
 #  define EXPECTED_VFS_EXCL "win32"
@@ -516,7 +516,7 @@ UniquePtr<sqlite3_vfs> ConstructTelemetryVFS(bool exclusive) {
   tvfs->szOsFile =
       sizeof(telemetry_file) - sizeof(sqlite3_file) + vfs->szOsFile;
   tvfs->mxPathname = vfs->mxPathname;
-  tvfs->zName = GetTelemetryVFSName(exclusive);
+  tvfs->zName = GetBaseVFSName(exclusive);
   tvfs->pAppData = vfs;
   tvfs->xOpen = xOpen;
   tvfs->xDelete = xDelete;
