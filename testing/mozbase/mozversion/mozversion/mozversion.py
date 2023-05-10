@@ -27,13 +27,17 @@ class Version(object):
         for type, section in INI_DATA_MAPPING:
             config_file = os.path.join(path, "%s.ini" % type)
             if os.path.exists(config_file):
-                self._parse_ini_file(open(config_file), type, section)
+                try:
+                    with open(config_file) as fp:
+                        self._parse_ini_file(fp, type, section)
+                except OSError:
+                    self._logger.warning("Unable to read %s" % config_file)
             else:
                 self._logger.warning("Unable to find %s" % config_file)
 
     def _parse_ini_file(self, fp, type, section):
         config = configparser.RawConfigParser()
-        config.readfp(fp)
+        config.read_file(fp)
         name_map = {
             "codename": "display_name",
             "milestone": "version",
@@ -61,14 +65,14 @@ class LocalFennecVersion(Version):
         for type, section in INI_DATA_MAPPING:
             filename = "%s.ini" % type
             if filename in archive_list:
-                fp = io.TextIOWrapper(archive.open(filename))
-                self._parse_ini_file(fp, type, section)
+                with io.TextIOWrapper(archive.open(filename)) as fp:
+                    self._parse_ini_file(fp, type, section)
             else:
                 self._logger.warning("Unable to find %s" % filename)
 
         if "package-name.txt" in archive_list:
-            fp = io.TextIOWrapper(archive.open("package-name.txt"))
-            self._info["package_name"] = fp.readlines()[0].strip()
+            with io.TextIOWrapper(archive.open("package-name.txt")) as fp:
+                self._info["package_name"] = fp.readlines()[0].strip()
 
 
 class LocalVersion(Version):
