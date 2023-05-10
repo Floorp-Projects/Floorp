@@ -1652,6 +1652,12 @@ nsresult EditorBase::CutAsAction(nsIPrincipal* aPrincipal) {
   }
 
   {
+    RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
+    if (NS_WARN_IF(!focusManager)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    const RefPtr<Element> focusedElement = focusManager->GetFocusedElement();
+
     Result<ClipboardEventResult, nsresult> ret =
         DispatchClipboardEventAndUpdateClipboard(
             eCut, nsIClipboard::kGlobalClipboard);
@@ -1670,6 +1676,24 @@ nsresult EditorBase::CutAsAction(nsIPrincipal* aPrincipal) {
         return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
       case ClipboardEventResult::DefaultPreventedOfPaste:
         MOZ_ASSERT_UNREACHABLE("Invalid result for eCut");
+    }
+
+    // If focus is changed by a "cut" event listener, we should stop handling
+    // the cut.
+    const RefPtr<Element> newFocusedElement = focusManager->GetFocusedElement();
+    if (MOZ_UNLIKELY(focusedElement != newFocusedElement)) {
+      if (focusManager->GetFocusedWindow() != GetWindow()) {
+        return NS_OK;
+      }
+      RefPtr<EditorBase> editorBase =
+          nsContentUtils::GetActiveEditor(GetPresContext());
+      if (!editorBase || (editorBase->IsHTMLEditor() &&
+                          !editorBase->AsHTMLEditor()->IsActiveInDOMWindow())) {
+        return NS_OK;
+      }
+      if (editorBase != this) {
+        return NS_OK;
+      }
     }
   }
 
@@ -1788,6 +1812,12 @@ nsresult EditorBase::PasteAsAction(int32_t aClipboardType,
   }
 
   if (aDispatchPasteEvent == DispatchPasteEvent::Yes) {
+    RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
+    if (NS_WARN_IF(!focusManager)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    const RefPtr<Element> focusedElement = focusManager->GetFocusedElement();
+
     Result<ClipboardEventResult, nsresult> ret =
         DispatchClipboardEventAndUpdateClipboard(ePaste, aClipboardType);
     if (MOZ_UNLIKELY(ret.isErr())) {
@@ -1804,6 +1834,31 @@ nsresult EditorBase::PasteAsAction(int32_t aClipboardType,
         return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
       case ClipboardEventResult::CopyOrCutHandled:
         MOZ_ASSERT_UNREACHABLE("Invalid result for ePaste");
+    }
+
+    // If focus is changed by a "paste" event listener, we should keep handling
+    // the "pasting" in new focused editor because Chrome works as so.
+    const RefPtr<Element> newFocusedElement = focusManager->GetFocusedElement();
+    if (MOZ_UNLIKELY(focusedElement != newFocusedElement)) {
+      // For the privacy reason, let's top handling it if new focused element is
+      // in different document.
+      if (focusManager->GetFocusedWindow() != GetWindow()) {
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      }
+      RefPtr<EditorBase> editorBase =
+          nsContentUtils::GetActiveEditor(GetPresContext());
+      if (!editorBase || (editorBase->IsHTMLEditor() &&
+                          !editorBase->AsHTMLEditor()->IsActiveInDOMWindow())) {
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      }
+      if (editorBase != this) {
+        nsresult rv = editorBase->PasteAsAction(
+            aClipboardType, DispatchPasteEvent::No, aPrincipal);
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "EditorBase::PasteAsAction(DispatchPasteEvent::No) failed");
+        return EditorBase::ToGenericNSResult(rv);
+      }
     }
   } else {
     // The caller must already have dispatched a "paste" event.
@@ -1832,6 +1887,12 @@ nsresult EditorBase::PasteAsQuotationAsAction(
   }
 
   if (aDispatchPasteEvent == DispatchPasteEvent::Yes) {
+    RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
+    if (NS_WARN_IF(!focusManager)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    const RefPtr<Element> focusedElement = focusManager->GetFocusedElement();
+
     Result<ClipboardEventResult, nsresult> ret =
         DispatchClipboardEventAndUpdateClipboard(ePaste, aClipboardType);
     if (MOZ_UNLIKELY(ret.isErr())) {
@@ -1849,6 +1910,31 @@ nsresult EditorBase::PasteAsQuotationAsAction(
       case ClipboardEventResult::CopyOrCutHandled:
         MOZ_ASSERT_UNREACHABLE("Invalid result for ePaste");
     }
+
+    // If focus is changed by a "paste" event listener, we should keep handling
+    // the "pasting" in new focused editor because Chrome works as so.
+    const RefPtr<Element> newFocusedElement = focusManager->GetFocusedElement();
+    if (MOZ_UNLIKELY(focusedElement != newFocusedElement)) {
+      // For the privacy reason, let's top handling it if new focused element is
+      // in different document.
+      if (focusManager->GetFocusedWindow() != GetWindow()) {
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      }
+      RefPtr<EditorBase> editorBase =
+          nsContentUtils::GetActiveEditor(GetPresContext());
+      if (!editorBase || (editorBase->IsHTMLEditor() &&
+                          !editorBase->AsHTMLEditor()->IsActiveInDOMWindow())) {
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      }
+      if (editorBase != this) {
+        nsresult rv = editorBase->PasteAsQuotationAsAction(
+            aClipboardType, DispatchPasteEvent::No, aPrincipal);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "EditorBase::PasteAsQuotationAsAction("
+                             "DispatchPasteEvent::No) failed");
+        return EditorBase::ToGenericNSResult(rv);
+      }
+    }
   } else {
     // The caller must already have dispatched a "paste" event.
     editActionData.NotifyOfDispatchingClipboardEvent();
@@ -1861,7 +1947,8 @@ nsresult EditorBase::PasteAsQuotationAsAction(
 }
 
 nsresult EditorBase::PasteTransferableAsAction(
-    nsITransferable* aTransferable, nsIPrincipal* aPrincipal /* = nullptr */) {
+    nsITransferable* aTransferable, DispatchPasteEvent aDispatchPasteEvent,
+    nsIPrincipal* aPrincipal /* = nullptr */) {
   // FIXME: This may be called as a call of nsIEditor::PasteTransferable.
   // In this case, we should keep handling the paste even in the readonly mode.
   if (IsHTMLEditor() && IsReadonly()) {
@@ -1874,7 +1961,13 @@ nsresult EditorBase::PasteTransferableAsAction(
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  {
+  if (aDispatchPasteEvent == DispatchPasteEvent::Yes) {
+    RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
+    if (NS_WARN_IF(!focusManager)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    const RefPtr<Element> focusedElement = focusManager->GetFocusedElement();
+
     // Use an invalid value for the clipboard type as data comes from
     // aTransferable and we don't currently implement a way to put that in the
     // data transfer in TextEditor yet.
@@ -1896,6 +1989,34 @@ nsresult EditorBase::PasteTransferableAsAction(
       case ClipboardEventResult::CopyOrCutHandled:
         MOZ_ASSERT_UNREACHABLE("Invalid result for ePaste");
     }
+
+    // If focus is changed by a "paste" event listener, we should keep handling
+    // the "pasting" in new focused editor because Chrome works as so.
+    const RefPtr<Element> newFocusedElement = focusManager->GetFocusedElement();
+    if (MOZ_UNLIKELY(focusedElement != newFocusedElement)) {
+      // For the privacy reason, let's top handling it if new focused element is
+      // in different document.
+      if (focusManager->GetFocusedWindow() != GetWindow()) {
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      }
+      RefPtr<EditorBase> editorBase =
+          nsContentUtils::GetActiveEditor(GetPresContext());
+      if (!editorBase || (editorBase->IsHTMLEditor() &&
+                          !editorBase->AsHTMLEditor()->IsActiveInDOMWindow())) {
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      }
+      if (editorBase != this) {
+        nsresult rv = editorBase->PasteTransferableAsAction(
+            aTransferable, DispatchPasteEvent::No, aPrincipal);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "EditorBase::PasteTransferableAsAction("
+                             "DispatchPasteEvent::No) failed");
+        return EditorBase::ToGenericNSResult(rv);
+      }
+    }
+  } else {
+    // The caller must already have dispatched a "paste" event.
+    editActionData.NotifyOfDispatchingClipboardEvent();
   }
 
   if (NS_WARN_IF(!aTransferable)) {
@@ -1982,9 +2103,11 @@ EditorBase::SafeToInsertData EditorBase::IsSafeToInsertData(
 }
 
 NS_IMETHODIMP EditorBase::PasteTransferable(nsITransferable* aTransferable) {
-  nsresult rv = PasteTransferableAsAction(aTransferable);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::PasteTransferableAsAction() failed");
+  nsresult rv =
+      PasteTransferableAsAction(aTransferable, DispatchPasteEvent::Yes);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::PasteTransferableAsAction(DispatchPasteEvent::Yes) failed");
   return rv;
 }
 
