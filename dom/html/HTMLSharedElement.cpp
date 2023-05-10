@@ -26,8 +26,6 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
 
 namespace mozilla::dom {
 
-extern nsAttrValue::EnumTable kListTypeTable[];
-
 HTMLSharedElement::~HTMLSharedElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLSharedElement)
@@ -67,61 +65,6 @@ void HTMLSharedElement::DoneAddingChildren(bool aHaveNotified) {
     // sink isn't expecting it.
     asyncDispatcher->PostDOMEvent();
   }
-}
-
-bool HTMLSharedElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                                       const nsAString& aValue,
-                                       nsIPrincipal* aMaybeScriptedPrincipal,
-                                       nsAttrValue& aResult) {
-  if (aNamespaceID == kNameSpaceID_None && mNodeInfo->Equals(nsGkAtoms::dir)) {
-    if (aAttribute == nsGkAtoms::type) {
-      return aResult.ParseEnumValue(aValue, mozilla::dom::kListTypeTable,
-                                    false);
-    }
-    if (aAttribute == nsGkAtoms::start) {
-      return aResult.ParseIntWithBounds(aValue, 1);
-    }
-  }
-
-  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
-                                              aMaybeScriptedPrincipal, aResult);
-}
-
-static void DirectoryMapAttributesIntoRule(
-    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  if (!aDecls.PropertyIsSet(eCSSProperty_list_style_type)) {
-    // type: enum
-    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
-    if (value) {
-      if (value->Type() == nsAttrValue::eEnum) {
-        aDecls.SetKeywordValue(eCSSProperty_list_style_type,
-                               value->GetEnumValue());
-      } else {
-        aDecls.SetKeywordValue(eCSSProperty_list_style_type, ListStyle::Disc);
-      }
-    }
-  }
-
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
-}
-
-NS_IMETHODIMP_(bool)
-HTMLSharedElement::IsAttributeMapped(const nsAtom* aAttribute) const {
-  if (mNodeInfo->Equals(nsGkAtoms::dir)) {
-    static const MappedAttributeEntry attributes[] = {
-        {nsGkAtoms::type},
-        // { nsGkAtoms::compact }, // XXX
-        {nullptr}};
-
-    static const MappedAttributeEntry* const map[] = {
-        attributes,
-        sCommonAttributeMap,
-    };
-
-    return FindAttributeDependence(aAttribute, map);
-  }
-
-  return nsGenericHTMLElement::IsAttributeMapped(aAttribute);
 }
 
 static void SetBaseURIUsingFirstBaseWithHref(Document* aDocument,
@@ -257,15 +200,6 @@ void HTMLSharedElement::UnbindFromTree(bool aNullParent) {
       SetBaseTargetUsingFirstBaseWithTarget(doc, nullptr);
     }
   }
-}
-
-nsMapRuleToAttributesFunc HTMLSharedElement::GetAttributeMappingFunction()
-    const {
-  if (mNodeInfo->Equals(nsGkAtoms::dir)) {
-    return &DirectoryMapAttributesIntoRule;
-  }
-
-  return nsGenericHTMLElement::GetAttributeMappingFunction();
 }
 
 JSObject* HTMLSharedElement::WrapNode(JSContext* aCx,

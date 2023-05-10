@@ -30,18 +30,9 @@ class HTMLSharedElement final : public nsGenericHTMLElement {
   // nsIContent
   virtual void DoneAddingChildren(bool aHaveNotified) override;
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
-
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
   virtual void UnbindFromTree(bool aNullParent = true) override;
-
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
-      const override;
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
