@@ -632,28 +632,29 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
       ReflowInput kidReflowInput(PresContext(), aReflowInput, child, availSize,
                                  Some(kidCBSize));
       kidReflowInput.mFlags.mIsTopOfPage = [&]() {
-        const bool isNestedMulticol =
+        const bool isNestedMulticolOrPaginated =
             aReflowInput.mParentReflowInput->mFrame->HasAnyStateBits(
-                NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
-        if (isNestedMulticol) {
+                NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR) ||
+            PresContext()->IsPaginated();
+        if (isNestedMulticolOrPaginated) {
           if (aConfig.mForceAuto) {
             // If we are forced to fill columns sequentially, force fit the
             // content whether we are at top of page or not.
             return true;
           }
           if (aReflowInput.mFlags.mIsTopOfPage) {
-            // If this is the last balancing reflow in a nested multicol, we
-            // want to force fit content to avoid infinite loops.
+            // If this is the last balancing reflow, we want to force fit
+            // content to avoid infinite loops.
             return !aConfig.mIsBalancing || aConfig.mIsLastBalancingReflow;
           }
-          // If we are a nested multicol and not at the top of page, we
-          // shouldn't force fit content. This is because our
-          // ColumnSetWrapperFrame can be pushed to next page/column and
-          // reflowed again with a potentially larger available block-size.
+          // If we are a not at the top of page, we shouldn't force fit content.
+          // This is because our ColumnSetWrapperFrame can be pushed to the next
+          // column or page and reflowed again with a potentially larger
+          // available block-size.
           return false;
         }
-        // We are a top-level multicol. Force fit the content only if we are not
-        // balancing columns.
+        // We are a top-level multicol in non-paginated context. Force fit the
+        // content only if we are not balancing columns.
         return !aConfig.mIsBalancing;
       }();
       kidReflowInput.mFlags.mTableIsSplittable = false;
