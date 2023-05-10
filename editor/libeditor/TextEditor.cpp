@@ -540,13 +540,18 @@ bool TextEditor::IsCopyToClipboardAllowedInternal() const {
   return UnmaskedStart() <= selectionStart && UnmaskedEnd() >= selectionEnd;
 }
 
-nsresult TextEditor::HandlePasteAsQuotation(
-    AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) {
+nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
+                                              bool aDispatchPasteEvent,
+                                              nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
              aClipboardType == nsIClipboard::kSelectionClipboard);
-  if (NS_WARN_IF(!GetDocument())) {
-    return NS_OK;
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePasteAsQuotation,
+                                          aPrincipal);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
+  MOZ_ASSERT(GetDocument());
 
   // Get Clipboard Service
   nsresult rv;
@@ -564,7 +569,7 @@ nsresult TextEditor::HandlePasteAsQuotation(
       EditorUtils::CreateTransferableForPlainText(*GetDocument());
   if (maybeTransferable.isErr()) {
     NS_WARNING("EditorUtils::CreateTransferableForPlainText() failed");
-    return maybeTransferable.unwrapErr();
+    return EditorBase::ToGenericNSResult(maybeTransferable.unwrapErr());
   }
   nsCOMPtr<nsITransferable> trans(maybeTransferable.unwrap());
   if (!trans) {
@@ -581,15 +586,14 @@ nsresult TextEditor::HandlePasteAsQuotation(
   // it still owns the data, we just have a pointer to it.
   // If it can't support a "text" output of the data the call will fail
   nsCOMPtr<nsISupports> genericDataObj;
-  nsAutoCString flavor;
-  rv = trans->GetAnyTransferData(flavor, getter_AddRefs(genericDataObj));
+  nsAutoCString flav;
+  rv = trans->GetAnyTransferData(flav, getter_AddRefs(genericDataObj));
   if (NS_FAILED(rv)) {
     NS_WARNING("nsITransferable::GetAnyTransferData() failed");
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
 
-  if (!flavor.EqualsLiteral(kTextMime) &&
-      !flavor.EqualsLiteral(kMozTextInternal)) {
+  if (!flav.EqualsLiteral(kTextMime) && !flav.EqualsLiteral(kMozTextInternal)) {
     return NS_OK;
   }
 
@@ -606,15 +610,17 @@ nsresult TextEditor::HandlePasteAsQuotation(
     return NS_OK;
   }
 
-  aEditActionData.SetData(stuffToPaste);
+  editActionData.SetData(stuffToPaste);
   if (!stuffToPaste.IsEmpty()) {
     nsContentUtils::PlatformToDOMLineBreaks(stuffToPaste);
   }
-  rv = aEditActionData.MaybeDispatchBeforeInputEvent();
+  // XXX Perhaps, we should dispatch "paste" event with the pasting text data.
+  editActionData.NotifyOfDispatchingClipboardEvent();
+  rv = editActionData.MaybeDispatchBeforeInputEvent();
   if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
                          "MaybeDispatchBeforeInputEvent() failed");
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(
@@ -622,7 +628,7 @@ nsresult TextEditor::HandlePasteAsQuotation(
   rv = InsertWithQuotationsAsSubAction(stuffToPaste);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "TextEditor::InsertWithQuotationsAsSubAction() failed");
-  return rv;
+  return EditorBase::ToGenericNSResult(rv);
 }
 
 nsresult TextEditor::InsertWithQuotationsAsSubAction(

@@ -378,7 +378,6 @@ interface nsIEditor  : nsISupports
     * What about mixed selections?
     * What are the clipboard formats?
     */
-  [can_run_script]
   void copy();
 
   /**
