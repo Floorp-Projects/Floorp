@@ -27,4 +27,3 @@ def nss_config(nss_pkg, build_env):
 
 set_config("NSS_CFLAGS", nss_config.cflags)
 set_config("NSS_LIBS", nss_config.libs)
-add_old_configure_assignment("NSS_CFLAGS", nss_config.cflags)

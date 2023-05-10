@@ -766,7 +766,6 @@ def cross_compiling(host, target):
 
 set_config("CROSS_COMPILE", cross_compiling)
 set_define("CROSS_COMPILE", cross_compiling)
-add_old_configure_assignment("CROSS_COMPILE", cross_compiling)
 
 
 @depends(target)
@@ -976,7 +975,6 @@ def android_cpu_arch(target):
 
 
 set_config("ANDROID_CPU_ARCH", android_cpu_arch)
-add_old_configure_assignment("ANDROID_CPU_ARCH", android_cpu_arch)
 
 
 @depends("--enable-project", build_environment, "--help")
@@ -1157,21 +1155,16 @@ set_config("NIGHTLY_BUILD", milestone.is_nightly)
 set_define("NIGHTLY_BUILD", milestone.is_nightly)
 set_config("RELEASE_OR_BETA", milestone.is_release_or_beta)
 set_define("RELEASE_OR_BETA", milestone.is_release_or_beta)
-add_old_configure_assignment("RELEASE_OR_BETA", milestone.is_release_or_beta)
 set_config("MOZ_ESR", milestone.is_esr)
 set_define("MOZ_ESR", milestone.is_esr)
 set_config("EARLY_BETA_OR_EARLIER", milestone.is_early_beta_or_earlier)
 set_define("EARLY_BETA_OR_EARLIER", milestone.is_early_beta_or_earlier)
-add_old_configure_assignment(
-    "EARLY_BETA_OR_EARLIER", milestone.is_early_beta_or_earlier
-)
 set_define("MOZILLA_VERSION", depends(milestone)(lambda m: '"%s"' % m.version))
 set_config("MOZILLA_VERSION", milestone.version)
 set_define("MOZILLA_VERSION_U", milestone.version)
 set_define("MOZILLA_UAVERSION", depends(milestone)(lambda m: '"%s"' % m.uaversion))
 set_config("MOZILLA_SYMBOLVERSION", milestone.symbolversion)
-# JS configure still wants to look at these.
-add_old_configure_assignment("MOZILLA_VERSION", milestone.version)
+# JS configure still want to look at this one.
 add_old_configure_assignment("MOZILLA_SYMBOLVERSION", milestone.symbolversion)
 
 set_config("MOZ_APP_VERSION", milestone.app_version)

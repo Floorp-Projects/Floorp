@@ -2700,7 +2700,6 @@ def gnu_as(assembler, c_compiler, toolchain_flags):
 
 
 set_config("GNU_AS", gnu_as)
-add_old_configure_assignment("GNU_AS", gnu_as)
 
 
 @depends(as_info, target)
@@ -3089,15 +3088,13 @@ def ar_config(c_compiler, toolchain_prefix=None):
 
 target_ar_config = ar_config(c_compiler, toolchain_prefix)
 
-ar = check_prog("AR", target_ar_config.names, paths=clang_search_path)
-
-add_old_configure_assignment("AR", ar)
+check_prog("AR", target_ar_config.names, paths=clang_search_path)
 
 set_config("AR_FLAGS", target_ar_config.flags)
 
 host_ar_config = ar_config(host_c_compiler)
 
-host_ar = check_prog("HOST_AR", host_ar_config.names, paths=clang_search_path)
+check_prog("HOST_AR", host_ar_config.names, paths=clang_search_path)
 
 
 @depends(toolchain_prefix, c_compiler)

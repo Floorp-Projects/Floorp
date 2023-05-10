@@ -163,7 +163,6 @@ def dmd(value):
 
 set_config("MOZ_DMD", dmd)
 set_define("MOZ_DMD", dmd)
-add_old_configure_assignment("MOZ_DMD", dmd)
 imply_option("--enable-profiling", dmd)
 imply_option("--enable-jemalloc", dmd, when=compile_environment)
 imply_option("--enable-replace-malloc", dmd, when=compile_environment)
@@ -589,7 +588,6 @@ def fc_freetype(value, toolkit):
         return True
 
 
-add_old_configure_assignment("USE_FC_FREETYPE", fc_freetype)
 set_define("USE_FC_FREETYPE", fc_freetype)
 
 # Pango
@@ -751,7 +749,6 @@ def fmp4(value, target, wmf, applemedia):
 
 set_config("MOZ_FMP4", fmp4)
 set_define("MOZ_FMP4", fmp4)
-add_old_configure_assignment("MOZ_FMP4", fmp4)
 
 
 @depends(target)
@@ -1125,7 +1122,6 @@ def webspeech(value):
 
 set_config("MOZ_WEBSPEECH", webspeech)
 set_define("MOZ_WEBSPEECH", webspeech)
-add_old_configure_assignment("MOZ_WEBSPEECH", webspeech)
 
 # Speech API test backend
 # ==============================================================
@@ -1467,7 +1463,6 @@ def enable_asan_reporter(value):
 
 set_config("MOZ_ASAN_REPORTER", enable_asan_reporter)
 set_define("MOZ_ASAN_REPORTER", enable_asan_reporter)
-add_old_configure_assignment("MOZ_ASAN_REPORTER", enable_asan_reporter)
 
 # Elfhack
 # ==============================================================

@@ -249,7 +249,6 @@ def armv7(arch):
 
 set_config("MOZ_THUMB2", True, when=arm_target.thumb2)
 set_define("MOZ_THUMB2", True, when=arm_target.thumb2)
-add_old_configure_assignment("MOZ_THUMB2", True, when=arm_target.thumb2)
 
 
 have_arm_simd = c_compiler.try_compile(
@@ -280,7 +279,6 @@ set_define("BUILD_ARM_NEON", True, when=build_arm_neon)
 
 
 set_config("ARM_ARCH", depends(arm_target.arm_arch)(lambda x: str(x)))
-add_old_configure_assignment("ARM_ARCH", depends(arm_target.arm_arch)(lambda x: str(x)))
 set_config("MOZ_FPU", arm_target.fpu)
 
 
