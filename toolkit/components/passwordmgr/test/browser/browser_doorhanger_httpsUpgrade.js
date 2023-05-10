@@ -30,7 +30,7 @@ add_task(async function test_httpsUpgradeCaptureFields_noChange() {
   info(
     "Check that we don't prompt to remember when capturing an upgraded login with no change"
   );
-  await Services.logins.addLoginAsync(login1);
+  Services.logins.addLogin(login1);
   // Sanity check the HTTP login exists.
   let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should have the HTTP login");
@@ -73,7 +73,7 @@ add_task(async function test_httpsUpgradeCaptureFields_changePW() {
   info(
     "Check that we prompt to change when capturing an upgraded login with a new PW"
   );
-  await Services.logins.addLoginAsync(login1);
+  Services.logins.addLogin(login1);
   // Sanity check the HTTP login exists.
   let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should have the HTTP login");
@@ -131,7 +131,8 @@ add_task(
     info(
       "Check that we prompt to change and properly save when capturing an upgraded login with a new PW when an http login also exists for that username"
     );
-    await Services.logins.addLogins([login1, login1HTTPS]);
+    Services.logins.addLogin(login1);
+    Services.logins.addLogin(login1HTTPS);
 
     let logins = Services.logins.getAllLogins();
     Assert.equal(logins.length, 2, "Should have both HTTP and HTTPS logins");
@@ -212,7 +213,7 @@ add_task(
 
 add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
   info("Capture a new HTTP login which matches a stored HTTPS one.");
-  await Services.logins.addLoginAsync(login1HTTPS);
+  Services.logins.addLogin(login1HTTPS);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",

@@ -16,27 +16,27 @@
 /**
  * Tests legacy validation with addLogin.
  */
-add_task(async function test_addLogin_invalid_characters_legacy() {
+add_task(function test_addLogin_invalid_characters_legacy() {
   // Test newlines and carriage returns in properties that contain URLs.
   for (let testValue of [
     "http://newline\n.example.com",
     "http://carriagereturn.example.com\r",
   ]) {
     let loginInfo = TestData.formLogin({ origin: testValue });
-    await Assert.rejects(
-      Services.logins.addLoginAsync(loginInfo),
+    Assert.throws(
+      () => Services.logins.addLogin(loginInfo),
       /login values can't contain newlines/
     );
 
     loginInfo = TestData.formLogin({ formActionOrigin: testValue });
-    await Assert.rejects(
-      Services.logins.addLoginAsync(loginInfo),
+    Assert.throws(
+      () => Services.logins.addLogin(loginInfo),
       /login values can't contain newlines/
     );
 
     loginInfo = TestData.authLogin({ httpRealm: testValue });
-    await Assert.rejects(
-      Services.logins.addLoginAsync(loginInfo),
+    Assert.throws(
+      () => Services.logins.addLogin(loginInfo),
       /login values can't contain newlines/
     );
   }
@@ -44,35 +44,35 @@ add_task(async function test_addLogin_invalid_characters_legacy() {
   // Test newlines and carriage returns in form field names.
   for (let testValue of ["newline_field\n", "carriagereturn\r_field"]) {
     let loginInfo = TestData.formLogin({ usernameField: testValue });
-    await Assert.rejects(
-      Services.logins.addLoginAsync(loginInfo),
+    Assert.throws(
+      () => Services.logins.addLogin(loginInfo),
       /login values can't contain newlines/
     );
 
     loginInfo = TestData.formLogin({ passwordField: testValue });
-    await Assert.rejects(
-      Services.logins.addLoginAsync(loginInfo),
+    Assert.throws(
+      () => Services.logins.addLogin(loginInfo),
       /login values can't contain newlines/
     );
   }
 
   // Test a single dot as the value of usernameField and formActionOrigin.
   let loginInfo = TestData.formLogin({ usernameField: "." });
-  await Assert.rejects(
-    Services.logins.addLoginAsync(loginInfo),
+  Assert.throws(
+    () => Services.logins.addLogin(loginInfo),
     /login values can't be periods/
   );
 
   loginInfo = TestData.formLogin({ formActionOrigin: "." });
-  await Assert.rejects(
-    Services.logins.addLoginAsync(loginInfo),
+  Assert.throws(
+    () => Services.logins.addLogin(loginInfo),
     /login values can't be periods/
   );
 
   // Test the sequence " (" inside the value of the "origin" property.
   loginInfo = TestData.formLogin({ origin: "http://parens (.example.com" });
-  await Assert.rejects(
-    Services.logins.addLoginAsync(loginInfo),
+  Assert.throws(
+    () => Services.logins.addLogin(loginInfo),
     /bad parens in origin/
   );
 });

@@ -9,64 +9,75 @@
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
+<script>
+let readyPromise = registerRunTests(1);
+
+let origin = window.location.origin;
+addLoginsInParent(
+  [origin, "https://autocomplete", null, "user1", "pass1", "", ""],
+  [origin, "https://autocomplete", null, "user2", "pass2", "", ""]);
+
+</script>
 <body>
 <p id="display"></p>
-<div id="content"></div>
+<div id="content">
+  <form id="form1" action="https://autocomplete" onsubmit="return false;">
+    <input  type="text"       id="uname">
+    <input  type="password"   id="pword">
+    <button type="submit">Submit</button>
+  </form>
 <pre id="test">
 <script>
-const { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
+let { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
 
 add_setup(async () => {
-  const origin = window.location.origin;
-  await addLoginsInParent(
-    [origin, "https://autocomplete", null, "user1", "pass1", "", ""],
-    [origin, "https://autocomplete", null, "user2", "pass2", "", ""]
-  );
+  ok(readyPromise, "check promise is available");
+  await readyPromise;
 });
 
 add_task(async function test_field_highlight_on_autocomplete() {
-  const form = createLoginForm({
-    action: "https://autocomplete"
-  });
+  // Test username autocomplete.
+  let username = document.getElementById("uname");
+  let password = document.getElementById("pword");
 
-  await openPopupOn(form.uname);
+  await openPopupOn(username);
   synthesizeKey("KEY_ArrowDown");
   await synthesizeKey("KEY_Enter");
 
   await ContentTaskUtils.waitForCondition(() => {
-    return form.uname.matches(":autofill")
+    return username.matches(":autofill")
   }, "Highlight was successfully applied to the username field on username autocomplete");
 
-  ok(form.pword.matches(":autofill"),
+  ok(password.matches(":autofill"),
      "Highlight was successfully applied to the password field on username autocomplete");
 
   // Clear existing highlight on login fields. We check by pressing the tab key after backspace
   // (by shifting focus to the next element) because the tab key was known to cause a bug where the
   // highlight is applied once again. See Bug 1526522.
-  form.uname.focus();
+  username.focus();
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
-  ok(!form.uname.matches(":autofill"),
+  ok(!username.matches(":autofill"),
      "Highlight was successfully removed on the username field");
 
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
-  ok(!form.pword.matches(":autofill"),
+  ok(!password.matches(":autofill"),
      "Highlight was successfully removed on the password field");
 
   // Clear login fields.
-  form.uname.value = "";
-  form.pword.value = "";
+  username.value = "";
+  password.value = "";
 
   // Test password field autocomplete.
-  await openPopupOn(form.pword);
+  await openPopupOn(password);
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
 
   await ContentTaskUtils.waitForCondition(() => {
-    return form.pword.matches(":autofill");
+    return password.matches(":autofill");
   }, "Highlight was successfully applied to the password field on password autocomplete");
 
   // Clear existing highlight on the password field. We check by pressing the tab key after backspace
@@ -75,12 +86,12 @@ add_task(async function test_field_highlight_on_autocomplete() {
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
 
-  ok(!form.pword.matches(":autofill"),
+  ok(!password.matches(":autofill"),
      "Highlight was successfully removed on the password field");
 
   // Clear login fields.
-  form.uname.value = "";
-  form.pword.value = "";
+  username.value = "";
+  password.value = "";
 });
 </script>
 </body>

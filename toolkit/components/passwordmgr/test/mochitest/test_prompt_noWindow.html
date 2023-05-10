@@ -21,13 +21,21 @@
 modalType = authPromptModalType;
 
 add_setup(async () => {
-  await addLoginsInParent(
-    ["http://mochi.test:8888", null, "mochitest", "mochiuser1", "mochipass1", "", ""]
-  );
+  let loginAddedPromise = promiseStorageChanged(["addLogin"]);
+
+  runInParent(() => {
+    let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                createInstance(Ci.nsILoginInfo);
+    login.init("http://mochi.test:8888", null, "mochitest",
+               "mochiuser1", "mochipass1", "", "");
+    Services.logins.addLogin(login);
+  });
+
+  await loginAddedPromise;
 });
 
 add_task(async function test_sandbox_xhr() {
-  const state = {
+  let state = {
     msg: "This site is asking you to sign in.",
     title: "Authentication Required",
     textValue: "mochiuser1",
@@ -42,21 +50,21 @@ add_task(async function test_sandbox_xhr() {
     focused: "textField",
     defButton: "button0",
   };
-  const action = {
+  let action = {
     buttonClick: "ok",
   };
-  const promptDone = handlePrompt(state, action);
+  let promptDone = handlePrompt(state, action);
 
-  const url = new URL("authenticate.sjs?user=mochiuser1&pass=mochipass1", window.location.href);
-  const sandboxConstructor = SpecialPowers.Cu.Sandbox;
-  const sandbox = new sandboxConstructor(this, {wantXrays: true});
+  let url = new URL("authenticate.sjs?user=mochiuser1&pass=mochipass1", window.location.href);
+  let sandboxConstructor = SpecialPowers.Cu.Sandbox;
+  let sandbox = new sandboxConstructor(this, {wantXrays: true});
   function sandboxedRequest(sandboxedUrl) {
-    const req = new XMLHttpRequest();
+    let req = new XMLHttpRequest();
     req.open("GET", sandboxedUrl, true);
     req.send(null);
   }
 
-  const loginModifiedPromise = promiseStorageChanged(["modifyLogin"]);
+  let loginModifiedPromise = promiseStorageChanged(["modifyLogin"]);
   sandbox.sandboxedRequest = sandboxedRequest(url);
   info("send the XHR request in the sandbox");
   SpecialPowers.Cu.evalInSandbox("sandboxedRequest;", sandbox);
