@@ -39,9 +39,11 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
     case VideoType::kUYVY:
       return width * height * 2;
     case VideoType::kRGB24:
+    case VideoType::kBGR24:
       return width * height * 3;
     case VideoType::kBGRA:
     case VideoType::kARGB:
+    case VideoType::kABGR:
       return width * height * 4;
     case VideoType::kMJPEG:
     case VideoType::kUnknown:
@@ -92,6 +94,8 @@ int ConvertVideoType(VideoType video_type) {
       return libyuv::FOURCC_YV12;
     case VideoType::kRGB24:
       return libyuv::FOURCC_24BG;
+    case VideoType::kBGR24:
+      return libyuv::FOURCC_RAW;
     case VideoType::kABGR:
       return libyuv::FOURCC_ABGR;
     case VideoType::kRGB565:
