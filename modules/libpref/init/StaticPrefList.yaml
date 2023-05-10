@@ -1737,6 +1737,29 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# This pref controls how filtering of opaque responses for calls to `Window.fetch`.
+# (and similar) is performed in the parent process. This is intended to make sure
+# that data that would be filtered in a content process never actually reaches that
+# content process.
+# See https://fetch.spec.whatwg.org/#concept-filtered-response-opaque
+#   0) Don't filter in the parent process at all, and let content processes handle
+#      opaque filtering. Regardless of if ORB is enabled or not. N.B. that if ORB
+#      is enabled opaque responses will be blocked.
+#   1) If ORB is enabled, in the parent process, filter the responses that ORB allows.
+#      N.B. any responses ORB doesn't allow will not send data to a content process
+#      since they will return a NetworkError. If the request is allowed by ORB, the
+#      internal response will be intact and sent to the content process as is.
+#   2) If ORB is enabled, in the parent process, filter the responses that ORB blocks,
+#      if they were issued by `Window.fetch` (and similar).
+#   3) Filter all responses in the parent, regardless of if ORB is enabled or not.
+#      This means that opaque responses coming from `Window.fetch` won't even be
+#      considered for being blocked by ORB.
+- name: browser.opaqueResponseBlocking.filterFetchResponse
+  type: uint32_t
+  value: 2
+  mirror: always
+  do_not_use_directly: true
+
 # When this pref is enabled, <object> and <embed> elements will create
 # synthetic documents when the resource type they're loading is an image.
 - name: browser.opaqueResponseBlocking.syntheticBrowsingContext
