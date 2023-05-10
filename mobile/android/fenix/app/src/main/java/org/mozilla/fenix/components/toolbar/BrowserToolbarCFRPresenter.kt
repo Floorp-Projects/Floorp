@@ -9,8 +9,12 @@ import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.clickable
 import androidx.compose.material.Text
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getColor
@@ -211,6 +215,7 @@ class BrowserToolbarCFRPresenter(
         }
     }
 
+    @OptIn(ExperimentalComposeUiApi::class)
     @VisibleForTesting
     internal fun showTcpCfr() {
         CFRPopup(
@@ -246,6 +251,11 @@ class BrowserToolbarCFRPresenter(
                         text = context.getString(R.string.tcp_cfr_message),
                         color = FirefoxTheme.colors.textOnColorPrimary,
                         style = FirefoxTheme.typography.body2,
+                        modifier = Modifier
+                            .semantics {
+                                testTagsAsResourceId = true
+                                testTag = "tcp_cfr.message"
+                            },
                     )
                 }
             },
@@ -254,16 +264,21 @@ class BrowserToolbarCFRPresenter(
                     Text(
                         text = context.getString(R.string.tcp_cfr_learn_more),
                         color = FirefoxTheme.colors.textOnColorPrimary,
-                        modifier = Modifier.clickable {
-                            context.components.useCases.tabsUseCases.selectOrAddTab.invoke(
-                                SupportUtils.getSumoURLForTopic(
-                                    context,
-                                    TOTAL_COOKIE_PROTECTION,
-                                ),
-                            )
-                            TrackingProtection.tcpSumoLinkClicked.record(NoExtras())
-                            popup?.dismiss()
-                        },
+                        modifier = Modifier
+                            .semantics {
+                                testTagsAsResourceId = true
+                                testTag = "tcp_cfr.action"
+                            }
+                            .clickable {
+                                context.components.useCases.tabsUseCases.selectOrAddTab.invoke(
+                                    SupportUtils.getSumoURLForTopic(
+                                        context,
+                                        TOTAL_COOKIE_PROTECTION,
+                                    ),
+                                )
+                                TrackingProtection.tcpSumoLinkClicked.record(NoExtras())
+                                popup?.dismiss()
+                            },
                         style = FirefoxTheme.typography.body2.copy(
                             textDecoration = TextDecoration.Underline,
                         ),

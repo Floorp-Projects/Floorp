@@ -7,6 +7,11 @@ package org.mozilla.fenix.onboarding
 import android.content.Context
 import android.view.View
 import androidx.compose.material.Text
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getColor
 import androidx.recyclerview.widget.RecyclerView
@@ -55,6 +60,7 @@ class HomeCFRPresenter(
         }
     }
 
+    @OptIn(ExperimentalComposeUiApi::class)
     private fun showSyncedTabCFR(view: View) {
         CFRPopup(
             anchor = view,
@@ -84,6 +90,11 @@ class HomeCFRPresenter(
                         text = context.getString(R.string.sync_cfr_message),
                         color = FirefoxTheme.colors.textOnColorPrimary,
                         style = FirefoxTheme.typography.body2,
+                        modifier = Modifier
+                            .semantics {
+                                testTagsAsResourceId = true
+                                testTag = "sync_cfr.message"
+                            },
                     )
                 }
             },
@@ -92,6 +103,7 @@ class HomeCFRPresenter(
         Onboarding.synCfrShown.record(NoExtras())
     }
 
+    @OptIn(ExperimentalComposeUiApi::class)
     @Suppress("MagicNumber")
     private fun showJumpBackInCFR(view: View) {
         CFRPopup(
@@ -122,6 +134,11 @@ class HomeCFRPresenter(
                         text = context.getString(R.string.onboarding_home_screen_jump_back_contextual_hint_2),
                         color = FirefoxTheme.colors.textOnColorPrimary,
                         style = FirefoxTheme.typography.body2,
+                        modifier = Modifier
+                            .semantics {
+                                testTagsAsResourceId = true
+                                testTag = "jump_back_cfr.message"
+                            },
                     )
                 }
             },

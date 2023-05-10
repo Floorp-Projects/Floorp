@@ -871,6 +871,11 @@ class HomeFragment : Fragment() {
                             text = context.getString(R.string.private_mode_cfr_message_2),
                             color = FirefoxTheme.colors.textOnColorPrimary,
                             style = FirefoxTheme.typography.headline7,
+                            modifier = Modifier
+                                .semantics {
+                                    testTagsAsResourceId = true
+                                    testTag = "private.message"
+                                },
                         )
                     }
                 },
