@@ -278,9 +278,21 @@ typedef bool (*WriteStructuredCloneOp)(JSContext* cx,
                                        void* closure);
 
 /**
- * This is called when JS_WriteStructuredClone is given an invalid transferable.
+ * This is called when serialization or deserialization encounters an error.
  * To follow HTML5, the application must throw a DATA_CLONE_ERR DOMException
  * with error set to one of the JS_SCERR_* values.
+ *
+ * Note that if the .reportError field of the JSStructuredCloneCallbacks is
+ * set (to a function with this signature), then an exception will *not* be
+ * set on the JSContext when an error is encountered. The clone operation
+ * will still be aborted and will return false, however, so it is up to the
+ * embedding to do what it needs to for the error.
+ *
+ * Example: for the DOM, mozilla::dom::StructuredCloneHolder will save away
+ * the error message during its reportError callback. Then when the overall
+ * operation fails, it will clear any exception that might have been set
+ * from other ways to fail and pass the saved error message to
+ * ErrorResult::ThrowDataCloneError().
  */
 typedef void (*StructuredCloneErrorOp)(JSContext* cx, uint32_t errorid,
                                        void* closure, const char* errorMessage);
