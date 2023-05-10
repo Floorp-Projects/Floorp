@@ -2,15 +2,70 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.translations-panel {
+.translations-panel-view {
   font: menu;
+  width: 31em;
+}
+
+:where(#translations-panel) :is(description, label, menulist) {
+  margin: 0;
+}
+
+.translations-panel-header {
+  text-align: initial;
+  padding: var(--arrowpanel-padding);
+  padding-bottom: 0;
+}
+
+image.translations-panel-gear-icon {
+  /* Override the panel-info-button with a gear icon. */
+  list-style-image: url(chrome://global/skin/icons/settings.svg);
 }
 
 .translations-panel-content {
   display: flex;
   flex-direction: column;
-  padding: 10px;
-  gap: 9px;
-  max-width: 300px;
-  min-width: 200px;
+  padding: var(--arrowpanel-padding);
+}
+
+.translations-panel-content > label:first-child {
+  margin-block-start: 0;
+}
+
+.translations-panel-content > label {
+  margin-block: var(--arrowpanel-padding) 6px;
+}
+
+/* The default styling is to dim the default, but here override it so that it still uses
+   the primary color. */
+.translations-panel-footer > button[default][disabled="true"] {
+  color: var(--button-primary-color);
+  background-color: var(--button-primary-bgcolor);
+}
+
+#translations-panel-error {
+  color: #e22850;
+  /* Align the error icon to the start. */
+  align-items: start;
+}
+
+@media (-moz-platform: windows) {
+  #translations-panel-error {
+    /* On windows the default button in the panel-footer is flipped with the order
+       property. In order to keep the error on the flex-start, it also needs a -1 order. */
+    order: -1;
+  }
+}
+
+.translations-panel-error-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  list-style-image: url(chrome://global/skin/icons/error.svg);
+  margin-inline-end: 5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  #translations-panel-error {
+    color: #ff9aa2;
+  }
 }
