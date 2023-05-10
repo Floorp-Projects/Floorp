@@ -674,6 +674,28 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     return AppUnitsToIntCSSPixels(DevPixelsToAppUnits(aPixels));
   }
 
+  static nscoord RoundDownAppUnitsToCSSPixel(nscoord aAppUnits) {
+    return mozilla::RoundDownToMultiple(aAppUnits,
+                                        mozilla::AppUnitsPerCSSPixel());
+  }
+  static nscoord RoundUpAppUnitsToCSSPixel(nscoord aAppUnits) {
+    return mozilla::RoundUpToMultiple(aAppUnits,
+                                      mozilla::AppUnitsPerCSSPixel());
+  }
+  static nscoord RoundAppUnitsToCSSPixel(nscoord aAppUnits) {
+    return mozilla::RoundToMultiple(aAppUnits, mozilla::AppUnitsPerCSSPixel());
+  }
+
+  nscoord RoundDownAppUnitsToDevPixel(nscoord aAppUnits) const {
+    return mozilla::RoundDownToMultiple(aAppUnits, AppUnitsPerDevPixel());
+  }
+  nscoord RoundUpAppUnitsToDevPixel(nscoord aAppUnits) const {
+    return mozilla::RoundUpToMultiple(aAppUnits, AppUnitsPerDevPixel());
+  }
+  nscoord RoundAppUnitsToDevPixel(nscoord aAppUnits) const {
+    return mozilla::RoundToMultiple(aAppUnits, AppUnitsPerDevPixel());
+  }
+
   mozilla::CSSIntPoint DevPixelsToIntCSSPixels(
       const mozilla::LayoutDeviceIntPoint& aPoint) {
     return mozilla::CSSIntPoint(

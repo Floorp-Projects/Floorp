@@ -795,15 +795,20 @@ void nsCanvasFrame::Reflow(nsPresContext* aPresContext,
         viewport->InvalidateFrame();
       }
 
-      // Return our desired size. Normally it's what we're told, but
-      // sometimes we can be given an unconstrained block-size (when a window
-      // is sizing-to-content), and we should compute our desired block-size.
+      // Return our desired size. Normally it's what we're told, but sometimes
+      // we can be given an unconstrained block-size (when a window is
+      // sizing-to-content), and we should compute our desired block-size. This
+      // is done by PresShell::ResizeReflow, when given the BSizeLimit flag.
+      //
+      // We do this here rather than at the viewport frame, because the canvas
+      // is what draws the background, so it can extend a little bit more than
+      // the real content without visual glitches, realistically.
       if (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE &&
           !kidFrame->IsPlaceholderFrame()) {
         LogicalSize finalSize = aReflowInput.ComputedSize();
-        finalSize.BSize(wm) =
+        finalSize.BSize(wm) = nsPresContext::RoundUpAppUnitsToCSSPixel(
             kidFrame->GetLogicalSize(wm).BSize(wm) +
-            kidReflowInput.ComputedLogicalMargin(wm).BStartEnd(wm);
+            kidReflowInput.ComputedLogicalMargin(wm).BStartEnd(wm));
         aDesiredSize.SetSize(wm, finalSize);
         aDesiredSize.SetOverflowAreasToDesiredBounds();
       }
