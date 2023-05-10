@@ -380,9 +380,7 @@ RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
 
 RawId WebGPUChild::DeviceCreateTexture(RawId aSelfId,
                                        const dom::GPUTextureDescriptor& aDesc) {
-  // Somehow cbindgen does not successfully rename this into
-  // WGPUTextureDescriptor. See wgpu_bindings/cbindgen.toml.
-  ffi::WGPUTextureDescriptor______nsACString__FfiSlice_TextureFormat desc = {};
+  ffi::WGPUTextureDescriptor desc = {};
 
   webgpu::StringHelper label(aDesc.mLabel);
   desc.label = label.Get();
