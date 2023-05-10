@@ -643,17 +643,13 @@ var gSync = {
   },
 
   updateSendToDeviceTitle() {
-    let string = gBrowserBundle.GetStringFromName("sendTabsToDevice.label");
-    let title = PluralForm.get(1, string).replace("#1", 1);
-    if (gBrowser.selectedTab.multiselected) {
-      let tabCount = gBrowser.selectedTabs.length;
-      title = PluralForm.get(tabCount, string).replace("#1", tabCount);
-    }
-
-    PanelMultiView.getViewNode(
-      document,
-      "PanelUI-fxa-menu-sendtab-button"
-    ).setAttribute("label", title);
+    const tabCount = gBrowser.selectedTab.multiselected
+      ? gBrowser.selectedTabs.length
+      : 1;
+    document.l10n.setArgs(
+      PanelMultiView.getViewNode(document, "PanelUI-fxa-menu-sendtab-button"),
+      { tabCount }
+    );
   },
 
   showSendToDeviceView(anchor) {
