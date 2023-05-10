@@ -25,6 +25,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "console", () => {
@@ -354,7 +355,7 @@ export class TranslationsParent extends JSWindowActorParent {
     const client = this.#getLanguageIdModelRemoteClient();
 
     /** @type {LanguageIdModelRecord[]} */
-    const modelRecords = await TranslationsParent.getMaxVersionRecords(client);
+    let modelRecords = await TranslationsParent.getMaxVersionRecords(client);
 
     if (modelRecords.length === 0) {
       throw new Error(
@@ -371,6 +372,8 @@ export class TranslationsParent extends JSWindowActorParent {
       );
     }
     const [modelRecord] = modelRecords;
+
+    await chaosModeError(1 / 3);
 
     /** @type {{buffer: ArrayBuffer}} */
     const { buffer } = await client.attachments.download(modelRecord);
@@ -414,7 +417,7 @@ export class TranslationsParent extends JSWindowActorParent {
     lazy.console.log(`Getting remote language-identification wasm binary.`);
 
     /** @type {WasmRecord[]} */
-    const wasmRecords = await TranslationsParent.getMaxVersionRecords(client, {
+    let wasmRecords = await TranslationsParent.getMaxVersionRecords(client, {
       filters: { name: "fasttext-wasm" },
     });
 
@@ -439,6 +442,8 @@ export class TranslationsParent extends JSWindowActorParent {
     // cache on disk if it's already been downloaded. Do not retain a copy, as
     // this will be running in the parent process. It's not worth holding onto
     // this much memory, so reload it every time it is needed.
+
+    await chaosModeError(1 / 3);
 
     /** @type {{buffer: ArrayBuffer}} */
     const { buffer } = await client.attachments.download(wasmRecords[0]);
@@ -653,6 +658,12 @@ export class TranslationsParent extends JSWindowActorParent {
     remoteSettingsClient,
     { filters = {}, lookupKey = record => record.name } = {}
   ) {
+    try {
+      await chaosMode(1 / 4);
+    } catch (_error) {
+      // Simulate an error by providing empty records.
+      return [];
+    }
     const retrievedRecords = await remoteSettingsClient.get({
       // Pull the records from the network.
       syncIfEmpty: true,
@@ -891,6 +902,8 @@ export class TranslationsParent extends JSWindowActorParent {
     // this will be running in the parent process. It's not worth holding onto
     // this much memory, so reload it every time it is needed.
 
+    await chaosModeError(1 / 3);
+
     /** @type {{buffer: ArrayBuffer}} */
     const { buffer } = await client.attachments.download(wasmRecords[0]);
 
@@ -982,6 +995,7 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   async deleteAllLanguageFiles() {
     const client = this.#getTranslationModelsRemoteClient();
+    await chaosMode();
     await client.attachments.deleteAll();
     return [...(await this.#getTranslationModelRecords()).keys()];
   }
@@ -1121,6 +1135,8 @@ export class TranslationsParent extends JSWindowActorParent {
         const start = Date.now();
 
         // Download or retrieve from the local cache:
+
+        await chaosModeError(1 / 3);
 
         /** @type {{buffer: ArrayBuffer }} */
         const { buffer } = await client.attachments.download(record);
@@ -1598,4 +1614,57 @@ async function downloadManager(queue) {
   lazy.console.log(
     `Finished ${originalQueueLength} downloads in ${duration} seconds.`
   );
+}
+
+/**
+ * The translations code has lots of async code and fallible network requests. To test
+ * this manually while using the feature, enable chaos mode by setting "errors" to true
+ * and "timeoutMS" to a positive number of milliseconds.
+ * prefs to true:
+ *
+ *  - browser.translations.chaos.timeoutMS
+ *  - browser.translations.chaos.errors
+ */
+async function chaosMode(probability = 0.5) {
+  await chaosModeTimer();
+  await chaosModeError(probability);
+}
+
+/**
+ * The translations code has lots of async code that relies on the network. To test
+ * this manually while using the feature, enable chaos mode by setting the following pref
+ * to a positive number of milliseconds.
+ *
+ *  - browser.translations.chaos.timeoutMS
+ */
+async function chaosModeTimer() {
+  /** @type {number} */
+  const timeoutLimit = Services.prefs.getIntPref(
+    "browser.translations.chaos.timeoutMS"
+  );
+  if (timeoutLimit) {
+    const timeout = Math.random() * timeoutLimit;
+    lazy.console.log(
+      `Chaos mode timer started for ${(timeout / 1000).toFixed(1)} seconds.`
+    );
+    await new Promise(resolve => lazy.setTimeout(resolve, timeout));
+  }
+}
+
+/**
+ * The translations code has lots of async code that is fallible. To test this manually
+ * while using the feature, enable chaos mode by setting the following pref to true.
+ *
+ *  - browser.translations.chaos.errors
+ */
+async function chaosModeError(probability = 0.5) {
+  if (
+    Services.prefs.getBoolPref("browser.translations.chaos.errors") &&
+    Math.random() < probability
+  ) {
+    lazy.console.trace(`Chaos mode error generated.`);
+    throw new Error(
+      `Chaos Mode error from the pref "browser.translations.chaos.errors".`
+    );
+  }
 }
