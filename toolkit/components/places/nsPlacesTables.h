@@ -7,26 +7,28 @@
 #ifndef __nsPlacesTables_h__
 #define __nsPlacesTables_h__
 
-#define CREATE_MOZ_PLACES                              \
-  nsLiteralCString(                                    \
-      "CREATE TABLE moz_places ( "                     \
-      "  id INTEGER PRIMARY KEY"                       \
-      ", url LONGVARCHAR"                              \
-      ", title LONGVARCHAR"                            \
-      ", rev_host LONGVARCHAR"                         \
-      ", visit_count INTEGER DEFAULT 0"                \
-      ", hidden INTEGER DEFAULT 0 NOT NULL"            \
-      ", typed INTEGER DEFAULT 0 NOT NULL"             \
-      ", frecency INTEGER DEFAULT -1 NOT NULL"         \
-      ", last_visit_date INTEGER "                     \
-      ", guid TEXT"                                    \
-      ", foreign_count INTEGER DEFAULT 0 NOT NULL"     \
-      ", url_hash INTEGER DEFAULT 0 NOT NULL "         \
-      ", description TEXT"                             \
-      ", preview_image_url TEXT"                       \
-      ", site_name TEXT"                               \
-      ", origin_id INTEGER REFERENCES moz_origins(id)" \
-      ", recalc_frecency INTEGER NOT NULL DEFAULT 0"   \
+#define CREATE_MOZ_PLACES                                \
+  nsLiteralCString(                                      \
+      "CREATE TABLE moz_places ( "                       \
+      "  id INTEGER PRIMARY KEY"                         \
+      ", url LONGVARCHAR"                                \
+      ", title LONGVARCHAR"                              \
+      ", rev_host LONGVARCHAR"                           \
+      ", visit_count INTEGER DEFAULT 0"                  \
+      ", hidden INTEGER DEFAULT 0 NOT NULL"              \
+      ", typed INTEGER DEFAULT 0 NOT NULL"               \
+      ", frecency INTEGER DEFAULT -1 NOT NULL"           \
+      ", last_visit_date INTEGER "                       \
+      ", guid TEXT"                                      \
+      ", foreign_count INTEGER DEFAULT 0 NOT NULL"       \
+      ", url_hash INTEGER DEFAULT 0 NOT NULL "           \
+      ", description TEXT"                               \
+      ", preview_image_url TEXT"                         \
+      ", site_name TEXT"                                 \
+      ", origin_id INTEGER REFERENCES moz_origins(id)"   \
+      ", recalc_frecency INTEGER NOT NULL DEFAULT 0"     \
+      ", alt_frecency INTEGER"                           \
+      ", recalc_alt_frecency INTEGER NOT NULL DEFAULT 0" \
       ")")
 
 #define CREATE_MOZ_HISTORYVISITS            \
