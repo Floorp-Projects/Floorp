@@ -95,7 +95,7 @@ add_setup(async () => {
 });
 
 async function testResultOfTabInteractions(testData) {
-  let logins = testData.logins.map(name => availableLogins[name]);
+  const logins = testData.logins.map(name => availableLogins[name]);
   await setStoredLoginsAsync(...logins);
 
   const form = createLoginForm({
@@ -112,7 +112,6 @@ async function testResultOfTabInteractions(testData) {
   SpecialPowers.wrap(form.uname).setUserInput("");
 
   info("Placing focus in the password field");
-  const shownPromise = popupBy();
   form.pword.focus();
   await synthesizeKey("KEY_Tab", { shiftKey: true }); // blur pw, focus un
   await new Promise(resolve => SimpleTest.executeSoon(resolve));
@@ -120,9 +119,8 @@ async function testResultOfTabInteractions(testData) {
   // moving focus shouldn't change anything
   checkForm(1, "", "");
 
-  await synthesizeKey("KEY_ArrowDown");
   info("waiting for AC results");
-  let results = await shownPromise;
+  const results = await popupByArrowDown();
   info("checking results");
   checkAutoCompleteResults(results, testData.expectedACLabels,
                            window.location.host, "Check all rows are correct");
@@ -153,8 +151,8 @@ async function testResultOfTabInteractions(testData) {
   checkForm(1, testData.expectedTabbedUsername, testData.expectedTabbedPassword);
 }
 
-for (let testData of tests) {
-  let tmp = {
+for (const testData of tests) {
+  const tmp = {
     async [testData.name]() {
       await testResultOfTabInteractions(testData);
     },
