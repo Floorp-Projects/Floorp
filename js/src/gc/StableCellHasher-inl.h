@@ -9,7 +9,10 @@
 
 #include "gc/StableCellHasher.h"
 
+#include "mozilla/HashFunctions.h"
+
 #include "gc/Cell.h"
+#include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"
@@ -162,6 +165,94 @@ inline void RemoveUniqueId(Cell* cell) {
 }
 
 }  // namespace gc
+
+static inline js::HashNumber UniqueIdToHash(uint64_t uid) {
+  return mozilla::HashGeneric(uid);
+}
+
+template <typename T>
+/* static */ bool StableCellHasher<T>::maybeGetHash(const Lookup& l,
+                                                    HashNumber* hashOut) {
+  if (!l) {
+    *hashOut = 0;
+    return true;
+  }
+
+  uint64_t uid;
+  if (!gc::MaybeGetUniqueId(l, &uid)) {
+    return false;
+  }
+
+  *hashOut = UniqueIdToHash(uid);
+  return true;
+}
+
+template <typename T>
+/* static */ bool StableCellHasher<T>::ensureHash(const Lookup& l,
+                                                  HashNumber* hashOut) {
+  if (!l) {
+    *hashOut = 0;
+    return true;
+  }
+
+  uint64_t uid;
+  if (!gc::GetOrCreateUniqueId(l, &uid)) {
+    return false;
+  }
+
+  *hashOut = UniqueIdToHash(uid);
+  return true;
+}
+
+template <typename T>
+/* static */ HashNumber StableCellHasher<T>::hash(const Lookup& l) {
+  if (!l) {
+    return 0;
+  }
+
+  // We have to access the zone from-any-thread here: a worker thread may be
+  // cloning a self-hosted object from the main runtime's self- hosting zone
+  // into another runtime. The zone's uid lock will protect against multiple
+  // workers doing this simultaneously.
+  MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()) ||
+             CurrentThreadIsPerformingGC());
+
+  return UniqueIdToHash(gc::GetUniqueIdInfallible(l));
+}
+
+template <typename T>
+/* static */ bool StableCellHasher<T>::match(const Key& k, const Lookup& l) {
+  if (k == l) {
+    return true;
+  }
+
+  if (!k || !l) {
+    return false;
+  }
+
+  MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()) ||
+             CurrentThreadIsPerformingGC());
+
+#ifdef DEBUG
+  // Incremental table sweeping means that existing table entries may no
+  // longer have unique IDs. We fail the match in that case and the entry is
+  // removed from the table later on.
+  if (!gc::HasUniqueId(k)) {
+    Key key = k;
+    MOZ_ASSERT(IsAboutToBeFinalizedUnbarriered(key));
+  }
+  MOZ_ASSERT(gc::HasUniqueId(l));
+#endif
+
+  uint64_t keyId;
+  if (!gc::MaybeGetUniqueId(k, &keyId)) {
+    // Key is dead and cannot match lookup which must be live.
+    return false;
+  }
+
+  return keyId == gc::GetUniqueIdInfallible(l);
+}
+
 }  // namespace js
 
 #endif  // gc_StableCellHasher_inl_h

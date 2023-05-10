@@ -118,6 +118,7 @@
 #include "debugger/Script-inl.h"   // for DebuggerScript::getReferent
 #include "gc/GC-inl.h"             // for ZoneCellIter
 #include "gc/Marking-inl.h"        // for MaybeForwarded
+#include "gc/StableCellHasher-inl.h"
 #include "gc/WeakMap-inl.h"        // for DebuggerWeakMap::trace
 #include "vm/Compartment-inl.h"    // for Compartment::wrap
 #include "vm/GeckoProfiler-inl.h"  // for AutoSuppressProfilerSampling

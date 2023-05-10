@@ -29,6 +29,7 @@
 #include "wasm/WasmInstance.h"
 
 #include "gc/Marking-inl.h"
+#include "gc/StableCellHasher-inl.h"
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"

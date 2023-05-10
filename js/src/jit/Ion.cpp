@@ -64,6 +64,7 @@
 #endif
 
 #include "gc/GC-inl.h"
+#include "gc/StableCellHasher-inl.h"
 #include "jit/InlineScriptTree-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SafepointIndex-inl.h"

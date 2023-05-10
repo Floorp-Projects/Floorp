@@ -20,6 +20,7 @@
 #include "vm/Realm.h"                 // for AutoRealm, Realm
 #include "vm/Warnings.h"              // for WarnNumberLatin1
 
+#include "gc/StableCellHasher-inl.h"
 #include "vm/Realm-inl.h"  // for AutoRealm::AutoRealm
 
 using namespace js;
