@@ -28,9 +28,6 @@ class RTCStatsTimestampMakerRealtimeClock : public webrtc::Clock {
       webrtc::Timestamp aRealtime) override;
 
   const dom::RTCStatsTimestampMaker mTimestampMaker;
-
- private:
-  webrtc::NtpTime WebrtcSystemTimeToNtp(TimeDuration aSystemTime);
 };
 
 // The time base used for WebrtcSystemTime(). Completely arbitrary. Constant.

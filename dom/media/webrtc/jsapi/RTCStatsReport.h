@@ -32,7 +32,29 @@ extern TimeStamp WebrtcSystemTimeBase();
 namespace dom {
 
 /**
- * Class that facilitates creating timestamps for webrtc stats by mimicking
+ * Keeps the state needed to convert RTCStatsTimestamps.
+ */
+struct RTCStatsTimestampState {
+  RTCStatsTimestampState();
+  explicit RTCStatsTimestampState(Performance& aPerformance);
+
+  RTCStatsTimestampState(const RTCStatsTimestampState&) = default;
+
+  // These members are sampled when a non-copy constructor is called.
+
+  // Performance's random timeline seed.
+  const uint64_t mRandomTimelineSeed;
+  // TimeStamp::Now() when the members were sampled. This is equivalent to time
+  // 0 in Realtime.
+  const TimeStamp mStartRealtime;
+  // Performance's RTPCallerType.
+  const RTPCallerType mRTPCallerType;
+  // Performance.timeOrigin for mStartRealtime when the members were sampled.
+  const DOMHighResTimeStamp mStartWallClockRaw;
+};
+
+/**
+ * Classes that facilitate creating timestamps for webrtc stats by mimicking
  * dom::Performance, as well as getting and converting timestamps for libwebrtc
  * and our integration with it.
  *
@@ -47,25 +69,43 @@ namespace dom {
  *              Performance.now().
  * - WallClock: Non-monotonic, unix epoch.
  */
+class RTCStatsTimestampMaker;
+class RTCStatsTimestamp {
+ public:
+  TimeStamp ToMozTime() const;
+  webrtc::Timestamp ToRealtime() const;
+  webrtc::Timestamp To1Jan1970() const;
+  webrtc::Timestamp ToNtp() const;
+  DOMHighResTimeStamp ToDom() const;
+
+  static RTCStatsTimestamp FromMozTime(const RTCStatsTimestampMaker& aMaker,
+                                       TimeStamp aMozTime);
+  static RTCStatsTimestamp FromRealtime(const RTCStatsTimestampMaker& aMaker,
+                                        webrtc::Timestamp aRealtime);
+  static RTCStatsTimestamp From1Jan1970(const RTCStatsTimestampMaker& aMaker,
+                                        webrtc::Timestamp aRealtime);
+  static RTCStatsTimestamp FromNtp(const RTCStatsTimestampMaker& aMaker,
+                                   webrtc::Timestamp aRealtime);
+  // There is on purpose no conversion functions from DOMHighResTimeStamp
+  // because of the loss in precision of a floating point to integer conversion.
+
+ private:
+  RTCStatsTimestamp(RTCStatsTimestampState aState, TimeStamp aMozTime);
+
+  const RTCStatsTimestampState mState;
+  const TimeStamp mMozTime;
+};
+
 class RTCStatsTimestampMaker {
  public:
-  RTCStatsTimestampMaker();
-  explicit RTCStatsTimestampMaker(nsPIDOMWindowInner* aWindow);
+  static RTCStatsTimestampMaker Create(nsPIDOMWindowInner* aWindow = nullptr);
 
-  DOMHighResTimeStamp GetNow() const;
+  RTCStatsTimestamp GetNow() const;
 
-  webrtc::Timestamp GetNowRealtime() const;
-  webrtc::Timestamp ConvertMozTimeToRealtime(TimeStamp aMozTime) const;
-  webrtc::Timestamp ConvertRealtimeTo1Jan1970(
-      webrtc::Timestamp aRealtime) const;
-  DOMHighResTimeStamp ConvertNtpToDomTime(webrtc::Timestamp aNtpTime) const;
-  DOMHighResTimeStamp ReduceRealtimePrecision(
-      webrtc::Timestamp aRealtime) const;
+  const RTCStatsTimestampState mState;
 
-  const uint64_t mRandomTimelineSeed;
-  const TimeStamp mStartRealtime;
-  const RTPCallerType mRTPCallerType;
-  const DOMHighResTimeStamp mStartWallClockRaw;
+ private:
+  explicit RTCStatsTimestampMaker(RTCStatsTimestampState aState);
 };
 
 // TODO(bug 1588303): If we ever get move semantics for webidl dictionaries, we

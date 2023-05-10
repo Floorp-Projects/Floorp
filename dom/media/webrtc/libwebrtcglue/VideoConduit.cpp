@@ -1678,7 +1678,7 @@ void WebrtcVideoConduit::OnFrame(const webrtc::VideoFrame& video_frame) {
   }
 
   // Record frame history
-  const auto historyNow = mCall->GetTimestampMaker().GetNow();
+  const auto historyNow = mCall->GetTimestampMaker().GetNow().ToDom();
   if (needsNewHistoryElement) {
     dom::RTCVideoFrameHistoryEntryInternal frameHistoryElement;
     frameHistoryElement.mConsecutiveFrames = 0;

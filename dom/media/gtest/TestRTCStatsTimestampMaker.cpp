@@ -13,7 +13,7 @@ using namespace dom;
 
 TEST(RTCStatsTimestampMakerRealtimeClock, ConvertTimestampToNtpTime)
 {
-  RTCStatsTimestampMaker maker;
+  auto maker = RTCStatsTimestampMaker::Create();
   RTCStatsTimestampMakerRealtimeClock clock(maker);
   constexpr auto ntpTo1Jan1970Ms = webrtc::kNtpJan1970 * 1000LL;
   for (int i = 1000; i < 20000; i += 93) {
@@ -22,23 +22,26 @@ TEST(RTCStatsTimestampMakerRealtimeClock, ConvertTimestampToNtpTime)
     // Because of precision differences, these round to a specific millisecond
     // slightly differently.
     EXPECT_NEAR(ntp.ToMs() - ntpTo1Jan1970Ms,
-                maker.ConvertRealtimeTo1Jan1970(t).ms(), 1.0)
+                RTCStatsTimestamp::FromRealtime(maker, t).To1Jan1970().ms(),
+                1.0)
         << " for i=" << i;
   }
 }
 
 TEST(RTCStatsTimestampMaker, ConvertNtpToDomTime)
 {
-  RTCStatsTimestampMaker maker;
+  auto maker = RTCStatsTimestampMaker::Create();
   RTCStatsTimestampMakerRealtimeClock clock(maker);
   for (int i = 1000; i < 20000; i += 93) {
     const auto t = webrtc::Timestamp::Micros(i);
     const auto ntp = clock.ConvertTimestampToNtpTime(t);
     const auto dom =
-        maker.ConvertNtpToDomTime(webrtc::Timestamp::Millis(ntp.ToMs()));
+        RTCStatsTimestamp::FromNtp(maker, webrtc::Timestamp::Millis(ntp.ToMs()))
+            .ToDom();
     // Because of precision differences, these round to a specific millisecond
     // slightly differently.
-    EXPECT_NEAR(std::lround(dom), std::lround(maker.ReduceRealtimePrecision(t)),
+    EXPECT_NEAR(std::lround(dom),
+                std::lround(RTCStatsTimestamp::FromRealtime(maker, t).ToDom()),
                 1.0)
         << " for i=" << i;
   }
