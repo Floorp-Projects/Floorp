@@ -18,33 +18,6 @@ const { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
 
-function createForm () {
-  const form = document.createElement("form");
-  form.action = "https://autocomplete"
-
-  const usernameInput = document.createElement("input");
-  usernameInput.type = "text";
-  usernameInput.name = "uname";
-  usernameInput.setAttribute("autocomplete", "username");
-  form.appendChild(usernameInput);
-
-  const submitButton = document.createElement("button");
-  submitButton.type = "submit";
-  submitButton.name = "submit";
-  submitButton.innerText = "Submit";
-  form.appendChild(submitButton);
-
-  const content = document.getElementById("content");
-
-  if (content.firstChild) {
-    content.replaceChild(form, content.firstChild);
-  } else {
-    content.appendChild(form);
-  }
-
-  return form;
-}
-
 add_setup(async () => {
   await addLoginsInParent(
     [location.origin, "https://autocomplete", null, "user1", "pass1", "", ""],
@@ -53,7 +26,12 @@ add_setup(async () => {
 });
 
 add_task(async function test_username_field_in_username_only_form_highlight_on_autocomplete() {
-  const form = createForm();
+  const form = createLoginForm({
+    action: "https://autocomplete",
+    username: {
+      autocomplete: "username"
+    }
+  });
 
   await openPopupOn(form.uname);
   synthesizeKey("KEY_ArrowDown");

@@ -15,38 +15,7 @@ Login Manager test: related realms autocomplete
 <div id="content"></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
 /** Test for Login Manager: related realms autocomplete. **/
-
-function createForm () {
-  const form = document.createElement("form");
-
-  const usernameInput = document.createElement("input");
-  usernameInput.type = "text";
-  usernameInput.name = "uname";
-  form.appendChild(usernameInput);
-
-  const passwordInput = document.createElement("input");
-  passwordInput.type = "password";
-  passwordInput.name = "pword";
-  form.appendChild(passwordInput);
-
-  const submitButton = document.createElement("button");
-  submitButton.type = "submit";
-  submitButton.name = "submit";
-  submitButton.innerText = "Submit";
-  form.appendChild(submitButton);
-
-  const content = document.getElementById("content");
-
-  if (content.firstChild) {
-    content.replaceChild(form, content.firstChild);
-  } else {
-    content.appendChild(form);
-  }
-
-  return form;
-}
 
 function sendFakeAutocompleteEvent(element) {
   var acEvent = document.createEvent("HTMLEvents");
@@ -76,7 +45,7 @@ add_setup(async () => {
 });
 
 add_task(async function test_form1_initial_empty() {
-  const form = createForm();
+  const form = createLoginForm();
 
   // Make sure initial form is empty.
   checkLoginForm(form.uname, "", form.pword, "");
@@ -85,7 +54,7 @@ add_task(async function test_form1_initial_empty() {
 });
 
 add_task(async function test_form_related_domain_menuitems() {
-  const form = createForm();
+  const form = createLoginForm();
 
   form.uname.focus();
 
