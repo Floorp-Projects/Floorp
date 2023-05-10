@@ -122,9 +122,7 @@ class GfxInfo final : public GfxInfoBase {
   static int sGLXTestPipe;
   static pid_t sGLXTestPID;
 
-#ifdef MOZ_WAYLAND
   void GetDataVAAPI();
-#endif
   void AddCrashReportAnnotations();
 };
 
