@@ -11,183 +11,180 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<script>
- const readyPromise = addLoginsInParent(
-    ["http://mochi.test:8888", "http://username-focus-1", null, "testuser1A", "testpass1A", "", ""],
-    ["http://mochi.test:8888", "http://username-focus-2", null, "testuser2A", "testpass2A", "", ""],
-    ["http://mochi.test:8888", "http://username-focus-2", null, "testuser2B", "testpass2B", "", ""]
-  ).then(() => registerRunTests(5));
-</script>
-
 <p id="display"></p>
-<div id="content">
-  <!-- first 3 forms have a matching user+pass login -->
-
-  <!-- user+pass form. -->
-  <form id="form-autofilled" action="http://username-focus-1">
-    <input  type="text"     name="uname">
-    <input  type="password" name="pword">
-    <button type="submit" name="submit">Submit</button>
-  </form>
-
-  <!-- user+pass form, username prefilled -->
-  <form id="form-autofilled-prefilled-un" action="http://username-focus-1">
-    <input  type="text"     name="uname" value="testuser1A">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- user+pass form. -->
-  <form id="form-autofilled-focused-dynamic" action="http://username-focus-1">
-    <input  type="text"             name="uname">
-    <input  type="not-yet-password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-
-  <!-- next 5 forms have matching user+pass (2x) logins -->
-
-  <!-- user+pass form. -->
-  <form id="form-multiple" action="http://username-focus-2">
-    <input  type="text"     name="uname">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- user+pass form dynamic with existing focus -->
-  <form id="form-multiple-dynamic" action="http://username-focus-2">
-    <input  type="text"             name="uname">
-    <input  type="not-yet-password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- user+pass form, username prefilled -->
-  <form id="form-multiple-prefilled-un1" action="http://username-focus-2">
-    <input  type="text"     name="uname" value="testuser2A">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- user+pass form, different username prefilled -->
-  <form id="form-multiple-prefilled-un2" action="http://username-focus-2">
-    <input  type="text"     name="uname" value="testuser2B">
-    <input  type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- user+pass form, username prefilled with existing focus -->
-  <form id="form-multiple-prefilled-focused-dynamic" action="http://username-focus-2">
-    <input  type="text"             name="uname" value="testuser2B">
-    <input  type="not-yet-password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-</div>
+<div id="content"></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-function removeFocus() {
-  getFormElementByName("-autofilled", "submit").focus();
+function createForm (heading, {
+  action,
+  usernameInputValue = "",
+  passwordInputType = "password"
+}) {
+  const form = document.createElement("form");
+  form.action = action;
+
+  const h = document.createElement("h4");
+  h.innerText = heading;
+  form.appendChild(h);
+
+  const usernameInput = document.createElement("input");
+  usernameInput.type = "text";
+  usernameInput.name = "uname";
+  usernameInput.value = usernameInputValue;
+  form.appendChild(usernameInput);
+
+  const passwordInput = document.createElement("input");
+  passwordInput.type = passwordInputType;
+  passwordInput.name = "pword";
+  form.appendChild(passwordInput);
+
+  const submitButton = document.createElement("button");
+  submitButton.type = "submit";
+  submitButton.name = "submit";
+  submitButton.innerText = "Submit";
+  form.appendChild(submitButton);
+
+  const content = document.getElementById("content");
+
+  if (content.firstChild) {
+    content.replaceChild(form, content.firstChild);
+  } else {
+    content.appendChild(form);
+  }
+
+  return form;
 }
 
+const action1 = "http://username-focus-1";
+const action2 = "http://username-focus-2";
+
 add_setup(async () => {
-  ok(readyPromise, "check promise is available");
-  await readyPromise;
+  await addLoginsInParent(
+    [location.origin, action1, null, "testuser1A", "testpass1A", "", ""],
+    [location.origin, action2, null, "testuser2A", "testpass2A", "", ""],
+    [location.origin, action2, null, "testuser2B", "testpass2B", "", ""]
+  );
 });
 
-add_task(async function test_autofilled() {
-  const usernameField = getFormElementByName("-autofilled", "uname");
+add_task(async function autofilled() {
+  const form = createForm("autofilled", { action: action1 });
+
   info("Username and password already filled so don't show autocomplete");
-  await noPopupBy(() => usernameField.focus());
+  await noPopupBy(() => form.uname.focus());
 
-  removeFocus();
-  usernameField.value = "testuser";
+  form.submit.focus();
+  form.uname.value = "testuser";
   info("Focus when we don't have an exact match");
-  await popupBy(() => usernameField.focus());
+  await popupBy(() => form.uname.focus());
 });
 
-add_task(async function test_autofilled_prefilled_un() {
-  const usernameField = getFormElementByName("-autofilled-prefilled-un", "uname");
+add_task(async function autofilled_prefilled_un() {
+  const form = createForm("autofilled prefilled un", {
+    action: action1,
+    usernameInputValue: "testuser1A"
+  });
+
   info("Username and password already filled so don't show autocomplete");
-  await noPopupBy(() => usernameField.focus());
+  await noPopupBy(() => form.uname.focus());
 
-  removeFocus();
-  usernameField.value = "testuser";
+  form.submit.focus();
+  form.uname.value = "testuser";
   info("Focus when we don't have an exact match");
-  await popupBy(() => usernameField.focus());
+  await popupBy(() => form.uname.focus());
 });
 
-add_task(async function test_autofilled_focused_dynamic() {
-  const usernameField = getFormElementByName("-autofilled-focused-dynamic", "uname");
-  const passwordField = getFormElementByName("-autofilled-focused-dynamic", "pword");
+add_task(async function autofilled_focused_dynamic() {
+  const form = createForm("autofilled focused dynamic", {
+    action: action1,
+    passwordInputType: "not-yet-password"
+  });
+
   info("Username and password will be filled while username focused");
-  await noPopupBy(() => usernameField.focus());
+  await noPopupBy(() => form.uname.focus());
+
   info("triggering autofill");
-  await noPopupBy(() => passwordField.type = "password");
+  await noPopupBy(() => form.pword.type = "password");
 
   const popupState = await getPopupState();
   is(popupState.open, false, "Check popup is closed");
 
-  removeFocus();
-  passwordField.value = "test";
+  form.submit.focus();
+  form.pword.value = "test";
   info("Focus when we don't have an exact match");
-  await popupBy(() => usernameField.focus());
+  await popupBy(() => form.uname.focus());
 });
 
 // Begin testing forms that have multiple saved logins
 
-add_task(async function test_multiple() {
-  const usernameField = getFormElementByName("-multiple", "uname");
+add_task(async function multiple() {
+  const form = createForm("multiple", { action: action2 });
+
   info("Fields not filled due to multiple so autocomplete upon focus");
-  await popupBy(() => usernameField.focus());
+  await popupBy(() => form.uname.focus());
 });
 
-add_task(async function test_multiple_dynamic() {
-  const usernameField = getFormElementByName("-multiple-dynamic", "uname");
-  const passwordField = getFormElementByName("-multiple-dynamic", "pword");
+add_task(async function multiple_dynamic() {
+  const form = createForm("multiple dynamic", {
+    action: action2,
+    passwordInputType: "not-yet-password"
+  });
+
   info("Fields not filled but username is focused upon marking so open");
-  await noPopupBy(() => usernameField.focus());
+  await noPopupBy(() => form.uname.focus());
 
   info("triggering _fillForm code");
-  await popupBy(() => passwordField.type = "password");
+  await popupBy(() => form.pword.type = "password");
 });
 
-add_task(async function test_multiple_prefilled_un1() {
-  const usernameField = getFormElementByName("-multiple-prefilled-un1", "uname");
+add_task(async function multiple_prefilled_un1() {
+  const form = createForm("multiple prefilled un1", {
+    action: action2,
+    usernameInputValue: "testuser2A"
+  });
+
   info("Username and password already filled so don't show autocomplete");
-  await noPopupBy(() => usernameField.focus());
+  await noPopupBy(() => form.uname.focus());
 
-  removeFocus();
-  usernameField.value = "testuser";
+  form.submit.focus();
+  form.uname.value = "testuser";
   info("Focus when we don't have an exact match");
-  await popupBy(() => usernameField.focus());
+  await popupBy(() => form.uname.focus());
 });
 
-add_task(async function test_multiple_prefilled_un2() {
-  const usernameField = getFormElementByName("-multiple-prefilled-un2", "uname");
+add_task(async function multiple_prefilled_un2() {
+  const form = createForm("multiple prefilled un2", {
+    action: action2,
+    usernameInputValue: "testuser2B"
+  });
+
   info("Username and password already filled so don't show autocomplete");
-  await noPopupBy(() => usernameField.focus());
+  await noPopupBy(() => form.uname.focus());
 
-  removeFocus();
-  usernameField.value = "testuser";
+  form.submit.focus();
+  form.uname.value = "testuser";
   info("Focus when we don't have an exact match");
-  await popupBy(() => usernameField.focus());
+  await popupBy(() => form.uname.focus());
 });
 
-add_task(async function test_multiple_prefilled_focused_dynamic() {
-  const usernameField = getFormElementByName("-multiple-prefilled-focused-dynamic", "uname");
-  const passwordField = getFormElementByName("-multiple-prefilled-focused-dynamic", "pword");
+add_task(async function multiple_prefilled_focused_dynamic() {
+  const form = createForm("multiple prefilled focused dynamic", {
+    action: action2,
+    usernameInputValue: "testuser2B",
+    passwordInputType: "not-yet-password"
+  });
+
   info("Username and password will be filled while username focused");
-  await noPopupBy(() => usernameField.focus());
+  await noPopupBy(() => form.uname.focus());
   info("triggering autofill");
-  await noPopupBy(() => passwordField.type = "password");
+  await noPopupBy(() => form.pword.type = "password");
 
-  const popupState = await getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is closed");
 
-  removeFocus();
-  passwordField.value = "test";
+  form.submit.focus();
+  form.pword.value = "test";
   info("Focus when we don't have an exact match");
-  await popupBy(() => usernameField.focus());
+  await popupBy(() => form.uname.focus());
 });
 </script>
 </pre>
