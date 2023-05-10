@@ -67,6 +67,10 @@ bool CurrentThreadIsIonCompiling() {
 
 #endif  // DEBUG
 
+static inline js::HashNumber UniqueIdToHash(uint64_t uid) {
+  return mozilla::HashGeneric(uid);
+}
+
 template <typename T>
 /* static */ bool StableCellHasher<T>::maybeGetHash(const Lookup& l,
                                                     HashNumber* hashOut) {
@@ -75,7 +79,13 @@ template <typename T>
     return true;
   }
 
-  return l->zoneFromAnyThread()->maybeGetHashCode(l, hashOut);
+  uint64_t uid;
+  if (!l->zoneFromAnyThread()->maybeGetUniqueId(l, &uid)) {
+    return false;
+  }
+
+  *hashOut = UniqueIdToHash(uid);
+  return true;
 }
 
 template <typename T>
@@ -86,7 +96,13 @@ template <typename T>
     return true;
   }
 
-  return l->zoneFromAnyThread()->getOrCreateHashCode(l, hashOut);
+  uint64_t uid;
+  if (!l->zoneFromAnyThread()->getOrCreateUniqueId(l, &uid)) {
+    return false;
+  }
+
+  *hashOut = UniqueIdToHash(uid);
+  return true;
 }
 
 template <typename T>
@@ -102,7 +118,7 @@ template <typename T>
   MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()) ||
              CurrentThreadIsPerformingGC());
 
-  return l->zoneFromAnyThread()->getHashCodeInfallible(l);
+  return UniqueIdToHash(l->zoneFromAnyThread()->getUniqueIdInfallible(l));
 }
 
 template <typename T>
