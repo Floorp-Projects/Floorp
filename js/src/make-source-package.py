@@ -155,6 +155,7 @@ rsync_filter_list = """
 
 + /mozglue/baseprofiler/**
 + /mozglue/build/**
++ /mozglue/interposers/**
 + /mozglue/misc/**
 + /mozglue/moz.build
 + /mozglue/static/**
