@@ -303,6 +303,7 @@ LoginManager.prototype = {
 
   /**
    * Add a new login to login storage.
+   * @deprecated: use `addLoginAsync` instead.
    */
   addLogin(login) {
     this._checkLogin(login);
@@ -318,8 +319,40 @@ LoginManager.prototype = {
     if (matchingLogin) {
       throw lazy.LoginHelper.createLoginAlreadyExistsError(matchingLogin.guid);
     }
-    lazy.log.debug("Adding login");
+    lazy.log.debug("addLogin is DEPRECATED, please use addLoginAsync instead.");
     return this._storage.addLogin(login);
+  },
+
+  /**
+   * Add a new login to login storage.
+   */
+  async addLoginAsync(login) {
+    this._checkLogin(login);
+
+    const { origin, formActionOrigin, httpRealm } = login;
+    const existingLogins = this.findLogins(origin, formActionOrigin, httpRealm);
+    const matchingLogin = existingLogins.find(l => login.matches(l, true));
+    if (matchingLogin) {
+      throw lazy.LoginHelper.createLoginAlreadyExistsError(matchingLogin.guid);
+    }
+
+    const crypto = Cc["@mozilla.org/login-manager/crypto/SDR;1"].getService(
+      Ci.nsILoginManagerCrypto
+    );
+    const plaintexts = [login.username, login.password];
+    const [username, password] = await crypto.encryptMany(plaintexts);
+
+    const { username: plaintextUsername, password: plaintextPassword } = login;
+    login.username = username;
+    login.password = password;
+
+    lazy.log.debug("Adding login");
+    return this._storage.addLogin(
+      login,
+      true,
+      plaintextUsername,
+      plaintextPassword
+    );
   },
 
   async addLogins(logins) {

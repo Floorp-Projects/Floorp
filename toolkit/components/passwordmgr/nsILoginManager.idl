@@ -45,6 +45,19 @@ interface nsILoginManager : nsISupports {
   nsILoginInfo addLogin(in nsILoginInfo aLogin);
 
   /**
+   * Like addLogin, but asynchronous.
+   *
+   * @param aLogin
+   *        The login to be added.
+   * @return A promise which resolves with a cloned login with the guid set.
+   *
+   * Default values for each login's nsILoginMetaInfo properties will be
+   * created. However, if the caller specifies non-default values, they will
+   * be used instead.
+   */
+  Promise addLoginAsync(in nsILoginInfo aLogin);
+
+  /**
    * Like addLogin, but asynchronous and for many logins.
    *
    * @param aLogins
