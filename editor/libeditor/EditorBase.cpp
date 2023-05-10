@@ -2353,15 +2353,19 @@ EditorBase::InsertNodeWithTransaction(ContentNodeType& aContentToInsert,
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjInsertNode() failed, but ignored");
 
-  if (IsHTMLEditor()) {
-    TopLevelEditSubActionDataRef().DidInsertContent(*this, aContentToInsert);
-  }
-
   if (NS_WARN_IF(Destroyed())) {
     return Err(NS_ERROR_EDITOR_DESTROYED);
   }
+  if (NS_WARN_IF(aContentToInsert.GetParentNode() !=
+                 aPointToInsert.GetContainer())) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
   if (NS_FAILED(rv)) {
     return Err(rv);
+  }
+
+  if (IsHTMLEditor()) {
+    TopLevelEditSubActionDataRef().DidInsertContent(*this, aContentToInsert);
   }
 
   return CreateNodeResultBase<ContentNodeType>(
