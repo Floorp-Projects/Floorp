@@ -1,4 +1,6 @@
-let { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 function handleRequest(request, response) {
   response.processAsync();

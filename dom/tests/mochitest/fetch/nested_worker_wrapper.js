@@ -1,10 +1,5 @@
 function getScriptUrl() {
-  const params = new URL(location.href).searchParams;
-  let scriptUrl = params.get("script");
-  if (params.has("orbEnabled")) {
-    scriptUrl += "&orbEnabled";
-  }
-  return scriptUrl;
+  return new URL(location.href).searchParams.get("script");
 }
 
 // Hold the nested worker alive until this parent worker closes.
