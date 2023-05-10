@@ -153,7 +153,7 @@ class SettingsGeneralTest {
         }
     }
 
-    fun changeLocale(languageTag: String?) {
+    fun changeLocale(languageTag: String) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val locale = Locales.parseLocaleCode(languageTag)
         LocaleManager.setNewLocale(

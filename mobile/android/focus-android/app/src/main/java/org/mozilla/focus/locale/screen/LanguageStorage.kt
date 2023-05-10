@@ -72,7 +72,7 @@ class LanguageStorage(private val context: Context) {
      * This method generates the descriptor array.
      */
     private fun getUsableLocales(): Array<LocaleDescriptor?> {
-        val shippingLocales = LocaleManager.getPackagedLocaleTags()
+        val shippingLocales = LocaleManager.packagedLocaleTags
         val initialCount: Int = shippingLocales.size
         val locales: MutableSet<LocaleDescriptor> = HashSet(initialCount)
         for (tag in shippingLocales) {

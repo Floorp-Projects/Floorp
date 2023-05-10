@@ -2,50 +2,45 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+package org.mozilla.focus.locale
 
-package org.mozilla.focus.locale;
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import org.mozilla.focus.locale.Locales.getLanguage
+import org.mozilla.focus.locale.Locales.getLanguageTag
+import java.util.Locale
 
-import org.junit.Test;
-
-import java.util.Locale;
-
-import static org.junit.Assert.assertEquals;
-
-public class LocalesTest {
+class LocalesTest {
     @Test
-    public void testLanguage() {
-        assertEquals("en", Locales.getLanguage(Locale.getDefault()));
+    fun testLanguage() {
+        assertEquals("en", getLanguage(Locale.getDefault()))
     }
 
     @Test
-    public void testHebrewIsrael() {
-        final Locale locale = new Locale("iw", "IL");
-
-        assertEquals("he", Locales.getLanguage(locale));
-        assertEquals("he-IL", Locales.getLanguageTag(locale));
+    fun testHebrewIsrael() {
+        val locale = Locale("iw", "IL")
+        assertEquals("he", getLanguage(locale))
+        assertEquals("he-IL", getLanguageTag(locale))
     }
 
     @Test
-    public void testIndonesianIndonesia() {
-        final Locale locale = new Locale("in", "ID");
-
-        assertEquals("id", Locales.getLanguage(locale));
-        assertEquals("id-ID", Locales.getLanguageTag(locale));
+    fun testIndonesianIndonesia() {
+        val locale = Locale("in", "ID")
+        assertEquals("id", getLanguage(locale))
+        assertEquals("id-ID", getLanguageTag(locale))
     }
 
     @Test
-    public void testYiddishUnitedStates() {
-        final Locale locale = new Locale("ji", "US");
-
-        assertEquals("yi", Locales.getLanguage(locale));
-        assertEquals("yi-US", Locales.getLanguageTag(locale));
+    fun testYiddishUnitedStates() {
+        val locale = Locale("ji", "US")
+        assertEquals("yi", getLanguage(locale))
+        assertEquals("yi-US", getLanguageTag(locale))
     }
 
     @Test
-    public void testEmptyCountry() {
-        final Locale locale = new Locale("en");
-
-        assertEquals("en", Locales.getLanguage(locale));
-        assertEquals("en", Locales.getLanguageTag(locale));
+    fun testEmptyCountry() {
+        val locale = Locale("en")
+        assertEquals("en", getLanguage(locale))
+        assertEquals("en", getLanguageTag(locale))
     }
 }

@@ -1,105 +1,107 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+package org.mozilla.focus.locale
 
-package org.mozilla.focus.locale;
-
-import android.content.Context;
-import android.content.res.Configuration;
-import android.content.res.Resources;
-import java.util.Locale;
+import android.content.Context
+import android.content.res.Configuration
+import android.content.res.Resources
+import mozilla.components.support.ktx.android.content.res.locale
+import org.mozilla.focus.locale.LocaleManager.Companion.instance
+import java.util.Locale
 
 /**
  * This is a helper class to do typical locale switching operations without
  * hitting StrictMode errors or adding boilerplate to common activity
  * subclasses.
  *
- * Inherit from <code>LocaleAwareFragmentActivity</code> or <code>LocaleAwareActivity</code>.
+ * Inherit from `LocaleAwareFragmentActivity` or `LocaleAwareActivity`.
  */
-public class Locales {
-
+object Locales {
     /**
      * Sometimes we want just the language for a locale, not the entire language
      * tag. But Java's .getLanguage method is wrong.
      *
      * This method is equivalent to the first part of
-     * {@link Locales#getLanguageTag(Locale)}.
+     * [Locales.getLanguageTag].
      *
      * @return a language string, such as "he" for the Hebrew locales.
      */
-    public static String getLanguage(final Locale locale) {
-        // Can, but should never be, an empty string.
-        final String language = locale.getLanguage();
-
+    fun getLanguage(locale: Locale): String {
         // Modernize certain language codes.
-        if (language.equals("iw")) {
-            return "he";
-        }
+        return when (val language = locale.language) {
+            "iw" -> {
+                "he"
+            }
 
-        if (language.equals("in")) {
-            return "id";
-        }
+            "in" -> {
+                "id"
+            }
 
-        if (language.equals("ji")) {
-            return "yi";
-        }
+            "ji" -> {
+                "yi"
+            }
 
-        return language;
+            else -> language
+        }
     }
 
     /**
-     * Gecko uses locale codes like "es-ES", whereas a Java {@link Locale}
+     * Gecko uses locale codes like "es-ES", whereas a Java [Locale]
      * stringifies as "es_ES".
      *
      * This method approximates the Java 7 method
-     * <code>Locale#toLanguageTag()</code>.
+     * `Locale#toLanguageTag()`.
      *
      * @return a locale string suitable for passing to Gecko.
      */
-    public static String getLanguageTag(final Locale locale) {
-        // If this were Java 7:
-        // return locale.toLanguageTag();
+    @JvmStatic
+    fun getLanguageTag(locale: Locale): String {
+        val language = getLanguage(locale)
+        val country = locale.country
 
-        final String language = getLanguage(locale);
-        final String country = locale.getCountry(); // Can be an empty string.
-        if (country.equals("")) {
-            return language;
+        return if (country.isEmpty()) {
+            language
+        } else {
+            "$language-$country"
         }
-        return language + "-" + country;
     }
 
-    public static Locale parseLocaleCode(final String localeCode) {
-        int index;
-        if ((index = localeCode.indexOf('-')) != -1 ||
-            (index = localeCode.indexOf('_')) != -1) {
-            final String langCode = localeCode.substring(0, index);
-            final String countryCode = localeCode.substring(index + 1);
-            return new Locale(langCode, countryCode);
+    /**
+     * Parses a locale code [String] and returns the corresponding [Locale].
+     */
+    fun parseLocaleCode(localeCode: String): Locale {
+        var index: Int
+
+        if (localeCode.indexOf('-').also { index = it } != -1 ||
+            localeCode.indexOf('_').also { index = it } != -1
+        ) {
+            val langCode = localeCode.substring(0, index)
+            val countryCode = localeCode.substring(index + 1)
+            return Locale(langCode, countryCode)
         }
 
-        return new Locale(localeCode);
+        return Locale(localeCode)
     }
 
     /**
      * Get a Resources instance with the currently selected locale applied.
      */
-    public static Resources getLocalizedResources(Context context) {
-        final Resources currentResources = context.getResources();
+    fun getLocalizedResources(context: Context): Resources {
+        val currentResources = context.resources
+        val currentLocale: Locale? = instance.get()?.getCurrentLocale(context)
+        val viewLocale = currentResources.locale
 
-        final Locale currentLocale = LocaleManager.getInstance().getCurrentLocale(context);
-        final Locale viewLocale = currentResources.getConfiguration().locale;
-
-        if (currentLocale == null || viewLocale == null) {
-            return currentResources;
+        if (currentLocale == null) {
+            return currentResources
         }
 
-        if (currentLocale.toLanguageTag().equals(viewLocale.toLanguageTag())) {
-            return currentResources;
+        if (currentLocale.toLanguageTag() == viewLocale.toLanguageTag()) {
+            return currentResources
         }
 
-        final Configuration configuration = new Configuration(currentResources.getConfiguration());
-        configuration.setLocale(currentLocale);
-
-        return context.createConfigurationContext(configuration).getResources();
+        val configuration = Configuration(currentResources.configuration)
+        configuration.setLocale(currentLocale)
+        return context.createConfigurationContext(configuration).resources
     }
 }
