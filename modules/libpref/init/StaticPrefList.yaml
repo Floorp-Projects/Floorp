@@ -14372,7 +14372,7 @@
 # Currently off by default.
 - name: threads.lower_mainthread_priority_in_background.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 #---------------------------------------------------------------------------
