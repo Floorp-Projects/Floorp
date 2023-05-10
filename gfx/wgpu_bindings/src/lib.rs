@@ -95,11 +95,17 @@ impl ByteBuf {
 
 #[repr(C)]
 #[derive(serde::Serialize, serde::Deserialize)]
-pub struct AdapterInformation {
+pub struct AdapterInformation<S> {
     id: id::AdapterId,
-    ty: wgt::DeviceType,
     limits: wgt::Limits,
     features: wgt::Features,
+    name: S,
+    vendor: usize,
+    device: usize,
+    device_type: wgt::DeviceType,
+    driver: S,
+    driver_info: S,
+    backend: wgt::Backend,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
