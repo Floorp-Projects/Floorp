@@ -33,6 +33,7 @@
 
 #include "ErrorList.h"
 #include "gfxFontUtils.h"  // for gfxFontUtils
+#include "mozilla/Assertions.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/BasePrincipal.h"            // for BasePrincipal
 #include "mozilla/CheckedInt.h"               // for CheckedInt
@@ -1578,35 +1579,64 @@ bool EditorBase::CheckForClipboardCommandListener(
   return false;
 }
 
-bool EditorBase::FireClipboardEvent(EventMessage aEventMessage,
-                                    int32_t aClipboardType,
-                                    bool* aActionTaken) {
+Result<EditorBase::ClipboardEventResult, nsresult>
+EditorBase::DispatchClipboardEventAndUpdateClipboard(EventMessage aEventMessage,
+                                                     int32_t aClipboardType) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (aEventMessage == ePaste) {
     CommitComposition();
+    if (NS_WARN_IF(Destroyed())) {
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
   }
 
   RefPtr<PresShell> presShell = GetPresShell();
   if (NS_WARN_IF(!presShell)) {
-    return false;
+    return Err(NS_ERROR_NOT_AVAILABLE);
   }
 
-  RefPtr<Selection> sel = &SelectionRef();
-  if (IsHTMLEditor() && aEventMessage == eCopy && sel->IsCollapsed()) {
-    // If we don't have a usable selection for copy and we're an HTML editor
-    // (which is global for the document) try to use the last focused selection
-    // instead.
-    sel = nsCopySupport::GetSelectionForCopy(GetDocument());
-  }
+  const RefPtr<Selection> sel = [&]() {
+    if (IsHTMLEditor() && aEventMessage == eCopy &&
+        SelectionRef().IsCollapsed()) {
+      // If we don't have a usable selection for copy and we're an HTML
+      // editor (which is global for the document) try to use the last
+      // focused selection instead.
+      return nsCopySupport::GetSelectionForCopy(GetDocument());
+    }
+    return do_AddRef(&SelectionRef());
+  }();
 
-  const bool clipboardEventCanceled = !nsCopySupport::FireClipboardEvent(
-      aEventMessage, aClipboardType, presShell, sel, aActionTaken);
+  bool actionTaken = false;
+  const bool doDefault = nsCopySupport::FireClipboardEvent(
+      aEventMessage, aClipboardType, presShell, sel, &actionTaken);
   NotifyOfDispatchingClipboardEvent();
 
-  // If the event handler caused the editor to be destroyed, return false.
-  // Otherwise return true if the event was not cancelled.
-  return !clipboardEventCanceled && !mDidPreDestroy;
+  if (NS_WARN_IF(Destroyed())) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+
+  if (doDefault) {
+    MOZ_ASSERT(actionTaken);
+    return ClipboardEventResult::DoDefault;
+  }
+  // If we handle a "paste" and nsCopySupport::FireClipboardEvent sets
+  // actionTaken to "false" means that it's an error.  Otherwise, the "paste"
+  // event is just canceled.
+  if (aEventMessage == ePaste) {
+    return actionTaken ? ClipboardEventResult::DefaultPreventedOfPaste
+                       : ClipboardEventResult::IgnoredOrError;
+  }
+  // If we handle a "copy", actionTaken is set to true only when
+  // nsCopySupport::FireClipboardEvent does not meet an error.
+  // If we handle a "cut", actionTaken is set to true only when
+  // nsCopySupport::FireClipboardEvent does not meet an error and
+  // - the selection is collapsed in editable elements when the event is not
+  //   canceled.
+  // - the event is canceled but update the clipboard with the dataTransfer
+  //   of the event.
+  return actionTaken ? ClipboardEventResult::CopyOrCutHandled
+                     : ClipboardEventResult::IgnoredOrError;
 }
 
 NS_IMETHODIMP EditorBase::Cut() {
@@ -1621,10 +1651,26 @@ nsresult EditorBase::CutAsAction(nsIPrincipal* aPrincipal) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  bool actionTaken = false;
-  if (!FireClipboardEvent(eCut, nsIClipboard::kGlobalClipboard, &actionTaken)) {
-    return EditorBase::ToGenericNSResult(
-        actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
+  {
+    Result<ClipboardEventResult, nsresult> ret =
+        DispatchClipboardEventAndUpdateClipboard(
+            eCut, nsIClipboard::kGlobalClipboard);
+    if (MOZ_UNLIKELY(ret.isErr())) {
+      NS_WARNING(
+          "EditorBase::DispatchClipboardEventAndUpdateClipboard(eCut, "
+          "nsIClipboard::kGlobalClipboard) failed");
+      return EditorBase::ToGenericNSResult(ret.unwrapErr());
+    }
+    switch (ret.unwrap()) {
+      case ClipboardEventResult::DoDefault:
+        break;
+      case ClipboardEventResult::CopyOrCutHandled:
+        return NS_OK;
+      case ClipboardEventResult::IgnoredOrError:
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      case ClipboardEventResult::DefaultPreventedOfPaste:
+        MOZ_ASSERT_UNREACHABLE("Invalid result for eCut");
+    }
   }
 
   // Dispatch "beforeinput" event after dispatching "cut" event.
@@ -1678,11 +1724,25 @@ NS_IMETHODIMP EditorBase::Copy() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  bool actionTaken = false;
-  FireClipboardEvent(eCopy, nsIClipboard::kGlobalClipboard, &actionTaken);
-
-  return EditorBase::ToGenericNSResult(
-      actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
+  Result<ClipboardEventResult, nsresult> ret =
+      DispatchClipboardEventAndUpdateClipboard(eCopy,
+                                               nsIClipboard::kGlobalClipboard);
+  if (MOZ_UNLIKELY(ret.isErr())) {
+    NS_WARNING(
+        "EditorBase::DispatchClipboardEventAndUpdateClipboard(eCopy, "
+        "nsIClipboard::kGlobalClipboard) failed");
+    return EditorBase::ToGenericNSResult(ret.unwrapErr());
+  }
+  switch (ret.unwrap()) {
+    case ClipboardEventResult::DoDefault:
+    case ClipboardEventResult::CopyOrCutHandled:
+      return NS_OK;
+    case ClipboardEventResult::IgnoredOrError:
+      return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+    case ClipboardEventResult::DefaultPreventedOfPaste:
+      MOZ_ASSERT_UNREACHABLE("Invalid result for eCopy");
+  }
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP EditorBase::CanCopy(bool* aCanCopy) {
