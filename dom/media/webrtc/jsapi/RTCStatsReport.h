@@ -47,6 +47,9 @@ struct RTCStatsTimestampState {
   // TimeStamp::Now() when the members were sampled. This is equivalent to time
   // 0 in DomRealtime.
   const TimeStamp mStartDomRealtime;
+  // WebrtcSystemTime() when the members were sampled. This represents the same
+  // point in time as mStartDomRealtime, but as a webrtc timestamp.
+  const webrtc::Timestamp mStartRealtime;
   // Performance's RTPCallerType.
   const RTPCallerType mRTPCallerType;
   // Performance.timeOrigin for mStartDomRealtime when the members were sampled.

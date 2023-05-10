@@ -10,6 +10,13 @@
 
 namespace mozilla {
 
+// webrtc::Timestamp may not be negative. `now-base` for the first call to
+// WebrtcSystemTime() is always 0, which makes it impossible for libwebrtc
+// code to calculate a timestamp older than the first one returned. This
+// offset makes sure the clock starts at a value equivalent to roughly 4.5h.
+static constexpr webrtc::TimeDelta kWebrtcTimeOffset =
+    webrtc::TimeDelta::Micros(0x10000000);
+
 RTCStatsTimestampMakerRealtimeClock::RTCStatsTimestampMakerRealtimeClock(
     const dom::RTCStatsTimestampMaker& aTimestampMaker)
     : mTimestampMaker(aTimestampMaker) {}

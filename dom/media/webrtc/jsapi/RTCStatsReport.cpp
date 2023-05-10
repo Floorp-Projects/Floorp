@@ -15,6 +15,10 @@ namespace mozilla::dom {
 RTCStatsTimestampState::RTCStatsTimestampState()
     : mRandomTimelineSeed(0),
       mStartDomRealtime(WebrtcSystemTimeBase()),
+      mStartRealtime(
+          WebrtcSystemTime() -
+          webrtc::TimeDelta::Micros(
+              (TimeStamp::Now() - mStartDomRealtime).ToMicroseconds())),
       mRTPCallerType(RTPCallerType::Normal),
       mStartWallClockRaw(
           PerformanceService::GetOrCreate()->TimeOrigin(mStartDomRealtime)) {}
@@ -22,6 +26,10 @@ RTCStatsTimestampState::RTCStatsTimestampState()
 RTCStatsTimestampState::RTCStatsTimestampState(Performance& aPerformance)
     : mRandomTimelineSeed(aPerformance.GetRandomTimelineSeed()),
       mStartDomRealtime(aPerformance.CreationTimeStamp()),
+      mStartRealtime(
+          WebrtcSystemTime() -
+          webrtc::TimeDelta::Micros(
+              (TimeStamp::Now() - mStartDomRealtime).ToMicroseconds())),
       mRTPCallerType(aPerformance.GetRTPCallerType()),
       mStartWallClockRaw(
           PerformanceService::GetOrCreate()->TimeOrigin(mStartDomRealtime)) {}
@@ -29,7 +37,8 @@ RTCStatsTimestampState::RTCStatsTimestampState(Performance& aPerformance)
 TimeStamp RTCStatsTimestamp::ToMozTime() const { return mMozTime; }
 
 webrtc::Timestamp RTCStatsTimestamp::ToRealtime() const {
-  return ToDomRealtime() + kWebrtcTimeOffset;
+  return ToDomRealtime() +
+         webrtc::TimeDelta::Micros(mState.mStartRealtime.us());
 }
 
 webrtc::Timestamp RTCStatsTimestamp::To1Jan1970() const {
@@ -79,7 +88,9 @@ DOMHighResTimeStamp RTCStatsTimestamp::ToDom() const {
 
 /* static */ RTCStatsTimestamp RTCStatsTimestamp::FromRealtime(
     const RTCStatsTimestampMaker& aMaker, webrtc::Timestamp aRealtime) {
-  return FromDomRealtime(aMaker, aRealtime - kWebrtcTimeOffset);
+  return FromDomRealtime(
+      aMaker,
+      aRealtime - webrtc::TimeDelta::Micros(aMaker.mState.mStartRealtime.us()));
 }
 
 /* static */ RTCStatsTimestamp RTCStatsTimestamp::From1Jan1970(
