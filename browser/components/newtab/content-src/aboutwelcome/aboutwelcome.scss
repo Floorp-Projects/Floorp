@@ -485,6 +485,10 @@ html {
             text-align: initial;
             align-items: initial;
 
+            &:empty {
+              margin: 0;
+            }
+
             h1 {
               font-size: 24px;
               line-height: 1.2;
@@ -1465,7 +1469,8 @@ html {
       transition-delay: 0.8s;
     }
 
-    .tiles-theme-section {
+    .tiles-theme-section,
+    migration-wizard {
       transition-delay: 0.9s;
     }
 
@@ -1561,7 +1566,8 @@ html {
       .checkbox-container,
       .secondary,
       .secondary-cta:not(.top),
-      .cta-link {
+      .cta-link,
+      migration-wizard {
         opacity: 0;
         translate: 0 calc(-1 * var(--translate));
       }
@@ -1594,12 +1600,14 @@ html {
         transition-delay: 0.1s;
       }
 
+      // content that is nested between inner main content and navigation CTAs
+      // requires an additional 0.1s transition to avoid overlap
       .tiles-theme-section,
-      .colorway-text {
+      .colorway-text,
+      migration-wizard {
         opacity: 0;
         translate: 0 var(--translate);
         transition-delay: 0.2s;
-
       }
 
       .primary,
@@ -1631,12 +1639,18 @@ html {
       }
     }
   }
-}
 
-migration-wizard {
-  width: unset;
-}
+  migration-wizard {
+    width: unset;
+    transition: var(--transition);
 
-migration-wizard::part(buttons) {
-  justify-content: flex-start;
+    &::part(buttons) {
+      margin-top: 32px;
+      justify-content: flex-start;
+    }
+
+    &::part(deck) {
+      font-size: 0.83em;
+    }
+  }
 }
