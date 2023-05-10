@@ -69,13 +69,13 @@ add_task(async function test_cancel_after_asyncOpen() {
   }
 });
 
-// const NS_NET_STATUS_CONNECTING_TO = 0x804b0007;
-// const NS_NET_STATUS_CONNECTED_TO = 0x804b0004;
-// const NS_NET_STATUS_SENDING_TO = 0x804b0005;
-const NS_NET_STATUS_WAITING_FOR = 0x804b000a; // 2152398858
-const NS_NET_STATUS_RECEIVING_FROM = 0x804b0006;
-// const NS_NET_STATUS_TLS_HANDSHAKE_STARTING = 0x804b000c; // 2152398860
-// const NS_NET_STATUS_TLS_HANDSHAKE_ENDED = 0x804b000d; // 2152398861
+// const NS_NET_STATUS_CONNECTING_TO = 0x4b0007;
+// const NS_NET_STATUS_CONNECTED_TO = 0x4b0004;
+// const NS_NET_STATUS_SENDING_TO = 0x4b0005;
+const NS_NET_STATUS_WAITING_FOR = 0x4b000a; // 2152398858
+const NS_NET_STATUS_RECEIVING_FROM = 0x4b0006;
+// const NS_NET_STATUS_TLS_HANDSHAKE_STARTING = 0x4b000c; // 2152398860
+// const NS_NET_STATUS_TLS_HANDSHAKE_ENDED = 0x4b000d; // 2152398861
 
 add_task(async function test_cancel_after_connect_http2proxy() {
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
