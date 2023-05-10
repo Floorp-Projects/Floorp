@@ -114,10 +114,10 @@
 #include "debugger/DebugAPI-inl.h"
 #include "debugger/Environment-inl.h"  // for DebuggerEnvironment::owner
 #include "debugger/Frame-inl.h"        // for DebuggerFrame::hasGeneratorInfo
-#include "debugger/Object-inl.h"   // for DebuggerObject::owner and isInstance.
-#include "debugger/Script-inl.h"   // for DebuggerScript::getReferent
-#include "gc/GC-inl.h"             // for ZoneCellIter
-#include "gc/Marking-inl.h"        // for MaybeForwarded
+#include "debugger/Object-inl.h"  // for DebuggerObject::owner and isInstance.
+#include "debugger/Script-inl.h"  // for DebuggerScript::getReferent
+#include "gc/GC-inl.h"            // for ZoneCellIter
+#include "gc/Marking-inl.h"       // for MaybeForwarded
 #include "gc/StableCellHasher-inl.h"
 #include "gc/WeakMap-inl.h"        // for DebuggerWeakMap::trace
 #include "vm/Compartment-inl.h"    // for Compartment::wrap
