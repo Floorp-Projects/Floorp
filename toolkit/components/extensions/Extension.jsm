@@ -78,11 +78,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
-
-  // These are used for manipulating jar entry paths, which always use Unix
-  // separators.
-  basename: "resource://gre/modules/osfile/ospath_unix.jsm",
-  dirname: "resource://gre/modules/osfile/ospath_unix.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "resourceProtocol", () =>
@@ -273,6 +268,37 @@ const INSTALL_AND_UPDATE_STARTUP_REASONS = new Set([
 
 const PROTOCOL_HANDLER_OPEN_PERM_KEY = "open-protocol-handler";
 const PERMISSION_KEY_DELIMITER = "^";
+
+// These are used for manipulating jar entry paths, which always use Unix
+// separators (originally copied from `ospath_unix.jsm` as part of the "OS.Path
+// to PathUtils" migration).
+
+/**
+ * Return the final part of the path.
+ * The final part of the path is everything after the last "/".
+ */
+function basename(path) {
+  return path.slice(path.lastIndexOf("/") + 1);
+}
+
+/**
+ * Return the directory part of the path.
+ * The directory part of the path is everything before the last
+ * "/". If the last few characters of this part are also "/",
+ * they are ignored.
+ *
+ * If the path contains no directory, return ".".
+ */
+function dirname(path) {
+  let index = path.lastIndexOf("/");
+  if (index == -1) {
+    return ".";
+  }
+  while (index >= 0 && path[index] == "/") {
+    --index;
+  }
+  return path.slice(0, index + 1);
+}
 
 // Returns true if the extension is owned by Mozilla (is either privileged,
 // using one of the @mozilla.com/@mozilla.org protected addon id suffixes).
@@ -1762,11 +1788,11 @@ class ExtensionData {
       for (let [lang, path] of Object.entries(manifest.dictionaries)) {
         path = path.replace(/^\/+/, "");
 
-        let dir = lazy.dirname(path);
+        let dir = dirname(path);
         if (dir === ".") {
           dir = "";
         }
-        let leafName = lazy.basename(path);
+        let leafName = basename(path);
         let affixPath = leafName.slice(0, -3) + "aff";
 
         let entries = await this._readDirectory(dir);
