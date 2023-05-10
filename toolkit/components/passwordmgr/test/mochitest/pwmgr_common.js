@@ -703,12 +703,15 @@ function runInParent(aFunctionOrURL) {
   return chromeScript;
 }
 
-/** Initialize with a list of logins. The logins are added within the parent chrome process.
- * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
- *                          that would be passed to nsLoginInfo.init().
- */
-async function addLoginsInParent(...aLogins) {
-  let script = runInParent(function addLoginsInParentInner() {
+/** Manage logins in parent chrome process.
+ * */
+function manageLoginsInParent() {
+  return runInParent(function addLoginsInParentInner() {
+    /* eslint-env mozilla/chrome-script */
+    addMessageListener("removeAllUserFacingLogins", () => {
+      Services.logins.removeAllUserFacingLogins();
+    });
+
     /* eslint-env mozilla/chrome-script */
     addMessageListener("addLogins", async logins => {
       let nsLoginInfo = Components.Constructor(
@@ -725,6 +728,26 @@ async function addLoginsInParent(...aLogins) {
       }
     });
   });
+}
+
+/** Initialize with a list of logins. The logins are added within the parent chrome process.
+ * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
+ *                          that would be passed to nsLoginInfo.init().
+ */
+async function addLoginsInParent(...aLogins) {
+  const script = manageLoginsInParent();
+  await script.sendQuery("addLogins", aLogins);
+  return script;
+}
+
+/** Initialize with a list of logins, after removing all user facing logins.
+ * The logins are added within the parent chrome process.
+ * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
+ *                          that would be passed to nsLoginInfo.init().
+ */
+async function setStoredLoginsAsync(...aLogins) {
+  const script = manageLoginsInParent();
+  script.sendQuery("removeAllUserFacingLogins");
   await script.sendQuery("addLogins", aLogins);
   return script;
 }
