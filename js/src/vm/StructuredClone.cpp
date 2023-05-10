@@ -1229,7 +1229,7 @@ bool JSStructuredCloneWriter::parseTransferable() {
       bool sameProcessScopeRequired = false;
       if (!out.buf.callbacks_->canTransfer(
               cx, unwrappedObj, &sameProcessScopeRequired, out.buf.closure_)) {
-        return false;
+        return reportDataCloneError(JS_SCERR_TRANSFERABLE);
       }
 
       if (sameProcessScopeRequired) {
