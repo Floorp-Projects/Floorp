@@ -15,46 +15,6 @@
 <div id="content"></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-function createForm (heading, {
-  action,
-  usernameInputValue = "",
-  passwordInputType = "password"
-}) {
-  const form = document.createElement("form");
-  form.action = action;
-
-  const h = document.createElement("h4");
-  h.innerText = heading;
-  form.appendChild(h);
-
-  const usernameInput = document.createElement("input");
-  usernameInput.type = "text";
-  usernameInput.name = "uname";
-  usernameInput.value = usernameInputValue;
-  form.appendChild(usernameInput);
-
-  const passwordInput = document.createElement("input");
-  passwordInput.type = passwordInputType;
-  passwordInput.name = "pword";
-  form.appendChild(passwordInput);
-
-  const submitButton = document.createElement("button");
-  submitButton.type = "submit";
-  submitButton.name = "submit";
-  submitButton.innerText = "Submit";
-  form.appendChild(submitButton);
-
-  const content = document.getElementById("content");
-
-  if (content.firstChild) {
-    content.replaceChild(form, content.firstChild);
-  } else {
-    content.appendChild(form);
-  }
-
-  return form;
-}
-
 const action1 = "http://username-focus-1";
 const action2 = "http://username-focus-2";
 
@@ -67,7 +27,7 @@ add_setup(async () => {
 });
 
 add_task(async function autofilled() {
-  const form = createForm("autofilled", { action: action1 });
+  const form = createLoginForm({ action: action1 });
 
   info("Username and password already filled so don't show autocomplete");
   await noPopupBy(() => form.uname.focus());
@@ -79,9 +39,11 @@ add_task(async function autofilled() {
 });
 
 add_task(async function autofilled_prefilled_un() {
-  const form = createForm("autofilled prefilled un", {
+  const form = createLoginForm({
     action: action1,
-    usernameInputValue: "testuser1A"
+    username: {
+      value: "testuser1A"
+    }
   });
 
   info("Username and password already filled so don't show autocomplete");
@@ -94,9 +56,11 @@ add_task(async function autofilled_prefilled_un() {
 });
 
 add_task(async function autofilled_focused_dynamic() {
-  const form = createForm("autofilled focused dynamic", {
+  const form = createLoginForm({
     action: action1,
-    passwordInputType: "not-yet-password"
+    password: {
+      type: "not-yet-password"
+    }
   });
 
   info("Username and password will be filled while username focused");
@@ -117,16 +81,18 @@ add_task(async function autofilled_focused_dynamic() {
 // Begin testing forms that have multiple saved logins
 
 add_task(async function multiple() {
-  const form = createForm("multiple", { action: action2 });
+  const form = createLoginForm({ action: action2 });
 
   info("Fields not filled due to multiple so autocomplete upon focus");
   await popupBy(() => form.uname.focus());
 });
 
 add_task(async function multiple_dynamic() {
-  const form = createForm("multiple dynamic", {
+  const form = createLoginForm({
     action: action2,
-    passwordInputType: "not-yet-password"
+    password: {
+      type: "not-yet-password"
+    }
   });
 
   info("Fields not filled but username is focused upon marking so open");
@@ -137,9 +103,11 @@ add_task(async function multiple_dynamic() {
 });
 
 add_task(async function multiple_prefilled_un1() {
-  const form = createForm("multiple prefilled un1", {
+  const form = createLoginForm({
     action: action2,
-    usernameInputValue: "testuser2A"
+    username: {
+      value: "testuser2A"
+    }
   });
 
   info("Username and password already filled so don't show autocomplete");
@@ -152,9 +120,11 @@ add_task(async function multiple_prefilled_un1() {
 });
 
 add_task(async function multiple_prefilled_un2() {
-  const form = createForm("multiple prefilled un2", {
+  const form = createLoginForm({
     action: action2,
-    usernameInputValue: "testuser2B"
+    username: {
+      value: "testuser2B"
+    }
   });
 
   info("Username and password already filled so don't show autocomplete");
@@ -167,10 +137,14 @@ add_task(async function multiple_prefilled_un2() {
 });
 
 add_task(async function multiple_prefilled_focused_dynamic() {
-  const form = createForm("multiple prefilled focused dynamic", {
+  const form = createLoginForm({
     action: action2,
-    usernameInputValue: "testuser2B",
-    passwordInputType: "not-yet-password"
+    username: {
+      value: "testuser2B"
+    },
+    password: {
+      type: "not-yet-password"
+    }
   });
 
   info("Username and password will be filled while username focused");

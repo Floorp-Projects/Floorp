@@ -17,37 +17,6 @@ Login Manager test: logins with non-exact match origin appear in autocomplete dr
 <div id="content"></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-function createForm () {
-  const form = document.createElement("form");
-  form.action = "https://otherexample.com/formtest.js"
-
-  const usernameInput = document.createElement("input");
-  usernameInput.type = "text";
-  usernameInput.name = "uname";
-  form.appendChild(usernameInput);
-
-  const passwordInput = document.createElement("input");
-  passwordInput.type = "password";
-  passwordInput.name = "pword";
-  form.appendChild(passwordInput);
-
-  const submitButton = document.createElement("button");
-  submitButton.type = "submit";
-  submitButton.name = "submit";
-  submitButton.innerText = "Submit";
-  form.appendChild(submitButton);
-
-  const content = document.getElementById("content");
-
-  if (content.firstChild) {
-    content.replaceChild(form, content.firstChild);
-  } else {
-    content.appendChild(form);
-  }
-
-  return form;
-}
-
 const setupScript = runInParent(function setup() {
   addMessageListener("getDateString", () => {
     const dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
@@ -85,7 +54,9 @@ add_setup(async () => {
 });
 
 add_task(async function test_form1_initial_empty() {
-  const form = createForm();
+  const form = createLoginForm({
+    action: "https://otherexample.com/formtest.js"
+  });
 
   // Make sure initial form is empty.
   checkLoginForm(form.uname, "", form.pword, "");
@@ -98,7 +69,9 @@ add_task(async function test_form1_initial_empty() {
  * should appear in the autocomplete popup.
  */
 add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_different_subdomain() {
-  const form = createForm();
+  const form = createLoginForm({
+    action: "https://otherexample.com/formtest.js"
+  });
 
   // Trigger autocomplete popup
   form.uname.focus();

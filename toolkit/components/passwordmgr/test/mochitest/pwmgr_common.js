@@ -183,6 +183,57 @@ function getPasswordEditedMessage() {
 }
 
 /**
+ * Create a login form and insert into contents dom, replacing its childs if any.
+ * @return {HTMLDomElement} the form
+ */
+function createLoginForm({
+  action = "",
+  username = {
+    value: "",
+  },
+  password = {
+    type: "password",
+  },
+} = {}) {
+  info(`Creating login form ${JSON.stringify({ action, username, password })}`);
+
+  const form = document.createElement("form");
+  form.action = action;
+
+  const usernameInput = document.createElement("input");
+  usernameInput.type = "text";
+  usernameInput.name = "uname";
+  usernameInput.value = username.value;
+  if (username.autocomplete) {
+    usernameInput.setAttribute("autocomplete", username.autocomplete);
+  }
+  form.appendChild(usernameInput);
+
+  if (password) {
+    const passwordInput = document.createElement("input");
+    passwordInput.type = password.type;
+    passwordInput.name = "pword";
+    form.appendChild(passwordInput);
+  }
+
+  const submitButton = document.createElement("button");
+  submitButton.type = "submit";
+  submitButton.name = "submit";
+  submitButton.innerText = "Submit";
+  form.appendChild(submitButton);
+
+  const content = document.getElementById("content");
+
+  if (content.firstChild) {
+    content.replaceChild(form, content.firstChild);
+  } else {
+    content.appendChild(form);
+  }
+
+  return form;
+}
+
+/**
  * Check for expected username/password in form.
  * @see `checkForm` below for a similar function.
  */
