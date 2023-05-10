@@ -19,8 +19,25 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Services.h"
 
-#ifdef XP_MACOSX
+#if defined(XP_WIN)
+#  include "WinWifiScanner.h"
+#endif
+
+#if defined(XP_MACOSX)
 #  include "nsCocoaFeatures.h"
+#  include "MacWifiScanner.h"
+#endif
+
+#if defined(__DragonFly__) || defined(__FreeBSD__)
+#  include "FreeBsdWifiScanner.h"
+#endif
+
+#if defined(XP_SOLARIS)
+#  include "SolarisWifiScanner.h"
+#endif
+
+#if defined(NECKO_WIFI_DBUS)
+#  include "DbusWifiScanner.h"
 #endif
 
 using namespace mozilla;
@@ -29,10 +46,14 @@ LazyLogModule gWifiMonitorLog("WifiMonitor");
 
 NS_IMPL_ISUPPORTS(nsWifiMonitor, nsIRunnable, nsIObserver, nsIWifiMonitor)
 
-nsWifiMonitor::nsWifiMonitor()
+nsWifiMonitor::nsWifiMonitor(UniquePtr<mozilla::WifiScanner>&& aScanner)
     : mKeepGoing(true),
       mThreadComplete(false),
+      mWifiScanner(std::move(aScanner)),
       mReentrantMonitor("nsWifiMonitor.mReentrantMonitor") {
+  LOG(("Creating nsWifiMonitor"));
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   if (obsSvc) obsSvc->AddObserver(this, "xpcom-shutdown", false);
 
@@ -191,6 +212,51 @@ NS_IMETHODIMP nsWifiMonitor::Run() {
   }
 
   LOG(("@@@@@ wifi monitor run complete\n"));
+  return NS_OK;
+}
+
+nsresult nsWifiMonitor::DoScan() {
+  if (!mWifiScanner) {
+    mWifiScanner = MakeUnique<mozilla::WifiScannerImpl>();
+    if (!mWifiScanner) {
+      // TODO: Probably return OOM error
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Regularly get the access point data.
+  nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
+  nsTArray<RefPtr<nsIWifiAccessPoint>> accessPointsArray;
+
+  do {
+    accessPointsArray.Clear();
+    nsresult rv = mWifiScanner->GetAccessPointsFromWLAN(accessPointsArray);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    nsCOMArray<nsWifiAccessPoint> accessPoints;
+
+    for (auto& ap : accessPointsArray) {
+      accessPoints.AppendObject(static_cast<nsWifiAccessPoint*>(ap.get()));
+    }
+
+    bool accessPointsChanged =
+        !AccessPointsEqual(accessPoints, lastAccessPoints);
+    ReplaceArray(lastAccessPoints, accessPoints);
+
+    rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // wait for some reasonable amount of time.  pref?
+    LOG(("waiting on monitor\n"));
+
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    if (mKeepGoing) {
+      mon.Wait(PR_SecondsToInterval(kDefaultWifiScanInterval));
+    }
+  } while (mKeepGoing);
+
   return NS_OK;
 }
 
