@@ -161,7 +161,6 @@ bool RenderCompositorEGL::Resume() {
     // Destroy EGLSurface if it exists.
     DestroyEGLSurface();
 
-#ifdef MOZ_WIDGET_ANDROID
     auto size = GetBufferSize();
     GLint maxTextureSize = 0;
     gl()->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, (GLint*)&maxTextureSize);
@@ -179,7 +178,6 @@ bool RenderCompositorEGL::Resume() {
       return false;
     }
     gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
-#endif  // MOZ_WIDGET_ANDROID
   } else if (kIsWayland || kIsX11) {
     // Destroy EGLSurface if it exists and create a new one. We will set the
     // swap interval after MakeCurrent() has been called.
