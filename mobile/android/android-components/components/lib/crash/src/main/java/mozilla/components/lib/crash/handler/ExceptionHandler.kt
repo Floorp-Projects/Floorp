@@ -31,6 +31,9 @@ class ExceptionHandler(
             return
         }
 
+        // We want to catch and log all exceptions that can take down the crash reporter.
+        // This is the best we can do without being able to report it.
+        @Suppress("TooGenericExceptionCaught")
         try {
             crashing = true
 
@@ -44,6 +47,8 @@ class ExceptionHandler(
             )
 
             defaultExceptionHandler?.uncaughtException(thread, throwable)
+        } catch (e: Exception) {
+            Log.e(TAG, "Crash reporter has crashed.", e)
         } finally {
             terminateProcess()
         }

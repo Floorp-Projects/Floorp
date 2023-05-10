@@ -10,6 +10,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **lib-crash**
+  * Log exceptions that crash the `CrashReporter` to avoid silent failurs. See [bug 1826591](https://bugzilla.mozilla.org/show_bug.cgi?id=1826591).
+
 # 114.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v113..releases_v114)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v114/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
