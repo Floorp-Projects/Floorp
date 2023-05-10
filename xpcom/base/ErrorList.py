@@ -429,19 +429,19 @@ with modules["NETWORK"]:
     # These are really not "results", they're statuses, used by nsITransport and
     # friends.  This is abuse of nsresult, but we'll put up with it for now.
     # nsITransport
-    errors["NS_NET_STATUS_READING"] = FAILURE(8)
-    errors["NS_NET_STATUS_WRITING"] = FAILURE(9)
+    errors["NS_NET_STATUS_READING"] = SUCCESS(8)
+    errors["NS_NET_STATUS_WRITING"] = SUCCESS(9)
 
     # nsISocketTransport
-    errors["NS_NET_STATUS_RESOLVING_HOST"] = FAILURE(3)
-    errors["NS_NET_STATUS_RESOLVED_HOST"] = FAILURE(11)
-    errors["NS_NET_STATUS_CONNECTING_TO"] = FAILURE(7)
-    errors["NS_NET_STATUS_CONNECTED_TO"] = FAILURE(4)
-    errors["NS_NET_STATUS_TLS_HANDSHAKE_STARTING"] = FAILURE(12)
-    errors["NS_NET_STATUS_TLS_HANDSHAKE_ENDED"] = FAILURE(13)
-    errors["NS_NET_STATUS_SENDING_TO"] = FAILURE(5)
-    errors["NS_NET_STATUS_WAITING_FOR"] = FAILURE(10)
-    errors["NS_NET_STATUS_RECEIVING_FROM"] = FAILURE(6)
+    errors["NS_NET_STATUS_RESOLVING_HOST"] = SUCCESS(3)
+    errors["NS_NET_STATUS_RESOLVED_HOST"] = SUCCESS(11)
+    errors["NS_NET_STATUS_CONNECTING_TO"] = SUCCESS(7)
+    errors["NS_NET_STATUS_CONNECTED_TO"] = SUCCESS(4)
+    errors["NS_NET_STATUS_TLS_HANDSHAKE_STARTING"] = SUCCESS(12)
+    errors["NS_NET_STATUS_TLS_HANDSHAKE_ENDED"] = SUCCESS(13)
+    errors["NS_NET_STATUS_SENDING_TO"] = SUCCESS(5)
+    errors["NS_NET_STATUS_WAITING_FOR"] = SUCCESS(10)
+    errors["NS_NET_STATUS_RECEIVING_FROM"] = SUCCESS(6)
 
     # nsIInterceptedChannel
     # Generic error for non-specific failures during service worker interception

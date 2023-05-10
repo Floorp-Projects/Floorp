@@ -13,7 +13,7 @@ var httpbody = "0123456789";
 var last = 0,
   max = 0;
 
-const STATUS_RECEIVING_FROM = 0x804b0006;
+const STATUS_RECEIVING_FROM = 0x4b0006;
 const LOOPS = 50000;
 
 const TYPE_ONSTATUS = 1;

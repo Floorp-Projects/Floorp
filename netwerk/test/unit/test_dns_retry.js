@@ -164,7 +164,7 @@ HttpListener.prototype = {
   },
 };
 
-function promiseObserverNotification(topic, matchFunc) {
+function promiseObserverNotification(aTopic, matchFunc) {
   return new Promise((resolve, reject) => {
     Services.obs.addObserver(function observe(subject, topic, data) {
       let matches = typeof matchFunc != "function" || matchFunc(subject, data);
@@ -173,7 +173,7 @@ function promiseObserverNotification(topic, matchFunc) {
       }
       Services.obs.removeObserver(observe, topic);
       resolve({ subject, data });
-    }, topic);
+    }, aTopic);
   });
 }
 
@@ -187,12 +187,12 @@ async function make_request(uri, check_events, succeeded) {
 
   if (check_events) {
     equal(
-      statusCounter._statusCount[0x804b000b] || 0,
+      statusCounter._statusCount[0x4b000b] || 0,
       1,
       "Expecting only one instance of NS_NET_STATUS_RESOLVED_HOST"
     );
     equal(
-      statusCounter._statusCount[0x804b0007] || 0,
+      statusCounter._statusCount[0x4b0007] || 0,
       1,
       "Expecting only one instance of NS_NET_STATUS_CONNECTING_TO"
     );

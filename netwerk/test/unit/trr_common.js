@@ -1092,12 +1092,12 @@ async function test_no_retry_without_doh() {
       chan.asyncOpen(new ChannelListener(resolve, null, CL_EXPECT_FAILURE))
     );
     equal(
-      statusCounter.statusCount[0x804b000b],
+      statusCounter.statusCount[0x4b000b],
       1,
       "Expecting only one instance of NS_NET_STATUS_RESOLVED_HOST"
     );
     equal(
-      statusCounter.statusCount[0x804b0007],
+      statusCounter.statusCount[0x4b0007],
       1,
       "Expecting only one instance of NS_NET_STATUS_CONNECTING_TO"
     );
