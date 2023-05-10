@@ -203,11 +203,7 @@ void TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
 
 void TypeUtils::ToCacheResponse(JSContext* aCx, CacheResponse& aOut,
                                 Response& aIn, ErrorResult& aRv) {
-  bool bodyUsed = aIn.GetBodyUsed(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-  if (bodyUsed) {
+  if (aIn.BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return;
   }
@@ -436,11 +432,7 @@ void TypeUtils::CheckAndSetBodyUsed(JSContext* aCx, Request& aRequest,
     return;
   }
 
-  bool bodyUsed = aRequest.GetBodyUsed(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-  if (bodyUsed) {
+  if (aRequest.BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return;
   }
