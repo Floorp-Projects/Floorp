@@ -2159,10 +2159,16 @@ export class SpecialPowersChild extends JSWindowActorChild {
       case "cmd_highlight":
       case "cmd_insertImageNoUI":
       case "cmd_insertLinkNoUI":
-      case "cmd_paragraphState":
-        let params = Cu.createCommandParams();
+      case "cmd_paragraphState": {
+        const params = Cu.createCommandParams();
         params.setStringValue("state_attribute", param);
         return window.docShell.doCommandWithParams(cmd, params);
+      }
+      case "cmd_pasteTransferable": {
+        const params = Cu.createCommandParams();
+        params.setISupportsValue("transferable", param);
+        return window.docShell.doCommandWithParams(cmd, params);
+      }
       default:
         return window.docShell.doCommand(cmd);
     }

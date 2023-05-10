@@ -234,14 +234,17 @@ class HTMLEditor final : public EditorBase,
    * PasteNoFormattingAsAction() pastes content in clipboard without any style
    * information.
    *
-   * @param aSelectionType      nsIClipboard::kGlobalClipboard or
+   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
    *                            nsIClipboard::kSelectionClipboard.
+   * @param aDispatchPasteEvent Yes if this should dispatch ePaste event
+   *                            before pasting.  Otherwise, No.
    * @param aPrincipal          Set subject principal if it may be called by
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
   MOZ_CAN_RUN_SCRIPT nsresult PasteNoFormattingAsAction(
-      int32_t aSelectionType, nsIPrincipal* aPrincipal = nullptr);
+      int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
+      nsIPrincipal* aPrincipal = nullptr);
 
   bool CanPasteTransferable(nsITransferable* aTransferable) final;
 

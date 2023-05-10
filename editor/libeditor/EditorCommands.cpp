@@ -507,10 +507,11 @@ nsresult PasteTransferableCommand::DoCommandParam(
   if (NS_WARN_IF(!aTransferableParam)) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsresult rv =
-      aEditorBase.PasteTransferableAsAction(aTransferableParam, aPrincipal);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::PasteTransferableAsAction() failed");
+  nsresult rv = aEditorBase.PasteTransferableAsAction(
+      aTransferableParam, EditorBase::DispatchPasteEvent::Yes, aPrincipal);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::PasteTransferableAsAction(DispatchPasteEvent::Yes) failed");
   return rv;
 }
 
