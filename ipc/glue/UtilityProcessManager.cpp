@@ -384,10 +384,6 @@ UtilityProcessManager::StartProcessForRemoteMediaDecoding(
                 std::move(childPipe), __func__);
           },
           [self, remoteDecodingStart](nsresult aError) {
-            if (!self->IsShutdown()) {
-              MOZ_ASSERT_UNREACHABLE(
-                  "PUtilityAudioDecoder: failure when starting actor");
-            }
             NS_WARNING(
                 "Reject StartProcessForRemoteMediaDecoding() for "
                 "StartUtility() rejection");
@@ -438,10 +434,6 @@ UtilityProcessManager::GetWindowsUtilsPromise() {
             return WindowsUtilsPromise::CreateAndResolve(wup, __func__);
           },
           [self, windowsUtilsStart](nsresult aError) {
-            if (!self->IsShutdown()) {
-              MOZ_ASSERT_UNREACHABLE(
-                  "PWindowsUtils: failure when starting actor");
-            }
             NS_WARNING("StartUtility rejected promise for PWindowsUtils");
             PROFILER_MARKER_TEXT(
                 "UtilityProcessManager::GetWindowsUtilsPromise", OTHER,
