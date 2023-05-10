@@ -12,27 +12,16 @@
 <body>
 Login Manager test: no duplicate logins when using autofill and autocomplete with related realms
 <p id="display"></p>
-<div id="content">
-  <form id="form1" action="https://www.example.com" onsubmit="return false;">
-    <input type="text" name="uname">
-    <input type="password" name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-</div>
-
+<div id="content"></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: related realms autofill/autocomplete. **/
 
-const uname = getFormElementByName(1, "uname");
-const pword = getFormElementByName(1, "pword");
-
-function restoreForm() {
-  uname.value = "";
-  pword.value = "";
-  uname.focus();
+function restoreForm(form) {
+  form.uname.value = "";
+  form.pword.value = "";
+  form.uname.focus();
 }
 
 function sendFakeAutocompleteEvent(element) {
@@ -71,11 +60,15 @@ add_setup(async () => {
 });
 
 add_task(async function test_no_duplicates_autocomplete_autofill() {
+  const form = createLoginForm({
+    action: "https://www.example.com"
+  });
+
   await promiseFormsProcessedInSameProcess();
   await SimpleTest.promiseFocus(window);
   const results = await popupBy(() => {
-    checkLoginForm(uname, "exactUser1", pword, "exactPass1")
-    restoreForm();
+    checkLoginForm(form.uname, "exactUser1", form.pword, "exactPass1")
+    restoreForm(form);
   });
 
   const popupState = await getPopupState();
@@ -85,12 +78,12 @@ add_task(async function test_no_duplicates_autocomplete_autofill() {
 
   const acEvents = await getTelemetryEvents({ process: "parent", filterProps: TelemetryFilterPropsAC, clear: true });
   is(acEvents.length, 1, "One autocomplete event");
-  checkACTelemetryEvent(acEvents[0], uname, {
+  checkACTelemetryEvent(acEvents[0], form.uname, {
     "hadPrevious": "0",
     "login": expectedMenuItems.length + "",
     "loginsFooter": "1"
   });
-  restoreForm();
+  restoreForm(form);
   synthesizeKey("KEY_Escape");
 });
 </script>
