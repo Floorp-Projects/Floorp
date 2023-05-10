@@ -58,7 +58,6 @@ pref("devtools.debugger.features.command-click", false);
 pref("devtools.debugger.features.component-pane", false);
 pref("devtools.debugger.features.autocomplete-expressions", false);
 pref("devtools.debugger.features.map-expression-bindings", true);
-pref("devtools.debugger.features.xhr-breakpoints", true);
 pref("devtools.debugger.features.event-listeners-breakpoints", true);
 pref("devtools.debugger.features.dom-mutation-breakpoints", true);
 pref("devtools.debugger.features.log-points", true);
