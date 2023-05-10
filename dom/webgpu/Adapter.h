@@ -20,6 +20,8 @@ struct GPUDeviceDescriptor;
 struct GPUExtensions;
 struct GPUFeatures;
 enum class GPUFeatureName : uint8_t;
+enum class WgpuBackend : uint8_t;
+enum class WgpuDeviceType : uint8_t;
 template <typename T>
 class Sequence;
 }  // namespace dom
@@ -35,16 +37,27 @@ struct WGPUAdapterInformation;
 }  // namespace ffi
 
 class AdapterInfo final : public dom::NonRefcountedDOMObject {
- public:
-  nsString mVendor;
-  nsString mArchitecture;
-  nsString mDevice;
-  nsString mDescription;
+ private:
+  const std::shared_ptr<ffi::WGPUAdapterInformation> mAboutSupportInfo;
 
-  void GetVendor(nsString& s) const { s = mVendor; }
-  void GetArchitecture(nsString& s) const { s = mArchitecture; }
-  void GetDevice(nsString& s) const { s = mDevice; }
-  void GetDescription(nsString& s) const { s = mDescription; }
+ public:
+  explicit AdapterInfo(
+      const std::shared_ptr<ffi::WGPUAdapterInformation>& aAboutSupportInfo)
+      : mAboutSupportInfo(aAboutSupportInfo) {}
+
+  void GetVendor(nsString& s) const { s = nsString(); }
+  void GetArchitecture(nsString& s) const { s = nsString(); }
+  void GetDevice(nsString& s) const { s = nsString(); }
+  void GetDescription(nsString& s) const { s = nsString(); }
+
+  // Non-standard field getters; see also TODO BUGZILLA LINK
+  void GetWgpuName(nsString&) const;
+  size_t WgpuVendor() const;
+  size_t WgpuDevice() const;
+  void GetWgpuDeviceType(nsString&) const;
+  void GetWgpuDriver(nsString&) const;
+  void GetWgpuDriverInfo(nsString&) const;
+  void GetWgpuBackend(nsString&) const;
 
   bool WrapObject(JSContext*, JS::Handle<JSObject*>,
                   JS::MutableHandle<JSObject*>);
@@ -69,14 +82,15 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
   // to unlink them in CC unlink.
   RefPtr<SupportedFeatures> mFeatures;
   RefPtr<SupportedLimits> mLimits;
-  const bool mIsFallbackAdapter = false;
+
+  const std::shared_ptr<ffi::WGPUAdapterInformation> mInfo;
 
  public:
   Adapter(Instance* const aParent, WebGPUChild* const aBridge,
-          const ffi::WGPUAdapterInformation& aInfo);
+          const std::shared_ptr<ffi::WGPUAdapterInformation>& aInfo);
   const RefPtr<SupportedFeatures>& Features() const;
   const RefPtr<SupportedLimits>& Limits() const;
-  bool IsFallbackAdapter() const { return mIsFallbackAdapter; }
+  bool IsFallbackAdapter() const;
 
   already_AddRefed<dom::Promise> RequestDevice(
       const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv);
