@@ -12,53 +12,34 @@
 <body>
 Login Manager test: autocomplete due to multiple matching logins
 <p id="display"></p>
-
 <!-- we presumably can't hide the content for this test. -->
-<div id="content">
-
-  <!-- form1 tests multiple matching logins -->
-  <form id="form1" action="https://autocomplete:8888/formtest.js" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-</div>
-
+<div id="content"></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-runChecksAfterCommonInit(false);
-
 /** Test for Login Manager: autocomplete due to multiple matching logins **/
 
-const uname = getFormElementByName(1, "uname");
-const pword = getFormElementByName(1, "pword");
-
-// Restore the form to the default state.
-function restoreForm() {
-  uname.value = "";
-  pword.value = "";
-  uname.focus();
-}
-
 add_setup(async () => {
-  const origin = window.location.origin;
   await addLoginsInParent(
-    [origin, "https://autocomplete:8888", null, "name", "pass", "uname", "pword"],
-    [origin, "https://autocomplete:8888", null, "Name", "Pass", "uname", "pword"],
-    [origin, "https://autocomplete:8888", null, "USER", "PASS", "uname", "pword"]
+    [location.origin, "https://autocomplete:8888", null, "name", "pass", "uname", "pword"],
+    [location.origin, "https://autocomplete:8888", null, "Name", "Pass", "uname", "pword"],
+    [location.origin, "https://autocomplete:8888", null, "USER", "PASS", "uname", "pword"]
   );
 })
 
 add_task(async function test_empty_first_entry() {
-  /* test 1 */
+  const form = createLoginForm({
+    action: "https://autocomplete:8888"
+  });
+
   // Make sure initial form is empty.
-  checkLoginForm(uname, "", pword, "");
+  checkLoginForm(form.uname, "", form.pword, "");
+
   // Trigger autocomplete popup
-  restoreForm();
+  form.uname.focus();
+
   let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
-  const { items } = await openPopupOn(uname);
+  const { items } = await openPopupOn(form.uname);
   popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected");
   checkAutoCompleteResults(items, ["name", "Name", "USER"], "example.com", "initial");
@@ -67,42 +48,51 @@ add_task(async function test_empty_first_entry() {
   const index0Promise = notifySelectedIndex(0);
   synthesizeKey("KEY_ArrowDown");
   await index0Promise;
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update
+  checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
-  checkLoginForm(uname, "name", pword, "pass");
+  checkLoginForm(form.uname, "name", form.pword, "pass");
 });
 
 add_task(async function test_empty_second_entry() {
-  restoreForm();
-  await openPopupOn(uname);
+  const form = createLoginForm({
+    action: "https://autocomplete:8888"
+  });
+
+  await openPopupOn(form.uname);
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
-  checkLoginForm(uname, "Name", pword, "Pass");
+  checkLoginForm(form.uname, "Name", form.pword, "Pass");
 });
 
 add_task(async function test_empty_third_entry() {
-  restoreForm();
-  await openPopupOn(uname);
+  const form = createLoginForm({
+    action: "https://autocomplete:8888"
+  });
+
+  await openPopupOn(form.uname);
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_ArrowDown"); // third
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
-  checkLoginForm(uname, "USER", pword, "PASS");
+  checkLoginForm(form.uname, "USER", form.pword, "PASS");
 });
 
 add_task(async function test_preserve_matching_username_case() {
-  restoreForm();
-  await openPopupOn(uname, { inputValue: "user" });
+  const form = createLoginForm({
+    action: "https://autocomplete:8888"
+  });
+  await promiseFormsProcessedInSameProcess();
 
+  await openPopupOn(form.uname, { inputValue: "user" });
   // Check that we don't clobber user-entered text when tabbing away
   // (even with no autocomplete entry selected)
   synthesizeKey("KEY_Tab");
   await promiseFormsProcessedInSameProcess();
-  checkLoginForm(uname, "user", pword, "PASS");
+  checkLoginForm(form.uname, "user", form.pword, "PASS");
 });
 </script>
 </pre>
