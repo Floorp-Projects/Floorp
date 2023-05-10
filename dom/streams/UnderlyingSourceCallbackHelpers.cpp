@@ -176,11 +176,10 @@ InputStreamHolder::InputStreamHolder(JSContext* aCx,
   }
 }
 
-InputStreamHolder::~InputStreamHolder() { MOZ_ASSERT(!mCallback); }
+InputStreamHolder::~InputStreamHolder() = default;
 
 void InputStreamHolder::Shutdown() {
-  if (mCallback) {
-    mCallback = nullptr;
+  if (mWorkerRef) {
     mInput->CloseWithStatus(NS_BASE_STREAM_CLOSED);
     mWorkerRef = nullptr;
     // If we have an AsyncWait running, we'll get a callback and clear
@@ -207,11 +206,12 @@ NS_IMETHODIMP InputStreamHolder::OnInputStreamReady(
   return NS_ERROR_FAILURE;
 }
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(
-    InputToReadableStreamAlgorithms, UnderlyingSourceAlgorithmsWrapper)
-NS_IMPL_CYCLE_COLLECTION_INHERITED(InputToReadableStreamAlgorithms,
-                                   UnderlyingSourceAlgorithmsWrapper, mStream,
-                                   mOwningEventTarget, mPullPromise)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(InputToReadableStreamAlgorithms,
+                                             UnderlyingSourceAlgorithmsWrapper,
+                                             nsIInputStreamCallback)
+NS_IMPL_CYCLE_COLLECTION_WEAK_PTR_INHERITED(InputToReadableStreamAlgorithms,
+                                            UnderlyingSourceAlgorithmsWrapper,
+                                            mPullPromise, mStream)
 
 already_AddRefed<Promise> InputToReadableStreamAlgorithms::PullCallbackImpl(
     JSContext* aCx, ReadableStreamController& aController, ErrorResult& aRv) {
