@@ -13,6 +13,7 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/UtilityProcessParent.h"
 #include "mozilla/ipc/UtilityProcessSandboxing.h"
+#include "mozilla/ipc/UtilityAudioDecoder.h"
 #include "mozilla/ipc/PUtilityAudioDecoderChild.h"
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
@@ -55,26 +56,7 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
       const RemoteDecodeIn& aLocation,
       const media::MediaCodecsSupported& aSupported);
 
-  UtilityActorName GetActorName() {
-    switch (mSandbox) {
-      case GENERIC_UTILITY:
-        return UtilityActorName::AudioDecoder_Generic;
-#ifdef MOZ_APPLEMEDIA
-      case UTILITY_AUDIO_DECODING_APPLE_MEDIA:
-        return UtilityActorName::AudioDecoder_AppleMedia;
-#endif
-#ifdef XP_WIN
-      case UTILITY_AUDIO_DECODING_WMF:
-        return UtilityActorName::AudioDecoder_WMF;
-#endif
-#ifdef MOZ_WMF_MEDIA_ENGINE
-      case MF_MEDIA_ENGINE_CDM:
-        return UtilityActorName::MfMediaEngineCDM;
-#endif
-      default:
-        MOZ_CRASH("Unexpected mSandbox for GetActorName()");
-    }
-  }
+  UtilityActorName GetActorName() { return GetAudioActorName(mSandbox); }
 
   nsresult BindToUtilityProcess(RefPtr<UtilityProcessParent> aUtilityParent) {
     Endpoint<PUtilityAudioDecoderChild> utilityAudioDecoderChildEnd;
