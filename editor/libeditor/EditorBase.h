@@ -766,8 +766,8 @@ class EditorBase : public nsIEditor,
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteTransferableAsAction(
-      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr) = 0;
+  MOZ_CAN_RUN_SCRIPT nsresult PasteTransferableAsAction(
+      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * PasteAsQuotationAsAction() pastes content in clipboard as quotation.
@@ -2661,6 +2661,14 @@ class EditorBase : public nsIEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult HandlePasteAsQuotation(
       AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) = 0;
+
+  /**
+   * Called after PasteTransferableAsAction() dispatches "paste" event and it's
+   * not canceled.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult HandlePasteTransferable(
+      AutoEditActionDataSetter& aEditActionData,
+      nsITransferable& aTransferable) = 0;
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;

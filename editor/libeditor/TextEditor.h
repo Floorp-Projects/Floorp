@@ -136,9 +136,6 @@ class TextEditor final : public EditorBase,
 
   bool CanPaste(int32_t aClipboardType) const final;
 
-  MOZ_CAN_RUN_SCRIPT nsresult PasteTransferableAsAction(
-      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr) final;
-
   bool CanPasteTransferable(nsITransferable* aTransferable) final;
 
   MOZ_CAN_RUN_SCRIPT nsresult
@@ -554,6 +551,9 @@ class TextEditor final : public EditorBase,
       AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePasteAsQuotation(
       AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  HandlePasteTransferable(AutoEditActionDataSetter& aEditActionData,
+                          nsITransferable& aTransferable) final;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) final;

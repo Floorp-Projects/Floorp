@@ -1861,6 +1861,54 @@ nsresult EditorBase::PasteAsQuotationAsAction(
   return EditorBase::ToGenericNSResult(rv);
 }
 
+nsresult EditorBase::PasteTransferableAsAction(
+    nsITransferable* aTransferable, nsIPrincipal* aPrincipal /* = nullptr */) {
+  // FIXME: This may be called as a call of nsIEditor::PasteTransferable.
+  // In this case, we should keep handling the paste even in the readonly mode.
+  if (IsHTMLEditor() && IsReadonly()) {
+    return NS_OK;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
+                                          aPrincipal);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  {
+    // Use an invalid value for the clipboard type as data comes from
+    // aTransferable and we don't currently implement a way to put that in the
+    // data transfer in TextEditor yet.
+    Result<ClipboardEventResult, nsresult> ret =
+        DispatchClipboardEventAndUpdateClipboard(
+            ePaste, IsTextEditor() ? -1 : nsIClipboard::kGlobalClipboard);
+    if (MOZ_UNLIKELY(ret.isErr())) {
+      NS_WARNING(
+          "EditorBase::DispatchClipboardEventAndUpdateClipboard(ePaste) "
+          "failed");
+      return EditorBase::ToGenericNSResult(ret.unwrapErr());
+    }
+    switch (ret.inspect()) {
+      case ClipboardEventResult::DoDefault:
+        break;
+      case ClipboardEventResult::DefaultPreventedOfPaste:
+      case ClipboardEventResult::IgnoredOrError:
+        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+      case ClipboardEventResult::CopyOrCutHandled:
+        MOZ_ASSERT_UNREACHABLE("Invalid result for ePaste");
+    }
+  }
+
+  if (NS_WARN_IF(!aTransferable)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv = HandlePasteTransferable(editActionData, *aTransferable);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::HandlePasteTransferable() failed");
+  return EditorBase::ToGenericNSResult(rv);
+}
+
 nsresult EditorBase::PrepareToInsertContent(
     const EditorDOMPoint& aPointToInsert,
     DeleteSelectedContent aDeleteSelectedContent) {
