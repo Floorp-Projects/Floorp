@@ -2,11 +2,11 @@
 
 Services.prefs.setBoolPref("dom.manifest.enabled", true);
 
-const { ManifestIcons } = ChromeUtils.import(
-  "resource://gre/modules/ManifestIcons.jsm"
+const { ManifestIcons } = ChromeUtils.importESModule(
+  "resource://gre/modules/ManifestIcons.sys.mjs"
 );
-const { ManifestObtainer } = ChromeUtils.import(
-  "resource://gre/modules/ManifestObtainer.jsm"
+const { ManifestObtainer } = ChromeUtils.importESModule(
+  "resource://gre/modules/ManifestObtainer.sys.mjs"
 );
 
 const defaultURL = new URL(

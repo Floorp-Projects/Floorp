@@ -2,8 +2,8 @@
 
 Services.prefs.setBoolPref("dom.manifest.enabled", true);
 
-const { ManifestObtainer } = ChromeUtils.import(
-  "resource://gre/modules/ManifestObtainer.jsm"
+const { ManifestObtainer } = ChromeUtils.importESModule(
+  "resource://gre/modules/ManifestObtainer.sys.mjs"
 );
 
 // Don't send cookies

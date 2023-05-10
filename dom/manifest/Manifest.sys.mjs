@@ -13,14 +13,9 @@
  *  - Trigger appropriate app installed events
  */
 
-"use strict";
+import { ManifestObtainer } from "resource://gre/modules/ManifestObtainer.sys.mjs";
 
-const { ManifestObtainer } = ChromeUtils.import(
-  "resource://gre/modules/ManifestObtainer.jsm"
-);
-const { ManifestIcons } = ChromeUtils.import(
-  "resource://gre/modules/ManifestIcons.jsm"
-);
+import { ManifestIcons } from "resource://gre/modules/ManifestIcons.sys.mjs";
 
 const lazy = {};
 
@@ -165,7 +160,7 @@ class Manifest {
 /*
  * Manifests maintains the list of installed manifests
  */
-var Manifests = {
+export var Manifests = {
   async _initialize() {
     if (this._readyPromise) {
       return this._readyPromise;
@@ -248,5 +243,3 @@ var Manifests = {
     return manifest;
   },
 };
-
-var EXPORTED_SYMBOLS = ["Manifests"];

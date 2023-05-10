@@ -5,9 +5,8 @@
  * Helper functions extract values from manifest members
  * and reports conformance errors.
  */
-"use strict";
 
-class ValueExtractor {
+export class ValueExtractor {
   constructor(errors, aBundle) {
     this.errors = errors;
     this.domBundle = aBundle;
@@ -102,5 +101,3 @@ class ValueExtractor {
     return langTag;
   }
 }
-
-const EXPORTED_SYMBOLS = ["ValueExtractor"];

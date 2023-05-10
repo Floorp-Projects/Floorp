@@ -1,6 +1,6 @@
 "use strict";
-const { ManifestFinder } = ChromeUtils.import(
-  "resource://gre/modules/ManifestFinder.jsm"
+const { ManifestFinder } = ChromeUtils.importESModule(
+  "resource://gre/modules/ManifestFinder.sys.mjs"
 );
 const defaultURL = new URL(
   "http://example.org/browser/dom/manifest/test/resource.sjs"

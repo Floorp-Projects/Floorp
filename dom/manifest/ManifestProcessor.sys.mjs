@@ -18,7 +18,6 @@
  * TODO: The constructor should accept the UA's supported orientations.
  * TODO: The constructor should accept the UA's supported display modes.
  */
-"use strict";
 
 const displayModes = new Set([
   "fullscreen",
@@ -40,19 +39,16 @@ const textDirections = new Set(["ltr", "rtl", "auto"]);
 
 // ValueExtractor is used by the various processors to get values
 // from the manifest and to report errors.
-const { ValueExtractor } = ChromeUtils.import(
-  "resource://gre/modules/ValueExtractor.jsm"
-);
+import { ValueExtractor } from "resource://gre/modules/ValueExtractor.sys.mjs";
+
 // ImageObjectProcessor is used to process things like icons and images
-const { ImageObjectProcessor } = ChromeUtils.import(
-  "resource://gre/modules/ImageObjectProcessor.jsm"
-);
+import { ImageObjectProcessor } from "resource://gre/modules/ImageObjectProcessor.sys.mjs";
 
 const domBundle = Services.strings.createBundle(
   "chrome://global/locale/dom/dom.properties"
 );
 
-var ManifestProcessor = {
+export var ManifestProcessor = {
   get defaultDisplayMode() {
     return "browser";
   },
@@ -347,4 +343,3 @@ var ManifestProcessor = {
     }
   },
 };
-var EXPORTED_SYMBOLS = ["ManifestProcessor"];
