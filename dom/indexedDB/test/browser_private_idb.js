@@ -143,6 +143,10 @@ add_task(async function() {
   const pageUrl =
     "http://example.com/browser/dom/indexedDB/test/page_private_idb.html";
 
+  const enabled = SpecialPowers.getBoolPref(
+    "dom.indexedDB.privateBrowsing.enabled"
+  );
+
   let normalWin = await BrowserTestUtils.openNewBrowserWindow();
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
@@ -164,7 +168,7 @@ add_task(async function() {
   );
   is(
     await checkTabWindowIDB(privateTab),
-    "error",
+    enabled ? "created" : "error",
     "IndexedDB does not work in a private-browsing page."
   );
 
@@ -175,7 +179,7 @@ add_task(async function() {
   );
   is(
     await checkTabDedicatedWorkerIDB(privateTab),
-    "error",
+    enabled ? "created" : "error",
     "IndexedDB does not work in a private-browsing Worker."
   );
 
@@ -186,7 +190,7 @@ add_task(async function() {
   );
   is(
     await checkTabSharedWorkerIDB(privateTab),
-    "error",
+    enabled ? "created" : "error",
     "IndexedDB does not work in a private-browsing SharedWorker."
   );
 
