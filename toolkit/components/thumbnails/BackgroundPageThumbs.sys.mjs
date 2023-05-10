@@ -19,9 +19,10 @@ const TELEMETRY_HISTOGRAM_ID_PREFIX = "FX_THUMBNAILS_BG_";
 const ABOUT_NEWTAB_SEGREGATION_PREF =
   "privacy.usercontext.about_newtab_segregation.enabled";
 
-const { PageThumbs, PageThumbsStorage } = ChromeUtils.import(
-  "resource://gre/modules/PageThumbs.jsm"
-);
+import {
+  PageThumbs,
+  PageThumbsStorage,
+} from "resource://gre/modules/PageThumbs.sys.mjs";
 
 // possible FX_THUMBNAILS_BG_CAPTURE_DONE_REASON_2 telemetry values
 const TEL_CAPTURE_DONE_OK = 0;

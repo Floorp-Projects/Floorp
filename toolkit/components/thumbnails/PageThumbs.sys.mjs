@@ -27,11 +27,8 @@ const { BasePromiseWorker } = ChromeUtils.import(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  PageThumbUtils: "resource://gre/modules/PageThumbUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  PageThumbUtils: "resource://gre/modules/PageThumbUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -821,7 +818,8 @@ var PageThumbsStorageMigrator = {
   },
 };
 
-var PageThumbsExpiration = {
+// Export required for testing
+export var PageThumbsExpiration = {
   _filters: [],
 
   init: function Expiration_init() {
