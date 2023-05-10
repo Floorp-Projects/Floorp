@@ -56,10 +56,6 @@ class RenderCompositorEGL : public RenderCompositor {
   RefPtr<gl::GLContext> mGL;
 
   EGLSurface mEGLSurface;
-#ifdef MOZ_WIDGET_ANDROID
-  // On android we must track our own surface size.
-  LayoutDeviceIntSize mEGLSurfaceSize;
-#endif
 
   // FileDescriptor of release fence.
   // Release fence is a fence that is used for waiting until usage/composite of
