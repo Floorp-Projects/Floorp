@@ -794,9 +794,9 @@ class TelemetryEvent {
    * blurring the input field, an abandonment event is recorded.
    *
    * On return, `details.isSessionOngoing` will be set to true if the engagement
-   * did not end the search session. Not all engagements end the session.
-   * Currently, the session remains ongoing when dismissing results or picking
-   * results that enter search mode.
+   * did not end the search session. Not all engagements end the session. The
+   * session remains ongoing when certain commands are picked (like dismissal)
+   * and results that enter search mode are picked.
    *
    * @param {event} [event]
    *        A DOM event.
@@ -936,13 +936,14 @@ class TelemetryEvent {
     let method = action == "blur" ? "abandonment" : "engagement";
 
     if (method == "engagement") {
-      // Not all engagements end the search session. Currently, the session
-      // remains ongoing when dismissing results or picking results that enter
-      // search mode. We should find a generalized way to determine this instead
-      // of listing all the cases like this.
+      // Not all engagements end the search session. The session remains ongoing
+      // when certain commands are picked (like dismissal) and results that
+      // enter search mode are picked. We should find a generalized way to
+      // determine this instead of listing all the cases like this.
       details.isSessionOngoing = !!(
-        details.selType == "dismiss" ||
-        details.result?.payload.providesSearchMode
+        ["dismiss", "inaccurate_location", "show_less_frequently"].includes(
+          details.selType
+        ) || details.result?.payload.providesSearchMode
       );
     }
 

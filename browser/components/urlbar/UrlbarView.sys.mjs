@@ -1517,6 +1517,7 @@ export class UrlbarView {
       item.appendChild(item._content);
       item.removeAttribute("tip-type");
       item.removeAttribute("dynamicType");
+      item.removeAttribute("feedback-acknowledgment");
       if (item.result.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC) {
         this.#createRowContentForDynamicType(item, result);
       } else if (item.result.isBestMatch) {
