@@ -4,9 +4,7 @@
 
 const THUMBNAIL_DIRECTORY = "thumbnails";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -21,7 +19,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gUnicodeConverter", function() {
   converter.charset = "utf8";
   return converter;
 });
-function PageThumbsStorageService() {}
+export function PageThumbsStorageService() {}
 
 PageThumbsStorageService.prototype = {
   classID: Components.ID("{97943eec-0e48-49ef-b7b7-cf4aa0109bb6}"),
@@ -67,5 +65,3 @@ PageThumbsStorageService.prototype = {
     return hex;
   },
 };
-
-var EXPORTED_SYMBOLS = ["PageThumbsStorageService"];
