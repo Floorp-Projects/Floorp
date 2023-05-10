@@ -19,8 +19,11 @@ add_task(async function testAudioDecodingInRDD() {
 });
 
 add_task(async function testRDDTelemetry() {
-  const codecs = ["vorbis", "mp3", "aac", "flac"];
   const extraKey = ",utility-disabled";
-  await verifyNoTelemetryForProcess("utility", codecs, extraKey);
+  const platform = Services.appinfo.OS;
+  for (let exp of utilityPerCodecs[platform]) {
+    await verifyNoTelemetryForProcess(exp.process, exp.codecs, extraKey);
+  }
+  const codecs = ["vorbis", "mp3", "aac", "flac"];
   await verifyTelemetryForProcess("rdd", codecs, extraKey);
 });

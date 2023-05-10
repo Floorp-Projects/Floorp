@@ -18,6 +18,35 @@ const { ContentTaskUtils } = ChromeUtils.importESModule(
 
 const MEDIA_AUDIO_PROCESS = "media.audio_process_per_codec_name";
 
+const utilityPerCodecs = {
+  Linux: [
+    {
+      process: "utility+audioDecoder_Generic",
+      codecs: ["vorbis", "mp3", "aac", "flac"],
+    },
+  ],
+  WINNT: [
+    {
+      process: "utility+audioDecoder_Generic",
+      codecs: ["vorbis", "mp3", "flac"],
+    },
+    {
+      process: "utility+audioDecoder_WMF",
+      codecs: ["aac"],
+    },
+  ],
+  Darwin: [
+    {
+      process: "utility+audioDecoder_Generic",
+      codecs: ["vorbis", "mp3", "flac"],
+    },
+    {
+      process: "utility+audioDecoder_AppleMedia",
+      codecs: ["aac"],
+    },
+  ],
+};
+
 const kInterval = 300; /* ms */
 const kRetries = 5;
 
