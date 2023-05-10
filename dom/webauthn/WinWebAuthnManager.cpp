@@ -174,8 +174,6 @@ void WinWebAuthnManager::Register(
   ClearTransaction();
   mTransactionParent = aTransactionParent;
 
-  BYTE U2FUserId = 0x01;
-
   WEBAUTHN_EXTENSION rgExtension[1] = {};
   DWORD cExtensions = 0;
   BOOL HmacCreateSecret = FALSE;
@@ -216,135 +214,119 @@ void WinWebAuthnManager::Register(
   // AttestationConveyance
   DWORD winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
 
-  if (aInfo.Extra().isSome()) {
-    const auto& extra = aInfo.Extra().ref();
+  rpInfo.pwszName = aInfo.Rp().Name().get();
+  rpInfo.pwszIcon = aInfo.Rp().Icon().get();
 
-    rpInfo.pwszName = extra.Rp().Name().get();
-    rpInfo.pwszIcon = extra.Rp().Icon().get();
+  userInfo.cbId = static_cast<DWORD>(aInfo.User().Id().Length());
+  userInfo.pbId = const_cast<unsigned char*>(aInfo.User().Id().Elements());
+  userInfo.pwszName = aInfo.User().Name().get();
+  userInfo.pwszIcon = aInfo.User().Icon().get();
+  userInfo.pwszDisplayName = aInfo.User().DisplayName().get();
 
-    userInfo.cbId = static_cast<DWORD>(extra.User().Id().Length());
-    userInfo.pbId = const_cast<unsigned char*>(extra.User().Id().Elements());
-    userInfo.pwszName = extra.User().Name().get();
-    userInfo.pwszIcon = extra.User().Icon().get();
-    userInfo.pwszDisplayName = extra.User().DisplayName().get();
-
-    for (const auto& coseAlg : extra.coseAlgs()) {
-      WEBAUTHN_COSE_CREDENTIAL_PARAMETER coseAlgorithm = {
-          WEBAUTHN_COSE_CREDENTIAL_PARAMETER_CURRENT_VERSION,
-          WEBAUTHN_CREDENTIAL_TYPE_PUBLIC_KEY, coseAlg.alg()};
-      coseParams.AppendElement(coseAlgorithm);
-    }
-
-    const auto& sel = extra.AuthenticatorSelection();
-
-    const nsString& userVerificationRequirement =
-        sel.userVerificationRequirement();
-    // This mapping needs to be reviewed if values are added to the
-    // UserVerificationRequirement enum.
-    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
-    if (userVerificationRequirement.EqualsLiteral(
-            MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
-      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
-    } else if (userVerificationRequirement.EqualsLiteral(
-                   MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED)) {
-      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
-    } else if (userVerificationRequirement.EqualsLiteral(
-                   MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED)) {
-      winUserVerificationReq =
-          WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
-    } else {
-      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
-    }
-
-    if (sel.authenticatorAttachment().isSome()) {
-      const nsString& authenticatorAttachment =
-          sel.authenticatorAttachment().value();
-      // This mapping needs to be reviewed if values are added to the
-      // AuthenticatorAttachement enum.
-      static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
-      if (authenticatorAttachment.EqualsLiteral(
-              MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM)) {
-        winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM;
-      } else if (authenticatorAttachment.EqualsLiteral(
-                     MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM)) {
-        winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM;
-      } else {
-        winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_ANY;
-      }
-    }
-
-    const nsString& residentKey = sel.residentKey();
-    // This mapping needs to be reviewed if values are added to the
-    // ResidentKeyRequirement enum.
-    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
-    if (residentKey.EqualsLiteral(
-            MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED)) {
-      winRequireResidentKey = TRUE;
-      winPreferResidentKey = TRUE;
-    } else if (residentKey.EqualsLiteral(
-                   MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_PREFERRED)) {
-      winRequireResidentKey = FALSE;
-      winPreferResidentKey = TRUE;
-    } else if (residentKey.EqualsLiteral(
-                   MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED)) {
-      winRequireResidentKey = FALSE;
-      winPreferResidentKey = FALSE;
-    } else {
-      // WebAuthnManager::MakeCredential is supposed to assign one of the above
-      // values, so this shouldn't happen.
-      MOZ_ASSERT_UNREACHABLE();
-      MaybeAbortRegister(aTransactionId, NS_ERROR_DOM_UNKNOWN_ERR);
-      return;
-    }
-
-    // AttestationConveyance
-    const nsString& attestation = extra.attestationConveyancePreference();
-    // This mapping needs to be reviewed if values are added to the
-    // AttestationConveyancePreference enum.
-    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
-    if (attestation.EqualsLiteral(
-            MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE)) {
-      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE;
-    } else if (attestation.EqualsLiteral(
-                   MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT)) {
-      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT;
-    } else if (attestation.EqualsLiteral(
-                   MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT)) {
-      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT;
-    } else {
-      winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
-    }
-
-    if (extra.Extensions().Length() >
-        (int)(sizeof(rgExtension) / sizeof(rgExtension[0]))) {
-      nsresult aError = NS_ERROR_DOM_INVALID_STATE_ERR;
-      MaybeAbortRegister(aTransactionId, aError);
-      return;
-    }
-    for (const WebAuthnExtension& ext : extra.Extensions()) {
-      if (ext.type() == WebAuthnExtension::TWebAuthnExtensionHmacSecret) {
-        HmacCreateSecret =
-            ext.get_WebAuthnExtensionHmacSecret().hmacCreateSecret() == true;
-        if (HmacCreateSecret) {
-          rgExtension[cExtensions].pwszExtensionIdentifier =
-              WEBAUTHN_EXTENSIONS_IDENTIFIER_HMAC_SECRET;
-          rgExtension[cExtensions].cbExtension = sizeof(BOOL);
-          rgExtension[cExtensions].pvExtension = &HmacCreateSecret;
-          cExtensions++;
-        }
-      }
-    }
-  } else {
-    userInfo.cbId = sizeof(BYTE);
-    userInfo.pbId = &U2FUserId;
-
+  for (const auto& coseAlg : aInfo.coseAlgs()) {
     WEBAUTHN_COSE_CREDENTIAL_PARAMETER coseAlgorithm = {
         WEBAUTHN_COSE_CREDENTIAL_PARAMETER_CURRENT_VERSION,
-        WEBAUTHN_CREDENTIAL_TYPE_PUBLIC_KEY,
-        WEBAUTHN_COSE_ALGORITHM_ECDSA_P256_WITH_SHA256};
+        WEBAUTHN_CREDENTIAL_TYPE_PUBLIC_KEY, coseAlg.alg()};
     coseParams.AppendElement(coseAlgorithm);
+  }
 
-    winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM_U2F_V2;
+  const auto& sel = aInfo.AuthenticatorSelection();
+
+  const nsString& userVerificationRequirement =
+      sel.userVerificationRequirement();
+  // This mapping needs to be reviewed if values are added to the
+  // UserVerificationRequirement enum.
+  static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+  if (userVerificationRequirement.EqualsLiteral(
+          MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
+    winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
+  } else if (userVerificationRequirement.EqualsLiteral(
+                 MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED)) {
+    winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
+  } else if (userVerificationRequirement.EqualsLiteral(
+                 MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED)) {
+    winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
+  } else {
+    winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
+  }
+
+  if (sel.authenticatorAttachment().isSome()) {
+    const nsString& authenticatorAttachment =
+        sel.authenticatorAttachment().value();
+    // This mapping needs to be reviewed if values are added to the
+    // AuthenticatorAttachement enum.
+    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+    if (authenticatorAttachment.EqualsLiteral(
+            MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM)) {
+      winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM;
+    } else if (authenticatorAttachment.EqualsLiteral(
+                   MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM)) {
+      winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM;
+    } else {
+      winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_ANY;
+    }
+  }
+
+  const nsString& residentKey = sel.residentKey();
+  // This mapping needs to be reviewed if values are added to the
+  // ResidentKeyRequirement enum.
+  static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+  if (residentKey.EqualsLiteral(
+          MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED)) {
+    winRequireResidentKey = TRUE;
+    winPreferResidentKey = TRUE;
+  } else if (residentKey.EqualsLiteral(
+                 MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_PREFERRED)) {
+    winRequireResidentKey = FALSE;
+    winPreferResidentKey = TRUE;
+  } else if (residentKey.EqualsLiteral(
+                 MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED)) {
+    winRequireResidentKey = FALSE;
+    winPreferResidentKey = FALSE;
+  } else {
+    // WebAuthnManager::MakeCredential is supposed to assign one of the above
+    // values, so this shouldn't happen.
+    MOZ_ASSERT_UNREACHABLE();
+    MaybeAbortRegister(aTransactionId, NS_ERROR_DOM_UNKNOWN_ERR);
+    return;
+  }
+
+  // AttestationConveyance
+  const nsString& attestation = aInfo.attestationConveyancePreference();
+  // This mapping needs to be reviewed if values are added to the
+  // AttestationConveyancePreference enum.
+  static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+  if (attestation.EqualsLiteral(
+          MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE)) {
+    winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE;
+  } else if (attestation.EqualsLiteral(
+                 MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT)) {
+    winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT;
+  } else if (attestation.EqualsLiteral(
+                 MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT)) {
+    winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT;
+  } else {
+    winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
+  }
+
+  if (aInfo.Extensions().Length() >
+      (int)(sizeof(rgExtension) / sizeof(rgExtension[0]))) {
+    nsresult aError = NS_ERROR_DOM_INVALID_STATE_ERR;
+    MaybeAbortRegister(aTransactionId, aError);
+    return;
+  }
+  for (const WebAuthnExtension& ext : aInfo.Extensions()) {
+    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionHmacSecret) {
+      HmacCreateSecret =
+          ext.get_WebAuthnExtensionHmacSecret().hmacCreateSecret() == true;
+      if (HmacCreateSecret) {
+        rgExtension[cExtensions].pwszExtensionIdentifier =
+            WEBAUTHN_EXTENSIONS_IDENTIFIER_HMAC_SECRET;
+        rgExtension[cExtensions].cbExtension = sizeof(BOOL);
+        rgExtension[cExtensions].pvExtension = &HmacCreateSecret;
+        cExtensions++;
+      }
+    }
   }
 
   WEBAUTHN_COSE_CREDENTIAL_PARAMETERS WebAuthNCredentialParameters = {
@@ -439,49 +421,9 @@ void WinWebAuthnManager::Register(
 
     nsTArray<uint8_t> authenticatorData;
 
-    if (aInfo.Extra().isSome()) {
-      authenticatorData.AppendElements(
-          pWebAuthNCredentialAttestation->pbAuthenticatorData,
-          pWebAuthNCredentialAttestation->cbAuthenticatorData);
-    } else {
-      PWEBAUTHN_COMMON_ATTESTATION attestation =
-          reinterpret_cast<PWEBAUTHN_COMMON_ATTESTATION>(
-              pWebAuthNCredentialAttestation->pvAttestationDecode);
-
-      DWORD coseKeyOffset = 32 +  // RPIDHash
-                            1 +   // Flags
-                            4 +   // Counter
-                            16 +  // AAGuid
-                            2 +   // Credential ID Length field
-                            pWebAuthNCredentialAttestation->cbCredentialId;
-
-      // Hardcoding as couldn't finder decoder and it is an ECC key.
-      DWORD xOffset = coseKeyOffset + 10;
-      DWORD yOffset = coseKeyOffset + 45;
-
-      // Authenticator Data length check.
-      if (pWebAuthNCredentialAttestation->cbAuthenticatorData < yOffset + 32) {
-        MaybeAbortRegister(aTransactionId, NS_ERROR_DOM_INVALID_STATE_ERR);
-      }
-
-      authenticatorData.AppendElement(0x05);  // Reserved Byte
-      authenticatorData.AppendElement(0x04);  // ECC Uncompressed Key
-      authenticatorData.AppendElements(
-          pWebAuthNCredentialAttestation->pbAuthenticatorData + xOffset,
-          32);  // X Coordinate
-      authenticatorData.AppendElements(
-          pWebAuthNCredentialAttestation->pbAuthenticatorData + yOffset,
-          32);  // Y Coordinate
-      authenticatorData.AppendElement(
-          pWebAuthNCredentialAttestation->cbCredentialId);
-      authenticatorData.AppendElements(
-          pWebAuthNCredentialAttestation->pbCredentialId,
-          pWebAuthNCredentialAttestation->cbCredentialId);
-      authenticatorData.AppendElements(attestation->pX5c->pbData,
-                                       attestation->pX5c->cbData);
-      authenticatorData.AppendElements(attestation->pbSignature,
-                                       attestation->cbSignature);
-    }
+    authenticatorData.AppendElements(
+        pWebAuthNCredentialAttestation->pbAuthenticatorData,
+        pWebAuthNCredentialAttestation->cbAuthenticatorData);
 
     nsTArray<uint8_t> attObject;
     if (winAttestation == WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE) {
@@ -528,8 +470,7 @@ void WinWebAuthnManager::Register(
     }
 
     WebAuthnMakeCredentialResult result(aInfo.ClientDataJSON(), attObject,
-                                        credentialId, authenticatorData,
-                                        extensions);
+                                        credentialId, extensions);
 
     Unused << mTransactionParent->SendConfirmRegister(aTransactionId, result);
     ClearTransaction();
@@ -587,45 +528,33 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
       (DWORD)aInfo.ClientDataJSON().Length(),
       (BYTE*)(aInfo.ClientDataJSON().get()), WEBAUTHN_HASH_ALGORITHM_SHA_256};
 
-  if (aInfo.Extra().isSome()) {
-    const auto& extra = aInfo.Extra().ref();
-
-    for (const WebAuthnExtension& ext : extra.Extensions()) {
-      if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
-        winAppIdentifier =
-            ext.get_WebAuthnExtensionAppId().appIdentifier().get();
-        pbU2fAppIdUsed = &bU2fAppIdUsed;
-        break;
-      }
+  for (const WebAuthnExtension& ext : aInfo.Extensions()) {
+    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
+      winAppIdentifier = ext.get_WebAuthnExtensionAppId().appIdentifier().get();
+      pbU2fAppIdUsed = &bU2fAppIdUsed;
+      break;
     }
+  }
 
-    // RPID
-    rpID = aInfo.RpId().get();
+  // RPID
+  rpID = aInfo.RpId().get();
 
-    // User Verification Requirement
-    const nsString& userVerificationReq = extra.userVerificationRequirement();
-    // This mapping needs to be reviewed if values are added to the
-    // UserVerificationRequirement enum.
-    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
-    if (userVerificationReq.EqualsLiteral(
-            MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
-      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
-    } else if (userVerificationReq.EqualsLiteral(
-                   MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED)) {
-      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
-    } else if (userVerificationReq.EqualsLiteral(
-                   MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED)) {
-      winUserVerificationReq =
-          WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
-    } else {
-      winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
-    }
-  } else {
-    rpID = aInfo.Origin().get();
-    winAppIdentifier = aInfo.RpId().get();
-    pbU2fAppIdUsed = &bU2fAppIdUsed;
-    winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM_U2F_V2;
+  // User Verification Requirement
+  const nsString& userVerificationReq = aInfo.userVerificationRequirement();
+  // This mapping needs to be reviewed if values are added to the
+  // UserVerificationRequirement enum.
+  static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+  if (userVerificationReq.EqualsLiteral(
+          MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
+    winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED;
+  } else if (userVerificationReq.EqualsLiteral(
+                 MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED)) {
+    winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_PREFERRED;
+  } else if (userVerificationReq.EqualsLiteral(
+                 MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED)) {
     winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
+  } else {
+    winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
   }
 
   // allow Credentials
@@ -702,26 +631,8 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
   if (hr == S_OK) {
     nsTArray<uint8_t> signature;
-    if (aInfo.Extra().isSome()) {
-      signature.AppendElements(pWebAuthNAssertion->pbSignature,
-                               pWebAuthNAssertion->cbSignature);
-    } else {
-      // AuthenticatorData Length check.
-      // First 32 bytes: RPID Hash
-      // Next 1 byte: Flags
-      // Next 4 bytes: Counter
-      if (pWebAuthNAssertion->cbAuthenticatorData < 32 + 1 + 4) {
-        MaybeAbortRegister(aTransactionId, NS_ERROR_DOM_INVALID_STATE_ERR);
-      }
-
-      signature.AppendElement(0x01);  // User Presence bit
-      signature.AppendElements(pWebAuthNAssertion->pbAuthenticatorData +
-                                   32 +  // RPID Hash length
-                                   1,    // Flags
-                               4);       // Counter length
-      signature.AppendElements(pWebAuthNAssertion->pbSignature,
-                               pWebAuthNAssertion->cbSignature);
-    }
+    signature.AppendElements(pWebAuthNAssertion->pbSignature,
+                             pWebAuthNAssertion->cbSignature);
 
     nsTArray<uint8_t> keyHandle;
     keyHandle.AppendElements(pWebAuthNAssertion->Credential.pbId,
@@ -743,7 +654,7 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
     WebAuthnGetAssertionResult result(aInfo.ClientDataJSON(), keyHandle,
                                       signature, authenticatorData, extensions,
-                                      signature, userHandle);
+                                      userHandle);
 
     Unused << mTransactionParent->SendConfirmSign(aTransactionId, result);
     ClearTransaction();

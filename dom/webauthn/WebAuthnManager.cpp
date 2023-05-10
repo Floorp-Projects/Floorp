@@ -440,9 +440,6 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   WebAuthnMakeCredentialUserInfo userInfo(
       userId, aOptions.mUser.mName, userIcon, aOptions.mUser.mDisplayName);
 
-  WebAuthnMakeCredentialExtraInfo extra(rpInfo, userInfo, coseAlgos, extensions,
-                                        authSelection, attestation);
-
   BrowsingContext* context = mParent->GetBrowsingContext();
   if (!context) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
@@ -451,7 +448,8 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
 
   WebAuthnMakeCredentialInfo info(
       origin, NS_ConvertUTF8toUTF16(rpId), challenge, clientDataJSON,
-      adjustedTimeout, excludeList, Some(extra), context->Top()->Id());
+      adjustedTimeout, excludeList, rpInfo, userInfo, coseAlgos, extensions,
+      authSelection, attestation, context->Top()->Id());
 
 #ifdef OS_WIN
   if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
@@ -649,8 +647,6 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
     extensions.AppendElement(WebAuthnExtensionAppId(appIdHash, appId));
   }
 
-  WebAuthnGetAssertionExtraInfo extra(extensions, aOptions.mUserVerification);
-
   BrowsingContext* context = mParent->GetBrowsingContext();
   if (!context) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
@@ -659,7 +655,8 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
 
   WebAuthnGetAssertionInfo info(origin, NS_ConvertUTF8toUTF16(rpId), challenge,
                                 clientDataJSON, adjustedTimeout, allowList,
-                                Some(extra), context->Top()->Id());
+                                extensions, aOptions.mUserVerification,
+                                context->Top()->Id());
 
 #ifdef OS_WIN
   if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
