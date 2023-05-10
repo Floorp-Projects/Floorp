@@ -30,7 +30,8 @@ add_task(async function test_username_field_in_username_only_form_highlight_on_a
     action: "https://autocomplete",
     username: {
       autocomplete: "username"
-    }
+    },
+    password: false
   });
 
   await openPopupOn(form.uname);
