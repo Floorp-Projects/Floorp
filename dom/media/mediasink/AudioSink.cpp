@@ -282,7 +282,9 @@ Maybe<MozPromiseHolder<MediaSink::EndedPromise>> AudioSink::Shutdown(
   if (mAudioStream) {
     rv = mAudioStream->Shutdown(aShutdownCause);
     mAudioStream = nullptr;
-    ReenqueueUnplayedAudioDataIfNeeded();
+    if (aShutdownCause == ShutdownCause::Muting) {
+      ReenqueueUnplayedAudioDataIfNeeded();
+    }
   }
   mProcessedQueueFinished = true;
 
