@@ -107,8 +107,7 @@
 
 using namespace mozilla;
 
-namespace mozilla {
-namespace places {
+namespace mozilla::places {
 
 namespace {
 
@@ -139,11 +138,8 @@ bool isRecentCorruptFile(const nsCOMPtr<nsIFile>& aCorruptFile) {
     return false;
   }
   PRTime lastMod = 0;
-  if (NS_FAILED(aCorruptFile->GetLastModifiedTime(&lastMod)) || lastMod <= 0 ||
-      (PR_Now() - lastMod) > RECENT_BACKUP_TIME_MICROSEC) {
-    return false;
-  }
-  return true;
+  return NS_SUCCEEDED(aCorruptFile->GetLastModifiedTime(&lastMod)) &&
+         lastMod > 0 && (PR_Now() - lastMod) <= RECENT_BACKUP_TIME_MICROSEC;
 }
 
 /**
@@ -2851,5 +2847,4 @@ Database::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-}  // namespace places
-}  // namespace mozilla
+}  // namespace mozilla::places
