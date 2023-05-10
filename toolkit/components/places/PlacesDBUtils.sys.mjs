@@ -347,7 +347,8 @@ export var PlacesDBUtils = {
                 url = OLD.url;
 
           /* Recalculate frecency for the destination. */
-          UPDATE moz_places SET recalc_frecency = 1 WHERE id = OLD.id;
+          UPDATE moz_places SET recalc_frecency = 1, recalc_alt_frecency = 1
+          WHERE id = OLD.id;
         END`,
       },
       {
