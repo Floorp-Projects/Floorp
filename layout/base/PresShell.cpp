@@ -9639,9 +9639,9 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   // height was unconstrained to start with.
   nsRect boundsRelativeToTarget =
       nsRect(0, 0, desiredSize.Width(), desiredSize.Height());
-  NS_ASSERTION((isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) ||
-                   (desiredSize.ISize(wm) == size.ISize(wm) &&
-                    desiredSize.BSize(wm) == size.BSize(wm)),
+  const bool isBSizeLimitReflow =
+      isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE;
+  NS_ASSERTION(isBSizeLimitReflow || desiredSize.Size(wm) == size,
                "non-root frame's desired size changed during an "
                "incremental reflow");
   NS_ASSERTION(status.IsEmpty(), "reflow roots should never split");
@@ -9665,7 +9665,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
     ScrollAnchorContainer* container = ScrollAnchorContainer::FindFor(target);
     PostPendingScrollAnchorAdjustment(container);
   }
-  if (isRoot && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
+  if (MOZ_UNLIKELY(isBSizeLimitReflow)) {
     mPresContext->SetVisibleArea(boundsRelativeToTarget);
   }
 
