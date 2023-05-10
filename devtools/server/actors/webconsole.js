@@ -873,7 +873,7 @@ class WebConsoleActor extends Actor {
   }
 
   /**
-   * In order to have asynchronous commands (e.g. screenshot, top-level await, …) ,
+   * In order to support async evaluations (e.g. top-level await, …),
    * we have to be able to handle promises. This method handles waiting for the promise,
    * and then returns the result.
    *
@@ -887,41 +887,26 @@ class WebConsoleActor extends Actor {
    *         The updated response object.
    */
   async _maybeWaitForResponseResult(response) {
-    if (!response) {
+    if (!response?.awaitResult) {
       return response;
     }
 
-    const thenable = obj => obj && typeof obj.then === "function";
-    const waitForHelperResult =
-      response.helperResult && thenable(response.helperResult);
-    const waitForAwaitResult =
-      response.awaitResult && thenable(response.awaitResult);
+    let result;
+    try {
+      result = await response.awaitResult;
 
-    if (!waitForAwaitResult && !waitForHelperResult) {
-      return response;
+      // `createValueGrip` expect a debuggee value, while here we have the raw object.
+      // We need to call `makeDebuggeeValue` on it to make it work.
+      const dbgResult = this.makeDebuggeeValue(result);
+      response.result = this.createValueGrip(dbgResult);
+    } catch (e) {
+      // The promise was rejected. We let the engine handle this as it will report a
+      // `uncaught exception` error.
+      response.topLevelAwaitRejected = true;
     }
 
-    // Wait for asynchronous command completion before sending back the response
-    if (waitForHelperResult) {
-      response.helperResult = await response.helperResult;
-    } else if (waitForAwaitResult) {
-      let result;
-      try {
-        result = await response.awaitResult;
-
-        // `createValueGrip` expect a debuggee value, while here we have the raw object.
-        // We need to call `makeDebuggeeValue` on it to make it work.
-        const dbgResult = this.makeDebuggeeValue(result);
-        response.result = this.createValueGrip(dbgResult);
-      } catch (e) {
-        // The promise was rejected. We let the engine handle this as it will report a
-        // `uncaught exception` error.
-        response.topLevelAwaitRejected = true;
-      }
-
-      // Remove the promise from the response object.
-      delete response.awaitResult;
-    }
+    // Remove the promise from the response object.
+    delete response.awaitResult;
 
     return response;
   }
