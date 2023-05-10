@@ -172,9 +172,6 @@ class HTMLEditor final : public EditorBase,
   bool CanPaste(int32_t aClipboardType) const final;
   using EditorBase::CanPaste;
 
-  MOZ_CAN_RUN_SCRIPT nsresult PasteTransferableAsAction(
-      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr) final;
-
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode) final;
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() final;
@@ -3093,6 +3090,9 @@ class HTMLEditor final : public EditorBase,
       AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePasteAsQuotation(
       AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  HandlePasteTransferable(AutoEditActionDataSetter& aEditActionData,
+                          nsITransferable& aTransferable) final;
 
   /**
    * PasteInternal() pasts text with replacing selected content.
