@@ -7,6 +7,10 @@ Library("interposers")
 
 DEFINES["IMPL_MFBT"] = True
 
+UNIFIED_SOURCES += [
+    "env_interposer.cpp",
+]
+
 if CONFIG["MOZ_CRASHREPORTER"]:
     UNIFIED_SOURCES += [
         "pthread_create_interposer.cpp",
