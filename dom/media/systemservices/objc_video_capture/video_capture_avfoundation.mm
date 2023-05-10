@@ -196,6 +196,7 @@ int32_t VideoCaptureAvFoundation::StartCapture(const VideoCaptureCapability& aCa
       case webrtc::VideoType::kMJPEG:
         return CaptureStage::ImageType::MJPEG;
       case webrtc::VideoType::kRGB24:
+      case webrtc::VideoType::kBGR24:
       case webrtc::VideoType::kABGR:
       case webrtc::VideoType::kARGB:
       case webrtc::VideoType::kARGB4444:
