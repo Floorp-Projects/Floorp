@@ -104,17 +104,19 @@ export function OnboardingExperience({
   return (
     <div style={style}>
       <div className="ds-onboarding-ref" ref={heightElement}>
-        <div className="ds-onboarding">
+        <div className="ds-onboarding-container">
           <DSDismiss
             onDismissClick={onDismissClick}
-            extraClasses={`ds-onboarding-dismiss`}
+            extraClasses={`ds-onboarding`}
           >
+            <div>
+              <header>
+                <span className="icon icon-pocket" />
+                <span data-l10n-id="newtab-pocket-onboarding-discover" />
+              </header>
+              <p data-l10n-id="newtab-pocket-onboarding-cta" />
+            </div>
             <div className="ds-onboarding-graphic" />
-            <header>
-              <span className="icon icon-pocket" />
-              <span data-l10n-id="newtab-pocket-onboarding-discover" />
-            </header>
-            <p data-l10n-id="newtab-pocket-onboarding-cta" />
           </DSDismiss>
         </div>
       </div>
