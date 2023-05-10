@@ -74,7 +74,7 @@ using mozilla::Telemetry::AccumulateCategoricalKeyed;
 using mozilla::Telemetry::LABELS_SQLITE_STORE_OPEN;
 using mozilla::Telemetry::LABELS_SQLITE_STORE_QUERY;
 
-const char* GetTelemetryVFSName(bool);
+const char* GetBaseVFSName(bool);
 const char* GetQuotaVFSName();
 const char* GetObfuscatingVFSName();
 
@@ -825,8 +825,8 @@ nsresult Connection::initialize(const nsACString& aStorageKey,
 
   mTelemetryFilename.AssignLiteral(":memory:");
 
-  int srv = ::sqlite3_open_v2(path.get(), &mDBConn, mFlags,
-                              GetTelemetryVFSName(true));
+  int srv =
+      ::sqlite3_open_v2(path.get(), &mDBConn, mFlags, GetBaseVFSName(true));
   if (srv != SQLITE_OK) {
     mDBConn = nullptr;
     nsresult rv = convertResultCode(srv);
@@ -874,12 +874,12 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
                             "readonly-immutable-nolock");
   } else {
     srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
-                            GetTelemetryVFSName(exclusive));
+                            GetBaseVFSName(exclusive));
     if (exclusive && (srv == SQLITE_LOCKED || srv == SQLITE_BUSY)) {
       // Retry without trying to get an exclusive lock.
       exclusive = false;
       srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn,
-                              mFlags, GetTelemetryVFSName(false));
+                              mFlags, GetBaseVFSName(false));
     }
   }
   if (srv != SQLITE_OK) {
@@ -897,7 +897,7 @@ nsresult Connection::initialize(nsIFile* aDatabaseFile) {
     // first query execution. When initializeInternal fails it closes the
     // connection, so we can try to restart it in non-exclusive mode.
     srv = ::sqlite3_open_v2(NS_ConvertUTF16toUTF8(path).get(), &mDBConn, mFlags,
-                            GetTelemetryVFSName(false));
+                            GetBaseVFSName(false));
     if (srv == SQLITE_OK) {
       rv = initializeInternal();
     }
@@ -960,7 +960,7 @@ nsresult Connection::initialize(nsIFileURL* aFileURL,
 
   const char* const vfs = hasKey               ? GetObfuscatingVFSName()
                           : hasDirectoryLockId ? GetQuotaVFSName()
-                                               : GetTelemetryVFSName(exclusive);
+                                               : GetBaseVFSName(exclusive);
 
   int srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, vfs);
   if (srv != SQLITE_OK) {
@@ -2545,7 +2545,7 @@ Connection::EnableModule(const nsACString& aModuleName) {
   return NS_ERROR_FAILURE;
 }
 
-// Implemented in TelemetryVFS.cpp
+// Implemented in QuotaVFS.cpp
 already_AddRefed<QuotaObject> GetQuotaObjectForFile(sqlite3_file* pFile);
 
 NS_IMETHODIMP

@@ -56,6 +56,7 @@ EXPORTS.mozilla.storage += [
 # SEE ABOVE NOTE!
 
 UNIFIED_SOURCES += [
+    "BaseVFS.cpp",
     "FileSystemModule.cpp",
     "mozStorageArgValueArray.cpp",
     "mozStorageAsyncStatement.cpp",
@@ -78,7 +79,6 @@ UNIFIED_SOURCES += [
     "ReadOnlyNoLockVFS.cpp",
     "SQLCollations.cpp",
     "StorageBaseStatementInternal.cpp",
-    "TelemetryVFS.cpp",
     "VacuumManager.cpp",
     "Variant.cpp",
 ]
