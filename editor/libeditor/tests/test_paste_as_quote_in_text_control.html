@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing "paste" event dispatching for cmd_pasteQuote command</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  info("Waiting for initializing clipboard...");
+  await SimpleTest.promiseClipboardChange(
+    "plain text",
+    () => SpecialPowers.clipboardCopyString("plain text")
+  );
+
+  for (let selector of ["input", "textarea"]) {
+    const textControl = document.querySelector(selector);
+    textControl.focus();
+    textControl.addEventListener(
+      "paste",
+      event => event.preventDefault(),
+      {once: true}
+    );
+    SpecialPowers.doCommand(window, "cmd_pasteQuote");
+    is(
+      textControl.value,
+      "",
+      `<${selector}> should not have pasted text because "paste" event should've been canceled`
+    );
+    SpecialPowers.doCommand(window, "cmd_pasteQuote");
+    is(
+      textControl.value.replace(/\n/g, ""),
+      "> plain text",
+      `<${selector}> should have pasted text with a ">"`
+    );
+  }
+
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body>
+<input><textarea></textarea>
+</body>
+</html>
