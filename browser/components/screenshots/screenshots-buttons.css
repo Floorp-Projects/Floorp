@@ -9,6 +9,7 @@
   min-width: 90px;
   padding: 46px 5px 5px;
   margin: 2px;
+  color: var(--panel-color);
 }
 
 .all-buttons-container .full-page {
@@ -21,6 +22,6 @@
 
 .full-page, .visible-page {
   -moz-context-properties: fill, stroke;
-  fill: buttonText;
-  stroke: AccentColor;
+  fill: currentColor;
+  stroke: var(--color-accent-primary);
 }
