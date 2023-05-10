@@ -254,6 +254,13 @@
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Nanà\'huì\' %s</string>
 
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Nikâ chre gān’ānj nāna’huìt riña dukuán direksiûn</string>
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Nādunā dàj gā riña sa nānà’huì’t</string>
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Hìaj nī nānà’huì’ riña:</string>
+
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Gāyi\'ì</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
@@ -336,13 +343,15 @@
     <string name="reduce_cookie_banner_on_for_site">Huā nî’nïn guendâ sitiô nan</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Sī ga\'hue Akuan\' nïn</string>
-    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Gā\'nïn</string>
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button">Gā\'nïn</string>
 
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Dūnâ\’àj</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Ngà \'hiaj sunj riña daran\' nej rakïj ñanj</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Ngà \'hiaj sunj riña rakïj ñanj huìi</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Gāhuin chrūn doj</string>
     <!-- Preference for accessibility -->
@@ -395,22 +404,61 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Nā\'nīn nej lînk riña nej aplikasiûn</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Nīgànj chre</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Gāchìnj nan’ānjt hìaj nï’ gàchin nā’nïnt</string>
     <!-- Preference for open links in third party apps never open in apps option -->
     <string name="preferences_open_links_in_apps_never">Nitāj āmān</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Sa ni’hiāj rayi’î nej sa nanïnj ânèj e</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Sa gā\'ue nūtò\'</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Sa atāj nan\'ānj an</string>
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Gā’hue gāchinj</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Sī ga’hue gāchinj</string>
 
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">GĀ’HUE</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Dūyichin\'</string>
 
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">Nuguan ‘hiaj nadigi’ñûn’ ‘ngō sa huāa</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">Nej sa giri sa gū’nàj %s</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Nuguan’ ru’hue nej si du’hue</string>
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Sa gīnun riña raga’a</string>
+
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Aksesô direktô ru’hue nej si du’hue</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Si’hiaj sa gīnu riña raga’a: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">¡Ngà nahuin nākà sinu riña raga’a!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Ni\'hiāj</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Nu gā’hue nādunïn sinu riña raga’a</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">Ginùn huin ñûn</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Nu gā’hue nādunaj sinu riña raga’a</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Gāhuin chrūn doj</string>
+
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">Klâsiko %s</string>
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">Sa ahui Nāsinùnj</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -549,13 +597,49 @@
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
     <string name="preferences_tabs">Nej rakïj ñanj</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Dàj hua rakïj ñanj</string>
     <!-- Option for a list tab view -->
     <string name="tab_view_list">Lista</string>
 
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Kuadrîkula</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Narán nej rakïj ñanj</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
     <string name="close_tabs_manually">Nitāj āmān</string>
+
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Gachîn ‘ngō gui</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Gachîn ‘ngō sēmâna</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Gachîn ‘ngō ahuii</string>
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Nārrán mā’an riña nej rakïj ñanj huā nî’nïnj ïn</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Raga’ ñāan</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Ñanj ayi\'ì\'</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Rakïj ñanj rukù nï’ïn</string>
+
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Pagjinâ gayi’ì’ ngà gisîj gachîn gàn’ànj hora nu gi’hiaj sunj</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Narán man</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Nārán man si gāchīn ‘ngō gui</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Nārán man si gāchīn ‘ngō semâna</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Nārán man si gāchīn ‘ngō ahuii</string>
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Nā’nïn man riña pajinâ ayi’ì’</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Nā’nïn man riña rakïj ñanj rūkù nï’ïn</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -576,16 +660,30 @@
     <string name="tab_header_label">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Rakïj ñanj huìi</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Nej rakïj ñanj gūñā huaa</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Nūtà\' a\'ngô rakïj ñanj</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Nūtà\' a\'ngô rakïj ñanj huìi</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Sa huìi</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Nāgi’hiaj nūguan’àn</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Dūyinga\' daran\' nej rakïj ñanj</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Rakïj ñanj hiaj narrán nakà</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Rakïj ñanj hiaj narrán nakà</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Nāgi\'iô\' riña kuênta</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Nādunā sa huā riña rakïj ñanj</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Nārrán riña daran\' nej rakïj ñanj</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Sa arâj sun nīchrò\' doj</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">Nārán</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
@@ -606,7 +704,9 @@
     <string name="collection_rename">Nādūnā si yugui yi\'nïn\'ïn</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
-    <!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Nāchrūn a\'ngô si yūgui</string>
+	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Nādure\'</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Riña Huìi)</string>
@@ -761,16 +861,24 @@
     <string name="preference_exceptions">Sa huā gi\'iát</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Dūnâ\’àj</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Nāgi\'iaj mun\'ûn\'</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Gā\'nïn gī\'iaj sun sa unïnt ngà sa ni\'iājt</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Gā\'nïn gī\'hiaj sun sa unïnt ngà sa ni\'hiājt</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Nārán riña sa unïnt ngà sa ni\'iājt ngà datô si āgâ\'t li</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">Nānùn sa unïnt ngà sa ni\'iājt ngà Wi-Fi</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Màn riña sa unïnt nārán</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Màn riña sa unïnt nārán</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Nārán riña sa unïnt ngà sa ni\'iājt</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">Nārán riña sa unïnt ngà sa ni\'iājt</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Nāchrūn</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -957,6 +1065,13 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Gāhuī</string>
 
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Sa gahuin akuan\'</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Hìaj ngà guki</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Daran\'anj</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s nādure\'ej nej si datô riña gaché nunt ngà naguit.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -973,6 +1088,8 @@
     <!-- Text for the allow button for the history group dialog -->
     <string name="delete_history_group_prompt_allow">Nādūre\'</string>
 
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Gāyi\'ì sēsiûn</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Ngà nanûn Sync</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1076,6 +1193,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Nej kriptominêro</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Nej da\'nga\' rā\'a</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">A\'ngô nej sa nika</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Nitāj si hūaj nāyi\'nïn</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -1204,8 +1323,16 @@
     <string name="logins_username_copied">Ngà nañû si yūguît riña portapapel</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Gūxūn da\'nga\' huìi nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Nādure’ da’nga’ hùii</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Gūxūn si yūguît nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Nādure’ si yūgui sa arâj suun</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Nādure’ si yūgui sērbidôr</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Nā’nïn sitiô nan riña sērbidôr</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">Nādīgân da\'nga\' huìi</string>
 
@@ -1237,6 +1364,17 @@
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Nāgi\'iaj hue\'ê riña menú gayì\'ìt sēsiûn</string>
+
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Nāchra man\'an</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Nej direksiûn</string>
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Tarjetâ san\'ānj an</string>
+
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Nā’nïn sà’ nī nachra mā’an riña tārjêta</string>
 
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Nādūre\'</string>
@@ -1346,8 +1484,14 @@
     <!--  The page title for editing a saved login. -->
     <string name="edit">Nāgi\'iaj riñaj</string>
 
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Nutà’ riña ayi’ì sēsiûn nākàa</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Achin da\'nga\' huìi</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Dāñùn ni’ñan si yūgui si râj suun</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Dāñùn ni’ñan si yūgui Host</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Nānà\'uì\' ngà nanèt</string>
 
@@ -1355,6 +1499,9 @@
     <string name="voice_search_explainer">Gā\'mīn hìaj</string>
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Ngà huā \'ngō riña gayì\'ìt sēsiûn gù\'nàj dàdanj</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1370,13 +1517,23 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">Gāyi\'ì sēsiûn riña sync</string>
 
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Nitāj si huā ni\’nïnj riña nej rakïj ñanj</string>
+
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ga\'ue, ngà garâj da\'nga\' ruhuâj</string>
 
-    <!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Si yūgui</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Si yūgui aksêso dīrêkto</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">GĀ’HUE</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Dūyichin\'</string>
+
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">Nādūnō’ sa huāa</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Nādure\'</string>
