@@ -260,3 +260,12 @@ firefox-suggest-onboarding-main-reject-option-description-3 = Leave the default 
 
 firefox-suggest-onboarding-main-submit-button = Save preferences
 firefox-suggest-onboarding-main-skip-link = Not now
+
+# This string displays the number of reviews in the add-ons suggestion
+# Variables:
+#   $quantity (number) - The number of reviews for the add-on.
+firefox-suggest-addons-reviews =
+  { $quantity ->
+      [one] { $quantity } review
+     *[other] { $quantity } reviews
+  }

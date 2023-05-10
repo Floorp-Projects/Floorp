@@ -424,6 +424,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // The maximum number of trending results to show while not in search mode.
   ["trending.maxResultsNoSearchMode", 10],
+
+  // Feature gate pref for addon suggestions in the urlbar.
+  ["addons.featureGate", false],
 ]);
 
 const PREF_OTHER_DEFAULTS = new Map([

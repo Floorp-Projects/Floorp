@@ -805,3 +805,49 @@ add_task(async function selected_result_trending() {
   await PlacesUtils.history.clear();
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function selected_result_addons() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.addons.featureGate", true],
+      ["browser.urlbar.suggest.searches", false],
+    ],
+  });
+
+  const cleanupQuickSuggest = await ensureQuickSuggestInit({
+    merinoSuggestions: [
+      {
+        provider: "amo",
+        icon: "https://example.com/good-addon.svg",
+        url: "https://example.com/good-addon",
+        name: "Good Addon",
+        description: "This is a good addon",
+        custom_details: {
+          addons: {
+            rating: "4.8",
+            reviews: "1234567",
+          },
+        },
+        is_top_pick: true,
+      },
+    ],
+  });
+
+  await doTest(async browser => {
+    await openPopup("only match the Merino suggestion");
+    await selectRowByProvider("UrlbarProviderQuickSuggest");
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "merino_amo",
+        selected_result_subtype: "",
+        provider: "UrlbarProviderQuickSuggest",
+        results: "search_engine,merino_amo",
+      },
+    ]);
+  });
+
+  cleanupQuickSuggest();
+  await SpecialPowers.popPrefEnv();
+});

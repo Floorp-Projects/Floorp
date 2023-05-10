@@ -1351,6 +1351,8 @@ export var UrlbarUtils = {
             return "unit";
           case "UrlbarProviderContextualSearch":
             return "site_specific_contextual_search";
+          case "UrlbarProviderQuickSuggest":
+            return this._getQuickSuggestTelemetryType(result);
           case "Weather":
             return "weather";
         }
@@ -1415,11 +1417,7 @@ export var UrlbarUtils = {
           return `autofill_${result.autofill.type ?? "unknown"}`;
         }
         if (result.providerName === "UrlbarProviderQuickSuggest") {
-          let source = result.payload.source;
-          if (source == "remote-settings") {
-            source = "rs";
-          }
-          return `${source}_${result.payload.telemetryType}`;
+          return this._getQuickSuggestTelemetryType(result);
         }
         if (result.providerName === "UrlbarProviderTopSites") {
           return "top_site";
@@ -1452,6 +1450,14 @@ export var UrlbarUtils = {
     }
 
     return "";
+  },
+
+  _getQuickSuggestTelemetryType(result) {
+    let source = result.payload.source;
+    if (source == "remote-settings") {
+      source = "rs";
+    }
+    return `${source}_${result.payload.telemetryType}`;
   },
 };
 

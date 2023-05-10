@@ -163,8 +163,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
       if (instance != this.queryInstance) {
         return;
       }
-      if (canAdd) {
-        let result = this.#makeResult(queryContext, suggestion);
+
+      let result;
+      if (canAdd && (result = this.#makeResult(queryContext, suggestion))) {
         this.#resultFromLastQuery = result;
         addCallback(this, result);
         return;
@@ -227,9 +228,31 @@ class ProviderQuickSuggest extends UrlbarProvider {
     this.#resultFromLastQuery = null;
   }
 
+  /**
+   * This is called only for dynamic result types, when the urlbar view updates
+   * the view of one of the results of the provider.  It should return an object
+   * describing the view update.
+   *
+   * @param {UrlbarResult} result The result whose view will be updated.
+   * @returns {object} An object describing the view update.
+   */
+  getViewUpdate(result) {
+    // For now, we support only addons suggestion.
+    return lazy.QuickSuggest.getFeature("AddonSuggestions").getViewUpdate(
+      result
+    );
+  }
+
   #makeResult(queryContext, suggestion) {
     let result;
     switch (suggestion.provider) {
+      case "amo":
+        result = lazy.QuickSuggest.getFeature("AddonSuggestions").makeResult(
+          queryContext,
+          suggestion,
+          this._trimmedSearchString
+        );
+        break;
       case "adm": // Merino
       case "AdmWikipedia": // remote settings
         result = lazy.QuickSuggest.getFeature("AdmWikipedia").makeResult(
@@ -241,6 +264,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
       default:
         result = this.#makeDefaultResult(queryContext, suggestion);
         break;
+    }
+
+    if (!result) {
+      // Feature might return null, if the feature is disabled and so on.
+      return null;
     }
 
     if (!result.hasSuggestedIndex) {
@@ -763,17 +791,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
   async _canAddSuggestion(suggestion) {
     this.logger.info("Checking if suggestion can be added");
     this.logger.debug(JSON.stringify({ suggestion }));
-
-    // Return false if suggestions are disabled.
-    if (
-      (suggestion.is_sponsored &&
-        !lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")) ||
-      (!suggestion.is_sponsored &&
-        !lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))
-    ) {
-      this.logger.info("Suggestions disabled, not adding suggestion");
-      return false;
-    }
 
     // Return false if an impression cap has been hit.
     if (
