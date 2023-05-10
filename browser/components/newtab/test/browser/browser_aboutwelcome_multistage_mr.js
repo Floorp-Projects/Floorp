@@ -35,6 +35,15 @@ async function clickVisibleButton(browser, selector) {
   });
 }
 
+add_setup(async function() {
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["ui.prefersReducedMotion", 1],
+      ["browser.aboutwelcome.transitions", false],
+    ],
+  });
+});
+
 function initSandbox({ pin = true, isDefault = false } = {}) {
   const sandbox = sinon.createSandbox();
   sandbox.stub(AboutWelcomeParent, "doesAppNeedPin").returns(pin);
@@ -351,6 +360,7 @@ add_task(async function test_aboutwelcome_gratitude() {
   // make sure the button navigates to newtab
   await test_screen_content(
     browser,
+    "home",
     //Expected selectors
     ["body.activity-stream"],
 
@@ -484,6 +494,7 @@ add_task(async function test_aboutwelcome_embedded_migration() {
       );
 
       let wizard = content.document.querySelector("migration-wizard");
+      await new Promise(resolve => content.requestAnimationFrame(resolve));
       let shadow = wizard.openOrClosedShadowRoot;
       let deck = shadow.querySelector("#wizard-deck");
 
@@ -528,12 +539,23 @@ add_task(async function test_aboutwelcome_embedded_migration() {
 
       // Recalculate the <panel-list> rect top value relative to the top-left
       // of the selectorRect. We expect the <panel-list> to be tightly anchored
-      // to the bottom of the <button>, so we expect this new value to be 0.
+      // to the bottom of the <button>, so we expect this new value to be close to 0,
+      // to account for subpixel rounding
       let panelTopLeftRelativeToAnchorTopLeft =
         panelRect.top - selectorRect.top - selectorRect.height;
-      Assert.equal(
+
+      function isfuzzy(actual, expected, epsilon, msg) {
+        if (actual >= expected - epsilon && actual <= expected + epsilon) {
+          ok(true, msg);
+        } else {
+          is(actual, expected, msg);
+        }
+      }
+
+      isfuzzy(
         panelTopLeftRelativeToAnchorTopLeft,
         0,
+        1,
         "Panel should be tightly anchored to the bottom of the button shadow node."
       );
 
