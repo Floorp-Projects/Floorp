@@ -420,7 +420,7 @@ win64-clang-16-stage1:
             - clang-16
         toolchain:
             - linux64-clang-16-stage1
-            - win64-vs2019
+            - vs-toolchain
 
 win64-clang-16-raw:
     description: "Clang-cl 16 toolchain build"
@@ -450,7 +450,7 @@ win64-clang-16-raw:
         toolchain:
             - win64-clang-16-stage1
             - win64-compiler-rt-16
-            - win64-vs2019
+            - vs-toolchain
 
 win64-clang-16:
     description: "Clang-cl 16 toolchain build"
@@ -830,7 +830,7 @@ win64-clang-trunk-stage1:
             - clang-trunk
         toolchain:
             - linux64-clang-trunk-stage1
-            - win64-vs2019
+            - vs-toolchain
 
 win64-clang-trunk-raw:
     description: "Clang-cl trunk toolchain build"
@@ -862,7 +862,7 @@ win64-clang-trunk-raw:
         toolchain:
             - win64-clang-trunk-stage1
             - win64-compiler-rt-trunk
-            - win64-vs2019
+            - vs-toolchain
 
 win64-clang-trunk:
     description: "Clang-cl trunk toolchain build"
