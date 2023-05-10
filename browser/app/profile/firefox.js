@@ -831,6 +831,13 @@ pref("security.allow_parent_unrestricted_js_loads", false);
 // this value (in milliseconds).
 pref("browser.tabs.min_inactive_duration_before_unload", 600000);
 
+// Does middleclick paste of clipboard to new tab button
+#ifdef UNIX_BUT_NOT_MAC
+pref("browser.tabs.searchclipboardfor.middleclick", true);
+#else
+pref("browser.tabs.searchclipboardfor.middleclick", false);
+#endif
+
 #if defined(XP_MACOSX)
   // During low memory periods, poll with this frequency (milliseconds)
   // until memory is no longer low. Changes to the pref take effect immediately.

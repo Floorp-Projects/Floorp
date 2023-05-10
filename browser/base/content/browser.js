@@ -558,6 +558,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
+  "gMiddleClickNewTabUsesPasteboard",
+  "browser.tabs.searchclipboardfor.middleclick",
+  true
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
   "gScreenshotsDisabled",
   "extensions.screenshots.disabled",
   false,
@@ -2853,7 +2860,11 @@ function openLocation(event) {
   );
 }
 
-function BrowserOpenTab({ event, url = BROWSER_NEW_TAB_URL } = {}) {
+function BrowserOpenTab({ event, url } = {}) {
+  let werePassedURL = !!url;
+  url ??= BROWSER_NEW_TAB_URL;
+  let searchClipboard = gMiddleClickNewTabUsesPasteboard && event?.button == 1;
+
   let relatedToCurrent = false;
   let where = "tab";
 
@@ -2886,10 +2897,20 @@ function BrowserOpenTab({ event, url = BROWSER_NEW_TAB_URL } = {}) {
   Services.obs.notifyObservers(
     {
       wrappedJSObject: new Promise(resolve => {
-        openTrustedLinkIn(url, where, {
-          relatedToCurrent,
-          resolveOnNewTabCreated: resolve,
-        });
+        if (!werePassedURL && searchClipboard) {
+          let clipboard = readFromClipboard();
+          clipboard = UrlbarUtils.stripUnsafeProtocolOnPaste(clipboard);
+          openTrustedLinkIn(clipboard, where, {
+            relatedToCurrent,
+            resolveOnNewTabCreated: resolve,
+            allowThirdPartyFixup: true,
+          });
+        } else {
+          openTrustedLinkIn(url, where, {
+            relatedToCurrent,
+            resolveOnNewTabCreated: resolve,
+          });
+        }
       }),
     },
     "browser-open-newtab-start"
