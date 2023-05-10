@@ -32,7 +32,7 @@
     --color-canvas: var(--color-white);
 
     /* Text */
-    --text-color-deemphasized: var(--color-gray-70);
+    --text-color-deemphasized: color-mix(in srgb, currentColor 69%, transparent);
   }
 }
 
@@ -48,6 +48,6 @@
     --color-canvas: var(--color-gray-90);
 
     /* Text */
-    --text-color-deemphasized: var(--color-gray-50);
+    --text-color-deemphasized: color-mix(in srgb, currentColor 75%, transparent);
   }
 }

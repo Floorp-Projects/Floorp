@@ -22,8 +22,5 @@
     --system-color-accent-hover: var(--button-primary-hover-bgcolor);
     --system-color-accent-active: var(--button-primary-active-bgcolor);
     --color-canvas: Canvas;
-
-    /* Text */
-    --text-color-deemphasized: var(--panel-description-color);
   }
 }
