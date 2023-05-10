@@ -31,7 +31,7 @@ async function promiseACPopupClosed() {
 }
 
 add_setup(async () => {
-  await addLoginsInParent(
+  await setStoredLoginsAsync(
     // Simple related domain relationship where example.com and other-example.com are in the related domains list
     ["https://other-example.com", "https://other-example.com", null, "relatedUser1", "relatedPass1", "uname", "pword"],
 
@@ -46,6 +46,7 @@ add_setup(async () => {
 
 add_task(async function test_form1_initial_empty() {
   const form = createLoginForm();
+  await promiseFormsProcessedInSameProcess();
 
   // Make sure initial form is empty.
   checkLoginForm(form.uname, "", form.pword, "");
@@ -55,6 +56,7 @@ add_task(async function test_form1_initial_empty() {
 
 add_task(async function test_form_related_domain_menuitems() {
   const form = createLoginForm();
+  await promiseFormsProcessedInSameProcess();
 
   form.uname.focus();
 

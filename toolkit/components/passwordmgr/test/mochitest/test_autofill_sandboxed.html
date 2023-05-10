@@ -10,24 +10,6 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-
-<script>
-const chromeScript = runChecksAfterCommonInit();
-
-const setupScript = runInParent(async function setup() {
-  const nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
-  assert.ok(nsLoginInfo != null, "nsLoginInfo constructor");
-
-  const login1 = new nsLoginInfo("https://example.com", "", null, "tempuser1", "temppass1", "uname", "pword");
-
-  // try/catch in case someone runs the tests manually, twice.
-  try {
-    await Services.logins.addLogin(login1);
-  } catch (e) {
-    assert.ok(false, "addLogin threw: " + e);
-  }
-});
-</script>
 <p id="display"></p>
 
 <div id="content">
@@ -47,6 +29,10 @@ let pword;
 function promiseExecuteSoon() {
   return new Promise(SimpleTest.executeSoon);
 }
+
+add_setup(async () => {
+  await setStoredLoginsAsync(["https://example.com", "", null, "tempuser1", "temppass1", "uname", "pword"]);
+});
 
 add_task(async function test_no_autofill_in_form() {
   sandboxed.src = "form_basic.html";
