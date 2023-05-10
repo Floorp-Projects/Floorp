@@ -10,6 +10,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
+#include "mozilla/WeakPtr.h"
 #include "nsIAsyncInputStream.h"
 #include "nsISupports.h"
 #include "nsISupportsImpl.h"
@@ -176,7 +177,7 @@ class InputStreamHolder final : public nsIInputStreamCallback {
   InputStreamHolder(JSContext* aCx, InputToReadableStreamAlgorithms* aCallback,
                     nsIAsyncInputStream* aInput);
 
-  // This MUST be called before we're destroyed
+  // Used by Worker shutdown
   void Shutdown();
 
   // These just proxy the calls to the nsIAsyncInputStream
@@ -193,9 +194,8 @@ class InputStreamHolder final : public nsIInputStreamCallback {
  private:
   ~InputStreamHolder();
 
-  // Purposely rawptr to avoid cycles.  Must be cleared with Shutdown() before
-  // destruction
-  InputToReadableStreamAlgorithms* mCallback;
+  // WeakPtr to avoid cycles
+  WeakPtr<InputToReadableStreamAlgorithms> mCallback;
   // To ensure the worker sticks around
   RefPtr<StrongWorkerRef> mAsyncWaitWorkerRef;
   RefPtr<StrongWorkerRef> mWorkerRef;
@@ -204,7 +204,8 @@ class InputStreamHolder final : public nsIInputStreamCallback {
 
 class InputToReadableStreamAlgorithms final
     : public UnderlyingSourceAlgorithmsWrapper,
-      public nsIInputStreamCallback {
+      public nsIInputStreamCallback,
+      public SupportsWeakPtr {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InputToReadableStreamAlgorithms,
