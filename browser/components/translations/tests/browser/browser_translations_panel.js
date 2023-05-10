@@ -114,24 +114,16 @@ add_task(async function test_translations_panel() {
     );
   });
 
-  {
-    const popupshown = waitForTranslationsPopupEvent("popupshown");
+  await waitForTranslationsPopupEvent("popupshown", () => {
     click(button, "Opening the popup");
-    await popupshown;
-  }
+  });
 
-  {
-    const translateButton = getByL10nId(
-      "translations-panel-dual-translate-button"
-    );
-
-    const popuphidden = waitForTranslationsPopupEvent("popuphidden");
+  await waitForTranslationsPopupEvent("popuphidden", () => {
     click(
-      translateButton,
+      getByL10nId("translations-panel-default-translate-button"),
       "Start translating by clicking the translate button."
     );
-    await popuphidden;
-  }
+  });
 
   await runInPage(async TranslationsTest => {
     const { getH1 } = TranslationsTest.getSelectors();
@@ -142,18 +134,16 @@ add_task(async function test_translations_panel() {
     );
   });
 
-  {
-    const popupshown = waitForTranslationsPopupEvent("popupshown");
+  await waitForTranslationsPopupEvent("popupshown", () => {
     click(button, "Re-opening the popup");
-    await popupshown;
-  }
+  });
 
-  {
-    const restoreButton = getByL10nId("translations-panel-restore-button");
-    const popuphidden = waitForTranslationsPopupEvent("popuphidden");
-    click(restoreButton, "Start translating by clicking the translate button.");
-    await popuphidden;
-  }
+  await waitForTranslationsPopupEvent("popuphidden", () => {
+    click(
+      getByL10nId("translations-panel-revisit-restore-button"),
+      "Click the restore language button."
+    );
+  });
 
   await runInPage(async TranslationsTest => {
     const { getH1 } = TranslationsTest.getSelectors();
