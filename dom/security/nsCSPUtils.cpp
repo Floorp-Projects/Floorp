@@ -201,8 +201,8 @@ void CSP_LogMessage(const nsAString& aMessage, const nsAString& aSourceName,
 
   // Prepending CSP to the outgoing console message
   nsString cspMsg;
-  cspMsg.AppendLiteral(u"Content Security Policy: ");
-  cspMsg.Append(aMessage);
+  CSP_GetLocalizedStr("CSPMessagePrefix",
+                      AutoTArray<nsString, 1>{nsString(aMessage)}, cspMsg);
 
   // Currently 'aSourceLine' is not logged to the console, because similar
   // information is already included within the source link of the message.

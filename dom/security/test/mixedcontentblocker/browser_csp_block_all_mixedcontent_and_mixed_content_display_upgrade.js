@@ -15,7 +15,7 @@ function on_new_message(msgObj) {
   const message = msgObj.message;
 
   // Check if csp warns about block-all-mixed content being obsolete
-  if (message.includes("Content Security Policy")) {
+  if (message.includes("Content-Security-Policy")) {
     ok(
       message.includes("block-all-mixed-content obsolete"),
       "CSP warns about block-all-mixed content being obsolete"
