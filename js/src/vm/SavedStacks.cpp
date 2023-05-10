@@ -36,6 +36,7 @@
 #include "vm/WrapperObject.h"
 
 #include "debugger/DebugAPI-inl.h"
+#include "gc/StableCellHasher-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSContext-inl.h"
 

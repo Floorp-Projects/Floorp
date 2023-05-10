@@ -32,6 +32,7 @@
 #include "vm/SavedStacks.h"
 
 #include "debugger/Debugger-inl.h"
+#include "gc/StableCellHasher-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

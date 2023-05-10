@@ -70,6 +70,7 @@
 #include "vm/WellKnownAtom.h"            // for js_apply_str
 #include "vm/WrapperObject.h"            // for JSObject::is, WrapperObject
 
+#include "gc/StableCellHasher-inl.h"
 #include "vm/Compartment-inl.h"  // for Compartment::wrap
 #include "vm/JSObject-inl.h"  // for GetObjectClassName, InitClass, NewObjectWithGivenProtoAndKind, ToPropertyKey
 #include "vm/NativeObject-inl.h"      // for NativeObject::global
