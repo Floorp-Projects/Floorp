@@ -33,7 +33,6 @@
 #include "MotionEvent.h"
 #include "ScopedGLHelpers.h"
 #include "ScreenHelperAndroid.h"
-#include "SurfaceViewWrapperSupport.h"
 #include "TouchResampler.h"
 #include "WidgetUtils.h"
 #include "WindowRenderer.h"
@@ -1264,13 +1263,6 @@ class LayerViewSupport final
       int32_t aWidth, int32_t aHeight, jni::Object::Param aSurface,
       jni::Object::Param aSurfaceControl) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-
-    // If our Surface is in an abandoned state then we will never succesfully
-    // create an EGL Surface, and will eventually crash. Better to explicitly
-    // crash now.
-    if (SurfaceViewWrapperSupport::IsSurfaceAbandoned(aSurface)) {
-      MOZ_CRASH("Compositor resumed with abandoned Surface");
-    }
 
     mX = aX;
     mY = aY;
