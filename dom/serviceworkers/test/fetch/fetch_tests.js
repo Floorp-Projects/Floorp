@@ -453,10 +453,6 @@ fetch(
   { mode: "no-cors" }
 ).then(
   function(res) {
-    my_ok(
-      !new URLSearchParams(location.search).has("orbEnabled"),
-      "no-cors Fetch request with invalid javascript content should be blocked if ORB is enabled"
-    );
     my_ok(res.type == "opaque", "Response type should be opaque");
     my_ok(res.status == 0, "Status should be 0");
     res.text().then(function(body) {
@@ -465,10 +461,7 @@ fetch(
     });
   },
   function(e) {
-    my_ok(
-      new URLSearchParams(location.search).has("orbEnabled"),
-      "no-cors Fetch request with invalid javascript content should not be blocked if ORB disabled"
-    );
+    my_ok(false, "no-cors Fetch failed");
     finish();
   }
 );
@@ -495,10 +488,6 @@ expectAsyncResult();
 fetch("http://example.com/opaque-no-cors", { mode: "no-cors" }).then(
   function(res) {
     my_ok(
-      !new URLSearchParams(location.search).has("orbEnabled"),
-      "intercepted opaque response for no-cors request with invalid javascript content should be blocked when ORB is enabled."
-    );
-    my_ok(
       res.type == "opaque",
       "intercepted opaque response for no-cors request should have type opaque."
     );
@@ -506,8 +495,8 @@ fetch("http://example.com/opaque-no-cors", { mode: "no-cors" }).then(
   },
   function(e) {
     my_ok(
-      new URLSearchParams(location.search).has("orbEnabled"),
-      "intercepted opaque response for no-cors request wth invalid javascript content should not be blocked when ORB is disabled."
+      false,
+      "intercepted opaque response for no-cors request should pass."
     );
     finish();
   }
