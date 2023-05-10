@@ -2992,6 +2992,7 @@ def necko_wifi_dbus(necko_wifi, dbus):
 
 
 set_config("NECKO_WIFI_DBUS", True, when=necko_wifi_dbus)
+set_define("NECKO_WIFI_DBUS", True, when=necko_wifi_dbus)
 
 
 # Frontend JS debug mode
