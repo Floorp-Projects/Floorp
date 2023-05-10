@@ -542,7 +542,7 @@ android.applicationVariants.all { variant ->
 }
 
 def generatedLocaleListDir = 'src/main/java/org/mozilla/focus/generated'
-def generatedLocaleListFilename = 'LocaleList.java'
+def generatedLocaleListFilename = 'LocalesList.kt'
 
 task generateLocaleList {
     doLast {
@@ -552,15 +552,19 @@ task generateLocaleList {
 
         localeList.delete()
         localeList.createNewFile()
-        localeList << "package org.mozilla.focus.generated;" << "\n" << "\n"
-        localeList << "import java.util.Arrays;" << "\n"
-        localeList << "import java.util.Collections;" << "\n"
-        localeList << "import java.util.List;" << "\n"
+        localeList << "package org.mozilla.focus.generated" << "\n" << "\n"
+        localeList << "import java.util.Collections" << "\n"
         localeList << "\n"
-        localeList << "public class LocaleList {" << "\n"
-        // findbugs doesn't like "public static final String[]", see http://findbugs.sourceforge.net/bugDescriptions.html#MS_MUTABLE_ARRAY
-        localeList << "    public static final List<String> BUNDLED_LOCALES = Collections.unmodifiableList(Arrays.asList(new String[] { "
-        localeList << getEnabledLocales().join(", ") + " }));" << "\n"
+        localeList << "object LocalesList {" << "\n"
+        localeList << "    " << "val BUNDLED_LOCALES: List<String> = Collections.unmodifiableList("
+        localeList << "\n"
+        localeList << "        " << "listOf("
+        localeList << "\n"
+        localeList << "            "
+        localeList << getEnabledLocales().join(",\n" + "            ")
+        localeList << ",\n"
+        localeList << "        )," << "\n"
+        localeList << "    )" << "\n"
         localeList << "}" << "\n"
     }
 }

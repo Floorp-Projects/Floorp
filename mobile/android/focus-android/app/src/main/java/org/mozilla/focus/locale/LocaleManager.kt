@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 import org.mozilla.focus.R
-import org.mozilla.focus.generated.LocaleList
+import org.mozilla.focus.generated.LocalesList
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicReference
 
@@ -75,6 +75,6 @@ class LocaleManager {
         /**
          * Returns a list of supported locale codes
          */
-        val packagedLocaleTags: Collection<String> = LocaleList.BUNDLED_LOCALES
+        val packagedLocaleTags: Collection<String> = LocalesList.BUNDLED_LOCALES
     }
 }
