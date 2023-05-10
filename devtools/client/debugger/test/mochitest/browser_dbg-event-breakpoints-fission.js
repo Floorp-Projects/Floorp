@@ -7,11 +7,6 @@
 "use strict";
 
 add_task(async function() {
-  await pushPref(
-    "devtools.debugger.features.event-listeners-breakpoints",
-    true
-  );
-
   const dbg = await initDebugger(
     "doc-event-breakpoints-fission.html",
     "event-breakpoints.js"

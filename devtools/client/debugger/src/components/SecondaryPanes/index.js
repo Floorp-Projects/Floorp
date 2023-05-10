@@ -406,9 +406,7 @@ class SecondaryPanes extends Component {
 
     items.push(this.getXHRItem());
 
-    if (features.eventListenersBreakpoints) {
-      items.push(this.getEventListenersItem());
-    }
+    items.push(this.getEventListenersItem());
 
     if (features.domMutationBreakpoints) {
       items.push(this.getDOMMutationsItem());
