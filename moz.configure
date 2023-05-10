@@ -502,16 +502,6 @@ add_old_configure_assignment("AWK", awk_for_old_configure)
 # ==============================================================
 perl = check_prog("PERL", ("perl5", "perl"))
 
-# Until the PERL variable is not necessary in old-configure
-
-
-@depends(perl)
-def perl_for_old_configure(value):
-    return value
-
-
-add_old_configure_assignment("PERL", perl_for_old_configure)
-
 
 @template
 def perl_version_check(min_version):
