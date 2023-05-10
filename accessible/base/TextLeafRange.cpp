@@ -1112,7 +1112,7 @@ TextLeafPoint TextLeafPoint::FindLineEnd(nsDirection aDirection,
     }
   }
   TextLeafPoint searchFrom = *this;
-  if (aDirection == eDirNext && (IsLineFeedChar() || IsEmptyLastLine())) {
+  if (aDirection == eDirNext && IsLineFeedChar()) {
     // If we search for the next line start from a line feed, we'll get the
     // character immediately following the line feed. We actually want the
     // next line start after that. Skip the line feed.
@@ -1121,6 +1121,11 @@ TextLeafPoint TextLeafPoint::FindLineEnd(nsDirection aDirection,
   }
   TextLeafPoint lineStart = searchFrom.FindBoundary(
       nsIAccessibleText::BOUNDARY_LINE_START, aDirection, aFlags);
+  if (aDirection == eDirNext && IsEmptyLastLine()) {
+    // There is a line feed immediately before us, but that's actually the end
+    // of the previous line, not the end of our empty line. Don't walk back.
+    return lineStart;
+  }
   // If there is a line feed before this line start (at the end of the previous
   // line), we must return that.
   TextLeafPoint prevChar =
