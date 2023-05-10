@@ -47,6 +47,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
       return width * height * 4;
     case VideoType::kMJPEG:
     case VideoType::kUnknown:
+      break;
   }
   RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << type;
   return 0;
