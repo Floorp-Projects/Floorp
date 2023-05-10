@@ -77,7 +77,8 @@ bool UiCompositorControllerChild::Resume() {
   if (!mIsOpen) {
     return false;
   }
-  return SendResume();
+  bool resumed = false;
+  return SendResume(&resumed) && resumed;
 }
 
 bool UiCompositorControllerChild::ResumeAndResize(const int32_t& aX,
@@ -89,7 +90,8 @@ bool UiCompositorControllerChild::ResumeAndResize(const int32_t& aX,
     // Since we are caching these values, pretend the call succeeded.
     return true;
   }
-  return SendResumeAndResize(aX, aY, aWidth, aHeight);
+  bool resumed = false;
+  return SendResumeAndResize(aX, aY, aWidth, aHeight, &resumed) && resumed;
 }
 
 bool UiCompositorControllerChild::InvalidateAndRender() {
@@ -293,8 +295,9 @@ void UiCompositorControllerChild::OpenForGPUProcess(
 void UiCompositorControllerChild::SendCachedValues() {
   MOZ_ASSERT(mIsOpen);
   if (mResize) {
+    bool resumed;
     SendResumeAndResize(mResize.ref().x, mResize.ref().y, mResize.ref().width,
-                        mResize.ref().height);
+                        mResize.ref().height, &resumed);
     mResize.reset();
   }
   if (mMaxToolbarHeight) {

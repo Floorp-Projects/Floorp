@@ -174,9 +174,23 @@ bool RenderCompositorEGL::Resume() {
 
     mEGLSurface = CreateEGLSurface();
     if (mEGLSurface == EGL_NO_SURFACE) {
-      RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
+      // Often when we fail to create an EGL surface it is because the Java
+      // Surface we have been provided is invalid. Therefore the on the first
+      // occurence we don't raise a WebRenderError and instead just return
+      // failure. This allows the widget a chance to request a new Java
+      // Surface. On subsequent failures, raising the WebRenderError will
+      // result in the compositor being recreated, falling back through
+      // webrender configurations, and eventually crashing if we still do not
+      // succeed.
+      if (!mHandlingNewSurfaceError) {
+        mHandlingNewSurfaceError = true;
+      } else {
+        RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
+      }
       return false;
     }
+    mHandlingNewSurfaceError = false;
+
     gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
   } else if (kIsWayland || kIsX11) {
     // Destroy EGLSurface if it exists and create a new one. We will set the
