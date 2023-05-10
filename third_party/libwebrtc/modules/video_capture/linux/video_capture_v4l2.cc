@@ -130,23 +130,18 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
   // Supported video formats in preferred order.
   // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
   // I420 otherwise.
-  const int nFormats = 6;
-  unsigned int fmts[nFormats];
-  if (capability.width > 640 || capability.height > 480) {
-    fmts[0] = V4L2_PIX_FMT_MJPEG;
-    fmts[1] = V4L2_PIX_FMT_YUV420;
-    fmts[2] = V4L2_PIX_FMT_YUYV;
-    fmts[3] = V4L2_PIX_FMT_UYVY;
-    fmts[4] = V4L2_PIX_FMT_NV12;
-    fmts[5] = V4L2_PIX_FMT_JPEG;
-  } else {
-    fmts[0] = V4L2_PIX_FMT_YUV420;
-    fmts[1] = V4L2_PIX_FMT_YUYV;
-    fmts[2] = V4L2_PIX_FMT_UYVY;
-    fmts[3] = V4L2_PIX_FMT_NV12;
-    fmts[4] = V4L2_PIX_FMT_MJPEG;
-    fmts[5] = V4L2_PIX_FMT_JPEG;
-  }
+  unsigned int hdFmts[] = {
+      V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YUYV,
+      V4L2_PIX_FMT_UYVY,   V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_JPEG,
+  };
+  unsigned int sdFmts[] = {
+      V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YUYV,   V4L2_PIX_FMT_UYVY,
+      V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_JPEG,
+  };
+  const bool isHd = capability.width > 640 || capability.height > 480;
+  unsigned int* fmts = isHd ? hdFmts : sdFmts;
+  static_assert(sizeof(hdFmts) == sizeof(sdFmts));
+  constexpr int nFormats = sizeof(hdFmts) / sizeof(unsigned int);
 
   // Enumerate image formats.
   struct v4l2_fmtdesc fmt;
@@ -195,6 +190,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
     _captureVideoType = VideoType::kMJPEG;
+  else
+    RTC_DCHECK_NOTREACHED();
 
   // set format and frame size now
   if (ioctl(_deviceFd, VIDIOC_S_FMT, &video_fmt) < 0) {
