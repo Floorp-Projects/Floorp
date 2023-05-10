@@ -34,6 +34,7 @@ const TEST_PROVIDER_INFO = [
     shoppingTab: {
       selector: "nav a",
       regexp: "&page=shopping",
+      inspectRegexpInSERP: true,
     },
     components: [
       {
