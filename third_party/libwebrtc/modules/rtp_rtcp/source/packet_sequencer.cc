@@ -118,8 +118,18 @@ void PacketSequencer::PopulatePaddingFields(RtpPacketToSend& packet) {
     return;
   }
 
-  packet.SetTimestamp(last_rtp_timestamp_);
-  packet.set_capture_time(Timestamp::Millis(last_capture_time_ms_));
+  if (last_timestamp_time_ms_ > 0) {
+    RTC_DCHECK_GT(last_rtp_timestamp_, 0);
+    RTC_DCHECK_GT(last_capture_time_ms_, 0);
+    packet.SetTimestamp(last_rtp_timestamp_);
+    packet.set_capture_time(Timestamp::Millis(last_capture_time_ms_));
+  } else {
+    // No media packet has been sent yet so timestamps are not known. Set them
+    // now as they will be needed when serializing the packet later on.
+    auto now = clock_->CurrentTime();
+    packet.SetTimestamp(now.ms() * kTimestampTicksPerMs);
+    packet.set_capture_time(now);
+  }
 
   // Only change the timestamp of padding packets sent over RTX.
   // Padding only packets over RTP has to be sent as part of a media
