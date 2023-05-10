@@ -237,7 +237,7 @@ testMultiOk();
 testMultiOkCrossRealm();
 testMultiOkWithDeserialize();
 testMultiOkWithDeserializeCrossRealm();
-// testMultiWithDeserializeReadTransferError(); // failure during readTransfer throws uncatchable exception
-// testMultiWithDeserializeReadTransferErrorCrossRealm();
+testMultiWithDeserializeReadTransferError();
+testMultiWithDeserializeReadTransferErrorCrossRealm();
 testMultiWithDeserializeReadError();
 testMultiWithDeserializeReadErrorCrossRealm();
