@@ -18,7 +18,7 @@
 #include "vm/PropMap.h"
 #include "wasm/WasmJS.h"
 
-#include "gc/Zone-inl.h"
+#include "gc/StableCellHasher-inl.h"
 
 namespace js {
 
@@ -80,7 +80,7 @@ template <typename T>
   }
 
   uint64_t uid;
-  if (!l->zoneFromAnyThread()->maybeGetUniqueId(l, &uid)) {
+  if (!gc::MaybeGetUniqueId(l, &uid)) {
     return false;
   }
 
@@ -97,7 +97,7 @@ template <typename T>
   }
 
   uint64_t uid;
-  if (!l->zoneFromAnyThread()->getOrCreateUniqueId(l, &uid)) {
+  if (!gc::GetOrCreateUniqueId(l, &uid)) {
     return false;
   }
 
@@ -118,7 +118,7 @@ template <typename T>
   MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()) ||
              CurrentThreadIsPerformingGC());
 
-  return UniqueIdToHash(l->zoneFromAnyThread()->getUniqueIdInfallible(l));
+  return UniqueIdToHash(gc::GetUniqueIdInfallible(l));
 }
 
 template <typename T>
@@ -134,29 +134,24 @@ template <typename T>
   MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()) ||
              CurrentThreadIsPerformingGC());
 
-  Zone* zone = k->zoneFromAnyThread();
-  if (zone != l->zoneFromAnyThread()) {
-    return false;
-  }
-
 #ifdef DEBUG
   // Incremental table sweeping means that existing table entries may no
   // longer have unique IDs. We fail the match in that case and the entry is
   // removed from the table later on.
-  if (!zone->hasUniqueId(k)) {
+  if (!gc::HasUniqueId(k)) {
     Key key = k;
     MOZ_ASSERT(IsAboutToBeFinalizedUnbarriered(key));
   }
-  MOZ_ASSERT(zone->hasUniqueId(l));
+  MOZ_ASSERT(gc::HasUniqueId(l));
 #endif
 
   uint64_t keyId;
-  if (!zone->maybeGetUniqueId(k, &keyId)) {
+  if (!gc::MaybeGetUniqueId(k, &keyId)) {
     // Key is dead and cannot match lookup which must be live.
     return false;
   }
 
-  return keyId == zone->getUniqueIdInfallible(l);
+  return keyId == gc::GetUniqueIdInfallible(l);
 }
 
 #if !MOZ_IS_GCC

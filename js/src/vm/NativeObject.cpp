@@ -14,6 +14,7 @@
 #include <iterator>
 
 #include "gc/MaybeRooted.h"
+#include "gc/StableCellHasher.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/Value.h"
@@ -231,7 +232,7 @@ mozilla::Maybe<PropertyInfo> js::NativeObject::lookupPure(jsid id) {
 
 bool NativeObject::setUniqueId(JSContext* cx, uint64_t uid) {
   MOZ_ASSERT(!hasUniqueId());
-  MOZ_ASSERT(!zone()->hasUniqueId(this));
+  MOZ_ASSERT(!gc::HasUniqueId(this));
 
   return setOrUpdateUniqueId(cx, uid);
 }

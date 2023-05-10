@@ -24,6 +24,7 @@
 #include "vm/Scope.h"
 
 #include "gc/Marking-inl.h"
+#include "gc/StableCellHasher-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSContext-inl.h"
 
