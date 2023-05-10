@@ -37,6 +37,31 @@ static bool IsOpaqueSafeListedMIMEType(const nsACString& aContentType) {
   return nsContentUtils::IsJavascriptMIMEType(typeString);
 }
 
+static bool IsOpaqueSafeListedSpecBreakingMIMEType(
+    const nsACString& aContentType, bool aNoSniff) {
+  // Avoid trouble with DASH/HLS. See bug 1698040.
+  if (aContentType.EqualsLiteral(APPLICATION_DASH_XML) ||
+      aContentType.EqualsLiteral(APPLICATION_MPEGURL) ||
+      aContentType.EqualsLiteral(TEXT_VTT)) {
+    return true;
+  }
+
+  // Do what Chromium does. This is from bug 1828375, and we should ideally
+  // revert this.
+  if (aContentType.EqualsLiteral(TEXT_PLAIN) && aNoSniff) {
+    return true;
+  }
+
+  // This is not a good solution, but we need this until we solve Bug 1827684 in
+  // a better way. Chromium currently allows all "audio/*" and "video/*", but
+  // from discussion in bug, we want to try only "audio/mpeg".
+  if (StringBeginsWith(aContentType, "audio/mpeg"_ns)) {
+    return true;
+  }
+
+  return false;
+}
+
 static bool IsOpaqueBlockListedMIMEType(const nsACString& aContentType) {
   return aContentType.EqualsLiteral(TEXT_HTML) ||
          StringEndsWith(aContentType, "+json"_ns) ||
@@ -89,7 +114,8 @@ static bool IsOpaqueBlockListedNeverSniffedMIMEType(
          aContentType.EqualsLiteral(MULTIPART_SIGNED) ||
          aContentType.EqualsLiteral(TEXT_EVENT_STREAM) ||
          aContentType.EqualsLiteral(TEXT_CSV) ||
-         aContentType.EqualsLiteral(TEXT_VTT);
+         aContentType.EqualsLiteral(TEXT_VTT) ||
+         aContentType.EqualsLiteral(APPLICATION_DASH_XML);
 }
 
 OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
@@ -100,6 +126,12 @@ OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
 
   if (IsOpaqueSafeListedMIMEType(aContentType)) {
     return OpaqueResponseBlockedReason::ALLOWED_SAFE_LISTED;
+  }
+
+  // For some MIME types we deviate from spec and allow when we ideally
+  // shouldn't. These are returnened before any blocking takes place.
+  if (IsOpaqueSafeListedSpecBreakingMIMEType(aContentType, aNoSniff)) {
+    return OpaqueResponseBlockedReason::ALLOWED_SAFE_LISTED_SPEC_BREAKING;
   }
 
   if (IsOpaqueBlockListedNeverSniffedMIMEType(aContentType)) {

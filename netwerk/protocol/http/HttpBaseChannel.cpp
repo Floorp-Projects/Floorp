@@ -3234,6 +3234,9 @@ HttpBaseChannel::PerformOpaqueResponseSafelistCheckBeforeSniff() {
     case OpaqueResponseBlockedReason::ALLOWED_SAFE_LISTED:
       // Step 3.1
       return OpaqueResponse::Allow;
+    case OpaqueResponseBlockedReason::ALLOWED_SAFE_LISTED_SPEC_BREAKING:
+      LOGORB("Allowed %s in a spec breaking way", contentType.get());
+      return OpaqueResponse::Allow;
     case OpaqueResponseBlockedReason::BLOCKED_BLOCKLISTED_NEVER_SNIFFED:
       return BlockOrFilterOpaqueResponse(
           mORB, u"mimeType is an opaque-blocklisted-never-sniffed MIME type"_ns,

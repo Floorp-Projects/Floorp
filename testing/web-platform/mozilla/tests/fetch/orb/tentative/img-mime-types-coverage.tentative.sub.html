@@ -1,0 +1,43 @@
+<!-- Test verifies that cross-origin, nosniff images are 1) blocked when their
+  MIME type is covered by ORB and 2) allowed otherwise.
+
+  This test is very similar to fetch/orb/img-mime-types-coverage.tentative.sub.html,
+  except that it focuses on MIME types relevant to ORB.
+-->
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<div id=log></div>
+<script>
+  var passes = [
+    // These are exceptions that allow more MIME types than the ORB spec does.
+    // This is due to web compat, but might be removed in the future.
+    // See Bug 1828375
+    "application/dash+xml",
+    "application/vnd.apple.mpegurl",
+    "audio/mpegurl",
+    "audio/mpeg",
+    "text/vtt",
+  ]
+
+  const get_url = (mime) => {
+    // www1 is cross-origin, so the HTTP response is ORB-eligible -->
+    url = "http://{{domains[www1]}}:{{ports[http][0]}}"
+    url = url + "/fetch/nosniff/resources/image.py"
+    if (mime != null) {
+      url += "?type=" + encodeURIComponent(mime)
+    }
+    return url
+  }
+
+  passes.forEach(function (mime) {
+    async_test(function (t) {
+      var img = document.createElement("img")
+      img.onerror = t.unreached_func("Unexpected error event")
+      img.onload = t.step_func_done(function () {
+        assert_equals(img.width, 96)
+      })
+      img.src = get_url(mime)
+      document.body.appendChild(img)
+    }, "ORB should allow the response if Content-Type is: '" + mime + "'.  ")
+  })
+</script>
