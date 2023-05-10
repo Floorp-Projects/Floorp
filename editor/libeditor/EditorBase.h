@@ -2619,18 +2619,33 @@ class EditorBase : public nsIEditor,
       nsAtom* aCommand, EventMessage aEventMessage) const;
 
   /**
-   * FireClipboardEvent() may dispatch a clipboard event.
+   * DispatchClipboardEventAndUpdateClipboard() may dispatch a clipboard event
+   * and update clipboard if aEventMessage is eCopy or eCut.
    *
    * @param aEventMessage       The event message which may be set to the
    *                            dispatching event.
    * @param aClipboardType      Working with global clipboard or selection.
-   * @param aActionTaken        [optional][out] If set to non-nullptr, will be
-   *                            set to true if the action for the event is
-   *                            handled or prevented default.
-   * @return                    false if dispatching event is canceled.
    */
-  bool FireClipboardEvent(EventMessage aEventMessage, int32_t aClipboardType,
-                          bool* aActionTaken = nullptr);
+  enum class ClipboardEventResult {
+    // We have met an error in nsCopySupport::FireClipboardEvent,
+    // or, default of dispatched event is NOT prevented, the event is "cut"
+    // and the event target is not editable.
+    IgnoredOrError,
+    // A "paste" event is dispatched and prevented its default.
+    DefaultPreventedOfPaste,
+    // Default of a "copy" or "cut" event is prevented but the clipboard is
+    // updated unless the dataTransfer of the event is cleared by the listener.
+    // Or, default of the event is NOT prevented but selection is collapsed
+    // when the event target is editable or the event is "copy".
+    CopyOrCutHandled,
+    // A clipboard event is maybe dispatched and not canceled by the web app.
+    // In this case, the clipboard has been updated if aEventMessage is eCopy
+    // or eCut.
+    DoDefault,
+  };
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<ClipboardEventResult, nsresult>
+  DispatchClipboardEventAndUpdateClipboard(EventMessage aEventMessage,
+                                           int32_t aClipboardType);
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
