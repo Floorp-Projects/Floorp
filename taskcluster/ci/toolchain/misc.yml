@@ -323,7 +323,7 @@ win64-winchecksec:
             - winchecksec
         toolchain:
             - linux64-clang-toolchain
-            - win64-vs2017
+            - vs-toolchain
 
 linux64-makecab:
     description: "makecab toolchain build"
@@ -358,7 +358,7 @@ win64-mozmake:
             - gnumake
         toolchain:
             - linux64-clang-toolchain
-            - win64-vs2017
+            - vs-toolchain
 
 nsis:
     description: "NSIS for Linux and Windows"
@@ -411,6 +411,7 @@ win64-vs2019:
         resources:
             - build/vs/vs2019.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
+        toolchain-alias: vs-toolchain
 
 win64-vs2022:
     description: "VS 2022"

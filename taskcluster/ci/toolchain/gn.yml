@@ -46,4 +46,4 @@ win64-gn:
         fetch:
             - ninja
         toolchain:
-            - win64-vs2017
+            - vs-toolchain

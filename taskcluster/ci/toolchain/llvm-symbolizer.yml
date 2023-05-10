@@ -118,7 +118,7 @@ win64-llvm-symbolizer-16:
             - clang-16
         toolchain:
             - linux64-clang-16-stage1
-            - win64-vs2019
+            - vs-toolchain
 
 linux32-llvm-symbolizer-trunk:
     description: "llvm-symbolizer for Linux"
@@ -238,4 +238,4 @@ win64-llvm-symbolizer-trunk:
             - clang-trunk
         toolchain:
             - linux64-clang-trunk-stage1
-            - win64-vs2019
+            - vs-toolchain

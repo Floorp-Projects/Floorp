@@ -102,7 +102,7 @@ win64-clang-tidy:
     fetches:
         toolchain:
             - linux64-clang-16
-            - win64-vs2019
+            - vs-toolchain
 
 linux64-clang-tidy-external:
     attributes:
