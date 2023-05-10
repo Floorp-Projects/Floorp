@@ -65,19 +65,22 @@ mozilla::ipc::IPCResult UiCompositorControllerParent::RecvPause() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult UiCompositorControllerParent::RecvResume() {
+mozilla::ipc::IPCResult UiCompositorControllerParent::RecvResume(
+    bool* aOutResumed) {
+  *aOutResumed = false;
   CompositorBridgeParent* parent =
       CompositorBridgeParent::GetCompositorBridgeParentFromLayersId(
           mRootLayerTreeId);
   if (parent) {
-    parent->ResumeComposition();
+    *aOutResumed = parent->ResumeComposition();
   }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult UiCompositorControllerParent::RecvResumeAndResize(
     const int32_t& aX, const int32_t& aY, const int32_t& aWidth,
-    const int32_t& aHeight) {
+    const int32_t& aHeight, bool* aOutResumed) {
+  *aOutResumed = false;
   CompositorBridgeParent* parent =
       CompositorBridgeParent::GetCompositorBridgeParentFromLayersId(
           mRootLayerTreeId);
@@ -88,7 +91,7 @@ mozilla::ipc::IPCResult UiCompositorControllerParent::RecvResumeAndResize(
     parent->GetWidget()->AsAndroid()->NotifyClientSizeChanged(
         LayoutDeviceIntSize(aWidth, aHeight));
 #endif
-    parent->ResumeCompositionAndResize(aX, aY, aWidth, aHeight);
+    *aOutResumed = parent->ResumeCompositionAndResize(aX, aY, aWidth, aHeight);
   }
   return IPC_OK();
 }
