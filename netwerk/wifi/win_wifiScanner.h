@@ -4,16 +4,17 @@
 
 #pragma once
 
-#include "WifiScanner.h"
+// Moz headers (alphabetical)
+#include "mozilla/UniquePtr.h"
+#include "nsCOMArray.h"
+#include "win_wlanLibrary.h"
 
-class nsIWifiAccessPoint;
+class nsWifiAccessPoint;
 
-namespace mozilla {
-
-class WifiScannerImpl final : public WifiScanner {
+class WinWifiScanner final {
  public:
-  WifiScannerImpl();
-  ~WifiScannerImpl();
+  WinWifiScanner();
+  ~WinWifiScanner();
 
   /**
    * GetAccessPointsFromWLAN
@@ -24,8 +25,8 @@ class WifiScannerImpl final : public WifiScanner {
    * @param accessPoints The collection to populate with available APs
    * @return NS_OK on success, failure codes on failure
    */
-  nsresult GetAccessPointsFromWLAN(
-      nsTArray<RefPtr<nsIWifiAccessPoint>>& accessPoints);
-};
+  nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint>& accessPoints);
 
-}  // namespace mozilla
+ private:
+  mozilla::UniquePtr<WinWLANLibrary> mWlanLibrary;
+};
