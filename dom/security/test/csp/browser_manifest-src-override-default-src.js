@@ -4,8 +4,8 @@
  */
 /*globals Cu, is, ok*/
 "use strict";
-const { ManifestObtainer } = ChromeUtils.import(
-  "resource://gre/modules/ManifestObtainer.jsm"
+const { ManifestObtainer } = ChromeUtils.importESModule(
+  "resource://gre/modules/ManifestObtainer.sys.mjs"
 );
 const path = "/tests/dom/security/test/csp/";
 const testFile = `${path}file_web_manifest.html`;

@@ -3,8 +3,8 @@
 Services.prefs.setBoolPref("dom.manifest.enabled", true);
 Services.prefs.setBoolPref("dom.security.https_first", false);
 
-const { ManifestObtainer } = ChromeUtils.import(
-  "resource://gre/modules/ManifestObtainer.jsm"
+const { ManifestObtainer } = ChromeUtils.importESModule(
+  "resource://gre/modules/ManifestObtainer.sys.mjs"
 );
 const remoteURL =
   "http://mochi.test:8888/browser/dom/manifest/test/resource.sjs";

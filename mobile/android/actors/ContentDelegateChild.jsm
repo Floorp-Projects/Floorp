@@ -6,14 +6,10 @@ const { GeckoViewActorChild } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewActorChild.sys.mjs"
 );
 
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ManifestObtainer: "resource://gre/modules/ManifestObtainer.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  ManifestObtainer: "resource://gre/modules/ManifestObtainer.sys.mjs",
 });
 
 var EXPORTED_SYMBOLS = ["ContentDelegateChild"];

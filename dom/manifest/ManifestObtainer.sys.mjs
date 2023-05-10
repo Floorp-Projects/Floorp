@@ -21,13 +21,10 @@
  *
  * Which is injected into every browser instance via browser.js.
  */
-"use strict";
 
-const { ManifestProcessor } = ChromeUtils.import(
-  "resource://gre/modules/ManifestProcessor.jsm"
-);
+import { ManifestProcessor } from "resource://gre/modules/ManifestProcessor.sys.mjs";
 
-var ManifestObtainer = {
+export var ManifestObtainer = {
   /**
    * Public interface for obtaining a web manifest from a XUL browser, to use
    * on the parent process.
@@ -164,5 +161,3 @@ async function fetchManifest(aWindow) {
   // Can reject...
   return aWindow.fetch(request);
 }
-
-var EXPORTED_SYMBOLS = ["ManifestObtainer"];

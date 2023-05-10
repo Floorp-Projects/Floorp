@@ -17,21 +17,11 @@ var EXPORTED_SYMBOLS = ["ManifestMessagesChild"];
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ManifestObtainer",
-  "resource://gre/modules/ManifestObtainer.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ManifestFinder",
-  "resource://gre/modules/ManifestFinder.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ManifestIcons",
-  "resource://gre/modules/ManifestIcons.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ManifestFinder: "resource://gre/modules/ManifestFinder.sys.mjs",
+  ManifestIcons: "resource://gre/modules/ManifestIcons.sys.mjs",
+  ManifestObtainer: "resource://gre/modules/ManifestObtainer.sys.mjs",
+});
 
 class ManifestMessagesChild extends JSWindowActorChild {
   receiveMessage(message) {

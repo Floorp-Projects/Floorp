@@ -18,9 +18,7 @@
  *
  */
 
-"use strict";
-
-function ImageObjectProcessor(aErrors, aExtractor, aBundle) {
+export function ImageObjectProcessor(aErrors, aExtractor, aBundle) {
   this.errors = aErrors;
   this.extractor = aExtractor;
   this.domBundle = aBundle;
@@ -250,4 +248,3 @@ ImageObjectProcessor.prototype.process = function(
     }
   }
 };
-var EXPORTED_SYMBOLS = ["ImageObjectProcessor"];
