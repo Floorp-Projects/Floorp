@@ -222,10 +222,21 @@ UNIFIED_SOURCES += [
     "ScrollSnap.cpp",
     "ScrollVelocityQueue.cpp",
     "StickyScrollContainer.cpp",
-    "TextOverflow.cpp",
     "ViewportFrame.cpp",
     "WBRFrame.cpp",
 ]
+
+# on win32 if we add these files to UNIFIED_SOURCES then the compiler generates
+# larger stack frames for some recursive functions that cause us to hit stack
+# overflows (see bug 1827428)
+if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CPU_ARCH"] == "x86":
+    SOURCES += [
+        "TextOverflow.cpp",
+    ]
+else:
+    UNIFIED_SOURCES += [
+        "TextOverflow.cpp",
+    ]
 
 SOURCES += [
     # If this file gets compiled with ScrollPositionUpdate.cpp, the specialized
