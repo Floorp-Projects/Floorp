@@ -52,6 +52,10 @@ inline bool MaybeGetUniqueId(Cell* cell, uint64_t* uidp) {
   return true;
 }
 
+extern bool CreateUniqueIdForNativeObject(NativeObject* obj, uint64_t* uidp);
+extern bool CreateUniqueIdForNonNativeObject(Cell* cell, UniqueIdMap::AddPtr,
+                                             uint64_t* uidp);
+
 inline bool GetOrCreateUniqueId(Cell* cell, uint64_t* uidp) {
   MOZ_ASSERT(uidp);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cell->runtimeFromAnyThread()) ||
@@ -66,38 +70,18 @@ inline bool GetOrCreateUniqueId(Cell* cell, uint64_t* uidp) {
         return true;
       }
 
-      JSRuntime* runtime = cell->runtimeFromMainThread();
-      *uidp = NextCellUniqueId(runtime);
-      JSContext* cx = runtime->mainContextFromOwnThread();
-      return nobj->setUniqueId(cx, *uidp);
+      return CreateUniqueIdForNativeObject(nobj, uidp);
     }
   }
 
   // Get an existing uid, if one has been set.
-  UniqueIdMap& uniqueIds = cell->zone()->uniqueIds();
-  auto p = uniqueIds.lookupForAdd(cell);
+  auto p = cell->zone()->uniqueIds().lookupForAdd(cell);
   if (p) {
     *uidp = p->value();
     return true;
   }
 
-  // Set a new uid on the cell.
-  JSRuntime* runtime = cell->runtimeFromMainThread();
-  *uidp = NextCellUniqueId(runtime);
-  if (!uniqueIds.add(p, cell, *uidp)) {
-    return false;
-  }
-
-  // If the cell was in the nursery, hopefully unlikely, then we need to
-  // tell the nursery about it so that it can sweep the uid if the thing
-  // does not get tenured.
-  if (IsInsideNursery(cell) &&
-      !runtime->gc.nursery().addedUniqueIdToCell(cell)) {
-    uniqueIds.remove(cell);
-    return false;
-  }
-
-  return true;
+  return CreateUniqueIdForNonNativeObject(cell, p, uidp);
 }
 
 inline bool SetOrUpdateUniqueId(JSContext* cx, Cell* cell, uint64_t uid) {

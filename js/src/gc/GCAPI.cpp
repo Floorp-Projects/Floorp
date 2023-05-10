@@ -480,6 +480,30 @@ JS_PUBLIC_API bool JS::WasIncrementalGC(JSRuntime* rt) {
   return rt->gc.isIncrementalGc();
 }
 
+bool js::gc::CreateUniqueIdForNativeObject(NativeObject* nobj, uint64_t* uidp) {
+  JSRuntime* runtime = nobj->runtimeFromMainThread();
+  *uidp = NextCellUniqueId(runtime);
+  JSContext* cx = runtime->mainContextFromOwnThread();
+  return nobj->setUniqueId(cx, *uidp);
+}
+
+bool js::gc::CreateUniqueIdForNonNativeObject(Cell* cell,
+                                              UniqueIdMap::AddPtr ptr,
+                                              uint64_t* uidp) {
+  // If the cell is in the nursery, hopefully unlikely, then we need to tell the
+  // nursery about it so that it can sweep the uid if the thing does not get
+  // tenured.
+  JSRuntime* runtime = cell->runtimeFromMainThread();
+  if (IsInsideNursery(cell) &&
+      !runtime->gc.nursery().addedUniqueIdToCell(cell)) {
+    return false;
+  }
+
+  // Set a new uid on the cell.
+  *uidp = NextCellUniqueId(runtime);
+  return cell->zone()->uniqueIds().add(ptr, cell, *uidp);
+}
+
 uint64_t js::gc::NextCellUniqueId(JSRuntime* rt) {
   return rt->gc.nextCellUniqueId();
 }
