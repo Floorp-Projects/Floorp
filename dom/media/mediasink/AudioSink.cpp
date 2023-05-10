@@ -230,7 +230,8 @@ void AudioSink::ReenqueueUnplayedAudioDataIfNeeded() {
   }
 
   // Extract all audio data from the ring buffer, we can only read the data from
-  // the most recent, so we reenqueue the data, packetized, in a temporary array.
+  // the most recent, so we reenqueue the data, packetized, in a temporary
+  // array.
   while (framesRemaining) {
     uint32_t packetFrameCount =
         std::min(framesRemaining, typicalPacketFrameCount);
