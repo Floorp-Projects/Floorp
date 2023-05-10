@@ -768,7 +768,7 @@ pub extern "C" fn Servo_AnimationValue_GetColor(
         AnimationValue::BackgroundColor(ref color) => {
             let computed: ComputedColor = color.clone();
             let foreground_color = convert_nscolor_to_absolute_color(foreground_color);
-            convert_absolute_color_to_nscolor(&computed.resolve_into_absolute(&foreground_color))
+            convert_absolute_color_to_nscolor(&computed.resolve_to_absolute(&foreground_color))
         },
         _ => panic!("Other color properties are not supported yet"),
     }
@@ -7199,7 +7199,7 @@ pub unsafe extern "C" fn Servo_ComputeColor(
         *was_current_color = computed.is_currentcolor();
     }
 
-    let rgba = computed.resolve_into_absolute(&current_color);
+    let rgba = computed.resolve_to_absolute(&current_color);
     *result_color = style::gecko::values::convert_absolute_color_to_nscolor(&rgba);
     true
 }
@@ -7209,7 +7209,7 @@ pub extern "C" fn Servo_ResolveColor(
     color: &computed::Color,
     foreground: &style::color::AbsoluteColor,
 ) -> style::color::AbsoluteColor {
-    color.clone().resolve_into_absolute(foreground)
+    color.resolve_to_absolute(foreground)
 }
 
 #[no_mangle]
