@@ -124,6 +124,12 @@ class TextEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD EndOfDocument() final;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() final;
   NS_IMETHOD GetTextLength(uint32_t* aCount) final;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
+    const nsresult rv = TextEditor::PasteAsAction(aClipboardType, true);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HTMLEditor::PasteAsAction() failed");
+    return rv;
+  }
 
   // Shouldn't be used internally, but we need these using declarations for
   // avoiding warnings of clang.
@@ -136,12 +142,23 @@ class TextEditor final : public EditorBase,
 
   bool CanPaste(int32_t aClipboardType) const final;
 
+  MOZ_CAN_RUN_SCRIPT nsresult PasteTransferableAsAction(
+      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr) final;
+
   bool CanPasteTransferable(nsITransferable* aTransferable) final;
 
   MOZ_CAN_RUN_SCRIPT nsresult
   HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) final;
 
   dom::EventTarget* GetDOMEventTarget() const final;
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
+                nsIPrincipal* aPrincipal = nullptr) final;
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
+                           nsIPrincipal* aPrincipal = nullptr) final;
 
   MOZ_CAN_RUN_SCRIPT nsresult
   OnFocus(const nsINode& aOriginalEventTargetNode) final;
@@ -546,14 +563,6 @@ class TextEditor final : public EditorBase,
    * Make the given selection span the entire document.
    */
   MOZ_CAN_RUN_SCRIPT nsresult SelectEntireDocument() final;
-
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePaste(
-      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePasteAsQuotation(
-      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  HandlePasteTransferable(AutoEditActionDataSetter& aEditActionData,
-                          nsITransferable& aTransferable) final;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) final;

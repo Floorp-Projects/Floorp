@@ -172,6 +172,9 @@ class HTMLEditor final : public EditorBase,
   bool CanPaste(int32_t aClipboardType) const final;
   using EditorBase::CanPaste;
 
+  MOZ_CAN_RUN_SCRIPT nsresult PasteTransferableAsAction(
+      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr) final;
+
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode) final;
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() final;
@@ -230,21 +233,33 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult GetBackgroundColorState(bool* aMixed,
                                                       nsAString& aOutColor);
 
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
+    const nsresult rv = HTMLEditor::PasteAsAction(aClipboardType, true);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "HTMLEditor::PasteAsAction() failed");
+    return rv;
+  }
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
+                nsIPrincipal* aPrincipal = nullptr) final;
+
   /**
    * PasteNoFormattingAsAction() pastes content in clipboard without any style
    * information.
    *
-   * @param aClipboardType      nsIClipboard::kGlobalClipboard or
+   * @param aSelectionType      nsIClipboard::kGlobalClipboard or
    *                            nsIClipboard::kSelectionClipboard.
-   * @param aDispatchPasteEvent Yes if this should dispatch ePaste event
-   *                            before pasting.  Otherwise, No.
    * @param aPrincipal          Set subject principal if it may be called by
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
   MOZ_CAN_RUN_SCRIPT nsresult PasteNoFormattingAsAction(
-      int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
-      nsIPrincipal* aPrincipal = nullptr);
+      int32_t aSelectionType, nsIPrincipal* aPrincipal = nullptr);
+
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
+                           nsIPrincipal* aPrincipal = nullptr) final;
 
   bool CanPasteTransferable(nsITransferable* aTransferable) final;
 
@@ -3088,14 +3103,6 @@ class HTMLEditor final : public EditorBase,
    * element is not in <table> or <tr> element, this returns nullptr.
    */
   Result<RefPtr<Element>, nsresult> GetFirstSelectedCellElementInTable() const;
-
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePaste(
-      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandlePasteAsQuotation(
-      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) final;
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  HandlePasteTransferable(AutoEditActionDataSetter& aEditActionData,
-                          nsITransferable& aTransferable) final;
 
   /**
    * PasteInternal() pasts text with replacing selected content.

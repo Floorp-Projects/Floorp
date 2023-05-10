@@ -464,12 +464,9 @@ bool PasteCommand::IsCommandEnabled(Command aCommand,
 
 nsresult PasteCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
                                  nsIPrincipal* aPrincipal) const {
-  nsresult rv = aEditorBase.PasteAsAction(nsIClipboard::kGlobalClipboard,
-                                          EditorBase::DispatchPasteEvent::Yes,
+  nsresult rv = aEditorBase.PasteAsAction(nsIClipboard::kGlobalClipboard, true,
                                           aPrincipal);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::PasteAsAction(nsIClipboard::"
-                       "kGlobalClipboard, DispatchPasteEvent::Yes) failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::PasteAsAction() failed");
   return rv;
 }
 
@@ -507,11 +504,10 @@ nsresult PasteTransferableCommand::DoCommandParam(
   if (NS_WARN_IF(!aTransferableParam)) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsresult rv = aEditorBase.PasteTransferableAsAction(
-      aTransferableParam, EditorBase::DispatchPasteEvent::Yes, aPrincipal);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "EditorBase::PasteTransferableAsAction(DispatchPasteEvent::Yes) failed");
+  nsresult rv =
+      aEditorBase.PasteTransferableAsAction(aTransferableParam, aPrincipal);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::PasteTransferableAsAction() failed");
   return rv;
 }
 
@@ -959,11 +955,9 @@ nsresult PasteQuotationCommand::DoCommand(Command aCommand,
                                           EditorBase& aEditorBase,
                                           nsIPrincipal* aPrincipal) const {
   nsresult rv = aEditorBase.PasteAsQuotationAsAction(
-      nsIClipboard::kGlobalClipboard, EditorBase::DispatchPasteEvent::Yes,
-      aPrincipal);
+      nsIClipboard::kGlobalClipboard, true, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::PasteAsQuotationAsAction(nsIClipboard::"
-                       "kGlobalClipboard, DispatchPasteEvent::Yes) failed");
+                       "EditorBase::PasteAsQuotationAsAction() failed");
   return rv;
 }
 

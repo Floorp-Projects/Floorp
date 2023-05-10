@@ -160,9 +160,26 @@ nsresult TextEditor::InsertDroppedDataTransferAsAction(
   return rv;
 }
 
-nsresult TextEditor::HandlePaste(AutoEditActionDataSetter& aEditActionData,
-                                 int32_t aClipboardType) {
-  if (NS_WARN_IF(!GetDocument())) {
+nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
+                                   bool aDispatchPasteEvent,
+                                   nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
+                                          aPrincipal);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  if (aDispatchPasteEvent) {
+    if (!FireClipboardEvent(ePaste, aClipboardType)) {
+      return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+    }
+  } else {
+    // The caller must already have dispatched a "paste" event.
+    editActionData.NotifyOfDispatchingClipboardEvent();
+  }
+
+  if (!GetDocument()) {
+    NS_WARNING("The editor didn't have document, but ignored");
     return NS_OK;
   }
 
@@ -183,7 +200,7 @@ nsresult TextEditor::HandlePaste(AutoEditActionDataSetter& aEditActionData,
       EditorUtils::CreateTransferableForPlainText(*GetDocument());
   if (maybeTransferable.isErr()) {
     NS_WARNING("EditorUtils::CreateTransferableForPlainText() failed");
-    return maybeTransferable.unwrapErr();
+    return EditorBase::ToGenericNSResult(maybeTransferable.unwrapErr());
   }
   nsCOMPtr<nsITransferable> transferable(maybeTransferable.unwrap());
   if (NS_WARN_IF(!transferable)) {
@@ -205,22 +222,34 @@ nsresult TextEditor::HandlePaste(AutoEditActionDataSetter& aEditActionData,
   rv = InsertTextFromTransferable(transferable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "TextEditor::InsertTextFromTransferable() failed");
-  return rv;
+  return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult TextEditor::HandlePasteTransferable(
-    AutoEditActionDataSetter& aEditActionData, nsITransferable& aTransferable) {
+nsresult TextEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
+                                               nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
+                                          aPrincipal);
+  // The data will be initialized in InsertTextFromTransferable().  Therefore,
+  // we cannot dispatch "beforeinput" here.
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  // Use an invalid value for the clipboard type as data comes from
+  // aTransferable and we don't currently implement a way to put that in the
+  // data transfer yet.
+  if (!FireClipboardEvent(ePaste, -1)) {
+    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+  }
+
   if (!IsModifiable()) {
     return NS_OK;
   }
 
-  // FYI: The data of beforeinput will be initialized in
-  // InsertTextFromTransferable().  Therefore, here does not touch
-  // aEditActionData.
-  nsresult rv = InsertTextFromTransferable(&aTransferable);
+  nsresult rv = InsertTextFromTransferable(aTransferable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "TextEditor::InsertTextFromTransferable() failed");
-  return rv;
+  return EditorBase::ToGenericNSResult(rv);
 }
 
 bool TextEditor::CanPaste(int32_t aClipboardType) const {
