@@ -58,8 +58,6 @@ struct UniqueIdGCPolicy {
 using UniqueIdMap = GCHashMap<Cell*, uint64_t, PointerHasher<Cell*>,
                               SystemAllocPolicy, UniqueIdGCPolicy>;
 
-extern uint64_t NextCellUniqueId(JSRuntime* rt);
-
 template <typename T>
 class ZoneAllCellIter;
 
@@ -545,28 +543,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   BoundPrefixCache& boundPrefixCache() { return boundPrefixCache_.ref(); }
 
   js::ShapeZone& shapeZone() { return shapeZone_.ref(); }
-
-  // Gets an existing UID in |uidp| if one exists.
-  [[nodiscard]] bool maybeGetUniqueId(js::gc::Cell* cell, uint64_t* uidp);
-
-  // Puts an existing UID in |uidp|, or creates a new UID for this Cell and
-  // puts that into |uidp|. Returns false on OOM.
-  [[nodiscard]] bool getOrCreateUniqueId(js::gc::Cell* cell, uint64_t* uidp);
-
-  uint64_t getUniqueIdInfallible(js::gc::Cell* cell);
-
-  // Return true if this cell has a UID associated with it.
-  [[nodiscard]] bool hasUniqueId(js::gc::Cell* cell);
-
-  // Transfer an id from another cell. This must only be called on behalf of a
-  // moving GC. This method is infallible.
-  void transferUniqueId(js::gc::Cell* tgt, js::gc::Cell* src);
-
-  // Remove any unique id associated with this Cell.
-  void removeUniqueId(js::gc::Cell* cell);
-
-  // Used to restore unique ID after JSObject::swap.
-  bool setOrUpdateUniqueId(JSContext* cx, js::gc::Cell* cell, uint64_t uid);
 
   bool keepPropMapTables() const { return keepPropMapTables_; }
   void setKeepPropMapTables(bool b) { keepPropMapTables_ = b; }

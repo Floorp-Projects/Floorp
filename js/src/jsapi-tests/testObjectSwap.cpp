@@ -20,7 +20,7 @@
 #include "jsapi-tests/tests.h"
 #include "vm/PlainObject.h"
 
-#include "gc/Zone-inl.h"
+#include "gc/StableCellHasher-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;
@@ -110,11 +110,11 @@ BEGIN_TEST(testObjectSwap) {
 
         uint64_t uid1 = 0;
         if (config1.hasUniqueId) {
-          uid1 = cx->zone()->getUniqueIdInfallible(obj1);
+          uid1 = gc::GetUniqueIdInfallible(obj1);
         }
         uint64_t uid2 = 0;
         if (config2.hasUniqueId) {
-          uid2 = cx->zone()->getUniqueIdInfallible(obj2);
+          uid2 = gc::GetUniqueIdInfallible(obj2);
         }
 
         {
@@ -207,7 +207,7 @@ JSObject* CreateObject(const ObjectConfig& config, uint32_t* idOut) {
 
   if (config.hasUniqueId) {
     uint64_t unused;
-    if (!obj->zone()->getOrCreateUniqueId(obj, &unused)) {
+    if (!gc::GetOrCreateUniqueId(obj, &unused)) {
       return nullptr;
     }
   }
@@ -400,26 +400,23 @@ bool CheckUniqueIds(HandleObject obj1, bool hasUniqueId1, uint64_t uid1,
   CHECK(CheckUniqueId(obj2, hasUniqueId2, uid2));
 
   // Check unique IDs are different if present.
-  Zone* zone = cx->zone();
-  if (zone->hasUniqueId(obj1) && zone->hasUniqueId(obj2)) {
-    CHECK(zone->getUniqueIdInfallible(obj1) !=
-          zone->getUniqueIdInfallible(obj2));
+  if (gc::HasUniqueId(obj1) && gc::HasUniqueId(obj2)) {
+    CHECK(gc::GetUniqueIdInfallible(obj1) != gc::GetUniqueIdInfallible(obj2));
   }
 
   return true;
 }
 
 bool CheckUniqueId(HandleObject obj, bool hasUniqueId, uint64_t uid) {
-  Zone* zone = obj->zone();
   if (hasUniqueId) {
-    CHECK(zone->hasUniqueId(obj));
-    CHECK(zone->getUniqueIdInfallible(obj) == uid);
+    CHECK(gc::HasUniqueId(obj));
+    CHECK(gc::GetUniqueIdInfallible(obj) == uid);
   } else {
     // Swap may add a unique ID to an object.
   }
 
   if (obj->is<NativeObject>()) {
-    CHECK(!zone->uniqueIds().has(obj));
+    CHECK(!obj->zone()->uniqueIds().has(obj));
   }
   return true;
 }
