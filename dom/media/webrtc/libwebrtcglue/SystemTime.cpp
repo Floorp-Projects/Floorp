@@ -32,7 +32,8 @@ TimeStamp WebrtcSystemTimeBase() {
 webrtc::Timestamp WebrtcSystemTime() {
   const TimeStamp base = WebrtcSystemTimeBase();
   const TimeStamp now = TimeStamp::Now();
-  return webrtc::Timestamp::Micros((now - base).ToMicroseconds());
+  return webrtc::Timestamp::Micros((now - base).ToMicroseconds()) +
+         kWebrtcTimeOffset;
 }
 
 webrtc::NtpTime CreateNtp(webrtc::Timestamp aTime) {
