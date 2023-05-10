@@ -234,14 +234,16 @@ class HTMLEditor final : public EditorBase,
                                                       nsAString& aOutColor);
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
-    const nsresult rv = HTMLEditor::PasteAsAction(aClipboardType, true);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::PasteAsAction() failed");
+    const nsresult rv =
+        HTMLEditor::PasteAsAction(aClipboardType, DispatchPasteEvent::Yes);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::PasteAsAction(DispatchPasteEvent::Yes) failed");
     return rv;
   }
 
   MOZ_CAN_RUN_SCRIPT nsresult
-  PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
+  PasteAsAction(int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
                 nsIPrincipal* aPrincipal = nullptr) final;
 
   /**
@@ -257,9 +259,9 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult PasteNoFormattingAsAction(
       int32_t aSelectionType, nsIPrincipal* aPrincipal = nullptr);
 
-  MOZ_CAN_RUN_SCRIPT nsresult
-  PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
-                           nsIPrincipal* aPrincipal = nullptr) final;
+  MOZ_CAN_RUN_SCRIPT nsresult PasteAsQuotationAsAction(
+      int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
+      nsIPrincipal* aPrincipal = nullptr) final;
 
   bool CanPasteTransferable(nsITransferable* aTransferable) final;
 

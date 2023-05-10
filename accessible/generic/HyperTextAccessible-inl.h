@@ -84,7 +84,8 @@ inline void HyperTextAccessible::PasteText(int32_t aPosition) {
   RefPtr<EditorBase> editorBase = GetEditor();
   if (editorBase) {
     SetSelectionRange(aPosition, aPosition);
-    editorBase->PasteAsAction(nsIClipboard::kGlobalClipboard, true);
+    editorBase->PasteAsAction(nsIClipboard::kGlobalClipboard,
+                              EditorBase::DispatchPasteEvent::Yes);
   }
 }
 

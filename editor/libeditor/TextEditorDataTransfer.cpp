@@ -161,7 +161,7 @@ nsresult TextEditor::InsertDroppedDataTransferAsAction(
 }
 
 nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
-                                   bool aDispatchPasteEvent,
+                                   DispatchPasteEvent aDispatchPasteEvent,
                                    nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
                                           aPrincipal);
@@ -169,7 +169,7 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (aDispatchPasteEvent) {
+  if (aDispatchPasteEvent == DispatchPasteEvent::Yes) {
     Result<ClipboardEventResult, nsresult> ret =
         DispatchClipboardEventAndUpdateClipboard(ePaste, aClipboardType);
     if (MOZ_UNLIKELY(ret.isErr())) {
