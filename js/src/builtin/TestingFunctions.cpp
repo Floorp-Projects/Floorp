@@ -4997,6 +4997,305 @@ static mozilla::Maybe<JS::StructuredCloneScope> ParseCloneScope(
   return scope;
 }
 
+// A custom object that is serializable and transferable using
+// the engine's custom hooks. The callbacks log their activity
+// to a JSRuntime-wide log (tagging actions with IDs to distinguish them).
+class CustomSerializableObject : public NativeObject {
+  static const size_t ID_SLOT = 0;
+  static const size_t DETACHED_SLOT = 1;
+  static const size_t BEHAVIOR_SLOT = 2;
+  static const size_t NUM_SLOTS = 3;
+
+  static constexpr size_t MAX_LOG_LEN = 100;
+
+  // The activity log should be specific to a JSRuntime.
+  struct ActivityLog {
+    uint32_t buffer[MAX_LOG_LEN];
+    size_t length = 0;
+
+    static MOZ_THREAD_LOCAL(ActivityLog*) self;
+    static ActivityLog* getThreadLog() {
+      if (!self.initialized() || !self.get()) {
+        self.infallibleInit();
+        self.set(js_new<ActivityLog>());
+        MOZ_RELEASE_ASSERT(self.get());
+      }
+      return self.get();
+    }
+
+    static bool log(int32_t id, char action) {
+      return getThreadLog()->logImpl(id, action);
+    }
+
+    bool logImpl(int32_t id, char action) {
+      if (length + 2 > MAX_LOG_LEN) {
+        return false;
+      }
+      buffer[length++] = id;
+      buffer[length++] = uint32_t(action);
+      return true;
+    }
+  };
+
+ public:
+  enum class Behavior {
+    Nothing = 0,
+    FailDuringReadTransfer = 1,
+    FailDuringRead = 2
+  };
+
+  static constexpr JSClass class_ = {"CustomSerializable",
+                                     JSCLASS_HAS_RESERVED_SLOTS(NUM_SLOTS)};
+
+  static bool is(HandleValue v) {
+    return v.isObject() && v.toObject().is<CustomSerializableObject>();
+  }
+
+  static CustomSerializableObject* Create(JSContext* cx, int32_t id,
+                                          Behavior behavior) {
+    Rooted<CustomSerializableObject*> obj(
+        cx, static_cast<CustomSerializableObject*>(JS_NewObject(cx, &class_)));
+    if (!obj) {
+      return nullptr;
+    }
+    obj->setReservedSlot(ID_SLOT, Int32Value(id));
+    obj->setReservedSlot(DETACHED_SLOT, BooleanValue(false));
+    obj->setReservedSlot(BEHAVIOR_SLOT,
+                         Int32Value(static_cast<int32_t>(behavior)));
+
+    if (!JS_DefineProperty(cx, obj, "log", getLog, clearLog, 0)) {
+      return nullptr;
+    }
+
+    return obj;
+  }
+
+ public:
+  static uint32_t tag() { return JS_SCTAG_USER_MIN; }
+
+  static bool log(int32_t id, char action) {
+    return ActivityLog::log(id, action);
+  }
+  bool log(char action) {
+    return log(getReservedSlot(ID_SLOT).toInt32(), action);
+  }
+
+  void detach() { setReservedSlot(DETACHED_SLOT, BooleanValue(true)); }
+  bool isDetached() { return getReservedSlot(DETACHED_SLOT).toBoolean(); }
+
+  uint32_t id() const { return getReservedSlot(ID_SLOT).toInt32(); }
+  Behavior behavior() {
+    return static_cast<Behavior>(getReservedSlot(BEHAVIOR_SLOT).toInt32());
+  }
+
+  static bool getLog(JSContext* cx, unsigned int argc, JS::Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<is, getLog_impl>(cx, args);
+  }
+
+  static bool getLog_impl(JSContext* cx, const CallArgs& args) {
+    Rooted<CustomSerializableObject*> obj(
+        cx, &args.thisv().toObject().as<CustomSerializableObject>());
+
+    size_t len = ActivityLog::getThreadLog()->length;
+    uint32_t* logBuffer = ActivityLog::getThreadLog()->buffer;
+
+    Rooted<ArrayObject*> result(cx, NewDenseFullyAllocatedArray(cx, len));
+    if (!result) {
+      return false;
+    }
+    result->ensureDenseInitializedLength(0, len);
+
+    for (size_t p = 0; p < len; p += 2) {
+      int32_t id = int32_t(logBuffer[p]);
+      char action = char(logBuffer[p + 1]);
+      result->setDenseElement(p, Int32Value(id));
+      JSString* str = JS_NewStringCopyN(cx, &action, 1);
+      if (!str) {
+        return false;
+      }
+      result->setDenseElement(p + 1, StringValue(str));
+    }
+
+    args.rval().setObject(*result);
+    return true;
+  }
+
+  static bool clearLog(JSContext* cx, unsigned int argc, JS::Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.get(0).isNullOrUndefined()) {
+      JS_ReportErrorASCII(cx, "log may only be assigned null/undefined");
+      return false;
+    }
+    ActivityLog::getThreadLog()->length = 0;
+    args.rval().setUndefined();
+    return true;
+  }
+
+  static bool Write(JSContext* cx, JSStructuredCloneWriter* w,
+                    JS::HandleObject aObj, bool* sameProcessScopeRequired,
+                    void* closure) {
+    Rooted<CustomSerializableObject*> obj(cx);
+
+    if ((obj = aObj->maybeUnwrapIf<CustomSerializableObject>())) {
+      obj->log('w');
+      // Write a regular clone as a <tag, id> pair, followed by <0, behavior>.
+      // Note that transferring will communicate the behavior via a different
+      // mechanism.
+      return JS_WriteUint32Pair(w, obj->tag(), obj->id()) &&
+             JS_WriteUint32Pair(w, 0, static_cast<uint32_t>(obj->behavior()));
+    }
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SC_UNSUPPORTED_TYPE);
+    return false;
+  }
+
+  static JSObject* Read(JSContext* cx, JSStructuredCloneReader* r,
+                        const JS::CloneDataPolicy& cloneDataPolicy,
+                        uint32_t tag, uint32_t id, void* closure) {
+    uint32_t dummy, behaviorData;
+    if (!JS_ReadUint32Pair(r, &dummy, &behaviorData)) {
+      return nullptr;
+    }
+    if (dummy != 0 || id > INT32_MAX) {
+      JS_ReportErrorASCII(cx, "out of range");
+      return nullptr;
+    }
+
+    auto b = static_cast<Behavior>(behaviorData);
+    Rooted<CustomSerializableObject*> obj(
+        cx, Create(cx, static_cast<int32_t>(id), b));
+    if (!obj) {
+      return nullptr;
+    }
+
+    obj->log('r');
+    if (obj->behavior() == Behavior::FailDuringRead) {
+      JS_ReportErrorASCII(cx,
+                          "Failed as requested in read during deserialization");
+      return nullptr;
+    }
+    return obj;
+  }
+
+  static bool CanTransfer(JSContext* cx, JS::Handle<JSObject*> wrapped,
+                          bool* sameProcessScopeRequired, void* closure) {
+    Rooted<CustomSerializableObject*> obj(cx);
+
+    if ((obj = wrapped->maybeUnwrapIf<CustomSerializableObject>())) {
+      obj->log('?');
+      // For now, all CustomSerializable objects are considered to be
+      // transferable.
+      return true;
+    }
+
+    return false;
+  }
+
+  static bool WriteTransfer(JSContext* cx, JS::Handle<JSObject*> aObj,
+                            void* closure, uint32_t* tag,
+                            JS::TransferableOwnership* ownership,
+                            void** content, uint64_t* extraData) {
+    Rooted<CustomSerializableObject*> obj(cx);
+
+    if ((obj = aObj->maybeUnwrapIf<CustomSerializableObject>())) {
+      if (obj->isDetached()) {
+        JS_ReportErrorASCII(cx, "Attempted to transfer detached object");
+        return false;
+      }
+      obj->log('W');
+      *content = reinterpret_cast<void*>(obj->id());
+      *extraData = static_cast<uint64_t>(obj->behavior());
+      *tag = obj->tag();
+      *ownership = JS::SCTAG_TMO_CUSTOM;
+      obj->detach();
+      return true;
+    }
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SC_NOT_TRANSFERABLE);
+    return false;
+  }
+
+  static bool ReadTransfer(JSContext* cx, JSStructuredCloneReader* r,
+                           uint32_t tag, void* content, uint64_t extraData,
+                           void* closure,
+                           JS::MutableHandleObject returnObject) {
+    if (tag == CustomSerializableObject::tag()) {
+      int32_t id = int32_t(reinterpret_cast<uintptr_t>(content));
+      Rooted<CustomSerializableObject*> obj(
+          cx, CustomSerializableObject::Create(
+                  cx, id, static_cast<Behavior>(extraData)));
+      if (!obj) {
+        return false;
+      }
+      obj->log('R');
+      if (obj->behavior() == Behavior::FailDuringReadTransfer) {
+        return false;
+      }
+      returnObject.set(obj);
+      return true;
+    }
+
+    return false;
+  }
+
+  static void FreeTransfer(uint32_t tag, JS::TransferableOwnership ownership,
+                           void* content, uint64_t extraData, void* closure) {
+    CustomSerializableObject::log(uint32_t(reinterpret_cast<intptr_t>(content)),
+                                  'F');
+  }
+};
+
+MOZ_THREAD_LOCAL(CustomSerializableObject::ActivityLog*)
+CustomSerializableObject::ActivityLog::self;
+
+static bool MakeSerializable(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  int32_t id = 0;
+  if (args.get(0).isInt32()) {
+    id = args[0].toInt32();
+    if (id < 0) {
+      JS_ReportErrorASCII(cx, "id out of range");
+      return false;
+    }
+  }
+  CustomSerializableObject::Behavior behavior =
+      CustomSerializableObject::Behavior::Nothing;
+  if (args.get(1).isInt32()) {
+    int32_t iv = args[1].toInt32();
+    constexpr int32_t min =
+        static_cast<int32_t>(CustomSerializableObject::Behavior::Nothing);
+    constexpr int32_t max = static_cast<int32_t>(
+        CustomSerializableObject::Behavior::FailDuringRead);
+    if (iv < min || iv > max) {
+      JS_ReportErrorASCII(cx, "behavior out of range");
+      return false;
+    }
+    behavior = static_cast<CustomSerializableObject::Behavior>(iv);
+  }
+
+  JSObject* obj = CustomSerializableObject::Create(cx, id, behavior);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
+static JSStructuredCloneCallbacks gCloneCallbacks = {
+    .read = CustomSerializableObject::Read,
+    .write = CustomSerializableObject::Write,
+    .reportError = nullptr,
+    .readTransfer = CustomSerializableObject::ReadTransfer,
+    .writeTransfer = CustomSerializableObject::WriteTransfer,
+    .freeTransfer = CustomSerializableObject::FreeTransfer,
+    .canTransfer = CustomSerializableObject::CanTransfer,
+    .sabCloned = nullptr};
+
 bool js::testingFunc_serialize(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -5056,12 +5355,13 @@ bool js::testingFunc_serialize(JSContext* cx, unsigned argc, Value* vp) {
         JS_ReportErrorASCII(cx, "Invalid structured clone scope");
         return false;
       }
-      clonebuf.emplace(*scope, nullptr, nullptr);
+      clonebuf.emplace(*scope, &gCloneCallbacks, nullptr);
     }
   }
 
   if (!clonebuf) {
-    clonebuf.emplace(JS::StructuredCloneScope::SameProcess, nullptr, nullptr);
+    clonebuf.emplace(JS::StructuredCloneScope::SameProcess, &gCloneCallbacks,
+                     nullptr);
   }
 
   if (!clonebuf->write(cx, args.get(0), args.get(1), policy)) {
@@ -5172,7 +5472,8 @@ static bool Deserialize(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedValue deserialized(cx);
   if (!JS_ReadStructuredClone(cx, *obj->data(), JS_STRUCTURED_CLONE_VERSION,
-                              scope, &deserialized, policy, nullptr, nullptr)) {
+                              scope, &deserialized, policy, &gCloneCallbacks,
+                              nullptr)) {
     return false;
   }
   args.rval().set(deserialized);
@@ -8975,6 +9276,23 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 "detachArrayBuffer(buffer)",
 "  Detach the given ArrayBuffer object from its memory, i.e. as if it\n"
 "  had been transferred to a WebWorker."),
+
+    JS_FN_HELP("makeSerializable", MakeSerializable, 1, 0,
+"makeSerializable(numeric id, [behavior])",
+"  Make a custom serializable, transferable object. It will have a single accessor\n"
+"  obj.log that will give a history of all operations on all such objects in the\n"
+"  current thread as an array [id, action, id, action, ...] where the id\n"
+"  is the number passed into this function, and the action is one of:\n"
+"     ? - the canTransfer() hook was called.\n"
+"     w - the write() hook was called.\n"
+"     W - the writeTransfer() hook was called.\n"
+"     R - the readTransfer() hook was called.\n"
+"     r - the read() hook was called.\n"
+"     F - the freeTransfer() hook was called.\n"
+"  The `behavior` parameter can be used to force a failure during processing:\n"
+"     1 - fail during readTransfer() hook\n"
+"     2 - fail during read() hook\n"
+"  Set the log to null to clear it."),
 
     JS_FN_HELP("helperThreadCount", HelperThreadCount, 0, 0,
 "helperThreadCount()",

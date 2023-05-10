@@ -252,7 +252,10 @@ class CloneDataPolicy {
  * tag and data are the pair of uint32_t values from the header. The callback
  * may use the JS_Read* APIs to read any other relevant parts of the object
  * from the reader r. closure is any value passed to the JS_ReadStructuredClone
- * function. Return the new object on success, nullptr on error/exception.
+ * function.
+ *
+ * Return the new object on success, or raise an exception and return nullptr on
+ * error.
  */
 typedef JSObject* (*ReadStructuredCloneOp)(
     JSContext* cx, JSStructuredCloneReader* r,
@@ -269,7 +272,8 @@ typedef JSObject* (*ReadStructuredCloneOp)(
  * the value v to the writer w. closure is any value passed to the
  * JS_WriteStructuredClone function.
  *
- * Return true on success, false on error/exception.
+ * Return true on success, false on error. On error, an exception should
+ * normally be set.
  */
 typedef bool (*WriteStructuredCloneOp)(JSContext* cx,
                                        JSStructuredCloneWriter* w,
@@ -303,6 +307,10 @@ typedef void (*StructuredCloneErrorOp)(JSContext* cx, uint32_t errorid,
  * JS engine calls the reportError op if set, otherwise it throws a
  * DATA_CLONE_ERR DOM Exception. This method is called before any other
  * callback and must return a non-null object in returnObject on success.
+ *
+ * If this readTransfer() hook is called and produces an object, then the
+ * read() hook will *not* be called for the same object, since the main data
+ * will only contain a backreference to the already-read object.
  */
 typedef bool (*ReadTransferStructuredCloneOp)(
     JSContext* cx, JSStructuredCloneReader* r, uint32_t tag, void* content,
