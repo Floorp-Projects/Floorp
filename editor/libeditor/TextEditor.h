@@ -125,9 +125,11 @@ class TextEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() final;
   NS_IMETHOD GetTextLength(uint32_t* aCount) final;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
-    const nsresult rv = TextEditor::PasteAsAction(aClipboardType, true);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::PasteAsAction() failed");
+    const nsresult rv =
+        TextEditor::PasteAsAction(aClipboardType, DispatchPasteEvent::Yes);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::PasteAsAction(DispatchPasteEvent::Yes) failed");
     return rv;
   }
 
@@ -153,12 +155,14 @@ class TextEditor final : public EditorBase,
   dom::EventTarget* GetDOMEventTarget() const final;
 
   MOZ_CAN_RUN_SCRIPT nsresult
-  PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
+  PasteAsAction(int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
                 nsIPrincipal* aPrincipal = nullptr) final;
 
-  MOZ_CAN_RUN_SCRIPT nsresult
-  PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
-                           nsIPrincipal* aPrincipal = nullptr) final;
+  // FIXME: Even if called with DispatchPasteEvent::Yes, this method does not
+  //        dispatch ePaste event.
+  MOZ_CAN_RUN_SCRIPT nsresult PasteAsQuotationAsAction(
+      int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
+      nsIPrincipal* aPrincipal = nullptr) final;
 
   MOZ_CAN_RUN_SCRIPT nsresult
   OnFocus(const nsINode& aOriginalEventTargetNode) final;

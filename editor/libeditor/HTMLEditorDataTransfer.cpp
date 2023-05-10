@@ -2262,7 +2262,7 @@ HTMLEditor::HavePrivateHTMLFlavor HTMLEditor::ClipboardHasPrivateHTMLFlavor(
 }
 
 nsresult HTMLEditor::PasteAsAction(int32_t aClipboardType,
-                                   bool aDispatchPasteEvent,
+                                   DispatchPasteEvent aDispatchPasteEvent,
                                    nsIPrincipal* aPrincipal) {
   if (IsReadonly()) {
     return NS_OK;
@@ -2274,7 +2274,7 @@ nsresult HTMLEditor::PasteAsAction(int32_t aClipboardType,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (aDispatchPasteEvent) {
+  if (aDispatchPasteEvent == DispatchPasteEvent::Yes) {
     Result<ClipboardEventResult, nsresult> ret =
         DispatchClipboardEventAndUpdateClipboard(ePaste, aClipboardType);
     if (MOZ_UNLIKELY(ret.isErr())) {
@@ -2674,9 +2674,9 @@ bool HTMLEditor::CanPasteTransferable(nsITransferable* aTransferable) {
   return false;
 }
 
-nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
-                                              bool aDispatchPasteEvent,
-                                              nsIPrincipal* aPrincipal) {
+nsresult HTMLEditor::PasteAsQuotationAsAction(
+    int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
+    nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
              aClipboardType == nsIClipboard::kSelectionClipboard);
 
@@ -2692,7 +2692,7 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (aDispatchPasteEvent) {
+  if (aDispatchPasteEvent == DispatchPasteEvent::Yes) {
     Result<ClipboardEventResult, nsresult> ret =
         DispatchClipboardEventAndUpdateClipboard(ePaste, aClipboardType);
     if (MOZ_UNLIKELY(ret.isErr())) {
