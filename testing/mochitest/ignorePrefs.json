@@ -1,4 +1,5 @@
 [
+  "app.normandy.first_run",
   "app.update.lastUpdateTime.addon-background-update-timer",
   "app.update.lastUpdateTime.background-update-timer",
   "app.update.lastUpdateTime.browser-cleanup-thumbnails",
