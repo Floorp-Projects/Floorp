@@ -346,7 +346,7 @@ PasswordStore.prototype = {
         "formSubmitURL: " +
         JSON.stringify(login.formActionOrigin)
     );
-    Services.logins.addLogin(login);
+    await Services.logins.addLoginAsync(login);
   },
 
   async remove(record) {
