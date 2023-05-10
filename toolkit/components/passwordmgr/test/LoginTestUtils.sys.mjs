@@ -64,13 +64,7 @@ export const LoginTestUtils = {
       username,
       password,
     });
-    let storageChangedPromised = TestUtils.topicObserved(
-      "passwordmgr-storage-changed",
-      (_, data) => data == "addLogin"
-    );
-    Services.logins.addLogin(login);
-    let [savedLogin] = await storageChangedPromised;
-    return savedLogin;
+    return Services.logins.addLoginAsync(login);
   },
 
   async modifyLogin(oldLogin, newLogin) {

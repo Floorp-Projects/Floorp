@@ -419,7 +419,7 @@ add_task(async function test_noPasswordField() {
 
 add_task(async function test_pwOnlyNewLoginMatchesUPForm() {
   info("Check for update popup when new existing pw-only login matches form.");
-  Services.logins.addLogin(login2);
+  await Services.logins.addLoginAsync(login2);
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
     async function(fieldValues) {
@@ -473,7 +473,7 @@ add_task(async function test_pwOnlyNewLoginMatchesUPForm() {
 
 add_task(async function test_pwOnlyOldLoginMatchesUPForm() {
   info("Check for update popup when old existing pw-only login matches form.");
-  Services.logins.addLogin(login2);
+  await Services.logins.addLoginAsync(login2);
 
   // Change the timePasswordChanged to be old so that the password won't be
   // revealed in the doorhanger.
@@ -542,7 +542,7 @@ add_task(async function test_pwOnlyFormMatchesLogin() {
   info(
     "Check for no notification popup when pw-only form matches existing login."
   );
-  Services.logins.addLogin(login1);
+  await Services.logins.addLoginAsync(login1);
 
   await testSubmittingLoginFormHTTP("subtst_notifications_6.html", function(
     fieldValues
@@ -571,7 +571,7 @@ add_task(async function test_pwOnlyFormDoesntMatchExisting() {
   info(
     "Check for notification popup when pw-only form doesn't match existing login."
   );
-  Services.logins.addLogin(login1B);
+  await Services.logins.addLoginAsync(login1B);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_6.html",
@@ -601,7 +601,7 @@ add_task(async function test_pwOnlyFormDoesntMatchExisting() {
 
 add_task(async function test_changeUPLoginOnUPForm_dont() {
   info("Check for change-password popup, u+p login on u+p form. (not changed)");
-  Services.logins.addLogin(login1);
+  await Services.logins.addLoginAsync(login1);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_8.html",
@@ -642,7 +642,7 @@ add_task(async function test_changeUPLoginOnUPForm_dont() {
 
 add_task(async function test_changeUPLoginOnUPForm_remove() {
   info("Check for change-password popup, u+p login on u+p form. (remove)");
-  Services.logins.addLogin(login1);
+  await Services.logins.addLoginAsync(login1);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_8.html",
@@ -683,7 +683,7 @@ add_task(async function test_changeUPLoginOnUPForm_remove() {
 
 add_task(async function test_changeUPLoginOnUPForm_change() {
   info("Check for change-password popup, u+p login on u+p form.");
-  Services.logins.addLogin(login1);
+  await Services.logins.addLoginAsync(login1);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_8.html",
@@ -739,7 +739,7 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
 
 add_task(async function test_changePLoginOnUPForm() {
   info("Check for change-password popup, p-only login on u+p form (empty u).");
-  Services.logins.addLogin(login2);
+  await Services.logins.addLoginAsync(login2);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_9.html",
@@ -927,7 +927,7 @@ add_task(async function test_change2pw0unExistingDifferentUP() {
       "is submitted and there is a saved login with a username and different password."
   );
 
-  Services.logins.addLogin(login1B);
+  await Services.logins.addLoginAsync(login1B);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_0un.html",
@@ -961,7 +961,7 @@ add_task(async function test_change2pw0unExistingDifferentP() {
       "is submitted and there is a saved login with no username and different password."
   );
 
-  Services.logins.addLogin(login2B);
+  await Services.logins.addLoginAsync(login2B);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_0un.html",
@@ -995,7 +995,7 @@ add_task(async function test_change2pw0unExistingWithSameP() {
       "is submitted and there is a saved login with a username and the same password."
   );
 
-  Services.logins.addLogin(login2);
+  await Services.logins.addLoginAsync(login2);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_0un.html",
@@ -1025,7 +1025,7 @@ add_task(async function test_change2pw0unExistingWithSameP() {
 
 add_task(async function test_changeUPLoginOnPUpdateForm() {
   info("Check for change-password popup, u+p login on password update form.");
-  Services.logins.addLogin(login1);
+  await Services.logins.addLoginAsync(login1);
 
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_change_p.html",
