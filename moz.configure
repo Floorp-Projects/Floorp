@@ -498,49 +498,6 @@ def awk_for_old_configure(value):
 add_old_configure_assignment("AWK", awk_for_old_configure)
 
 
-# Perl detection
-# ==============================================================
-perl = check_prog("PERL", ("perl5", "perl"))
-
-
-@template
-def perl_version_check(min_version):
-    @depends(perl)
-    @checking("for minimum required perl version >= %s" % min_version)
-    def get_perl_version(perl):
-        return Version(
-            check_cmd_output(
-                perl,
-                "-e",
-                "print $]",
-                onerror=lambda: die("Failed to get perl version."),
-            )
-        )
-
-    @depends(get_perl_version)
-    def check_perl_version(version):
-        if version < min_version:
-            die("Perl %s or higher is required.", min_version)
-
-    @depends(perl)
-    @checking("for full perl installation")
-    @imports("subprocess")
-    def has_full_perl_installation(perl):
-        ret = subprocess.call([perl, "-e", "use Config; exit(!-d $Config{archlib})"])
-        return ret == 0
-
-    @depends(has_full_perl_installation)
-    def require_full_perl_installation(has_full_perl_installation):
-        if not has_full_perl_installation:
-            die(
-                "Cannot find Config.pm or $Config{archlib}. "
-                "A full perl installation is required."
-            )
-
-
-perl_version_check("5.006")
-
-
 # GNU make detection
 # ==============================================================
 option(env="MAKE", nargs=1, help="Path to GNU make")
