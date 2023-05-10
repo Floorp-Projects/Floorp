@@ -345,14 +345,6 @@ class TestPreprocessor(unittest.TestCase):
                 self.pp.do_include("f")
                 self.assertEqual(e.args[0][-1], "spit this message out")
 
-    def test_ambigous_command(self):
-        comment = "# if I tell you a joke\n"
-        with MockedOpen({"f": comment}):
-            with self.assertRaises(Preprocessor.Error) as e:
-                self.pp.do_include("f")
-            the_exception = e.exception
-            self.assertEqual(the_exception.args[0][-1], comment)
-
     def test_javascript_line(self):
         # The preprocessor is reading the filename from somewhere not caught
         # by MockedOpen.
