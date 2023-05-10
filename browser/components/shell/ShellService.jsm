@@ -312,6 +312,7 @@ let ShellServiceInternal = {
       });
       telemetryResult = "ErrOther";
       this._handleWDBAResult(exeProcess);
+      telemetryResult = "Success";
     } catch (ex) {
       if (ex instanceof WDBAError) {
         telemetryResult = ex.telemetryResult;
@@ -349,6 +350,7 @@ let ShellServiceInternal = {
       });
       telemetryResult = "ErrOther";
       this._handleWDBAResult(exeProcess);
+      telemetryResult = "Success";
     } catch (ex) {
       if (ex instanceof WDBAError) {
         telemetryResult = ex.telemetryResult;
