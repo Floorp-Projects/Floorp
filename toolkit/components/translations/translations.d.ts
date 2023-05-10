@@ -304,3 +304,5 @@ export interface SupportedLanguages {
   fromLanguages: Array<{ langTag: string, isBeta: boolean, displayName: string, }>,
   toLanguages: Array<{ langTag: string, isBeta: boolean, displayName: string }>,
 }
+
+export type TranslationErrors = "engine-load-error";

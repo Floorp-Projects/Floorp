@@ -68,6 +68,7 @@ const VERIFY_SIGNATURES_FROM_FS = false;
  * @typedef {import("../translations").LanguagePair} LanguagePair
  * @typedef {import("../translations").SupportedLanguages} SupportedLanguages
  * @typedef {import("../translations").LanguageIdModelRecord} LanguageIdModelRecord
+ * @typedef {import("../translations").TranslationErrors} TranslationErrors
  */
 
 /**
@@ -267,8 +268,7 @@ export class TranslationsParent extends JSWindowActorParent {
         return TranslationsParent.getIsTranslationsEngineSupported();
       }
       case "Translations:FullPageTranslationFailed": {
-        // Reset the TranslationsLanguageState in case of an engine failure.
-        this.languageState.requestedTranslationPair = null;
+        this.languageState.error = data.reason;
         break;
       }
       case "Translations:GetLanguageTranslationModelFiles": {
@@ -713,6 +713,10 @@ export class TranslationsParent extends JSWindowActorParent {
           )}`,
       }
     );
+
+    if (translationModelRecords.length === 0) {
+      throw new Error("Unable to retrieve the translation models.");
+    }
 
     for (const record of TranslationsParent.ensureLanguagePairsHavePivots(
       translationModelRecords
@@ -1378,67 +1382,33 @@ function detectSimdSupport() {
  * the UI.
  */
 class TranslationsLanguageState {
-  #actor;
+  /**
+   * @param {TranslationsParent} actor
+   */
   constructor(actor) {
     this.#actor = actor;
     this.dispatch();
   }
 
+  /**
+   * The data members for TranslationsLanguageState, see the getters for their
+   * documentation.
+   */
+
+  /** @type {TranslationsParent} */
+  #actor;
+
   /** @type {TranslationPair | null} */
   #requestedTranslationPair = null;
-
-  /**
-   * When a translation is requested, this contains the translation pair. This means
-   * that the TranslationsChild should be creating a TranslationsDocument and keep
-   * the page updated with the target language.
-   *
-   * @returns {TranslationPair | null}
-   */
-  get requestedTranslationPair() {
-    return this.#requestedTranslationPair;
-  }
-
-  set requestedTranslationPair(requestedTranslationPair) {
-    this.#requestedTranslationPair = requestedTranslationPair;
-    this.dispatch();
-  }
 
   /** @type {DetectedLanguages | null} */
   #detectedLanguages = null;
 
-  /**
-   * The TranslationsChild will detect languages and offer them up for translation.
-   * The results are stored here.
-   *
-   * @returns {DetectedLanguages | null}
-   */
-  get detectedLanguages() {
-    return this.#detectedLanguages;
-  }
-
-  set detectedLanguages(detectedLanguages) {
-    this.#detectedLanguages = detectedLanguages;
-    this.dispatch();
-  }
-
   /** @type {number} */
   #locationChangeId = -1;
 
-  /**
-   * This id represents the last location change that happened for this actor. This
-   * allows the UI to disambiguate when there are races and out of order events that
-   * are dispatched. Only the most up to date `locationChangeId` is used.
-   *
-   * @returns {number}
-   */
-  get locationChangeId() {
-    return this.#locationChangeId;
-  }
-
-  set locationChangeId(locationChangeId) {
-    this.#locationChangeId = locationChangeId;
-    this.dispatch();
-  }
+  /** @type {null | TranslationErrors} */
+  #error = null;
 
   /**
    * Dispatch anytime the language details change, so that any UI can react to it.
@@ -1460,9 +1430,76 @@ class TranslationsLanguageState {
         detail: {
           detectedLanguages: this.#detectedLanguages,
           requestedTranslationPair: this.#requestedTranslationPair,
+          error: this.#error,
         },
       })
     );
+  }
+
+  /**
+   * When a translation is requested, this contains the translation pair. This means
+   * that the TranslationsChild should be creating a TranslationsDocument and keep
+   * the page updated with the target language.
+   *
+   * @returns {TranslationPair | null}
+   */
+  get requestedTranslationPair() {
+    return this.#requestedTranslationPair;
+  }
+
+  set requestedTranslationPair(requestedTranslationPair) {
+    this.#error = null;
+    this.#requestedTranslationPair = requestedTranslationPair;
+    this.dispatch();
+  }
+
+  /**
+   * The TranslationsChild will detect languages and offer them up for translation.
+   * The results are stored here.
+   *
+   * @returns {DetectedLanguages | null}
+   */
+  get detectedLanguages() {
+    return this.#detectedLanguages;
+  }
+
+  set detectedLanguages(detectedLanguages) {
+    this.#detectedLanguages = detectedLanguages;
+    this.dispatch();
+  }
+
+  /**
+   * This id represents the last location change that happened for this actor. This
+   * allows the UI to disambiguate when there are races and out of order events that
+   * are dispatched. Only the most up to date `locationChangeId` is used.
+   *
+   * @returns {number}
+   */
+  get locationChangeId() {
+    return this.#locationChangeId;
+  }
+
+  set locationChangeId(locationChangeId) {
+    this.#locationChangeId = locationChangeId;
+
+    // When the location changes remove the previous error.
+    this.#error = null;
+
+    this.dispatch();
+  }
+
+  /**
+   * The last error that occured during translation.
+   */
+  get error() {
+    return this.#error;
+  }
+
+  set error(error) {
+    this.#error = error;
+    // Setting an error invalidates the requested translation pair.
+    this.#requestedTranslationPair = null;
+    this.dispatch();
   }
 }
 
