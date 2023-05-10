@@ -32,8 +32,6 @@ const TEST_URI = `https://example.org/document-builder.sjs?html=
 <iframe src="${encodeURI(TEST_COM_URI)}"></iframe><body>`;
 
 add_task(async function() {
-  // Enable features
-  await pushPref("devtools.debugger.features.dom-mutation-breakpoints", true);
   await pushPref("devtools.markup.mutationBreakpoints.enabled", true);
   await pushPref("devtools.debugger.dom-mutation-breakpoints-visible", true);
 
