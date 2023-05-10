@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "Adapter.h"
 
@@ -21,73 +20,6 @@ bool AdapterInfo::WrapObject(JSContext* const cx,
                              JS::Handle<JSObject*> givenProto,
                              JS::MutableHandle<JSObject*> reflector) {
   return dom::GPUAdapterInfo_Binding::Wrap(cx, this, givenProto, reflector);
-}
-
-void AdapterInfo::GetWgpuName(nsString& s) const {
-  s = mAboutSupportInfo->name;
-}
-
-size_t AdapterInfo::WgpuVendor() const { return mAboutSupportInfo->vendor; }
-
-size_t AdapterInfo::WgpuDevice() const { return mAboutSupportInfo->device; }
-
-void AdapterInfo::GetWgpuDeviceType(nsString& s) const {
-  switch (mAboutSupportInfo->device_type) {
-    case ffi::WGPUDeviceType_Cpu:
-      s.AssignLiteral("Cpu");
-      return;
-    case ffi::WGPUDeviceType_DiscreteGpu:
-      s.AssignLiteral("DiscreteGpu");
-      return;
-    case ffi::WGPUDeviceType_IntegratedGpu:
-      s.AssignLiteral("IntegratedGpu");
-      return;
-    case ffi::WGPUDeviceType_VirtualGpu:
-      s.AssignLiteral("VirtualGpu");
-      return;
-    case ffi::WGPUDeviceType_Other:
-      s.AssignLiteral("Other");
-      return;
-    case ffi::WGPUDeviceType_Sentinel:
-      break;
-  }
-  MOZ_CRASH("Bad `ffi::WGPUDeviceType`");
-}
-
-void AdapterInfo::GetWgpuDriver(nsString& s) const {
-  s = mAboutSupportInfo->driver;
-}
-
-void AdapterInfo::GetWgpuDriverInfo(nsString& s) const {
-  s = mAboutSupportInfo->driver_info;
-}
-
-void AdapterInfo::GetWgpuBackend(nsString& s) const {
-  switch (mAboutSupportInfo->backend) {
-    case ffi::WGPUBackend_Empty:
-      s.AssignLiteral("Empty");
-      return;
-    case ffi::WGPUBackend_Vulkan:
-      s.AssignLiteral("Vulkan");
-      return;
-    case ffi::WGPUBackend_Metal:
-      s.AssignLiteral("Metal");
-      return;
-    case ffi::WGPUBackend_Dx12:
-      s.AssignLiteral("Dx12");
-      return;
-    case ffi::WGPUBackend_Dx11:
-      s.AssignLiteral("Dx11");
-      return;
-    case ffi::WGPUBackend_Gl:
-      s.AssignLiteral("Gl");
-      return;
-    case ffi::WGPUBackend_BrowserWebGpu:  // This should never happen, because
-                                          // we _are_ the browser.
-    case ffi::WGPUBackend_Sentinel:
-      break;
-  }
-  MOZ_CRASH("Bad `ffi::WGPUBackend`");
 }
 
 // -
@@ -119,29 +51,29 @@ Maybe<uint32_t> Adapter::MakeFeatureBits(
 }
 
 Adapter::Adapter(Instance* const aParent, WebGPUChild* const aBridge,
-                 const std::shared_ptr<ffi::WGPUAdapterInformation>& aInfo)
+                 const ffi::WGPUAdapterInformation& aInfo)
     : ChildOf(aParent),
       mBridge(aBridge),
-      mId(aInfo->id),
+      mId(aInfo.id),
       mFeatures(new SupportedFeatures(this)),
-      mLimits(new SupportedLimits(this,
-                                  MakeUnique<ffi::WGPULimits>(aInfo->limits))),
-      mInfo(aInfo) {
+      mLimits(
+          new SupportedLimits(this, MakeUnique<ffi::WGPULimits>(aInfo.limits))),
+      mIsFallbackAdapter(aInfo.ty == ffi::WGPUDeviceType_Cpu) {
   ErrorResult result;  // TODO: should this come from outside
   // This list needs to match `AdapterRequestDevice`
-  if (aInfo->features & WGPUFeatures_DEPTH_CLIP_CONTROL) {
+  if (aInfo.features & WGPUFeatures_DEPTH_CLIP_CONTROL) {
     dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(
         mFeatures, u"depth-clip-control"_ns, result);
   }
-  if (aInfo->features & WGPUFeatures_TEXTURE_COMPRESSION_BC) {
+  if (aInfo.features & WGPUFeatures_TEXTURE_COMPRESSION_BC) {
     dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(
         mFeatures, u"texture-compression-bc"_ns, result);
   }
-  if (aInfo->features & WGPUFeatures_INDIRECT_FIRST_INSTANCE) {
+  if (aInfo.features & WGPUFeatures_INDIRECT_FIRST_INSTANCE) {
     dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(
         mFeatures, u"indirect-first-instance"_ns, result);
   }
-  if (aInfo->features & WGPUFeatures_DEPTH32FLOAT_STENCIL8) {
+  if (aInfo.features & WGPUFeatures_DEPTH32FLOAT_STENCIL8) {
     dom::GPUSupportedFeatures_Binding::SetlikeHelpers::Add(
         mFeatures, u"depth32float-stencil8"_ns, result);
   }
@@ -158,9 +90,6 @@ void Adapter::Cleanup() {
 
 const RefPtr<SupportedFeatures>& Adapter::Features() const { return mFeatures; }
 const RefPtr<SupportedLimits>& Adapter::Limits() const { return mLimits; }
-bool Adapter::IsFallbackAdapter() const {
-  return mInfo->device_type == ffi::WGPUDeviceType::WGPUDeviceType_Cpu;
-}
 
 already_AddRefed<dom::Promise> Adapter::RequestDevice(
     const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv) {
@@ -223,7 +152,9 @@ already_AddRefed<dom::Promise> Adapter::RequestAdapterInfo(
   RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
   if (!promise) return nullptr;
 
-  auto rai = UniquePtr<AdapterInfo>{new AdapterInfo(mInfo)};
+  auto rai = UniquePtr<AdapterInfo>{new AdapterInfo};
+  // E.g. rai.mDevice = SanitizeRenderer(deviceName);
+
   promise->MaybeResolve(std::move(rai));
   return promise.forget();
 }
