@@ -754,9 +754,9 @@ class EditorBase : public nsIEditor,
    *                            called by system.
    */
   enum class DispatchPasteEvent { No, Yes };
-  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsAction(
-      int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
-      nsIPrincipal* aPrincipal = nullptr) = 0;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  PasteAsAction(int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
+                nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * Paste aTransferable at Selection.
@@ -784,9 +784,9 @@ class EditorBase : public nsIEditor,
    *                            JS.  If set to nullptr, will be treated as
    *                            called by system.
    */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsQuotationAsAction(
+  MOZ_CAN_RUN_SCRIPT nsresult PasteAsQuotationAsAction(
       int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
-      nsIPrincipal* aPrincipal = nullptr) = 0;
+      nsIPrincipal* aPrincipal = nullptr);
 
  protected:  // May be used by friends.
   class AutoEditActionDataSetter;
@@ -2647,6 +2647,20 @@ class EditorBase : public nsIEditor,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<ClipboardEventResult, nsresult>
   DispatchClipboardEventAndUpdateClipboard(EventMessage aEventMessage,
                                            int32_t aClipboardType);
+
+  /**
+   * Called after PasteAsAction() dispatches "paste" event and it's not
+   * canceled.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult HandlePaste(
+      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) = 0;
+
+  /**
+   * Called after PasteAsQuotationAsAction() dispatches "paste" event and it's
+   * not canceled.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult HandlePasteAsQuotation(
+      AutoEditActionDataSetter& aEditActionData, int32_t aClipboardType) = 0;
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
