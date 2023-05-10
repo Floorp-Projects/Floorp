@@ -1235,7 +1235,7 @@ class DebugEnvironments {
    * environments.
    */
   typedef GCHashMap<WeakHeapPtr<JSObject*>, LiveEnvironmentVal,
-                    MovableCellHasher<WeakHeapPtr<JSObject*>>, ZoneAllocPolicy>
+                    StableCellHasher<WeakHeapPtr<JSObject*>>, ZoneAllocPolicy>
       LiveEnvironmentMap;
   LiveEnvironmentMap liveEnvs;
 

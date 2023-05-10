@@ -299,7 +299,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   using KeptAliveSet =
       JS::GCHashSet<js::HeapPtr<JSObject*>,
-                    js::MovableCellHasher<js::HeapPtr<JSObject*>>,
+                    js::StableCellHasher<js::HeapPtr<JSObject*>>,
                     js::ZoneAllocPolicy>;
   friend class js::WeakRefObject;
   js::MainThreadOrGCTaskData<KeptAliveSet> keptObjects;

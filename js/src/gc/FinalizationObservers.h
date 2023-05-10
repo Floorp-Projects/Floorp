@@ -28,7 +28,7 @@ class FinalizationObservers {
   // The set of all finalization registries in the associated zone. These are
   // direct pointers and are not wrapped.
   using RegistrySet =
-      GCHashSet<HeapPtr<JSObject*>, MovableCellHasher<HeapPtr<JSObject*>>,
+      GCHashSet<HeapPtr<JSObject*>, StableCellHasher<HeapPtr<JSObject*>>,
                 ZoneAllocPolicy>;
   RegistrySet registries;
 
@@ -41,7 +41,7 @@ class FinalizationObservers {
   // wrapped appropriately.
   using RecordMap =
       GCHashMap<HeapPtr<JSObject*>, RecordVector,
-                MovableCellHasher<HeapPtr<JSObject*>>, ZoneAllocPolicy>;
+                StableCellHasher<HeapPtr<JSObject*>>, ZoneAllocPolicy>;
   RecordMap recordMap;
 
   // A weak map used as a set of cross-zone wrappers. This is used for both
@@ -59,7 +59,7 @@ class FinalizationObservers {
       GCVector<js::HeapPtr<JSObject*>, 1, js::ZoneAllocPolicy>;
   using WeakRefMap =
       GCHashMap<HeapPtr<JSObject*>, WeakRefHeapPtrVector,
-                MovableCellHasher<HeapPtr<JSObject*>>, ZoneAllocPolicy>;
+                StableCellHasher<HeapPtr<JSObject*>>, ZoneAllocPolicy>;
   WeakRefMap weakRefMap;
 
   // A weak map used as a set of cross-zone weak refs wrappers.
@@ -108,7 +108,7 @@ class FinalizationRegistryGlobalData {
   // Set of finalization records for finalization registries in this
   // realm. These are traced as part of the realm's global.
   using RecordSet =
-      GCHashSet<HeapPtr<JSObject*>, MovableCellHasher<HeapPtr<JSObject*>>,
+      GCHashSet<HeapPtr<JSObject*>, StableCellHasher<HeapPtr<JSObject*>>,
                 ZoneAllocPolicy>;
   RecordSet recordSet;
 

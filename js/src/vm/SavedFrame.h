@@ -147,7 +147,7 @@ class SavedFrame : public NativeObject {
 
 struct SavedFrame::HashPolicy {
   using Lookup = SavedFrame::Lookup;
-  using SavedFramePtrHasher = MovableCellHasher<SavedFrame*>;
+  using SavedFramePtrHasher = StableCellHasher<SavedFrame*>;
   using JSPrincipalsPtrHasher = PointerHasher<JSPrincipals*>;
 
   static bool maybeGetHash(const Lookup& l, HashNumber* hashOut);

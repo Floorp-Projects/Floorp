@@ -531,7 +531,7 @@ class InnerViewTable {
   // live. Special support is required in the minor GC, implemented in
   // sweepAfterMinorGC.
   using Map = GCHashMap<UnsafeBarePtr<JSObject*>, ViewVector,
-                        MovableCellHasher<JSObject*>, ZoneAllocPolicy>;
+                        StableCellHasher<JSObject*>, ZoneAllocPolicy>;
 
   // For all objects sharing their storage with some other view, this maps
   // the object to the list of such views. All entries in this map are weak.
