@@ -3806,7 +3806,12 @@ pref("browser.translations.autoTranslate", false);
 // Simulate the behavior of using a device that does not support the translations engine.
 // Requires restart.
 pref("browser.translations.simulateUnsupportedEngine", false);
-
+// The translations code relies on asynchronous network request. Chaos mode simulates
+// flaky and slow network connections, so that the UI may be manually tested. The
+// "chaos.errors" makes network requests fail, while "timeoutMS" randomly times out
+// between 0ms and the timeoutMS provided.
+pref("browser.translations.chaos.errors", false);
+pref("browser.translations.chaos.timeoutMS", 0);
 
 // When a user cancels this number of authentication dialogs coming from
 // a single web page in a row, all following authentication dialogs will
