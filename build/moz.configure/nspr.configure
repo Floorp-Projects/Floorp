@@ -111,7 +111,5 @@ set_config("NSPR_LIB_DIR", nspr_config.lib_dir, when=nspr_config)
 set_config("NSPR_INCLUDE_DIR", nspr_pkg.include_dir, when=nspr_pkg)
 set_config("NSPR_LIB_DIR", nspr_pkg.lib_dir, when=nspr_pkg)
 
-add_old_configure_assignment("NSPR_CFLAGS", nspr_config.cflags, when=nspr_config)
 add_old_configure_assignment("NSPR_LIBS", nspr_config.libs, when=nspr_config)
-add_old_configure_assignment("NSPR_CFLAGS", nspr_pkg.cflags, when=nspr_pkg)
 add_old_configure_assignment("NSPR_LIBS", nspr_pkg.libs, when=nspr_pkg)
