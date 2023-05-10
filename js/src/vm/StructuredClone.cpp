@@ -350,7 +350,6 @@ struct SCOutput {
     buf.setCallbacks(callbacks, closure, policy);
   }
   void extractBuffer(JSStructuredCloneData* data) { *data = std::move(buf); }
-  void discardTransferables();
 
   uint64_t tell() const { return buf.Size(); }
   uint64_t count() const { return buf.Size() / sizeof(uint64_t); }
@@ -566,10 +565,9 @@ struct JSStructuredCloneWriter {
         transferable(cx, tVal),
         transferableObjects(cx, TransferableObjectsList(cx)),
         cloneDataPolicy(cloneDataPolicy) {
-    out.setCallbacks(cb, cbClosure, OwnTransferablePolicy::NoTransferables);
+    out.setCallbacks(cb, cbClosure,
+                     OwnTransferablePolicy::OwnsTransferablesIfAny);
   }
-
-  ~JSStructuredCloneWriter();
 
   bool init() {
     return parseTransferable() && writeHeader() && writeTransferMap();
@@ -1019,8 +1017,6 @@ bool SCOutput::writeChars(const Latin1Char* p, size_t nchars) {
   return writeBytes(p, nchars);
 }
 
-void SCOutput::discardTransferables() { buf.discardTransferables(); }
-
 }  // namespace js
 
 JSStructuredCloneData::~JSStructuredCloneData() { discardTransferables(); }
@@ -1127,13 +1123,6 @@ void JSStructuredCloneData::discardTransferables() {
 }
 
 static_assert(JSString::MAX_LENGTH < UINT32_MAX);
-
-JSStructuredCloneWriter::~JSStructuredCloneWriter() {
-  // Free any transferable data left lying around in the buffer
-  if (out.count()) {
-    out.discardTransferables();
-  }
-}
 
 bool JSStructuredCloneWriter::parseTransferable() {
   // NOTE: The transferables set is tested for non-emptiness at various
@@ -4003,12 +3992,8 @@ bool JSAutoStructuredCloneBuffer::write(
       cx, value, &data_, data_.scopeForInternalWriting(), cloneDataPolicy,
       optionalCallbacks ? optionalCallbacks : data_.callbacks_,
       optionalCallbacks ? closure : data_.closure_, transferable);
-
-  if (ok) {
-    data_.ownTransferables_ = OwnTransferablePolicy::OwnsTransferablesIfAny;
-  } else {
+  if (!ok) {
     version_ = JS_STRUCTURED_CLONE_VERSION;
-    data_.ownTransferables_ = OwnTransferablePolicy::NoTransferables;
   }
   return ok;
 }

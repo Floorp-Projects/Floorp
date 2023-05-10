@@ -232,12 +232,12 @@ function testMultiWithDeserializeReadErrorCrossRealm() {
 
 testBasic();
 testErrorDuringWrite();
-// testErrorDuringTransfer(); // freeTransfer not yet called correctly.
+testErrorDuringTransfer();
 testMultiOk();
 testMultiOkCrossRealm();
 testMultiOkWithDeserialize();
 testMultiOkWithDeserializeCrossRealm();
-//testMultiWithDeserializeReadTransferError(); // failure during readTransfer throws uncatchable exception
-//testMultiWithDeserializeReadTransferErrorCrossRealm();
+// testMultiWithDeserializeReadTransferError(); // failure during readTransfer throws uncatchable exception
+// testMultiWithDeserializeReadTransferErrorCrossRealm();
 testMultiWithDeserializeReadError();
 testMultiWithDeserializeReadErrorCrossRealm();

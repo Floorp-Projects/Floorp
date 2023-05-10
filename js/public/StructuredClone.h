@@ -478,22 +478,15 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API JSStructuredCloneData {
   // the initial size and initial capacity of the BufferList must be zero.
   explicit JSStructuredCloneData(JS::StructuredCloneScope scope)
       : bufList_(0, 0, kStandardCapacity, js::SystemAllocPolicy()),
-        scope_(scope),
-        callbacks_(nullptr),
-        closure_(nullptr),
-        ownTransferables_(OwnTransferablePolicy::NoTransferables) {}
+        scope_(scope) {}
 
   // Steal the raw data from a BufferList. In this case, we don't know the
   // scope and none of the callback info is assigned yet.
-  JSStructuredCloneData(BufferList&& buffers, JS::StructuredCloneScope scope)
+  JSStructuredCloneData(BufferList&& buffers, JS::StructuredCloneScope scope,
+                        OwnTransferablePolicy ownership)
       : bufList_(std::move(buffers)),
         scope_(scope),
-        callbacks_(nullptr),
-        closure_(nullptr),
-        ownTransferables_(OwnTransferablePolicy::NoTransferables) {}
-  MOZ_IMPLICIT JSStructuredCloneData(BufferList&& buffers)
-      : JSStructuredCloneData(std::move(buffers),
-                              JS::StructuredCloneScope::Unassigned) {}
+        ownTransferables_(ownership) {}
   JSStructuredCloneData(JSStructuredCloneData&& other) = default;
   JSStructuredCloneData& operator=(JSStructuredCloneData&& other) = default;
   ~JSStructuredCloneData();
@@ -583,7 +576,8 @@ class MOZ_NON_MEMMOVABLE JS_PUBLIC_API JSStructuredCloneData {
                                bool* success) const {
     MOZ_ASSERT(scope() == JS::StructuredCloneScope::DifferentProcess);
     return JSStructuredCloneData(
-        bufList_.Borrow<js::SystemAllocPolicy>(iter, size, success), scope());
+        bufList_.Borrow<js::SystemAllocPolicy>(iter, size, success), scope(),
+        IgnoreTransferablesIfAny);
   }
 
   // Iterate over all contained data, one BufferList segment's worth at a
