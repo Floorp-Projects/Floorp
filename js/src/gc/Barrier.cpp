@@ -68,8 +68,8 @@ bool CurrentThreadIsIonCompiling() {
 #endif  // DEBUG
 
 template <typename T>
-/* static */ bool MovableCellHasher<T>::maybeGetHash(const Lookup& l,
-                                                     HashNumber* hashOut) {
+/* static */ bool StableCellHasher<T>::maybeGetHash(const Lookup& l,
+                                                    HashNumber* hashOut) {
   if (!l) {
     *hashOut = 0;
     return true;
@@ -79,8 +79,8 @@ template <typename T>
 }
 
 template <typename T>
-/* static */ bool MovableCellHasher<T>::ensureHash(const Lookup& l,
-                                                   HashNumber* hashOut) {
+/* static */ bool StableCellHasher<T>::ensureHash(const Lookup& l,
+                                                  HashNumber* hashOut) {
   if (!l) {
     *hashOut = 0;
     return true;
@@ -90,7 +90,7 @@ template <typename T>
 }
 
 template <typename T>
-/* static */ HashNumber MovableCellHasher<T>::hash(const Lookup& l) {
+/* static */ HashNumber StableCellHasher<T>::hash(const Lookup& l) {
   if (!l) {
     return 0;
   }
@@ -106,7 +106,7 @@ template <typename T>
 }
 
 template <typename T>
-/* static */ bool MovableCellHasher<T>::match(const Key& k, const Lookup& l) {
+/* static */ bool StableCellHasher<T>::match(const Key& k, const Lookup& l) {
   if (k == l) {
     return true;
   }
@@ -144,18 +144,18 @@ template <typename T>
 }
 
 #if !MOZ_IS_GCC
-template struct JS_PUBLIC_API MovableCellHasher<JSObject*>;
+template struct JS_PUBLIC_API StableCellHasher<JSObject*>;
 #endif
 
-template struct JS_PUBLIC_API MovableCellHasher<AbstractGeneratorObject*>;
-template struct JS_PUBLIC_API MovableCellHasher<EnvironmentObject*>;
-template struct JS_PUBLIC_API MovableCellHasher<GlobalObject*>;
-template struct JS_PUBLIC_API MovableCellHasher<JSScript*>;
-template struct JS_PUBLIC_API MovableCellHasher<BaseScript*>;
-template struct JS_PUBLIC_API MovableCellHasher<PropMap*>;
-template struct JS_PUBLIC_API MovableCellHasher<ScriptSourceObject*>;
-template struct JS_PUBLIC_API MovableCellHasher<SavedFrame*>;
-template struct JS_PUBLIC_API MovableCellHasher<WasmInstanceObject*>;
+template struct JS_PUBLIC_API StableCellHasher<AbstractGeneratorObject*>;
+template struct JS_PUBLIC_API StableCellHasher<EnvironmentObject*>;
+template struct JS_PUBLIC_API StableCellHasher<GlobalObject*>;
+template struct JS_PUBLIC_API StableCellHasher<JSScript*>;
+template struct JS_PUBLIC_API StableCellHasher<BaseScript*>;
+template struct JS_PUBLIC_API StableCellHasher<PropMap*>;
+template struct JS_PUBLIC_API StableCellHasher<ScriptSourceObject*>;
+template struct JS_PUBLIC_API StableCellHasher<SavedFrame*>;
+template struct JS_PUBLIC_API StableCellHasher<WasmInstanceObject*>;
 
 }  // namespace js
 

@@ -176,10 +176,10 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
 
 template <class Key, class Value>
 class WeakMap
-    : private HashMap<Key, Value, MovableCellHasher<Key>, ZoneAllocPolicy>,
+    : private HashMap<Key, Value, StableCellHasher<Key>, ZoneAllocPolicy>,
       public WeakMapBase {
  public:
-  using Base = HashMap<Key, Value, MovableCellHasher<Key>, ZoneAllocPolicy>;
+  using Base = HashMap<Key, Value, StableCellHasher<Key>, ZoneAllocPolicy>;
 
   using Lookup = typename Base::Lookup;
   using Entry = typename Base::Entry;

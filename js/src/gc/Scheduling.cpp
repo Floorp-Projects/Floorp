@@ -966,7 +966,7 @@ void MemoryTracker::decNonGCMemory(void* mem, size_t nbytes, MemoryUse use) {
 }
 
 void MemoryTracker::fixupAfterMovingGC() {
-  // Update the table after we move GC things. We don't use MovableCellHasher
+  // Update the table after we move GC things. We don't use StableCellHasher
   // because that would create a difference between debug and release builds.
   for (GCMap::Enum e(gcMap); !e.empty(); e.popFront()) {
     const auto& key = e.front().key();

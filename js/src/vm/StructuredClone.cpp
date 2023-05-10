@@ -647,9 +647,8 @@ struct JSStructuredCloneWriter {
   // The "memory" list described in the HTML5 internal structured cloning
   // algorithm.  memory is a superset of objs; items are never removed from
   // Memory until a serialization operation is finished
-  using CloneMemory =
-      GCHashMap<JSObject*, uint32_t, MovableCellHasher<JSObject*>,
-                SystemAllocPolicy>;
+  using CloneMemory = GCHashMap<JSObject*, uint32_t,
+                                StableCellHasher<JSObject*>, SystemAllocPolicy>;
   Rooted<CloneMemory> memory;
 
   // Set of transferable objects

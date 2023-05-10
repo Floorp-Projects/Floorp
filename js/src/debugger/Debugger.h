@@ -286,7 +286,7 @@ class Completion {
 };
 
 typedef HashSet<WeakHeapPtr<GlobalObject*>,
-                MovableCellHasher<WeakHeapPtr<GlobalObject*>>, ZoneAllocPolicy>
+                StableCellHasher<WeakHeapPtr<GlobalObject*>>, ZoneAllocPolicy>
     WeakGlobalObjectSet;
 
 #ifdef DEBUG
