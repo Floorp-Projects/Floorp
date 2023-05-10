@@ -1412,7 +1412,7 @@ void WebrtcVideoConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
   MOZ_ASSERT(false);
 }
 
-void WebrtcVideoConduit::OnRtpReceived(MediaPacket&& aPacket,
+void WebrtcVideoConduit::OnRtpReceived(webrtc::RtpPacketReceived&& aPacket,
                                        webrtc::RTPHeader&& aHeader) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
@@ -1441,27 +1441,14 @@ void WebrtcVideoConduit::OnRtpReceived(MediaPacket&& aPacket,
     }
   }
 
-  CSFLogVerbose(
-      LOGTAG,
-      "VideoConduit %p: Received RTP packet, seq# %u, len %zu, SSRC %u (0x%x) ",
-      this, (uint16_t)ntohs(((uint16_t*)aPacket.data())[1]), aPacket.len(),
-      (uint32_t)ntohl(((uint32_t*)aPacket.data())[2]),
-      (uint32_t)ntohl(((uint32_t*)aPacket.data())[2]));
+  CSFLogVerbose(LOGTAG, "%s: seq# %u, Len %zu, SSRC %u (0x%x) ", __FUNCTION__,
+                aPacket.SequenceNumber(), aPacket.size(), aPacket.Ssrc(),
+                aPacket.Ssrc());
 
   mRtpPacketEvent.Notify();
   if (mCall->Call()) {
-    webrtc::RtpPacketReceived parsed_packet;
-    if (!parsed_packet.Parse(
-            rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()))) {
-      CSFLogError(LOGTAG, "%s Parsing packet failed for RTP packet",
-                  __FUNCTION__);
-      return;
-    }
-    parsed_packet.set_arrival_time(mCall->GetTimestampMaker().GetNowRealtime());
-    parsed_packet.set_payload_type_frequency(
-        webrtc::kVideoPayloadTypeFrequency);
     mCall->Call()->Receiver()->DeliverRtpPacket(
-        webrtc::MediaType::VIDEO, std::move(parsed_packet),
+        webrtc::MediaType::VIDEO, std::move(aPacket),
         [self = RefPtr<WebrtcVideoConduit>(this)](
             const webrtc::RtpPacketReceived& packet) {
           CSFLogVerbose(

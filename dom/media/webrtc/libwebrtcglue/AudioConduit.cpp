@@ -536,7 +536,7 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
 }
 
 // Transport Layer Callbacks
-void WebrtcAudioConduit::OnRtpReceived(MediaPacket&& aPacket,
+void WebrtcAudioConduit::OnRtpReceived(webrtc::RtpPacketReceived&& aPacket,
                                        webrtc::RTPHeader&& aHeader) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
@@ -547,23 +547,13 @@ void WebrtcAudioConduit::OnRtpReceived(MediaPacket&& aPacket,
   }
 
   CSFLogVerbose(LOGTAG, "%s: seq# %u, Len %zu, SSRC %u (0x%x) ", __FUNCTION__,
-                (uint16_t)ntohs(((uint16_t*)aPacket.data())[1]), aPacket.len(),
-                (uint32_t)ntohl(((uint32_t*)aPacket.data())[2]),
-                (uint32_t)ntohl(((uint32_t*)aPacket.data())[2]));
+                aPacket.SequenceNumber(), aPacket.size(), aPacket.Ssrc(),
+                aPacket.Ssrc());
 
   mRtpPacketEvent.Notify();
   if (mCall->Call()) {
-    webrtc::RtpPacketReceived parsed_packet;
-    if (!parsed_packet.Parse(
-            rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()))) {
-      CSFLogError(LOGTAG, "%s Parsing packet failed for RTP packet",
-                  __FUNCTION__);
-      return;
-    }
-    parsed_packet.set_arrival_time(mCall->GetTimestampMaker().GetNowRealtime());
-
     mCall->Call()->Receiver()->DeliverRtpPacket(
-        webrtc::MediaType::AUDIO, std::move(parsed_packet),
+        webrtc::MediaType::AUDIO, std::move(aPacket),
         [self = RefPtr<WebrtcAudioConduit>(this)](
             const webrtc::RtpPacketReceived& packet) {
           CSFLogVerbose(

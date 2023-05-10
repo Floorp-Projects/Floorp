@@ -27,13 +27,17 @@
 #include "jsapi/PacketDumper.h"
 #include "PerformanceRecorder.h"
 
-#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
-
 // Should come from MediaEngine.h, but that's a pain to include here
 // because of the MOZILLA_EXTERNAL_LINKAGE stuff.
 #define WEBRTC_MAX_SAMPLE_RATE 48000
 
 class nsIPrincipal;
+
+namespace webrtc {
+struct RTPHeader;
+class RtpHeaderExtensionMap;
+class RtpPacketReceived;
+}  // namespace webrtc
 
 namespace mozilla {
 class AudioProxyThread;
@@ -240,7 +244,8 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   RefPtr<PacketDumper> mPacketDumper;
 
-  MediaEventProducerExc<MediaPacket, webrtc::RTPHeader> mRtpReceiveEvent;
+  MediaEventProducerExc<webrtc::RtpPacketReceived, webrtc::RTPHeader>
+      mRtpReceiveEvent;
   MediaEventProducerExc<MediaPacket> mSenderRtcpReceiveEvent;
   MediaEventProducerExc<MediaPacket> mReceiverRtcpReceiveEvent;
 
