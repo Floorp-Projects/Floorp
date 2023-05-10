@@ -497,19 +497,6 @@ static const struct EVInfo kEVInfos[] = {
     "DL4=",
   },
   {
-    // CN = E-Tugra Certification Authority, OU = E-Tugra Sertifikasyon Merkezi, O = E-Tuğra EBG Bilişim Teknolojileri ve Hizmetleri A.Ş., L = Ankara, C = TR
-    "2.16.792.3.0.4.1.1.4",
-    "ETugra EV OID",
-    { 0xB0, 0xBF, 0xD5, 0x2B, 0xB0, 0xD7, 0xD9, 0xBD, 0x92, 0xBF, 0x5D,
-      0x4D, 0xC1, 0x3D, 0xA2, 0x55, 0xC0, 0x2C, 0x54, 0x2F, 0x37, 0x83,
-      0x65, 0xEA, 0x89, 0x39, 0x11, 0xF5, 0x5E, 0x55, 0xF2, 0x3C },
-    "MIGyMQswCQYDVQQGEwJUUjEPMA0GA1UEBwwGQW5rYXJhMUAwPgYDVQQKDDdFLVR1"
-    "xJ9yYSBFQkcgQmlsacWfaW0gVGVrbm9sb2ppbGVyaSB2ZSBIaXptZXRsZXJpIEEu"
-    "xZ4uMSYwJAYDVQQLDB1FLVR1Z3JhIFNlcnRpZmlrYXN5b24gTWVya2V6aTEoMCYG"
-    "A1UEAwwfRS1UdWdyYSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eQ==",
-    "amg+nFGby1M=",
-  },
-  {
     // CN=E-Tugra Global Root CA RSA v3,OU=E-Tugra Trust Center,O=E-Tugra EBG A.S.,L=Ankara,C=TR
     "2.23.140.1.1",
     "CA/Browser Forum EV OID",
