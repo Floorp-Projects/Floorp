@@ -15034,9 +15034,15 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
     return;
   }
 
+  bool wasHiding = popoverHTMLEl->GetPopoverData()->IsHiding();
+  popoverHTMLEl->GetPopoverData()->SetIsHiding(true);
+  auto restoreIsHiding = MakeScopeExit([&]() {
+    if (auto* popoverData = popoverHTMLEl->GetPopoverData()) {
+      popoverData->SetIsHiding(wasHiding);
+    }
+  });
+
   if (popoverHTMLEl->IsAutoPopover()) {
-    // TODO: There might be a circle if show other auto popover while hidding
-    // See, https://github.com/whatwg/html/issues/9196
     HideAllPopoversUntil(*popoverHTMLEl, aFocusPreviousElement, aFireEvents);
     if (!popoverHTMLEl->CheckPopoverValidity(PopoverVisibilityState::Showing,
                                              nullptr, aRv)) {
@@ -15061,7 +15067,7 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
   aPopover.SetHasPopoverInvoker(false);
 
   // Fire beforetoggle event and re-check popover validity.
-  if (aFireEvents) {
+  if (aFireEvents && !wasHiding) {
     // Intentionally ignore the return value here as only on open event for
     // beforetoggle the cancelable attribute is initialized to true.
     popoverHTMLEl->FireToggleEvent(PopoverVisibilityState::Showing,
