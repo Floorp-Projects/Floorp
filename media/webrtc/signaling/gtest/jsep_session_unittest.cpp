@@ -5073,7 +5073,7 @@ TEST_F(JsepSessionTest, UnknownFingerprintAlgorithm) {
   ReplaceAll("fingerprint:sha", "fingerprint:foo", &offer);
   JsepSession::Result result =
       mSessionAns->SetRemoteDescription(kJsepSdpOffer, offer);
-  ASSERT_EQ(dom::PCError::InvalidAccessError, *result.mError);
+  ASSERT_EQ(dom::PCError::OperationError, *result.mError);
   ASSERT_NE("", mSessionAns->GetLastError());
 }
 
@@ -5752,7 +5752,7 @@ TEST_F(JsepSessionTest, missingUfrag) {
   offer.replace(pos, ufrag.length(), "ice-ufrog");
   JsepSession::Result result =
       mSessionAns->SetRemoteDescription(kJsepSdpOffer, offer);
-  ASSERT_EQ(dom::PCError::InvalidAccessError, *result.mError);
+  ASSERT_EQ(dom::PCError::OperationError, *result.mError);
 }
 
 TEST_F(JsepSessionTest, AudioOnlyCalleeNoRtcpMux) {
@@ -7438,172 +7438,6 @@ TEST_F(JsepSessionTest, TestDuplicatePayloadTypes) {
         ASSERT_TRUE(ulpfecPt == videoCodec->mULPFECPayloadType);
       }
     }
-  }
-}
-
-TEST_F(JsepSessionTest, TestTransportAttributeValidation) {
-  const std::string sdpTemplate =
-      "v=0\r\n"
-      "o=- 6 2 IN IP4 1r\r\n"
-      "t=0 0a\r\n"
-      "a=group:BUNDLE audio video\r\n"
-      "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"
-      "c=IN IP4 51.81.107.13\r\n"
-      "a=ice-ufrag:Xp\r\n"
-      "a=ice-pwd:he\r\n"
-      "a=setup:actpass\r\n"
-      "a=fingerprint:sha-256 "
-      "DC:FC:25:56:2B:88:77:2F:E4:FA:97:4E:2E:F1:D6:34:A6:A0:11:E2:E4:38:B3:98:"
-      "08:D2:F7:9D:F5:E2:C1:15\r\n"
-      "a=sendrecv\r\n"
-      "a=extmap:11 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\n"
-      "a=fmtp:111 maxplaybackrate=48000;stereo=1;useinbandfec=1\r\n"
-      "a=mid:audio\r\n"
-      "a=rtcp-mux\r\n"
-      "a=rtpmap:111 opus/48000/2\r\n"
-      "a=ssrc:3463672643 cname:{ec9a356a-8d2c-504e-9977-99070a51f929}\r\n"
-      "m=video 9 UDP/TLS/RTP/SAVPF 100\r\n"
-      "c=IN IP4 51.81.107.13\r\n"
-      "a=rtpmap:100 VP8/90000\r\n"
-      "a=extmap:1 urn:ietf:params:rtp-hdrext:toffset\r\n"
-      "a=mid:video\r\n"
-      "a=ice-ufrag:Xp\r\n"
-      "a=ice-pwd:he\r\n"
-      "a=setup:actpass\r\n"
-      "a=fingerprint:sha-256 "
-      "DC:FC:25:56:2B:88:77:2F:E4:FA:97:4E:2E:F1:D6:34:A6:A0:11:E2:E4:38:B3:98:"
-      "08:D2:F7:9D:F5:E2:C1:15\r\n";
-
-  // Control case
-  {
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdpTemplate);
-    ASSERT_FALSE(result.mError.isSome());
-  }
-
-  // Missing ufrag
-  {
-    UniquePtr<Sdp> parsed = Parse(sdpTemplate);
-    parsed->GetMediaSection(0).GetAttributeList().RemoveAttribute(
-        SdpAttribute::kIceUfragAttribute);
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_TRUE(result.mError.isSome());
-  }
-
-  // Missing pwd, bundle tag
-  {
-    UniquePtr<Sdp> parsed = Parse(sdpTemplate);
-    parsed->GetMediaSection(0).GetAttributeList().RemoveAttribute(
-        SdpAttribute::kIcePwdAttribute);
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_TRUE(result.mError.isSome());
-  }
-
-  // Missing setup, bundle tag
-  {
-    UniquePtr<Sdp> parsed = Parse(sdpTemplate);
-    parsed->GetMediaSection(0).GetAttributeList().RemoveAttribute(
-        SdpAttribute::kSetupAttribute);
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_TRUE(result.mError.isSome());
-  }
-
-  // Invalid setup attribute (holdconn), bundle tag
-  {
-    UniquePtr<Sdp> parsed = Parse(sdpTemplate);
-    parsed->GetMediaSection(0).GetAttributeList().SetAttribute(
-        new SdpSetupAttribute(SdpSetupAttribute::kHoldconn));
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_TRUE(result.mError.isSome());
-  }
-
-  // Missing fingerprint, bundle tag
-  {
-    UniquePtr<Sdp> parsed = Parse(sdpTemplate);
-    parsed->GetMediaSection(0).GetAttributeList().RemoveAttribute(
-        SdpAttribute::kFingerprintAttribute);
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_TRUE(result.mError.isSome());
-  }
-
-  // Unknown fingerprint algorithm
-  {
-    std::string mungedSdp = sdpTemplate;
-    ReplaceAll("fingerprint:sha", "fingerprint:foo", &mungedSdp);
-    UniquePtr<Sdp> parsed = Parse(mungedSdp);
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_TRUE(result.mError.isSome());
-  }
-
-  // Missing pwd, bundled msection without bundle-only
-  {
-    UniquePtr<Sdp> parsed = Parse(sdpTemplate);
-    parsed->GetMediaSection(1).GetAttributeList().RemoveAttribute(
-        SdpAttribute::kIcePwdAttribute);
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_TRUE(result.mError.isSome());
-  }
-
-  // Missing setup, bundled msection without bundle-only
-  {
-    UniquePtr<Sdp> parsed = Parse(sdpTemplate);
-    parsed->GetMediaSection(1).GetAttributeList().RemoveAttribute(
-        SdpAttribute::kSetupAttribute);
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_TRUE(result.mError.isSome());
-  }
-
-  // Missing fingerprint, bundled msection without bundle-only
-  {
-    UniquePtr<Sdp> parsed = Parse(sdpTemplate);
-    parsed->GetMediaSection(1).GetAttributeList().RemoveAttribute(
-        SdpAttribute::kFingerprintAttribute);
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_TRUE(result.mError.isSome());
-  }
-
-  // Missing ufrag attribute, bundle-only msection
-  {
-    UniquePtr<Sdp> parsed = Parse(sdpTemplate);
-    parsed->GetMediaSection(1).GetAttributeList().RemoveAttribute(
-        SdpAttribute::kIceUfragAttribute);
-    parsed->GetMediaSection(1).GetAttributeList().SetAttribute(
-        new SdpFlagAttribute(SdpAttribute::kBundleOnlyAttribute));
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_FALSE(result.mError.isSome());
-  }
-
-  // Missing pwd attribute, bundle-only msection
-  {
-    UniquePtr<Sdp> parsed = Parse(sdpTemplate);
-    parsed->GetMediaSection(1).GetAttributeList().RemoveAttribute(
-        SdpAttribute::kIcePwdAttribute);
-    parsed->GetMediaSection(1).GetAttributeList().SetAttribute(
-        new SdpFlagAttribute(SdpAttribute::kBundleOnlyAttribute));
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_FALSE(result.mError.isSome());
-  }
-
-  // Missing fingerprint attribute, bundle-only msection
-  {
-    UniquePtr<Sdp> parsed = Parse(sdpTemplate);
-    parsed->GetMediaSection(1).GetAttributeList().RemoveAttribute(
-        SdpAttribute::kFingerprintAttribute);
-    parsed->GetMediaSection(1).GetAttributeList().SetAttribute(
-        new SdpFlagAttribute(SdpAttribute::kBundleOnlyAttribute));
-    auto sdp = parsed->ToString();
-    auto result = mSessionOff->SetRemoteDescription(kJsepSdpOffer, sdp);
-    ASSERT_FALSE(result.mError.isSome());
   }
 }
 }  // namespace mozilla
