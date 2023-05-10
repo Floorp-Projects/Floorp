@@ -51,7 +51,7 @@ let TestObserver = {
   },
 };
 
-add_task(function test_notifications() {
+add_task(async function test_notifications() {
   let testnum = 0;
   let testdesc = "Setup of nsLoginInfo test-users";
 
@@ -88,7 +88,7 @@ add_task(function test_notifications() {
 
     expectedNotification = "addLogin";
     expectedData = testuser1;
-    Services.logins.addLogin(testuser1);
+    await Services.logins.addLoginAsync(testuser1);
     LoginTestUtils.checkLogins([testuser1]);
     Assert.equal(expectedNotification, null); // check that observer got a notification
 
@@ -128,7 +128,7 @@ add_task(function test_notifications() {
 
     expectedNotification = "addLogin";
     expectedData = testuser1;
-    Services.logins.addLogin(testuser1);
+    await Services.logins.addLoginAsync(testuser1);
 
     expectedNotification = "removeAllLogins";
     expectedData = null;

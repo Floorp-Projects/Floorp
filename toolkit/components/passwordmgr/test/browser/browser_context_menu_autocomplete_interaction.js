@@ -22,9 +22,7 @@ add_task(async function test_initialize() {
       autocompleteUnexpectedPopupShowing
     );
   });
-  for (let login of loginList()) {
-    Services.logins.addLogin(login);
-  }
+  await Services.logins.addLogins(loginList());
   autocompletePopup.addEventListener(
     "popupshowing",
     autocompleteUnexpectedPopupShowing

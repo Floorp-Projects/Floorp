@@ -10,7 +10,7 @@
 </head>
 <body>
 <script type="application/javascript">
-let readyPromise = registerRunTests();
+const readyPromise = registerRunTests();
 
 const DEFAULT_ORIGIN = window.location.origin;
 
@@ -20,14 +20,14 @@ function removeAllUserFacingLoginsInParent() {
   });
 }
 
-function add2logins() {
+async function add2logins() {
   removeAllUserFacingLoginsInParent();
-  addLoginsInParent([DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "real••••user", "pass1", "", ""], [DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "user2", "pass2", "", ""]);
+  await addLoginsInParent([DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "real••••user", "pass1", "", ""], [DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "user2", "pass2", "", ""]);
 }
 
-function addSingleLogin() {
+async function addSingleLogin() {
   removeAllUserFacingLoginsInParent();
-  addLoginsInParent([DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "real••••user", "pass1", "", ""])
+  await addLoginsInParent([DEFAULT_ORIGIN, DEFAULT_ORIGIN, null, "real••••user", "pass1", "", ""])
 }
 
 /**
@@ -37,14 +37,14 @@ function addSingleLogin() {
  function generateTestCases(test) {
   const MUNGE_CHARS = ["*", ".", "•"];
 
-  let nothingToReplace = Object.values(test).every(value => typeof value !== "string" || !value.includes("!"));
+  const nothingToReplace = Object.values(test).every(value => typeof value !== "string" || !value.includes("!"));
   if (nothingToReplace) {
     return test;
   };
 
   return MUNGE_CHARS.map(char => {
-    let newTest = {};
-    for (let [propName, val] of Object.entries(test)) {
+    const newTest = {};
+    for (const [propName, val] of Object.entries(test)) {
       if (typeof val === "string") {
         newTest[propName] = val.replace(/!/g, char);
       } else {
@@ -54,7 +54,7 @@ function addSingleLogin() {
   return newTest;
 })};
 
-let loadPromise = new Promise(resolve => {
+const loadPromise = new Promise(resolve => {
   document.addEventListener("DOMContentLoaded", () => {
     resolve();
   });
@@ -101,14 +101,14 @@ add_task(async function test_new_logins() {
     expected: "*.•*.•*.•*.•*.•*.•",
   },
 ].flatMap(generateTestCases);
-  for (let tc of TEST_CASES) {
+  for (const tc of TEST_CASES) {
     info("Starting testcase: " + JSON.stringify(tc));
     // Create a new window for each test case, because if we instead try to use
     // the same window and change the page using window.location, that will trigger
     // an onLocationChange event, which can trigger unwanted FormSubmit outside of
     // clicking the submit button in each test document.
-    let win = window.open("about:blank");
-    let html = `
+    const win = window.open("about:blank");
+    const html = `
       <form id="form1" onsubmit="return false;">
         <input  type="text"       name="uname" value="${tc.username}">
         <input  type="password"   name="pword" value="thepassword">
@@ -116,25 +116,25 @@ add_task(async function test_new_logins() {
       </form>`;
     await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
     await SpecialPowers.spawn(win, [html], function(contentHtml) {
-      let doc = this.content.document;
-      for (let field of doc.querySelectorAll("input")) {
-        let actualValue = field.value;
+      const doc = this.content.document;
+      for (const field of doc.querySelectorAll("input")) {
+        const actualValue = field.value;
         field.value = "";
         SpecialPowers.wrap(field).setUserInput(actualValue);
       }
     });
     await SpecialPowers.spawn(win, [tc], function(testcase) {
-      let doc = this.content.document;
+      const doc = this.content.document;
       Assert.equal(doc.querySelector("[name='uname']").value, testcase.username, "Checking for filled username");
     });
 
     // Check data sent via PasswordManager:onFormSubmit
-    let processedPromise = getSubmitMessage();
+    const processedPromise = getSubmitMessage();
     await SpecialPowers.spawn(win, [], function() {
       this.content.document.getElementById("submitBtn").click();
     });
 
-    let { data } = await processedPromise;
+    const { data } = await processedPromise;
     info("Got submitted result: " + JSON.stringify(data));
 
     if (tc.expected === null) {
@@ -177,14 +177,14 @@ add_task(async function test_no_save_dialog_when_password_is_fully_munged() {
     },
   ].flatMap(generateTestCases);
 
-  for (let tc of TEST_CASES) {
+  for (const tc of TEST_CASES) {
     info("Starting testcase: " + tc.testName)
     // Create a new window for each test case, because if we instead try to use
     // the same window and change the page using window.location, that will trigger
     // an onLocationChange event, which can trigger unwanted FormSubmit outside of
     // clicking the submit button in each test document.
-    let win = window.open("about:blank");
-    let html = `
+    const win = window.open("about:blank");
+    const html = `
       <form id="form1" onsubmit="return false;">
         <input  type="text"       name="uname" value="username">
         <input  type="password"   name="pword" value="${tc.password}">
@@ -192,19 +192,19 @@ add_task(async function test_no_save_dialog_when_password_is_fully_munged() {
       </form>`;
     await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
     await SpecialPowers.spawn(win, [html], function(contentHtml) {
-      let doc = this.content.document;
-      for (let field of doc.querySelectorAll("input")) {
-        let actualValue = field.value;
+      const doc = this.content.document;
+      for (const field of doc.querySelectorAll("input")) {
+        const actualValue = field.value;
         field.value = "";
         SpecialPowers.wrap(field).setUserInput(actualValue);
       }
     });
     await SpecialPowers.spawn(win, [tc], function(testcase) {
-      let doc = this.content.document;
+      const doc = this.content.document;
       Assert.equal(doc.querySelector("[name='pword']").value, testcase.password, "Checking for filled password");
     });
 
-    let formSubmitListener = SpecialPowers.spawn(win, [], function() {
+    const formSubmitListener = SpecialPowers.spawn(win, [], function() {
       return new Promise(resolve => {
         this.content.windowRoot.addEventListener(
             "PasswordManager:ShowDoorhanger",
@@ -220,7 +220,7 @@ add_task(async function test_no_save_dialog_when_password_is_fully_munged() {
       this.content.document.getElementById("submitBtn").click();
     });
 
-    let dialogRequested = await formSubmitListener;
+    const dialogRequested = await formSubmitListener;
 
     is(dialogRequested, tc.shouldShowPrompt, "Verify 'show save/update prompt' message sent to parent process");
 
@@ -232,18 +232,18 @@ add_task(async function test_no_save_dialog_when_password_is_fully_munged() {
 add_task(async function test_no_autofill_munged_username_matching_password() {
   // run this test with 2 matching logins from this origin so we don't autofill
   await add2logins();
-  let allLogins = await LoginManager.getAllLogins();
-  let matchingLogins = Array.prototype.filter.call(allLogins, l => l.origin == DEFAULT_ORIGIN);
+  const allLogins = await LoginManager.getAllLogins();
+  const matchingLogins = Array.prototype.filter.call(allLogins, l => l.origin == DEFAULT_ORIGIN);
   is(matchingLogins.length, 2, "Expected number of matching logins");
 
-  let bulletLogin = matchingLogins.find(l => l.username == "real••••user");
+  const bulletLogin = matchingLogins.find(l => l.username == "real••••user");
   ok(bulletLogin, "Found the real••••user login");
 
-  let timesUsed = bulletLogin.timesUsed;
-  let guid = bulletLogin.guid;
+  const timesUsed = bulletLogin.timesUsed;
+  const guid = bulletLogin.guid;
 
-  let win = window.open("about:blank");
-  let html =
+  const win = window.open("about:blank");
+  const html =
     `<form id="form1" onsubmit="return false;">
       <input  type="text"       name="uname" value="">
       <input  type="password"   name="pword" value="">
@@ -251,36 +251,36 @@ add_task(async function test_no_autofill_munged_username_matching_password() {
     </form>`;
   await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
   await SpecialPowers.spawn(win, [html], function(contentHtml) {
-    let doc = this.content.document;
-    for (let field of doc.querySelectorAll("input")) {
-      let actualValue = field.value;
+    const doc = this.content.document;
+    for (const field of doc.querySelectorAll("input")) {
+      const actualValue = field.value;
       field.value = "";
       SpecialPowers.wrap(field).setUserInput(actualValue);
     }
   });
   await SpecialPowers.spawn(win, [], function() {
-    let doc = this.content.document;
+    const doc = this.content.document;
     Assert.equal(doc.querySelector("[name='uname']").value, "", "Check username didn't get autofilled");
     SpecialPowers.wrap(doc.querySelector("[name='uname']")).setUserInput("real••••user");
     SpecialPowers.wrap(doc.querySelector("[name='pword']")).setUserInput("pass1");
   });
 
   // we shouldn't get the save password doorhanger...
-  let popupShownPromise = noPopupBy();
+  const popupShownPromise = noPopupBy();
 
   // Check data sent via PasswordManager:onFormSubmit
-  let processedPromise = getSubmitMessage();
+  const processedPromise = getSubmitMessage();
   await SpecialPowers.spawn(win, [], function() {
     this.content.document.getElementById("submitBtn").click();
   });
 
-  let { data } = await processedPromise;
+  const { data } = await processedPromise;
   info("Got submitted result: " + JSON.stringify(data));
 
   is(data.usernameField, null, "Check usernameField");
 
-  let updatedLogins = await LoginManager.getAllLogins();
-  let updatedLogin = Array.prototype.find.call(updatedLogins, l => l.guid == guid);
+  const updatedLogins = await LoginManager.getAllLogins();
+  const updatedLogin = Array.prototype.find.call(updatedLogins, l => l.guid == guid);
   ok(updatedLogin, "Got the login via guid");
   is(updatedLogin.timesUsed, timesUsed + 1, "timesUsed was incremented");
 
@@ -295,19 +295,19 @@ add_task(async function test_autofill_munged_username_matching_password() {
   // only a single matching login so we autofill the username
   await addSingleLogin();
 
-  let allLogins = await LoginManager.getAllLogins();
-  let matchingLogins = Array.prototype.filter.call(allLogins, l => l.origin == DEFAULT_ORIGIN);
+  const allLogins = await LoginManager.getAllLogins();
+  const matchingLogins = Array.prototype.filter.call(allLogins, l => l.origin == DEFAULT_ORIGIN);
   is(matchingLogins.length, 1, "Expected number of matching logins");
 
   info("matched login: " + matchingLogins[0].username);
-  let bulletLogin = matchingLogins.find(l => l.username == "real••••user");
+  const bulletLogin = matchingLogins.find(l => l.username == "real••••user");
   ok(bulletLogin, "Found the real••••user login");
 
-  let timesUsed = bulletLogin.timesUsed;
-  let guid = bulletLogin.guid;
+  const timesUsed = bulletLogin.timesUsed;
+  const guid = bulletLogin.guid;
 
-  let win = window.open("about:blank");
-  let html =
+  const win = window.open("about:blank");
+  const html =
     `<form id="form1" onsubmit="return false;">
       <input  type="text"       name="uname" value="">
       <input  type="password"   name="pword" value="">
@@ -315,35 +315,35 @@ add_task(async function test_autofill_munged_username_matching_password() {
     </form>`;
   await loadFormIntoWindow(DEFAULT_ORIGIN, html, win);
   await SpecialPowers.spawn(win, [html], function(contentHtml) {
-    let doc = this.content.document;
-    for (let field of doc.querySelectorAll("input")) {
-      let actualValue = field.value;
+    const doc = this.content.document;
+    for (const field of doc.querySelectorAll("input")) {
+      const actualValue = field.value;
       field.value = "";
       SpecialPowers.wrap(field).setUserInput(actualValue);
     }
   });
   await SpecialPowers.spawn(win, [], function() {
-    let doc = this.content.document;
+    const doc = this.content.document;
     Assert.equal(doc.querySelector("[name='uname']").value, "real••••user", "Check username did get autofilled");
     doc.querySelector("[name='pword']").setUserInput("pass1");
   });
 
   // we shouldn't get the save/update password doorhanger as it didn't change
-  let popupShownPromise = noPopupBy();
+  const popupShownPromise = noPopupBy();
 
   // Check data sent via PasswordManager:onFormSubmit
-  let processedPromise = getSubmitMessage();
+  const processedPromise = getSubmitMessage();
   await SpecialPowers.spawn(win, [], function() {
     this.content.document.getElementById("submitBtn").click();
   });
 
-  let { data } = await processedPromise;
+  const { data } = await processedPromise;
   info("Got submitted result: " + JSON.stringify(data));
 
   is(data.usernameField, null, "Check usernameField");
 
-  let updatedLogins = await LoginManager.getAllLogins();
-  let updatedLogin = Array.prototype.find.call(updatedLogins, l => l.guid == guid);
+  const updatedLogins = await LoginManager.getAllLogins();
+  const updatedLogin = Array.prototype.find.call(updatedLogins, l => l.guid == guid);
   ok(updatedLogin, "Got the login via guid");
   is(updatedLogin.timesUsed, timesUsed + 1, "timesUsed was incremented");
 

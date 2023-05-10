@@ -252,9 +252,7 @@ function authLogin(modifications = {}) {
 async function runTestcase({ formOrigin, savedLogins, expectedItems }) {
   const DOCUMENT_CONTENT = "<form><input id='pw' type=password></form>";
 
-  for (let login of savedLogins) {
-    Services.logins.addLogin(login);
-  }
+  await Services.logins.addLogins(savedLogins);
 
   // Create the logins menuitems fragment.
   let { fragment, document } = createLoginsFragment(

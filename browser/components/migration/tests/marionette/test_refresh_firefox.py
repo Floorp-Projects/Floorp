@@ -40,18 +40,20 @@ class TestFirefoxRefresh(MarionetteTestCase):
     _expectedURLs = ["about:robots", "about:mozilla"]
 
     def savePassword(self):
-        self.runCode(
+        self.runAsyncCode(
             """
+          let [username, password, resolve] = arguments;
           let myLogin = new global.LoginInfo(
             "test.marionette.mozilla.com",
             "http://test.marionette.mozilla.com/some/form/",
             null,
-            arguments[0],
-            arguments[1],
+            username,
+            password,
             "username",
             "password"
           );
-          Services.logins.addLogin(myLogin)
+          Services.logins.addLoginAsync(myLogin)
+            .then(() => resolve(false), resolve);
         """,
             script_args=(self._username, self._password),
         )

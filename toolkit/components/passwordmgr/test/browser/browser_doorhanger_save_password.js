@@ -89,7 +89,7 @@ async function test_save_change(testData) {
   } = testData;
   // Add a login for the origin of the form if testing a change notification.
   if (oldPassword) {
-    Services.logins.addLogin(
+    await Services.logins.addLoginAsync(
       LoginTestUtils.testData.formLogin({
         origin: "https://example.com",
         formActionOrigin: "https://example.com",

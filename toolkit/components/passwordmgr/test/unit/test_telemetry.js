@@ -111,7 +111,7 @@ function testHistogram(histogramId, expectedNonZeroRanges) {
  * Enable local telemetry recording for the duration of the tests, and prepare
  * the test data that will be used by the following tests.
  */
-add_task(function test_initialize() {
+add_setup(async () => {
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
   registerCleanupFunction(function() {
@@ -119,16 +119,16 @@ add_task(function test_initialize() {
   });
 
   let uniqueNumber = 1;
+  let logins = [];
   for (let loginModifications of StatisticsTestData) {
     loginModifications.origin = `http://${uniqueNumber++}.example.com`;
-    let login;
     if (typeof loginModifications.httpRealm != "undefined") {
-      login = TestData.authLogin(loginModifications);
+      logins.push(TestData.authLogin(loginModifications));
     } else {
-      login = TestData.formLogin(loginModifications);
+      logins.push(TestData.formLogin(loginModifications));
     }
-    Services.logins.addLogin(login);
   }
+  await Services.logins.addLogins(logins);
 });
 
 /**

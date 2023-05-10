@@ -2,20 +2,19 @@ const TEST_URL_PATH =
   "://example.org/browser/toolkit/components/passwordmgr/test/browser/";
 
 add_setup(async function() {
-  let login = LoginTestUtils.testData.formLogin({
+  const login1 = LoginTestUtils.testData.formLogin({
     origin: "http://example.org",
     formActionOrigin: "http://example.org",
     username: "username",
     password: "password",
   });
-  Services.logins.addLogin(login);
-  login = LoginTestUtils.testData.formLogin({
+  const login2 = LoginTestUtils.testData.formLogin({
     origin: "http://example.org",
     formActionOrigin: "http://example.com",
     username: "username",
     password: "password",
   });
-  Services.logins.addLogin(login);
+  await Services.logins.addLogins([login1, login2]);
   await SpecialPowers.pushPrefEnv({
     set: [["signon.autofillForms.http", false]],
   });
