@@ -82,10 +82,10 @@ add_task(
     let storageUpdatePromise = TestUtils.topicObserved(
       "password-storage-updated"
     );
-    await Services.logins.addLoginAsync(login1);
+    Services.logins.addLogin(login1);
     Assert.ok(true, "added login1");
     await loginStoreExists();
-    await Services.logins.addLoginAsync(fxaKey);
+    Services.logins.addLogin(fxaKey);
     Assert.ok(true, "added fxaKey");
     await loginBackupExists();
     Assert.ok(true, "logins-backup.json now exists");
@@ -123,12 +123,12 @@ add_task(async function test_deleteLoginsBackup_removeAllUserFacingLogins() {
     "password-storage-updated"
   );
   info("Add a login to create logins.json");
-  await Services.logins.addLoginAsync(login1);
+  Services.logins.addLogin(login1);
   await loginStoreExists();
   Assert.ok(true, "logins.json now exists");
 
   info("Add a second login to create logins-backup.json");
-  await Services.logins.addLoginAsync(login2);
+  Services.logins.addLogin(login2);
   await loginBackupExists();
   info("logins-backup.json now exists");
 
@@ -166,11 +166,11 @@ add_task(async function test_deleteLoginsBackup_removeAllLogins() {
     "password-storage-updated"
   );
   info("Add a login to create logins.json");
-  await Services.logins.addLoginAsync(login1);
+  Services.logins.addLogin(login1);
   Assert.ok(true, "added login1");
   await loginStoreExists();
   Assert.ok(true, "logins.json now exists");
-  await Services.logins.addLoginAsync(login2);
+  Services.logins.addLogin(login2);
   Assert.ok(true, "added login2");
   await loginBackupExists();
   info("logins-backup.json now exists");
@@ -193,9 +193,9 @@ add_task(async function test_deleteLoginsBackup_removeAllLogins() {
 
   info("Testing the removeAllLogins() case when FxA key is present");
   storageUpdatePromise = TestUtils.topicObserved("password-storage-updated");
-  await Services.logins.addLoginAsync(login1);
+  Services.logins.addLogin(login1);
   await loginStoreExists();
-  await Services.logins.addLoginAsync(fxaKey);
+  Services.logins.addLogin(fxaKey);
   await loginBackupExists();
   info("logins-backup.json now exists");
   await storageUpdatePromise;
@@ -225,9 +225,9 @@ add_task(async function test_deleteLoginsBackup_removeLogin() {
   let storageUpdatePromise = TestUtils.topicObserved(
     "password-storage-updated"
   );
-  await Services.logins.addLoginAsync(login1);
+  Services.logins.addLogin(login1);
   await loginStoreExists();
-  await Services.logins.addLoginAsync(login2);
+  Services.logins.addLogin(login2);
   await loginBackupExists();
   info("logins-backup.json now exists");
 
@@ -255,9 +255,9 @@ add_task(async function test_deleteLoginsBackup_removeLogin() {
   info("Testing the removeLogin() case when there is a saved fxa key");
   info("Adding two logins: one user facing and the fxa key");
   storageUpdatePromise = TestUtils.topicObserved("password-storage-updated");
-  await Services.logins.addLoginAsync(login1);
+  Services.logins.addLogin(login1);
   await loginStoreExists();
-  await Services.logins.addLoginAsync(fxaKey);
+  Services.logins.addLogin(fxaKey);
   await loginBackupExists();
   info("logins-backup.json now exists");
 

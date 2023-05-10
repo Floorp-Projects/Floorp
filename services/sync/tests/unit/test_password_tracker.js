@@ -39,7 +39,7 @@ add_task(async function test_tracking() {
     };
     recordNum++;
     let login = store._nsLoginInfoFromRecord(record);
-    await Services.logins.addLoginAsync(login);
+    Services.logins.addLogin(login);
     await tracker.asyncObserver.promiseObserversComplete();
   }
 
@@ -126,7 +126,7 @@ add_task(async function test_removeAllLogins() {
     };
     recordNum++;
     let login = store._nsLoginInfoFromRecord(record);
-    await Services.logins.addLoginAsync(login);
+    Services.logins.addLogin(login);
     await tracker.asyncObserver.promiseObserversComplete();
   }
   try {

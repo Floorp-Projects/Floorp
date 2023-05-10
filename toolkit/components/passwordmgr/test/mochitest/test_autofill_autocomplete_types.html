@@ -10,16 +10,18 @@
 <body>
 Test autofilling with autocomplete types (username, off, cc-type, etc.)
 
-<p id="display"></p>
-<div id="content"></div>
-<pre id="test">
-<script class="testbody" type="text/javascript">
-/*
-  Test for Login Manager: Skip over inappropriate autcomplete types when finding username field
- */
+<script>
+let readyPromise = registerRunTests(9);
 
-const win = window.open("about:blank");
-const loadPromise = loadFormIntoWindow(location.origin, `
+addLoginsInParent(
+  [window.location.origin, "https://autocomplete", null,
+   "testuser@example.com", "testpass1", "", ""]);
+
+let DEFAULT_ORIGIN = window.location.origin;
+
+let win = window.open("about:blank");
+SimpleTest.registerCleanupFunction(() => win.close());
+let loadPromise = loadFormIntoWindow(DEFAULT_ORIGIN, `
   <form id="form0" action="https://autocomplete">
     <input  type="text" name="uname">
     <input  type="text" autocomplete="">
@@ -84,12 +86,20 @@ const loadPromise = loadFormIntoWindow(location.origin, `
     <input  type="password" name="pword">
     <button type="submit">Submit</button>
   </form>`, win);
+</script>
+
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/*
+  Test for Login Manager: Skip over inappropriate autcomplete types when finding username field
+ */
 
 add_setup(async () => {
-  await setStoredLoginsAsync(
-    [window.location.origin, "https://autocomplete", null, "testuser@example.com", "testpass1", "", ""]
-  );
-  SimpleTest.registerCleanupFunction(() => win.close());
+  ok(readyPromise, "check promise is available");
+  await readyPromise;
 });
 
 /* Tests for autofill of single-user forms with various autocomplete types */

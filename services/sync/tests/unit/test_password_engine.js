@@ -45,7 +45,7 @@ add_task(async function test_ignored_fields() {
 
   enableValidationPrefs();
 
-  let login = await Services.logins.addLoginAsync(
+  let login = Services.logins.addLogin(
     new LoginInfo(
       "https://example.com",
       "",
@@ -97,7 +97,7 @@ add_task(async function test_ignored_sync_credentials() {
   engine._tracker.start();
 
   try {
-    let login = await Services.logins.addLoginAsync(
+    let login = Services.logins.addLogin(
       new LoginInfo(
         FXA_PWDMGR_HOST,
         null,
@@ -146,7 +146,7 @@ add_task(async function test_password_engine() {
       "",
       ""
     );
-    await Services.logins.addLoginAsync(login);
+    Services.logins.addLogin(login);
 
     let logins = Services.logins.findLogins("https://example.com", "", "");
     equal(logins.length, 1, "Should find new login in login manager");
@@ -181,7 +181,7 @@ add_task(async function test_password_engine() {
       "",
       ""
     );
-    await Services.logins.addLoginAsync(login);
+    Services.logins.addLogin(login);
 
     let props = new PropertyBag();
     let localPasswordChangeTime = Date.now() - 1 * 60 * 60 * 24 * 1000;

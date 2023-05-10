@@ -62,11 +62,22 @@ let prompterParent = runInParent(() => {
 
 let prompter1 = new PrompterProxy(prompterParent);
 
-add_setup(async () => {
-  await addLoginsInParent(
-    ["http://mochi.test:8888", null, "xhr", "xhruser1", "xhrpass1"],
-    ["http://mochi.test:8888", null, "xhr2", "xhruser2", "xhrpass2"]
-  );
+add_task(function setup() {
+  runInParent(function initLogins() {
+    let nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                                             Ci.nsILoginInfo, "init");
+    let login1 = new nsLoginInfo("http://mochi.test:8888", null, "xhr",
+                                 "xhruser1", "xhrpass1");
+    let login2 = new nsLoginInfo("http://mochi.test:8888", null, "xhr2",
+                                 "xhruser2", "xhrpass2");
+
+    try {
+      Services.logins.addLogin(login1);
+      Services.logins.addLogin(login2);
+    } catch (e) {
+      assert.ok(false, "addLogin threw: " + e);
+    }
+  });
 });
 
 add_task(async function test1() {

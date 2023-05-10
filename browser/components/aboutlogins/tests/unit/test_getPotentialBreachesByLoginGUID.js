@@ -110,7 +110,7 @@ const LOGIN_WITH_NON_STANDARD_URI = LoginTestUtils.testData.formLogin({
 });
 
 add_task(async function test_notBreachedLogin() {
-  await Services.logins.addLoginAsync(NOT_BREACHED_LOGIN);
+  Services.logins.addLogin(NOT_BREACHED_LOGIN);
   const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [NOT_BREACHED_LOGIN],
     TEST_BREACHES
@@ -123,7 +123,7 @@ add_task(async function test_notBreachedLogin() {
 });
 
 add_task(async function test_breachedLogin() {
-  await Services.logins.addLoginAsync(BREACHED_LOGIN);
+  Services.logins.addLogin(BREACHED_LOGIN);
   const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [NOT_BREACHED_LOGIN, BREACHED_LOGIN],
     TEST_BREACHES
@@ -141,7 +141,7 @@ add_task(async function test_breachedLogin() {
 });
 
 add_task(async function test_breachedLoginAfterCrashingUriLogin() {
-  await Services.logins.addLoginAsync(CRASHING_URI_LOGIN);
+  Services.logins.addLogin(CRASHING_URI_LOGIN);
 
   const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [CRASHING_URI_LOGIN, BREACHED_LOGIN],
@@ -160,7 +160,7 @@ add_task(async function test_breachedLoginAfterCrashingUriLogin() {
 });
 
 add_task(async function test_notBreachedSubdomain() {
-  await Services.logins.addLoginAsync(NOT_BREACHED_SUBDOMAIN_LOGIN);
+  Services.logins.addLogin(NOT_BREACHED_SUBDOMAIN_LOGIN);
 
   const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [NOT_BREACHED_LOGIN, NOT_BREACHED_SUBDOMAIN_LOGIN],
@@ -174,7 +174,7 @@ add_task(async function test_notBreachedSubdomain() {
 });
 
 add_task(async function test_breachedSubdomain() {
-  await Services.logins.addLoginAsync(BREACHED_SUBDOMAIN_LOGIN);
+  Services.logins.addLogin(BREACHED_SUBDOMAIN_LOGIN);
 
   const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [NOT_BREACHED_SUBDOMAIN_LOGIN, BREACHED_SUBDOMAIN_LOGIN],
@@ -188,9 +188,7 @@ add_task(async function test_breachedSubdomain() {
 });
 
 add_task(async function test_breachedSiteWithoutPasswords() {
-  await Services.logins.addLoginAsync(
-    LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS
-  );
+  Services.logins.addLogin(LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS);
 
   const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS],
@@ -254,7 +252,7 @@ add_task(async function test_newBreachAfterDismissal() {
 });
 
 add_task(async function test_ExceptionsThrownByNonStandardURIsAreCaught() {
-  await Services.logins.addLoginAsync(LOGIN_WITH_NON_STANDARD_URI);
+  Services.logins.addLogin(LOGIN_WITH_NON_STANDARD_URI);
 
   const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [LOGIN_WITH_NON_STANDARD_URI, BREACHED_LOGIN],

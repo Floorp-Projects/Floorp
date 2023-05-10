@@ -11,38 +11,8 @@
 </head>
 <body>
 Login Manager test: no duplicate logins when using autofill and autocomplete with related realms
-<p id="display"></p>
-<div id="content"></div>
-<pre id="test">
-<script class="testbody" type="text/javascript">
-
-/** Test for Login Manager: related realms autofill/autocomplete. **/
-
-function restoreForm(form) {
-  form.uname.value = "";
-  form.pword.value = "";
-  form.uname.focus();
-}
-
-function sendFakeAutocompleteEvent(element) {
-  const acEvent = document.createEvent("HTMLEvents");
-  acEvent.initEvent("DOMAutoComplete", true, false);
-  element.dispatchEvent(acEvent);
-}
-
-function spinEventLoop() {
-  return Promise.resolve();
-}
-
-async function promiseACPopupClosed() {
-  return SimpleTest.promiseWaitForCondition(async () => {
-    const popupState = await getPopupState();
-    return !popupState.open;
-  }, "Wait for AC popup to be closed");
-}
-
-add_setup(async () => {
-  await addLoginsInParent(
+<script>
+  addLoginsInParent(
     // Simple related domain relationship where example.com and other-example.com are in the related domains list
     ["https://other-example.com", "https://other-example.com", null, "relatedUser1", "relatedPass1", "uname", "pword"],
 
@@ -55,35 +25,74 @@ add_setup(async () => {
     // Ensures there are no duplicates for the exact domain that the user is on
     ["https://example.com", "https://example.com", null, "exactUser1", "exactPass1", "uname", "pword"],
     ["https://www.example.com", "https://www.example.com", null, "exactWWWUser1", "exactWWWPass1", "uname", "pword"],
-  );
+    );
+</script>
+<p id="display"></p>
+<div id="content">
+  <form id="form1" action="https://www.example.com" onsubmit="return false;">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: related realms autofill/autocomplete. **/
+
+const uname = getFormElementByName(1, "uname");
+const pword = getFormElementByName(1, "pword");
+
+function restoreForm() {
+  uname.value = "";
+  pword.value = "";
+  uname.focus();
+}
+
+function sendFakeAutocompleteEvent(element) {
+  var acEvent = document.createEvent("HTMLEvents");
+  acEvent.initEvent("DOMAutoComplete", true, false);
+  element.dispatchEvent(acEvent);
+}
+
+function spinEventLoop() {
+  return Promise.resolve();
+}
+
+async function promiseACPopupClosed() {
+  return SimpleTest.promiseWaitForCondition(async () => {
+    let popupState = await getPopupState();
+    return !popupState.open;
+  }, "Wait for AC popup to be closed");
+}
+
+add_setup(async () => {
   listenForUnexpectedPopupShown();
 });
 
 add_task(async function test_no_duplicates_autocomplete_autofill() {
-  const form = createLoginForm({
-    action: "https://www.example.com"
-  });
-
   await promiseFormsProcessedInSameProcess();
   await SimpleTest.promiseFocus(window);
-  const results = await popupBy(() => {
-    checkLoginForm(form.uname, "exactUser1", form.pword, "exactPass1")
-    restoreForm(form);
+  let results = await popupBy(() => {
+    checkLoginForm(uname, "exactUser1", pword, "exactPass1")
+    restoreForm();
   });
 
-  const popupState = await getPopupState();
+  let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entires are selected upon opening");
-  const expectedMenuItems = ["exactUser1", "exactWWWUser1", "relatedUser1", "subUser1"];
+  let expectedMenuItems = ["exactUser1", "exactWWWUser1", "relatedUser1", "subUser1"];
   checkAutoCompleteResults(results, expectedMenuItems, window.location.host, "Check all menuitems are displayed correctly");
 
-  const acEvents = await getTelemetryEvents({ process: "parent", filterProps: TelemetryFilterPropsAC, clear: true });
+  let acEvents = await getTelemetryEvents({ process: "parent", filterProps: TelemetryFilterPropsAC, clear: true });
   is(acEvents.length, 1, "One autocomplete event");
-  checkACTelemetryEvent(acEvents[0], form.uname, {
+  checkACTelemetryEvent(acEvents[0], uname, {
     "hadPrevious": "0",
     "login": expectedMenuItems.length + "",
     "loginsFooter": "1"
   });
-  restoreForm(form);
+  restoreForm();
   synthesizeKey("KEY_Escape");
 });
 </script>
