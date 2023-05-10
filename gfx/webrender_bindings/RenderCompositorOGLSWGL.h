@@ -71,11 +71,6 @@ class RenderCompositorOGLSWGL : public RenderCompositorLayersSWGL {
   EGLSurface mEGLSurface = EGL_NO_SURFACE;
   bool mFullRender = false;
 
-  // Whether we are in the process of handling a NEW_SURFACE error. On Android
-  // this is used to allow the widget an opportunity to recover from the first
-  // instance, before raising a WebRenderError on subsequent occurences.
-  bool mHandlingNewSurfaceError = false;
-
   class TileOGL : public RenderCompositorLayersSWGL::Tile {
    public:
     TileOGL(RefPtr<layers::TextureImageTextureSourceOGL>&& aTexture,

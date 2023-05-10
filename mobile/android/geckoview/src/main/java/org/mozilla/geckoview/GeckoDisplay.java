@@ -30,36 +30,12 @@ public class GeckoDisplay {
   }
 
   /**
-   * Interface that allows Gecko the request a new Surface from the application. An implementation
-   * of this should be set on the {@link GeckoDisplay.SurfaceInfo} object passed to {@link
-   * GeckoDisplay#surfaceChanged(SurfaceInfo)}, by using {@link
-   * GeckoDisplay.SurfaceInfo.Builder#newSurfaceProvider(NewSurfaceProvider)}.
-   */
-  public interface NewSurfaceProvider {
-    /**
-     * Called by Gecko to request a new Surface from the application.
-     *
-     * <p>Occasionally the Surface provided to Gecko via {@link #surfaceChanged(SurfaceInfo)} is
-     * invalid and Gecko is unable to render in to it. This function will be called in such
-     * circumstances. It is the implementation's responsibility to ensure that {@link
-     * #surfaceChanged(SurfaceInfo)} gets called soon afterwards with a new Surface, allowing Gecko
-     * to resume rendering.
-     *
-     * <p>Failure to implement this function may result in Gecko either crashing or not rendering
-     * correctly should it encounter an invalid Surface.
-     */
-    @UiThread
-    void requestNewSurface();
-  }
-
-  /**
    * Wrapper class containing a Surface and associated information that the compositor should render
    * in to. Should be constructed using {@link SurfaceInfo.Builder}.
    */
   public static class SurfaceInfo {
     /* package */ final @NonNull Surface mSurface;
     /* package */ final @Nullable SurfaceControl mSurfaceControl;
-    /* package */ final @Nullable NewSurfaceProvider mNewSurfaceProvider;
     /* package */ final int mLeft;
     /* package */ final int mTop;
     /* package */ final int mWidth;
@@ -68,7 +44,6 @@ public class GeckoDisplay {
     private SurfaceInfo(final @NonNull Builder builder) {
       mSurface = builder.mSurface;
       mSurfaceControl = builder.mSurfaceControl;
-      mNewSurfaceProvider = builder.mNewSurfaceProvider;
       mLeft = builder.mLeft;
       mTop = builder.mTop;
       mWidth = builder.mWidth;
@@ -79,7 +54,6 @@ public class GeckoDisplay {
     public static class Builder {
       private Surface mSurface;
       private SurfaceControl mSurfaceControl;
-      private NewSurfaceProvider mNewSurfaceProvider;
       private int mLeft;
       private int mTop;
       private int mWidth;
@@ -108,24 +82,6 @@ public class GeckoDisplay {
       @UiThread
       public @NonNull Builder surfaceControl(final @Nullable SurfaceControl surfaceControl) {
         mSurfaceControl = surfaceControl;
-        return this;
-      }
-
-      /**
-       * Sets a NewSurfaceProvider from which Gecko can request a new Surface.
-       *
-       * <p>This allows Gecko to recover from situations where the current Surface is for whatever
-       * reason invalid and Gecko is unable to render in to it. Failure to set this field correctly
-       * may result in Gecko either crashing or not rendering correctly should it encounter an
-       * invalid Surface.
-       *
-       * @param newSurfaceProvider A NewSurfaceProvider from which Gecko can request a new Surface.
-       * @return The builder object
-       */
-      @UiThread
-      public @NonNull Builder newSurfaceProvider(
-          final @Nullable NewSurfaceProvider newSurfaceProvider) {
-        mNewSurfaceProvider = newSurfaceProvider;
         return this;
       }
 

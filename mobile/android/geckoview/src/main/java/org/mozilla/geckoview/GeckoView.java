@@ -62,7 +62,7 @@ import org.mozilla.gecko.SurfaceViewWrapper;
 import org.mozilla.gecko.util.ThreadUtils;
 
 @UiThread
-public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfaceProvider {
+public class GeckoView extends FrameLayout {
   private static final String LOGTAG = "GeckoView";
   private static final boolean DEBUG = false;
 
@@ -112,14 +112,25 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
       if (GeckoView.this.mSurfaceWrapper != null) {
         final SurfaceViewWrapper wrapper = GeckoView.this.mSurfaceWrapper;
 
-        mDisplay.surfaceChanged(
-            new GeckoDisplay.SurfaceInfo.Builder(wrapper.getSurface())
-                .surfaceControl(wrapper.getSurfaceControl())
-                .newSurfaceProvider(GeckoView.this)
-                .size(wrapper.getWidth(), wrapper.getHeight())
-                .build());
-        mDisplay.setDynamicToolbarMaxHeight(mDynamicToolbarMaxHeight);
-        GeckoView.this.setActive(true);
+        // On some devices, we have seen that the Surface can become abandoned sometime in between
+        // the surfaceChanged callback and attempting to use the Surface here. In such cases,
+        // rendering in to the Surface will always fail, resulting in the user being presented a
+        // blank, unresponsive screen or the application crashing. To work around this, check
+        // whether the Surface is in such a state, and if so toggle the SurfaceView's visibility
+        // in order to request a new Surface. See bug 1772839.
+        final boolean isAbandoned = SurfaceViewWrapper.isSurfaceAbandoned(wrapper.getSurface());
+        if (isAbandoned && wrapper.getView().getVisibility() == View.VISIBLE) {
+          wrapper.getView().setVisibility(View.INVISIBLE);
+          wrapper.getView().setVisibility(View.VISIBLE);
+        } else {
+          mDisplay.surfaceChanged(
+              new GeckoDisplay.SurfaceInfo.Builder(wrapper.getSurface())
+                  .surfaceControl(wrapper.getSurfaceControl())
+                  .size(wrapper.getWidth(), wrapper.getHeight())
+                  .build());
+          mDisplay.setDynamicToolbarMaxHeight(mDynamicToolbarMaxHeight);
+          GeckoView.this.setActive(true);
+        }
       }
     }
 
@@ -146,7 +157,6 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
         mDisplay.surfaceChanged(
             new GeckoDisplay.SurfaceInfo.Builder(surface)
                 .surfaceControl(surfaceControl)
-                .newSurfaceProvider(GeckoView.this)
                 .size(width, height)
                 .build());
         mDisplay.setDynamicToolbarMaxHeight(mDynamicToolbarMaxHeight);
@@ -1210,24 +1220,5 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
       final PrintDocumentAdapter pda = new GeckoViewPrintDocumentAdapter(pdfStream, getContext());
       printManager.print("Firefox", pda, null);
     }
-  }
-
-  // GeckoDisplay.NewSurfaceProvider
-
-  @Override
-  public void requestNewSurface() {
-    // Toggling the View's visibility is enough to provoke a surfaceChanged callback with a new
-    // Surface on all current versions of Android tested from 5 through to 13. On the more recent of
-    // those versions, however, this does not work when called from within a prior surfaceChanged
-    // callback, which we probably are here. We therefore post a Runnable to toggle the visibility
-    // from outside of the current callback.
-    post(
-        new Runnable() {
-          @Override
-          public void run() {
-            mSurfaceWrapper.getView().setVisibility(View.INVISIBLE);
-            mSurfaceWrapper.getView().setVisibility(View.VISIBLE);
-          }
-        });
   }
 }

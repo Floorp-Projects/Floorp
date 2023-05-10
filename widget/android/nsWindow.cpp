@@ -33,6 +33,7 @@
 #include "MotionEvent.h"
 #include "ScopedGLHelpers.h"
 #include "ScreenHelperAndroid.h"
+#include "SurfaceViewWrapperSupport.h"
 #include "TouchResampler.h"
 #include "WidgetUtils.h"
 #include "WindowRenderer.h"
@@ -77,7 +78,6 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
-#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/ipc/Shmem.h"
@@ -935,8 +935,6 @@ class LayerViewSupport final
   // Set in NotifyCompositorCreated and cleared in
   // NotifyCompositorSessionLost.
   RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
-  // Whether we have requested a new Surface from the GeckoSession.
-  bool mRequestedNewSurface = false;
 
   Maybe<uint32_t> mDefaultClearColor;
 
@@ -1075,13 +1073,7 @@ class LayerViewSupport final
         }
       }
 
-      bool resumed = mUiCompositorControllerChild->ResumeAndResize(
-          mX, mY, mWidth, mHeight);
-      if (!resumed) {
-        gfxCriticalNote
-            << "Failed to resume compositor from NotifyCompositorCreated";
-        RequestNewSurface();
-      }
+      mUiCompositorControllerChild->ResumeAndResize(mX, mY, mWidth, mHeight);
     }
   }
 
@@ -1263,12 +1255,7 @@ class LayerViewSupport final
 
     if (mUiCompositorControllerChild) {
       mCompositorPaused = false;
-      bool resumed = mUiCompositorControllerChild->Resume();
-      if (!resumed) {
-        gfxCriticalNote
-            << "Failed to resume compositor from SyncResumeCompositor";
-        RequestNewSurface();
-      }
+      mUiCompositorControllerChild->Resume();
     }
   }
 
@@ -1277,6 +1264,13 @@ class LayerViewSupport final
       int32_t aWidth, int32_t aHeight, jni::Object::Param aSurface,
       jni::Object::Param aSurfaceControl) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+
+    // If our Surface is in an abandoned state then we will never succesfully
+    // create an EGL Surface, and will eventually crash. Better to explicitly
+    // crash now.
+    if (SurfaceViewWrapperSupport::IsSurfaceAbandoned(aSurface)) {
+      MOZ_CRASH("Compositor resumed with abandoned Surface");
+    }
 
     mX = aX;
     mY = aY;
@@ -1305,22 +1299,8 @@ class LayerViewSupport final
         }
       }
 
-      bool resumed = mUiCompositorControllerChild->ResumeAndResize(
-          aX, aY, aWidth, aHeight);
-      if (!resumed) {
-        gfxCriticalNote
-            << "Failed to resume compositor from SyncResumeResizeCompositor";
-        // Only request a new Surface if this SyncResumeAndResize call is not
-        // response to a previous request, otherwise we will get stuck in an
-        // infinite loop.
-        if (!mRequestedNewSurface) {
-          RequestNewSurface();
-        }
-        return;
-      }
+      mUiCompositorControllerChild->ResumeAndResize(aX, aY, aWidth, aHeight);
     }
-
-    mRequestedNewSurface = false;
 
     mCompositorPaused = false;
 
@@ -1372,17 +1352,6 @@ class LayerViewSupport final
     // Use priority queue for timing-sensitive event.
     nsAppShell::PostEvent(
         MakeUnique<LayerViewEvent>(MakeUnique<OnResumedEvent>(aObj)));
-  }
-
-  void RequestNewSurface() {
-    if (const auto& compositor = GetJavaCompositor()) {
-      mRequestedNewSurface = true;
-      if (mSurfaceControl) {
-        java::SurfaceControlManager::GetInstance()->RemoveSurface(
-            mSurfaceControl);
-      }
-      compositor->RequestNewSurface();
-    }
   }
 
   mozilla::jni::Object::LocalRef GetMagnifiableSurface() {

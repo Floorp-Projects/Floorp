@@ -33,12 +33,11 @@ class UiCompositorControllerParent final
 
   // PUiCompositorControllerParent functions
   mozilla::ipc::IPCResult RecvPause();
-  mozilla::ipc::IPCResult RecvResume(bool* aOutResumed);
+  mozilla::ipc::IPCResult RecvResume();
   mozilla::ipc::IPCResult RecvResumeAndResize(const int32_t& aX,
                                               const int32_t& aY,
                                               const int32_t& aHeight,
-                                              const int32_t& aWidth,
-                                              bool* aOutResumed);
+                                              const int32_t& aWidth);
   mozilla::ipc::IPCResult RecvInvalidateAndRender();
   mozilla::ipc::IPCResult RecvMaxToolbarHeight(const int32_t& aHeight);
   mozilla::ipc::IPCResult RecvFixedBottomOffset(const int32_t& aOffset);
