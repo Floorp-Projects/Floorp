@@ -206,6 +206,10 @@ be invoked like this:
 This can take a few minutes due to symbolification, but you only need to
 run it once on a log file.
 
+You can also locally symbolicate stacks from DMD logs generated on TreeHerder,
+but it will [take a few extra steps](/contributing/debugging/local_symbols.rst)
+that you need to do before running `dmd.py`.
+
 After that is done, we can finally find out which objects (possibly)
 point to other objects, using the block_analyzer script:
 
