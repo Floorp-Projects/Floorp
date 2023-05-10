@@ -208,47 +208,19 @@ nsresult TextEditor::HandlePaste(AutoEditActionDataSetter& aEditActionData,
   return rv;
 }
 
-nsresult TextEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
-                                               nsIPrincipal* aPrincipal) {
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
-                                          aPrincipal);
-  // The data will be initialized in InsertTextFromTransferable().  Therefore,
-  // we cannot dispatch "beforeinput" here.
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  {
-    // Use an invalid value for the clipboard type as data comes from
-    // aTransferable and we don't currently implement a way to put that in the
-    // data transfer yet.
-    Result<ClipboardEventResult, nsresult> ret =
-        DispatchClipboardEventAndUpdateClipboard(ePaste, -1);
-    if (MOZ_UNLIKELY(ret.isErr())) {
-      NS_WARNING(
-          "EditorBase::DispatchClipboardEventAndUpdateClipboard(ePaste, -1) "
-          "failed");
-      return EditorBase::ToGenericNSResult(ret.unwrapErr());
-    }
-    switch (ret.inspect()) {
-      case ClipboardEventResult::DoDefault:
-        break;
-      case ClipboardEventResult::DefaultPreventedOfPaste:
-      case ClipboardEventResult::IgnoredOrError:
-        return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-      case ClipboardEventResult::CopyOrCutHandled:
-        MOZ_ASSERT_UNREACHABLE("Invalid result for ePaste");
-    }
-  }
-
+nsresult TextEditor::HandlePasteTransferable(
+    AutoEditActionDataSetter& aEditActionData, nsITransferable& aTransferable) {
   if (!IsModifiable()) {
     return NS_OK;
   }
 
-  nsresult rv = InsertTextFromTransferable(aTransferable);
+  // FYI: The data of beforeinput will be initialized in
+  // InsertTextFromTransferable().  Therefore, here does not touch
+  // aEditActionData.
+  nsresult rv = InsertTextFromTransferable(&aTransferable);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "TextEditor::InsertTextFromTransferable() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  return rv;
 }
 
 bool TextEditor::CanPaste(int32_t aClipboardType) const {
