@@ -181,9 +181,14 @@ CachedTextMarkerRange CachedTextMarker::LineRange() const {
       TextLeafPoint::BoundaryFlags::eStopInEditable |
           TextLeafPoint::BoundaryFlags::eIgnoreListItemMarker |
           TextLeafPoint::BoundaryFlags::eIncludeOrigin);
+  // If this is a blank line containing only a line feed, the start boundary
+  // is the same as the end boundary. We do not want to walk to the end of the
+  // next line.
   TextLeafPoint end =
-      start.FindBoundary(nsIAccessibleText::BOUNDARY_LINE_END, eDirNext,
-                         TextLeafPoint::BoundaryFlags::eStopInEditable);
+      start.IsLineFeedChar()
+          ? start
+          : start.FindBoundary(nsIAccessibleText::BOUNDARY_LINE_END, eDirNext,
+                               TextLeafPoint::BoundaryFlags::eStopInEditable);
 
   return CachedTextMarkerRange(start, end);
 }
