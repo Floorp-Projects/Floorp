@@ -540,9 +540,9 @@ bool TextEditor::IsCopyToClipboardAllowedInternal() const {
   return UnmaskedStart() <= selectionStart && UnmaskedEnd() >= selectionEnd;
 }
 
-nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
-                                              bool aDispatchPasteEvent,
-                                              nsIPrincipal* aPrincipal) {
+nsresult TextEditor::PasteAsQuotationAsAction(
+    int32_t aClipboardType, DispatchPasteEvent aDispatchPasteEvent,
+    nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
              aClipboardType == nsIClipboard::kSelectionClipboard);
 

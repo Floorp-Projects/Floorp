@@ -5512,11 +5512,12 @@ nsresult EventStateManager::HandleMiddleClickPaste(
   // If Control key is pressed, we should paste clipboard content as
   // quotation.  Otherwise, paste it as is.
   if (aMouseEvent->IsControl()) {
-    DebugOnly<nsresult> rv =
-        aEditorBase->PasteAsQuotationAsAction(clipboardType, false);
+    DebugOnly<nsresult> rv = aEditorBase->PasteAsQuotationAsAction(
+        clipboardType, EditorBase::DispatchPasteEvent::No);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to paste as quotation");
   } else {
-    DebugOnly<nsresult> rv = aEditorBase->PasteAsAction(clipboardType, false);
+    DebugOnly<nsresult> rv = aEditorBase->PasteAsAction(
+        clipboardType, EditorBase::DispatchPasteEvent::No);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to paste");
   }
   *aStatus = nsEventStatus_eConsumeNoDefault;
