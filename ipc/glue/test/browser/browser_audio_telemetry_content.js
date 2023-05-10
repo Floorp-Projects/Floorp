@@ -22,6 +22,11 @@ add_task(async function testUtilityTelemetry() {
   const codecs = ["vorbis", "mp3", "aac", "flac"];
   const extraKey = ",rdd-disabled,utility-disabled";
   await verifyTelemetryForProcess("tab", codecs, extraKey);
-  await verifyNoTelemetryForProcess("utility", codecs, extraKey);
+
+  const platform = Services.appinfo.OS;
+  for (let exp of utilityPerCodecs[platform]) {
+    await verifyNoTelemetryForProcess(exp.process, exp.codecs, extraKey);
+  }
+
   await verifyNoTelemetryForProcess("rdd", codecs, extraKey);
 });
