@@ -57,6 +57,11 @@ class RenderCompositorEGL : public RenderCompositor {
 
   EGLSurface mEGLSurface;
 
+  // Whether we are in the process of handling a NEW_SURFACE error. On Android
+  // this is used to allow the widget an opportunity to recover from the first
+  // instance, before raising a WebRenderError on subsequent occurences.
+  bool mHandlingNewSurfaceError = false;
+
   // FileDescriptor of release fence.
   // Release fence is a fence that is used for waiting until usage/composite of
   // AHardwareBuffer is ended. The fence is delivered to client side via

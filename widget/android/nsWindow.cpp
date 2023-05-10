@@ -77,6 +77,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/ipc/Shmem.h"
@@ -934,6 +935,8 @@ class LayerViewSupport final
   // Set in NotifyCompositorCreated and cleared in
   // NotifyCompositorSessionLost.
   RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
+  // Whether we have requested a new Surface from the GeckoSession.
+  bool mRequestedNewSurface = false;
 
   Maybe<uint32_t> mDefaultClearColor;
 
@@ -1072,7 +1075,13 @@ class LayerViewSupport final
         }
       }
 
-      mUiCompositorControllerChild->ResumeAndResize(mX, mY, mWidth, mHeight);
+      bool resumed = mUiCompositorControllerChild->ResumeAndResize(
+          mX, mY, mWidth, mHeight);
+      if (!resumed) {
+        gfxCriticalNote
+            << "Failed to resume compositor from NotifyCompositorCreated";
+        RequestNewSurface();
+      }
     }
   }
 
@@ -1254,7 +1263,12 @@ class LayerViewSupport final
 
     if (mUiCompositorControllerChild) {
       mCompositorPaused = false;
-      mUiCompositorControllerChild->Resume();
+      bool resumed = mUiCompositorControllerChild->Resume();
+      if (!resumed) {
+        gfxCriticalNote
+            << "Failed to resume compositor from SyncResumeCompositor";
+        RequestNewSurface();
+      }
     }
   }
 
@@ -1291,8 +1305,22 @@ class LayerViewSupport final
         }
       }
 
-      mUiCompositorControllerChild->ResumeAndResize(aX, aY, aWidth, aHeight);
+      bool resumed = mUiCompositorControllerChild->ResumeAndResize(
+          aX, aY, aWidth, aHeight);
+      if (!resumed) {
+        gfxCriticalNote
+            << "Failed to resume compositor from SyncResumeResizeCompositor";
+        // Only request a new Surface if this SyncResumeAndResize call is not
+        // response to a previous request, otherwise we will get stuck in an
+        // infinite loop.
+        if (!mRequestedNewSurface) {
+          RequestNewSurface();
+        }
+        return;
+      }
     }
+
+    mRequestedNewSurface = false;
 
     mCompositorPaused = false;
 
@@ -1344,6 +1372,17 @@ class LayerViewSupport final
     // Use priority queue for timing-sensitive event.
     nsAppShell::PostEvent(
         MakeUnique<LayerViewEvent>(MakeUnique<OnResumedEvent>(aObj)));
+  }
+
+  void RequestNewSurface() {
+    if (const auto& compositor = GetJavaCompositor()) {
+      mRequestedNewSurface = true;
+      if (mSurfaceControl) {
+        java::SurfaceControlManager::GetInstance()->RemoveSurface(
+            mSurfaceControl);
+      }
+      compositor->RequestNewSurface();
+    }
   }
 
   mozilla::jni::Object::LocalRef GetMagnifiableSurface() {
