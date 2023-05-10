@@ -3,8 +3,8 @@
 
 /**
  * Check the existence of a shopping tab and navigation to a shopping page.
- * Existing tests have shopping tabs as false, so this explicitly loads a page
- * with a shopping tab.
+ * Most existing tests don't include shopping tabs, so this explicitly loads a
+ * page with a shopping tab and clicks on it.
  */
 
 "use strict";
@@ -16,24 +16,42 @@ const {
   "resource:///modules/SearchSERPTelemetry.sys.mjs"
 );
 
-const TEST_PROVIDER_INFO = [
+// The setup for each test is the same, the only differences are the various
+// permutations of the search tests.
+const BASE_TEST_PROVIDER = {
+  telemetryId: "example",
+  searchPageRegexp: /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd/,
+  queryParamName: "s",
+  codeParamName: "abc",
+  taggedCodes: ["ff"],
+  extraAdServersRegexps: [/^https:\/\/example\.org\/ad/],
+  components: [
+    {
+      type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+      default: true,
+    },
+  ],
+};
+
+const TEST_PROVIDER_INFO_1 = [
   {
-    telemetryId: "example",
-    searchPageRegexp: /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd/,
-    queryParamName: "s",
-    codeParamName: "abc",
-    taggedCodes: ["ff"],
-    extraAdServersRegexps: [/^https:\/\/example\.org\/ad/],
+    ...BASE_TEST_PROVIDER,
     shoppingTab: {
       selector: "nav a",
       regexp: "&page=shopping&",
+      inspectRegexpInSERP: true,
     },
-    components: [
-      {
-        type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
-        default: true,
-      },
-    ],
+  },
+];
+
+const TEST_PROVIDER_INFO_2 = [
+  {
+    ...BASE_TEST_PROVIDER,
+    shoppingTab: {
+      selector: "nav a#shopping",
+      regexp: "&page=shopping&",
+      inspectRegexpInSERP: false,
+    },
   },
 ];
 
@@ -56,7 +74,7 @@ async function waitForIdle() {
 }
 
 add_setup(async function() {
-  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO_1);
   await waitForIdle();
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
@@ -75,12 +93,10 @@ add_setup(async function() {
   });
 });
 
-add_task(async function has_shopping_tab() {
-  resetTelemetry();
-
+async function loadSerpAndClickShoppingTab(page) {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl("searchTelemetryAd_shopping.html")
+    getSERPUrl(page)
   );
 
   assertImpressionEvents([
@@ -95,21 +111,7 @@ add_task(async function has_shopping_tab() {
       },
     },
   ]);
-
-  BrowserTestUtils.removeTab(tab);
-});
-
-add_task(async function shopping_tab_click() {
-  resetTelemetry();
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    getSERPUrl("searchTelemetryAd_shopping.html")
-  );
-
-  await TestUtils.waitForCondition(() => {
-    return Glean.serp.adImpression.testGetValue()?.length;
-  }, "Should have received an ad impression.");
+  await waitForPageWithAdImpressions();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
@@ -137,4 +139,16 @@ add_task(async function shopping_tab_click() {
   ]);
 
   BrowserTestUtils.removeTab(tab);
+}
+
+add_task(async function test_inspect_shopping_tab_regexp_on_serp() {
+  resetTelemetry();
+  await loadSerpAndClickShoppingTab("searchTelemetryAd_shopping.html");
+});
+
+add_task(async function test_no_inspect_shopping_tab_regexp_on_serp() {
+  resetTelemetry();
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO_2);
+  await waitForIdle();
+  await loadSerpAndClickShoppingTab("searchTelemetryAd_shopping.html");
 });

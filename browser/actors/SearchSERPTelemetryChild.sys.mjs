@@ -73,7 +73,7 @@ class SearchProviders {
           });
         }
         p.adServerAttributes = p.adServerAttributes ?? [];
-        if (p.shoppingTab?.regexp) {
+        if (p.shoppingTab?.inspectRegexpInSERP) {
           p.shoppingTab.regexp = new RegExp(p.shoppingTab.regexp);
         }
         return {
@@ -226,19 +226,32 @@ class SearchAdImpression {
       return false;
     }
 
-    let selector = this.#providerInfo.shoppingTab.selector;
-    let regexp = this.#providerInfo.shoppingTab.regexp;
-
-    let elements = document.querySelectorAll(selector);
-    for (let element of elements) {
-      let href = element.getAttribute("href");
-      if (href && regexp.test(href)) {
-        this.#recordElementData(element, {
-          type: "shopping_tab",
-          count: 1,
-        });
-        return true;
+    // If a provider has the inspectRegexpInSERP, we assume there must be an
+    // associated regexp that must be used on any hrefs matched by the elements
+    // found using the selector. If inspectRegexpInSERP is false, then check if
+    // the number of items found using the selector matches exactly one element
+    // to ensure we've used a fine-grained search.
+    let elements = document.querySelectorAll(
+      this.#providerInfo.shoppingTab.selector
+    );
+    if (this.#providerInfo.shoppingTab.inspectRegexpInSERP) {
+      let regexp = this.#providerInfo.shoppingTab.regexp;
+      for (let element of elements) {
+        let href = element.getAttribute("href");
+        if (href && regexp.test(href)) {
+          this.#recordElementData(element, {
+            type: "shopping_tab",
+            count: 1,
+          });
+          return true;
+        }
       }
+    } else if (elements.length == 1) {
+      this.#recordElementData(elements[0], {
+        type: "shopping_tab",
+        count: 1,
+      });
+      return true;
     }
     return false;
   }
