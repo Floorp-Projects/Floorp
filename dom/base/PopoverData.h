@@ -72,6 +72,9 @@ class PopoverData {
   void SetToggleEventTask(PopoverToggleEventTask* aTask) { mTask = aTask; }
   void ClearToggleEventTask() { mTask = nullptr; }
 
+  bool IsHiding() const { return mIsHiding; }
+  void SetIsHiding(bool aIsHiding) { mIsHiding = aIsHiding; }
+
  private:
   PopoverVisibilityState mVisibilityState = PopoverVisibilityState::Hidden;
   PopoverState mState = PopoverState::None;
@@ -83,6 +86,7 @@ class PopoverData {
   // https://html.spec.whatwg.org/multipage/popover.html#popover-invoker, also
   // see https://github.com/whatwg/html/issues/9168.
   bool mHasPopoverInvoker = false;
+  bool mIsHiding = false;
   RefPtr<PopoverToggleEventTask> mTask;
 };
 }  // namespace mozilla::dom
