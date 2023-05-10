@@ -16,6 +16,11 @@ else:
         "MozillaRuntimeMain.cpp",
     ]
 
+# The pthred_create() interposer needs to be linked as early as possible so
+# that it will appear before libpthread when resolving symbols.
+if CONFIG["OS_ARCH"] == "Linux" and CONFIG["MOZ_CRASHREPORTER"]:
+    USE_LIBS += ["pthread_create_interposer"]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
