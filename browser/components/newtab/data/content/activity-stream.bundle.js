@@ -8490,18 +8490,18 @@ function OnboardingExperience({
     className: "ds-onboarding-ref",
     ref: heightElement
   }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "ds-onboarding"
+    className: "ds-onboarding-container"
   }, /*#__PURE__*/external_React_default().createElement(DSDismiss, {
     onDismissClick: onDismissClick,
-    extraClasses: `ds-onboarding-dismiss`
-  }, /*#__PURE__*/external_React_default().createElement("div", {
-    className: "ds-onboarding-graphic"
-  }), /*#__PURE__*/external_React_default().createElement("header", null, /*#__PURE__*/external_React_default().createElement("span", {
+    extraClasses: `ds-onboarding`
+  }, /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("header", null, /*#__PURE__*/external_React_default().createElement("span", {
     className: "icon icon-pocket"
   }), /*#__PURE__*/external_React_default().createElement("span", {
     "data-l10n-id": "newtab-pocket-onboarding-discover"
   })), /*#__PURE__*/external_React_default().createElement("p", {
     "data-l10n-id": "newtab-pocket-onboarding-cta"
+  })), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "ds-onboarding-graphic"
   })))));
 }
 function CardGrid_IntersectionObserver({

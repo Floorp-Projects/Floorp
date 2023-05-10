@@ -1,7 +1,7 @@
 $col4-header-line-height: 20;
 $col4-header-font-size: 14;
 
-.ds-onboarding,
+.ds-onboarding-container,
 .ds-card-grid .ds-card {
   @include dark-theme-only {
     background: none;
@@ -27,11 +27,7 @@ $col4-header-font-size: 14;
   }
 }
 
-.ds-onboarding-ref {
-  display: inline-block;
-}
-
-.ds-onboarding {
+.ds-onboarding-container {
   padding-inline-start: 16px;
   padding-inline-end: 16px;
 
@@ -44,12 +40,12 @@ $col4-header-font-size: 14;
   }
 
   margin-bottom: 24px;
-  display: inline-block;
   // This is to position the dismiss button to the right most of this element.
   position: relative;
 
-  .ds-dismiss {
+  .ds-onboarding {
     position: static;
+    display: flex;
 
     .ds-dismiss-button {
       inset-inline-end: 8px;
@@ -119,9 +115,10 @@ $col4-header-font-size: 14;
     background-position: center;
     height: 120px;
     width: 200px;
-    margin-inline-start: 54px;
+    margin-top: 16px;
     margin-bottom: 16px;
-    float: inline-end;
+    margin-inline-start: 54px;
+    flex-shrink: 0;
     display: none;
 
     @media (min-width: $break-point-large) {
