@@ -2279,7 +2279,7 @@
   mirror: always
 
 # Whether window.location.reload() and window.history.go(0) should be blocked
-# if called directly from a window resize event handler.
+# when called directly from a window resize event handler.
 #
 # This used to be necessary long ago to prevent terrible UX when using stuff
 # like TypeAheadFind (bug 258917), but it also causes compat issues on mobile
@@ -5122,7 +5122,7 @@
 # `useRemoteSubframes` flag set.
 # Callers which cannot use `useRemoteSubframes` must use
 # `Services.appinfo.fissionAutostart` or `mozilla::FissionAutostart()` to check
-# if fission is enabled by default.
+# whether fission is enabled by default.
 - name: fission.autostart
   type: bool
   value: @IS_NOT_ANDROID@
@@ -7243,8 +7243,8 @@
 
   # Whether Gecko returns available composition string rect or TS_E_NOLAYOUT
   # from ITextStoreACP::GetTextExt() when the specified range is same as the
-  # range of composition string but some character rects in it are still dirty
-  # if and only if ATOK is active TIP.
+  # range of composition string but some character rects in it are still
+  # dirty if and only if ATOK is active TIP.
   # Note that this is ignored if active ATOK is or older than 2016 and
   # create_native_caret is true.
 -   name: intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string
@@ -7273,8 +7273,8 @@
 
   # Whether Gecko returns available composition string rect or TS_E_NOLAYOUT
   # from ITextStoreACP::GetTextExt() when the specified range is same as the
-  # range of composition string but some character rects in it are still dirty
-  # if and only if Japanist 10 is active TIP.
+  # range of composition string but some character rects in it are still
+  # dirty if and only if Japanist 10 is active TIP.
 -   name: intl.tsf.hack.japanist10.do_not_return_no_layout_error_of_composition_string
     type: bool
     value: true
@@ -12881,8 +12881,8 @@
 #    (both in the output, and the images we select via srcset, for example).
 #
 # Therefore, using a high DPI is preferable. For now, we use 144dpi to match
-# physical printer output on Windows, but higher (e.g. 300dpi) might be better
-# if it does not lead to issues such as excessive memory use.
+# physical printer output on Windows, but higher (e.g. 300dpi) might be better,
+# but only if it does not lead to issues such as excessive memory use.
 - name: print.default_dpi
   type: float
   value: 144.0f
@@ -13874,9 +13874,9 @@
   mirror: once
 
 # On Windows 8.1, if the following preference is 2, we will attempt to detect
-# if the Family Safety TLS interception feature has been enabled. If so, we
-# will behave as if the enterprise roots feature has been enabled (i.e. import
-# and trust third party root certificates from the OS).
+# whether the Family Safety TLS interception feature has been enabled.
+# If so, we will behave as if the enterprise roots feature has been enabled
+# (i.e. import and trust third party root certificates from the OS).
 # With any other value of the pref or on any other platform, this does nothing.
 # This preference takes precedence over "security.enterprise_roots.enabled".
 - name: security.family_safety.mode
