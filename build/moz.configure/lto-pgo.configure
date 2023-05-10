@@ -165,7 +165,7 @@ set_config("MOZ_PGO_RUST", moz_pgo_rust)
 option(
     "--enable-lto",
     env="MOZ_LTO",
-    nargs="?",
+    nargs="*",
     choices=("full", "thin", "cross"),
     help="Enable LTO",
 )
@@ -190,7 +190,7 @@ imply_option("MOZ_LD64_KNOWN_GOOD", depends_if("MOZ_AUTOMATION")(lambda _: True)
 )
 @imports("multiprocessing")
 def lto(
-    value,
+    values,
     c_compiler,
     select_linker,
     ld64_known_good,
@@ -203,26 +203,30 @@ def lto(
     enabled = None
     rust_lto = False
 
-    if not value:
+    if not values:
         return
 
-    # If a value was given to --enable-lto, use that, otherwise, default to
+    # Sanitize LTO modes.
+    if "full" in values and "thin" in values:
+        die("incompatible --enable-lto choices 'full' and 'thin'")
+
+    # If a value was given to --enable-lto, use that.
+    # Otherwise, make the lto mode explicit, using
     # thin with clang/clang-cl and full with gcc.
-    if len(value):
-        value = value[0]
-    elif c_compiler.type == "gcc":
-        value = "full"
-    else:
-        value = "thin"
+    if not values or values == ("cross",):
+        if c_compiler.type == "gcc":
+            values += ("full",)
+        else:
+            values += ("thin",)
 
     if instrumented_build:
         log.warning("Disabling LTO because --enable-profile-generate is specified")
         return
 
     if c_compiler.type == "gcc":
-        if value == "cross":
+        if "cross" in values:
             die("Cross-language LTO is not supported with GCC.")
-        if value == "thin":
+        if "thin" in values:
             die(
                 "gcc does not support thin LTO. Use `--enable-lto` "
                 "to enable full LTO for gcc."
@@ -231,7 +235,7 @@ def lto(
     if (
         target.kernel == "Darwin"
         and target.os == "OSX"
-        and value == "cross"
+        and "cross" in values
         and select_linker.KIND == "ld64"
         and not ld64_known_good
     ):
@@ -243,14 +247,14 @@ def lto(
         )
 
     if c_compiler.type == "clang":
-        if value == "full":
+        if "full" in values:
             cflags.append("-flto")
             ldflags.append("-flto")
         else:
             cflags.append("-flto=thin")
             ldflags.append("-flto=thin")
 
-        if target.os == "Android" and value == "cross":
+        if target.os == "Android" and "cross" in values:
             # Work around https://github.com/rust-lang/rust/issues/90088
             # by enabling the highest level of SSE the rust targets default
             # to.
@@ -261,7 +265,7 @@ def lto(
             elif target.cpu == "x86_64":
                 ldflags.append("-Wl,-plugin-opt=-mattr=+sse4.2")
     elif c_compiler.type == "clang-cl":
-        if value == "full":
+        if "full" in values:
             cflags.append("-flto")
         else:
             cflags.append("-flto=thin")
@@ -327,11 +331,17 @@ def lto(
                 ldflags.append("-Wl,-plugin-opt=new-pass-manager")
             ldflags.append("-Wl,-plugin-opt=-import-hot-multiplier=30")
 
+    # Pick Rust LTO mode in case of cross lTO. Thin is the default.
+    if "cross" in values:
+        rust_lto = "full" if "full" in values else "thin"
+    else:
+        rust_lto = ""
+
     return namespace(
         enabled=True,
         cflags=cflags,
         ldflags=ldflags,
-        rust_lto=(value == "cross"),
+        rust_lto=rust_lto,
     )
 
 
