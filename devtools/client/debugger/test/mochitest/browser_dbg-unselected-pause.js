@@ -166,7 +166,6 @@ add_task(async function() {
     );
     dbg.actions.selectThread(getContext(dbg), iframeThread);
     await waitForPausedThread(dbg, iframeThread);
-    await waitForSelectedSource(dbg, source);
     assertPausedAtSourceAndLine(dbg, source.id, 3);
 
     info("Resume the iframe target");
