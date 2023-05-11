@@ -86,6 +86,7 @@ class Rule {
 
     this.domRule.off("rule-updated", this.onStyleRuleFrontUpdated);
     this.compatibilityIssues = null;
+    this.destroyed = true;
   }
 
   get declarations() {
@@ -218,12 +219,25 @@ class Rule {
       this.compatibilityIssues = Promise.all([
         getTargetBrowsers(),
         this.inspector.inspectorFront.getCompatibilityFront(),
-      ]).then(([targetBrowsers, compatibility]) =>
-        compatibility.getCSSDeclarationBlockIssues(
-          this.domRule.declarations,
-          targetBrowsers
+      ])
+        .then(([targetBrowsers, compatibility]) =>
+          compatibility.getCSSDeclarationBlockIssues(
+            this.domRule.declarations,
+            targetBrowsers
+          )
         )
-      );
+        .catch(e => {
+          if (
+            this.destroyed ||
+            !this.inspector.inspectorFront ||
+            this.inspector.inspectorFront.isDestroyed()
+          ) {
+            // This method is often called from synchronous codepath and the
+            // request will throw if it occurs while DevTools are destroyed/the page navigates.
+            return [];
+          }
+          throw e;
+        });
     }
 
     return this.compatibilityIssues;
