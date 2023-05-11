@@ -47,6 +47,7 @@ activity_stream:
       "DIALOG_OPEN",
       "DRAG",
       "DROP",
+      "IMPRESSION",
       "MIGRATION_CANCEL",
       "MIGRATION_START",
       "OPEN_NEWTAB_PREFS",
