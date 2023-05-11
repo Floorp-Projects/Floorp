@@ -75,6 +75,7 @@ add_setup(async function() {
       ["privacy.query_stripping.strip_list", "paramToStrip1 paramToStrip2"],
       ["privacy.query_stripping.redirect", true],
       ["privacy.query_stripping.listService.logLevel", "Debug"],
+      ["privacy.query_stripping.strip_on_share.enabled", false],
     ],
   });
 

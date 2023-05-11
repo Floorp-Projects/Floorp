@@ -13389,6 +13389,13 @@
   value: true
   mirror: always
 
+# Enables / disables the strip on share feature which strips query parameters
+# when copying/sharing in-content links or from the url bar.
+- name: privacy.query_stripping.strip_on_share.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Enables / disables the URL query string stripping in normal browsing mode
 # which strips query parameters from loading URIs to prevent bounce (redirect)
 # tracking.

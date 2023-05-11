@@ -39,8 +39,8 @@ class URLQueryStringStripper final : public nsIObserver,
   [[nodiscard]] nsresult Init();
   [[nodiscard]] nsresult Shutdown();
 
-  nsresult StripQueryString(nsIURI* aURI, nsIURI** aOutput,
-                            uint32_t* aStripCount);
+  [[nodiscard]] nsresult StripQueryString(nsIURI* aURI, nsIURI** aOutput,
+                                          uint32_t* aStripCount);
 
   bool CheckAllowList(nsIURI* aURI);
 
