@@ -10,12 +10,12 @@ const TEST_MERINO_SUGGESTIONS = [
     provider: "amo",
     icon: "https://example.com/first.svg",
     url: "https://example.com/first-addon",
-    title: "First Addon",
+    name: "First Addon",
     description: "This is a first addon",
     custom_details: {
-      amo: {
+      addons: {
         rating: "5",
-        number_of_ratings: "1234567",
+        reviews: "1234567",
       },
     },
     is_top_pick: true,
@@ -24,12 +24,12 @@ const TEST_MERINO_SUGGESTIONS = [
     provider: "amo",
     icon: "https://example.com/second.png",
     url: "https://example.com/second-addon",
-    title: "Second Addon",
+    name: "Second Addon",
     description: "This is a second addon",
     custom_details: {
-      amo: {
+      addons: {
         rating: "4.5",
-        number_of_ratings: "123",
+        reviews: "123",
       },
     },
     is_sponsored: true,
@@ -38,12 +38,12 @@ const TEST_MERINO_SUGGESTIONS = [
     provider: "amo",
     icon: "https://example.com/third.svg",
     url: "https://example.com/third-addon",
-    title: "Third Addon",
+    name: "Third Addon",
     description: "This is a third addon",
     custom_details: {
-      amo: {
+      addons: {
         rating: "0",
-        number_of_ratings: "0",
+        reviews: "0",
       },
     },
   },
@@ -88,7 +88,7 @@ add_task(async function basic() {
     const url = row.querySelector(".urlbarView-dynamic-addons-url");
     Assert.equal(url.textContent, merinoSuggestion.url);
     const title = row.querySelector(".urlbarView-dynamic-addons-title");
-    Assert.equal(title.textContent, merinoSuggestion.title);
+    Assert.equal(title.textContent, merinoSuggestion.name);
     const description = row.querySelector(
       ".urlbarView-dynamic-addons-description"
     );
@@ -97,7 +97,7 @@ add_task(async function basic() {
     Assert.equal(
       reviews.textContent,
       `${new Intl.NumberFormat().format(
-        Number(merinoSuggestion.custom_details.amo.number_of_ratings)
+        Number(merinoSuggestion.custom_details.addons.reviews)
       )} reviews`
     );
 
@@ -168,7 +168,7 @@ add_task(async function ratings() {
   );
 
   for (const rating of testRating) {
-    baseMerinoSuggestion.custom_details.amo.rating = rating;
+    baseMerinoSuggestion.custom_details.addons.rating = rating;
     MerinoTestUtils.server.response.body.suggestions = [baseMerinoSuggestion];
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
