@@ -470,6 +470,11 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     sourceMapURL_ = rhs.sourceMapURL();
   }
 
+  // Construct CompileOptions for FrontendContext-APIs.
+  struct ForFrontendContext {};
+  explicit CompileOptions(const ForFrontendContext&)
+      : ReadOnlyCompileOptions() {}
+
   CompileOptions& setFile(const char* f) {
     filename_ = f;
     return *this;
