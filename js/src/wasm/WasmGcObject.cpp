@@ -72,9 +72,9 @@ using namespace wasm;
 //     a js::MallocedBlockCache -- and the intention is that trailers are
 //     allocated from this pool and freed back into it whenever possible.
 //
-// (b) WasmArrayObject::createArray and WasmStructObject::createStructOOL
-//     always request trailer allocation from the nursery's cache (a).  If the
-//     cache cannot honour the request directly it will allocate directly from
+// (b) WasmArrayObject::createArray and WasmStructObject::createStruct always
+//     request trailer allocation from the nursery's cache (a).  If the cache
+//     cannot honour the request directly it will allocate directly from
 //     js_malloc; we hope this happens only infrequently.
 //
 // (c) The allocated block is returned as a js::PointerAndUint7, a pair that
@@ -87,7 +87,7 @@ using namespace wasm;
 //     JIT-generated code.
 //
 // (d) Still in WasmArrayObject::createArray and
-//     WasmStructObject::createStructOOL, if the object was allocated in the
+//     WasmStructObject::createStruct, if the object was allocated in the
 //     nursery, then the resulting js::PointerAndUint7 is "registered" with
 //     the nursery by handing it to Nursery::registerTrailer.
 //
@@ -138,7 +138,7 @@ using namespace wasm;
 //
 // * allocated:
 //
-//   - in WasmArrayObject::createArray / WasmStructObject::createStructOOL
+//   - in WasmArrayObject::createArray / WasmStructObject::createStruct
 //
 //   - by calling the nursery's MallocBlockCache alloc method
 //
@@ -534,7 +534,7 @@ WasmArrayObject* WasmArrayObject::createArray(
 
   // It's unfortunate that `arrayObj` has to be rooted, since this is a hot
   // path and rooting costs around 15 instructions.  It is the call to
-  // registerTrailer that makes it necessary.
+  // registerMallocedBuffer that makes it necessary.
   Rooted<WasmArrayObject*> arrayObj(cx);
   arrayObj =
       (WasmArrayObject*)WasmGcObject::create(cx, typeDefData, initialHeap);
@@ -701,31 +701,35 @@ js::gc::AllocKind js::WasmStructObject::allocKindForTypeDef(
   return gc::GetGCObjectKindForBytes(nbytes);
 }
 
-/* static MOZ_NEVER_INLINE */
+/* static */
 template <bool ZeroFields>
-WasmStructObject* WasmStructObject::createStructOOL(
+WasmStructObject* WasmStructObject::createStruct(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
-    js::gc::InitialHeap initialHeap, uint32_t inlineBytes,
-    uint32_t outlineBytes) {
-  // This method is called as the slow path from the (inlineable)
-  // WasmStructObject::createStruct.  It handles the case where an object
-  // needs OOL storage.  It doesn't handle the non-OOL case at all.
+    js::gc::InitialHeap initialHeap) {
+  const TypeDef* typeDef = typeDefData->typeDef;
+  MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
 
-  // Allocate the outline data area before allocating the object so that we can
-  // infallibly initialize the outline data area.
+  uint32_t totalBytes = typeDef->structType().size_;
+  uint32_t inlineBytes, outlineBytes;
+  WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
+
+  // Allocate the outline data, if any, before allocating the object so that
+  // we can infallibly initialize the outline data of structs that require one.
   Nursery& nursery = cx->nursery();
-  PointerAndUint7 outlineData =
-      nursery.mallocedBlockCache().alloc(outlineBytes);
-  if (MOZ_UNLIKELY(!outlineData.pointer())) {
-    ReportOutOfMemory(cx);
-    return nullptr;
+  PointerAndUint7 outlineData(nullptr, 0);
+  if (outlineBytes > 0) {
+    outlineData = nursery.mallocedBlockCache().alloc(outlineBytes);
+    if (!outlineData.pointer()) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
   }
 
   // See corresponding comment in WasmArrayObject::createArray.
   Rooted<WasmStructObject*> structObj(cx);
   structObj =
       (WasmStructObject*)WasmGcObject::create(cx, typeDefData, initialHeap);
-  if (MOZ_UNLIKELY(!structObj)) {
+  if (!structObj) {
     ReportOutOfMemory(cx);
     if (outlineData.pointer()) {
       nursery.mallocedBlockCache().free(outlineData);
@@ -733,18 +737,23 @@ WasmStructObject* WasmStructObject::createStructOOL(
     return nullptr;
   }
 
-  // Initialize the outline data fields
+  // Initialize the outline data field
   structObj->outlineData_ = (uint8_t*)outlineData.pointer();
+
   if constexpr (ZeroFields) {
     memset(&(structObj->inlineData_[0]), 0, inlineBytes);
-    memset(outlineData.pointer(), 0, outlineBytes);
   }
-  if (MOZ_LIKELY(js::gc::IsInsideNursery(structObj))) {
-    // See corresponding comment in WasmArrayObject::createArray.
-    if (!nursery.registerTrailer(outlineData, outlineBytes)) {
-      nursery.mallocedBlockCache().free(outlineData);
-      ReportOutOfMemory(cx);
-      return nullptr;
+  if (outlineBytes > 0) {
+    if constexpr (ZeroFields) {
+      memset(outlineData.pointer(), 0, outlineBytes);
+    }
+    if (js::gc::IsInsideNursery(structObj)) {
+      // See corresponding comment in WasmArrayObject::createArray.
+      if (!nursery.registerTrailer(outlineData, outlineBytes)) {
+        nursery.mallocedBlockCache().free(outlineData);
+        ReportOutOfMemory(cx);
+        return nullptr;
+      }
     }
   }
 
