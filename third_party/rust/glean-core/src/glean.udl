@@ -69,6 +69,17 @@ dictionary InternalConfiguration {
     string app_build;
     boolean use_core_mps;
     boolean trim_data_to_registered_pings;
+    LevelFilter? log_level;
+};
+
+// An enum representing the different logging levels for the `log` crate.
+enum LevelFilter {
+    "Off",
+    "Error",
+    "Warn",
+    "Info",
+    "Debug",
+    "Trace",
 };
 
 // Values for the `client_info` metrics.

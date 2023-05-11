@@ -53,6 +53,7 @@ fn send_a_ping() {
         uploader: Some(Box::new(FakeUploader { sender: s })),
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -142,6 +143,7 @@ fn test_experiments_recording_before_glean_inits() {
             uploader: None,
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
         false,
@@ -202,6 +204,7 @@ fn sending_of_foreground_background_pings() {
         uploader: Some(Box::new(FakeUploader { sender: s })),
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -284,6 +287,7 @@ fn sending_of_startup_baseline_ping() {
             uploader: Some(Box::new(FakeUploader { sender: s })),
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
         false,
@@ -343,6 +347,7 @@ fn no_dirty_baseline_on_clean_shutdowns() {
             uploader: Some(Box::new(FakeUploader { sender: s })),
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
         false,
@@ -373,6 +378,7 @@ fn initialize_must_not_crash_if_data_dir_is_messed_up() {
         uploader: None,
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     test_reset_glean(cfg, ClientInfoMetrics::unknown(), false);
@@ -419,6 +425,7 @@ fn queued_recorded_metrics_correctly_record_during_init() {
         uploader: None,
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
     let _t = new_glean(Some(cfg), false);
 
@@ -445,6 +452,7 @@ fn initializing_twice_is_a_noop() {
             uploader: None,
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
         true,
@@ -465,6 +473,7 @@ fn initializing_twice_is_a_noop() {
             uploader: None,
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
     );
@@ -493,6 +502,7 @@ fn dont_handle_events_when_uninitialized() {
             uploader: None,
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
         true,
@@ -557,6 +567,7 @@ fn the_app_channel_must_be_correctly_set_if_requested() {
             uploader: None,
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         client_info,
         true,
@@ -579,6 +590,7 @@ fn the_app_channel_must_be_correctly_set_if_requested() {
             uploader: None,
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         client_info,
         true,
@@ -642,6 +654,7 @@ fn ping_collection_must_happen_after_concurrently_scheduled_metrics_recordings()
             uploader: Some(Box::new(FakeUploader { sender: s })),
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
         true,
@@ -723,6 +736,7 @@ fn core_metrics_should_be_cleared_and_restored_when_disabling_and_enabling_uploa
             uploader: None,
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
         true,
@@ -785,6 +799,7 @@ fn sending_deletion_ping_if_disabled_outside_of_run() {
         uploader: None,
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -802,6 +817,7 @@ fn sending_deletion_ping_if_disabled_outside_of_run() {
             uploader: Some(Box::new(FakeUploader { sender: s })),
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
         false,
@@ -850,6 +866,7 @@ fn no_sending_of_deletion_ping_if_unchanged_outside_of_run() {
         uploader: None,
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -867,6 +884,7 @@ fn no_sending_of_deletion_ping_if_unchanged_outside_of_run() {
             uploader: Some(Box::new(FakeUploader { sender: s })),
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
         false,
@@ -923,6 +941,7 @@ fn test_sending_of_startup_baseline_ping_with_application_lifetime_metric() {
             uploader: None,
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
         true,
@@ -955,6 +974,7 @@ fn test_sending_of_startup_baseline_ping_with_application_lifetime_metric() {
             uploader: Some(Box::new(FakeUploader { sender: s })),
             use_core_mps: false,
             trim_data_to_registered_pings: false,
+            log_level: None,
         },
         ClientInfoMetrics::unknown(),
         false,
@@ -1013,6 +1033,7 @@ fn setting_debug_view_tag_before_initialization_should_not_crash() {
         uploader: Some(Box::new(FakeUploader { sender: s })),
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -1071,6 +1092,7 @@ fn setting_source_tags_before_initialization_should_not_crash() {
         uploader: Some(Box::new(FakeUploader { sender: s })),
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -1128,6 +1150,7 @@ fn setting_source_tags_after_initialization_should_not_crash() {
         uploader: Some(Box::new(FakeUploader { sender: s })),
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -1199,6 +1222,7 @@ fn flipping_upload_enabled_respects_order_of_events() {
         uploader: Some(Box::new(FakeUploader { sender: s })),
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     // We create a ping and a metric before we initialize Glean
@@ -1267,6 +1291,7 @@ fn registering_pings_before_init_must_work() {
         uploader: Some(Box::new(FakeUploader { sender: s })),
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -1317,6 +1342,7 @@ fn test_a_ping_before_submission() {
         uploader: Some(Box::new(FakeUploader { sender: s })),
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     let _t = new_glean(Some(cfg), true);
@@ -1445,6 +1471,7 @@ fn signaling_done() {
         })),
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     let _t = new_glean(Some(cfg), true);
