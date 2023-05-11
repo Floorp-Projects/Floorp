@@ -402,7 +402,7 @@ class JSAPIFrontendTest : public JSAPITest {
   virtual ~JSAPIFrontendTest() {}
 
   virtual bool init() { return true; }
-  virtual void uninit();
+  virtual void uninit() {}
 
   virtual bool run() = 0;
 };
@@ -417,6 +417,18 @@ class JSAPIFrontendTest : public JSAPITest {
   BEGIN_TEST_WITH_ATTRIBUTES_AND_EXTRA(testname, attrs, )
 
 #define BEGIN_TEST(testname) BEGIN_TEST_WITH_ATTRIBUTES(testname, )
+
+#define BEGIN_FRONTEND_TEST_WITH_ATTRIBUTES_AND_EXTRA(testname, attrs, extra) \
+  class cls_##testname : public JSAPIFrontendTest {                           \
+   public:                                                                    \
+    virtual const char* name() override { return #testname; }                 \
+    extra virtual bool run() override attrs
+
+#define BEGIN_FRONTEND_TEST_WITH_ATTRIBUTES(testname, attrs) \
+  BEGIN_FRONTEND_TEST_WITH_ATTRIBUTES_AND_EXTRA(testname, attrs, )
+
+#define BEGIN_FRONTEND_TEST(testname) \
+  BEGIN_FRONTEND_TEST_WITH_ATTRIBUTES(testname, )
 
 #define BEGIN_REUSABLE_TEST(testname)   \
   BEGIN_TEST_WITH_ATTRIBUTES_AND_EXTRA( \
