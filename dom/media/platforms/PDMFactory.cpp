@@ -45,6 +45,9 @@
 #  ifdef MOZ_WMF_MEDIA_ENGINE
 #    include "MFMediaEngineDecoderModule.h"
 #  endif
+#  ifdef MOZ_WMF_CDM
+#    include "mozilla/CDMProxy.h"
+#  endif
 #endif
 #ifdef MOZ_FFVPX
 #  include "FFVPXRuntimeLinker.h"
@@ -787,6 +790,13 @@ void PDMFactory::SetCDMProxy(CDMProxy* aProxy) {
 #ifdef MOZ_WIDGET_ANDROID
   if (IsWidevineKeySystem(aProxy->KeySystem())) {
     mEMEPDM = AndroidDecoderModule::Create(aProxy);
+    return;
+  }
+#endif
+#ifdef MOZ_WMF_CDM
+  if (IsPlayReadyKeySystemAndSupported(aProxy->KeySystem())) {
+    mEMEPDM = RemoteDecoderModule::Create(
+        RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM);
     return;
   }
 #endif
