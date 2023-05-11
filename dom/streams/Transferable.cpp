@@ -55,7 +55,13 @@ static void PackAndPostMessage(JSContext* aCx, MessagePort* aPort,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
-  if (!JS_DefineProperty(aCx, obj, "value", aValue, JSPROP_ENUMERATE)) {
+  JS::Rooted<JS::Value> value(aCx, aValue);
+  if (!JS_WrapValue(aCx, &value)) {
+    JS_ClearPendingException(aCx);
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+  if (!JS_DefineProperty(aCx, obj, "value", value, JSPROP_ENUMERATE)) {
     JS_ClearPendingException(aCx);
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
