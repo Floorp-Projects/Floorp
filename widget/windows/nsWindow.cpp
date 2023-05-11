@@ -3857,10 +3857,6 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
   return nullptr;
 }
 
-void nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal) {
-  NS_ERROR("SetNativeData called with unsupported data type.");
-}
-
 // Free some native data according to aDataType
 void nsWindow::FreeNativeData(void* data, uint32_t aDataType) {
   switch (aDataType) {
