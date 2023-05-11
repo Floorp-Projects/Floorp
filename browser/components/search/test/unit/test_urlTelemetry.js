@@ -144,7 +144,7 @@ const TESTS = [
   },
   {
     title: "DuckDuckGo organic",
-    trackingUrl: "https://duckduckgo.com/?q=test&t=hi&ia=news",
+    trackingUrl: "https://duckduckgo.com/?q=test&t=other&ia=news",
     expectedSearchCountEntry: "duckduckgo:organic:other",
     expectedAdKey: "duckduckgo:organic",
     adUrls: ["https://duckduckgo.com/y.js?ad_provider=foo"],
