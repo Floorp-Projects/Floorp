@@ -225,7 +225,7 @@ this.PrefsFeed = class PrefsFeed {
       let folderExists = await IOUtils.exists(tPath)
       if (folderExists) {
         let imagesPath = await IOUtils.getChildren(tPath)
-        let str = new RegExp(`\\.(${Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions", "").split(",").join("|")})+$`)
+        let str = new RegExp(`\\.(${Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions", "").split(",").join("|").toLowerCase()})+$`)
         let imagesDataPath = {data:{},urls:[]}
         
         this.store.dispatch(
@@ -236,7 +236,7 @@ this.PrefsFeed = class PrefsFeed {
         );
         if (imagesPath != 0) {
           for (let elem of imagesPath) {
-            if (!str.test(elem)) continue
+            if (!str.test(elem.toLowerCase())) continue
             let filePath = Services.io.newFileURI(FileUtils.File(elem)).asciiSpec
             imagesDataPath.urls.push(filePath)
             imagesDataPath.data[filePath] = {}
