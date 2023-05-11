@@ -41,7 +41,7 @@ add_task(async function test() {
   await stepIn(dbg);
   await stepIn(dbg);
 
-  // Switch to original source
-  await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
+  // Note that we are asserting against an original source here,
+  // See earlier comment about paused in bundle.js
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "step-in-test.js").id, 7679);
 });
