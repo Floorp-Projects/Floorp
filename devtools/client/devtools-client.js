@@ -805,10 +805,17 @@ DevToolsClient.prototype = {
   /**
    * Creates an object front for this DevToolsClient and the grip in parameter,
    * @param {Object} grip: The grip to create the ObjectFront for.
+   * @param {ThreadFront} threadFront
+   * @param {Front} parentFront: Optional front that will manage the object front.
+   *                             Defaults to threadFront.
    * @returns {ObjectFront}
    */
-  createObjectFront(grip, threadFront) {
-    return new ObjectFront(this, threadFront.targetFront, threadFront, grip);
+  createObjectFront(grip, threadFront, parentFront) {
+    if (!parentFront) {
+      parentFront = threadFront;
+    }
+
+    return new ObjectFront(this, threadFront.targetFront, parentFront, grip);
   },
 
   get transport() {

@@ -21,6 +21,11 @@
           hasBody: obj => true,
           body: obj => ["span", {"style": "font-family: serif; font-size: 2rem;"}, obj.customFormatHeaderAndBody]
         }];
+
+      function pauseWithCustomFormattedObjectInScopes() {
+        const x = {customFormatHeaderAndBody: "bodyInScopes"};
+        debugger;
+      }
     </script>
   </body>
 </html>
