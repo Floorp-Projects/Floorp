@@ -166,7 +166,7 @@
 /* Wrap the url to a second line when the window is narrow. Do not wrap when the
    window is also short, because fewer results will be shown. */
 @media screen and (min-height: 600px) {
-  .urlbarView-results[wrap] > .urlbarView-row > .urlbarView-row-inner {
+  .urlbarView-results[wrap] > .urlbarView-row:not([rich-suggestion]) > .urlbarView-row-inner {
     flex-wrap: wrap;
   }
   .urlbarView-results[wrap] > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap {
@@ -234,6 +234,37 @@
      due to the `direction: ltr` rule.  .urlbarView-title does not have this
      problem since it does not have flex. */
   text-align: right;
+}
+
+/* Rich Suggestions */
+
+.urlbarView-row[rich-suggestion=with-icon] > .urlbarView-row-inner > .urlbarView-favicon {
+  width: 28px;
+  height: 28px;
+  margin-inline-end: 8px;
+}
+
+.urlbarView-row[rich-suggestion=with-icon] > .urlbarView-row-inner {
+  padding-block: 4px;
+  flex-wrap: nowrap;
+}
+
+.urlbarView-row[rich-suggestion=no-icon] .urlbarView-favicon {
+  margin-inline-start: 4px;
+  margin-inline-end: 16px;
+}
+
+.urlbarView-row[rich-suggestion=with-icon] > .urlbarView-row-inner > .urlbarView-no-wrap {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+}
+
+.urlbarView-description {
+  /* We want the description to be last visually but to be after the title
+     in the screenreader */
+  order: 2;
+  width: 100%
 }
 
 /* Favicon */

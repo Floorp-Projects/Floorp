@@ -20,29 +20,26 @@ function handleRequest(req, resp) {
     return memo;
   }, {});
 
-  let timeout = parseInt(params.timeout);
-  if (timeout) {
-    // Write the response after a timeout.
-    resp.processAsync();
-    gTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    gTimer.init(
-      () => {
-        writeResponse(params, resp);
-        resp.finish();
-      },
-      timeout,
-      Ci.nsITimer.TYPE_ONE_SHOT
-    );
-    return;
-  }
-
   writeResponse(params, resp);
 }
 
 function writeResponse(params, resp) {
   // Echoes back 15 results, query0, query1, query2 etc.
   let suffixes = [...Array(15).keys()];
-  let data = [params.query, suffixes.map(s => params.query + s)];
+  let query = params.query || "";
+  let data = [query, suffixes.map(s => query + s)];
+  if (params?.richsuggestions) {
+    data.push([]);
+    data.push({
+      "google:suggestdetail": suffixes.map(s => ({
+        a: "Extended title",
+        dc: "#FFFFFF",
+        i:
+          "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+        t: "Title",
+      })),
+    });
+  }
   resp.setHeader("Content-Type", "application/json", false);
 
   let json = JSON.stringify(data);
