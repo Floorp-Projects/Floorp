@@ -679,21 +679,21 @@ void GfxInfo::GetDataVAAPI() {
         gfxCriticalNote << "vaapitest: Failed to get VAAPI codecs\n";
         return;
       }
-      int codecs = 0;
-      std::istringstream(line) >> codecs;
-      if (codecs & CODEC_HW_H264) {
+
+      std::istringstream(line) >> mVAAPISupportedCodecs;
+      if (mVAAPISupportedCodecs & CODEC_HW_H264) {
         media::MCSInfo::AddSupport(
             media::MediaCodecsSupport::H264HardwareDecode);
       }
-      if (codecs & CODEC_HW_VP8) {
+      if (mVAAPISupportedCodecs & CODEC_HW_VP8) {
         media::MCSInfo::AddSupport(
             media::MediaCodecsSupport::VP8HardwareDecode);
       }
-      if (codecs & CODEC_HW_VP9) {
+      if (mVAAPISupportedCodecs & CODEC_HW_VP9) {
         media::MCSInfo::AddSupport(
             media::MediaCodecsSupport::VP9HardwareDecode);
       }
-      if (codecs & CODEC_HW_AV1) {
+      if (mVAAPISupportedCodecs & CODEC_HW_AV1) {
         media::MCSInfo::AddSupport(
             media::MediaCodecsSupport::AV1HardwareDecode);
       }
@@ -1127,6 +1127,27 @@ nsresult GfxInfo::GetFeatureStatusImpl(
         return NS_OK;
       }
     }
+  }
+
+  const struct {
+    int32_t mFeature;
+    int32_t mCodec;
+  } kFeatureToCodecs[] = {{nsIGfxInfo::FEATURE_H264_HW_DECODE, CODEC_HW_H264},
+                          {nsIGfxInfo::FEATURE_VP8_HW_DECODE, CODEC_HW_VP8},
+                          {nsIGfxInfo::FEATURE_VP9_HW_DECODE, CODEC_HW_VP9},
+                          {nsIGfxInfo::FEATURE_AV1_HW_DECODE, CODEC_HW_AV1}};
+
+  for (const auto& pair : kFeatureToCodecs) {
+    if (aFeature != pair.mFeature) {
+      continue;
+    }
+    if (mVAAPISupportedCodecs & pair.mCodec) {
+      *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+    } else {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST;
+      aFailureId = "FEATURE_FAILURE_VIDEO_DECODING_MISSING";
+    }
+    return NS_OK;
   }
 
   auto ret = GfxInfoBase::GetFeatureStatusImpl(
