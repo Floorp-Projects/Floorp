@@ -6572,20 +6572,17 @@ static void EmitGuardLastIndexIsNonNegativeInt32(CacheIRWriter& writer,
   writer.guardInt32IsNonNegative(lastIndexId);
 }
 
-AttachDecision
-InlinableNativeIRGenerator::tryAttachIntrinsicRegExpBuiltinExec() {
-  // Self-hosted code calls this with (regexp, string, boolean) arguments.
-  MOZ_ASSERT(argc_ == 3);
+AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpBuiltinExec(
+    InlinableNative native) {
+  // Self-hosted code calls this with (regexp, string) arguments.
+  MOZ_ASSERT(argc_ == 2);
   MOZ_ASSERT(args_[0].isObject());
   MOZ_ASSERT(args_[1].isString());
-  MOZ_ASSERT(args_[2].isBoolean());
 
   RegExpObject* re = &args_[0].toObject().as<RegExpObject>();
   if (!HasOptimizableLastIndexSlot(re, cx_)) {
     return AttachDecision::NoAction;
   }
-
-  bool forTest = args_[2].toBoolean();
 
   // Initialize the input operand.
   initializeInputOperand();
@@ -6600,11 +6597,7 @@ InlinableNativeIRGenerator::tryAttachIntrinsicRegExpBuiltinExec() {
   ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
   StringOperandId inputId = writer.guardToString(arg1Id);
 
-  ValOperandId arg2Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
-  Int32OperandId forTestId = writer.guardBooleanToInt32(arg2Id);
-  writer.guardSpecificInt32(forTestId, forTest);
-
-  if (forTest) {
+  if (native == InlinableNative::IntrinsicRegExpBuiltinExecForTest) {
     writer.regExpBuiltinExecTestResult(regExpId, inputId);
   } else {
     writer.regExpBuiltinExecMatchResult(regExpId, inputId);
@@ -6615,12 +6608,12 @@ InlinableNativeIRGenerator::tryAttachIntrinsicRegExpBuiltinExec() {
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpExec() {
-  // Self-hosted code calls this with (object, string, boolean) arguments.
-  MOZ_ASSERT(argc_ == 3);
+AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpExec(
+    InlinableNative native) {
+  // Self-hosted code calls this with (object, string) arguments.
+  MOZ_ASSERT(argc_ == 2);
   MOZ_ASSERT(args_[0].isObject());
   MOZ_ASSERT(args_[1].isString());
-  MOZ_ASSERT(args_[2].isBoolean());
 
   if (!args_[0].toObject().is<RegExpObject>()) {
     return AttachDecision::NoAction;
@@ -6657,8 +6650,6 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpExec() {
   }
   JSFunction* execFunction = &execVal.toObject().as<JSFunction>();
 
-  bool forTest = args_[2].toBoolean();
-
   // Initialize the input operand.
   initializeInputOperand();
 
@@ -6680,11 +6671,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpExec() {
   ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
   StringOperandId inputId = writer.guardToString(arg1Id);
 
-  ValOperandId arg2Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
-  Int32OperandId forTestId = writer.guardBooleanToInt32(arg2Id);
-  writer.guardSpecificInt32(forTestId, forTest);
-
-  if (forTest) {
+  if (native == InlinableNative::IntrinsicRegExpExecForTest) {
     writer.regExpBuiltinExecTestResult(regExpId, inputId);
   } else {
     writer.regExpBuiltinExecMatchResult(regExpId, inputId);
@@ -10600,9 +10587,11 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     case InlinableNative::GetFirstDollarIndex:
       return tryAttachGetFirstDollarIndex();
     case InlinableNative::IntrinsicRegExpBuiltinExec:
-      return tryAttachIntrinsicRegExpBuiltinExec();
+    case InlinableNative::IntrinsicRegExpBuiltinExecForTest:
+      return tryAttachIntrinsicRegExpBuiltinExec(native);
     case InlinableNative::IntrinsicRegExpExec:
-      return tryAttachIntrinsicRegExpExec();
+    case InlinableNative::IntrinsicRegExpExecForTest:
+      return tryAttachIntrinsicRegExpExec(native);
 
     // String natives.
     case InlinableNative::String:
