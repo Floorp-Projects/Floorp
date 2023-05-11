@@ -1205,20 +1205,29 @@ public class GeckoView extends FrameLayout {
     }
 
     public void onPrint(@NonNull final InputStream pdfStream) {
+      onPrintWithStatus(pdfStream);
+    }
+
+    public GeckoResult<Boolean> onPrintWithStatus(@NonNull final InputStream pdfStream) {
+      final GeckoResult<Boolean> isDialogFinished = new GeckoResult<Boolean>();
       if (mActivityDelegate == null) {
         Log.w(LOGTAG, "Missing an activity context delegate, which is required for printing.");
-        return;
+        isDialogFinished.completeExceptionally(new Exception("Missing activity context delegate."));
+        return isDialogFinished;
       }
       final Context printContext = mActivityDelegate.getActivityContext();
       if (printContext == null) {
         Log.w(LOGTAG, "An activity context is required for printing.");
-        return;
+        isDialogFinished.completeExceptionally(new Exception("Missing an activity context."));
+        return isDialogFinished;
       }
       final PrintManager printManager =
           (PrintManager)
               mActivityDelegate.getActivityContext().getSystemService(Context.PRINT_SERVICE);
-      final PrintDocumentAdapter pda = new GeckoViewPrintDocumentAdapter(pdfStream, getContext());
+      final PrintDocumentAdapter pda =
+          new GeckoViewPrintDocumentAdapter(pdfStream, getContext(), isDialogFinished);
       printManager.print("Firefox", pda, null);
+      return isDialogFinished;
     }
   }
 }
