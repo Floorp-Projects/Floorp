@@ -473,7 +473,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     kotlinOptions {
         freeCompilerArgs += [
                 "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                "-opt-in=com.google.accompanist.pager.ExperimentalPagerApi",
         ]
     }
 }
@@ -488,7 +487,6 @@ dependencies {
     implementation FenixDependencies.androidx_constraintlayout
     implementation FenixDependencies.androidx_coordinatorlayout
     implementation FenixDependencies.google_accompanist_drawablepainter
-    implementation FenixDependencies.google_accompanist_pager
 
     implementation FenixDependencies.sentry
 

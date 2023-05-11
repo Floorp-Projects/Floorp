@@ -116,7 +116,6 @@ object FenixDependencies {
 
     const val google_material = "com.google.android.material:material:${FenixVersions.google_material}"
     const val google_accompanist_drawablepainter = "com.google.accompanist:accompanist-drawablepainter:${FenixVersions.google_accompanist}"
-    const val google_accompanist_pager = "com.google.accompanist:accompanist-pager:${FenixVersions.google_accompanist}"
 
     const val protobuf_javalite = "com.google.protobuf:protobuf-javalite:${FenixVersions.protobuf}"
     const val protobuf_compiler = "com.google.protobuf:protoc:${FenixVersions.protobuf}"

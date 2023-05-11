@@ -2,14 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package org.mozilla.fenix.onboarding.view
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -24,9 +30,6 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.PagerState
-import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
@@ -76,7 +79,7 @@ fun JunoOnboardingScreen(
     }
 
     val scrollToNextPageOrDismiss: () -> Unit = {
-        if (pagerState.currentPage == pagerState.pageCount - 1) {
+        if (pagerState.currentPage == pagesToDisplay.lastIndex) {
             onFinish(pagesToDisplay[pagerState.currentPage])
         } else {
             coroutineScope.launch {
@@ -152,7 +155,7 @@ private fun JunoOnboardingContent(
             .navigationBarsPadding(),
     ) {
         HorizontalPager(
-            count = pagesToDisplay.size,
+            pageCount = pagesToDisplay.size,
             state = pagerState,
             key = { pagesToDisplay[it].type },
             modifier = Modifier
@@ -175,6 +178,7 @@ private fun JunoOnboardingContent(
 
         PagerIndicator(
             pagerState = pagerState,
+            pageCount = pagesToDisplay.size,
             activeColor = FirefoxTheme.colors.actionPrimary,
             inactiveColor = FirefoxTheme.colors.actionSecondary,
             leaveTrail = true,
@@ -198,7 +202,7 @@ private class DisableForwardSwipeNestedScrollConnection(
             // this would be a result of a slow back fling, and we should allow snapper to
             // snap to the appropriate item.
             // Else consume the whole offset and disable going forward.
-            if (pagerState.currentPageOffset < 0) {
+            if (pagerState.currentPageOffsetFraction < 0) {
                 Offset.Zero
             } else {
                 Offset(available.x, 0f)
