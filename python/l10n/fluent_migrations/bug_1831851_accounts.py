@@ -11,6 +11,8 @@ def migrate(ctx):
 
     accounts = "browser/chrome/browser/accounts.properties"
     accounts_ftl = "browser/browser/accounts.ftl"
+    preferences_ftl = "browser/browser/preferences/preferences.ftl"
+
     ctx.add_transforms(
         accounts_ftl,
         accounts_ftl,
@@ -161,6 +163,33 @@ def migrate(ctx):
                         {"#1": VARIABLE_REFERENCE("tabCount")},
                     ),
                 ),
+            ),
+        ],
+    )
+
+    ctx.add_transforms(
+        preferences_ftl,
+        preferences_ftl,
+        [
+            FTL.Message(
+                id=FTL.Identifier("sync-verification-sent-title"),
+                value=COPY(accounts, "verificationSentTitle"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("sync-verification-sent-body"),
+                value=REPLACE(
+                    accounts,
+                    "verificationSentBody",
+                    {"%1$S": VARIABLE_REFERENCE("email")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("sync-verification-not-sent-title"),
+                value=COPY(accounts, "verificationNotSentTitle"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("sync-verification-not-sent-body"),
+                value=COPY(accounts, "verificationNotSentBody"),
             ),
         ],
     )
