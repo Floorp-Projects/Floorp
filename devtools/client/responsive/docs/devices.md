@@ -26,11 +26,11 @@ Each device has a user agent specified. We can get this value by:
 
 First, make sure you can have access to RemoteSettings (see https://remote-settings.readthedocs.io/en/latest/getting-started.html#getting-started).
 
-You should then be able to add the device to the [RemoteSettings Stage instance](https://settings-writer.stage.mozaws.net/v1/admin/#/buckets/main-workspace/collections/devtools-devices/) using the interface.
+You should then be able to add the device to the [RemoteSettings Stage instance](https://remote-settings.allizom.org/v1/admin/#/buckets/main-workspace/collections/devtools-devices/) using the interface.
 Then use the RemoteSettings DevTools to make Firefox pull the devices list from the Stage instance (see https://remote-settings.readthedocs.io/en/latest/support.html?highlight=devtools#how-do-i-setup-firefox-to-pull-data-from-stage)
 Once that is done, open RDM and make sure you can see the new addition in the Devices modal.
 
-If everything is good, you can then ask for review on the data change. Once this get approved, you can replicate the same changes to the [RemoteSettings Prod instance](https://settings-writer.prod.mozaws.net/v1/admin/#/buckets/main-workspace/collections/devtools-devices/), reset the RemoteSettings DevTools settings, check RDM again just to be sure and finally ask for review on the data change.
+If everything is good, you can then ask for review on the data change. Once this get approved, you can replicate the same changes to the [RemoteSettings Prod instance](https://remote-settings.mozilla.org/v1/admin/#/buckets/main-workspace/collections/devtools-devices/), reset the RemoteSettings DevTools settings, check RDM again just to be sure and finally ask for review on the data change.
 
 ## Things to consider in the future
 

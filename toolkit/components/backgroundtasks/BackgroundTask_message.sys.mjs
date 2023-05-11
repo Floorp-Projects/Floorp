@@ -19,7 +19,7 @@
 // environment variables still apply.
 //
 // --stage: use stage Remote Settings
-//   (`https://settings-cdn.stage.mozaws.net/v1`) rather than production
+//   (`https://firefox.settings.services.allizom.org/v1`) rather than production
 //   (`https://firefox.settings.services.mozilla.com/v1`)
 //
 // --preview: enable Remote Settings and Experiment previews.
@@ -76,7 +76,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ToastNotification: "resource://activity-stream/lib/ToastNotification.jsm",
 });
 
-const SERVER_STAGE = "https://settings-cdn.stage.mozaws.net/v1";
+const SERVER_STAGE = "https://firefox.settings.services.allizom.org/v1";
 
 // Default profile targeting snapshot.
 let defaultProfileTargetingSnapshot = {};
@@ -182,7 +182,7 @@ async function handleCommandLine(commandLine) {
   Services.prefs.clearUserPref("services.settings.load_dump");
   if (commandLine.handleFlag("stage", CASE_INSENSITIVE)) {
     console.log(
-      `Saw --stage, setting 'services.settings.server="https://settings-cdn.stage.mozaws.net/v1"'`
+      `Saw --stage, setting 'services.settings.server="${SERVER_STAGE}"'`
     );
     Services.prefs.setCharPref("services.settings.server", SERVER_STAGE);
     Services.prefs.setBoolPref("services.settings.load_dump", false);
