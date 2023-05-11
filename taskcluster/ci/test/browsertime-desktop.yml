@@ -364,8 +364,7 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            (linux|macosx1015).*64.*shippable-qr/.*: [trunk]
-                            windows.*64.*shippable-qr/.*: [trunk, mozilla-release]
+                            .*64.*shippable-qr/.*: [trunk, mozilla-release]
                             .*nightlyasrelease.*: [autoland]
                             default: []
                     default: []
@@ -374,8 +373,7 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            (linux|macosx1015).*64.*shippable-qr/.*: [trunk]
-                            windows.*64.*shippable-qr/.*: [trunk, mozilla-release]
+                            .*64.*shippable-qr/.*: [trunk, mozilla-release]
                             default: []
                     default: []
             speedometer:
@@ -383,8 +381,7 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            (linux|macosx1015).*64.*shippable-qr/.*: [trunk]
-                            windows.*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                            .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                             .*nightlyasrelease.*: [autoland]
                             default: []
                     default: []
