@@ -3833,13 +3833,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                            wasm::FailureMode failureMode);
 
   // Perform a subtype check that `object` is a subtype of `type`, branching to
-  // `label` depending on `onSuccess`.
+  // `label` depending on `onSuccess`. `type` must be in the `any` hierarchy.
   //
-  // `scratch1` is required iff the destination type is eq or lower and not
-  // none. `superSuperTypeVector` is required iff the destination type is a
-  // concrete type. `scratch2` is required iff the destination type is a
-  // concrete type and its `subTypingDepth` is >=
-  // wasm::MinSuperTypeVectorLength.
+  // `superSuperTypeVector` is required iff the destination type is a concrete
+  // type. `scratch1` is required iff the destination type is eq or lower and
+  // not none. `scratch2` is required iff the destination type is a concrete
+  // type and its `subTypingDepth` is >= wasm::MinSuperTypeVectorLength.
   //
   // `object` and `superSuperTypeVector` are preserved. Scratch registers are
   // clobbered.

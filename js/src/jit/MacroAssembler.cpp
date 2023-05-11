@@ -4849,12 +4849,15 @@ void MacroAssembler::wasmCallRef(const wasm::CallSiteDesc& desc,
 
 bool MacroAssembler::needScratch1ForBranchWasmGcRefType(
     const wasm::RefType& type) {
-  return !type.isNone() &&
-         wasm::RefType::isSubTypeOf(type, wasm::RefType::eq());
+  MOZ_ASSERT(type.isValid());
+  MOZ_ASSERT(type.isAnyHierarchy());
+  return !type.isNone() && !type.isAny();
 }
 
 bool MacroAssembler::needScratch2ForBranchWasmGcRefType(
     const wasm::RefType& type) {
+  MOZ_ASSERT(type.isValid());
+  MOZ_ASSERT(type.isAnyHierarchy());
   return type.isTypeRef() &&
          type.typeDef()->subTypingDepth() >= wasm::MinSuperTypeVectorLength;
 }
@@ -4868,6 +4871,7 @@ void MacroAssembler::branchWasmGcObjectIsRefType(
     Register object, const wasm::RefType& type, Label* label, bool onSuccess,
     Register superSuperTypeVector, Register scratch1, Register scratch2) {
   MOZ_ASSERT(type.isValid());
+  MOZ_ASSERT(type.isAnyHierarchy());
   MOZ_ASSERT_IF(needScratch1ForBranchWasmGcRefType(type),
                 scratch1 != Register::Invalid());
   MOZ_ASSERT_IF(needScratch2ForBranchWasmGcRefType(type),

@@ -3559,6 +3559,10 @@ inline bool OpIter<Policy>::readRefTest(bool nullable, RefType* refType,
     return false;
   }
 
+  if (!refType->isAnyHierarchy()) {
+    return fail("ref.test only supports the any hierarchy for now");
+  }
+
   return push(ValType(ValType::I32));
 }
 
@@ -3573,6 +3577,10 @@ inline bool OpIter<Policy>::readRefCast(bool nullable, RefType* refType,
 
   if (!popWithType(refType->topType(), ref)) {
     return false;
+  }
+
+  if (!refType->isAnyHierarchy()) {
+    return fail("ref.cast only supports the any hierarchy for now");
   }
 
   return push(*refType);
@@ -3654,6 +3662,12 @@ inline bool OpIter<Policy>::readBrOnCast(bool* onSuccess,
   RefType typeOnBranch = *onSuccess ? typeOnSuccess : typeOnFail;
   RefType typeOnFallthrough = *onSuccess ? typeOnFail : typeOnSuccess;
 
+  if (!typeOnSuccess.isAnyHierarchy() || !typeOnFail.isAnyHierarchy()) {
+    return fail(
+        "br_on_cast and br_on_cast_fail only support the any hierarchy for "
+        "now");
+  }
+
   // Get the branch target type, which will also determine the type of extra
   // values that are passed along on branch.
   Control* block = nullptr;
@@ -3702,6 +3716,10 @@ inline bool OpIter<Policy>::checkBrOnCastCommonV5(uint32_t labelRelativeDepth,
                                                   ValType castToType,
                                                   ResultType* labelType,
                                                   ValueVector* values) {
+  if (!(castToType.isRefType() && castToType.refType().isAnyHierarchy())) {
+    return fail("br_on_cast v5 only supports the any hierarchy");
+  }
+
   // The casted from type is any subtype of anyref.
   ValType anyrefType(RefType::any());
 
@@ -3839,6 +3857,10 @@ template <typename Policy>
 inline bool OpIter<Policy>::checkBrOnCastFailCommonV5(
     uint32_t labelRelativeDepth, ValType castFromType, ValType castToType,
     ResultType* labelType, ValueVector* values) {
+  if (!(castToType.isRefType() && castToType.refType().isAnyHierarchy())) {
+    return fail("br_on_cast_fail v5 only supports the any hierarchy");
+  }
+
   // Get the branch target type, which will also determine the type of extra
   // values that are passed along with the casted type.  This validates
   // requirement (1).
