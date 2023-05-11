@@ -54,6 +54,7 @@ add_setup(async function() {
     set: [
       ["browser.urlbar.quicksuggest.enabled", true],
       ["browser.urlbar.quicksuggest.remoteSettings.enabled", false],
+      ["browser.urlbar.bestMatch.enabled", true],
     ],
   });
 
