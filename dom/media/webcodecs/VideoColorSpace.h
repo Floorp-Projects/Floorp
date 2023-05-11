@@ -31,9 +31,6 @@ class VideoColorSpace final : public nsISupports, public nsWrapperCache {
   ~VideoColorSpace() = default;
 
  public:
-  // This should return something that eventually allows finding a
-  // path to the global this object is associated with.  Most simply,
-  // returning an actual global works.
   nsIGlobalObject* GetParentObject() const;
 
   JSObject* WrapObject(JSContext* aCx,
