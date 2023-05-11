@@ -121,7 +121,7 @@ media-full:
         - "mochitest-media android !spi !swr !lite"
         - "mochitest-browser-chrome !dfpi !nofis !a11y"
         - "mochitest-browser-media"
-        - "web-platform-tests !dfpi !nofis"
+        - "web-platform-tests !dfpi !nofis !shippable"
         - "web-platform-tests android !wdspec !spi !swr !lite"
         - "crashtest !wdspec !nofis"
         - "crashtest android !wdspec !spi !swr !lite"
