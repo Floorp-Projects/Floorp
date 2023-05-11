@@ -16,6 +16,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
+import org.hamcrest.CoreMatchers.containsString
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -28,6 +29,7 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PrintDelegate
 import org.mozilla.geckoview.GeckoView.ActivityContextDelegate
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import kotlin.math.roundToInt
@@ -155,6 +157,38 @@ class PrintDelegateTest : BaseSessionTest() {
                 "Android print opened and rendered.",
                 sessionRule.waitForResult(centerPixel) == orange
             )
+        }
+    }
+
+    @NullDelegate(Autofill.Delegate::class)
+    @Test
+    fun statusWindowDotPrintTest() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.enable_window_print" to true))
+        activityRule.scenario.onActivity { activity ->
+            // CSS rules render this blue on screen and orange on print
+            mainSession.loadTestPath(PRINT_CONTENT_CHANGE)
+            mainSession.waitForPageStop()
+            // Setting to the default delegate (test rules changed it)
+            mainSession.printDelegate = activity.view.printDelegate
+            mainSession.evaluateJS("window.print()")
+            val centerPixel = printCenterPixelColor()
+            val orange = rgb(255, 113, 57)
+            assertTrue(
+                "Android print opened and rendered.",
+                sessionRule.waitForResult(centerPixel) == orange
+            )
+            var didCatch = false
+            try {
+                mainSession.evaluateJS("window.print();")
+            } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+                assertThat(
+                    "Print status context reported.",
+                    e.message,
+                    containsString("Window.print: No browsing context")
+                )
+                didCatch = true
+            }
+            assertTrue("Did show print status.", didCatch)
         }
     }
 
