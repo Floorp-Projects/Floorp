@@ -26,6 +26,8 @@ static const char kQueryStrippingEnabledPref[] =
     "privacy.query_stripping.enabled";
 static const char kQueryStrippingEnabledPBMPref[] =
     "privacy.query_stripping.enabled.pbmode";
+static const char kQueryStrippingOnShareEnabledPref[] =
+    "privacy.query_stripping.strip_on_share.enabled";
 
 }  // namespace
 
@@ -65,7 +67,20 @@ URLQueryStringStripper::URLQueryStringStripper() {
 
   rv = Preferences::RegisterCallback(&URLQueryStringStripper::OnPrefChange,
                                      kQueryStrippingEnabledPref);
+
+  rv = Preferences::RegisterCallback(&URLQueryStringStripper::OnPrefChange,
+                                     kQueryStrippingOnShareEnabledPref);
   NS_ENSURE_SUCCESS_VOID(rv);
+}
+
+NS_IMETHODIMP
+URLQueryStringStripper::StripForCopyOrShare(nsIURI* aURI,
+                                            nsIURI** strippedURI) {
+  if (!StaticPrefs::privacy_query_stripping_strip_on_share_enabled()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  uint32_t numStripped;
+  return StripQueryString(aURI, strippedURI, &numStripped);
 }
 
 NS_IMETHODIMP
@@ -100,7 +115,8 @@ void URLQueryStringStripper::OnPrefChange(const char* aPref, void* aData) {
 
   bool prefEnablesComponent =
       StaticPrefs::privacy_query_stripping_enabled() ||
-      StaticPrefs::privacy_query_stripping_enabled_pbmode();
+      StaticPrefs::privacy_query_stripping_enabled_pbmode() ||
+      StaticPrefs::privacy_query_stripping_strip_on_share_enabled();
 
   nsresult rv;
   if (prefEnablesComponent) {

@@ -69,6 +69,7 @@ add_setup(async function() {
     ["privacy.query_stripping.enabled", false],
     ["privacy.query_stripping.enabled.pbmode", false],
     ["privacy.query_stripping.strip_list", ""],
+    ["privacy.query_stripping.strip_on_share.enabled", false],
   ]);
 
   await SpecialPowers.pushPrefEnv({
