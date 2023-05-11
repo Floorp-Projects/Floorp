@@ -1642,8 +1642,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-speedometer**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -1684,8 +1684,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-speedometer**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-speedometer**
         - ❌
         - ❌
@@ -1937,8 +1937,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-speedometer**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
 
 
    .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
@@ -1979,8 +1979,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-speedometer**
         - ✅
         - ✅
-        - ❌
-        - ❌
+        - ✅
+        - ✅
       * - **browsertime-benchmark-safari-speedometer**
         - ❌
         - ❌
@@ -2246,7 +2246,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-speedometer3**
         - ✅
         - ✅
-        - ❌
+        - ✅
         - ❌
 
 
@@ -2288,7 +2288,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-speedometer3**
         - ✅
         - ✅
-        - ❌
+        - ✅
         - ❌
       * - **browsertime-benchmark-safari-speedometer3**
         - ❌
@@ -2550,7 +2550,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-speedometer3**
         - ✅
         - ✅
-        - ❌
+        - ✅
         - ❌
 
 
@@ -2592,7 +2592,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-speedometer3**
         - ✅
         - ✅
-        - ❌
+        - ✅
         - ❌
       * - **browsertime-benchmark-safari-speedometer3**
         - ❌
@@ -3531,7 +3531,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
         - ✅
-        - ❌
+        - ✅
         - ❌
 
 
@@ -3573,7 +3573,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
         - ✅
-        - ❌
+        - ✅
         - ❌
       * - **browsertime-benchmark-safari-unity-webgl**
         - ❌
@@ -3818,7 +3818,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
         - ✅
-        - ❌
+        - ✅
         - ❌
 
 
@@ -3860,7 +3860,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
         - ✅
-        - ❌
+        - ✅
         - ❌
       * - **browsertime-benchmark-safari-unity-webgl**
         - ❌
