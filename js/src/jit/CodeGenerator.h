@@ -69,8 +69,7 @@ class OutOfLineIsCallable;
 class OutOfLineIsConstructor;
 class OutOfLineRegExpMatcher;
 class OutOfLineRegExpSearcher;
-class OutOfLineRegExpExecMatch;
-class OutOfLineRegExpExecTest;
+class OutOfLineRegExpTester;
 class OutOfLineRegExpPrototypeOptimizable;
 class OutOfLineRegExpInstanceOptimizable;
 class OutOfLineNaNToZero;
@@ -137,8 +136,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void visitOutOfLineRegExpMatcher(OutOfLineRegExpMatcher* ool);
   void visitOutOfLineRegExpSearcher(OutOfLineRegExpSearcher* ool);
-  void visitOutOfLineRegExpExecMatch(OutOfLineRegExpExecMatch* ool);
-  void visitOutOfLineRegExpExecTest(OutOfLineRegExpExecTest* ool);
+  void visitOutOfLineRegExpTester(OutOfLineRegExpTester* ool);
   void visitOutOfLineRegExpPrototypeOptimizable(
       OutOfLineRegExpPrototypeOptimizable* ool);
   void visitOutOfLineRegExpInstanceOptimizable(

@@ -149,7 +149,7 @@ function RegExpMatch(string) {
     }
 
     // Step 5.
-    return RegExpBuiltinExec(rx, S);
+    return RegExpBuiltinExec(rx, S, false);
   }
 
   // Stes 4-6
@@ -165,7 +165,7 @@ function RegExpMatchSlowPath(rx, S) {
 
   // Step 5.
   if (!callFunction(std_String_includes, flags, "g")) {
-    return RegExpExec(rx, S);
+    return RegExpExec(rx, S, false);
   }
 
   // Step 6.a.
@@ -183,7 +183,7 @@ function RegExpMatchSlowPath(rx, S) {
   // Step 6.e.
   while (true) {
     // Step 6.e.i.
-    var result = RegExpExec(rx, S);
+    var result = RegExpExec(rx, S, false);
 
     // Step 6.e.ii.
     if (result === null) {
@@ -427,7 +427,7 @@ function RegExpReplaceSlowPath(
   // Steps 11-12.
   while (true) {
     // Step 12.a.
-    var result = RegExpExec(rx, S);
+    var result = RegExpExec(rx, S, false);
 
     // Step 12.b.
     if (result === null) {
@@ -976,7 +976,7 @@ function RegExpSearch(string) {
 // Steps 6-10.
 function RegExpSearchSlowPath(rx, S, previousLastIndex) {
   // Step 6.
-  var result = RegExpExec(rx, S);
+  var result = RegExpExec(rx, S, false);
 
   // Step 7.
   var currentLastIndex = rx.lastIndex;
@@ -1102,7 +1102,7 @@ function RegExpSplit(string, limit) {
     if (optimizable) {
       z = RegExpMatcher(splitter, S, 0);
     } else {
-      z = RegExpExec(splitter, S);
+      z = RegExpExec(splitter, S, false);
     }
 
     // Step 17.b.
@@ -1148,7 +1148,7 @@ function RegExpSplit(string, limit) {
       splitter.lastIndex = q;
 
       // Step 19.b.
-      z = RegExpExec(splitter, S);
+      z = RegExpExec(splitter, S, false);
 
       // Step 19.c.
       if (z === null) {
@@ -1236,11 +1236,110 @@ function RegExp_prototype_Exec(string) {
   var S = ToString(string);
 
   // Step 6.
-  return RegExpBuiltinExec(R, S);
+  return RegExpBuiltinExec(R, S, false);
+}
+
+// ES6 21.2.5.2.1.
+function RegExpExec(R, S, forTest) {
+  // Steps 1-2 (skipped).
+
+  // Steps 3-4.
+  var exec = R.exec;
+
+  // Step 5.
+  // If exec is the original RegExp.prototype.exec, use the same, faster,
+  // path as for the case where exec isn't callable.
+  if (exec === RegExp_prototype_Exec || !IsCallable(exec)) {
+    // ES6 21.2.5.2 steps 1-2, 4-5 (skipped) for optimized case.
+
+    // Steps 6-7 or ES6 21.2.5.2 steps 3, 6 for optimized case.
+    return RegExpBuiltinExec(R, S, forTest);
+  }
+
+  // Steps 5.a-b.
+  var result = callContentFunction(exec, R, S);
+
+  // Step 5.c.
+  if (result !== null && !IsObject(result)) {
+    ThrowTypeError(JSMSG_EXEC_NOT_OBJORNULL);
+  }
+
+  // Step 5.d.
+  return forTest ? result !== null : result;
+}
+
+// ES2017 draft rev 6390c2f1b34b309895d31d8c0512eac8660a0210
+// 21.2.5.2.2 Runtime Semantics: RegExpBuiltinExec ( R, S )
+function RegExpBuiltinExec(R, S, forTest) {
+  // 21.2.5.2.1 Runtime Semantics: RegExpExec, step 5.
+  // This check is here for RegExpTest.  RegExp_prototype_Exec does same
+  // thing already.
+  if (!IsRegExpObject(R)) {
+    return UnwrapAndCallRegExpBuiltinExec(R, S, forTest);
+  }
+
+  // Steps 1-3 (skipped).
+
+  // Step 4.
+  var lastIndex = ToLength(R.lastIndex);
+
+  // Step 5.
+  var flags = UnsafeGetInt32FromReservedSlot(R, REGEXP_FLAGS_SLOT);
+
+  // Steps 6-7.
+  var globalOrSticky = !!(flags & (REGEXP_GLOBAL_FLAG | REGEXP_STICKY_FLAG));
+
+  // Step 8.
+  if (!globalOrSticky) {
+    lastIndex = 0;
+  } else {
+    // Step 12.a.
+    if (lastIndex > S.length) {
+      // Steps 12.a.i-ii.
+      if (globalOrSticky) {
+        R.lastIndex = 0;
+      }
+      return forTest ? false : null;
+    }
+  }
+
+  if (forTest) {
+    // Steps 3, 9-25, except 12.a.i-ii, 12.c.i.1-2, 15.
+    var endIndex = RegExpTester(R, S, lastIndex);
+    if (endIndex === -1) {
+      // Steps 12.a.i-ii, 12.c.i.1-2.
+      if (globalOrSticky) {
+        R.lastIndex = 0;
+      }
+      return false;
+    }
+
+    // Step 15.
+    if (globalOrSticky) {
+      R.lastIndex = endIndex;
+    }
+
+    return true;
+  }
+
+  // Steps 3, 9-25, except 12.a.i-ii, 12.c.i.1-2, 15.
+  var result = RegExpMatcher(R, S, lastIndex);
+  if (result === null) {
+    // Steps 12.a.i, 12.c.i.
+    if (globalOrSticky) {
+      R.lastIndex = 0;
+    }
+  } else {
+    // Step 15.
+    if (globalOrSticky) {
+      R.lastIndex = result.index + result[0].length;
+    }
+  }
+
+  return result;
 }
 
 function UnwrapAndCallRegExpBuiltinExec(R, S, forTest) {
-  assert(typeof forTest === "boolean", "forTest must be a boolean");
   return callFunction(
     CallRegExpMethodIfWrapped,
     R,
@@ -1251,11 +1350,7 @@ function UnwrapAndCallRegExpBuiltinExec(R, S, forTest) {
 }
 
 function CallRegExpBuiltinExec(S, forTest) {
-  assert(typeof forTest === "boolean", "forTest must be a boolean");
-  if (forTest) {
-    return RegExpBuiltinExecForTest(this, S);
-  }
-  return RegExpBuiltinExec(this, S);
+  return RegExpBuiltinExec(this, S, forTest);
 }
 
 // ES6 21.2.5.13.
@@ -1270,7 +1365,7 @@ function RegExpTest(string) {
   var S = ToString(string);
 
   // Steps 5-6.
-  return RegExpExecForTest(R, S);
+  return RegExpExec(R, S, true);
 }
 
 // ES 2016 draft Mar 25, 2016 21.2.4.2.
@@ -1524,7 +1619,7 @@ function RegExpStringIteratorNext() {
   }
 
   // Step 9.
-  var match = RegExpExec(regexp, string);
+  var match = RegExpExec(regexp, string, false);
 
   // Step 10.
   if (match === null) {

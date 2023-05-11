@@ -190,9 +190,7 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   Value valueStubField(uint32_t offset) {
     uint64_t raw =
         static_cast<uint64_t>(stubInfo_->getStubRawInt64(stubData_, offset));
-    Value val = Value::fromRawBits(raw);
-    MOZ_ASSERT_IF(val.isGCThing(), val.toGCThing()->isTenured());
-    return val;
+    return Value::fromRawBits(raw);
   }
   double doubleStubField(uint32_t offset) {
     uint64_t raw =
@@ -877,6 +875,7 @@ bool WarpCacheIRTranspiler::emitGuardDynamicSlotValue(ObjOperandId objId,
 
   size_t offset = int32StubField(offsetOffset);
   Value val = valueStubField(valOffset);
+  MOZ_ASSERT(val.isPrivateGCThing());
 
   size_t slotIndex = NativeObject::getDynamicSlotIndexFromOffset(offset);
 
@@ -3517,28 +3516,18 @@ bool WarpCacheIRTranspiler::emitCallRegExpSearcherResult(
   return resumeAfter(searcher);
 }
 
-bool WarpCacheIRTranspiler::emitRegExpBuiltinExecMatchResult(
-    ObjOperandId regexpId, StringOperandId inputId) {
+bool WarpCacheIRTranspiler::emitCallRegExpTesterResult(
+    ObjOperandId regexpId, StringOperandId inputId,
+    Int32OperandId lastIndexId) {
   MDefinition* regexp = getOperand(regexpId);
   MDefinition* input = getOperand(inputId);
+  MDefinition* lastIndex = getOperand(lastIndexId);
 
-  auto* ins = MRegExpExecMatch::New(alloc(), regexp, input);
-  addEffectful(ins);
-  pushResult(ins);
+  auto* tester = MRegExpTester::New(alloc(), regexp, input, lastIndex);
+  addEffectful(tester);
+  pushResult(tester);
 
-  return resumeAfter(ins);
-}
-
-bool WarpCacheIRTranspiler::emitRegExpBuiltinExecTestResult(
-    ObjOperandId regexpId, StringOperandId inputId) {
-  MDefinition* regexp = getOperand(regexpId);
-  MDefinition* input = getOperand(inputId);
-
-  auto* ins = MRegExpExecTest::New(alloc(), regexp, input);
-  addEffectful(ins);
-  pushResult(ins);
-
-  return resumeAfter(ins);
+  return resumeAfter(tester);
 }
 
 MInstruction* WarpCacheIRTranspiler::convertToBoolean(MDefinition* input) {

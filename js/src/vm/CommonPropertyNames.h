@@ -425,8 +425,6 @@
   MACRO_(RegExpFlagsGetter, RegExpFlagsGetter, "$RegExpFlagsGetter")           \
   MACRO_(RegExpStringIterator, RegExpStringIterator, "RegExp String Iterator") \
   MACRO_(RegExpToString, RegExpToString, "$RegExpToString")                    \
-  MACRO_(RegExp_prototype_Exec, RegExp_prototype_Exec,                         \
-         "RegExp_prototype_Exec")                                              \
   MACRO_(region, region, "region")                                             \
   MACRO_(register, register_, "register")                                      \
   MACRO_(Reify, Reify, "Reify")                                                \
@@ -544,8 +542,6 @@
          "UnsafeSetReservedSlot")                                              \
   MACRO_(unsized, unsized, "unsized")                                          \
   MACRO_(unwatch, unwatch, "unwatch")                                          \
-  MACRO_(UnwrapAndCallRegExpBuiltinExec, UnwrapAndCallRegExpBuiltinExec,       \
-         "UnwrapAndCallRegExpBuiltinExec")                                     \
   MACRO_(url, url, "url")                                                      \
   MACRO_(usage, usage, "usage")                                                \
   MACRO_(useAsm, useAsm, "use asm")                                            \
