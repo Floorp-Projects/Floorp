@@ -639,8 +639,6 @@ class OpenTest extends RoundedWindowTest {
 }
 
 // ============================================================
-const partial = (func, ...args) => (...rest) => func(...args, ...rest);
-
 async function runActualTest(
   uri,
   iframe_domain,

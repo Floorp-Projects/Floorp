@@ -314,7 +314,7 @@ const spoofedUserAgentHeader = `Mozilla/5.0 (${
 
 // The following are convenience objects that allow you to quickly see what is
 //   and is not modified from a logical set of values.
-// Be sure to always use `let expectedResults = JSON.parse(JSON.stringify(allNotSpoofed))` to do a
+// Be sure to always use `let expectedResults = structuredClone(allNotSpoofed)` to do a
 //   deep copy and avoiding corrupting the original 'const' object
 const allNotSpoofed = {
   appVersion: DEFAULT_APPVERSION[AppConstants.platform],
@@ -350,10 +350,10 @@ requestLongerTimeout(2);
 
 let expectedResults = {};
 
-expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
+expectedResults = structuredClone(allNotSpoofed);
 add_task(
-  partial(
-    defaultsTest,
+  defaultsTest.bind(
+    this,
     uri,
     iframe_domain,
     cross_origin_domain,
@@ -362,10 +362,10 @@ add_task(
   )
 );
 
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+expectedResults = structuredClone(allSpoofed);
 add_task(
-  partial(
-    simpleRFPTest,
+  simpleRFPTest.bind(
+    this,
     uri,
     iframe_domain,
     cross_origin_domain,
@@ -375,10 +375,10 @@ add_task(
 );
 
 // (A) RFP is exempted on the framer and framee and each contacts an exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
+expectedResults = structuredClone(allNotSpoofed);
 add_task(
-  partial(
-    testA,
+  testA.bind(
+    this,
     uri,
     iframe_domain,
     cross_origin_domain,
@@ -388,10 +388,10 @@ add_task(
 );
 
 // (B) RFP is exempted on the framer and framee and each contacts a non-exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allNotSpoofed));
+expectedResults = structuredClone(allNotSpoofed);
 add_task(
-  partial(
-    testB,
+  testB.bind(
+    this,
     uri,
     iframe_domain,
     cross_origin_domain,
@@ -401,12 +401,12 @@ add_task(
 );
 
 // (C) RFP is exempted on the framer but not the framee and each contacts an exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+expectedResults = structuredClone(allSpoofed);
 expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
 expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
 add_task(
-  partial(
-    testC,
+  testC.bind(
+    this,
     uri,
     iframe_domain,
     cross_origin_domain,
@@ -416,12 +416,12 @@ add_task(
 );
 
 // (D) RFP is exempted on the framer but not the framee and each contacts a non-exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+expectedResults = structuredClone(allSpoofed);
 expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
 expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
 add_task(
-  partial(
-    testD,
+  testD.bind(
+    this,
     uri,
     iframe_domain,
     cross_origin_domain,
@@ -431,10 +431,10 @@ add_task(
 );
 
 // (E) RFP is not exempted on the framer nor the framee and each contacts an exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+expectedResults = structuredClone(allSpoofed);
 add_task(
-  partial(
-    testE,
+  testE.bind(
+    this,
     uri,
     iframe_domain,
     cross_origin_domain,
@@ -444,10 +444,10 @@ add_task(
 );
 
 // (F) RFP is not exempted on the framer nor the framee and each contacts a non-exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+expectedResults = structuredClone(allSpoofed);
 add_task(
-  partial(
-    testF,
+  testF.bind(
+    this,
     uri,
     iframe_domain,
     cross_origin_domain,
@@ -457,10 +457,10 @@ add_task(
 );
 
 // (G) RFP is not exempted on the framer but is on the framee and each contacts an exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+expectedResults = structuredClone(allSpoofed);
 add_task(
-  partial(
-    testG,
+  testG.bind(
+    this,
     uri,
     iframe_domain,
     cross_origin_domain,
@@ -470,10 +470,10 @@ add_task(
 );
 
 // (H) RFP is not exempted on the framer but is on the framee and each contacts a non-exempted cross-origin resource
-expectedResults = JSON.parse(JSON.stringify(allSpoofed));
+expectedResults = structuredClone(allSpoofed);
 add_task(
-  partial(
-    testH,
+  testH.bind(
+    this,
     uri,
     iframe_domain,
     cross_origin_domain,
