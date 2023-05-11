@@ -128,6 +128,7 @@ struct PropertyStyleAnimationValuePair;
 struct PropertyValuePair;
 struct StyleAnimation;
 struct StyleCssUrlData;
+struct StyleAnimationValue;
 struct StyleStylesheetContents;
 struct URLExtraData;
 using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
@@ -154,6 +155,7 @@ class Element;
   };                                                                    \
   }
 #include "mozilla/ServoArcTypeList.h"
+SERVO_ARC_TYPE(AnimationValue, mozilla::StyleAnimationValue)
 SERVO_ARC_TYPE(ComputedStyle, mozilla::ComputedStyle)
 SERVO_ARC_TYPE(CssUrlData, mozilla::StyleCssUrlData)
 SERVO_ARC_TYPE(StyleSheetContents, mozilla::StyleStylesheetContents)

@@ -878,7 +878,7 @@ void Animation::CommitStyles(ErrorResult& aRv) {
   bool changed = false;
   nsCSSPropertyIDSet properties = keyframeEffect->GetPropertySet();
   for (nsCSSPropertyID property : properties) {
-    RefPtr<RawServoAnimationValue> computedValue =
+    RefPtr<StyleAnimationValue> computedValue =
         Servo_AnimationValueMap_GetValue(animationValues.get(), property)
             .Consume();
     if (computedValue) {

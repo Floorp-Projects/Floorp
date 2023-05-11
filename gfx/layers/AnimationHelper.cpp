@@ -157,7 +157,7 @@ static AnimationHelper::SampleResult SampleAnimationForProperty(
     TimeStamp aCurrentFrameTime, const AnimatedValue* aPreviousValue,
     CanSkipCompose aCanSkipCompose,
     nsTArray<PropertyAnimation>& aPropertyAnimations,
-    RefPtr<RawServoAnimationValue>& aAnimationValue) {
+    RefPtr<StyleAnimationValue>& aAnimationValue) {
   MOZ_ASSERT(!aPropertyAnimations.IsEmpty(), "Should have animations");
 
   auto reason = AnimationHelper::SampleResult::Reason::None;
@@ -318,17 +318,17 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
     const MutexAutoLock& aProofOfMapLock, TimeStamp aPreviousFrameTime,
     TimeStamp aCurrentFrameTime, const AnimatedValue* aPreviousValue,
     nsTArray<PropertyAnimationGroup>& aPropertyAnimationGroups,
-    nsTArray<RefPtr<RawServoAnimationValue>>& aAnimationValues /* out */) {
+    nsTArray<RefPtr<StyleAnimationValue>>& aAnimationValues /* out */) {
   MOZ_ASSERT(!aPropertyAnimationGroups.IsEmpty(),
              "Should be called with animation data");
   MOZ_ASSERT(aAnimationValues.IsEmpty(),
              "Should be called with empty aAnimationValues");
 
-  nsTArray<RefPtr<RawServoAnimationValue>> baseStyleOfDelayAnimations;
-  nsTArray<RefPtr<RawServoAnimationValue>> nonAnimatingValues;
+  nsTArray<RefPtr<StyleAnimationValue>> baseStyleOfDelayAnimations;
+  nsTArray<RefPtr<StyleAnimationValue>> nonAnimatingValues;
   for (PropertyAnimationGroup& group : aPropertyAnimationGroups) {
     // Initialize animation value with base style.
-    RefPtr<RawServoAnimationValue> currValue = group.mBaseStyle;
+    RefPtr<StyleAnimationValue> currValue = group.mBaseStyle;
 
     CanSkipCompose canSkipCompose =
         aPreviousValue && aPropertyAnimationGroups.Length() == 1 &&
@@ -600,7 +600,7 @@ uint64_t AnimationHelper::GetNextCompositorAnimationsId() {
 }
 
 gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
-    const nsTArray<RefPtr<RawServoAnimationValue>>& aValues,
+    const nsTArray<RefPtr<StyleAnimationValue>>& aValues,
     const TransformData& aTransformData, gfx::Path* aCachedMotionPath) {
   using nsStyleTransformMatrix::TransformReferenceBox;
 

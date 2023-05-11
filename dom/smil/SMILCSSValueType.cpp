@@ -34,8 +34,7 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-using ServoAnimationValues =
-    CopyableAutoTArray<RefPtr<RawServoAnimationValue>, 1>;
+using ServoAnimationValues = CopyableAutoTArray<RefPtr<StyleAnimationValue>, 1>;
 
 /*static*/
 SMILCSSValueType SMILCSSValueType::sSingleton;
@@ -47,7 +46,7 @@ struct ValueWrapper {
     mServoValues.AppendElement(aValue.mServo);
   }
   ValueWrapper(nsCSSPropertyID aPropID,
-               const RefPtr<RawServoAnimationValue>& aValue)
+               const RefPtr<StyleAnimationValue>& aValue)
       : mPropID(aPropID), mServoValues{(aValue)} {}
   ValueWrapper(nsCSSPropertyID aPropID, ServoAnimationValues&& aValues)
       : mPropID(aPropID), mServoValues{std::move(aValues)} {}
@@ -90,14 +89,14 @@ struct ValueWrapper {
 // If both arguments are null, this method returns false.
 //
 // |aZeroValueStorage| should be a reference to a
-// RefPtr<RawServoAnimationValue>. This is used where we may need to allocate a
+// RefPtr<StyleAnimationValue>. This is used where we may need to allocate a
 // new ServoAnimationValue to represent the appropriate zero value.
 //
 // Returns true on success, or otherwise.
 static bool FinalizeServoAnimationValues(
-    const RefPtr<RawServoAnimationValue>*& aValue1,
-    const RefPtr<RawServoAnimationValue>*& aValue2,
-    RefPtr<RawServoAnimationValue>& aZeroValueStorage) {
+    const RefPtr<StyleAnimationValue>*& aValue1,
+    const RefPtr<StyleAnimationValue>*& aValue2,
+    RefPtr<StyleAnimationValue>& aZeroValueStorage) {
   if (!aValue1 && !aValue2) {
     return false;
   }
@@ -203,11 +202,11 @@ static bool AddOrAccumulateForServo(SMILValue& aDest,
              "both of them exist");
 
   for (size_t i = 0; i < len; i++) {
-    const RefPtr<RawServoAnimationValue>* valueToAdd =
+    const RefPtr<StyleAnimationValue>* valueToAdd =
         aValueToAddWrapper ? &aValueToAddWrapper->mServoValues[i] : nullptr;
-    const RefPtr<RawServoAnimationValue>* destValue =
+    const RefPtr<StyleAnimationValue>* destValue =
         aDestWrapper ? &aDestWrapper->mServoValues[i] : nullptr;
-    RefPtr<RawServoAnimationValue> zeroValueStorage;
+    RefPtr<StyleAnimationValue> zeroValueStorage;
     if (!FinalizeServoAnimationValues(valueToAdd, destValue,
                                       zeroValueStorage)) {
       return false;
@@ -223,7 +222,7 @@ static bool AddOrAccumulateForServo(SMILValue& aDest,
       aDestWrapper->mServoValues.SetLength(len);
     }
 
-    RefPtr<RawServoAnimationValue> result;
+    RefPtr<StyleAnimationValue> result;
     if (aCompositeOp == CompositeOperation::Add) {
       result = Servo_AnimationValues_Add(*destValue, *valueToAdd).Consume();
     } else {
@@ -307,10 +306,10 @@ static nsresult ComputeDistanceForServo(const ValueWrapper* aFromWrapper,
   double squareDistance = 0;
 
   for (size_t i = 0; i < len; i++) {
-    const RefPtr<RawServoAnimationValue>* fromValue =
+    const RefPtr<StyleAnimationValue>* fromValue =
         aFromWrapper ? &aFromWrapper->mServoValues[0] : nullptr;
-    const RefPtr<RawServoAnimationValue>* toValue = &aToWrapper.mServoValues[0];
-    RefPtr<RawServoAnimationValue> zeroValueStorage;
+    const RefPtr<StyleAnimationValue>* toValue = &aToWrapper.mServoValues[0];
+    RefPtr<StyleAnimationValue> zeroValueStorage;
     if (!FinalizeServoAnimationValues(fromValue, toValue, zeroValueStorage)) {
       return NS_ERROR_FAILURE;
     }
@@ -370,16 +369,15 @@ static nsresult InterpolateForServo(const ValueWrapper* aStartWrapper,
              "Start and end values length should be the same if "
              "the start value exists");
   for (size_t i = 0; i < len; i++) {
-    const RefPtr<RawServoAnimationValue>* startValue =
+    const RefPtr<StyleAnimationValue>* startValue =
         aStartWrapper ? &aStartWrapper->mServoValues[i] : nullptr;
-    const RefPtr<RawServoAnimationValue>* endValue =
-        &aEndWrapper.mServoValues[i];
-    RefPtr<RawServoAnimationValue> zeroValueStorage;
+    const RefPtr<StyleAnimationValue>* endValue = &aEndWrapper.mServoValues[i];
+    RefPtr<StyleAnimationValue> zeroValueStorage;
     if (!FinalizeServoAnimationValues(startValue, endValue, zeroValueStorage)) {
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<RawServoAnimationValue> result =
+    RefPtr<StyleAnimationValue> result =
         Servo_AnimationValues_Interpolate(*startValue, *endValue, aUnitDistance)
             .Consume();
     if (!result) {
@@ -558,8 +556,8 @@ void SMILCSSValueType::FinalizeValue(SMILValue& aValue,
   ServoAnimationValues zeroValues;
   zeroValues.SetCapacity(valueToMatchWrapper->mServoValues.Length());
 
-  for (auto& valueToMatch : valueToMatchWrapper->mServoValues) {
-    RefPtr<RawServoAnimationValue> zeroValue =
+  for (const auto& valueToMatch : valueToMatchWrapper->mServoValues) {
+    RefPtr<StyleAnimationValue> zeroValue =
         Servo_AnimationValues_GetZeroValue(valueToMatch).Consume();
     if (!zeroValue) {
       return;

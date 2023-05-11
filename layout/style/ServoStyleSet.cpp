@@ -1090,7 +1090,7 @@ nsTArray<ComputedKeyframeValues> ServoStyleSet::GetComputedKeyframeValuesFor(
 void ServoStyleSet::GetAnimationValues(
     RawServoDeclarationBlock* aDeclarations, Element* aElement,
     const ComputedStyle* aComputedStyle,
-    nsTArray<RefPtr<RawServoAnimationValue>>& aAnimationValues) {
+    nsTArray<RefPtr<StyleAnimationValue>>& aAnimationValues) {
   // Servo_GetAnimationValues below won't handle ignoring existing element
   // data for bfcached documents. (See comment in ResolveStyleLazily
   // about these bfcache issues.)
@@ -1108,13 +1108,13 @@ already_AddRefed<ComputedStyle> ServoStyleSet::GetBaseContextForElement(
 already_AddRefed<ComputedStyle>
 ServoStyleSet::ResolveServoStyleByAddingAnimation(
     Element* aElement, const ComputedStyle* aStyle,
-    RawServoAnimationValue* aAnimationValue) {
+    StyleAnimationValue* aAnimationValue) {
   return Servo_StyleSet_GetComputedValuesByAddingAnimation(
              mRawData.get(), aElement, aStyle, &Snapshots(), aAnimationValue)
       .Consume();
 }
 
-already_AddRefed<RawServoAnimationValue> ServoStyleSet::ComputeAnimationValue(
+already_AddRefed<StyleAnimationValue> ServoStyleSet::ComputeAnimationValue(
     Element* aElement, RawServoDeclarationBlock* aDeclarations,
     const ComputedStyle* aStyle) {
   return Servo_AnimationValue_Compute(aElement, aDeclarations, aStyle,

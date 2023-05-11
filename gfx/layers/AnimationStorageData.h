@@ -26,8 +26,8 @@ namespace layers {
 
 struct PropertyAnimation {
   struct SegmentData {
-    RefPtr<RawServoAnimationValue> mStartValue;
-    RefPtr<RawServoAnimationValue> mEndValue;
+    RefPtr<StyleAnimationValue> mStartValue;
+    RefPtr<StyleAnimationValue> mEndValue;
     Maybe<mozilla::StyleComputedTimingFunction> mFunction;
     float mStartPortion;
     float mEndPortion;
@@ -69,7 +69,7 @@ struct PropertyAnimationGroup {
   nsCSSPropertyID mProperty;
 
   nsTArray<PropertyAnimation> mAnimations;
-  RefPtr<RawServoAnimationValue> mBaseStyle;
+  RefPtr<StyleAnimationValue> mBaseStyle;
 
   bool IsEmpty() const { return mAnimations.IsEmpty(); }
   void Clear() {
