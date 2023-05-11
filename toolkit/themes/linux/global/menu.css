@@ -20,8 +20,7 @@ menubar {
 menu,
 menuitem,
 menucaption {
-  appearance: auto;
-  -moz-default-appearance: menuitem;
+  border-radius: 4px;
   align-items: center;
   flex-shrink: 0;
   padding: 4px 6px;
@@ -31,15 +30,6 @@ menucaption {
    * optimization, as backgrounds don't disable theming on XUL elements, but
    * also papers over bug 1653832. */
   background-color: initial;
-}
-
-@media (-moz-gtk-non-native-menus) {
-  menu,
-  menuitem,
-  menucaption {
-    appearance: none;
-    border-radius: 4px;
-  }
 }
 
 menu:where([_moz-menuactive]:not([disabled])),
@@ -55,39 +45,15 @@ menucaption:where([disabled="true"]) {
 }
 
 menubar > menu {
-  padding: 4px 6px;
-}
-
-menubar:-moz-lwtheme > menu {
-  appearance: none;
-  text-shadow: none;
-}
-
-menubar:-moz-lwtheme > menu:not([open]) {
-  text-shadow: inherit;
-}
-
-menubar > menu:not([open], [disabled="true"]) {
   color: inherit;
+  background-color: transparent;
+  border-radius: 0;
+  padding-bottom: 1px;
+  border-bottom: 3px solid transparent;
 }
 
 menubar > menu[open] {
-  color: -moz-menubarhovertext;
-  background-color: -moz-menuhover;
-}
-
-@media (-moz-gtk-non-native-menus) {
-  menubar > menu {
-    background-color: transparent;
-    border-bottom: 3px solid transparent;
-    padding-bottom: 1px;
-    border-radius: 0;
-  }
-  menubar > menu[open] {
-    background-color: transparent;
-    color: inherit;
-    border-bottom-color: AccentColor;
-  }
+  border-bottom-color: AccentColor;
 }
 
 menuitem[default="true"],
@@ -172,45 +138,23 @@ menulist > menupopup > :is(menuitem, menucaption, menu) > .menu-iconic-left {
   display: none;
 }
 
-menuitem:is([type="checkbox"], [checked="true"]) {
+menuitem:is([type="checkbox"], [checked="true"]) .menu-iconic-icon {
   appearance: auto;
-  -moz-default-appearance: checkmenuitem;
+  -moz-default-appearance: checkbox;
 }
 
-menuitem[type="radio"] {
+menuitem[type="radio"] .menu-iconic-icon {
   appearance: auto;
-  -moz-default-appearance: radiomenuitem;
+  -moz-default-appearance: radio;
 }
 
 menuseparator {
-  appearance: auto;
-  -moz-default-appearance: menuseparator;
+  margin-block: 2px;
+  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
 }
 
-@media (-moz-gtk-non-native-menus) or (-moz-non-native-content-theme) {
-  menuitem:is([type="checkbox"], [checked="true"], [type="radio"]) {
-    appearance: none;
-  }
-
-  menuitem:is([type="checkbox"], [checked="true"]) .menu-iconic-icon {
-    appearance: auto;
-    -moz-default-appearance: checkbox;
-  }
-
-  menuitem[type="radio"] .menu-iconic-icon {
-    appearance: auto;
-    -moz-default-appearance: radio;
-  }
-
+@media (prefers-contrast) {
   menuseparator {
-    appearance: none;
-    margin-block: 2px;
-    border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
-  }
-
-  @media (prefers-contrast) {
-    menuseparator {
-      border-top-color: var(--panel-border-color);
-    }
+    border-top-color: var(--panel-border-color);
   }
 }

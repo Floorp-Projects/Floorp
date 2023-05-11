@@ -72,12 +72,6 @@ static GtkWidget* CreateRadiobuttonWidget() {
   return widget;
 }
 
-static GtkWidget* CreateMenuBarWidget() {
-  GtkWidget* widget = gtk_menu_bar_new();
-  AddToWindowContainer(widget);
-  return widget;
-}
-
 static GtkWidget* CreateMenuPopupWidget() {
   GtkWidget* widget = gtk_menu_new();
   GtkStyleContext* style = gtk_widget_get_style_context(widget);
@@ -361,12 +355,6 @@ static GtkWidget* CreateComboBoxEntryArrowWidget() {
 static GtkWidget* CreateScrolledWindowWidget() {
   GtkWidget* widget = gtk_scrolled_window_new(nullptr, nullptr);
   AddToWindowContainer(widget);
-  return widget;
-}
-
-static GtkWidget* CreateMenuSeparatorWidget() {
-  GtkWidget* widget = gtk_separator_menu_item_new();
-  gtk_menu_shell_append(GTK_MENU_SHELL(GetWidget(MOZ_GTK_MENUPOPUP)), widget);
   return widget;
 }
 
@@ -727,12 +715,8 @@ static GtkWidget* CreateWidget(WidgetNodeType aAppearance) {
       return CreateRadiobuttonWidget();
     case MOZ_GTK_SCROLLBAR_VERTICAL:
       return CreateScrollbarWidget(aAppearance, GTK_ORIENTATION_VERTICAL);
-    case MOZ_GTK_MENUBAR:
-      return CreateMenuBarWidget();
     case MOZ_GTK_MENUPOPUP:
       return CreateMenuPopupWidget();
-    case MOZ_GTK_MENUSEPARATOR:
-      return CreateMenuSeparatorWidget();
     case MOZ_GTK_EXPANDER:
       return CreateExpanderWidget();
     case MOZ_GTK_FRAME:
@@ -947,19 +931,8 @@ static GtkStyleContext* GetWidgetRootStyle(WidgetNodeType aNodeType) {
   if (style) return style;
 
   switch (aNodeType) {
-    case MOZ_GTK_MENUBARITEM:
-      style = CreateStyleForWidget(gtk_menu_item_new(), MOZ_GTK_MENUBAR);
-      break;
     case MOZ_GTK_MENUITEM:
       style = CreateStyleForWidget(gtk_menu_item_new(), MOZ_GTK_MENUPOPUP);
-      break;
-    case MOZ_GTK_CHECKMENUITEM:
-      style =
-          CreateStyleForWidget(gtk_check_menu_item_new(), MOZ_GTK_MENUPOPUP);
-      break;
-    case MOZ_GTK_RADIOMENUITEM:
-      style = CreateStyleForWidget(gtk_radio_menu_item_new(nullptr),
-                                   MOZ_GTK_MENUPOPUP);
       break;
     case MOZ_GTK_TEXT_VIEW:
       style =
@@ -1082,12 +1055,6 @@ static GtkStyleContext* GetCssNodeStyleInternal(WidgetNodeType aNodeType) {
       style = CreateChildCSSNode(GTK_STYLE_CLASS_CHECK,
                                  MOZ_GTK_CHECKBUTTON_CONTAINER);
       break;
-    case MOZ_GTK_RADIOMENUITEM_INDICATOR:
-      style = CreateChildCSSNode(GTK_STYLE_CLASS_RADIO, MOZ_GTK_RADIOMENUITEM);
-      break;
-    case MOZ_GTK_CHECKMENUITEM_INDICATOR:
-      style = CreateChildCSSNode(GTK_STYLE_CLASS_CHECK, MOZ_GTK_CHECKMENUITEM);
-      break;
     case MOZ_GTK_PROGRESS_TROUGH:
       /* Progress bar background (trough) */
       style = CreateChildCSSNode(GTK_STYLE_CLASS_TROUGH, MOZ_GTK_PROGRESSBAR);
@@ -1201,13 +1168,6 @@ static GtkStyleContext* GetCssNodeStyleInternal(WidgetNodeType aNodeType) {
           false, "MOZ_GTK_HEADER_BAR_BUTTON_RESTORE is used as an icon only!");
       return nullptr;
     }
-    case MOZ_GTK_MENUPOPUP_DECORATION: {
-      GtkStyleContext* parentStyle =
-          CreateSubStyleWithClass(MOZ_GTK_MENUPOPUP, "csd");
-      style = CreateCSSNode("decoration", parentStyle);
-      g_object_unref(parentStyle);
-      break;
-    }
     case MOZ_GTK_WINDOW_DECORATION: {
       GtkStyleContext* parentStyle =
           CreateSubStyleWithClass(MOZ_GTK_WINDOW, "csd");
@@ -1252,14 +1212,6 @@ static GtkStyleContext* GetWidgetStyleInternal(WidgetNodeType aNodeType) {
     case MOZ_GTK_CHECKBUTTON:
       style = CreateSubStyleWithClass(MOZ_GTK_CHECKBUTTON_CONTAINER,
                                       GTK_STYLE_CLASS_CHECK);
-      break;
-    case MOZ_GTK_RADIOMENUITEM_INDICATOR:
-      style =
-          CreateSubStyleWithClass(MOZ_GTK_RADIOMENUITEM, GTK_STYLE_CLASS_RADIO);
-      break;
-    case MOZ_GTK_CHECKMENUITEM_INDICATOR:
-      style =
-          CreateSubStyleWithClass(MOZ_GTK_CHECKMENUITEM, GTK_STYLE_CLASS_CHECK);
       break;
     case MOZ_GTK_PROGRESS_TROUGH:
       style =

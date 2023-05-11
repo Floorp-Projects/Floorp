@@ -717,12 +717,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::MozComboboxtext:
       aColor = mComboBoxText;
       break;
-    case ColorID::MozMenubartext:
-      aColor = mMenuBarText;
-      break;
-    case ColorID::MozMenubarhovertext:
-      aColor = mMenuBarHoverText;
-      break;
     case ColorID::MozColheadertext:
       aColor = mMozColHeaderText;
       break;
@@ -959,11 +953,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::TitlebarRadius: {
       EnsureInit();
       aResult = EffectiveTheme().mTitlebarRadius;
-      break;
-    }
-    case IntID::GtkMenuRadius: {
-      EnsureInit();
-      aResult = EffectiveTheme().mMenuRadius;
       break;
     }
     case IntID::AllowOverlayScrollbarsOverlap: {
@@ -1846,14 +1835,6 @@ void nsLookAndFeel::PerThemeData::Init() {
         "background");
     return mMozWindowBackground;
   }();
-  mMenuRadius = 0;
-  if (!IsSolidCSDStyleUsed()) {
-    mMenuRadius = GetBorderRadius(style);
-    if (!mMenuRadius) {
-      mMenuRadius =
-          GetBorderRadius(GetStyleContext(MOZ_GTK_MENUPOPUP_DECORATION));
-    }
-  }
 
   style = GetStyleContext(MOZ_GTK_MENUITEM);
   gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
@@ -1983,13 +1964,6 @@ void nsLookAndFeel::PerThemeData::Init() {
   gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
   mComboBoxText = GDK_RGBA_TO_NS_RGBA(color);
 
-  // Menubar text and hover text colors
-  style = GetStyleContext(MOZ_GTK_MENUBARITEM);
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
-  mMenuBarText = GDK_RGBA_TO_NS_RGBA(color);
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
-  mMenuBarHoverText = GDK_RGBA_TO_NS_RGBA(color);
-
   // GTK's guide to fancy odd row background colors:
   // 1) Check if a theme explicitly defines an odd row color
   // 2) If not, check if it defines an even row color, and darken it
@@ -2073,7 +2047,6 @@ void nsLookAndFeel::PerThemeData::Init() {
              NS_SUCCEEDED(rv) ? color : 0);
     }
     LOGLNF(" * titlebar-radius: %d\n", mTitlebarRadius);
-    LOGLNF(" * menu-radius: %d\n", mMenuRadius);
   }
 }
 
