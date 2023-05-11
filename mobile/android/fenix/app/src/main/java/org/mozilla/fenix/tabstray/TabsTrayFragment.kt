@@ -275,6 +275,9 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                                 private = tabsTrayStore.state.selectedPage == Page.PrivateTabs,
                             )
                         },
+                        onDeleteSelectedTabsClick = tabsTrayInteractor::onDeleteSelectedTabsClicked,
+                        onBookmarkSelectedTabsClick = tabsTrayInteractor::onBookmarkSelectedTabsClicked,
+                        onForceSelectedTabsAsInactiveClick = tabsTrayInteractor::onForceSelectedTabsAsInactiveClicked,
                     )
                 }
             }

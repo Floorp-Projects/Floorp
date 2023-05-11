@@ -81,6 +81,9 @@ import mozilla.components.browser.storage.sync.Tab as SyncTab
  * @param onRecentlyClosedClick Invoked when the user clicks on the recently closed banner menu item.
  * @param onAccountSettingsClick Invoked when the user clicks on the account settings banner menu item.
  * @param onDeleteAllTabsClick Invoked when the user clicks on the close all tabs banner menu item.
+ * @param onBookmarkSelectedTabsClick Invoked when the user clicks on the bookmark banner menu item.
+ * @param onDeleteSelectedTabsClick Invoked when the user clicks on the close selected tabs banner menu item.
+ * @param onForceSelectedTabsAsInactiveClick Invoked when the user clicks on the make inactive banner menu item.
  */
 @OptIn(ExperimentalPagerApi::class)
 @Suppress("LongMethod", "LongParameterList", "ComplexMethod")
@@ -113,6 +116,9 @@ fun TabsTray(
     onRecentlyClosedClick: () -> Unit,
     onAccountSettingsClick: () -> Unit,
     onDeleteAllTabsClick: () -> Unit,
+    onBookmarkSelectedTabsClick: () -> Unit,
+    onDeleteSelectedTabsClick: () -> Unit,
+    onForceSelectedTabsAsInactiveClick: () -> Unit,
 ) {
     val normalTabCount = browserStore
         .observeAsComposableState { state -> state.normalTabs.size }.value ?: 0
@@ -166,6 +172,9 @@ fun TabsTray(
                 onRecentlyClosedClick = onRecentlyClosedClick,
                 onAccountSettingsClick = onAccountSettingsClick,
                 onDeleteAllTabsClick = onDeleteAllTabsClick,
+                onBookmarkSelectedTabsClick = onBookmarkSelectedTabsClick,
+                onDeleteSelectedTabsClick = onDeleteSelectedTabsClick,
+                onForceSelectedTabsAsInactiveClick = onForceSelectedTabsAsInactiveClick,
             )
         }
 
@@ -525,6 +534,9 @@ private fun TabsTrayPreviewRoot(
             onRecentlyClosedClick = {},
             onAccountSettingsClick = {},
             onDeleteAllTabsClick = {},
+            onDeleteSelectedTabsClick = {},
+            onBookmarkSelectedTabsClick = {},
+            onForceSelectedTabsAsInactiveClick = {},
         )
     }
 }

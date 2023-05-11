@@ -74,6 +74,9 @@ private val ICON_SIZE = 24.dp
  * @param onRecentlyClosedClick Invoked when the user clicks on the recently closed tabs menu item.
  * @param onAccountSettingsClick Invoked when the user clicks on the account settings menu item.
  * @param onDeleteAllTabsClick Invoked when user interacts with the close all tabs menu item.
+ * @param onDeleteSelectedTabsClick Invoked when user interacts with the close menu item.
+ * @param onBookmarkSelectedTabsClick Invoked when user interacts with the bookmark menu item.
+ * @param onForceSelectedTabsAsInactiveClick Invoked when user interacts with the make inactive menu item.
  */
 @Suppress("LongParameterList")
 @Composable
@@ -93,6 +96,9 @@ fun TabsTrayBanner(
     onRecentlyClosedClick: () -> Unit,
     onAccountSettingsClick: () -> Unit,
     onDeleteAllTabsClick: () -> Unit,
+    onDeleteSelectedTabsClick: () -> Unit,
+    onBookmarkSelectedTabsClick: () -> Unit,
+    onForceSelectedTabsAsInactiveClick: () -> Unit,
 ) {
     if (selectMode is TabsTrayState.Mode.Select) {
         MultiSelectBanner(
@@ -101,6 +107,9 @@ fun TabsTrayBanner(
             onExitSelectModeClick = onExitSelectModeClick,
             onSaveToCollectionsClick = onSaveToCollectionClick,
             onShareSelectedTabs = onShareSelectedTabsClick,
+            onBookmarkSelectedTabsClick = onBookmarkSelectedTabsClick,
+            onCloseSelectedTabsClick = onDeleteSelectedTabsClick,
+            onMakeSelectedTabsInactive = onForceSelectedTabsAsInactiveClick,
         )
     } else {
         SingleSelectBanner(
@@ -350,8 +359,11 @@ private fun NormalTabsTabIcon(normalTabCount: Int) {
  * @param onExitSelectModeClick Invoked when the user clicks on exit select mode button.
  * @param onSaveToCollectionsClick Invoked when the user clicks on the save to collection button.
  * @param onShareSelectedTabs Invoked when the user clicks on the share button.
+ * @param onBookmarkSelectedTabsClick Invoked when user interacts with the bookmark menu item.
+ * @param onCloseSelectedTabsClick Invoked when user interacts with the close menu item.
+ * @param onMakeSelectedTabsInactive Invoked when user interacts with the make inactive menu item.
  */
-@Suppress("LongMethod")
+@Suppress("LongMethod", "LongParameterList")
 @Composable
 private fun MultiSelectBanner(
     selectedTabCount: Int,
@@ -359,21 +371,27 @@ private fun MultiSelectBanner(
     onExitSelectModeClick: () -> Unit,
     onSaveToCollectionsClick: () -> Unit,
     onShareSelectedTabs: () -> Unit,
+    onBookmarkSelectedTabsClick: () -> Unit,
+    onCloseSelectedTabsClick: () -> Unit,
+    onMakeSelectedTabsInactive: () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val menuItems = mutableListOf(
         MenuItem(
             title = stringResource(R.string.tab_tray_multiselect_menu_item_bookmark),
-        ) {},
+            onClick = onBookmarkSelectedTabsClick,
+        ),
         MenuItem(
             title = stringResource(R.string.tab_tray_multiselect_menu_item_close),
-        ) {},
+            onClick = onCloseSelectedTabsClick,
+        ),
     )
     if (shouldShowInactiveButton) {
         menuItems.add(
             MenuItem(
                 title = stringResource(R.string.inactive_tabs_menu_item),
-            ) {},
+                onClick = onMakeSelectedTabsInactive,
+            ),
         )
     }
 
@@ -508,6 +526,9 @@ private fun TabsTrayBannerPreviewRoot(
                 onRecentlyClosedClick = {},
                 onAccountSettingsClick = {},
                 onDeleteAllTabsClick = {},
+                onBookmarkSelectedTabsClick = {},
+                onDeleteSelectedTabsClick = {},
+                onForceSelectedTabsAsInactiveClick = {},
             )
         }
     }
