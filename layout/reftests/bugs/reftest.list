@@ -2130,10 +2130,6 @@ skip-if(!/^Windows\x20NT\x2010\.0/.test(http.oscpu)) != 1798297-1.html 1798297-1
 == 1799425-1.html 1799425-1-ref.html
 == 1800437-1.html 1800437-1-ref.html
 == 1803999-1.html 1803999-1-ref.html
-# testing the same bug but we can hit it via a few different code paths, 1 is raster image, 2 is vector image, 3 is vector image with an image restriction region
-pref(image.downscale-during-decode.enabled,true) == 1804872-1.html 1804872-1-ref.html
-pref(image.downscale-during-decode.enabled,true) == 1804872-2.html 1804872-2-ref.html
-pref(image.downscale-during-decode.enabled,true) == 1804872-3.html 1804872-3-ref.html
 == 1814628-1.html 1814628-1-ref.html
 == 1814047.html 1814047-ref.html
 == 1818412-1.html 1818412-1-ref.html
