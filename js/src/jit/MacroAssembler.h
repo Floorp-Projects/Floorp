@@ -1311,10 +1311,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void branchIfNotRegExpInstanceOptimizable(Register regexp, Register temp,
                                             Label* label);
 
-  void loadAndUpdateRegExpLastIndex(bool forTest, Register regexp,
-                                    Register string, Register lastIndex,
-                                    TypedOrValueRegister output, Label* done);
-
   // ===============================================================
   // Shift functions
 

@@ -74,17 +74,11 @@ JSObject* InitRegExpClass(JSContext* cx, HandleObject obj);
                                             MatchPairs* maybeMatches,
                                             int32_t* result);
 
-template <bool CalledFromJit>
-[[nodiscard]] extern bool RegExpBuiltinExecMatchRaw(
-    JSContext* cx, Handle<RegExpObject*> regexp, HandleString input,
-    int32_t lastIndex, MatchPairs* maybeMatches, MutableHandleValue output);
+[[nodiscard]] extern bool RegExpTester(JSContext* cx, unsigned argc, Value* vp);
 
-template <bool CalledFromJit>
-[[nodiscard]] extern bool RegExpBuiltinExecTestRaw(JSContext* cx,
-                                                   Handle<RegExpObject*> regexp,
-                                                   HandleString input,
-                                                   int32_t lastIndex,
-                                                   bool* result);
+[[nodiscard]] extern bool RegExpTesterRaw(JSContext* cx, HandleObject regexp,
+                                          HandleString input, int32_t lastIndex,
+                                          int32_t* endIndex);
 
 [[nodiscard]] extern bool intrinsic_GetElemBaseForLambda(JSContext* cx,
                                                          unsigned argc,
@@ -129,16 +123,6 @@ template <bool CalledFromJit>
 [[nodiscard]] extern bool RegExpInstanceOptimizableRaw(JSContext* cx,
                                                        JSObject* obj,
                                                        JSObject* proto);
-
-[[nodiscard]] extern bool RegExpBuiltinExec(JSContext* cx,
-                                            Handle<RegExpObject*> regexp,
-                                            Handle<JSString*> string,
-                                            bool forTest,
-                                            MutableHandle<Value> rval);
-
-[[nodiscard]] extern bool RegExpExec(JSContext* cx, Handle<JSObject*> regexp,
-                                     Handle<JSString*> string, bool forTest,
-                                     MutableHandle<Value> rval);
 
 [[nodiscard]] extern bool RegExpGetSubstitution(
     JSContext* cx, Handle<ArrayObject*> matchResult,

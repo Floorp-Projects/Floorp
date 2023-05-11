@@ -246,10 +246,9 @@ namespace jit {
   _(PushLexicalEnv, js::jit::PushLexicalEnv)                                   \
   _(PushVarEnv, js::jit::PushVarEnv)                                           \
   _(RecreateLexicalEnv, js::jit::RecreateLexicalEnv)                           \
-  _(RegExpBuiltinExecMatchRaw, js::RegExpBuiltinExecMatchRaw<true>)            \
-  _(RegExpBuiltinExecTestRaw, js::RegExpBuiltinExecTestRaw<true>)              \
   _(RegExpMatcherRaw, js::RegExpMatcherRaw)                                    \
   _(RegExpSearcherRaw, js::RegExpSearcherRaw)                                  \
+  _(RegExpTesterRaw, js::RegExpTesterRaw)                                      \
   _(SameValue, js::SameValue)                                                  \
   _(SetArrayLength, js::jit::SetArrayLength)                                   \
   _(SetElementMegamorphicNoCache, js::jit::SetElementMegamorphic<false>)       \

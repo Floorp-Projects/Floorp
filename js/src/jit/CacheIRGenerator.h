@@ -613,11 +613,9 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachGuardToClass(InlinableNative native);
   AttachDecision tryAttachHasClass(const JSClass* clasp,
                                    bool isPossiblyWrapped);
-  AttachDecision tryAttachRegExpMatcherSearcher(InlinableNative native);
+  AttachDecision tryAttachRegExpMatcherSearcherTester(InlinableNative native);
   AttachDecision tryAttachRegExpPrototypeOptimizable();
   AttachDecision tryAttachRegExpInstanceOptimizable();
-  AttachDecision tryAttachIntrinsicRegExpBuiltinExec(InlinableNative native);
-  AttachDecision tryAttachIntrinsicRegExpExec(InlinableNative native);
   AttachDecision tryAttachGetFirstDollarIndex();
   AttachDecision tryAttachSubstringKernel();
   AttachDecision tryAttachObjectHasPrototype();

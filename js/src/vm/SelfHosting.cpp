@@ -1309,32 +1309,6 @@ static bool intrinsic_TypedArrayInitFromPackedArray(JSContext* cx,
   return true;
 }
 
-template <bool ForTest>
-static bool intrinsic_RegExpBuiltinExec(JSContext* cx, unsigned argc,
-                                        Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  MOZ_ASSERT(args[0].isObject());
-  MOZ_ASSERT(args[0].toObject().is<RegExpObject>());
-  MOZ_ASSERT(args[1].isString());
-
-  Rooted<RegExpObject*> obj(cx, &args[0].toObject().as<RegExpObject>());
-  Rooted<JSString*> string(cx, args[1].toString());
-  return RegExpBuiltinExec(cx, obj, string, ForTest, args.rval());
-}
-
-template <bool ForTest>
-static bool intrinsic_RegExpExec(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
-  MOZ_ASSERT(args[0].isObject());
-  MOZ_ASSERT(args[1].isString());
-
-  Rooted<JSObject*> obj(cx, &args[0].toObject());
-  Rooted<JSString*> string(cx, args[1].toString());
-  return RegExpExec(cx, obj, string, ForTest, args.rval());
-}
-
 static bool intrinsic_RegExpCreate(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1533,6 +1507,7 @@ bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
   static const char* const internalNames[] = {
       "IsTypedArrayEnsuringArrayBuffer",
       "UnwrapAndCallRegExpBuiltinExec",
+      "RegExpBuiltinExec",
       "RegExpExec",
       "RegExpSearchSlowPath",
       "RegExpReplaceSlowPath",
@@ -1993,17 +1968,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     intrinsic_PossiblyWrappedTypedArrayLength, 1, 0,
                     IntrinsicPossiblyWrappedTypedArrayLength),
     JS_FN("PromiseResolve", intrinsic_PromiseResolve, 2, 0),
-    JS_INLINABLE_FN("RegExpBuiltinExec", intrinsic_RegExpBuiltinExec<false>, 2,
-                    0, IntrinsicRegExpBuiltinExec),
-    JS_INLINABLE_FN("RegExpBuiltinExecForTest",
-                    intrinsic_RegExpBuiltinExec<true>, 2, 0,
-                    IntrinsicRegExpBuiltinExecForTest),
     JS_FN("RegExpConstructRaw", regexp_construct_raw_flags, 2, 0),
     JS_FN("RegExpCreate", intrinsic_RegExpCreate, 2, 0),
-    JS_INLINABLE_FN("RegExpExec", intrinsic_RegExpExec<false>, 2, 0,
-                    IntrinsicRegExpExec),
-    JS_INLINABLE_FN("RegExpExecForTest", intrinsic_RegExpExec<true>, 2, 0,
-                    IntrinsicRegExpExecForTest),
     JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 5, 0),
     JS_INLINABLE_FN("RegExpInstanceOptimizable", RegExpInstanceOptimizable, 1,
                     0, RegExpInstanceOptimizable),
@@ -2011,6 +1977,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("RegExpPrototypeOptimizable", RegExpPrototypeOptimizable, 1,
                     0, RegExpPrototypeOptimizable),
     JS_INLINABLE_FN("RegExpSearcher", RegExpSearcher, 3, 0, RegExpSearcher),
+    JS_INLINABLE_FN("RegExpTester", RegExpTester, 3, 0, RegExpTester),
     JS_INLINABLE_FN("SameValue", js::obj_is, 2, 0, ObjectIs),
     JS_FN("SharedArrayBufferByteLength",
           intrinsic_ArrayBufferByteLength<SharedArrayBufferObject>, 1, 0),
@@ -2762,14 +2729,6 @@ void JSRuntime::assertSelfHostedFunctionHasCanonicalName(
 bool js::IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name) {
   return fun->isSelfHostedBuiltin() && fun->isExtended() &&
          GetClonedSelfHostedFunctionName(fun) == name;
-}
-
-bool js::IsSelfHostedFunctionWithName(const Value& v, JSAtom* name) {
-  if (!v.isObject() || !v.toObject().is<JSFunction>()) {
-    return false;
-  }
-  JSFunction* fun = &v.toObject().as<JSFunction>();
-  return IsSelfHostedFunctionWithName(fun, name);
 }
 
 static_assert(
