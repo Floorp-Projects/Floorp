@@ -226,6 +226,7 @@ class MarionetteParentProcess {
       this.server.start();
     } catch (e) {
       lazy.logger.fatal("Marionette server failed to start", e);
+      await this.uninit();
       Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
       return;
     }
