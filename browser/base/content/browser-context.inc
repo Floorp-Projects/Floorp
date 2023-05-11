@@ -117,6 +117,10 @@
       <menuitem id="context-copylink"
                 data-l10n-id="main-context-menu-copy-link-simple"
                 oncommand="gContextMenu.copyLink();"/>
+      <menuitem id="context-stripOnShareLink"
+                data-l10n-id="main-context-menu-strip-on-share-link"
+                hidden="true"
+                oncommand="gContextMenu.copyStrippedLink();"/>
       <menu id="context-sendlinktodevice"
             class="sync-ui-item"
             data-l10n-id="main-context-menu-link-send-to-device"

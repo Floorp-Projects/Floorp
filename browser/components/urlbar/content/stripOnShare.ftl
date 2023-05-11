@@ -9,6 +9,10 @@
 ## These strings are used in the context menu of the url bar
 ## and the in-content context menu.
 
+main-context-menu-strip-on-share-link =
+    .label = Copy Clean Link
+    .accesskey = y
+
 text-action-strip-on-share =
     .label = Copy Clean
     .accesskey = n
