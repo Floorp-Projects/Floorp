@@ -25,6 +25,7 @@ use std::thread;
 use std::time::Duration;
 
 use crossbeam_channel::unbounded;
+use log::{self, LevelFilter};
 use once_cell::sync::{Lazy, OnceCell};
 use uuid::Uuid;
 
@@ -125,6 +126,8 @@ pub struct InternalConfiguration {
     pub use_core_mps: bool,
     /// Whether Glean should, on init, trim its event storage to only the registered pings.
     pub trim_data_to_registered_pings: bool,
+    /// The internal logging level.
+    pub log_level: Option<LevelFilter>,
 }
 
 /// Launches a new task on the global dispatch queue with a reference to the Glean singleton.
@@ -305,6 +308,11 @@ fn initialize_inner(
         .spawn(move || {
             let upload_enabled = cfg.upload_enabled;
             let trim_data_to_registered_pings = cfg.trim_data_to_registered_pings;
+
+            // Set the internal logging level.
+            if let Some(level) = cfg.log_level {
+                log::set_max_level(level)
+            }
 
             let glean = match Glean::new(cfg) {
                 Ok(glean) => glean,
@@ -557,8 +565,31 @@ pub fn shutdown() {
         glean.set_dirty_flag(false);
     });
 
-    // We need to wait for above task to finish.
-    dispatcher::block_on_queue();
+    // We need to wait for above task to finish,
+    // but we also don't wait around forever.
+    //
+    // TODO: Make the timeout configurable?
+    // The default hang watchdog on Firefox waits 60s,
+    // Glean's `uploader_shutdown` further below waits up to 30s.
+    let timer_id = core::with_glean(|glean| {
+        glean
+            .additional_metrics
+            .shutdown_dispatcher_wait
+            .start_sync()
+    });
+    if dispatcher::block_on_queue_timeout(Duration::from_secs(10)).is_err() {
+        log::error!(
+            "Timeout while blocking on the dispatcher. No further shutdown cleanup will happen."
+        );
+        return;
+    }
+    let stop_time = time::precise_time_ns();
+    core::with_glean(|glean| {
+        glean
+            .additional_metrics
+            .shutdown_dispatcher_wait
+            .set_stop_and_accumulate(glean, timer_id, stop_time);
+    });
 
     if let Err(e) = dispatcher::shutdown() {
         log::error!("Can't shutdown dispatcher thread: {:?}", e);

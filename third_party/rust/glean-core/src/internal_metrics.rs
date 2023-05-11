@@ -24,6 +24,9 @@ pub struct AdditionalMetrics {
 
     /// Time waited for the uploader at shutdown.
     pub shutdown_wait: TimingDistributionMetric,
+
+    /// Time waited for the dispatcher to unblock during shutdown.
+    pub shutdown_dispatcher_wait: TimingDistributionMetric,
 }
 
 impl CoreMetrics {
@@ -89,6 +92,18 @@ impl AdditionalMetrics {
             shutdown_wait: TimingDistributionMetric::new(
                 CommonMetricData {
                     name: "shutdown_wait".into(),
+                    category: "glean.validation".into(),
+                    send_in_pings: vec!["metrics".into()],
+                    lifetime: Lifetime::Ping,
+                    disabled: false,
+                    dynamic_label: None,
+                },
+                TimeUnit::Millisecond,
+            ),
+
+            shutdown_dispatcher_wait: TimingDistributionMetric::new(
+                CommonMetricData {
+                    name: "shutdown_dispatcher_wait".into(),
                     category: "glean.validation".into(),
                     send_in_pings: vec!["metrics".into()],
                     lifetime: Lifetime::Ping,

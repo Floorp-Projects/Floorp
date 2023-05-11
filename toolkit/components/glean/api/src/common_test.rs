@@ -39,6 +39,7 @@ fn setup_glean(tempdir: Option<tempfile::TempDir>) -> tempfile::TempDir {
         uploader: None,
         use_core_mps: false,
         trim_data_to_registered_pings: false,
+        log_level: None,
     };
 
     let client_info = glean::ClientInfoMetrics {

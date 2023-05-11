@@ -238,7 +238,7 @@ impl EventDatabase {
                 db.insert(
                     store_name,
                     file.lines()
-                        .filter_map(|line| line.ok())
+                        .map_while(Result::ok)
                         .filter_map(|line| serde_json::from_str::<StoredEvent>(&line).ok())
                         .collect(),
                 );
