@@ -78,15 +78,3 @@ add_task(async function test_with_input_and_results() {
   await browserLoadedPromise;
   ok(true, "Successfully loaded " + url);
 });
-
-async function promiseContextualMenuitem(anonid) {
-  let textBox = gURLBar.querySelector("moz-input-box");
-  let cxmenu = textBox.menupopup;
-  let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {
-    type: "contextmenu",
-    button: 2,
-  });
-  await cxmenuPromise;
-  return textBox.getMenuItem(anonid);
-}
