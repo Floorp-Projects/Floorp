@@ -1649,8 +1649,8 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
     }
   }
 
-  modifiedDirty.IntersectRect(
-      modifiedDirty, RootReferenceFrame()->InkOverflowRectRelativeToSelf());
+  nsRect rootOverflow = RootOverflowRect();
+  modifiedDirty.IntersectRect(modifiedDirty, rootOverflow);
 
   mBuilder.SetDirtyRect(modifiedDirty);
   mBuilder.SetPartialUpdate(true);
@@ -1664,8 +1664,7 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
   if (!modifiedDL.IsEmpty()) {
     nsLayoutUtils::AddExtraBackgroundItems(
         &mBuilder, &modifiedDL, RootReferenceFrame(),
-        nsRect(nsPoint(0, 0), RootReferenceFrame()->GetSize()),
-        RootReferenceFrame()->InkOverflowRectRelativeToSelf(), aBackstop);
+        nsRect(nsPoint(0, 0), rootOverflow.Size()), rootOverflow, aBackstop);
   }
   mBuilder.SetPartialUpdate(false);
 
@@ -1714,6 +1713,20 @@ PartialUpdateResult RetainedDisplayListBuilder::AttemptPartialUpdate(
 
   mBuilder.LeavePresShell(RootReferenceFrame(), List());
   return result;
+}
+
+nsRect RetainedDisplayListBuilder::RootOverflowRect() const {
+  const nsIFrame* rootReferenceFrame = RootReferenceFrame();
+  nsRect rootOverflowRect = rootReferenceFrame->InkOverflowRectRelativeToSelf();
+  const nsPresContext* presContext = rootReferenceFrame->PresContext();
+  if (!rootReferenceFrame->GetParent() &&
+      presContext->IsRootContentDocumentCrossProcess() &&
+      presContext->HasDynamicToolbar()) {
+    rootOverflowRect.SizeTo(nsLayoutUtils::ExpandHeightForDynamicToolbar(
+        presContext, rootOverflowRect.Size()));
+  }
+
+  return rootOverflowRect;
 }
 
 }  // namespace mozilla

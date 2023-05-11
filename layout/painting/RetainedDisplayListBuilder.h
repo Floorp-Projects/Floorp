@@ -252,6 +252,11 @@ class RetainedDisplayListBuilder {
                     nsIFrame** aOutModifiedAGR);
 
   nsIFrame* RootReferenceFrame() { return mBuilder.RootReferenceFrame(); }
+  const nsIFrame* RootReferenceFrame() const {
+    return mBuilder.RootReferenceFrame();
+  }
+
+  nsRect RootOverflowRect() const;
 
   /**
    * Tries to perform a simple partial display list build without display list
