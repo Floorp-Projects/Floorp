@@ -495,6 +495,23 @@ def run_test_command(command, **kwargs):
     return status
 
 
+def run_jsapitests(args):
+    jsapi_test_binary = os.path.join(OBJDIR, "dist", "bin", "jsapi-tests")
+    test_env = env.copy()
+    test_env["TOPSRCDIR"] = DIR.source
+    if use_minidump and platform.system() == "Linux":
+        test_env["LD_PRELOAD"] = injector_lib
+    st = run_test_command([jsapi_test_binary] + args, env=test_env)
+    if st < 0:
+        print(
+            "PROCESS-CRASH | {} | application crashed".format(
+                " ".join(["jsapi-tests"] + args)
+            )
+        )
+        print("Return code: {}".format(st))
+    return st
+
+
 default_test_suites = frozenset(["jstests", "jittest", "jsapitests", "checks"])
 nondefault_test_suites = frozenset(["gdb"])
 all_test_suites = default_test_suites | nondefault_test_suites
@@ -565,15 +582,9 @@ if "checks" in test_suites:
 if "jittest" in test_suites:
     results.append(("make check-jit-test", run_test_command([MAKE, "check-jit-test"])))
 if "jsapitests" in test_suites:
-    jsapi_test_binary = os.path.join(OBJDIR, "dist", "bin", "jsapi-tests")
-    test_env = env.copy()
-    test_env["TOPSRCDIR"] = DIR.source
-    if use_minidump and platform.system() == "Linux":
-        test_env["LD_PRELOAD"] = injector_lib
-    st = run_test_command([jsapi_test_binary], env=test_env)
-    if st < 0:
-        print("PROCESS-CRASH | jsapi-tests | application crashed")
-        print("Return code: {}".format(st))
+    st = run_jsapitests([])
+    if st == 0:
+        st = run_jsapitests(["--frontend-only"])
     results.append(("jsapi-tests", st))
 if "jstests" in test_suites:
     results.append(("jstests", run_test_command([MAKE, "check-jstests"])))
