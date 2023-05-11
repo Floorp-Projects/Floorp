@@ -193,7 +193,7 @@ class CompositorAnimationStorage final {
   void StoreAnimatedValue(
       nsCSSPropertyID aProperty, uint64_t aId,
       const std::unique_ptr<AnimationStorageData>& aAnimationStorageData,
-      const AutoTArray<RefPtr<RawServoAnimationValue>, 1>& aAnimationValues,
+      const AutoTArray<RefPtr<StyleAnimationValue>, 1>& aAnimationValues,
       const MutexAutoLock& aProofOfMapLock,
       const RefPtr<APZSampler>& aApzSampler, AnimatedValue* aAnimatedValueEntry,
       JankedAnimationMap& aJankedAnimationMap);

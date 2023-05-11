@@ -32,7 +32,7 @@ namespace mozilla {
 class ComputedStyle;
 class EffectSet;
 class RestyleTracker;
-class StyleAnimationValue;
+struct StyleAnimationValue;
 struct StyleAnimationValueMap;
 struct AnimationProperty;
 struct NonOwningAnimationTarget;

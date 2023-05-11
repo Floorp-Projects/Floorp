@@ -253,7 +253,7 @@ size_t Gecko_ElementTransitions_Length(
 nsCSSPropertyID Gecko_ElementTransitions_PropertyAt(
     const mozilla::dom::Element* aElementOrPseudo, size_t aIndex);
 
-const RawServoAnimationValue* Gecko_ElementTransitions_EndValueAt(
+const mozilla::StyleAnimationValue* Gecko_ElementTransitions_EndValueAt(
     const mozilla::dom::Element* aElementOrPseudo, size_t aIndex);
 
 double Gecko_GetProgressFromComputedTiming(const mozilla::ComputedTiming*);
@@ -263,10 +263,10 @@ double Gecko_GetPositionInSegment(const mozilla::AnimationPropertySegment*,
 
 // Get servo's AnimationValue for |aProperty| from the cached base style
 // |aBaseStyles|.
-// |aBaseStyles| is nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>.
+// |aBaseStyles| is nsRefPtrHashtable<nsUint32HashKey, StyleAnimationValue>.
 // We use RawServoAnimationValueTableBorrowed to avoid exposing
 // nsRefPtrHashtable in FFI.
-const RawServoAnimationValue* Gecko_AnimationGetBaseStyle(
+const mozilla::StyleAnimationValue* Gecko_AnimationGetBaseStyle(
     const RawServoAnimationValueTable* aBaseStyles, nsCSSPropertyID aProperty);
 
 void Gecko_StyleTransition_SetUnsupportedProperty(

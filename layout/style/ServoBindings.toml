@@ -414,7 +414,6 @@ opaque-types = [
     "mozilla::dom::TreeOrderedArray", # AutoTArray<>
     "gfxSize",  # <- union { struct { T width; T height; }; T components[2] };
     "gfxSize_Super",  # Ditto.
-    "mozilla::StyleAnimationValue",
     "StyleAnimationValue", # pulls in a whole bunch of stuff we don't need in the bindings
     "mozilla::dom::.*Callback", # Pulls in ErrorResult and other things that
                                 # don't align properly on Linux 32-bit
@@ -650,6 +649,7 @@ cbindgen-types = [
     { gecko = "StyleAuthorStyles", servo = "crate::gecko::data::AuthorStyles" },
     { gecko = "StyleUseCounters", servo = "crate::use_counters::UseCounters" },
     { gecko = "StyleStylesheetContents", servo = "crate::stylesheets::StylesheetContents" },
+    { gecko = "StyleAnimationValue", servo = "crate::properties::animated_properties::AnimationValue" },
 ]
 
 mapped-generic-types = [

@@ -11,7 +11,7 @@ use dom::{DocumentState, ElementState};
 use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
 use selectors::NthIndexCache;
-use servo_arc::{Arc, ArcBorrow, RawOffsetArc};
+use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
 use std::collections::BTreeSet;
 use std::fmt::Write;
@@ -83,12 +83,11 @@ use style::gecko_bindings::structs::StyleSheet as DomStyleSheet;
 use style::gecko_bindings::structs::URLExtraData;
 use style::gecko_bindings::structs::{nsINode as RawGeckoNode, Element as RawGeckoElement};
 use style::gecko_bindings::structs::{
-    RawServoAnimationValue, RawServoContainerRule, RawServoCounterStyleRule,
-    RawServoDeclarationBlock, RawServoFontFaceRule, RawServoFontFeatureValuesRule,
-    RawServoFontPaletteValuesRule, RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule,
-    RawServoLayerBlockRule, RawServoLayerStatementRule, RawServoMediaList, RawServoMediaRule,
-    RawServoMozDocumentRule, RawServoNamespaceRule, RawServoPageRule,
-    RawServoSupportsRule, ServoCssRules,
+    RawServoContainerRule, RawServoCounterStyleRule, RawServoDeclarationBlock,
+    RawServoFontFaceRule, RawServoFontFeatureValuesRule, RawServoFontPaletteValuesRule,
+    RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule, RawServoLayerBlockRule,
+    RawServoLayerStatementRule, RawServoMediaList, RawServoMediaRule, RawServoMozDocumentRule,
+    RawServoNamespaceRule, RawServoPageRule, RawServoSupportsRule, ServoCssRules,
 };
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, Strong};
 use style::gecko_bindings::sugar::refptr::RefPtr;
@@ -144,6 +143,7 @@ use style::values::specified::source_size_list::SourceSizeList;
 use style::values::specified::{AbsoluteLength, NoCalcLength};
 use style::values::{specified, AtomIdent, CustomIdent, KeyframesName};
 use style_traits::{CssWriter, ParseError, ParsingMode, ToCss};
+use thin_vec::ThinVec;
 use to_shmem::SharedMemoryBuilder;
 
 trait ClosureHelper {
@@ -378,14 +378,12 @@ pub extern "C" fn Servo_MaybeGCRuleTree(raw_data: &PerDocumentStyleData) {
 
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValues_Interpolate(
-    from: &RawServoAnimationValue,
-    to: &RawServoAnimationValue,
+    from: &AnimationValue,
+    to: &AnimationValue,
     progress: f64,
-) -> Strong<RawServoAnimationValue> {
-    let from_value = AnimationValue::as_arc(&from);
-    let to_value = AnimationValue::as_arc(&to);
-    if let Ok(value) = from_value.animate(to_value, Procedure::Interpolate { progress }) {
-        Arc::new(value).into_strong()
+) -> Strong<AnimationValue> {
+    if let Ok(value) = from.animate(to, Procedure::Interpolate { progress }) {
+        Arc::new(value).into()
     } else {
         Strong::null()
     }
@@ -393,25 +391,16 @@ pub extern "C" fn Servo_AnimationValues_Interpolate(
 
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValues_IsInterpolable(
-    from: &RawServoAnimationValue,
-    to: &RawServoAnimationValue,
+    from: &AnimationValue,
+    to: &AnimationValue,
 ) -> bool {
-    let from_value = AnimationValue::as_arc(&from);
-    let to_value = AnimationValue::as_arc(&to);
-    from_value
-        .animate(to_value, Procedure::Interpolate { progress: 0.5 })
-        .is_ok()
+    from.animate(to, Procedure::Interpolate { progress: 0.5 }).is_ok()
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValues_Add(
-    a: &RawServoAnimationValue,
-    b: &RawServoAnimationValue,
-) -> Strong<RawServoAnimationValue> {
-    let a_value = AnimationValue::as_arc(&a);
-    let b_value = AnimationValue::as_arc(&b);
-    if let Ok(value) = a_value.animate(b_value, Procedure::Add) {
-        Arc::new(value).into_strong()
+pub extern "C" fn Servo_AnimationValues_Add(a: &AnimationValue, b: &AnimationValue) -> Strong<AnimationValue> {
+    if let Ok(value) = a.animate(b, Procedure::Add) {
+        Arc::new(value).into()
     } else {
         Strong::null()
     }
@@ -419,14 +408,12 @@ pub extern "C" fn Servo_AnimationValues_Add(
 
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValues_Accumulate(
-    a: &RawServoAnimationValue,
-    b: &RawServoAnimationValue,
+    a: &AnimationValue,
+    b: &AnimationValue,
     count: u64,
-) -> Strong<RawServoAnimationValue> {
-    let a_value = AnimationValue::as_arc(&a);
-    let b_value = AnimationValue::as_arc(&b);
-    if let Ok(value) = a_value.animate(b_value, Procedure::Accumulate { count }) {
-        Arc::new(value).into_strong()
+) -> Strong<AnimationValue> {
+    if let Ok(value) = a.animate(b, Procedure::Accumulate { count }) {
+        Arc::new(value).into()
     } else {
         Strong::null()
     }
@@ -434,11 +421,10 @@ pub extern "C" fn Servo_AnimationValues_Accumulate(
 
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValues_GetZeroValue(
-    value_to_match: &RawServoAnimationValue,
-) -> Strong<RawServoAnimationValue> {
-    let value_to_match = AnimationValue::as_arc(&value_to_match);
+    value_to_match: &AnimationValue,
+) -> Strong<AnimationValue> {
     if let Ok(zero_value) = value_to_match.to_animated_zero() {
-        Arc::new(zero_value).into_strong()
+        Arc::new(zero_value).into()
     } else {
         Strong::null()
     }
@@ -446,17 +432,12 @@ pub extern "C" fn Servo_AnimationValues_GetZeroValue(
 
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValues_ComputeDistance(
-    from: &RawServoAnimationValue,
-    to: &RawServoAnimationValue,
+    from: &AnimationValue,
+    to: &AnimationValue,
 ) -> f64 {
-    let from_value = AnimationValue::as_arc(&from);
-    let to_value = AnimationValue::as_arc(&to);
     // If compute_squared_distance() failed, this function will return negative value
     // in order to check whether we support the specified paced animation values.
-    from_value
-        .compute_squared_distance(to_value)
-        .map(|d| d.sqrt())
-        .unwrap_or(-1.0)
+    from.compute_squared_distance(to).map_or(-1.0, |d| d.sqrt())
 }
 
 /// Compute one of the endpoints for the interpolation interval, compositing it with the
@@ -465,7 +446,7 @@ pub extern "C" fn Servo_AnimationValues_ComputeDistance(
 /// It is the responsibility of the caller to ensure that |underlying_value| is provided
 /// when it will be used.
 fn composite_endpoint(
-    endpoint_value: Option<&RawOffsetArc<AnimationValue>>,
+    endpoint_value: Option<&AnimationValue>,
     composite: CompositeOperation,
     underlying_value: Option<&AnimationValue>,
 ) -> Option<AnimationValue> {
@@ -488,7 +469,7 @@ fn composite_endpoint(
 /// Accumulate one of the endpoints of the animation interval.
 /// A returned value of None means, "Just use endpoint_value as-is."
 fn accumulate_endpoint(
-    endpoint_value: Option<&RawOffsetArc<AnimationValue>>,
+    endpoint_value: Option<&AnimationValue>,
     composited_value: Option<AnimationValue>,
     last_value: &AnimationValue,
     current_iteration: u64,
@@ -524,22 +505,8 @@ fn compose_animation_segment(
     segment_progress: f64,
 ) -> AnimationValue {
     // Extract keyframe values.
-    let raw_from_value;
-    let keyframe_from_value = if !segment.mFromValue.mServo.mRawPtr.is_null() {
-        raw_from_value = unsafe { &*segment.mFromValue.mServo.mRawPtr };
-        Some(AnimationValue::as_arc(&raw_from_value))
-    } else {
-        None
-    };
-
-    let raw_to_value;
-    let keyframe_to_value = if !segment.mToValue.mServo.mRawPtr.is_null() {
-        raw_to_value = unsafe { &*segment.mToValue.mServo.mRawPtr };
-        Some(AnimationValue::as_arc(&raw_to_value))
-    } else {
-        None
-    };
-
+    let keyframe_from_value = unsafe {segment.mFromValue.mServo.mRawPtr.as_ref() };
+    let keyframe_to_value = unsafe { segment.mToValue.mServo.mRawPtr.as_ref() };
     let mut composited_from_value = composite_endpoint(
         keyframe_from_value,
         segment.mFromComposite,
@@ -612,14 +579,12 @@ fn compose_animation_segment(
 #[no_mangle]
 pub extern "C" fn Servo_ComposeAnimationSegment(
     segment: &structs::AnimationPropertySegment,
-    underlying_value: Option<&RawServoAnimationValue>,
-    last_value: Option<&RawServoAnimationValue>,
+    underlying_value: Option<&AnimationValue>,
+    last_value: Option<&AnimationValue>,
     iteration_composite: IterationCompositeOperation,
     progress: f64,
     current_iteration: u64,
-) -> Strong<RawServoAnimationValue> {
-    let underlying_value = AnimationValue::arc_from_borrowed(&underlying_value).map(|v| &**v);
-    let last_value = AnimationValue::arc_from_borrowed(&last_value).map(|v| &**v);
+) -> Strong<AnimationValue> {
     let result = compose_animation_segment(
         segment,
         underlying_value,
@@ -629,7 +594,7 @@ pub extern "C" fn Servo_ComposeAnimationSegment(
         progress,
         progress,
     );
-    Arc::new(result).into_strong()
+    Arc::new(result).into()
 }
 
 #[no_mangle]
@@ -667,13 +632,9 @@ pub extern "C" fn Servo_AnimationCompose(
     // effect), or, if there is no current value, look up the cached base value
     // for this property.
     let underlying_value = if need_underlying_value {
-        let previous_composed_value = value_map.get(&property).cloned();
+        let previous_composed_value = value_map.get(&property).map(|v| &*v);
         previous_composed_value.or_else(|| {
-            let raw_base_style =
-                unsafe { Gecko_AnimationGetBaseStyle(base_values, css_property).as_ref() };
-            AnimationValue::arc_from_borrowed(&raw_base_style)
-                .map(|v| &**v)
-                .cloned()
+            unsafe { Gecko_AnimationGetBaseStyle(base_values, css_property).as_ref() }
         })
     } else {
         None
@@ -684,14 +645,7 @@ pub extern "C" fn Servo_AnimationCompose(
         return;
     }
 
-    let raw_last_value;
-    let last_value = if !last_segment.mToValue.mServo.mRawPtr.is_null() {
-        raw_last_value = unsafe { &*last_segment.mToValue.mServo.mRawPtr };
-        Some(&**AnimationValue::as_arc(&raw_last_value))
-    } else {
-        None
-    };
-
+    let last_value = unsafe { last_segment.mToValue.mServo.mRawPtr.as_ref() };
     let progress = unsafe { Gecko_GetProgressFromComputedTiming(computed_timing) };
     let position = if segment.mToKey == segment.mFromKey {
         // Note: compose_animation_segment doesn't use this value
@@ -703,7 +657,7 @@ pub extern "C" fn Servo_AnimationCompose(
 
     let result = compose_animation_segment(
         segment,
-        underlying_value.as_ref(),
+        underlying_value,
         last_value,
         iteration_composite,
         computed_timing.mCurrentIteration,
@@ -726,12 +680,12 @@ macro_rules! get_property_id_from_nscsspropertyid {
 
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValue_Serialize(
-    value: &RawServoAnimationValue,
+    value: &AnimationValue,
     property: nsCSSPropertyID,
     raw_data: &PerDocumentStyleData,
     buffer: &mut nsACString,
 ) {
-    let uncomputed_value = AnimationValue::as_arc(&value).uncompute();
+    let uncomputed_value = value.uncompute();
     let data = raw_data.borrow();
     let rv = PropertyDeclarationBlock::with_one(uncomputed_value, Importance::Normal)
         .single_value_to_css(
@@ -746,26 +700,20 @@ pub extern "C" fn Servo_AnimationValue_Serialize(
 
 /// Debug: MOZ_DBG for AnimationValue.
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValue_Dump(
-    value: &RawServoAnimationValue,
-    result: &mut nsACString,
-) {
-    let value = AnimationValue::as_arc(&value);
+pub extern "C" fn Servo_AnimationValue_Dump(value: &AnimationValue, result: &mut nsACString) {
     write!(result, "{:?}", value).unwrap();
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValue_GetColor(
-    value: &RawServoAnimationValue,
+    value: &AnimationValue,
     foreground_color: structs::nscolor,
 ) -> structs::nscolor {
     use style::gecko::values::{
         convert_absolute_color_to_nscolor, convert_nscolor_to_absolute_color,
     };
     use style::values::computed::color::Color as ComputedColor;
-
-    let value = AnimationValue::as_arc(&value);
-    match **value {
+    match *value {
         AnimationValue::BackgroundColor(ref color) => {
             let computed: ComputedColor = color.clone();
             let foreground_color = convert_nscolor_to_absolute_color(foreground_color);
@@ -776,9 +724,8 @@ pub extern "C" fn Servo_AnimationValue_GetColor(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValue_IsCurrentColor(value: &RawServoAnimationValue) -> bool {
-    let value = AnimationValue::as_arc(&value);
-    match **value {
+pub extern "C" fn Servo_AnimationValue_IsCurrentColor(value: &AnimationValue) -> bool {
+    match *value {
         AnimationValue::BackgroundColor(ref color) => color.is_currentcolor(),
         _ => {
             debug_assert!(false, "Other color properties are not supported yet");
@@ -788,9 +735,8 @@ pub extern "C" fn Servo_AnimationValue_IsCurrentColor(value: &RawServoAnimationV
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValue_GetOpacity(value: &RawServoAnimationValue) -> f32 {
-    let value = AnimationValue::as_arc(&value);
-    if let AnimationValue::Opacity(opacity) = **value {
+pub extern "C" fn Servo_AnimationValue_GetOpacity(value: &AnimationValue) -> f32 {
+    if let AnimationValue::Opacity(opacity) = *value {
         opacity
     } else {
         panic!("The AnimationValue should be Opacity");
@@ -798,15 +744,15 @@ pub extern "C" fn Servo_AnimationValue_GetOpacity(value: &RawServoAnimationValue
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValue_Opacity(opacity: f32) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::Opacity(opacity)).into_strong()
+pub extern "C" fn Servo_AnimationValue_Opacity(opacity: f32) -> Strong<AnimationValue> {
+    Arc::new(AnimationValue::Opacity(opacity)).into()
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_AnimationValue_Color(
     color_property: nsCSSPropertyID,
     color: structs::nscolor,
-) -> Strong<RawServoAnimationValue> {
+) -> Strong<AnimationValue> {
     use style::gecko::values::convert_nscolor_to_absolute_color;
     use style::values::animated::color::Color;
 
@@ -817,171 +763,123 @@ pub extern "C" fn Servo_AnimationValue_Color(
 
     match property {
         LonghandId::BackgroundColor => {
-            Arc::new(AnimationValue::BackgroundColor(Color::Absolute(animated))).into_strong()
+            Arc::new(AnimationValue::BackgroundColor(Color::Absolute(animated))).into()
         },
         _ => panic!("Should be background-color property"),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_GetScale(
-    value: &RawServoAnimationValue,
-) -> *const computed::Scale {
-    let value = AnimationValue::as_arc(&value);
-    match **value {
+pub unsafe extern "C" fn Servo_AnimationValue_GetScale(value: &AnimationValue) -> *const computed::Scale {
+    match *value {
         AnimationValue::Scale(ref value) => value,
         _ => unreachable!("Expected scale"),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_GetTranslate(
-    value: &RawServoAnimationValue,
-) -> *const computed::Translate {
-    let value = AnimationValue::as_arc(&value);
-    match **value {
+pub unsafe extern "C" fn Servo_AnimationValue_GetTranslate(value: &AnimationValue) -> *const computed::Translate {
+    match *value {
         AnimationValue::Translate(ref value) => value,
         _ => unreachable!("Expected translate"),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_GetRotate(
-    value: &RawServoAnimationValue,
-) -> *const computed::Rotate {
-    let value = AnimationValue::as_arc(&value);
-    match **value {
+pub unsafe extern "C" fn Servo_AnimationValue_GetRotate(value: &AnimationValue) -> *const computed::Rotate {
+    match *value {
         AnimationValue::Rotate(ref value) => value,
         _ => unreachable!("Expected rotate"),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
-    value: &RawServoAnimationValue,
-) -> *const computed::Transform {
-    let value = AnimationValue::as_arc(&value);
-    match **value {
+pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(value: &AnimationValue) -> *const computed::Transform {
+    match *value {
         AnimationValue::Transform(ref value) => value,
         _ => unreachable!("Unsupported transform animation value"),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetPath(
-    value: &RawServoAnimationValue,
-) -> *const computed::motion::OffsetPath {
-    let value = AnimationValue::as_arc(&value);
-    match **value {
+pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetPath(value: &AnimationValue) -> *const computed::motion::OffsetPath {
+    match *value {
         AnimationValue::OffsetPath(ref value) => value,
         _ => unreachable!("Expected offset-path"),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetDistance(
-    value: &RawServoAnimationValue,
-) -> *const computed::LengthPercentage {
-    let value = AnimationValue::as_arc(&value);
-    match **value {
+pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetDistance(value: &AnimationValue) -> *const computed::LengthPercentage {
+    match *value {
         AnimationValue::OffsetDistance(ref value) => value,
         _ => unreachable!("Expected offset-distance"),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetRotate(
-    value: &RawServoAnimationValue,
-) -> *const computed::motion::OffsetRotate {
-    let value = AnimationValue::as_arc(&value);
-    match **value {
+pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetRotate(value: &AnimationValue) -> *const computed::motion::OffsetRotate {
+    match *value {
         AnimationValue::OffsetRotate(ref value) => value,
         _ => unreachable!("Expected offset-rotate"),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetAnchor(
-    value: &RawServoAnimationValue,
-) -> *const computed::position::PositionOrAuto {
-    let value = AnimationValue::as_arc(&value);
-    match **value {
+pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetAnchor(value: &AnimationValue) -> *const computed::position::PositionOrAuto {
+    match *value {
         AnimationValue::OffsetAnchor(ref value) => value,
         _ => unreachable!("Expected offset-anchor"),
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_Rotate(
-    r: &computed::Rotate,
-) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::Rotate(r.clone())).into_strong()
+pub unsafe extern "C" fn Servo_AnimationValue_Rotate(r: &computed::Rotate) -> Strong<AnimationValue> {
+    Arc::new(AnimationValue::Rotate(r.clone())).into()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_Translate(
-    t: &computed::Translate,
-) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::Translate(t.clone())).into_strong()
+pub unsafe extern "C" fn Servo_AnimationValue_Translate(t: &computed::Translate) -> Strong<AnimationValue> {
+    Arc::new(AnimationValue::Translate(t.clone())).into()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_Scale(
-    s: &computed::Scale,
-) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::Scale(s.clone())).into_strong()
+pub unsafe extern "C" fn Servo_AnimationValue_Scale(s: &computed::Scale) -> Strong<AnimationValue> {
+    Arc::new(AnimationValue::Scale(s.clone())).into()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_Transform(
-    transform: &computed::Transform,
-) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::Transform(transform.clone())).into_strong()
+pub unsafe extern "C" fn Servo_AnimationValue_Transform(transform: &computed::Transform) -> Strong<AnimationValue> {
+    Arc::new(AnimationValue::Transform(transform.clone())).into()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_OffsetPath(
-    p: &computed::motion::OffsetPath,
-) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::OffsetPath(p.clone())).into_strong()
+pub unsafe extern "C" fn Servo_AnimationValue_OffsetPath(p: &computed::motion::OffsetPath) -> Strong<AnimationValue> {
+    Arc::new(AnimationValue::OffsetPath(p.clone())).into()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_OffsetDistance(
-    d: &computed::length::LengthPercentage,
-) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::OffsetDistance(d.clone())).into_strong()
+pub unsafe extern "C" fn Servo_AnimationValue_OffsetDistance(d: &computed::LengthPercentage) -> Strong<AnimationValue> {
+    Arc::new(AnimationValue::OffsetDistance(d.clone())).into()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_OffsetRotate(
-    r: &computed::motion::OffsetRotate,
-) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::OffsetRotate(*r)).into_strong()
+pub unsafe extern "C" fn Servo_AnimationValue_OffsetRotate(r: &computed::motion::OffsetRotate) -> Strong<AnimationValue> {
+    Arc::new(AnimationValue::OffsetRotate(*r)).into()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_OffsetAnchor(
-    p: &computed::position::PositionOrAuto,
-) -> Strong<RawServoAnimationValue> {
-    Arc::new(AnimationValue::OffsetAnchor(p.clone())).into_strong()
+pub unsafe extern "C" fn Servo_AnimationValue_OffsetAnchor(p: &computed::position::PositionOrAuto) -> Strong<AnimationValue> {
+    Arc::new(AnimationValue::OffsetAnchor(p.clone())).into()
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValue_DeepEqual(
-    this: &RawServoAnimationValue,
-    other: &RawServoAnimationValue,
-) -> bool {
-    let this_value = AnimationValue::as_arc(&this);
-    let other_value = AnimationValue::as_arc(&other);
-    this_value == other_value
+pub extern "C" fn Servo_AnimationValue_DeepEqual(this: &AnimationValue, other: &AnimationValue) -> bool {
+    this == other
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValue_Uncompute(
-    value: &RawServoAnimationValue,
-) -> Strong<RawServoDeclarationBlock> {
-    let value = AnimationValue::as_arc(&value);
+pub extern "C" fn Servo_AnimationValue_Uncompute(value: &AnimationValue) -> Strong<RawServoDeclarationBlock> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     Arc::new(
         global_style_data
@@ -1145,13 +1043,13 @@ pub unsafe extern "C" fn Servo_AnimationValueMap_Drop(value_map: *mut AnimationV
 pub extern "C" fn Servo_AnimationValueMap_GetValue(
     value_map: &AnimationValueMap,
     property_id: nsCSSPropertyID,
-) -> Strong<RawServoAnimationValue> {
+) -> Strong<AnimationValue> {
     let property = match LonghandId::from_nscsspropertyid(property_id) {
         Ok(longhand) => longhand,
         Err(()) => return Strong::null(),
     };
     value_map.get(&property).map_or(Strong::null(), |value| {
-        Arc::new(value.clone()).into_strong()
+        Arc::new(value.clone()).into()
     })
 }
 
@@ -1208,7 +1106,7 @@ pub extern "C" fn Servo_StyleSet_GetComputedValuesByAddingAnimation(
     element: &RawGeckoElement,
     computed_values: &ComputedValues,
     snapshots: *const ServoElementSnapshotTable,
-    animation_value: &RawServoAnimationValue,
+    animation_value: &AnimationValue,
 ) -> Strong<ComputedValues> {
     debug_assert!(!snapshots.is_null());
     let rules = match computed_values.rules {
@@ -1218,7 +1116,7 @@ pub extern "C" fn Servo_StyleSet_GetComputedValuesByAddingAnimation(
 
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
-    let uncomputed_value = AnimationValue::as_arc(&animation_value).uncompute();
+    let uncomputed_value = animation_value.uncompute();
     let doc_data = raw_style_set.borrow();
 
     let with_animations_rules = {
@@ -1263,13 +1161,13 @@ pub extern "C" fn Servo_StyleSet_GetComputedValuesByAddingAnimation(
 pub extern "C" fn Servo_ComputedValues_ExtractAnimationValue(
     computed_values: &ComputedValues,
     property_id: nsCSSPropertyID,
-) -> Strong<RawServoAnimationValue> {
+) -> Strong<AnimationValue> {
     let property = match LonghandId::from_nscsspropertyid(property_id) {
         Ok(longhand) => longhand,
         Err(()) => return Strong::null(),
     };
     match AnimationValue::from_computed_values(property, &computed_values) {
-        Some(v) => Arc::new(v).into_strong(),
+        Some(v) => Arc::new(v).into(),
         None => Strong::null(),
     }
 }
@@ -4924,10 +4822,9 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetProperty(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_DeclarationBlock_SetPropertyToAnimationValue(
     declarations: &RawServoDeclarationBlock,
-    animation_value: &RawServoAnimationValue,
+    animation_value: &AnimationValue,
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
-    let animation_value = AnimationValue::as_arc(&animation_value);
     let non_custom_property_id = animation_value.id().into();
     let mut source_declarations = SourcePropertyDeclaration::with_one(animation_value.uncompute());
 
@@ -6187,19 +6084,14 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
                     seen.insert(property);
 
                     // This is safe since we immediately write to the uninitialized values.
-                    unsafe { animation_values.set_len((property_index + 1) as u32) };
-                    animation_values[property_index].mProperty = property.to_nscsspropertyid();
-                    match value {
-                        Some(v) => {
-                            animation_values[property_index]
-                                .mValue
-                                .mServo
-                                .set_arc_leaky(Arc::new(v));
-                        },
-                        None => {
-                            animation_values[property_index].mValue.mServo.mRawPtr =
-                                ptr::null_mut();
-                        },
+                    unsafe {
+                        animation_values.set_len((property_index + 1) as u32);
+                        ptr::write(&mut animation_values[property_index], structs::PropertyStyleAnimationValuePair {
+                            mProperty: property.to_nscsspropertyid(),
+                            mValue: structs::AnimationValue {
+                                mServo: value.map_or(structs::RefPtr::null(), |v| structs::RefPtr::from_arc(Arc::new(v))),
+                            },
+                        });
                     }
                     property_index += 1;
                 };
@@ -6235,7 +6127,7 @@ pub extern "C" fn Servo_GetAnimationValues(
     element: &RawGeckoElement,
     style: &ComputedValues,
     raw_data: &PerDocumentStyleData,
-    animation_values: &mut nsTArray<structs::RefPtr<structs::RawServoAnimationValue>>,
+    animation_values: &mut ThinVec<structs::RefPtr<AnimationValue>>,
 ) {
     let data = raw_data.borrow();
     let element = GeckoElement(element);
@@ -6268,17 +6160,11 @@ pub extern "C" fn Servo_GetAnimationValues(
         &default_values,
         None, // SMIL has no extra custom properties.
     );
-    for (index, anim) in iter.enumerate() {
-        unsafe { animation_values.set_len((index + 1) as u32) };
-        animation_values[index].set_arc_leaky(Arc::new(anim));
-    }
+    animation_values.extend(iter.map(|v| structs::RefPtr::from_arc(Arc::new(v))));
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValue_GetPropertyId(
-    value: &RawServoAnimationValue,
-) -> nsCSSPropertyID {
-    let value = AnimationValue::as_arc(&value);
+pub extern "C" fn Servo_AnimationValue_GetPropertyId(value: &AnimationValue) -> nsCSSPropertyID {
     value.id().to_nscsspropertyid()
 }
 
@@ -6288,7 +6174,7 @@ pub extern "C" fn Servo_AnimationValue_Compute(
     declarations: &RawServoDeclarationBlock,
     style: &ComputedValues,
     raw_data: &PerDocumentStyleData,
-) -> Strong<RawServoAnimationValue> {
+) -> Strong<AnimationValue> {
     let data = raw_data.borrow();
 
     let element = GeckoElement(element);
@@ -6327,7 +6213,7 @@ pub extern "C" fn Servo_AnimationValue_Compute(
                 None, // No extra custom properties for devtools.
                 default_values,
             );
-            animation.map_or(Strong::null(), |value| Arc::new(value).into_strong())
+            animation.map_or(Strong::null(), |value| Arc::new(value).into())
         },
         _ => Strong::null(),
     }
@@ -6548,7 +6434,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
                         id.to_nscsspropertyid(),
                     );
 
-                    (*pair).mServoDeclarationBlock.set_arc_leaky(Arc::new(
+                    (*pair).mServoDeclarationBlock.set_arc_ffi(Arc::new(
                         global_style_data
                             .shared_lock
                             .wrap(PropertyDeclarationBlock::with_one(
@@ -6571,7 +6457,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
                         nsCSSPropertyID::eCSSPropertyExtra_variable,
                     );
 
-                    (*pair).mServoDeclarationBlock.set_arc_leaky(Arc::new(
+                    (*pair).mServoDeclarationBlock.set_arc_ffi(Arc::new(
                         global_style_data.shared_lock.wrap(custom_properties),
                     ));
                 }
@@ -6609,16 +6495,10 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_GetFontFaceRules(
     raw_data: &PerDocumentStyleData,
-    rules: &mut nsTArray<structs::nsFontFaceRuleContainer>,
+    rules: &mut ThinVec<structs::nsFontFaceRuleContainer>,
 ) {
     let data = raw_data.borrow();
     debug_assert_eq!(rules.len(), 0);
-
-    let len: u32 = data
-        .stylist
-        .iter_extra_data_origins()
-        .map(|(d, _)| d.font_faces.len() as u32)
-        .sum();
 
     // Reversed iterator because Gecko expects rules to appear sorted
     // UserAgent first, Author last.
@@ -6627,11 +6507,10 @@ pub extern "C" fn Servo_StyleSet_GetFontFaceRules(
         .iter_extra_data_origins_rev()
         .flat_map(|(d, o)| d.font_faces.iter().zip(iter::repeat(o)));
 
-    unsafe { rules.set_len(len) };
-    for ((&(ref rule, _), origin), dest) in font_face_iter.zip(rules.iter_mut()) {
-        dest.mRule.set_arc_leaky(rule.clone());
-        dest.mOrigin = origin;
-    }
+    rules.extend(font_face_iter.map(|(&(ref rule, _layer_id), origin)| structs::nsFontFaceRuleContainer {
+        mRule: structs::RefPtr::from_arc_ffi(rule.clone()),
+        mOrigin: origin,
+    }))
 }
 
 // XXX Ideally this should return a Option<&RawServoCounterStyleRule>,

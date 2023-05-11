@@ -213,7 +213,7 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
 }
 
 /* static */
-already_AddRefed<RawServoAnimationValue> AnimationValue::FromAnimatable(
+already_AddRefed<StyleAnimationValue> AnimationValue::FromAnimatable(
     nsCSSPropertyID aProperty, const layers::Animatable& aAnimatable) {
   switch (aAnimatable.type()) {
     case layers::Animatable::Tnull_t:

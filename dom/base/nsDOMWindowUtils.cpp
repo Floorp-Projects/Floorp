@@ -3244,7 +3244,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<RawServoAnimationValue> value =
+  RefPtr<StyleAnimationValue> value =
       Servo_ComputedValues_ExtractAnimationValue(computedStyle, propertyID)
           .Consume();
   if (!value) {

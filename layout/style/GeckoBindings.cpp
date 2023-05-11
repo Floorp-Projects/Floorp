@@ -680,7 +680,7 @@ nsCSSPropertyID Gecko_ElementTransitions_PropertyAt(const Element* aElement,
                     : nsCSSPropertyID::eCSSProperty_UNKNOWN;
 }
 
-const RawServoAnimationValue* Gecko_ElementTransitions_EndValueAt(
+const StyleAnimationValue* Gecko_ElementTransitions_EndValueAt(
     const Element* aElement, size_t aIndex) {
   CSSTransition* transition = GetCurrentTransitionAt(aElement, aIndex);
   return transition ? transition->ToValue().mServo.get() : nullptr;
@@ -705,10 +705,10 @@ double Gecko_GetPositionInSegment(const AnimationPropertySegment* aSegment,
       aSegment->mTimingFunction, positionInSegment, aBeforeFlag);
 }
 
-const RawServoAnimationValue* Gecko_AnimationGetBaseStyle(
+const StyleAnimationValue* Gecko_AnimationGetBaseStyle(
     const RawServoAnimationValueTable* aBaseStyles, nsCSSPropertyID aProperty) {
   auto base = reinterpret_cast<
-      const nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>*>(
+      const nsRefPtrHashtable<nsUint32HashKey, StyleAnimationValue>*>(
       aBaseStyles);
   return base->GetWeak(aProperty);
 }
