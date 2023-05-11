@@ -18,9 +18,11 @@ exclude: true
   arguments: `skipConfirmation` and `requestExternalApp`.
 - Added [`GeckoDisplay.NewSurfaceProvider`][115.2] interface, which allows Gecko to request a new rendering Surface from the application.
   ([bug 1824083]({{bugzilla}}1824083))
+- Add [`onPrintWithStatus`][115.3] to retrieve additional printing status information.
 
 [115.1]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(byte[], String, String, boolean, boolean)
 [115.2]: {{javadoc_uri}}/GeckoDisplay.NewSurfaceProvider.html
+[115.3]: {{javadoc_uri}}/GeckoSession.PrintDelegate.html#onPrintWithStatus
 
 ## v114
 - Add [`SessionPdfFileSaver.createResponse`][114.1] to response of saving PDF.
@@ -1364,4 +1366,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 44d4062b9a77d0655756829e81d80b372f44b118
+[api-version]: 3caf920d1b5feeadb1d929f6ac70ce5730e46fde
