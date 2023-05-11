@@ -324,6 +324,22 @@
     input: StringId
     lastIndex: Int32Id
 
+- name: RegExpBuiltinExecMatchResult
+  shared: true
+  transpile: false
+  cost_estimate: 5
+  args:
+    regexp: ObjId
+    input: StringId
+
+- name: RegExpBuiltinExecTestResult
+  shared: true
+  transpile: false
+  cost_estimate: 5
+  args:
+    regexp: ObjId
+    input: StringId
+
 - name: RegExpFlagResult
   shared: true
   transpile: true

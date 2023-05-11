@@ -83,7 +83,11 @@ class RegExpObject : public NativeObject {
 
   /* Accessors. */
 
-  static unsigned lastIndexSlot() { return LAST_INDEX_SLOT; }
+  static constexpr size_t lastIndexSlot() { return LAST_INDEX_SLOT; }
+
+  static constexpr size_t offsetOfLastIndex() {
+    return getFixedSlotOffset(lastIndexSlot());
+  }
 
   static bool isInitialShape(RegExpObject* rx) {
     // RegExpObject has a non-configurable lastIndex property, so there must be
@@ -118,7 +122,11 @@ class RegExpObject : public NativeObject {
 
   /* Flags. */
 
-  static unsigned flagsSlot() { return FLAGS_SLOT; }
+  static constexpr size_t flagsSlot() { return FLAGS_SLOT; }
+
+  static constexpr size_t offsetOfFlags() {
+    return getFixedSlotOffset(flagsSlot());
+  }
 
   JS::RegExpFlags getFlags() const {
     return JS::RegExpFlags(getFixedSlot(FLAGS_SLOT).toInt32());

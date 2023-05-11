@@ -205,6 +205,8 @@
   _(IntrinsicIsPossiblyWrappedTypedArray)          \
   _(IntrinsicTypedArrayLength)                     \
   _(IntrinsicPossiblyWrappedTypedArrayLength)      \
+  _(IntrinsicRegExpBuiltinExec)                    \
+  _(IntrinsicRegExpExec)                           \
   _(IntrinsicTypedArrayByteOffset)                 \
   _(IntrinsicTypedArrayElementSize)                \
                                                    \

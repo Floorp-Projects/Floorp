@@ -4253,6 +4253,75 @@ void MacroAssembler::branchIfNotRegExpInstanceOptimizable(Register regexp,
   branchTestObjShapeUnsafe(Assembler::NotEqual, regexp, temp, label);
 }
 
+void MacroAssembler::loadAndUpdateRegExpLastIndex(bool forTest, Register regexp,
+                                                  Register string,
+                                                  Register lastIndex,
+                                                  TypedOrValueRegister output,
+                                                  Label* done) {
+  Address flagsSlot(regexp, RegExpObject::offsetOfFlags());
+  Address lastIndexSlot(regexp, RegExpObject::offsetOfLastIndex());
+  Address stringLength(string, JSString::offsetOfLength());
+
+  Label notGlobalOrSticky, loadedLastIndex;
+
+  branchTest32(Assembler::Zero, flagsSlot,
+               Imm32(JS::RegExpFlag::Global | JS::RegExpFlag::Sticky),
+               &notGlobalOrSticky);
+  {
+    // It's a global or sticky regular expression. Emit the following code:
+    //
+    //   lastIndex = regexp.lastIndex
+    //   if lastIndex > string.length:
+    //     regexp.lastIndex = 0
+    //     output = forTest ? false : null
+    //     jump to done (skip the regexp match/test operation)
+    //
+    // See steps 5-8 in js::RegExpBuiltinExec.
+    //
+    // Earlier guards must have ensured regexp.lastIndex is a non-negative
+    // integer.
+#ifdef DEBUG
+    {
+      Label ok;
+      branchTestInt32(Assembler::Equal, lastIndexSlot, &ok);
+      assumeUnreachable("Expected int32 value for lastIndex");
+      bind(&ok);
+    }
+#endif
+    unboxInt32(lastIndexSlot, lastIndex);
+#ifdef DEBUG
+    {
+      Label ok;
+      branchTest32(Assembler::NotSigned, lastIndex, lastIndex, &ok);
+      assumeUnreachable("Expected non-negative lastIndex");
+      bind(&ok);
+    }
+#endif
+    branch32(Assembler::AboveOrEqual, stringLength, lastIndex,
+             &loadedLastIndex);
+    {
+      storeValue(Int32Value(0), lastIndexSlot);
+      if (forTest) {
+        if (output.hasValue()) {
+          moveValue(BooleanValue(false), output.valueReg());
+        } else {
+          MOZ_ASSERT(output.type() == MIRType::Boolean);
+          move32(Imm32(0), output.typedReg().gpr());
+        }
+      } else {
+        moveValue(NullValue(), output.valueReg());
+      }
+      jump(done);
+    }
+    jump(&loadedLastIndex);
+  }
+
+  bind(&notGlobalOrSticky);
+  move32(Imm32(0), lastIndex);
+
+  bind(&loadedLastIndex);
+}
+
 // ===============================================================
 // Branch functions
 

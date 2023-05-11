@@ -208,6 +208,8 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicIsTypedArray:
     case InlinableNative::IntrinsicIsPossiblyWrappedTypedArray:
     case InlinableNative::IntrinsicPossiblyWrappedTypedArrayLength:
+    case InlinableNative::IntrinsicRegExpBuiltinExec:
+    case InlinableNative::IntrinsicRegExpExec:
     case InlinableNative::IntrinsicTypedArrayLength:
     case InlinableNative::IntrinsicTypedArrayByteOffset:
     case InlinableNative::IntrinsicTypedArrayElementSize:
