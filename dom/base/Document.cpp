@@ -144,6 +144,7 @@
 #include "mozilla/css/Rule.h"
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/dom/AnonymousContent.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
@@ -16170,10 +16171,23 @@ void Document::SendPageUseCounters() {
 }
 
 void Document::RecomputeResistFingerprinting() {
-  mShouldResistFingerprinting =
-      !nsContentUtils::IsChromeDoc(this) &&
-      nsContentUtils::ShouldResistFingerprinting(
-          mChannel, RFPTarget::IsAlwaysEnabledForPrecompute);
+  if (mParentDocument &&
+      (NodePrincipal()->Equals(mParentDocument->NodePrincipal()) ||
+       NodePrincipal()->GetIsNullPrincipal())) {
+    // If we have a parent document, defer to it only when we have a null
+    // principal (e.g. a sandboxed iframe or a data: uri) or when the parent
+    // document's principal matches.  This means we will defer about:blank,
+    // about:srcdoc, blob and same-origin iframes to the parent, but not
+    // cross-origin iframes.
+    mShouldResistFingerprinting = !nsContentUtils::IsChromeDoc(this) &&
+                                  mParentDocument->ShouldResistFingerprinting(
+                                      RFPTarget::IsAlwaysEnabledForPrecompute);
+  } else {
+    mShouldResistFingerprinting =
+        !nsContentUtils::IsChromeDoc(this) &&
+        nsContentUtils::ShouldResistFingerprinting(
+            mChannel, RFPTarget::IsAlwaysEnabledForPrecompute);
+  }
 }
 
 bool Document::ShouldResistFingerprinting(
