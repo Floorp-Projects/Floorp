@@ -18,9 +18,10 @@
 #include "js/RootingAPI.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 
-JSAPITest* JSAPITest::list;
+JSAPIRuntimeTest* JSAPIRuntimeTest::list;
+JSAPIFrontendTest* JSAPIFrontendTest::list;
 
-bool JSAPITest::init(JSContext* maybeReusableContext) {
+bool JSAPIRuntimeTest::init(JSContext* maybeReusableContext) {
   if (maybeReusableContext && reuseGlobal) {
     cx = maybeReusableContext;
     global.init(cx, JS::CurrentGlobalOrNull(cx));
@@ -48,7 +49,7 @@ bool JSAPITest::init(JSContext* maybeReusableContext) {
   return init();
 }
 
-JSContext* JSAPITest::maybeForgetContext() {
+JSContext* JSAPIRuntimeTest::maybeForgetContext() {
   if (!reuseGlobal) {
     return nullptr;
   }
@@ -60,21 +61,22 @@ JSContext* JSAPITest::maybeForgetContext() {
 }
 
 /* static */
-void JSAPITest::MaybeFreeContext(JSContext* maybeCx) {
+void JSAPIRuntimeTest::MaybeFreeContext(JSContext* maybeCx) {
   if (maybeCx) {
     JS::LeaveRealm(maybeCx, nullptr);
     JS_DestroyContext(maybeCx);
   }
 }
 
-void JSAPITest::uninit() {
+void JSAPIRuntimeTest::uninit() {
   global.reset();
   MaybeFreeContext(cx);
   cx = nullptr;
   msgs.clear();
 }
 
-bool JSAPITest::exec(const char* utf8, const char* filename, int lineno) {
+bool JSAPIRuntimeTest::exec(const char* utf8, const char* filename,
+                            int lineno) {
   JS::CompileOptions opts(cx);
   opts.setFileAndLine(filename, lineno);
 
@@ -85,8 +87,8 @@ bool JSAPITest::exec(const char* utf8, const char* filename, int lineno) {
          fail(JSAPITestString(utf8), filename, lineno);
 }
 
-bool JSAPITest::execDontReport(const char* utf8, const char* filename,
-                               int lineno) {
+bool JSAPIRuntimeTest::execDontReport(const char* utf8, const char* filename,
+                                      int lineno) {
   JS::CompileOptions opts(cx);
   opts.setFileAndLine(filename, lineno);
 
@@ -96,8 +98,8 @@ bool JSAPITest::execDontReport(const char* utf8, const char* filename,
          JS::Evaluate(cx, opts, srcBuf, &v);
 }
 
-bool JSAPITest::evaluate(const char* utf8, const char* filename, int lineno,
-                         JS::MutableHandleValue vp) {
+bool JSAPIRuntimeTest::evaluate(const char* utf8, const char* filename,
+                                int lineno, JS::MutableHandleValue vp) {
   JS::CompileOptions opts(cx);
   opts.setFileAndLine(filename, lineno);
 
@@ -107,11 +109,11 @@ bool JSAPITest::evaluate(const char* utf8, const char* filename, int lineno,
          fail(JSAPITestString(utf8), filename, lineno);
 }
 
-bool JSAPITest::definePrint() {
+bool JSAPIRuntimeTest::definePrint() {
   return JS_DefineFunction(cx, global, "print", (JSNative)print, 0, 0);
 }
 
-JSObject* JSAPITest::createGlobal(JSPrincipals* principals) {
+JSObject* JSAPIRuntimeTest::createGlobal(JSPrincipals* principals) {
   /* Create the global object. */
   JS::RootedObject newGlobal(cx);
   JS::RealmOptions options;
@@ -130,6 +132,7 @@ JSObject* JSAPITest::createGlobal(JSPrincipals* principals) {
 
 struct CommandOptions {
   bool list = false;
+  bool frontendOnly = false;
   bool help = false;
   const char* filter = nullptr;
 };
@@ -146,6 +149,11 @@ void parseArgs(int argc, char* argv[], CommandOptions& options) {
       continue;
     }
 
+    if (strcmp(argv[i], "--frontend-only") == 0) {
+      options.frontendOnly = true;
+      continue;
+    }
+
     if (!options.filter) {
       options.filter = argv[i];
       continue;
@@ -153,6 +161,55 @@ void parseArgs(int argc, char* argv[], CommandOptions& options) {
 
     printf("error: Unrecognized option: %s\n", argv[i]);
     options.help = true;
+  }
+}
+
+template <typename TestT>
+void PrintTests(TestT* list) {
+  for (TestT* test = list; test; test = test->next) {
+    printf("%s\n", test->name());
+  }
+}
+
+template <typename TestT, typename InitF, typename RunF, typename BeforeUninitF>
+void RunTests(int& total, int& failures, CommandOptions& options, TestT* list,
+              InitF init, RunF run, BeforeUninitF beforeUninit) {
+  for (TestT* test = list; test; test = test->next) {
+    const char* name = test->name();
+    if (options.filter && strstr(name, options.filter) == nullptr) {
+      continue;
+    }
+
+    total += 1;
+
+    printf("%s\n", name);
+
+    // Make sure the test name is printed before we enter the test that can
+    // crash on failure.
+    fflush(stdout);
+
+    if (!init(test)) {
+      printf("TEST-UNEXPECTED-FAIL | %s | Failed to initialize.\n", name);
+      failures++;
+      test->uninit();
+      continue;
+    }
+
+    if (run(test)) {
+      printf("TEST-PASS | %s | ok\n", name);
+    } else {
+      JSAPITestString messages = test->messages();
+      printf("%s | %s | %.*s\n",
+             (test->knownFail ? "TEST-KNOWN-FAIL" : "TEST-UNEXPECTED-FAIL"),
+             name, (int)messages.length(), messages.begin());
+      if (!test->knownFail) {
+        failures++;
+      }
+    }
+
+    beforeUninit(test);
+
+    test->uninit();
   }
 }
 
@@ -168,18 +225,27 @@ int main(int argc, char* argv[]) {
     printf("Options:\n");
     printf("    -h, --help          Display this message\n");
     printf("        --list          List all tests\n");
+    printf(
+        "        --frontend-only Run tests for frontend-only APIs, with "
+        "light-weight entry point\n");
     return 0;
   }
 
-  if (!JS_Init()) {
-    printf("TEST-UNEXPECTED-FAIL | jsapi-tests | JS_Init() failed.\n");
-    return 1;
+  if (!options.frontendOnly) {
+    if (!JS_Init()) {
+      printf("TEST-UNEXPECTED-FAIL | jsapi-tests | JS_Init() failed.\n");
+      return 1;
+    }
+  } else {
+    if (!JS_FrontendOnlyInit()) {
+      printf("TEST-UNEXPECTED-FAIL | jsapi-tests | JS_Init() failed.\n");
+      return 1;
+    }
   }
 
   if (options.list) {
-    for (JSAPITest* test = JSAPITest::list; test; test = test->next) {
-      printf("%s\n", test->name());
-    }
+    PrintTests(JSAPIRuntimeTest::list);
+    PrintTests(JSAPIFrontendTest::list);
     return 0;
   }
 
@@ -187,48 +253,34 @@ int main(int argc, char* argv[]) {
   // recompile all self-hosted builtins. Allow tests to opt-in to reusing the
   // global.
   JSContext* maybeReusedContext = nullptr;
-  for (JSAPITest* test = JSAPITest::list; test; test = test->next) {
-    const char* name = test->name();
-    if (options.filter && strstr(name, options.filter) == nullptr) {
-      continue;
-    }
 
-    total += 1;
-
-    printf("%s\n", name);
-
-    // Make sure the test name is printed before we enter the test that can
-    // crash on failure.
-    fflush(stdout);
-
-    if (!test->init(maybeReusedContext)) {
-      printf("TEST-UNEXPECTED-FAIL | %s | Failed to initialize.\n", name);
-      failures++;
-      test->uninit();
-      continue;
-    }
-
-    if (test->run(test->global)) {
-      printf("TEST-PASS | %s | ok\n", name);
-    } else {
-      JSAPITestString messages = test->messages();
-      printf("%s | %s | %.*s\n",
-             (test->knownFail ? "TEST-KNOWN-FAIL" : "TEST-UNEXPECTED-FAIL"),
-             name, (int)messages.length(), messages.begin());
-      if (!test->knownFail) {
-        failures++;
-      }
-    }
-
-    // Return a non-nullptr pointer if the context & global can safely be
-    // reused for the next test.
-    maybeReusedContext = test->maybeForgetContext();
-    test->uninit();
+  if (!options.frontendOnly) {
+    RunTests(
+        total, failures, options, JSAPIRuntimeTest::list,
+        [&maybeReusedContext](JSAPIRuntimeTest* test) {
+          return test->init(maybeReusedContext);
+        },
+        [](JSAPIRuntimeTest* test) { return test->run(test->global); },
+        [&maybeReusedContext](JSAPIRuntimeTest* test) {
+          // Return a non-nullptr pointer if the context & global can safely be
+          // reused for the next test.
+          maybeReusedContext = test->maybeForgetContext();
+        });
   }
-  JSAPITest::MaybeFreeContext(maybeReusedContext);
+  RunTests(
+      total, failures, options, JSAPIFrontendTest::list,
+      [](JSAPIFrontendTest* test) { return test->init(); },
+      [](JSAPIFrontendTest* test) { return test->run(); },
+      [](JSAPIFrontendTest* test) {});
 
-  MOZ_RELEASE_ASSERT(!JSRuntime::hasLiveRuntimes());
-  JS_ShutDown();
+  if (!options.frontendOnly) {
+    JSAPIRuntimeTest::MaybeFreeContext(maybeReusedContext);
+
+    MOZ_RELEASE_ASSERT(!JSRuntime::hasLiveRuntimes());
+    JS_ShutDown();
+  } else {
+    JS_FrontendOnlyShutDown();
+  }
 
   if (failures) {
     printf("\n%d unexpected failure%s.\n", failures,

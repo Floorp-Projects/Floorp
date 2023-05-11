@@ -71,15 +71,50 @@ inline JSAPITestString operator+(const JSAPITestString& a,
   return result;
 }
 
+class JSAPIRuntimeTest;
+
 class JSAPITest {
  public:
-  static JSAPITest* list;
-  JSAPITest* next;
+  bool knownFail;
+  JSAPITestString msgs;
+
+  JSAPITest() : knownFail(false) {}
+
+  virtual ~JSAPITest() {}
+
+  virtual const char* name() = 0;
+
+  virtual void maybeAppendException(JSAPITestString& message) {}
+
+  bool fail(const JSAPITestString& msg = JSAPITestString(),
+            const char* filename = "-", int lineno = 0) {
+    char location[256];
+    SprintfLiteral(location, "%s:%d:", filename, lineno);
+
+    JSAPITestString message(location);
+    message += msg;
+
+    maybeAppendException(message);
+
+    fprintf(stderr, "%.*s\n", int(message.length()), message.begin());
+
+    if (msgs.length() != 0) {
+      msgs += " | ";
+    }
+    msgs += message;
+    return false;
+  }
+
+  JSAPITestString messages() const { return msgs; }
+};
+
+class JSAPIRuntimeTest : public JSAPITest {
+ public:
+  static JSAPIRuntimeTest* list;
+  JSAPIRuntimeTest* next;
 
   JSContext* cx;
   JS::PersistentRootedObject global;
-  bool knownFail;
-  JSAPITestString msgs;
 
   // Whether this test is willing to skip its init() and reuse a global (and
   // JSContext etc.) from a previous test that also has reuseGlobal=true. It
@@ -87,12 +122,12 @@ class JSAPITest {
   // another reuseGlobal test.
   bool reuseGlobal;
 
-  JSAPITest() : cx(nullptr), knownFail(false), reuseGlobal(false) {
+  JSAPIRuntimeTest() : JSAPITest(), cx(nullptr), reuseGlobal(false) {
     next = list;
     list = this;
   }
 
-  virtual ~JSAPITest() {
+  virtual ~JSAPIRuntimeTest() {
     MOZ_RELEASE_ASSERT(!cx);
     MOZ_RELEASE_ASSERT(!global);
   }
@@ -112,7 +147,6 @@ class JSAPITest {
   virtual bool init() { return true; }
   virtual void uninit();
 
-  virtual const char* name() = 0;
   virtual bool run(JS::HandleObject global) = 0;
 
 #define EXEC(s)                                     \
@@ -286,14 +320,7 @@ class JSAPITest {
                   __LINE__);                                         \
   } while (false)
 
-  bool fail(const JSAPITestString& msg = JSAPITestString(),
-            const char* filename = "-", int lineno = 0) {
-    char location[256];
-    SprintfLiteral(location, "%s:%d:", filename, lineno);
-
-    JSAPITestString message(location);
-    message += msg;
-
+  void maybeAppendException(JSAPITestString& message) override {
     if (JS_IsExceptionPending(cx)) {
       message += " -- ";
 
@@ -308,17 +335,7 @@ class JSAPITest {
         }
       }
     }
-
-    fprintf(stderr, "%.*s\n", int(message.length()), message.begin());
-
-    if (msgs.length() != 0) {
-      msgs += " | ";
-    }
-    msgs += message;
-    return false;
   }
-
-  JSAPITestString messages() const { return msgs; }
 
   static const JSClass* basicGlobalClass() {
     static const JSClass c = {"global", JSCLASS_GLOBAL_FLAGS,
@@ -372,8 +389,26 @@ class JSAPITest {
   virtual JSObject* createGlobal(JSPrincipals* principals = nullptr);
 };
 
+class JSAPIFrontendTest : public JSAPITest {
+ public:
+  static JSAPIFrontendTest* list;
+  JSAPIFrontendTest* next;
+
+  JSAPIFrontendTest() : JSAPITest() {
+    next = list;
+    list = this;
+  }
+
+  virtual ~JSAPIFrontendTest() {}
+
+  virtual bool init() { return true; }
+  virtual void uninit();
+
+  virtual bool run() = 0;
+};
+
 #define BEGIN_TEST_WITH_ATTRIBUTES_AND_EXTRA(testname, attrs, extra) \
-  class cls_##testname : public JSAPITest {                          \
+  class cls_##testname : public JSAPIRuntimeTest {                   \
    public:                                                           \
     virtual const char* name() override { return #testname; }        \
     extra virtual bool run(JS::HandleObject global) override attrs
@@ -386,7 +421,7 @@ class JSAPITest {
 #define BEGIN_REUSABLE_TEST(testname)   \
   BEGIN_TEST_WITH_ATTRIBUTES_AND_EXTRA( \
       testname, , cls_##testname()      \
-      : JSAPITest() { reuseGlobal = true; })
+      : JSAPIRuntimeTest() { reuseGlobal = true; })
 
 #define END_TEST(testname) \
   }                        \
@@ -394,8 +429,8 @@ class JSAPITest {
   static cls_##testname cls_##testname##_instance;
 
 /*
- * A "fixture" is a subclass of JSAPITest that holds common definitions for a
- * set of tests. Each test that wants to use the fixture should use
+ * A "fixture" is a subclass of JSAPIRuntimeTest that holds common definitions
+ * for a set of tests. Each test that wants to use the fixture should use
  * BEGIN_FIXTURE_TEST and END_FIXTURE_TEST, just as one would use BEGIN_TEST and
  * END_TEST, but include the fixture class as the first argument. The fixture
  * class's declarations are then in scope for the test bodies.

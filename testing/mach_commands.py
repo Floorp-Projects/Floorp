@@ -647,13 +647,19 @@ def run_jittests(command_context, shell, cgc, params):
     help="List all tests",
 )
 @CommandArgument(
+    "--frontend-only",
+    action="store_true",
+    default=False,
+    help="Run tests for frontend-only APIs, with light-weight entry point",
+)
+@CommandArgument(
     "test_name",
     nargs="?",
     metavar="N",
     help="Test to run. Can be a prefix or omitted. If "
     "omitted, the entire test suite is executed.",
 )
-def run_jsapitests(command_context, list=False, test_name=None):
+def run_jsapitests(command_context, list=False, frontend_only=False, test_name=None):
     import subprocess
 
     jsapi_tests_cmd = [
@@ -661,6 +667,8 @@ def run_jsapitests(command_context, list=False, test_name=None):
     ]
     if list:
         jsapi_tests_cmd.append("--list")
+    if frontend_only:
+        jsapi_tests_cmd.append("--frontend-only")
     if test_name:
         jsapi_tests_cmd.append(test_name)
 
