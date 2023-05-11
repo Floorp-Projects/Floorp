@@ -33,8 +33,9 @@
 #include "util/CompleteFile.h"     // js::FileContents, js::ReadCompleteFile
 #include "util/StringBuffer.h"     // js::StringBuffer
 #include "vm/EnvironmentObject.h"  // js::CreateNonSyntacticEnvironmentChain
-#include "vm/Interpreter.h"        // js::Execute
-#include "vm/JSContext.h"          // JSContext
+#include "vm/ErrorReporting.h"  // js::ErrorMetadata, js::ReportCompileErrorLatin1
+#include "vm/Interpreter.h"     // js::Execute
+#include "vm/JSContext.h"       // JSContext
 
 #include "vm/JSContext-inl.h"  // JSContext::check
 
@@ -54,6 +55,28 @@ using namespace js;
 JS_PUBLIC_API void JS::detail::ReportSourceTooLong(JSContext* cx) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_SOURCE_TOO_LONG);
+}
+
+static void ReportSourceTooLongImpl(JS::FrontendContext* fc, ...) {
+  va_list args;
+  va_start(args, fc);
+
+  js::ErrorMetadata metadata;
+  metadata.filename = "<unknown>";
+  metadata.lineNumber = 0;
+  metadata.columnNumber = 0;
+  metadata.lineLength = 0;
+  metadata.tokenOffset = 0;
+  metadata.isMuted = false;
+
+  js::ReportCompileErrorLatin1(fc, std::move(metadata), nullptr,
+                               JSMSG_SOURCE_TOO_LONG, &args);
+
+  va_end(args);
+}
+
+JS_PUBLIC_API void JS::detail::ReportSourceTooLong(JS::FrontendContext* fc) {
+  ReportSourceTooLongImpl(fc);
 }
 
 template <typename Unit>
