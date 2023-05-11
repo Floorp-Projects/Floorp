@@ -641,18 +641,26 @@ def run_jittests(command_context, shell, cgc, params):
 
 @Command("jsapi-tests", category="testing", description="Run SpiderMonkey JSAPI tests.")
 @CommandArgument(
+    "--list",
+    action="store_true",
+    default=False,
+    help="List all tests",
+)
+@CommandArgument(
     "test_name",
     nargs="?",
     metavar="N",
     help="Test to run. Can be a prefix or omitted. If "
     "omitted, the entire test suite is executed.",
 )
-def run_jsapitests(command_context, test_name=None):
+def run_jsapitests(command_context, list=False, test_name=None):
     import subprocess
 
     jsapi_tests_cmd = [
         os.path.join(command_context.bindir, executable_name("jsapi-tests"))
     ]
+    if list:
+        jsapi_tests_cmd.append("--list")
     if test_name:
         jsapi_tests_cmd.append(test_name)
 
