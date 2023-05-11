@@ -1084,15 +1084,6 @@
   possibly_calls: true
   can_recover: true
 
-- name: RegExpTester
-  operands:
-    regexp: Object
-    string: String
-    lastIndex: Int32
-  result_type: Int32
-  possibly_calls: true
-  can_recover: true
-
 - name: RegExpExecMatch
   operands:
     regexp: Object

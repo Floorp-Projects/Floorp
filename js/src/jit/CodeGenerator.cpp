@@ -3219,61 +3219,6 @@ JitCode* JitRealm::generateRegExpTesterStub(JSContext* cx) {
   return code;
 }
 
-class OutOfLineRegExpTester : public OutOfLineCodeBase<CodeGenerator> {
-  LRegExpTester* lir_;
-
- public:
-  explicit OutOfLineRegExpTester(LRegExpTester* lir) : lir_(lir) {}
-
-  void accept(CodeGenerator* codegen) override {
-    codegen->visitOutOfLineRegExpTester(this);
-  }
-
-  LRegExpTester* lir() const { return lir_; }
-};
-
-void CodeGenerator::visitOutOfLineRegExpTester(OutOfLineRegExpTester* ool) {
-  LRegExpTester* lir = ool->lir();
-  Register lastIndex = ToRegister(lir->lastIndex());
-  Register input = ToRegister(lir->string());
-  Register regexp = ToRegister(lir->regexp());
-
-  pushArg(lastIndex);
-  pushArg(input);
-  pushArg(regexp);
-
-  // We are not using oolCallVM because we are in a Call, and that live
-  // registers are already saved by the the register allocator.
-  using Fn = bool (*)(JSContext* cx, HandleObject regexp, HandleString input,
-                      int32_t lastIndex, int32_t* result);
-  callVM<Fn, RegExpTesterRaw>(lir);
-
-  masm.jump(ool->rejoin());
-}
-
-void CodeGenerator::visitRegExpTester(LRegExpTester* lir) {
-  MOZ_ASSERT(ToRegister(lir->regexp()) == RegExpTesterRegExpReg);
-  MOZ_ASSERT(ToRegister(lir->string()) == RegExpTesterStringReg);
-  MOZ_ASSERT(ToRegister(lir->lastIndex()) == RegExpTesterLastIndexReg);
-  MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
-
-  static_assert(RegExpTesterRegExpReg != ReturnReg);
-  static_assert(RegExpTesterStringReg != ReturnReg);
-  static_assert(RegExpTesterLastIndexReg != ReturnReg);
-
-  OutOfLineRegExpTester* ool = new (alloc()) OutOfLineRegExpTester(lir);
-  addOutOfLineCode(ool, lir->mir());
-
-  const JitRealm* jitRealm = gen->realm->jitRealm();
-  JitCode* regExpTesterStub =
-      jitRealm->regExpTesterStubNoBarrier(&realmStubsToReadBarrier_);
-  masm.call(regExpTesterStub);
-
-  masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpTesterResultFailed),
-                ool->entry());
-  masm.bind(ool->rejoin());
-}
-
 class OutOfLineRegExpExecTest : public OutOfLineCodeBase<CodeGenerator> {
   LRegExpExecTest* lir_;
 

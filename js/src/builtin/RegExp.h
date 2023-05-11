@@ -74,12 +74,6 @@ JSObject* InitRegExpClass(JSContext* cx, HandleObject obj);
                                             MatchPairs* maybeMatches,
                                             int32_t* result);
 
-[[nodiscard]] extern bool RegExpTester(JSContext* cx, unsigned argc, Value* vp);
-
-[[nodiscard]] extern bool RegExpTesterRaw(JSContext* cx, HandleObject regexp,
-                                          HandleString input, int32_t lastIndex,
-                                          int32_t* endIndex);
-
 template <bool CalledFromJit>
 [[nodiscard]] extern bool RegExpBuiltinExecMatchRaw(
     JSContext* cx, Handle<RegExpObject*> regexp, HandleString input,

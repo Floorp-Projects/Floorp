@@ -315,15 +315,6 @@
     input: StringId
     lastIndex: Int32Id
 
-- name: CallRegExpTesterResult
-  shared: true
-  transpile: true
-  cost_estimate: 5
-  args:
-    regexp: ObjId
-    input: StringId
-    lastIndex: Int32Id
-
 - name: RegExpBuiltinExecMatchResult
   shared: true
   transpile: true
