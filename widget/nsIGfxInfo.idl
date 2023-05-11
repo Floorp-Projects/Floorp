@@ -181,6 +181,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_BACKDROP_FILTER = 42;
   /* Whether to use Accelerated Canvas2D, starting in 110. */
   const long FEATURE_ACCELERATED_CANVAS2D = 43;
+  /* Whether hardware H264 decoding is supported, starting in 114; not for downloadable blocking. */
+  const long FEATURE_H264_HW_DECODE = 44;
+  /* Whether hardware AV1 decoding is supported, starting in 114; not for downloadable blocking. */
+  const long FEATURE_AV1_HW_DECODE = 45;
   /* the maximum feature value. */
   const long FEATURE_MAX_VALUE = FEATURE_ACCELERATED_CANVAS2D;
 
