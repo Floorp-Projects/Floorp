@@ -3,18 +3,8 @@
 <head>
 <meta charset="utf-8">
 <title></title>
+<script src="shared_test_funcs.js"></script>
 <script>
-function waitForMessage(aMsg, aOrigin) {
-  return new Promise(resolve => {
-    window.addEventListener("message", function listener(event) {
-      if (event.data == "ready" && event.origin == aOrigin) {
-        window.removeEventListener("message", listener);
-        resolve();
-      }
-    });
-  });
-}
-
 async function runTheTest(iframe_domain, cross_origin_domain) {
   const iframes = document.querySelectorAll("iframe");
   iframes[0].src = `https://${iframe_domain}/browser/browser/components/resistfingerprinting/test/browser/file_navigator_iframee.html`;
