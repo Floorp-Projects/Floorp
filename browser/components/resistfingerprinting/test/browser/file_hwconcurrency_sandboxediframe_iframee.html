@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script type="text/javascript">
+window.onload = () => {
+  parent.postMessage("ready", "*");
+}
+
+window.addEventListener("message", function listener(event) {
+  if (event.data[0] == "gimme") {
+    let iframe = document.createElement("iframe");
+    iframe.src = "/browser/browser/components/resistfingerprinting/test/browser/file_hwconcurrency_sandboxediframe_double_framee.html";
+    iframe.sandbox = "allow-scripts";
+    document.body.append(iframe);
+
+  } else if (event.data[0] == "frame_ready") {
+    let iframe = document.getElementsByTagName("iframe")[0];
+    iframe.contentWindow.postMessage({0: "gimme"}, "*");
+  } else if (event.data[0] == "frame_response") {
+    parent.postMessage(event.data[1], "*")
+  }
+});
+</script>
+<body>
+<output id="result"></output>
+</body>

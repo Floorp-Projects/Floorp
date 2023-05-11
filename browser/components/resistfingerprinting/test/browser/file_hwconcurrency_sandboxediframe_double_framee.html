@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<body>
+<output id="result"></output>
+<script type="text/javascript">
+    window.addEventListener("load", function listener(event) {
+      parent.postMessage(["frame_ready"], "*");
+    });
+    window.addEventListener("message", function listener(event) {
+      if (event.data[0] == "gimme") {
+        let result = {
+          hardwareConcurrency : navigator.hardwareConcurrency
+        };
+
+        parent.postMessage(["frame_response", result], "*");
+      }
+    });
+</script>
+</body>
