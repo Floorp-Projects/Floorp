@@ -8,12 +8,7 @@ const { FxAccounts } = ChromeUtils.importESModule(
 const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
   Ci.nsIObserver
 );
-const accountsBundle = Services.strings.createBundle(
-  "chrome://browser/locale/accounts.properties"
-);
 const DEVICES_URL = "https://example.com/devices";
-
-let expectedBody;
 
 add_setup(async function() {
   const origManageDevicesURI = FxAccounts.config.promiseManageDevicesURI;
@@ -45,16 +40,9 @@ async function testDeviceConnected(deviceName) {
 }
 
 add_task(async function() {
-  expectedBody = accountsBundle.formatStringFromName(
-    "otherDeviceConnectedBody",
-    ["My phone"]
-  );
   await testDeviceConnected("My phone");
 });
 
 add_task(async function() {
-  expectedBody = accountsBundle.GetStringFromName(
-    "otherDeviceConnectedBody.noDeviceName"
-  );
   await testDeviceConnected(null);
 });
