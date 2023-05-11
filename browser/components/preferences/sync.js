@@ -98,12 +98,6 @@ var gSyncPane = {
       Weave.Svc.Obs.remove(UIState.ON_UPDATE, this.updateWeavePrefs, this);
     });
 
-    XPCOMUtils.defineLazyGetter(this, "_accountsStringBundle", () => {
-      return Services.strings.createBundle(
-        "chrome://browser/locale/accounts.properties"
-      );
-    });
-
     FxAccounts.config
       .promiseConnectDeviceURI(this._getEntryPoint())
       .then(connectURI => {
@@ -496,36 +490,22 @@ var gSyncPane = {
     }
   },
 
-  verifyFirefoxAccount() {
-    let showVerifyNotification = data => {
-      let isError = !data;
-      let maybeNot = isError ? "Not" : "";
-      let sb = this._accountsStringBundle;
-      let title = sb.GetStringFromName("verification" + maybeNot + "SentTitle");
-      let email = !isError && data ? data.email : "";
-      let body = sb.formatStringFromName(
-        "verification" + maybeNot + "SentBody",
-        [email]
-      );
-      new Notification(title, { body });
-    };
-
-    let onError = () => {
-      showVerifyNotification();
-    };
-
-    let onSuccess = data => {
-      if (data) {
-        showVerifyNotification(data);
-      } else {
-        onError();
-      }
-    };
-
-    fxAccounts
-      .resendVerificationEmail()
-      .then(() => fxAccounts.getSignedInUser(), onError)
-      .then(onSuccess, onError);
+  async verifyFirefoxAccount() {
+    let titleL10nid, bodyL10nId;
+    try {
+      await fxAccounts.resendVerificationEmail();
+      const { email } = await fxAccounts.getSignedInUser();
+      titleL10nid = "sync-verification-sent-title";
+      bodyL10nId = { id: "sync-verification-sent-body", args: { email } };
+    } catch {
+      titleL10nid = "sync-verification-not-sent-title";
+      bodyL10nId = "sync-verification-not-sent-body";
+    }
+    const [title, body] = await document.l10n.formatValues([
+      titleL10nid,
+      bodyL10nId,
+    ]);
+    new Notification(title, { body });
   },
 
   // Disconnect the account, including everything linked.
