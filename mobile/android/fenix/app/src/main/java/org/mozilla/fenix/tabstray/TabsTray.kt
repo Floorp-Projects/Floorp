@@ -72,6 +72,8 @@ import mozilla.components.browser.storage.sync.Tab as SyncTab
  * @param onInactiveTabClick Invoked when the user clicks on an inactive tab.
  * @param onInactiveTabClose Invoked when the user clicks on an inactive tab's close button.
  * @param onSyncedTabClick Invoked when the user clicks on a synced tab.
+ * @param onSaveToCollectionClick Invoked when the user clicks on the save to collection button from
+ * the multi select banner.
  */
 @OptIn(ExperimentalPagerApi::class, ExperimentalComposeUiApi::class)
 @Suppress("LongMethod", "LongParameterList", "ComplexMethod")
@@ -97,6 +99,7 @@ fun TabsTray(
     onInactiveTabClick: (TabSessionState) -> Unit,
     onInactiveTabClose: (TabSessionState) -> Unit,
     onSyncedTabClick: (SyncTab) -> Unit,
+    onSaveToCollectionClick: () -> Unit,
 ) {
     val normalTabCount = browserStore
         .observeAsComposableState { state -> state.normalTabs.size }.value ?: 0
@@ -139,6 +142,7 @@ fun TabsTray(
                 isInDebugMode = isInDebugMode,
                 onTabPageIndicatorClicked = onTabPageClick,
                 onExitSelectModeClick = { tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode) },
+                onSaveToCollectionClick = onSaveToCollectionClick,
             )
         }
 
@@ -491,6 +495,7 @@ private fun TabsTrayPreviewRoot(
             onInactiveTabClick = {},
             onInactiveTabClose = inactiveTabsState::remove,
             onSyncedTabClick = {},
+            onSaveToCollectionClick = {},
         )
     }
 }

@@ -258,6 +258,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                         onInactiveTabClick = tabsTrayInteractor::onInactiveTabClicked,
                         onInactiveTabClose = tabsTrayInteractor::onInactiveTabClosed,
                         onSyncedTabClick = tabsTrayInteractor::onSyncedTabClicked,
+                        onSaveToCollectionClick = tabsTrayInteractor::onAddSelectedTabsToCollectionClicked,
                     )
                 }
             }
@@ -580,11 +581,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             },
             operation = { },
             elevation = ELEVATION,
-            anchorView = when {
-                requireContext().settings().enableTabsTrayToCompose -> fabButtonComposeBinding.root
-                fabButtonBinding.newTabButton.isVisible -> fabButtonBinding.newTabButton
-                else -> null
-            },
+            anchorView = getSnackbarAnchor(),
         )
     }
 
@@ -716,12 +713,10 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         return parentFragmentManager.findFragmentByTag(DOWNLOAD_CANCEL_DIALOG_FRAGMENT_TAG) as? DownloadCancelDialogFragment
     }
 
-    private fun getSnackbarAnchor(): View? {
-        return if (requireComponents.settings.accessibilityServicesEnabled) {
-            null
-        } else {
-            fabButtonBinding.newTabButton
-        }
+    private fun getSnackbarAnchor(): View? = when {
+        requireContext().settings().enableTabsTrayToCompose -> fabButtonComposeBinding.root
+        fabButtonBinding.newTabButton.isVisible -> fabButtonBinding.newTabButton
+        else -> null
     }
 
     private fun showInactiveTabsAutoCloseConfirmationSnackbar() {
