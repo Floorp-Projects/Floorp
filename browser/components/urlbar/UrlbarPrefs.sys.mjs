@@ -427,6 +427,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Feature gate pref for addon suggestions in the urlbar.
   ["addons.featureGate", false],
+
+  // Feature gate pref for rich suggestions being shown in the urlbar.
+  ["richSuggestions.featureGate", false],
 ]);
 
 const PREF_OTHER_DEFAULTS = new Map([

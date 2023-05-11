@@ -1500,6 +1500,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
   [UrlbarUtils.RESULT_TYPE.SEARCH]: {
     type: "object",
     properties: {
+      description: {
+        type: "string",
+      },
       displayUrl: {
         type: "string",
       },
@@ -1519,6 +1522,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
         type: "boolean",
       },
       isGeneralPurposeEngine: {
+        type: "boolean",
+      },
+      isRichSuggestion: {
         type: "boolean",
       },
       keyword: {

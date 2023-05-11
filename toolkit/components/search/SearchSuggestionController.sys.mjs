@@ -9,6 +9,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
 ChromeUtils.defineModuleGetter(
@@ -63,14 +64,20 @@ class SearchSuggestionEntry {
    * @param {string} [options.tail]
    *   Represents the suggested part of a tail suggestion. For example, Google
    *   might return "toronto" as the tail for the query "what time is it in t".
+   * @param {string} [options.icon]
+   *   An icon representing the result in a data uri format.
+   * @param {string} [options.description]
+   *   A description of the result.
    * @param {boolean} [options.trending]
    *   Whether this is a trending suggestion.
    */
-  constructor(value, { matchPrefix, tail, trending } = {}) {
+  constructor(value, { matchPrefix, tail, icon, description, trending } = {}) {
     this.#value = value;
     this.#matchPrefix = matchPrefix;
     this.#tail = tail;
     this.#trending = trending;
+    this.#icon = icon;
+    this.#description = description;
   }
 
   get value() {
@@ -87,6 +94,14 @@ class SearchSuggestionEntry {
 
   get trending() {
     return this.#trending;
+  }
+
+  get icon() {
+    return this.#icon;
+  }
+
+  get description() {
+    return this.#description;
   }
 
   get tailOffsetIndex() {
@@ -125,6 +140,8 @@ class SearchSuggestionEntry {
   #matchPrefix;
   #tail;
   #trending;
+  #icon;
+  #description;
 }
 
 // Maps each engine name to a unique firstPartyDomain, so that requests to
@@ -733,13 +750,23 @@ export class SearchSuggestionController {
    * @returns {SearchSuggestionEntry}
    */
   #newSearchSuggestionEntry(suggestion, richSuggestionData, trending) {
-    if (!trending && richSuggestionData) {
+    if (
+      richSuggestionData &&
+      (!trending || lazy.UrlbarPrefs.get("richSuggestions.featureGate"))
+    ) {
       // We have valid rich suggestions.
-      return new SearchSuggestionEntry(suggestion, {
+      let args = {
         matchPrefix: richSuggestionData?.mp,
         tail: richSuggestionData?.t,
         trending,
-      });
+      };
+
+      if (lazy.UrlbarPrefs.get("richSuggestions.featureGate")) {
+        args.icon = richSuggestionData?.i;
+        args.description = richSuggestionData?.a;
+      }
+
+      return new SearchSuggestionEntry(suggestion, args);
     }
     // Return a regular suggestion.
     return new SearchSuggestionEntry(suggestion, { trending });

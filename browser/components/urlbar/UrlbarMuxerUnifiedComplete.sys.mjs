@@ -824,6 +824,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     if (
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
       result.payload.tail &&
+      !result.payload.isRichSuggestion &&
       !state.canShowTailSuggestions
     ) {
       return false;
