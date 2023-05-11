@@ -30,15 +30,6 @@ class VideoColorSpace final : public nsISupports, public nsWrapperCache {
  protected:
   ~VideoColorSpace() = default;
 
- private:
-  template <class T>
-  static Nullable<T> ToNullable(const Optional<T>& aInput) {
-    if (aInput.WasPassed()) {
-      return Nullable<T>(aInput.Value());
-    }
-    return Nullable<T>();
-  }
-
  public:
   // This should return something that eventually allows finding a
   // path to the global this object is associated with.  Most simply,
@@ -52,19 +43,19 @@ class VideoColorSpace final : public nsISupports, public nsWrapperCache {
       const GlobalObject& aGlobal, const VideoColorSpaceInit& aInit,
       ErrorResult& aRv);
 
-  Nullable<VideoColorPrimaries> GetPrimaries() const {
-    return ToNullable(mInit.mPrimaries);
+  const Nullable<VideoColorPrimaries>& GetPrimaries() const {
+    return mInit.mPrimaries;
   }
 
-  Nullable<VideoTransferCharacteristics> GetTransfer() const {
-    return ToNullable(mInit.mTransfer);
+  const Nullable<VideoTransferCharacteristics>& GetTransfer() const {
+    return mInit.mTransfer;
   }
 
-  Nullable<VideoMatrixCoefficients> GetMatrix() const {
-    return ToNullable(mInit.mMatrix);
+  const Nullable<VideoMatrixCoefficients>& GetMatrix() const {
+    return mInit.mMatrix;
   }
 
-  Nullable<bool> GetFullRange() const { return ToNullable(mInit.mFullRange); }
+  const Nullable<bool>& GetFullRange() const { return mInit.mFullRange; }
 
  private:
   nsCOMPtr<nsIGlobalObject> mParent;
