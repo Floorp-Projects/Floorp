@@ -282,9 +282,17 @@ nsresult MemoryTelemetry::GatherReports(
 #ifndef XP_MACOSX
         RECORD(MEMORY_UNIQUE, ResidentUnique, UNITS_BYTES);
 #endif
-        RECORD(MEMORY_HEAP_ALLOCATED, HeapAllocated, UNITS_BYTES);
-        RECORD(MEMORY_HEAP_OVERHEAD_FRACTION, HeapOverheadFraction,
-               UNITS_PERCENTAGE);
+
+#ifdef HAVE_JEMALLOC_STATS
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+        HandleMemoryReport(Telemetry::MEMORY_HEAP_ALLOCATED,
+                           nsIMemoryReporter::UNITS_BYTES,
+                           mgr->HeapAllocated(stats));
+        HandleMemoryReport(Telemetry::MEMORY_HEAP_OVERHEAD_FRACTION,
+                           nsIMemoryReporter::UNITS_PERCENTAGE,
+                           mgr->HeapOverheadFraction(stats));
+#endif
 
         if (completionRunnable) {
           NS_DispatchToMainThread(completionRunnable.forget(),
