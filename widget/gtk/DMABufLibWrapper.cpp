@@ -152,20 +152,12 @@ bool DMABufDevice::IsEnabled(nsACString& aFailureId) {
 }
 
 DMABufDevice::DMABufDevice()
-    : mXRGBFormat({true, false, GBM_FORMAT_XRGB8888, nullptr, 0}),
-      mARGBFormat({true, true, GBM_FORMAT_ARGB8888, nullptr, 0}) {
+    : mXRGBFormat({true, false, GBM_FORMAT_XRGB8888, {}}),
+      mARGBFormat({true, true, GBM_FORMAT_ARGB8888, {}}) {
   Configure();
 }
 
 DMABufDevice::~DMABufDevice() {
-  mARGBFormat.mModifiersCount = 0;
-  free(mARGBFormat.mModifiers);
-  mARGBFormat.mModifiers = nullptr;
-
-  mXRGBFormat.mModifiersCount = 0;
-  free(mXRGBFormat.mModifiers);
-  mXRGBFormat.mModifiers = nullptr;
-
   if (mGbmDevice) {
     GbmLib::DestroyDevice(mGbmDevice);
     mGbmDevice = nullptr;
@@ -229,47 +221,13 @@ bool DMABufDevice::IsDMABufWebGLEnabled() {
 }
 
 void DMABufDevice::SetModifiersToGfxVars() {
-  std::vector<uint64_t> modifiers;
-
-  modifiers.push_back(mXRGBFormat.mModifiersCount);
-  for (int i = 0; i < mXRGBFormat.mModifiersCount; i++) {
-    modifiers.push_back(mXRGBFormat.mModifiers[i]);
-  }
-  modifiers.push_back(mARGBFormat.mModifiersCount);
-  for (int i = 0; i < mARGBFormat.mModifiersCount; i++) {
-    modifiers.push_back(mARGBFormat.mModifiers[i]);
-  }
-
-  gfxVars::SetDMABufModifiers(
-      nsCString((char*)modifiers.data(), modifiers.size() * sizeof(uint64_t)));
-}
-
-static uint64_t* CopyAndIterateInt64Array(const uint64_t** aArray, int aLen) {
-  if (!aLen) {
-    return nullptr;
-  }
-  uint64_t* ret = (uint64_t*)malloc(sizeof(uint64_t) * aLen);
-  if (!ret) {
-    return nullptr;
-  }
-  memcpy(ret, *aArray, sizeof(uint64_t) * aLen);
-  *aArray += aLen;
-  return ret;
+  gfxVars::SetDMABufModifiersXRGB(mXRGBFormat.mModifiers);
+  gfxVars::SetDMABufModifiersARGB(mARGBFormat.mModifiers);
 }
 
 void DMABufDevice::GetModifiersFromGfxVars() {
-  nsCString tmp(gfxVars::DMABufModifiers());
-  const uint64_t* modifiers = (const uint64_t*)tmp.get();
-
-  mXRGBFormat.mModifiersCount = *modifiers++;
-  mXRGBFormat.mModifiers =
-      CopyAndIterateInt64Array(&modifiers, mXRGBFormat.mModifiersCount);
-  mARGBFormat.mModifiersCount = *modifiers++;
-  mARGBFormat.mModifiers =
-      CopyAndIterateInt64Array(&modifiers, mARGBFormat.mModifiersCount);
-
-  // modifiers must point to terminal \0 char.
-  MOZ_RELEASE_ASSERT((char*)modifiers == tmp.get() + tmp.Length());
+  mXRGBFormat.mModifiers = gfxVars::DMABufModifiersXRGB().Clone();
+  mARGBFormat.mModifiers = gfxVars::DMABufModifiersARGB().Clone();
 }
 
 void DMABufDevice::DisableDMABufWebGL() { sUseWebGLDmabufBackend = false; }
@@ -286,12 +244,8 @@ void DMABufDevice::AddFormatModifier(bool aHasAlpha, int aFormat,
   format->mIsSupported = true;
   format->mHasAlpha = aHasAlpha;
   format->mFormat = aFormat;
-  format->mModifiersCount++;
-  format->mModifiers =
-      (uint64_t*)realloc(format->mModifiers,
-                         format->mModifiersCount * sizeof(*format->mModifiers));
-  format->mModifiers[format->mModifiersCount - 1] =
-      ((uint64_t)mModifierHi << 32) | mModifierLo;
+  format->mModifiers.AppendElement(
+      ((uint64_t)mModifierHi << 32) | mModifierLo);
 }
 
 static void dmabuf_modifiers(void* data,

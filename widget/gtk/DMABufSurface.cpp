@@ -193,7 +193,7 @@ DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
       mMappedRegion(),
       mMappedRegionStride(),
       mSyncFd(-1),
-      mSync(0),
+      mSync(nullptr),
       mGlobalRefCountFd(0),
       mUID(gNewSurfaceUID++),
       mSurfaceLock("DMABufSurface") {
@@ -402,12 +402,12 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
   mDrmFormats[0] = mGmbFormat->mFormat;
 
   bool useModifiers = (aDMABufSurfaceFlags & DMABUF_USE_MODIFIERS) &&
-                      mGmbFormat->mModifiersCount > 0;
+                      !mGmbFormat->mModifiers.IsEmpty();
   if (useModifiers) {
     LOGDMABUF(("    Creating with modifiers\n"));
     mGbmBufferObject[0] = GbmLib::CreateWithModifiers(
         GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight, mDrmFormats[0],
-        mGmbFormat->mModifiers, mGmbFormat->mModifiersCount);
+        mGmbFormat->mModifiers.Elements(), mGmbFormat->mModifiers.Length());
     if (mGbmBufferObject[0]) {
       mBufferModifiers[0] = GbmLib::GetModifier(mGbmBufferObject[0]);
     }

@@ -15,8 +15,7 @@
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 class gfxVarReceiver;
 
@@ -82,7 +81,8 @@ class gfxVarReceiver;
   _(UseEGL, bool, false)                                           \
   _(DrmRenderDevice, nsCString, nsCString())                       \
   _(UseDMABuf, bool, false)                                        \
-  _(DMABufModifiers, nsCString, nsCString())                       \
+  _(DMABufModifiersXRGB, ArrayOfuint64_t, nsTArray<uint64_t>())    \
+  _(DMABufModifiersARGB, ArrayOfuint64_t, nsTArray<uint64_t>())    \
   _(CodecSupportInfo, nsCString, nsCString())                      \
   _(WebRenderRequiresHardwareDriver, bool, false)                  \
   _(SupportsThreadsafeGL, bool, false)                             \
@@ -132,6 +132,17 @@ class gfxVars final {
   // Return a list of updates for all variables with non-default values.
   static nsTArray<GfxVarUpdate> FetchNonDefaultVars();
 
+ private:
+  template <typename U>
+  static U CloneVarValue(const U& aValue) {
+    return aValue;
+  }
+
+  template <typename U>
+  static nsTArray<U> CloneVarValue(const nsTArray<U>& aValue) {
+    return aValue.Clone();
+  }
+
  public:
   // Each variable must expose Set and Get methods for IPDL.
   class VarBase {
@@ -165,13 +176,14 @@ class gfxVars final {
     }
     bool HasDefaultValue() const override { return mValue == Default(); }
     const T& Get() const { return mValue; }
+
     // Return true if the value changed, false otherwise.
     bool Set(const T& aValue) {
       MOZ_ASSERT(XRE_IsParentProcess());
       if (mValue == aValue) {
         return false;
       }
-      mValue = aValue;
+      mValue = CloneVarValue(aValue);
       if (mListener) {
         mListener();
       }
@@ -191,7 +203,7 @@ class gfxVars final {
  private:                                                                      \
   static DataType Get##CxxName##Default() { return DefaultValue; }             \
   static DataType Get##CxxName##From(const GfxVarValue& aValue) {              \
-    return aValue.get_##DataType();                                            \
+    return CloneVarValue(aValue.get_##DataType());                             \
   }                                                                            \
   VarImpl<DataType, Get##CxxName##Default, Get##CxxName##From> mVar##CxxName;  \
                                                                                \
@@ -201,7 +213,7 @@ class gfxVars final {
     if (!sInstance) {                                                          \
       return DefaultValue;                                                     \
     }                                                                          \
-    return sInstance->mVar##CxxName.Get();                                     \
+    return CloneVarValue(sInstance->mVar##CxxName.Get());                      \
   }                                                                            \
   static void Set##CxxName(const DataType& aValue) {                           \
     if (sInstance->mVar##CxxName.Set(aValue)) {                                \
@@ -212,6 +224,8 @@ class gfxVars final {
   static void Set##CxxName##Listener(const std::function<void()>& aListener) { \
     sInstance->mVar##CxxName.SetListener(aListener);                           \
   }
+
+  using ArrayOfuint64_t = nsTArray<uint64_t>;
 
   GFX_VARS_LIST(GFX_VAR_DECL)
 #undef GFX_VAR_DECL
@@ -227,7 +241,6 @@ class gfxVars final {
 
 #undef GFX_VARS_LIST
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx
 
 #endif  // mozilla_gfx_config_gfxVars_h
