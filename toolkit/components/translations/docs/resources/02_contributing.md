@@ -57,7 +57,7 @@ Once you have access to Firefox Translations content in Remote Settings, you wil
 > [https://settings.dev.mozaws.net/v0/admin](https://settings.dev.mozaws.net/v1/admin)
 
 **Stage**<br>
-> [https://settings-writer.stage.mozaws.net/v0/admin](https://settings-writer.stage.mozaws.net/v1/admin)
+> [https://remote-settings.allizom.org/v0/admin](https://settings-writer.stage.mozaws.net/v1/admin)
 
 ### Prod Admin Access
 
@@ -65,7 +65,7 @@ In order to access the prod admin dashboard, you must also have access to a VPN 
 To gain access to the VPN, follow [Step 3] on this page in the Remote Settings documentation.
 
 **Prod**<br>
-> [https://settings-writer.prod.mozaws.net/v1/admin](https://settings-writer.prod.mozaws.net/v1/admin)
+> [https://remote-settings.mozilla.org/v1/admin](https://settings-writer.prod.mozaws.net/v1/admin)
 
 
 ### Pulling From Different Sources

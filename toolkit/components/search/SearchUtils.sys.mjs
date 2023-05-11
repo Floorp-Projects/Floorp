@@ -155,9 +155,9 @@ export var SearchUtils = {
     "prod-preview":
       "https://firefox.settings.services.mozilla.com/v1/buckets/main-preview/collections/search-config/records",
     "stage-main":
-      "https://settings.stage.mozaws.net/v1/buckets/main/collections/search-config/records",
+      "https://firefox.settings.services.allizom.org/v1/buckets/main/collections/search-config/records",
     "stage-preview":
-      "https://settings.stage.mozaws.net/v1/buckets/main-preview/collections/search-config/records",
+      "https://firefox.settings.services.allizom.org/v1/buckets/main-preview/collections/search-config/records",
   },
 
   // The following constants are left undocumented in nsISearchService.idl

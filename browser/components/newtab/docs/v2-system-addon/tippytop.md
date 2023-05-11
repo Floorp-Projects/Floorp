@@ -34,7 +34,7 @@ $ source .venv/bin/activate
 $ ./upload2remotesettings.py prod
 ```
 
-After uploading it to Remote Setting, you can request for review in the [dashboard](https://settings-writer.prod.mozaws.net/v1/admin/). Note that you will need to log in the Mozilla LDAP VPN for both uploading and accessing Remote Setting's dashboard. Once your request gets approved by the reviewer, the new manifest will be content signed and published to production.
+After uploading it to Remote Setting, you can request for review in the [dashboard](https://remote-settings.mozilla.org/v1/admin/). Note that you will need to log in the Mozilla LDAP VPN for both uploading and accessing Remote Setting's dashboard. Once your request gets approved by the reviewer, the new manifest will be content signed and published to production.
 
 ## TippyTop Viewer
 You can use this [viewer](https://mozilla.github.io/tippy-top-sites/manifest-viewer/) to load all the icons in the current manifest.

@@ -20,7 +20,7 @@ This should save the `css-properties.json` JSON file directly in `devtools/share
 The browsers data are stored in a RemoteSettings collection, and updates are handled by a script in https://github.com/firefox-devtools/remote-settings-mdn-browser-compat-data .
 The script is run every day in automation, and if the data are updated, the team should receive a data review email.
 
-To review the data update, you need to be connected to the Mozilla Corporate VPN (See https://mana.mozilla.org/wiki/display/SD/VPN), log into https://settings-writer.stage.mozaws.net/v1/admin/#/buckets/main/collections/devtools-compatibility-browsers/records (Using `OpenID Connect (LDAP)`)
+To review the data update, you need to be connected to the Mozilla Corporate VPN (See https://mana.mozilla.org/wiki/display/SD/VPN), log into https://remote-settings.allizom.org/v1/admin/#/buckets/main/collections/devtools-compatibility-browsers/records (Using `OpenID Connect (LDAP)`)
 Then run Firefox, and use the [RemoteSettings DevTools WebExtension](https://github.com/mozilla-extensions/remote-settings-devtools) to use the `Prod (preview)` environment and restart the browser.
 Then open the compatibility panel and make sure that the updated browsers do appear in the `Settings` panel.
 
