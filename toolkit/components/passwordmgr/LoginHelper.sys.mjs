@@ -351,7 +351,9 @@ class ImportRowProcessor {
     for (let summaryRow of this.summary) {
       try {
         if (summaryRow.result === "added") {
-          summaryRow.login = await Services.logins.addLogin(summaryRow.login);
+          summaryRow.login = await Services.logins.addLoginAsync(
+            summaryRow.login
+          );
         } else if (summaryRow.result === "modified") {
           Services.logins.modifyLogin(summaryRow.login, summaryRow.propBag);
         }
