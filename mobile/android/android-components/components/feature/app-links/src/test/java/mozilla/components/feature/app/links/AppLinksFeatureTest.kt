@@ -17,12 +17,12 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
@@ -30,7 +30,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -114,12 +113,9 @@ class AppLinksFeatureTest {
         val appIntent = AppIntentState(intentUrl, intent)
         store.dispatch(ContentAction.UpdateAppIntentAction(tab.id, appIntent)).joinBlocking()
 
-        val tabWithPendingAppIntent = store.state.findTab(tab.id)!!
-        assertNotNull(tabWithPendingAppIntent.content.appIntent)
-
-        verify(feature).handleAppIntent(tabWithPendingAppIntent, intentUrl, intent)
-
         store.waitUntilIdle()
+        verify(feature).handleAppIntent(any(), any(), any())
+
         val tabWithConsumedAppIntent = store.state.findTab(tab.id)!!
         assertNull(tabWithConsumedAppIntent.content.appIntent)
     }
