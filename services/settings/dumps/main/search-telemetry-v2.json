@@ -1,6 +1,49 @@
 {
   "data": [
     {
+      "schema": 1683504016013,
+      "taggedCodes": [
+        "ffab",
+        "ffcm",
+        "ffhp",
+        "ffip",
+        "ffit",
+        "ffnt",
+        "ffocus",
+        "ffos",
+        "ffsb",
+        "fpas",
+        "fpsa",
+        "ftas",
+        "ftsa",
+        "lm",
+        "newext"
+      ],
+      "telemetryId": "duckduckgo",
+      "organicCodes": [],
+      "codeParamName": "t",
+      "queryParamName": "q",
+      "searchPageRegexp": "^https://duckduckgo\\.com/",
+      "expectedOrganicCodes": [
+        "hz",
+        "h_",
+        "hs",
+        "ha",
+        "hb",
+        "hc",
+        "hg",
+        "hh",
+        "hi",
+        "hj"
+      ],
+      "extraAdServersRegexps": [
+        "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
+        "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
+      ],
+      "id": "9dfd626b-26f2-4913-9d0a-27db6cb7d8ca",
+      "last_modified": 1683640711097
+    },
+    {
       "schema": 1678791413786,
       "taggedCodes": [
         "firefox-a",
@@ -47,45 +90,6 @@
       ],
       "id": "635a3325-1995-42d6-be09-dbe4b2a95453",
       "last_modified": 1678922429086
-    },
-    {
-      "schema": 1674146204409,
-      "taggedCodes": [
-        "ffab",
-        "ffcm",
-        "ffhp",
-        "ffip",
-        "ffit",
-        "ffnt",
-        "ffocus",
-        "ffos",
-        "ffsb",
-        "fpas",
-        "fpsa",
-        "ftas",
-        "ftsa",
-        "lm",
-        "newext"
-      ],
-      "telemetryId": "duckduckgo",
-      "organicCodes": [],
-      "codeParamName": "t",
-      "queryParamName": "q",
-      "searchPageRegexp": "^https://duckduckgo\\.com/",
-      "expectedOrganicCodes": [
-        "hz",
-        "h_",
-        "hs",
-        "ha",
-        "hb",
-        "hc"
-      ],
-      "extraAdServersRegexps": [
-        "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
-        "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
-      ],
-      "id": "9dfd626b-26f2-4913-9d0a-27db6cb7d8ca",
-      "last_modified": 1674751991106
     },
     {
       "schema": 1671479978127,
@@ -174,5 +178,5 @@
       "last_modified": 1643136933989
     }
   ],
-  "timestamp": 1678922429086
+  "timestamp": 1683640711097
 }
