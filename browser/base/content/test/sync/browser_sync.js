@@ -48,6 +48,7 @@ add_task(async function test_navBar_button_visibility() {
     "Button should be hidden with STATUS_NOT_CONFIGURED"
   );
 
+  state.email = "foo@bar.com";
   state.status = UIState.STATUS_NOT_VERIFIED;
   gSync.updateAllUI(state);
   ok(

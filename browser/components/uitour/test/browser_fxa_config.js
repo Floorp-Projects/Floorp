@@ -336,6 +336,7 @@ add_UITour_task(async function test_fxa_signedin_state_change() {
 
   UIStateStub.restore();
   UIStateStub = sandbox.stub(UIState, "get").returns({
+    email: "foo@example.com",
     status: UIState.STATUS_LOGIN_FAILED,
   });
 
@@ -361,6 +362,7 @@ add_UITour_task(async function test_fxa_signedin_state_change() {
 
   UIStateStub.restore();
   UIStateStub = sandbox.stub(UIState, "get").returns({
+    email: "foo@example.com",
     status: UIState.STATUS_NOT_VERIFIED,
   });
 

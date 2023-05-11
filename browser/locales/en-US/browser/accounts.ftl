@@ -15,3 +15,32 @@ account-send-to-all-devices = Send to all devices
 
 # Menu item that links to the Firefox Accounts settings for connected devices.
 account-manage-devices = Manage devices…
+
+## Variables:
+##   $email (String): = Email address of user's Firefox Account.
+
+account-reconnect = Reconnect { $email }
+account-verify = Verify { $email }
+
+## Displayed in the Send Tab/Page/Link to Device context menu when right clicking a tab, a page or a link.
+
+account-send-to-all-devices-titlecase = Send to All Devices
+account-manage-devices-titlecase = Manage Devices…
+
+## Displayed in the Send Tabs context menu when right clicking a tab, a page or a link
+## and the account has only 1 device connected.
+
+# Redirects to a marketing page.
+account-send-tab-to-device-singledevice-status = No Devices Connected
+
+# Redirects to a marketing page.
+account-send-tab-to-device-singledevice-learnmore = Learn About Sending Tabs…
+
+# Redirects to an FxAccounts page that tells to you to connect another device.
+account-send-tab-to-device-connectdevice = Connect Another Device…
+
+## Displayed in the Send Tabs context menu when right clicking a tab, a page or a link
+## and the Sync account is unverified. Redirects to the Sync preferences page.
+
+account-send-tab-to-device-verify-status = Account Not Verified
+account-send-tab-to-device-verify = Verify Your Account…
