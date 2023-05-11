@@ -33,39 +33,26 @@
         Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
         Services.prefs.setIntPref("prompts.authentication_dialog_abuse_limit", -1);
 
-        function initLogins(mozproxy) {
-          function addLogin(host, realm, user, pass) {
-            let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+        addMessageListener("initLogins", async function onMessage(msg) {
+          const loginsData = [
+            [msg.mozproxyOrigin, "proxy_realm", "proxy_user", "proxy_pass"],
+            [msg.mozproxyOrigin, "proxy_realm2", "proxy_user2", "proxy_pass2"],
+            [msg.mozproxyOrigin, "proxy_realm3", "proxy_user3", "proxy_pass3"],
+            [msg.mozproxyOrigin, "proxy_realm4", "proxy_user4", "proxy_pass4"],
+            [msg.mozproxyOrigin, "proxy_realm5", "proxy_user5", "proxy_pass5"],
+            ["http://example.com", "mochirealm", "user1name", "user1pass"],
+            ["http://example.org", "mochirealm2", "user2name", "user2pass"],
+            ["http://example.com", "mochirealm3", "user3name", "user3pass"],
+            ["http://example.com", "mochirealm4", "user4name", "user4pass"],
+            ["http://example.com", "mochirealm5", "user5name", "user5pass"],
+            ["http://example.com", "mochirealm6", "user6name", "user6pass"]
+          ];
+          const logins = loginsData.map(([host, realm, user, pass]) => {
+            const login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
             login.init(host, null, realm, user, pass, "", "");
-            Services.logins.addLogin(login);
-          }
-
-          addLogin(mozproxy, "proxy_realm",
-                   "proxy_user", "proxy_pass");
-          addLogin(mozproxy, "proxy_realm2",
-                   "proxy_user2", "proxy_pass2");
-          addLogin(mozproxy, "proxy_realm3",
-                   "proxy_user3", "proxy_pass3");
-          addLogin(mozproxy, "proxy_realm4",
-                   "proxy_user4", "proxy_pass4");
-          addLogin(mozproxy, "proxy_realm5",
-                   "proxy_user5", "proxy_pass5");
-          addLogin("http://example.com", "mochirealm",
-                   "user1name", "user1pass");
-          addLogin("http://example.org", "mochirealm2",
-                   "user2name", "user2pass");
-          addLogin("http://example.com", "mochirealm3",
-                   "user3name", "user3pass");
-          addLogin("http://example.com", "mochirealm4",
-                   "user4name", "user4pass");
-          addLogin("http://example.com", "mochirealm5",
-                   "user5name", "user5pass");
-          addLogin("http://example.com", "mochirealm6",
-                   "user6name", "user6pass");
-        }
-
-        addMessageListener("initLogins", function onMessage(msg) {
-          initLogins(msg.mozproxyOrigin);
+            return login
+          })
+          await Services.logins.addLogins(logins);
         });
       }); // end runInParent
 
@@ -116,7 +103,7 @@
               mozproxyOrigin = "moz-proxy://" + SpecialPowers.wrap(pi).host + ":" +
                 SpecialPowers.wrap(pi).port;
 
-              resolve(pwmgrParent.sendQuery("initLogins", {mozproxyOrigin}));
+              pwmgrParent.sendQuery("initLogins", {mozproxyOrigin}).then(resolve)
             },
           });
 
