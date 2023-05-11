@@ -77,8 +77,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     nscolor mInfoBackground = kWhite;
     nscolor mInfoText = kBlack;
     nscolor mMenuBackground = kWhite;
-    nscolor mMenuBarText = kBlack;
-    nscolor mMenuBarHoverText = kBlack;
     nscolor mMenuText = kBlack;
     nscolor mMenuTextInactive = kWhite;
     nscolor mMenuHover = kWhite;
@@ -124,7 +122,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
     float mCaretRatio = 0.0f;
     int32_t mTitlebarRadius = 0;
-    int32_t mMenuRadius = 0;
     char16_t mInvisibleCharacter = 0;
     bool mMenuSupportsDrag = false;
 
