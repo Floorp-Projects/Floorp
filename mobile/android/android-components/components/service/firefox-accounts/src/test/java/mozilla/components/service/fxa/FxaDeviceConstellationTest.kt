@@ -168,7 +168,7 @@ class FxaDeviceConstellationTest {
     @ExperimentalCoroutinesApi
     fun `process raw device command`() = runTestOnMain {
         // No commands, no observer.
-        `when`(account.handlePushMessage("raw events payload")).thenReturn(emptyArray())
+        `when`(account.handlePushMessage("raw events payload")).thenReturn(mozilla.appservices.fxaclient.AccountEvent.Unknown)
         assertTrue(constellation.processRawEvent("raw events payload"))
 
         // No commands, with observer.
@@ -183,19 +183,24 @@ class FxaDeviceConstellationTest {
         // No commands, with an observer.
         constellation.register(eventsObserver)
         assertTrue(constellation.processRawEvent("raw events payload"))
-        assertEquals(listOf<AccountEvent.DeviceCommandIncoming>(), eventsObserver.latestEvents)
+        assertEquals(listOf(AccountEvent.Unknown), eventsObserver.latestEvents)
 
         // Some commands, with an observer. More detailed command handling tests below.
         val testDevice1 = testDevice("test1", false)
         val testTab1 = TabHistoryEntry("Hello", "http://world.com/1")
         `when`(account.handlePushMessage("raw events payload")).thenReturn(
+            ASAccountEvent.CommandReceived(
+                command = IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab1), "flowid", "streamid")),
+            ),
+        )
+
+        `when`(account.pollDeviceCommands()).thenReturn(
             arrayOf(
-                ASAccountEvent.CommandReceived(
-                    command = IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab1), "flowid", "streamid")),
-                ),
+                IncomingDeviceCommand.TabReceived(testDevice1, SendTabPayload(listOf(testTab1), "flowid", "streamid")),
             ),
         )
         assertTrue(constellation.processRawEvent("raw events payload"))
+        verify(account).pollDeviceCommands()
 
         val events = eventsObserver.latestEvents!!
         val command = (events[0] as AccountEvent.DeviceCommandIncoming).command

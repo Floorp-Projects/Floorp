@@ -35,6 +35,9 @@ sealed class AccountEvent {
 
     /** A device (possibly this one) disconnected from the account */
     data class DeviceDisconnected(val deviceId: String, val isLocalDevice: Boolean) : AccountEvent()
+
+    /** An unknown account event. Should be gracefully ignore */
+    object Unknown : AccountEvent()
 }
 
 /**

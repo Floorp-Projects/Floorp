@@ -308,6 +308,10 @@ class MainActivity :
                             txtView.text = "The device ${it.deviceId} disconnected"
                         }
                     }
+                    is AccountEvent.Unknown -> {
+                        // Unknown events are ignored to allow supporting new
+                        // account events
+                    }
                 }
             }
         }

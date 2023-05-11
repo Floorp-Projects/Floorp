@@ -117,7 +117,13 @@ class FxaDeviceConstellation(
 
     override suspend fun processRawEvent(payload: String) = withContext(scope.coroutineContext) {
         handleFxaExceptions(logger, "processing raw commands") {
-            processEvents(account.handlePushMessage(payload).map { it.into() })
+            val events = when (val accountEvent: AccountEvent = account.handlePushMessage(payload).into()) {
+                is AccountEvent.DeviceCommandIncoming -> account.pollDeviceCommands().map {
+                    AccountEvent.DeviceCommandIncoming(command = it.into())
+                }
+                else -> listOf(accountEvent)
+            }
+            processEvents(events)
         }
     }
 

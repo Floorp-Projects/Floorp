@@ -233,6 +233,7 @@ fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent {
                 deviceId = this.deviceId,
                 isLocalDevice = this.isLocalDevice,
             )
+        is AccountEvent.Unknown -> mozilla.components.concept.sync.AccountEvent.Unknown
     }
 }
 
