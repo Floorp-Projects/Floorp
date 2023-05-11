@@ -3151,7 +3151,7 @@
 # Whether HTMLMediaElement.mozPreservesPitch is enabled.
 - name: dom.media.mozPreservesPitch.enabled
   type: bool
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 # WebCodecs API
