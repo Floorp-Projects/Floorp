@@ -223,7 +223,6 @@ class nsWindow final : public nsBaseWidget {
                   bool aIncludeChildren = false);
   void Invalidate(const LayoutDeviceIntRect& aRect) override;
   void* GetNativeData(uint32_t aDataType) override;
-  void SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   void FreeNativeData(void* data, uint32_t aDataType) override;
   nsresult SetTitle(const nsAString& aTitle) override;
   void SetIcon(const nsAString& aIconSpec) override;

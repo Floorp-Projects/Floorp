@@ -2659,10 +2659,6 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
   return nullptr;
 }
 
-void nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal) {
-  switch (aDataType) {}
-}
-
 void nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent) {
   if (aEvent.mMessage == eTouchStart && aEvent.mTouches.Length() == 1) {
     // Since touch events don't get retargeted by PositionedEventTargeting.cpp

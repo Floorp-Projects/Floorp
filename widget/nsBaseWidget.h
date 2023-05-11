@@ -349,8 +349,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   void NotifyWindowMoved(int32_t aX, int32_t aY,
                          ByMoveToRect = ByMoveToRect::No);
 
-  void SetNativeData(uint32_t aDataType, uintptr_t aVal) override {}
-
   // Should be called by derived implementations to notify on system color and
   // theme changes.
   void NotifyThemeChanged(mozilla::widget::ThemeChangeKind);
