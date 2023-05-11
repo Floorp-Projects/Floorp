@@ -940,7 +940,8 @@ void nsTableRowGroupFrame::CreateContinuingRowFrame(nsIFrame& aRowFrame,
   mFrames.InsertFrame(nullptr, &aRowFrame, *aContRowFrame);
 
   // Push the continuing row frame and the frames that follow
-  PushChildren(*aContRowFrame, &aRowFrame);
+  // This needs to match `UndoContinuedRow`.
+  PushChildrenToOverflow(*aContRowFrame, &aRowFrame);
 }
 
 // Reflow the cells with rowspan > 1 which originate between aFirstRow
@@ -1047,6 +1048,8 @@ void nsTableRowGroupFrame::UndoContinuedRow(nsPresContext* aPresContext,
   MOZ_ASSERT(mFrames.ContainsFrame(rowBefore),
              "rowBefore not in our frame list?");
 
+  // Needs to match `CreateContinuingRowFrame` - we're assuming that continued
+  // frames always go into overflow frames list.
   AutoFrameListPtr overflows(aPresContext, StealOverflowFrames());
   if (!rowBefore || !overflows || overflows->IsEmpty() ||
       overflows->FirstChild() != aRow) {

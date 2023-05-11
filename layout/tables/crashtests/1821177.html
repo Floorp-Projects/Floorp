@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html class="reftest-paged">
+<style>
+#msub {
+  page-break-before: always;
+}
+mtable, mtr, mtd {
+  border: 1px solid;
+}
+</style>
+<br>
+<br>
+<math display="block">
+<mtable style="position: absolute;">
+  <mtr>
+    <mtd>
+      <mrow><mi>1</mi></mrow>
+    </mtd>
+  </mtr>
+  <mtr>
+    <mtd rowspan="0" style="font-size: 72px;">
+      <mrow id="msub">
+        <mi>2</mi>
+      </mrow>
+    </mtd>
+    <mtd rowspan="0">
+      <mtext>2</mtext>
+      <mspace height="100px"></mspace>
+    </mtd>
+  </mtr>
+  <mtr>
+    <mtd rowspan="0">
+      <mtext>3</mtext>
+    </mtd>
+  </mtr>
+  <mtr>
+    <mtd style="padding-bottom: 1000px;">
+      <mtext>4</mtext>
+    </mtd>
+  </mtr>
+</mtable>
+</math>
+</html>
