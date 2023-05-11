@@ -1250,16 +1250,16 @@ NS_IMPL_ISUPPORTS(PageFaultsHardReporter, nsIMemoryReporter)
 
 #ifdef HAVE_JEMALLOC_STATS
 
-static size_t HeapOverhead(jemalloc_stats_t* aStats) {
-  return aStats->waste + aStats->bookkeeping + aStats->page_cache +
-         aStats->bin_unused;
+static size_t HeapOverhead(const jemalloc_stats_t& aStats) {
+  return aStats.waste + aStats.bookkeeping + aStats.page_cache +
+         aStats.bin_unused;
 }
 
 // This has UNITS_PERCENTAGE, so it is multiplied by 100x *again* on top of the
 // 100x for the percentage.
-static int64_t HeapOverheadFraction(jemalloc_stats_t* aStats) {
+static int64_t HeapOverheadFraction(const jemalloc_stats_t& aStats) {
   size_t heapOverhead = HeapOverhead(aStats);
-  size_t heapCommitted = aStats->allocated + heapOverhead;
+  size_t heapCommitted = aStats.allocated + heapOverhead;
   return int64_t(10000 * (heapOverhead / (double)heapCommitted));
 }
 
@@ -1327,7 +1327,7 @@ class JemallocHeapReporter final : public nsIMemoryReporter {
 
     MOZ_COLLECT_REPORT(
       "heap-committed/overhead", KIND_OTHER, UNITS_BYTES,
-      HeapOverhead(&stats),
+      HeapOverhead(stats),
 "The sum of 'explicit/heap-overhead/*'.");
 
     MOZ_COLLECT_REPORT(
@@ -2582,7 +2582,7 @@ nsMemoryReporterManager::GetHeapOverheadFraction(int64_t* aAmount) {
 #ifdef HAVE_JEMALLOC_STATS
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
-  *aAmount = HeapOverheadFraction(&stats);
+  *aAmount = HeapOverheadFraction(stats);
   return NS_OK;
 #else
   *aAmount = 0;
