@@ -72,6 +72,7 @@ union GfxVarValue
   nsString;
   int32_t;
   float;
+  uint64_t[];
 };
 
 struct GfxVarUpdate
