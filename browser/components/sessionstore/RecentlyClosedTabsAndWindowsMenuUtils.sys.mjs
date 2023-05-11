@@ -6,13 +6,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
-  PluralForm: "resource://gre/modules/PluralForm.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
-
-var navigatorBundle = Services.strings.createBundle(
-  "chrome://browser/locale/browser.properties"
-);
 
 export var RecentlyClosedTabsAndWindowsMenuUtils = {
   /**
@@ -24,16 +19,9 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
    * @param   aPrefixRestoreAll (defaults to false)
    *          Whether the 'restore all tabs' item is suffixed or prefixed to the list.
    *          If suffixed (the default) a separator will be inserted before it.
-   * @param   aRestoreAllLabel (defaults to "appmenu-reopen-all-tabs")
-   *          Which localizable string to use for the 'restore all tabs' item.
    * @returns A document fragment with UI items for each recently closed tab.
    */
-  getTabsFragment(
-    aWindow,
-    aTagName,
-    aPrefixRestoreAll = false,
-    aRestoreAllLabel = "appmenu-reopen-all-tabs"
-  ) {
+  getTabsFragment(aWindow, aTagName, aPrefixRestoreAll = false) {
     let doc = aWindow.document;
     let fragment = doc.createDocumentFragment();
     if (lazy.SessionStore.getClosedTabCount(aWindow) != 0) {
@@ -55,7 +43,9 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
         fragment,
         aPrefixRestoreAll,
         false,
-        aRestoreAllLabel,
+        aTagName == "menuitem"
+          ? "recently-closed-menu-reopen-all-tabs"
+          : "recently-closed-panel-reopen-all-tabs",
         closedTabs.length,
         aTagName
       );
@@ -72,42 +62,23 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
    * @param   aPrefixRestoreAll (defaults to false)
    *          Whether the 'restore all windows' item is suffixed or prefixed to the list.
    *          If suffixed (the default) a separator will be inserted before it.
-   * @param   aRestoreAllLabel (defaults to "appmenu-reopen-all-windows")
-   *          Which localizable string to use for the 'restore all windows' item.
    * @returns A document fragment with UI items for each recently closed window.
    */
-  getWindowsFragment(
-    aWindow,
-    aTagName,
-    aPrefixRestoreAll = false,
-    aRestoreAllLabel = "appmenu-reopen-all-windows"
-  ) {
+  getWindowsFragment(aWindow, aTagName, aPrefixRestoreAll = false) {
     let closedWindowData = lazy.SessionStore.getClosedWindowData();
     let doc = aWindow.document;
     let fragment = doc.createDocumentFragment();
     if (closedWindowData.length) {
-      let menuLabelString = navigatorBundle.GetStringFromName(
-        "menuUndoCloseWindowLabel"
-      );
-      let menuLabelStringSingleTab = navigatorBundle.GetStringFromName(
-        "menuUndoCloseWindowSingleTabLabel"
-      );
-
       for (let i = 0; i < closedWindowData.length; i++) {
-        let undoItem = closedWindowData[i];
-        let otherTabsCount = undoItem.tabs.length - 1;
-        let label =
-          otherTabsCount == 0
-            ? menuLabelStringSingleTab
-            : lazy.PluralForm.get(otherTabsCount, menuLabelString);
-        let menuLabel = label
-          .replace("#1", undoItem.title)
-          .replace("#2", otherTabsCount);
-        let selectedTab = undoItem.tabs[undoItem.selected - 1];
-        if (!selectedTab) {
-          continue;
+        const { selected, tabs, title } = closedWindowData[i];
+        const selectedTab = tabs[selected - 1];
+        if (selectedTab) {
+          const menuLabel = this.l10n.formatValueSync(
+            "recently-closed-undo-close-window-label",
+            { tabCount: tabs.length - 1, winTitle: title }
+          );
+          createEntry(aTagName, true, i, selectedTab, doc, menuLabel, fragment);
         }
-        createEntry(aTagName, true, i, selectedTab, doc, menuLabel, fragment);
       }
 
       createRestoreAllEntry(
@@ -115,7 +86,9 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
         fragment,
         aPrefixRestoreAll,
         true,
-        aRestoreAllLabel,
+        aTagName == "menuitem"
+          ? "recently-closed-menu-reopen-all-windows"
+          : "recently-closed-panel-reopen-all-windows",
         closedWindowData.length,
         aTagName
       );
@@ -142,12 +115,9 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
     }
   },
 
-  get strings() {
-    delete this.strings;
-    return (this.strings = new Localization(
-      ["branding/brand.ftl", "browser/menubar.ftl", "browser/appmenu.ftl"],
-      true
-    ));
+  get l10n() {
+    delete this.l10n;
+    return (this.l10n = new Localization(["browser/recentlyClosed.ftl"], true));
   },
 };
 
@@ -263,9 +233,7 @@ function createRestoreAllEntry(
   // updated in time and displays a blank string (see Bug 1691553).
   restoreAllElements.setAttribute(
     "label",
-    RecentlyClosedTabsAndWindowsMenuUtils.strings.formatValueSync(
-      aRestoreAllLabel
-    )
+    RecentlyClosedTabsAndWindowsMenuUtils.l10n.formatValueSync(aRestoreAllLabel)
   );
 
   restoreAllElements.setAttribute(
