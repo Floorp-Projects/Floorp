@@ -115,29 +115,7 @@ void SVGSwitchFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
 }
 
 nsIFrame* SVGSwitchFrame::GetFrameForPoint(const gfxPoint& aPoint) {
-  NS_ASSERTION(
-      HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
-      "Only hit-testing of non-display SVG should take this code path");
-
-  nsIFrame* kid = GetActiveChildFrame();
-  ISVGDisplayableFrame* svgFrame = do_QueryFrame(kid);
-  if (svgFrame) {
-    // Transform the point from our SVG user space to our child's.
-    gfxPoint point = aPoint;
-    gfxMatrix m =
-        static_cast<const SVGElement*>(GetContent())
-            ->PrependLocalTransformsTo(gfxMatrix(), eChildToUserSpace);
-    m = static_cast<const SVGElement*>(kid->GetContent())
-            ->PrependLocalTransformsTo(m, eUserSpaceToParent);
-    if (!m.IsIdentity()) {
-      if (!m.Invert()) {
-        return nullptr;
-      }
-      point = m.TransformPoint(point);
-    }
-    return svgFrame->GetFrameForPoint(point);
-  }
-
+  MOZ_ASSERT_UNREACHABLE("A clipPath cannot contain an SVGSwitch element");
   return nullptr;
 }
 

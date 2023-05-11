@@ -220,21 +220,8 @@ nsresult SVGViewportFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 nsIFrame* SVGViewportFrame::GetFrameForPoint(const gfxPoint& aPoint) {
-  NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
-               "Only hit-testing of non-display SVG should take this "
-               "code path");
-
-  if (StyleDisplay()->IsScrollableOverflow()) {
-    Rect clip;
-    static_cast<SVGElement*>(GetContent())
-        ->GetAnimatedLengthValues(&clip.x, &clip.y, &clip.width, &clip.height,
-                                  nullptr);
-    if (!clip.Contains(ToPoint(aPoint))) {
-      return nullptr;
-    }
-  }
-
-  return SVGDisplayContainerFrame::GetFrameForPoint(aPoint);
+  MOZ_ASSERT_UNREACHABLE("A clipPath cannot contain svg or symbol elements");
+  return nullptr;
 }
 
 //----------------------------------------------------------------------

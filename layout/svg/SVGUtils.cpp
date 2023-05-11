@@ -277,14 +277,8 @@ float SVGUtils::UserSpace(const UserSpaceMetrics& aMetrics,
 }
 
 SVGOuterSVGFrame* SVGUtils::GetOuterSVGFrame(nsIFrame* aFrame) {
-  while (aFrame) {
-    if (aFrame->IsSVGOuterSVGFrame()) {
-      return static_cast<SVGOuterSVGFrame*>(aFrame);
-    }
-    aFrame = aFrame->GetParent();
-  }
-
-  return nullptr;
+  return static_cast<SVGOuterSVGFrame*>(nsLayoutUtils::GetClosestFrameOfType(
+      aFrame, LayoutFrameType::SVGOuterSVG));
 }
 
 nsIFrame* SVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame,
@@ -771,57 +765,6 @@ bool SVGUtils::HitTestClip(nsIFrame* aFrame, const gfxPoint& aPoint) {
            clipPathFrame->PointIsInsideClipPath(aFrame, aPoint);
   }
   return CSSClipPathInstance::HitTestBasicShapeOrPathClip(aFrame, aPoint);
-}
-
-nsIFrame* SVGUtils::HitTestChildren(SVGDisplayContainerFrame* aFrame,
-                                    const gfxPoint& aPoint) {
-  // First we transform aPoint into the coordinate space established by aFrame
-  // for its children (e.g. take account of any 'viewBox' attribute):
-  gfxPoint point = aPoint;
-  if (auto* svg = SVGElement::FromNode(aFrame->GetContent())) {
-    gfxMatrix m = svg->PrependLocalTransformsTo(gfxMatrix(), eChildToUserSpace);
-    if (!m.IsIdentity()) {
-      if (!m.Invert()) {
-        return nullptr;
-      }
-      point = m.TransformPoint(point);
-    }
-  }
-
-  // Traverse the list in reverse order, so that if we get a hit we know that's
-  // the topmost frame that intersects the point; then we can just return it.
-  nsIFrame* result = nullptr;
-  for (nsIFrame* current = aFrame->PrincipalChildList().LastChild(); current;
-       current = current->GetPrevSibling()) {
-    ISVGDisplayableFrame* SVGFrame = do_QueryFrame(current);
-    if (SVGFrame) {
-      const nsIContent* content = current->GetContent();
-      if (auto* svg = SVGElement::FromNode(content)) {
-        if (!svg->HasValidDimensions()) {
-          continue;
-        }
-      }
-      // GetFrameForPoint() expects a point in its frame's SVG user space, so
-      // we need to convert to that space:
-      gfxPoint p = point;
-      if (auto* svg = SVGElement::FromNode(content)) {
-        gfxMatrix m =
-            svg->PrependLocalTransformsTo(gfxMatrix(), eUserSpaceToParent);
-        if (!m.IsIdentity()) {
-          if (!m.Invert()) {
-            continue;
-          }
-          p = m.TransformPoint(p);
-        }
-      }
-      result = SVGFrame->GetFrameForPoint(p);
-      if (result) break;
-    }
-  }
-
-  if (result && !HitTestClip(aFrame, aPoint)) result = nullptr;
-
-  return result;
 }
 
 nsRect SVGUtils::TransformFrameRectToOuterSVG(const nsRect& aRect,
@@ -1481,47 +1424,45 @@ uint16_t SVGUtils::GetGeometryHitTestFlags(const nsIFrame* aFrame) {
     case StylePointerEvents::Auto:
     case StylePointerEvents::Visiblepainted:
       if (aFrame->StyleVisibility()->IsVisible()) {
-        if (!aFrame->StyleSVG()->mFill.kind.IsNone())
-          flags |= SVG_HIT_TEST_FILL;
-        if (!aFrame->StyleSVG()->mStroke.kind.IsNone())
+        if (!aFrame->StyleSVG()->mFill.kind.IsNone()) {
+          flags = SVG_HIT_TEST_FILL;
+        }
+        if (!aFrame->StyleSVG()->mStroke.kind.IsNone()) {
           flags |= SVG_HIT_TEST_STROKE;
-        if (!aFrame->StyleSVG()->mStrokeOpacity.IsOpacity() ||
-            aFrame->StyleSVG()->mStrokeOpacity.AsOpacity() > 0)
-          flags |= SVG_HIT_TEST_CHECK_MRECT;
+        }
       }
       break;
     case StylePointerEvents::Visiblefill:
       if (aFrame->StyleVisibility()->IsVisible()) {
-        flags |= SVG_HIT_TEST_FILL;
+        flags = SVG_HIT_TEST_FILL;
       }
       break;
     case StylePointerEvents::Visiblestroke:
       if (aFrame->StyleVisibility()->IsVisible()) {
-        flags |= SVG_HIT_TEST_STROKE;
+        flags = SVG_HIT_TEST_STROKE;
       }
       break;
     case StylePointerEvents::Visible:
       if (aFrame->StyleVisibility()->IsVisible()) {
-        flags |= SVG_HIT_TEST_FILL | SVG_HIT_TEST_STROKE;
+        flags = SVG_HIT_TEST_FILL | SVG_HIT_TEST_STROKE;
       }
       break;
     case StylePointerEvents::Painted:
-      if (!aFrame->StyleSVG()->mFill.kind.IsNone()) flags |= SVG_HIT_TEST_FILL;
-      if (!aFrame->StyleSVG()->mStroke.kind.IsNone())
+      if (!aFrame->StyleSVG()->mFill.kind.IsNone()) {
+        flags = SVG_HIT_TEST_FILL;
+      }
+      if (!aFrame->StyleSVG()->mStroke.kind.IsNone()) {
         flags |= SVG_HIT_TEST_STROKE;
-      if (!aFrame->StyleSVG()->mStrokeOpacity.IsOpacity() ||
-          aFrame->StyleSVG()->mStrokeOpacity.AsOpacity() > 0) {
-        flags |= SVG_HIT_TEST_CHECK_MRECT;
       }
       break;
     case StylePointerEvents::Fill:
-      flags |= SVG_HIT_TEST_FILL;
+      flags = SVG_HIT_TEST_FILL;
       break;
     case StylePointerEvents::Stroke:
-      flags |= SVG_HIT_TEST_STROKE;
+      flags = SVG_HIT_TEST_STROKE;
       break;
     case StylePointerEvents::All:
-      flags |= SVG_HIT_TEST_FILL | SVG_HIT_TEST_STROKE;
+      flags = SVG_HIT_TEST_FILL | SVG_HIT_TEST_STROKE;
       break;
     default:
       NS_ERROR("not reached");
