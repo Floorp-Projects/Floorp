@@ -21,6 +21,7 @@
 #endif
 #ifdef MOZ_WAYLAND_USE_VAAPI
 #  include "H264.h"
+#  include "mozilla/gfx/gfxVars.h"
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
 #  include "FFmpegVideoFramePool.h"
@@ -378,6 +379,30 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitHWDecodingPrefs() {
     FFMPEG_LOG("VAAPI is disabled by parent decoder module.");
     return;
   }
+
+  bool supported = false;
+  switch (mCodecID) {
+    case AV_CODEC_ID_H264:
+      supported = gfx::gfxVars::UseH264HwDecode();
+      break;
+    case AV_CODEC_ID_VP8:
+      supported = gfx::gfxVars::UseVP8HwDecode();
+      break;
+    case AV_CODEC_ID_VP9:
+      supported = gfx::gfxVars::UseVP9HwDecode();
+      break;
+    case AV_CODEC_ID_AV1:
+      supported = gfx::gfxVars::UseAV1HwDecode();
+      break;
+    default:
+      break;
+  }
+  if (!supported) {
+    mEnableHardwareDecoding = false;
+    FFMPEG_LOG("Codec %s is not accelerated", mLib->avcodec_get_name(mCodecID));
+    return;
+  }
+
   bool isHardwareWebRenderUsed = mImageAllocator &&
                                  (mImageAllocator->GetCompositorBackendType() ==
                                   layers::LayersBackend::LAYERS_WR) &&
