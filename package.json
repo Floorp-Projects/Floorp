@@ -26,6 +26,8 @@
     "eslint-plugin-spidermonkey-js": "file:tools/lint/eslint/eslint-plugin-spidermonkey-js",
     "jsdoc": "4.0.2",
     "prettier": "1.19.1",
+    "stylelint": "^15.6.0",
+    "stylelint-config-recommended": "^12.0.0",
     "yarn": "1.22.19"
   },
   "notes(private)": "We don't want to publish to npm, so this is marked as private",

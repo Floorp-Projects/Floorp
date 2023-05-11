@@ -366,6 +366,7 @@ menupopup::part(drop-indicator) {
   --arrowpanel-color: FieldText;
 }
 
+/* stylelint-disable-next-line media-feature-name-no-unknown */
 @media (-moz-content-prefers-color-scheme: dark) and (not (prefers-contrast)) {
   #DateTimePickerPanel {
     color-scheme: dark;

@@ -1,9 +1,9 @@
 [
   {
     "filename": "eslint.tar.gz",
-    "size": 24096013,
+    "size": 25359680,
     "algorithm": "sha512",
-    "digest": "dcf615e3d47219b6e6e7eeef9f72559bf0c59d0c503ec3d4e784cf0f2ad0178d6dac9341486ec6cb8dcfbaf02718e93470888ff7e8a3c16ca3171514f4b8136f",
+    "digest": "21e1bf49436755754014a0594c71cf7bbdabdbff4f504ff5c4881affa1b6f206b6a7ebbf68680badc42136245b57032cee5a968f8c5c6dac9b066facf23c1263",
     "unpack": true,
     "visibility": "public"
   }
