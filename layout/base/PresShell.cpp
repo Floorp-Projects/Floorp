@@ -5366,16 +5366,25 @@ void PresShell::AddCanvasBackgroundColorItem(
   // With async scrolling, we'd like to have two instances of the background
   // color: one that scrolls with the content (for the reasons stated above),
   // and one underneath which does not scroll with the content, but which can
-  // be shown during checkerboarding and overscroll.
+  // be shown during checkerboarding and overscroll and the dynamic toolbar
+  // movement.
   // We can only do that if the color is opaque.
   bool forceUnscrolledItem =
       nsLayoutUtils::UsesAsyncScrolling(aFrame) && NS_GET_A(bgcolor) == 255;
 
   if (!addedScrollingBackgroundColor || forceUnscrolledItem) {
+    const bool isRootContentDocumentCrossProcess =
+        mPresContext->IsRootContentDocumentCrossProcess();
+    MOZ_ASSERT_IF(
+        !aFrame->GetParent() && isRootContentDocumentCrossProcess &&
+            mPresContext->HasDynamicToolbar(),
+        aBounds.Size() ==
+            nsLayoutUtils::ExpandHeightForDynamicToolbar(
+                mPresContext, aFrame->InkOverflowRectRelativeToSelf().Size()));
+
     nsDisplaySolidColor* item = MakeDisplayItem<nsDisplaySolidColor>(
         aBuilder, aFrame, aBounds, bgcolor);
-    if (addedScrollingBackgroundColor &&
-        mPresContext->IsRootContentDocumentCrossProcess()) {
+    if (addedScrollingBackgroundColor && isRootContentDocumentCrossProcess) {
       item->SetIsCheckerboardBackground();
     }
     AddDisplayItemToBottom(aBuilder, aList, item);
