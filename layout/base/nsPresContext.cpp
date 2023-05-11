@@ -233,9 +233,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
     : mPresShell(nullptr),
       mDocument(aDocument),
       mMedium(aType == eContext_Galley ? nsGkAtoms::screen : nsGkAtoms::print),
-      mSystemFontScale(1.0),
       mTextZoom(1.0),
-      mEffectiveTextZoom(1.0),
       mFullZoom(1.0),
       mLastFontInflationScreenSize(gfxSize(-1.0, -1.0)),
       mCurAppUnitsPerDevPixel(0),
@@ -1296,8 +1294,8 @@ void nsPresContext::SetImageAnimationMode(uint16_t aMode) {
   mImageAnimationMode = aMode;
 }
 
-void nsPresContext::UpdateEffectiveTextZoom() {
-  float newZoom = mSystemFontScale * mTextZoom;
+void nsPresContext::SetTextZoom(float aTextZoom) {
+  float newZoom = aTextZoom;
   float minZoom = StaticPrefs::zoom_minPercent() / 100.0f;
   float maxZoom = StaticPrefs::zoom_maxPercent() / 100.0f;
 
@@ -1307,7 +1305,11 @@ void nsPresContext::UpdateEffectiveTextZoom() {
     newZoom = maxZoom;
   }
 
-  mEffectiveTextZoom = newZoom;
+  if (newZoom == mTextZoom) {
+    return;
+  }
+
+  mTextZoom = newZoom;
 
   // Media queries could have changed, since we changed the meaning
   // of 'em' units in them.

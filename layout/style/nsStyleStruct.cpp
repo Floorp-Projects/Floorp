@@ -298,7 +298,7 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
 
 Length nsStyleFont::ZoomText(const Document& aDocument, Length aSize) {
   if (auto* pc = aDocument.GetPresContext()) {
-    aSize.ScaleBy(pc->EffectiveTextZoom());
+    aSize.ScaleBy(pc->TextZoom());
   }
   return aSize;
 }
