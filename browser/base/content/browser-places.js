@@ -651,8 +651,7 @@ class HistoryMenu extends PlacesMenu {
     let tabsFragment = RecentlyClosedTabsAndWindowsMenuUtils.getTabsFragment(
       window,
       "menuitem",
-      /* aPrefixRestoreAll = */ false,
-      "menu-history-reopen-all-tabs"
+      /* aPrefixRestoreAll = */ false
     );
     undoPopup.appendChild(tabsFragment);
   }
@@ -691,8 +690,7 @@ class HistoryMenu extends PlacesMenu {
     let windowsFragment = RecentlyClosedTabsAndWindowsMenuUtils.getWindowsFragment(
       window,
       "menuitem",
-      /* aPrefixRestoreAll = */ false,
-      "menu-history-reopen-all-windows"
+      /* aPrefixRestoreAll = */ false
     );
     undoPopup.appendChild(windowsFragment);
   }
