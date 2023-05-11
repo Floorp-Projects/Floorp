@@ -56,6 +56,50 @@ class ComposeExtensionsKtTest {
     }
 
     @Test
+    fun usingInitialValueWithUpdates() {
+        val loading = "Loading"
+        val content = "Content"
+        val store = Store(
+            initialState = TestState(counter = 0),
+            reducer = ::reducer,
+        )
+
+        val value = mutableListOf<String>()
+
+        rule.setContent {
+            val composeState = store.observeAsState(
+                initialValue = loading,
+                map = { if (it.counter < 5) loading else content },
+            )
+            value.add(composeState.value)
+        }
+
+        rule.runOnIdle {
+            // Initial value when counter is 0.
+            assertEquals(listOf("Loading"), value)
+        }
+
+        store.dispatchBlockingOnIdle(TestAction.IncrementAction)
+        store.dispatchBlockingOnIdle(TestAction.IncrementAction)
+        store.dispatchBlockingOnIdle(TestAction.IncrementAction)
+        store.dispatchBlockingOnIdle(TestAction.IncrementAction)
+
+        rule.runOnIdle {
+            // Value after 4 increments, aka counter is 4. Note that it doesn't recompose here
+            // as the mapped value has stayed the same. We have 1 item in the list and not 5.
+            assertEquals(listOf(loading), value)
+        }
+
+        // 5th increment
+        store.dispatchBlockingOnIdle(TestAction.IncrementAction)
+
+        rule.runOnIdle {
+            assertEquals(listOf(loading, content), value)
+            assertEquals(content, value.last())
+        }
+    }
+
+    @Test
     fun receivingUpdatesForPartialStateUpdateOnly() {
         val store = Store(
             initialState = TestState(counter = 42),

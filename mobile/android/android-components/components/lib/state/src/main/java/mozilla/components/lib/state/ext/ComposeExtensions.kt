@@ -8,6 +8,7 @@ import android.os.Parcelable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -41,6 +42,35 @@ fun <S : State, A : Action, R> Store<S, A>.observeAsComposableState(map: (S) -> 
     }
 
     return state
+}
+
+/**
+ * Starts observing this [Store] and represents the mapped state (using [map]) via [ComposeState].
+ *
+ * Every time the mapped [Store] state changes, the returned [ComposeState] will be updated causing
+ * recomposition of every [ComposeState.value] usage.
+ *
+ * The [Store] observer will automatically be removed when this composable disposes or the current
+ * [LifecycleOwner] moves to the [Lifecycle.State.DESTROYED] state.
+ *
+ * @param initialValue Initial value emitted.
+ * @param map The applied function to produced the mapped value [R] from [S].
+ * @return A non nullable [ComposeState], making the api more reasonable for callers where the
+ * state is non null.
+ */
+@Composable
+fun <S : State, A : Action, R> Store<S, A>.observeAsState(
+    initialValue: R,
+    map: (S) -> R,
+): ComposeState<R> {
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    return produceState(initialValue = initialValue) {
+        val subscription = observe(lifecycleOwner) { browserState ->
+            value = map(browserState)
+        }
+        awaitDispose { subscription?.unsubscribe() }
+    }
 }
 
 /**
