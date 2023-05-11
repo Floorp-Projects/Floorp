@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<style>
+html {
+  /* Suppress scrollbars to avoid periodical unthrottling for transform */
+  /* animations on the compositor. */
+  overflow: hidden;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+}
+
+#target {
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  background-color: green;
+  scale:2;
+}
+</style>
+<img id="target" src="repeatable-diagonal-gradient.png">
+</html>
