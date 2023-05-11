@@ -6548,6 +6548,153 @@ AttachDecision InlinableNativeIRGenerator::tryAttachHasClass(
   return AttachDecision::Attach;
 }
 
+// Returns whether the .lastIndex property is a non-negative int32 value and is
+// still writable.
+static bool HasOptimizableLastIndexSlot(RegExpObject* regexp, JSContext* cx) {
+  auto lastIndexProp = regexp->lookupPure(cx->names().lastIndex);
+  MOZ_ASSERT(lastIndexProp->isDataProperty());
+  if (!lastIndexProp->writable()) {
+    return false;
+  }
+  Value lastIndex = regexp->getLastIndex();
+  if (!lastIndex.isInt32() || lastIndex.toInt32() < 0) {
+    return false;
+  }
+  return true;
+}
+
+static void EmitGuardLastIndexIsNonNegativeInt32(CacheIRWriter& writer,
+                                                 ObjOperandId regExpId) {
+  size_t offset =
+      NativeObject::getFixedSlotOffset(RegExpObject::lastIndexSlot());
+  ValOperandId lastIndexValId = writer.loadFixedSlot(regExpId, offset);
+  Int32OperandId lastIndexId = writer.guardToInt32(lastIndexValId);
+  writer.guardInt32IsNonNegative(lastIndexId);
+}
+
+AttachDecision
+InlinableNativeIRGenerator::tryAttachIntrinsicRegExpBuiltinExec() {
+  // Self-hosted code calls this with (regexp, string, boolean) arguments.
+  MOZ_ASSERT(argc_ == 3);
+  MOZ_ASSERT(args_[0].isObject());
+  MOZ_ASSERT(args_[1].isString());
+  MOZ_ASSERT(args_[2].isBoolean());
+
+  RegExpObject* re = &args_[0].toObject().as<RegExpObject>();
+  if (!HasOptimizableLastIndexSlot(re, cx_)) {
+    return AttachDecision::NoAction;
+  }
+
+  bool forTest = args_[2].toBoolean();
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId regExpId = writer.guardToObject(arg0Id);
+  writer.guardShape(regExpId, re->shape());
+  EmitGuardLastIndexIsNonNegativeInt32(writer, regExpId);
+
+  ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  StringOperandId inputId = writer.guardToString(arg1Id);
+
+  ValOperandId arg2Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
+  Int32OperandId forTestId = writer.guardBooleanToInt32(arg2Id);
+  writer.guardSpecificInt32(forTestId, forTest);
+
+  if (forTest) {
+    writer.regExpBuiltinExecTestResult(regExpId, inputId);
+  } else {
+    writer.regExpBuiltinExecMatchResult(regExpId, inputId);
+  }
+  writer.returnFromIC();
+
+  trackAttached("IntrinsicRegExpBuiltinExec");
+  return AttachDecision::Attach;
+}
+
+AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpExec() {
+  // Self-hosted code calls this with (object, string, boolean) arguments.
+  MOZ_ASSERT(argc_ == 3);
+  MOZ_ASSERT(args_[0].isObject());
+  MOZ_ASSERT(args_[1].isString());
+  MOZ_ASSERT(args_[2].isBoolean());
+
+  if (!args_[0].toObject().is<RegExpObject>()) {
+    return AttachDecision::NoAction;
+  }
+  RegExpObject* re = &args_[0].toObject().as<RegExpObject>();
+  if (!HasOptimizableLastIndexSlot(re, cx_)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure regexp.exec is the original RegExp.prototype.exec function on the
+  // prototype.
+  if (re->containsPure(cx_->names().exec)) {
+    return AttachDecision::NoAction;
+  }
+  MOZ_ASSERT(cx_->global()->maybeGetRegExpPrototype());
+  auto* regExpProto =
+      &cx_->global()->maybeGetRegExpPrototype()->as<NativeObject>();
+  if (re->staticPrototype() != regExpProto) {
+    return AttachDecision::NoAction;
+  }
+  auto execProp = regExpProto->as<NativeObject>().lookupPure(cx_->names().exec);
+  if (!execProp || !execProp->isDataProperty()) {
+    return AttachDecision::NoAction;
+  }
+  // It should be stored in a dynamic slot. We assert this in
+  // FinishRegExpClassInit.
+  if (regExpProto->isFixedSlot(execProp->slot())) {
+    return AttachDecision::NoAction;
+  }
+  Value execVal = regExpProto->getSlot(execProp->slot());
+  PropertyName* execName = cx_->names().RegExp_prototype_Exec;
+  if (!IsSelfHostedFunctionWithName(execVal, execName)) {
+    return AttachDecision::NoAction;
+  }
+  JSFunction* execFunction = &execVal.toObject().as<JSFunction>();
+
+  bool forTest = args_[2].toBoolean();
+
+  // Initialize the input operand.
+  initializeInputOperand();
+
+  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
+
+  ValOperandId arg0Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ObjOperandId regExpId = writer.guardToObject(arg0Id);
+  writer.guardShape(regExpId, re->shape());
+  EmitGuardLastIndexIsNonNegativeInt32(writer, regExpId);
+
+  // Emit guards for the RegExp.prototype.exec property.
+  ObjOperandId regExpProtoId = writer.loadObject(regExpProto);
+  writer.guardShape(regExpProtoId, regExpProto->shape());
+  size_t offset =
+      regExpProto->dynamicSlotIndex(execProp->slot()) * sizeof(Value);
+  writer.guardDynamicSlotValue(regExpProtoId, offset,
+                               ObjectValue(*execFunction));
+
+  ValOperandId arg1Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  StringOperandId inputId = writer.guardToString(arg1Id);
+
+  ValOperandId arg2Id = writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
+  Int32OperandId forTestId = writer.guardBooleanToInt32(arg2Id);
+  writer.guardSpecificInt32(forTestId, forTest);
+
+  if (forTest) {
+    writer.regExpBuiltinExecTestResult(regExpId, inputId);
+  } else {
+    writer.regExpBuiltinExecMatchResult(regExpId, inputId);
+  }
+  writer.returnFromIC();
+
+  trackAttached("IntrinsicRegExpExec");
+  return AttachDecision::Attach;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcherTester(
     InlinableNative native) {
   // Self-hosted code calls this with (object, string, number) arguments.
@@ -10459,6 +10606,10 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachRegExpInstanceOptimizable();
     case InlinableNative::GetFirstDollarIndex:
       return tryAttachGetFirstDollarIndex();
+    case InlinableNative::IntrinsicRegExpBuiltinExec:
+      return tryAttachIntrinsicRegExpBuiltinExec();
+    case InlinableNative::IntrinsicRegExpExec:
+      return tryAttachIntrinsicRegExpExec();
 
     // String natives.
     case InlinableNative::String:
