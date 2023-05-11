@@ -371,10 +371,10 @@ class SmokeTest {
         navigationToolbar {
             verifyReaderViewDetected(true)
             toggleReaderView()
-            mDevice.waitForIdle()
         }
 
         browserScreen {
+            waitForPageToLoad()
             verifyPageContent(estimatedReadingTime)
         }.openThreeDotMenu {
             verifyReaderViewAppearance(true)
