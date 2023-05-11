@@ -250,7 +250,6 @@ namespace jit {
   _(RegExpBuiltinExecTestRaw, js::RegExpBuiltinExecTestRaw<true>)              \
   _(RegExpMatcherRaw, js::RegExpMatcherRaw)                                    \
   _(RegExpSearcherRaw, js::RegExpSearcherRaw)                                  \
-  _(RegExpTesterRaw, js::RegExpTesterRaw)                                      \
   _(SameValue, js::SameValue)                                                  \
   _(SetArrayLength, js::jit::SetArrayLength)                                   \
   _(SetElementMegamorphicNoCache, js::jit::SetElementMegamorphic<false>)       \

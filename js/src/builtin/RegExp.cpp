@@ -1286,65 +1286,6 @@ bool js::RegExpSearcherRaw(JSContext* cx, HandleObject regexp,
   return RegExpSearcherImpl(cx, regexp, input, lastIndex, result);
 }
 
-/*
- * ES 2017 draft rev 6a13789aa9e7c6de4e96b7d3e24d9e6eba6584ad 21.2.5.2.2
- * steps 3, 9-14, except 12.a.i, 12.c.i.1.
- */
-bool js::RegExpTester(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 3);
-  MOZ_ASSERT(IsRegExpObject(args[0]));
-  MOZ_ASSERT(args[1].isString());
-  MOZ_ASSERT(args[2].isNumber());
-
-  RootedObject regexp(cx, &args[0].toObject());
-  RootedString string(cx, args[1].toString());
-
-  int32_t lastIndex;
-  MOZ_ALWAYS_TRUE(ToInt32(cx, args[2], &lastIndex));
-
-  /* Steps 3, 9-14, except 12.a.i, 12.c.i.1. */
-  VectorMatchPairs matches;
-  RegExpRunStatus status =
-      ExecuteRegExp(cx, regexp, string, lastIndex, &matches);
-
-  if (status == RegExpRunStatus_Error) {
-    return false;
-  }
-
-  if (status == RegExpRunStatus_Success) {
-    int32_t endIndex = matches[0].limit;
-    args.rval().setInt32(endIndex);
-  } else {
-    args.rval().setInt32(-1);
-  }
-  return true;
-}
-
-/*
- * Separate interface for use by the JITs.
- * This code cannot re-enter JIT code.
- */
-bool js::RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
-                         int32_t lastIndex, int32_t* endIndex) {
-  MOZ_ASSERT(lastIndex >= 0);
-
-  VectorMatchPairs matches;
-  RegExpRunStatus status =
-      ExecuteRegExp(cx, regexp, input, lastIndex, &matches);
-
-  if (status == RegExpRunStatus_Success) {
-    *endIndex = matches[0].limit;
-    return true;
-  }
-  if (status == RegExpRunStatus_Success_NotFound) {
-    *endIndex = -1;
-    return true;
-  }
-
-  return false;
-}
-
 template <bool CalledFromJit>
 bool js::RegExpBuiltinExecMatchRaw(JSContext* cx, Handle<RegExpObject*> regexp,
                                    HandleString input, int32_t lastIndex,

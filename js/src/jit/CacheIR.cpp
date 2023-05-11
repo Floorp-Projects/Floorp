@@ -6695,7 +6695,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIntrinsicRegExpExec() {
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcherTester(
+AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcher(
     InlinableNative native) {
   // Self-hosted code calls this with (object, string, number) arguments.
   MOZ_ASSERT(argc_ == 3);
@@ -6734,12 +6734,6 @@ AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcherTester(
       writer.callRegExpSearcherResult(reId, inputId, lastIndexId);
       writer.returnFromIC();
       trackAttached("RegExpSearcher");
-      break;
-
-    case InlinableNative::RegExpTester:
-      writer.callRegExpTesterResult(reId, inputId, lastIndexId);
-      writer.returnFromIC();
-      trackAttached("RegExpTester");
       break;
 
     default:
@@ -10598,8 +10592,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
                                /* isPossiblyWrapped = */ true);
     case InlinableNative::RegExpMatcher:
     case InlinableNative::RegExpSearcher:
-    case InlinableNative::RegExpTester:
-      return tryAttachRegExpMatcherSearcherTester(native);
+      return tryAttachRegExpMatcherSearcher(native);
     case InlinableNative::RegExpPrototypeOptimizable:
       return tryAttachRegExpPrototypeOptimizable();
     case InlinableNative::RegExpInstanceOptimizable:
