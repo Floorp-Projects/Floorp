@@ -33,6 +33,7 @@ public class GeckoViewPrintDocumentAdapter extends PrintDocumentAdapter {
   private InputStream mPdfInputStream;
   private Context mContext;
   private Boolean mDoDeleteTmpPdf;
+  private GeckoResult<Boolean> mPrintDialogFinish = null;
 
   /**
    * Default GeckoView PrintDocumentAdapter to be used with a PrintManager to print documents using
@@ -46,6 +47,24 @@ public class GeckoViewPrintDocumentAdapter extends PrintDocumentAdapter {
     this.mPdfInputStream = pdfInputStream;
     this.mContext = context;
     this.mDoDeleteTmpPdf = true;
+  }
+
+  /**
+   * GeckoView PrintDocumentAdapter to be used with a PrintManager to print documents using the
+   * default Android print functionality. Will make a temporary PDF file from InputStream.
+   *
+   * @param pdfInputStream an input stream containing a PDF
+   * @param context context that should be used for making a temporary file
+   * @param printDialogFinish result to report that the print finished
+   */
+  public GeckoViewPrintDocumentAdapter(
+      @NonNull final InputStream pdfInputStream,
+      @NonNull final Context context,
+      @Nullable final GeckoResult<Boolean> printDialogFinish) {
+    this.mPdfInputStream = pdfInputStream;
+    this.mContext = context;
+    this.mDoDeleteTmpPdf = true;
+    this.mPrintDialogFinish = printDialogFinish;
   }
 
   /**
@@ -169,6 +188,9 @@ public class GeckoViewPrintDocumentAdapter extends PrintDocumentAdapter {
     } catch (final NullPointerException npe) {
       // Silence the exception. We only want to delete a real file. We don't
       // care if the file doesn't exist.
+    }
+    if (this.mPrintDialogFinish != null) {
+      mPrintDialogFinish.complete(true);
     }
   }
 }
