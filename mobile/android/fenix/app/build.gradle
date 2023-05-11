@@ -223,7 +223,8 @@ android {
     }
     packagingOptions {
         resources {
-            excludes += ['META-INF/atomicfu.kotlin_module', 'META-INF/AL2.0', 'META-INF/LGPL2.1']
+            excludes += ['META-INF/atomicfu.kotlin_module', 'META-INF/AL2.0', 'META-INF/LGPL2.1',
+                         'META-INF/LICENSE.md', 'META-INF/LICENSE-notice.md']
         }
     }
 

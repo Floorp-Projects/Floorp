@@ -47,10 +47,10 @@ object FenixVersions {
     const val adjust = "4.33.0"
     const val installreferrer = "2.2"
 
-    const val junit = "5.5.2"
+    const val junit = "5.9.3"
     const val mockk = "1.12.0"
 
-    const val mockwebserver = "4.10.0"
+    const val mockwebserver = "4.11.0"
     const val uiautomator = "2.2.0"
     const val robolectric = "4.10.1"
 
