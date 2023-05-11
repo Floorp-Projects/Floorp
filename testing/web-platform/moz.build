@@ -559,6 +559,9 @@ with Files("tests/netinfo/**"):
 with Files("tests/notifications/**"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
+with Files("tests/network-error-logging/**"):
+    BUG_COMPONENT = ("Core", "DOM: Networking")
+
 with Files("tests/old-tests/submission/Microsoft/foreigncontent/**"):
     BUG_COMPONENT = ("Core", "SVG")
 
@@ -697,6 +700,7 @@ with Files("tests/uievents/**"):
 
 with Files("tests/upgrade-insecure-requests/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
+
 with Files("tests/url/**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
