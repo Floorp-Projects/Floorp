@@ -49,6 +49,7 @@ UNIFIED_SOURCES += [
     "testForOfIterator.cpp",
     "testForwardSetProperty.cpp",
     "testFreshGlobalEvalRedefinition.cpp",
+    "testFrontendJSON.cpp",
     "testFunctionBinding.cpp",
     "testFunctionNonSyntactic.cpp",
     "testFunctionProperties.cpp",
