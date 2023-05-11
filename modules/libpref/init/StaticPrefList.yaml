@@ -5834,7 +5834,7 @@
 
 - name: gfx.color_management.native_srgb
   type: RelaxedAtomicBool
-#if defined(XP_MACOSX) || defined(XP_WIN)
+#if defined(XP_MACOSX)
   value: true
 #else
   value: false
