@@ -464,11 +464,9 @@ i686/xul.dll
 i686/nss3.dll
 i686/mozglue.dll
 i686/lgpllibs.dll
-i686/@MSVC_CXX_RUNTIME_DLL@
-i686/@MSVC_C_RUNTIME_DLL@
-#ifdef MSVC_C_RUNTIME_1_DLL
-i686/@MSVC_C_RUNTIME_1_DLL@
-#endif
+i686/msvcp140.dll
+i686/vcruntime140.dll
+i686/vcruntime140_1.dll
 i686/gmp-clearkey/0.1/clearkey.dll
 [eme destdir="i686"]
 ; We assume the file we generate locally is the same as what was in the win32
