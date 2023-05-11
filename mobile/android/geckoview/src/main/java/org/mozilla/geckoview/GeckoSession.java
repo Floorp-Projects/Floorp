@@ -751,8 +751,23 @@ public class GeckoSession {
             pdfResult
                 .accept(
                     pdfStream -> {
-                      delegate.onPrint(pdfStream);
-                      mEventDispatcher.dispatch("GeckoView:DotPrintFinish", null);
+                      final GeckoResult<Boolean> dialogFinished =
+                          delegate.onPrintWithStatus(pdfStream);
+                      try {
+                        dialogFinished
+                            .accept(
+                                isDialogFinished -> {
+                                  mEventDispatcher.dispatch("GeckoView:DotPrintFinish", null);
+                                })
+                            .exceptionally(
+                                e -> {
+                                  mEventDispatcher.dispatch("GeckoView:DotPrintFinish", null);
+                                  return null;
+                                });
+                      } catch (final Exception e) {
+                        mEventDispatcher.dispatch("GeckoView:DotPrintFinish", null);
+                        Log.e(LOGTAG, "Print delegate needs to be fully implemented to print.", e);
+                      }
                     })
                 .exceptionally(
                     e -> {
@@ -6915,6 +6930,17 @@ public class GeckoSession {
      * @param pdfInputStream an InputStream containing a PDF
      */
     default void onPrint(@NonNull final InputStream pdfInputStream) {}
+
+    /**
+     * Print any provided PDF InputStream.
+     *
+     * @param pdfInputStream an InputStream containing a PDF
+     * @return A GeckoResult if the print dialog has closed
+     */
+    default @Nullable GeckoResult<Boolean> onPrintWithStatus(
+        @NonNull final InputStream pdfInputStream) {
+      return null;
+    }
   }
 
   /**
