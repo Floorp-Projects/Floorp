@@ -18,7 +18,7 @@ async function runTheTest(iframe_domain, cross_origin_domain, extraData) {
       resolve(event.data);
     }, { once: true });
   });
-  iframes[0].contentWindow.postMessage({0: "gimme", 1: cross_origin_domain}, "*");
+  iframes[0].contentWindow.postMessage(["gimme", cross_origin_domain], "*");
   var result = await promiseForRFPTest;
 
   return result;
