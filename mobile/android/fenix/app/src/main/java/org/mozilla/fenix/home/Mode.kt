@@ -40,8 +40,9 @@ class CurrentMode(
 ) : AccountObserver {
 
     private val accountManager by lazy { context.components.backgroundServices.accountManager }
+    private val settings by lazy { context.components.settings }
 
-    fun getCurrentMode() = if (onboarding.userHasBeenOnboarded()) {
+    fun getCurrentMode() = if (onboarding.userHasBeenOnboarded() || settings.junoOnboardingEnabled) {
         Mode.fromBrowsingMode(browsingModeManager.mode)
     } else {
         val account = accountManager.authenticatedAccount()
