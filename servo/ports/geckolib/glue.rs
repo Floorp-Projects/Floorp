@@ -87,7 +87,7 @@ use style::gecko_bindings::structs::{
     RawServoDeclarationBlock, RawServoFontFaceRule, RawServoFontFeatureValuesRule,
     RawServoFontPaletteValuesRule, RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule,
     RawServoLayerBlockRule, RawServoLayerStatementRule, RawServoMediaList, RawServoMediaRule,
-    RawServoMozDocumentRule, RawServoNamespaceRule, RawServoPageRule, RawServoStyleSheetContents,
+    RawServoMozDocumentRule, RawServoNamespaceRule, RawServoPageRule,
     RawServoSupportsRule, ServoCssRules,
 };
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, Strong};
@@ -1523,7 +1523,7 @@ fn mode_to_origin(mode: SheetParsingMode) -> Origin {
 #[no_mangle]
 pub extern "C" fn Servo_StyleSheet_Empty(
     mode: SheetParsingMode,
-) -> Strong<RawServoStyleSheetContents> {
+) -> Strong<StylesheetContents> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let origin = mode_to_origin(mode);
     let shared_lock = &global_style_data.shared_lock;
@@ -1540,7 +1540,7 @@ pub extern "C" fn Servo_StyleSheet_Empty(
         AllowImportRules::Yes,
         /* sanitization_data = */ None,
     )
-    .into_strong()
+    .into()
 }
 
 /// Note: The load_data corresponds to this sheet, and is passed as the parent
@@ -1561,7 +1561,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
     allow_import_rules: AllowImportRules,
     sanitization_kind: SanitizationKind,
     sanitized_output: Option<&mut nsAString>,
-) -> Strong<RawServoStyleSheetContents> {
+) -> Strong<StylesheetContents> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let input = bytes.as_str_unchecked();
 
@@ -1610,7 +1610,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
             .assign_utf8(data.take().as_bytes());
     }
 
-    contents.into_strong()
+    contents.into()
 }
 
 #[no_mangle]
@@ -1661,7 +1661,7 @@ pub unsafe extern "C" fn Servo_ShutdownThreadPool() {
 pub unsafe extern "C" fn Servo_StyleSheet_FromSharedData(
     extra_data: *mut URLExtraData,
     shared_rules: &ServoCssRules,
-) -> Strong<RawServoStyleSheetContents> {
+) -> Strong<StylesheetContents> {
     let shared_rules = Locked::<CssRules>::as_arc(&shared_rules);
     StylesheetContents::from_shared_data(
         shared_rules.clone_arc(),
@@ -1669,7 +1669,7 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromSharedData(
         UrlExtraData::new(extra_data),
         QuirksMode::NoQuirks,
     )
-    .into_strong()
+    .into()
 }
 
 #[no_mangle]
@@ -1981,10 +1981,10 @@ pub extern "C" fn Servo_StyleSet_UsesFontMetrics(raw_data: &PerDocumentStyleData
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSheet_HasRules(raw_contents: &RawServoStyleSheetContents) -> bool {
+pub extern "C" fn Servo_StyleSheet_HasRules(raw_contents: &StylesheetContents) -> bool {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
-    !StylesheetContents::as_arc(&raw_contents)
+    !raw_contents
         .rules
         .read_with(&guard)
         .0
@@ -1992,35 +1992,29 @@ pub extern "C" fn Servo_StyleSheet_HasRules(raw_contents: &RawServoStyleSheetCon
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSheet_GetRules(
-    sheet: &RawServoStyleSheetContents,
-) -> Strong<ServoCssRules> {
-    StylesheetContents::as_arc(&sheet)
-        .rules
-        .clone()
-        .into_strong()
+pub extern "C" fn Servo_StyleSheet_GetRules(sheet: &StylesheetContents) -> Strong<ServoCssRules>
+{
+    sheet.rules.clone().into_strong()
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleSheet_Clone(
-    raw_sheet: &RawServoStyleSheetContents,
+    contents: &StylesheetContents,
     reference_sheet: *const DomStyleSheet,
-) -> Strong<RawServoStyleSheetContents> {
+) -> Strong<StylesheetContents> {
     use style::shared_lock::{DeepCloneParams, DeepCloneWithLock};
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
-    let contents = StylesheetContents::as_arc(&raw_sheet);
     let params = DeepCloneParams { reference_sheet };
 
-    Arc::new(contents.deep_clone_with_lock(&global_style_data.shared_lock, &guard, &params))
-        .into_strong()
+    Arc::new(contents.deep_clone_with_lock(&global_style_data.shared_lock, &guard, &params)).into()
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleSheet_SizeOfIncludingThis(
     malloc_size_of: GeckoMallocSizeOf,
     malloc_enclosing_size_of: GeckoMallocSizeOf,
-    sheet: &RawServoStyleSheetContents,
+    sheet: &StylesheetContents,
 ) -> usize {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -2029,22 +2023,21 @@ pub extern "C" fn Servo_StyleSheet_SizeOfIncludingThis(
         Some(malloc_enclosing_size_of.unwrap()),
         None,
     );
-    // TODO(emilio): We're not measuring the size of the Arc<StyleSheetContents>
+    // TODO(emilio): We're not measuring the size of the Arc<StylesheetContents>
     // allocation itself here.
-    StylesheetContents::as_arc(&sheet).size_of(&guard, &mut ops)
+    sheet.size_of(&guard, &mut ops)
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleSheet_GetOrigin(sheet: &RawServoStyleSheetContents) -> Origin {
-    StylesheetContents::as_arc(&sheet).origin
+pub extern "C" fn Servo_StyleSheet_GetOrigin(sheet: &StylesheetContents) -> Origin {
+    sheet.origin
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleSheet_GetSourceMapURL(
-    sheet: &RawServoStyleSheetContents,
+    contents: &StylesheetContents,
     result: &mut nsAString,
 ) {
-    let contents = StylesheetContents::as_arc(&sheet);
     let url_opt = contents.source_map_url.read();
     if let Some(ref url) = *url_opt {
         write!(result, "{}", url).unwrap();
@@ -2053,10 +2046,9 @@ pub extern "C" fn Servo_StyleSheet_GetSourceMapURL(
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleSheet_GetSourceURL(
-    sheet: &RawServoStyleSheetContents,
+    contents: &StylesheetContents,
     result: &mut nsAString,
 ) {
-    let contents = StylesheetContents::as_arc(&sheet);
     let url_opt = contents.source_url.read();
     if let Some(ref url) = *url_opt {
         write!(result, "{}", url).unwrap();
@@ -2145,7 +2137,7 @@ pub extern "C" fn Servo_CssRules_ListTypes(rules: &ServoCssRules, result: &mut n
 #[no_mangle]
 pub extern "C" fn Servo_CssRules_InsertRule(
     rules: &ServoCssRules,
-    contents: &RawServoStyleSheetContents,
+    contents: &StylesheetContents,
     rule: &nsACString,
     index: u32,
     nested: bool,
@@ -2170,7 +2162,6 @@ pub extern "C" fn Servo_CssRules_InsertRule(
     let rule = unsafe { rule.as_str_unchecked() };
 
     let global_style_data = &*GLOBAL_STYLE_DATA;
-    let contents = StylesheetContents::as_arc(&contents);
     let result = Locked::<CssRules>::as_arc(&rules).insert_rule(
         &global_style_data.shared_lock,
         rule,
@@ -2553,7 +2544,7 @@ pub type SelectorList = selectors::SelectorList<style::gecko::selector_parser::S
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleRule_SetSelectorText(
-    sheet: &RawServoStyleSheetContents,
+    contents: &StylesheetContents,
     rule: &RawServoStyleRule,
     text: &nsACString,
 ) -> bool {
@@ -2562,7 +2553,6 @@ pub extern "C" fn Servo_StyleRule_SetSelectorText(
     write_locked_arc(rule, |rule: &mut StyleRule| {
         use style::selector_parser::SelectorParser;
 
-        let contents = StylesheetContents::as_arc(&sheet);
         let namespaces = contents.namespaces.read();
         let url_data = contents.url_data.read();
         let parser = SelectorParser {
@@ -2819,11 +2809,10 @@ pub extern "C" fn Servo_KeyframesRule_FindRule(
 #[no_mangle]
 pub extern "C" fn Servo_KeyframesRule_AppendRule(
     rule: &RawServoKeyframesRule,
-    contents: &RawServoStyleSheetContents,
+    contents: &StylesheetContents,
     css: &nsACString,
 ) -> bool {
     let css = unsafe { css.as_str_unchecked() };
-    let contents = StylesheetContents::as_arc(&contents);
     let global_style_data = &*GLOBAL_STYLE_DATA;
 
     match Keyframe::parse(css, &contents, &global_style_data.shared_lock) {
@@ -2892,7 +2881,7 @@ pub extern "C" fn Servo_PageRule_GetSelectorText(rule: &RawServoPageRule, result
 
 #[no_mangle]
 pub extern "C" fn Servo_PageRule_SetSelectorText(
-    sheet: &RawServoStyleSheetContents,
+    contents: &StylesheetContents,
     rule: &RawServoPageRule,
     text: &nsACString,
 ) -> bool {
@@ -2910,7 +2899,6 @@ pub extern "C" fn Servo_PageRule_SetSelectorText(
             return true;
         }
 
-        let contents = StylesheetContents::as_arc(&sheet);
         let url_data = contents.url_data.read();
         let context = ParserContext::new(
             Origin::Author,
@@ -7560,11 +7548,9 @@ pub unsafe extern "C" fn Servo_SharedMemoryBuilder_Create(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_SharedMemoryBuilder_AddStylesheet(
     builder: &mut SharedMemoryBuilder,
-    raw_contents: &RawServoStyleSheetContents,
+    contents: &StylesheetContents,
     error_message: &mut nsACString,
 ) -> *const ServoCssRules {
-    let contents = StylesheetContents::as_arc(&raw_contents);
-
     // Assert some things we assume when we create a style sheet from shared
     // memory.
     debug_assert_eq!(contents.origin, Origin::UserAgent);

@@ -196,7 +196,7 @@ void CSSStyleRule::SetSelectorText(const nsACString& aSelectorText) {
 
     // TODO(emilio): May actually be more efficient to handle this as rule
     // removal + addition, from the point of view of invalidation...
-    const RawServoStyleSheetContents* contents = sheet->RawContents();
+    const StyleStylesheetContents* contents = sheet->RawContents();
     if (Servo_StyleRule_SetSelectorText(contents, mRawRule, &aSelectorText)) {
       sheet->RuleChanged(this, StyleRuleChangeKind::Generic);
     }

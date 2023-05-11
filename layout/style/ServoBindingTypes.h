@@ -127,6 +127,8 @@ struct Keyframe;
 struct PropertyStyleAnimationValuePair;
 struct PropertyValuePair;
 struct StyleAnimation;
+struct StyleCssUrlData;
+struct StyleStylesheetContents;
 struct URLExtraData;
 using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
 using GfxMatrix4x4 = mozilla::gfx::Float[16];
@@ -153,6 +155,8 @@ class Element;
   }
 #include "mozilla/ServoArcTypeList.h"
 SERVO_ARC_TYPE(ComputedStyle, mozilla::ComputedStyle)
+SERVO_ARC_TYPE(CssUrlData, mozilla::StyleCssUrlData)
+SERVO_ARC_TYPE(StyleSheetContents, mozilla::StyleStylesheetContents)
 #undef SERVO_ARC_TYPE
 
 #define SERVO_BOXED_TYPE(name_, type_)                                        \

@@ -154,7 +154,7 @@ impl AsyncStylesheetParser {
         unsafe {
             bindings::Gecko_StyleSheet_FinishAsyncParse(
                 self.load_data.get(),
-                sheet.into_strong(),
+                sheet.into(),
                 use_counters.map_or(std::ptr::null_mut(), Box::into_raw),
             );
         }

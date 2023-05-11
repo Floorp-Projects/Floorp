@@ -34,7 +34,7 @@ template struct StyleStrong<ComputedStyle>;
 template struct StyleStrong<ServoCssRules>;
 template struct StyleStrong<RawServoAnimationValue>;
 template struct StyleStrong<RawServoDeclarationBlock>;
-template struct StyleStrong<RawServoStyleSheetContents>;
+template struct StyleStrong<StyleStylesheetContents>;
 template struct StyleStrong<RawServoKeyframe>;
 template struct StyleStrong<RawServoLayerBlockRule>;
 template struct StyleStrong<RawServoLayerStatementRule>;

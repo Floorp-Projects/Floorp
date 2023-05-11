@@ -42,7 +42,7 @@ static void ServoParsingBench(const StyleUseCounters* aCounters) {
       new URLExtraData(uri.forget(), referrerInfo.forget(),
                        NullPrincipal::CreateWithoutOriginAttributes());
   for (int i = 0; i < PARSING_REPETITIONS; i++) {
-    RefPtr<RawServoStyleSheetContents> stylesheet =
+    RefPtr<StyleStylesheetContents> stylesheet =
         Servo_StyleSheet_FromUTF8Bytes(
             nullptr, nullptr, nullptr, &cssStr, eAuthorSheetFeatures, data, 0,
             eCompatibility_FullStandards, nullptr, aCounters,

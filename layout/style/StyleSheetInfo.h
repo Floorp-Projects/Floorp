@@ -15,11 +15,11 @@
 
 class nsIPrincipal;
 class nsIURI;
-struct RawServoStyleSheetContents;
 
 namespace mozilla {
 class StyleSheet;
 struct StyleUseCounters;
+struct StyleStylesheetContents;
 struct URLExtraData;
 
 /**
@@ -77,7 +77,7 @@ struct StyleSheetInfo final {
   // in the style sheet.
   nsString mSourceURL;
 
-  RefPtr<const RawServoStyleSheetContents> mContents;
+  RefPtr<const StyleStylesheetContents> mContents;
 
   UniquePtr<StyleUseCounters> mUseCounters;
 
