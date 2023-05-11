@@ -32,13 +32,14 @@ add_task(async function testBreakableLinesOverReloads() {
   // because the sourcemap replaces the content of the original file
   // and appends a few lines with a "WEBPACK FOOTER" comment
   // All the appended lines are empty lines or comments, so none of them are breakable.
-  await assertBreakableLines(dbg, "original.js", 13, [
+  await assertBreakableLines(dbg, "original.js", 15, [
     ...getRange(1, 3),
-    ...getRange(5, 8),
+    5,
+    ...getRange(8, 10),
   ]);
 
   info("Assert breakable lines of the simple first load of script.js");
-  await assertBreakableLines(dbg, "script.js", 3, [1, 3]);
+  await assertBreakableLines(dbg, "script.js", 9, [1, 5, 7, 8, 9]);
 
   info("Assert breakable lines of the first iframe page load");
   await assertBreakableLines(dbg, "iframe.html", 30, [

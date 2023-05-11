@@ -83,6 +83,7 @@ describe("sources - new sources", () => {
           },
         ],
         getOriginalLocations: async items => items,
+        getOriginalLocation: location => location,
       }
     );
 
@@ -104,6 +105,7 @@ describe("sources - new sources", () => {
       {
         getOriginalURLs,
         getOriginalLocations: async items => items,
+        getOriginalLocation: location => location,
       }
     );
 
@@ -119,6 +121,7 @@ describe("sources - new sources", () => {
       {
         getOriginalURLs: async () => new Promise(_ => {}),
         getOriginalLocations: async items => items,
+        getOriginalLocation: location => location,
       }
     );
     await dispatch(
