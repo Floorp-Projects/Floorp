@@ -69,10 +69,10 @@ third-party-button-expand =
     .title = Show detailed information
 third-party-button-collapse =
     .title = Collapse detailed information
-third-party-requires-restart =
-    { -brand-short-name } must restart to change which third-party modules are blocked.
+third-party-blocking-requires-restart =
+    To block a third-party module, { -brand-short-name } must restart.
 third-party-should-restart-title = Restart { -brand-short-name }
-third-party-should-restart-ok = Restart { -brand-short-name } now
+third-party-restart-now = Restart now
 third-party-restart-later = Restart later
 
 third-party-blocked-by-builtin =

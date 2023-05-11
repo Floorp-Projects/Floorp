@@ -178,9 +178,9 @@ async function confirmRestartPrompt() {
     restartButtonText,
     restartLaterButtonText,
   ] = await document.l10n.formatValues([
-    { id: "third-party-requires-restart" },
+    { id: "third-party-blocking-requires-restart" },
     { id: "third-party-should-restart-title" },
-    { id: "third-party-should-restart-ok" },
+    { id: "third-party-restart-now" },
     { id: "third-party-restart-later" },
   ]);
   let buttonFlags =
