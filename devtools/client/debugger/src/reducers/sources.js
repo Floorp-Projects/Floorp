@@ -96,16 +96,6 @@ export function initialSourcesState(state) {
      * See `createLocation` for the definition of this object.
      */
     selectedLocation: undefined,
-
-    /**
-     * By default, if we have a source-mapped source, we would automatically try
-     * to select and show the content of the original source. But, if we explicitly
-     * select a generated source, we remember this choice. That, until we explicitly
-     * select an original source.
-     * Note that selections related to non-source-mapped sources should never
-     * change this setting.
-     */
-    shouldSelectOriginalLocation: true,
   };
   /* eslint-disable sort-keys */
 }
@@ -124,7 +114,7 @@ function update(state = initialSourcesState(), action) {
     case "SET_SELECTED_LOCATION": {
       let pendingSelectedLocation = null;
 
-      if (action.location.source.url) {
+      if (action.source.url) {
         pendingSelectedLocation = createPendingSelectedLocation(
           action.location
         );
@@ -135,7 +125,6 @@ function update(state = initialSourcesState(), action) {
         ...state,
         selectedLocation: action.location,
         pendingSelectedLocation,
-        shouldSelectOriginalLocation: action.shouldSelectOriginalLocation,
       };
     }
 

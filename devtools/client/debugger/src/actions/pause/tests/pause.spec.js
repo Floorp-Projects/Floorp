@@ -224,20 +224,6 @@ describe("pause", () => {
       const store = createStore(client, {}, sourceMapLoaderMock);
       const { dispatch, getState } = store;
 
-      const originalSource = await dispatch(
-        actions.newGeneratedSource(makeSource("foo-original"))
-      );
-
-      const originalLocation = createLocation({
-        source: originalSource,
-        line: 3,
-        column: 0,
-        sourceActor: selectors.getFirstSourceActorForGeneratedSource(
-          getState(),
-          originalSource.id
-        ),
-      });
-
       const generatedSource = await dispatch(
         actions.newGeneratedSource(makeSource("foo"))
       );
@@ -255,6 +241,19 @@ describe("pause", () => {
       const { frames } = mockPauseInfo;
       client.getFrames = async () => frames;
 
+      const originalSource = await dispatch(
+        actions.newGeneratedSource(makeSource("foo-original"))
+      );
+
+      const originalLocation = createLocation({
+        source: originalSource,
+        line: 3,
+        column: 0,
+        sourceActor: selectors.getFirstSourceActorForGeneratedSource(
+          getState(),
+          originalSource.id
+        ),
+      });
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState(), "FakeThread")).toEqual([
         {

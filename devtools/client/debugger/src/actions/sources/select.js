@@ -28,7 +28,7 @@ import {
   getSourceByURL,
   getPrettySource,
   getSelectedLocation,
-  getShouldSelectOriginalLocation,
+  getSelectedSource,
   canPrettyPrintSource,
   getIsCurrentThreadPaused,
   getSourceTextContent,
@@ -36,15 +36,11 @@ import {
 } from "../../selectors";
 
 // This is only used by jest tests (and within this module)
-export const setSelectedLocation = (
-  cx,
-  location,
-  shouldSelectOriginalLocation
-) => ({
+export const setSelectedLocation = (cx, source, location) => ({
   type: "SET_SELECTED_LOCATION",
   cx,
+  source,
   location,
-  shouldSelectOriginalLocation,
 });
 
 // This is only used by jest tests (and within this module)
@@ -147,24 +143,16 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
     // If the currently selected source is original, we will
     // automatically map `location` to refer to the original source,
     // even if that used to refer only to the generated source.
-    let shouldSelectOriginalLocation = getShouldSelectOriginalLocation(
-      getState()
-    );
-    if (keepContext) {
-      if (shouldSelectOriginalLocation != isOriginalId(location.sourceId)) {
-        // getRelatedMapLocation will convert to the related generated/original location.
-        // i.e if the original location is passed, the related generated location will be returned and vice versa.
-        location = await getRelatedMapLocation(location, thunkArgs);
-        // Note that getRelatedMapLocation may return the exact same location.
-        // For example, if the source-map is half broken, it may return a generated location
-        // while we were selecting original locations. So we may be seeing bundles intermittently
-        // when stepping through broken source maps. And we will see original sources when stepping
-        // through functional original sources.
-
-        source = location.source;
-      }
-    } else {
-      shouldSelectOriginalLocation = isOriginalId(location.sourceId);
+    const selectedSource = getSelectedSource(getState());
+    if (
+      keepContext &&
+      selectedSource &&
+      selectedSource.isOriginal != isOriginalId(location.sourceId)
+    ) {
+      // getRelatedMapLocation will just convert to the related generated/original location.
+      // i.e if the original location is passed, the related generated location will be returned and vice versa.
+      location = await getRelatedMapLocation(location, thunkArgs);
+      source = location.source;
     }
 
     let sourceActor = location.sourceActor;
@@ -180,7 +168,7 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       dispatch(addTab(source, sourceActor));
     }
 
-    dispatch(setSelectedLocation(cx, location, shouldSelectOriginalLocation));
+    dispatch(setSelectedLocation(cx, source, location));
 
     await dispatch(loadSourceText(cx, source, sourceActor));
 
