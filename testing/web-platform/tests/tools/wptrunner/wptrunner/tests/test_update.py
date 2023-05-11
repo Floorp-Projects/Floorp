@@ -414,7 +414,7 @@ def test_update_expected_tie_resolution():
         "expected", default_run_info) == ["PASS", "FAIL"]
 
 
-def test_update_reorder_expected():
+def test_update_no_reorder_expected():
     tests = [("path/to/test.htm", [test_id], "testharness",
               b"""[test.htm]
   [test1]
@@ -448,12 +448,7 @@ def test_update_reorder_expected():
                                      "status": "OK"})])
 
     updated = update(tests, log_0, log_1, log_2, update_intermittent=True)
-    new_manifest = updated[0][1]
-
-    assert not new_manifest.is_empty
-    assert new_manifest.modified
-    assert new_manifest.get_test(test_id).children[0].get(
-        "expected", default_run_info) == ["PASS", "FAIL"]
+    assert not updated
 
 
 def test_update_and_preserve_unchanged_expected_intermittent():
@@ -755,7 +750,7 @@ def test_full_orphan():
     assert len(new_manifest.get_test(test_id).children) == 1
 
 
-def test_update_reorder_expected_full_conditions():
+def test_update_no_reorder_expected_full_conditions():
     tests = [("path/to/test.htm", [test_id], "testharness",
               b"""[test.htm]
   [test1]
@@ -802,17 +797,7 @@ def test_update_reorder_expected_full_conditions():
                                    "status": "OK"})])
 
     updated = update(tests, log_0, log_1, log_2, log_3, update_intermittent=True, full_update=True)
-
-    new_manifest = updated[0][1]
-
-    assert not new_manifest.is_empty
-    assert new_manifest.modified
-    run_info_1 = default_run_info.copy()
-    run_info_1.update({"os": "mac"})
-    assert new_manifest.get_test(test_id).children[0].get(
-        "expected", run_info_1) == ["TIMEOUT", "FAIL"]
-    assert new_manifest.get_test(test_id).children[0].get(
-        "expected", default_run_info) == ["PASS", "FAIL"]
+    assert not updated
 
 
 def test_skip_0():
