@@ -54,7 +54,6 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsISharePicker.h"
 #include "nsIURIMutator.h"
-#include "nsScriptSecurityManager.h"
 
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
@@ -66,7 +65,6 @@
 #include "SessionStoreFunctions.h"
 #include "nsIXPConnect.h"
 #include "nsImportModule.h"
-#include "nsIOService.h"
 
 #include "mozilla/dom/PBackgroundSessionStorageCache.h"
 
@@ -83,6 +81,7 @@ WindowGlobalParent::WindowGlobalParent(
     uint64_t aOuterWindowId, FieldValues&& aInit)
     : WindowContext(aBrowsingContext, aInnerWindowId, aOuterWindowId,
                     std::move(aInit)),
+      mIsInitialDocument(false),
       mSandboxFlags(0),
       mDocumentHasLoaded(false),
       mDocumentHasUserInteracted(false),
@@ -109,7 +108,7 @@ already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
                              aInit.context().mOuterWindowId, std::move(fields));
   wgp->mDocumentPrincipal = aInit.principal();
   wgp->mDocumentURI = aInit.documentURI();
-  wgp->mIsInitialDocument = Some(aInit.isInitialDocument());
+  wgp->mIsInitialDocument = aInit.isInitialDocument();
   wgp->mBlockAllMixedContent = aInit.blockAllMixedContent();
   wgp->mUpgradeInsecureRequests = aInit.upgradeInsecureRequests();
   wgp->mSandboxFlags = aInit.sandboxFlags();
@@ -372,44 +371,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvInternalLoad(
 
 IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
   // XXX(nika): Assert that the URI change was one which makes sense (either
-  // about:blank -> a real URI, or a legal push/popstate URI change):
-  nsAutoCString scheme;
-  if (NS_FAILED(aURI->GetScheme(scheme))) {
-    return IPC_FAIL(this, "Setting DocumentURI without scheme.");
-  }
-
-  nsIIOService* ios = nsContentUtils::GetIOService();
-  if (!ios) {
-    return IPC_FAIL(this, "Cannot get IOService");
-  }
-  nsCOMPtr<nsIProtocolHandler> handler;
-  ios->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
-  if (!handler) {
-    return IPC_FAIL(this, "Setting DocumentURI with unknown protocol.");
-  }
-
-  auto isLoadableViaInternet = [](nsIURI* uri) {
-    return (uri && (net::SchemeIsHTTP(uri) || net::SchemeIsHTTPS(uri)));
-  };
-
-  if (isLoadableViaInternet(aURI)) {
-    nsCOMPtr<nsIURI> principalURI = mDocumentPrincipal->GetURI();
-    if (mDocumentPrincipal->GetIsNullPrincipal()) {
-      nsCOMPtr<nsIPrincipal> precursor =
-          mDocumentPrincipal->GetPrecursorPrincipal();
-      if (precursor) {
-        principalURI = precursor->GetURI();
-      }
-    }
-
-    if (isLoadableViaInternet(principalURI) &&
-        !nsScriptSecurityManager::SecurityCompareURIs(principalURI, aURI)) {
-      return IPC_FAIL(this,
-                      "Setting DocumentURI with a different Origin than "
-                      "principal URI");
-    }
-  }
-
+  // about:blank -> a real URI, or a legal push/popstate URI change?)
   mDocumentURI = aURI;
   return IPC_OK();
 }
