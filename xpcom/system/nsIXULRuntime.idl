@@ -344,6 +344,9 @@ interface nsIXULRuntime : nsISupports
   /** Whether the content color-scheme derived from the app theme is dark */
   readonly attribute boolean contentThemeDerivedColorSchemeIsDark;
 
+  /** Whether the user prefers reduced motion */
+  readonly attribute boolean prefersReducedMotion;
+
   /** Whether we should draw over the titlebar */
   readonly attribute boolean drawInTitlebar;
 

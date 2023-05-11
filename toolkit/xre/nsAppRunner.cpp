@@ -1611,6 +1611,13 @@ nsXULAppInfo::GetContentThemeDerivedColorSchemeIsDark(bool* aResult) {
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetPrefersReducedMotion(bool* aResult) {
+  *aResult =
+      LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedMotion, 0) == 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetDrawInTitlebar(bool* aResult) {
   *aResult = LookAndFeel::DrawInTitlebar();
   return NS_OK;
