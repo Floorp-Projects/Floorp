@@ -3512,7 +3512,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 136;
+    const UI_VERSION = 137;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -4336,6 +4336,19 @@ BrowserGlue.prototype = {
         "placesList",
         "width"
       );
+    }
+
+    if (currentUIVersion < 137) {
+      // The default value for enabling smooth scrolls is now false if the
+      // user prefers reduced motion. If the value was previously set, do
+      // not reset it, but if it was not explicitly set preserve the old
+      // default value.
+      if (
+        !Services.prefs.prefHasUserValue("general.smoothScroll") &&
+        Services.appinfo.prefersReducedMotion
+      ) {
+        Services.prefs.setBoolPref("general.smoothScroll", true);
+      }
     }
 
     // Update the migration version.
