@@ -128,17 +128,55 @@ JSObject* JSAPITest::createGlobal(JSPrincipals* principals) {
   return newGlobal;
 }
 
+struct CommandOptions {
+  bool list = false;
+  bool help = false;
+  const char* filter = nullptr;
+};
+
+void parseArgs(int argc, char* argv[], CommandOptions& options) {
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+      options.help = true;
+      continue;
+    }
+
+    if (strcmp(argv[i], "--list") == 0) {
+      options.list = true;
+      continue;
+    }
+
+    if (!options.filter) {
+      options.filter = argv[i];
+      continue;
+    }
+
+    printf("error: Unrecognized option: %s\n", argv[i]);
+    options.help = true;
+  }
+}
+
 int main(int argc, char* argv[]) {
   int total = 0;
   int failures = 0;
-  const char* filter = (argc == 2) ? argv[1] : nullptr;
+  CommandOptions options;
+  parseArgs(argc, argv, options);
+
+  if (options.help) {
+    printf("Usage: jsapi-tests [OPTIONS] [FILTER]\n");
+    printf("\n");
+    printf("Options:\n");
+    printf("    -h, --help          Display this message\n");
+    printf("        --list          List all tests\n");
+    return 0;
+  }
 
   if (!JS_Init()) {
     printf("TEST-UNEXPECTED-FAIL | jsapi-tests | JS_Init() failed.\n");
     return 1;
   }
 
-  if (filter && strcmp(filter, "--list") == 0) {
+  if (options.list) {
     for (JSAPITest* test = JSAPITest::list; test; test = test->next) {
       printf("%s\n", test->name());
     }
@@ -151,7 +189,7 @@ int main(int argc, char* argv[]) {
   JSContext* maybeReusedContext = nullptr;
   for (JSAPITest* test = JSAPITest::list; test; test = test->next) {
     const char* name = test->name();
-    if (filter && strstr(name, filter) == nullptr) {
+    if (options.filter && strstr(name, options.filter) == nullptr) {
       continue;
     }
 
