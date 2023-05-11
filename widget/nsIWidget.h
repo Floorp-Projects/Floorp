@@ -113,11 +113,10 @@ typedef nsEventStatus (*EVENT_CALLBACK)(mozilla::WidgetGUIEvent* aEvent);
 typedef void* nsNativeWidget;
 
 /**
- * Flags for the GetNativeData and SetNativeData functions
+ * Values for the GetNativeData function
  */
 #define NS_NATIVE_WINDOW 0
 #define NS_NATIVE_GRAPHIC 1
-#define NS_NATIVE_TMP_WINDOW 2
 #define NS_NATIVE_WIDGET 3
 #define NS_NATIVE_REGION 5
 #define NS_NATIVE_OFFSETX 6
@@ -1271,7 +1270,6 @@ class nsIWidget : public nsISupports {
   virtual void AddChild(nsIWidget* aChild) = 0;
   virtual void RemoveChild(nsIWidget* aChild) = 0;
   virtual void* GetNativeData(uint32_t aDataType) = 0;
-  virtual void SetNativeData(uint32_t aDataType, uintptr_t aVal) = 0;
   virtual void FreeNativeData(void* data, uint32_t aDataType) = 0;  //~~~
 
   //@}
