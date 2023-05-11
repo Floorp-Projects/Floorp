@@ -332,14 +332,14 @@ files = [
 
 [[package]]
 name = "glean-parser"
-version = "7.1.0"
+version = "7.2.1"
 description = "Parser tools for Mozilla's Glean telemetry"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "glean_parser-7.1.0-py3-none-any.whl", hash = "sha256:3ed7befcb71cb2ac63414944c9e113916e96a45fd9d01d7fc9b51fdde836d70c"},
-    {file = "glean_parser-7.1.0.tar.gz", hash = "sha256:22005a2d54d5178a46902e44299bcb69aed4e8bc32dabff18addc4dba91611ab"},
+    {file = "glean_parser-7.2.1-py3-none-any.whl", hash = "sha256:651cfee34422ea1db90bbf1cb03732bd8c598773bf95daa289a62addeaf10295"},
+    {file = "glean_parser-7.2.1.tar.gz", hash = "sha256:11496ac004fe421b914c7fbdc9a1d620e4821d56e1d9f65523d3858cdb907bbd"},
 ]
 
 [package.dependencies]
@@ -350,7 +350,6 @@ Jinja2 = ">=2.10.1"
 jsonschema = ">=3.0.2"
 MarkupSafe = ">=1.1.1,<=2.0.1"
 PyYAML = ">=5.3.1"
-yamllint = ">=1.18.0"
 
 [[package]]
 name = "idna"
@@ -1284,4 +1283,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "9f803e0b016e0f45ff28e99fca69e4cfe07c40a18697d57ed24e0f414e1c0b7c"
+content-hash = "8e500208b1f7726b7df257ee98a5fb6f5aa725fb577f027daca652367717ee24"
