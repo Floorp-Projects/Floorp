@@ -152,6 +152,25 @@ eslint-build:
             - artifact: target.xpt_artifacts.zip
               dest: xpt_artifacts
 
+stylelint:
+    description: CSS lint check
+    treeherder:
+        symbol: stylelint
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: >
+            cp -r /build/node_modules_eslint node_modules &&
+            ./mach lint -v -l stylelint -f treeherder -f json:/builds/worker/mozlint.json .
+    when:
+        files-changed:
+            # Files that are likely audited.
+            - '**/*.css'
+            - 'tools/lint/styleint.yml'
+            # Run when stylelint policies change.
+            - '**/.stylelintignore'
+            - '**/*stylelintrc*'
+
 license:
     description: Check for license blocks in source files.
     treeherder:
