@@ -494,6 +494,58 @@ def test_update_and_preserve_unchanged_expected_intermittent():
         "expected", default_run_info) == "PASS"
 
 
+def test_update_intermittent():
+    tests = [("path/to/test.htm", [test_id], "testharness",
+              b"""[test.htm]
+  [test1]
+    expected:
+      if os == "linux" or os == "android": [PASS, FAIL, ERROR]""")]
+
+    # Logs where the test requires an update, but we don't want to update the
+    # intermittent status
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "FAIL",
+                                        "expected": "PASS",
+                                        "known_intermittent": ["FAIL", "ERROR"]}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})])
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "FAIL",
+                                        "expected": "PASS",
+                                        "known_intermittent": ["FAIL", "ERROR"]}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})])
+
+    log_2 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "PASS",
+                                        "expected": "PASS",
+                                        "known_intermittent": ["FAIL", "ERROR"]}),
+                       ("test_end", {"test": test_id,
+                                     "status": "TIMEOUT"})],
+                      run_info={"os": "android"})
+
+    updated = update(tests, log_0, log_1, log_2, update_intermittent=True)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+    assert new_manifest.modified
+
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"os": "android"})
+    assert new_manifest.get_test(test_id).get(
+        "expected", run_info_1) == "TIMEOUT"
+
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", default_run_info) == ["PASS", "FAIL", "ERROR"]
+
+
 def test_update_test_with_intermittent_to_one_expected_status():
     tests = [("path/to/test.htm", [test_id], "testharness",
               b"""[test.htm]
