@@ -47,9 +47,22 @@
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Este sitio web require unha conexión segura.</string>
 
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>A páxina que está tentando ver non se pode mostrar porque este sitio web require unha conexión segura.</li>
+         <li>O máis probable é que o problema estea relacionado co sitio web e non pode facer nada para resolvelo.</li>
+         <li>Pode notificarlle o problema ao administrador do sitio web.</li>
+      </ul>
+    ]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avanzadas…</string>
 
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> ten unha política de seguranza chamada HTTP Strict Transport Security (HSTS), o que significa que <b>%2$s</b> só se pode conectar a ela de forma segura. Non pode engadir unha excepción para visitar este sitio. </label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Retroceder</string>
 

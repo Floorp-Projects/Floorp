@@ -924,6 +924,48 @@
 
     <!-- Tracking protection bottom sheet -->
 
+     <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Chukulaj tetz majel ivatz ta’n %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Tuuleb’al</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Altziinaj kam</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Tetz tenam</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Pich’ul tetz</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">B’anel ve’t tuche imajax ivatz vatz u chukunaale’</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Eesamal ve’t el u lochb’al tetze’ tu atinb’ala’</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Ile’ b’a’n kuxh taq’onve’</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Ye’xh kam b’a’n koj taq’onve’</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Chukunaal tuk’ scripts la majpu ivatz</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Q’aaven unpajte</string>
+
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Jalpu ib’ii unpajte</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Jalpu ib’ii unpajte</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Ib’ii u aq’one’ uve’ k’ujb’a’mal kan s-a’n</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Tilb’al</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Saj</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Tokixi</string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Ye’xh kam b’a’n koj taq’onve’</string>
+
      <!-- Promote SearchWidget Dialog -->
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
