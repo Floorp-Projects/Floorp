@@ -44,3 +44,63 @@ account-send-tab-to-device-connectdevice = Connect Another Device…
 
 account-send-tab-to-device-verify-status = Account Not Verified
 account-send-tab-to-device-verify = Verify Your Account…
+
+## These strings are used in a notification shown when a new device joins the Firefox account.
+
+# The title shown in a notification when either this device or another device
+# has connected to, or disconnected from, a Firefox account.
+account-connection-title = { -fxaccount-brand-name(capitalization: "title") }
+
+# Variables:
+#   $deviceName (String): the name of the new device
+account-connection-connected-with = This computer is now connected with { $deviceName }.
+
+# Used when the name of the new device is not known.
+account-connection-connected-with-noname = This computer is now connected with a new device.
+
+# Used in a notification shown after a Firefox account is connected to the current device.
+account-connection-connected = You have signed in successfully
+
+# Used in a notification shown after the Firefox account was disconnected remotely.
+account-connection-disconnected = This computer has been disconnected.
+
+## These strings are used in a notification shown when we're opening
+## a single tab another device sent us to display.
+## The body for this notification is the URL of the received tab.
+
+account-single-tab-arriving-title = Tab Received
+# Variables:
+#   $deviceName (String): the device name.
+account-single-tab-arriving-from-device-title = Tab from { $deviceName }
+
+# Used when a tab from a remote device arrives but the URL must be truncated.
+# Should display the URL with an indication that it's been truncated.
+# Variables:
+#   $url (String): the portion of the URL that remains after truncation.
+account-single-tab-arriving-truncated-url = { $url }…
+
+## These strings are used in a notification shown when we're opening
+## multiple tabs another device or devices sent us to display.
+## Variables:
+##   $tabCount (Number): the number of tabs received
+
+account-multiple-tabs-arriving-title = Tabs Received
+
+# Variables:
+#   $deviceName (String): the device name.
+account-multiple-tabs-arriving-from-single-device =
+    { $tabCount ->
+        [one] { $tabCount } tab has arrived from { $deviceName }
+       *[other] { $tabCount } tabs have arrived from { $deviceName }
+    }
+account-multiple-tabs-arriving-from-multiple-devices =
+    { $tabCount ->
+        [one] { $tabCount } tab has arrived from your connected devices
+       *[other] { $tabCount } tabs have arrived from your connected devices
+    }
+# This version is used when we don't know any device names.
+account-multiple-tabs-arriving-from-unknown-device =
+    { $tabCount ->
+        [one] { $tabCount } tab has arrived
+       *[other] { $tabCount } tabs have arrived
+    }

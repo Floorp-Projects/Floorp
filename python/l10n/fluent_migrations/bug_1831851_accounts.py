@@ -3,7 +3,7 @@
 
 import fluent.syntax.ast as FTL
 from fluent.migrate.helpers import VARIABLE_REFERENCE
-from fluent.migrate.transforms import COPY, REPLACE
+from fluent.migrate.transforms import COPY, PLURALS, REPLACE, REPLACE_IN_TEXT
 
 
 def migrate(ctx):
@@ -56,6 +56,111 @@ def migrate(ctx):
             FTL.Message(
                 id=FTL.Identifier("account-send-tab-to-device-verify"),
                 value=COPY(accounts, "sendTabToDevice.verify"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("account-connection-title"),
+                value=FTL.Pattern(
+                    [
+                        FTL.Placeable(
+                            FTL.TermReference(
+                                id=FTL.Identifier("fxaccount-brand-name"),
+                                arguments=FTL.CallArguments(
+                                    named=[
+                                        FTL.NamedArgument(
+                                            FTL.Identifier("capitalization"),
+                                            FTL.StringLiteral("title"),
+                                        )
+                                    ]
+                                ),
+                            )
+                        )
+                    ]
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("account-connection-connected-with"),
+                value=REPLACE(
+                    accounts,
+                    "otherDeviceConnectedBody",
+                    {"%1$S": VARIABLE_REFERENCE("deviceName")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("account-connection-connected-with-noname"),
+                value=COPY(accounts, "otherDeviceConnectedBody.noDeviceName"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("account-connection-connected"),
+                value=COPY(accounts, "thisDeviceConnectedBody"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("account-connection-disconnected"),
+                value=COPY(accounts, "thisDeviceDisconnectedBody"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("account-single-tab-arriving-title"),
+                value=COPY(accounts, "tabArrivingNotification.title"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("account-single-tab-arriving-from-device-title"),
+                value=REPLACE(
+                    accounts,
+                    "tabArrivingNotificationWithDevice.title",
+                    {"%1$S": VARIABLE_REFERENCE("deviceName")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("account-single-tab-arriving-truncated-url"),
+                value=REPLACE(
+                    accounts,
+                    "singleTabArrivingWithTruncatedURL.body",
+                    {"%1$S": VARIABLE_REFERENCE("url")},
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("account-multiple-tabs-arriving-title"),
+                value=COPY(accounts, "multipleTabsArrivingNotification.title"),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("account-multiple-tabs-arriving-from-single-device"),
+                value=PLURALS(
+                    accounts,
+                    "unnamedTabsArrivingNotification2.body",
+                    VARIABLE_REFERENCE("tabCount"),
+                    foreach=lambda n: REPLACE_IN_TEXT(
+                        n,
+                        {
+                            "#1": VARIABLE_REFERENCE("tabCount"),
+                            "#2": VARIABLE_REFERENCE("deviceName"),
+                        },
+                    ),
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier(
+                    "account-multiple-tabs-arriving-from-multiple-devices"
+                ),
+                value=PLURALS(
+                    accounts,
+                    "unnamedTabsArrivingNotificationMultiple2.body",
+                    VARIABLE_REFERENCE("tabCount"),
+                    foreach=lambda n: REPLACE_IN_TEXT(
+                        n,
+                        {"#1": VARIABLE_REFERENCE("tabCount")},
+                    ),
+                ),
+            ),
+            FTL.Message(
+                id=FTL.Identifier("account-multiple-tabs-arriving-from-unknown-device"),
+                value=PLURALS(
+                    accounts,
+                    "unnamedTabsArrivingNotificationNoDevice.body",
+                    VARIABLE_REFERENCE("tabCount"),
+                    foreach=lambda n: REPLACE_IN_TEXT(
+                        n,
+                        {"#1": VARIABLE_REFERENCE("tabCount")},
+                    ),
+                ),
             ),
         ],
     )

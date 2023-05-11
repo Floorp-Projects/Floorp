@@ -101,7 +101,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   OnboardingMessageProvider:
     "resource://activity-stream/lib/OnboardingMessageProvider.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
-  PluralForm: "resource://gre/modules/PluralForm.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
@@ -125,6 +124,16 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
   PushService: ["@mozilla.org/push/Service;1", "nsIPushService"],
 });
+
+XPCOMUtils.defineLazyGetter(
+  lazy,
+  "accountsL10n",
+  () =>
+    new Localization(
+      ["browser/accounts.ftl", "toolkit/branding/accounts.ftl"],
+      true
+    )
+);
 
 if (AppConstants.ENABLE_WEBDRIVER) {
   XPCOMUtils.defineLazyServiceGetter(
@@ -3465,11 +3474,10 @@ BrowserGlue.prototype = {
   },
 
   _onThisDeviceConnected() {
-    let bundle = Services.strings.createBundle(
-      "chrome://browser/locale/accounts.properties"
-    );
-    let title = bundle.GetStringFromName("deviceConnDisconnTitle");
-    let body = bundle.GetStringFromName("thisDeviceConnectedBody");
+    const [title, body] = lazy.accountsL10n.formatValuesSync([
+      "account-connection-title",
+      "account-connection-connected",
+    ]);
 
     let clickCallback = (subject, topic, data) => {
       if (topic != "alertclickcallback") {
@@ -4630,58 +4638,52 @@ BrowserGlue.prototype = {
       await Promise.all(URIs.slice(1).map(URI => openTab(URI)));
 
       const deviceName = URIs[0].sender && URIs[0].sender.name;
-      let title, body;
-      const bundle = Services.strings.createBundle(
-        "chrome://browser/locale/accounts.properties"
-      );
+      let titleL10nId, body;
       if (URIs.length == 1) {
         // Due to bug 1305895, tabs from iOS may not have device information, so
         // we have separate strings to handle those cases. (See Also
         // unnamedTabsArrivingNotificationNoDevice.body below)
-        if (deviceName) {
-          title = bundle.formatStringFromName(
-            "tabArrivingNotificationWithDevice.title",
-            [deviceName]
-          );
-        } else {
-          title = bundle.GetStringFromName("tabArrivingNotification.title");
-        }
+        titleL10nId = deviceName
+          ? {
+              id: "account-single-tab-arriving-from-device-title",
+              args: { deviceName },
+            }
+          : { id: "account-single-tab-arriving-title" };
         // Use the page URL as the body. We strip the fragment and query (after
         // the `?` and `#` respectively) to reduce size, and also format it the
         // same way that the url bar would.
-        body = URIs[0].uri.replace(/([?#]).*$/, "$1");
-        let wasTruncated = body.length < URIs[0].uri.length;
-        body = lazy.BrowserUIUtils.trimURL(body);
+        let url = URIs[0].uri.replace(/([?#]).*$/, "$1");
+        const wasTruncated = url.length < URIs[0].uri.length;
+        url = lazy.BrowserUIUtils.trimURL(url);
         if (wasTruncated) {
-          body = bundle.formatStringFromName(
-            "singleTabArrivingWithTruncatedURL.body",
-            [body]
+          body = await lazy.accountsL10n.formatValue(
+            "account-single-tab-arriving-truncated-url",
+            { url }
           );
+        } else {
+          body = url;
         }
       } else {
-        title = bundle.GetStringFromName(
-          "multipleTabsArrivingNotification.title"
-        );
+        titleL10nId = { id: "account-multiple-tabs-arriving-title" };
         const allKnownSender = URIs.every(URI => URI.sender != null);
         const allSameDevice =
           allKnownSender &&
           URIs.every(URI => URI.sender.id == URIs[0].sender.id);
-        let tabArrivingBody;
+        let bodyL10nId;
         if (allSameDevice) {
-          if (deviceName) {
-            tabArrivingBody = "unnamedTabsArrivingNotification2.body";
-          } else {
-            tabArrivingBody = "unnamedTabsArrivingNotificationNoDevice.body";
-          }
+          bodyL10nId = deviceName
+            ? "account-multiple-tabs-arriving-from-single-device"
+            : "account-multiple-tabs-arriving-from-unknown-device";
         } else {
-          tabArrivingBody = "unnamedTabsArrivingNotificationMultiple2.body";
+          bodyL10nId = "account-multiple-tabs-arriving-from-multiple-devices";
         }
 
-        body = bundle.GetStringFromName(tabArrivingBody);
-        body = lazy.PluralForm.get(URIs.length, body);
-        body = body.replace("#1", URIs.length);
-        body = body.replace("#2", deviceName);
+        body = await lazy.accountsL10n.formatValue(bodyL10nId, {
+          deviceName,
+          tabCount: URIs.length,
+        });
       }
+      const title = await lazy.accountsL10n.formatValue(titleL10nId);
 
       const clickCallback = (obsSubject, obsTopic, obsData) => {
         if (obsTopic == "alertclickcallback") {
@@ -4744,14 +4746,12 @@ BrowserGlue.prototype = {
   },
 
   _onDeviceConnected(deviceName) {
-    let accountsBundle = Services.strings.createBundle(
-      "chrome://browser/locale/accounts.properties"
-    );
-    let title = accountsBundle.GetStringFromName("deviceConnDisconnTitle");
-    let body = accountsBundle.formatStringFromName(
-      "otherDeviceConnectedBody" + (deviceName ? "" : ".noDeviceName"),
-      [deviceName]
-    );
+    const [title, body] = lazy.accountsL10n.formatValuesSync([
+      { id: "account-connection-title" },
+      deviceName
+        ? { id: "account-connection-connected-with", args: { deviceName } }
+        : { id: "account-connection-connected-with-noname" },
+    ]);
 
     let clickCallback = async (subject, topic, data) => {
       if (topic != "alertclickcallback") {
@@ -4783,11 +4783,10 @@ BrowserGlue.prototype = {
   },
 
   _onDeviceDisconnected() {
-    let bundle = Services.strings.createBundle(
-      "chrome://browser/locale/accounts.properties"
-    );
-    let title = bundle.GetStringFromName("deviceConnDisconnTitle");
-    let body = bundle.GetStringFromName("thisDeviceDisconnectedBody");
+    const [title, body] = lazy.accountsL10n.formatValuesSync([
+      "account-connection-title",
+      "account-connection-disconnected",
+    ]);
 
     let clickCallback = (subject, topic, data) => {
       if (topic != "alertclickcallback") {
