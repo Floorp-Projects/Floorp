@@ -33,6 +33,9 @@ def test_verify_options(filedir):
         test_bytecode_cache=False,
         webext=False,
         extra_prefs=[],
+        benchmark_repository=None,
+        benchmark_revision=None,
+        benchmark_branch=None,
     )
     parser = ArgumentParser()
 
@@ -61,6 +64,9 @@ def test_verify_options(filedir):
         test_bytecode_cache=False,
         webext=False,
         extra_prefs=[],
+        benchmark_repository=None,
+        benchmark_revision=None,
+        benchmark_branch=None,
     )
     verify_options(parser, args)  # assert no exception
 
@@ -83,6 +89,9 @@ def test_verify_options(filedir):
         test_bytecode_cache=False,
         webext=False,
         extra_prefs=[],
+        benchmark_repository=None,
+        benchmark_revision=None,
+        benchmark_branch=None,
     )
     verify_options(parser, args)  # assert no exception
 
@@ -105,6 +114,9 @@ def test_verify_options(filedir):
         test_bytecode_cache=False,
         webext=False,
         extra_prefs=[],
+        benchmark_repository=None,
+        benchmark_revision=None,
+        benchmark_branch=None,
     )
     verify_options(parser, args)  # assert no exception
 
@@ -127,6 +139,9 @@ def test_verify_options(filedir):
         test_bytecode_cache=False,
         webext=False,
         extra_prefs=[],
+        benchmark_repository=None,
+        benchmark_revision=None,
+        benchmark_branch=None,
     )
     verify_options(parser, args)  # assert no exception
 
@@ -149,6 +164,9 @@ def test_verify_options(filedir):
         test_bytecode_cache=False,
         webext=False,
         extra_prefs=[],
+        benchmark_repository=None,
+        benchmark_revision=None,
+        benchmark_branch=None,
     )
     parser = ArgumentParser()
 
