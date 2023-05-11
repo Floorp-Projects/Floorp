@@ -11,7 +11,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
@@ -107,7 +106,10 @@ class AppLinksFeature(
             )
         }
 
-        if ((!tab.content.private && !shouldPrompt()) || fragmentManager == null) {
+        @Suppress("ComplexCondition")
+        if (isSameCallerAndApp(tab, appIntent) || (!tab.content.private && !shouldPrompt()) ||
+            fragmentManager == null
+        ) {
             doOpenApp()
             return
         }
@@ -166,5 +168,16 @@ class AppLinksFeature(
 
     private fun findPreviousDialogFragment(): RedirectDialogFragment? {
         return fragmentManager?.findFragmentByTag(FRAGMENT_TAG) as? RedirectDialogFragment
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun isSameCallerAndApp(tab: SessionState, appIntent: Intent): Boolean {
+        return (tab.source as? SessionState.Source.External)?.let { externalSource ->
+            when (externalSource.caller?.packageId) {
+                null -> false
+                appIntent.component?.packageName -> true
+                else -> false
+            }
+        } ?: false
     }
 }

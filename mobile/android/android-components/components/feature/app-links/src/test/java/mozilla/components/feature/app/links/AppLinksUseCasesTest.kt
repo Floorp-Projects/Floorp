@@ -7,7 +7,6 @@ package mozilla.components.feature.app.links
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.content.pm.ResolveInfo
@@ -17,6 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.Browsers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -43,8 +43,8 @@ class AppLinksUseCasesTest {
     private val appIntent = "intent://example.com"
     private val appSchemeIntent = "example://example.com"
     private val appPackage = "com.example.app"
-    private val browserUrl = "browser://test"
-    private val browserPackage = "com.browser"
+    private val browserSchemeUrl = "browser://test"
+    private val browserPackage = Browsers.KnownBrowser.ANDROID_STOCK_BROWSER.packageName
     private val testBrowserPackage = "com.current.browser"
     private val filePath = "file:///storage/abc/test.mp3"
     private val dataUrl = "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=="
@@ -55,8 +55,6 @@ class AppLinksUseCasesTest {
     private val layerUrl = "https://exmaple.com"
     private val layerPackage = "com.example.app"
     private val layerActivity = "com.example2.app.intentActivity"
-    private val mailUrl = "mailto:example@example.com"
-    private val mailPackage = "com.mail.app"
     private val appIntentWithPackageAndFallback =
         "intent://com.example.app#Intent;package=com.example.com;S.browser_fallback_url=https://example.com;end"
 
@@ -85,10 +83,6 @@ class AppLinksUseCasesTest {
             val resolveInfo = ResolveInfo().apply {
                 labelRes = android.R.string.ok
                 activityInfo = info
-                if (pkgName != browserPackage && pkgName != mailPackage) {
-                    filter = IntentFilter()
-                    filter.addDataPath("test", 0)
-                }
             }
             @Suppress("DEPRECATION") // Deprecation will be handled in https://github.com/mozilla-mobile/android-components/issues/11832
             packageManager.addResolveInfoForIntent(intent, resolveInfo)
@@ -241,53 +235,27 @@ class AppLinksUseCasesTest {
     }
 
     @Test
-    fun `A URL that matches only general packages is not an app link`() {
-        val context = createContext(
-            Triple(appUrl, browserPackage, ""),
-            Triple(browserUrl, browserPackage, ""),
-        )
+    fun `WHEN A URL that matches a browser AND the scheme is not supported THEN is an app link`() {
+        val context = createContext(Triple(browserSchemeUrl, browserPackage, ""))
+        val subject = AppLinksUseCases(context, { true })
+
+        val redirect = subject.interceptedAppLinkRedirect(browserSchemeUrl)
+        assertTrue(redirect.isRedirect())
+
+        val menuRedirect = subject.appLinkRedirect(browserSchemeUrl)
+        assertTrue(menuRedirect.isRedirect())
+    }
+
+    @Test
+    fun `WHEN A URL that matches a browser AND the scheme is supported THEN is not an app link`() {
+        val context = createContext(Triple(appUrl, browserPackage, ""))
         val subject = AppLinksUseCases(context, { true })
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
         assertFalse(redirect.isRedirect())
 
         val menuRedirect = subject.appLinkRedirect(appUrl)
-        assertFalse(menuRedirect.hasExternalApp())
-    }
-
-    @Test
-    fun `A URL that also matches both specialized and general packages is an app link`() {
-        val context = createContext(
-            Triple(appUrl, appPackage, ""),
-            Triple(appUrl, browserPackage, ""),
-            Triple(browserUrl, browserPackage, ""),
-        )
-        val subject = AppLinksUseCases(context, { true })
-
-        val redirect = subject.interceptedAppLinkRedirect(appUrl)
-        assertTrue(redirect.isRedirect())
-
-        // But we do from a context menu.
-        val menuRedirect = subject.appLinkRedirect(appUrl)
-        assertTrue(menuRedirect.isRedirect())
-    }
-
-    @Test
-    fun `A URL that also matches general packages but the scheme is not supported is an app link`() {
-        val context = createContext(Triple(mailUrl, mailPackage, ""))
-        val subject = AppLinksUseCases(context, { true })
-
-        val redirect = subject.interceptedAppLinkRedirect(mailUrl)
-        assertTrue(redirect.isRedirect())
-    }
-
-    @Test
-    fun `A URL that only matches default activity is not an app link`() {
-        val context = createContext(Triple(appUrl, appPackage, ""), default = true)
-        val subject = AppLinksUseCases(context, { true })
-
-        val menuRedirect = subject.appLinkRedirect(appUrl)
-        assertFalse(menuRedirect.hasExternalApp())
+        assertFalse(menuRedirect.isRedirect())
     }
 
     @Test
@@ -560,6 +528,28 @@ class AppLinksUseCasesTest {
         assertFalse(redirect.hasFallback())
         assertNull(redirect.marketplaceIntent)
         assertNull(redirect.fallbackUrl)
+        assertTrue(redirect.appIntent?.flags?.and(Intent.FLAG_ACTIVITY_CLEAR_TASK) == 0)
+    }
+
+    @Test
+    fun `WHEN opening A app scheme uri WITH fallback URL then respect user preference`() {
+        val context = createContext(Triple(appIntentWithPackageAndFallback, appPackage, ""))
+
+        val subject = AppLinksUseCases(context, { false })
+        var redirect = subject.interceptedAppLinkRedirect(appIntentWithPackageAndFallback)
+        assertFalse(redirect.hasExternalApp())
+        assertTrue(redirect.hasFallback())
+        assertTrue(redirect.marketplaceIntent != null)
+        assertEquals(redirect.fallbackUrl, "https://example.com")
+
+        // Wait till cache expires
+        shadowOf(getMainLooper()).idleFor(APP_LINKS_CACHE_INTERVAL + 1, MILLISECONDS)
+        val subject2 = AppLinksUseCases(context, { true })
+        redirect = subject2.interceptedAppLinkRedirect(appIntentWithPackageAndFallback)
+        assertTrue(redirect.hasExternalApp())
+        assertTrue(redirect.hasFallback())
+        assertTrue(redirect.marketplaceIntent != null)
+        assertEquals(redirect.fallbackUrl, "https://example.com")
         assertTrue(redirect.appIntent?.flags?.and(Intent.FLAG_ACTIVITY_CLEAR_TASK) == 0)
     }
 
