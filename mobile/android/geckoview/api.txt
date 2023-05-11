@@ -1211,6 +1211,7 @@ package org.mozilla.geckoview {
   @AnyThread public static interface GeckoSession.PrintDelegate {
     method default public void onPrint(@NonNull GeckoSession);
     method default public void onPrint(@NonNull InputStream);
+    method @Nullable default public GeckoResult<Boolean> onPrintWithStatus(@NonNull InputStream);
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.Priority {
@@ -1693,6 +1694,7 @@ package org.mozilla.geckoview {
 
   public class GeckoViewPrintDocumentAdapter extends PrintDocumentAdapter {
     ctor public GeckoViewPrintDocumentAdapter(@NonNull InputStream, @NonNull Context);
+    ctor public GeckoViewPrintDocumentAdapter(@NonNull InputStream, @NonNull Context, @Nullable GeckoResult<Boolean>);
     ctor public GeckoViewPrintDocumentAdapter(@NonNull File);
     method @AnyThread @Nullable public static File makeTempPdfFile(@NonNull InputStream, @NonNull Context);
   }
