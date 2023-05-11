@@ -223,7 +223,7 @@ jobs:
         fetches:
             toolchain:
                 - win64-rust
-                - win64-vs2017
+                - vs
                 - wrench-deps
         run:
             using: run-task
@@ -234,7 +234,7 @@ jobs:
             symbol: WR(wrench)
         when:
             files-changed:
-                - 'build/win64/mozconfig.vs2017'
+                - 'build/win64/mozconfig.vs2019'
                 - 'gfx/wr/**'
                 - 'taskcluster/scripts/misc/wrench-windows-tests.sh'
 

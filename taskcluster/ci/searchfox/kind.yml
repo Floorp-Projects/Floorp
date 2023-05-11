@@ -137,7 +137,7 @@ jobs:
                 - nsis
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
-                - win64-vs2017
+                - vs
             fetch:
                 - upx-3.95-win
 
