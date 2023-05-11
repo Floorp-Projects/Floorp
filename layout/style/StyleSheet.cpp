@@ -766,7 +766,7 @@ void StyleSheet::ReplaceSync(const nsACString& aText, ErrorResult& aRv) {
   // 4. If rules contain @imports, skip them and continue parsing.
   auto* loader = mConstructorDocument->CSSLoader();
   SetURLExtraData();
-  RefPtr<const RawServoStyleSheetContents> rawContent =
+  RefPtr<const StyleStylesheetContents> rawContent =
       Servo_StyleSheet_FromUTF8Bytes(
           loader, this,
           /* load_data = */ nullptr, &aText, mParsingMode, Inner().mURLData,
@@ -1217,7 +1217,7 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
       counters.reset(Servo_UseCounters_Create());
     }
 
-    RefPtr<RawServoStyleSheetContents> contents =
+    RefPtr<StyleStylesheetContents> contents =
         Servo_StyleSheet_FromUTF8Bytes(
             &aLoader, this, &aLoadData, &aBytes, mParsingMode, Inner().mURLData,
             aLoadData.mLineNumber, aLoadData.mCompatMode,
@@ -1237,7 +1237,7 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
 }
 
 void StyleSheet::FinishAsyncParse(
-    already_AddRefed<RawServoStyleSheetContents> aSheetContents,
+    already_AddRefed<StyleStylesheetContents> aSheetContents,
     UniquePtr<StyleUseCounters> aUseCounters) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mParsePromise.IsEmpty());

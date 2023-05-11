@@ -1791,7 +1791,7 @@ static void SanitizeStyleSheet(const nsAString& aOriginal,
       aDocument->ReferrerInfoForInternalCSSAndSVGResources();
   auto extraData =
       MakeRefPtr<URLExtraData>(aBaseURI, referrer, aDocument->NodePrincipal());
-  RefPtr<RawServoStyleSheetContents> contents =
+  RefPtr<StyleStylesheetContents> contents =
       Servo_StyleSheet_FromUTF8Bytes(
           /* loader = */ nullptr,
           /* stylesheet = */ nullptr,

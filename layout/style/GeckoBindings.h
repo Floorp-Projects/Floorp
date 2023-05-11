@@ -37,6 +37,7 @@ enum class PseudoStyleType : uint8_t;
 enum class PointerCapabilities : uint8_t;
 enum class UpdateAnimationsTasks : uint8_t;
 struct Keyframe;
+struct StyleStylesheetContents;
 
 namespace css {
 class LoaderReusableStyleSheets;
@@ -119,7 +120,7 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::SheetLoadDataHolder,
 
 void Gecko_StyleSheet_FinishAsyncParse(
     mozilla::css::SheetLoadDataHolder* data,
-    mozilla::StyleStrong<RawServoStyleSheetContents> sheet_contents,
+    mozilla::StyleStrong<mozilla::StyleStylesheetContents> sheet_contents,
     mozilla::StyleUseCounters* use_counters);
 
 mozilla::StyleSheet* Gecko_LoadStyleSheet(

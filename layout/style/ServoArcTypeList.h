@@ -23,7 +23,6 @@
 // clang-format off
 // Needs to be a on single line
 SERVO_ARC_TYPE(CssRules, ServoCssRules)
-SERVO_ARC_TYPE(StyleSheetContents, RawServoStyleSheetContents)
 SERVO_ARC_TYPE(DeclarationBlock, RawServoDeclarationBlock)
 SERVO_ARC_TYPE(StyleRule, RawServoStyleRule)
 SERVO_ARC_TYPE(ImportRule, RawServoImportRule)
@@ -43,7 +42,5 @@ SERVO_ARC_TYPE(FontFeatureValuesRule, RawServoFontFeatureValuesRule)
 SERVO_ARC_TYPE(FontPaletteValuesRule, RawServoFontPaletteValuesRule)
 SERVO_ARC_TYPE(FontFaceRule, RawServoFontFaceRule)
 SERVO_ARC_TYPE(CounterStyleRule, RawServoCounterStyleRule)
-SERVO_ARC_TYPE(CssUrlData, RawServoCssUrlData)
-SERVO_ARC_TYPE(Quotes, RawServoQuotes)
 
 // clang-format on

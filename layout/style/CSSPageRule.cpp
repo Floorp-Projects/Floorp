@@ -180,7 +180,7 @@ void CSSPageRule::SetSelectorText(const nsACString& aSelectorText) {
 
   if (StyleSheet* const sheet = GetStyleSheet()) {
     sheet->WillDirty();
-    const RawServoStyleSheetContents* const contents = sheet->RawContents();
+    const StyleStylesheetContents* const contents = sheet->RawContents();
     if (Servo_PageRule_SetSelectorText(contents, mRawRule.get(),
                                        &aSelectorText)) {
       sheet->RuleChanged(this, StyleRuleChangeKind::Generic);
