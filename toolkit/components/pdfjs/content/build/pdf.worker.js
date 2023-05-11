@@ -47,11 +47,11 @@ var _util = __w_pdfjs_require__(2);
 var _core_utils = __w_pdfjs_require__(3);
 var _primitives = __w_pdfjs_require__(4);
 var _pdf_manager = __w_pdfjs_require__(6);
-var _cleanup_helper = __w_pdfjs_require__(71);
-var _writer = __w_pdfjs_require__(65);
-var _is_node = __w_pdfjs_require__(102);
-var _message_handler = __w_pdfjs_require__(103);
-var _worker_stream = __w_pdfjs_require__(104);
+var _cleanup_helper = __w_pdfjs_require__(72);
+var _writer = __w_pdfjs_require__(66);
+var _is_node = __w_pdfjs_require__(103);
+var _message_handler = __w_pdfjs_require__(104);
+var _worker_stream = __w_pdfjs_require__(105);
 class WorkerTask {
   constructor(name) {
     this.name = name;
@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.7.11';
+    const workerVersion = '3.7.17';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -1454,6 +1454,7 @@ exports.stringToUTF16HexString = stringToUTF16HexString;
 exports.stringToUTF16String = stringToUTF16String;
 exports.toRomanNumerals = toRomanNumerals;
 exports.validateCSSFont = validateCSSFont;
+exports.validateFontName = validateFontName;
 var _util = __w_pdfjs_require__(2);
 var _primitives = __w_pdfjs_require__(4);
 var _base_stream = __w_pdfjs_require__(5);
@@ -1740,6 +1741,28 @@ function encodeToXmlString(str) {
   }
   return buffer.join("");
 }
+function validateFontName(fontFamily, mustWarn = false) {
+  const m = /^("|').*("|')$/.exec(fontFamily);
+  if (m && m[1] === m[2]) {
+    const re = new RegExp(`[^\\\\]${m[1]}`);
+    if (re.test(fontFamily.slice(1, -1))) {
+      if (mustWarn) {
+        (0, _util.warn)(`FontFamily contains unescaped ${m[1]}: ${fontFamily}.`);
+      }
+      return false;
+    }
+  } else {
+    for (const ident of fontFamily.split(/[ \t]+/)) {
+      if (/^(\d|(-(\d|-)))/.test(ident) || !/^[\w-\\]+$/.test(ident)) {
+        if (mustWarn) {
+          (0, _util.warn)(`FontFamily contains invalid <custom-ident>: ${fontFamily}.`);
+        }
+        return false;
+      }
+    }
+  }
+  return true;
+}
 function validateCSSFont(cssFontInfo) {
   const DEFAULT_CSS_FONT_OBLIQUE = "14";
   const DEFAULT_CSS_FONT_WEIGHT = "400";
@@ -1749,20 +1772,8 @@ function validateCSSFont(cssFontInfo) {
     fontWeight,
     italicAngle
   } = cssFontInfo;
-  const m = /^("|').*("|')$/.exec(fontFamily);
-  if (m && m[1] === m[2]) {
-    const re = new RegExp(`[^\\\\]${m[1]}`);
-    if (re.test(fontFamily.slice(1, -1))) {
-      (0, _util.warn)(`XFA - FontFamily contains unescaped ${m[1]}: ${fontFamily}.`);
-      return false;
-    }
-  } else {
-    for (const ident of fontFamily.split(/[ \t]+/)) {
-      if (/^(\d|(-(\d|-)))/.test(ident) || !/^[\w-\\]+$/.test(ident)) {
-        (0, _util.warn)(`XFA - FontFamily contains invalid <custom-ident>: ${fontFamily}.`);
-        return false;
-      }
-    }
+  if (!validateFontName(fontFamily, true)) {
+    return false;
   }
   const weight = fontWeight ? fontWeight.toString() : "";
   cssFontInfo.fontWeight = CSS_FONT_WEIGHT_VALUES.has(weight) ? weight : DEFAULT_CSS_FONT_WEIGHT;
@@ -2892,20 +2903,20 @@ var _core_utils = __w_pdfjs_require__(3);
 var _primitives = __w_pdfjs_require__(4);
 var _xfa_fonts = __w_pdfjs_require__(51);
 var _base_stream = __w_pdfjs_require__(5);
-var _crypto = __w_pdfjs_require__(67);
-var _catalog = __w_pdfjs_require__(69);
-var _cleanup_helper = __w_pdfjs_require__(71);
-var _dataset_reader = __w_pdfjs_require__(100);
+var _crypto = __w_pdfjs_require__(68);
+var _catalog = __w_pdfjs_require__(70);
+var _cleanup_helper = __w_pdfjs_require__(72);
+var _dataset_reader = __w_pdfjs_require__(101);
 var _parser = __w_pdfjs_require__(16);
 var _stream = __w_pdfjs_require__(8);
-var _object_loader = __w_pdfjs_require__(75);
-var _operator_list = __w_pdfjs_require__(63);
+var _object_loader = __w_pdfjs_require__(76);
+var _operator_list = __w_pdfjs_require__(64);
 var _evaluator = __w_pdfjs_require__(13);
 var _decode_stream = __w_pdfjs_require__(18);
-var _struct_tree = __w_pdfjs_require__(74);
-var _writer = __w_pdfjs_require__(65);
-var _factory = __w_pdfjs_require__(76);
-var _xref = __w_pdfjs_require__(101);
+var _struct_tree = __w_pdfjs_require__(75);
+var _writer = __w_pdfjs_require__(66);
+var _factory = __w_pdfjs_require__(77);
+var _xref = __w_pdfjs_require__(102);
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
 class Page {
@@ -2920,6 +2931,7 @@ class Page {
     builtInCMapCache,
     standardFontDataCache,
     globalImageCache,
+    systemFontCache,
     nonBlendModesSet,
     xfaFactory
   }) {
@@ -2932,6 +2944,7 @@ class Page {
     this.builtInCMapCache = builtInCMapCache;
     this.standardFontDataCache = standardFontDataCache;
     this.globalImageCache = globalImageCache;
+    this.systemFontCache = systemFontCache;
     this.nonBlendModesSet = nonBlendModesSet;
     this.evaluatorOptions = pdfManager.evaluatorOptions;
     this.resourcesPromise = null;
@@ -3061,6 +3074,7 @@ class Page {
       builtInCMapCache: this.builtInCMapCache,
       standardFontDataCache: this.standardFontDataCache,
       globalImageCache: this.globalImageCache,
+      systemFontCache: this.systemFontCache,
       options: this.evaluatorOptions
     });
     const pageDict = this.pageDict;
@@ -3078,7 +3092,7 @@ class Page {
     if (this.xref.encrypt) {
       transform = this.xref.encrypt.createCipherTransform(this.ref.num, this.ref.gen);
     }
-    (0, _writer.writeObject)(this.ref, pageDict, buffer, transform);
+    await (0, _writer.writeObject)(this.ref, pageDict, buffer, transform);
     if (savedDict) {
       pageDict.set("Annots", savedDict);
     }
@@ -3099,6 +3113,7 @@ class Page {
       builtInCMapCache: this.builtInCMapCache,
       standardFontDataCache: this.standardFontDataCache,
       globalImageCache: this.globalImageCache,
+      systemFontCache: this.systemFontCache,
       options: this.evaluatorOptions
     });
     return this._parsedAnnotations.then(function (annotations) {
@@ -3145,6 +3160,7 @@ class Page {
       builtInCMapCache: this.builtInCMapCache,
       standardFontDataCache: this.standardFontDataCache,
       globalImageCache: this.globalImageCache,
+      systemFontCache: this.systemFontCache,
       options: this.evaluatorOptions
     });
     const newAnnotationsByPage = !this.xfaFactory ? (0, _core_utils.getNewAnnotationsMap)(annotationStorage) : null;
@@ -3241,6 +3257,7 @@ class Page {
         builtInCMapCache: this.builtInCMapCache,
         standardFontDataCache: this.standardFontDataCache,
         globalImageCache: this.globalImageCache,
+        systemFontCache: this.systemFontCache,
         options: this.evaluatorOptions
       });
       return partialEvaluator.getTextContent({
@@ -3293,6 +3310,7 @@ class Page {
           builtInCMapCache: this.builtInCMapCache,
           standardFontDataCache: this.standardFontDataCache,
           globalImageCache: this.globalImageCache,
+          systemFontCache: this.systemFontCache,
           options: this.evaluatorOptions
         });
         textContentPromises.push(annotation.extractTextContent(partialEvaluator, task, this.view).catch(function (reason) {
@@ -3960,6 +3978,7 @@ class PDFDocument {
         builtInCMapCache: catalog.builtInCMapCache,
         standardFontDataCache: catalog.standardFontDataCache,
         globalImageCache: catalog.globalImageCache,
+        systemFontCache: catalog.systemFontCache,
         nonBlendModesSet: catalog.nonBlendModesSet,
         xfaFactory
       });
@@ -4037,6 +4056,7 @@ class PDFDocument {
             builtInCMapCache: catalog.builtInCMapCache,
             standardFontDataCache: catalog.standardFontDataCache,
             globalImageCache: catalog.globalImageCache,
+            systemFontCache: catalog.systemFontCache,
             nonBlendModesSet: catalog.nonBlendModesSet,
             xfaFactory: null
           }));
@@ -4148,16 +4168,16 @@ var _util = __w_pdfjs_require__(2);
 var _core_utils = __w_pdfjs_require__(3);
 var _default_appearance = __w_pdfjs_require__(11);
 var _primitives = __w_pdfjs_require__(4);
-var _writer = __w_pdfjs_require__(65);
+var _writer = __w_pdfjs_require__(66);
 var _base_stream = __w_pdfjs_require__(5);
 var _bidi = __w_pdfjs_require__(60);
-var _catalog = __w_pdfjs_require__(69);
+var _catalog = __w_pdfjs_require__(70);
 var _colorspace = __w_pdfjs_require__(12);
-var _file_spec = __w_pdfjs_require__(72);
-var _object_loader = __w_pdfjs_require__(75);
-var _operator_list = __w_pdfjs_require__(63);
+var _file_spec = __w_pdfjs_require__(73);
+var _object_loader = __w_pdfjs_require__(76);
+var _operator_list = __w_pdfjs_require__(64);
 var _stream = __w_pdfjs_require__(8);
-var _factory = __w_pdfjs_require__(76);
+var _factory = __w_pdfjs_require__(77);
 class AnnotationFactory {
   static create(xref, ref, pdfManager, idFactory, collectFields) {
     return Promise.all([pdfManager.ensureCatalog("acroForm"), pdfManager.ensureCatalog("baseUrl"), pdfManager.ensureCatalog("attachments"), pdfManager.ensureDoc("xfaDatasets"), collectFields ? this._getPageIndex(xref, ref, pdfManager) : -1]).then(([acroForm, baseUrl, attachments, xfaDatasets, pageIndex]) => pdfManager.ensure(this, "_create", [xref, ref, pdfManager, idFactory, acroForm, attachments, xfaDatasets, collectFields, pageIndex]));
@@ -4283,7 +4303,7 @@ class AnnotationFactory {
             baseFont.set("Encoding", _primitives.Name.get("WinAnsiEncoding"));
             const buffer = [];
             baseFontRef = xref.getNewTemporaryRef();
-            (0, _writer.writeObject)(baseFontRef, baseFont, buffer, null);
+            await (0, _writer.writeObject)(baseFontRef, baseFont, buffer, null);
             dependencies.push({
               ref: baseFontRef,
               data: buffer.join("")
@@ -5040,7 +5060,7 @@ class MarkupAnnotation extends Annotation {
         apRef
       });
       const transform = xref.encrypt ? xref.encrypt.createCipherTransform(apRef.num, apRef.gen) : null;
-      (0, _writer.writeObject)(apRef, ap, buffer, transform);
+      await (0, _writer.writeObject)(apRef, ap, buffer, transform);
       dependencies.push({
         ref: apRef,
         data: buffer.join("")
@@ -5050,7 +5070,7 @@ class MarkupAnnotation extends Annotation {
     }
     buffer.length = 0;
     const transform = xref.encrypt ? xref.encrypt.createCipherTransform(annotationRef.num, annotationRef.gen) : null;
-    (0, _writer.writeObject)(annotationRef, annotationDict, buffer, transform);
+    await (0, _writer.writeObject)(annotationRef, annotationDict, buffer, transform);
     return {
       ref: annotationRef,
       data: buffer.join("")
@@ -5338,7 +5358,7 @@ class WidgetAnnotation extends Annotation {
       if (rotationMatrix !== _util.IDENTITY_MATRIX) {
         appearanceDict.set("Matrix", rotationMatrix);
       }
-      (0, _writer.writeObject)(newRef, appearanceStream, buffer, newTransform);
+      await (0, _writer.writeObject)(newRef, appearanceStream, buffer, newTransform);
       changes.push({
         ref: newRef,
         data: buffer.join(""),
@@ -5348,7 +5368,7 @@ class WidgetAnnotation extends Annotation {
       buffer.length = 0;
     }
     dict.set("M", `D:${(0, _util.getModificationDate)()}`);
-    (0, _writer.writeObject)(this.ref, dict, buffer, originalTransform);
+    await (0, _writer.writeObject)(this.ref, dict, buffer, originalTransform);
     changes[0].data = buffer.join("");
     return changes;
   }
@@ -5861,7 +5881,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       originalTransform = encrypt.createCipherTransform(this.ref.num, this.ref.gen);
     }
     const buffer = [`${this.ref.num} ${this.ref.gen} obj\n`];
-    (0, _writer.writeDict)(dict, buffer, originalTransform);
+    await (0, _writer.writeDict)(dict, buffer, originalTransform);
     buffer.push("\nendobj\n");
     return [{
       ref: this.ref,
@@ -5911,7 +5931,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
         }
         parent.set("V", name);
         parentBuffer = [`${this.parent.num} ${this.parent.gen} obj\n`];
-        (0, _writer.writeDict)(parent, parentBuffer, parentTransform);
+        await (0, _writer.writeDict)(parent, parentBuffer, parentTransform);
         parentBuffer.push("\nendobj\n");
       } else if (this.parent instanceof _primitives.Dict) {
         this.parent.set("V", name);
@@ -5928,7 +5948,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       originalTransform = encrypt.createCipherTransform(this.ref.num, this.ref.gen);
     }
     const buffer = [`${this.ref.num} ${this.ref.gen} obj\n`];
-    (0, _writer.writeDict)(dict, buffer, originalTransform);
+    await (0, _writer.writeDict)(dict, buffer, originalTransform);
     buffer.push("\nendobj\n");
     const newRefs = [{
       ref: this.ref,
@@ -8251,14 +8271,15 @@ var _bidi = __w_pdfjs_require__(60);
 var _colorspace = __w_pdfjs_require__(12);
 var _decode_stream = __w_pdfjs_require__(18);
 var _fonts_utils = __w_pdfjs_require__(38);
+var _font_substitutions = __w_pdfjs_require__(61);
 var _glyphlist = __w_pdfjs_require__(39);
 var _core_utils = __w_pdfjs_require__(3);
 var _metrics = __w_pdfjs_require__(45);
 var _unicode = __w_pdfjs_require__(40);
-var _image_resizer = __w_pdfjs_require__(61);
-var _murmurhash = __w_pdfjs_require__(62);
-var _operator_list = __w_pdfjs_require__(63);
-var _image = __w_pdfjs_require__(64);
+var _image_resizer = __w_pdfjs_require__(62);
+var _murmurhash = __w_pdfjs_require__(63);
+var _operator_list = __w_pdfjs_require__(64);
+var _image = __w_pdfjs_require__(65);
 const DefaultPartialEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
   disableFontFace: false,
@@ -8368,6 +8389,7 @@ class PartialEvaluator {
     builtInCMapCache,
     standardFontDataCache,
     globalImageCache,
+    systemFontCache,
     options = null
   }) {
     this.xref = xref;
@@ -8378,6 +8400,7 @@ class PartialEvaluator {
     this.builtInCMapCache = builtInCMapCache;
     this.standardFontDataCache = standardFontDataCache;
     this.globalImageCache = globalImageCache;
+    this.systemFontCache = systemFontCache;
     this.options = options || DefaultPartialEvaluatorOptions;
     this.parsingType3Font = false;
     this._regionalImageCache = new _image_utils.RegionalImageCache();
@@ -11178,6 +11201,7 @@ class PartialEvaluator {
           type,
           name: baseFontName,
           loadedName: baseDict.loadedName,
+          systemFontInfo: null,
           widths: metrics.widths,
           defaultWidth: metrics.defaultWidth,
           isSimulatedFlags: true,
@@ -11196,6 +11220,9 @@ class PartialEvaluator {
         if (standardFontName) {
           file = await this.fetchStandardFontData(standardFontName);
           properties.isInternalFont = !!file;
+          if (!properties.isInternalFont && this.options.useSystemFonts) {
+            properties.systemFontInfo = (0, _font_substitutions.getFontSubstitution)(this.systemFontCache, this.idFactory, this.options.standardFontDataUrl, baseFontName, standardFontName);
+          }
         }
         return this.extractDataStructures(dict, dict, properties).then(newProperties => {
           if (widths) {
@@ -11246,6 +11273,7 @@ class PartialEvaluator {
     }
     let isInternalFont = false;
     let glyphScaleFactors = null;
+    let systemFontInfo = null;
     if (fontFile) {
       if (fontFile.dict) {
         const subtypeEntry = fontFile.dict.get("Subtype");
@@ -11272,6 +11300,9 @@ class PartialEvaluator {
       if (standardFontName) {
         fontFile = await this.fetchStandardFontData(standardFontName);
         isInternalFont = !!fontFile;
+        if (!isInternalFont && this.options.useSystemFonts) {
+          systemFontInfo = (0, _font_substitutions.getFontSubstitution)(this.systemFontCache, this.idFactory, this.options.standardFontDataUrl, fontName.name, standardFontName);
+        }
       }
     }
     properties = {
@@ -11299,7 +11330,8 @@ class PartialEvaluator {
       italicAngle: descriptor.get("ItalicAngle") || 0,
       isType3Font,
       cssFontInfo,
-      scaleFactors: glyphScaleFactors
+      scaleFactors: glyphScaleFactors,
+      systemFontInfo
     };
     if (composite) {
       const cidEncoding = baseDict.get("Encoding");
@@ -20815,7 +20847,7 @@ var _stream = __w_pdfjs_require__(8);
 var _type1_font = __w_pdfjs_require__(48);
 const PRIVATE_USE_AREAS = [[0xe000, 0xf8ff], [0x100000, 0x10fffd]];
 const PDF_GLYPH_SPACE_UNITS = 1000;
-const EXPORT_DATA_PROPERTIES = ["ascent", "bbox", "black", "bold", "charProcOperatorList", "composite", "cssFontInfo", "data", "defaultVMetrics", "defaultWidth", "descent", "fallbackName", "fontMatrix", "isInvalidPDFjsFont", "isType3Font", "italic", "loadedName", "mimetype", "missingFile", "name", "remeasure", "subtype", "type", "vertical"];
+const EXPORT_DATA_PROPERTIES = ["ascent", "bbox", "black", "bold", "charProcOperatorList", "composite", "cssFontInfo", "data", "defaultVMetrics", "defaultWidth", "descent", "fallbackName", "fontMatrix", "isInvalidPDFjsFont", "isType3Font", "italic", "loadedName", "mimetype", "missingFile", "name", "remeasure", "subtype", "systemFontInfo", "type", "vertical"];
 const EXPORT_DATA_EXTRA_PROPERTIES = ["cMap", "defaultEncoding", "differences", "isMonospace", "isSerifFont", "isSymbolicFont", "seacMap", "toFontChar", "toUnicode", "vmetrics", "widths"];
 function adjustWidths(properties) {
   if (!properties.fontMatrix) {
@@ -21417,6 +21449,7 @@ class Font {
     } else {
       this.fallbackName = "sans-serif";
     }
+    this.systemFontInfo = properties.systemFontInfo;
     this.differences = properties.differences;
     this.widths = properties.widths;
     this.defaultWidth = properties.defaultWidth;
@@ -29622,10 +29655,10 @@ const getFontNameToFileMap = (0, _core_utils.getLookupTableFactory)(function (t)
   t["Courier-Bold"] = "FoxitFixedBold.pfb";
   t["Courier-BoldOblique"] = "FoxitFixedBoldItalic.pfb";
   t["Courier-Oblique"] = "FoxitFixedItalic.pfb";
-  t.Helvetica = "FoxitSans.pfb";
-  t["Helvetica-Bold"] = "FoxitSansBold.pfb";
-  t["Helvetica-BoldOblique"] = "FoxitSansBoldItalic.pfb";
-  t["Helvetica-Oblique"] = "FoxitSansItalic.pfb";
+  t.Helvetica = "LiberationSans-Regular.ttf";
+  t["Helvetica-Bold"] = "LiberationSans-Bold.ttf";
+  t["Helvetica-BoldOblique"] = "LiberationSans-BoldItalic.ttf";
+  t["Helvetica-Oblique"] = "LiberationSans-Italic.ttf";
   t["Times-Roman"] = "FoxitSerif.pfb";
   t["Times-Bold"] = "FoxitSerifBold.pfb";
   t["Times-BoldItalic"] = "FoxitSerifBoldItalic.pfb";
@@ -38917,6 +38950,273 @@ function bidi(str, startLevel = -1, vertical = false) {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.getFontSubstitution = getFontSubstitution;
+var _fonts_utils = __w_pdfjs_require__(38);
+var _core_utils = __w_pdfjs_require__(3);
+const NORMAL = {
+  style: "normal",
+  weight: "normal"
+};
+const BOLD = {
+  style: "normal",
+  weight: "bold"
+};
+const ITALIC = {
+  style: "italic",
+  weight: "normal"
+};
+const BOLDITALIC = {
+  style: "italic",
+  weight: "bold"
+};
+const substitutionMap = new Map([["Times-Roman", {
+  local: ["Times New Roman", "Times-Roman", "Times", "Liberation Serif", "Nimbus Roman", "Nimbus Roman L", "Tinos", "Thorndale", "TeX Gyre Termes", "FreeSerif", "DejaVu Serif", "Bitstream Vera Serif", "Ubuntu"],
+  style: NORMAL,
+  ultimate: "serif"
+}], ["Times-Bold", {
+  local: {
+    alias: "Times-Roman",
+    append: "Bold"
+  },
+  style: BOLD,
+  ultimate: "serif"
+}], ["Times-Italic", {
+  local: {
+    alias: "Times-Roman",
+    append: "Italic"
+  },
+  style: ITALIC,
+  ultimate: "serif"
+}], ["Times-BoldItalic", {
+  local: {
+    alias: "Times-Roman",
+    append: "Bold Italic"
+  },
+  style: BOLDITALIC,
+  ultimate: "serif"
+}], ["Helvetica", {
+  local: ["Helvetica", "Helvetica Neue", "Arial", "Arial Nova", "Liberation Sans", "Arimo", "Nimbus Sans", "Nimbus Sans L", "A030", "TeX Gyre Heros", "FreeSans", "DejaVu Sans", "Albany", "Bitstream Vera Sans", "Arial Unicode MS", "Microsoft Sans Serif", "Apple Symbols", "Cantarell"],
+  path: "LiberationSans-Regular.ttf",
+  style: NORMAL,
+  ultimate: "sans-serif"
+}], ["Helvetica-Bold", {
+  local: {
+    alias: "Helvetica",
+    append: "Bold"
+  },
+  path: "LiberationSans-Bold.ttf",
+  style: BOLD,
+  ultimate: "sans-serif"
+}], ["Helvetica-Oblique", {
+  local: {
+    alias: "Helvetica",
+    append: "Italic"
+  },
+  path: "LiberationSans-Italic.ttf",
+  style: ITALIC,
+  ultimate: "sans-serif"
+}], ["Helvetica-BoldOblique", {
+  local: {
+    alias: "Helvetica",
+    append: "Bold Italic"
+  },
+  path: "LiberationSans-BoldItalic.ttf",
+  style: BOLDITALIC,
+  ultimate: "sans-serif"
+}], ["Courier", {
+  local: ["Courier", "Courier New", "Liberation Mono", "Nimbus Mono", "Nimbus Mono L", "Cousine", "Cumberland", "TeX Gyre Cursor", "FreeMono"],
+  style: NORMAL,
+  ultimate: "monospace"
+}], ["Courier-Bold", {
+  local: {
+    alias: "Courier",
+    append: "Bold"
+  },
+  style: BOLD,
+  ultimate: "monospace"
+}], ["Courier-Oblique", {
+  local: {
+    alias: "Courier",
+    append: "Italic"
+  },
+  style: ITALIC,
+  ultimate: "monospace"
+}], ["Courier-BoldOblique", {
+  local: {
+    alias: "Courier",
+    append: "Bold Italic"
+  },
+  style: BOLDITALIC,
+  ultimate: "monospace"
+}], ["ArialBlack", {
+  prepend: ["Arial Black"],
+  style: {
+    style: "normal",
+    weight: "900"
+  },
+  fallback: "Helvetica-Bold"
+}], ["ArialBlack-Bold", {
+  alias: "ArialBlack"
+}], ["ArialBlack-Italic", {
+  prepend: ["Arial Black Italic"],
+  local: {
+    alias: "ArialBlack",
+    append: "Italic"
+  },
+  style: {
+    style: "italic",
+    weight: "900"
+  },
+  fallback: "Helvetica-BoldOblique"
+}], ["ArialBlack-BoldItalic", {
+  alias: "ArialBlack-Italic"
+}], ["ArialNarrow", {
+  prepend: ["Arial Narrow", "Liberation Sans Narrow", "Helvetica Condensed", "Nimbus Sans Narrow", "TeX Gyre Heros Cn"],
+  style: NORMAL,
+  fallback: "Helvetica"
+}], ["ArialNarrow-Bold", {
+  local: {
+    alias: "ArialNarrow",
+    append: "Bold"
+  },
+  style: BOLD,
+  fallback: "Helvetica-Bold"
+}], ["ArialNarrow-Italic", {
+  local: {
+    alias: "ArialNarrow",
+    append: "Italic"
+  },
+  style: ITALIC,
+  fallback: "Helvetica-Oblique"
+}], ["ArialNarrow-BoldItalic", {
+  local: {
+    alias: "ArialNarrow",
+    append: "Bold Italic"
+  },
+  style: BOLDITALIC,
+  fallback: "Helvetica-BoldOblique"
+}], ["Calibri", {
+  prepend: ["Calibri", "Carlito"],
+  style: NORMAL,
+  fallback: "Helvetica"
+}], ["Calibri-Bold", {
+  local: {
+    alias: "Calibri",
+    append: "Bold"
+  },
+  style: BOLD,
+  fallback: "Helvetica-Bold"
+}], ["Calibri-Italic", {
+  local: {
+    alias: "Calibri",
+    append: "Italic"
+  },
+  style: ITALIC,
+  fallback: "Helvetica-Oblique"
+}], ["Calibri-BoldItalic", {
+  local: {
+    alias: "Calibri",
+    append: "Bold Italic"
+  },
+  style: BOLDITALIC,
+  fallback: "Helvetica-BoldOblique"
+}]]);
+const fontAliases = new Map([["Arial-Black", "ArialBlack"]]);
+function makeLocal(prepend, local) {
+  let append = "";
+  if (!Array.isArray(local)) {
+    append = ` ${local.append}`;
+    local = substitutionMap.get(local.alias).local;
+  }
+  let prependedPaths = "";
+  if (prepend) {
+    prependedPaths = prepend.map(name => `local(${name})`).join(",") + ",";
+  }
+  return prependedPaths + local.map(name => `local(${name}${append})`).join(",");
+}
+function getFontSubstitution(systemFontCache, idFactory, localFontPath, baseFontName, standardFontName) {
+  let mustAddBaseFont = false;
+  baseFontName = (0, _fonts_utils.normalizeFontName)(baseFontName);
+  const key = baseFontName;
+  let substitutionInfo = systemFontCache.get(key);
+  if (substitutionInfo) {
+    return substitutionInfo;
+  }
+  let substitution = substitutionMap.get(baseFontName);
+  if (!substitution) {
+    for (const [alias, subst] of fontAliases) {
+      if (baseFontName.startsWith(alias)) {
+        baseFontName = `${subst}${baseFontName.substring(alias.length)}`;
+        substitution = substitutionMap.get(baseFontName);
+        break;
+      }
+    }
+  }
+  if (!substitution) {
+    substitution = substitutionMap.get(standardFontName);
+    mustAddBaseFont = true;
+  }
+  const loadedName = `${idFactory.getDocId()}_sf_${idFactory.createFontId()}`;
+  if (!substitution) {
+    if (!(0, _core_utils.validateFontName)(baseFontName)) {
+      systemFontCache.set(key, null);
+      return null;
+    }
+    const bold = /bold/gi.test(baseFontName);
+    const italic = /oblique|italic/gi.test(baseFontName);
+    const style = bold && italic && BOLDITALIC || bold && BOLD || italic && ITALIC || NORMAL;
+    substitutionInfo = {
+      css: `${loadedName},sans-serif`,
+      loadedName,
+      src: `local(${baseFontName})`,
+      style
+    };
+    systemFontCache.set(key, substitutionInfo);
+    return substitutionInfo;
+  }
+  while (substitution.alias) {
+    substitution = substitutionMap.get(substitution.alias);
+  }
+  const {
+    fallback,
+    style
+  } = substitution;
+  let prepend = substitution.prepend;
+  if (fallback) {
+    prepend ||= substitutionMap.get(substitution.local.alias).prepend;
+    substitution = substitutionMap.get(fallback);
+  }
+  const {
+    local,
+    path,
+    ultimate
+  } = substitution;
+  let src = makeLocal(prepend, local);
+  if (path && localFontPath !== null) {
+    src += `,url(${localFontPath}${path})`;
+  }
+  if (mustAddBaseFont && (0, _core_utils.validateFontName)(baseFontName)) {
+    src = `local(${baseFontName}),${src}`;
+  }
+  substitutionInfo = {
+    css: `${loadedName},${ultimate}`,
+    loadedName,
+    src,
+    style
+  };
+  systemFontCache.set(key, substitutionInfo);
+  return substitutionInfo;
+}
+
+/***/ }),
+/* 62 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
 exports.ImageResizer = void 0;
 var _util = __w_pdfjs_require__(2);
 const MIN_IMAGE_DIM = 2048;
@@ -39163,7 +39463,7 @@ exports.ImageResizer = ImageResizer;
 ImageResizer._goodSquareLength = MIN_IMAGE_DIM;
 
 /***/ }),
-/* 62 */
+/* 63 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -39267,7 +39567,7 @@ class MurmurHash3_64 {
 exports.MurmurHash3_64 = MurmurHash3_64;
 
 /***/ }),
-/* 63 */
+/* 64 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -39805,7 +40105,7 @@ class OperatorList {
 exports.OperatorList = OperatorList;
 
 /***/ }),
-/* 64 */
+/* 65 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -39819,7 +40119,7 @@ var _image_utils = __w_pdfjs_require__(28);
 var _base_stream = __w_pdfjs_require__(5);
 var _colorspace = __w_pdfjs_require__(12);
 var _decode_stream = __w_pdfjs_require__(18);
-var _image_resizer = __w_pdfjs_require__(61);
+var _image_resizer = __w_pdfjs_require__(62);
 var _jpeg_stream = __w_pdfjs_require__(26);
 var _jpx = __w_pdfjs_require__(30);
 var _primitives = __w_pdfjs_require__(4);
@@ -40553,7 +40853,7 @@ class PDFImage {
 exports.PDFImage = PDFImage;
 
 /***/ }),
-/* 65 */
+/* 66 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -40567,36 +40867,67 @@ exports.writeObject = writeObject;
 var _util = __w_pdfjs_require__(2);
 var _primitives = __w_pdfjs_require__(4);
 var _core_utils = __w_pdfjs_require__(3);
-var _xml_parser = __w_pdfjs_require__(66);
+var _xml_parser = __w_pdfjs_require__(67);
 var _base_stream = __w_pdfjs_require__(5);
-var _crypto = __w_pdfjs_require__(67);
-function writeObject(ref, obj, buffer, transform) {
+var _crypto = __w_pdfjs_require__(68);
+async function writeObject(ref, obj, buffer, transform) {
   buffer.push(`${ref.num} ${ref.gen} obj\n`);
   if (obj instanceof _primitives.Dict) {
-    writeDict(obj, buffer, transform);
+    await writeDict(obj, buffer, transform);
   } else if (obj instanceof _base_stream.BaseStream) {
-    writeStream(obj, buffer, transform);
+    await writeStream(obj, buffer, transform);
   }
   buffer.push("\nendobj\n");
 }
-function writeDict(dict, buffer, transform) {
+async function writeDict(dict, buffer, transform) {
   buffer.push("<<");
   for (const key of dict.getKeys()) {
     buffer.push(` /${(0, _core_utils.escapePDFName)(key)} `);
-    writeValue(dict.getRaw(key), buffer, transform);
+    await writeValue(dict.getRaw(key), buffer, transform);
   }
   buffer.push(">>");
 }
-function writeStream(stream, buffer, transform) {
+async function writeStream(stream, buffer, transform) {
   let string = stream.getString();
   if (transform !== null) {
     string = transform.encryptString(string);
   }
+  if (typeof CompressionStream === "undefined") {
+    stream.dict.set("Length", string.length);
+    await writeDict(stream.dict, buffer, transform);
+    buffer.push(" stream\n", string, "\nendstream");
+    return;
+  }
+  const filter = await stream.dict.getAsync("Filter");
+  const flateDecode = _primitives.Name.get("FlateDecode");
+  const MIN_LENGTH_FOR_COMPRESSING = 256;
+  if (string.length >= MIN_LENGTH_FOR_COMPRESSING || Array.isArray(filter) && filter.includes(flateDecode) || filter instanceof _primitives.Name && filter.name === flateDecode.name) {
+    try {
+      const byteArray = (0, _util.stringToBytes)(string);
+      const cs = new CompressionStream("deflate");
+      const writer = cs.writable.getWriter();
+      writer.write(byteArray);
+      writer.close();
+      const buf = await new Response(cs.readable).arrayBuffer();
+      string = (0, _util.bytesToString)(new Uint8Array(buf));
+      if (Array.isArray(filter)) {
+        if (!filter.includes(flateDecode)) {
+          filter.push(flateDecode);
+        }
+      } else if (!filter) {
+        stream.dict.set("Filter", flateDecode);
+      } else if (!(filter instanceof _primitives.Name) || filter.name !== flateDecode.name) {
+        stream.dict.set("Filter", [filter, flateDecode]);
+      }
+    } catch (ex) {
+      (0, _util.info)(`writeStream - cannot compress data: "${ex}".`);
+    }
+  }
   stream.dict.set("Length", string.length);
-  writeDict(stream.dict, buffer, transform);
+  await writeDict(stream.dict, buffer, transform);
   buffer.push(" stream\n", string, "\nendstream");
 }
-function writeArray(array, buffer, transform) {
+async function writeArray(array, buffer, transform) {
   buffer.push("[");
   let first = true;
   for (const val of array) {
@@ -40605,17 +40936,17 @@ function writeArray(array, buffer, transform) {
     } else {
       first = false;
     }
-    writeValue(val, buffer, transform);
+    await writeValue(val, buffer, transform);
   }
   buffer.push("]");
 }
-function writeValue(value, buffer, transform) {
+async function writeValue(value, buffer, transform) {
   if (value instanceof _primitives.Name) {
     buffer.push(`/${(0, _core_utils.escapePDFName)(value.name)}`);
   } else if (value instanceof _primitives.Ref) {
     buffer.push(`${value.num} ${value.gen} R`);
   } else if (Array.isArray(value)) {
-    writeArray(value, buffer, transform);
+    await writeArray(value, buffer, transform);
   } else if (typeof value === "string") {
     if (transform !== null) {
       value = transform.encryptString(value);
@@ -40626,9 +40957,9 @@ function writeValue(value, buffer, transform) {
   } else if (typeof value === "boolean") {
     buffer.push(value.toString());
   } else if (value instanceof _primitives.Dict) {
-    writeDict(value, buffer, transform);
+    await writeDict(value, buffer, transform);
   } else if (value instanceof _base_stream.BaseStream) {
-    writeStream(value, buffer, transform);
+    await writeStream(value, buffer, transform);
   } else if (value === null) {
     buffer.push("null");
   } else {
@@ -40700,7 +41031,7 @@ function writeXFADataForAcroform(str, newRefs) {
   xml.documentElement.dump(buffer);
   return buffer.join("");
 }
-function updateAcroform({
+async function updateAcroform({
   xref,
   acroForm,
   acroFormRef,
@@ -40735,7 +41066,7 @@ function updateAcroform({
     transform = encrypt.createCipherTransform(acroFormRef.num, acroFormRef.gen);
   }
   const buffer = [];
-  writeObject(acroFormRef, dict, buffer, transform);
+  await writeObject(acroFormRef, dict, buffer, transform);
   newRefs.push({
     ref: acroFormRef,
     data: buffer.join("")
@@ -40762,7 +41093,7 @@ function updateXFA({
     data
   });
 }
-function incrementalUpdate({
+async function incrementalUpdate({
   originalData,
   xrefInfo,
   newRefs,
@@ -40775,7 +41106,7 @@ function incrementalUpdate({
   acroForm = null,
   xfaData = null
 }) {
-  updateAcroform({
+  await updateAcroform({
     xref,
     acroForm,
     acroFormRef,
@@ -40848,7 +41179,7 @@ function incrementalUpdate({
   newXref.set("W", sizes);
   newXref.set("Length", tableLength);
   buffer.push(`${refForXrefTable.num} ${refForXrefTable.gen} obj\n`);
-  writeDict(newXref, buffer, null);
+  await writeDict(newXref, buffer, null);
   buffer.push(" stream\n");
   const bufferLen = buffer.reduce((a, str) => a + str.length, 0);
   const footer = `\nendstream\nendobj\nstartxref\n${baseOffset}\n%%EOF\n`;
@@ -40869,7 +41200,7 @@ function incrementalUpdate({
 }
 
 /***/ }),
-/* 66 */
+/* 67 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -41297,7 +41628,7 @@ class SimpleXMLParser extends XMLParserBase {
 exports.SimpleXMLParser = SimpleXMLParser;
 
 /***/ }),
-/* 67 */
+/* 68 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -41310,7 +41641,7 @@ exports.calculateSHA384 = calculateSHA384;
 exports.calculateSHA512 = void 0;
 var _util = __w_pdfjs_require__(2);
 var _primitives = __w_pdfjs_require__(4);
-var _decrypt_stream = __w_pdfjs_require__(68);
+var _decrypt_stream = __w_pdfjs_require__(69);
 class ARCFourCipher {
   constructor(key) {
     this.a = 0;
@@ -42602,7 +42933,7 @@ const CipherTransformFactory = function CipherTransformFactoryClosure() {
 exports.CipherTransformFactory = CipherTransformFactory;
 
 /***/ }),
-/* 68 */
+/* 69 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -42648,7 +42979,7 @@ class DecryptStream extends _decode_stream.DecodeStream {
 exports.DecryptStream = DecryptStream;
 
 /***/ }),
-/* 69 */
+/* 70 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -42660,14 +42991,14 @@ exports.Catalog = void 0;
 var _core_utils = __w_pdfjs_require__(3);
 var _util = __w_pdfjs_require__(2);
 var _primitives = __w_pdfjs_require__(4);
-var _name_number_tree = __w_pdfjs_require__(70);
+var _name_number_tree = __w_pdfjs_require__(71);
 var _base_stream = __w_pdfjs_require__(5);
-var _cleanup_helper = __w_pdfjs_require__(71);
+var _cleanup_helper = __w_pdfjs_require__(72);
 var _colorspace = __w_pdfjs_require__(12);
-var _file_spec = __w_pdfjs_require__(72);
+var _file_spec = __w_pdfjs_require__(73);
 var _image_utils = __w_pdfjs_require__(59);
-var _metadata_parser = __w_pdfjs_require__(73);
-var _struct_tree = __w_pdfjs_require__(74);
+var _metadata_parser = __w_pdfjs_require__(74);
+var _struct_tree = __w_pdfjs_require__(75);
 function fetchDestination(dest) {
   if (dest instanceof _primitives.Dict) {
     dest = dest.get("D");
@@ -42691,6 +43022,7 @@ class Catalog {
     this.pageKidsCountCache = new _primitives.RefSetCache();
     this.pageIndexCache = new _primitives.RefSetCache();
     this.nonBlendModesSet = new _primitives.RefSet();
+    this.systemFontCache = new Map();
   }
   get version() {
     const version = this._catDict.get("Version");
@@ -43515,6 +43847,7 @@ class Catalog {
     this.fontCache.clear();
     this.builtInCMapCache.clear();
     this.standardFontDataCache.clear();
+    this.systemFontCache.clear();
   }
   async getPageDict(pageIndex) {
     const nodesToVisit = [this.toplevelPagesDict];
@@ -43983,7 +44316,7 @@ class Catalog {
 exports.Catalog = Catalog;
 
 /***/ }),
-/* 70 */
+/* 71 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -44111,7 +44444,7 @@ class NumberTree extends NameOrNumberTree {
 exports.NumberTree = NumberTree;
 
 /***/ }),
-/* 71 */
+/* 72 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -44128,7 +44461,7 @@ function clearGlobalCaches() {
 }
 
 /***/ }),
-/* 72 */
+/* 73 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -44211,7 +44544,7 @@ class FileSpec {
 exports.FileSpec = FileSpec;
 
 /***/ }),
-/* 73 */
+/* 74 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -44220,7 +44553,7 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.MetadataParser = void 0;
-var _xml_parser = __w_pdfjs_require__(66);
+var _xml_parser = __w_pdfjs_require__(67);
 class MetadataParser {
   constructor(data) {
     data = this._repair(data);
@@ -44319,7 +44652,7 @@ class MetadataParser {
 exports.MetadataParser = MetadataParser;
 
 /***/ }),
-/* 74 */
+/* 75 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -44330,7 +44663,7 @@ Object.defineProperty(exports, "__esModule", ({
 exports.StructTreeRoot = exports.StructTreePage = void 0;
 var _primitives = __w_pdfjs_require__(4);
 var _util = __w_pdfjs_require__(2);
-var _name_number_tree = __w_pdfjs_require__(70);
+var _name_number_tree = __w_pdfjs_require__(71);
 const MAX_DEPTH = 40;
 const StructElementType = {
   PAGE_CONTENT: "PAGE_CONTENT",
@@ -44607,7 +44940,7 @@ class StructTreePage {
 exports.StructTreePage = StructTreePage;
 
 /***/ }),
-/* 75 */
+/* 76 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -44727,7 +45060,7 @@ class ObjectLoader {
 exports.ObjectLoader = ObjectLoader;
 
 /***/ }),
-/* 76 */
+/* 77 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -44736,14 +45069,14 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.XFAFactory = void 0;
-var _xfa_object = __w_pdfjs_require__(77);
-var _bind = __w_pdfjs_require__(81);
-var _data = __w_pdfjs_require__(87);
-var _fonts = __w_pdfjs_require__(85);
-var _utils = __w_pdfjs_require__(78);
+var _xfa_object = __w_pdfjs_require__(78);
+var _bind = __w_pdfjs_require__(82);
+var _data = __w_pdfjs_require__(88);
+var _fonts = __w_pdfjs_require__(86);
+var _utils = __w_pdfjs_require__(79);
 var _util = __w_pdfjs_require__(2);
-var _parser = __w_pdfjs_require__(88);
-var _xhtml = __w_pdfjs_require__(98);
+var _parser = __w_pdfjs_require__(89);
+var _xhtml = __w_pdfjs_require__(99);
 class XFAFactory {
   constructor(data) {
     try {
@@ -44878,7 +45211,7 @@ class XFAFactory {
 exports.XFAFactory = XFAFactory;
 
 /***/ }),
-/* 77 */
+/* 78 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -44887,11 +45220,11 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.XmlObject = exports.XFAObjectArray = exports.XFAObject = exports.XFAAttribute = exports.StringObject = exports.OptionObject = exports.Option10 = exports.Option01 = exports.IntegerObject = exports.ContentObject = exports.$uid = exports.$toStyle = exports.$toString = exports.$toPages = exports.$toHTML = exports.$text = exports.$tabIndex = exports.$setValue = exports.$setSetAttributes = exports.$setId = exports.$searchNode = exports.$root = exports.$resolvePrototypes = exports.$removeChild = exports.$pushPara = exports.$pushGlyphs = exports.$popPara = exports.$onText = exports.$onChildCheck = exports.$onChild = exports.$nsAttributes = exports.$nodeName = exports.$namespaceId = exports.$isUsable = exports.$isTransparent = exports.$isThereMoreWidth = exports.$isSplittable = exports.$isNsAgnostic = exports.$isDescendent = exports.$isDataValue = exports.$isCDATAXml = exports.$isBindable = exports.$insertAt = exports.$indexOf = exports.$ids = exports.$hasSettableValue = exports.$globalData = exports.$getTemplateRoot = exports.$getSubformParent = exports.$getRealChildrenByNameIt = exports.$getParent = exports.$getNextPage = exports.$getExtra = exports.$getDataValue = exports.$getContainedChildren = exports.$getChildrenByNameIt = exports.$getChildrenByName = exports.$getChildrenByClass = exports.$getChildren = exports.$getAvailableSpace = exports.$getAttributes = exports.$getAttributeIt = exports.$flushHTML = exports.$finalize = exports.$extra = exports.$dump = exports.$data = exports.$content = exports.$consumed = exports.$clone = exports.$cleanup = exports.$cleanPage = exports.$clean = exports.$childrenToHTML = exports.$appendChild = exports.$addHTML = exports.$acceptWhitespace = void 0;
-var _utils = __w_pdfjs_require__(78);
+var _utils = __w_pdfjs_require__(79);
 var _util = __w_pdfjs_require__(2);
 var _core_utils = __w_pdfjs_require__(3);
-var _namespaces = __w_pdfjs_require__(79);
-var _som = __w_pdfjs_require__(80);
+var _namespaces = __w_pdfjs_require__(80);
+var _som = __w_pdfjs_require__(81);
 const $acceptWhitespace = Symbol();
 exports.$acceptWhitespace = $acceptWhitespace;
 const $addHTML = Symbol();
@@ -45814,7 +46147,7 @@ class Option10 extends IntegerObject {
 exports.Option10 = Option10;
 
 /***/ }),
-/* 78 */
+/* 79 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -46033,7 +46366,7 @@ class HTMLResult {
 exports.HTMLResult = HTMLResult;
 
 /***/ }),
-/* 79 */
+/* 80 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -46109,7 +46442,7 @@ const NamespaceIds = {
 exports.NamespaceIds = NamespaceIds;
 
 /***/ }),
-/* 80 */
+/* 81 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -46119,8 +46452,8 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.createDataNode = createDataNode;
 exports.searchNode = searchNode;
-var _xfa_object = __w_pdfjs_require__(77);
-var _namespaces = __w_pdfjs_require__(79);
+var _xfa_object = __w_pdfjs_require__(78);
+var _namespaces = __w_pdfjs_require__(80);
 var _util = __w_pdfjs_require__(2);
 const namePattern = /^[^.[]+/;
 const indexPattern = /^[^\]]+/;
@@ -46381,7 +46714,7 @@ function createDataNode(root, container, expr) {
 }
 
 /***/ }),
-/* 81 */
+/* 82 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -46390,10 +46723,10 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.Binder = void 0;
-var _xfa_object = __w_pdfjs_require__(77);
-var _template = __w_pdfjs_require__(82);
-var _som = __w_pdfjs_require__(80);
-var _namespaces = __w_pdfjs_require__(79);
+var _xfa_object = __w_pdfjs_require__(78);
+var _template = __w_pdfjs_require__(83);
+var _som = __w_pdfjs_require__(81);
+var _namespaces = __w_pdfjs_require__(80);
 var _util = __w_pdfjs_require__(2);
 const NS_DATASETS = _namespaces.NamespaceIds.datasets.id;
 function createText(content) {
@@ -46815,7 +47148,7 @@ class Binder {
 exports.Binder = Binder;
 
 /***/ }),
-/* 82 */
+/* 83 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -46824,15 +47157,15 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.Value = exports.Text = exports.TemplateNamespace = exports.Template = exports.SetProperty = exports.Items = exports.Field = exports.BindItems = void 0;
-var _xfa_object = __w_pdfjs_require__(77);
-var _namespaces = __w_pdfjs_require__(79);
-var _layout = __w_pdfjs_require__(83);
-var _html_utils = __w_pdfjs_require__(84);
-var _utils = __w_pdfjs_require__(78);
+var _xfa_object = __w_pdfjs_require__(78);
+var _namespaces = __w_pdfjs_require__(80);
+var _layout = __w_pdfjs_require__(84);
+var _html_utils = __w_pdfjs_require__(85);
+var _utils = __w_pdfjs_require__(79);
 var _util = __w_pdfjs_require__(2);
-var _fonts = __w_pdfjs_require__(85);
+var _fonts = __w_pdfjs_require__(86);
 var _core_utils = __w_pdfjs_require__(3);
-var _som = __w_pdfjs_require__(80);
+var _som = __w_pdfjs_require__(81);
 const TEMPLATE_NS_ID = _namespaces.NamespaceIds.template.id;
 const SVG_NS = "http://www.w3.org/2000/svg";
 const MAX_ATTEMPTS_FOR_LRTB_LAYOUT = 2;
@@ -51714,7 +52047,7 @@ class TemplateNamespace {
 exports.TemplateNamespace = TemplateNamespace;
 
 /***/ }),
-/* 83 */
+/* 84 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -51726,8 +52059,8 @@ exports.addHTML = addHTML;
 exports.checkDimensions = checkDimensions;
 exports.flushHTML = flushHTML;
 exports.getAvailableSpace = getAvailableSpace;
-var _xfa_object = __w_pdfjs_require__(77);
-var _html_utils = __w_pdfjs_require__(84);
+var _xfa_object = __w_pdfjs_require__(78);
+var _html_utils = __w_pdfjs_require__(85);
 function createLine(node, children) {
   return {
     name: "div",
@@ -51994,7 +52327,7 @@ function checkDimensions(node, space) {
 }
 
 /***/ }),
-/* 84 */
+/* 85 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52016,11 +52349,11 @@ exports.setFontFamily = setFontFamily;
 exports.setMinMaxDimensions = setMinMaxDimensions;
 exports.setPara = setPara;
 exports.toStyle = toStyle;
-var _xfa_object = __w_pdfjs_require__(77);
+var _xfa_object = __w_pdfjs_require__(78);
 var _util = __w_pdfjs_require__(2);
-var _utils = __w_pdfjs_require__(78);
-var _fonts = __w_pdfjs_require__(85);
-var _text = __w_pdfjs_require__(86);
+var _utils = __w_pdfjs_require__(79);
+var _fonts = __w_pdfjs_require__(86);
+var _text = __w_pdfjs_require__(87);
 function measureToString(m) {
   if (typeof m === "string") {
     return "0px";
@@ -52539,7 +52872,7 @@ function fixURL(str) {
 }
 
 /***/ }),
-/* 85 */
+/* 86 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52550,8 +52883,8 @@ Object.defineProperty(exports, "__esModule", ({
 exports.FontFinder = void 0;
 exports.getMetrics = getMetrics;
 exports.selectFont = selectFont;
-var _xfa_object = __w_pdfjs_require__(77);
-var _utils = __w_pdfjs_require__(78);
+var _xfa_object = __w_pdfjs_require__(78);
+var _utils = __w_pdfjs_require__(79);
 var _util = __w_pdfjs_require__(2);
 class FontFinder {
   constructor(pdfFonts) {
@@ -52704,7 +53037,7 @@ function getMetrics(xfaFont, real = false) {
 }
 
 /***/ }),
-/* 86 */
+/* 87 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52713,7 +53046,7 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.TextMeasure = void 0;
-var _fonts = __w_pdfjs_require__(85);
+var _fonts = __w_pdfjs_require__(86);
 const WIDTH_FACTOR = 1.02;
 class FontInfo {
   constructor(xfaFont, margin, lineHeight, fontFinder) {
@@ -52924,7 +53257,7 @@ class TextMeasure {
 exports.TextMeasure = TextMeasure;
 
 /***/ }),
-/* 87 */
+/* 88 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52933,7 +53266,7 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.DataHandler = void 0;
-var _xfa_object = __w_pdfjs_require__(77);
+var _xfa_object = __w_pdfjs_require__(78);
 class DataHandler {
   constructor(root, data) {
     this.data = data;
@@ -52983,7 +53316,7 @@ class DataHandler {
 exports.DataHandler = DataHandler;
 
 /***/ }),
-/* 88 */
+/* 89 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -52992,9 +53325,9 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.XFAParser = void 0;
-var _xfa_object = __w_pdfjs_require__(77);
-var _xml_parser = __w_pdfjs_require__(66);
-var _builder = __w_pdfjs_require__(89);
+var _xfa_object = __w_pdfjs_require__(78);
+var _xml_parser = __w_pdfjs_require__(67);
+var _builder = __w_pdfjs_require__(90);
 var _util = __w_pdfjs_require__(2);
 class XFAParser extends _xml_parser.XMLParserBase {
   constructor(rootNameSpace = null, richText = false) {
@@ -53125,7 +53458,7 @@ class XFAParser extends _xml_parser.XMLParserBase {
 exports.XFAParser = XFAParser;
 
 /***/ }),
-/* 89 */
+/* 90 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -53134,11 +53467,11 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.Builder = void 0;
-var _namespaces = __w_pdfjs_require__(79);
-var _xfa_object = __w_pdfjs_require__(77);
-var _setup = __w_pdfjs_require__(90);
-var _template = __w_pdfjs_require__(82);
-var _unknown = __w_pdfjs_require__(99);
+var _namespaces = __w_pdfjs_require__(80);
+var _xfa_object = __w_pdfjs_require__(78);
+var _setup = __w_pdfjs_require__(91);
+var _template = __w_pdfjs_require__(83);
+var _unknown = __w_pdfjs_require__(100);
 var _util = __w_pdfjs_require__(2);
 class Root extends _xfa_object.XFAObject {
   constructor(ids) {
@@ -53302,7 +53635,7 @@ class Builder {
 exports.Builder = Builder;
 
 /***/ }),
-/* 90 */
+/* 91 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -53311,15 +53644,15 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.NamespaceSetUp = void 0;
-var _config = __w_pdfjs_require__(91);
-var _connection_set = __w_pdfjs_require__(92);
-var _datasets = __w_pdfjs_require__(93);
-var _locale_set = __w_pdfjs_require__(94);
-var _signature = __w_pdfjs_require__(95);
-var _stylesheet = __w_pdfjs_require__(96);
-var _template = __w_pdfjs_require__(82);
-var _xdp = __w_pdfjs_require__(97);
-var _xhtml = __w_pdfjs_require__(98);
+var _config = __w_pdfjs_require__(92);
+var _connection_set = __w_pdfjs_require__(93);
+var _datasets = __w_pdfjs_require__(94);
+var _locale_set = __w_pdfjs_require__(95);
+var _signature = __w_pdfjs_require__(96);
+var _stylesheet = __w_pdfjs_require__(97);
+var _template = __w_pdfjs_require__(83);
+var _xdp = __w_pdfjs_require__(98);
+var _xhtml = __w_pdfjs_require__(99);
 const NamespaceSetUp = {
   config: _config.ConfigNamespace,
   connection: _connection_set.ConnectionSetNamespace,
@@ -53334,7 +53667,7 @@ const NamespaceSetUp = {
 exports.NamespaceSetUp = NamespaceSetUp;
 
 /***/ }),
-/* 91 */
+/* 92 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -53343,9 +53676,9 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.ConfigNamespace = void 0;
-var _namespaces = __w_pdfjs_require__(79);
-var _xfa_object = __w_pdfjs_require__(77);
-var _utils = __w_pdfjs_require__(78);
+var _namespaces = __w_pdfjs_require__(80);
+var _xfa_object = __w_pdfjs_require__(78);
+var _utils = __w_pdfjs_require__(79);
 var _util = __w_pdfjs_require__(2);
 const CONFIG_NS_ID = _namespaces.NamespaceIds.config.id;
 class Acrobat extends _xfa_object.XFAObject {
@@ -54770,7 +55103,7 @@ class ConfigNamespace {
 exports.ConfigNamespace = ConfigNamespace;
 
 /***/ }),
-/* 92 */
+/* 93 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -54779,8 +55112,8 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.ConnectionSetNamespace = void 0;
-var _namespaces = __w_pdfjs_require__(79);
-var _xfa_object = __w_pdfjs_require__(77);
+var _namespaces = __w_pdfjs_require__(80);
+var _xfa_object = __w_pdfjs_require__(78);
 const CONNECTION_SET_NS_ID = _namespaces.NamespaceIds.connectionSet.id;
 class ConnectionSet extends _xfa_object.XFAObject {
   constructor(attributes) {
@@ -54941,7 +55274,7 @@ class ConnectionSetNamespace {
 exports.ConnectionSetNamespace = ConnectionSetNamespace;
 
 /***/ }),
-/* 93 */
+/* 94 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -54950,8 +55283,8 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.DatasetsNamespace = void 0;
-var _xfa_object = __w_pdfjs_require__(77);
-var _namespaces = __w_pdfjs_require__(79);
+var _xfa_object = __w_pdfjs_require__(78);
+var _namespaces = __w_pdfjs_require__(80);
 const DATASETS_NS_ID = _namespaces.NamespaceIds.datasets.id;
 class Data extends _xfa_object.XmlObject {
   constructor(attributes) {
@@ -54992,7 +55325,7 @@ class DatasetsNamespace {
 exports.DatasetsNamespace = DatasetsNamespace;
 
 /***/ }),
-/* 94 */
+/* 95 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55001,9 +55334,9 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.LocaleSetNamespace = void 0;
-var _namespaces = __w_pdfjs_require__(79);
-var _xfa_object = __w_pdfjs_require__(77);
-var _utils = __w_pdfjs_require__(78);
+var _namespaces = __w_pdfjs_require__(80);
+var _xfa_object = __w_pdfjs_require__(78);
+var _utils = __w_pdfjs_require__(79);
 const LOCALE_SET_NS_ID = _namespaces.NamespaceIds.localeSet.id;
 class CalendarSymbols extends _xfa_object.XFAObject {
   constructor(attributes) {
@@ -55250,7 +55583,7 @@ class LocaleSetNamespace {
 exports.LocaleSetNamespace = LocaleSetNamespace;
 
 /***/ }),
-/* 95 */
+/* 96 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55259,8 +55592,8 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.SignatureNamespace = void 0;
-var _namespaces = __w_pdfjs_require__(79);
-var _xfa_object = __w_pdfjs_require__(77);
+var _namespaces = __w_pdfjs_require__(80);
+var _xfa_object = __w_pdfjs_require__(78);
 const SIGNATURE_NS_ID = _namespaces.NamespaceIds.signature.id;
 class Signature extends _xfa_object.XFAObject {
   constructor(attributes) {
@@ -55281,7 +55614,7 @@ class SignatureNamespace {
 exports.SignatureNamespace = SignatureNamespace;
 
 /***/ }),
-/* 96 */
+/* 97 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55290,8 +55623,8 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.StylesheetNamespace = void 0;
-var _namespaces = __w_pdfjs_require__(79);
-var _xfa_object = __w_pdfjs_require__(77);
+var _namespaces = __w_pdfjs_require__(80);
+var _xfa_object = __w_pdfjs_require__(78);
 const STYLESHEET_NS_ID = _namespaces.NamespaceIds.stylesheet.id;
 class Stylesheet extends _xfa_object.XFAObject {
   constructor(attributes) {
@@ -55312,7 +55645,7 @@ class StylesheetNamespace {
 exports.StylesheetNamespace = StylesheetNamespace;
 
 /***/ }),
-/* 97 */
+/* 98 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55321,8 +55654,8 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.XdpNamespace = void 0;
-var _namespaces = __w_pdfjs_require__(79);
-var _xfa_object = __w_pdfjs_require__(77);
+var _namespaces = __w_pdfjs_require__(80);
+var _xfa_object = __w_pdfjs_require__(78);
 const XDP_NS_ID = _namespaces.NamespaceIds.xdp.id;
 class Xdp extends _xfa_object.XFAObject {
   constructor(attributes) {
@@ -55355,7 +55688,7 @@ class XdpNamespace {
 exports.XdpNamespace = XdpNamespace;
 
 /***/ }),
-/* 98 */
+/* 99 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55364,10 +55697,10 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.XhtmlNamespace = void 0;
-var _xfa_object = __w_pdfjs_require__(77);
-var _namespaces = __w_pdfjs_require__(79);
-var _html_utils = __w_pdfjs_require__(84);
-var _utils = __w_pdfjs_require__(78);
+var _xfa_object = __w_pdfjs_require__(78);
+var _namespaces = __w_pdfjs_require__(80);
+var _html_utils = __w_pdfjs_require__(85);
+var _utils = __w_pdfjs_require__(79);
 const XHTML_NS_ID = _namespaces.NamespaceIds.xhtml.id;
 const $richText = Symbol();
 const VALID_STYLES = new Set(["color", "font", "font-family", "font-size", "font-stretch", "font-style", "font-weight", "margin", "margin-bottom", "margin-left", "margin-right", "margin-top", "letter-spacing", "line-height", "orphans", "page-break-after", "page-break-before", "page-break-inside", "tab-interval", "tab-stop", "text-align", "text-decoration", "text-indent", "vertical-align", "widows", "kerning-mode", "xfa-font-horizontal-scale", "xfa-font-vertical-scale", "xfa-spacerun", "xfa-tab-stops"]);
@@ -55771,7 +56104,7 @@ class XhtmlNamespace {
 exports.XhtmlNamespace = XhtmlNamespace;
 
 /***/ }),
-/* 99 */
+/* 100 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55780,8 +56113,8 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.UnknownNamespace = void 0;
-var _namespaces = __w_pdfjs_require__(79);
-var _xfa_object = __w_pdfjs_require__(77);
+var _namespaces = __w_pdfjs_require__(80);
+var _xfa_object = __w_pdfjs_require__(78);
 class UnknownNamespace {
   constructor(nsId) {
     this.namespaceId = nsId;
@@ -55793,7 +56126,7 @@ class UnknownNamespace {
 exports.UnknownNamespace = UnknownNamespace;
 
 /***/ }),
-/* 100 */
+/* 101 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55804,7 +56137,7 @@ Object.defineProperty(exports, "__esModule", ({
 exports.DatasetReader = void 0;
 var _util = __w_pdfjs_require__(2);
 var _core_utils = __w_pdfjs_require__(3);
-var _xml_parser = __w_pdfjs_require__(66);
+var _xml_parser = __w_pdfjs_require__(67);
 function decodeString(str) {
   try {
     return (0, _util.stringToUTF8String)(str);
@@ -55860,7 +56193,7 @@ class DatasetReader {
 exports.DatasetReader = DatasetReader;
 
 /***/ }),
-/* 101 */
+/* 102 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55874,7 +56207,7 @@ var _primitives = __w_pdfjs_require__(4);
 var _parser = __w_pdfjs_require__(16);
 var _core_utils = __w_pdfjs_require__(3);
 var _base_stream = __w_pdfjs_require__(5);
-var _crypto = __w_pdfjs_require__(67);
+var _crypto = __w_pdfjs_require__(68);
 class XRef {
   constructor(stream, pdfManager) {
     this.stream = stream;
@@ -56588,7 +56921,7 @@ class XRef {
 exports.XRef = XRef;
 
 /***/ }),
-/* 102 */
+/* 103 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -56601,7 +56934,7 @@ const isNodeJS = false;
 exports.isNodeJS = isNodeJS;
 
 /***/ }),
-/* 103 */
+/* 104 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -57014,7 +57347,7 @@ class MessageHandler {
 exports.MessageHandler = MessageHandler;
 
 /***/ }),
-/* 104 */
+/* 105 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -57176,8 +57509,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.7.11';
-const pdfjsBuild = '8f2d8f62f';
+const pdfjsVersion = '3.7.17';
+const pdfjsBuild = 'd520754bc';
 })();
 
 /******/ 	return __webpack_exports__;
