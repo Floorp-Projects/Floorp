@@ -142,6 +142,10 @@ template <bool CalledFromJit>
                                             bool forTest,
                                             MutableHandle<Value> rval);
 
+[[nodiscard]] extern bool RegExpExec(JSContext* cx, Handle<JSObject*> regexp,
+                                     Handle<JSString*> string, bool forTest,
+                                     MutableHandle<Value> rval);
+
 [[nodiscard]] extern bool RegExpGetSubstitution(
     JSContext* cx, Handle<ArrayObject*> matchResult,
     Handle<JSLinearString*> string, size_t position,
