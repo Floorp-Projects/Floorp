@@ -1457,7 +1457,21 @@ bool JS::SourceText<char16_t>::initMaybeBorrowed(
   JS::SourceOwnership ownership = linearChars.maybeGiveOwnershipToCaller()
                                       ? JS::SourceOwnership::TakeOwnership
                                       : JS::SourceOwnership::Borrowed;
-  return init(cx, chars, length, ownership);
+  return initImpl(cx, chars, length, ownership);
+}
+
+template <>
+bool JS::SourceText<char16_t>::initMaybeBorrowed(
+    JS::FrontendContext* fc, JS::AutoStableStringChars& linearChars) {
+  MOZ_ASSERT(linearChars.isTwoByte(),
+             "AutoStableStringChars must be initialized with char16_t");
+
+  const char16_t* chars = linearChars.twoByteChars();
+  size_t length = linearChars.length();
+  JS::SourceOwnership ownership = linearChars.maybeGiveOwnershipToCaller()
+                                      ? JS::SourceOwnership::TakeOwnership
+                                      : JS::SourceOwnership::Borrowed;
+  return initImpl(fc, chars, length, ownership);
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
