@@ -2463,6 +2463,12 @@ void gfxPlatform::InitAcceleration() {
       }
     }
 #endif
+  } else if (XRE_IsParentProcess()) {
+    FeatureState& feature =
+        gfxConfig::GetFeature(Feature::HARDWARE_VIDEO_DECODING);
+    feature.EnableByDefault();
+    feature.UserDisable("User disabled via pref",
+                        "FEATURE_HARDWARE_VIDEO_DECODING_PREF_DISABLED"_ns);
   }
 
   sLayersAccelerationPrefsInitialized = true;
