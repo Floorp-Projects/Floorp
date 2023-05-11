@@ -3146,6 +3146,30 @@ void LIRGenerator::visitRegExpTester(MRegExpTester* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitRegExpExecMatch(MRegExpExecMatch* ins) {
+  MOZ_ASSERT(ins->regexp()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->string()->type() == MIRType::String);
+
+  auto* lir = new (alloc())
+      LRegExpExecMatch(useFixedAtStart(ins->regexp(), RegExpMatcherRegExpReg),
+                       useFixedAtStart(ins->string(), RegExpMatcherStringReg),
+                       tempFixed(RegExpMatcherLastIndexReg));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitRegExpExecTest(MRegExpExecTest* ins) {
+  MOZ_ASSERT(ins->regexp()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->string()->type() == MIRType::String);
+
+  auto* lir = new (alloc())
+      LRegExpExecTest(useFixedAtStart(ins->regexp(), RegExpTesterRegExpReg),
+                      useFixedAtStart(ins->string(), RegExpTesterStringReg),
+                      tempFixed(RegExpTesterLastIndexReg));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitRegExpPrototypeOptimizable(
     MRegExpPrototypeOptimizable* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);

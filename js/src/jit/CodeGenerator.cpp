@@ -2831,6 +2831,119 @@ void CodeGenerator::visitRegExpMatcher(LRegExpMatcher* lir) {
   masm.freeStack(RegExpReservedStack);
 }
 
+class OutOfLineRegExpExecMatch : public OutOfLineCodeBase<CodeGenerator> {
+  LRegExpExecMatch* lir_;
+
+ public:
+  explicit OutOfLineRegExpExecMatch(LRegExpExecMatch* lir) : lir_(lir) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineRegExpExecMatch(this);
+  }
+
+  LRegExpExecMatch* lir() const { return lir_; }
+};
+
+void CodeGenerator::visitOutOfLineRegExpExecMatch(
+    OutOfLineRegExpExecMatch* ool) {
+  LRegExpExecMatch* lir = ool->lir();
+  Register lastIndex = ToRegister(lir->temp0());
+  MOZ_ASSERT(lastIndex == RegExpMatcherLastIndexReg);
+  Register input = ToRegister(lir->string());
+  Register regexp = ToRegister(lir->regexp());
+
+  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+  regs.take(lastIndex);
+  regs.take(input);
+  regs.take(regexp);
+  Register temp = regs.takeAny();
+
+  masm.computeEffectiveAddress(
+      Address(masm.getStackPointer(), InputOutputDataSize), temp);
+
+  pushArg(temp);
+  pushArg(lastIndex);
+  pushArg(input);
+  pushArg(regexp);
+
+  // We are not using oolCallVM because we are in a Call and live registers have
+  // already been saved by the register allocator.
+  using Fn =
+      bool (*)(JSContext*, Handle<RegExpObject*> regexp, HandleString input,
+               int32_t lastIndex, MatchPairs* pairs, MutableHandleValue output);
+  callVM<Fn, RegExpBuiltinExecMatchRaw<true>>(lir);
+  masm.jump(ool->rejoin());
+}
+
+void CodeGenerator::visitRegExpExecMatch(LRegExpExecMatch* lir) {
+  MOZ_ASSERT(ToRegister(lir->regexp()) == RegExpMatcherRegExpReg);
+  MOZ_ASSERT(ToRegister(lir->string()) == RegExpMatcherStringReg);
+  MOZ_ASSERT(ToRegister(lir->temp0()) == RegExpMatcherLastIndexReg);
+  MOZ_ASSERT(ToOutValue(lir) == JSReturnOperand);
+
+#if defined(JS_NUNBOX32)
+  static_assert(RegExpMatcherRegExpReg != JSReturnReg_Type);
+  static_assert(RegExpMatcherRegExpReg != JSReturnReg_Data);
+  static_assert(RegExpMatcherStringReg != JSReturnReg_Type);
+  static_assert(RegExpMatcherStringReg != JSReturnReg_Data);
+  static_assert(RegExpMatcherLastIndexReg != JSReturnReg_Type);
+  static_assert(RegExpMatcherLastIndexReg != JSReturnReg_Data);
+#elif defined(JS_PUNBOX64)
+  static_assert(RegExpMatcherRegExpReg != JSReturnReg);
+  static_assert(RegExpMatcherStringReg != JSReturnReg);
+  static_assert(RegExpMatcherLastIndexReg != JSReturnReg);
+#endif
+
+  Label done;
+
+  Register regexp = RegExpMatcherRegExpReg;
+  Register string = RegExpMatcherStringReg;
+  Register lastIndex = RegExpMatcherLastIndexReg;
+
+  masm.loadAndUpdateRegExpLastIndex(/* forTest = */ false, regexp, string,
+                                    lastIndex, JSReturnOperand, &done);
+
+  masm.reserveStack(RegExpReservedStack);
+
+  auto* ool = new (alloc()) OutOfLineRegExpExecMatch(lir);
+  addOutOfLineCode(ool, lir->mir());
+
+  const JitRealm* jitRealm = gen->realm->jitRealm();
+  JitCode* regExpMatcherStub =
+      jitRealm->regExpMatcherStubNoBarrier(&realmStubsToReadBarrier_);
+  masm.call(regExpMatcherStub);
+  masm.branchTestUndefined(Assembler::Equal, JSReturnOperand, ool->entry());
+
+  // If the regular expression is global or sticky, we have to update its
+  // .lastIndex slot.
+
+  Address flagsSlot(regexp, RegExpObject::offsetOfFlags());
+  Address lastIndexSlot(regexp, RegExpObject::offsetOfLastIndex());
+
+  masm.branchTest32(Assembler::Zero, flagsSlot,
+                    Imm32(JS::RegExpFlag::Global | JS::RegExpFlag::Sticky),
+                    ool->rejoin());
+
+  Label notFound;
+  masm.branchTestNull(Assembler::Equal, JSReturnOperand, &notFound);
+
+  // Conveniently, the MatchPairs vector is still on the stack, so we can load
+  // the new lastIndex value from it.
+  int32_t offsetOfLimit =
+      RegExpPairsVectorStartOffset(0) + MatchPair::offsetOfLimit();
+  masm.load32(Address(masm.getStackPointer(), offsetOfLimit), lastIndex);
+  masm.storeValue(JSVAL_TYPE_INT32, lastIndex, lastIndexSlot);
+  masm.jump(ool->rejoin());
+
+  masm.bind(&notFound);
+  masm.storeValue(Int32Value(0), lastIndexSlot);
+
+  masm.bind(ool->rejoin());
+  masm.freeStack(RegExpReservedStack);
+
+  masm.bind(&done);
+}
+
 static const int32_t RegExpSearcherResultNotFound = -1;
 static const int32_t RegExpSearcherResultFailed = -2;
 
@@ -3158,6 +3271,98 @@ void CodeGenerator::visitRegExpTester(LRegExpTester* lir) {
 
   masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpTesterResultFailed),
                 ool->entry());
+  masm.bind(ool->rejoin());
+}
+
+class OutOfLineRegExpExecTest : public OutOfLineCodeBase<CodeGenerator> {
+  LRegExpExecTest* lir_;
+
+ public:
+  explicit OutOfLineRegExpExecTest(LRegExpExecTest* lir) : lir_(lir) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineRegExpExecTest(this);
+  }
+
+  LRegExpExecTest* lir() const { return lir_; }
+};
+
+void CodeGenerator::visitOutOfLineRegExpExecTest(OutOfLineRegExpExecTest* ool) {
+  LRegExpExecTest* lir = ool->lir();
+  Register lastIndex = ToRegister(lir->temp0());
+  MOZ_ASSERT(lastIndex == RegExpTesterLastIndexReg);
+  Register input = ToRegister(lir->string());
+  Register regexp = ToRegister(lir->regexp());
+
+  pushArg(lastIndex);
+  pushArg(input);
+  pushArg(regexp);
+
+  // We are not using oolCallVM because we are in a Call and live registers have
+  // already been saved by the register allocator.
+  using Fn = bool (*)(JSContext* cx, Handle<RegExpObject*> regexp,
+                      HandleString input, int32_t lastIndex, bool* result);
+  callVM<Fn, RegExpBuiltinExecTestRaw<true>>(lir);
+
+  masm.jump(ool->rejoin());
+}
+
+void CodeGenerator::visitRegExpExecTest(LRegExpExecTest* lir) {
+  MOZ_ASSERT(ToRegister(lir->regexp()) == RegExpTesterRegExpReg);
+  MOZ_ASSERT(ToRegister(lir->string()) == RegExpTesterStringReg);
+  MOZ_ASSERT(ToRegister(lir->temp0()) == RegExpTesterLastIndexReg);
+  MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
+
+  static_assert(RegExpTesterRegExpReg != ReturnReg);
+  static_assert(RegExpTesterStringReg != ReturnReg);
+  static_assert(RegExpTesterLastIndexReg != ReturnReg);
+
+  auto* ool = new (alloc()) OutOfLineRegExpExecTest(lir);
+  addOutOfLineCode(ool, lir->mir());
+
+  Register regexp = RegExpTesterRegExpReg;
+  Register string = RegExpTesterStringReg;
+  Register lastIndex = RegExpTesterLastIndexReg;
+  TypedOrValueRegister output =
+      TypedOrValueRegister(MIRType::Boolean, AnyRegister(ReturnReg));
+
+  masm.loadAndUpdateRegExpLastIndex(/* forTest = */ true, regexp, string,
+                                    lastIndex, output, ool->rejoin());
+
+  const JitRealm* jitRealm = gen->realm->jitRealm();
+  JitCode* regExpTesterStub =
+      jitRealm->regExpTesterStubNoBarrier(&realmStubsToReadBarrier_);
+  masm.call(regExpTesterStub);
+
+  masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpTesterResultFailed),
+                ool->entry());
+
+  // Set ReturnReg to true/false based on the return value. If the regular
+  // expression is global or sticky, we also have to update its .lastIndex
+  // slot.
+
+  Address flagsSlot(regexp, RegExpObject::offsetOfFlags());
+  Address lastIndexSlot(regexp, RegExpObject::offsetOfLastIndex());
+
+  Label notFound;
+  masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpTesterResultNotFound),
+                &notFound);
+
+  masm.move32(ReturnReg, lastIndex);
+  masm.move32(Imm32(1), ReturnReg);
+  masm.branchTest32(Assembler::Zero, flagsSlot,
+                    Imm32(JS::RegExpFlag::Global | JS::RegExpFlag::Sticky),
+                    ool->rejoin());
+  masm.storeValue(JSVAL_TYPE_INT32, lastIndex, lastIndexSlot);
+  masm.jump(ool->rejoin());
+
+  masm.bind(&notFound);
+  masm.move32(Imm32(0), ReturnReg);
+  masm.branchTest32(Assembler::Zero, flagsSlot,
+                    Imm32(JS::RegExpFlag::Global | JS::RegExpFlag::Sticky),
+                    ool->rejoin());
+  masm.storeValue(Int32Value(0), lastIndexSlot);
+
   masm.bind(ool->rejoin());
 }
 
