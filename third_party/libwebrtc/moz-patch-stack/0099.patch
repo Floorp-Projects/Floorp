@@ -1,0 +1,28 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 10 May 2023 07:47:00 +0000
+Subject: Bug 1810949 - In webrtc_libyuv.cc put a label at end of compound
+ statement. CLOSED TREE
+
+Differential Revision: https://phabricator.services.mozilla.com/D177600
+
+Depends on D177599
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ac8147fee0323be3bf1d7f292a2a408a9901159
+---
+ common_video/libyuv/webrtc_libyuv.cc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
+index 8c68162624..05a4b184c2 100644
+--- a/common_video/libyuv/webrtc_libyuv.cc
++++ b/common_video/libyuv/webrtc_libyuv.cc
+@@ -47,6 +47,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+       return width * height * 4;
+     case VideoType::kMJPEG:
+     case VideoType::kUnknown:
++      break;
+   }
+   RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << type;
+   return 0;
+-- 
+2.34.1
+

@@ -1,177 +1,86 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 20 Apr 2023 14:52:00 -0500
-Subject: Bug 1828517 - (fix-a138c6c8a5) handle file moves in BUILD.gn
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 10 May 2023 07:06:00 +0000
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 7e5d9edfdf.
+ r=webrtc-reviewers,mjf
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf7e333da17689b3c115a6ffd07fab042bc5f086
+Upstream commit: https://webrtc.googlesource.com/src/+/7e5d9edfdfe82e06182b790afe848cd0da179a87
+    webrtc_libyuv: Raise warnings for unhandled types at compile time
+
+    Bug: webrtc:14830
+    Change-Id: Ib5141e585f673098bbedd2872dbd6e6ed9df4864
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291528
+    Reviewed-by: Erik Språng <sprang@webrtc.org>
+    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
+    Commit-Queue: Erik Språng <sprang@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39408}
+
+Differential Revision: https://phabricator.services.mozilla.com/D177228
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2bc179dfe25391e4b621ce407239beaebbe09be8
 ---
- rtc_base/BUILD.gn | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ common_video/libyuv/webrtc_libyuv.cc | 23 +++++++++--------------
+ 1 file changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 0b1e2a6208..7573a137ab 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -1147,6 +1147,7 @@ if (!build_with_chromium) {
- }
- 
- rtc_library("network") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "network.cc",
-@@ -1185,16 +1186,20 @@ rtc_library("network") {
-     deps += [ ":win32" ]
+diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
+index 8998af191d..d07d739119 100644
+--- a/common_video/libyuv/webrtc_libyuv.cc
++++ b/common_video/libyuv/webrtc_libyuv.cc
+@@ -22,7 +22,6 @@ namespace webrtc {
+ size_t CalcBufferSize(VideoType type, int width, int height) {
+   RTC_DCHECK_GE(width, 0);
+   RTC_DCHECK_GE(height, 0);
+-  size_t buffer_size = 0;
+   switch (type) {
+     case VideoType::kI420:
+     case VideoType::kNV21:
+@@ -31,28 +30,24 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+     case VideoType::kNV12: {
+       int half_width = (width + 1) >> 1;
+       int half_height = (height + 1) >> 1;
+-      buffer_size = width * height + half_width * half_height * 2;
+-      break;
++      return width * height + half_width * half_height * 2;
+     }
+     case VideoType::kARGB4444:
+     case VideoType::kRGB565:
+     case VideoType::kARGB1555:
+     case VideoType::kYUY2:
+     case VideoType::kUYVY:
+-      buffer_size = width * height * 2;
+-      break;
++      return width * height * 2;
+     case VideoType::kRGB24:
+-      buffer_size = width * height * 3;
+-      break;
++      return width * height * 3;
+     case VideoType::kBGRA:
+     case VideoType::kARGB:
+-      buffer_size = width * height * 4;
+-      break;
+-    default:
+-      RTC_DCHECK_NOTREACHED();
+-      break;
++      return width * height * 4;
++    case VideoType::kMJPEG:
++    case VideoType::kUnknown:
    }
- }
-+}
- 
- rtc_library("socket_address_pair") {
-+if (!build_with_mozilla) {
-   sources = [
-     "socket_address_pair.cc",
-     "socket_address_pair.h",
-   ]
-   deps = [ ":socket_address" ]
- }
-+}
- 
- rtc_library("net_helper") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "net_helper.cc",
-@@ -1203,8 +1208,10 @@ rtc_library("net_helper") {
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
-   deps = [ "system:rtc_export" ]
- }
-+}
- 
- rtc_library("socket_adapters") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "socket_adapters.cc",
-@@ -1224,6 +1231,7 @@ rtc_library("socket_adapters") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("network_route") {
-   sources = [
-@@ -1238,6 +1246,7 @@ rtc_library("network_route") {
+-  return buffer_size;
++  RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << type;
++  return 0;
  }
  
- rtc_library("async_tcp_socket") {
-+if (!build_with_mozilla) {
-   sources = [
-     "async_tcp_socket.cc",
-     "async_tcp_socket.h",
-@@ -1256,8 +1265,10 @@ rtc_library("async_tcp_socket") {
-     "third_party/sigslot",
-   ]
- }
-+}
- 
- rtc_library("async_udp_socket") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "async_udp_socket.cc",
-@@ -1279,8 +1290,10 @@ rtc_library("async_udp_socket") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
- }
-+}
- 
- rtc_library("async_packet_socket") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "async_packet_socket.cc",
-@@ -1298,6 +1311,7 @@ rtc_library("async_packet_socket") {
-     "third_party/sigslot",
-   ]
- }
-+}
- 
- rtc_library("mdns_responder_interface") {
-   sources = [ "mdns_responder_interface.h" ]
-@@ -1310,6 +1324,7 @@ rtc_library("dscp") {
- }
- 
- rtc_library("proxy_info") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "proxy_info.cc",
-@@ -1320,6 +1335,7 @@ rtc_library("proxy_info") {
-     ":socket_address",
-   ]
- }
-+}
- 
- rtc_library("file_rotating_stream") {
-   sources = [
-@@ -1348,6 +1364,7 @@ rtc_library("data_rate_limiter") {
- }
- 
- rtc_library("unique_id_generator") {
-+if (!build_with_mozilla) {
-   sources = [
-     "unique_id_generator.cc",
-     "unique_id_generator.h",
-@@ -1362,6 +1379,7 @@ rtc_library("unique_id_generator") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("crc32") {
-   sources = [
-@@ -1389,6 +1407,7 @@ rtc_library("stream") {
- }
- 
- rtc_library("rtc_certificate_generator") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "rtc_certificate_generator.cc",
-@@ -1406,8 +1425,10 @@ rtc_library("rtc_certificate_generator") {
-     "//third_party/abseil-cpp/absl/types:optional",
-   ]
- }
-+}
- 
- rtc_library("ssl") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "helpers.cc",
-@@ -1506,6 +1527,7 @@ rtc_library("ssl") {
-     deps += [ ":win32" ]
+ int ExtractBuffer(const rtc::scoped_refptr<I420BufferInterface>& input_frame,
+@@ -120,7 +115,7 @@ int ConvertVideoType(VideoType video_type) {
+     case VideoType::kNV12:
+       return libyuv::FOURCC_NV12;
    }
- }
-+}
- 
- rtc_library("crypt_string") {
-   sources = [
-@@ -1515,6 +1537,7 @@ rtc_library("crypt_string") {
+-  RTC_DCHECK_NOTREACHED();
++  RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << video_type;
+   return libyuv::FOURCC_ANY;
  }
  
- rtc_library("http_common") {
-+if (!build_with_mozilla) {
-   sources = [
-     "http_common.cc",
-     "http_common.h",
-@@ -1531,6 +1554,7 @@ rtc_library("http_common") {
- 
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_source_set("gtest_prod") {
-   sources = [ "gtest_prod_util.h" ]
 -- 
 2.34.1
 

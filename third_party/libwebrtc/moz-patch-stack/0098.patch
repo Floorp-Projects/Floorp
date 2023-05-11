@@ -1,0 +1,238 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 10 May 2023 07:06:00 +0000
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 91d5fc2ed6.
+ r=webrtc-reviewers,mjf
+
+Upstream commit: https://webrtc.googlesource.com/src/+/91d5fc2ed6ef347d90182868320267d45cf9525b
+    Support more pixel formats in v4l2 camera backend
+
+    These were tested with gstreamer and v4l2loopback, example setup:
+    $ sudo v4l2loopback-ctl add -n BGRA 10
+    $ gst-launch-1.0 videotestsrc pattern=smpte-rp-219 ! \
+      video/x-raw,format=BGRA ! v4l2sink device=/dev/video10 > /dev/null &
+
+    Then conversion was confirmed with video_loopback:
+    $ ./video_loopback --capture_device_index=3 --logs 2>&1 | grep -i \
+      capture
+
+    Bug: webrtc:14830
+    Change-Id: I35c8e453cf7f9a2923935b0ad82477a3144e8c12
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291532
+    Commit-Queue: Stefan Holmer <stefan@webrtc.org>
+    Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39979}
+
+Differential Revision: https://phabricator.services.mozilla.com/D177232
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/92dc582fdcf3a2fdb3fcdbcd96080d081de8f8d5
+---
+ .../video_capture/linux/device_info_v4l2.cc   | 71 +++++++++++++++++--
+ .../video_capture/linux/video_capture_v4l2.cc | 63 ++++++++++++++--
+ 2 files changed, 126 insertions(+), 8 deletions(-)
+
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index f854c2ccc7..ccd4b2bd2a 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -39,6 +39,24 @@
+ #define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
+ #endif
+ 
++// These defines are here to support building on kernel 3.16 which some
++// downstream projects, e.g. Firefox, use.
++// TODO(apehrson): Remove them and their undefs when no longer needed.
++#ifndef V4L2_PIX_FMT_ABGR32
++#define ABGR32_OVERRIDE 1
++#define V4L2_PIX_FMT_ABGR32 v4l2_fourcc('A', 'R', '2', '4')
++#endif
++
++#ifndef V4L2_PIX_FMT_ARGB32
++#define ARGB32_OVERRIDE 1
++#define V4L2_PIX_FMT_ARGB32 v4l2_fourcc('B', 'A', '2', '4')
++#endif
++
++#ifndef V4L2_PIX_FMT_RGBA32
++#define RGBA32_OVERRIDE 1
++#define V4L2_PIX_FMT_RGBA32 v4l2_fourcc('A', 'B', '2', '4')
++#endif
++
+ namespace webrtc {
+ namespace videocapturemodule {
+ #ifdef WEBRTC_LINUX
+@@ -391,9 +409,13 @@ int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
+   video_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+   video_fmt.fmt.pix.sizeimage = 0;
+ 
+-  unsigned int videoFormats[] = {V4L2_PIX_FMT_MJPEG, V4L2_PIX_FMT_YUV420,
+-                                 V4L2_PIX_FMT_YUYV, V4L2_PIX_FMT_UYVY,
+-                                 V4L2_PIX_FMT_NV12};
++  unsigned int videoFormats[] = {
++      V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_JPEG,   V4L2_PIX_FMT_YUV420,
++      V4L2_PIX_FMT_YVU420, V4L2_PIX_FMT_YUYV,   V4L2_PIX_FMT_UYVY,
++      V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_BGR24,  V4L2_PIX_FMT_RGB24,
++      V4L2_PIX_FMT_RGB565, V4L2_PIX_FMT_ABGR32, V4L2_PIX_FMT_ARGB32,
++      V4L2_PIX_FMT_RGBA32, V4L2_PIX_FMT_BGR32,  V4L2_PIX_FMT_RGB32,
++  };
+   constexpr int totalFmts = sizeof(videoFormats) / sizeof(unsigned int);
+ 
+   int sizes = 13;
+@@ -418,12 +440,38 @@ int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
+             cap.videoType = VideoType::kYUY2;
+           } else if (videoFormats[fmts] == V4L2_PIX_FMT_YUV420) {
+             cap.videoType = VideoType::kI420;
+-          } else if (videoFormats[fmts] == V4L2_PIX_FMT_MJPEG) {
++          } else if (videoFormats[fmts] == V4L2_PIX_FMT_YVU420) {
++            cap.videoType = VideoType::kYV12;
++          } else if (videoFormats[fmts] == V4L2_PIX_FMT_MJPEG ||
++                     videoFormats[fmts] == V4L2_PIX_FMT_JPEG) {
+             cap.videoType = VideoType::kMJPEG;
+           } else if (videoFormats[fmts] == V4L2_PIX_FMT_UYVY) {
+             cap.videoType = VideoType::kUYVY;
+           } else if (videoFormats[fmts] == V4L2_PIX_FMT_NV12) {
+             cap.videoType = VideoType::kNV12;
++          } else if (videoFormats[fmts] == V4L2_PIX_FMT_BGR24) {
++            // NB that for RGB formats, `VideoType` follows naming conventions
++            // of libyuv[1], where e.g. the format for FOURCC "ARGB" stores
++            // pixels in BGRA order in memory. V4L2[2] on the other hand names
++            // its formats based on the order of the RGB components as stored in
++            // memory. Applies to all RGB formats below.
++            // [1]https://chromium.googlesource.com/libyuv/libyuv/+/refs/heads/main/docs/formats.md#the-argb-fourcc
++            // [2]https://www.kernel.org/doc/html/v6.2/userspace-api/media/v4l/pixfmt-rgb.html#bits-per-component
++            cap.videoType = VideoType::kRGB24;
++          } else if (videoFormats[fmts] == V4L2_PIX_FMT_RGB24) {
++            cap.videoType = VideoType::kBGR24;
++          } else if (videoFormats[fmts] == V4L2_PIX_FMT_RGB565) {
++            cap.videoType = VideoType::kRGB565;
++          } else if (videoFormats[fmts] == V4L2_PIX_FMT_ABGR32) {
++            cap.videoType = VideoType::kARGB;
++          } else if (videoFormats[fmts] == V4L2_PIX_FMT_ARGB32) {
++            cap.videoType = VideoType::kBGRA;
++          } else if (videoFormats[fmts] == V4L2_PIX_FMT_BGR32) {
++            cap.videoType = VideoType::kARGB;
++          } else if (videoFormats[fmts] == V4L2_PIX_FMT_RGB32) {
++            cap.videoType = VideoType::kBGRA;
++          } else if (videoFormats[fmts] == V4L2_PIX_FMT_RGBA32) {
++            cap.videoType = VideoType::kABGR;
+           } else {
+             RTC_DCHECK_NOTREACHED();
+           }
+@@ -452,3 +500,18 @@ int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
+ 
+ }  // namespace videocapturemodule
+ }  // namespace webrtc
++
++#ifdef ABGR32_OVERRIDE
++#undef ABGR32_OVERRIDE
++#undef V4L2_PIX_FMT_ABGR32
++#endif
++
++#ifdef ARGB32_OVERRIDE
++#undef ARGB32_OVERRIDE
++#undef V4L2_PIX_FMT_ARGB32
++#endif
++
++#ifdef RGBA32_OVERRIDE
++#undef RGBA32_OVERRIDE
++#undef V4L2_PIX_FMT_RGBA32
++#endif
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index baf1916331..2935cd027d 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -37,6 +37,24 @@
+ #include "modules/video_capture/video_capture.h"
+ #include "rtc_base/logging.h"
+ 
++// These defines are here to support building on kernel 3.16 which some
++// downstream projects, e.g. Firefox, use.
++// TODO(apehrson): Remove them and their undefs when no longer needed.
++#ifndef V4L2_PIX_FMT_ABGR32
++#define ABGR32_OVERRIDE 1
++#define V4L2_PIX_FMT_ABGR32 v4l2_fourcc('A', 'R', '2', '4')
++#endif
++
++#ifndef V4L2_PIX_FMT_ARGB32
++#define ARGB32_OVERRIDE 1
++#define V4L2_PIX_FMT_ARGB32 v4l2_fourcc('B', 'A', '2', '4')
++#endif
++
++#ifndef V4L2_PIX_FMT_RGBA32
++#define RGBA32_OVERRIDE 1
++#define V4L2_PIX_FMT_RGBA32 v4l2_fourcc('A', 'B', '2', '4')
++#endif
++
+ namespace webrtc {
+ namespace videocapturemodule {
+ VideoCaptureModuleV4L2::VideoCaptureModuleV4L2()
+@@ -131,12 +149,18 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
+   // I420 otherwise.
+   unsigned int hdFmts[] = {
+-      V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YUYV,
+-      V4L2_PIX_FMT_UYVY,   V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_JPEG,
++      V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YVU420,
++      V4L2_PIX_FMT_YUYV,   V4L2_PIX_FMT_UYVY,   V4L2_PIX_FMT_NV12,
++      V4L2_PIX_FMT_ABGR32, V4L2_PIX_FMT_ARGB32, V4L2_PIX_FMT_RGBA32,
++      V4L2_PIX_FMT_BGR32,  V4L2_PIX_FMT_RGB32,  V4L2_PIX_FMT_BGR24,
++      V4L2_PIX_FMT_RGB24,  V4L2_PIX_FMT_RGB565, V4L2_PIX_FMT_JPEG,
+   };
+   unsigned int sdFmts[] = {
+-      V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YUYV,   V4L2_PIX_FMT_UYVY,
+-      V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_JPEG,
++      V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YVU420, V4L2_PIX_FMT_YUYV,
++      V4L2_PIX_FMT_UYVY,   V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_ABGR32,
++      V4L2_PIX_FMT_ARGB32, V4L2_PIX_FMT_RGBA32, V4L2_PIX_FMT_BGR32,
++      V4L2_PIX_FMT_RGB32,  V4L2_PIX_FMT_BGR24,  V4L2_PIX_FMT_RGB24,
++      V4L2_PIX_FMT_RGB565, V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_JPEG,
+   };
+   const bool isHd = capability.width > 640 || capability.height > 480;
+   unsigned int* fmts = isHd ? hdFmts : sdFmts;
+@@ -183,10 +207,26 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+     _captureVideoType = VideoType::kYUY2;
+   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
+     _captureVideoType = VideoType::kI420;
++  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YVU420)
++    _captureVideoType = VideoType::kYV12;
+   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY)
+     _captureVideoType = VideoType::kUYVY;
+   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_NV12)
+     _captureVideoType = VideoType::kNV12;
++  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_BGR24)
++    _captureVideoType = VideoType::kRGB24;
++  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB24)
++    _captureVideoType = VideoType::kBGR24;
++  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB565)
++    _captureVideoType = VideoType::kRGB565;
++  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_ABGR32 ||
++           video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_BGR32)
++    _captureVideoType = VideoType::kARGB;
++  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_ARGB32 ||
++           video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB32)
++    _captureVideoType = VideoType::kBGRA;
++  else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGBA32)
++    _captureVideoType = VideoType::kABGR;
+   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
+            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
+     _captureVideoType = VideoType::kMJPEG;
+@@ -432,3 +472,18 @@ int32_t VideoCaptureModuleV4L2::CaptureSettings(
+ }
+ }  // namespace videocapturemodule
+ }  // namespace webrtc
++
++#ifdef ABGR32_OVERRIDE
++#undef ABGR32_OVERRIDE
++#undef V4L2_PIX_FMT_ABGR32
++#endif
++
++#ifdef ARGB32_OVERRIDE
++#undef ARGB32_OVERRIDE
++#undef V4L2_PIX_FMT_ARGB32
++#endif
++
++#ifdef RGBA32_OVERRIDE
++#undef RGBA32_OVERRIDE
++#undef V4L2_PIX_FMT_RGBA32
++#endif
+-- 
+2.34.1
+

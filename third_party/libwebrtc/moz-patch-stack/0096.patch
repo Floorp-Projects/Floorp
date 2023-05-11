@@ -1,0 +1,56 @@
+From: Michael Froman <mjfroman@mac.com>
+Date: Thu, 11 May 2023 12:02:36 -0500
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit b1a174041d.
+ r=webrtc-reviewers,mjf
+
+Upstream commit: https://webrtc.googlesource.com/src/+/b1a174041ddf3057f5d6d2f87affa0f11f9413df
+    Relax VideoCaptureImpl::IncomingFrame size check
+
+    When testing manually with gstreamer and v4l2loopback, the incoming
+    buffer is often larger than the expected size. This change allows
+    such frames, while still logging the error.
+
+    Bug: webrtc:14830
+    Change-Id: I399aa55af6437d75b50830166a667547f6d144d4
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291530
+    Commit-Queue: Stefan Holmer <stefan@webrtc.org>
+    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39972}
+
+Differential Revision: https://phabricator.services.mozilla.com/D177230
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/19b5723ad94d55e52d89aad38d5219b72ab0473e
+---
+ modules/video_capture/video_capture_impl.cc | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
+index d227d41c34..9d9a1471e8 100644
+--- a/modules/video_capture/video_capture_impl.cc
++++ b/modules/video_capture/video_capture_impl.cc
+@@ -160,11 +160,17 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+   }
+ 
+   // Not encoded, convert to I420.
+-  if (frameInfo.videoType != VideoType::kMJPEG &&
+-      CalcBufferSize(frameInfo.videoType, width, abs(height)) !=
+-          videoFrameLength) {
+-    RTC_LOG(LS_ERROR) << "Wrong incoming frame length.";
+-    return -1;
++  if (frameInfo.videoType != VideoType::kMJPEG) {
++    // Allow buffers larger than expected. On linux gstreamer allocates buffers
++    // page-aligned and v4l2loopback passes us the buffer size verbatim which
++    // for most cases is larger than expected.
++    // See https://github.com/umlaeute/v4l2loopback/issues/190.
++    if (auto size = CalcBufferSize(frameInfo.videoType, width, abs(height));
++        videoFrameLength < size) {
++      RTC_LOG(LS_ERROR) << "Wrong incoming frame length. Expected " << size
++                        << ", Got " << videoFrameLength << ".";
++      return -1;
++    }
+   }
+ 
+   int target_width = width;
+-- 
+2.34.1
+
