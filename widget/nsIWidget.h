@@ -117,7 +117,6 @@ typedef void* nsNativeWidget;
  */
 #define NS_NATIVE_WINDOW 0
 #define NS_NATIVE_GRAPHIC 1
-#define NS_NATIVE_TMP_WINDOW 2
 #define NS_NATIVE_WIDGET 3
 #define NS_NATIVE_REGION 5
 #define NS_NATIVE_OFFSETX 6

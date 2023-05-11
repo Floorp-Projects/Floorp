@@ -333,6 +333,8 @@ class nsWindow final : public nsBaseWidget {
     sIsRestoringSession = aIsRestoringSession;
   }
 
+  bool IsRTL() const { return mIsRTL; }
+
   /**
    * AssociateDefaultIMC() associates or disassociates the default IMC for
    * the window.

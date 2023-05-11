@@ -13,28 +13,12 @@
 #include "nsIWidget.h"
 #include "nsString.h"
 #include "WidgetUtils.h"
+#include "WinUtils.h"
 #include "nsPIDOMWindow.h"
 
 using namespace mozilla::widget;
 
 namespace {
-// Manages NS_NATIVE_TMP_WINDOW child windows. NS_NATIVE_TMP_WINDOWs are
-// temporary child windows of mParentWidget created to address RTL issues
-// in picker dialogs. We are responsible for destroying these.
-class AutoDestroyTmpWindow {
- public:
-  explicit AutoDestroyTmpWindow(HWND aTmpWnd) : mWnd(aTmpWnd) {}
-
-  ~AutoDestroyTmpWindow() {
-    if (mWnd) DestroyWindow(mWnd);
-  }
-
-  inline HWND get() const { return mWnd; }
-
- private:
-  HWND mWnd;
-};
-
 static DWORD ColorStringToRGB(const nsAString& aColor) {
   DWORD result = 0;
 
@@ -108,10 +92,7 @@ AsyncColorChooser::Run() {
     mozilla::AutoRestore<AsyncColorChooser*> restoreColorChooser(gColorChooser);
     gColorChooser = this;
 
-    AutoDestroyTmpWindow adtw(
-        (HWND)(mParentWidget.get()
-                   ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW)
-                   : nullptr));
+    ScopedRtlShimWindow shim(mParentWidget.get());
 
     COLORREF customColors[16];
     for (size_t i = 0; i < mozilla::ArrayLength(customColors); i++) {
@@ -124,7 +105,7 @@ AsyncColorChooser::Run() {
 
     CHOOSECOLOR options;
     options.lStructSize = sizeof(options);
-    options.hwndOwner = adtw.get();
+    options.hwndOwner = shim.get();
     options.Flags = CC_RGBINIT | CC_FULLOPEN | CC_ENABLEHOOK;
     options.rgbResult = mInitialColor;
     options.lpCustColors = customColors;

@@ -69,10 +69,13 @@ nsPrintDialogServiceWin::ShowPrintDialog(mozIDOMWindowProxy* aParent,
                                          bool aHaveSelection,
                                          nsIPrintSettings* aSettings) {
   NS_ENSURE_ARG(aParent);
-  HWND hWnd = GetHWNDForDOMWindow(aParent);
-  NS_ASSERTION(hWnd, "Couldn't get native window for PRint Dialog!");
+  RefPtr<nsIWidget> parentWidget =
+      WidgetUtils::DOMWindowToWidget(nsPIDOMWindowOuter::From(aParent));
 
-  return NativeShowPrintDialog(hWnd, aHaveSelection, aSettings);
+  ScopedRtlShimWindow shim(parentWidget.get());
+  NS_ASSERTION(shim.get(), "Couldn't get native window for PRint Dialog!");
+
+  return NativeShowPrintDialog(shim.get(), aHaveSelection, aSettings);
 }
 
 NS_IMETHODIMP
@@ -141,12 +144,4 @@ nsresult nsPrintDialogServiceWin::DoDialog(mozIDOMWindowProxy* aParent,
       "centerscreen,chrome,modal,titlebar"_ns, array, getter_AddRefs(dialog));
 
   return rv;
-}
-
-HWND nsPrintDialogServiceWin::GetHWNDForDOMWindow(mozIDOMWindowProxy* aWindow) {
-  nsCOMPtr<nsIWidget> widget =
-      WidgetUtils::DOMWindowToWidget(nsPIDOMWindowOuter::From(aWindow));
-  if (!widget) return nullptr;
-
-  return (HWND)widget->GetNativeData(NS_NATIVE_TMP_WINDOW);
 }
