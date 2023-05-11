@@ -26,10 +26,6 @@ menucaption {
   padding: 4px 6px;
   max-width: 42em;
   list-style-image: none;
-  /* Specify our background to avoid triggering reflows on hover. This is an
-   * optimization, as backgrounds don't disable theming on XUL elements, but
-   * also papers over bug 1653832. */
-  background-color: initial;
 }
 
 menu:where([_moz-menuactive]:not([disabled="true"])),
