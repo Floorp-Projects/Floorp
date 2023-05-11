@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 7.1.0
+Version: 7.2.1
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
@@ -26,7 +26,6 @@ Requires-Dist: Jinja2 (>=2.10.1)
 Requires-Dist: MarkupSafe (<=2.0.1,>=1.1.1)
 Requires-Dist: jsonschema (>=3.0.2)
 Requires-Dist: PyYAML (>=5.3.1)
-Requires-Dist: yamllint (>=1.18.0)
 Requires-Dist: iso8601 (>=0.1.10) ; python_version <= "3.6"
 
 # Glean Parser
@@ -86,6 +85,14 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 7.2.1
+
+- Unbreak last minor release ([#579](https://github.com/mozilla/glean_parser/pull/579))
+
+## 7.2.0
+
+- Remove yamllint integration ([#578](https://github.com/mozilla/glean_parser/pull/578))
 
 ## 7.1.0
 

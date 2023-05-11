@@ -4,7 +4,7 @@ glean_parser/coverage.py,sha256=2IwC4XMDtDamMkBFoYilmqJzW4gyypq65YVCur8SNas,4405
 glean_parser/data_review.py,sha256=BweeeTkNNS6HrIDkztawhbDByrk_-Avxpg7YeST3VAs,2152
 glean_parser/javascript.py,sha256=w4ZhNBHBKWYk0h3t7G0Ud2tR__hRqzn9dlEXNKLdQrA,11230
 glean_parser/kotlin.py,sha256=5z8_74xlqvHDsedwZhGf1_qb7swPEgIZumkJIuj3ef8,12598
-glean_parser/lint.py,sha256=5oVrd7wPdQq82QRv18HEQw-qOxvOrrioGVDhgLBjx38,17622
+glean_parser/lint.py,sha256=A21ZKb9WSrgug6t8q1YHvXUxlB198xrkmZ26HCUDSlE,16303
 glean_parser/markdown.py,sha256=GkCr1CrV6mnRQseT6FO1-JJ7Eup8X3lxUfRMBTxXpe4,9066
 glean_parser/metrics.py,sha256=CSad9CbUWKF771Z82LhBAFAL9uXum0ycRwIHtl_i91E,12384
 glean_parser/parser.py,sha256=cUOnvSXKfEBg8YTpRcWiPcMwpFpK1TTqsVO_zjUtpR4,15309
@@ -31,10 +31,10 @@ glean_parser/templates/markdown.jinja2,sha256=vAHHGGm28HRDPd3zO_wQMAUZIuxE9uQ7hl
 glean_parser/templates/qmldir.jinja2,sha256=m6IGsp-tgTiOfQ7VN8XW6GqX0gJqJkt3B6Pkaul6FVo,156
 glean_parser/templates/rust.jinja2,sha256=tznLKaZxi_Z9puGqDKD0uuWefZcVHiNdQHB4BP9zJfs,10797
 glean_parser/templates/swift.jinja2,sha256=OsaEIlEdcOrUMvI_UzbxWv75lluTAWZGncH_pU-pbZQ,4809
-glean_parser-7.1.0.dist-info/AUTHORS.md,sha256=yxgj8MioO4wUnrh0gmfb8l3DJJrf-l4HmmEDbQsbbNI,455
-glean_parser-7.1.0.dist-info/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
-glean_parser-7.1.0.dist-info/METADATA,sha256=W6NxEtNj0L__CU3Tq_cS6xFwwtAwBgXE13KCXU2Ei74,28111
-glean_parser-7.1.0.dist-info/WHEEL,sha256=2wepM1nk4DS4eFpYrW1TTqPcoGNfHhhO_i5m4cOimbo,92
-glean_parser-7.1.0.dist-info/entry_points.txt,sha256=s-clJTIqp-PpJD-n3AnIQZFkTafIrzsTbAPX9vNY018,69
-glean_parser-7.1.0.dist-info/top_level.txt,sha256=q7T3duD-9tYZFyDry6Wv2LcdMsK2jGnzdDFhxWcT2Z8,13
-glean_parser-7.1.0.dist-info/RECORD,,
+glean_parser-7.2.1.dist-info/AUTHORS.md,sha256=yxgj8MioO4wUnrh0gmfb8l3DJJrf-l4HmmEDbQsbbNI,455
+glean_parser-7.2.1.dist-info/LICENSE,sha256=HyVuytGSiAUQ6ErWBHTqt1iSGHhLmlC8fO7jTCuR8dU,16725
+glean_parser-7.2.1.dist-info/METADATA,sha256=6ZY8M4qK01Cz54nm4d9tOii3CBbW9lSaUSpHwUnm9JA,28275
+glean_parser-7.2.1.dist-info/WHEEL,sha256=pkctZYzUS4AYVn6dJ-7367OJZivF2e8RA9b_ZBjif18,92
+glean_parser-7.2.1.dist-info/entry_points.txt,sha256=s-clJTIqp-PpJD-n3AnIQZFkTafIrzsTbAPX9vNY018,69
+glean_parser-7.2.1.dist-info/top_level.txt,sha256=q7T3duD-9tYZFyDry6Wv2LcdMsK2jGnzdDFhxWcT2Z8,13
+glean_parser-7.2.1.dist-info/RECORD,,
