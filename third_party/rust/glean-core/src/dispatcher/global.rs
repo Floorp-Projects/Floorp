@@ -6,8 +6,10 @@ use once_cell::sync::Lazy;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::RwLock;
 use std::thread;
+use std::time::Duration;
 
 use super::{DispatchError, DispatchGuard, Dispatcher};
+use crossbeam_channel::RecvTimeoutError;
 
 #[cfg(feature = "preinit_million_queue")]
 pub const GLOBAL_DISPATCHER_LIMIT: usize = 1000000;
@@ -74,6 +76,11 @@ pub fn launch(task: impl FnOnce() + Send + 'static) {
 /// Block until all tasks prior to this call are processed.
 pub fn block_on_queue() {
     guard().block_on_queue();
+}
+
+/// Block until all tasks prior to this call are processed, with a timeout.
+pub fn block_on_queue_timeout(timeout: Duration) -> Result<(), RecvTimeoutError> {
+    guard().block_on_queue_timeout(timeout)
 }
 
 /// Starts processing queued tasks in the global dispatch queue.

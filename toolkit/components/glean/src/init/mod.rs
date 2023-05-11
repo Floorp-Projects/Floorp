@@ -164,6 +164,7 @@ fn build_configuration(
         uploader: None,
         use_core_mps: true,
         trim_data_to_registered_pings: true,
+        log_level: None,
     };
 
     Ok((configuration, client_info))

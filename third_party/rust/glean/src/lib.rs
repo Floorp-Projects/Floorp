@@ -118,6 +118,7 @@ fn initialize_internal(cfg: Configuration, client_info: ClientInfoMetrics) -> Op
         app_build: client_info.app_build.clone(),
         use_core_mps: cfg.use_core_mps,
         trim_data_to_registered_pings: cfg.trim_data_to_registered_pings,
+        log_level: cfg.log_level,
     };
 
     glean_core::glean_initialize(core_cfg, client_info.into(), callbacks);

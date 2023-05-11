@@ -107,15 +107,15 @@ user-login = "nical"
 user-name = "Nicolas Silva"
 
 [[publisher.glean]]
-version = "52.6.0"
-when = "2023-04-20"
+version = "52.7.0"
+when = "2023-05-10"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "52.6.0"
-when = "2023-04-20"
+version = "52.7.0"
+when = "2023-05-10"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
