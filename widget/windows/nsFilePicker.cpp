@@ -41,23 +41,6 @@ typedef DWORD FILEOPENDIALOGOPTIONS;
 ///////////////////////////////////////////////////////////////////////////////
 // Helper classes
 
-// Manages NS_NATIVE_TMP_WINDOW child windows. NS_NATIVE_TMP_WINDOWs are
-// temporary child windows of mParentWidget created to address RTL issues
-// in picker dialogs. We are responsible for destroying these.
-class AutoDestroyTmpWindow {
- public:
-  explicit AutoDestroyTmpWindow(HWND aTmpWnd) : mWnd(aTmpWnd) {}
-
-  ~AutoDestroyTmpWindow() {
-    if (mWnd) DestroyWindow(mWnd);
-  }
-
-  inline HWND get() const { return mWnd; }
-
- private:
-  HWND mWnd;
-};
-
 // Manages matching PickerOpen/PickerClosed calls on the parent widget.
 class AutoWidgetPickerState {
  public:
@@ -148,15 +131,12 @@ bool nsFilePicker::ShowFolderPicker(const nsString& aInitialDir) {
     }
   }
 
-  AutoDestroyTmpWindow adtw(
-      (HWND)(mParentWidget.get()
-                 ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW)
-                 : nullptr));
+  ScopedRtlShimWindow shim(mParentWidget.get());
 
   // display
   mozilla::BackgroundHangMonitor().NotifyWait();
   RefPtr<IShellItem> item;
-  if (FAILED(dialog->Show(adtw.get())) ||
+  if (FAILED(dialog->Show(shim.get())) ||
       FAILED(dialog->GetResult(getter_AddRefs(item))) || !item) {
     return false;
   }
@@ -315,14 +295,11 @@ bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
   // display
 
   {
-    AutoDestroyTmpWindow adtw(
-        (HWND)(mParentWidget.get()
-                   ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW)
-                   : nullptr));
+    ScopedRtlShimWindow shim(mParentWidget.get());
     AutoWidgetPickerState awps(mParentWidget);
 
     mozilla::BackgroundHangMonitor().NotifyWait();
-    if (FAILED(dialog->Show(adtw.get()))) {
+    if (FAILED(dialog->Show(shim.get()))) {
       return false;
     }
   }

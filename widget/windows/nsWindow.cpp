@@ -3831,12 +3831,6 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
 // Return some native data according to aDataType
 void* nsWindow::GetNativeData(uint32_t aDataType) {
   switch (aDataType) {
-    case NS_NATIVE_TMP_WINDOW:
-      return (void*)::CreateWindowExW(
-          mIsRTL ? WS_EX_LAYOUTRTL : 0,
-          ChooseWindowClass(mWindowType, /* aForMenupopupFrame = */ false), L"",
-          WS_CHILD, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-          mWnd, nullptr, nsToolkit::mDllInstance, nullptr);
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
     case NS_NATIVE_WINDOW_WEBRTC_DEVICE_ID:
