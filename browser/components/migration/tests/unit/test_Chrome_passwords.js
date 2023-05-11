@@ -334,7 +334,7 @@ add_task(async function test_importExistingLogins() {
   // Create 3 new logins that are different but where the key properties are still the same.
   for (let i = 0; i < 3; i++) {
     newLogins.push(generateDifferentLogin(TEST_LOGINS[i]));
-    Services.logins.addLogin(newLogins[i]);
+    await Services.logins.addLoginAsync(newLogins[i]);
   }
 
   logins = Services.logins.getAllLogins();
