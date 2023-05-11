@@ -89,8 +89,6 @@ if CONFIG['MOZ_WASAPI']:
       "avrt",
       "ksuser",
     ]
-    if CONFIG['CC_TYPE'] == 'clang-cl':
-        CXXFLAGS += ['-Wno-macro-redefined'] # '_USE_MATH_DEFINES' : macro redefinition
 
 if CONFIG['MOZ_AAUDIO'] or CONFIG['MOZ_OPENSL']:
     SOURCES += ['cubeb-jni.cpp']
