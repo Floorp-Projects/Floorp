@@ -1309,6 +1309,37 @@ static bool intrinsic_TypedArrayInitFromPackedArray(JSContext* cx,
   return true;
 }
 
+static bool intrinsic_RegExpBuiltinExec(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 3);
+  MOZ_ASSERT(args[0].isObject());
+  MOZ_ASSERT(args[1].isString());
+  MOZ_ASSERT(args[2].isBoolean());
+
+  Rooted<JSObject*> obj(cx, &args[0].toObject());
+
+  // 21.2.5.2.1 Runtime Semantics: RegExpExec, step 5.
+  // This check is here for RegExpTest.  RegExp_prototype_Exec does the same
+  // thing already.
+  if (MOZ_LIKELY(obj->is<RegExpObject>())) {
+    Rooted<JSString*> string(cx, args[1].toString());
+    bool forTest = args[2].toBoolean();
+
+    return RegExpBuiltinExec(cx, obj.as<RegExpObject>(), string, forTest,
+                             args.rval());
+  }
+
+  // This is either a wrapped RegExpObject or we have to throw an exception.
+  // Call UnwrapAndCallRegExpBuiltinExec to handle this.
+  FixedInvokeArgs<3> args2(cx);
+  args2[0].set(args[0]);
+  args2[1].set(args[1]);
+  args2[2].set(args[2]);
+  return CallSelfHostedFunction(cx, cx->names().UnwrapAndCallRegExpBuiltinExec,
+                                UndefinedHandleValue, args2, args.rval());
+}
+
 static bool intrinsic_RegExpCreate(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1507,7 +1538,6 @@ bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
   static const char* const internalNames[] = {
       "IsTypedArrayEnsuringArrayBuffer",
       "UnwrapAndCallRegExpBuiltinExec",
-      "RegExpBuiltinExec",
       "RegExpExec",
       "RegExpSearchSlowPath",
       "RegExpReplaceSlowPath",
@@ -1968,6 +1998,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     intrinsic_PossiblyWrappedTypedArrayLength, 1, 0,
                     IntrinsicPossiblyWrappedTypedArrayLength),
     JS_FN("PromiseResolve", intrinsic_PromiseResolve, 2, 0),
+    JS_FN("RegExpBuiltinExec", intrinsic_RegExpBuiltinExec, 3, 0),
     JS_FN("RegExpConstructRaw", regexp_construct_raw_flags, 2, 0),
     JS_FN("RegExpCreate", intrinsic_RegExpCreate, 2, 0),
     JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 5, 0),
