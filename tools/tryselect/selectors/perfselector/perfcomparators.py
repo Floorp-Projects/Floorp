@@ -39,6 +39,13 @@ def comparator(comparator_klass):
 @comparator
 class BasePerfComparator:
     def __init__(self, vcs, compare_commit, current_revision_ref, comparator_args):
+        """Initialize the standard/default settings for Comparators.
+
+        :param vcs object: Used for updating the local repo.
+        :param compare_commit str: The base revision found for the local repo.
+        :param current_revision_ref str: The current revision of the local repo.
+        :param comparator_args list: List of comparator args in the format NAME=VALUE.
+        """
         self.vcs = vcs
         self.compare_commit = compare_commit
         self.current_revision_ref = current_revision_ref
@@ -48,21 +55,43 @@ class BasePerfComparator:
         self._updated = False
 
     def setup_base_revision(self, extra_args):
+        """Setup the base try run/revision.
+
+        In this case, we update to the repo to the base revision and
+        push that to try. The extra_args can be used to set additional
+        arguments for Raptor (not available for other harnesses).
+
+        :param extra_args list: A list of extra arguments to pass to the try tasks.
+        """
         self.vcs.update(self.compare_commit)
         self._updated = True
 
     def teardown_base_revision(self):
+        """Teardown the setup for the base revision."""
         if self._updated:
             self.vcs.update(self.current_revision_ref)
             self._updated = False
 
     def setup_new_revision(self, extra_args):
+        """Setup the new try run/revision.
+
+        Note that the extra_args are reset between the base, and new revision runs.
+
+        :param extra_args list: A list of extra arguments to pass to the try tasks.
+        """
         pass
 
     def teardown_new_revision(self):
+        """Teardown the new run/revision setup."""
         pass
 
     def teardown(self):
+        """Teardown for failures.
+
+        This method can be used for ensuring that the repo is cleaned up
+        when a failure is hit at any point in the process of doing the
+        new/base revision setups, or the pushes to try.
+        """
         self.teardown_base_revision()
 
 
