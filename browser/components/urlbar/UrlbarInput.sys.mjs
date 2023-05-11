@@ -43,6 +43,20 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "QueryStringStripper",
+  "@mozilla.org/url-query-string-stripper;1",
+  "nsIURLQueryStringStripper"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "QUERY_STRIPPING_STRIP_ON_SHARE",
+  "privacy.query_stripping.strip_on_share.enabled",
+  false
+);
+
 const DEFAULT_FORM_HISTORY_NAME = "searchbar-history";
 const SEARCH_BUTTON_ID = "urlbar-search-button";
 
@@ -265,6 +279,7 @@ export class UrlbarInput {
 
     this._initCopyCutController();
     this._initPasteAndGo();
+    this._initStripOnShare();
 
     // Tracks IME composition.
     this._compositionState = lazy.UrlbarUtils.COMPOSITION.NONE;
@@ -2841,16 +2856,115 @@ export class UrlbarInput {
     this.inputField.controllers.insertControllerAt(0, this._copyCutController);
   }
 
-  _initPasteAndGo() {
+  /**
+   * Searches the context menu for the location of a specific command.
+   *
+   * @param {string} menuItemCommand
+   *    The command to search for.
+   * @returns {string}
+   *    Html element that matches the command or
+   *    the last element if we could not find the command.
+   */
+  #findMenuItemLocation(menuItemCommand) {
     let inputBox = this.querySelector("moz-input-box");
     let contextMenu = inputBox.menupopup;
     let insertLocation = contextMenu.firstElementChild;
+    // find the location of the command
     while (
       insertLocation.nextElementSibling &&
-      insertLocation.getAttribute("cmd") != "cmd_paste"
+      insertLocation.getAttribute("cmd") != menuItemCommand
     ) {
       insertLocation = insertLocation.nextElementSibling;
     }
+
+    return insertLocation;
+  }
+
+  /**
+   * Strips known tracking query parameters/ link decorators.
+   *
+   * @returns {nsIURI|null}
+   *   The stripped URI or null
+   */
+  #stripURI() {
+    let copyString = this._getSelectedValueForClipboard();
+    if (!copyString) {
+      return null;
+    }
+    let strippedURI = null;
+    // throws if the selected string is not a valid URI
+    try {
+      let uri = Services.io.newURI(copyString);
+      strippedURI = lazy.QueryStringStripper.stripForCopyOrShare(uri);
+    } catch (e) {
+      console.debug(`stripURI: ${e.message}`);
+      return null;
+    }
+    if (strippedURI) {
+      return this.makeURIReadable(strippedURI);
+    }
+    return null;
+  }
+
+  // The strip-on-share feature will strip known tracking/decorational
+  // query params from the URI and copy the stripped version to the clipboard.
+  _initStripOnShare() {
+    let contextMenu = this.querySelector("moz-input-box").menupopup;
+    let insertLocation = this.#findMenuItemLocation("cmd_copy");
+    if (!insertLocation.getAttribute("cmd") == "cmd_copy") {
+      return;
+    }
+    // set up the menu item
+    let stripOnShare = this.document.createXULElement("menuitem");
+    this.document.l10n.setAttributes(
+      stripOnShare,
+      "text-action-strip-on-share"
+    );
+    stripOnShare.setAttribute("anonid", "strip-on-share");
+    stripOnShare.id = "strip-on-share";
+
+    insertLocation.insertAdjacentElement("afterend", stripOnShare);
+
+    // register listener that returns the stripped version of the url
+    stripOnShare.addEventListener("command", () => {
+      let strippedURI = this.#stripURI();
+      if (!strippedURI) {
+        // If there is nothing to strip the menu item should not have been visible.
+        // We might end up here if there was an unexpected URI change.
+        console.warn("StripOnShare: Unexpected null value.");
+        return;
+      }
+      lazy.ClipboardHelper.copyString(strippedURI.displaySpec);
+    });
+
+    // register a listener that hides the menu item if there is nothing to copy or nothing to strip.
+    contextMenu.addEventListener("popupshowing", () => {
+      // feature is not enabled
+      if (!lazy.QUERY_STRIPPING_STRIP_ON_SHARE) {
+        stripOnShare.setAttribute("hidden", true);
+        return;
+      }
+      let controller = this.document.commandDispatcher.getControllerForCommand(
+        "cmd_copy"
+      );
+      // url bar is empty
+      if (!controller.isCommandEnabled("cmd_copy")) {
+        stripOnShare.setAttribute("hidden", true);
+        return;
+      }
+      // nothing to strip/selection is not a valid url
+      if (!this.#stripURI()) {
+        stripOnShare.setAttribute("hidden", true);
+        return;
+      }
+      stripOnShare.setAttribute("hidden", false);
+    });
+  }
+
+  _initPasteAndGo() {
+    let inputBox = this.querySelector("moz-input-box");
+    let contextMenu = inputBox.menupopup;
+    let insertLocation = this.#findMenuItemLocation("cmd_paste");
     if (!insertLocation) {
       return;
     }
@@ -3753,6 +3867,7 @@ export class UrlbarInput {
   _on_aftercustomization() {
     this._initCopyCutController();
     this._initPasteAndGo();
+    this._initStripOnShare();
   }
 }
 
