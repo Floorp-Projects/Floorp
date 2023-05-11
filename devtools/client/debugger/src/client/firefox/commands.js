@@ -26,12 +26,23 @@ function currentThreadFront() {
   return currentTarget().threadFront;
 }
 
-function createObjectFront(grip) {
+/**
+ * Create an object front for the passed grip
+ *
+ * @param {Object} grip
+ * @param {Object} frame: An optional frame that will manage the created object front.
+ *                        if not passed, the current thread front will manage the object.
+ * @returns {ObjectFront}
+ */
+function createObjectFront(grip, frame) {
   if (!grip.actor) {
     throw new Error("Actor is missing");
   }
-
-  return commands.client.createObjectFront(grip, currentThreadFront());
+  const threadFront = frame?.thread
+    ? lookupThreadFront(frame.thread)
+    : currentThreadFront();
+  const frameFront = frame ? threadFront.getActorByID(frame.id) : null;
+  return commands.client.createObjectFront(grip, threadFront, frameFront);
 }
 
 async function loadObjectProperties(root, threadActorID) {

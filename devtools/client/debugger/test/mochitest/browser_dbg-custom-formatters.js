@@ -65,4 +65,46 @@ add_task(async function() {
   );
   ok(bodyJsonMlNode, "The body is custom formatted");
   is(bodyJsonMlNode?.textContent, "body", "The body text is correct");
+
+  info("Check that custom formatters are displayed in Scopes panel");
+  // pauseWithCustomFormattedObjectInScopes has a debugger statement
+  // that will pause the debugger
+  invokeInTab("pauseWithCustomFormattedObjectInScopes");
+
+  info("Wait for the debugger to be paused");
+  await waitForPaused(dbg);
+
+  info("Check that `x` is in the scopes panel and custom formatted");
+  const index = 4;
+  is(getScopeLabel(dbg, index), "x", "Got `x` at the expected position");
+  const scopeXElement = findElement(dbg, "scopeValue", index);
+  is(
+    scopeXElement.innerText,
+    "CUSTOM",
+    "`x` is custom formatted in the scopes panel"
+  );
+  const xArrow = scopeXElement.querySelector(".collapse-button");
+  ok(xArrow, "`x` is expandable");
+
+  info("Expanding `x`");
+  const onScopeBodyRendered = waitFor(
+    () =>
+      !!scopeXElement.querySelector(
+        ".objectBox-jsonml-body-wrapper .objectBox-jsonml"
+      )
+  );
+
+  xArrow.click();
+  await onScopeBodyRendered;
+  const scopeXBodyJsonMlNode = scopeXElement.querySelector(
+    ".objectBox-jsonml-body-wrapper > .objectBox-jsonml"
+  );
+  ok(scopeXBodyJsonMlNode, "The scope item body is custom formatted");
+  is(
+    scopeXBodyJsonMlNode?.textContent,
+    "bodyInScopes",
+    "The scope item body text is correct"
+  );
+
+  await resume(dbg);
 });
