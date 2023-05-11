@@ -244,8 +244,7 @@ void DMABufDevice::AddFormatModifier(bool aHasAlpha, int aFormat,
   format->mIsSupported = true;
   format->mHasAlpha = aHasAlpha;
   format->mFormat = aFormat;
-  format->mModifiers.AppendElement(
-      ((uint64_t)mModifierHi << 32) | mModifierLo);
+  format->mModifiers.AppendElement(((uint64_t)mModifierHi << 32) | mModifierLo);
 }
 
 static void dmabuf_modifiers(void* data,
