@@ -205,6 +205,10 @@ class DMABufDevice {
 
  private:
   void Configure();
+  void LoadFormatModifiers();
+
+  void SetModifiersToGfxVars();
+  void GetModifiersFromGfxVars();
 
  private:
   GbmFormat mXRGBFormat;

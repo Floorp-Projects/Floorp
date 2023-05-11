@@ -158,6 +158,14 @@ DMABufDevice::DMABufDevice()
 }
 
 DMABufDevice::~DMABufDevice() {
+  mARGBFormat.mModifiersCount = 0;
+  free(mARGBFormat.mModifiers);
+  mARGBFormat.mModifiers = nullptr;
+
+  mXRGBFormat.mModifiersCount = 0;
+  free(mXRGBFormat.mModifiers);
+  mXRGBFormat.mModifiers = nullptr;
+
   if (mGbmDevice) {
     GbmLib::DestroyDevice(mGbmDevice);
     mGbmDevice = nullptr;
@@ -195,6 +203,9 @@ void DMABufDevice::Configure() {
     mFailureId = "FEATURE_FAILURE_NO_DRM_DEVICE";
     return;
   }
+
+  LoadFormatModifiers();
+
   LOGDMABUF(("DMABuf is enabled"));
 }
 
@@ -217,11 +228,139 @@ bool DMABufDevice::IsDMABufWebGLEnabled() {
          StaticPrefs::widget_dmabuf_webgl_enabled();
 }
 
+void DMABufDevice::SetModifiersToGfxVars() {
+  std::vector<uint64_t> modifiers;
+
+  modifiers.push_back(mXRGBFormat.mModifiersCount);
+  for (int i = 0; i < mXRGBFormat.mModifiersCount; i++) {
+    modifiers.push_back(mXRGBFormat.mModifiers[i]);
+  }
+  modifiers.push_back(mARGBFormat.mModifiersCount);
+  for (int i = 0; i < mARGBFormat.mModifiersCount; i++) {
+    modifiers.push_back(mARGBFormat.mModifiers[i]);
+  }
+
+  gfxVars::SetDMABufModifiers(
+      nsCString((char*)modifiers.data(), modifiers.size() * sizeof(uint64_t)));
+}
+
+static uint64_t* CopyAndIterateInt64Array(const uint64_t** aArray, int aLen) {
+  if (!aLen) {
+    return nullptr;
+  }
+  uint64_t* ret = (uint64_t*)malloc(sizeof(uint64_t) * aLen);
+  if (!ret) {
+    return nullptr;
+  }
+  memcpy(ret, *aArray, sizeof(uint64_t) * aLen);
+  *aArray += aLen;
+  return ret;
+}
+
+void DMABufDevice::GetModifiersFromGfxVars() {
+  nsCString tmp(gfxVars::DMABufModifiers());
+  const uint64_t* modifiers = (const uint64_t*)tmp.get();
+
+  mXRGBFormat.mModifiersCount = *modifiers++;
+  mXRGBFormat.mModifiers =
+      CopyAndIterateInt64Array(&modifiers, mXRGBFormat.mModifiersCount);
+  mARGBFormat.mModifiersCount = *modifiers++;
+  mARGBFormat.mModifiers =
+      CopyAndIterateInt64Array(&modifiers, mARGBFormat.mModifiersCount);
+
+  // modifiers must point to terminal \0 char.
+  MOZ_RELEASE_ASSERT((char*)modifiers == tmp.get() + tmp.Length());
+}
+
 void DMABufDevice::DisableDMABufWebGL() { sUseWebGLDmabufBackend = false; }
 
 GbmFormat* DMABufDevice::GetGbmFormat(bool aHasAlpha) {
   GbmFormat* format = aHasAlpha ? &mARGBFormat : &mXRGBFormat;
   return format->mIsSupported ? format : nullptr;
+}
+
+void DMABufDevice::AddFormatModifier(bool aHasAlpha, int aFormat,
+                                     uint32_t mModifierHi,
+                                     uint32_t mModifierLo) {
+  GbmFormat* format = aHasAlpha ? &mARGBFormat : &mXRGBFormat;
+  format->mIsSupported = true;
+  format->mHasAlpha = aHasAlpha;
+  format->mFormat = aFormat;
+  format->mModifiersCount++;
+  format->mModifiers =
+      (uint64_t*)realloc(format->mModifiers,
+                         format->mModifiersCount * sizeof(*format->mModifiers));
+  format->mModifiers[format->mModifiersCount - 1] =
+      ((uint64_t)mModifierHi << 32) | mModifierLo;
+}
+
+static void dmabuf_modifiers(void* data,
+                             struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
+                             uint32_t format, uint32_t modifier_hi,
+                             uint32_t modifier_lo) {
+  // skip modifiers marked as invalid
+  if (modifier_hi == (DRM_FORMAT_MOD_INVALID >> 32) &&
+      modifier_lo == (DRM_FORMAT_MOD_INVALID & 0xffffffff)) {
+    return;
+  }
+
+  auto* device = static_cast<DMABufDevice*>(data);
+  switch (format) {
+    case GBM_FORMAT_ARGB8888:
+      device->AddFormatModifier(true, format, modifier_hi, modifier_lo);
+      break;
+    case GBM_FORMAT_XRGB8888:
+      device->AddFormatModifier(false, format, modifier_hi, modifier_lo);
+      break;
+    default:
+      break;
+  }
+}
+
+static void dmabuf_format(void* data,
+                          struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
+                          uint32_t format) {
+  // XXX: deprecated
+}
+
+static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
+    dmabuf_format, dmabuf_modifiers};
+
+static void global_registry_handler(void* data, wl_registry* registry,
+                                    uint32_t id, const char* interface,
+                                    uint32_t version) {
+  if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
+    auto* dmabuf = WaylandRegistryBind<zwp_linux_dmabuf_v1>(
+        registry, id, &zwp_linux_dmabuf_v1_interface, 3);
+    LOGDMABUF(("zwp_linux_dmabuf_v1 is available."));
+    zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, data);
+  } else if (strcmp(interface, "wl_drm") == 0) {
+    LOGDMABUF(("wl_drm is available."));
+  }
+}
+
+static void global_registry_remover(void* data, wl_registry* registry,
+                                    uint32_t id) {}
+
+static const struct wl_registry_listener registry_listener = {
+    global_registry_handler, global_registry_remover};
+
+void DMABufDevice::LoadFormatModifiers() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!GdkIsWaylandDisplay()) {
+    return;
+  }
+  if (XRE_IsParentProcess()) {
+    wl_display* display = WaylandDisplayGetWLDisplay();
+    wl_registry* registry = wl_display_get_registry(display);
+    wl_registry_add_listener(registry, &registry_listener, this);
+    wl_display_roundtrip(display);
+    wl_display_roundtrip(display);
+    wl_registry_destroy(registry);
+    SetModifiersToGfxVars();
+  } else {
+    GetModifiersFromGfxVars();
+  }
 }
 
 DMABufDevice* GetDMABufDevice() {
