@@ -96,5 +96,5 @@ jobs:
                 - win64-node
                 - win64-dump_syms
                 - win64-winchecksec
-                - win64-vs2017
+                - vs
                 - sysroot-wasm32-wasi

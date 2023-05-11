@@ -393,7 +393,6 @@ win64-vs2017:
         resources:
             - build/vs/vs2017.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
-        toolchain-alias: vs
 
 win64-vs2019:
     description: "VS 2019"
@@ -411,7 +410,9 @@ win64-vs2019:
         resources:
             - build/vs/vs2019.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
-        toolchain-alias: vs-toolchain
+        toolchain-alias:
+            - vs
+            - vs-toolchain
 
 win64-vs2022:
     description: "VS 2022"

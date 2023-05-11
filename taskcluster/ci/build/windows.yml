@@ -51,7 +51,7 @@ win32/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -100,7 +100,7 @@ win32/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -150,7 +150,7 @@ win32-fuzzing/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
     optimization:
@@ -201,7 +201,7 @@ win64/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -247,7 +247,7 @@ win64-non-unified/plain:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -296,7 +296,7 @@ win64-fuzzing/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
     optimization:
@@ -339,7 +339,7 @@ win64-plain/debug:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
+            - vs
             - nsis
             - sysroot-wasm32-wasi
     optimization:
@@ -390,7 +390,7 @@ win64/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -431,7 +431,7 @@ win64-plain/opt:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
+            - vs
             - nsis
             - sysroot-wasm32-wasi
     optimization:
@@ -496,7 +496,7 @@ win32-shippable/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -548,7 +548,7 @@ win64-shippable/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -597,7 +597,7 @@ win64-nightlyasrelease/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -642,7 +642,7 @@ win32-add-on-devel/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -687,7 +687,7 @@ win64-add-on-devel/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -732,7 +732,7 @@ win64-noopt/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -777,7 +777,7 @@ win32-noopt/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -822,7 +822,7 @@ win32-rusttests/opt:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
+            - vs
     optimization:
         test-inclusive: [rusttests]
 
@@ -867,7 +867,7 @@ win32-rusttests/debug:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
+            - vs
     optimization:
         test-inclusive: [rusttests]
 
@@ -909,7 +909,7 @@ win64-rusttests/opt:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
+            - vs
     optimization:
         test-inclusive: [rusttests]
 
@@ -951,7 +951,7 @@ win64-rusttests/debug:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
+            - vs
     optimization:
         test-inclusive: [rusttests]
 
@@ -1001,7 +1001,7 @@ win64-ccov/opt:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
+            - vs
             - nsis
             - sysroot-wasm32-wasi
 
@@ -1051,7 +1051,7 @@ win64-fuzzing-ccov/opt:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
+            - vs
             - nsis
             - sysroot-wasm32-wasi
 
@@ -1098,7 +1098,7 @@ win64-asan/debug:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
     optimization:
@@ -1148,7 +1148,7 @@ win64-asan/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -1207,7 +1207,7 @@ win64-asan-reporter-shippable/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -1253,7 +1253,7 @@ win64-asan-fuzzing/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
     optimization:
@@ -1318,7 +1318,7 @@ win32-devedition/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -1371,7 +1371,7 @@ win64-devedition/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
 
@@ -1419,7 +1419,7 @@ win64-aarch64/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
     optimization:
@@ -1475,7 +1475,7 @@ win64-aarch64/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
     optimization:
@@ -1671,7 +1671,7 @@ win64-aarch64-shippable-no-eme/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
     optimization:
@@ -1826,6 +1826,6 @@ win64-aarch64-devedition-no-eme/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
+            - vs
         fetch:
             - upx-3.95-win
