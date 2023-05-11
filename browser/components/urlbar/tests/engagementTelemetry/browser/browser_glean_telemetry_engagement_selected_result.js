@@ -820,12 +820,12 @@ add_task(async function selected_result_addons() {
         provider: "amo",
         icon: "https://example.com/good-addon.svg",
         url: "https://example.com/good-addon",
-        name: "Good Addon",
+        title: "Good Addon",
         description: "This is a good addon",
         custom_details: {
-          addons: {
+          amo: {
             rating: "4.8",
-            reviews: "1234567",
+            number_of_ratings: "1234567",
           },
         },
         is_top_pick: true,
