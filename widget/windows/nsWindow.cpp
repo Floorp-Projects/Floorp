@@ -1406,8 +1406,6 @@ DWORD nsWindow::WindowStyle() {
     if (mBorderStyle == BorderStyle::None ||
         !(mBorderStyle & BorderStyle::Title)) {
       style &= ~WS_DLGFRAME;
-      style |= WS_POPUP;
-      style &= ~WS_CHILD;
     }
 
     if (mBorderStyle == BorderStyle::None ||
