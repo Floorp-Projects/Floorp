@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<style>
+html {
+  /* Suppress scrollbars to avoid periodical unthrottling for transform */
+  /* animations on the compositor. */
+  overflow: hidden;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+}
+
+@keyframes anim {
+  0% { scale: 2.0; }
+  100% { scale: 2.0; }
+}
+
+#target {
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  background-image: url(pinwheel_logo.svg);
+  background-size: 200px 200px;
+  background-position: -50px -50px;
+  background-color: green;
+  scale:0.1;
+}
+</style>
+<div id="target">
+
+
+<script>
+document.addEventListener('MozReftestInvalidate', () => {
+  // Set a bit longer animation delay to avoid painting the initial animation
+  // style on the main thread.
+  target.style.animation = "anim 100s 1s";
+  target.addEventListener("animationstart", () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove("reftest-wait");
+      });
+    });
+  });
+}, { once: true });
+</script>
+</html>
