@@ -692,6 +692,14 @@ def vc_compiler_version(vc_compiler_path):
         return f"19.{version.minor}"
 
 
+@depends_if(vc_compiler_version)
+def is_vs2019_or_more(vc_compiler_version):
+    return Version(vc_compiler_version) >= Version("19.20")
+
+
+add_old_configure_assignment("IS_VS2019_OR_MORE", is_vs2019_or_more)
+
+
 clang_search_path = bootstrap_search_path("clang/bin")
 
 
