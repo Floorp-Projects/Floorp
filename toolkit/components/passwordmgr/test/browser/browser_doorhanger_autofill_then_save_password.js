@@ -64,7 +64,7 @@ async function test_save_change({
 
   info("Starting test: " + name);
 
-  LoginTestUtils.addLogin({
+  await LoginTestUtils.addLogin({
     username: oldUsername,
     password: oldPassword,
     origin: "https://example.com",
