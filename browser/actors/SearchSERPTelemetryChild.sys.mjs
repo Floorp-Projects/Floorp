@@ -497,25 +497,27 @@ class SearchAdImpression {
    * @returns {boolean}
    */
   #shouldInspectAnchor(anchor) {
-    if (!anchor.href) {
+    let href = anchor.href;
+    if (!href) {
       return false;
     }
     let regexps = this.#providerInfo.extraAdServersRegexps;
     // Anchors can contain ad links in a data-attribute.
     for (let name of this.#providerInfo.adServerAttributes) {
+      let attributeValue = anchor.dataset[name];
       if (
-        anchor.dataset[name] &&
-        regexps.some(regexp => regexp.test(anchor.dataset[name]))
+        attributeValue &&
+        regexps.some(regexp => regexp.test(attributeValue))
       ) {
         return true;
       }
     }
     // Anchors can contain ad links in a specific href.
-    if (regexps.some(regexp => regexp.test(anchor.href))) {
+    if (regexps.some(regexp => regexp.test(href))) {
       return true;
     }
     // Anchors can contain hrefs matching non-ad regular expressions.
-    if (this.#nonAdRegexps.some(regexp => regexp.test(anchor.href))) {
+    if (this.#nonAdRegexps.some(regexp => regexp.test(href))) {
       return true;
     }
     return false;
