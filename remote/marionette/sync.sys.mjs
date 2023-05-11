@@ -468,32 +468,73 @@ export function waitForMessage(
  *     if the notification is the expected one, or false if it should be
  *     ignored and listening should continue. If not specified, the first
  *     notification for the specified topic resolves the returned promise.
+ * @param {number=} options.timeout
+ *     Timeout duration in milliseconds, if provided.
+ *     If specified, then the returned promise will be rejected with
+ *     TimeoutError, if not already resolved, after this duration has elapsed.
+ *     If not specified, then no timeout is used. Defaults to null.
  *
  * @returns {Promise.<Array<string, object>>}
- *     Promise which resolves to an array of ``subject``, and ``data`` from
- *     the observed notification.
+ *     Promise which is either resolved to an array of ``subject``, and ``data``
+ *     from the observed notification, or rejected with TimeoutError after
+ *     options.timeout milliseconds if specified.
+ *
+ * @throws {TypeError}
+ * @throws {RangeError}
  */
-export function waitForObserverTopic(topic, { checkFn = null } = {}) {
+export function waitForObserverTopic(topic, options = {}) {
+  const { checkFn = null, timeout = null } = options;
   if (typeof topic != "string") {
     throw new TypeError();
   }
-  if (checkFn != null && typeof checkFn != "function") {
+  if (
+    (checkFn != null && typeof checkFn != "function") ||
+    (timeout !== null && typeof timeout != "number")
+  ) {
     throw new TypeError();
+  }
+  if (timeout && (!Number.isInteger(timeout) || timeout < 0)) {
+    throw new RangeError();
   }
 
   return new Promise((resolve, reject) => {
-    Services.obs.addObserver(function observer(subject, topic, data) {
+    let timer;
+
+    function cleanUp() {
+      Services.obs.removeObserver(observer, topic);
+      timer?.cancel();
+    }
+
+    function observer(subject, topic, data) {
       lazy.logger.trace(`Received observer notification ${topic}`);
       try {
         if (checkFn && !checkFn(subject, data)) {
           return;
         }
-        Services.obs.removeObserver(observer, topic);
+        cleanUp();
         resolve({ subject, data });
       } catch (ex) {
-        Services.obs.removeObserver(observer, topic);
+        cleanUp();
         reject(ex);
       }
-    }, topic);
+    }
+
+    Services.obs.addObserver(observer, topic);
+
+    if (timeout !== null) {
+      timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      timer.init(
+        () => {
+          cleanUp();
+          reject(
+            new lazy.error.TimeoutError(
+              `waitForObserverTopic timed out after ${timeout} ms`
+            )
+          );
+        },
+        timeout,
+        TYPE_ONE_SHOT
+      );
+    }
   });
 }
