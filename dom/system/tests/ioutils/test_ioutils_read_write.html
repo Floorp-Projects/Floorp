@@ -15,11 +15,6 @@
     const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
     const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 
-    // This is presently only used to test compatability between OS.File and
-    // IOUtils when it comes to writing compressed files. The import and the
-    // test `test_lz4_osfile_compat` can be removed with OS.File is removed.
-    const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
     add_task(async function test_read_failure() {
       const doesNotExist = PathUtils.join(PathUtils.tempDir, "does_not_exist.tmp");
       await Assert.rejects(
@@ -338,31 +333,6 @@
       ok(readEmptyRaw.equals(expectedHeader), "Expected to read header with content length of 0");
 
       await cleanup(tmpFileName);
-    });
-
-    add_task(async function test_lz4_osfile_compat() {
-      const osfileTmpFile = PathUtils.join(PathUtils.tempDir, "test_ioutils_lz4_compat_osfile.tmp");
-      const ioutilsTmpFile = PathUtils.join(PathUtils.tempDir, "test_ioutils_lz4_compat_ioutils.tmp");
-
-      info("Test OS.File and IOUtils write the same file with LZ4 compression enabled")
-      const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
-      let expectedBytes = 23;
-      let ioutilsBytes = await IOUtils.write(ioutilsTmpFile, repeatedBytes, { compress: true });
-      let osfileBytes = await OS.File.writeAtomic(osfileTmpFile, repeatedBytes, { compression: "lz4" });
-      is(ioutilsBytes, expectedBytes, "IOUtils writes the expected number of bytes for compression");
-      is(osfileBytes, ioutilsBytes, "OS.File and IOUtils write the same number of bytes for LZ4 compression");
-
-      info("Test OS.File can read a file compressed by IOUtils");
-      const osfileReadBytes = await OS.File.read(ioutilsTmpFile, { compression: "lz4" });
-      ok(osfileReadBytes.every(byte => byte === 1), "OS.File can read a file compressed by IOUtils");
-      is(osfileReadBytes.length, 50, "OS.File reads the right number of bytes from a file compressed by IOUtils")
-
-      info("Test IOUtils can read a file compressed by OS.File");
-      const ioutilsReadBytes = await IOUtils.read(osfileTmpFile, { decompress: true });
-      ok(ioutilsReadBytes.every(byte => byte === 1), "IOUtils can read a file compressed by OS.File");
-      is(ioutilsReadBytes.length, 50, "IOUtils reads the right number of bytes from a file compressed by OS.File")
-
-      await cleanup(osfileTmpFile, ioutilsTmpFile);
     });
 
     add_task(async function test_lz4_bad_call() {

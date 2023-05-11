@@ -72,7 +72,6 @@ module.exports = {
     "reject-lazy-imports-into-globals": require("../lib/rules/reject-lazy-imports-into-globals"),
     "reject-mixing-eager-and-lazy": require("../lib/rules/reject-mixing-eager-and-lazy"),
     "reject-multiple-getters-calls": require("../lib/rules/reject-multiple-getters-calls"),
-    "reject-osfile": require("../lib/rules/reject-osfile"),
     "reject-scriptableunicodeconverter": require("../lib/rules/reject-scriptableunicodeconverter"),
     "reject-relative-requires": require("../lib/rules/reject-relative-requires"),
     "reject-some-requires": require("../lib/rules/reject-some-requires"),
