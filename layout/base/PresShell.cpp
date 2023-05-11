@@ -11392,20 +11392,6 @@ nsSize PresShell::GetVisualViewportSizeUpdatedByDynamicToolbar() const {
 
 void PresShell::RecomputeFontSizeInflationEnabled() {
   mFontSizeInflationEnabled = DetermineFontSizeInflationState();
-
-  // Divide by 100 to convert the pref from a percentage to a fraction.
-  float fontScale = StaticPrefs::font_size_systemFontScale() / 100.0f;
-  if (fontScale == 0.0f) {
-    return;
-  }
-
-  MOZ_ASSERT(mDocument);
-  MOZ_ASSERT(mPresContext);
-  if (mFontSizeInflationEnabled || mDocument->IsSyntheticDocument()) {
-    mPresContext->SetSystemFontScale(1.0f);
-  } else {
-    mPresContext->SetSystemFontScale(fontScale);
-  }
 }
 
 bool PresShell::DetermineFontSizeInflationState() {

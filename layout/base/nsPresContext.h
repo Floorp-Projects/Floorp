@@ -512,41 +512,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   nsDeviceContext* DeviceContext() const { return mDeviceContext; }
   mozilla::EventStateManager* EventStateManager() { return mEventManager; }
 
-  /**
-   * Get/set a text zoom factor that is applied on top of the normal text zoom
-   * set by the front-end/user.
-   */
-  float GetSystemFontScale() const { return mSystemFontScale; }
-  void SetSystemFontScale(float aFontScale) {
-    MOZ_ASSERT(aFontScale > 0.0f, "invalid font scale");
-    if (aFontScale == mSystemFontScale || IsPrintingOrPrintPreview()) {
-      return;
-    }
-
-    mSystemFontScale = aFontScale;
-    UpdateEffectiveTextZoom();
-  }
-
-  /**
-   * Get/set the text zoom factor in use.
-   * This value should be used if you're interested in the pure text zoom value
-   * controlled by the front-end, e.g. when transferring zoom levels to a new
-   * document.
-   * Code that wants to use this value for layouting and rendering purposes
-   * should consider using EffectiveTextZoom() instead, so as to take the system
-   * font scale into account as well.
-   */
+  // Get the text zoom factor in use.
   float TextZoom() const { return mTextZoom; }
-
-  /**
-   * Corresponds to the product of text zoom and system font scale, limited
-   * by zoom.maxPercent and minPercent.
-   * As the system font scale is automatically set by the PresShell, code that
-   * e.g. wants to transfer zoom levels to a new document should use TextZoom()
-   * instead, which corresponds to the text zoom level that was actually set by
-   * the front-end/user.
-   */
-  float EffectiveTextZoom() const { return mEffectiveTextZoom; }
 
   /**
    * Notify the pres context that the safe area insets have changed.
@@ -562,19 +529,11 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
  protected:
   void CancelManagedPostRefreshObservers();
 
-  void UpdateEffectiveTextZoom();
-
 #ifdef DEBUG
   void ValidatePresShellAndDocumentReleation() const;
 #endif  // #ifdef DEBUG
 
-  void SetTextZoom(float aZoom) {
-    MOZ_ASSERT(aZoom > 0.0f, "invalid zoom factor");
-    if (aZoom == mTextZoom) return;
-
-    mTextZoom = aZoom;
-    UpdateEffectiveTextZoom();
-  }
+  void SetTextZoom(float aZoom);
   void SetFullZoom(float aZoom);
   void SetOverrideDPPX(float);
   void SetInRDMPane(bool aInRDMPane);
@@ -1213,10 +1172,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   // lot?
   MediaEmulationData mMediaEmulationData;
 
-  float mSystemFontScale;    // Internal text zoom factor, defaults to 1.0
-  float mTextZoom;           // Text zoom, defaults to 1.0
-  float mEffectiveTextZoom;  // Text zoom * system font scale
-  float mFullZoom;           // Page zoom, defaults to 1.0
+  float mTextZoom;  // Text zoom, defaults to 1.0
+  float mFullZoom;  // Page zoom, defaults to 1.0
   gfxSize mLastFontInflationScreenSize;
 
   int32_t mCurAppUnitsPerDevPixel;
