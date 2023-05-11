@@ -506,7 +506,9 @@ nsFileInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* _retval) {
     return rv;
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Check if we're at the end of file and need to close
   if (mBehaviorFlags & CLOSE_ON_EOF && *_retval == 0) {
