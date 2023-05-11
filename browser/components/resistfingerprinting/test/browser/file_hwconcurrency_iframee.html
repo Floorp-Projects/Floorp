@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script>
+window.onload = async () => {
+  parent.postMessage("ready", "*");
+}
+
+window.addEventListener("message", async function listener(event) {
+  if (event.data[0] == "gimme") {
+  	let result = {
+      hardwareConcurrency : navigator.hardwareConcurrency
+    };
+    parent.postMessage(result, "*")
+  }
+});
+</script>
+<output id="result"></output>
