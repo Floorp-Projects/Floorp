@@ -4,22 +4,21 @@
  *   and exemption behavior.
  *
  * This test only tests values in the iframe, it does not test them on the framer
+ * We use the cross-origin domain as the base URI of a resource we fetch (on both the framer and framee)
+ * so we can check that the HTTP header is as expected.
  *
  * Covers the following cases:
  *  - RFP is disabled entirely
  *  - RFP is enabled entirely
-
- *  - (A) RFP is exempted on the framer and framee and each contacts an exempted cross-origin resource
- *  - (B) RFP is exempted on the framer and framee and each contacts a non-exempted cross-origin resource
-
- *  - (C) RFP is exempted on the framer but not the framee and each contacts an exempted cross-origin resource
- *  - (D) RFP is exempted on the framer but not the framee and each contacts a non-exempted cross-origin resource
-
- *  - (E) RFP is not exempted on the framer nor the framee and each contacts an exempted cross-origin resource
- *  - (F) RFP is not exempted on the framer nor the framee and each contacts a non-exempted cross-origin resource
- * 
- *  - (G) RFP is not exempted on the framer but is on the framee and each contacts an exempted cross-origin resource
- *  - (H) RFP is not exempted on the framer but is on the framee and each contacts a non-exempted cross-origin resource
+ *
+ *  - (A) RFP is exempted on the framer and framee and (if needed) on another cross-origin domain
+ *  - (B) RFP is exempted on the framer and framee but is not on another (if needed) cross-origin domain
+ *  - (C) RFP is exempted on the framer and (if needed) on another cross-origin domain, but not the framee
+ *  - (D) RFP is exempted on the framer but not the framee nor another (if needed) cross-origin domain
+ *  - (E) RFP is not exempted on the framer nor the framee but (if needed) is exempted on another cross-origin domain
+ *  - (F) RFP is not exempted on the framer nor the framee nor another (if needed) cross-origin domain
+ *  - (G) RFP is not exempted on the framer but is on the framee and (if needed) on another cross-origin domain
+ *  - (H) RFP is not exempted on the framer nor another (if needed) cross-origin domain but is on the framee
  */
 
 "use strict";
@@ -341,143 +340,53 @@ const allSpoofed = {
   framee_crossOrigin_userAgentHTTPHeader: spoofedUserAgentHeader,
 };
 
-const framer_domain = "example.com";
-const iframe_domain = "example.org";
-const cross_origin_domain = "example.net";
-const uri = `https://${framer_domain}/browser/browser/components/resistfingerprinting/test/browser/file_navigator_iframer.html`;
+const uri = `https://${FRAMER_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_navigator_iframer.html`;
 
 requestLongerTimeout(2);
 
 let expectedResults = {};
 
 expectedResults = structuredClone(allNotSpoofed);
-add_task(
-  defaultsTest.bind(
-    this,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(defaultsTest.bind(null, uri, testNavigator, expectedResults));
 
 expectedResults = structuredClone(allSpoofed);
-add_task(
-  simpleRFPTest.bind(
-    this,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(simpleRFPTest.bind(null, uri, testNavigator, expectedResults));
 
-// (A) RFP is exempted on the framer and framee and each contacts an exempted cross-origin resource
+// In the below tests, we use the cross-origin domain as the base URI of a resource we fetch (on both the framer and framee)
+// so we can check that the HTTP header is as expected.
+
+// (A) RFP is exempted on the framer and framee and (if needed) on another cross-origin domain
 expectedResults = structuredClone(allNotSpoofed);
-add_task(
-  testA.bind(
-    this,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(testA.bind(null, uri, testNavigator, expectedResults));
 
-// (B) RFP is exempted on the framer and framee and each contacts a non-exempted cross-origin resource
+// (B) RFP is exempted on the framer and framee but is not on another (if needed) cross-origin domain
 expectedResults = structuredClone(allNotSpoofed);
-add_task(
-  testB.bind(
-    this,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(testB.bind(null, uri, testNavigator, expectedResults));
 
-// (C) RFP is exempted on the framer but not the framee and each contacts an exempted cross-origin resource
+// (C) RFP is exempted on the framer and (if needed) on another cross-origin domain, but not the framee
 expectedResults = structuredClone(allSpoofed);
 expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
 expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
-add_task(
-  testC.bind(
-    this,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(testC.bind(null, uri, testNavigator, expectedResults));
 
-// (D) RFP is exempted on the framer but not the framee and each contacts a non-exempted cross-origin resource
+// (D) RFP is exempted on the framer but not the framee nor another (if needed) cross-origin domain
 expectedResults = structuredClone(allSpoofed);
 expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
 expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
-add_task(
-  testD.bind(
-    this,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(testD.bind(null, uri, testNavigator, expectedResults));
 
-// (E) RFP is not exempted on the framer nor the framee and each contacts an exempted cross-origin resource
+// (E) RFP is not exempted on the framer nor the framee but (if needed) is exempted on another cross-origin domain
 expectedResults = structuredClone(allSpoofed);
-add_task(
-  testE.bind(
-    this,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(testE.bind(null, uri, testNavigator, expectedResults));
 
-// (F) RFP is not exempted on the framer nor the framee and each contacts a non-exempted cross-origin resource
+// (F) RFP is not exempted on the framer nor the framee nor another (if needed) cross-origin domain
 expectedResults = structuredClone(allSpoofed);
-add_task(
-  testF.bind(
-    this,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(testF.bind(null, uri, testNavigator, expectedResults));
 
-// (G) RFP is not exempted on the framer but is on the framee and each contacts an exempted cross-origin resource
+// (G) RFP is not exempted on the framer but is on the framee and (if needed) on another cross-origin domain
 expectedResults = structuredClone(allSpoofed);
-add_task(
-  testG.bind(
-    this,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(testG.bind(null, uri, testNavigator, expectedResults));
 
-// (H) RFP is not exempted on the framer but is on the framee and each contacts a non-exempted cross-origin resource
+// (H) RFP is not exempted on the framer nor another (if needed) cross-origin domain but is on the framee
 expectedResults = structuredClone(allSpoofed);
-add_task(
-  testH.bind(
-    this,
-    uri,
-    iframe_domain,
-    cross_origin_domain,
-    testNavigator,
-    expectedResults
-  )
-);
+add_task(testH.bind(null, uri, testNavigator, expectedResults));
