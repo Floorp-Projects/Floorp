@@ -55,7 +55,7 @@ user_pref("dom.disable_beforeunload", true);
 // function assumes this is available.
 user_pref("dom.animations-api.implicit-keyframes.enabled", true);
 // Disable high DPI
-user_pref("layout.css.devPixelsPerPx", "1.0");
+user_pref("layout.css.devPixelsPerPx", "1.0")
 // sometime wpt runs test even before the document becomes visible, which would
 // delay video.play() and cause play() running in wrong order.
 user_pref("media.block-autoplay-until-in-foreground", false);
@@ -80,10 +80,7 @@ user_pref("layout.css.font-loading-api.workers.enabled", true);
 // Enable WebDriver BiDi experimental commands and events during tests.
 user_pref("remote.experimental.enabled", true);
 // Disable always partitioning storage with the Storage Access API
-user_pref(
-  "privacy.partition.always_partition_third_party_non_cookie_storage",
-  false
-);
+user_pref("privacy.partition.always_partition_third_party_non_cookie_storage", false);
 // Disable OCSP checks in WPT (webtransport triggers these occasionally)
 user_pref("security.OCSP.enabled", 0);
 // Disable prefers-reduced-motion to ensure that smooth scrolls can be tested.
