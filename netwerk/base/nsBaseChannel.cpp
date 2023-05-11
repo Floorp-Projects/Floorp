@@ -168,31 +168,6 @@ bool nsBaseChannel::HasContentTypeHint() const {
   return !mContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE);
 }
 
-nsresult nsBaseChannel::PushStreamConverter(const char* fromType,
-                                            const char* toType,
-                                            bool invalidatesContentLength,
-                                            nsIStreamListener** result) {
-  NS_ASSERTION(mListener, "no listener");
-
-  nsresult rv;
-  nsCOMPtr<nsIStreamConverterService> scs =
-      do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIStreamListener> converter;
-  rv = scs->AsyncConvertData(fromType, toType, mListener, nullptr,
-                             getter_AddRefs(converter));
-  if (NS_SUCCEEDED(rv)) {
-    mListener = converter;
-    if (invalidatesContentLength) mContentLength = -1;
-    if (result) {
-      *result = nullptr;
-      converter.swap(*result);
-    }
-  }
-  return rv;
-}
-
 nsresult nsBaseChannel::BeginPumpingData() {
   nsresult rv;
 
@@ -701,7 +676,7 @@ nsBaseChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   // Store the listener and context early so that OpenContentStream and the
   // stream's AsyncWait method (called by AsyncRead) can have access to them
-  // via PushStreamConverter and the StreamListener methods.  However, since
+  // via the StreamListener methods.  However, since
   // this typically introduces a reference cycle between this and the listener,
   // we need to be sure to break the reference if this method does not succeed.
   mListener = listener;
