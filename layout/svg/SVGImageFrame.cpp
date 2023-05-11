@@ -672,7 +672,7 @@ bool SVGImageFrame::CreateWebRenderCommands(
 }
 
 nsIFrame* SVGImageFrame::GetFrameForPoint(const gfxPoint& aPoint) {
-  if (!HasAnyStateBits(NS_STATE_SVG_CLIPPATH_CHILD) && !GetHitTestFlags()) {
+  if (!HasAnyStateBits(NS_STATE_SVG_CLIPPATH_CHILD) && IgnoreHitTest()) {
     return nullptr;
   }
 
@@ -784,9 +784,7 @@ bool SVGImageFrame::ReflowFinished() {
 
 void SVGImageFrame::ReflowCallbackCanceled() { mReflowCallbackPosted = false; }
 
-uint16_t SVGImageFrame::GetHitTestFlags() {
-  uint16_t flags = 0;
-
+bool SVGImageFrame::IgnoreHitTest() const {
   switch (Style()->PointerEvents()) {
     case StylePointerEvents::None:
       break;
@@ -794,31 +792,29 @@ uint16_t SVGImageFrame::GetHitTestFlags() {
     case StylePointerEvents::Auto:
       if (StyleVisibility()->IsVisible()) {
         /* XXX: should check pixel transparency */
-        flags |= SVG_HIT_TEST_FILL;
+        return false;
       }
       break;
     case StylePointerEvents::Visiblefill:
     case StylePointerEvents::Visiblestroke:
     case StylePointerEvents::Visible:
       if (StyleVisibility()->IsVisible()) {
-        flags |= SVG_HIT_TEST_FILL;
+        return false;
       }
       break;
     case StylePointerEvents::Painted:
       /* XXX: should check pixel transparency */
-      flags |= SVG_HIT_TEST_FILL;
-      break;
+      return false;
     case StylePointerEvents::Fill:
     case StylePointerEvents::Stroke:
     case StylePointerEvents::All:
-      flags |= SVG_HIT_TEST_FILL;
-      break;
+      return false;
     default:
       NS_ERROR("not reached");
       break;
   }
 
-  return flags;
+  return true;
 }
 
 void SVGImageFrame::NotifySVGChanged(uint32_t aFlags) {

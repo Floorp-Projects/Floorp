@@ -215,35 +215,9 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 }
 
 nsIFrame* SVGForeignObjectFrame::GetFrameForPoint(const gfxPoint& aPoint) {
-  NS_ASSERTION(
-      HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
-      "Only hit-testing of non-display SVG should take this code path");
-
-  if (IsDisabled() || HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
-    return nullptr;
-  }
-
-  nsIFrame* kid = PrincipalChildList().FirstChild();
-  if (!kid) {
-    return nullptr;
-  }
-
-  float x, y, width, height;
-  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
-      static_cast<SVGElement*>(GetContent()), &x, &y, &width, &height);
-
-  if (!gfxRect(x, y, width, height).Contains(aPoint) ||
-      !SVGUtils::HitTestClip(this, aPoint)) {
-    return nullptr;
-  }
-
-  // Convert the point to app units relative to the top-left corner of the
-  // viewport that's established by the foreignObject element:
-
-  gfxPoint pt = (aPoint + gfxPoint(x, y)) * AppUnitsPerCSSPixel();
-  nsPoint point = nsPoint(NSToIntRound(pt.x), NSToIntRound(pt.y));
-
-  return nsLayoutUtils::GetFrameForPoint(RelativeTo{kid}, point);
+  MOZ_ASSERT_UNREACHABLE(
+      "A clipPath cannot contain an SVGForeignObject element");
+  return nullptr;
 }
 
 void SVGForeignObjectFrame::ReflowSVG() {

@@ -204,12 +204,6 @@ nsIFrame* SVGGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint) {
     if (!hitTestFlags) {
       return nullptr;
     }
-    if (hitTestFlags & SVG_HIT_TEST_CHECK_MRECT) {
-      gfxRect rect = nsLayoutUtils::RectToGfxRect(mRect, AppUnitsPerCSSPixel());
-      if (!rect.Contains(aPoint)) {
-        return nullptr;
-      }
-    }
     fillRule = SVGUtils::ToFillRule(StyleSVG()->mFillRule);
   }
 
@@ -228,7 +222,7 @@ nsIFrame* SVGGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint) {
   }
 
   if (hitTestFlags & SVG_HIT_TEST_FILL) {
-    isHit = path->ContainsPoint(ToPoint(aPoint), Matrix());
+    isHit = path->ContainsPoint(ToPoint(aPoint), {});
   }
   if (!isHit && (hitTestFlags & SVG_HIT_TEST_STROKE)) {
     Point point = ToPoint(aPoint);
@@ -245,7 +239,7 @@ nsIFrame* SVGGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint) {
           path->TransformedCopyToBuilder(ToMatrix(userToOuterSVG), fillRule);
       path = builder->Finish();
     }
-    isHit = path->StrokeContainsPoint(stroke, point, Matrix());
+    isHit = path->StrokeContainsPoint(stroke, point, {});
   }
 
   if (isHit && SVGUtils::HitTestClip(this, aPoint)) {
@@ -275,14 +269,14 @@ void SVGGeometryFrame::ReflowSVG() {
   // stroke-opacity="0"). GetGeometryHitTestFlags() accounts for
   // 'pointer-events'.
   uint16_t hitTestFlags = SVGUtils::GetGeometryHitTestFlags(this);
-  if ((hitTestFlags & SVG_HIT_TEST_FILL)) {
+  if (hitTestFlags & SVG_HIT_TEST_FILL) {
     flags |= SVGUtils::eBBoxIncludeFillGeometry;
   }
-  if ((hitTestFlags & SVG_HIT_TEST_STROKE)) {
+  if (hitTestFlags & SVG_HIT_TEST_STROKE) {
     flags |= SVGUtils::eBBoxIncludeStrokeGeometry;
   }
 
-  gfxRect extent = GetBBoxContribution(Matrix(), flags).ToThebesRect();
+  gfxRect extent = GetBBoxContribution({}, flags).ToThebesRect();
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent, AppUnitsPerCSSPixel());
 
   if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
