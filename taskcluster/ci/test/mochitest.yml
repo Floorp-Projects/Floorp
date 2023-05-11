@@ -689,7 +689,7 @@ mochitest-media:
                     android.*: built-projects
                     linux.*(asan|ccov)/opt: []
                     .*(ccov/|asan/|-32).*: built-projects
-                    (android|linux|windows10-64-2004|windows11-64-2009|macos)(?!.*-qr).*: []
+                    (android|linux|windows10-64-2009|windows11-64-2009|macos)(?!.*-qr).*: []
                     default: built-projects
     loopback-video: true
     chunks:

@@ -43,13 +43,13 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-ref-hw",
     },
-    "windows10-64-2004-qr": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
+    "windows10-64-2009-qr": {
+        "virtual": "win10-64-2009",
+        "virtual-with-gpu": "win10-64-2009-gpu",
     },
-    "windows10-64-2004-shippable-qr": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
+    "windows10-64-2009-shippable-qr": {
+        "virtual": "win10-64-2009",
+        "virtual-with-gpu": "win10-64-2009-gpu",
     },
     "windows11-32-2009-mingwclang-qr": {
         "virtual": "win11-64-2009",

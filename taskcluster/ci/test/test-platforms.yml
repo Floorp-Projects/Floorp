@@ -201,32 +201,32 @@ windows10-64-nightlyasrelease-qr/opt:
         - browsertime
 
 # win10-64 2004
-windows10-64-2004-qr/debug:
+windows10-64-2009-qr/debug:
     build-platform: win64/debug
     build-signing-label:
         by-variant:
             msix: repackage-signing-msix-win64/debug
             default: build-signing-win64/debug
     test-sets:
-        - windows10-2004-tests
+        - windows10-2009-tests
 
-windows10-64-2004-qr/opt:
+windows10-64-2009-qr/opt:
     build-platform: win64/opt
     build-signing-label:
         by-variant:
             msix: repackage-signing-msix-win64/opt
             default: build-signing-win64/opt
     test-sets:
-        - windows10-2004-tests
+        - windows10-2009-tests
 
-windows10-64-2004-shippable-qr/opt:
+windows10-64-2009-shippable-qr/opt:
     build-platform: win64-shippable/opt
     build-signing-label:
         by-variant:
             msix: repackage-signing-shippable-l10n-msix-win64-shippable/opt
             default: build-signing-win64-shippable/opt
     test-sets:
-        - windows10-2004-tests
+        - windows10-2009-tests
 
 # win11-64 2009
 windows11-64-2009-ccov-qr/opt:

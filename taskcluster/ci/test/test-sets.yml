@@ -207,7 +207,7 @@ windows32-2009-tests:
     - test-verify-gpu
     - test-verify-wpt
 
-windows10-2004-tests:
+windows10-2009-tests:
     - cppunit
     - gtest
     - mochitest-chrome
