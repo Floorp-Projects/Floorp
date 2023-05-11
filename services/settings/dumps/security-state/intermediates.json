@@ -1,6 +1,186 @@
 {
   "data": [
     {
+      "schema": 1683686879404,
+      "derHash": "EVoqRdtSA2GizfCjlcSkvYoYkC6qQDZ5KCX4RrvXaRc=",
+      "subject": "CN=BJCA EV SSL CA1,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
+      "subjectDN": "ME8xCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEYMBYGA1UEAwwPQkpDQSBFViBTU0wgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ef6e2fdc75139a5894e7e1991dfab92762b020f37bf9b1cd5c27709a34eaca0a",
+        "size": 2032,
+        "filename": "sLkDzaX9Q8etOWTdHEANzOS3cnjp-yqD0coS9iaHRjM=.pem",
+        "location": "security-state-staging/intermediates/448193ac-ac7c-4a3f-a881-f91f0a4c424f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "sLkDzaX9Q8etOWTdHEANzOS3cnjp+yqD0coS9iaHRjM=",
+      "crlite_enrolled": false,
+      "id": "0d85ff7b-cdd5-4f10-8831-533ba23464c4",
+      "last_modified": 1683687423842
+    },
+    {
+      "schema": 1683686879115,
+      "derHash": "L59BEU3K3DB4TkD+99buBjqb56Nj3lc36I+hEYZxUF4=",
+      "subject": "CN=BJCA IV SSL CA2,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
+      "subjectDN": "ME8xCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEYMBYGA1UEAwwPQkpDQSBJViBTU0wgQ0Ey",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0be887765dd949f54d98f598abb1933b7e5178628989923cf78985acd568b707",
+        "size": 1195,
+        "filename": "4kBf0Ckuf9X-B56JgI62Q9L5Nkj3Pk4NF5RmI71UvIE=.pem",
+        "location": "security-state-staging/intermediates/2c2a5067-06ef-4f7e-a569-bd57553b41d8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "4kBf0Ckuf9X+B56JgI62Q9L5Nkj3Pk4NF5RmI71UvIE=",
+      "crlite_enrolled": false,
+      "id": "a37caa64-097f-4b55-b097-44f7badfb88d",
+      "last_modified": 1683687423840
+    },
+    {
+      "schema": 1683686878274,
+      "derHash": "CmvD4gJKxGL11yvkNq5h0DOXjqjdtj1MXWIUkV5pBJs=",
+      "subject": "CN=BJCA OV SSL CA1,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
+      "subjectDN": "ME8xCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEYMBYGA1UEAwwPQkpDQSBPViBTU0wgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "37a37a29b7208fe2e18d6a5abe8df4814d6077cee5b92ef49884c42009067c2d",
+        "size": 2032,
+        "filename": "CBy_M0YoOsUoXP0Sn4rk371RA0hmwvpKTvZrj0Mc2LI=.pem",
+        "location": "security-state-staging/intermediates/fd9ed13a-147e-49c9-ae11-e62b80dbe726.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "CBy/M0YoOsUoXP0Sn4rk371RA0hmwvpKTvZrj0Mc2LI=",
+      "crlite_enrolled": false,
+      "id": "dbd25493-c3ed-4d08-bef5-c8a9f009846e",
+      "last_modified": 1683687423837
+    },
+    {
+      "schema": 1683686878546,
+      "derHash": "5gFHdwU0EnD9EgBmu98mIj5pU8Tbj6fqGX6vW/g0OyU=",
+      "subject": "CN=BJCA EV SSL CA2,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
+      "subjectDN": "ME8xCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEYMBYGA1UEAwwPQkpDQSBFViBTU0wgQ0Ey",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1323214ca2300de22d31d3814369d58fa6ae9e62ad92d6cc7604beb534750fd5",
+        "size": 1195,
+        "filename": "izxAW1vFQ-UGDxZZLXNl_O7jFN6W3VRKExKXWDX4Ps4=.pem",
+        "location": "security-state-staging/intermediates/c4a02c21-2b81-4612-96ea-de52dd1333c0.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "izxAW1vFQ+UGDxZZLXNl/O7jFN6W3VRKExKXWDX4Ps4=",
+      "crlite_enrolled": false,
+      "id": "17f83555-ab78-4fe7-908c-178e8b13c869",
+      "last_modified": 1683687423835
+    },
+    {
+      "schema": 1683686877665,
+      "derHash": "1wxZcAmvOjo3vfq+oMZBCMe4PNbCBC6P8Xij7o/gyug=",
+      "subject": "CN=BJCA IV SSL CA1,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
+      "subjectDN": "ME8xCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEYMBYGA1UEAwwPQkpDQSBJViBTU0wgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4c482fc8f507db6f5c7d83db341cff5fc7e21125450d9bcd86f157d233d6d3e3",
+        "size": 2032,
+        "filename": "1A_YDK0Cvh0x4c9OrH6hqXq_RW1vH6qY-R_tqJ5qsog=.pem",
+        "location": "security-state-staging/intermediates/c63f496a-748b-420b-9347-234c8c835e67.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "1A/YDK0Cvh0x4c9OrH6hqXq/RW1vH6qY+R/tqJ5qsog=",
+      "crlite_enrolled": false,
+      "id": "3ac3dfe5-e8a6-46b9-8130-d4483fef73f7",
+      "last_modified": 1683687423832
+    },
+    {
+      "schema": 1683686879698,
+      "derHash": "GdD+Zg28D6lIz0WRjkje+4OWxAJpA7wZ/k+RVS3/Tck=",
+      "subject": "CN=BJCA Generic CA1,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
+      "subjectDN": "MFAxCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEZMBcGA1UEAwwQQkpDQSBHZW5lcmljIENBMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3adf773fce633198e611293a20e90991037ea4e69c8194041bda5d7113d367b4",
+        "size": 1991,
+        "filename": "q4LhFN_r1c3dNt9NyxWwOwKS1S9Dv2gJVKxNa57YdPI=.pem",
+        "location": "security-state-staging/intermediates/55e65fbf-a90b-4e4c-b9ce-7bd8ca55f86b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "q4LhFN/r1c3dNt9NyxWwOwKS1S9Dv2gJVKxNa57YdPI=",
+      "crlite_enrolled": false,
+      "id": "1afda35e-956c-46f3-85f2-2e84242c2017",
+      "last_modified": 1683687423830
+    },
+    {
+      "schema": 1683686878828,
+      "derHash": "tM3PL0oRQc/mBPfVBifJb4gqq5XB07ekq7JGFdsVfRc=",
+      "subject": "CN=BJCA Generic CA2,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
+      "subjectDN": "MFAxCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEZMBcGA1UEAwwQQkpDQSBHZW5lcmljIENBMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "f097ecf027e6de14d4c09d02efde8bae582c4fec4e9920bd5843e270ee48eb40",
+        "size": 1154,
+        "filename": "31wNnjIOnIWZ2H6NJiuXBRLBhzngPMa3QpiMJNJ-Nt0=.pem",
+        "location": "security-state-staging/intermediates/ba5c1b80-d5d7-4af9-a8bc-aba07c4e6983.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "31wNnjIOnIWZ2H6NJiuXBRLBhzngPMa3QpiMJNJ+Nt0=",
+      "crlite_enrolled": false,
+      "id": "c526314c-38f2-4e77-95a6-cba2ac31a152",
+      "last_modified": 1683687423828
+    },
+    {
+      "schema": 1683686877217,
+      "derHash": "P1yxUxyxIjqr+3CHLcQ9LdbMPSgj6WtFip+KfsAmWUY=",
+      "subject": "CN=BJCA DV SSL CA2,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
+      "subjectDN": "ME8xCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEYMBYGA1UEAwwPQkpDQSBEViBTU0wgQ0Ey",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0477b03fe42a51cf720c5f271dd8707de7df5cca4b939d75088a721f4054c716",
+        "size": 1195,
+        "filename": "8WeDV8VuEJrDjNNnUkEUBbECT6pr7d3VnZOwBO87fcA=.pem",
+        "location": "security-state-staging/intermediates/ba34206c-ebf7-4165-9dd0-c834d74a7240.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8WeDV8VuEJrDjNNnUkEUBbECT6pr7d3VnZOwBO87fcA=",
+      "crlite_enrolled": false,
+      "id": "4f059ec0-e82f-4017-974e-6f0c7a0d76d5",
+      "last_modified": 1683687423825
+    },
+    {
+      "schema": 1683686876910,
+      "derHash": "OhpL1qYkaFeNvJHcJHBbJ2qDfMGLa+8f8/btD+YyYwI=",
+      "subject": "CN=BJCA OV SSL CA2,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
+      "subjectDN": "ME8xCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEYMBYGA1UEAwwPQkpDQSBPViBTU0wgQ0Ey",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8b27df18c2e866e7dfa85754cb29421b6f2e2ca998ff85edd3e912829175b711",
+        "size": 1195,
+        "filename": "tvJtJO4-3B8MoQ5C0ZwacldZCG-fJQKWXSdIedTP7wU=.pem",
+        "location": "security-state-staging/intermediates/070e5855-b176-4634-895a-2e70b31a0a09.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "tvJtJO4+3B8MoQ5C0ZwacldZCG+fJQKWXSdIedTP7wU=",
+      "crlite_enrolled": false,
+      "id": "2188890a-7aaf-4ab5-813d-c7bb3659023d",
+      "last_modified": 1683687423823
+    },
+    {
+      "schema": 1683686877953,
+      "derHash": "tAjWyCCXEhaUubZUjFtJRFlMCBE082xb6I10+jR1nZE=",
+      "subject": "CN=BJCA DV SSL CA1,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
+      "subjectDN": "ME8xCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEYMBYGA1UEAwwPQkpDQSBEViBTU0wgQ0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9cb99347de0950999aa205bc399844ebfda2eed74f9e22b40e9f5d35fe2e692f",
+        "size": 2032,
+        "filename": "kuKda6ujweDL4dO-o3j75jUDxqs8YWcDK29LT2fc2yg=.pem",
+        "location": "security-state-staging/intermediates/46746f82-2bb6-4c4f-9930-8cc48fa32633.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "kuKda6ujweDL4dO+o3j75jUDxqs8YWcDK29LT2fc2yg=",
+      "crlite_enrolled": false,
+      "id": "d35666a2-7f3f-4cf0-ae11-6f9581f65b30",
+      "last_modified": 1683687423820
+    },
+    {
       "schema": 1681980513975,
       "derHash": "L+Ta43D88rWPDHXyq8SUFLiB9VTs8hSF6uc/6qF7Hc0=",
       "subject": "CN=GlobalSign Atlas R3 DV ACME CA 2023 Q3,O=GlobalSign nv-sa,C=BE",
@@ -27505,5 +27685,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1682866623436
+  "timestamp": 1683687423842
 }
