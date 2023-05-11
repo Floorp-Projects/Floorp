@@ -138,6 +138,9 @@ def main(args=sys.argv[1:]):
             verbose=args.verbose,
             fission=args.fission,
             extra_summary_methods=args.extra_summary_methods,
+            benchmark_repository=args.benchmark_repository,
+            benchmark_revision=args.benchmark_revision,
+            benchmark_branch=args.benchmark_branch,
         )
     except Exception:
         traceback.print_exc()

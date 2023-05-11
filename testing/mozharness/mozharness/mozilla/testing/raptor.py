@@ -614,6 +614,41 @@ class Raptor(
                     ),
                 },
             ],
+            [
+                ["--benchmark-repository"],
+                {
+                    "dest": "benchmark_repository",
+                    "type": "str",
+                    "default": None,
+                    "help": (
+                        "Repository that should be used for a particular benchmark test. "
+                        "e.g. https://github.com/mozilla-mobile/firefox-android"
+                    ),
+                },
+            ],
+            [
+                ["--benchmark-revision"],
+                {
+                    "dest": "benchmark_revision",
+                    "type": "str",
+                    "default": None,
+                    "help": (
+                        "Repository revision that should be used for a particular "
+                        "benchmark test."
+                    ),
+                },
+            ],
+            [
+                ["--benchmark-branch"],
+                {
+                    "dest": "benchmark_branch",
+                    "type": "str",
+                    "default": None,
+                    "help": (
+                        "Repository branch that should be used for a particular benchmark test."
+                    ),
+                },
+            ],
         ]
         + testing_config_options
         + copy.deepcopy(code_coverage_config_options)
@@ -976,6 +1011,12 @@ class Raptor(
             kw_options["activity"] = self.config["activity"]
         if self.config.get("conditioned_profile") is not None:
             kw_options["conditioned-profile"] = self.config["conditioned_profile"]
+        if self.config.get("benchmark_repository"):
+            kw_options["benchmark_repository"] = self.config["benchmark_repository"]
+        if self.config.get("benchmark_revision"):
+            kw_options["benchmark_revision"] = self.config["benchmark_revision"]
+        if self.config.get("benchmark_repository"):
+            kw_options["benchmark_branch"] = self.config["benchmark_branch"]
 
         kw_options.update(kw)
         if self.host:

@@ -105,6 +105,9 @@ class Perftest(object):
         python=None,
         fission=True,
         extra_summary_methods=[],
+        benchmark_repository=None,
+        benchmark_revision=None,
+        benchmark_branch=None,
         **kwargs
     ):
         self._remote_test_root = None
@@ -151,6 +154,9 @@ class Perftest(object):
             "project": project,
             "verbose": verbose,
             "extra_summary_methods": extra_summary_methods,
+            "benchmark_repository": benchmark_repository,
+            "benchmark_revision": benchmark_revision,
+            "benchmark_branch": benchmark_branch,
         }
 
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
