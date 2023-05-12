@@ -43,7 +43,7 @@ union Utf8Unit;
 namespace js {
 
 class AtomSet;
-class JS_PUBLIC_API GenericPrinter;
+class GenericPrinter;
 class LifoAlloc;
 class StringBuffer;
 

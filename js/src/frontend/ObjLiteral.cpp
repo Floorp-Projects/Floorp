@@ -18,13 +18,13 @@
 #include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
 #include "gc/AllocKind.h"                          // gc::AllocKind
 #include "js/Id.h"                                 // INT_TO_JSID
-#include "js/Printer.h"                            // js::Fprinter
 #include "js/RootingAPI.h"                         // Rooted
 #include "js/TypeDecls.h"                          // RootedId, RootedValue
 #include "vm/JSObject.h"                           // TenuredObject
 #include "vm/JSONPrinter.h"                        // js::JSONPrinter
 #include "vm/NativeObject.h"                       // NativeDefineDataProperty
 #include "vm/PlainObject.h"                        // PlainObject
+#include "vm/Printer.h"                            // js::Fprinter
 
 #include "gc/ObjectKind-inl.h"    // gc::GetGCObjectKind
 #include "vm/JSAtom-inl.h"        // AtomToId

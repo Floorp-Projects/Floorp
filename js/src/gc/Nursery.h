@@ -63,7 +63,7 @@ class HeapSlot;
 class JSONPrinter;
 class MapObject;
 class SetObject;
-class JS_PUBLIC_API Sprinter;
+class Sprinter;
 class TenuringTracer;
 
 namespace gc {

@@ -17,7 +17,7 @@
 #include "js/TypeDecls.h"
 
 namespace js {
-class JS_PUBLIC_API GenericPrinter;
+class GenericPrinter;
 
 namespace jit {
 

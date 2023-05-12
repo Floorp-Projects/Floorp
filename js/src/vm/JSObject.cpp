@@ -3235,6 +3235,15 @@ JS_PUBLIC_API void js::DumpInterpreterFrame(JSContext* cx,
 
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) */
 
+namespace js {
+
+// We don't want jsfriendapi.h to depend on GenericPrinter,
+// so these functions are declared directly in the cpp.
+
+JS_PUBLIC_API void DumpBacktrace(JSContext* cx, js::GenericPrinter& out);
+
+}  // namespace js
+
 JS_PUBLIC_API void js::DumpBacktrace(JSContext* cx, FILE* fp) {
   Fprinter out(fp);
   js::DumpBacktrace(cx, out);
