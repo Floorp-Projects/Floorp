@@ -581,14 +581,13 @@ nsresult InitializeConnection(mozIStorageConnection& aConn) {
 
   // Enable WAL journaling.  This must be performed in a separate transaction
   // after changing the page_size and enabling auto_vacuum.
+  // Note there is a default journal_size_limit set by mozStorage.
   QM_TRY(MOZ_TO_RESULT(aConn.ExecuteSimpleSQL(nsPrintfCString(
       // WAL journal can grow to given number of *pages*
       "PRAGMA wal_autocheckpoint = %u; "
-      // Always truncate the journal back to given number of *bytes*
-      "PRAGMA journal_size_limit = %u; "
       // WAL must be enabled at the end to allow page size to be changed, etc.
       "PRAGMA journal_mode = WAL; ",
-      kWalAutoCheckpointPages, kWalAutoCheckpointSize))));
+      kWalAutoCheckpointPages))));
 
   // Verify that we successfully set the vacuum mode to incremental.  It
   // is very easy to put the database in a state where the auto_vacuum
