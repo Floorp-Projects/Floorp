@@ -72,6 +72,8 @@ skip == chrome://reftest/content/xul/treecell-image-svg-1b.xhtml chrome://reftes
 != chrome://reftest/content/xul/treetwisty-svg-context-paint-1-not-ref.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
 test-pref(svg.context-properties.content.enabled,true) fuzzy(0-26,0-2) == chrome://reftest/content/xul/treetwisty-svg-context-paint-1.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
 
+== chrome://reftest/content/xul/tree-scrollbar-height-change.xhtml chrome://reftest/content/xul/tree-scrollbar-height-change-ref.xhtml
+
 # resizer (non-native-themed)
 
 != chrome://reftest/content/xul/resizer-bottomend.xhtml chrome://reftest/content/xul/blank-window.xhtml
