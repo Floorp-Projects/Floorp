@@ -238,7 +238,18 @@ class JavaScriptTracer {
           frame.offset
         );
         const padding = "—".repeat(this.depth + 1);
-        const message = `${padding}[${frame.implementation}]—> ${script.source.url} @ ${lineNumber}:${columnNumber} - ${formatedDisplayName}`;
+        // Use a special URL, including line and column numbers which Firefox
+        // interprets as to be opened in the already opened DevTool's debugger
+        const href = `${script.source.url}:${lineNumber}:${columnNumber}`;
+
+        // Use special characters in order to print working hyperlinks right from the terminal
+        // See https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
+        const urlLink = `\x1B]8;;${href}\x1B\\${href}\x1B]8;;\x1B\\`;
+
+        const message = `${padding}[${
+          frame.implementation
+        }]—> ${urlLink} - ${formatDisplayName(frame)}`;
+
         dump(this.prefix + message + "\n");
       }
 
