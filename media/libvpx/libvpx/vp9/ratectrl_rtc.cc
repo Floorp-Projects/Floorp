@@ -140,7 +140,16 @@ bool VP9RateControlRTC::UpdateRateControl(
   cpi_->framerate = rc_cfg.framerate;
   cpi_->svc.number_spatial_layers = rc_cfg.ss_number_layers;
   cpi_->svc.number_temporal_layers = rc_cfg.ts_number_layers;
+
   vp9_set_mb_mi(cm, cm->width, cm->height);
+
+  if (setjmp(cpi_->common.error.jmp)) {
+    cpi_->common.error.setjmp = 0;
+    vpx_clear_system_state();
+    return false;
+  }
+  cpi_->common.error.setjmp = 1;
+
   for (int tl = 0; tl < cpi_->svc.number_temporal_layers; ++tl) {
     oxcf->ts_rate_decimator[tl] = rc_cfg.ts_rate_decimator[tl];
   }
@@ -168,6 +177,8 @@ bool VP9RateControlRTC::UpdateRateControl(
                                            (int)cpi_->oxcf.target_bandwidth);
   }
   vp9_check_reset_rc_flag(cpi_);
+
+  cpi_->common.error.setjmp = 0;
   return true;
 }
 

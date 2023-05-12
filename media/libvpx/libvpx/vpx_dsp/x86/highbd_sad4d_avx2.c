@@ -61,70 +61,79 @@ static VPX_FORCE_INLINE void highbd_sad64xHx4d(__m256i *sums_16 /*[4]*/,
   }
 }
 
+static VPX_FORCE_INLINE void highbd_sad64xNx4d_avx2(
+    const uint8_t *src_ptr, int src_stride, const uint8_t *const ref_array[4],
+    int ref_stride, uint32_t sad_array[4], int n) {
+  const uint16_t *src = CONVERT_TO_SHORTPTR(src_ptr);
+  uint16_t *refs[4];
+  __m256i sums_16[4];
+  __m256i sums_32[4];
+  int i;
+
+  refs[0] = CONVERT_TO_SHORTPTR(ref_array[0]);
+  refs[1] = CONVERT_TO_SHORTPTR(ref_array[1]);
+  refs[2] = CONVERT_TO_SHORTPTR(ref_array[2]);
+  refs[3] = CONVERT_TO_SHORTPTR(ref_array[3]);
+  sums_32[0] = _mm256_setzero_si256();
+  sums_32[1] = _mm256_setzero_si256();
+  sums_32[2] = _mm256_setzero_si256();
+  sums_32[3] = _mm256_setzero_si256();
+
+  for (i = 0; i < (n / 2); ++i) {
+    sums_16[0] = _mm256_setzero_si256();
+    sums_16[1] = _mm256_setzero_si256();
+    sums_16[2] = _mm256_setzero_si256();
+    sums_16[3] = _mm256_setzero_si256();
+
+    highbd_sad64xHx4d(sums_16, src, src_stride, refs, ref_stride, 2);
+
+    /* sums_16 will outrange after 2 rows, so add current sums_16 to
+     * sums_32*/
+    sums_32[0] = _mm256_add_epi32(
+        sums_32[0],
+        _mm256_add_epi32(
+            _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[0])),
+            _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16[0], 1))));
+    sums_32[1] = _mm256_add_epi32(
+        sums_32[1],
+        _mm256_add_epi32(
+            _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[1])),
+            _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16[1], 1))));
+    sums_32[2] = _mm256_add_epi32(
+        sums_32[2],
+        _mm256_add_epi32(
+            _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[2])),
+            _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16[2], 1))));
+    sums_32[3] = _mm256_add_epi32(
+        sums_32[3],
+        _mm256_add_epi32(
+            _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[3])),
+            _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16[3], 1))));
+
+    src += src_stride << 1;
+  }
+  calc_final_4(sums_32, sad_array);
+}
+
 #define HIGHBD_SAD64XNX4D(n)                                                   \
-  void vpx_highbd_sad64x##n##x4d_avx2(const uint8_t *src_ptr, int src_stride,  \
+  void vpx_highbd_sad64x##n##x4d_avx2(const uint8_t *src, int src_stride,      \
                                       const uint8_t *const ref_array[4],       \
                                       int ref_stride, uint32_t sad_array[4]) { \
-    const uint16_t *src = CONVERT_TO_SHORTPTR(src_ptr);                        \
-    uint16_t *refs[4];                                                         \
-    __m256i sums_16[4];                                                        \
-    __m256i sums_32[4];                                                        \
-    int i;                                                                     \
-                                                                               \
-    refs[0] = CONVERT_TO_SHORTPTR(ref_array[0]);                               \
-    refs[1] = CONVERT_TO_SHORTPTR(ref_array[1]);                               \
-    refs[2] = CONVERT_TO_SHORTPTR(ref_array[2]);                               \
-    refs[3] = CONVERT_TO_SHORTPTR(ref_array[3]);                               \
-    sums_32[0] = _mm256_setzero_si256();                                       \
-    sums_32[1] = _mm256_setzero_si256();                                       \
-    sums_32[2] = _mm256_setzero_si256();                                       \
-    sums_32[3] = _mm256_setzero_si256();                                       \
-                                                                               \
-    for (i = 0; i < (n / 2); ++i) {                                            \
-      sums_16[0] = _mm256_setzero_si256();                                     \
-      sums_16[1] = _mm256_setzero_si256();                                     \
-      sums_16[2] = _mm256_setzero_si256();                                     \
-      sums_16[3] = _mm256_setzero_si256();                                     \
-                                                                               \
-      highbd_sad64xHx4d(sums_16, src, src_stride, refs, ref_stride, 2);        \
-                                                                               \
-      /* sums_16 will outrange after 2 rows, so add current sums_16 to         \
-       * sums_32*/                                                             \
-      sums_32[0] = _mm256_add_epi32(                                           \
-          sums_32[0],                                                          \
-          _mm256_add_epi32(                                                    \
-              _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[0])),       \
-              _mm256_cvtepu16_epi32(                                           \
-                  _mm256_extractf128_si256(sums_16[0], 1))));                  \
-      sums_32[1] = _mm256_add_epi32(                                           \
-          sums_32[1],                                                          \
-          _mm256_add_epi32(                                                    \
-              _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[1])),       \
-              _mm256_cvtepu16_epi32(                                           \
-                  _mm256_extractf128_si256(sums_16[1], 1))));                  \
-      sums_32[2] = _mm256_add_epi32(                                           \
-          sums_32[2],                                                          \
-          _mm256_add_epi32(                                                    \
-              _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[2])),       \
-              _mm256_cvtepu16_epi32(                                           \
-                  _mm256_extractf128_si256(sums_16[2], 1))));                  \
-      sums_32[3] = _mm256_add_epi32(                                           \
-          sums_32[3],                                                          \
-          _mm256_add_epi32(                                                    \
-              _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[3])),       \
-              _mm256_cvtepu16_epi32(                                           \
-                  _mm256_extractf128_si256(sums_16[3], 1))));                  \
-                                                                               \
-      src += src_stride << 1;                                                  \
-    }                                                                          \
-    calc_final_4(sums_32, sad_array);                                          \
+    highbd_sad64xNx4d_avx2(src, src_stride, ref_array, ref_stride, sad_array,  \
+                           n);                                                 \
   }
 
-// 64x64
-HIGHBD_SAD64XNX4D(64)
-
-// 64x32
-HIGHBD_SAD64XNX4D(32)
+#define HIGHBD_SADSKIP64XNx4D(n)                                             \
+  void vpx_highbd_sad_skip_64x##n##x4d_avx2(                                 \
+      const uint8_t *src, int src_stride, const uint8_t *const ref_array[4], \
+      int ref_stride, uint32_t sad_array[4]) {                               \
+    highbd_sad64xNx4d_avx2(src, 2 * src_stride, ref_array, 2 * ref_stride,   \
+                           sad_array, n / 2);                                \
+    sad_array[0] <<= 1;                                                      \
+    sad_array[1] <<= 1;                                                      \
+    sad_array[2] <<= 1;                                                      \
+    sad_array[3] <<= 1;                                                      \
+  }
 
 static VPX_FORCE_INLINE void highbd_sad32xHx4d(__m256i *sums_16 /*[4]*/,
                                                const uint16_t *src,
@@ -171,73 +180,79 @@ static VPX_FORCE_INLINE void highbd_sad32xHx4d(__m256i *sums_16 /*[4]*/,
   }
 }
 
+static VPX_FORCE_INLINE void highbd_sad32xNx4d_avx2(
+    const uint8_t *src_ptr, int src_stride, const uint8_t *const ref_array[4],
+    int ref_stride, uint32_t sad_array[4], int n) {
+  const uint16_t *src = CONVERT_TO_SHORTPTR(src_ptr);
+  uint16_t *refs[4];
+  __m256i sums_16[4];
+  __m256i sums_32[4];
+  int i;
+
+  refs[0] = CONVERT_TO_SHORTPTR(ref_array[0]);
+  refs[1] = CONVERT_TO_SHORTPTR(ref_array[1]);
+  refs[2] = CONVERT_TO_SHORTPTR(ref_array[2]);
+  refs[3] = CONVERT_TO_SHORTPTR(ref_array[3]);
+  sums_32[0] = _mm256_setzero_si256();
+  sums_32[1] = _mm256_setzero_si256();
+  sums_32[2] = _mm256_setzero_si256();
+  sums_32[3] = _mm256_setzero_si256();
+
+  for (i = 0; i < (n / 8); ++i) {
+    sums_16[0] = _mm256_setzero_si256();
+    sums_16[1] = _mm256_setzero_si256();
+    sums_16[2] = _mm256_setzero_si256();
+    sums_16[3] = _mm256_setzero_si256();
+
+    highbd_sad32xHx4d(sums_16, src, src_stride, refs, ref_stride, 8);
+
+    /* sums_16 will outrange after 8 rows, so add current sums_16 to
+     * sums_32*/
+    sums_32[0] = _mm256_add_epi32(
+        sums_32[0],
+        _mm256_add_epi32(
+            _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[0])),
+            _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16[0], 1))));
+    sums_32[1] = _mm256_add_epi32(
+        sums_32[1],
+        _mm256_add_epi32(
+            _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[1])),
+            _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16[1], 1))));
+    sums_32[2] = _mm256_add_epi32(
+        sums_32[2],
+        _mm256_add_epi32(
+            _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[2])),
+            _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16[2], 1))));
+    sums_32[3] = _mm256_add_epi32(
+        sums_32[3],
+        _mm256_add_epi32(
+            _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[3])),
+            _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16[3], 1))));
+
+    src += src_stride << 3;
+  }
+  calc_final_4(sums_32, sad_array);
+}
+
 #define HIGHBD_SAD32XNX4D(n)                                                   \
-  void vpx_highbd_sad32x##n##x4d_avx2(const uint8_t *src_ptr, int src_stride,  \
+  void vpx_highbd_sad32x##n##x4d_avx2(const uint8_t *src, int src_stride,      \
                                       const uint8_t *const ref_array[4],       \
                                       int ref_stride, uint32_t sad_array[4]) { \
-    const uint16_t *src = CONVERT_TO_SHORTPTR(src_ptr);                        \
-    uint16_t *refs[4];                                                         \
-    __m256i sums_16[4];                                                        \
-    __m256i sums_32[4];                                                        \
-    int i;                                                                     \
-                                                                               \
-    refs[0] = CONVERT_TO_SHORTPTR(ref_array[0]);                               \
-    refs[1] = CONVERT_TO_SHORTPTR(ref_array[1]);                               \
-    refs[2] = CONVERT_TO_SHORTPTR(ref_array[2]);                               \
-    refs[3] = CONVERT_TO_SHORTPTR(ref_array[3]);                               \
-    sums_32[0] = _mm256_setzero_si256();                                       \
-    sums_32[1] = _mm256_setzero_si256();                                       \
-    sums_32[2] = _mm256_setzero_si256();                                       \
-    sums_32[3] = _mm256_setzero_si256();                                       \
-                                                                               \
-    for (i = 0; i < (n / 8); ++i) {                                            \
-      sums_16[0] = _mm256_setzero_si256();                                     \
-      sums_16[1] = _mm256_setzero_si256();                                     \
-      sums_16[2] = _mm256_setzero_si256();                                     \
-      sums_16[3] = _mm256_setzero_si256();                                     \
-                                                                               \
-      highbd_sad32xHx4d(sums_16, src, src_stride, refs, ref_stride, 8);        \
-                                                                               \
-      /* sums_16 will outrange after 8 rows, so add current sums_16 to         \
-       * sums_32*/                                                             \
-      sums_32[0] = _mm256_add_epi32(                                           \
-          sums_32[0],                                                          \
-          _mm256_add_epi32(                                                    \
-              _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[0])),       \
-              _mm256_cvtepu16_epi32(                                           \
-                  _mm256_extractf128_si256(sums_16[0], 1))));                  \
-      sums_32[1] = _mm256_add_epi32(                                           \
-          sums_32[1],                                                          \
-          _mm256_add_epi32(                                                    \
-              _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[1])),       \
-              _mm256_cvtepu16_epi32(                                           \
-                  _mm256_extractf128_si256(sums_16[1], 1))));                  \
-      sums_32[2] = _mm256_add_epi32(                                           \
-          sums_32[2],                                                          \
-          _mm256_add_epi32(                                                    \
-              _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[2])),       \
-              _mm256_cvtepu16_epi32(                                           \
-                  _mm256_extractf128_si256(sums_16[2], 1))));                  \
-      sums_32[3] = _mm256_add_epi32(                                           \
-          sums_32[3],                                                          \
-          _mm256_add_epi32(                                                    \
-              _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16[3])),       \
-              _mm256_cvtepu16_epi32(                                           \
-                  _mm256_extractf128_si256(sums_16[3], 1))));                  \
-                                                                               \
-      src += src_stride << 3;                                                  \
-    }                                                                          \
-    calc_final_4(sums_32, sad_array);                                          \
+    highbd_sad32xNx4d_avx2(src, src_stride, ref_array, ref_stride, sad_array,  \
+                           n);                                                 \
   }
 
-// 32x64
-HIGHBD_SAD32XNX4D(64)
-
-// 32x32
-HIGHBD_SAD32XNX4D(32)
-
-// 32x16
-HIGHBD_SAD32XNX4D(16)
+#define HIGHBD_SADSKIP32XNx4D(n)                                             \
+  void vpx_highbd_sad_skip_32x##n##x4d_avx2(                                 \
+      const uint8_t *src, int src_stride, const uint8_t *const ref_array[4], \
+      int ref_stride, uint32_t sad_array[4]) {                               \
+    highbd_sad32xNx4d_avx2(src, 2 * src_stride, ref_array, 2 * ref_stride,   \
+                           sad_array, n / 2);                                \
+    sad_array[0] <<= 1;                                                      \
+    sad_array[1] <<= 1;                                                      \
+    sad_array[2] <<= 1;                                                      \
+    sad_array[3] <<= 1;                                                      \
+  }
 
 static VPX_FORCE_INLINE void highbd_sad16xHx4d(__m256i *sums_16 /*[4]*/,
                                                const uint16_t *src,
@@ -275,13 +290,15 @@ static VPX_FORCE_INLINE void highbd_sad16xHx4d(__m256i *sums_16 /*[4]*/,
   }
 }
 
-void vpx_highbd_sad16x32x4d_avx2(const uint8_t *src_ptr, int src_stride,
-                                 const uint8_t *const ref_array[4],
-                                 int ref_stride, uint32_t sad_array[4]) {
+static VPX_FORCE_INLINE void highbd_sad16xNx4d_avx2(
+    const uint8_t *src_ptr, int src_stride, const uint8_t *const ref_array[4],
+    int ref_stride, uint32_t sad_array[4], int n) {
   const uint16_t *src = CONVERT_TO_SHORTPTR(src_ptr);
   uint16_t *refs[4];
   __m256i sums_16[4];
   __m256i sums_32[4];
+  const int height = VPXMIN(16, n);
+  const int num_iters = n / height;
   int i;
 
   refs[0] = CONVERT_TO_SHORTPTR(ref_array[0]);
@@ -293,13 +310,13 @@ void vpx_highbd_sad16x32x4d_avx2(const uint8_t *src_ptr, int src_stride,
   sums_32[2] = _mm256_setzero_si256();
   sums_32[3] = _mm256_setzero_si256();
 
-  for (i = 0; i < 2; ++i) {
+  for (i = 0; i < num_iters; ++i) {
     sums_16[0] = _mm256_setzero_si256();
     sums_16[1] = _mm256_setzero_si256();
     sums_16[2] = _mm256_setzero_si256();
     sums_16[3] = _mm256_setzero_si256();
 
-    highbd_sad16xHx4d(sums_16, src, src_stride, refs, ref_stride, 16);
+    highbd_sad16xHx4d(sums_16, src, src_stride, refs, ref_stride, height);
 
     // sums_16 will outrange after 16 rows, so add current sums_16 to sums_32
     sums_32[0] = _mm256_add_epi32(
@@ -327,6 +344,26 @@ void vpx_highbd_sad16x32x4d_avx2(const uint8_t *src_ptr, int src_stride,
   }
   calc_final_4(sums_32, sad_array);
 }
+
+#define HIGHBD_SAD16XNX4D(n)                                                   \
+  void vpx_highbd_sad16x##n##x4d_avx2(const uint8_t *src, int src_stride,      \
+                                      const uint8_t *const ref_array[4],       \
+                                      int ref_stride, uint32_t sad_array[4]) { \
+    highbd_sad16xNx4d_avx2(src, src_stride, ref_array, ref_stride, sad_array,  \
+                           n);                                                 \
+  }
+
+#define HIGHBD_SADSKIP16XNx4D(n)                                             \
+  void vpx_highbd_sad_skip_16x##n##x4d_avx2(                                 \
+      const uint8_t *src, int src_stride, const uint8_t *const ref_array[4], \
+      int ref_stride, uint32_t sad_array[4]) {                               \
+    highbd_sad16xNx4d_avx2(src, 2 * src_stride, ref_array, 2 * ref_stride,   \
+                           sad_array, n / 2);                                \
+    sad_array[0] <<= 1;                                                      \
+    sad_array[1] <<= 1;                                                      \
+    sad_array[2] <<= 1;                                                      \
+    sad_array[3] <<= 1;                                                      \
+  }
 
 void vpx_highbd_sad16x16x4d_avx2(const uint8_t *src_ptr, int src_stride,
                                  const uint8_t *const ref_array[4],
@@ -399,3 +436,27 @@ void vpx_highbd_sad16x8x4d_avx2(const uint8_t *src_ptr, int src_stride,
     calc_final_4(sums_32, sad_array);
   }
 }
+
+// clang-format off
+HIGHBD_SAD64XNX4D(64)
+HIGHBD_SADSKIP64XNx4D(64)
+
+HIGHBD_SAD64XNX4D(32)
+HIGHBD_SADSKIP64XNx4D(32)
+
+HIGHBD_SAD32XNX4D(64)
+HIGHBD_SADSKIP32XNx4D(64)
+
+HIGHBD_SAD32XNX4D(32)
+HIGHBD_SADSKIP32XNx4D(32)
+
+HIGHBD_SAD32XNX4D(16)
+HIGHBD_SADSKIP32XNx4D(16)
+
+HIGHBD_SAD16XNX4D(32)
+HIGHBD_SADSKIP16XNx4D(32)
+
+HIGHBD_SADSKIP16XNx4D(16)
+
+HIGHBD_SADSKIP16XNx4D(8)
+    // clang-format on

@@ -358,14 +358,6 @@ class TransTestBase : public ::testing::TestWithParam<DctParam> {
     ASSERT_TRUE(in.Init());
     Buffer<tran_low_t> coeff = Buffer<tran_low_t>(size_, size_, 0, 16);
     ASSERT_TRUE(coeff.Init());
-    Buffer<uint8_t> dst = Buffer<uint8_t>(size_, size_, 0, 16);
-    ASSERT_TRUE(dst.Init());
-    Buffer<uint8_t> src = Buffer<uint8_t>(size_, size_, 0);
-    ASSERT_TRUE(src.Init());
-    Buffer<uint16_t> dst16 = Buffer<uint16_t>(size_, size_, 0, 16);
-    ASSERT_TRUE(dst16.Init());
-    Buffer<uint16_t> src16 = Buffer<uint16_t>(size_, size_, 0);
-    ASSERT_TRUE(src16.Init());
 
     for (int i = 0; i < count_test_block; ++i) {
       InitMem();

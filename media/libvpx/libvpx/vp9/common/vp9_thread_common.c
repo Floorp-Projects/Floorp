@@ -283,7 +283,7 @@ void vp9_loop_filter_alloc(VP9LfSync *lf_sync, VP9_COMMON *cm, int rows,
   {
     int i;
 
-    CHECK_MEM_ERROR(cm, lf_sync->mutex,
+    CHECK_MEM_ERROR(&cm->error, lf_sync->mutex,
                     vpx_malloc(sizeof(*lf_sync->mutex) * rows));
     if (lf_sync->mutex) {
       for (i = 0; i < rows; ++i) {
@@ -291,7 +291,7 @@ void vp9_loop_filter_alloc(VP9LfSync *lf_sync, VP9_COMMON *cm, int rows,
       }
     }
 
-    CHECK_MEM_ERROR(cm, lf_sync->cond,
+    CHECK_MEM_ERROR(&cm->error, lf_sync->cond,
                     vpx_malloc(sizeof(*lf_sync->cond) * rows));
     if (lf_sync->cond) {
       for (i = 0; i < rows; ++i) {
@@ -299,11 +299,11 @@ void vp9_loop_filter_alloc(VP9LfSync *lf_sync, VP9_COMMON *cm, int rows,
       }
     }
 
-    CHECK_MEM_ERROR(cm, lf_sync->lf_mutex,
+    CHECK_MEM_ERROR(&cm->error, lf_sync->lf_mutex,
                     vpx_malloc(sizeof(*lf_sync->lf_mutex)));
     pthread_mutex_init(lf_sync->lf_mutex, NULL);
 
-    CHECK_MEM_ERROR(cm, lf_sync->recon_done_mutex,
+    CHECK_MEM_ERROR(&cm->error, lf_sync->recon_done_mutex,
                     vpx_malloc(sizeof(*lf_sync->recon_done_mutex) * rows));
     if (lf_sync->recon_done_mutex) {
       for (i = 0; i < rows; ++i) {
@@ -311,7 +311,7 @@ void vp9_loop_filter_alloc(VP9LfSync *lf_sync, VP9_COMMON *cm, int rows,
       }
     }
 
-    CHECK_MEM_ERROR(cm, lf_sync->recon_done_cond,
+    CHECK_MEM_ERROR(&cm->error, lf_sync->recon_done_cond,
                     vpx_malloc(sizeof(*lf_sync->recon_done_cond) * rows));
     if (lf_sync->recon_done_cond) {
       for (i = 0; i < rows; ++i) {
@@ -321,15 +321,15 @@ void vp9_loop_filter_alloc(VP9LfSync *lf_sync, VP9_COMMON *cm, int rows,
   }
 #endif  // CONFIG_MULTITHREAD
 
-  CHECK_MEM_ERROR(cm, lf_sync->lfdata,
+  CHECK_MEM_ERROR(&cm->error, lf_sync->lfdata,
                   vpx_malloc(num_workers * sizeof(*lf_sync->lfdata)));
   lf_sync->num_workers = num_workers;
   lf_sync->num_active_workers = lf_sync->num_workers;
 
-  CHECK_MEM_ERROR(cm, lf_sync->cur_sb_col,
+  CHECK_MEM_ERROR(&cm->error, lf_sync->cur_sb_col,
                   vpx_malloc(sizeof(*lf_sync->cur_sb_col) * rows));
 
-  CHECK_MEM_ERROR(cm, lf_sync->num_tiles_done,
+  CHECK_MEM_ERROR(&cm->error, lf_sync->num_tiles_done,
                   vpx_malloc(sizeof(*lf_sync->num_tiles_done) *
                                  mi_cols_aligned_to_sb(cm->mi_rows) >>
                              MI_BLOCK_SIZE_LOG2));

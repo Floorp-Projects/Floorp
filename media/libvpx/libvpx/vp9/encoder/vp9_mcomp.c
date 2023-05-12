@@ -77,14 +77,6 @@ int vp9_init_search_range(int size) {
   return sr;
 }
 
-static INLINE int mv_cost(const MV *mv, const int *joint_cost,
-                          int *const comp_cost[2]) {
-  assert(mv->row >= -MV_MAX && mv->row < MV_MAX);
-  assert(mv->col >= -MV_MAX && mv->col < MV_MAX);
-  return joint_cost[vp9_get_mv_joint(mv)] + comp_cost[0][mv->row] +
-         comp_cost[1][mv->col];
-}
-
 int vp9_mv_bit_cost(const MV *mv, const MV *ref, const int *mvjcost,
                     int *mvcost[2], int weight) {
   const MV diff = { mv->row - ref->row, mv->col - ref->col };
@@ -103,15 +95,6 @@ static int mv_err_cost(const MV *mv, const MV *ref, const int *mvjcost,
   }
   return 0;
 }
-
-static int mvsad_err_cost(const MACROBLOCK *x, const MV *mv, const MV *ref,
-                          int sad_per_bit) {
-  const MV diff = { mv->row - ref->row, mv->col - ref->col };
-  return ROUND_POWER_OF_TWO(
-      (unsigned)mv_cost(&diff, x->nmvjointsadcost, x->nmvsadcost) * sad_per_bit,
-      VP9_PROB_COST_SHIFT);
-}
-
 void vp9_init_dsmotion_compensation(search_site_config *cfg, int stride) {
   int len;
   int ss_count = 0;
@@ -2070,9 +2053,9 @@ int vp9_prepare_nb_full_mvs(const MotionField *motion_field, int mi_row,
 #endif  // CONFIG_NON_GREEDY_MV
 
 int vp9_diamond_search_sad_c(const MACROBLOCK *x, const search_site_config *cfg,
-                             MV *ref_mv, MV *best_mv, int search_param,
-                             int sad_per_bit, int *num00,
-                             const vp9_variance_fn_ptr_t *fn_ptr,
+                             MV *ref_mv, uint32_t start_mv_sad, MV *best_mv,
+                             int search_param, int sad_per_bit, int *num00,
+                             const vp9_sad_fn_ptr_t *sad_fn_ptr,
                              const MV *center_mv) {
   int i, j, step;
 
@@ -2083,7 +2066,7 @@ int vp9_diamond_search_sad_c(const MACROBLOCK *x, const search_site_config *cfg,
   const int in_what_stride = xd->plane[0].pre[0].stride;
   const uint8_t *best_address;
 
-  unsigned int bestsad = INT_MAX;
+  unsigned int bestsad = start_mv_sad;
   int best_site = -1;
   int last_site = -1;
 
@@ -2101,8 +2084,6 @@ int vp9_diamond_search_sad_c(const MACROBLOCK *x, const search_site_config *cfg,
   const int tot_steps = cfg->total_steps - search_param;
 
   const MV fcenter_mv = { center_mv->row >> 3, center_mv->col >> 3 };
-  clamp_mv(ref_mv, x->mv_limits.col_min, x->mv_limits.col_max,
-           x->mv_limits.row_min, x->mv_limits.row_max);
   ref_row = ref_mv->row;
   ref_col = ref_mv->col;
   *num00 = 0;
@@ -2112,10 +2093,6 @@ int vp9_diamond_search_sad_c(const MACROBLOCK *x, const search_site_config *cfg,
   // Work out the start point for the search
   in_what = xd->plane[0].pre[0].buf + ref_row * in_what_stride + ref_col;
   best_address = in_what;
-
-  // Check the starting position
-  bestsad = fn_ptr->sdf(what, what_stride, in_what, in_what_stride) +
-            mvsad_err_cost(x, best_mv, &fcenter_mv, sad_per_bit);
 
   i = 0;
 
@@ -2140,8 +2117,8 @@ int vp9_diamond_search_sad_c(const MACROBLOCK *x, const search_site_config *cfg,
 
         for (t = 0; t < 4; t++) block_offset[t] = ss_os[i + t] + best_address;
 
-        fn_ptr->sdx4df(what, what_stride, block_offset, in_what_stride,
-                       sad_array);
+        sad_fn_ptr->sdx4df(what, what_stride, block_offset, in_what_stride,
+                           sad_array);
 
         for (t = 0; t < 4; t++, i++) {
           if (sad_array[t] < bestsad) {
@@ -2165,7 +2142,7 @@ int vp9_diamond_search_sad_c(const MACROBLOCK *x, const search_site_config *cfg,
         if (is_mv_in(&x->mv_limits, &this_mv)) {
           const uint8_t *const check_here = ss_os[i] + best_address;
           unsigned int thissad =
-              fn_ptr->sdf(what, what_stride, check_here, in_what_stride);
+              sad_fn_ptr->sdf(what, what_stride, check_here, in_what_stride);
 
           if (thissad < bestsad) {
             thissad += mvsad_err_cost(x, &this_mv, &fcenter_mv, sad_per_bit);
@@ -2507,15 +2484,54 @@ int vp9_full_pixel_diamond_new(const VP9_COMP *cpi, MACROBLOCK *x,
               point as the best match, we will do a final 1-away diamond
               refining search  */
 static int full_pixel_diamond(const VP9_COMP *const cpi,
-                              const MACROBLOCK *const x, MV *mvp_full,
-                              int step_param, int sadpb, int further_steps,
-                              int do_refine, int *cost_list,
+                              const MACROBLOCK *const x, BLOCK_SIZE bsize,
+                              MV *mvp_full, int step_param, int sadpb,
+                              int further_steps, int do_refine,
+                              int use_downsampled_sad, int *cost_list,
                               const vp9_variance_fn_ptr_t *fn_ptr,
                               const MV *ref_mv, MV *dst_mv) {
   MV temp_mv;
   int thissme, n, num00 = 0;
-  int bestsme = cpi->diamond_search_sad(x, &cpi->ss_cfg, mvp_full, &temp_mv,
-                                        step_param, sadpb, &n, fn_ptr, ref_mv);
+  int bestsme;
+  const int src_buf_stride = x->plane[0].src.stride;
+  const uint8_t *const src_buf = x->plane[0].src.buf;
+  const MACROBLOCKD *const xd = &x->e_mbd;
+  const int pred_buf_stride = xd->plane[0].pre[0].stride;
+  uint8_t *pred_buf;
+  vp9_sad_fn_ptr_t sad_fn_ptr;
+  unsigned int start_mv_sad, start_mv_sad_even_rows, start_mv_sad_odd_rows;
+  const MV ref_mv_full = { ref_mv->row >> 3, ref_mv->col >> 3 };
+  clamp_mv(mvp_full, x->mv_limits.col_min, x->mv_limits.col_max,
+           x->mv_limits.row_min, x->mv_limits.row_max);
+
+  pred_buf =
+      xd->plane[0].pre[0].buf + mvp_full->row * pred_buf_stride + mvp_full->col;
+  start_mv_sad_even_rows =
+      fn_ptr->sdsf(src_buf, src_buf_stride, pred_buf, pred_buf_stride);
+  start_mv_sad_odd_rows =
+      fn_ptr->sdsf(src_buf + src_buf_stride, src_buf_stride,
+                   pred_buf + pred_buf_stride, pred_buf_stride);
+  start_mv_sad = (start_mv_sad_even_rows + start_mv_sad_odd_rows) >> 1;
+  start_mv_sad += mvsad_err_cost(x, mvp_full, &ref_mv_full, sadpb);
+
+  sad_fn_ptr.sdf = fn_ptr->sdf;
+  sad_fn_ptr.sdx4df = fn_ptr->sdx4df;
+  if (use_downsampled_sad && num_4x4_blocks_high_lookup[bsize] >= 2) {
+    // If the absolute difference between the pred-to-src SAD of even rows and
+    // the pred-to-src SAD of odd rows is small, skip every other row in sad
+    // computation.
+    const int odd_to_even_diff_sad =
+        abs((int)start_mv_sad_even_rows - (int)start_mv_sad_odd_rows);
+    const int mult_thresh = 10;
+    if (odd_to_even_diff_sad * mult_thresh < (int)start_mv_sad_even_rows) {
+      sad_fn_ptr.sdf = fn_ptr->sdsf;
+      sad_fn_ptr.sdx4df = fn_ptr->sdsx4df;
+    }
+  }
+
+  bestsme =
+      cpi->diamond_search_sad(x, &cpi->ss_cfg, mvp_full, start_mv_sad, &temp_mv,
+                              step_param, sadpb, &n, &sad_fn_ptr, ref_mv);
   if (bestsme < INT_MAX)
     bestsme = vp9_get_mvpred_var(x, &temp_mv, ref_mv, fn_ptr, 1);
   *dst_mv = temp_mv;
@@ -2530,9 +2546,9 @@ static int full_pixel_diamond(const VP9_COMP *const cpi,
     if (num00) {
       num00--;
     } else {
-      thissme = cpi->diamond_search_sad(x, &cpi->ss_cfg, mvp_full, &temp_mv,
-                                        step_param + n, sadpb, &num00, fn_ptr,
-                                        ref_mv);
+      thissme = cpi->diamond_search_sad(x, &cpi->ss_cfg, mvp_full, start_mv_sad,
+                                        &temp_mv, step_param + n, sadpb, &num00,
+                                        &sad_fn_ptr, ref_mv);
       if (thissme < INT_MAX)
         thissme = vp9_get_mvpred_var(x, &temp_mv, ref_mv, fn_ptr, 1);
 
@@ -2550,13 +2566,34 @@ static int full_pixel_diamond(const VP9_COMP *const cpi,
   if (do_refine) {
     const int search_range = 8;
     MV best_mv = *dst_mv;
-    thissme = vp9_refining_search_sad(x, &best_mv, sadpb, search_range, fn_ptr,
-                                      ref_mv);
+    thissme = vp9_refining_search_sad(x, &best_mv, sadpb, search_range,
+                                      &sad_fn_ptr, ref_mv);
     if (thissme < INT_MAX)
       thissme = vp9_get_mvpred_var(x, &best_mv, ref_mv, fn_ptr, 1);
     if (thissme < bestsme) {
       bestsme = thissme;
       *dst_mv = best_mv;
+    }
+  }
+
+  if (sad_fn_ptr.sdf != fn_ptr->sdf) {
+    // If we are skipping rows when we perform the motion search, we need to
+    // check the quality of skipping. If it's bad, then we run search with
+    // skip row features off.
+    const uint8_t *best_address = get_buf_from_mv(&xd->plane[0].pre[0], dst_mv);
+    const int sad =
+        fn_ptr->sdf(src_buf, src_buf_stride, best_address, pred_buf_stride);
+    const int skip_sad =
+        fn_ptr->sdsf(src_buf, src_buf_stride, best_address, pred_buf_stride);
+    // We will keep the result of skipping rows if it's good enough.
+    const int kSADThresh =
+        1 << (b_width_log2_lookup[bsize] + b_height_log2_lookup[bsize]);
+    if (sad > kSADThresh && abs(skip_sad - sad) * 10 >= VPXMAX(sad, 1) * 9) {
+      // There is a large discrepancy between skipping and not skipping, so we
+      // need to redo the motion search.
+      return full_pixel_diamond(cpi, x, bsize, mvp_full, step_param, sadpb,
+                                further_steps, do_refine, 0, cost_list, fn_ptr,
+                                ref_mv, dst_mv);
     }
   }
 
@@ -2711,7 +2748,7 @@ int64_t vp9_refining_search_sad_new(const MACROBLOCK *x, MV *best_full_mv,
 
 int vp9_refining_search_sad(const MACROBLOCK *x, MV *ref_mv, int error_per_bit,
                             int search_range,
-                            const vp9_variance_fn_ptr_t *fn_ptr,
+                            const vp9_sad_fn_ptr_t *sad_fn_ptr,
                             const MV *center_mv) {
   const MACROBLOCKD *const xd = &x->e_mbd;
   const MV neighbors[4] = { { -1, 0 }, { 0, -1 }, { 0, 1 }, { 1, 0 } };
@@ -2720,7 +2757,7 @@ int vp9_refining_search_sad(const MACROBLOCK *x, MV *ref_mv, int error_per_bit,
   const MV fcenter_mv = { center_mv->row >> 3, center_mv->col >> 3 };
   const uint8_t *best_address = get_buf_from_mv(in_what, ref_mv);
   unsigned int best_sad =
-      fn_ptr->sdf(what->buf, what->stride, best_address, in_what->stride) +
+      sad_fn_ptr->sdf(what->buf, what->stride, best_address, in_what->stride) +
       mvsad_err_cost(x, ref_mv, &fcenter_mv, error_per_bit);
   int i, j;
 
@@ -2737,7 +2774,8 @@ int vp9_refining_search_sad(const MACROBLOCK *x, MV *ref_mv, int error_per_bit,
                                             best_address - 1, best_address + 1,
                                             best_address + in_what->stride };
 
-      fn_ptr->sdx4df(what->buf, what->stride, positions, in_what->stride, sads);
+      sad_fn_ptr->sdx4df(what->buf, what->stride, positions, in_what->stride,
+                         sads);
 
       for (j = 0; j < 4; ++j) {
         if (sads[j] < best_sad) {
@@ -2757,8 +2795,8 @@ int vp9_refining_search_sad(const MACROBLOCK *x, MV *ref_mv, int error_per_bit,
 
         if (is_mv_in(&x->mv_limits, &mv)) {
           unsigned int sad =
-              fn_ptr->sdf(what->buf, what->stride,
-                          get_buf_from_mv(in_what, &mv), in_what->stride);
+              sad_fn_ptr->sdf(what->buf, what->stride,
+                              get_buf_from_mv(in_what, &mv), in_what->stride);
           if (sad < best_sad) {
             sad += mvsad_err_cost(x, &mv, &fcenter_mv, error_per_bit);
             if (sad < best_sad) {
@@ -2875,9 +2913,10 @@ int vp9_full_pixel_search(const VP9_COMP *const cpi, const MACROBLOCK *const x,
       break;
     case NSTEP:
     case MESH:
-      var = full_pixel_diamond(cpi, x, mvp_full, step_param, error_per_bit,
-                               MAX_MVSEARCH_STEPS - 1 - step_param, 1,
-                               cost_list, fn_ptr, ref_mv, tmp_mv);
+      var = full_pixel_diamond(
+          cpi, x, bsize, mvp_full, step_param, error_per_bit,
+          MAX_MVSEARCH_STEPS - 1 - step_param, 1,
+          cpi->sf.mv.use_downsampled_sad, cost_list, fn_ptr, ref_mv, tmp_mv);
       break;
     default: assert(0 && "Unknown search method");
   }

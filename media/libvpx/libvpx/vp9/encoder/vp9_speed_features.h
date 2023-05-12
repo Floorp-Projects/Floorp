@@ -210,6 +210,10 @@ typedef struct MV_SPEED_FEATURES {
 
   // This variable sets the step_param used in full pel motion search.
   int fullpel_search_step_param;
+
+  // Whether to downsample the rows in sad calculation during motion search.
+  // This is only active when there are at least 8 rows.
+  int use_downsampled_sad;
 } MV_SPEED_FEATURES;
 
 typedef struct PARTITION_SEARCH_BREAKOUT_THR {
@@ -282,11 +286,20 @@ typedef struct SPEED_FEATURES {
   // adds overhead.
   int static_segmentation;
 
-  // If 1 we iterate finding a best reference for 2 ref frames together - via
-  // a log search that iterates 4 times (check around mv for last for best
-  // error of combined predictor then check around mv for alt). If 0 we
-  // we just use the best motion vector found for each frame by itself.
-  BLOCK_SIZE comp_inter_joint_search_thresh;
+  // The best compound predictor is found using an iterative log search process
+  // that searches for best ref0 mv using error of combined predictor and then
+  // searches for best ref1 mv. This sf determines the number of iterations of
+  // this process based on block size. The sf becomes more aggressive from level
+  // 0 to 2. The following table indicates the number of iterations w.r.t bsize:
+  //  -----------------------------------------------
+  // |sf (level)|bsize < 8X8| [8X8, 16X16] | > 16X16 |
+  // |    0     |     4     |      4       |    4    |
+  // |    1     |     0     |      2       |    4    |
+  // |    2     |     0     |      0       |    0    |
+  //  -----------------------------------------------
+  // Here, 0 iterations indicate using the best single motion vector selected
+  // for each ref frame without any iterative refinement.
+  int comp_inter_joint_search_iter_level;
 
   // This variable is used to cap the maximum number of times we skip testing a
   // mode to be evaluated. A high value means we will be faster.

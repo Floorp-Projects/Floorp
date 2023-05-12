@@ -50,39 +50,49 @@ static VPX_FORCE_INLINE void highbd_sad64xH(__m256i *sums_16,
   }
 }
 
-#define HIGHBD_SAD64XN(n)                                                    \
-  unsigned int vpx_highbd_sad64x##n##_avx2(                                  \
-      const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr,        \
-      int ref_stride) {                                                      \
-    const uint16_t *src = CONVERT_TO_SHORTPTR(src_ptr);                      \
-    uint16_t *ref = CONVERT_TO_SHORTPTR(ref_ptr);                            \
-    __m256i sums_32 = _mm256_setzero_si256();                                \
-    int i;                                                                   \
-                                                                             \
-    for (i = 0; i < (n / 2); ++i) {                                          \
-      __m256i sums_16 = _mm256_setzero_si256();                              \
-                                                                             \
-      highbd_sad64xH(&sums_16, src, src_stride, ref, ref_stride, 2);         \
-                                                                             \
-      /* sums_16 will outrange after 2 rows, so add current sums_16 to       \
-       * sums_32*/                                                           \
-      sums_32 = _mm256_add_epi32(                                            \
-          sums_32,                                                           \
-          _mm256_add_epi32(                                                  \
-              _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16)),        \
-              _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16, 1)))); \
-                                                                             \
-      src += src_stride << 1;                                                \
-      ref += ref_stride << 1;                                                \
-    }                                                                        \
-    return calc_final(sums_32);                                              \
+static VPX_FORCE_INLINE unsigned int highbd_sad64xN_avx2(const uint8_t *src_ptr,
+                                                         int src_stride,
+                                                         const uint8_t *ref_ptr,
+                                                         int ref_stride,
+                                                         int n) {
+  const uint16_t *src = CONVERT_TO_SHORTPTR(src_ptr);
+  uint16_t *ref = CONVERT_TO_SHORTPTR(ref_ptr);
+  __m256i sums_32 = _mm256_setzero_si256();
+  int i;
+
+  for (i = 0; i < (n / 2); ++i) {
+    __m256i sums_16 = _mm256_setzero_si256();
+
+    highbd_sad64xH(&sums_16, src, src_stride, ref, ref_stride, 2);
+
+    /* sums_16 will outrange after 2 rows, so add current sums_16 to
+     * sums_32*/
+    sums_32 = _mm256_add_epi32(
+        sums_32,
+        _mm256_add_epi32(
+            _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16)),
+            _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16, 1))));
+
+    src += src_stride << 1;
+    ref += ref_stride << 1;
+  }
+  return calc_final(sums_32);
+}
+
+#define HIGHBD_SAD64XN(n)                                                      \
+  unsigned int vpx_highbd_sad64x##n##_avx2(const uint8_t *src, int src_stride, \
+                                           const uint8_t *ref,                 \
+                                           int ref_stride) {                   \
+    return highbd_sad64xN_avx2(src, src_stride, ref, ref_stride, n);           \
   }
 
-// 64x64
-HIGHBD_SAD64XN(64)
-
-// 64x32
-HIGHBD_SAD64XN(32)
+#define HIGHBD_SADSKIP64xN(n)                                                \
+  unsigned int vpx_highbd_sad_skip_64x##n##_avx2(                            \
+      const uint8_t *src, int src_stride, const uint8_t *ref,                \
+      int ref_stride) {                                                      \
+    return 2 * highbd_sad64xN_avx2(src, 2 * src_stride, ref, 2 * ref_stride, \
+                                   n / 2);                                   \
+  }
 
 static VPX_FORCE_INLINE void highbd_sad32xH(__m256i *sums_16,
                                             const uint16_t *src, int src_stride,
@@ -107,42 +117,49 @@ static VPX_FORCE_INLINE void highbd_sad32xH(__m256i *sums_16,
   }
 }
 
-#define HIGHBD_SAD32XN(n)                                                    \
-  unsigned int vpx_highbd_sad32x##n##_avx2(                                  \
-      const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr,        \
-      int ref_stride) {                                                      \
-    const uint16_t *src = CONVERT_TO_SHORTPTR(src_ptr);                      \
-    uint16_t *ref = CONVERT_TO_SHORTPTR(ref_ptr);                            \
-    __m256i sums_32 = _mm256_setzero_si256();                                \
-    int i;                                                                   \
-                                                                             \
-    for (i = 0; i < (n / 8); ++i) {                                          \
-      __m256i sums_16 = _mm256_setzero_si256();                              \
-                                                                             \
-      highbd_sad32xH(&sums_16, src, src_stride, ref, ref_stride, 8);         \
-                                                                             \
-      /* sums_16 will outrange after 8 rows, so add current sums_16 to       \
-       * sums_32*/                                                           \
-      sums_32 = _mm256_add_epi32(                                            \
-          sums_32,                                                           \
-          _mm256_add_epi32(                                                  \
-              _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16)),        \
-              _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16, 1)))); \
-                                                                             \
-      src += src_stride << 3;                                                \
-      ref += ref_stride << 3;                                                \
-    }                                                                        \
-    return calc_final(sums_32);                                              \
+static VPX_FORCE_INLINE unsigned int highbd_sad32xN_avx2(const uint8_t *src_ptr,
+                                                         int src_stride,
+                                                         const uint8_t *ref_ptr,
+                                                         int ref_stride,
+                                                         int n) {
+  const uint16_t *src = CONVERT_TO_SHORTPTR(src_ptr);
+  uint16_t *ref = CONVERT_TO_SHORTPTR(ref_ptr);
+  __m256i sums_32 = _mm256_setzero_si256();
+  int i;
+
+  for (i = 0; i < (n / 8); ++i) {
+    __m256i sums_16 = _mm256_setzero_si256();
+
+    highbd_sad32xH(&sums_16, src, src_stride, ref, ref_stride, 8);
+
+    /* sums_16 will outrange after 8 rows, so add current sums_16 to
+     * sums_32*/
+    sums_32 = _mm256_add_epi32(
+        sums_32,
+        _mm256_add_epi32(
+            _mm256_cvtepu16_epi32(_mm256_castsi256_si128(sums_16)),
+            _mm256_cvtepu16_epi32(_mm256_extractf128_si256(sums_16, 1))));
+
+    src += src_stride << 3;
+    ref += ref_stride << 3;
+  }
+  return calc_final(sums_32);
+}
+
+#define HIGHBD_SAD32XN(n)                                                      \
+  unsigned int vpx_highbd_sad32x##n##_avx2(const uint8_t *src, int src_stride, \
+                                           const uint8_t *ref,                 \
+                                           int ref_stride) {                   \
+    return highbd_sad32xN_avx2(src, src_stride, ref, ref_stride, n);           \
   }
 
-// 32x64
-HIGHBD_SAD32XN(64)
-
-// 32x32
-HIGHBD_SAD32XN(32)
-
-// 32x16
-HIGHBD_SAD32XN(16)
+#define HIGHBD_SADSKIP32xN(n)                                                \
+  unsigned int vpx_highbd_sad_skip_32x##n##_avx2(                            \
+      const uint8_t *src, int src_stride, const uint8_t *ref,                \
+      int ref_stride) {                                                      \
+    return 2 * highbd_sad32xN_avx2(src, 2 * src_stride, ref, 2 * ref_stride, \
+                                   n / 2);                                   \
+  }
 
 static VPX_FORCE_INLINE void highbd_sad16xH(__m256i *sums_16,
                                             const uint16_t *src, int src_stride,
@@ -167,17 +184,22 @@ static VPX_FORCE_INLINE void highbd_sad16xH(__m256i *sums_16,
   }
 }
 
-unsigned int vpx_highbd_sad16x32_avx2(const uint8_t *src_ptr, int src_stride,
-                                      const uint8_t *ref_ptr, int ref_stride) {
+static VPX_FORCE_INLINE unsigned int highbd_sad16xN_avx2(const uint8_t *src_ptr,
+                                                         int src_stride,
+                                                         const uint8_t *ref_ptr,
+                                                         int ref_stride,
+                                                         int n) {
   const uint16_t *src = CONVERT_TO_SHORTPTR(src_ptr);
   uint16_t *ref = CONVERT_TO_SHORTPTR(ref_ptr);
   __m256i sums_32 = _mm256_setzero_si256();
+  const int height = VPXMIN(16, n);
+  const int num_iters = n / height;
   int i;
 
-  for (i = 0; i < 2; ++i) {
+  for (i = 0; i < num_iters; ++i) {
     __m256i sums_16 = _mm256_setzero_si256();
 
-    highbd_sad16xH(&sums_16, src, src_stride, ref, ref_stride, 16);
+    highbd_sad16xH(&sums_16, src, src_stride, ref, ref_stride, height);
 
     // sums_16 will outrange after 16 rows, so add current sums_16 to sums_32
     sums_32 = _mm256_add_epi32(
@@ -191,6 +213,21 @@ unsigned int vpx_highbd_sad16x32_avx2(const uint8_t *src_ptr, int src_stride,
   }
   return calc_final(sums_32);
 }
+
+#define HIGHBD_SAD16XN(n)                                                      \
+  unsigned int vpx_highbd_sad16x##n##_avx2(const uint8_t *src, int src_stride, \
+                                           const uint8_t *ref,                 \
+                                           int ref_stride) {                   \
+    return highbd_sad16xN_avx2(src, src_stride, ref, ref_stride, n);           \
+  }
+
+#define HIGHBD_SADSKIP16xN(n)                                                \
+  unsigned int vpx_highbd_sad_skip_16x##n##_avx2(                            \
+      const uint8_t *src, int src_stride, const uint8_t *ref,                \
+      int ref_stride) {                                                      \
+    return 2 * highbd_sad16xN_avx2(src, 2 * src_stride, ref, 2 * ref_stride, \
+                                   n / 2);                                   \
+  }
 
 unsigned int vpx_highbd_sad16x16_avx2(const uint8_t *src_ptr, int src_stride,
                                       const uint8_t *ref_ptr, int ref_stride) {
@@ -223,6 +260,23 @@ unsigned int vpx_highbd_sad16x8_avx2(const uint8_t *src_ptr, int src_stride,
     return calc_final(sums_32);
   }
 }
+
+// clang-format off
+HIGHBD_SAD64XN(64)
+HIGHBD_SADSKIP64xN(64)
+HIGHBD_SAD64XN(32)
+HIGHBD_SADSKIP64xN(32)
+HIGHBD_SAD32XN(64)
+HIGHBD_SADSKIP32xN(64)
+HIGHBD_SAD32XN(32)
+HIGHBD_SADSKIP32xN(32)
+HIGHBD_SAD32XN(16)
+HIGHBD_SADSKIP32xN(16)
+HIGHBD_SAD16XN(32)
+HIGHBD_SADSKIP16xN(32)
+HIGHBD_SADSKIP16xN(16)
+HIGHBD_SADSKIP16xN(8)
+//clang-format on
 
 // AVG -------------------------------------------------------------------------
 static VPX_FORCE_INLINE void highbd_sad64xH_avg(__m256i *sums_16,

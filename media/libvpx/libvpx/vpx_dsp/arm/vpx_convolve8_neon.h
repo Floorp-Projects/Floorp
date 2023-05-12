@@ -16,7 +16,7 @@
 #include "./vpx_config.h"
 #include "./vpx_dsp_rtcd.h"
 
-#if defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD)
+#if VPX_ARCH_AARCH64 && defined(__ARM_FEATURE_DOTPROD)
 
 static INLINE int32x4_t convolve8_4_sdot_partial(const int8x16_t samples_lo,
                                                  const int8x16_t samples_hi,
@@ -114,9 +114,9 @@ static INLINE uint8x8_t convolve8_8_sdot(uint8x16_t samples,
   return vqrshrun_n_s16(sum, 7);
 }
 
-#endif  // defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD)
+#endif  // VPX_ARCH_AARCH64 && defined(__ARM_FEATURE_DOTPROD)
 
-#if defined(__aarch64__) && defined(__ARM_FEATURE_MATMUL_INT8)
+#if VPX_ARCH_AARCH64 && defined(__ARM_FEATURE_MATMUL_INT8)
 
 static INLINE int32x4_t convolve8_4_usdot_partial(const uint8x16_t samples_lo,
                                                   const uint8x16_t samples_hi,
@@ -199,7 +199,7 @@ static INLINE uint8x8_t convolve8_8_usdot(uint8x16_t samples,
   return vqrshrun_n_s16(sum, 7);
 }
 
-#endif  // defined(__aarch64__) && defined(__ARM_FEATURE_MATMUL_INT8)
+#endif  // VPX_ARCH_AARCH64 && defined(__ARM_FEATURE_MATMUL_INT8)
 
 static INLINE int16x4_t convolve8_4(const int16x4_t s0, const int16x4_t s1,
                                     const int16x4_t s2, const int16x4_t s3,

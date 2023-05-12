@@ -25,9 +25,10 @@ static INLINE void calc_final_4(const __m256i *const sums /*[4]*/,
   _mm_storeu_si128((__m128i *)sad_array, sum);
 }
 
-void vpx_sad32x32x4d_avx2(const uint8_t *src_ptr, int src_stride,
-                          const uint8_t *const ref_array[4], int ref_stride,
-                          uint32_t sad_array[4]) {
+static INLINE void sad32xhx4d_avx2(const uint8_t *src_ptr, int src_stride,
+                                   const uint8_t *const ref_array[4],
+                                   int ref_stride, int h,
+                                   uint32_t sad_array[4]) {
   int i;
   const uint8_t *refs[4];
   __m256i sums[4];
@@ -41,7 +42,7 @@ void vpx_sad32x32x4d_avx2(const uint8_t *src_ptr, int src_stride,
   sums[2] = _mm256_setzero_si256();
   sums[3] = _mm256_setzero_si256();
 
-  for (i = 0; i < 32; i++) {
+  for (i = 0; i < h; i++) {
     __m256i r[4];
 
     // load src and all ref[]
@@ -73,9 +74,10 @@ void vpx_sad32x32x4d_avx2(const uint8_t *src_ptr, int src_stride,
   calc_final_4(sums, sad_array);
 }
 
-void vpx_sad64x64x4d_avx2(const uint8_t *src_ptr, int src_stride,
-                          const uint8_t *const ref_array[4], int ref_stride,
-                          uint32_t sad_array[4]) {
+static INLINE void sad64xhx4d_avx2(const uint8_t *src_ptr, int src_stride,
+                                   const uint8_t *const ref_array[4],
+                                   int ref_stride, int h,
+                                   uint32_t sad_array[4]) {
   __m256i sums[4];
   int i;
   const uint8_t *refs[4];
@@ -89,7 +91,7 @@ void vpx_sad64x64x4d_avx2(const uint8_t *src_ptr, int src_stride,
   sums[2] = _mm256_setzero_si256();
   sums[3] = _mm256_setzero_si256();
 
-  for (i = 0; i < 64; i++) {
+  for (i = 0; i < h; i++) {
     __m256i r_lo[4], r_hi[4];
     // load 64 bytes from src and all ref[]
     const __m256i s_lo = _mm256_load_si256((const __m256i *)src_ptr);
@@ -132,3 +134,51 @@ void vpx_sad64x64x4d_avx2(const uint8_t *src_ptr, int src_stride,
 
   calc_final_4(sums, sad_array);
 }
+
+#define SAD64_H(h)                                                         \
+  void vpx_sad64x##h##x4d_avx2(const uint8_t *src, int src_stride,         \
+                               const uint8_t *const ref_array[4],          \
+                               int ref_stride, uint32_t sad_array[4]) {    \
+    sad64xhx4d_avx2(src, src_stride, ref_array, ref_stride, h, sad_array); \
+  }
+
+#define SAD32_H(h)                                                         \
+  void vpx_sad32x##h##x4d_avx2(const uint8_t *src, int src_stride,         \
+                               const uint8_t *const ref_array[4],          \
+                               int ref_stride, uint32_t sad_array[4]) {    \
+    sad32xhx4d_avx2(src, src_stride, ref_array, ref_stride, h, sad_array); \
+  }
+
+SAD64_H(64)
+SAD32_H(32)
+
+#define SADS64_H(h)                                                           \
+  void vpx_sad_skip_64x##h##x4d_avx2(const uint8_t *src, int src_stride,      \
+                                     const uint8_t *const ref_array[4],       \
+                                     int ref_stride, uint32_t sad_array[4]) { \
+    sad64xhx4d_avx2(src, 2 * src_stride, ref_array, 2 * ref_stride,           \
+                    ((h) >> 1), sad_array);                                   \
+    sad_array[0] <<= 1;                                                       \
+    sad_array[1] <<= 1;                                                       \
+    sad_array[2] <<= 1;                                                       \
+    sad_array[3] <<= 1;                                                       \
+  }
+
+#define SADS32_H(h)                                                           \
+  void vpx_sad_skip_32x##h##x4d_avx2(const uint8_t *src, int src_stride,      \
+                                     const uint8_t *const ref_array[4],       \
+                                     int ref_stride, uint32_t sad_array[4]) { \
+    sad32xhx4d_avx2(src, 2 * src_stride, ref_array, 2 * ref_stride,           \
+                    ((h) >> 1), sad_array);                                   \
+    sad_array[0] <<= 1;                                                       \
+    sad_array[1] <<= 1;                                                       \
+    sad_array[2] <<= 1;                                                       \
+    sad_array[3] <<= 1;                                                       \
+  }
+
+SADS64_H(64)
+SADS64_H(32)
+
+SADS32_H(64)
+SADS32_H(32)
+SADS32_H(16)

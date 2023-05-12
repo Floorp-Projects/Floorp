@@ -911,12 +911,6 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t *ctx,
     }
   }
 
-  if (setjmp(ctx->cpi->common.error.jmp)) {
-    ctx->cpi->common.error.setjmp = 0;
-    vpx_clear_system_state();
-    return VPX_CODEC_CORRUPT_FRAME;
-  }
-
   /* Initialize the encoder instance on the first frame*/
   if (!res && ctx->cpi) {
     unsigned int lib_flags;
@@ -926,6 +920,13 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t *ctx,
     unsigned char *cx_data;
     unsigned char *cx_data_end;
     int comp_data_state = 0;
+
+    if (setjmp(ctx->cpi->common.error.jmp)) {
+      ctx->cpi->common.error.setjmp = 0;
+      vpx_clear_system_state();
+      return VPX_CODEC_CORRUPT_FRAME;
+    }
+    ctx->cpi->common.error.setjmp = 1;
 
     /* Set up internal flags */
     if (ctx->base.init_flags & VPX_CODEC_USE_PSNR) {
@@ -947,19 +948,10 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t *ctx,
     if (img != NULL) {
       res = image2yuvconfig(img, &sd);
 
-      if (sd.y_width != ctx->cfg.g_w || sd.y_height != ctx->cfg.g_h) {
-        /* from vpx_encoder.h for g_w/g_h:
-           "Note that the frames passed as input to the encoder must have this
-           resolution"
-        */
-        ctx->base.err_detail = "Invalid input frame resolution";
-        res = VPX_CODEC_INVALID_PARAM;
-      } else {
-        if (vp8_receive_raw_frame(ctx->cpi, ctx->next_frame_flag | lib_flags,
-                                  &sd, dst_time_stamp, dst_end_time_stamp)) {
-          VP8_COMP *cpi = (VP8_COMP *)ctx->cpi;
-          res = update_error_state(ctx, &cpi->common.error);
-        }
+      if (vp8_receive_raw_frame(ctx->cpi, ctx->next_frame_flag | lib_flags, &sd,
+                                dst_time_stamp, dst_end_time_stamp)) {
+        VP8_COMP *cpi = (VP8_COMP *)ctx->cpi;
+        res = update_error_state(ctx, &cpi->common.error);
       }
 
       /* reset for next frame */
@@ -970,8 +962,6 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t *ctx,
     cx_data_sz = ctx->cx_data_sz;
     cx_data_end = ctx->cx_data + cx_data_sz;
     lib_flags = 0;
-
-    ctx->cpi->common.error.setjmp = 1;
 
     while (cx_data_sz >= ctx->cx_data_sz / 2) {
       comp_data_state = vp8_get_compressed_data(
@@ -1068,6 +1058,7 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t *ctx,
         }
       }
     }
+    ctx->cpi->common.error.setjmp = 0;
   }
 
   return res;

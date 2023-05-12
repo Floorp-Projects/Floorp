@@ -505,6 +505,7 @@ typedef struct EncFrameBuf {
 } EncFrameBuf;
 
 // Maximum operating frame buffer size needed for a GOP using ARF reference.
+// This is used to allocate the memory for TPL stats for a GOP.
 #define MAX_ARF_GOP_SIZE (2 * MAX_LAG_BUFFERS)
 #define MAX_KMEANS_GROUPS 8
 
@@ -743,6 +744,8 @@ typedef struct VP9_COMP {
 
   BLOCK_SIZE tpl_bsize;
   TplDepFrame tpl_stats[MAX_ARF_GOP_SIZE];
+  // Used to store TPL stats before propagation
+  VpxTplGopStats tpl_gop_stats;
   YV12_BUFFER_CONFIG *tpl_recon_frames[REF_FRAMES];
   EncFrameBuf enc_frame_buf[REF_FRAMES];
 #if CONFIG_MULTITHREAD
@@ -1057,7 +1060,7 @@ static INLINE void partition_info_init(struct VP9_COMP *cpi) {
   VP9_COMMON *const cm = &cpi->common;
   const int unit_width = get_num_unit_4x4(cpi->frame_info.frame_width);
   const int unit_height = get_num_unit_4x4(cpi->frame_info.frame_height);
-  CHECK_MEM_ERROR(cm, cpi->partition_info,
+  CHECK_MEM_ERROR(&cm->error, cpi->partition_info,
                   (PARTITION_INFO *)vpx_calloc(unit_width * unit_height,
                                                sizeof(PARTITION_INFO)));
   memset(cpi->partition_info, 0,
@@ -1085,7 +1088,7 @@ static INLINE void motion_vector_info_init(struct VP9_COMP *cpi) {
   VP9_COMMON *const cm = &cpi->common;
   const int unit_width = get_num_unit_4x4(cpi->frame_info.frame_width);
   const int unit_height = get_num_unit_4x4(cpi->frame_info.frame_height);
-  CHECK_MEM_ERROR(cm, cpi->motion_vector_info,
+  CHECK_MEM_ERROR(&cm->error, cpi->motion_vector_info,
                   (MOTION_VECTOR_INFO *)vpx_calloc(unit_width * unit_height,
                                                    sizeof(MOTION_VECTOR_INFO)));
   memset(cpi->motion_vector_info, 0,
@@ -1104,7 +1107,7 @@ static INLINE void free_motion_vector_info(struct VP9_COMP *cpi) {
 static INLINE void tpl_stats_info_init(struct VP9_COMP *cpi) {
   VP9_COMMON *const cm = &cpi->common;
   CHECK_MEM_ERROR(
-      cm, cpi->tpl_stats_info,
+      &cm->error, cpi->tpl_stats_info,
       (TplDepStats *)vpx_calloc(MAX_LAG_BUFFERS, sizeof(TplDepStats)));
   memset(cpi->tpl_stats_info, 0, MAX_LAG_BUFFERS * sizeof(TplDepStats));
 }
@@ -1123,7 +1126,7 @@ static INLINE void fp_motion_vector_info_init(struct VP9_COMP *cpi) {
   VP9_COMMON *const cm = &cpi->common;
   const int unit_width = get_num_unit_16x16(cpi->frame_info.frame_width);
   const int unit_height = get_num_unit_16x16(cpi->frame_info.frame_height);
-  CHECK_MEM_ERROR(cm, cpi->fp_motion_vector_info,
+  CHECK_MEM_ERROR(&cm->error, cpi->fp_motion_vector_info,
                   (MOTION_VECTOR_INFO *)vpx_calloc(unit_width * unit_height,
                                                    sizeof(MOTION_VECTOR_INFO)));
 }
@@ -1454,9 +1457,10 @@ static INLINE int log_tile_cols_from_picsize_level(uint32_t width,
 
 VP9_LEVEL vp9_get_level(const Vp9LevelSpec *const level_spec);
 
-int vp9_set_roi_map(VP9_COMP *cpi, unsigned char *map, unsigned int rows,
-                    unsigned int cols, int delta_q[8], int delta_lf[8],
-                    int skip[8], int ref_frame[8]);
+vpx_codec_err_t vp9_set_roi_map(VP9_COMP *cpi, unsigned char *map,
+                                unsigned int rows, unsigned int cols,
+                                int delta_q[8], int delta_lf[8], int skip[8],
+                                int ref_frame[8]);
 
 void vp9_new_framerate(VP9_COMP *cpi, double framerate);
 
@@ -1471,12 +1475,46 @@ static INLINE void alloc_frame_mvs(VP9_COMMON *const cm, int buffer_idx) {
   if (new_fb_ptr->mvs == NULL || new_fb_ptr->mi_rows < cm->mi_rows ||
       new_fb_ptr->mi_cols < cm->mi_cols) {
     vpx_free(new_fb_ptr->mvs);
-    CHECK_MEM_ERROR(cm, new_fb_ptr->mvs,
+    CHECK_MEM_ERROR(&cm->error, new_fb_ptr->mvs,
                     (MV_REF *)vpx_calloc(cm->mi_rows * cm->mi_cols,
                                          sizeof(*new_fb_ptr->mvs)));
     new_fb_ptr->mi_rows = cm->mi_rows;
     new_fb_ptr->mi_cols = cm->mi_cols;
   }
+}
+
+static INLINE int mv_cost(const MV *mv, const int *joint_cost,
+                          int *const comp_cost[2]) {
+  assert(mv->row >= -MV_MAX && mv->row < MV_MAX);
+  assert(mv->col >= -MV_MAX && mv->col < MV_MAX);
+  return joint_cost[vp9_get_mv_joint(mv)] + comp_cost[0][mv->row] +
+         comp_cost[1][mv->col];
+}
+
+static INLINE int mvsad_err_cost(const MACROBLOCK *x, const MV *mv,
+                                 const MV *ref, int sad_per_bit) {
+  MV diff;
+  diff.row = mv->row - ref->row;
+  diff.col = mv->col - ref->col;
+  return ROUND_POWER_OF_TWO(
+      (unsigned)mv_cost(&diff, x->nmvjointsadcost, x->nmvsadcost) * sad_per_bit,
+      VP9_PROB_COST_SHIFT);
+}
+
+static INLINE uint32_t get_start_mv_sad(const MACROBLOCK *x, const MV *mvp_full,
+                                        const MV *ref_mv_full,
+                                        vpx_sad_fn_t sad_fn_ptr, int sadpb) {
+  const int src_buf_stride = x->plane[0].src.stride;
+  const uint8_t *const src_buf = x->plane[0].src.buf;
+  const MACROBLOCKD *const xd = &x->e_mbd;
+  const int pred_buf_stride = xd->plane[0].pre[0].stride;
+  const uint8_t *const pred_buf =
+      xd->plane[0].pre[0].buf + mvp_full->row * pred_buf_stride + mvp_full->col;
+  uint32_t start_mv_sad =
+      sad_fn_ptr(src_buf, src_buf_stride, pred_buf, pred_buf_stride);
+  start_mv_sad += mvsad_err_cost(x, mvp_full, ref_mv_full, sadpb);
+
+  return start_mv_sad;
 }
 
 static INLINE int num_4x4_to_edge(int plane_4x4_dim, int mb_to_edge_dim,

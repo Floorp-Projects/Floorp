@@ -967,13 +967,13 @@ static void encode_tiles_buffer_alloc(VP9_COMP *const cpi) {
   int i;
   const size_t worker_data_size =
       cpi->num_workers * sizeof(*cpi->vp9_bitstream_worker_data);
-  CHECK_MEM_ERROR(cm, cpi->vp9_bitstream_worker_data,
+  CHECK_MEM_ERROR(&cm->error, cpi->vp9_bitstream_worker_data,
                   vpx_memalign(16, worker_data_size));
   memset(cpi->vp9_bitstream_worker_data, 0, worker_data_size);
   for (i = 1; i < cpi->num_workers; ++i) {
     cpi->vp9_bitstream_worker_data[i].dest_size =
         cpi->oxcf.width * cpi->oxcf.height;
-    CHECK_MEM_ERROR(cm, cpi->vp9_bitstream_worker_data[i].dest,
+    CHECK_MEM_ERROR(&cm->error, cpi->vp9_bitstream_worker_data[i].dest,
                     vpx_malloc(cpi->vp9_bitstream_worker_data[i].dest_size));
   }
 }

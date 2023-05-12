@@ -166,7 +166,7 @@ void vpx_highbd_quantize_b_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
     } while (n_coeffs > 0);
   }
 
-#ifdef __aarch64__
+#if VPX_ARCH_AARCH64
   *eob_ptr = vmaxvq_u16(eob_max);
 #else
   {
@@ -176,7 +176,7 @@ void vpx_highbd_quantize_b_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
     const uint16x4_t eob_max_2 = vpmax_u16(eob_max_1, eob_max_1);
     vst1_lane_u16(eob_ptr, eob_max_2, 0);
   }
-#endif  // __aarch64__
+#endif  // VPX_ARCH_AARCH64
   // Need these here, else the compiler complains about mixing declarations and
   // code in C90
   (void)n_coeffs;
@@ -291,7 +291,7 @@ void vpx_highbd_quantize_b_32x32_neon(
     }
   }
 
-#ifdef __aarch64__
+#if VPX_ARCH_AARCH64
   *eob_ptr = vmaxvq_u16(eob_max);
 #else
   {
@@ -301,5 +301,5 @@ void vpx_highbd_quantize_b_32x32_neon(
     const uint16x4_t eob_max_2 = vpmax_u16(eob_max_1, eob_max_1);
     vst1_lane_u16(eob_ptr, eob_max_2, 0);
   }
-#endif  // __aarch64__
+#endif  // VPX_ARCH_AARCH64
 }

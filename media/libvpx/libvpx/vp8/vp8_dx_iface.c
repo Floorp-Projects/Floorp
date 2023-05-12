@@ -310,6 +310,7 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t *ctx,
     VP8D_COMP *pbi = ctx->yv12_frame_buffers.pbi[0];
     VP8_COMMON *const pc = &pbi->common;
     if (setjmp(pbi->common.error.jmp)) {
+      pbi->common.error.setjmp = 0;
       vp8_remove_decoder_instances(fb);
       vp8_zero(fb->pbi);
       vpx_clear_system_state();
@@ -494,6 +495,7 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t *ctx,
 
     /* get ready for the next series of fragments */
     ctx->fragments.count = 0;
+    pbi->common.error.setjmp = 0;
   }
 
   return res;
