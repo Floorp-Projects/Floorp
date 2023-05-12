@@ -149,7 +149,7 @@ function RegExpMatch(string) {
     }
 
     // Step 5.
-    return RegExpBuiltinExec(rx, S, false);
+    return RegExpBuiltinExec(rx, S);
   }
 
   // Stes 4-6
@@ -165,7 +165,7 @@ function RegExpMatchSlowPath(rx, S) {
 
   // Step 5.
   if (!callFunction(std_String_includes, flags, "g")) {
-    return RegExpExec(rx, S, false);
+    return RegExpExec(rx, S);
   }
 
   // Step 6.a.
@@ -183,7 +183,7 @@ function RegExpMatchSlowPath(rx, S) {
   // Step 6.e.
   while (true) {
     // Step 6.e.i.
-    var result = RegExpExec(rx, S, false);
+    var result = RegExpExec(rx, S);
 
     // Step 6.e.ii.
     if (result === null) {
@@ -427,7 +427,7 @@ function RegExpReplaceSlowPath(
   // Steps 11-12.
   while (true) {
     // Step 12.a.
-    var result = RegExpExec(rx, S, false);
+    var result = RegExpExec(rx, S);
 
     // Step 12.b.
     if (result === null) {
@@ -976,7 +976,7 @@ function RegExpSearch(string) {
 // Steps 6-10.
 function RegExpSearchSlowPath(rx, S, previousLastIndex) {
   // Step 6.
-  var result = RegExpExec(rx, S, false);
+  var result = RegExpExec(rx, S);
 
   // Step 7.
   var currentLastIndex = rx.lastIndex;
@@ -1102,7 +1102,7 @@ function RegExpSplit(string, limit) {
     if (optimizable) {
       z = RegExpMatcher(splitter, S, 0);
     } else {
-      z = RegExpExec(splitter, S, false);
+      z = RegExpExec(splitter, S);
     }
 
     // Step 17.b.
@@ -1148,7 +1148,7 @@ function RegExpSplit(string, limit) {
       splitter.lastIndex = q;
 
       // Step 19.b.
-      z = RegExpExec(splitter, S, false);
+      z = RegExpExec(splitter, S);
 
       // Step 19.c.
       if (z === null) {
@@ -1236,10 +1236,11 @@ function RegExp_prototype_Exec(string) {
   var S = ToString(string);
 
   // Step 6.
-  return RegExpBuiltinExec(R, S, false);
+  return RegExpBuiltinExec(R, S);
 }
 
 function UnwrapAndCallRegExpBuiltinExec(R, S, forTest) {
+  assert(typeof forTest === "boolean", "forTest must be a boolean");
   return callFunction(
     CallRegExpMethodIfWrapped,
     R,
@@ -1250,7 +1251,11 @@ function UnwrapAndCallRegExpBuiltinExec(R, S, forTest) {
 }
 
 function CallRegExpBuiltinExec(S, forTest) {
-  return RegExpBuiltinExec(this, S, forTest);
+  assert(typeof forTest === "boolean", "forTest must be a boolean");
+  if (forTest) {
+    return RegExpBuiltinExecForTest(this, S);
+  }
+  return RegExpBuiltinExec(this, S);
 }
 
 // ES6 21.2.5.13.
@@ -1265,7 +1270,7 @@ function RegExpTest(string) {
   var S = ToString(string);
 
   // Steps 5-6.
-  return RegExpExec(R, S, true);
+  return RegExpExecForTest(R, S);
 }
 
 // ES 2016 draft Mar 25, 2016 21.2.4.2.
@@ -1519,7 +1524,7 @@ function RegExpStringIteratorNext() {
   }
 
   // Step 9.
-  var match = RegExpExec(regexp, string, false);
+  var match = RegExpExec(regexp, string);
 
   // Step 10.
   if (match === null) {
