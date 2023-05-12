@@ -937,10 +937,12 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
     // matter... Medium also doesn't affect those.
     return;
   }
-  auto systemZoom = LookAndFeel::SystemZoomSettings();
-  SetFullZoom(browsingContext->FullZoom() * systemZoom.mFullZoom);
-  SetTextZoom(browsingContext->TextZoom() * systemZoom.mTextZoom);
-  SetOverrideDPPX(browsingContext->OverrideDPPX());
+  if (!IsPrintingOrPrintPreview()) {
+    auto systemZoom = LookAndFeel::SystemZoomSettings();
+    SetFullZoom(browsingContext->FullZoom() * systemZoom.mFullZoom);
+    SetTextZoom(browsingContext->TextZoom() * systemZoom.mTextZoom);
+    SetOverrideDPPX(browsingContext->OverrideDPPX());
+  }
 
   auto* top = browsingContext->Top();
   SetColorSchemeOverride([&] {
