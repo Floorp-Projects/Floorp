@@ -110,7 +110,9 @@ def format(config, fix=None, **lintargs):
         for filename in glob.iglob(folder + "/**/*.java", recursive=True):
             err = {
                 "rule": "spotless-java",
-                "path": os.path.join(path, mozpath.relpath(filename, folder)),
+                "path": os.path.join(
+                    topsrcdir, path, mozpath.relpath(filename, folder)
+                ),
                 "lineno": 0,
                 "column": 0,
                 "message": "Formatting error, please run ./mach lint -l android-format --fix",
@@ -123,7 +125,9 @@ def format(config, fix=None, **lintargs):
         for filename in glob.iglob(folder + "/**/*.kt", recursive=True):
             err = {
                 "rule": "spotless-kt",
-                "path": os.path.join(path, mozpath.relpath(filename, folder)),
+                "path": os.path.join(
+                    topsrcdir, path, mozpath.relpath(filename, folder)
+                ),
                 "lineno": 0,
                 "column": 0,
                 "message": "Formatting error, please run ./mach lint -l android-format --fix",
@@ -172,7 +176,7 @@ def api_lint(config, **lintargs):
             for r in issues[rule]:
                 err = {
                     "rule": r["rule"] if rule == "failures" else "compat_failures",
-                    "path": mozpath.relpath(r["file"], topsrcdir),
+                    "path": r["file"],
                     "lineno": int(r["line"]),
                     "column": int(r.get("column") or 0),
                     "message": r["msg"],
@@ -183,7 +187,7 @@ def api_lint(config, **lintargs):
         for r in issues["api_changes"]:
             err = {
                 "rule": "api_changes",
-                "path": mozpath.relpath(r["file"], topsrcdir),
+                "path": r["file"],
                 "lineno": int(r["line"]),
                 "column": int(r.get("column") or 0),
                 "message": "Unexpected api change. Please run ./mach gradle {} for more "
@@ -218,7 +222,6 @@ def javadoc(config, **lintargs):
             issues = json.load(f)
 
             for issue in issues:
-                issue["path"] = issue["path"].replace(lintargs["root"], "")
                 # We want warnings to be errors for linting purposes.
                 # TODO: Bug 1316188 - resolve missing javadoc comments
                 issue["level"] = (
@@ -266,7 +269,7 @@ def lint(config, **lintargs):
             "level": issue.get("severity").lower(),
             "rule": issue.get("id"),
             "message": issue.get("message"),
-            "path": location.get("file").replace(lintargs["root"], ""),
+            "path": location.get("file"),
             "lineno": int(location.get("line") or 0),
         }
         results.append(result.from_config(config, **err))
@@ -279,7 +282,6 @@ def _parse_checkstyle_output(config, topsrcdir=None, report_path=None):
     root = tree.getroot()
 
     for file in root.findall("file"):
-        sourcepath = file.get("name").replace(topsrcdir + "/", "")
 
         for error in file.findall("error"):
             # Like <error column="42" line="22" message="Name 'mPorts' must match pattern 'xm[A-Z][A-Za-z]*$'." severity="error" source="com.puppycrawl.tools.checkstyle.checks.naming.MemberNameCheck" />.  # NOQA: E501
@@ -287,7 +289,7 @@ def _parse_checkstyle_output(config, topsrcdir=None, report_path=None):
                 "level": "error",
                 "rule": error.get("source"),
                 "message": error.get("message"),
-                "path": sourcepath,
+                "path": file.get("name"),
                 "lineno": int(error.get("line") or 0),
                 "column": int(error.get("column") or 0),
             }
@@ -376,7 +378,9 @@ def _parse_android_test_results(config, topsrcdir=None, report_dir=None):
                         "level": "error",
                         "rule": unexpected.get("type"),
                         "message": message,
-                        "path": os.path.join("mobile", "android", sourcepath),
+                        "path": os.path.join(
+                            topsrcdir, "mobile", "android", sourcepath
+                        ),
                         "lineno": lineno,
                     }
                     yield result.from_config(config, **err)
