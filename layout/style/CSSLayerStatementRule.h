@@ -14,7 +14,7 @@ namespace mozilla::dom {
 
 class CSSLayerStatementRule final : public css::Rule {
  public:
-  CSSLayerStatementRule(RefPtr<RawServoLayerStatementRule> aRawRule,
+  CSSLayerStatementRule(RefPtr<StyleLockedLayerStatementRule> aRawRule,
                         StyleSheet* aSheet, css::Rule* aParentRule,
                         uint32_t aLine, uint32_t aColumn);
 
@@ -26,8 +26,8 @@ class CSSLayerStatementRule final : public css::Rule {
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  RawServoLayerStatementRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<RawServoLayerStatementRule>);
+  StyleLockedLayerStatementRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<StyleLockedLayerStatementRule>);
 
   // WebIDL interface
   StyleCssRuleType Type() const final;
@@ -41,7 +41,7 @@ class CSSLayerStatementRule final : public css::Rule {
  private:
   ~CSSLayerStatementRule() = default;
 
-  RefPtr<RawServoLayerStatementRule> mRawRule;
+  RefPtr<StyleLockedLayerStatementRule> mRawRule;
 };
 
 }  // namespace mozilla::dom

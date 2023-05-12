@@ -1000,7 +1000,7 @@ void ServoStyleSet::RuleChangedInternal(StyleSheet& aSheet, css::Rule& aRule,
 
 #define CASE_FOR(constant_, type_)                                        \
   case StyleCssRuleType::constant_:                                       \
-    return Servo_StyleSet_##type_##RuleChanged(                           \
+    return Servo_StyleSet_##constant_##RuleChanged(                       \
         mRawData.get(), static_cast<dom::CSS##type_##Rule&>(aRule).Raw(), \
         &aSheet, aKind);
 
@@ -1088,7 +1088,7 @@ nsTArray<ComputedKeyframeValues> ServoStyleSet::GetComputedKeyframeValuesFor(
 }
 
 void ServoStyleSet::GetAnimationValues(
-    RawServoDeclarationBlock* aDeclarations, Element* aElement,
+    StyleLockedDeclarationBlock* aDeclarations, Element* aElement,
     const ComputedStyle* aComputedStyle,
     nsTArray<RefPtr<StyleAnimationValue>>& aAnimationValues) {
   // Servo_GetAnimationValues below won't handle ignoring existing element
@@ -1115,7 +1115,7 @@ ServoStyleSet::ResolveServoStyleByAddingAnimation(
 }
 
 already_AddRefed<StyleAnimationValue> ServoStyleSet::ComputeAnimationValue(
-    Element* aElement, RawServoDeclarationBlock* aDeclarations,
+    Element* aElement, StyleLockedDeclarationBlock* aDeclarations,
     const ComputedStyle* aStyle) {
   return Servo_AnimationValue_Compute(aElement, aDeclarations, aStyle,
                                       mRawData.get())
@@ -1274,7 +1274,7 @@ void ServoStyleSet::AppendFontFaceRules(
   Servo_StyleSet_GetFontFaceRules(mRawData.get(), &aArray);
 }
 
-const RawServoCounterStyleRule* ServoStyleSet::CounterStyleRuleForName(
+const StyleLockedCounterStyleRule* ServoStyleSet::CounterStyleRuleForName(
     nsAtom* aName) {
   MOZ_ASSERT(!StylistNeedsUpdate());
   return Servo_StyleSet_GetCounterStyleRule(mRawData.get(), aName);
@@ -1298,7 +1298,7 @@ ServoStyleSet::BuildFontPaletteValueSet() {
 
 already_AddRefed<ComputedStyle> ServoStyleSet::ResolveForDeclarations(
     const ComputedStyle* aParentOrNull,
-    const RawServoDeclarationBlock* aDeclarations) {
+    const StyleLockedDeclarationBlock* aDeclarations) {
   // No need to update the stylist, we're only cascading aDeclarations.
   return Servo_StyleSet_ResolveForDeclarations(mRawData.get(), aParentOrNull,
                                                aDeclarations)

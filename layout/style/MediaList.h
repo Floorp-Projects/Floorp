@@ -31,7 +31,7 @@ class MediaList final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(MediaList)
 
   // Needed for CSSOM, but please don't use it outside of that :)
-  explicit MediaList(already_AddRefed<RawServoMediaList> aRawList)
+  explicit MediaList(already_AddRefed<StyleLockedMediaList> aRawList)
       : mRawList(aRawList) {}
 
   static already_AddRefed<MediaList> Create(
@@ -47,7 +47,7 @@ class MediaList final : public nsISupports, public nsWrapperCache {
   bool Matches(const Document&) const;
 
   void SetStyleSheet(StyleSheet* aSheet);
-  void SetRawAfterClone(RefPtr<RawServoMediaList> aRaw) {
+  void SetRawAfterClone(RefPtr<StyleLockedMediaList> aRaw) {
     mRawList = std::move(aRaw);
   }
 
@@ -89,7 +89,7 @@ class MediaList final : public nsISupports, public nsWrapperCache {
  private:
   template <typename Func>
   inline void DoMediaChange(Func aCallback, ErrorResult& aRv);
-  RefPtr<RawServoMediaList> mRawList;
+  RefPtr<StyleLockedMediaList> mRawList;
 };
 
 }  // namespace dom

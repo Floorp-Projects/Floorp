@@ -21,7 +21,7 @@ namespace mozilla::dom {
 
 class CSSKeyframeList : public dom::CSSRuleList {
  public:
-  CSSKeyframeList(already_AddRefed<RawServoKeyframesRule> aRawRule,
+  CSSKeyframeList(already_AddRefed<StyleLockedKeyframesRule> aRawRule,
                   StyleSheet* aSheet, CSSKeyframesRule* aParentRule)
       : mStyleSheet(aSheet), mParentRule(aParentRule), mRawRule(aRawRule) {
     mRules.SetCount(Servo_KeyframesRule_GetCount(mRawRule));
@@ -30,13 +30,13 @@ class CSSKeyframeList : public dom::CSSRuleList {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframeList, dom::CSSRuleList)
 
-  void SetRawAfterClone(RefPtr<RawServoKeyframesRule> aRaw) {
+  void SetRawAfterClone(RefPtr<StyleLockedKeyframesRule> aRaw) {
     mRawRule = std::move(aRaw);
     uint32_t index = 0;
     for (css::Rule* rule : mRules) {
       if (rule) {
         uint32_t line = 0, column = 0;
-        RefPtr<RawServoKeyframe> keyframe =
+        RefPtr<StyleLockedKeyframe> keyframe =
             Servo_KeyframesRule_GetKeyframeAt(mRawRule, index, &line, &column)
                 .Consume();
         static_cast<CSSKeyframeRule*>(rule)->SetRawAfterClone(
@@ -63,7 +63,7 @@ class CSSKeyframeList : public dom::CSSRuleList {
   CSSKeyframeRule* GetRule(uint32_t aIndex) {
     if (!mRules[aIndex]) {
       uint32_t line = 0, column = 0;
-      RefPtr<RawServoKeyframe> rule =
+      RefPtr<StyleLockedKeyframe> rule =
           Servo_KeyframesRule_GetKeyframeAt(mRawRule, aIndex, &line, &column)
               .Consume();
       CSSKeyframeRule* ruleObj = new CSSKeyframeRule(rule.forget(), mStyleSheet,
@@ -139,7 +139,7 @@ class CSSKeyframeList : public dom::CSSRuleList {
   // may be nullptr when the style sheet drops the reference to us.
   StyleSheet* mStyleSheet = nullptr;
   CSSKeyframesRule* mParentRule = nullptr;
-  RefPtr<RawServoKeyframesRule> mRawRule;
+  RefPtr<StyleLockedKeyframesRule> mRawRule;
   nsCOMArray<css::Rule> mRules;
 };
 
@@ -169,7 +169,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 // CSSKeyframesRule
 //
 
-CSSKeyframesRule::CSSKeyframesRule(RefPtr<RawServoKeyframesRule> aRawRule,
+CSSKeyframesRule::CSSKeyframesRule(RefPtr<StyleLockedKeyframesRule> aRawRule,
                                    StyleSheet* aSheet, css::Rule* aParentRule,
                                    uint32_t aLine, uint32_t aColumn)
     : css::Rule(aSheet, aParentRule, aLine, aColumn),
@@ -210,7 +210,7 @@ StyleCssRuleType CSSKeyframesRule::Type() const {
   return StyleCssRuleType::Keyframes;
 }
 
-void CSSKeyframesRule::SetRawAfterClone(RefPtr<RawServoKeyframesRule> aRaw) {
+void CSSKeyframesRule::SetRawAfterClone(RefPtr<StyleLockedKeyframesRule> aRaw) {
   mRawRule = std::move(aRaw);
   if (mKeyframeList) {
     mKeyframeList->SetRawAfterClone(mRawRule);
