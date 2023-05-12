@@ -231,6 +231,7 @@ static void set_good_speed_feature_framesize_independent(VP9_COMP *cpi,
   sf->allow_skip_recode = 1;
   sf->less_rectangular_check = 1;
   sf->mv.auto_mv_step_size = 1;
+  sf->mv.use_downsampled_sad = 1;
   sf->prune_ref_frame_for_rect_partitions = 1;
   sf->temporal_filter_search_method = NSTEP;
   sf->tx_size_search_breakout = 1;
@@ -243,6 +244,7 @@ static void set_good_speed_feature_framesize_independent(VP9_COMP *cpi,
   sf->trellis_opt_tx_rd.thresh = boosted ? 4.0 : 3.0;
 
   sf->intra_y_mode_mask[TX_32X32] = INTRA_DC_H_V;
+  sf->comp_inter_joint_search_iter_level = 1;
 
   // Reference masking is not supported in dynamic scaling mode.
   sf->reference_masking = oxcf->resize_mode != RESIZE_DYNAMIC;
@@ -330,7 +332,7 @@ static void set_good_speed_feature_framesize_independent(VP9_COMP *cpi,
             : FLAG_SKIP_INTRA_DIRMISMATCH | FLAG_SKIP_INTRA_BESTINTER |
                   FLAG_SKIP_COMP_BESTINTRA | FLAG_SKIP_INTRA_LOWVAR;
     sf->disable_filter_search_var_thresh = 100;
-    sf->comp_inter_joint_search_thresh = BLOCK_SIZES;
+    sf->comp_inter_joint_search_iter_level = 2;
     sf->auto_min_max_partition_size = RELAXED_NEIGHBORING_MIN_MAX;
     sf->recode_tolerance_high = 45;
     sf->enhanced_full_pixel_motion_search = 0;
@@ -396,7 +398,6 @@ static void set_good_speed_feature_framesize_independent(VP9_COMP *cpi,
   }
 
   if (speed >= 5) {
-    int i;
     sf->optimize_coefficients = 0;
     sf->mv.search_method = HEX;
     sf->disable_filter_search_var_thresh = 500;
@@ -530,7 +531,7 @@ static void set_rt_speed_feature_framesize_independent(
     }
 
     sf->disable_filter_search_var_thresh = 50;
-    sf->comp_inter_joint_search_thresh = BLOCK_SIZES;
+    sf->comp_inter_joint_search_iter_level = 2;
     sf->auto_min_max_partition_size = RELAXED_NEIGHBORING_MIN_MAX;
     sf->lf_motion_threshold = LOW_MOTION_THRESHOLD;
     sf->adjust_partitioning_from_last_frame = 1;
@@ -675,7 +676,7 @@ static void set_rt_speed_feature_framesize_independent(
       if (cpi->content_state_sb_fd == NULL &&
           (!cpi->use_svc ||
            svc->spatial_layer_id == svc->number_spatial_layers - 1)) {
-        CHECK_MEM_ERROR(cm, cpi->content_state_sb_fd,
+        CHECK_MEM_ERROR(&cm->error, cpi->content_state_sb_fd,
                         (uint8_t *)vpx_calloc(
                             (cm->mi_stride >> 3) * ((cm->mi_rows >> 3) + 1),
                             sizeof(uint8_t)));
@@ -831,13 +832,13 @@ static void set_rt_speed_feature_framesize_independent(
     }
     if (cpi->count_arf_frame_usage == NULL) {
       CHECK_MEM_ERROR(
-          cm, cpi->count_arf_frame_usage,
+          &cm->error, cpi->count_arf_frame_usage,
           (uint8_t *)vpx_calloc((cm->mi_stride >> 3) * ((cm->mi_rows >> 3) + 1),
                                 sizeof(*cpi->count_arf_frame_usage)));
     }
     if (cpi->count_lastgolden_frame_usage == NULL)
       CHECK_MEM_ERROR(
-          cm, cpi->count_lastgolden_frame_usage,
+          &cm->error, cpi->count_lastgolden_frame_usage,
           (uint8_t *)vpx_calloc((cm->mi_stride >> 3) * ((cm->mi_rows >> 3) + 1),
                                 sizeof(*cpi->count_lastgolden_frame_usage)));
   }
@@ -927,7 +928,8 @@ void vp9_set_speed_features_framesize_independent(VP9_COMP *cpi, int speed) {
   sf->coeff_prob_appx_step = 1;
   sf->mv.auto_mv_step_size = 0;
   sf->mv.fullpel_search_step_param = 6;
-  sf->comp_inter_joint_search_thresh = BLOCK_4X4;
+  sf->mv.use_downsampled_sad = 0;
+  sf->comp_inter_joint_search_iter_level = 0;
   sf->tx_size_search_method = USE_FULL_RD;
   sf->use_lp32x32fdct = 0;
   sf->adaptive_motion_search = 0;

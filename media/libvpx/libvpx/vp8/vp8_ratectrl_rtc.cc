@@ -294,6 +294,34 @@ void VP8RateControlRTC::ComputeQP(const VP8FrameParamsQpRTC &frame_params) {
 
 int VP8RateControlRTC::GetQP() const { return q_; }
 
+int VP8RateControlRTC::GetLoopfilterLevel() const {
+  VP8_COMMON *cm = &cpi_->common;
+  const double qp = q_;
+
+  // This model is from linear regression
+  if (cm->Width * cm->Height <= 320 * 240) {
+    cm->filter_level = static_cast<int>(0.352685 * qp + 2.957774);
+  } else if (cm->Width * cm->Height <= 640 * 480) {
+    cm->filter_level = static_cast<int>(0.485069 * qp - 0.534462);
+  } else {
+    cm->filter_level = static_cast<int>(0.314875 * qp + 7.959003);
+  }
+
+  int min_filter_level = 0;
+  // This logic is from get_min_filter_level() in picklpf.c
+  if (q_ > 6 && q_ <= 16) {
+    min_filter_level = 1;
+  } else {
+    min_filter_level = (q_ / 8);
+  }
+
+  const int max_filter_level = 63;
+  if (cm->filter_level < min_filter_level) cm->filter_level = min_filter_level;
+  if (cm->filter_level > max_filter_level) cm->filter_level = max_filter_level;
+
+  return cm->filter_level;
+}
+
 void VP8RateControlRTC::PostEncodeUpdate(uint64_t encoded_frame_size) {
   VP8_COMMON *const cm = &cpi_->common;
   vpx_clear_system_state();

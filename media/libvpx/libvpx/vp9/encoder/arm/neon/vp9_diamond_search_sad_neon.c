@@ -30,30 +30,6 @@ static INLINE int_mv pack_int_mv(int16_t row, int16_t col) {
   return result;
 }
 
-static INLINE MV_JOINT_TYPE get_mv_joint(const int_mv mv) {
-  // This is simplified from the C implementation to utilise that
-  //  x->nmvjointsadcost[1] == x->nmvjointsadcost[2]  and
-  //  x->nmvjointsadcost[1] == x->nmvjointsadcost[3]
-  return mv.as_int == 0 ? 0 : 1;
-}
-
-static INLINE int mv_cost(const int_mv mv, const int *joint_cost,
-                          int *const comp_cost[2]) {
-  assert(mv.as_mv.row >= -MV_MAX && mv.as_mv.row < MV_MAX);
-  assert(mv.as_mv.col >= -MV_MAX && mv.as_mv.col < MV_MAX);
-  return joint_cost[get_mv_joint(mv)] + comp_cost[0][mv.as_mv.row] +
-         comp_cost[1][mv.as_mv.col];
-}
-
-static int mvsad_err_cost(const MACROBLOCK *x, const int_mv mv, const MV *ref,
-                          int sad_per_bit) {
-  const int_mv diff =
-      pack_int_mv(mv.as_mv.row - ref->row, mv.as_mv.col - ref->col);
-  return ROUND_POWER_OF_TWO(
-      (unsigned)mv_cost(diff, x->nmvjointsadcost, x->nmvsadcost) * sad_per_bit,
-      VP9_PROB_COST_SHIFT);
-}
-
 /*****************************************************************************
  * This function utilizes 3 properties of the cost function lookup tables,   *
  * constructed in using 'cal_nmvjointsadcost' and 'cal_nmvsadcosts' in       *
@@ -71,8 +47,9 @@ static int mvsad_err_cost(const MACROBLOCK *x, const int_mv mv, const MV *ref,
  *****************************************************************************/
 int vp9_diamond_search_sad_neon(const MACROBLOCK *x,
                                 const search_site_config *cfg, MV *ref_mv,
-                                MV *best_mv, int search_param, int sad_per_bit,
-                                int *num00, const vp9_variance_fn_ptr_t *fn_ptr,
+                                uint32_t start_mv_sad, MV *best_mv,
+                                int search_param, int sad_per_bit, int *num00,
+                                const vp9_sad_fn_ptr_t *sad_fn_ptr,
                                 const MV *center_mv) {
   static const uint32_t data[4] = { 0, 1, 2, 3 };
   const uint32x4_t v_idx_d = vld1q_u32((const uint32_t *)data);
@@ -101,8 +78,8 @@ int vp9_diamond_search_sad_neon(const MACROBLOCK *x,
       pack_int_mv(center_mv->row >> 3, center_mv->col >> 3);
   const int16x8_t vfcmv = vreinterpretq_s16_s32(vdupq_n_s32(fcenter_mv.as_int));
 
-  const int ref_row = clamp(ref_mv->row, minmv.as_mv.row, maxmv.as_mv.row);
-  const int ref_col = clamp(ref_mv->col, minmv.as_mv.col, maxmv.as_mv.col);
+  const int ref_row = ref_mv->row;
+  const int ref_col = ref_mv->col;
 
   int_mv bmv = pack_int_mv(ref_row, ref_col);
   int_mv new_bmv = bmv;
@@ -117,12 +94,13 @@ int vp9_diamond_search_sad_neon(const MACROBLOCK *x,
   // Work out the start point for the search
   const uint8_t *best_address = in_what;
   const uint8_t *new_best_address = best_address;
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
   int64x2_t v_ba_q = vdupq_n_s64((intptr_t)best_address);
 #else
   int32x4_t v_ba_d = vdupq_n_s32((intptr_t)best_address);
 #endif
-  unsigned int best_sad = INT_MAX;
+  // Starting position
+  unsigned int best_sad = start_mv_sad;
   int i, j, step;
 
   // Check the prerequisite cost function properties that are easy to check
@@ -130,10 +108,6 @@ int vp9_diamond_search_sad_neon(const MACROBLOCK *x,
   // prerequisites.
   assert(x->nmvjointsadcost[1] == x->nmvjointsadcost[2]);
   assert(x->nmvjointsadcost[1] == x->nmvjointsadcost[3]);
-
-  // Check the starting position
-  best_sad = fn_ptr->sdf(what, what_stride, in_what, in_what_stride);
-  best_sad += mvsad_err_cost(x, bmv, &fcenter_mv.as_mv, sad_per_bit);
 
   *num00 = 0;
 
@@ -143,7 +117,7 @@ int vp9_diamond_search_sad_neon(const MACROBLOCK *x,
       int8x16_t v_inside_d;
       uint32x4_t v_outside_d;
       int32x4_t v_cost_d, v_sad_d;
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
       int64x2_t v_blocka[2];
 #else
       int32x4_t v_blocka[1];
@@ -164,7 +138,7 @@ int vp9_diamond_search_sad_neon(const MACROBLOCK *x,
                     vreinterpretq_s32_s16(v_these_mv_w)));
 
       // If none of them are inside, then move on
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
       horiz_max = vmaxvq_u32(vreinterpretq_u32_s8(v_inside_d));
 #else
       horiz_max_0 = vmax_u32(vget_low_u32(vreinterpretq_u32_s8(v_inside_d)),
@@ -193,7 +167,7 @@ int vp9_diamond_search_sad_neon(const MACROBLOCK *x,
 
       // Compute the SIMD pointer offsets.
       {
-#if defined(__aarch64__)  //  sizeof(intptr_t) == 8
+#if VPX_ARCH_AARCH64  //  sizeof(intptr_t) == 8
         // Load the offsets
         int64x2_t v_bo10_q = vld1q_s64((const int64_t *)&ss_os[i + 0]);
         int64x2_t v_bo32_q = vld1q_s64((const int64_t *)&ss_os[i + 2]);
@@ -214,8 +188,8 @@ int vp9_diamond_search_sad_neon(const MACROBLOCK *x,
 #endif
       }
 
-      fn_ptr->sdx4df(what, what_stride, (const uint8_t **)&v_blocka[0],
-                     in_what_stride, (uint32_t *)&v_sad_d);
+      sad_fn_ptr->sdx4df(what, what_stride, (const uint8_t **)&v_blocka[0],
+                         in_what_stride, (uint32_t *)&v_sad_d);
 
       // Look up the component cost of the residual motion vector
       {
@@ -260,7 +234,7 @@ int vp9_diamond_search_sad_neon(const MACROBLOCK *x,
       // Find the minimum value and index horizontally in v_sad_d
       {
         uint32_t local_best_sad;
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
         local_best_sad = vminvq_u32(vreinterpretq_u32_s32(v_sad_d));
 #else
         uint32x2_t horiz_min_0 =
@@ -282,7 +256,7 @@ int vp9_diamond_search_sad_neon(const MACROBLOCK *x,
           uint32x4_t v_mask_d = vandq_u32(v_sel_d, v_idx_d);
           v_mask_d = vbslq_u32(v_sel_d, v_mask_d, vdupq_n_u32(0xffffffff));
 
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
           local_best_idx = vminvq_u32(v_mask_d);
 #else
           horiz_min_0 =
@@ -306,7 +280,7 @@ int vp9_diamond_search_sad_neon(const MACROBLOCK *x,
     best_address = new_best_address;
 
     v_bmv_w = vreinterpretq_s16_s32(vdupq_n_s32(bmv.as_int));
-#if defined(__aarch64__)
+#if VPX_ARCH_AARCH64
     v_ba_q = vdupq_n_s64((intptr_t)best_address);
 #else
     v_ba_d = vdupq_n_s32((intptr_t)best_address);

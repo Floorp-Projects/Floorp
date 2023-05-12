@@ -134,7 +134,7 @@ void vpx_quantize_b_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
     } while (n_coeffs > 0);
   }
 
-#ifdef __aarch64__
+#if VPX_ARCH_AARCH64
   *eob_ptr = vmaxvq_u16(eob_max);
 #else
   {
@@ -144,7 +144,7 @@ void vpx_quantize_b_neon(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
     const uint16x4_t eob_max_2 = vpmax_u16(eob_max_1, eob_max_1);
     vst1_lane_u16(eob_ptr, eob_max_2, 0);
   }
-#endif  // __aarch64__
+#endif  // VPX_ARCH_AARCH64
   // Need these here, else the compiler complains about mixing declarations and
   // code in C90
   (void)scan;
@@ -216,10 +216,10 @@ quantize_b_32x32_neon(const tran_low_t *coeff_ptr, tran_low_t *qcoeff_ptr,
 // Main difference is that zbin values are halved before comparison and dqcoeff
 // values are divided by 2. zbin is rounded but dqcoeff is not.
 void vpx_quantize_b_32x32_neon(const tran_low_t *coeff_ptr,
-                               const struct macroblock_plane *const mb_plane,
+                               const struct macroblock_plane *mb_plane,
                                tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                                const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                               const struct ScanOrder *const scan_order) {
+                               const struct ScanOrder *scan_order) {
   const int16x8_t neg_one = vdupq_n_s16(-1);
   uint16x8_t eob_max;
   int i;
@@ -276,7 +276,7 @@ void vpx_quantize_b_32x32_neon(const tran_low_t *coeff_ptr,
     }
   }
 
-#ifdef __aarch64__
+#if VPX_ARCH_AARCH64
   *eob_ptr = vmaxvq_u16(eob_max);
 #else
   {
@@ -286,5 +286,5 @@ void vpx_quantize_b_32x32_neon(const tran_low_t *coeff_ptr,
     const uint16x4_t eob_max_2 = vpmax_u16(eob_max_1, eob_max_1);
     vst1_lane_u16(eob_ptr, eob_max_2, 0);
   }
-#endif  // __aarch64__
+#endif  // VPX_ARCH_AARCH64
 }

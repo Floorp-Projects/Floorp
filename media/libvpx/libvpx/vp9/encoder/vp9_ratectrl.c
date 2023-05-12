@@ -1150,8 +1150,9 @@ static int rc_pick_q_and_bounds_one_pass_vbr(const VP9_COMP *cpi,
   if (frame_is_intra_only(cm)) {
     if (oxcf->rc_mode == VPX_Q) {
       int qindex = cq_level;
-      double q = vp9_convert_qindex_to_q(qindex, cm->bit_depth);
-      int delta_qindex = vp9_compute_qdelta(rc, q, q * 0.25, cm->bit_depth);
+      double qstart = vp9_convert_qindex_to_q(qindex, cm->bit_depth);
+      int delta_qindex =
+          vp9_compute_qdelta(rc, qstart, qstart * 0.25, cm->bit_depth);
       active_best_quality = VPXMAX(qindex + delta_qindex, rc->best_quality);
     } else if (rc->this_key_frame_forced) {
       // Handle the special case for key frames forced when we have reached
@@ -1206,12 +1207,14 @@ static int rc_pick_q_and_bounds_one_pass_vbr(const VP9_COMP *cpi,
 
     } else if (oxcf->rc_mode == VPX_Q) {
       int qindex = cq_level;
-      double q = vp9_convert_qindex_to_q(qindex, cm->bit_depth);
+      double qstart = vp9_convert_qindex_to_q(qindex, cm->bit_depth);
       int delta_qindex;
       if (cpi->refresh_alt_ref_frame)
-        delta_qindex = vp9_compute_qdelta(rc, q, q * 0.40, cm->bit_depth);
+        delta_qindex =
+            vp9_compute_qdelta(rc, qstart, qstart * 0.40, cm->bit_depth);
       else
-        delta_qindex = vp9_compute_qdelta(rc, q, q * 0.50, cm->bit_depth);
+        delta_qindex =
+            vp9_compute_qdelta(rc, qstart, qstart * 0.50, cm->bit_depth);
       active_best_quality = VPXMAX(qindex + delta_qindex, rc->best_quality);
     } else {
       active_best_quality = get_gf_active_quality(cpi, q, cm->bit_depth);
@@ -1219,11 +1222,12 @@ static int rc_pick_q_and_bounds_one_pass_vbr(const VP9_COMP *cpi,
   } else {
     if (oxcf->rc_mode == VPX_Q) {
       int qindex = cq_level;
-      double q = vp9_convert_qindex_to_q(qindex, cm->bit_depth);
+      double qstart = vp9_convert_qindex_to_q(qindex, cm->bit_depth);
       double delta_rate[FIXED_GF_INTERVAL] = { 0.50, 1.0, 0.85, 1.0,
                                                0.70, 1.0, 0.85, 1.0 };
       int delta_qindex = vp9_compute_qdelta(
-          rc, q, q * delta_rate[cm->current_video_frame % FIXED_GF_INTERVAL],
+          rc, qstart,
+          qstart * delta_rate[cm->current_video_frame % FIXED_GF_INTERVAL],
           cm->bit_depth);
       active_best_quality = VPXMAX(qindex + delta_qindex, rc->best_quality);
     } else {
@@ -1859,8 +1863,7 @@ void vp9_rc_postencode_update(VP9_COMP *cpi, uint64_t bytes_used) {
     rc->avg_frame_qindex[KEY_FRAME] =
         ROUND_POWER_OF_TWO(3 * rc->avg_frame_qindex[KEY_FRAME] + qindex, 2);
     if (cpi->use_svc) {
-      int i = 0;
-      SVC *svc = &cpi->svc;
+      int i;
       for (i = 0; i < svc->number_temporal_layers; ++i) {
         const int layer = LAYER_IDS_TO_IDX(svc->spatial_layer_id, i,
                                            svc->number_temporal_layers);
@@ -3269,11 +3272,9 @@ int vp9_encodedframe_overshoot(VP9_COMP *cpi, int frame_size, int *q) {
       MODE_INFO **mi = cm->mi_grid_visible;
       int sum_intra_usage = 0;
       int mi_row, mi_col;
-      int tot = 0;
       for (mi_row = 0; mi_row < cm->mi_rows; mi_row++) {
         for (mi_col = 0; mi_col < cm->mi_cols; mi_col++) {
           if (mi[0]->ref_frame[0] == INTRA_FRAME) sum_intra_usage++;
-          tot++;
           mi++;
         }
         mi += 8;

@@ -2,6 +2,7 @@
 @  using the ads2gas.pl script.
 .syntax unified
 .equ VPX_ARCH_ARM ,  1
+.equ VPX_ARCH_AARCH64 ,  1
 .equ VPX_ARCH_MIPS ,  0
 .equ VPX_ARCH_X86 ,  0
 .equ VPX_ARCH_X86_64 ,  0

@@ -774,16 +774,16 @@
    Details     : 4 signed word elements of 'in' vector are added together and
                  the resulting integer sum is returned
 */
-#define HADD_SW_S32(in)                            \
-  ({                                               \
-    v2i64 res0_m, res1_m;                          \
-    int32_t sum_m;                                 \
-                                                   \
-    res0_m = __msa_hadd_s_d((v4i32)in, (v4i32)in); \
-    res1_m = __msa_splati_d(res0_m, 1);            \
-    res0_m = res0_m + res1_m;                      \
-    sum_m = __msa_copy_s_w((v4i32)res0_m, 0);      \
-    sum_m;                                         \
+#define HADD_SW_S32(in)                                               \
+  ({                                                                  \
+    v2i64 hadd_sw_s32_res0_m, hadd_sw_s32_res1_m;                     \
+    int32_t hadd_sw_s32_sum_m;                                        \
+                                                                      \
+    hadd_sw_s32_res0_m = __msa_hadd_s_d((v4i32)in, (v4i32)in);        \
+    hadd_sw_s32_res1_m = __msa_splati_d(hadd_sw_s32_res0_m, 1);       \
+    hadd_sw_s32_res0_m = hadd_sw_s32_res0_m + hadd_sw_s32_res1_m;     \
+    hadd_sw_s32_sum_m = __msa_copy_s_w((v4i32)hadd_sw_s32_res0_m, 0); \
+    hadd_sw_s32_sum_m;                                                \
   })
 
 /* Description : Horizontal addition of 4 unsigned word elements
@@ -793,16 +793,16 @@
    Details     : 4 unsigned word elements of 'in' vector are added together and
                  the resulting integer sum is returned
 */
-#define HADD_UW_U32(in)                               \
-  ({                                                  \
-    v2u64 res0_m, res1_m;                             \
-    uint32_t sum_m;                                   \
-                                                      \
-    res0_m = __msa_hadd_u_d((v4u32)in, (v4u32)in);    \
-    res1_m = (v2u64)__msa_splati_d((v2i64)res0_m, 1); \
-    res0_m += res1_m;                                 \
-    sum_m = __msa_copy_u_w((v4i32)res0_m, 0);         \
-    sum_m;                                            \
+#define HADD_UW_U32(in)                                                       \
+  ({                                                                          \
+    v2u64 hadd_uw_u32_res0_m, hadd_uw_u32_res1_m;                             \
+    uint32_t hadd_uw_u32_sum_m;                                               \
+                                                                              \
+    hadd_uw_u32_res0_m = __msa_hadd_u_d((v4u32)in, (v4u32)in);                \
+    hadd_uw_u32_res1_m = (v2u64)__msa_splati_d((v2i64)hadd_uw_u32_res0_m, 1); \
+    hadd_uw_u32_res0_m += hadd_uw_u32_res1_m;                                 \
+    hadd_uw_u32_sum_m = __msa_copy_u_w((v4i32)hadd_uw_u32_res0_m, 0);         \
+    hadd_uw_u32_sum_m;                                                        \
   })
 
 /* Description : Horizontal addition of 8 unsigned halfword elements
@@ -812,14 +812,14 @@
    Details     : 8 unsigned halfword elements of 'in' vector are added
                  together and the resulting integer sum is returned
 */
-#define HADD_UH_U32(in)                           \
-  ({                                              \
-    v4u32 res_m;                                  \
-    uint32_t sum_m;                               \
-                                                  \
-    res_m = __msa_hadd_u_w((v8u16)in, (v8u16)in); \
-    sum_m = HADD_UW_U32(res_m);                   \
-    sum_m;                                        \
+#define HADD_UH_U32(in)                                       \
+  ({                                                          \
+    v4u32 hadd_uh_u32_res_m;                                  \
+    uint32_t hadd_uh_u32_sum_m;                               \
+                                                              \
+    hadd_uh_u32_res_m = __msa_hadd_u_w((v8u16)in, (v8u16)in); \
+    hadd_uh_u32_sum_m = HADD_UW_U32(hadd_uh_u32_res_m);       \
+    hadd_uh_u32_sum_m;                                        \
   })
 
 /* Description : Horizontal addition of unsigned byte vector elements

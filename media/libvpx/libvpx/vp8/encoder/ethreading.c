@@ -510,16 +510,16 @@ int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
 
     if (th_count == 0) return 0;
 
-    CHECK_MEM_ERROR(cpi->h_encoding_thread,
+    CHECK_MEM_ERROR(&cpi->common.error, cpi->h_encoding_thread,
                     vpx_malloc(sizeof(pthread_t) * th_count));
-    CHECK_MEM_ERROR(cpi->h_event_start_encoding,
+    CHECK_MEM_ERROR(&cpi->common.error, cpi->h_event_start_encoding,
                     vpx_malloc(sizeof(sem_t) * th_count));
-    CHECK_MEM_ERROR(cpi->h_event_end_encoding,
+    CHECK_MEM_ERROR(&cpi->common.error, cpi->h_event_end_encoding,
                     vpx_malloc(sizeof(sem_t) * th_count));
-    CHECK_MEM_ERROR(cpi->mb_row_ei,
+    CHECK_MEM_ERROR(&cpi->common.error, cpi->mb_row_ei,
                     vpx_memalign(32, sizeof(MB_ROW_COMP) * th_count));
     memset(cpi->mb_row_ei, 0, sizeof(MB_ROW_COMP) * th_count);
-    CHECK_MEM_ERROR(cpi->en_thread_data,
+    CHECK_MEM_ERROR(&cpi->common.error, cpi->en_thread_data,
                     vpx_malloc(sizeof(ENCODETHREAD_DATA) * th_count));
 
     vpx_atomic_store_release(&cpi->b_multi_threaded, 1);

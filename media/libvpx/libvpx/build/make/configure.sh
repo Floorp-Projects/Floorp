@@ -842,6 +842,10 @@ process_common_toolchain() {
 
   # Enable the architecture family
   case ${tgt_isa} in
+    arm64 | armv8)
+      enable_feature arm
+      enable_feature aarch64
+      ;;
     arm*)
       enable_feature arm
       ;;
@@ -1066,8 +1070,11 @@ EOF
                     enable_feature win_arm64_neon_h_workaround
               else
                 # If a probe is not possible, assume this is the pure Windows
-                # SDK and so the workaround is necessary.
-                enable_feature win_arm64_neon_h_workaround
+                # SDK and so the workaround is necessary when using Visual
+                # Studio < 2019.
+                if [ ${tgt_cc##vs} -lt 16 ]; then
+                  enable_feature win_arm64_neon_h_workaround
+                fi
               fi
             fi
           fi

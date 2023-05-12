@@ -634,11 +634,11 @@ int vp9_denoiser_alloc(VP9_COMMON *cm, struct SVC *svc, VP9_DENOISER *denoiser,
   denoiser->num_ref_frames = use_svc ? SVC_REF_FRAMES : NONSVC_REF_FRAMES;
   init_num_ref_frames = use_svc ? MAX_REF_FRAMES : NONSVC_REF_FRAMES;
   denoiser->num_layers = num_layers;
-  CHECK_MEM_ERROR(cm, denoiser->running_avg_y,
+  CHECK_MEM_ERROR(&cm->error, denoiser->running_avg_y,
                   vpx_calloc(denoiser->num_ref_frames * num_layers,
                              sizeof(denoiser->running_avg_y[0])));
   CHECK_MEM_ERROR(
-      cm, denoiser->mc_running_avg_y,
+      &cm->error, denoiser->mc_running_avg_y,
       vpx_calloc(num_layers, sizeof(denoiser->mc_running_avg_y[0])));
 
   for (layer = 0; layer < num_layers; ++layer) {

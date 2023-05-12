@@ -129,6 +129,8 @@ struct vpx_codec_alg_priv {
   BufferPool *buffer_pool;
 };
 
+// Called by encoder_set_config() and encoder_encode() only. Must not be called
+// by encoder_init().
 static vpx_codec_err_t update_error_state(
     vpx_codec_alg_priv_t *ctx, const struct vpx_internal_error_info *error) {
   const vpx_codec_err_t res = error->error_code;
@@ -813,6 +815,7 @@ static vpx_codec_err_t encoder_set_config(vpx_codec_alg_priv_t *ctx,
     assert(codec_err != VPX_CODEC_OK);
     return codec_err;
   }
+  ctx->cpi->common.error.setjmp = 1;
 
   ctx->cfg = *cfg;
   set_encoder_config(&ctx->oxcf, &ctx->cfg, &ctx->extra_cfg);
@@ -1372,22 +1375,13 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
           timebase_units_to_ticks(timestamp_ratio, pts + duration);
       res = image2yuvconfig(img, &sd);
 
-      if (sd.y_width != ctx->cfg.g_w || sd.y_height != ctx->cfg.g_h) {
-        /* from vpx_encoder.h for g_w/g_h:
-           "Note that the frames passed as input to the encoder must have this
-           resolution"
-        */
-        ctx->base.err_detail = "Invalid input frame resolution";
-        res = VPX_CODEC_INVALID_PARAM;
-      } else {
-        // Store the original flags in to the frame buffer. Will extract the
-        // key frame flag when we actually encode this frame.
-        if (vp9_receive_raw_frame(cpi, flags | ctx->next_frame_flags, &sd,
+      // Store the original flags in to the frame buffer. Will extract the
+      // key frame flag when we actually encode this frame.
+      if (vp9_receive_raw_frame(cpi, flags | ctx->next_frame_flags, &sd,
                                 dst_time_stamp, dst_end_time_stamp)) {
-          res = update_error_state(ctx, &cpi->common.error);
-        }
-        ctx->next_frame_flags = 0;
+        res = update_error_state(ctx, &cpi->common.error);
       }
+      ctx->next_frame_flags = 0;
     }
 
     cx_data = ctx->cx_data;
@@ -1640,13 +1634,9 @@ static vpx_codec_err_t ctrl_set_roi_map(vpx_codec_alg_priv_t *ctx,
 
   if (data) {
     vpx_roi_map_t *roi = (vpx_roi_map_t *)data;
-
-    if (!vp9_set_roi_map(ctx->cpi, roi->roi_map, roi->rows, roi->cols,
-                         roi->delta_q, roi->delta_lf, roi->skip,
-                         roi->ref_frame)) {
-      return VPX_CODEC_OK;
-    }
-    return VPX_CODEC_INVALID_PARAM;
+    return vp9_set_roi_map(ctx->cpi, roi->roi_map, roi->rows, roi->cols,
+                           roi->delta_q, roi->delta_lf, roi->skip,
+                           roi->ref_frame);
   }
   return VPX_CODEC_INVALID_PARAM;
 }
@@ -1794,6 +1784,24 @@ static vpx_codec_err_t ctrl_get_svc_ref_frame_config(vpx_codec_alg_priv_t *ctx,
     data->update_golden[sl] = cpi->svc.update_golden[sl];
     data->update_alt_ref[sl] = cpi->svc.update_altref[sl];
   }
+  return VPX_CODEC_OK;
+}
+
+static vpx_codec_err_t ctrl_get_tpl_stats(vpx_codec_alg_priv_t *ctx,
+                                          va_list args) {
+  VP9_COMP *const cpi = ctx->cpi;
+  VpxTplGopStats *data = va_arg(args, VpxTplGopStats *);
+  VpxTplFrameStats *frame_stats_list = cpi->tpl_gop_stats.frame_stats_list;
+  int i;
+  if (data == NULL) {
+    return VPX_CODEC_INVALID_PARAM;
+  }
+  data->size = cpi->tpl_gop_stats.size;
+
+  for (i = 0; i < data->size; i++) {
+    data->frame_stats_list[i] = frame_stats_list[i];
+  }
+
   return VPX_CODEC_OK;
 }
 
@@ -2044,6 +2052,7 @@ static vpx_codec_ctrl_fn_map_t encoder_ctrl_maps[] = {
   { VP9E_GET_ACTIVEMAP, ctrl_get_active_map },
   { VP9E_GET_LEVEL, ctrl_get_level },
   { VP9E_GET_SVC_REF_FRAME_CONFIG, ctrl_get_svc_ref_frame_config },
+  { VP9E_GET_TPL_STATS, ctrl_get_tpl_stats },
 
   { -1, NULL },
 };

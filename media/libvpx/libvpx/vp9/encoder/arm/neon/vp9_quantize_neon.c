@@ -50,7 +50,7 @@ static VPX_FORCE_INLINE int16x8_t get_max_lane_eob(const int16_t *iscan_ptr,
 }
 
 static VPX_FORCE_INLINE uint16_t get_max_eob(int16x8_t v_eobmax) {
-#ifdef __aarch64__
+#if VPX_ARCH_AARCH64
   return (uint16_t)vmaxvq_s16(v_eobmax);
 #else
   const int16x4_t v_eobmax_3210 =
@@ -65,7 +65,7 @@ static VPX_FORCE_INLINE uint16_t get_max_eob(int16x8_t v_eobmax) {
       vmax_s16(v_eobmax_tmp, vreinterpret_s16_s64(v_eobmax_xxx3));
 
   return (uint16_t)vget_lane_s16(v_eobmax_final, 0);
-#endif  // __aarch64__
+#endif  // VPX_ARCH_AARCH64
 }
 
 static VPX_FORCE_INLINE void load_fp_values(const int16_t *round_ptr,
@@ -81,7 +81,7 @@ static VPX_FORCE_INLINE void load_fp_values(const int16_t *round_ptr,
 static VPX_FORCE_INLINE void update_fp_values(int16x8_t *v_round,
                                               int16x8_t *v_quant,
                                               int16x8_t *v_dequant) {
-#ifdef __aarch64__
+#if VPX_ARCH_AARCH64
   *v_round = vdupq_laneq_s16(*v_round, 1);
   *v_quant = vdupq_laneq_s16(*v_quant, 1);
   *v_dequant = vdupq_laneq_s16(*v_dequant, 1);
