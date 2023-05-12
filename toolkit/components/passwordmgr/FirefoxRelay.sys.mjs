@@ -33,6 +33,12 @@ const gConfig = (function() {
       "signon.firefoxRelay.manage_url"
     ),
     relayFeaturePref: "signon.firefoxRelay.feature",
+    termsOfServiceUrl: Services.urlFormatter.formatURLPref(
+      "signon.firefoxRelay.terms_of_service_url"
+    ),
+    privacyPolicyUrl: Services.urlFormatter.formatURLPref(
+      "signon.firefoxRelay.privacy_policy_url"
+    ),
   };
 })();
 
@@ -291,6 +297,10 @@ async function showReusableMasksAsync(browser, origin, error) {
           notification.remove();
           lazy.log.info("Reusing Relay mask");
           fillUsername(mask.full_address);
+          showConfirmation(
+            browser,
+            "confirmation-hint-firefox-relay-mask-reused"
+          );
           FirefoxRelayTelemetry.recordRelayReusePanelEvent(
             "reuse_mask",
             FirefoxRelay.flowId
@@ -369,7 +379,7 @@ async function generateUsernameAsync(browser, origin) {
   if (response.ok) {
     lazy.log.info(`generated Relay mask`);
     const result = await response.json();
-    showConfirmation(browser, "confirmation-hint-firefox-relay-mask-generated");
+    showConfirmation(browser, "confirmation-hint-firefox-relay-mask-created");
     return result.full_address;
   }
 
@@ -417,8 +427,8 @@ class RelayOffered {
 
       if (this.#isRelayUser) {
         const [title, subtitle] = await formatMessages(
-          "firefox-relay-opt-in-title",
-          "firefox-relay-opt-in-subtitle"
+          "firefox-relay-opt-in-title-1",
+          "firefox-relay-opt-in-subtitle-1"
         );
         yield new ParentAutocompleteOption(
           "page-icon:https://relay.firefox.com",
@@ -459,7 +469,7 @@ class RelayOffered {
       disableStrings,
       postponeStrings,
     ] = await formatMessages(
-      "firefox-relay-opt-in-confirmation-enable",
+      "firefox-relay-opt-in-confirmation-enable-button",
       "firefox-relay-opt-in-confirmation-disable",
       "firefox-relay-opt-in-confirmation-postpone"
     );
@@ -523,17 +533,24 @@ class RelayOffered {
             case "shown":
               customizeNotificationHeader(notification);
               const document = notification.owner.panel.ownerDocument;
+              const tosLink = document.getElementById(
+                "firefox-relay-offer-tos-url"
+              );
+              tosLink.href = gConfig.termsOfServiceUrl;
+              const privacyLink = document.getElementById(
+                "firefox-relay-offer-privacy-url"
+              );
+              privacyLink.href = gConfig.privacyPolicyUrl;
               const content = document.querySelector(
                 `popupnotification[id=${notification.id}-notification] popupnotificationcontent`
               );
               const line3 = content.querySelector(
-                "[id=firefox-relay-offer-what-relay-does]"
+                "[id=firefox-relay-offer-what-relay-provides]"
               );
               document.l10n.setAttributes(
                 line3,
-                "firefox-relay-offer-what-relay-does",
+                "firefox-relay-offer-what-relay-provides",
                 {
-                  sitename: origin,
                   useremail: fxaUser.email,
                 }
               );
@@ -558,14 +575,11 @@ class RelayEnabled {
       isSignup(scenarioName) &&
       (await hasFirefoxAccountAsync())
     ) {
-      const [title, subtitle] = await formatMessages(
-        "firefox-relay-generate-mask-title",
-        "firefox-relay-generate-mask-subtitle"
-      );
+      const [title] = await formatMessages("firefox-relay-use-mask-title");
       yield new ParentAutocompleteOption(
         "page-icon:https://relay.firefox.com",
         title,
-        subtitle,
+        "", // when the user has opted-in, there is no subtitle content
         "PasswordManager:generateRelayUsername",
         {
           telemetry: {

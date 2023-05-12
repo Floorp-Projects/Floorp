@@ -170,9 +170,10 @@ add_setup(async function() {
 
   gRelayACOptionsTitles = await new Localization([
     "browser/firefoxRelay.ftl",
+    "toolkit/branding/brandings.ftl",
   ]).formatMessages([
-    "firefox-relay-opt-in-title",
-    "firefox-relay-generate-mask-title",
+    "firefox-relay-opt-in-title-1",
+    "firefox-relay-use-mask-title",
   ]);
 
   registerCleanupFunction(async () => {
