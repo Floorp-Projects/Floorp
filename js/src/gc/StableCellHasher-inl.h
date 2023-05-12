@@ -151,7 +151,10 @@ inline void RemoveUniqueId(Cell* cell) {
 }  // namespace gc
 
 static inline js::HashNumber UniqueIdToHash(uint64_t uid) {
-  return mozilla::HashGeneric(uid);
+  // This uses the default hasher which returns the lower 32 bits of 64 bit
+  // integers as the hash code. This is OK because he result will be scrambled
+  // later by ScrambleHashCode().
+  return DefaultHasher<uint64_t>::hash(uid);
 }
 
 template <typename T>
