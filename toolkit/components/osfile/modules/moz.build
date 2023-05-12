@@ -1,0 +1,29 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXTRA_JS_MODULES.osfile += [
+    "osfile_async_front.jsm",
+    "osfile_async_worker.js",
+    "osfile_native.jsm",
+    "osfile_shared_allthreads.jsm",
+    "osfile_shared_front.js",
+    "ospath.jsm",
+    "ospath_unix.jsm",
+    "ospath_win.jsm",
+]
+
+if CONFIG["OS_TARGET"] == "WINNT":
+    EXTRA_JS_MODULES.osfile += [
+        "osfile_win_allthreads.jsm",
+        "osfile_win_back.js",
+        "osfile_win_front.js",
+    ]
+else:
+    EXTRA_JS_MODULES.osfile += [
+        "osfile_unix_allthreads.jsm",
+        "osfile_unix_back.js",
+        "osfile_unix_front.js",
+    ]
