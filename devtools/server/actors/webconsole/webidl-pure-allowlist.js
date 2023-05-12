@@ -9,50 +9,11 @@
 module.exports = {
   DOMTokenList: {
     prototype: {
-      getters: ["length", "value"],
       methods: ["item", "contains"],
     },
   },
   Document: {
-    instance: {
-      getters: ["location"],
-    },
     prototype: {
-      getters: [
-        "URL",
-        "documentURI",
-        "compatMode",
-        "characterSet",
-        "charset",
-        "inputEncoding",
-        "contentType",
-        "doctype",
-        "documentElement",
-        "title",
-        "dir",
-        "body",
-        "head",
-        "images",
-        "embeds",
-        "plugins",
-        "links",
-        "forms",
-        "scripts",
-        "defaultView",
-        "currentScript",
-        "anchors",
-        "applets",
-        "all",
-        "styleSheetSets",
-        "featurePolicy",
-        "blockedNodeByClassifierCount",
-        "blockedNodesByClassifier",
-        "permDelegateHandler",
-        "children",
-        "firstElementChild",
-        "lastElementChild",
-        "childElementCount",
-      ],
       methods: [
         "getSelection",
         "hasStorageAccess",
@@ -69,25 +30,6 @@ module.exports = {
   },
   Element: {
     prototype: {
-      getters: [
-        "namespaceURI",
-        "prefix",
-        "localName",
-        "tagName",
-        "id",
-        "className",
-        "classList",
-        "part",
-        "attributes",
-        "innerHTML",
-        "outerHTML",
-        "previousElementSibling",
-        "nextElementSibling",
-        "children",
-        "firstElementChild",
-        "lastElementChild",
-        "childElementCount",
-      ],
       methods: [
         "getAttributeNames",
         "getAttribute",
@@ -121,43 +63,8 @@ module.exports = {
       methods: ["entries", "keys", "values"],
     },
   },
-  Location: {
-    instance: {
-      getters: [
-        "href",
-        "origin",
-        "protocol",
-        "host",
-        "hostname",
-        "port",
-        "pathname",
-        "search",
-        "hash",
-      ],
-    },
-  },
   Node: {
     prototype: {
-      getters: [
-        "nodeType",
-        "nodeName",
-        "baseURI",
-        "isConnected",
-        "ownerDocument",
-        "parentNode",
-        "parentElement",
-        "childNodes",
-        "firstChild",
-        "lastChild",
-        "previousSibling",
-        "nextSibling",
-        "nodeValue",
-        "textContent",
-        "flattenedTreeParentNode",
-        "isNativeAnonymous",
-        "containingShadowRoot",
-        "accessibleNode",
-      ],
       methods: [
         "getRootNode",
         "hasChildNodes",
@@ -173,7 +80,6 @@ module.exports = {
   },
   Performance: {
     prototype: {
-      getters: ["timeOrigin", "timing", "navigation", "eventCounts"],
       methods: ["now"],
     },
   },
@@ -196,23 +102,6 @@ module.exports = {
   URLSearchParams: {
     prototype: {
       methods: ["entries", "keys", "values"],
-    },
-  },
-  Window: {
-    instance: {
-      getters: [
-        "location",
-        "window",
-        "self",
-        "document",
-        "performance",
-        "browsingContext",
-        "windowUtils",
-        "windowGlobalChild",
-        "visualViewport",
-        "caches",
-        "scheduler",
-      ],
     },
   },
 };
