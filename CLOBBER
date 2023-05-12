@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1828517 - (fix-a138c6c8a5) handle file moves in BUILD.gn
+Modified build files in third_party/libwebrtc - Bug 1828517 - Vendor libwebrtc from 612872b29d
