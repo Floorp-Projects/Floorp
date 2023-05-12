@@ -6,6 +6,9 @@
 
 import { onToggleContainer } from "./helpers.mjs";
 
+const { SyncedTabsErrorHandler } = ChromeUtils.importESModule(
+  "resource:///modules/firefox-view-synced-tabs-error-handler.sys.mjs"
+);
 const { TabsSetupFlowManager } = ChromeUtils.importESModule(
   "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
 );
@@ -91,14 +94,15 @@ class TabPickupContainer extends HTMLDetailsElement {
       return;
     }
     if (event.type == "click" && event.target.dataset.action) {
+      const { ErrorType } = SyncedTabsErrorHandler;
       switch (event.target.dataset.action) {
-        case "view0-sync-error-action":
-        case "view0-network-offline-action":
-        case "view0-password-locked-action": {
+        case `view0-${ErrorType.SYNC_ERROR}-action`:
+        case `view0-${ErrorType.NETWORK_OFFLINE}-action`:
+        case `view0-${ErrorType.PASSWORD_LOCKED}-action`: {
           TabsSetupFlowManager.tryToClearError();
           break;
         }
-        case "view0-signed-out-action":
+        case `view0-${ErrorType.SIGNED_OUT}-action`:
         case "view1-primary-action": {
           TabsSetupFlowManager.openFxASignup(event.target.ownerGlobal);
           break;
@@ -120,7 +124,7 @@ class TabPickupContainer extends HTMLDetailsElement {
           TabsSetupFlowManager.dismissMobileConfirmation(event.target);
           break;
         }
-        case "view0-sync-disconnected-action": {
+        case `view0-${ErrorType.SYNC_DISCONNECTED}-action`: {
           const win = event.target.ownerGlobal;
           const {
             switchToTabHavingURI,
@@ -170,7 +174,7 @@ class TabPickupContainer extends HTMLDetailsElement {
     stateIndex = TabsSetupFlowManager.uiStateIndex,
     showMobilePromo = TabsSetupFlowManager.shouldShowMobilePromo,
     showMobilePairSuccess = TabsSetupFlowManager.shouldShowMobileConnectedSuccess,
-    errorState = TabsSetupFlowManager.getErrorType(),
+    errorState = SyncedTabsErrorHandler.getErrorType(),
     waitingForTabs = TabsSetupFlowManager.waitingForTabs,
   } = {}) {
     let needsRender = false;
@@ -202,53 +206,6 @@ class TabPickupContainer extends HTMLDetailsElement {
   }
 
   generateErrorMessage() {
-    // We map the error state strings to Fluent string IDs so that it's easier
-    // to change strings in the future without having to update all of the
-    // error state strings.
-    const errorStateStringMappings = {
-      "sync-error": {
-        header: "firefoxview-tabpickup-sync-error-header",
-        description: "firefoxview-tabpickup-generic-sync-error-description",
-        buttonLabel: "firefoxview-tabpickup-sync-error-primarybutton",
-      },
-
-      "fxa-admin-disabled": {
-        header: "firefoxview-tabpickup-fxa-admin-disabled-header",
-        description: "firefoxview-tabpickup-fxa-admin-disabled-description",
-        // The button is hidden for this errorState, so we don't include the
-        // buttonLabel property.
-      },
-
-      "network-offline": {
-        header: "firefoxview-tabpickup-network-offline-header",
-        description: "firefoxview-tabpickup-network-offline-description",
-        buttonLabel: "firefoxview-tabpickup-network-offline-primarybutton",
-      },
-
-      "sync-disconnected": {
-        header: "firefoxview-tabpickup-sync-disconnected-header",
-        description: "firefoxview-tabpickup-sync-disconnected-description",
-        buttonLabel: "firefoxview-tabpickup-sync-disconnected-primarybutton",
-      },
-
-      "password-locked": {
-        header: "firefoxview-tabpickup-password-locked-header",
-        description: "firefoxview-tabpickup-password-locked-description",
-        buttonLabel: "firefoxview-tabpickup-password-locked-primarybutton",
-        link: {
-          label: "firefoxview-tabpickup-password-locked-link",
-          href:
-            Services.urlFormatter.formatURLPref("app.support.baseURL") +
-            "primary-password-stored-logins",
-        },
-      },
-      "signed-out": {
-        header: "firefoxview-tabpickup-signed-out-header",
-        description: "firefoxview-tabpickup-signed-out-description",
-        buttonLabel: "firefoxview-tabpickup-signed-out-primarybutton",
-      },
-    };
-
     const errorStateHeader = this.querySelector(
       "#tabpickup-steps-view0-header"
     );
@@ -257,7 +214,9 @@ class TabPickupContainer extends HTMLDetailsElement {
     );
     const errorStateButton = this.querySelector("#error-state-button");
     const errorStateLink = this.querySelector("#error-state-link");
-    const errorStateProperties = errorStateStringMappings[this.errorState];
+    const errorStateProperties = SyncedTabsErrorHandler.getFluentStringsForErrorType(
+      this.errorState
+    );
 
     document.l10n.setAttributes(errorStateHeader, errorStateProperties.header);
     document.l10n.setAttributes(
