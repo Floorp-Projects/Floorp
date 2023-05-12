@@ -2025,30 +2025,6 @@ metrics:
     metadata:
       tags:
         - Telemetry
-  toolbar_position:
-    type: string
-    lifetime: application
-    description: |
-      A string that indicates the new position of the toolbar TOP or BOTTOM
-    send_in_pings:
-      - metrics
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/6054
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/6608
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/20517#pullrequestreview-718069041
-      - https://github.com/mozilla-mobile/fenix/pull/23453#issuecomment-1024694220
-      - https://github.com/mozilla-mobile/fenix/pull/28502
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 124
-    metadata:
-      tags:
-        - Toolbar
   close_tab_setting:
     type: string
     lifetime: application
