@@ -315,15 +315,15 @@ WebRenderBridgeParent::WebRenderBridgeParent(
   if (IsRootWebRenderBridgeParent()) {
     MOZ_ASSERT(!mCompositorScheduler);
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
+    UpdateDebugFlags();
+    UpdateQualitySettings();
+    UpdateProfilerUI();
+    UpdateParameters();
+    // Start with the cached bool parameter bits inverted so that we update them
+    // all.
+    mBoolParameterBits = ~gfxVars::WebRenderBoolParameters();
+    UpdateBoolParameters();
   }
-  UpdateDebugFlags();
-  UpdateQualitySettings();
-  UpdateProfilerUI();
-  UpdateParameters();
-  // Start with the cached bool parameter bits inverted so that we update
-  // them all.
-  mBoolParameterBits = ~gfxVars::WebRenderBoolParameters();
-  UpdateBoolParameters();
 }
 
 WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId,
@@ -1618,21 +1618,40 @@ void WebRenderBridgeParent::DisableNativeCompositor() {
 }
 
 void WebRenderBridgeParent::UpdateQualitySettings() {
+  if (!IsRootWebRenderBridgeParent()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return;
+  }
   wr::TransactionBuilder txn(mApi);
   txn.UpdateQualitySettings(gfxVars::ForceSubpixelAAWherePossible());
   mApi->SendTransaction(txn);
 }
 
 void WebRenderBridgeParent::UpdateDebugFlags() {
+  if (!IsRootWebRenderBridgeParent()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return;
+  }
+
   mApi->UpdateDebugFlags(gfxVars::WebRenderDebugFlags());
 }
 
 void WebRenderBridgeParent::UpdateProfilerUI() {
+  if (!IsRootWebRenderBridgeParent()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return;
+  }
+
   nsCString uiString = gfxVars::GetWebRenderProfilerUIOrDefault();
   mApi->SetProfilerUI(uiString);
 }
 
 void WebRenderBridgeParent::UpdateParameters() {
+  if (!IsRootWebRenderBridgeParent()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return;
+  }
+
   uint32_t count = gfxVars::WebRenderBatchingLookback();
   mApi->SetBatchingLookback(count);
   mApi->SetInt(wr::IntParameter::BatchedUploadThreshold,
@@ -1642,6 +1661,11 @@ void WebRenderBridgeParent::UpdateParameters() {
 }
 
 void WebRenderBridgeParent::UpdateBoolParameters() {
+  if (!IsRootWebRenderBridgeParent()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return;
+  }
+
   uint32_t bits = gfxVars::WebRenderBoolParameters();
   uint32_t changedBits = mBoolParameterBits ^ bits;
 
