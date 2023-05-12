@@ -16,6 +16,11 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
+// Because Marionette supports a single session only we store its id
+// globally so that the parent actor can access it.
+// eslint-disable-next-line no-unused-vars
+let webDriverSessionId = null;
+
 export class MarionetteCommandsParent extends JSWindowActorParent {
   actorCreated() {
     this._resolveDialogOpened = null;
@@ -350,8 +355,11 @@ export function getMarionetteCommandsActorProxy(browsingContextFn) {
 
 /**
  * Register the MarionetteCommands actor that holds all the commands.
+ *
+ * @param {string} sessionId
+ *     The id of the current WebDriver session.
  */
-export function registerCommandsActor() {
+export function registerCommandsActor(sessionId) {
   try {
     ChromeUtils.registerWindowActor("MarionetteCommands", {
       kind: "JSWindowActor",
@@ -374,8 +382,12 @@ export function registerCommandsActor() {
       throw e;
     }
   }
+
+  webDriverSessionId = sessionId;
 }
 
 export function unregisterCommandsActor() {
+  webDriverSessionId = null;
+
   ChromeUtils.unregisterWindowActor("MarionetteCommands");
 }

@@ -201,9 +201,13 @@ export class WebDriverSession {
     }
 
     lazy.registerProcessDataActor();
+
+    webDriverSessions.set(this.id, this);
   }
 
   destroy() {
+    webDriverSessions.delete(this.id);
+
     lazy.allowAllCerts.disable();
 
     // Close all open connections which unregister themselves.
@@ -346,3 +350,18 @@ export class WebDriverSession {
     return ChromeUtils.generateQI(["nsIHttpRequestHandler"]);
   }
 }
+
+/**
+ *
+ * @param {string} sessionId
+ *     The ID of the WebDriver session to retrieve.
+ *
+ * @returns {WebDriverSession}
+ *     The WebDriver session.
+ */
+export function getWebDriverSessionById(sessionId) {
+  return webDriverSessions.get(sessionId);
+}
+
+// Global singleton that holds active WebDriver sessions
+const webDriverSessions = new Map();
