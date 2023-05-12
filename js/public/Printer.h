@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_Printer_h
-#define vm_Printer_h
+#ifndef js_Printer_h
+#define js_Printer_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Range.h"
@@ -27,7 +27,7 @@ class LifoAlloc;
 // This class is useful to make generic printers which can work either with a
 // file backend, with a buffer allocated with an JSContext or a link-list
 // of chunks allocated with a LifoAlloc.
-class GenericPrinter {
+class JS_PUBLIC_API GenericPrinter {
  protected:
   bool hadOOM_;  // whether reportOutOfMemory() has been called.
 
@@ -55,7 +55,7 @@ class GenericPrinter {
 };
 
 // Sprintf, but with unlimited and automatically allocated buffering.
-class Sprinter final : public GenericPrinter {
+class JS_PUBLIC_API Sprinter final : public GenericPrinter {
  public:
   struct InvariantChecker {
     const Sprinter* parent;
@@ -134,7 +134,7 @@ class Sprinter final : public GenericPrinter {
 };
 
 // Fprinter, print a string directly into a file.
-class Fprinter final : public GenericPrinter {
+class JS_PUBLIC_API Fprinter final : public GenericPrinter {
  private:
   FILE* file_;
   bool init_;
@@ -164,7 +164,7 @@ class Fprinter final : public GenericPrinter {
 // LSprinter, is similar to Sprinter except that instead of using an
 // JSContext to allocate strings, it use a LifoAlloc as a backend for the
 // allocation of the chunk of the string.
-class LSprinter final : public GenericPrinter {
+class JS_PUBLIC_API LSprinter final : public GenericPrinter {
  private:
   struct Chunk {
     Chunk* next;
@@ -205,24 +205,24 @@ extern const char js_EscapeMap[];
 // (as specified by the quote argument) are also escaped, and the quote
 // character is appended at the beginning and end of the result string.
 // The returned string is guaranteed to contain only ASCII characters.
-extern JS::UniqueChars QuoteString(JSContext* cx, JSString* str,
-                                   char quote = '\0');
+extern JS_PUBLIC_API JS::UniqueChars QuoteString(JSContext* cx, JSString* str,
+                                                 char quote = '\0');
 
 // Appends the quoted string to the given Sprinter. Follows the same semantics
 // as QuoteString from above.
-extern bool QuoteString(Sprinter* sp, JSString* str, char quote = '\0');
+extern JS_PUBLIC_API bool QuoteString(Sprinter* sp, JSString* str, char quote = '\0');
 
 // Appends the quoted string to the given Sprinter. Follows the same
 // Appends the JSON quoted string to the given Sprinter.
-extern bool JSONQuoteString(Sprinter* sp, JSString* str);
+extern JS_PUBLIC_API bool JSONQuoteString(Sprinter* sp, JSString* str);
 
 // Internal implementation code for QuoteString methods above.
 enum class QuoteTarget { String, JSON };
 
 template <QuoteTarget target, typename CharT>
-bool QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars,
-                 char quote = '\0');
+bool JS_PUBLIC_API QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars,
+                               char quote = '\0');
 
 }  // namespace js
 
-#endif  // vm_Printer_h
+#endif  // js_Printer_h

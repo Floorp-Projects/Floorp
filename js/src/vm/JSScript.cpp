@@ -51,6 +51,7 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/HeapAPI.h"               // JS::GCCellPtr
 #include "js/MemoryMetrics.h"
+#include "js/Printer.h"  // js::GenericPrinter, js::Fprinter, js::Sprinter, js::QuoteString
 #include "js/Transcoding.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"  // JS::UniqueChars
@@ -69,7 +70,6 @@
 #include "vm/JSObject.h"
 #include "vm/JSONPrinter.h"  // JSONPrinter
 #include "vm/Opcodes.h"
-#include "vm/Printer.h"  // js::GenericPrinter, js::Fprinter, js::Sprinter, js::QuoteString
 #include "vm/Scope.h"  // Scope
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/StencilEnums.h"  // TryNote, TryNoteKind, ScopeNote

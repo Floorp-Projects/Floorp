@@ -15,11 +15,11 @@
 #include "frontend/BytecodeCompiler.h"  // IsIdentifier
 #include "frontend/CompilationStencil.h"
 #include "js/GCAPI.h"           // JS::AutoSuppressGCAnalysis
+#include "js/Printer.h"         // Sprinter, QuoteString
 #include "util/StringBuffer.h"  // StringBuffer
 #include "util/Text.h"          // AsciiDigitToNumber
 #include "util/Unicode.h"
 #include "vm/JSContext.h"
-#include "vm/Printer.h"  // Sprinter, QuoteString
 #include "vm/Runtime.h"
 #include "vm/SelfHosting.h"  // ExtendedUnclonedSelfHostedFunctionNamePrefix
 #include "vm/StaticStrings.h"
