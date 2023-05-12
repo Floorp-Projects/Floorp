@@ -60,6 +60,13 @@ add_task(async () => {
 
     var testCanvasContext = document.createElement("canvas").getContext("2d");
 
+    var objWithNativeGetter = {};
+    Object.defineProperty(objWithNativeGetter, "print", { get: print });
+    Object.defineProperty(objWithNativeGetter, "Element", { get: Element });
+    Object.defineProperty(objWithNativeGetter, "setAttribute", { get: Element.prototype.setAttribute });
+    Object.defineProperty(objWithNativeGetter, "setClassName", { get: Object.getOwnPropertyDescriptor(Element.prototype, "className").set });
+    Object.defineProperty(objWithNativeGetter, "requestPermission", { get: Notification.requestPermission });
+
     async function testAsync() { return 10; }
     async function testAsyncAwait() { await 1; return 10; }
     async function * testAsyncGen() { return 10; }
@@ -89,6 +96,7 @@ add_task(async () => {
   await doEagerEvalWithSideEffectMonkeyPatched(commands);
   await doEagerEvalESGetters(commands);
   await doEagerEvalDOMGetters(commands);
+  await doEagerEvalOtherNativeGetters(commands);
   await doEagerEvalAsyncFunctions(commands);
 
   await commands.destroy();
@@ -952,6 +960,46 @@ async function doEagerEvalDOMGetters(commands) {
       {
         input: code,
         result: expectedResult,
+      },
+      code
+    );
+
+    ok(!response.exception, "no eval exception");
+    ok(!response.helperResult, "no helper result");
+  }
+}
+
+async function doEagerEvalOtherNativeGetters(commands) {
+  // DOM getter functions are allowed to be eagerly-evaluated.
+  // Test the situation where non-DOM-getter function is called by accessing
+  // getter.
+  //
+  // "being a DOM getter" is tested by checking if the native function has
+  // JSJitInfo and it's marked as getter.
+  const testData = [
+    // Has no JitInfo.
+    "objWithNativeGetter.print",
+    "objWithNativeGetter.Element",
+
+    // Not marked as getter, but method.
+    "objWithNativeGetter.getAttribute",
+
+    // Not marked as getter, but setter.
+    "objWithNativeGetter.setClassName",
+
+    // Not marked as getter, but static method.
+    "objWithNativeGetter.requestPermission",
+  ];
+
+  for (const code of testData) {
+    const response = await commands.scriptCommand.execute(code, {
+      eager: true,
+    });
+    checkObject(
+      response,
+      {
+        input: code,
+        result: { type: "undefined" },
       },
       code
     );
