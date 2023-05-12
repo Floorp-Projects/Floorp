@@ -173,6 +173,7 @@ EXPORTS.js += [
     "../public/Object.h",
     "../public/OffThreadScriptCompilation.h",
     "../public/Principals.h",
+    "../public/Printer.h",
     "../public/Printf.h",
     "../public/ProfilingCategory.h",
     "../public/ProfilingFrameIterator.h",

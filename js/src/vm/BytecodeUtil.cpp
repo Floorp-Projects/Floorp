@@ -32,6 +32,7 @@
 #include "js/experimental/PCCountProfiling.h"  // JS::{Start,Stop}PCCountProfiling, JS::PurgePCCounts, JS::GetPCCountScript{Count,Summary,Contents}
 #include "js/friend/DumpFunctions.h"           // js::DumpPC, js::DumpScript
 #include "js/friend/ErrorMessages.h"           // js::GetErrorMessage, JSMSG_*
+#include "js/Printer.h"
 #include "js/Printf.h"
 #include "js/Symbol.h"
 #include "util/DifferentialTesting.h"
@@ -50,7 +51,6 @@
 #include "vm/JSONPrinter.h"
 #include "vm/JSScript.h"
 #include "vm/Opcodes.h"
-#include "vm/Printer.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"
 #include "vm/ToSource.h"       // js::ValueToSource

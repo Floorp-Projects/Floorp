@@ -26,7 +26,8 @@
 #include "js/GCVector.h"          // JS::RootedVector
 #include "js/HeapAPI.h"           // JS::GCCellPtr, js::gc::IsInsideNursery
 #include "js/Id.h"                // JS::PropertyKey
-#include "js/RootingAPI.h"        // JS::Handle, JS::Rooted
+#include "js/Printer.h"     // js::GenericPrinter, js::QuoteString, js::Sprinter
+#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
 #include "js/TracingAPI.h"        // JS::CallbackTracer, JS_GetTraceThingInfo
 #include "js/UbiNode.h"           // JS::ubi::Node
 #include "js/Value.h"             // JS::Value
@@ -38,7 +39,6 @@
 #include "vm/JSFunction.h"        // JSFunction
 #include "vm/JSObject.h"          // JSObject
 #include "vm/JSScript.h"          // JSScript
-#include "vm/Printer.h"     // js::GenericPrinter, js::QuoteString, js::Sprinter
 #include "vm/Realm.h"       // JS::Realm
 #include "vm/Runtime.h"     // JSRuntime
 #include "vm/Scope.h"       // js::PositionalFormalParameterIter
