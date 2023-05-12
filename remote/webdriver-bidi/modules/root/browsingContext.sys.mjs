@@ -4,7 +4,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys.mjs";
+import { RootBiDiModule } from "chrome://remote/content/webdriver-bidi/modules/RootBiDiModule.sys.mjs";
 
 const lazy = {};
 
@@ -63,7 +63,7 @@ const WaitCondition = {
   Complete: "complete",
 };
 
-class BrowsingContextModule extends Module {
+class BrowsingContextModule extends RootBiDiModule {
   #contextListener;
   #subscribedEvents;
 
