@@ -79,6 +79,9 @@ class nsFocusManager final : public nsIFocusManager,
    * pointer filled in to an out-parameter).
    */
   mozilla::dom::Element* GetFocusedElement() { return mFocusedElement; }
+  static mozilla::dom::Element* GetFocusedElementStatic() {
+    return sInstance ? sInstance->GetFocusedElement() : nullptr;
+  }
 
   /**
    * Returns true if aContent currently has focus.
