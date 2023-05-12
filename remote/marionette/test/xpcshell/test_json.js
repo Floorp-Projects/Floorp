@@ -5,7 +5,7 @@ const { NodeCache } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/NodeCache.sys.mjs"
 );
 const { ShadowRoot, WebElement, WebReference } = ChromeUtils.importESModule(
-  "chrome://remote/content/marionette/element.sys.mjs"
+  "chrome://remote/content/marionette/web-reference.sys.mjs"
 );
 
 function setupTest() {

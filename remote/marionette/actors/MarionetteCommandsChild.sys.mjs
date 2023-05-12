@@ -12,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
   action: "chrome://remote/content/shared/webdriver/Actions.sys.mjs",
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
-  element: "chrome://remote/content/marionette/element.sys.mjs",
+  element: "chrome://remote/content/shared/webdriver/Element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   evaluate: "chrome://remote/content/marionette/evaluate.sys.mjs",
   interaction: "chrome://remote/content/marionette/interaction.sys.mjs",
@@ -21,7 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   sandbox: "chrome://remote/content/marionette/evaluate.sys.mjs",
   Sandboxes: "chrome://remote/content/marionette/evaluate.sys.mjs",
-  WebReference: "chrome://remote/content/marionette/element.sys.mjs",
+  WebReference: "chrome://remote/content/marionette/web-reference.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
