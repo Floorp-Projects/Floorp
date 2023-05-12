@@ -17,13 +17,15 @@ rtcrtpsender:
       The number of RTCRtpSenders created.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   count_setparameters_compat:
     type: counter
@@ -32,13 +34,15 @@ rtcrtpsender:
       setParameters.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   used_sendencodings:
     type: rate
@@ -48,13 +52,15 @@ rtcrtpsender:
     denominator_metric: rtcrtpsender.count
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
 rtcrtpsender.setparameters:
   warn_no_getparameters:
@@ -67,13 +73,15 @@ rtcrtpsender.setparameters:
     denominator_metric: rtcrtpsender.count_setparameters_compat
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   blame_no_getparameters:
     type: labeled_counter
@@ -101,13 +109,15 @@ rtcrtpsender.setparameters:
     denominator_metric: rtcrtpsender.count_setparameters_compat
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   blame_length_changed:
     type: labeled_counter
@@ -153,13 +163,15 @@ rtcrtpsender.setparameters:
     denominator_metric: rtcrtpsender.count_setparameters_compat
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   blame_no_transactionid:
     type: labeled_counter
@@ -186,13 +198,15 @@ rtcrtpsender.setparameters:
     denominator_metric: rtcrtpsender.count_setparameters_compat
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   blame_stale_transactionid:
     type: labeled_counter
@@ -219,13 +233,15 @@ rtcrtpsender.setparameters:
     denominator_metric: rtcrtpsender.count
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   fail_rid_changed:
     type: rate
@@ -237,13 +253,15 @@ rtcrtpsender.setparameters:
     denominator_metric: rtcrtpsender.count
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   fail_no_getparameters:
     type: rate
@@ -254,13 +272,15 @@ rtcrtpsender.setparameters:
     denominator_metric: rtcrtpsender.count
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   fail_no_transactionid:
     type: rate
@@ -270,13 +290,15 @@ rtcrtpsender.setparameters:
     denominator_metric: rtcrtpsender.count
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   fail_stale_transactionid:
     type: rate
@@ -286,13 +308,15 @@ rtcrtpsender.setparameters:
     denominator_metric: rtcrtpsender.count
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   fail_no_encodings:
     type: rate
@@ -305,13 +329,15 @@ rtcrtpsender.setparameters:
     denominator_metric: rtcrtpsender.count_setparameters_compat
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
 
   fail_other:
     type: rate
@@ -321,10 +347,12 @@ rtcrtpsender.setparameters:
     denominator_metric: rtcrtpsender.count
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1832459
     data_sensitivity:
       - technical
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
+    expires: 120
