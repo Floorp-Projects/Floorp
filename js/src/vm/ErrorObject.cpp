@@ -61,7 +61,7 @@ using namespace js;
 
 #define IMPLEMENT_ERROR_PROTO_CLASS(name)                         \
   {                                                               \
-#    name ".prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_##name), \
+    #name ".prototype", JSCLASS_HAS_CACHED_PROTO(JSProto_##name), \
         JS_NULL_CLASS_OPS,                                        \
         &ErrorObject::classSpecs[JSProto_##name - JSProto_Error]  \
   }
@@ -150,7 +150,7 @@ const ClassSpec ErrorObject::classSpecs[JSEXN_ERROR_LIMIT] = {
 
 #define IMPLEMENT_ERROR_CLASS_CORE(name, reserved_slots)         \
   {                                                              \
-#    name,                                                       \
+    #name,                                                       \
         JSCLASS_HAS_CACHED_PROTO(JSProto_##name) |               \
             JSCLASS_HAS_RESERVED_SLOTS(reserved_slots) |         \
             JSCLASS_BACKGROUND_FINALIZE,                         \
@@ -247,7 +247,8 @@ static ErrorObject* CreateErrorObject(JSContext* cx, const CallArgs& args,
     fileName = cx->runtime()->emptyString;
     if (!iter.done()) {
       if (const char* cfilename = iter.filename()) {
-        fileName = JS_NewStringCopyZ(cx, cfilename);
+        fileName = JS_NewStringCopyUTF8Z(
+            cx, JS::ConstUTF8CharsZ(cfilename, strlen(cfilename)));
       }
       if (iter.hasScript()) {
         sourceId = iter.script()->scriptSource()->id();
@@ -571,7 +572,8 @@ JSErrorReport* js::ErrorObject::getOrCreateErrorReport(JSContext* cx) {
   report.exnType = type_;
 
   // Filename.
-  UniqueChars filenameStr = JS_EncodeStringToLatin1(cx, fileName(cx));
+  RootedString filename(cx, fileName(cx));
+  UniqueChars filenameStr = JS_EncodeStringToUTF8(cx, filename);
   if (!filenameStr) {
     return nullptr;
   }

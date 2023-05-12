@@ -9,7 +9,7 @@
 #include <stdint.h>  // uint32_t
 
 #include "jsapi.h"                 // JS_NewPlainObject, JS_WrapValue
-#include "js/CharacterEncoding.h"  // JS_EncodeStringToLatin1
+#include "js/CharacterEncoding.h"  // JS_EncodeStringToUTF8
 #include "js/CompileOptions.h"     // JS::CompileOptions
 #include "js/Conversions.h"  // JS::ToBoolean, JS::ToString, JS::ToUint32, JS::ToInt32
 #include "js/PropertyAndElement.h"  // JS_GetProperty, JS_DefineProperty
@@ -50,7 +50,7 @@ bool js::ParseCompileOptions(JSContext* cx, JS::CompileOptions& options,
       return false;
     }
     if (fileNameBytes) {
-      *fileNameBytes = JS_EncodeStringToLatin1(cx, s);
+      *fileNameBytes = JS_EncodeStringToUTF8(cx, s);
       if (!*fileNameBytes) {
         return false;
       }
