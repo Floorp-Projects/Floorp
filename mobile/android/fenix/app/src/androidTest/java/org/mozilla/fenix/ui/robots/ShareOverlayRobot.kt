@@ -11,19 +11,24 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.BundleMatchers
 import androidx.test.espresso.intent.matcher.IntentMatchers
-import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
 class ShareOverlayRobot {
@@ -46,7 +51,40 @@ class ShareOverlayRobot {
     }
 
     // This function verifies the share layout when a single tab is shared - no tab info shown
-    fun verifyShareTabLayout() = assertShareTabLayout()
+    fun verifyShareTabLayout() {
+        assertItemWithResIdExists(
+            // Share layout
+            itemWithResId("$packageName:id/sharingLayout"),
+            // Send to device section
+            itemWithResId("$packageName:id/devicesList"),
+            // Recently used section
+            itemWithResId("$packageName:id/recentAppsContainer"),
+            // All actions sections
+            itemWithResId("$packageName:id/appsList"),
+        )
+        assertItemWithResIdAndTextExists(
+            // Send to device header
+            itemWithResIdContainingText(
+                "$packageName:id/accountHeaderText",
+                getStringResource(R.string.share_device_subheader),
+            ),
+            // Recently used header
+            itemWithResIdContainingText(
+                "$packageName:id/recent_apps_link_header",
+                getStringResource(R.string.share_link_recent_apps_subheader),
+            ),
+            // All actions header
+            itemWithResIdContainingText(
+                "$packageName:id/apps_link_header",
+                getStringResource(R.string.share_link_all_apps_subheader),
+            ),
+        )
+
+        assertItemContainingTextExists(
+            // Save as PDF button
+            itemContainingText(getStringResource(R.string.share_save_to_pdf)),
+        )
+    }
 
     // this verifies the Android sharing layout - not customized for sharing tabs
     fun verifyAndroidShareLayout() {
@@ -60,10 +98,6 @@ class ShareOverlayRobot {
             verifySharedTabsIntent(content, subject)
         }
     }
-
-    fun verifySendToDeviceTitle() = assertSendToDeviceTitle()
-
-    fun verifyShareALinkTitle() = assertShareALinkTitle()
 
     fun verifySharedTabsIntent(text: String, subject: String) {
         Intents.intended(
@@ -112,29 +146,3 @@ fun shareOverlay(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Tran
     ShareOverlayRobot().interact()
     return ShareOverlayRobot.Transition()
 }
-
-private fun shareTabsLayout() = onView(withResourceName("shareWrapper"))
-
-private fun assertShareTabLayout() =
-    shareTabsLayout().check(matches(isDisplayed()))
-
-private fun sendToDeviceTitle() =
-    onView(
-        allOf(
-            withText("SEND TO DEVICE"),
-            withResourceName("accountHeaderText"),
-        ),
-    )
-
-private fun assertSendToDeviceTitle() = sendToDeviceTitle()
-    .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun shareALinkTitle() =
-    onView(
-        allOf(
-            withText("ALL ACTIONS"),
-            withResourceName("apps_link_header"),
-        ),
-    )
-
-private fun assertShareALinkTitle() = shareALinkTitle()

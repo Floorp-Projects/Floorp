@@ -209,8 +209,6 @@ class MainMenuTest {
         }.openThreeDotMenu {
         }.clickShareButton {
             verifyShareTabLayout()
-            verifySendToDeviceTitle()
-            verifyShareALinkTitle()
         }
     }
 
