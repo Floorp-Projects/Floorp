@@ -4191,17 +4191,27 @@ static bool DumpHeap(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     if (!fuzzingSafe) {
-      UniqueChars fileNameBytes = JS_EncodeStringToLatin1(cx, str);
+      UniqueChars fileNameBytes = JS_EncodeStringToUTF8(cx, str);
       if (!fileNameBytes) {
         return false;
       }
-      dumpFile = fopen(fileNameBytes.get(), "w");
+#ifdef XP_WIN
+      UniqueWideChars wideFileNameBytes =
+          JS::EncodeUtf8ToWide(cx, fileNameBytes.get());
+      if (!wideFileNameBytes) {
+        return false;
+      }
+      dumpFile = _wfopen(wideFileNameBytes.get(), L"w");
+#else
+      UniqueChars narrowFileNameBytes =
+          JS::EncodeUtf8ToNarrow(cx, fileNameBytes.get());
+      if (!narrowFileNameBytes) {
+        return false;
+      }
+      dumpFile = fopen(narrowFileNameBytes.get(), "w");
+#endif
       if (!dumpFile) {
-        fileNameBytes = JS_EncodeStringToLatin1(cx, str);
-        if (!fileNameBytes) {
-          return false;
-        }
-        JS_ReportErrorLatin1(cx, "can't open %s", fileNameBytes.get());
+        JS_ReportErrorUTF8(cx, "can't open %s", fileNameBytes.get());
         return false;
       }
     }
