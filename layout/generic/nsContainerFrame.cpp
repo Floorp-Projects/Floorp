@@ -633,7 +633,7 @@ nsresult nsContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
   if (oldParentView != newParentView) {
     // They're not so we need to reparent any child views
     aChildFrame->ReparentFrameViewTo(oldParentView->GetViewManager(),
-                                     newParentView, oldParentView);
+                                     newParentView);
   }
 
   return NS_OK;
@@ -692,7 +692,7 @@ void nsContainerFrame::ReparentFrameViewList(const nsFrameList& aChildFrameList,
 
     // They're not so we need to reparent any child views
     for (nsIFrame* f : aChildFrameList) {
-      f->ReparentFrameViewTo(viewManager, newParentView, oldParentView);
+      f->ReparentFrameViewTo(viewManager, newParentView);
     }
   }
 }
