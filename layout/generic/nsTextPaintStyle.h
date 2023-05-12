@@ -18,6 +18,10 @@
 class nsTextFrame;
 class nsPresContext;
 
+namespace mozilla {
+enum class StyleTextDecorationStyle : uint8_t;
+}
+
 /**
  * This helper object computes colors used for painting, and also IME
  * underline information. The data is computed lazily and cached as necessary.

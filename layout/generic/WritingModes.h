@@ -15,6 +15,7 @@
 
 #include "nsRect.h"
 #include "nsBidiUtils.h"
+#include "nsStyleStruct.h"
 
 // It is the caller's responsibility to operate on logical-coordinate objects
 // with matched writing modes. Failure to do so will be a runtime bug; the
