@@ -105,7 +105,7 @@ describe("sources", () => {
   it("should open a tab for the source", async () => {
     const { dispatch, getState, cx } = createStore(mockCommandClient);
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
-    dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
+    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
 
     const tabs = getSourceTabs(getState());
     expect(tabs).toHaveLength(1);
@@ -181,7 +181,7 @@ describe("sources", () => {
     const location = createLocation({ source });
 
     // set value
-    dispatch(actions.setSelectedLocation(cx, source, location));
+    dispatch(actions.setSelectedLocation(cx, location));
     expect(getSelectedLocation(getState())).toEqual({
       sourceId: source.id,
       ...location,
