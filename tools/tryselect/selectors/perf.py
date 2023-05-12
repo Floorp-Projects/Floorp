@@ -890,18 +890,31 @@ class PerfParser(CompareParser):
 
         selected_tasks |= set(mwu_task)
 
-    def check_cached_revision(base_commit=None):
+    def check_cached_revision(selected_tasks, base_commit=None):
         """
         If the base_commit parameter does not exist, remove expired cache data.
         Cache data format:
         {
-                base_commit[str]: {
+                base_commit[str]: [
+                    {
                         "base_revision_treeherder": "2b04563b5",
-                        "date": "2023-03-12"
-                }
+                        "date": "2023-03-12",
+                        "tasks": ["a-task"],
+                    },
+                    {
+                        "base_revision_treeherder": "999998888",
+                        "date": "2023-03-12",
+                        "tasks": ["b-task"],
+                    },
+                ]
         }
 
-        :param base_commit: The base commit to search
+        The list represents different pushes with different task selections.
+
+        TODO: See if we can request additional tests on a given base revision.
+
+        :param selected_tasks list: The list of tasks selected by the user
+        :param base_commit str: The base commit to search
         :return: The base_revision_treeherder if found, else None
         """
         today = datetime.now()
@@ -913,40 +926,58 @@ class PerfParser(CompareParser):
 
         with cache_file.open("r") as f:
             cache_data = json.load(f)
+
         # Remove expired cache data
         if base_commit is None:
             for cached_base_commit in list(cache_data):
-                if cache_data[cached_base_commit]["date"] < expired_date:
+                if not isinstance(cache_data[cached_base_commit], list):
+                    # TODO: Remove in the future, this is for backwards-compatibility
+                    # with the previous cache structure
                     cache_data.pop(cached_base_commit)
+                else:
+                    # Go through the pushes, and expire any that are too old
+                    new_pushes = []
+                    for push in cache_data[cached_base_commit]:
+                        if push["date"] > expired_date:
+                            new_pushes.append(push)
+                    # If no pushes are left after expiration, expire the base commit
+                    if new_pushes:
+                        cache_data[cached_base_commit] = new_pushes
+                    else:
+                        cache_data.pop(cached_base_commit)
             with cache_file.open("w") as f:
                 json.dump(cache_data, f, indent=4)
 
         cached_base_commit = cache_data.get(base_commit, None)
         if cached_base_commit:
-            return cached_base_commit["base_revision_treeherder"]
+            for push in cached_base_commit:
+                if set(selected_tasks) <= set(push["tasks"]):
+                    return push["base_revision_treeherder"]
 
-    def save_revision_treeherder(base_commit, base_revision_treeherder):
+    def save_revision_treeherder(selected_tasks, base_commit, base_revision_treeherder):
         """
         Save the base revision of treeherder to the cache.
         See "check_cached_revision" for more information about the data structure.
 
-        :param base_commit: The base commit to save
-        :param base_revision_treeherder: The base revision of treeherder to save
+        :param selected_tasks list: The list of tasks selected by the user
+        :param base_commit str: The base commit to save
+        :param base_revision_treeherder str: The base revision of treeherder to save
         :return: None
         """
         today = datetime.now().strftime("%Y-%m-%d")
         new_revision = {
             "base_revision_treeherder": base_revision_treeherder,
             "date": today,
+            "tasks": list(selected_tasks),
         }
         cache_data = {}
 
         if cache_file.is_file():
             with cache_file.open("r") as f:
                 cache_data = json.load(f)
-                cache_data[base_commit] = new_revision
+                cache_data.setdefault(base_commit, []).append(new_revision)
         else:
-            cache_data[base_commit] = new_revision
+            cache_data[base_commit] = [new_revision]
 
         with cache_file.open(mode="w") as f:
             json.dump(cache_data, f, indent=4)
@@ -1268,7 +1299,7 @@ def run(**kwargs):
     # Make sure the categories are following
     # the rules we've setup
     PerfParser.run_category_checks()
-    PerfParser.check_cached_revision()
+    PerfParser.check_cached_revision([])
 
     revisions = PerfParser.run(
         profile=kwargs.get("try_config", {}).get("gecko-profile", False),
