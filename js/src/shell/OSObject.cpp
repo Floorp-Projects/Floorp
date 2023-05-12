@@ -1026,17 +1026,35 @@ static bool os_system(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* str = JS::ToString(cx, args[0]);
+  Rooted<JSString*> str(cx, JS::ToString(cx, args[0]));
   if (!str) {
     return false;
   }
 
-  UniqueChars command = JS_EncodeStringToLatin1(cx, str);
+  UniqueChars command = JS_EncodeStringToUTF8(cx, str);
   if (!command) {
     return false;
   }
 
-  int result = system(command.get());
+#  ifdef XP_WIN
+  UniqueWideChars wideCommand = JS::EncodeUtf8ToWide(cx, command.get());
+  if (!wideCommand) {
+    return false;
+  }
+
+  // Existing streams must be explicitly flushed or closed before calling
+  // the system() function on Windows.
+  _flushall();
+
+  int result = _wsystem(wideCommand.get());
+#  else
+  UniqueChars narrowCommand = JS::EncodeUtf8ToNarrow(cx, command.get());
+  if (!narrowCommand) {
+    return false;
+  }
+
+  int result = system(narrowCommand.get());
+#  endif
   if (result == -1) {
     ReportSysError(cx, "system call failed");
     return false;
@@ -1055,13 +1073,17 @@ static bool os_spawn(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* str = JS::ToString(cx, args[0]);
+  Rooted<JSString*> str(cx, JS::ToString(cx, args[0]));
   if (!str) {
     return false;
   }
 
-  UniqueChars command = JS_EncodeStringToLatin1(cx, str);
+  UniqueChars command = JS_EncodeStringToUTF8(cx, str);
   if (!command) {
+    return false;
+  }
+  UniqueChars narrowCommand = JS::EncodeUtf8ToNarrow(cx, command.get());
+  if (!narrowCommand) {
     return false;
   }
 
@@ -1079,7 +1101,7 @@ static bool os_spawn(JSContext* cx, unsigned argc, Value* vp) {
   // We are in the child
 
   const char* cmd[] = {"sh", "-c", nullptr, nullptr};
-  cmd[2] = command.get();
+  cmd[2] = narrowCommand.get();
 
   execvp("sh", (char* const*)cmd);
   exit(1);
