@@ -409,6 +409,103 @@ DevToolsStartup.prototype = {
     if (flags.devToolsServer) {
       this.handleDevToolsServerFlag(cmdLine, flags.devToolsServer);
     }
+
+    // If Firefox is already opened, and DevTools are also already opened,
+    // try to open links passed via command line arguments.
+    if (!isInitialLaunch && this.initialized && cmdLine.length) {
+      this.checkForDebuggerLink(cmdLine);
+    }
+  },
+
+  /**
+   * Lookup in all arguments passed to firefox binary to find
+   * URLs including a precise location, like this:
+   *   https://domain.com/file.js:1:10 (URL ending with `:${line}:${number}`)
+   * When such argument exists, try to open this source and precise location
+   * in the debugger.
+   *
+   * @param {nsICommandLine} cmdLine
+   */
+  checkForDebuggerLink(cmdLine) {
+    const urlFlagIdx = cmdLine.findFlag("url", false);
+    // Bail out when there is no -url argument, or if that's last and so there is no URL after it.
+    if (urlFlagIdx == -1 && urlFlagIdx + 1 < cmdLine.length) {
+      return;
+    }
+
+    // The following code would only work if we have a top level browser window opened
+    const window = Services.wm.getMostRecentWindow("navigator:browser");
+    if (!window) {
+      return;
+    }
+
+    const urlParam = cmdLine.getArgument(urlFlagIdx + 1);
+
+    // Avoid processing valid url like:
+    //   http://foo@user:123
+    // Note that when loading `http://foo.com` the URL of the default html page will be `http://foo.com/`.
+    // So that there will always be another `/` after `https://`
+    if (
+      (urlParam.startsWith("http://") || urlParam.startsWith("https://")) &&
+      urlParam.lastIndexOf("/") <= 7
+    ) {
+      return;
+    }
+
+    let match = urlParam.match(/^(?<url>\w+:.+):(?<line>\d+):(?<column>\d+)$/);
+    if (!match) {
+      // fallback on only having the line when there is no column
+      match = urlParam.match(/^(?<url>\w+:.+):(?<line>\d+)?$/);
+      if (!match) {
+        return;
+      }
+    }
+
+    const { url, line, column } = match.groups;
+
+    // If for any reason the final url is invalid, ignore it
+    try {
+      Services.io.newURI(url);
+    } catch (e) {
+      return;
+    }
+
+    // Avoid regular Firefox code from processing this argument,
+    // otherwise we would open the source in DevTools and in a new tab.
+    //
+    // /!\ This has to be called synchronously from the call to `DevToolsStartup.handle(cmdLine)`
+    //     Otherwise the next command lines listener will interpret the argument redundantly.
+    cmdLine.removeArguments(urlFlagIdx, urlFlagIdx + 1);
+
+    // Avoid opening a new empty top level window if there is no more arguments
+    if (!cmdLine.length) {
+      cmdLine.preventDefault = true;
+    }
+
+    // Note that the following method is async and returns a promise.
+    // But the current method has to be synchronous because of cmdLine.removeArguments.
+    this.openSourceInDebugger(window, {
+      url,
+      line: parseInt(line, 10),
+      column: parseInt(column || 0, 10),
+    });
+  },
+
+  /**
+   * If DevTools and the debugger are opened, try to open the source
+   * at specified location in the debugger.
+   * Otherwise fallback by opening this location via view-source.
+   *
+   * @param {Window} window
+   *        The top level browser window into which we should open the URL.
+   * @param {String} url
+   * @param {Number} line
+   * @param {Number} column
+   */
+  async openSourceInDebugger(window, { url, line, column }) {
+    const require = this.initDevTools("CommandLine");
+    const { gDevTools } = require("devtools/client/framework/devtools");
+    await gDevTools.openSourceInDebugger(window, { url, line, column });
   },
 
   readCommandLineFlags(cmdLine) {
