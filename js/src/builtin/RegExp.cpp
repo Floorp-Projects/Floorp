@@ -495,6 +495,22 @@ bool js::IsRegExp(JSContext* cx, HandleValue value, bool* result) {
   return true;
 }
 
+// The "lastIndex" property is non-configurable, but it can be made
+// non-writable.
+static bool SetLastIndex(JSContext* cx, Handle<RegExpObject*> regexp,
+                         int32_t lastIndex) {
+  MOZ_ASSERT(lastIndex >= 0);
+
+  if (MOZ_LIKELY(RegExpObject::isInitialShape(regexp)) ||
+      regexp->lookupPure(cx->names().lastIndex)->writable()) {
+    regexp->setLastIndex(cx, lastIndex);
+    return true;
+  }
+
+  Rooted<Value> val(cx, Int32Value(lastIndex));
+  return SetProperty(cx, regexp, cx->names().lastIndex, val);
+}
+
 /* ES6 B.2.5.1. */
 MOZ_ALWAYS_INLINE bool regexp_compile_impl(JSContext* cx,
                                            const CallArgs& args) {
@@ -549,15 +565,10 @@ MOZ_ALWAYS_INLINE bool regexp_compile_impl(JSContext* cx,
 
   // The final niggling bit of step 5.
   //
-  // |regexp| is user-exposed, but if its "lastIndex" property hasn't been
-  // made non-writable, we can still use a fast path to zero it.
-  if (regexp->lookupPure(cx->names().lastIndex)->writable()) {
-    regexp->zeroLastIndex(cx);
-  } else {
-    RootedValue zero(cx, Int32Value(0));
-    if (!SetProperty(cx, regexp, cx->names().lastIndex, zero)) {
-      return false;
-    }
+  // |regexp| is user-exposed, so its "lastIndex" property might be
+  // non-writable.
+  if (!SetLastIndex(cx, regexp, 0)) {
+    return false;
   }
 
   args.rval().setObject(*regexp);
