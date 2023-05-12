@@ -116,7 +116,7 @@ class nsTreeBodyFrame final : public mozilla::SimpleXULLeafFrame,
 
   void CancelImageRequests();
 
-  void ManageReflowCallback(const nsRect& aRect, nscoord aHorzWidth);
+  void ManageReflowCallback();
 
   void DidReflow(nsPresContext*, const ReflowInput*) override;
 
@@ -567,6 +567,9 @@ class nsTreeBodyFrame final : public mozilla::SimpleXULLeafFrame,
   // The amount by which to adjust the width of the last cell.
   // This depends on whether or not the columnpicker and scrollbars are present.
   nscoord mAdjustWidth;
+
+  // Our last reflowed rect, used for invalidation, see ManageReflowCallback().
+  Maybe<nsRect> mLastReflowRect;
 
   // Cached heights and indent info.
   nsRect mInnerBox;  // 4-byte aligned
