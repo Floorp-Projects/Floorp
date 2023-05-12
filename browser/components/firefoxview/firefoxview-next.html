@@ -9,35 +9,8 @@
     <meta http-equiv="Content-Security-Policy" content="default-src resource: chrome:; object-src 'none'; img-src data: chrome:;">
     <meta name="color-scheme" content="light dark">
     <title>Firefox View Next</title>
-    <link rel="localization" href="preview/firefoxViewNext.ftl"/>
-    <link rel="stylesheet" href="chrome://browser/content/firefoxview/firefoxview-next.css">
-    <script type="module" src="chrome://browser/content/firefoxview/overview.mjs"></script>
-    <script type="module" src="chrome://browser/content/firefoxview/history.mjs"></script>
-    <script type="module" src="chrome://browser/content/firefoxview/opentabs.mjs"></script>
   </head>
 
   <body>
-    <div id="navigation">
-      <ul>
-        <li data-l10n-id="overview-navigation" page="overview"></li>
-        <li data-l10n-id="history-navigation" page="history"></li>
-        <li data-l10n-id="opentabs-navigation" page="opentabs"></li>
-      </ul>
-    </div>
-    <named-deck id="pages">
-      <view-overview name="overview">
-        <h2 data-l10n-id="history-header"></h2>
-        <div>
-          <view-history slot="history"></view-history>
-        </div>
-        <h2 data-l10n-id="opentabs-header"></h2>
-        <div>
-          <view-opentabs slot="opentabs"></view-opentabs>
-        </div>
-      </view-overview>
-      <view-history name="history"></view-history>
-      <view-opentabs name="opentabs"></view-opentabs>
-    </named-deck>
-    <script src="chrome://browser/content/firefoxview/firefoxview-next.mjs"></script>
   </body>
 </html>
