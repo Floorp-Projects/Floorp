@@ -2654,6 +2654,27 @@ impl TileCacheInstance {
         let local_to_surface = ScaleOffset::identity();
         let surface_to_device = normalized_prim_to_device;
 
+        // If this primitive is an external image, and supports being used
+        // directly by a native compositor, then lookup the external image id
+        // so we can pass that through.
+        let mut external_image_id = if flags.contains(PrimitiveFlags::SUPPORTS_EXTERNAL_COMPOSITOR_SURFACE)
+            && image_rendering == ImageRendering::Auto {
+            resource_cache.get_image_properties(api_keys[0])
+                .and_then(|properties| properties.external_image)
+                .and_then(|image| Some(image.id))
+        } else {
+            None
+        };
+
+
+        if let CompositorKind::Native { capabilities, .. } = composite_state.compositor_kind {
+            if external_image_id.is_some() &&
+               !capabilities.supports_external_compositor_surface_negative_scaling &&
+               (surface_to_device.scale.x < 0.0 || surface_to_device.scale.y < 0.0) {
+                external_image_id = None;
+            }
+        }
+
         let compositor_transform_index = composite_state.register_transform(
             local_to_surface,
             surface_to_device,
@@ -2671,18 +2692,6 @@ impl TileCacheInstance {
            surface_size.height >= MAX_COMPOSITOR_SURFACES_SIZE {
            return false;
         }
-
-        // If this primitive is an external image, and supports being used
-        // directly by a native compositor, then lookup the external image id
-        // so we can pass that through.
-        let external_image_id = if flags.contains(PrimitiveFlags::SUPPORTS_EXTERNAL_COMPOSITOR_SURFACE)
-            && image_rendering == ImageRendering::Auto {
-            resource_cache.get_image_properties(api_keys[0])
-                .and_then(|properties| properties.external_image)
-                .and_then(|image| Some(image.id))
-        } else {
-            None
-        };
 
         // When using native compositing, we need to find an existing native surface
         // handle to use, or allocate a new one. For existing native surfaces, we can
