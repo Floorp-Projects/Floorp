@@ -60,6 +60,10 @@ void JitRuntime::generateBaselineInterpreterEntryTrampoline(
     MacroAssembler& masm) {
   AutoCreatedBy acb(masm,
                     "JitRuntime::generateBaselineInterpreterEntryTrampoline");
+
+#ifdef JS_USE_LINK_REGISTER
+  masm.pushReturnAddress();
+#endif
   masm.push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
 
@@ -155,41 +159,75 @@ void JitRuntime::generateInterpreterEntryTrampoline(MacroAssembler& masm) {
     }
   }
 
+#ifdef JS_CODEGEN_ARM64
+  // Use the normal stack pointer for the initial pushes.
+  masm.SetStackPointer64(sp);
+
+  // Push lr and fp together to maintain 16-byte alignment.
+  masm.push(lr, FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
+  // Save the PSP register (r28), and a scratch (r19).
+  masm.push(r19, r28);
+
+  // Setup the PSP so we can use callWithABI below.
+  masm.SetStackPointer64(PseudoStackPointer64);
+  masm.initPseudoStackPtr();
+
+  Register arg0 = IntArgReg0;
+  Register arg1 = IntArgReg1;
+  Register scratch = r19;
+#elif defined(JS_CODEGEN_X86)
   masm.push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
 
   AllocatableRegisterSet regs(RegisterSet::Volatile());
-  LiveRegisterSet save(regs.asLiveSet());
-  masm.PushRegsInMask(save);
-
-#ifdef JS_CODEGEN_X86
-  Register temp0 = regs.takeAnyGeneral();
-  Register temp1 = regs.takeAnyGeneral();
-  Address cxAddr(FramePointer, 2 * sizeof(void*));
-  Address stateAddr(FramePointer, 3 * sizeof(void*));
-  masm.loadPtr(cxAddr, temp0);
-  masm.loadPtr(stateAddr, temp1);
-#else
-  Register temp0 = IntArgReg0;
-  Register temp1 = IntArgReg1;
-#endif
-
+  Register arg0 = regs.takeAnyGeneral();
+  Register arg1 = regs.takeAnyGeneral();
   Register scratch = regs.takeAnyGeneral();
 
-  using Fn = bool (*)(JSContext * cx, js::RunState & state);
+  // First two arguments are passed on the stack in 32-bit.
+  Address cxAddr(FramePointer, 2 * sizeof(void*));
+  Address stateAddr(FramePointer, 3 * sizeof(void*));
+  masm.loadPtr(cxAddr, arg0);
+  masm.loadPtr(stateAddr, arg1);
+#else
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
+  AllocatableRegisterSet regs(RegisterSet::Volatile());
+  regs.take(IntArgReg0);
+  regs.take(IntArgReg1);
+  Register arg0 = IntArgReg0;
+  Register arg1 = IntArgReg1;
+  Register scratch = regs.takeAnyGeneral();
+#endif
+
+  using Fn = bool (*)(JSContext* cx, js::RunState& state);
   masm.setupUnalignedABICall(scratch);
-  masm.passABIArg(temp0);  // cx
-  masm.passABIArg(temp1);  // state
+  masm.passABIArg(arg0);  // cx
+  masm.passABIArg(arg1);  // state
   masm.callWithABI<Fn, Interpret>(
       MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
-  LiveRegisterSet ignore;
-  ignore.add(ReturnReg);
-  masm.PopRegsInMaskIgnore(save, ignore);
+#ifdef JS_CODEGEN_ARM64
+  masm.syncStackPtr();
+  masm.SetStackPointer64(sp);
 
+  // Restore r28 and r19.
+  masm.pop(r28, r19);
+
+  // Restore old fp and pop lr for return.
+  masm.pop(FramePointer, lr);
+  masm.abiret();
+
+  // Reset stack pointer.
+  masm.SetStackPointer64(PseudoStackPointer64);
+#else
   masm.moveToStackPtr(FramePointer);
   masm.pop(FramePointer);
   masm.ret();
+#endif
 }
 
 JitCode* JitRuntime::generateEntryTrampolineForScript(JSContext* cx,
@@ -209,6 +247,7 @@ JitCode* JitRuntime::generateEntryTrampolineForScript(JSContext* cx,
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jctx(cx);
   StackMacroAssembler masm(cx, temp);
+  AutoCreatedBy acb(masm, "JitRuntime::generateEntryTrampolineForScript");
   PerfSpewerRangeRecorder rangeRecorder(masm);
 
   if (IsBaselineInterpreterEnabled()) {
