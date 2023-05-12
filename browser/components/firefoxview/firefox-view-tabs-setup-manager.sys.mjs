@@ -7,6 +7,7 @@
  * diverse inputs which drive the Firefox View synced tabs setup flow
  */
 
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
@@ -14,6 +15,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.sys.mjs",
   SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
+  SyncedTabsErrorHandler:
+    "resource:///modules/firefox-view-synced-tabs-error-handler.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
 });
 
@@ -28,23 +31,16 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "gNetworkLinkService",
-  "@mozilla.org/network/network-link-service;1",
-  "nsINetworkLinkService"
-);
-
 const SYNC_TABS_PREF = "services.sync.engine.tabs";
 const TOPIC_TABS_CHANGED = "services.sync.tabs.changed";
 const MOBILE_PROMO_DISMISSED_PREF =
   "browser.tabs.firefox-view.mobilePromo.dismissed";
 const LOGGING_PREF = "browser.tabs.firefox-view.logLevel";
 const TOPIC_SETUPSTATE_CHANGED = "firefox-view.setupstate.changed";
+const TOPIC_DEVICESTATE_CHANGED = "firefox-view.devicestate.changed";
 const TOPIC_DEVICELIST_UPDATED = "fxaccounts:devicelist_updated";
 const NETWORK_STATUS_CHANGED = "network:offline-status-changed";
 const SYNC_SERVICE_ERROR = "weave:service:sync:error";
-const FXA_ENABLED = "identity.fxaccounts.enabled";
 const FXA_DEVICE_CONNECTED = "fxaccounts:device_connected";
 const FXA_DEVICE_DISCONNECTED = "fxaccounts:device_disconnected";
 const SYNC_SERVICE_FINISHED = "weave:service:sync:finish";
@@ -66,10 +62,6 @@ export const TabsSetupFlowManager = new (class {
     this.setupState = new Map();
     this.resetInternalState();
     this._currentSetupStateName = "";
-    this.networkIsOnline =
-      lazy.gNetworkLinkService.linkStatusKnown &&
-      lazy.gNetworkLinkService.isLinkUp;
-    this.syncIsWorking = true;
     this.syncIsConnected = lazy.UIState.get().syncEnabled;
     this.didFxaTabOpen = false;
 
@@ -77,22 +69,7 @@ export const TabsSetupFlowManager = new (class {
       uiStateIndex: 0,
       name: "error-state",
       exitConditions: () => {
-        const fxaStatus = lazy.UIState.get().status;
-        return (
-          this.networkIsOnline &&
-          (this.syncIsWorking || this.syncHasWorked) &&
-          !Services.prefs.prefIsLocked(FXA_ENABLED) &&
-          // it's an error for sync to not be connected if we are signed-in,
-          // or for sync to be connected if the FxA status is "login_failed",
-          // which can happen if a user updates their password on another device
-          ((!this.syncIsConnected &&
-            fxaStatus !== lazy.UIState.STATUS_SIGNED_IN) ||
-            (this.syncIsConnected &&
-              fxaStatus !== lazy.UIState.STATUS_LOGIN_FAILED)) &&
-          // We treat a locked primary password as an error if we are signed-in.
-          // If the user dismisses the prompt to unlock, they can use the "Try again" button to prompt again
-          (!this.isPrimaryPasswordLocked || !this.fxaSignedIn)
-        );
+        return lazy.SyncedTabsErrorHandler.isSyncReady();
       },
     });
     this.registerSetupState({
@@ -171,7 +148,7 @@ export const TabsSetupFlowManager = new (class {
     this._didShowMobilePromo = false;
     this.abortWaitingForTabs();
 
-    this.syncHasWorked = false;
+    Services.obs.notifyObservers(null, TOPIC_DEVICESTATE_CHANGED);
 
     // keep track of what is connected so we can respond to changes
     this._deviceStateSnapshot = {
@@ -184,26 +161,6 @@ export const TabsSetupFlowManager = new (class {
 
   get isPrimaryPasswordLocked() {
     return lazy.syncUtils.mpLocked();
-  }
-
-  getErrorType() {
-    // this ordering is important for dealing with multiple errors at once
-    const errorStates = {
-      "network-offline": !this.networkIsOnline,
-      "fxa-admin-disabled": Services.prefs.prefIsLocked(FXA_ENABLED),
-      "password-locked": this.isPrimaryPasswordLocked,
-      "signed-out":
-        lazy.UIState.get().status === lazy.UIState.STATUS_LOGIN_FAILED,
-      "sync-disconnected": !this.syncIsConnected,
-      "sync-error": !this.syncIsWorking && !this.syncHasWorked,
-    };
-
-    for (let [type, value] of Object.entries(errorStates)) {
-      if (value) {
-        return type;
-      }
-    }
-    return null;
   }
 
   uninit() {
@@ -300,7 +257,7 @@ export const TabsSetupFlowManager = new (class {
         if (this._lastFxASignedIn !== this.fxaSignedIn) {
           this.onSignedInChange();
         } else {
-          this.maybeUpdateUI();
+          await this.maybeUpdateUI();
         }
         this._lastFxASignedIn = this.fxaSignedIn;
         break;
@@ -308,7 +265,7 @@ export const TabsSetupFlowManager = new (class {
         this.logger.debug("Handling observer notification:", topic, data);
         const { deviceStateChanged, deviceAdded } = await this.refreshDevices();
         if (deviceStateChanged) {
-          this.maybeUpdateUI(true);
+          await this.maybeUpdateUI(true);
         }
         if (deviceAdded && this.secondaryDeviceConnected) {
           this.logger.debug("device was added");
@@ -321,31 +278,25 @@ export const TabsSetupFlowManager = new (class {
       case FXA_DEVICE_CONNECTED:
       case FXA_DEVICE_DISCONNECTED:
         await lazy.fxAccounts.device.refreshDeviceList({ ignoreCached: true });
-        this.maybeUpdateUI(true);
+        await this.maybeUpdateUI(true);
         break;
       case SYNC_SERVICE_ERROR:
         this.logger.debug(`Handling ${SYNC_SERVICE_ERROR}`);
         if (lazy.UIState.get().status == lazy.UIState.STATUS_SIGNED_IN) {
           this.abortWaitingForTabs();
-          this.syncIsWorking = false;
-          this.maybeUpdateUI(true);
+          await this.maybeUpdateUI(true);
         }
         break;
       case NETWORK_STATUS_CHANGED:
-        this.networkIsOnline = data == "online";
         this.abortWaitingForTabs();
-        this.maybeUpdateUI(true);
+        await this.maybeUpdateUI(true);
         break;
       case SYNC_SERVICE_FINISHED:
         this.logger.debug(`Handling ${SYNC_SERVICE_FINISHED}`);
         // We intentionally leave any empty-tabs timestamp
         // as we may be still waiting for a sync that delivers some tabs
         this._waitingForNextTabSync = false;
-        if (!this.syncIsWorking) {
-          this.syncIsWorking = true;
-          this.syncHasWorked = true;
-        }
-        this.maybeUpdateUI(true);
+        await this.maybeUpdateUI(true);
         break;
       case TOPIC_TABS_CHANGED:
         this.stopWaitingForTabs();
@@ -425,7 +376,7 @@ export const TabsSetupFlowManager = new (class {
   async onSignedInChange() {
     this.logger.debug("onSignedInChange, fxaSignedIn:", this.fxaSignedIn);
     // update UI to make the state change
-    this.maybeUpdateUI(true);
+    await this.maybeUpdateUI(true);
     if (!this.fxaSignedIn) {
       // As we just signed out, ensure the waiting flag is reset for next time around
       this.abortWaitingForTabs();
@@ -454,7 +405,7 @@ export const TabsSetupFlowManager = new (class {
       );
       // give the UI an opportunity to update as secondaryDeviceConnected or
       // mobileDeviceConnected have changed value
-      this.maybeUpdateUI(true);
+      await this.maybeUpdateUI(true);
     }
 
     // If we can't get recent tabs, we need to trigger a request for them
@@ -582,7 +533,7 @@ export const TabsSetupFlowManager = new (class {
         this.logger.debug(
           "We lost a device, now claim sync hasn't worked before."
         );
-        this.syncHasWorked = false;
+        Services.obs.notifyObservers(null, TOPIC_DEVICESTATE_CHANGED);
       }
     } else {
       this.logger.debug("refreshDevices: no device state change");
@@ -593,7 +544,7 @@ export const TabsSetupFlowManager = new (class {
     };
   }
 
-  maybeUpdateUI(forceUpdate = false) {
+  async maybeUpdateUI(forceUpdate = false) {
     let nextSetupStateName = this._currentSetupStateName;
     let errorState = null;
     let stateChanged = false;
@@ -632,7 +583,11 @@ export const TabsSetupFlowManager = new (class {
         this._didShowMobilePromo = true;
       }
       if (uiStateIndex == 0) {
-        errorState = this.getErrorType();
+        // Use idleDispatch() to give observers a chance to resolve before
+        // determining the new state.
+        errorState = await PromiseUtils.idleDispatch(() =>
+          lazy.SyncedTabsErrorHandler.getErrorType()
+        );
         this.logger.debug("maybeUpdateUI, in error state:", errorState);
       }
       Services.obs.notifyObservers(null, TOPIC_SETUPSTATE_CHANGED, errorState);
