@@ -1496,7 +1496,14 @@ class ExtensionData {
       );
     }
 
-    this.#parseBrowserStyleInManifest(manifest, "options_ui", true);
+    if (manifest.options_ui) {
+      if (manifest.options_ui.open_in_tab) {
+        // browser_style:true has no effect when open_in_tab is true.
+        manifest.options_ui.browser_style = false;
+      } else {
+        this.#parseBrowserStyleInManifest(manifest, "options_ui", true);
+      }
+    }
     if (this.manifestVersion < 3) {
       this.#parseBrowserStyleInManifest(manifest, "browser_action", false);
     } else {
