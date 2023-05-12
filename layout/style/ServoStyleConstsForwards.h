@@ -198,9 +198,9 @@ using StyleIterationCompositeOperation = dom::IterationCompositeOperation;
 using StyleMatrixTransformOperator =
     nsStyleTransformMatrix::MatrixTransformOperator;
 
-#  define SERVO_ARC_TYPE(name_, type_) using Style##type_ = type_;
-#  include "mozilla/ServoArcTypeList.h"
-#  undef SERVO_ARC_TYPE
+#  define SERVO_LOCKED_ARC_TYPE(name_) struct StyleLocked##type_;
+#  include "mozilla/ServoLockedArcTypeList.h"
+#  undef SERVO_LOCKED_ARC_TYPE
 
 #  define SERVO_BOXED_TYPE(name_, type_) struct Style##type_;
 #  include "mozilla/ServoBoxedTypeList.h"

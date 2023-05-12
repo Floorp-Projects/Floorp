@@ -34,30 +34,33 @@ namespace mozilla {
 
 extern "C" {
 
-#define BASIC_RULE_FUNCS_WITHOUT_GETTER(type_)                            \
-  void Servo_##type_##_Debug(const RawServo##type_*, nsACString* result); \
-  void Servo_##type_##_GetCssText(const RawServo##type_*, nsACString* result);
+#define BASIC_RULE_FUNCS_WITHOUT_GETTER(type_)                        \
+  void Servo_##type_##_Debug(const mozilla::StyleLocked##type_*,      \
+                             nsACString* result);                     \
+  void Servo_##type_##_GetCssText(const mozilla::StyleLocked##type_*, \
+                                  nsACString* result);
 
-#define BASIC_RULE_FUNCS(type_)                                         \
-  StyleStrong<RawServo##type_##Rule> Servo_CssRules_Get##type_##RuleAt( \
-      const ServoCssRules* rules, uint32_t index, uint32_t* line,       \
-      uint32_t* column);                                                \
-  void Servo_StyleSet_##type_##RuleChanged(                             \
-      const StylePerDocumentStyleData*, const RawServo##type_##Rule*,   \
-      const StyleDomStyleSheet*, StyleRuleChangeKind);                  \
+#define BASIC_RULE_FUNCS(type_)                                           \
+  StyleStrong<mozilla::StyleLocked##type_##Rule>                          \
+      Servo_CssRules_Get##type_##RuleAt(const StyleLockedCssRules* rules, \
+                                        uint32_t index, uint32_t* line,   \
+                                        uint32_t* column);                \
+  void Servo_StyleSet_##type_##RuleChanged(                               \
+      const StylePerDocumentStyleData*, const StyleLocked##type_##Rule*,  \
+      const StyleDomStyleSheet*, StyleRuleChangeKind);                    \
   BASIC_RULE_FUNCS_WITHOUT_GETTER(type_##Rule)
 
-#define GROUP_RULE_FUNCS(type_)                            \
-  BASIC_RULE_FUNCS(type_)                                  \
-  StyleStrong<ServoCssRules> Servo_##type_##Rule_GetRules( \
-      const RawServo##type_##Rule* rule);
+#define GROUP_RULE_FUNCS(type_)                                           \
+  BASIC_RULE_FUNCS(type_)                                                 \
+  StyleStrong<mozilla::StyleLockedCssRules> Servo_##type_##Rule_GetRules( \
+      const mozilla::StyleLocked##type_##Rule* rule);
 
 BASIC_RULE_FUNCS(Style)
 BASIC_RULE_FUNCS(Import)
 BASIC_RULE_FUNCS_WITHOUT_GETTER(Keyframe)
 BASIC_RULE_FUNCS(Keyframes)
 GROUP_RULE_FUNCS(Media)
-GROUP_RULE_FUNCS(MozDocument)
+GROUP_RULE_FUNCS(Document)
 BASIC_RULE_FUNCS(Namespace)
 BASIC_RULE_FUNCS(Page)
 GROUP_RULE_FUNCS(Supports)
@@ -91,12 +94,12 @@ BASIC_SERDE_FUNCS(StyleComputedTimingFunction)
 #undef BASIC_SERDE_FUNCS
 
 void Servo_CounterStyleRule_GetDescriptorCssText(
-    const RawServoCounterStyleRule* rule, nsCSSCounterDesc desc,
+    const StyleLockedCounterStyleRule* rule, nsCSSCounterDesc desc,
     nsACString* result);
 
-bool Servo_CounterStyleRule_SetDescriptor(const RawServoCounterStyleRule* rule,
-                                          nsCSSCounterDesc desc,
-                                          const nsACString* value);
+bool Servo_CounterStyleRule_SetDescriptor(
+    const StyleLockedCounterStyleRule* rule, nsCSSCounterDesc desc,
+    const nsACString* value);
 
 }  // extern "C"
 

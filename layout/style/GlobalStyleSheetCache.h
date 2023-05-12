@@ -91,7 +91,7 @@ class GlobalStyleSheetCache final : public nsIObserver,
   struct Header {
     static constexpr uint32_t kMagic = 0x55415353;
     uint32_t mMagic;  // Must be set to kMagic.
-    const ServoCssRules* mSheets[size_t(UserAgentStyleSheetID::Count)];
+    const StyleLockedCssRules* mSheets[size_t(UserAgentStyleSheetID::Count)];
     uint8_t mBuffer[1];
   };
 

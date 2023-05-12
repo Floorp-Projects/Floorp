@@ -10,13 +10,13 @@
 #include "mozilla/css/Rule.h"
 #include "mozilla/ServoBindingTypes.h"
 
-struct RawServoCounterStyleRule;
+struct StyleLockedCounterStyleRule;
 
 namespace mozilla::dom {
 
 class CSSCounterStyleRule final : public css::Rule {
  public:
-  CSSCounterStyleRule(already_AddRefed<RawServoCounterStyleRule> aRawRule,
+  CSSCounterStyleRule(already_AddRefed<StyleLockedCounterStyleRule> aRawRule,
                       StyleSheet* aSheet, css::Rule* aParentRule,
                       uint32_t aLine, uint32_t aColumn)
       : css::Rule(aSheet, aParentRule, aLine, aColumn),
@@ -32,8 +32,8 @@ class CSSCounterStyleRule final : public css::Rule {
  public:
   bool IsCCLeaf() const final;
 
-  const RawServoCounterStyleRule* Raw() const { return mRawRule.get(); }
-  void SetRawAfterClone(RefPtr<RawServoCounterStyleRule>);
+  const StyleLockedCounterStyleRule* Raw() const { return mRawRule.get(); }
+  void SetRawAfterClone(RefPtr<StyleLockedCounterStyleRule>);
 
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
@@ -55,7 +55,7 @@ class CSSCounterStyleRule final : public css::Rule {
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
  private:
-  RefPtr<RawServoCounterStyleRule> mRawRule;
+  RefPtr<StyleLockedCounterStyleRule> mRawRule;
 };
 
 }  // namespace mozilla::dom

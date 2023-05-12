@@ -422,7 +422,7 @@ static ServoAnimationValues ValueFromStringHelper(
   // Parse property
   ServoCSSParser::ParsingEnvironment env =
       ServoCSSParser::GetParsingEnvironment(doc);
-  RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
+  RefPtr<StyleLockedDeclarationBlock> servoDeclarationBlock =
       ServoCSSParser::ParseProperty(aPropID, NS_ConvertUTF16toUTF8(aString),
                                     env,
                                     ParsingMode::AllowUnitlessLength |

@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-CSSImportRule::CSSImportRule(RefPtr<RawServoImportRule> aRawRule,
+CSSImportRule::CSSImportRule(RefPtr<StyleLockedImportRule> aRawRule,
                              StyleSheet* aSheet, css::Rule* aParentRule,
                              uint32_t aLine, uint32_t aColumn)
     : css::Rule(aSheet, aParentRule, aLine, aColumn),
@@ -78,7 +78,7 @@ StyleCssRuleType CSSImportRule::Type() const {
   return StyleCssRuleType::Import;
 }
 
-void CSSImportRule::SetRawAfterClone(RefPtr<RawServoImportRule> aRaw) {
+void CSSImportRule::SetRawAfterClone(RefPtr<StyleLockedImportRule> aRaw) {
   mRawRule = std::move(aRaw);
   if (mChildSheet) {
     mChildSheet->RemoveReferencingRule(*this);

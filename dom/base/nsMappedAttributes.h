@@ -77,7 +77,7 @@ class nsMappedAttributes final {
   // Obtain the contained servo declaration block
   // May return null if called before the inner block
   // has been (lazily) resolved
-  const RefPtr<RawServoDeclarationBlock>& GetServoStyle() const {
+  const mozilla::StyleLockedDeclarationBlock* GetServoStyle() const {
     return mServoStyle;
   }
 
@@ -102,7 +102,7 @@ class nsMappedAttributes final {
 #endif
   nsHTMLStyleSheet* mSheet;  // weak
   nsMapRuleToAttributesFunc mRuleMapper;
-  RefPtr<RawServoDeclarationBlock> mServoStyle;
+  RefPtr<mozilla::StyleLockedDeclarationBlock> mServoStyle;
   InternalAttr mBuffer[0];
 
   static bool sShuttingDown;

@@ -33,7 +33,7 @@ namespace css {
 // MediaRule and DocumentRule
 class GroupRule : public Rule {
  protected:
-  GroupRule(already_AddRefed<ServoCssRules> aRules, StyleSheet* aSheet,
+  GroupRule(already_AddRefed<StyleLockedCssRules> aRules, StyleSheet* aSheet,
             Rule* aParentRule, uint32_t aLineNumber, uint32_t aColumnNumber);
   GroupRule(const GroupRule& aCopy) = delete;
   virtual ~GroupRule();
@@ -55,7 +55,7 @@ class GroupRule : public Rule {
     return mRuleList ? mRuleList->GetRule(aIndex) : nullptr;
   }
 
-  void SetRawAfterClone(RefPtr<ServoCssRules> aRules) {
+  void SetRawAfterClone(RefPtr<StyleLockedCssRules> aRules) {
     if (mRuleList) {
       mRuleList->SetRawAfterClone(std::move(aRules));
     } else {
