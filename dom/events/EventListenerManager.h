@@ -166,6 +166,8 @@ class EventListenerManagerBase {
   uint16_t mMayHaveTransitionEventListener : 1;
   uint16_t mClearingListeners : 1;
   uint16_t mIsMainThreadELM : 1;
+  uint16_t mMayHaveListenersForUntrustedEvents : 1;
+  // 1 unused flag.
 };
 
 /*
@@ -374,15 +376,15 @@ class EventListenerManager final : public EventListenerManagerBase {
   void HandleEvent(nsPresContext* aPresContext, WidgetEvent* aEvent,
                    dom::Event** aDOMEvent, dom::EventTarget* aCurrentTarget,
                    nsEventStatus* aEventStatus, bool aItemInShadowTree) {
-    if (mListeners.IsEmpty() || aEvent->PropagationStopped()) {
-      return;
-    }
-
     if (!mMayHaveCapturingListeners && !aEvent->mFlags.mInBubblingPhase) {
       return;
     }
 
     if (!mMayHaveSystemGroupListeners && aEvent->mFlags.mInSystemGroup) {
+      return;
+    }
+
+    if (!aEvent->IsTrusted() && !mMayHaveListenersForUntrustedEvents) {
       return;
     }
 
@@ -396,6 +398,11 @@ class EventListenerManager final : public EventListenerManagerBase {
                mNoListenerForEvents[2] == aEvent->mMessage) {
       return;
     }
+
+    if (mListeners.IsEmpty() || aEvent->PropagationStopped()) {
+      return;
+    }
+
     HandleEventInternal(aPresContext, aEvent, aDOMEvent, aCurrentTarget,
                         aEventStatus, aItemInShadowTree);
   }

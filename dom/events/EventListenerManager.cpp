@@ -113,7 +113,8 @@ EventListenerManagerBase::EventListenerManagerBase()
       mMayHaveFormSelectEventListener(false),
       mMayHaveTransitionEventListener(false),
       mClearingListeners(false),
-      mIsMainThreadELM(NS_IsMainThread()) {
+      mIsMainThreadELM(NS_IsMainThread()),
+      mMayHaveListenersForUntrustedEvents(false) {
   ClearNoListenersForEvents();
   static_assert(sizeof(EventListenerManagerBase) == sizeof(uint64_t),
                 "Keep the size of EventListenerManagerBase size compact!");
@@ -247,6 +248,10 @@ void EventListenerManager::AddEventListenerInternal(
   listener->mListenerIsHandler = aHandler;
   listener->mHandlerIsString = false;
   listener->mAllEvents = aAllEvents;
+
+  if (listener->mFlags.mAllowUntrustedEvents) {
+    mMayHaveListenersForUntrustedEvents = true;
+  }
 
   // Detect the type of event listener.
   if (aFlags.mListenerIsJSListener) {
@@ -980,6 +985,7 @@ EventListenerManager::Listener* EventListenerManager::SetEventHandlerInternal(
   listener->mHandlerIsString = !aTypedHandler.HasEventHandler();
   if (aPermitUntrustedEvents) {
     listener->mFlags.mAllowUntrustedEvents = true;
+    mMayHaveListenersForUntrustedEvents = true;
   }
 
   return listener;
