@@ -103,7 +103,7 @@ class LogModule extends WindowGlobalBiDiModule {
     }
   }
 
-  #onConsoleAPIMessage = (eventName, data = {}) => {
+  #onConsoleAPIMessage = async (eventName, data = {}) => {
     const {
       // `arguments` cannot be used as variable name in functions
       arguments: messageArguments,
@@ -143,7 +143,7 @@ class LogModule extends WindowGlobalBiDiModule {
       // involved when creating object references, which will not happen with
       // OwnershipModel.None. This will be revisited in Bug 1742589.
       serializedArgs.push(
-        this.serialize(
+        await this.serialize(
           Cu.waiveXrays(arg),
           lazy.setDefaultSerializationOptions(),
           lazy.OwnershipModel.None,

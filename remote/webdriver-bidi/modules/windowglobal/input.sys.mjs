@@ -31,8 +31,8 @@ class InputModule extends WindowGlobalBiDiModule {
     }
 
     await this.#deserializeActionOrigins(actions);
-    const actionChain = lazy.action.Chain.fromJSON(this.#actionState, actions);
 
+    const actionChain = lazy.action.Chain.fromJSON(this.#actionState, actions);
     await actionChain.dispatch(this.#actionState, this.messageHandler.window);
   }
 
@@ -85,7 +85,8 @@ class InputModule extends WindowGlobalBiDiModule {
     }
 
     const realm = this.messageHandler.getRealm();
-    return this.deserialize(realm, sharedReference);
+
+    return (await this.deserialize(realm, sharedReference)).data;
   }
 }
 

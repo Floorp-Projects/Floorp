@@ -49,7 +49,7 @@ class ScriptModule extends WindowGlobalBiDiModule {
     this.#stopObserving();
   }
 
-  observe(subject, topic) {
+  async observe(subject, topic) {
     if (topic !== "document-element-inserted") {
       return;
     }
@@ -58,11 +58,11 @@ class ScriptModule extends WindowGlobalBiDiModule {
 
     // Ignore events without a window and those from other tabs.
     if (window === this.messageHandler.window) {
-      this.#evaluatePreloadScripts();
+      await this.#evaluatePreloadScripts();
     }
   }
 
-  #buildExceptionDetails(exception, stack, realm, resultOwnership) {
+  async #buildExceptionDetails(exception, stack, realm, resultOwnership) {
     exception = this.#toRawObject(exception);
 
     // A stacktrace is mandatory to build exception details and a missing stack
@@ -92,7 +92,7 @@ class ScriptModule extends WindowGlobalBiDiModule {
 
     return {
       columnNumber: stack.column - 1,
-      exception: this.serialize(
+      exception: await this.serialize(
         exception,
         lazy.setDefaultSerializationOptions(),
         resultOwnership,
@@ -155,7 +155,7 @@ class ScriptModule extends WindowGlobalBiDiModule {
       case EvaluationStatus.Normal:
         return {
           evaluationStatus,
-          result: this.serialize(
+          result: await this.serialize(
             this.#toRawObject(result),
             serializationOptions,
             resultOwnership,
@@ -166,7 +166,7 @@ class ScriptModule extends WindowGlobalBiDiModule {
       case EvaluationStatus.Throw:
         return {
           evaluationStatus,
-          exceptionDetails: this.#buildExceptionDetails(
+          exceptionDetails: await this.#buildExceptionDetails(
             exception,
             stack,
             realm,
@@ -188,14 +188,14 @@ class ScriptModule extends WindowGlobalBiDiModule {
    * @param {ChannelProperties} channelProperties
    * @param {RemoteValue} message
    */
-  #emitScriptMessage = (realm, channelProperties, message) => {
+  async #emitScriptMessage(realm, channelProperties, message) {
     const {
       channel,
       ownership: ownershipType = lazy.OwnershipModel.None,
       serializationOptions,
     } = channelProperties;
 
-    const data = this.serialize(
+    const data = await this.serialize(
       this.#toRawObject(message),
       lazy.setDefaultSerializationOptions(serializationOptions),
       ownershipType,
@@ -207,9 +207,9 @@ class ScriptModule extends WindowGlobalBiDiModule {
       data,
       source: this.#getSource(realm),
     });
-  };
+  }
 
-  #evaluatePreloadScripts() {
+  async #evaluatePreloadScripts() {
     let resolveBlockerPromise;
     const blockerPromise = new Promise(resolve => {
       resolveBlockerPromise = resolve;
@@ -223,12 +223,17 @@ class ScriptModule extends WindowGlobalBiDiModule {
         functionDeclaration,
         sandbox,
       } = script;
+
       const realm = this.messageHandler.getRealm({ sandboxName: sandbox });
-      const deserializedArguments = commandArguments.map(arg =>
-        this.deserialize(realm, arg, {
-          emitScriptMessage: this.#emitScriptMessage,
-        })
-      );
+
+      const deserializedArguments = [];
+      for (const commandArgument of commandArguments) {
+        const argValue = await this.deserialize(realm, commandArgument, {
+          emitScriptMessage: this.#emitScriptMessage.bind(this),
+        });
+        deserializedArguments.push(argValue.data);
+      }
+
       const rv = realm.executeInGlobalWithBindings(
         functionDeclaration,
         deserializedArguments
@@ -328,21 +333,25 @@ class ScriptModule extends WindowGlobalBiDiModule {
 
     const realm = this.messageHandler.getRealm({ realmId, sandboxName });
 
-    const deserializedArguments =
-      commandArguments !== null
-        ? commandArguments.map(arg =>
-            this.deserialize(realm, arg, {
-              emitScriptMessage: this.#emitScriptMessage,
-            })
-          )
-        : [];
-
-    const deserializedThis =
-      thisParameter !== null
-        ? this.deserialize(realm, thisParameter, {
-            emitScriptMessage: this.#emitScriptMessage,
+    const deserializedArguments = [];
+    if (commandArguments !== null) {
+      const args = await Promise.all(
+        commandArguments.map(arg =>
+          this.deserialize(realm, arg, {
+            emitScriptMessage: this.#emitScriptMessage.bind(this),
           })
-        : null;
+        )
+      );
+      args.forEach(arg => deserializedArguments.push(arg.data));
+    }
+
+    let deserializedThis = null;
+    if (thisParameter !== null) {
+      const thisArg = await this.deserialize(realm, thisParameter, {
+        emitScriptMessage: this.#emitScriptMessage.bind(this),
+      });
+      deserializedThis = thisArg.data;
+    }
 
     const rv = realm.executeInGlobalWithBindings(
       functionDeclaration,

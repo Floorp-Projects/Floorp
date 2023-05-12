@@ -8,6 +8,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  element: "chrome://remote/content/shared/webdriver/Element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
@@ -52,10 +53,13 @@ export const OwnershipModel = {
  *
  * @typedef {object} RemoteValueOptions
  *
- * @property {NodeCache=} nodeCache
- *     The cache containing DOM node references.
  * @param {Function=} emitScriptMessage
- *     The function to emit "script.message" event.
+ *     Callback to emit a "script.message" event.
+ * @param {Function=} getNode
+ *     Callback to retrieve a DOM node via its nodeId and browsing context.
+ * @param {Function=} getOrCreateNodeReference
+ *     Async callback to get or create a new node reference. Its return value
+ *     is the unique id of the DOM node.
  */
 
 /**
@@ -158,12 +162,13 @@ function checkDateTimeString(dateString) {
  * @param {RemoteValueOptions} options
  *     Extra Remote Value deserialization options.
  *
- * @returns {Array} List of deserialized values.
+ * @returns {Promise<Array>}
+ *     Promise that resolves to the list of deserialized values.
  *
  * @throws {InvalidArgumentError}
  *     If <var>serializedValueList</var> is not an array.
  */
-function deserializeValueList(realm, serializedValueList, options = {}) {
+async function deserializeValueList(realm, serializedValueList, options = {}) {
   lazy.assert.array(
     serializedValueList,
     `Expected "serializedValueList" to be an array, got ${serializedValueList}`
@@ -172,7 +177,7 @@ function deserializeValueList(realm, serializedValueList, options = {}) {
   const deserializedValues = [];
 
   for (const item of serializedValueList) {
-    deserializedValues.push(deserialize(realm, item, options));
+    deserializedValues.push((await deserialize(realm, item, options)).data);
   }
 
   return deserializedValues;
@@ -190,13 +195,18 @@ function deserializeValueList(realm, serializedValueList, options = {}) {
  * @param {RemoteValueOptions} options
  *     Extra Remote Value deserialization options.
  *
- * @returns {Array} List of deserialized key-value.
+ * @returns {Promise<Array>}
+ *     Promise that resolves to the list of deserialized key-value pairs.
  *
  * @throws {InvalidArgumentError}
  *     If <var>serializedKeyValueList</var> is not an array or
  *     not an array of key-value arrays.
  */
-function deserializeKeyValueList(realm, serializedKeyValueList, options = {}) {
+async function deserializeKeyValueList(
+  realm,
+  serializedKeyValueList,
+  options = {}
+) {
   lazy.assert.array(
     serializedKeyValueList,
     `Expected "serializedKeyValueList" to be an array, got ${serializedKeyValueList}`
@@ -211,11 +221,16 @@ function deserializeKeyValueList(realm, serializedKeyValueList, options = {}) {
       );
     }
     const [serializedKey, serializedValue] = serializedKeyValue;
-    const deserializedKey =
-      typeof serializedKey == "string"
-        ? serializedKey
-        : deserialize(realm, serializedKey, options);
-    const deserializedValue = deserialize(realm, serializedValue, options);
+
+    let deserializedKey;
+    if (typeof serializedKey == "string") {
+      deserializedKey = serializedKey;
+    } else {
+      deserializedKey = (await deserialize(realm, serializedKey, options)).data;
+    }
+    const deserializedValue = (
+      await deserialize(realm, serializedValue, options)
+    ).data;
 
     deserializedKeyValueList.push([deserializedKey, deserializedValue]);
   }
@@ -237,41 +252,23 @@ function deserializeKeyValueList(realm, serializedKeyValueList, options = {}) {
  * @param {RemoteValueOptions} options
  *     Extra Remote Value deserialization options.
  *
- * @returns {Node} The deserialized DOM node.
+ * @returns {Node}
+ *     The deserialized DOM node.
  */
 function deserializeSharedReference(sharedRef, realm, options = {}) {
-  const { nodeCache } = options;
+  const { getNode } = options;
 
   const browsingContext = realm.browsingContext;
   if (!browsingContext) {
     throw new lazy.error.NoSuchNodeError("Realm isn't a Window global");
   }
 
-  const node = nodeCache.getNode(browsingContext, sharedRef);
+  const node = getNode(browsingContext, sharedRef);
 
   if (node === null) {
     throw new lazy.error.NoSuchNodeError(
       `The node with the reference ${sharedRef} is not known`
     );
-  }
-
-  // Bug 1819902: Instead of a browsing context check compare the origin
-  const isSameBrowsingContext = sharedRef => {
-    const nodeDetails = nodeCache.getReferenceDetails(sharedRef);
-
-    if (nodeDetails.isTopBrowsingContext && browsingContext.parent === null) {
-      // As long as Navigables are not available any cross-group navigation will
-      // cause a swap of the current top-level browsing context. The only unique
-      // identifier in such a case is the browser id the top-level browsing
-      // context actually lives in.
-      return nodeDetails.browserId === browsingContext.browserId;
-    }
-
-    return nodeDetails.browsingContextId === browsingContext.id;
-  };
-
-  if (!isSameBrowsingContext(sharedRef)) {
-    return null;
   }
 
   return node;
@@ -289,10 +286,13 @@ function deserializeSharedReference(sharedRef, realm, options = {}) {
  * @param {RemoteValueOptions} options
  *     Extra Remote Value deserialization options.
  *
- * @returns {object} Deserialized representation of the value.
+ * @returns {Promise<object>}
+ *     Promise that resolves to an object that contains the deserialized
+ *     representation of the value as `data` property.
  */
-export function deserialize(realm, serializedValue, options = {}) {
+export async function deserialize(realm, serializedValue, options = {}) {
   const { handle, sharedId, type, value } = serializedValue;
+  let data = undefined;
 
   // With a shared id present deserialize as node reference.
   if (sharedId !== undefined) {
@@ -301,134 +301,157 @@ export function deserialize(realm, serializedValue, options = {}) {
       `Expected "sharedId" to be a string, got ${sharedId}`
     );
 
-    return deserializeSharedReference(sharedId, realm, options);
+    data = deserializeSharedReference(sharedId, realm, options);
   }
 
   // With a handle present deserialize as remote reference.
-  if (handle !== undefined) {
+  else if (handle !== undefined) {
     lazy.assert.string(
       handle,
       `Expected "handle" to be a string, got ${handle}`
     );
 
-    const object = realm.getObjectForHandle(handle);
-    if (!object) {
+    data = realm.getObjectForHandle(handle);
+    if (!data) {
       throw new lazy.error.NoSuchHandleError(
         `Unable to find an object reference for "handle" ${handle}`
       );
     }
+  } else {
+    lazy.assert.string(type, `Expected "type" to be a string, got ${type}`);
 
-    return object;
-  }
-
-  lazy.assert.string(type, `Expected "type" to be a string, got ${type}`);
-
-  // Primitive protocol values
-  switch (type) {
-    case "undefined":
-      return undefined;
-    case "null":
-      return null;
-    case "string":
-      lazy.assert.string(
-        value,
-        `Expected "value" to be a string, got ${value}`
-      );
-      return value;
-    case "number":
-      // If value is already a number return its value.
-      if (typeof value === "number") {
-        return value;
-      }
-
-      // Otherwise it has to be one of the special strings
-      lazy.assert.in(
-        value,
-        ["NaN", "-0", "Infinity", "-Infinity"],
-        `Expected "value" to be one of "NaN", "-0", "Infinity", "-Infinity", got ${value}`
-      );
-      return Number(value);
-    case "boolean":
-      lazy.assert.boolean(
-        value,
-        `Expected "value" to be a boolean, got ${value}`
-      );
-      return value;
-    case "bigint":
-      lazy.assert.string(
-        value,
-        `Expected "value" to be a string, got ${value}`
-      );
-      try {
-        return BigInt(value);
-      } catch (e) {
-        throw new lazy.error.InvalidArgumentError(
-          `Failed to deserialize value as BigInt: ${value}`
+    // Primitive protocol values
+    switch (type) {
+      case "undefined":
+        data = undefined;
+        break;
+      case "null":
+        data = null;
+        break;
+      case "string":
+        data = lazy.assert.string(
+          value,
+          `Expected "value" to be a string, got ${value}`
         );
-      }
-
-    // Script channel
-    case "channel": {
-      const channel = message =>
-        options.emitScriptMessage(realm, value, message);
-      return realm.cloneIntoRealm(channel);
-    }
-
-    // Non-primitive protocol values
-    case "array":
-      const array = realm.cloneIntoRealm([]);
-      deserializeValueList(realm, value, options).forEach(v => array.push(v));
-      return array;
-    case "date":
-      // We want to support only Date Time String format,
-      // check if the value follows it.
-      checkDateTimeString(value);
-
-      return realm.cloneIntoRealm(new Date(value));
-    case "map":
-      const map = realm.cloneIntoRealm(new Map());
-      deserializeKeyValueList(realm, value, options).forEach(([k, v]) =>
-        map.set(k, v)
-      );
-
-      return map;
-    case "object":
-      const object = realm.cloneIntoRealm({});
-      deserializeKeyValueList(realm, value, options).forEach(
-        ([k, v]) => (object[k] = v)
-      );
-      return object;
-    case "regexp":
-      lazy.assert.object(
-        value,
-        `Expected "value" for RegExp to be an object, got ${value}`
-      );
-      const { pattern, flags } = value;
-      lazy.assert.string(
-        pattern,
-        `Expected "pattern" for RegExp to be a string, got ${pattern}`
-      );
-      if (flags !== undefined) {
+        break;
+      case "number":
+        // If value is already a number return its value.
+        if (typeof value === "number") {
+          data = value;
+        } else {
+          // Otherwise it has to be one of the special strings
+          lazy.assert.in(
+            value,
+            ["NaN", "-0", "Infinity", "-Infinity"],
+            `Expected "value" to be one of "NaN", "-0", "Infinity", "-Infinity", got ${value}`
+          );
+          data = Number(value);
+        }
+        break;
+      case "boolean":
+        lazy.assert.boolean(
+          value,
+          `Expected "value" to be a boolean, got ${value}`
+        );
+        data = value;
+        break;
+      case "bigint":
         lazy.assert.string(
-          flags,
-          `Expected "flags" for RegExp to be a string, got ${flags}`
+          value,
+          `Expected "value" to be a string, got ${value}`
         );
+        try {
+          data = BigInt(value);
+        } catch (e) {
+          throw new lazy.error.InvalidArgumentError(
+            `Failed to deserialize value as BigInt: ${value}`
+          );
+        }
+        break;
+      // Script channel
+      case "channel": {
+        const channel = message =>
+          options.emitScriptMessage(realm, value, message);
+        data = realm.cloneIntoRealm(channel);
+        break;
       }
-      try {
-        return realm.cloneIntoRealm(new RegExp(pattern, flags));
-      } catch (e) {
-        throw new lazy.error.InvalidArgumentError(
-          `Failed to deserialize value as RegExp: ${value}`
+      // Non-primitive protocol values
+      case "array":
+        const deserializedArray = await deserializeValueList(
+          realm,
+          value,
+          options
         );
-      }
-    case "set":
-      const set = realm.cloneIntoRealm(new Set());
-      deserializeValueList(realm, value, options).forEach(v => set.add(v));
-      return set;
+        // TODO: clone deserializedList instead?
+        data = realm.cloneIntoRealm([]);
+        deserializedArray.forEach(v => data.push(v));
+        break;
+      case "date":
+        // We want to support only Date Time String format,
+        // check if the value follows it.
+        checkDateTimeString(value);
+
+        data = realm.cloneIntoRealm(new Date(value));
+        break;
+      case "map":
+        data = realm.cloneIntoRealm(new Map());
+        const deserializedMap = await deserializeKeyValueList(
+          realm,
+          value,
+          options
+        );
+        deserializedMap.forEach(([k, v]) => data.set(k, v));
+        break;
+      case "object":
+        data = realm.cloneIntoRealm({});
+        const deserializedObject = await deserializeKeyValueList(
+          realm,
+          value,
+          options
+        );
+        deserializedObject.forEach(([k, v]) => (data[k] = v));
+        break;
+      case "regexp":
+        lazy.assert.object(
+          value,
+          `Expected "value" for RegExp to be an object, got ${value}`
+        );
+        const { pattern, flags } = value;
+        lazy.assert.string(
+          pattern,
+          `Expected "pattern" for RegExp to be a string, got ${pattern}`
+        );
+        if (flags !== undefined) {
+          lazy.assert.string(
+            flags,
+            `Expected "flags" for RegExp to be a string, got ${flags}`
+          );
+        }
+        try {
+          data = realm.cloneIntoRealm(new RegExp(pattern, flags));
+        } catch (e) {
+          throw new lazy.error.InvalidArgumentError(
+            `Failed to deserialize value as RegExp: ${value}`
+          );
+        }
+        break;
+      case "set":
+        data = realm.cloneIntoRealm(new Set());
+        const deserializedSet = await deserializeValueList(
+          realm,
+          value,
+          options
+        );
+        deserializedSet.forEach(v => data.add(v));
+        break;
+
+      default:
+        lazy.logger.warn(`Unsupported type for local value ${type}`);
+    }
   }
 
-  lazy.logger.warn(`Unsupported type for local value ${type}`);
-  return undefined;
+  // Wrap into an object so that Promises can be returned as well.
+  return { data };
 }
 
 /**
@@ -468,11 +491,11 @@ function getHandleForObject(realm, ownershipType, object) {
  * @param {RemoteValueOptions} options
  *     Extra Remote Value serialization options.
  *
- * @returns {string}
- *    Shared unique reference for the Node.
+ * @returns {Promise<string>}
+ *    Promise that resolves to a shared unique reference for the Node.
  */
-function getSharedIdForNode(node, realm, options = {}) {
-  const { nodeCache } = options;
+async function getSharedIdForNode(node, realm, options = {}) {
+  const { getOrCreateNodeReference } = options;
 
   if (!Node.isInstance(node)) {
     return null;
@@ -483,26 +506,7 @@ function getSharedIdForNode(node, realm, options = {}) {
     return null;
   }
 
-  const unwrapped = Cu.unwaiveXrays(node);
-  return nodeCache.getOrCreateNodeReference(unwrapped);
-}
-
-/**
- * Determines if <var>node</var> is shadow root.
- *
- * @param {Node} node
- *    Node to check.
- *
- * @returns {boolean}
- *    True if <var>node</var> is shadow root, false otherwise.
- */
-function isShadowRoot(node) {
-  const DOCUMENT_FRAGMENT_NODE = 11;
-  return (
-    node &&
-    node.nodeType === DOCUMENT_FRAGMENT_NODE &&
-    node.containingShadowRoot == node
-  );
+  return getOrCreateNodeReference(browsingContext, Cu.unwaiveXrays(node));
 }
 
 /**
@@ -529,9 +533,10 @@ function isShadowRoot(node) {
  * @param {RemoteValueOptions} options
  *     Extra Remote Value serialization options.
  *
- * @returns {object} Object for serialized values.
+ * @returns {Promise<object>}
+ *     Promise that resolves to the serialized values.
  */
-function serializeArrayLike(
+async function serializeArrayLike(
   production,
   handleId,
   knownObject,
@@ -546,7 +551,7 @@ function serializeArrayLike(
   setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
   if (!knownObject && serializationOptions.maxObjectDepth !== 0) {
-    serialized.value = serializeList(
+    serialized.value = await serializeList(
       value,
       serializationOptions,
       ownershipType,
@@ -577,9 +582,10 @@ function serializeArrayLike(
  * @param {RemoteValueOptions} options
  *     Extra Remote Value serialization options.
  *
- * @returns {Array} List of serialized values.
+ * @returns {Promise<Array>}
+ *     Promise that resolves to a list of serialized values.
  */
-function serializeList(
+async function serializeList(
   iterable,
   serializationOptions,
   ownershipType,
@@ -598,7 +604,7 @@ function serializeList(
 
   for (const item of iterable) {
     serialized.push(
-      serialize(
+      await serialize(
         item,
         childSerializationOptions,
         ownershipType,
@@ -630,9 +636,10 @@ function serializeList(
  * @param {RemoteValueOptions} options
  *     Extra Remote Value serialization options.
  *
- * @returns {Array} List of serialized values.
+ * @returns {Promise<Array>}
+ *     Promise that resolves to a list of serialized values.
  */
-function serializeMapping(
+async function serializeMapping(
   iterable,
   serializationOptions,
   ownershipType,
@@ -653,7 +660,7 @@ function serializeMapping(
     const serializedKey =
       typeof key == "string"
         ? key
-        : serialize(
+        : await serialize(
             key,
             childSerializationOptions,
             ownershipType,
@@ -661,7 +668,7 @@ function serializeMapping(
             realm,
             options
           );
-    const serializedValue = serialize(
+    const serializedValue = await serialize(
       item,
       childSerializationOptions,
       ownershipType,
@@ -692,9 +699,10 @@ function serializeMapping(
  * @param {RemoteValueOptions} options
  *     Extra Remote Value serialization options.
  *
- * @returns {object} Serialized value.
+ * @returns {Promise<object>}
+ *     Promise that resolves to the serialized value.
  */
-function serializeNode(
+async function serializeNode(
   node,
   serializationOptions,
   ownershipType,
@@ -722,7 +730,7 @@ function serializeNode(
   serialized.childNodeCount = node.childNodes.length;
   if (
     maxDomDepth !== 0 &&
-    (!isShadowRoot(node) ||
+    (!lazy.element.isShadowRoot(node) ||
       (includeShadowTree === IncludeShadowTreeMode.Open &&
         node.mode === "open") ||
       includeShadowTree === IncludeShadowTreeMode.All)
@@ -736,7 +744,7 @@ function serializeNode(
     }
     for (const child of node.childNodes) {
       children.push(
-        serialize(
+        await serialize(
           child,
           childSerializationOptions,
           ownershipType,
@@ -759,7 +767,7 @@ function serializeNode(
     const shadowRoot = Cu.unwaiveXrays(node).openOrClosedShadowRoot;
     serialized.shadowRoot = null;
     if (shadowRoot !== null) {
-      serialized.shadowRoot = serialize(
+      serialized.shadowRoot = await serialize(
         shadowRoot,
         serializationOptions,
         ownershipType,
@@ -770,7 +778,7 @@ function serializeNode(
     }
   }
 
-  if (isShadowRoot(node)) {
+  if (lazy.element.isShadowRoot(node)) {
     serialized.mode = node.mode;
   }
 
@@ -795,9 +803,10 @@ function serializeNode(
  * @param {RemoteValueOptions} options
  *     Extra Remote Value serialization options.
  *
- * @returns {object} Serialized representation of the value.
+ * @returns {Promise<object>}
+ *     Promise that resolves to the serialized representation of the value.
  */
-export function serialize(
+export async function serialize(
   value,
   serializationOptions,
   ownershipType,
@@ -869,7 +878,7 @@ export function serialize(
     setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
     if (!knownObject && maxObjectDepth !== 0) {
-      serialized.value = serializeMapping(
+      serialized.value = await serializeMapping(
         value.entries(),
         serializationOptions,
         ownershipType,
@@ -883,7 +892,7 @@ export function serialize(
     setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
     if (!knownObject && maxObjectDepth !== 0) {
-      serialized.value = serializeList(
+      serialized.value = await serializeList(
         value.values(),
         serializationOptions,
         ownershipType,
@@ -911,7 +920,7 @@ export function serialize(
     const serialized = buildSerialized("node", handleId);
 
     // Get or create the shared id for WebDriver classic compat from the node.
-    const sharedId = getSharedIdForNode(value, realm, options);
+    const sharedId = await getSharedIdForNode(value, realm, options);
     if (sharedId !== null) {
       serialized.sharedId = sharedId;
     }
@@ -919,7 +928,7 @@ export function serialize(
     setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
     if (!knownObject) {
-      serialized.value = serializeNode(
+      serialized.value = await serializeNode(
         value,
         serializationOptions,
         ownershipType,
@@ -940,7 +949,7 @@ export function serialize(
   setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
   if (!knownObject && maxObjectDepth !== 0) {
-    serialized.value = serializeMapping(
+    serialized.value = await serializeMapping(
       Object.entries(value),
       serializationOptions,
       ownershipType,
