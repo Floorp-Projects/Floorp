@@ -926,7 +926,7 @@ CounterStyle* DependentBuiltinCounterStyle::GetFallback() {
 class CustomCounterStyle final : public CounterStyle {
  public:
   CustomCounterStyle(CounterStyleManager* aManager,
-                     const StyleLockedCounterStyleRule* aRule)
+                     const RawServoCounterStyleRule* aRule)
       : CounterStyle(ListStyle::Custom),
         mManager(aManager),
         mRule(aRule),
@@ -950,7 +950,7 @@ class CustomCounterStyle final : public CounterStyle {
   // other counter style is added, removed, or changed.
   void ResetDependentData();
 
-  const StyleLockedCounterStyleRule* GetRule() const { return mRule; }
+  const RawServoCounterStyleRule* GetRule() const { return mRule; }
   uint32_t GetRuleGeneration() const { return mRuleGeneration; }
 
   virtual void GetPrefix(nsAString& aResult) override;
@@ -1015,7 +1015,7 @@ class CustomCounterStyle final : public CounterStyle {
   // frames are released.
   CounterStyleManager* mManager;
 
-  RefPtr<const StyleLockedCounterStyleRule> mRule;
+  RefPtr<const RawServoCounterStyleRule> mRule;
   uint32_t mRuleGeneration;
 
   StyleCounterSystem mSystem;

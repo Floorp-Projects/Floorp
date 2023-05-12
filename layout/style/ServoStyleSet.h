@@ -387,13 +387,13 @@ class ServoStyleSet {
       PseudoStyleType aPseudoType, const ComputedStyle* aStyle);
 
   void GetAnimationValues(
-      StyleLockedDeclarationBlock* aDeclarations, dom::Element* aElement,
+      RawServoDeclarationBlock* aDeclarations, dom::Element* aElement,
       const mozilla::ComputedStyle* aStyle,
       nsTArray<RefPtr<StyleAnimationValue>>& aAnimationValues);
 
   void AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
 
-  const StyleLockedCounterStyleRule* CounterStyleRuleForName(nsAtom* aName);
+  const RawServoCounterStyleRule* CounterStyleRuleForName(nsAtom* aName);
 
   // Get all the currently-active font feature values set.
   already_AddRefed<gfxFontFeatureValueSet> BuildFontFeatureValueSet();
@@ -426,10 +426,10 @@ class ServoStyleSet {
    */
   already_AddRefed<ComputedStyle> ResolveForDeclarations(
       const ComputedStyle* aParentOrNull,
-      const StyleLockedDeclarationBlock* aDeclarations);
+      const RawServoDeclarationBlock* aDeclarations);
 
   already_AddRefed<StyleAnimationValue> ComputeAnimationValue(
-      dom::Element* aElement, StyleLockedDeclarationBlock* aDeclaration,
+      dom::Element* aElement, RawServoDeclarationBlock* aDeclaration,
       const mozilla::ComputedStyle* aStyle);
 
   void AppendTask(PostTraversalTask aTask) {

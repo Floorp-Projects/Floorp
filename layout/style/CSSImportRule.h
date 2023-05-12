@@ -17,7 +17,7 @@ namespace dom {
 
 class CSSImportRule final : public css::Rule {
  public:
-  CSSImportRule(RefPtr<StyleLockedImportRule> aRawRule, StyleSheet* aSheet,
+  CSSImportRule(RefPtr<RawServoImportRule> aRawRule, StyleSheet* aSheet,
                 css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -47,13 +47,13 @@ class CSSImportRule final : public css::Rule {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  const StyleLockedImportRule* Raw() const { return mRawRule.get(); }
-  void SetRawAfterClone(RefPtr<StyleLockedImportRule>);
+  const RawServoImportRule* Raw() const { return mRawRule.get(); }
+  void SetRawAfterClone(RefPtr<RawServoImportRule>);
 
  private:
   ~CSSImportRule();
 
-  RefPtr<StyleLockedImportRule> mRawRule;
+  RefPtr<RawServoImportRule> mRawRule;
   RefPtr<StyleSheet> mChildSheet;
 };
 

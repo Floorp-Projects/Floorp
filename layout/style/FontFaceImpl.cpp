@@ -105,7 +105,7 @@ static FontFaceLoadStatus LoadStateToStatus(
 
 already_AddRefed<FontFaceImpl> FontFaceImpl::CreateForRule(
     FontFace* aOwner, FontFaceSetImpl* aFontFaceSet,
-    StyleLockedFontFaceRule* aRule) {
+    RawServoFontFaceRule* aRule) {
   RefPtr<FontFaceImpl> obj = new FontFaceImpl(aOwner, aFontFaceSet);
   obj->mRule = aRule;
   obj->mSourceType = eSourceType_FontFaceRule;
@@ -563,7 +563,7 @@ void FontFaceImpl::SetUserFontEntry(gfxUserFontEntry* aEntry) {
 }
 
 bool FontFaceImpl::GetAttributes(gfxUserFontAttributes& aAttr) {
-  StyleLockedFontFaceRule* data = GetData();
+  RawServoFontFaceRule* data = GetData();
   if (!data) {
     return false;
   }

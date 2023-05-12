@@ -17,6 +17,7 @@
 class nsFontFaceLoader;
 class nsIPrincipal;
 class nsIGlobalObject;
+struct RawServoFontFaceRule;
 
 namespace mozilla {
 class PostTraversalTask;

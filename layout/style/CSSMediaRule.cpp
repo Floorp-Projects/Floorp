@@ -12,7 +12,7 @@
 
 namespace mozilla::dom {
 
-CSSMediaRule::CSSMediaRule(RefPtr<StyleLockedMediaRule> aRawRule,
+CSSMediaRule::CSSMediaRule(RefPtr<RawServoMediaRule> aRawRule,
                            StyleSheet* aSheet, css::Rule* aParentRule,
                            uint32_t aLine, uint32_t aColumn)
     : ConditionRule(Servo_MediaRule_GetRules(aRawRule).Consume(), aSheet,
@@ -55,7 +55,7 @@ void CSSMediaRule::DropSheetReference() {
   ConditionRule::DropSheetReference();
 }
 
-void CSSMediaRule::SetRawAfterClone(RefPtr<StyleLockedMediaRule> aRaw) {
+void CSSMediaRule::SetRawAfterClone(RefPtr<RawServoMediaRule> aRaw) {
   mRawRule = std::move(aRaw);
   if (mMediaList) {
     mMediaList->SetRawAfterClone(Servo_MediaRule_GetMedia(mRawRule).Consume());

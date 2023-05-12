@@ -16,7 +16,7 @@ namespace dom {
 
 class CSSMozDocumentRule final : public css::ConditionRule {
  public:
-  CSSMozDocumentRule(RefPtr<StyleLockedDocumentRule> aRawRule,
+  CSSMozDocumentRule(RefPtr<RawServoMozDocumentRule> aRawRule,
                      StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
                      uint32_t aColumn);
 
@@ -30,8 +30,8 @@ class CSSMozDocumentRule final : public css::ConditionRule {
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  StyleLockedDocumentRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<StyleLockedDocumentRule>);
+  RawServoMozDocumentRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<RawServoMozDocumentRule>);
 
   // WebIDL interface
   StyleCssRuleType Type() const final;
@@ -46,7 +46,7 @@ class CSSMozDocumentRule final : public css::ConditionRule {
  private:
   ~CSSMozDocumentRule() = default;
 
-  RefPtr<StyleLockedDocumentRule> mRawRule;
+  RefPtr<RawServoMozDocumentRule> mRawRule;
 };
 
 }  // namespace dom

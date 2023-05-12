@@ -32,9 +32,9 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-ServoCSSRuleList::ServoCSSRuleList(
-    already_AddRefed<StyleLockedCssRules> aRawRules, StyleSheet* aSheet,
-    css::GroupRule* aParentRule)
+ServoCSSRuleList::ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,
+                                   StyleSheet* aSheet,
+                                   css::GroupRule* aParentRule)
     : mStyleSheet(aSheet), mParentRule(aParentRule), mRawRules(aRawRules) {
   ResetRules();
 }
@@ -66,17 +66,17 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
   if (rule <= kMaxRuleType) {
     RefPtr<css::Rule> ruleObj = nullptr;
     switch (StyleCssRuleType(rule)) {
-#define CASE_RULE(const_, name_)                                              \
-  case StyleCssRuleType::const_: {                                            \
-    uint32_t line = 0, column = 0;                                            \
-    RefPtr<StyleLocked##const_##Rule> raw =                                   \
-        Servo_CssRules_Get##const_##RuleAt(mRawRules, aIndex, &line, &column) \
-            .Consume();                                                       \
-    MOZ_ASSERT(raw);                                                          \
-    ruleObj = new CSS##name_##Rule(raw.forget(), mStyleSheet, mParentRule,    \
-                                   line, column);                             \
-    MOZ_ASSERT(ruleObj->Type() == StyleCssRuleType(rule));                    \
-    break;                                                                    \
+#define CASE_RULE(const_, name_)                                             \
+  case StyleCssRuleType::const_: {                                           \
+    uint32_t line = 0, column = 0;                                           \
+    RefPtr<RawServo##name_##Rule> raw =                                      \
+        Servo_CssRules_Get##name_##RuleAt(mRawRules, aIndex, &line, &column) \
+            .Consume();                                                      \
+    MOZ_ASSERT(raw);                                                         \
+    ruleObj = new CSS##name_##Rule(raw.forget(), mStyleSheet, mParentRule,   \
+                                   line, column);                            \
+    MOZ_ASSERT(ruleObj->Type() == StyleCssRuleType(rule));                   \
+    break;                                                                   \
   }
       CASE_RULE(Style, Style)
       CASE_RULE(Keyframes, Keyframes)
@@ -227,7 +227,7 @@ nsresult ServoCSSRuleList::DeleteRule(uint32_t aIndex) {
   return rv;
 }
 
-void ServoCSSRuleList::SetRawContents(RefPtr<StyleLockedCssRules> aNewRules,
+void ServoCSSRuleList::SetRawContents(RefPtr<ServoCssRules> aNewRules,
                                       bool aFromClone) {
   mRawRules = std::move(aNewRules);
   if (!aFromClone) {
@@ -236,16 +236,15 @@ void ServoCSSRuleList::SetRawContents(RefPtr<StyleLockedCssRules> aNewRules,
   }
 
   EnumerateInstantiatedRules([&](css::Rule* aRule, uint32_t aIndex) {
-#define CASE_FOR(constant_, type_)                                      \
-  case StyleCssRuleType::constant_: {                                   \
-    uint32_t line = 0, column = 0;                                      \
-    RefPtr<StyleLocked##constant_##Rule> raw =                          \
-        Servo_CssRules_Get##constant_##RuleAt(mRawRules, aIndex, &line, \
-                                              &column)                  \
-            .Consume();                                                 \
-    static_cast<dom::CSS##type_##Rule*>(aRule)->SetRawAfterClone(       \
-        std::move(raw));                                                \
-    break;                                                              \
+#define CASE_FOR(constant_, type_)                                           \
+  case StyleCssRuleType::constant_: {                                        \
+    uint32_t line = 0, column = 0;                                           \
+    RefPtr<RawServo##type_##Rule> raw =                                      \
+        Servo_CssRules_Get##type_##RuleAt(mRawRules, aIndex, &line, &column) \
+            .Consume();                                                      \
+    static_cast<dom::CSS##type_##Rule*>(aRule)->SetRawAfterClone(            \
+        std::move(raw));                                                     \
+    break;                                                                   \
   }
     switch (aRule->Type()) {
       CASE_FOR(Style, Style)

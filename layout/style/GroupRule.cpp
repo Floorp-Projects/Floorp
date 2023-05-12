@@ -19,9 +19,9 @@ using namespace mozilla::dom;
 
 namespace mozilla::css {
 
-GroupRule::GroupRule(already_AddRefed<StyleLockedCssRules> aRules,
-                     StyleSheet* aSheet, Rule* aParentRule,
-                     uint32_t aLineNumber, uint32_t aColumnNumber)
+GroupRule::GroupRule(already_AddRefed<ServoCssRules> aRules, StyleSheet* aSheet,
+                     Rule* aParentRule, uint32_t aLineNumber,
+                     uint32_t aColumnNumber)
     : Rule(aSheet, aParentRule, aLineNumber, aColumnNumber),
       mRuleList(new ServoCSSRuleList(std::move(aRules), aSheet, this)) {}
 

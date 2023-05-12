@@ -91,7 +91,7 @@ JSObject* FontFace::WrapObject(JSContext* aCx,
 
 already_AddRefed<FontFace> FontFace::CreateForRule(
     nsIGlobalObject* aGlobal, FontFaceSet* aFontFaceSet,
-    StyleLockedFontFaceRule* aRule) {
+    RawServoFontFaceRule* aRule) {
   FontFaceSetImpl* setImpl = aFontFaceSet->GetImpl();
   MOZ_ASSERT(setImpl);
 

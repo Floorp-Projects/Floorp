@@ -36,7 +36,7 @@ class DeclarationBlock final {
   }
 
  public:
-  explicit DeclarationBlock(already_AddRefed<StyleLockedDeclarationBlock> aRaw)
+  explicit DeclarationBlock(already_AddRefed<RawServoDeclarationBlock> aRaw)
       : mRaw(aRaw), mImmutable(false), mIsDirty(false) {
     mContainer.mRaw = 0;
   }
@@ -149,7 +149,7 @@ class DeclarationBlock final {
   static already_AddRefed<DeclarationBlock> FromCssText(
       const nsACString& aCssText, URLExtraData* aExtraData,
       nsCompatibility aMode, css::Loader* aLoader, StyleCssRuleType aRuleType) {
-    RefPtr<StyleLockedDeclarationBlock> raw =
+    RefPtr<RawServoDeclarationBlock> raw =
         Servo_ParseStyleAttribute(&aCssText, aExtraData, aMode, aLoader,
                                   aRuleType)
             .Consume();
@@ -163,7 +163,25 @@ class DeclarationBlock final {
     return FromCssText(value, aExtraData, aMode, aLoader, aRuleType);
   }
 
-  StyleLockedDeclarationBlock* Raw() const { return mRaw; }
+  RawServoDeclarationBlock* Raw() const { return mRaw; }
+  RawServoDeclarationBlock* const* RefRaw() const {
+    static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
+                      sizeof(RawServoDeclarationBlock*),
+                  "RefPtr should just be a pointer");
+    return reinterpret_cast<RawServoDeclarationBlock* const*>(&mRaw);
+  }
+
+  const StyleStrong<RawServoDeclarationBlock>* RefRawStrong() const {
+    static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
+                      sizeof(RawServoDeclarationBlock*),
+                  "RefPtr should just be a pointer");
+    static_assert(
+        sizeof(RefPtr<RawServoDeclarationBlock>) ==
+            sizeof(StyleStrong<RawServoDeclarationBlock>),
+        "RawServoDeclarationBlockStrong should be the same as RefPtr");
+    return reinterpret_cast<const StyleStrong<RawServoDeclarationBlock>*>(
+        &mRaw);
+  }
 
   void ToString(nsACString& aResult) const {
     Servo_DeclarationBlock_GetCssText(mRaw, &aResult);
@@ -224,7 +242,7 @@ class DeclarationBlock final {
     nsHTMLCSSStyleSheet* mHTMLCSSStyleSheet;
   } mContainer;
 
-  RefPtr<StyleLockedDeclarationBlock> mRaw;
+  RefPtr<RawServoDeclarationBlock> mRaw;
 
   // set when declaration put in the rule tree;
   bool mImmutable;

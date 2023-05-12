@@ -14,7 +14,7 @@
 
 struct JSContext;
 class JSObject;
-struct StyleLockedDeclarationBlock;
+struct RawServoDeclarationBlock;
 
 namespace mozilla {
 struct AnimationProperty;

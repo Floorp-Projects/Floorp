@@ -32,7 +32,7 @@ bool ServoCSSParser::ComputeColor(ServoStyleSet* aStyleSet,
 }
 
 /* static */
-already_AddRefed<StyleLockedDeclarationBlock> ServoCSSParser::ParseProperty(
+already_AddRefed<RawServoDeclarationBlock> ServoCSSParser::ParseProperty(
     nsCSSPropertyID aProperty, const nsACString& aValue,
     const ParsingEnvironment& aParsingEnvironment, ParsingMode aParsingMode) {
   return Servo_ParseProperty(

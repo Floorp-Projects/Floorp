@@ -50,7 +50,7 @@ class FontFaceSetDocumentImpl final : public FontFaceSetImpl,
 
   bool UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules) override;
 
-  StyleLockedFontFaceRule* FindRuleForEntry(gfxFontEntry* aFontEntry) override;
+  RawServoFontFaceRule* FindRuleForEntry(gfxFontEntry* aFontEntry) override;
 
   /**
    * Notification method called by the nsPresContext to indicate that the
@@ -85,7 +85,7 @@ class FontFaceSetDocumentImpl final : public FontFaceSetImpl,
       const gfxFontFaceSrc* aFontFaceSrc) override;
 
   // search for @font-face rule that matches a userfont font entry
-  StyleLockedFontFaceRule* FindRuleForUserFontEntry(
+  RawServoFontFaceRule* FindRuleForUserFontEntry(
       gfxUserFontEntry* aUserFontEntry) override;
 
   void FindMatchingFontFaces(const nsTHashSet<FontFace*>& aMatchingFaces,

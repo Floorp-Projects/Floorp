@@ -1294,7 +1294,7 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
       return;
     }
 
-    RefPtr<StyleLockedDeclarationBlock> customProperties;
+    RefPtr<RawServoDeclarationBlock> customProperties;
     // A workaround for CSS Animations in servo backend, custom properties in
     // keyframe are stored in a servo's declaration block. Find the declaration
     // block to resolve CSS variables in the keyframe.

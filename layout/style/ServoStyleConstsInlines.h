@@ -26,32 +26,32 @@
 namespace mozilla {
 
 // We need to explicitly instantiate these so that the clang plugin can see that
-// they're trivially copyable...
+// they're trivially copiable...
 //
 // https://github.com/eqrion/cbindgen/issues/402 tracks doing something like
 // this automatically from cbindgen.
 template struct StyleStrong<ComputedStyle>;
-template struct StyleStrong<StyleLockedCssRules>;
+template struct StyleStrong<ServoCssRules>;
 template struct StyleStrong<StyleAnimationValue>;
-template struct StyleStrong<StyleLockedDeclarationBlock>;
+template struct StyleStrong<RawServoDeclarationBlock>;
 template struct StyleStrong<StyleStylesheetContents>;
-template struct StyleStrong<StyleLockedKeyframe>;
-template struct StyleStrong<StyleLockedLayerBlockRule>;
-template struct StyleStrong<StyleLockedLayerStatementRule>;
-template struct StyleStrong<StyleLockedMediaList>;
-template struct StyleStrong<StyleLockedStyleRule>;
-template struct StyleStrong<StyleLockedImportRule>;
-template struct StyleStrong<StyleLockedKeyframesRule>;
-template struct StyleStrong<StyleLockedMediaRule>;
-template struct StyleStrong<StyleLockedDocumentRule>;
-template struct StyleStrong<StyleLockedNamespaceRule>;
-template struct StyleStrong<StyleLockedPageRule>;
-template struct StyleStrong<StyleLockedSupportsRule>;
-template struct StyleStrong<StyleLockedFontFeatureValuesRule>;
-template struct StyleStrong<StyleLockedFontPaletteValuesRule>;
-template struct StyleStrong<StyleLockedFontFaceRule>;
-template struct StyleStrong<StyleLockedCounterStyleRule>;
-template struct StyleStrong<StyleLockedContainerRule>;
+template struct StyleStrong<RawServoKeyframe>;
+template struct StyleStrong<RawServoLayerBlockRule>;
+template struct StyleStrong<RawServoLayerStatementRule>;
+template struct StyleStrong<RawServoMediaList>;
+template struct StyleStrong<RawServoStyleRule>;
+template struct StyleStrong<RawServoImportRule>;
+template struct StyleStrong<RawServoKeyframesRule>;
+template struct StyleStrong<RawServoMediaRule>;
+template struct StyleStrong<RawServoMozDocumentRule>;
+template struct StyleStrong<RawServoNamespaceRule>;
+template struct StyleStrong<RawServoPageRule>;
+template struct StyleStrong<RawServoSupportsRule>;
+template struct StyleStrong<RawServoFontFeatureValuesRule>;
+template struct StyleStrong<RawServoFontPaletteValuesRule>;
+template struct StyleStrong<RawServoFontFaceRule>;
+template struct StyleStrong<RawServoCounterStyleRule>;
+template struct StyleStrong<RawServoContainerRule>;
 
 template <typename T>
 inline void StyleOwnedSlice<T>::Clear() {

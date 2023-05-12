@@ -651,7 +651,7 @@ static Maybe<PropertyValuePair> MakePropertyValuePair(
 
   ServoCSSParser::ParsingEnvironment env =
       ServoCSSParser::GetParsingEnvironment(aDocument);
-  RefPtr<StyleLockedDeclarationBlock> servoDeclarationBlock =
+  RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
       ServoCSSParser::ParseProperty(aProperty, aStringValue, env);
 
   if (servoDeclarationBlock) {

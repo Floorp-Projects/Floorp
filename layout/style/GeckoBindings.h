@@ -128,13 +128,12 @@ mozilla::StyleSheet* Gecko_LoadStyleSheet(
     mozilla::css::SheetLoadData* parent_load_data,
     mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
     const mozilla::StyleCssUrl* url,
-    mozilla::StyleStrong<mozilla::StyleLockedMediaList> media_list);
+    mozilla::StyleStrong<RawServoMediaList> media_list);
 
-void Gecko_LoadStyleSheetAsync(
-    mozilla::css::SheetLoadDataHolder* parent_data,
-    const mozilla::StyleCssUrl* url,
-    mozilla::StyleStrong<mozilla::StyleLockedMediaList>,
-    mozilla::StyleStrong<mozilla::StyleLockedImportRule>);
+void Gecko_LoadStyleSheetAsync(mozilla::css::SheetLoadDataHolder* parent_data,
+                               const mozilla::StyleCssUrl* url,
+                               mozilla::StyleStrong<RawServoMediaList>,
+                               mozilla::StyleStrong<RawServoImportRule>);
 
 // Selector Matching.
 uint64_t Gecko_ElementState(const mozilla::dom::Element*);
@@ -181,26 +180,26 @@ SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(
 #undef SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS
 
 // Style attributes.
-const mozilla::StyleLockedDeclarationBlock* Gecko_GetStyleAttrDeclarationBlock(
-    const mozilla::dom::Element* element);
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
+Gecko_GetStyleAttrDeclarationBlock(const mozilla::dom::Element* element);
 
 void Gecko_UnsetDirtyStyleAttr(const mozilla::dom::Element* element);
 
-const mozilla::StyleLockedDeclarationBlock*
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
 Gecko_GetHTMLPresentationAttrDeclarationBlock(
     const mozilla::dom::Element* element);
 
-const mozilla::StyleLockedDeclarationBlock*
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
 Gecko_GetExtraContentStyleDeclarations(const mozilla::dom::Element* element);
 
-const mozilla::StyleLockedDeclarationBlock*
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
 Gecko_GetUnvisitedLinkAttrDeclarationBlock(
     const mozilla::dom::Element* element);
 
-const mozilla::StyleLockedDeclarationBlock*
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
 Gecko_GetVisitedLinkAttrDeclarationBlock(const mozilla::dom::Element* element);
 
-const mozilla::StyleLockedDeclarationBlock*
+const mozilla::StyleStrong<RawServoDeclarationBlock>*
 Gecko_GetActiveLinkAttrDeclarationBlock(const mozilla::dom::Element* element);
 
 // Visited handling.

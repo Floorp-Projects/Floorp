@@ -14,7 +14,7 @@ namespace mozilla::dom {
 
 class CSSMediaRule final : public css::ConditionRule {
  public:
-  CSSMediaRule(RefPtr<StyleLockedMediaRule> aRawRule, StyleSheet* aSheet,
+  CSSMediaRule(RefPtr<RawServoMediaRule> aRawRule, StyleSheet* aSheet,
                css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -26,8 +26,8 @@ class CSSMediaRule final : public css::ConditionRule {
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  StyleLockedMediaRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<StyleLockedMediaRule>);
+  RawServoMediaRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<RawServoMediaRule>);
 
   // WebIDL interface
   StyleCssRuleType Type() const override;
@@ -44,7 +44,7 @@ class CSSMediaRule final : public css::ConditionRule {
  private:
   virtual ~CSSMediaRule();
 
-  RefPtr<StyleLockedMediaRule> mRawRule;
+  RefPtr<RawServoMediaRule> mRawRule;
   RefPtr<dom::MediaList> mMediaList;
 };
 
