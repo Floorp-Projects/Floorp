@@ -91,6 +91,8 @@
       }));
 
       window.varify = true;
+
+      const Cu_Sandbox = Cu ? Cu.Sandbox : null;
     `;
     await evaluateExpression(state.webConsoleFront, script);
 
@@ -218,8 +220,8 @@
 
   async function doAutocompleteSandbox(webConsoleFront) {
     // Check that completion provides inherited properties even if [[OwnPropertyKeys]] throws.
-    info("test autocomplete for 'Cu.Sandbox.'");
-    const response = await webConsoleFront.autocomplete("Cu.Sandbox.");
+    info("test autocomplete for 'Cu_Sandbox.'");
+    const response = await webConsoleFront.autocomplete("Cu_Sandbox.");
     ok(!response.matchProp, "matchProp");
     const keys = Object.getOwnPropertyNames(Object.prototype).sort();
     is(response.matches.length, keys.length, "matches.length");

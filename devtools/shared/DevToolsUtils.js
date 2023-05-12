@@ -28,6 +28,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ObjectUtils.jsm"
 );
 
+ChromeUtils.defineLazyGetter(lazy, "eagerEcmaAllowlist", () => {
+  return require("resource://devtools/server/actors/webconsole/eager-ecma-allowlist.js");
+});
+
 // Using this name lets the eslint plugin know about lazy defines in
 // this file.
 var DevToolsUtils = exports;
@@ -266,6 +270,28 @@ exports.isSafeDebuggerObject = function(obj) {
   return true;
 };
 
+// Native getters which are considered to be side effect free.
+let gSideEffectFreeGetters; // string => Array(Function)
+
+/**
+ * Generate gSideEffectFreeGetters map.
+ */
+function ensureSideEffectFreeGetters() {
+  if (gSideEffectFreeGetters) {
+    return;
+  }
+
+  const map = new Map();
+  for (const n of lazy.eagerEcmaAllowlist.getters) {
+    if (!map.has(n.name)) {
+      map.set(n.name, []);
+    }
+    map.get(n.name).push(n);
+  }
+
+  gSideEffectFreeGetters = map;
+}
+
 /**
  * Determines if a descriptor has a getter which doesn't call into JavaScript.
  *
@@ -279,7 +305,35 @@ exports.hasSafeGetter = function(desc) {
   // unwrapping.
   let fn = desc.get;
   fn = fn && exports.unwrap(fn);
-  return fn?.callable && fn?.class == "Function" && fn?.script === undefined;
+  if (!fn) {
+    return false;
+  }
+  if (!fn.callable || fn.class !== "Function") {
+    return false;
+  }
+  if (fn.script !== undefined) {
+    // This is scripted function.
+    return false;
+  }
+
+  // This is a getter with native function.
+
+  // We assume all DOM getters have no major side effect, and they are
+  // eagerly-evaluateable.
+  //
+  // JitInfo is used only by methods/accessors in WebIDL, and being
+  // "a getter with JitInfo" can be used as a condition to check if given
+  // function is DOM getter.
+  //
+  // This includes privileged interfaces in addition to standard web APIs.
+  if (fn.isNativeGetterWithJitInfo()) {
+    return true;
+  }
+
+  // Apply explicit allowlist.
+  ensureSideEffectFreeGetters();
+  const natives = gSideEffectFreeGetters.get(fn.name);
+  return natives && natives.some(n => fn.isSameNative(n));
 };
 
 /**

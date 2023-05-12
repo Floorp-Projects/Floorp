@@ -511,7 +511,8 @@ function ensureSideEffectFreeNatives(maybeEvalGlobal) {
   }
 
   const natives = [
-    ...eagerEcmaAllowlist,
+    ...eagerEcmaAllowlist.functions,
+    ...eagerEcmaAllowlist.getters,
 
     // Pull in all of the non-ECMAScript native functions that we want to
     // allow as well.
