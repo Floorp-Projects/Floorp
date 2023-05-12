@@ -22,61 +22,71 @@ add_task(async function() {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [LONGSTRING], function(
     longString
   ) {
-    content.wrappedJSObject.console.log(
-      "oi-test",
-      Object.create(
-        null,
-        Object.getOwnPropertyDescriptors({
-          get myStringGetter() {
-            return "hello";
-          },
-          get myNumberGetter() {
-            return 123;
-          },
-          get myUndefinedGetter() {
-            return undefined;
-          },
-          get myNullGetter() {
-            return null;
-          },
-          get myZeroGetter() {
-            return 0;
-          },
-          get myEmptyStringGetter() {
-            return "";
-          },
-          get myFalseGetter() {
-            return false;
-          },
-          get myTrueGetter() {
-            return true;
-          },
-          get myObjectGetter() {
-            return { foo: "bar" };
-          },
-          get myArrayGetter() {
-            return Array.from({ length: 1000 }, (_, i) => i);
-          },
-          get myMapGetter() {
-            return new Map([["foo", { bar: "baz" }]]);
-          },
-          get myProxyGetter() {
-            const handler = {
-              get(target, name) {
-                return name in target ? target[name] : 37;
-              },
-            };
-            return new Proxy({ a: 1 }, handler);
-          },
-          get myThrowingGetter() {
-            throw new Error("myError");
-          },
-          get myLongStringGetter() {
-            return longString;
-          },
-        })
-      )
+    const obj = Object.create(
+      null,
+      Object.getOwnPropertyDescriptors({
+        get myStringGetter() {
+          return "hello";
+        },
+        get myNumberGetter() {
+          return 123;
+        },
+        get myUndefinedGetter() {
+          return undefined;
+        },
+        get myNullGetter() {
+          return null;
+        },
+        get myZeroGetter() {
+          return 0;
+        },
+        get myEmptyStringGetter() {
+          return "";
+        },
+        get myFalseGetter() {
+          return false;
+        },
+        get myTrueGetter() {
+          return true;
+        },
+        get myObjectGetter() {
+          return { foo: "bar" };
+        },
+        get myArrayGetter() {
+          return Array.from({ length: 1000 }, (_, i) => i);
+        },
+        get myMapGetter() {
+          return new Map([["foo", { bar: "baz" }]]);
+        },
+        get myProxyGetter() {
+          const handler = {
+            get(target, name) {
+              return name in target ? target[name] : 37;
+            },
+          };
+          return new Proxy({ a: 1 }, handler);
+        },
+        get myThrowingGetter() {
+          throw new Error("myError");
+        },
+        get myLongStringGetter() {
+          return longString;
+        },
+      })
     );
+    Object.defineProperty(obj, "MyPrint", { get: content.print });
+    Object.defineProperty(obj, "MyElement", { get: content.Element });
+    Object.defineProperty(obj, "MySetAttribute", {
+      get: content.Element.prototype.setAttribute,
+    });
+    Object.defineProperty(obj, "MySetClassName", {
+      get: Object.getOwnPropertyDescriptor(
+        content.Element.prototype,
+        "className"
+      ).set,
+    });
+
+    content.wrappedJSObject.console.log("oi-test", obj);
   });
 
   const node = await waitFor(() => findConsoleAPIMessage(hud, "oi-test"));
@@ -99,6 +109,7 @@ add_task(async function() {
   await testProxyGetter(oi);
   await testThrowingGetter(oi);
   await testLongStringGetter(oi, LONGSTRING);
+  await testUnsafeGetters(oi);
 });
 
 async function testStringGetter(oi) {
@@ -565,6 +576,39 @@ async function testLongStringGetter(oi, longString) {
     )
   );
   ok(true, "the longstring was expanded");
+}
+
+async function testUnsafeGetters(oi) {
+  const props = [
+    [
+      "MyPrint",
+      "MyPrint: TypeError: 'print' called on an object that does not implement interface Window.",
+    ],
+    ["MyElement", "MyElement: TypeError: Illegal constructor."],
+    [
+      "MySetAttribute",
+      "MySetAttribute: TypeError: 'setAttribute' called on an object that does not implement interface Element.",
+    ],
+    [
+      "MySetClassName",
+      "MySetClassName: TypeError: 'set className' called on an object that does not implement interface Element.",
+    ],
+  ];
+
+  for (const [name, text] of props) {
+    const getNode = () => findObjectInspectorNode(oi, name);
+    is(
+      isObjectInspectorNodeExpandable(getNode()),
+      false,
+      `The ${name} node can't be expanded`
+    );
+    const invokeButton = getObjectInspectorInvokeGetterButton(getNode());
+    ok(invokeButton, `There is an invoke button for ${name} as expected`);
+
+    invokeButton.click();
+    await waitFor(() => getNode().textContent.includes(text));
+    ok(true, `${name} getter shows the error message ${text}`);
+  }
 }
 
 function checkChildren(node, expectedChildren) {
