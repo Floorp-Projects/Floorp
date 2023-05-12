@@ -182,10 +182,6 @@ struct BaseEventFlags {
   // If mCameFromAnotherProcess is true, the event came from another process.
   bool mCameFromAnotherProcess : 1;
 
-  // At lease one of the event in the event path had non privileged click
-  // listener.
-  bool mHadNonPrivilegedClickListeners : 1;
-
   // If the event is being handled in target phase, returns true.
   inline bool InTargetPhase() const {
     return (mInBubblingPhase && mInCapturePhase);
