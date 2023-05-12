@@ -244,7 +244,7 @@ function removeSourcesAndActors(state, action) {
     mutableSources,
     mutableOriginalSources,
     mutableSourceActors,
-    mutableBreakableLines,
+    mutableOriginalBreakableLines,
     mutableBreakpointPositions,
   } = state;
   for (const removedSource of action.sources) {
@@ -278,7 +278,7 @@ function removeSourcesAndActors(state, action) {
     mutableSourceActors.delete(sourceId);
 
     if (removedSource.isOriginal) {
-      mutableBreakableLines.delete(sourceId);
+      mutableOriginalBreakableLines.delete(sourceId);
     }
 
     mutableBreakpointPositions.delete(sourceId);
