@@ -42,9 +42,17 @@
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Ni’ñānj sitiô nan ‘ngō koneksiûn dūgumîn ñù’.</string>
 
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[<ul>
+<li>Nā’hue nāyi’nïn pajinâ ruhuât ni’hiājt dadin’ ni’ñānj web nan ‘ngō kōneksiûn hue’ê.</li>
+<li>Ahui a’nan’ man si gūruhuaj dadin’ pajinân nan ‘hiaj nī nitāj dàj gaj gī’hiát da’ gānahuin man.</li>
+<li>Gā’hue gātāj nan’ānjt riña administrador sitio nan rayi’î sa ahui a’nan’ nan.</li></ul>]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Sa huāj ñā doj…</string>
 
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[<label> <b>%1$s</b> nīka ‘ngō chrēj dugumîn ñùn’ gū’nàj HTTP Strict Transport Security (HSTS), ô’ nī gāta ruhuâj sisī <b>%2$s</b> gā’hue gātūt riñanj ngâ sa huā arán doj. Si ga’hue nādunāt sa huā riña sitiô nan si ruhuât gātūt. </label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Nānīkāj ne\’ Rūkùu</string>
 
@@ -247,4 +255,10 @@
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Pajinâ %1$s nī \'ngō pajinâ diga\'ñu\'ūnj un huin man yī\'ì dan narán aga\' nan riñaj dadin\' daj gà\' gatāj na\'ānjt gūnï.</p>]]></string>
 
-    </resources>
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Nitāj si huā akuan’ sitiô hue’è nan</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Ngà ‘hiaj sun sa gū’nàj HTTPS da’ gā nïn doj gāchēt nī huā nï’ nitāj ‘ngō HTTPS nākà guendâ <em>%1$s</em> hua.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Gīnu ngè riña HTTP</string>
+</resources>

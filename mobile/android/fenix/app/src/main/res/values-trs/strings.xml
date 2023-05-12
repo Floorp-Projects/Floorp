@@ -369,8 +369,14 @@
 
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Têma</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Ñanj ayi\'ì\'</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Da\'nga\'a</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Nādunō\' dàj huin ruhuô\'</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Gāyi’ì sēsiûn da’ nāgi’hiaj nūguan’ànt nej rakïj ñanj, nej markadô, nej da’nga’ huìi nī doj sa huāa.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Si kuendâ Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -399,8 +405,12 @@
     <string name="preferences_search_browsing_history">Nānà\'uì\' nej sa gatsít nga gaché nunt</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">Nānà\'uì\' nej sa garâj sun nīchrà\'t</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Nāna’huì’ nej rakïj ñanj ‘hiaj sun nūguan’àan</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Nāgi\'iô\' riña kuênta</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Nāhuin chrē’ mān’an URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Nā\'nīn nej lînk riña nej aplikasiûn</string>
 
@@ -422,11 +432,27 @@
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">Sī ga’hue gāchinj</string>
 
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Riña màn nej sa nata’ nagi’hiaj mān’ânt</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">GĀ’HUE</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Dūyichin\'</string>
 
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Si yūgui yi’nïn’ nan</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Sisi’hiaj yi’nïn’ nan (ID si’hija si)</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Gūej ñû</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Marcador nakà doj</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Hìaj nākà gini’hiājt</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Nuguan ‘hiaj nadigi’ñûn’ ‘ngō sa huāa</string>
     <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
@@ -459,6 +485,11 @@
     <string name="wallpaper_classic_title">Klâsiko %s</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">Sa ahui Nāsinùnj</string>
+
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Gārahuè ngà a’ngô kōlô</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Nāguī ‘ngō sa gīnu riña raga’ gā’min ngàt.</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -686,8 +717,14 @@
     <string name="tab_tray_multiselect_menu_item_bookmark">Sa arâj sun nīchrò\' doj</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">Nārán</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Dūyinga’ nej rakïj ñanj naguit</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Riña ‘na’ nej rakïj ñanj naguit</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Nādure\' rakïj ñanj riña màn yì\'nïnj</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Nāguī nej rakïj ñanj</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Nārán rakïj ñanj</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -704,13 +741,20 @@
     <string name="collection_rename">Nādūnā si yugui yi\'nïn\'ïn</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
-    <!-- Text for the menu button to rename a top site -->
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Si yūgui yi’nïn’ nan</string>
+	<!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">Nāchrūn a\'ngô si yūgui</string>
 	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Nādure\'</string>
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Nādure’ man riña ‘na’ sa gini’hiājt</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Riña Huìi)</string>
 
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Dūguatûj nuguan\'an</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Nādūre\' sa gini\'iājt</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -738,6 +782,16 @@
     <string name="history_empty_message">Nitāj à\'ngō sa gini\'iājt</string>
 
 
+    <!-- Downloads -->
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Nej sa nadunïnjt ngà nare’</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Ngà gahuin anêj %1$s</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">Nitāj à’ngō achibô nanïnj ïn nu</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">Ngà naguit %1$d</string>
     <!-- Text for the button to remove a single download item -->
     <string name="download_delete_item_1">Nādure\'</string>
 
@@ -775,6 +829,10 @@
     <string name="bookmark_menu_open_in_new_tab_button">Nā\'nïn riña rakïj ñanj nakàa</string>
     <!-- Bookmark overflow menu open in private tab button -->
     <string name="bookmark_menu_open_in_private_tab_button">Nā\'nïn riña rakïj ñanj huìi</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">Nā’nïn daran’anj riña nej rakïj ñanj nākàa</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">Nā’nïn daran’anj riña nej rakïj ñanj huìi</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Nādūre\'</string>
     <!--Bookmark overflow menu save button -->
@@ -815,6 +873,9 @@
     <string name="bookmark_deletion_multiple_snackbar_message_3">Nādure’ nej karpetâ naguit</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">NĀNIKÀJ RŪKÙ</string>
+
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Dūguatûj nuguan\'an</string>
 
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
@@ -942,6 +1003,10 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Dūyingô\'</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Nā’nïnj sà’ ngà PDF</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">Nā’hue nāgi’hia PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Gā\'nïnj riña aga\'</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -949,9 +1014,15 @@
 
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Hìaj garâj sun nākàt</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Nā’nïnj sà\' riña portapapeles</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">\'Ngà nū sà\'aj riña portapapeles</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Gāyi\'ì sēsiû riña Sync</string>
-     <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Nāgi\’hiaj nūguà\'àn nī na’nïnj sà\’t nej dâto</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Gā \'nïnj gan\'an riña daran\' nej aga\'a</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Gānātū nākà ñû riña Sync</string>
@@ -979,6 +1050,9 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Nārán riña nej rakïj ñanj huìi</string>
+
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Dūyingô’</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

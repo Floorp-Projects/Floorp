@@ -82,7 +82,51 @@
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">Ahui hio\' yi</string>
 
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">Gānïn ‘ngō diû</string>
+    <!-- Option in expanded select login prompt that links to login settings -->
+    <string name="mozac_feature_prompts_manage_logins">Gīni’hiāj rayi’î riña ayi’ìt sēsiûn</string>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">Nāgi’hiaj nìko nej riña ayi’ìt sesiûn huaa</string>
+
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Gāchrī huì nej riña ayi’ìt sesiûn huaa</string>
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">Nej riña ayi’ìt sesiûn huaa</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Nā’nïnjt nej dato riña sitiô nan anj.</string>
+    <string name="mozac_feature_prompt_repost_message">Sisī nāgi’hiaj nākàt pajinâ nan nī gā’hue nāhuin huà’ nej sa gi’hiaj nākàt, dàj rû’ gā’nïnjt ‘ngō san’ānj an asi huà’ gāhuī ‘ngō nuguan’ gā’nïnjt.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Nā’nïnj ñû gān’ānj nej dâto</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
     <string name="mozac_feature_prompt_repost_negative_button_text">Dūyichin\'</string>
 
-    </resources>
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">Nāguī tarjeta san’ānj an</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Nāgi’hiaj da’ gatū doj nej tarjeta san’ānj an</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Gāchrī huì nej tarjeta san’ānj huāa</string>
+
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards">Ni’hiāj dàj gā nej tarjeta san’ānj an</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">Nā’nïnj sà’ hue’êt tarjeta nan anj.</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">Nāgi’hiāj nākàt diû gisìj gīrè’ tarjeta nan anj</string>
+
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Nāruguì’ da’ga’ nīkāj si tarjetât. Si nanun sà’ da’nga’ gāhui rayi’ij.</string>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address_2">Nāguī ‘ngō dīreksiûn</string>
+    <!-- Content description for expanding the select addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description">Nāgi’hiaj nìko nej direksiûn huaa</string>
+    <!-- Content description for collapsing the select address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description">Gāchrī huì nej direksiûn huaa</string>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Ni’hiāj dàj gā nej dīreksiûn</string>
+</resources>

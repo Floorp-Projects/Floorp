@@ -38,6 +38,10 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Gīrì\' nej dato āsìj riña portapapel</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Gachrūn nej dâto riña portapapel</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Nārán riña nej nuguan’ nan riña ahuin mān’an pâjina</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Ni’hiāj riña nej hiūj gaché nunt</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Nādunïnj nej archivo nu gāhiāt nī nāgi’iát riña nej sa gahuin ngà nadunïnjt riña navegador</string>
     <!-- Description for downloads_open permission. -->
@@ -160,6 +164,8 @@
     <string name="mozac_add_on_install_progress_caption">Hìaj naduni nī natsi sa nata\' naguit…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
     <string name="mozac_feature_addons_failed_to_query_add_ons">Nu ga\'ue natsi nej sa nūtò\'.</string>
+    <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
+    <string name="mozac_feature_addons_failed_to_translate">Nu nāri’ìj nuguan’ nañû, guendâ nāgi’hiát sa huā riña %1$s nī gunedâ nādunā nânj ngà ‘na’ nīñā %2$s</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">Ngà huā %1$s gārasunt</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->

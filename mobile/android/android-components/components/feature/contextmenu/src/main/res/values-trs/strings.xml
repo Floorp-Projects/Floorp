@@ -18,6 +18,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">Gūxūn nī nāchrūnt a\'ngô hiūj u riña \'na\' ñadu\'ua</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Nā\'nïnj sà\' ñadu\'ua</string>
+    <!-- Text for context menu item to copy the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image">Gīda’a ñanj dū’hua</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">Nā\'nïnj sà\' riña si ārchibô aga\' nan</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
