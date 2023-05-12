@@ -7,13 +7,13 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  element: "chrome://remote/content/marionette/element.sys.mjs",
+  element: "chrome://remote/content/shared/webdriver/Element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
-  ShadowRoot: "chrome://remote/content/marionette/element.sys.mjs",
-  WebElement: "chrome://remote/content/marionette/element.sys.mjs",
-  WebReference: "chrome://remote/content/marionette/element.sys.mjs",
+  ShadowRoot: "chrome://remote/content/marionette/web-reference.sys.mjs",
+  WebElement: "chrome://remote/content/marionette/web-reference.sys.mjs",
+  WebReference: "chrome://remote/content/marionette/web-reference.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>

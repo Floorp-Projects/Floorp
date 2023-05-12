@@ -17,7 +17,6 @@ remote.jar:
   content/marionette/cert.sys.mjs (cert.sys.mjs)
   content/marionette/cookie.sys.mjs (cookie.sys.mjs)
   content/marionette/driver.sys.mjs (driver.sys.mjs)
-  content/marionette/element.sys.mjs (element.sys.mjs)
   content/marionette/evaluate.sys.mjs (evaluate.sys.mjs)
   content/marionette/event.sys.mjs  (event.sys.mjs)
   content/marionette/interaction.sys.mjs (interaction.sys.mjs)
@@ -37,6 +36,7 @@ remote.jar:
   content/marionette/stream-utils.sys.mjs (stream-utils.sys.mjs)
   content/marionette/sync.sys.mjs (sync.sys.mjs)
   content/marionette/transport.sys.mjs (transport.sys.mjs)
+  content/marionette/web-reference.sys.mjs (web-reference.sys.mjs)
 #ifdef ENABLE_TESTS
   content/marionette/test_dialog.dtd (chrome/test_dialog.dtd)
   content/marionette/test_dialog.properties (chrome/test_dialog.properties)
