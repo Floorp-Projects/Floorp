@@ -319,6 +319,11 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   void GetFontKerning(nsAString& aFontKerning);
   void SetFontKerning(const nsAString& aFontKerning);
 
+  void GetLetterSpacing(nsACString& aLetterSpacing);
+  void SetLetterSpacing(const nsACString& aLetterSpacing);
+  void GetWordSpacing(nsACString& aWordSpacing);
+  void SetWordSpacing(const nsACString& aWordSpacing);
+
   void ClosePath() override {
     EnsureWritablePath();
 
@@ -529,6 +534,17 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void UpdateFilter();
 
  protected:
+  /**
+   * Helper to parse a value for the letterSpacing or wordSpacing attribute.
+   * If successful, returns the result in aValue, and the whitespace-normalized
+   * value string in aNormalized; if unsuccessful these are left untouched.
+   */
+  void ParseSpacing(const nsACString& aSpacing, float* aValue,
+                    nsACString& aNormalized);
+
+  already_AddRefed<const ComputedStyle> ResolveStyleForProperty(
+      nsCSSPropertyID aProperty, const nsACString& aValue);
+
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
                              uint32_t aWidth, uint32_t aHeight,
                              Maybe<nsIPrincipal*> aSubjectPrincipal,
@@ -591,6 +607,10 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   // Helper for SetFontInternal in the case where we have no PresShell.
   bool SetFontInternalDisconnected(const nsACString& aFont,
                                    mozilla::ErrorResult& aError);
+
+  // Update the resolved values for letterSpacing and wordSpacing, if present,
+  // following a potential change to font-relative dimensions.
+  void UpdateSpacing();
 
   // Clears the target and updates mOpaque based on mOpaqueAttrValue and
   // mContextAttributesHasAlpha.
@@ -960,6 +980,11 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     TextBaseline textBaseline = TextBaseline::ALPHABETIC;
     TextDirection textDirection = TextDirection::INHERIT;
     FontKerning fontKerning = FontKerning::AUTO;
+
+    gfx::Float letterSpacing = 0.0f;
+    gfx::Float wordSpacing = 0.0f;
+    nsCString letterSpacingStr;
+    nsCString wordSpacingStr;
 
     nscolor shadowColor = 0;
 

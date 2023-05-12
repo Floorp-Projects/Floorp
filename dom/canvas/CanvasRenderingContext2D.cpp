@@ -990,6 +990,10 @@ CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
       textBaseline(aOther.textBaseline),
       textDirection(aOther.textDirection),
       fontKerning(aOther.fontKerning),
+      letterSpacing(aOther.letterSpacing),
+      wordSpacing(aOther.wordSpacing),
+      letterSpacingStr(aOther.letterSpacingStr),
+      wordSpacingStr(aOther.wordSpacingStr),
       shadowColor(aOther.shadowColor),
       transform(aOther.transform),
       shadowOffset(aOther.shadowOffset),
@@ -2530,6 +2534,98 @@ void CanvasRenderingContext2D::SetFilter(const nsACString& aFilter,
   }
 }
 
+static already_AddRefed<const ComputedStyle> ResolveStyleForServo(
+    nsCSSPropertyID aProperty, const nsACString& aString,
+    const ComputedStyle* aParentStyle, PresShell* aPresShell,
+    ErrorResult& aError) {
+  RefPtr<RawServoDeclarationBlock> declarations =
+      CreateDeclarationForServo(aProperty, aString, aPresShell->GetDocument());
+  if (!declarations) {
+    return nullptr;
+  }
+
+  // In addition to unparseable values, reject 'inherit' and 'initial'.
+  if (Servo_DeclarationBlock_HasCSSWideKeyword(declarations, aProperty)) {
+    return nullptr;
+  }
+
+  ServoStyleSet* styleSet = aPresShell->StyleSet();
+  return styleSet->ResolveForDeclarations(aParentStyle, declarations);
+}
+
+already_AddRefed<const ComputedStyle>
+CanvasRenderingContext2D::ResolveStyleForProperty(nsCSSPropertyID aProperty,
+                                                  const nsACString& aValue) {
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
+    return nullptr;
+  }
+
+  nsAutoCString usedFont;
+  IgnoredErrorResult err;
+  RefPtr<const ComputedStyle> parentStyle =
+      GetFontStyleForServo(mCanvasElement, GetFont(), presShell, usedFont, err);
+  if (!parentStyle) {
+    return nullptr;
+  }
+
+  return ResolveStyleForServo(aProperty, aValue, parentStyle, presShell, err);
+}
+
+void CanvasRenderingContext2D::GetLetterSpacing(nsACString& aLetterSpacing) {
+  if (CurrentState().letterSpacingStr.IsEmpty()) {
+    aLetterSpacing.AssignLiteral("0px");
+  } else {
+    aLetterSpacing = CurrentState().letterSpacingStr;
+  }
+}
+
+void CanvasRenderingContext2D::SetLetterSpacing(
+    const nsACString& aLetterSpacing) {
+  ParseSpacing(aLetterSpacing, &CurrentState().letterSpacing,
+               CurrentState().letterSpacingStr);
+}
+
+void CanvasRenderingContext2D::GetWordSpacing(nsACString& aWordSpacing) {
+  if (CurrentState().wordSpacingStr.IsEmpty()) {
+    aWordSpacing.AssignLiteral("0px");
+  } else {
+    aWordSpacing = CurrentState().wordSpacingStr;
+  }
+}
+
+void CanvasRenderingContext2D::SetWordSpacing(const nsACString& aWordSpacing) {
+  ParseSpacing(aWordSpacing, &CurrentState().wordSpacing,
+               CurrentState().wordSpacingStr);
+}
+
+void CanvasRenderingContext2D::ParseSpacing(const nsACString& aSpacing,
+                                            float* aValue,
+                                            nsACString& aNormalized) {
+  // Normalize whitespace in the string before trying to parse it, as we want
+  // to store it in normalized form, and this allows a simple check against the
+  // 'normal' keyword, which is not accepted.
+  nsAutoCString normalized(aSpacing);
+  normalized.CompressWhitespace(true, true);
+  if (normalized.Equals("normal", nsCaseInsensitiveCStringComparator)) {
+    return;
+  }
+  float value;
+  if (!Servo_ParseAbsoluteLength(&normalized, &value)) {
+    if (!GetPresShell()) {
+      return;
+    }
+    RefPtr<const ComputedStyle> style =
+        ResolveStyleForProperty(eCSSProperty_letter_spacing, aSpacing);
+    if (!style) {
+      return;
+    }
+    value = style->StyleText()->mLetterSpacing.ToCSSPixels();
+  }
+  aNormalized = normalized;
+  *aValue = value;
+}
+
 class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
  public:
   CanvasUserSpaceMetrics(const gfx::IntSize& aSize, const nsFont& aFont,
@@ -3526,6 +3622,13 @@ void CanvasRenderingContext2D::TransformWillUpdate() {
 void CanvasRenderingContext2D::SetFont(const nsACString& aFont,
                                        ErrorResult& aError) {
   SetFontInternal(aFont, aError);
+  if (aError.Failed()) {
+    return;
+  }
+
+  // If letterSpacing or wordSpacing is present, recompute to account for
+  // changes to font-relative dimensions.
+  UpdateSpacing();
 }
 
 bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
@@ -3727,6 +3830,16 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
   return true;
 }
 
+void CanvasRenderingContext2D::UpdateSpacing() {
+  auto state = CurrentState();
+  if (!state.letterSpacingStr.IsEmpty()) {
+    SetLetterSpacing(state.letterSpacingStr);
+  }
+  if (!state.wordSpacingStr.IsEmpty()) {
+    SetWordSpacing(state.wordSpacingStr);
+  }
+}
+
 void CanvasRenderingContext2D::SetTextAlign(const nsAString& aTextAlign) {
   if (aTextAlign.EqualsLiteral("start"))
     CurrentState().textAlign = TextAlign::START;
@@ -3896,16 +4009,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     : public nsBidiPresUtils::BidiProcessor {
   using Style = CanvasRenderingContext2D::Style;
 
-  CanvasBidiProcessor()
-      : nsBidiPresUtils::BidiProcessor(),
-        mCtx(nullptr),
-        mFontgrp(nullptr),
-        mAppUnitsPerDevPixel(0),
-        mOp(CanvasRenderingContext2D::TextDrawOperation::FILL),
-        mTextRunFlags(),
-        mSetTextCount(0),
-        mDoMeasureBoundingBox(false),
-        mIgnoreSetText(false) {
+  CanvasBidiProcessor() : nsBidiPresUtils::BidiProcessor() {
     if (StaticPrefs::gfx_missing_fonts_notify()) {
       mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
     }
@@ -3917,6 +4021,73 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
       mMissingFonts->Flush();
     }
   }
+
+  class PropertyProvider : public gfxTextRun::PropertyProvider {
+   public:
+    explicit PropertyProvider(const CanvasBidiProcessor& aProcessor)
+        : mProcessor(aProcessor) {}
+
+    void GetSpacing(gfxTextRun::Range aRange,
+                    gfxFont::Spacing* aSpacing) const {
+      for (auto i = aRange.start; i < aRange.end; ++i) {
+        auto* charGlyphs = mProcessor.mTextRun->GetCharacterGlyphs();
+        if (i == mProcessor.mTextRun->GetLength() - 1 ||
+            (charGlyphs[i + 1].IsClusterStart() &&
+             charGlyphs[i + 1].IsLigatureGroupStart())) {
+          // Currently we add all the letterspacing to the right of the glyph,
+          // which is similar to Chrome's behavior, though the LTR vs RTL
+          // asymmetry seems unfortunate.
+          if (mProcessor.mTextRun->IsRightToLeft()) {
+            aSpacing->mAfter = 0;
+            aSpacing->mBefore = mProcessor.mLetterSpacing;
+          } else {
+            aSpacing->mBefore = 0;
+            aSpacing->mAfter = mProcessor.mLetterSpacing;
+          }
+        } else {
+          aSpacing->mBefore = 0;
+          aSpacing->mAfter = 0;
+        }
+        if (charGlyphs[i].CharIsSpace()) {
+          if (mProcessor.mTextRun->IsRightToLeft()) {
+            aSpacing->mBefore += mProcessor.mWordSpacing;
+          } else {
+            aSpacing->mAfter += mProcessor.mWordSpacing;
+          }
+        }
+        aSpacing++;
+      }
+    }
+
+    mozilla::StyleHyphens GetHyphensOption() const {
+      return mozilla::StyleHyphens::None;
+    }
+
+    // Methods only used when hyphenation is active, not relevant to canvas2d:
+    void GetHyphenationBreaks(gfxTextRun::Range aRange,
+                              gfxTextRun::HyphenType* aBreakBefore) const {
+      MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
+    }
+    gfxFloat GetHyphenWidth() const {
+      MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
+      return 0.0;
+    }
+    already_AddRefed<DrawTarget> GetDrawTarget() const {
+      MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
+      return nullptr;
+    }
+    uint32_t GetAppUnitsPerDevUnit() const {
+      MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
+      return 60;
+    }
+    gfx::ShapedTextFlags GetShapedTextFlags() const {
+      MOZ_ASSERT_UNREACHABLE("no hyphenation in canvas2d text!");
+      return gfx::ShapedTextFlags();
+    }
+
+   private:
+    const CanvasBidiProcessor& mProcessor;
+  };
 
   using ContextState = CanvasRenderingContext2D::ContextState;
 
@@ -3948,10 +4119,11 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
   }
 
   nscoord GetWidth() override {
+    PropertyProvider provider(*this);
     gfxTextRun::Metrics textRunMetrics = mTextRun->MeasureText(
         mDoMeasureBoundingBox ? gfxFont::TIGHT_INK_EXTENTS
                               : gfxFont::LOOSE_INK_EXTENTS,
-        mDrawTarget);
+        mDrawTarget, &provider);
 
     // this only measures the height; the total width is gotten from the
     // the return value of ProcessText.
@@ -4032,6 +4204,8 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     float& inlineCoord = verticalRun ? point.y.value : point.x.value;
     inlineCoord += aXOffset;
 
+    PropertyProvider provider(*this);
+
     // offset is given in terms of left side of string
     if (rtl) {
       // Bug 581092 - don't use rounded pixel width to advance to
@@ -4042,7 +4216,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
       gfxTextRun::Metrics textRunMetrics = mTextRun->MeasureText(
           mDoMeasureBoundingBox ? gfxFont::TIGHT_INK_EXTENTS
                                 : gfxFont::LOOSE_INK_EXTENTS,
-          mDrawTarget);
+          mDrawTarget, &provider);
       inlineCoord += textRunMetrics.mAdvanceWidth;
       // old code was:
       //   point.x += width * mAppUnitsPerDevPixel;
@@ -4116,6 +4290,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     }
 
     params.drawOpts = &drawOpts;
+    params.provider = &provider;
 
     if (style == Style::STROKE) {
       strokeOpts.mLineWidth = state.lineWidth;
@@ -4141,38 +4316,43 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
   RefPtr<DrawTarget> mDrawTarget;
 
   // Pointer to the draw target we should fill our text to
-  CanvasRenderingContext2D* mCtx;
+  CanvasRenderingContext2D* mCtx = nullptr;
 
   // position of the left side of the string, alphabetic baseline
   gfx::Point mPt;
 
   // current font
-  gfxFontGroup* mFontgrp;
+  gfxFontGroup* mFontgrp = nullptr;
+
+  // spacing adjustments to be applied
+  gfx::Float mLetterSpacing = 0.0f;
+  gfx::Float mWordSpacing = 0.0f;
 
   // to record any unsupported characters found in the text,
   // and notify front-end if it is interested
   UniquePtr<gfxMissingFontRecorder> mMissingFonts;
 
   // dev pixel conversion factor
-  int32_t mAppUnitsPerDevPixel;
+  int32_t mAppUnitsPerDevPixel = 0;
 
   // operation (fill or stroke)
-  CanvasRenderingContext2D::TextDrawOperation mOp;
+  CanvasRenderingContext2D::TextDrawOperation mOp =
+      CanvasRenderingContext2D::TextDrawOperation::FILL;
 
   // union of bounding boxes of all runs, needed for shadows
   gfxRect mBoundingBox;
 
   // flags to use when creating textrun, based on CSS style
-  gfx::ShapedTextFlags mTextRunFlags;
+  gfx::ShapedTextFlags mTextRunFlags = gfx::ShapedTextFlags();
 
   // Count of how many times SetText has been called on this processor.
-  uint32_t mSetTextCount;
+  uint32_t mSetTextCount = 0;
 
   // true iff the bounding box should be measured
-  bool mDoMeasureBoundingBox;
+  bool mDoMeasureBoundingBox = false;
 
   // true if future SetText calls should be ignored
-  bool mIgnoreSetText;
+  bool mIgnoreSetText = false;
 };
 
 TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
@@ -4298,6 +4478,17 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
                                     !mIsEntireFrameInvalid ||
                                     aOp == TextDrawOperation::MEASURE;
   processor.mFontgrp = currentFontStyle;
+
+  if (state.letterSpacing != 0.0 || state.wordSpacing != 0.0) {
+    processor.mLetterSpacing =
+        state.letterSpacing * processor.mAppUnitsPerDevPixel;
+    processor.mWordSpacing = state.wordSpacing * processor.mAppUnitsPerDevPixel;
+    processor.mTextRunFlags |= gfx::ShapedTextFlags::TEXT_ENABLE_SPACING;
+    if (state.letterSpacing != 0.0) {
+      processor.mTextRunFlags |=
+          gfx::ShapedTextFlags::TEXT_DISABLE_OPTIONAL_LIGATURES;
+    }
+  }
 
   nscoord totalWidthCoord;
 
