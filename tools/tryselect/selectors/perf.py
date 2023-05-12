@@ -1025,9 +1025,10 @@ class PerfParser(CompareParser):
             if not (dry_run or single_run or base_revision_treeherder):
                 # Setup the base revision, and try config. This lets us change the options
                 # we run the tests with through the PERF_FLAGS environment variable.
+                base_extra_args = list(extra_args)
                 base_try_config = copy.deepcopy(try_config)
-                comparator_obj.setup_base_revision(extra_args)
-                PerfParser.setup_try_config(base_try_config, extra_args)
+                comparator_obj.setup_base_revision(base_extra_args)
+                PerfParser.setup_try_config(base_try_config, base_extra_args)
 
                 with redirect_stdout(log_processor):
                     # XXX Figure out if we can use the `again` selector in some way
@@ -1053,10 +1054,11 @@ class PerfParser(CompareParser):
 
                 comparator_obj.teardown_base_revision()
 
-            comparator_obj.setup_new_revision(extra_args)
+            new_extra_args = list(extra_args)
+            comparator_obj.setup_new_revision(new_extra_args)
             PerfParser.setup_try_config(
                 try_config,
-                extra_args,
+                new_extra_args,
                 base_revision_treeherder=base_revision_treeherder,
             )
 

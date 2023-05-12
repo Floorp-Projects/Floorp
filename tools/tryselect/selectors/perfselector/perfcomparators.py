@@ -151,6 +151,12 @@ class BenchmarkComparator(BasePerfComparator):
             if arg.startswith(arg_prefix):
                 _, settings = arg.split(arg_prefix)
                 setting, val = settings.split("=")
+                if setting not in benchmark_info:
+                    raise BadComparatorArgs(
+                        f"Unknown argument provided `{setting}`. Only the following "
+                        f"are available (prefixed with `{arg_prefix}`): "
+                        f"{list(benchmark_info.keys())}"
+                    )
                 benchmark_info[setting] = val
 
         # Parse the link for any required information
