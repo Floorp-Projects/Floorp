@@ -221,17 +221,6 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     }
   }
 
-  if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK)) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
-    RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
-    MOZ_ASSERT(form);
-    // tell the form that we are about to exit a click handler
-    // so the form knows not to defer subsequent submissions
-    // the pending ones that were created during the handler
-    // will be flushed or forgoten.
-    form->OnSubmitClickEnd();
-  }
-
   if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
     WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
     if (keyEvent && keyEvent->IsTrusted()) {
@@ -251,7 +240,6 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         }
         // https://html.spec.whatwg.org/multipage/form-elements.html#attr-button-type-button-state
         // NS_FORM_BUTTON_BUTTON do nothing.
-        return rv;
       }
       HandlePopoverTargetAction();
     }
@@ -261,6 +249,11 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
     RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
     MOZ_ASSERT(form);
+    // Tell the form that we are about to exit a click handler,
+    // so the form knows not to defer subsequent submissions.
+    // The pending ones that were created during the handler
+    // will be flushed or forgotten.
+    form->OnSubmitClickEnd();
     // Tell the form to flush a possible pending submission.
     // the reason is that the script returned false (the event was
     // not ignored) so if there is a stored submission, it needs to

@@ -510,10 +510,16 @@ void HTMLFormElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
       }
       mGeneratingSubmit = true;
 
-      // let the form know that it needs to defer the submission,
-      // that means that if there are scripted submissions, the
-      // latest one will be deferred until after the exit point of the handler.
-      mDeferSubmission = true;
+      // XXXedgar, the untrusted event would trigger form submission, in this
+      // case, form need to handle defer flag and flushing pending submission by
+      // itself. This could be removed after Bug 1370630.
+      if (!aVisitor.mEvent->IsTrusted()) {
+        // let the form know that it needs to defer the submission,
+        // that means that if there are scripted submissions, the
+        // latest one will be deferred until after the exit point of the
+        // handler.
+        mDeferSubmission = true;
+      }
     } else if (msg == eFormReset) {
       if (mGeneratingReset) {
         aVisitor.mCanHandle = false;
@@ -541,11 +547,6 @@ nsresult HTMLFormElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   if (aVisitor.mEvent->mOriginalTarget == static_cast<nsIContent*>(this) &&
       CanSubmit(*aVisitor.mEvent)) {
     EventMessage msg = aVisitor.mEvent->mMessage;
-    if (msg == eFormSubmit) {
-      // let the form know not to defer subsequent submissions
-      mDeferSubmission = false;
-    }
-
     if (aVisitor.mEventStatus == nsEventStatus_eIgnore) {
       switch (msg) {
         case eFormReset: {
@@ -553,14 +554,6 @@ nsresult HTMLFormElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           break;
         }
         case eFormSubmit: {
-          if (mPendingSubmission) {
-            // tell the form to forget a possible pending submission.
-            // the reason is that the script returned true (the event was
-            // ignored) so if there is a stored submission, it will miss
-            // the name/value of the submitting element, thus we need
-            // to forget it and the form element will build a new one
-            mPendingSubmission = nullptr;
-          }
           if (!aVisitor.mEvent->IsTrusted()) {
             // Warning about the form submission is from untrusted event.
             OwnerDoc()->WarnOnceAbout(
@@ -572,14 +565,16 @@ nsresult HTMLFormElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         default:
           break;
       }
-    } else {
-      if (msg == eFormSubmit) {
-        // tell the form to flush a possible pending submission.
-        // the reason is that the script returned false (the event was
-        // not ignored) so if there is a stored submission, it needs to
-        // be submitted immediatelly.
-        FlushPendingSubmission();
-      }
+    }
+
+    // XXXedgar, the untrusted event would trigger form submission, in this
+    // case, form need to handle defer flag and flushing pending submission by
+    // itself. This could be removed after Bug 1370630.
+    if (msg == eFormSubmit && !aVisitor.mEvent->IsTrusted()) {
+      // let the form know not to defer subsequent submissions
+      mDeferSubmission = false;
+      // tell the form to flush a possible pending submission.
+      FlushPendingSubmission();
     }
 
     if (msg == eFormSubmit) {
