@@ -82,9 +82,55 @@ async function checkBrowserStyle({
   );
 }
 
+async function checkBrowserStyleWithOpenInTabTrue({
+  manifest_version = 3,
+  browser_style_in_manifest = null,
+  expected_browser_style,
+}) {
+  info(
+    `Testing options_ui.open_in_tab=true + browser_style=${browser_style_in_manifest} for MV${manifest_version} extension`
+  );
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version,
+      options_ui: {
+        page: "options.html",
+        browser_style: browser_style_in_manifest,
+        open_in_tab: true,
+      },
+    },
+  });
+  await extension.startup();
+  checkBrowserStyleInManifestKey(
+    extension,
+    "options_ui",
+    expected_browser_style
+  );
+  const warnings = extension.extension.warnings;
+  await extension.unload();
+  Assert.deepEqual(
+    warnings,
+    [],
+    "Expected no warnings on extension with options_ui.open_in_tab true"
+  );
+}
+
 async function repeatTestIndependentOfPref_browser_style_same_as_mv2(testFn) {
   for (let same_as_mv2 of [true, false]) {
     await runWithPrefs([[PREF_SAME_AS_MV2, same_as_mv2]], testFn);
+  }
+}
+async function repeatTestIndependentOf_browser_style_deprecation_prefs(testFn) {
+  for (let supported of [true, false]) {
+    for (let same_as_mv2 of [true, false]) {
+      await runWithPrefs(
+        [
+          [PREF_SUPPORTED, supported],
+          [PREF_SAME_AS_MV2, same_as_mv2],
+        ],
+        testFn
+      );
+    }
   }
 }
 
@@ -108,20 +154,46 @@ add_task(async function browser_style_never_deprecated_in_MV2() {
       expected_browser_style: "BROWSER_STYLE_MV2_DEFAULTS",
       expected_warnings: [],
     });
+
+    // When open_in_tab is true, browser_style is not used and its value does
+    // not matter. Since we want the parsed value to be false in MV3, and the
+    // implementation is simpler if consistently applied to MV2, browser_style
+    // is false when open_in_tab is true (even if browser_style:true is set).
+    await checkBrowserStyleWithOpenInTabTrue({
+      manifest_version: 2,
+      browser_style_in_manifest: null,
+      expected_browser_style: false,
+    });
+    await checkBrowserStyleWithOpenInTabTrue({
+      manifest_version: 2,
+      browser_style_in_manifest: true,
+      expected_browser_style: false,
+    });
   }
   // Regardless of all potential test configurations, browser_style is never
   // deprecated in MV2.
-  for (let supported of [true, false]) {
-    for (let same_as_mv2 of [true, false]) {
-      await runWithPrefs(
-        [
-          [PREF_SUPPORTED, supported],
-          [PREF_SAME_AS_MV2, same_as_mv2],
-        ],
-        check_browser_style_never_deprecated_in_MV2
-      );
-    }
-  }
+  await repeatTestIndependentOf_browser_style_deprecation_prefs(
+    check_browser_style_never_deprecated_in_MV2
+  );
+});
+
+add_task(async function open_in_tab_implies_browser_style_false_MV3() {
+  // Regardless of all potential test configurations, when
+  // options_ui.open_in_tab is true, options_ui.browser_style should be false,
+  // because it being true would print deprecation warnings in MV3, and
+  // browser_style:true does not have any effect when open_in_tab is true.
+  await repeatTestIndependentOf_browser_style_deprecation_prefs(async () => {
+    await checkBrowserStyleWithOpenInTabTrue({
+      manifest_version: 3,
+      browser_style_in_manifest: null,
+      expected_browser_style: false,
+    });
+    await checkBrowserStyleWithOpenInTabTrue({
+      manifest_version: 3,
+      browser_style_in_manifest: true,
+      expected_browser_style: false,
+    });
+  });
 });
 
 // Disable browser_style:true - bug 1830711.
