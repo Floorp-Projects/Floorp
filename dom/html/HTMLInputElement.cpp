@@ -3656,25 +3656,6 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     }
   }
 
-  if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK)) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
-    RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
-    MOZ_ASSERT(form);
-
-    switch (oldType) {
-      case FormControlType::InputSubmit:
-      case FormControlType::InputImage:
-        // tell the form that we are about to exit a click handler
-        // so the form knows not to defer subsequent submissions
-        // the pending ones that were created during the handler
-        // will be flushed or forgotten.
-        form->OnSubmitClickEnd();
-        break;
-      default:
-        break;
-    }
-  }
-
   bool preventDefault =
       aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault;
   if (IsDisabled() && oldType != FormControlType::InputCheckbox &&
@@ -4031,21 +4012,6 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       }
 
       if (outerActivateEvent) {
-        if ((oldType == FormControlType::InputSubmit ||
-             oldType == FormControlType::InputImage)) {
-          if (mType != FormControlType::InputSubmit &&
-              mType != FormControlType::InputImage &&
-              aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) {
-            nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
-            RefPtr<HTMLFormElement> form =
-                HTMLFormElement::FromNodeOrNull(content);
-            MOZ_ASSERT(form);
-            // If the type has changed to a non-submit type, then we want to
-            // flush the stored submission if there is one (as if the submit()
-            // was allowed to succeed)
-            form->FlushPendingSubmission();
-          }
-        }
         switch (mType) {
           case FormControlType::InputReset:
           case FormControlType::InputSubmit:
@@ -4059,19 +4025,6 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
                 form->MaybeSubmit(this);
               }
               aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-            } else if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) &&
-                       (oldType == FormControlType::InputSubmit ||
-                        oldType == FormControlType::InputImage)) {
-              // We are here mostly because the event handler removed us from
-              // the document (mForm is null). In this case, the event doesn't
-              // trigger a submission, so tell the form to flush a possible
-              // pending submission.
-              nsCOMPtr<nsIContent> content(
-                  do_QueryInterface(aVisitor.mItemData));
-              RefPtr<HTMLFormElement> form =
-                  HTMLFormElement::FromNodeOrNull(content);
-              MOZ_ASSERT(form);
-              form->FlushPendingSubmission();
             }
             break;
 
@@ -4082,19 +4035,25 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           HandlePopoverTargetAction();
         }
       }  // click or outer activate event
-    } else if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) &&
-               (oldType == FormControlType::InputSubmit ||
-                oldType == FormControlType::InputImage)) {
-      nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
-      RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
-      MOZ_ASSERT(form);
-      // tell the form to flush a possible pending submission.
-      // the reason is that the script returned false (the event was
-      // not ignored) so if there is a stored submission, it needs to
-      // be submitted immediately.
-      form->FlushPendingSubmission();
     }
   }  // if
+  if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) &&
+      (oldType == FormControlType::InputSubmit ||
+       oldType == FormControlType::InputImage)) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
+    RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
+    MOZ_ASSERT(form);
+    // Tell the form that we are about to exit a click handler,
+    // so the form knows not to defer subsequent submissions.
+    // The pending ones that were created during the handler
+    // will be flushed or forgotten.
+    form->OnSubmitClickEnd();
+    // tell the form to flush a possible pending submission.
+    // the reason is that the script returned false (the event was
+    // not ignored) so if there is a stored submission, it needs to
+    // be submitted immediately.
+    form->FlushPendingSubmission();
+  }
 
   if (NS_SUCCEEDED(rv) && mType == FormControlType::InputRange) {
     PostHandleEventForRangeThumb(aVisitor);
