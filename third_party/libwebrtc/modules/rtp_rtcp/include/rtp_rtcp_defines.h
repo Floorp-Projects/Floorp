@@ -72,9 +72,12 @@ enum RTPExtensionType : int {
   kRtpExtensionRtpStreamId,
   kRtpExtensionRepairedRtpStreamId,
   kRtpExtensionMid,
-  kRtpExtensionGenericFrameDescriptor00,
-  kRtpExtensionGenericFrameDescriptor = kRtpExtensionGenericFrameDescriptor00,
-  kRtpExtensionGenericFrameDescriptor02,
+  kRtpExtensionGenericFrameDescriptor,
+  kRtpExtensionGenericFrameDescriptor00 [[deprecated]] =
+      kRtpExtensionGenericFrameDescriptor,
+  kRtpExtensionDependencyDescriptor,
+  kRtpExtensionGenericFrameDescriptor02 [[deprecated]] =
+      kRtpExtensionDependencyDescriptor,
   kRtpExtensionColorSpace,
   kRtpExtensionVideoFrameTrackingId,
   kRtpExtensionNumberOfExtensions  // Must be the last entity in the enum.
@@ -174,17 +177,6 @@ struct RtpState {
   int64_t capture_time_ms;
   int64_t last_timestamp_time_ms;
   bool ssrc_has_acked;
-};
-
-// Callback interface for packets recovered by FlexFEC or ULPFEC. In
-// the FlexFEC case, the implementation should be able to demultiplex
-// the recovered RTP packets based on SSRC.
-class RecoveredPacketReceiver {
- public:
-  virtual void OnRecoveredPacket(const uint8_t* packet, size_t length) = 0;
-
- protected:
-  virtual ~RecoveredPacketReceiver() = default;
 };
 
 class RtcpIntraFrameObserver {

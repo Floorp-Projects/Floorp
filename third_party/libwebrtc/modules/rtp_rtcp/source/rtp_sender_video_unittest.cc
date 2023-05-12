@@ -29,6 +29,9 @@
 #include "api/video/video_timing.h"
 #include "modules/rtp_rtcp/include/rtp_cvo.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/nack.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/receiver_report.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
 #include "modules/rtp_rtcp/source/rtp_dependency_descriptor_extension.h"
 #include "modules/rtp_rtcp/source/rtp_format_video_generic.h"
 #include "modules/rtp_rtcp/source/rtp_generic_frame_descriptor.h"
@@ -57,6 +60,7 @@ using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
 using ::testing::IsEmpty;
 using ::testing::NiceMock;
+using ::testing::Not;
 using ::testing::Return;
 using ::testing::ReturnArg;
 using ::testing::SaveArg;
@@ -81,6 +85,7 @@ constexpr VideoCodecType kType = VideoCodecType::kVideoCodecGeneric;
 constexpr uint32_t kTimestamp = 10;
 constexpr uint16_t kSeqNum = 33;
 constexpr uint32_t kSsrc = 725242;
+constexpr uint32_t kRtxSsrc = 912364;
 constexpr int kMaxPacketLength = 1500;
 constexpr Timestamp kStartTime = Timestamp::Millis(123456789);
 constexpr int64_t kDefaultExpectedRetransmissionTimeMs = 125;
@@ -182,6 +187,8 @@ class RtpSenderVideoTest : public ::testing::Test {
           config.retransmission_rate_limiter = &retransmission_rate_limiter_;
           config.field_trials = &field_trials_;
           config.local_media_ssrc = kSsrc;
+          config.rtx_send_ssrc = kRtxSsrc;
+          config.rid = "rid";
           return config;
         }())),
         rtp_sender_video_(
@@ -503,6 +510,66 @@ TEST_F(RtpSenderVideoTest, ConditionalRetransmitLimit) {
   vp8_header.temporalIdx = 1;
   EXPECT_TRUE(
       rtp_sender_video_->AllowRetransmission(header, kSettings, kRttMs));
+}
+
+TEST_F(RtpSenderVideoTest,
+       ReservesEnoughSpaceForRtxPacketWhenMidAndRsidAreRegistered) {
+  constexpr int kMediaPayloadId = 100;
+  constexpr int kRtxPayloadId = 101;
+  constexpr size_t kMaxPacketSize = 1'000;
+
+  rtp_module_->SetMaxRtpPacketSize(kMaxPacketSize);
+  rtp_module_->RegisterRtpHeaderExtension(RtpMid::Uri(), 1);
+  rtp_module_->RegisterRtpHeaderExtension(RtpStreamId::Uri(), 2);
+  rtp_module_->RegisterRtpHeaderExtension(RepairedRtpStreamId::Uri(), 3);
+  rtp_module_->RegisterRtpHeaderExtension(AbsoluteSendTime::Uri(), 4);
+  rtp_module_->SetMid("long_mid");
+  rtp_module_->SetRtxSendPayloadType(kRtxPayloadId, kMediaPayloadId);
+  rtp_module_->SetStorePacketsStatus(/*enable=*/true, 10);
+  rtp_module_->SetRtxSendStatus(kRtxRetransmitted);
+
+  RTPVideoHeader header;
+  header.codec = kVideoCodecVP8;
+  header.frame_type = VideoFrameType::kVideoFrameDelta;
+  auto& vp8_header = header.video_type_header.emplace<RTPVideoHeaderVP8>();
+  vp8_header.temporalIdx = 0;
+
+  uint8_t kPayload[kMaxPacketSize] = {};
+  EXPECT_TRUE(rtp_sender_video_->SendVideo(
+      kMediaPayloadId, /*codec_type=*/kVideoCodecVP8, /*rtp_timestamp=*/0,
+      /*capture_time_ms=*/1'000, kPayload, header,
+      /*expected_retransmission_time_ms=*/absl::nullopt, /*csrcs=*/{}));
+  ASSERT_THAT(transport_.sent_packets(), Not(IsEmpty()));
+  // Ack media ssrc, but not rtx ssrc.
+  rtcp::ReceiverReport rr;
+  rtcp::ReportBlock rb;
+  rb.SetMediaSsrc(kSsrc);
+  rb.SetExtHighestSeqNum(transport_.last_sent_packet().SequenceNumber());
+  rr.AddReportBlock(rb);
+  rtp_module_->IncomingRtcpPacket(rr.Build());
+
+  // Test for various frame size close to `kMaxPacketSize` to catch edge cases
+  // when rtx packet barely fit.
+  for (size_t frame_size = 800; frame_size < kMaxPacketSize; ++frame_size) {
+    SCOPED_TRACE(frame_size);
+    rtc::ArrayView<const uint8_t> payload(kPayload, frame_size);
+
+    EXPECT_TRUE(rtp_sender_video_->SendVideo(
+        kMediaPayloadId, /*codec_type=*/kVideoCodecVP8, /*rtp_timestamp=*/0,
+        /*capture_time_ms=*/1'000, payload, header,
+        /*expected_retransmission_time_ms=*/1'000, /*csrcs=*/{}));
+    const RtpPacketReceived& media_packet = transport_.last_sent_packet();
+    EXPECT_EQ(media_packet.Ssrc(), kSsrc);
+
+    rtcp::Nack nack;
+    nack.SetMediaSsrc(kSsrc);
+    nack.SetPacketIds({media_packet.SequenceNumber()});
+    rtp_module_->IncomingRtcpPacket(nack.Build());
+
+    const RtpPacketReceived& rtx_packet = transport_.last_sent_packet();
+    EXPECT_EQ(rtx_packet.Ssrc(), kRtxSsrc);
+    EXPECT_LE(rtx_packet.size(), kMaxPacketSize);
+  }
 }
 
 TEST_F(RtpSenderVideoTest, SendsDependencyDescriptorWhenVideoStructureIsSet) {

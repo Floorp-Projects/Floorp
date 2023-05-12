@@ -147,7 +147,7 @@ std::string RTCStats::ToJson() const {
      << id_
      << "\","
         "\"timestamp\":"
-     << timestamp_us_;
+     << timestamp_.us();
   for (const RTCStatsMemberInterface* member : Members()) {
     if (member->is_defined()) {
       sb << ",\"" << member->name() << "\":";

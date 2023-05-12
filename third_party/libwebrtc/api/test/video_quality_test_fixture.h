@@ -37,6 +37,7 @@ class VideoQualityTestFixtureInterface {
     struct CallConfig {
       bool send_side_bwe = false;
       bool generic_descriptor = false;
+      bool dependency_descriptor = false;
       BitrateConstraints call_bitrate_config;
       int num_thumbnails = 0;
       // Indicates if secondary_(video|ss|screenshare) structures are used.

@@ -19,6 +19,7 @@
 #include "modules/desktop_capture/cropping_window_capturer.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
+#include "system_wrappers/include/metrics.h"
 
 #if defined(RTC_ENABLE_WIN_WGC)
 #include "modules/desktop_capture/win/wgc_capturer_win.h"
@@ -30,6 +31,11 @@
 #endif
 
 namespace webrtc {
+
+void LogDesktopCapturerFullscreenDetectorUsage() {
+  RTC_HISTOGRAM_BOOLEAN("WebRTC.Screenshare.DesktopCapturerFullscreenDetector",
+                        true);
+}
 
 DesktopCapturer::~DesktopCapturer() = default;
 

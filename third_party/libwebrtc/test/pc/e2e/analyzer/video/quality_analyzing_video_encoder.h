@@ -173,6 +173,9 @@ class QualityAnalyzingVideoEncoderFactory : public VideoEncoderFactory {
 
   // Methods of VideoEncoderFactory interface.
   std::vector<SdpVideoFormat> GetSupportedFormats() const override;
+  VideoEncoderFactory::CodecSupport QueryCodecSupport(
+      const SdpVideoFormat& format,
+      absl::optional<std::string> scalability_mode) const override;
   std::unique_ptr<VideoEncoder> CreateVideoEncoder(
       const SdpVideoFormat& format) override;
 

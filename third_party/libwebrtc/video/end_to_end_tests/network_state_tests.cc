@@ -122,35 +122,25 @@ void NetworkStateEndToEndTest::VerifyNewVideoSendStreamsRespectNetworkState(
 void NetworkStateEndToEndTest::VerifyNewVideoReceiveStreamsRespectNetworkState(
     MediaType network_to_bring_up,
     Transport* transport) {
-  std::unique_ptr<test::DirectTransport> sender_transport;
+  SendTask(task_queue(), [this, network_to_bring_up, transport]() {
+    CreateCalls();
+    receiver_call_->SignalChannelNetworkState(network_to_bring_up, kNetworkUp);
+    CreateSendTransport(BuiltInNetworkBehaviorConfig(),
+                        /*observer=*/nullptr);
 
-  SendTask(
-      task_queue(),
-      [this, &sender_transport, network_to_bring_up, transport]() {
-        CreateCalls();
-        receiver_call_->SignalChannelNetworkState(network_to_bring_up,
-                                                  kNetworkUp);
-        sender_transport = std::make_unique<test::DirectTransport>(
-            task_queue(),
-            std::make_unique<FakeNetworkPipe>(
-                Clock::GetRealTimeClock(), std::make_unique<SimulatedNetwork>(
-                                               BuiltInNetworkBehaviorConfig())),
-            sender_call_.get(), payload_type_map_);
-        sender_transport->SetReceiver(receiver_call_->Receiver());
-        CreateSendConfig(1, 0, 0, sender_transport.get());
-        CreateMatchingReceiveConfigs(transport);
-        CreateVideoStreams();
-        CreateFrameGeneratorCapturer(kDefaultFramerate, kDefaultWidth,
-                                     kDefaultHeight);
-        Start();
-      });
+    CreateSendConfig(1, 0, 0);
+    CreateMatchingReceiveConfigs(transport);
+    CreateVideoStreams();
+    CreateFrameGeneratorCapturer(kDefaultFramerate, kDefaultWidth,
+                                 kDefaultHeight);
+    Start();
+  });
 
   SleepMs(kSilenceTimeoutMs);
 
-  SendTask(task_queue(), [this, &sender_transport]() {
+  SendTask(task_queue(), [this]() {
     Stop();
     DestroyStreams();
-    sender_transport.reset();
     DestroyCalls();
   });
 }

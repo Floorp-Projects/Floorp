@@ -233,8 +233,13 @@ int32_t VideoCaptureDS::SetCameraOutput(
 
     // Check if this is a DV camera and we need to add MS DV Filter
     if (pmt->subtype == MEDIASUBTYPE_dvsl ||
-        pmt->subtype == MEDIASUBTYPE_dvsd || pmt->subtype == MEDIASUBTYPE_dvhd)
+        pmt->subtype == MEDIASUBTYPE_dvsd ||
+        pmt->subtype == MEDIASUBTYPE_dvhd) {
       isDVCamera = true;  // This is a DV camera. Use MS DV filter
+    }
+
+    FreeMediaType(pmt);
+    pmt = NULL;
   }
   RELEASE_AND_CLEAR(streamConfig);
 

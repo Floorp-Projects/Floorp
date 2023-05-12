@@ -130,7 +130,7 @@ NSObject *ValueFromStatsMember(const RTCStatsMemberInterface *member) {
 - (instancetype)initWithStatistics:(const webrtc::RTCStats &)statistics {
   if (self = [super init]) {
     _id = [NSString stringForStdString:statistics.id()];
-    _timestamp_us = statistics.timestamp_us();
+    _timestamp_us = statistics.timestamp().us();
     _type = [NSString stringWithCString:statistics.type() encoding:NSUTF8StringEncoding];
 
     NSMutableDictionary<NSString *, NSObject *> *values = [NSMutableDictionary dictionary];
@@ -175,7 +175,7 @@ NSObject *ValueFromStatsMember(const RTCStatsMemberInterface *member) {
 
 - (instancetype)initWithReport : (const webrtc::RTCStatsReport &)report {
   if (self = [super init]) {
-    _timestamp_us = report.timestamp_us();
+    _timestamp_us = report.timestamp().us();
 
     NSMutableDictionary *statisticsById =
         [NSMutableDictionary dictionaryWithCapacity:report.size()];

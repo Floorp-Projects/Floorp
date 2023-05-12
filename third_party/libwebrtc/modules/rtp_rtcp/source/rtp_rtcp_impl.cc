@@ -58,8 +58,6 @@ ModuleRtpRtcpImpl::RtpSenderContext::RtpSenderContext(
 std::unique_ptr<RtpRtcp> RtpRtcp::DEPRECATED_Create(
     const Configuration& configuration) {
   RTC_DCHECK(configuration.clock);
-  RTC_LOG(LS_ERROR)
-      << "*********** USING WebRTC INTERNAL IMPLEMENTATION DETAILS ***********";
   return std::make_unique<ModuleRtpRtcpImpl>(configuration);
 }
 

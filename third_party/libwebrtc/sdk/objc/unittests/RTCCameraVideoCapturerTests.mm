@@ -517,7 +517,8 @@ CMSampleBufferRef createTestSampleBufferRef() {
   XCTAssertEqual(callbackError, errorMock);
 }
 
-- (void)testStartCaptureSetsOutputDimensionsInvalidPixelFormat {
+// TODO(crbug.com/webrtc/14829): Test is disabled on iOS < 16 and broken on iOS 16.
+- (void)DISABLED_testStartCaptureSetsOutputDimensionsInvalidPixelFormat {
   id expectedDeviceInputMock = OCMClassMock([AVCaptureDeviceInput class]);
   id captureDeviceInputMock = OCMClassMock([AVCaptureDeviceInput class]);
   OCMStub([captureDeviceInputMock deviceInputWithDevice:_deviceMock error:[OCMArg setTo:nil]])

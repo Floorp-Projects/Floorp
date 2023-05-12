@@ -33,7 +33,8 @@ LOCAL_INCLUDES += [
 ]
 
 SOURCES += [
-    "/third_party/libwebrtc/api/video/i210_buffer.cc"
+    "/third_party/libwebrtc/api/video/i210_buffer.cc",
+    "/third_party/libwebrtc/api/video/i410_buffer.cc"
 ]
 
 UNIFIED_SOURCES += [
@@ -65,7 +66,6 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
     OS_LIBS += [
-        "GLESv2",
         "log"
     ]
 
@@ -93,11 +93,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
-
-    OS_LIBS += [
-        "dl",
-        "rt"
-    ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
@@ -141,9 +136,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["__STD_C"] = True
 
     OS_LIBS += [
-        "crypt32",
-        "iphlpapi",
-        "secur32",
         "winmm"
     ]
 

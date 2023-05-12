@@ -228,17 +228,10 @@ TEST_F(StatsEndToEndTest, GetStats) {
       return true;
     }
 
-    std::unique_ptr<test::PacketTransport> CreateSendTransport(
-        TaskQueueBase* task_queue,
-        Call* sender_call) override {
+    BuiltInNetworkBehaviorConfig GetSendTransportConfig() const override {
       BuiltInNetworkBehaviorConfig network_config;
       network_config.loss_percent = 5;
-      return std::make_unique<test::PacketTransport>(
-          task_queue, sender_call, this, test::PacketTransport::kSender,
-          payload_type_map_,
-          std::make_unique<FakeNetworkPipe>(
-              Clock::GetRealTimeClock(),
-              std::make_unique<SimulatedNetwork>(network_config)));
+      return network_config;
     }
 
     void ModifySenderBitrateConfig(
@@ -349,6 +342,8 @@ TEST_F(StatsEndToEndTest, GetStats) {
 
 TEST_F(StatsEndToEndTest, TimingFramesAreReported) {
   static const int kExtensionId = 5;
+  RegisterRtpExtension(
+      RtpExtension(RtpExtension::kVideoTimingUri, kExtensionId));
 
   class StatsObserver : public test::EndToEndTest {
    public:
@@ -514,16 +509,12 @@ TEST_F(StatsEndToEndTest, MAYBE_ContentTypeSwitches) {
                      &encoder_config_with_screenshare]() {
         CreateSenderCall(send_config);
         CreateReceiverCall(recv_config);
-
-        receive_transport_ = test.CreateReceiveTransport(task_queue());
-        send_transport_ =
-            test.CreateSendTransport(task_queue(), sender_call_.get());
-        send_transport_->SetReceiver(receiver_call_->Receiver());
-        receive_transport_->SetReceiver(sender_call_->Receiver());
+        CreateReceiveTransport(test.GetReceiveTransportConfig(), &test);
+        CreateSendTransport(test.GetReceiveTransportConfig(), &test);
 
         receiver_call_->SignalChannelNetworkState(MediaType::VIDEO, kNetworkUp);
-        CreateSendConfig(1, 0, 0, send_transport_.get());
-        CreateMatchingReceiveConfigs(receive_transport_.get());
+        CreateSendConfig(1, 0, 0);
+        CreateMatchingReceiveConfigs();
 
         // Modify send and receive configs.
         GetVideoSendConfig()->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
@@ -562,8 +553,6 @@ TEST_F(StatsEndToEndTest, MAYBE_ContentTypeSwitches) {
   SendTask(task_queue(), [this]() {
     Stop();
     DestroyStreams();
-    send_transport_.reset();
-    receive_transport_.reset();
     DestroyCalls();
   });
 
@@ -698,38 +687,24 @@ TEST_F(StatsEndToEndTest, CallReportsRttForSender) {
   static const int kSendDelayMs = 30;
   static const int kReceiveDelayMs = 70;
 
-  std::unique_ptr<test::DirectTransport> sender_transport;
-  std::unique_ptr<test::DirectTransport> receiver_transport;
+  SendTask(task_queue(), [this]() {
+    BuiltInNetworkBehaviorConfig config;
+    config.queue_delay_ms = kSendDelayMs;
+    CreateCalls();
+    CreateSendTransport(config, /*observer*/ nullptr);
 
-  SendTask(task_queue(),
-           [this, &sender_transport, &receiver_transport]() {
-             BuiltInNetworkBehaviorConfig config;
-             config.queue_delay_ms = kSendDelayMs;
-             CreateCalls();
-             sender_transport = std::make_unique<test::DirectTransport>(
-                 task_queue(),
-                 std::make_unique<FakeNetworkPipe>(
-                     Clock::GetRealTimeClock(),
-                     std::make_unique<SimulatedNetwork>(config)),
-                 sender_call_.get(), payload_type_map_);
-             config.queue_delay_ms = kReceiveDelayMs;
-             receiver_transport = std::make_unique<test::DirectTransport>(
-                 task_queue(),
-                 std::make_unique<FakeNetworkPipe>(
-                     Clock::GetRealTimeClock(),
-                     std::make_unique<SimulatedNetwork>(config)),
-                 receiver_call_.get(), payload_type_map_);
-             sender_transport->SetReceiver(receiver_call_->Receiver());
-             receiver_transport->SetReceiver(sender_call_->Receiver());
+    config.queue_delay_ms = kReceiveDelayMs;
+    CreateReceiveTransport(config, /*observer*/ nullptr);
 
-             CreateSendConfig(1, 0, 0, sender_transport.get());
-             CreateMatchingReceiveConfigs(receiver_transport.get());
+    CreateSendConfig(1, 0, 0);
+    CreateMatchingReceiveConfigs();
 
-             CreateVideoStreams();
-             CreateFrameGeneratorCapturer(kDefaultFramerate, kDefaultWidth,
-                                          kDefaultHeight);
-             Start();
-           });
+    CreateVideoStreams();
+    CreateFrameGeneratorCapturer(kDefaultFramerate, kDefaultWidth,
+                                 kDefaultHeight);
+    receiver_call_->SignalChannelNetworkState(MediaType::VIDEO, kNetworkUp);
+    Start();
+  });
 
   int64_t start_time_ms = clock_->TimeInMilliseconds();
   while (true) {
@@ -749,11 +724,9 @@ TEST_F(StatsEndToEndTest, CallReportsRttForSender) {
     SleepMs(10);
   }
 
-  SendTask(task_queue(), [this, &sender_transport, &receiver_transport]() {
+  SendTask(task_queue(), [this]() {
     Stop();
     DestroyStreams();
-    sender_transport.reset();
-    receiver_transport.reset();
     DestroyCalls();
   });
 }

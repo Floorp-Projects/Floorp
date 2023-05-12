@@ -12,6 +12,7 @@
 
 #include <map>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "absl/functional/any_invocable.h"
@@ -21,6 +22,7 @@
 #include "api/rtp_sender_interface.h"
 #include "api/units/time_delta.h"
 #include "api/video/video_timing.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/codec.h"
 #include "media/base/media_channel.h"
@@ -249,6 +251,18 @@ VoiceMediaInfo::~VoiceMediaInfo() = default;
 
 VideoMediaInfo::VideoMediaInfo() = default;
 VideoMediaInfo::~VideoMediaInfo() = default;
+
+VideoMediaSendInfo::VideoMediaSendInfo() = default;
+VideoMediaSendInfo::~VideoMediaSendInfo() = default;
+
+VoiceMediaSendInfo::VoiceMediaSendInfo() = default;
+VoiceMediaSendInfo::~VoiceMediaSendInfo() = default;
+
+VideoMediaReceiveInfo::VideoMediaReceiveInfo() = default;
+VideoMediaReceiveInfo::~VideoMediaReceiveInfo() = default;
+
+VoiceMediaReceiveInfo::VoiceMediaReceiveInfo() = default;
+VoiceMediaReceiveInfo::~VoiceMediaReceiveInfo() = default;
 
 AudioSendParameters::AudioSendParameters() = default;
 AudioSendParameters::~AudioSendParameters() = default;

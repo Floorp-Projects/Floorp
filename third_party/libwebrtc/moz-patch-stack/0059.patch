@@ -18,10 +18,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0300b32b7de70fb89
  5 files changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index e6fa67084a..3e9da8f9a3 100644
+index f32e632ff6..0272f6a8fe 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -213,6 +213,9 @@ config("common_inherited_config") {
+@@ -215,6 +215,9 @@ config("common_inherited_config") {
    if (is_linux || is_chromeos) {
      defines += [ "WEBRTC_LINUX" ]
    }
@@ -32,10 +32,10 @@ index e6fa67084a..3e9da8f9a3 100644
      defines += [ "WEBRTC_MAC" ]
    }
 diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
-index a2cc092fe5..f5062a0a7b 100644
+index 95548906c4..4a5bf62433 100644
 --- a/modules/video_capture/BUILD.gn
 +++ b/modules/video_capture/BUILD.gn
-@@ -62,7 +62,7 @@ if (!build_with_chromium) {
+@@ -63,7 +63,7 @@ if (!build_with_chromium) {
        "../../system_wrappers",
      ]
  

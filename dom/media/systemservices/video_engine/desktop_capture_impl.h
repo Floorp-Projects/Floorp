@@ -170,6 +170,8 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   // mControlThread only.
   void RegisterCaptureDataCallback(
       rtc::VideoSinkInterface<VideoFrame>* aCallback) override;
+  void RegisterCaptureDataCallback(
+      RawVideoSinkInterface* dataCallback) override {}
   void DeRegisterCaptureDataCallback(
       rtc::VideoSinkInterface<VideoFrame>* aCallback) override;
   int32_t StopCaptureIfAllClientsClose() override;

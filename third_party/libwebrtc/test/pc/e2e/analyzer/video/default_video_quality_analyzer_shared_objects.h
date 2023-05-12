@@ -145,7 +145,9 @@ struct StreamStats {
   SamplesStatsCounter time_between_freezes_ms;
   SamplesStatsCounter resolution_of_decoded_frame;
   SamplesStatsCounter target_encode_bitrate;
-  SamplesStatsCounter qp;
+  // Sender side qp values per spatial layer. In case when spatial layer is not
+  // set for `webrtc::EncodedImage`, 0 is used as default.
+  std::map<int, SamplesStatsCounter> spatial_layers_qp;
 
   int64_t total_encoded_images_payload = 0;
   // Counters on which phase how many frames were dropped.

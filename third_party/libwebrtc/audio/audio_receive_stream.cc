@@ -38,7 +38,6 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
   rtc::SimpleStringBuilder ss(ss_buf);
   ss << "{remote_ssrc: " << remote_ssrc;
   ss << ", local_ssrc: " << local_ssrc;
-  ss << ", transport_cc: " << (transport_cc ? "on" : "off");
   ss << ", nack: " << nack.ToString();
   ss << ", extensions: [";
   for (size_t i = 0; i < extensions.size(); ++i) {
@@ -212,16 +211,6 @@ void AudioReceiveStreamImpl::Stop() {
   audio_state()->RemoveReceivingStream(this);
 }
 
-bool AudioReceiveStreamImpl::transport_cc() const {
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  return config_.rtp.transport_cc;
-}
-
-void AudioReceiveStreamImpl::SetTransportCc(bool transport_cc) {
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  config_.rtp.transport_cc = transport_cc;
-}
-
 bool AudioReceiveStreamImpl::IsRunning() const {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   return playing_;
@@ -274,12 +263,6 @@ void AudioReceiveStreamImpl::SetRtpExtensions(
   // expect to be called on the network thread.
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   config_.rtp.extensions = std::move(extensions);
-}
-
-const std::vector<RtpExtension>& AudioReceiveStreamImpl::GetRtpExtensions()
-    const {
-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  return config_.rtp.extensions;
 }
 
 RtpHeaderExtensionMap AudioReceiveStreamImpl::GetRtpExtensionMap() const {

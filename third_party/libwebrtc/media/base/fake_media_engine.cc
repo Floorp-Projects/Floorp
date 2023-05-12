@@ -15,6 +15,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
+#include "absl/types/optional.h"
 #include "rtc_base/checks.h"
 
 namespace cricket {
@@ -187,8 +188,11 @@ absl::optional<int> FakeVoiceMediaChannel::GetBaseMinimumPlayoutDelayMs(
   }
   return absl::nullopt;
 }
-bool FakeVoiceMediaChannel::GetStats(VoiceMediaInfo* info,
-                                     bool get_and_clear_legacy_stats) {
+bool FakeVoiceMediaChannel::GetSendStats(VoiceMediaSendInfo* info) {
+  return false;
+}
+bool FakeVoiceMediaChannel::GetReceiveStats(VoiceMediaReceiveInfo* info,
+                                            bool get_and_clear_legacy_stats) {
   return false;
 }
 void FakeVoiceMediaChannel::SetRawAudioSink(
@@ -367,7 +371,10 @@ bool FakeVideoMediaChannel::RemoveRecvStream(uint32_t ssrc) {
 }
 void FakeVideoMediaChannel::FillBitrateInfo(BandwidthEstimationInfo* bwe_info) {
 }
-bool FakeVideoMediaChannel::GetStats(VideoMediaInfo* info) {
+bool FakeVideoMediaChannel::GetSendStats(VideoMediaSendInfo* info) {
+  return false;
+}
+bool FakeVideoMediaChannel::GetReceiveStats(VideoMediaReceiveInfo* info) {
   return false;
 }
 std::vector<webrtc::RtpSource> FakeVideoMediaChannel::GetSources(
@@ -483,6 +490,10 @@ int FakeVoiceEngine::GetInputLevel() {
 bool FakeVoiceEngine::StartAecDump(webrtc::FileWrapper file,
                                    int64_t max_size_bytes) {
   return false;
+}
+absl::optional<webrtc::AudioDeviceModule::Stats>
+FakeVoiceEngine::GetAudioDeviceStats() {
+  return absl::nullopt;
 }
 void FakeVoiceEngine::StopAecDump() {}
 

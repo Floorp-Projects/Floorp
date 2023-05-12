@@ -34,7 +34,8 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/logging/rtc_event_log/events/rtc_event_audio_network_adaptation.cc",
     "/third_party/libwebrtc/logging/rtc_event_log/events/rtc_event_audio_playout.cc",
     "/third_party/libwebrtc/logging/rtc_event_log/events/rtc_event_audio_receive_stream_config.cc",
-    "/third_party/libwebrtc/logging/rtc_event_log/events/rtc_event_audio_send_stream_config.cc"
+    "/third_party/libwebrtc/logging/rtc_event_log/events/rtc_event_audio_send_stream_config.cc",
+    "/third_party/libwebrtc/logging/rtc_event_log/events/rtc_event_neteq_set_minimum_delay.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

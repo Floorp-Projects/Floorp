@@ -38,10 +38,6 @@ rtc_library("congestion_controller") {
     "../remote_bitrate_estimator",
     "../rtp_rtcp:rtp_rtcp_format",
   ]
-
-  if (!build_with_mozilla) {
-    deps += [ "../../rtc_base" ]
-  }
 }
 
 if (rtc_include_tests && !build_with_chromium) {

@@ -210,10 +210,12 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
                 remoteId = u"outbound_rtcp_"_ns + idstr + u"_"_ns;
                 remoteId.AppendInt(ssrc);
                 aRemote.mTimestamp.Construct(
-                    pipeline->GetTimestampMaker().ConvertNtpToDomTime(
+                    RTCStatsTimestamp::FromNtp(
+                        pipeline->GetTimestampMaker(),
                         webrtc::Timestamp::Micros(
                             aRtcpData.report_block_timestamp_utc_us()) +
-                        webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970)));
+                            webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970))
+                        .ToDom());
                 aRemote.mId.Construct(remoteId);
                 aRemote.mType.Construct(RTCStatsType::Remote_inbound_rtp);
                 aRemote.mSsrc = ssrc;
@@ -238,7 +240,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
               [&](RTCOutboundRtpStreamStats& aLocal) {
                 aLocal.mSsrc = ssrc;
                 aLocal.mTimestamp.Construct(
-                    pipeline->GetTimestampMaker().GetNow());
+                    pipeline->GetTimestampMaker().GetNow().ToDom());
                 aLocal.mId.Construct(localId);
                 aLocal.mType.Construct(RTCStatsType::Outbound_rtp);
                 aLocal.mKind = kind;
@@ -441,7 +443,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
             [&](RTCMediaSourceStats& aStats) {
               nsString id = u"mediasource_"_ns + idstr + trackName;
               aStats.mTimestamp.Construct(
-                  pipeline->GetTimestampMaker().GetNow());
+                  pipeline->GetTimestampMaker().GetNow().ToDom());
               aStats.mId.Construct(id);
               aStats.mType.Construct(RTCStatsType::Media_source);
               aStats.mTrackIdentifier = trackName;
@@ -462,7 +464,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
   if (!aSkipIceStats && GetJsepTransceiver().mTransport.mComponents) {
     promises.AppendElement(mTransportHandler->GetIceStats(
         GetJsepTransceiver().mTransport.mTransportId,
-        mPipeline->GetTimestampMaker().GetNow()));
+        mPipeline->GetTimestampMaker().GetNow().ToDom()));
   }
 
   return promises;

@@ -20322,3 +20322,936 @@ e0efbd45ea
 # MOZ_LIBWEBRTC_SRC=/home/bcampen/checkouts/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
 # base of lastest vendoring
 218b56e516
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2d953287da
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+adddc10684
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d9bba1f61e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9632a81bb9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+50454ef84a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ab397ddec4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a6c79d4bcf
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d49d49ad89
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+794d599741
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fa67bcc27a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+af80d79d66
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3ccec2675c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6c27d56a2a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+de57c57e1e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2bd52fab82
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+82da9324bc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+91b62e0e8f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a2f5d45b81
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cca2c0e6bb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6e1ae443ac
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6903f713d2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+757da3cf70
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+67dba7bba8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bbbb9021fa
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+61dfaafcb2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c044295ab4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2ba941e6bc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ed0dd8e419
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6b7834c14f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7e176c41b9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4f26c25b62
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4dc7a3e2be
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+994734f593
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d3ac3b668a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+54cf754dac
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+315b95ca11
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+70d9e4e02b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6f5c314f07
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+68a7c415c5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0b17d1466b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e04c397099
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f4b21da965
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5e5d017c2b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d29b12f90c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4456e67f5a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f0e894086b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b3c8327850
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4e83af3a9a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bf0223b3a0
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+303d4e0555
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+01abbb1c32
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+821317d9ee
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c834803d99
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+98f3dea533
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6a6abd62bb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1791e7d316
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c6409cc887
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f52e015239
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ac13324baa
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8dbe521696
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9d0986c540
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0ef7528407
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a3fb4e0787
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e003589248
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+66b52fd6c1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3a1843a3c5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+727080cbac
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7dd36d8e7b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4704d29299
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e8cd75ae2b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4f74385b4f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ef90964b83
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3bb6f6d4e8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ea38c55b6b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a282bfca8d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7496ff655a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0dbce83d1a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0c2981364f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+97ba853295
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+81aab48878
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c412a9c177
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+323e9df6d1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5ed4da7222
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e192b68958
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c3c8934219
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f015a12802
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+be5c7135f9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d4f81bb9a7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a009b80d75
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8ce2fc1448
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bd297a6c93
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+07d64b4072
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b7f9113b72
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8bec181bfc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7a5de44455
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9253240305
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1251c6418e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+17043b89ae
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5dbd1ed1b5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+838256373f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6f941fa396
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1fbfde95c4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8a40d08189
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+861357dce7
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6d3524bf1c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a456b3592e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b81823a5f0
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d152a6d51c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+175f06f112
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+73ca7e08e5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+46ca3f6092
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+632cd9bb03
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7f8680cf6f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cf439a04e5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2acf83bd11
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8aee5d525e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+16f1fd3f37
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ae79590cbc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+91375aa8f3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+62136fc2f5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3644884373
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7bb5b2a92b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0bf10d506b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c0c49a686a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+798b6c2a59
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2852ab90d9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+614da1b1d8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+17c4ca8fb3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+097fc347ec
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a138c6c8a5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e60380f7d6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f7b0e14d8b
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5d8b49b233
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8267cf31ce
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a1bb81e5c2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+224e390988
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fcbeb774b5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1c7602c65d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5ef5c2e9b8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+372cf8b824
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+11dfb42fe9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1d6a5087d2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+075c20fe16
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6d5fa001df
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6762fbd988
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+353a5ce7e3
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bc319027ae
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+83c357f70a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+64f2017b1e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4df20baff1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c3891e3a4e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+885ededbb8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c4991048b2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+854ca9a0a6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d7956891d0
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7ef0c1aff5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+89ca299161
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+143c3b2b4c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bfc26c65e6
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+154cbea357
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+69ea6afa35
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7b96ebbc56
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+47d4be732f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+128afb1a7e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e137c4592e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7b4c8adb75
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a5ba58662f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fa962ffc69
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+57e5562c3f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8c347eb5ea
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b081042eec
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d100a589c8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e6b4cbe606
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e4c49e379a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b40657773f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+402a440577
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0bef97c5ae
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d22dc86211
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9337ac8650
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+43d4eee8ce
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+778742963a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+17f783eee8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4387ad6cdc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+222c052864
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+83fd843535
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d8b6b06e70
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b613d62285
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5b7896be29
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b3046c25aa
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c19cc29e25
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f04a345762
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e7e53feace
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9795589f50
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+079e93de17
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+04e9318e5c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3fab086614
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7aa145d73e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6a9af57a24
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bb25641dd9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dc39aebd08
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6cf46b9497
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8da0f3aecc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+612872b29d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+37d4d840b0
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a1eb4fe664
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c01410ea1e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+332bc4bfdd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2d14479605
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5cca08648c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+55ac75f177
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6afa92ab20
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3dd73ae6f4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f7e40717ab
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+efbe753617
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a6b9924988
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f7a46e55cb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+40b5bd72d0
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f1fa6ac7bf
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6d19e6fefc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9b239001bc
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+94b05599ec
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1389c4b594
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9a8aa209ab
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+478f3b786e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b8023690d9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+897f15d4e1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d05daeb16d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+25ffa806e8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e351560d5f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2c0376e20c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+44e5d5a9d1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4ccb616fa2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4885de46ef
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e6b3f48a06
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bdf30c871f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3b96f2c770
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+444741e78d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9ece54fa73
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+73918995a4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+299c02ede2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+a0bc404607
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+abb64161e4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+949e356456
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+fc5d627cef
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3e61f881cd
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9f9671fe7f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4abca6699d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+828de8036d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bd1e5d5aa5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4cb2ac0e30
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+41010f95bb
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+541024a588
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+74f108a671
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5f59dedd23
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+8e1d61338a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+89870ffa95
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+bf27f35a04
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+124d7c3fe5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+46053e4aae
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+eeb223557f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7d79740bc1
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+4893638e72
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c4ea5aeca9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+62ba379caa
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d2c15aa550
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+c8270b1dc8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5e7ae14c11
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d506651607
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+d3b9e71b0e
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+41748c9188
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9ad10bc492
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+05ce032486
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+438b5b4ca5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5b55b2750a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6e627290bf
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+22821deb38
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+2810c14ade
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ace52a821c
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0793ee7552
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e2c29c520a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+1e43ce6f3f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0540627386
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+897ea04db5
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+ea36cc273f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cc1c932f10
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+508979bb72
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+07577b5434
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+f2a083f262
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+10f1bf3923
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+92dcc2d1f4
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+87733493da
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5671c64103
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5683a12728
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0c1c9720d8
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5adc2b6969
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7c43d24000
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+7a67dce582
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+664cf14f9f
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+e15b9ff408
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cfbb247f6d
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+73e0cc8969
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+66efab2dd2
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+94d5f6af62
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+3eceaf4669
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+dcb09ff218
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+6c032cb835
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+5bdb4418e9
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+cb954cdb08
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+416bc06a6a
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+b6b9b1fc76
+# MOZ_LIBWEBRTC_SRC=/home/mfroman/mozilla/moz-central/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+9089c0d814

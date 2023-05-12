@@ -842,6 +842,47 @@ TEST(ApmWithSubmodulesExcludedTest, ToggleTransientSuppressor) {
   }
 }
 
+class StartupInputVolumeParameterizedTest
+    : public ::testing::TestWithParam<int> {};
+
+// Tests that, when no input volume controller is used, the startup input volume
+// is never modified.
+TEST_P(StartupInputVolumeParameterizedTest,
+       WithNoInputVolumeControllerStartupVolumeNotModified) {
+  webrtc::AudioProcessing::Config config;
+  config.gain_controller1.enabled = false;
+  config.gain_controller2.enabled = false;
+  auto apm = AudioProcessingBuilder().SetConfig(config).Create();
+
+  int startup_volume = GetParam();
+  int recommended_volume = ProcessInputVolume(
+      *apm, /*num_frames=*/1, /*initial_volume=*/startup_volume);
+  EXPECT_EQ(recommended_volume, startup_volume);
+}
+
+INSTANTIATE_TEST_SUITE_P(AudioProcessingImplTest,
+                         StartupInputVolumeParameterizedTest,
+                         ::testing::Values(0, 5, 15, 50, 100));
+
+// Tests that, when no input volume controller is used, the recommended input
+// volume always matches the applied one.
+TEST(AudioProcessingImplTest,
+     WithNoInputVolumeControllerAppliedAndRecommendedVolumesMatch) {
+  webrtc::AudioProcessing::Config config;
+  config.gain_controller1.enabled = false;
+  config.gain_controller2.enabled = false;
+  auto apm = AudioProcessingBuilder().SetConfig(config).Create();
+
+  Random rand_gen(42);
+  for (int i = 0; i < 32; ++i) {
+    SCOPED_TRACE(i);
+    int32_t applied_volume = rand_gen.Rand(/*low=*/0, /*high=*/255);
+    int recommended_volume =
+        ProcessInputVolume(*apm, /*num_frames=*/1, applied_volume);
+    EXPECT_EQ(recommended_volume, applied_volume);
+  }
+}
+
 class ApmInputVolumeControllerParametrizedTest
     : public ::testing::TestWithParam<
           std::tuple<int, int, AudioProcessing::Config>> {
@@ -914,6 +955,18 @@ TEST_P(ApmInputVolumeControllerParametrizedTest,
   apm->ProcessStream(channel_pointers(), stream_config, stream_config,
                      channel_pointers());
   EXPECT_GT(apm->recommended_stream_analog_level(), kManuallyAdjustedVolume);
+}
+
+TEST_P(ApmInputVolumeControllerParametrizedTest,
+       DoNotEnforceMinInputVolumeAtStartupWithHighVolume) {
+  const StreamConfig stream_config(sample_rate_hz(), num_channels());
+  auto apm = AudioProcessingBuilder().SetConfig(GetConfig()).Create();
+
+  constexpr int kStartupVolume = 200;
+  apm->set_stream_analog_level(kStartupVolume);
+  apm->ProcessStream(channel_pointers(), stream_config, stream_config,
+                     channel_pointers());
+  EXPECT_EQ(apm->recommended_stream_analog_level(), kStartupVolume);
 }
 
 TEST_P(ApmInputVolumeControllerParametrizedTest,
@@ -1234,7 +1287,10 @@ TEST_P(Agc2FieldTrialParametrizedTest,
 
 TEST_P(Agc2FieldTrialParametrizedTest, ProcessSucceedsWithTs) {
   AudioProcessing::Config config = GetParam();
-  config.transient_suppression.enabled = true;
+  if (!config.transient_suppression.enabled) {
+    GTEST_SKIP() << "TS is disabled, skip.";
+  }
+
   webrtc::test::ScopedFieldTrials field_trials(
       "WebRTC-Audio-GainController2/Disabled/");
   auto apm = AudioProcessingBuilder().SetConfig(config).Create();
@@ -1287,7 +1343,10 @@ TEST_P(Agc2FieldTrialParametrizedTest, ProcessSucceedsWithoutTs) {
 TEST_P(Agc2FieldTrialParametrizedTest,
        ProcessSucceedsWhenSwitchToFullAgc2WithTs) {
   AudioProcessing::Config config = GetParam();
-  config.transient_suppression.enabled = true;
+  if (!config.transient_suppression.enabled) {
+    GTEST_SKIP() << "TS is disabled, skip.";
+  }
+
   webrtc::test::ScopedFieldTrials field_trials(
       "WebRTC-Audio-GainController2/Enabled,"
       "switch_to_agc2:true,"
@@ -1344,15 +1403,34 @@ INSTANTIATE_TEST_SUITE_P(
     AudioProcessingImplTest,
     Agc2FieldTrialParametrizedTest,
     ::testing::Values(
-        // Full AGC1.
+        // Full AGC1, TS disabled.
         AudioProcessing::Config{
+            .transient_suppression = {.enabled = false},
             .gain_controller1 =
                 {.enabled = true,
                  .analog_gain_controller = {.enabled = true,
                                             .enable_digital_adaptive = true}},
             .gain_controller2 = {.enabled = false}},
-        // Hybrid AGC.
+        // Full AGC1, TS enabled.
         AudioProcessing::Config{
+            .transient_suppression = {.enabled = true},
+            .gain_controller1 =
+                {.enabled = true,
+                 .analog_gain_controller = {.enabled = true,
+                                            .enable_digital_adaptive = true}},
+            .gain_controller2 = {.enabled = false}},
+        // Hybrid AGC, TS disabled.
+        AudioProcessing::Config{
+            .transient_suppression = {.enabled = false},
+            .gain_controller1 =
+                {.enabled = true,
+                 .analog_gain_controller = {.enabled = true,
+                                            .enable_digital_adaptive = false}},
+            .gain_controller2 = {.enabled = true,
+                                 .adaptive_digital = {.enabled = true}}},
+        // Hybrid AGC, TS enabled.
+        AudioProcessing::Config{
+            .transient_suppression = {.enabled = true},
             .gain_controller1 =
                 {.enabled = true,
                  .analog_gain_controller = {.enabled = true,

@@ -166,10 +166,20 @@ TaskQueueLibevent::TaskQueueLibevent(absl::string_view queue_name,
           CurrentTaskQueueSetter set_current(this);
           while (is_active_)
             event_base_loop(event_base_, 0);
-        }
 
+          // Ensure remaining deleted tasks are destroyed with Current() set up
+          // to this task queue.
+          absl::InlinedVector<absl::AnyInvocable<void() &&>, 4> pending;
+          MutexLock lock(&pending_lock_);
+          pending_.swap(pending);
+        }
         for (TimerEvent* timer : pending_timers_)
           delete timer;
+
+#if RTC_DCHECK_IS_ON
+        MutexLock lock(&pending_lock_);
+        RTC_DCHECK(pending_.empty());
+#endif
       },
       queue_name, rtc::ThreadAttributes().SetPriority(priority));
 }
