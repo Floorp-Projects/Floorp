@@ -31,22 +31,22 @@ function setupTest() {
 }
 
 add_task(function test_clone_generalTypes() {
-  const { nodeCache } = setupTest();
-
   // null
-  equal(json.clone(undefined, nodeCache), null);
-  equal(json.clone(null, nodeCache), null);
+  equal(json.clone({ value: undefined }), null);
+  equal(json.clone({ value: null }), null);
 
   // primitives
-  equal(json.clone(true, nodeCache), true);
-  equal(json.clone(42, nodeCache), 42);
-  equal(json.clone("foo", nodeCache), "foo");
+  equal(json.clone({ value: true }), true);
+  equal(json.clone({ value: 42 }), 42);
+  equal(json.clone({ value: "foo" }), "foo");
 
   // toJSON
   equal(
     json.clone({
-      toJSON() {
-        return "foo";
+      value: {
+        toJSON() {
+          return "foo";
+        },
       },
     }),
     "foo"
@@ -56,9 +56,14 @@ add_task(function test_clone_generalTypes() {
 add_task(function test_clone_ShadowRoot() {
   const { nodeCache, shadowRoot } = setupTest();
 
+  function getOrCreateNodeReference(node) {
+    const nodeRef = nodeCache.getOrCreateNodeReference(node);
+    return WebReference.from(node, nodeRef);
+  }
+
   const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
   deepEqual(
-    json.clone(shadowRoot, nodeCache),
+    json.clone({ value: shadowRoot, getOrCreateNodeReference }),
     WebReference.from(shadowRoot, shadowRootRef).toJSON()
   );
 });
@@ -66,22 +71,32 @@ add_task(function test_clone_ShadowRoot() {
 add_task(function test_clone_WebElement() {
   const { htmlEl, nodeCache, svgEl } = setupTest();
 
+  function getOrCreateNodeReference(node) {
+    const nodeRef = nodeCache.getOrCreateNodeReference(node);
+    return WebReference.from(node, nodeRef);
+  }
+
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
   deepEqual(
-    json.clone(htmlEl, nodeCache),
+    json.clone({ value: htmlEl, getOrCreateNodeReference }),
     WebReference.from(htmlEl, htmlElRef).toJSON()
   );
 
   // Check an element with a different namespace
   const svgElRef = nodeCache.getOrCreateNodeReference(svgEl);
   deepEqual(
-    json.clone(svgEl, nodeCache),
+    json.clone({ value: svgEl, getOrCreateNodeReference }),
     WebReference.from(svgEl, svgElRef).toJSON()
   );
 });
 
 add_task(function test_clone_Sequences() {
   const { htmlEl, nodeCache } = setupTest();
+
+  function getOrCreateNodeReference(node) {
+    const nodeRef = nodeCache.getOrCreateNodeReference(node);
+    return WebReference.from(node, nodeRef);
+  }
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
 
@@ -98,7 +113,7 @@ add_task(function test_clone_Sequences() {
     { bar: "baz" },
   ];
 
-  const actual = json.clone(input, nodeCache);
+  const actual = json.clone({ value: input, getOrCreateNodeReference });
 
   equal(actual[0], null);
   equal(actual[1], true);
@@ -110,6 +125,11 @@ add_task(function test_clone_Sequences() {
 
 add_task(function test_clone_objects() {
   const { htmlEl, nodeCache } = setupTest();
+
+  function getOrCreateNodeReference(node) {
+    const nodeRef = nodeCache.getOrCreateNodeReference(node);
+    return WebReference.from(node, nodeRef);
+  }
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
 
@@ -126,7 +146,7 @@ add_task(function test_clone_objects() {
     object: { bar: "baz" },
   };
 
-  const actual = json.clone(input, nodeCache);
+  const actual = json.clone({ value: input, getOrCreateNodeReference });
 
   equal(actual.null, null);
   equal(actual.boolean, true);
@@ -137,70 +157,85 @@ add_task(function test_clone_objects() {
 });
 
 add_task(function test_clone_сyclicReference() {
-  const { nodeCache } = setupTest();
-
   // object
   Assert.throws(() => {
     const obj = {};
     obj.reference = obj;
-    json.clone(obj, nodeCache);
+    json.clone({ value: obj });
   }, /JavaScriptError/);
 
   // array
   Assert.throws(() => {
     const array = [];
     array.push(array);
-    json.clone(array, nodeCache);
+    json.clone({ value: array });
   }, /JavaScriptError/);
 
   // array in object
   Assert.throws(() => {
     const array = [];
     array.push(array);
-    json.clone({ array }, nodeCache);
+    json.clone({ value: { array } });
   }, /JavaScriptError/);
 
   // object in array
   Assert.throws(() => {
     const obj = {};
     obj.reference = obj;
-    json.clone([obj], nodeCache);
+    json.clone({ value: [obj] });
   }, /JavaScriptError/);
 });
 
 add_task(function test_deserialize_generalTypes() {
-  const { browser, nodeCache } = setupTest();
+  const { browser } = setupTest();
   const win = browser.document.ownerGlobal;
 
   // null
-  equal(json.deserialize(undefined, nodeCache, win), undefined);
-  equal(json.deserialize(null, nodeCache, win), null);
+  equal(json.deserialize({ value: undefined, win }), undefined);
+  equal(json.deserialize({ value: null, win }), null);
 
   // primitives
-  equal(json.deserialize(true, nodeCache, win), true);
-  equal(json.deserialize(42, nodeCache, win), 42);
-  equal(json.deserialize("foo", nodeCache, win), "foo");
+  equal(json.deserialize({ value: true, win }), true);
+  equal(json.deserialize({ value: 42, win }), 42);
+  equal(json.deserialize({ value: "foo", win }), "foo");
 });
 
 add_task(function test_deserialize_ShadowRoot() {
   const { browser, nodeCache, shadowRoot } = setupTest();
   const win = browser.document.ownerGlobal;
 
-  // Fails to resolve for unknown elements
+  function getKnownShadowRoot(browsingContext, nodeId) {
+    return nodeCache.getNode(browsingContext, nodeId);
+  }
+
+  // Unknown shadow root
   const unknownShadowRootId = { [ShadowRoot.Identifier]: "foo" };
-  Assert.throws(() => {
-    json.deserialize(unknownShadowRootId, nodeCache, win);
-  }, /NoSuchShadowRootError/);
+  equal(
+    json.deserialize({ value: unknownShadowRootId, getKnownShadowRoot, win }),
+    null
+  );
 
   const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
   const shadowRootEl = { [ShadowRoot.Identifier]: shadowRootRef };
 
+  // Fails to resolve for missing getKnownShadowRoot callback
+  Assert.throws(
+    () => equal(json.deserialize({ value: shadowRootEl, win })),
+    /TypeError/
+  );
+
   // Fails to resolve for missing window reference
-  Assert.throws(() => json.deserialize(shadowRootEl, nodeCache), /TypeError/);
+  Assert.throws(
+    () => equal(json.deserialize({ value: shadowRootEl, getKnownShadowRoot })),
+    /TypeError/
+  );
 
   // Previously seen element is associated with original web element reference
-  const root = json.deserialize(shadowRootEl, nodeCache, win);
-  deepEqual(root, shadowRoot);
+  const root = json.deserialize({
+    value: shadowRootEl,
+    getKnownShadowRoot,
+    win,
+  });
   deepEqual(root, nodeCache.getNode(browser.browsingContext, shadowRootRef));
 });
 
@@ -208,20 +243,34 @@ add_task(function test_deserialize_WebElement() {
   const { browser, htmlEl, nodeCache } = setupTest();
   const win = browser.document.ownerGlobal;
 
-  // Fails to resolve for unknown elements
+  function getKnownElement(browsingContext, nodeId) {
+    return nodeCache.getNode(browsingContext, nodeId);
+  }
+
+  // Unknown element
   const unknownWebElId = { [WebElement.Identifier]: "foo" };
-  Assert.throws(() => {
-    json.deserialize(unknownWebElId, nodeCache, win);
-  }, /NoSuchElementError/);
+  equal(
+    json.deserialize({ value: unknownWebElId, getKnownElement, win }),
+    null
+  );
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
   const htmlWebEl = { [WebElement.Identifier]: htmlElRef };
 
+  // Fails to resolve for missing getKnownElement callback
+  Assert.throws(
+    () => equal(json.deserialize({ value: htmlWebEl, win })),
+    /TypeError/
+  );
+
   // Fails to resolve for missing window reference
-  Assert.throws(() => json.deserialize(htmlWebEl, nodeCache), /TypeError/);
+  Assert.throws(
+    () => equal(json.deserialize({ value: htmlWebEl, getKnownElement })),
+    /TypeError/
+  );
 
   // Previously seen element is associated with original web element reference
-  const el = json.deserialize(htmlWebEl, nodeCache, win);
+  const el = json.deserialize({ value: htmlWebEl, getKnownElement, win });
   deepEqual(el, htmlEl);
   deepEqual(el, nodeCache.getNode(browser.browsingContext, htmlElRef));
 });
@@ -229,6 +278,10 @@ add_task(function test_deserialize_WebElement() {
 add_task(function test_deserialize_Sequences() {
   const { browser, htmlEl, nodeCache } = setupTest();
   const win = browser.document.ownerGlobal;
+
+  function getKnownElement(browsingContext, nodeId) {
+    return nodeCache.getNode(browsingContext, nodeId);
+  }
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
 
@@ -240,7 +293,7 @@ add_task(function test_deserialize_Sequences() {
     { bar: "baz" },
   ];
 
-  const actual = json.deserialize(input, nodeCache, win);
+  const actual = json.deserialize({ value: input, getKnownElement, win });
 
   equal(actual[0], null);
   equal(actual[1], true);
@@ -253,6 +306,10 @@ add_task(function test_deserialize_objects() {
   const { browser, htmlEl, nodeCache } = setupTest();
   const win = browser.document.ownerGlobal;
 
+  function getKnownElement(browsingContext, nodeId) {
+    return nodeCache.getNode(browsingContext, nodeId);
+  }
+
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
 
   const input = {
@@ -263,7 +320,7 @@ add_task(function test_deserialize_objects() {
     object: { bar: "baz" },
   };
 
-  const actual = json.deserialize(input, nodeCache, win);
+  const actual = json.deserialize({ value: input, getKnownElement, win });
 
   equal(actual.null, null);
   equal(actual.boolean, true);

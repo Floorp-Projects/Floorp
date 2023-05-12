@@ -12,13 +12,6 @@ const {
 } = ChromeUtils.importESModule(
   "chrome://remote/content/marionette/element.sys.mjs"
 );
-const { NodeCache } = ChromeUtils.importESModule(
-  "chrome://remote/content/shared/webdriver/NodeCache.sys.mjs"
-);
-
-const MemoryReporter = Cc["@mozilla.org/memory-reporter-manager;1"].getService(
-  Ci.nsIMemoryReporterManager
-);
 
 class MockElement {
   constructor(tagName, attrs = {}) {
@@ -103,7 +96,6 @@ function setupTest() {
 
   return {
     browser,
-    nodeCache: new NodeCache(),
     childEl,
     divEl,
     iframeEl,
@@ -453,142 +445,6 @@ add_task(function test_coordinates() {
     () => element.coordinates(divEl, [], []),
     /Offset must be a number/
   );
-});
-
-add_task(function test_isNodeReferenceKnown() {
-  const { browser, nodeCache, childEl, iframeEl, videoEl } = setupTest();
-
-  // Unknown node reference
-  ok(!element.isNodeReferenceKnown(browser.browsingContext, "foo", nodeCache));
-
-  // Known node reference
-  const videoElRef = nodeCache.getOrCreateNodeReference(videoEl);
-  ok(
-    element.isNodeReferenceKnown(browser.browsingContext, videoElRef, nodeCache)
-  );
-
-  // Different top-level browsing context
-  const browser2 = Services.appShell.createWindowlessBrowser(false);
-  ok(
-    !element.isNodeReferenceKnown(
-      browser2.browsingContext,
-      videoElRef,
-      nodeCache
-    )
-  );
-
-  // Different child browsing context
-  const childElRef = nodeCache.getOrCreateNodeReference(childEl);
-  const childBrowsingContext = iframeEl.contentWindow.browsingContext;
-  ok(element.isNodeReferenceKnown(childBrowsingContext, childElRef, nodeCache));
-
-  const iframeEl2 = browser2.document.createElement("iframe");
-  browser2.document.body.appendChild(iframeEl2);
-  const childBrowsingContext2 = iframeEl2.contentWindow.browsingContext;
-  ok(
-    !element.isNodeReferenceKnown(childBrowsingContext2, childElRef, nodeCache)
-  );
-});
-
-add_task(function test_getKnownElement() {
-  const { browser, nodeCache, shadowRoot, videoEl } = setupTest();
-
-  // Unknown element reference
-  Assert.throws(() => {
-    element.getKnownElement(browser.browsingContext, "foo", nodeCache);
-  }, /NoSuchElementError/);
-
-  // With a ShadowRoot reference
-  const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
-  Assert.throws(() => {
-    element.getKnownElement(browser.browsingContext, shadowRootRef, nodeCache);
-  }, /NoSuchElementError/);
-
-  // Deleted element (eg. garbage collected)
-  let detachedEl = browser.document.createElement("div");
-  const detachedElRef = nodeCache.getOrCreateNodeReference(detachedEl);
-
-  // ... not connected to the DOM
-  Assert.throws(() => {
-    element.getKnownElement(browser.browsingContext, detachedElRef, nodeCache);
-  }, /StaleElementReferenceError/);
-
-  // ... element garbage collected
-  detachedEl = null;
-  MemoryReporter.minimizeMemoryUsage(() => {
-    Assert.throws(() => {
-      element.getKnownElement(
-        browser.browsingContext,
-        detachedElRef,
-        nodeCache
-      );
-    }, /StaleElementReferenceError/);
-  });
-
-  // Known element reference
-  const videoElRef = nodeCache.getOrCreateNodeReference(videoEl);
-  equal(
-    element.getKnownElement(browser.browsingContext, videoElRef, nodeCache),
-    videoEl
-  );
-});
-
-add_task(function test_getKnownShadowRoot() {
-  const { browser, nodeCache, shadowRoot, videoEl } = setupTest();
-
-  const videoElRef = nodeCache.getOrCreateNodeReference(videoEl);
-
-  // Unknown ShadowRoot reference
-  Assert.throws(() => {
-    element.getKnownShadowRoot(browser.browsingContext, "foo", nodeCache);
-  }, /NoSuchShadowRootError/);
-
-  // With a HTMLElement reference
-  Assert.throws(() => {
-    element.getKnownShadowRoot(browser.browsingContext, videoElRef, nodeCache);
-  }, /NoSuchShadowRootError/);
-
-  // Known ShadowRoot reference
-  const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
-  equal(
-    element.getKnownShadowRoot(
-      browser.browsingContext,
-      shadowRootRef,
-      nodeCache
-    ),
-    shadowRoot
-  );
-
-  // Detached ShadowRoot host
-  let el = browser.document.createElement("div");
-  let detachedShadowRoot = el.attachShadow({ mode: "open" });
-  detachedShadowRoot.innerHTML = "<input></input>";
-
-  const detachedShadowRootRef = nodeCache.getOrCreateNodeReference(
-    detachedShadowRoot
-  );
-
-  // ... not connected to the DOM
-  Assert.throws(() => {
-    element.getKnownShadowRoot(
-      browser.browsingContext,
-      detachedShadowRootRef,
-      nodeCache
-    );
-  }, /DetachedShadowRootError/);
-
-  // ... host and shadow root garbage collected
-  el = null;
-  detachedShadowRoot = null;
-  MemoryReporter.minimizeMemoryUsage(() => {
-    Assert.throws(() => {
-      element.getKnownShadowRoot(
-        browser.browsingContext,
-        detachedShadowRootRef,
-        nodeCache
-      );
-    }, /DetachedShadowRootError/);
-  });
 });
 
 add_task(function test_isDetached() {
