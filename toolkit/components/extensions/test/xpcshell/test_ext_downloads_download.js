@@ -2,7 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Downloads } = ChromeUtils.importESModule(
   "resource://gre/modules/Downloads.sys.mjs"
 );
@@ -22,6 +21,12 @@ const FILE_NAME_UNIQUE = "file_download(1).txt";
 const FILE_LEN = 46;
 
 let downloadDir;
+
+function joinPath(...components) {
+  const separator = WINDOWS ? "\\" : "/";
+
+  return components.join(separator);
+}
 
 function setup() {
   downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
@@ -267,7 +272,7 @@ add_task(async function test_downloads() {
   });
 
   // Try to download to an absolute path.
-  const absolutePath = OS.Path.join(
+  const absolutePath = PathUtils.join(
     WINDOWS ? "C:\\tmp" : "/tmp",
     "file_download.txt"
   );
@@ -308,7 +313,7 @@ add_task(async function test_downloads() {
   // Try to download to a relative path containing ..
   await download({
     url: FILE_URL,
-    filename: OS.Path.join("..", "file_download.txt"),
+    filename: joinPath("..", "file_download.txt"),
   }).then(msg => {
     equal(
       msg.status,
@@ -325,7 +330,7 @@ add_task(async function test_downloads() {
   // Try to download to a long relative path containing ..
   await download({
     url: FILE_URL,
-    filename: OS.Path.join("foo", "..", "..", "file_download.txt"),
+    filename: joinPath("foo", "..", "..", "file_download.txt"),
   }).then(msg => {
     equal(
       msg.status,
