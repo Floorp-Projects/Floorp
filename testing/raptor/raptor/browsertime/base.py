@@ -293,6 +293,9 @@ class Browsertime(Perftest):
             # url load timeout (milliseconds)
             "--pageCompleteCheckPollTimeout",
             "1000",
+            # delay before pageCompleteCheck (milliseconds)
+            "--beforePageCompleteWaitTime",
+            "2000",
             # running browser scripts timeout (milliseconds)
             "--timeouts.pageLoad",
             str(timeout),
