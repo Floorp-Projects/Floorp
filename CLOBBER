@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Merge day clobber 2023-05-08
+Modified build files in third_party/libwebrtc - Bug 1828517 - (fix-794d599741) account for moved files in BUILD.gn that we don't want to build.
