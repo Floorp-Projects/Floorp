@@ -245,6 +245,16 @@ struct IsCacheablePod<T[N]>
 template <class T>
 inline constexpr bool is_cacheable_pod = IsCacheablePod<T>::value;
 
+// Checks if derrived class will not use the structure alignment for its
+// next field. It used when pod is a base class.
+#define WASM_CHECK_CACHEABLE_POD_PADDING(Type)                \
+  class __CHECK_PADING_##Type : public Type {                 \
+   public:                                                    \
+    char c;                                                   \
+  };                                                          \
+  static_assert(sizeof(__CHECK_PADING_##Type) > sizeof(Type), \
+                #Type " will overlap with next field if inherited");
+
 // Declare the type 'Type' to be cacheable POD. The definition of the type must
 // contain a WASM_CHECK_CACHEABLE_POD[_WITH_PARENT] to ensure all fields of the
 // type are cacheable POD.
