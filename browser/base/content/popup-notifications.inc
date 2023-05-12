@@ -217,9 +217,12 @@
     <popupnotification id="relay-integration-offer-notification" hidden="true">
       <popupnotificationcontent orient="vertical">
         <html:div>
-          <html:p data-l10n-id="firefox-relay-offer-why-relay"></html:p>
-          <html:p data-l10n-id="firefox-relay-offer-how-we-integrate"></html:p>
-          <html:p id="firefox-relay-offer-what-relay-does" data-l10n-id="firefox-relay-offer-what-relay-does" data-l10n-args='{"sitename": "", "useremail": ""}'></html:p>
+          <html:p data-l10n-id="firefox-relay-offer-why-to-use-relay"></html:p>
+          <html:p id="firefox-relay-offer-what-relay-provides" data-l10n-id="firefox-relay-offer-what-relay-provides" data-l10n-args='{"useremail": ""}'></html:p>
+          <html:p id="firefox-relay-offer-legal-notice" data-l10n-id="firefox-relay-offer-legal-notice">
+            <label id="firefox-relay-offer-tos-url" is="text-link" data-l10n-name="tos-url"/>
+            <label id="firefox-relay-offer-privacy-url" is="text-link" data-l10n-name="privacy-url"/>
+          </html:p>
         </html:div>
       </popupnotificationcontent>
     </popupnotification>
