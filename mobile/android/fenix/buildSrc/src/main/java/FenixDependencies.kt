@@ -17,7 +17,7 @@ object FenixVersions {
     const val sentry = "6.19.0"
     const val leakcanary = "2.11"
     const val osslicenses_plugin = "0.10.4"
-    const val detekt = "1.19.0"
+    const val detekt = "1.22.0"
 
     const val androidx_activity = "1.7.1"
     const val androidx_compose = "1.4.3"
