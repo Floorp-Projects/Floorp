@@ -6,7 +6,12 @@ browser.jar:
     content/browser/firefoxview/firefoxview.html
     content/browser/firefoxview/firefoxview-next.html
     content/browser/firefoxview/firefoxview.mjs
+    content/browser/firefoxview/firefoxview-next.mjs
+    content/browser/firefoxview/history.mjs
+    content/browser/firefoxview/opentabs.mjs
+    content/browser/firefoxview/overview.mjs
     content/browser/firefoxview/firefoxview.css
+    content/browser/firefoxview/firefoxview-next.css
     content/browser/firefoxview/helpers.mjs
     content/browser/firefoxview/moz-tab-list.css
     content/browser/firefoxview/moz-tab-list.mjs
@@ -14,6 +19,7 @@ browser.jar:
     content/browser/firefoxview/tab-pickup-container.mjs
     content/browser/firefoxview/tab-pickup-list.mjs
     content/browser/firefoxview/recently-closed-tabs.mjs
+    content/browser/firefoxview/viewpage.mjs
     content/browser/firefoxview/recently-closed-empty.svg (content/recently-closed-empty.svg)
     content/browser/firefoxview/tab-pickup-empty.svg (content/tab-pickup-empty.svg)
     content/browser/callout-tab-pickup.svg (content/callout-tab-pickup.svg)

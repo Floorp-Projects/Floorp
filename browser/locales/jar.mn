@@ -13,6 +13,7 @@
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
   preview/firefoxSuggest.ftl                       (../components/urlbar/content/firefoxSuggest.ftl)
   preview/identityCredentialNotification.ftl       (../components/credentialmanager/identityCredentialNotification.ftl)
+  preview/firefoxViewNext.ftl                      (../components/firefoxview/firefoxViewNext.ftl)
   locales-preview/translations.ftl                  (../locales-preview/translations.ftl)
   preview/stripOnShare.ftl                         (../components/urlbar/content/stripOnShare.ftl)
   browser                                          (%browser/**/*.ftl)
