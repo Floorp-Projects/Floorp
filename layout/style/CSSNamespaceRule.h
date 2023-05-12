@@ -18,7 +18,7 @@ namespace dom {
 
 class CSSNamespaceRule final : public css::Rule {
  public:
-  CSSNamespaceRule(already_AddRefed<StyleLockedNamespaceRule> aRule,
+  CSSNamespaceRule(already_AddRefed<RawServoNamespaceRule> aRule,
                    StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
                    uint32_t aColumn)
       : css::Rule(aSheet, aParentRule, aLine, aColumn),
@@ -38,8 +38,8 @@ class CSSNamespaceRule final : public css::Rule {
 
   StyleCssRuleType Type() const final;
 
-  const StyleLockedNamespaceRule* Raw() const { return mRawRule.get(); }
-  void SetRawAfterClone(RefPtr<StyleLockedNamespaceRule>);
+  const RawServoNamespaceRule* Raw() const { return mRawRule.get(); }
+  void SetRawAfterClone(RefPtr<RawServoNamespaceRule>);
 
   void GetNamespaceURI(nsString& aNamespaceURI) { GetURLSpec(aNamespaceURI); }
 
@@ -56,7 +56,7 @@ class CSSNamespaceRule final : public css::Rule {
 
  private:
   ~CSSNamespaceRule();
-  RefPtr<StyleLockedNamespaceRule> mRawRule;
+  RefPtr<RawServoNamespaceRule> mRawRule;
 };
 
 }  // namespace dom

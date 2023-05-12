@@ -25,8 +25,8 @@ namespace mozilla {
 // block for a given element.
 class MappedDeclarations final {
  public:
-  explicit MappedDeclarations(
-      dom::Document* aDoc, already_AddRefed<StyleLockedDeclarationBlock> aDecls)
+  explicit MappedDeclarations(dom::Document* aDoc,
+                              already_AddRefed<RawServoDeclarationBlock> aDecls)
       : mDocument(aDoc), mDecl(aDecls) {
     MOZ_ASSERT(mDecl);
   }
@@ -35,7 +35,7 @@ class MappedDeclarations final {
 
   dom::Document* Document() { return mDocument; }
 
-  already_AddRefed<StyleLockedDeclarationBlock> TakeDeclarationBlock() {
+  already_AddRefed<RawServoDeclarationBlock> TakeDeclarationBlock() {
     MOZ_ASSERT(mDecl);
     return mDecl.forget();
   }
@@ -197,7 +197,7 @@ class MappedDeclarations final {
 
  private:
   dom::Document* const mDocument;
-  RefPtr<StyleLockedDeclarationBlock> mDecl;
+  RefPtr<RawServoDeclarationBlock> mDecl;
 };
 
 }  // namespace mozilla

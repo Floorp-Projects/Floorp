@@ -639,7 +639,7 @@ nsresult FontFaceSetImpl::LogMessage(gfxUserFontEntry* aUserFontEntry,
   }
 
   // try to give the user an indication of where the rule came from
-  StyleLockedFontFaceRule* rule = FindRuleForUserFontEntry(aUserFontEntry);
+  RawServoFontFaceRule* rule = FindRuleForUserFontEntry(aUserFontEntry);
   nsString href;
   nsAutoCString text;
   uint32_t line = 0;

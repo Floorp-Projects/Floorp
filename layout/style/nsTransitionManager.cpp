@@ -185,7 +185,7 @@ static Keyframe& AppendKeyframe(double aOffset, nsCSSPropertyID aProperty,
   Keyframe& frame = *aKeyframes.AppendElement();
   frame.mOffset.emplace(aOffset);
   MOZ_ASSERT(aValue.mServo);
-  RefPtr<StyleLockedDeclarationBlock> decl =
+  RefPtr<RawServoDeclarationBlock> decl =
       Servo_AnimationValue_Uncompute(aValue.mServo).Consume();
   frame.mPropertyValues.AppendElement(
       PropertyValuePair(aProperty, std::move(decl)));

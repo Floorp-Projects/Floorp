@@ -23,7 +23,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
-#include "mozilla/ServoBindings.h"  // StyleLockedDeclarationBlock
+#include "mozilla/ServoBindings.h"  // RawServoDeclarationBlock
 #include "mozilla/ServoCSSParser.h"
 #include "gfxMatrix.h"
 #include "gfxQuaternion.h"
@@ -200,9 +200,8 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
       nsComputedDOMStyle::GetComputedStyle(aElement);
   MOZ_ASSERT(computedStyle);
 
-  RefPtr<StyleLockedDeclarationBlock> declarations =
-      ServoCSSParser::ParseProperty(aProperty, aValue,
-                                    ServoCSSParser::GetParsingEnvironment(doc));
+  RefPtr<RawServoDeclarationBlock> declarations = ServoCSSParser::ParseProperty(
+      aProperty, aValue, ServoCSSParser::GetParsingEnvironment(doc));
 
   if (!declarations) {
     return result;

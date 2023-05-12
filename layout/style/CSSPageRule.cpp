@@ -15,7 +15,7 @@ namespace mozilla::dom {
 // -- CSSPageRuleDeclaration ---------------------------------------
 
 CSSPageRuleDeclaration::CSSPageRuleDeclaration(
-    already_AddRefed<StyleLockedDeclarationBlock> aDecls)
+    already_AddRefed<RawServoDeclarationBlock> aDecls)
     : mDecls(new DeclarationBlock(std::move(aDecls))) {
   mDecls->SetOwningRule(Rule());
 }
@@ -61,7 +61,7 @@ DeclarationBlock* CSSPageRuleDeclaration::GetOrCreateCSSDeclaration(
 }
 
 void CSSPageRuleDeclaration::SetRawAfterClone(
-    RefPtr<StyleLockedDeclarationBlock> aDeclarationBlock) {
+    RefPtr<RawServoDeclarationBlock> aDeclarationBlock) {
   mDecls->SetOwningRule(nullptr);
   mDecls = new DeclarationBlock(aDeclarationBlock.forget());
   mDecls->SetOwningRule(Rule());
@@ -91,9 +91,9 @@ CSSPageRuleDeclaration::GetParsingEnvironment(
 
 // -- CSSPageRule --------------------------------------------------
 
-CSSPageRule::CSSPageRule(RefPtr<StyleLockedPageRule> aRawRule,
-                         StyleSheet* aSheet, css::Rule* aParentRule,
-                         uint32_t aLine, uint32_t aColumn)
+CSSPageRule::CSSPageRule(RefPtr<RawServoPageRule> aRawRule, StyleSheet* aSheet,
+                         css::Rule* aParentRule, uint32_t aLine,
+                         uint32_t aColumn)
     : css::Rule(aSheet, aParentRule, aLine, aColumn),
       mRawRule(std::move(aRawRule)),
       mDecls(Servo_PageRule_GetStyle(mRawRule).Consume()) {}
@@ -138,7 +138,7 @@ bool CSSPageRule::IsCCLeaf() const {
   return !mDecls.PreservingWrapper();
 }
 
-void CSSPageRule::SetRawAfterClone(RefPtr<StyleLockedPageRule> aRaw) {
+void CSSPageRule::SetRawAfterClone(RefPtr<RawServoPageRule> aRaw) {
   mRawRule = std::move(aRaw);
   mDecls.SetRawAfterClone(Servo_PageRule_GetStyle(mRawRule.get()).Consume());
 }

@@ -42,8 +42,8 @@ class CSSPageRuleDeclaration final : public nsDOMCSSDeclaration {
   friend class CSSPageRule;
 
   explicit CSSPageRuleDeclaration(
-      already_AddRefed<StyleLockedDeclarationBlock> aDecls);
-  void SetRawAfterClone(RefPtr<StyleLockedDeclarationBlock>);
+      already_AddRefed<RawServoDeclarationBlock> aDecls);
+  void SetRawAfterClone(RefPtr<RawServoDeclarationBlock>);
 
   ~CSSPageRuleDeclaration();
 
@@ -55,7 +55,7 @@ class CSSPageRuleDeclaration final : public nsDOMCSSDeclaration {
 
 class CSSPageRule final : public css::Rule {
  public:
-  CSSPageRule(RefPtr<StyleLockedPageRule> aRawRule, StyleSheet* aSheet,
+  CSSPageRule(RefPtr<RawServoPageRule> aRawRule, StyleSheet* aSheet,
               css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -63,8 +63,8 @@ class CSSPageRule final : public css::Rule {
 
   bool IsCCLeaf() const final;
 
-  StyleLockedPageRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<StyleLockedPageRule>);
+  RawServoPageRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<RawServoPageRule>);
 
   // WebIDL interfaces
   StyleCssRuleType Type() const final;
@@ -88,7 +88,7 @@ class CSSPageRule final : public css::Rule {
   // For computing the offset of mDecls.
   friend class CSSPageRuleDeclaration;
 
-  RefPtr<StyleLockedPageRule> mRawRule;
+  RefPtr<RawServoPageRule> mRawRule;
   CSSPageRuleDeclaration mDecls;
 };
 

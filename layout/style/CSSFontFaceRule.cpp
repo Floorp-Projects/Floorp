@@ -34,8 +34,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF_USING_AGGREGATOR(CSSFontFaceRuleDecl, ContainingRule())
 NS_IMPL_RELEASE_USING_AGGREGATOR(CSSFontFaceRuleDecl, ContainingRule())
 
-void CSSFontFaceRuleDecl::SetRawAfterClone(
-    RefPtr<StyleLockedFontFaceRule> aRaw) {
+void CSSFontFaceRuleDecl::SetRawAfterClone(RefPtr<RawServoFontFaceRule> aRaw) {
   mRawRule = std::move(aRaw);
 }
 
@@ -202,7 +201,7 @@ StyleCssRuleType CSSFontFaceRule::Type() const {
   return StyleCssRuleType::FontFace;
 }
 
-void CSSFontFaceRule::SetRawAfterClone(RefPtr<StyleLockedFontFaceRule> aRaw) {
+void CSSFontFaceRule::SetRawAfterClone(RefPtr<RawServoFontFaceRule> aRaw) {
   mDecl.SetRawAfterClone(std::move(aRaw));
 }
 

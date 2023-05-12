@@ -372,13 +372,13 @@ bool Gecko_HaveSeenPtr(SeenPtrs* aTable, const void* aPtr) {
   return aTable->HaveSeenPtr(aPtr);
 }
 
-const StyleLockedDeclarationBlock* Gecko_GetStyleAttrDeclarationBlock(
+const StyleStrong<RawServoDeclarationBlock>* Gecko_GetStyleAttrDeclarationBlock(
     const Element* aElement) {
   DeclarationBlock* decl = aElement->GetInlineStyleDeclaration();
   if (!decl) {
     return nullptr;
   }
-  return decl->Raw();
+  return decl->RefRawStrong();
 }
 
 void Gecko_UnsetDirtyStyleAttr(const Element* aElement) {
@@ -389,44 +389,53 @@ void Gecko_UnsetDirtyStyleAttr(const Element* aElement) {
   decl->UnsetDirty();
 }
 
-const StyleLockedDeclarationBlock*
+static const StyleStrong<RawServoDeclarationBlock>* AsRefRawStrong(
+    const RefPtr<RawServoDeclarationBlock>& aDecl) {
+  static_assert(sizeof(RefPtr<RawServoDeclarationBlock>) ==
+                    sizeof(StyleStrong<RawServoDeclarationBlock>),
+                "RefPtr should just be a pointer");
+  return reinterpret_cast<const StyleStrong<RawServoDeclarationBlock>*>(&aDecl);
+}
+
+const StyleStrong<RawServoDeclarationBlock>*
 Gecko_GetHTMLPresentationAttrDeclarationBlock(const Element* aElement) {
   const nsMappedAttributes* attrs = aElement->GetMappedAttributes();
   if (!attrs) {
-    if (auto* svg = SVGElement::FromNodeOrNull(aElement)) {
-      if (const auto* decl = svg->GetContentDeclarationBlock()) {
-        return decl->Raw();
+    auto* svg = SVGElement::FromNodeOrNull(aElement);
+    if (svg) {
+      if (auto decl = svg->GetContentDeclarationBlock()) {
+        return decl->RefRawStrong();
       }
     }
     return nullptr;
   }
 
-  return attrs->GetServoStyle();
+  return AsRefRawStrong(attrs->GetServoStyle());
 }
 
-const StyleLockedDeclarationBlock* Gecko_GetExtraContentStyleDeclarations(
-    const Element* aElement) {
+const StyleStrong<RawServoDeclarationBlock>*
+Gecko_GetExtraContentStyleDeclarations(const Element* aElement) {
   if (const auto* cell = HTMLTableCellElement::FromNode(aElement)) {
     if (nsMappedAttributes* attrs =
             cell->GetMappedAttributesInheritedFromTable()) {
-      return attrs->GetServoStyle();
+      return AsRefRawStrong(attrs->GetServoStyle());
     }
   } else if (const auto* img = HTMLImageElement::FromNode(aElement)) {
     if (const auto* attrs = img->GetMappedAttributesFromSource()) {
-      return attrs->GetServoStyle();
+      return AsRefRawStrong(attrs->GetServoStyle());
     }
   }
   return nullptr;
 }
 
-const StyleLockedDeclarationBlock* Gecko_GetUnvisitedLinkAttrDeclarationBlock(
-    const Element* aElement) {
+const StyleStrong<RawServoDeclarationBlock>*
+Gecko_GetUnvisitedLinkAttrDeclarationBlock(const Element* aElement) {
   nsHTMLStyleSheet* sheet = aElement->OwnerDoc()->GetAttributeStyleSheet();
   if (!sheet) {
     return nullptr;
   }
 
-  return sheet->GetServoUnvisitedLinkDecl();
+  return AsRefRawStrong(sheet->GetServoUnvisitedLinkDecl());
 }
 
 StyleSheet* Gecko_StyleSheet_Clone(const StyleSheet* aSheet,
@@ -456,24 +465,24 @@ void Gecko_StyleSheet_Release(const StyleSheet* aSheet) {
   const_cast<StyleSheet*>(aSheet)->Release();
 }
 
-const StyleLockedDeclarationBlock* Gecko_GetVisitedLinkAttrDeclarationBlock(
-    const Element* aElement) {
+const StyleStrong<RawServoDeclarationBlock>*
+Gecko_GetVisitedLinkAttrDeclarationBlock(const Element* aElement) {
   nsHTMLStyleSheet* sheet = aElement->OwnerDoc()->GetAttributeStyleSheet();
   if (!sheet) {
     return nullptr;
   }
 
-  return sheet->GetServoVisitedLinkDecl();
+  return AsRefRawStrong(sheet->GetServoVisitedLinkDecl());
 }
 
-const StyleLockedDeclarationBlock* Gecko_GetActiveLinkAttrDeclarationBlock(
-    const Element* aElement) {
+const StyleStrong<RawServoDeclarationBlock>*
+Gecko_GetActiveLinkAttrDeclarationBlock(const Element* aElement) {
   nsHTMLStyleSheet* sheet = aElement->OwnerDoc()->GetAttributeStyleSheet();
   if (!sheet) {
     return nullptr;
   }
 
-  return sheet->GetServoActiveLinkDecl();
+  return AsRefRawStrong(sheet->GetServoActiveLinkDecl());
 }
 
 bool Gecko_GetAnimationRule(const Element* aElement,
@@ -1511,7 +1520,7 @@ void Gecko_StyleSheet_FinishAsyncParse(
 static already_AddRefed<StyleSheet> LoadImportSheet(
     Loader* aLoader, StyleSheet* aParent, SheetLoadData* aParentLoadData,
     LoaderReusableStyleSheets* aReusableSheets, const StyleCssUrl& aURL,
-    already_AddRefed<StyleLockedMediaList> aMediaList) {
+    already_AddRefed<RawServoMediaList> aMediaList) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoader, "Should've catched this before");
   MOZ_ASSERT(aParent, "Only used for @import, so parent should exist!");
@@ -1560,7 +1569,7 @@ StyleSheet* Gecko_LoadStyleSheet(Loader* aLoader, StyleSheet* aParent,
                                  SheetLoadData* aParentLoadData,
                                  LoaderReusableStyleSheets* aReusableSheets,
                                  const StyleCssUrl* aUrl,
-                                 StyleStrong<StyleLockedMediaList> aMediaList) {
+                                 StyleStrong<RawServoMediaList> aMediaList) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aUrl);
 
@@ -1571,12 +1580,12 @@ StyleSheet* Gecko_LoadStyleSheet(Loader* aLoader, StyleSheet* aParent,
 
 void Gecko_LoadStyleSheetAsync(SheetLoadDataHolder* aParentData,
                                const StyleCssUrl* aUrl,
-                               StyleStrong<StyleLockedMediaList> aMediaList,
-                               StyleStrong<StyleLockedImportRule> aImportRule) {
+                               StyleStrong<RawServoMediaList> aMediaList,
+                               StyleStrong<RawServoImportRule> aImportRule) {
   MOZ_ASSERT(aUrl);
   RefPtr<SheetLoadDataHolder> loadData = aParentData;
-  RefPtr<StyleLockedMediaList> mediaList = aMediaList.Consume();
-  RefPtr<StyleLockedImportRule> importRule = aImportRule.Consume();
+  RefPtr<RawServoMediaList> mediaList = aMediaList.Consume();
+  RefPtr<RawServoImportRule> importRule = aImportRule.Consume();
   NS_DispatchToMainThreadQueue(
       NS_NewRunnableFunction(
           __func__,

@@ -16,7 +16,7 @@ namespace mozilla::dom {
 
 class CSSFontPaletteValuesRule final : public css::Rule {
  public:
-  CSSFontPaletteValuesRule(RefPtr<StyleLockedFontPaletteValuesRule> aRawRule,
+  CSSFontPaletteValuesRule(RefPtr<RawServoFontPaletteValuesRule> aRawRule,
                            StyleSheet* aSheet, css::Rule* aParentRule,
                            uint32_t aLine, uint32_t aColumn)
       : css::Rule(aSheet, aParentRule, aLine, aColumn),
@@ -24,8 +24,8 @@ class CSSFontPaletteValuesRule final : public css::Rule {
 
   bool IsCCLeaf() const final;
 
-  StyleLockedFontPaletteValuesRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<StyleLockedFontPaletteValuesRule> aRaw);
+  RawServoFontPaletteValuesRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<RawServoFontPaletteValuesRule> aRaw);
 
   // WebIDL interfaces
   StyleCssRuleType Type() const final;
@@ -51,7 +51,7 @@ class CSSFontPaletteValuesRule final : public css::Rule {
  private:
   ~CSSFontPaletteValuesRule() = default;
 
-  RefPtr<StyleLockedFontPaletteValuesRule> mRawRule;
+  RefPtr<RawServoFontPaletteValuesRule> mRawRule;
 };
 
 }  // namespace mozilla::dom

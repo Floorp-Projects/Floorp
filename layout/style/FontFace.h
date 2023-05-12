@@ -19,11 +19,11 @@
 class gfxFontFaceBufferSource;
 class nsIGlobalObject;
 
+struct RawServoFontFaceRule;
+
 namespace mozilla {
 struct CSSFontFaceDescriptors;
 class PostTraversalTask;
-struct StyleLockedFontFaceRule;
-
 namespace dom {
 class CSSFontFaceRule;
 class FontFaceBufferSource;
@@ -48,9 +48,9 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   nsIGlobalObject* GetParentObject() const { return mParent; }
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
-  static already_AddRefed<FontFace> CreateForRule(
-      nsIGlobalObject* aGlobal, FontFaceSet* aFontFaceSet,
-      StyleLockedFontFaceRule* aRule);
+  static already_AddRefed<FontFace> CreateForRule(nsIGlobalObject* aGlobal,
+                                                  FontFaceSet* aFontFaceSet,
+                                                  RawServoFontFaceRule* aRule);
 
   // Web IDL
   static already_AddRefed<FontFace> Constructor(

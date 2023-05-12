@@ -14,9 +14,8 @@ namespace mozilla::dom {
 
 class CSSContainerRule final : public css::ConditionRule {
  public:
-  CSSContainerRule(RefPtr<StyleLockedContainerRule> aRawRule,
-                   StyleSheet* aSheet, css::Rule* aParentRule, uint32_t aLine,
-                   uint32_t aColumn);
+  CSSContainerRule(RefPtr<RawServoContainerRule> aRawRule, StyleSheet* aSheet,
+                   css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -24,8 +23,8 @@ class CSSContainerRule final : public css::ConditionRule {
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  StyleLockedContainerRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<StyleLockedContainerRule>);
+  RawServoContainerRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<RawServoContainerRule>);
 
   // WebIDL interface
   StyleCssRuleType Type() const override;
@@ -46,7 +45,7 @@ class CSSContainerRule final : public css::ConditionRule {
  private:
   virtual ~CSSContainerRule();
 
-  RefPtr<StyleLockedContainerRule> mRawRule;
+  RefPtr<RawServoContainerRule> mRawRule;
 };
 
 }  // namespace mozilla::dom

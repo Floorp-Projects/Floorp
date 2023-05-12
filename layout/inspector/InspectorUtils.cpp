@@ -251,7 +251,7 @@ void InspectorUtils::GetCSSStyleRules(
     return;
   }
 
-  nsTArray<const StyleLockedStyleRule*> rawRuleList;
+  nsTArray<const RawServoStyleRule*> rawRuleList;
   Servo_ComputedValues_GetStyleRuleList(computedStyle, &rawRuleList);
 
   AutoTArray<ServoStyleRuleMap*, 1> maps;
@@ -280,7 +280,7 @@ void InspectorUtils::GetCSSStyleRules(
   }
 
   // Find matching rules in the table.
-  for (const StyleLockedStyleRule* rawRule : Reversed(rawRuleList)) {
+  for (const RawServoStyleRule* rawRule : Reversed(rawRuleList)) {
     CSSStyleRule* rule = nullptr;
     for (ServoStyleRuleMap* map : maps) {
       rule = map->Lookup(rawRule);

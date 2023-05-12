@@ -32,7 +32,7 @@ StyleCssRuleType CSSCounterStyleRule::Type() const {
 }
 
 void CSSCounterStyleRule::SetRawAfterClone(
-    RefPtr<StyleLockedCounterStyleRule> aRaw) {
+    RefPtr<RawServoCounterStyleRule> aRaw) {
   mRawRule = std::move(aRaw);
 }
 

@@ -32,7 +32,7 @@ void CSSFontPaletteValuesRule::List(FILE* out, int32_t aIndent) const {
 #endif
 
 void CSSFontPaletteValuesRule::SetRawAfterClone(
-    RefPtr<StyleLockedFontPaletteValuesRule> aRaw) {
+    RefPtr<RawServoFontPaletteValuesRule> aRaw) {
   mRawRule = std::move(aRaw);
 }
 

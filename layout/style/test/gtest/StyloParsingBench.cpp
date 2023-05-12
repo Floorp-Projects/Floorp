@@ -54,7 +54,7 @@ static void ServoParsingBench(const StyleUseCounters* aCounters) {
 static constexpr auto STYLE_RULE = StyleCssRuleType::Style;
 
 static void ServoSetPropertyByIdBench(const nsACString& css) {
-  RefPtr<StyleLockedDeclarationBlock> block =
+  RefPtr<RawServoDeclarationBlock> block =
       Servo_DeclarationBlock_CreateEmpty().Consume();
   RefPtr<nsIURI> uri = NullPrincipal::CreateURI();
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
@@ -72,7 +72,7 @@ static void ServoSetPropertyByIdBench(const nsACString& css) {
 }
 
 static void ServoGetPropertyValueById() {
-  RefPtr<StyleLockedDeclarationBlock> block =
+  RefPtr<RawServoDeclarationBlock> block =
       Servo_DeclarationBlock_CreateEmpty().Consume();
 
   RefPtr<nsIURI> uri = NullPrincipal::CreateURI();

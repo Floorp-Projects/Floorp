@@ -1120,7 +1120,7 @@ void StyleSheet::FixUpRuleListAfterContentsChangeIfNeeded(bool aFromClone) {
     return;
   }
 
-  RefPtr<StyleLockedCssRules> rules =
+  RefPtr<ServoCssRules> rules =
       Servo_StyleSheet_GetRules(Inner().mContents.get()).Consume();
   mRuleList->SetRawContents(std::move(rules), aFromClone);
 }
@@ -1132,12 +1132,12 @@ void StyleSheet::FixUpAfterInnerClone() {
 
   FixUpRuleListAfterContentsChangeIfNeeded(/* aFromClone = */ true);
 
-  RefPtr<StyleLockedCssRules> rules =
+  RefPtr<ServoCssRules> rules =
       Servo_StyleSheet_GetRules(Inner().mContents.get()).Consume();
   uint32_t index = 0;
   while (true) {
     uint32_t line, column;  // Actually unused.
-    RefPtr<StyleLockedImportRule> import =
+    RefPtr<RawServoImportRule> import =
         Servo_CssRules_GetImportRuleAt(rules, index, &line, &column).Consume();
     if (!import) {
       // Note that only @charset rules come before @import rules, and @charset
@@ -1413,7 +1413,7 @@ ServoCSSRuleList* StyleSheet::GetCssRulesInternal() {
     // @import rules first, see bug 1719963.
     EnsureUniqueInner();
 
-    RefPtr<StyleLockedCssRules> rawRules =
+    RefPtr<ServoCssRules> rawRules =
         Servo_StyleSheet_GetRules(Inner().mContents).Consume();
     MOZ_ASSERT(rawRules);
     mRuleList = new ServoCSSRuleList(rawRules.forget(), this, nullptr);
@@ -1480,7 +1480,7 @@ StyleOrigin StyleSheet::GetOrigin() const {
   return Servo_StyleSheet_GetOrigin(Inner().mContents);
 }
 
-void StyleSheet::SetSharedContents(const StyleLockedCssRules* aSharedRules) {
+void StyleSheet::SetSharedContents(const ServoCssRules* aSharedRules) {
   MOZ_ASSERT(!IsComplete());
 
   SetURLExtraData();
@@ -1492,8 +1492,8 @@ void StyleSheet::SetSharedContents(const StyleLockedCssRules* aSharedRules) {
   // which we don't have.
 }
 
-const StyleLockedCssRules* StyleSheet::ToShared(
-    StyleSharedMemoryBuilder* aBuilder, nsCString& aErrorMessage) {
+const ServoCssRules* StyleSheet::ToShared(StyleSharedMemoryBuilder* aBuilder,
+                                          nsCString& aErrorMessage) {
   // Assert some things we assume when creating a StyleSheet using shared
   // memory.
   MOZ_ASSERT(GetReferrerInfo()->ReferrerPolicy() == ReferrerPolicy::_empty);
@@ -1503,7 +1503,7 @@ const StyleLockedCssRules* StyleSheet::ToShared(
   MOZ_ASSERT(Inner().mIntegrity.IsEmpty());
   MOZ_ASSERT(Principal()->IsSystemPrincipal());
 
-  const StyleLockedCssRules* rules = Servo_SharedMemoryBuilder_AddStylesheet(
+  const ServoCssRules* rules = Servo_SharedMemoryBuilder_AddStylesheet(
       aBuilder, Inner().mContents, &aErrorMessage);
 
 #ifdef DEBUG
