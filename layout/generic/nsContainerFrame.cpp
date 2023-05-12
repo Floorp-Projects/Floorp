@@ -582,9 +582,10 @@ void nsContainerFrame::PositionFrameView(nsIFrame* aKidFrame) {
   vm->MoveViewTo(view, pt.x, pt.y);
 }
 
-nsresult nsContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
-                                             nsIFrame* aOldParentFrame,
-                                             nsIFrame* aNewParentFrame) {
+void nsContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
+                                         nsIFrame* aOldParentFrame,
+                                         nsIFrame* aNewParentFrame) {
+#ifdef DEBUG
   MOZ_ASSERT(aChildFrame, "null child frame pointer");
   MOZ_ASSERT(aOldParentFrame, "null old parent frame pointer");
   MOZ_ASSERT(aNewParentFrame, "null new parent frame pointer");
@@ -619,7 +620,7 @@ nsresult nsContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
     // and the common parent or the new parent frame and the common parent.
     // Because neither the old parent frame nor the new parent frame have views,
     // then any child views don't need reparenting
-    return NS_OK;
+    return;
   }
 
   // We found views for one or both of the ancestor frames before we
@@ -631,17 +632,18 @@ nsresult nsContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
   // same view sub-hierarchy. If they are then we don't have to do
   // anything
   if (oldParentView != newParentView) {
+    MOZ_ASSERT_UNREACHABLE("can't move frames between views");
     // They're not so we need to reparent any child views
     aChildFrame->ReparentFrameViewTo(oldParentView->GetViewManager(),
                                      newParentView);
   }
-
-  return NS_OK;
+#endif
 }
 
 void nsContainerFrame::ReparentFrameViewList(const nsFrameList& aChildFrameList,
                                              nsIFrame* aOldParentFrame,
                                              nsIFrame* aNewParentFrame) {
+#ifdef DEBUG
   MOZ_ASSERT(aChildFrameList.NotEmpty(), "empty child frame list");
   MOZ_ASSERT(aOldParentFrame, "null old parent frame pointer");
   MOZ_ASSERT(aNewParentFrame, "null new parent frame pointer");
@@ -688,6 +690,7 @@ void nsContainerFrame::ReparentFrameViewList(const nsFrameList& aChildFrameList,
   // same view sub-hierarchy. If they are then we don't have to do
   // anything
   if (oldParentView != newParentView) {
+    MOZ_ASSERT_UNREACHABLE("can't move frames between views");
     nsViewManager* viewManager = oldParentView->GetViewManager();
 
     // They're not so we need to reparent any child views
@@ -695,6 +698,7 @@ void nsContainerFrame::ReparentFrameViewList(const nsFrameList& aChildFrameList,
       f->ReparentFrameViewTo(viewManager, newParentView);
     }
   }
+#endif
 }
 
 void nsContainerFrame::ReparentFrame(nsIFrame* aFrame,
