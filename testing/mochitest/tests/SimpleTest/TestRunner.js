@@ -212,8 +212,8 @@ TestRunner._checkForHangs = function() {
       var frameWindow =
         (!testInXOriginFrame() && testIframe.contentWindow.wrappedJSObject) ||
         testIframe.contentWindow;
-      // TODO : Do this in a way that reports that the test ended with a status "TIMEOUT"
       reportError(frameWindow, "Test timed out.");
+      TestRunner.updateUI([{ result: false }]);
 
       // If we have too many timeouts, give up. We don't want to wait hours
       // for results if some bug causes lots of tests to time out.
@@ -239,6 +239,7 @@ TestRunner._checkForHangs = function() {
           await killTest(frameWindow);
         } catch (e) {
           reportError(frameWindow, "Test error: " + e);
+          TestRunner.updateUI([{ result: false }]);
         }
       }, 1000);
 
