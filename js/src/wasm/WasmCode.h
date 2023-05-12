@@ -93,6 +93,8 @@ struct LinkDataCacheablePod {
 
 WASM_DECLARE_CACHEABLE_POD(LinkDataCacheablePod);
 
+WASM_CHECK_CACHEABLE_POD_PADDING(LinkDataCacheablePod)
+
 struct LinkData : LinkDataCacheablePod {
   explicit LinkData(Tier tier) : tier(tier) {}
 
@@ -361,6 +363,7 @@ struct MetadataCacheablePod {
   uint32_t typeDefsOffsetStart;
   uint32_t tablesOffsetStart;
   uint32_t tagsOffsetStart;
+  uint32_t padding;
 
   WASM_CHECK_CACHEABLE_POD(kind, memory, instanceDataLength, startFuncIndex,
                            nameCustomSectionIndex, filenameIsURL,
@@ -374,10 +377,13 @@ struct MetadataCacheablePod {
         omitsBoundsChecks(false),
         typeDefsOffsetStart(UINT32_MAX),
         tablesOffsetStart(UINT32_MAX),
-        tagsOffsetStart(UINT32_MAX) {}
+        tagsOffsetStart(UINT32_MAX),
+        padding(0) {}
 };
 
 WASM_DECLARE_CACHEABLE_POD(MetadataCacheablePod)
+
+WASM_CHECK_CACHEABLE_POD_PADDING(MetadataCacheablePod)
 
 using ModuleHash = uint8_t[8];
 
