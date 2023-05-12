@@ -783,8 +783,10 @@ async function doEagerEvalESGetters(commands) {
 }
 
 async function doEagerEvalDOMGetters(commands) {
+  // Getters explicitly marked no-side-effect.
+  //
   // [code, expectedResult]
-  const testData = [
+  const testDataExplicit = [
     // DOMTokenList
     ["document.documentElement.classList.length", 1],
     ["document.documentElement.classList.value", "class1"],
@@ -884,10 +886,10 @@ async function doEagerEvalDOMGetters(commands) {
   ];
   if (typeof Scheduler === "function") {
     // Scheduler is behind a pref.
-    testData.push(["window.scheduler.constructor.name", "Scheduler"]);
+    testDataExplicit.push(["window.scheduler.constructor.name", "Scheduler"]);
   }
 
-  for (const [code, expectedResult] of testData) {
+  for (const [code, expectedResult] of testDataExplicit) {
     const response = await commands.scriptCommand.execute(code, {
       eager: true,
     });
@@ -904,42 +906,44 @@ async function doEagerEvalDOMGetters(commands) {
     ok(!response.helperResult, "no helper result");
   }
 
-  const testDataWithSideEffect = [
+  // Getters not-explicitly marked no-side-effect.
+  // All DOM getters are considered no-side-effect in eager evaluation context.
+  const testDataImplicit = [
     // NOTE: This is not an exhaustive list.
     // Document
-    `document.implementation`,
-    `document.domain`,
-    `document.referrer`,
-    `document.cookie`,
-    `document.lastModified`,
-    `document.readyState`,
-    `document.designMode`,
-    `document.onbeforescriptexecute`,
-    `document.onafterscriptexecute`,
+    [`document.implementation.constructor.name`, "DOMImplementation"],
+    [`typeof document.domain`, "string"],
+    [`typeof document.referrer`, "string"],
+    [`typeof document.cookie`, "string"],
+    [`typeof document.lastModified`, "string"],
+    [`typeof document.readyState`, "string"],
+    [`typeof document.designMode`, "string"],
+    [`typeof document.onbeforescriptexecute`, "object"],
+    [`typeof document.onafterscriptexecute`, "object"],
 
     // Element
-    `document.documentElement.scrollTop`,
-    `document.documentElement.scrollLeft`,
-    `document.documentElement.scrollWidth`,
-    `document.documentElement.scrollHeight`,
+    [`typeof document.documentElement.scrollTop`, "number"],
+    [`typeof document.documentElement.scrollLeft`, "number"],
+    [`typeof document.documentElement.scrollWidth`, "number"],
+    [`typeof document.documentElement.scrollHeight`, "number"],
 
     // Performance
-    `performance.onresourcetimingbufferfull`,
+    [`typeof performance.onresourcetimingbufferfull`, "object"],
 
     // window
-    `window.name`,
-    `window.history`,
-    `window.customElements`,
-    `window.locationbar`,
-    `window.menubar`,
-    `window.status`,
-    `window.closed`,
+    [`typeof window.name`, "string"],
+    [`window.history.constructor.name`, "History"],
+    [`window.customElements.constructor.name`, "CustomElementRegistry"],
+    [`window.locationbar.constructor.name`, "BarProp"],
+    [`window.menubar.constructor.name`, "BarProp"],
+    [`typeof window.status`, "string"],
+    [`window.closed`, false],
 
     // CanvasRenderingContext2D / CanvasCompositing
-    `testCanvasContext.globalAlpha`,
+    [`testCanvasContext.globalAlpha`, 1],
   ];
 
-  for (const code of testDataWithSideEffect) {
+  for (const [code, expectedResult] of testDataImplicit) {
     const response = await commands.scriptCommand.execute(code, {
       eager: true,
     });
@@ -947,7 +951,7 @@ async function doEagerEvalDOMGetters(commands) {
       response,
       {
         input: code,
-        result: { type: "undefined" },
+        result: expectedResult,
       },
       code
     );

@@ -424,7 +424,7 @@ function makeSideeffectFreeDebugger(maybeEvalGlobal) {
       // getters are handled with an allowlist.
       if (
         (reason == "get" || reason == "call") &&
-        nativeHasNoSideEffects(callee)
+        nativeIsEagerlyEvaluateable(callee)
       ) {
         // Returning undefined causes execution to continue normally.
         return undefined;
@@ -531,9 +531,21 @@ function ensureSideEffectFreeNatives(maybeEvalGlobal) {
   gSideEffectFreeNatives = map;
 }
 
-function nativeHasNoSideEffects(fn) {
+function nativeIsEagerlyEvaluateable(fn) {
   if (fn.isBoundFunction) {
     fn = fn.boundTargetFunction;
+  }
+
+  // We assume all DOM getters have no major side effect, and they are
+  // eagerly-evaluateable.
+  //
+  // JitInfo is used only by methods/accessors in WebIDL, and being
+  // "a getter with JitInfo" can be used as a condition to check if given
+  // function is DOM getter.
+  //
+  // This includes privileged interfaces in addition to standard web APIs.
+  if (fn.isNativeGetterWithJitInfo()) {
+    return true;
   }
 
   // Natives with certain names are always considered side effect free.
