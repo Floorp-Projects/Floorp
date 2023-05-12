@@ -3,14 +3,23 @@
   "$id": "resource://activity-stream/schemas/MessagingExperiment.schema.json",
   "title": "Messaging Experiment",
   "description": "A Firefox Messaging System message.",
-  "oneOf": [
-    {
-      "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/TemplatedMessage"
+  "if": {
+    "type": "object",
+    "properties": {
+      "template": {
+        "const": "multi"
+      }
     },
-    {
-      "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/MultiMessage"
-    }
-  ],
+    "required": [
+      "template"
+    ]
+  },
+  "then": {
+    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/MultiMessage"
+  },
+  "else": {
+    "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/TemplatedMessage"
+  },
   "$defs": {
     "CFRUrlbarChiclet": {
       "$schema": "https://json-schema.org/draft/2019-09/schema",
