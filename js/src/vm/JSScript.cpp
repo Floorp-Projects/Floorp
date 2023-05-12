@@ -76,7 +76,6 @@
 #include "vm/StringType.h"    // JSString, JSAtom
 #include "vm/Time.h"          // AutoIncrementalTimer
 #include "vm/ToSource.h"      // JS::ValueToSource
-#include "vm/Warnings.h"      // js::WarnNumberLatin1
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
 #endif

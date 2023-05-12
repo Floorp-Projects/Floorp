@@ -370,7 +370,7 @@ bool js::ParseEvalOptions(JSContext* cx, HandleValue value,
     if (!url_str) {
       return false;
     }
-    UniqueChars url_bytes = JS_EncodeStringToLatin1(cx, url_str);
+    UniqueChars url_bytes = JS_EncodeStringToUTF8(cx, url_str);
     if (!url_bytes) {
       return false;
     }
@@ -2439,7 +2439,8 @@ static bool RememberSourceURL(JSContext* cx, HandleScript script) {
     return true;
   }
 
-  RootedString filenameString(cx, JS_AtomizeString(cx, filename));
+  RootedString filenameString(cx,
+                              AtomizeUTF8Chars(cx, filename, strlen(filename)));
   if (!filenameString) {
     return false;
   }
@@ -5422,7 +5423,8 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
     // Compute urlCString and displayURLChars, if a url or displayURL was
     // given respectively.
     if (url.isString()) {
-      urlCString = JS_EncodeStringToLatin1(cx, url.toString());
+      Rooted<JSString*> str(cx, url.toString());
+      urlCString = JS_EncodeStringToUTF8(cx, str);
       if (!urlCString) {
         return false;
       }

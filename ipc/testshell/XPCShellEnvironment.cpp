@@ -116,7 +116,7 @@ static bool Load(JSContext* cx, unsigned argc, JS::Value* vp) {
     if (!str) {
       return false;
     }
-    JS::UniqueChars filename = JS_EncodeStringToLatin1(cx, str);
+    JS::UniqueChars filename = JS_EncodeStringToUTF8(cx, str);
     if (!filename) {
       return false;
     }
