@@ -48,6 +48,17 @@ export const OwnershipModel = {
 };
 
 /**
+ * Extra options for serializing and deserializing remote values.
+ *
+ * @typedef {object} RemoteValueOptions
+ *
+ * @property {NodeCache=} nodeCache
+ *     The cache containing DOM node references.
+ * @param {Function=} emitScriptMessage
+ *     The function to emit "script.message" event.
+ */
+
+/**
  * An object which holds the information of how
  * ECMAScript objects should be serialized.
  *
@@ -144,9 +155,8 @@ function checkDateTimeString(dateString) {
  *     The Realm in which the value is deserialized.
  * @param {Array} serializedValueList
  *     List of serialized values.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {RemoteValueOptions} options
+ *     Extra Remote Value deserialization options.
  *
  * @returns {Array} List of deserialized values.
  *
@@ -177,9 +187,8 @@ function deserializeValueList(realm, serializedValueList, options = {}) {
  *     The Realm in which the value is deserialized.
  * @param {Array} serializedKeyValueList
  *     List of serialized key-value.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {RemoteValueOptions} options
+ *     Extra Remote Value deserialization options.
  *
  * @returns {Array} List of deserialized key-value.
  *
@@ -225,9 +234,8 @@ function deserializeKeyValueList(realm, serializedKeyValueList, options = {}) {
  *     Shared unique reference of the Node.
  * @param {Realm} realm
  *     The Realm in which the value is deserialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {RemoteValueOptions} options
+ *     Extra Remote Value deserialization options.
  *
  * @returns {Node} The deserialized DOM node.
  */
@@ -278,11 +286,8 @@ function deserializeSharedReference(sharedRef, realm, options = {}) {
  *     The Realm in which the value is deserialized.
  * @param {object} serializedValue
  *     Value of any type to be deserialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
- * @param {Function} options.emitScriptMessage
- *     The function to emit "script.message" event.
+ * @param {RemoteValueOptions} options
+ *     Extra Remote Value deserialization options.
  *
  * @returns {object} Deserialized representation of the value.
  */
@@ -460,9 +465,8 @@ function getHandleForObject(realm, ownershipType, object) {
  *    Node to create the unique reference for.
  * @param {Realm} realm
  *     The Realm in which the value is serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {RemoteValueOptions} options
+ *     Extra Remote Value serialization options.
  *
  * @returns {string}
  *    Shared unique reference for the Node.
@@ -522,9 +526,8 @@ function isShadowRoot(node) {
  *     Map of internal ids.
  * @param {Realm} realm
  *     The Realm from which comes the value being serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {RemoteValueOptions} options
+ *     Extra Remote Value serialization options.
  *
  * @returns {object} Object for serialized values.
  */
@@ -571,9 +574,8 @@ function serializeArrayLike(
  *     Map of internal ids.
  * @param {Realm} realm
  *     The Realm from which comes the value being serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {RemoteValueOptions} options
+ *     Extra Remote Value serialization options.
  *
  * @returns {Array} List of serialized values.
  */
@@ -625,9 +627,8 @@ function serializeList(
  *     Map of internal ids.
  * @param {Realm} realm
  *     The Realm from which comes the value being serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {RemoteValueOptions} options
+ *     Extra Remote Value serialization options.
  *
  * @returns {Array} List of serialized values.
  */
@@ -688,9 +689,8 @@ function serializeMapping(
  *     Map of internal ids.
  * @param {Realm} realm
  *     The Realm from which comes the value being serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {RemoteValueOptions} options
+ *     Extra Remote Value serialization options.
  *
  * @returns {object} Serialized value.
  */
@@ -792,9 +792,8 @@ function serializeNode(
  *     Map of internal ids.
  * @param {Realm} realm
  *     The Realm from which comes the value being serialized.
- * @param {object} options
- * @param {NodeCache} options.nodeCache
- *     The cache containing DOM node references.
+ * @param {RemoteValueOptions} options
+ *     Extra Remote Value serialization options.
  *
  * @returns {object} Serialized representation of the value.
  */

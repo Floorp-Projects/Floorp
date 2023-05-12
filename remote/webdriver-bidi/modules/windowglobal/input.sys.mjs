@@ -8,7 +8,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   action: "chrome://remote/content/shared/webdriver/Actions.sys.mjs",
-  deserialize: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
 });
 
@@ -33,6 +32,7 @@ class InputModule extends WindowGlobalBiDiModule {
 
     await this.#deserializeActionOrigins(actions);
     const actionChain = lazy.action.Chain.fromJSON(this.#actionState, actions);
+
     await actionChain.dispatch(this.#actionState, this.messageHandler.window);
   }
 
@@ -85,9 +85,7 @@ class InputModule extends WindowGlobalBiDiModule {
     }
 
     const realm = this.messageHandler.getRealm();
-    return lazy.deserialize(realm, sharedReference, {
-      nodeCache: this.nodeCache,
-    });
+    return this.deserialize(realm, sharedReference);
   }
 }
 

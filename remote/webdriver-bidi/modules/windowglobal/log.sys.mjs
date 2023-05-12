@@ -13,7 +13,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/listeners/ConsoleListener.sys.mjs",
   isChromeFrame: "chrome://remote/content/shared/Stack.sys.mjs",
   OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
-  serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   setDefaultSerializationOptions:
     "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
 });
@@ -138,22 +137,17 @@ class LogModule extends WindowGlobalBiDiModule {
 
     // Serialize each arg as remote value.
     const defaultRealm = this.messageHandler.getRealm();
-    const nodeCache = this.nodeCache;
     const serializedArgs = [];
     for (const arg of args) {
       // Note that we can pass a default realm for now since realms are only
       // involved when creating object references, which will not happen with
       // OwnershipModel.None. This will be revisited in Bug 1742589.
       serializedArgs.push(
-        lazy.serialize(
+        this.serialize(
           Cu.waiveXrays(arg),
           lazy.setDefaultSerializationOptions(),
           lazy.OwnershipModel.None,
-          new Map(),
-          defaultRealm,
-          {
-            nodeCache,
-          }
+          defaultRealm
         )
       );
     }
