@@ -2335,6 +2335,17 @@ void nsGenericHTMLElement::HandleKeyboardActivation(
   MOZ_ASSERT(aVisitor.mEvent->HasKeyEventMessage());
   MOZ_ASSERT(aVisitor.mEvent->IsTrusted());
 
+  // If focused element is different from this element, it may be editable.
+  // In that case, associated editor for the element should handle the keyboard
+  // instead.  Therefore, if this is not the focused element, we should not
+  // handle the event here.  Note that this element may be an editing host,
+  // i.e., focused and editable.  In the case, keyboard events should be
+  // handled by the focused element instead of associated editor because
+  // Chrome handles the case so.  For compatibility with Chrome, we follow them.
+  if (nsFocusManager::GetFocusedElementStatic() != this) {
+    return;
+  }
+
   const auto message = aVisitor.mEvent->mMessage;
   const WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
   if (nsEventStatus_eIgnore != aVisitor.mEventStatus) {
