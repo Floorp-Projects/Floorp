@@ -141,6 +141,22 @@ accessibility.getAccessible = async function(element) {
 
   // First, wait for accessibility to be ready for the element's document.
   await waitForDocumentAccessibility(element.ownerDocument);
+
+  const acc = accessibility.service.getAccessibleFor(element);
+  if (acc) {
+    return acc;
+  }
+
+  // The Accessible doesn't exist yet. This can happen because a11y tree
+  // mutations happen during refresh driver ticks. Stop the refresh driver from
+  // doing its regular ticks and force two refresh driver ticks: the first to
+  // let layout update and notify a11y, and the second to let a11y process
+  // updates.
+  const windowUtils = element.ownerGlobal.windowUtils;
+  windowUtils.advanceTimeAndRefresh(0);
+  windowUtils.advanceTimeAndRefresh(0);
+  // Go back to normal refresh driver ticks.
+  windowUtils.restoreNormalRefresh();
   return accessibility.service.getAccessibleFor(element);
 };
 
