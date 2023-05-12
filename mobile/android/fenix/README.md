@@ -228,13 +228,7 @@ If you wish to use a custom Glean server during local development, you can add a
 - `glean.custom.server.url`
 
 ### GeckoView
-Specify a relative path to your local `mozilla-central` checkout via `dependencySubstitutions.geckoviewTopsrcdir`,
-and optional a path to m-c object directory via `dependencySubstitutions.geckoviewTopobjdir`.
-
-If these are configured, local builds of GeckoView will be used instead of what's configured in Dependencies.kt.
-For more details, see https://firefox-source-docs.mozilla.org/mobile/android/geckoview/contributor/geckoview-quick-start.html#include-geckoview-as-a-dependency
-
-See notes on building successfully in the `android-components` auto-publication section.
+For building with a local checkout of `mozilla-central` see [Substituting Local GeckoView](https://github.com/mozilla-mobile/firefox-android/blob/main/fenix/docs/substituting-local-gv.md)
 
 ## License
 
