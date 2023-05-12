@@ -150,9 +150,12 @@ void HTMLDialogElement::FocusDialog() {
   // 1) If subject is inert, return.
   // 2) Let control be the first descendant element of subject, in tree
   // order, that is not inert and has the autofocus attribute specified.
-  if (RefPtr<Document> doc = GetComposedDoc()) {
+  RefPtr<Document> doc = OwnerDoc();
+  if (IsInComposedDoc()) {
     doc->FlushPendingNotifications(FlushType::Frames);
   }
+
+  doc->HideAllPopoversWithoutRunningScript();
 
   RefPtr<Element> control = GetFocusDelegate(false /* aWithMouse */);
 
