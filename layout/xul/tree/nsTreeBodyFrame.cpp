@@ -365,19 +365,24 @@ void nsTreeBodyFrame::EnsureView() {
   NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
 }
 
-void nsTreeBodyFrame::ManageReflowCallback(const nsRect& aRect,
-                                           nscoord aHorzWidth) {
-  if (!mReflowCallbackPosted &&
-      (!aRect.IsEqualEdges(mRect) || mHorzWidth != aHorzWidth)) {
-    PresShell()->PostReflowCallback(this);
-    mReflowCallbackPosted = true;
-    mOriginalHorzWidth = mHorzWidth;
-  } else if (mReflowCallbackPosted && mHorzWidth != aHorzWidth &&
-             mOriginalHorzWidth == aHorzWidth) {
+void nsTreeBodyFrame::ManageReflowCallback() {
+  const nscoord horzWidth = CalcHorzWidth(GetScrollParts());
+  if (!mReflowCallbackPosted) {
+    if (!mLastReflowRect || !mLastReflowRect->IsEqualEdges(mRect) ||
+        mHorzWidth != horzWidth) {
+      PresShell()->PostReflowCallback(this);
+      mReflowCallbackPosted = true;
+      mOriginalHorzWidth = mHorzWidth;
+    }
+  } else if (mHorzWidth != horzWidth && mOriginalHorzWidth == horzWidth) {
+    // FIXME(emilio): This doesn't seem sound to me, if the rect changes in the
+    // block axis.
     PresShell()->CancelReflowCallback(this);
     mReflowCallbackPosted = false;
     mOriginalHorzWidth = -1;
   }
+  mLastReflowRect = Some(mRect);
+  mHorzWidth = horzWidth;
 }
 
 nscoord nsTreeBodyFrame::GetIntrinsicBSize() {
@@ -386,9 +391,7 @@ nscoord nsTreeBodyFrame::GetIntrinsicBSize() {
 
 void nsTreeBodyFrame::DidReflow(nsPresContext* aPresContext,
                                 const ReflowInput* aReflowInput) {
-  nscoord horzWidth = CalcHorzWidth(GetScrollParts());
-  ManageReflowCallback(GetRect(), horzWidth);
-  mHorzWidth = horzWidth;
+  ManageReflowCallback();
   SimpleXULLeafFrame::DidReflow(aPresContext, aReflowInput);
 }
 
