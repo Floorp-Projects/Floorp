@@ -271,7 +271,7 @@ class TaskGraphGenerator:
         # Always add legacy target tasks method until we deprecate that API.
         if "target_tasks_method" not in filters:
             filters.insert(0, "target_tasks_method")
-        filters = [filter_tasks.filter_task_functions[f] for f in filters if f]
+        filters = [filter_tasks.filter_task_functions[f] for f in filters]
 
         yield self.verify("parameters", parameters)
 
