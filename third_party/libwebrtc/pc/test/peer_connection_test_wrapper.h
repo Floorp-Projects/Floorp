@@ -30,6 +30,7 @@
 #include "pc/test/fake_video_track_renderer.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
+#include "test/scoped_key_value_config.h"
 
 class PeerConnectionTestWrapper
     : public webrtc::PeerConnectionObserver,
@@ -116,6 +117,7 @@ class PeerConnectionTestWrapper
       const cricket::AudioOptions& audio_options,
       bool video);
 
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   std::string name_;
   rtc::SocketServer* const socket_server_;
   rtc::Thread* const network_thread_;

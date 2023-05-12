@@ -32,40 +32,90 @@ extern TimeStamp WebrtcSystemTimeBase();
 namespace dom {
 
 /**
- * Class that facilitates creating timestamps for webrtc stats by mimicking
+ * Keeps the state needed to convert RTCStatsTimestamps.
+ */
+struct RTCStatsTimestampState {
+  RTCStatsTimestampState();
+  explicit RTCStatsTimestampState(Performance& aPerformance);
+
+  RTCStatsTimestampState(const RTCStatsTimestampState&) = default;
+
+  // These members are sampled when a non-copy constructor is called.
+
+  // Performance's random timeline seed.
+  const uint64_t mRandomTimelineSeed;
+  // TimeStamp::Now() when the members were sampled. This is equivalent to time
+  // 0 in DomRealtime.
+  const TimeStamp mStartDomRealtime;
+  // WebrtcSystemTime() when the members were sampled. This represents the same
+  // point in time as mStartDomRealtime, but as a webrtc timestamp.
+  const webrtc::Timestamp mStartRealtime;
+  // Performance's RTPCallerType.
+  const RTPCallerType mRTPCallerType;
+  // Performance.timeOrigin for mStartDomRealtime when the members were sampled.
+  const DOMHighResTimeStamp mStartWallClockRaw;
+};
+
+/**
+ * Classes that facilitate creating timestamps for webrtc stats by mimicking
  * dom::Performance, as well as getting and converting timestamps for libwebrtc
  * and our integration with it.
  *
- * It converts and uses time from these clocks:
- * - Moz      : Monotonic, unspecified (but constant) and inaccessible epoch, as
- *              implemented by mozilla::TimeStamp
- * - Realtime : Monotonic, unspecified (but constant) epoch.
- * - 1Jan1970 : Monotonic, unix epoch (00:00:00 UTC on 1 January 1970).
- * - Ntp      : Monotonic, ntp epoch (00:00:00 UTC on 1 January 1900).
- * - Dom      : Monotonic, milliseconds since unix epoch, as the timestamps
- *              defined by webrtc-pc. Corresponds to Performance.timeOrigin +
- *              Performance.now().
- * - WallClock: Non-monotonic, unix epoch.
+ * They use the same clock to avoid drift and inconsistencies, base on
+ * mozilla::TimeStamp, and convert to and from these time bases:
+ * - Moz        : Monotonic, unspecified (but constant) and inaccessible epoch,
+ *                as implemented by mozilla::TimeStamp
+ * - Realtime   : Monotonic, unspecified (but constant) epoch.
+ * - 1Jan1970   : Monotonic, unix epoch (00:00:00 UTC on 1 January 1970).
+ * - Ntp        : Monotonic, ntp epoch (00:00:00 UTC on 1 January 1900).
+ * - Dom        : Monotonic, milliseconds since unix epoch, as the timestamps
+ *                defined by webrtc-pc. Corresponds to Performance.timeOrigin +
+ *                Performance.now(). Has reduced precision.
+ * - DomRealtime: Like Dom, but with full precision.
+ * - WallClock  : Non-monotonic, unix epoch. Not used here since it is
+ *                non-monotonic and cannot be correlated to the other time
+ *                bases.
  */
+class RTCStatsTimestampMaker;
+class RTCStatsTimestamp {
+ public:
+  TimeStamp ToMozTime() const;
+  webrtc::Timestamp ToRealtime() const;
+  webrtc::Timestamp To1Jan1970() const;
+  webrtc::Timestamp ToNtp() const;
+  webrtc::Timestamp ToDomRealtime() const;
+  DOMHighResTimeStamp ToDom() const;
+
+  static RTCStatsTimestamp FromMozTime(const RTCStatsTimestampMaker& aMaker,
+                                       TimeStamp aMozTime);
+  static RTCStatsTimestamp FromRealtime(const RTCStatsTimestampMaker& aMaker,
+                                        webrtc::Timestamp aRealtime);
+  static RTCStatsTimestamp From1Jan1970(const RTCStatsTimestampMaker& aMaker,
+                                        webrtc::Timestamp aRealtime);
+  static RTCStatsTimestamp FromNtp(const RTCStatsTimestampMaker& aMaker,
+                                   webrtc::Timestamp aRealtime);
+  static RTCStatsTimestamp FromDomRealtime(const RTCStatsTimestampMaker& aMaker,
+                                           webrtc::Timestamp aDomRealtime);
+  // There is on purpose no conversion functions from DOMHighResTimeStamp
+  // because of the loss in precision of a floating point to integer conversion.
+
+ private:
+  RTCStatsTimestamp(RTCStatsTimestampState aState, TimeStamp aMozTime);
+
+  const RTCStatsTimestampState mState;
+  const TimeStamp mMozTime;
+};
+
 class RTCStatsTimestampMaker {
  public:
-  RTCStatsTimestampMaker();
-  explicit RTCStatsTimestampMaker(nsPIDOMWindowInner* aWindow);
+  static RTCStatsTimestampMaker Create(nsPIDOMWindowInner* aWindow = nullptr);
 
-  DOMHighResTimeStamp GetNow() const;
+  RTCStatsTimestamp GetNow() const;
 
-  webrtc::Timestamp GetNowRealtime() const;
-  webrtc::Timestamp ConvertMozTimeToRealtime(TimeStamp aMozTime) const;
-  webrtc::Timestamp ConvertRealtimeTo1Jan1970(
-      webrtc::Timestamp aRealtime) const;
-  DOMHighResTimeStamp ConvertNtpToDomTime(webrtc::Timestamp aNtpTime) const;
-  DOMHighResTimeStamp ReduceRealtimePrecision(
-      webrtc::Timestamp aRealtime) const;
+  const RTCStatsTimestampState mState;
 
-  const uint64_t mRandomTimelineSeed;
-  const TimeStamp mStartRealtime;
-  const RTPCallerType mRTPCallerType;
-  const DOMHighResTimeStamp mStartWallClockRaw;
+ private:
+  explicit RTCStatsTimestampMaker(RTCStatsTimestampState aState);
 };
 
 // TODO(bug 1588303): If we ever get move semantics for webidl dictionaries, we

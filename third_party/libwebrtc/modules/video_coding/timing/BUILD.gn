@@ -26,6 +26,7 @@ rtc_library("inter_frame_delay") {
     "../../../api/units:frequency",
     "../../../api/units:time_delta",
     "../../../api/units:timestamp",
+    "../../../rtc_base:rtc_numerics",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -58,9 +59,9 @@ rtc_library("jitter_estimator") {
     "../../../api/units:frequency",
     "../../../api/units:time_delta",
     "../../../api/units:timestamp",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
+    "../../../rtc_base:rolling_accumulator",
     "../../../rtc_base:rtc_numerics",
     "../../../rtc_base:safe_conversions",
     "../../../rtc_base/experiments:field_trial_parser",
@@ -92,6 +93,7 @@ rtc_library("timestamp_extrapolator") {
   deps = [
     "../../../api/units:timestamp",
     "../../../modules:module_api_public",
+    "../../../rtc_base:rtc_numerics",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }

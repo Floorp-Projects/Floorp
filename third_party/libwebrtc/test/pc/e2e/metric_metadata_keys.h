@@ -37,6 +37,8 @@ class MetricMetadataKey {
   // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
   static constexpr char kExperimentalTestNameMetadataKey[] =
       "experimental_test_name";
+  // Represents index of a video spatial layer to which metric belongs.
+  static constexpr char kSpatialLayerMetadataKey[] = "spatial_layer";
 
  private:
   MetricMetadataKey() = default;

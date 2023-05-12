@@ -10,44 +10,37 @@
 
 namespace mozilla {
 
+// webrtc::Timestamp may not be negative. `now-base` for the first call to
+// WebrtcSystemTime() is always 0, which makes it impossible for libwebrtc
+// code to calculate a timestamp older than the first one returned. This
+// offset makes sure the clock starts at a value equivalent to roughly 4.5h.
+static constexpr webrtc::TimeDelta kWebrtcTimeOffset =
+    webrtc::TimeDelta::Micros(0x10000000);
+
 RTCStatsTimestampMakerRealtimeClock::RTCStatsTimestampMakerRealtimeClock(
     const dom::RTCStatsTimestampMaker& aTimestampMaker)
     : mTimestampMaker(aTimestampMaker) {}
 
 webrtc::Timestamp RTCStatsTimestampMakerRealtimeClock::CurrentTime() {
-  return mTimestampMaker.GetNowRealtime();
+  return mTimestampMaker.GetNow().ToRealtime();
 }
 
 webrtc::NtpTime RTCStatsTimestampMakerRealtimeClock::ConvertTimestampToNtpTime(
     webrtc::Timestamp aRealtime) {
-  return CreateNtp(mTimestampMaker.ConvertRealtimeTo1Jan1970(aRealtime) +
-                   webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970));
-}
-
-static TimeStamp CalculateBaseOffset(TimeStamp aNow) {
-  uint32_t offset = 24 * 60 * 60;
-  // If `converted` has underflowed it is capped at 0, which is an invalid
-  // timestamp. Reduce the offset in case that happens.
-  TimeStamp base;
-  do {
-    base = aNow - TimeDuration::FromSeconds(offset);
-    offset /= 2;
-  } while (!base);
-  return base;
+  return CreateNtp(
+      dom::RTCStatsTimestamp::FromRealtime(mTimestampMaker, aRealtime).ToNtp());
 }
 
 TimeStamp WebrtcSystemTimeBase() {
   static TimeStamp now = TimeStamp::Now();
-  // Make it obvious that these timestamps use a different base than
-  // RTCStatsTimestampMakerRealtimeClock::CurrentTime.
-  static TimeStamp base = CalculateBaseOffset(now);
-  return base;
+  return now;
 }
 
 webrtc::Timestamp WebrtcSystemTime() {
   const TimeStamp base = WebrtcSystemTimeBase();
   const TimeStamp now = TimeStamp::Now();
-  return webrtc::Timestamp::Micros((now - base).ToMicroseconds());
+  return webrtc::Timestamp::Micros((now - base).ToMicroseconds()) +
+         kWebrtcTimeOffset;
 }
 
 webrtc::NtpTime CreateNtp(webrtc::Timestamp aTime) {

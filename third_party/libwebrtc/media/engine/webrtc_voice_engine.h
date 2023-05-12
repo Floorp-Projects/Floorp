@@ -25,6 +25,7 @@
 #include "api/transport/rtp/rtp_source.h"
 #include "call/audio_state.h"
 #include "call/call.h"
+#include "media/base/media_channel_impl.h"
 #include "media/base/media_engine.h"
 #include "media/base/rtp_utils.h"
 #include "modules/async_audio_processing/async_audio_processing.h"
@@ -86,6 +87,9 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
 
   // Stops AEC dump.
   void StopAecDump() override;
+
+  absl::optional<webrtc::AudioDeviceModule::Stats> GetAudioDeviceStats()
+      override;
 
  private:
   // Every option that is "set" will be applied. Every option not "set" will be
@@ -172,6 +176,7 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   bool AddRecvStream(const StreamParams& sp) override;
   bool RemoveRecvStream(uint32_t ssrc) override;
   void ResetUnsignaledRecvStream() override;
+  absl::optional<uint32_t> GetUnsignaledSsrc() const override;
   void OnDemuxerCriteriaUpdatePending() override;
   void OnDemuxerCriteriaUpdateComplete() override;
 
@@ -200,13 +205,14 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   bool CanInsertDtmf() override;
   bool InsertDtmf(uint32_t ssrc, int event, int duration) override;
 
-  void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
-                        int64_t packet_time_us) override;
+  void OnPacketReceived(const webrtc::RtpPacketReceived& packet) override;
   void OnPacketSent(const rtc::SentPacket& sent_packet) override;
   void OnNetworkRouteChanged(absl::string_view transport_name,
                              const rtc::NetworkRoute& network_route) override;
   void OnReadyToSend(bool ready) override;
-  bool GetStats(VoiceMediaInfo* info, bool get_and_clear_legacy_stats) override;
+  bool GetSendStats(VoiceMediaSendInfo* info) override;
+  bool GetReceiveStats(VoiceMediaReceiveInfo* info,
+                       bool get_and_clear_legacy_stats) override;
 
   // Set the audio sink for an existing stream.
   void SetRawAudioSink(
@@ -249,6 +255,11 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   bool DeleteVoEChannel(int channel);
   bool SetMaxSendBitrate(int bps);
   void SetupRecording();
+
+  // Expected to be invoked once per packet that belongs to this channel that
+  // can not be demuxed. Returns true if a default receive stream has been
+  // created.
+  bool MaybeCreateDefaultReceiveStream(const webrtc::RtpPacketReceived& packet);
   // Check if 'ssrc' is an unsignaled stream, and if so mark it as not being
   // unsignaled anymore (i.e. it is now removed, or signaled), and return true.
   bool MaybeDeregisterUnsignaledRecvStream(uint32_t ssrc);
@@ -269,7 +280,6 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   AudioOptions options_;
   absl::optional<int> dtmf_payload_type_;
   int dtmf_payload_freq_ = -1;
-  bool recv_transport_cc_enabled_ = false;
   bool recv_nack_enabled_ = false;
   bool enable_non_sender_rtt_ = false;
   bool playout_ = false;
@@ -308,6 +318,7 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   class WebRtcAudioReceiveStream;
   std::map<uint32_t, WebRtcAudioReceiveStream*> recv_streams_;
   std::vector<webrtc::RtpExtension> recv_rtp_extensions_;
+  webrtc::RtpHeaderExtensionMap recv_rtp_extension_map_;
 
   absl::optional<webrtc::AudioSendStream::Config::SendCodecSpec>
       send_codec_spec_;
@@ -324,7 +335,11 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
       unsignaled_frame_decryptor_;
   rtc::scoped_refptr<webrtc::FrameTransformerInterface>
       unsignaled_frame_transformer_;
+
+  void FillSendCodecStats(VoiceMediaSendInfo* voice_media_info);
+  void FillReceiveCodecStats(VoiceMediaReceiveInfo* voice_media_info);
 };
+
 }  // namespace cricket
 
 #endif  // MEDIA_ENGINE_WEBRTC_VOICE_ENGINE_H_

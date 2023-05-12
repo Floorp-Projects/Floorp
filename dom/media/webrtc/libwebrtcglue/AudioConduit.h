@@ -32,7 +32,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   Maybe<int> ActiveSendPayloadType() const override;
   Maybe<int> ActiveRecvPayloadType() const override;
 
-  void OnRtpReceived(MediaPacket&& aPacket, webrtc::RTPHeader&& aHeader);
+  void OnRtpReceived(webrtc::RtpPacketReceived&& aPacket,
+                     webrtc::RTPHeader&& aHeader);
   void OnRtcpReceived(MediaPacket&& aPacket);
 
   void OnRtcpBye() override;
@@ -50,7 +51,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
     return mReceiverRtcpSendEvent;
   }
   void ConnectReceiverRtpEvent(
-      MediaEventSourceExc<MediaPacket, webrtc::RTPHeader>& aEvent) override {
+      MediaEventSourceExc<webrtc::RtpPacketReceived, webrtc::RTPHeader>& aEvent)
+      override {
     mReceiverRtpEventListener =
         aEvent.Connect(mCallThread, this, &WebrtcAudioConduit::OnRtpReceived);
   }

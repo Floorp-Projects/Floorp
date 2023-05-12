@@ -279,7 +279,7 @@ TEST(DefaultVideoQualityAnalyzerMetricNamesTest, MetricNamesForP2PAreCorrect) {
               .improvement_direction = ImprovementDirection::kNeitherIsBetter},
           MetricValidationInfo{
               .test_case = "test_case/alice_video",
-              .name = "qp",
+              .name = "qp_sl0",
               .unit = Unit::kUnitless,
               .improvement_direction = ImprovementDirection::kSmallerIsBetter},
           MetricValidationInfo{
@@ -453,7 +453,7 @@ TEST(DefaultVideoQualityAnalyzerMetricNamesTest,
               .improvement_direction = ImprovementDirection::kNeitherIsBetter},
           MetricValidationInfo{
               .test_case = "test_case/alice_video_alice_bob",
-              .name = "qp",
+              .name = "qp_sl0",
               .unit = Unit::kUnitless,
               .improvement_direction = ImprovementDirection::kSmallerIsBetter},
           MetricValidationInfo{
@@ -595,7 +595,7 @@ TEST(DefaultVideoQualityAnalyzerMetricNamesTest,
               .improvement_direction = ImprovementDirection::kNeitherIsBetter},
           MetricValidationInfo{
               .test_case = "test_case/alice_video_alice_charlie",
-              .name = "qp",
+              .name = "qp_sl0",
               .unit = Unit::kUnitless,
               .improvement_direction = ImprovementDirection::kSmallerIsBetter},
           MetricValidationInfo{

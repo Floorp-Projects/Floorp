@@ -190,7 +190,8 @@ class WebrtcVideoConduit
 
   void CollectTelemetryData() override;
 
-  void OnRtpReceived(MediaPacket&& aPacket, webrtc::RTPHeader&& aHeader);
+  void OnRtpReceived(webrtc::RtpPacketReceived&& aPacket,
+                     webrtc::RTPHeader&& aHeader);
   void OnRtcpReceived(MediaPacket&& aPacket);
 
   void OnRtcpBye() override;
@@ -208,7 +209,8 @@ class WebrtcVideoConduit
     return mReceiverRtcpSendEvent;
   }
   void ConnectReceiverRtpEvent(
-      MediaEventSourceExc<MediaPacket, webrtc::RTPHeader>& aEvent) override {
+      MediaEventSourceExc<webrtc::RtpPacketReceived, webrtc::RTPHeader>& aEvent)
+      override {
     mReceiverRtpEventListener =
         aEvent.Connect(mCallThread, this, &WebrtcVideoConduit::OnRtpReceived);
   }

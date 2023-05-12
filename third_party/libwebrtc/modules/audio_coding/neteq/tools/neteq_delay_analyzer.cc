@@ -18,8 +18,8 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
-#include "modules/include/module_common_types_public.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/numerics/sequence_number_unwrapper.h"
 
 namespace webrtc {
 namespace test {
@@ -140,7 +140,7 @@ void NetEqDelayAnalyzer::CreateGraphs(Delays* arrival_delay_ms,
 
   std::vector<double> rtp_timestamps_ms;
   double offset = std::numeric_limits<double>::max();
-  TimestampUnwrapper unwrapper;
+  RtpTimestampUnwrapper unwrapper;
   // This loop traverses data_ and populates rtp_timestamps_ms as well as
   // calculates the base offset.
   for (auto& d : data_) {

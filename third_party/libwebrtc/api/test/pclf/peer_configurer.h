@@ -113,16 +113,24 @@ class PeerConfigurer {
   // include all streams with `VideoSubscription::kSameAsSendStream`
   // resolution. To this behavior use this method.
   PeerConfigurer* SetVideoSubscription(VideoSubscription subscription);
-  // Set the list of video codecs used by the peer during the test. These
+  // Sets the list of video codecs used by the peer during the test. These
   // codecs will be negotiated in SDP during offer/answer exchange. The order
   // of these codecs during negotiation will be the same as in `video_codecs`.
   // Codecs have to be available in codecs list provided by peer connection to
   // be negotiated. If some of specified codecs won't be found, the test will
   // crash.
   PeerConfigurer* SetVideoCodecs(std::vector<VideoCodecConfig> video_codecs);
-  // Set the audio stream for the call from this peer. If this method won't
+  // Sets a list of RTP header extensions which will be enforced on all video
+  // streams added to this peer.
+  PeerConfigurer* SetExtraVideoRtpHeaderExtensions(
+      std::vector<std::string> extensions);
+  // Sets the audio stream for the call from this peer. If this method won't
   // be invoked, this peer will send no audio.
   PeerConfigurer* SetAudioConfig(AudioConfig config);
+  // Sets a list of RTP header extensions which will be enforced on all audio
+  // streams added to this peer.
+  PeerConfigurer* SetExtraAudioRtpHeaderExtensions(
+      std::vector<std::string> extensions);
 
   // Set if ULP FEC should be used or not. False by default.
   PeerConfigurer* SetUseUlpFEC(bool value);

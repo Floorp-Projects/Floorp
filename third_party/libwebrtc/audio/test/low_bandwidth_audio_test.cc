@@ -84,7 +84,7 @@ class Mobile2GNetworkTest : public AudioQualityTest {
          {{"maxaveragebitrate", "6000"}, {"ptime", "60"}, {"stereo", "1"}}});
   }
 
-  BuiltInNetworkBehaviorConfig GetNetworkPipeConfig() const override {
+  BuiltInNetworkBehaviorConfig GetSendTransportConfig() const override {
     BuiltInNetworkBehaviorConfig pipe_config;
     pipe_config.link_capacity_kbps = 12;
     pipe_config.queue_length_packets = 1500;

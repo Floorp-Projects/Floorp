@@ -411,26 +411,27 @@ VideoQualityTest::VideoQualityTest(
     encoder_factory_ = std::make_unique<InternalEncoderFactory>();
   }
 
-  payload_type_map_ = test::CallTest::payload_type_map_;
-  RTC_DCHECK(payload_type_map_.find(kPayloadTypeH264) ==
-             payload_type_map_.end());
-  RTC_DCHECK(payload_type_map_.find(kPayloadTypeVP8) ==
-             payload_type_map_.end());
-  RTC_DCHECK(payload_type_map_.find(kPayloadTypeVP9) ==
-             payload_type_map_.end());
-  RTC_DCHECK(payload_type_map_.find(kPayloadTypeGeneric) ==
-             payload_type_map_.end());
-  payload_type_map_[kPayloadTypeH264] = webrtc::MediaType::VIDEO;
-  payload_type_map_[kPayloadTypeVP8] = webrtc::MediaType::VIDEO;
-  payload_type_map_[kPayloadTypeVP9] = webrtc::MediaType::VIDEO;
-  payload_type_map_[kPayloadTypeGeneric] = webrtc::MediaType::VIDEO;
-
   fec_controller_factory_ =
       std::move(injection_components_->fec_controller_factory);
   network_state_predictor_factory_ =
       std::move(injection_components_->network_state_predictor_factory);
   network_controller_factory_ =
       std::move(injection_components_->network_controller_factory);
+
+  // Register header extensions that are used by transport to identify
+  // extensions when parsing incomig packets.
+  RegisterRtpExtension(RtpExtension(RtpExtension::kTransportSequenceNumberUri,
+                                    kTransportSequenceNumberExtensionId));
+  RegisterRtpExtension(
+      RtpExtension(RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId));
+  RegisterRtpExtension(RtpExtension(RtpExtension::kGenericFrameDescriptorUri00,
+                                    kGenericFrameDescriptorExtensionId00));
+  RegisterRtpExtension(RtpExtension(RtpExtension::kDependencyDescriptorUri,
+                                    kRtpExtensionDependencyDescriptor));
+  RegisterRtpExtension(RtpExtension(RtpExtension::kVideoContentTypeUri,
+                                    kVideoContentTypeExtensionId));
+  RegisterRtpExtension(
+      RtpExtension(RtpExtension::kVideoTimingUri, kVideoTimingExtensionId));
 }
 
 VideoQualityTest::InjectionComponents::InjectionComponents() = default;
@@ -710,7 +711,9 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
   std::string generic_codec_name;
   webrtc::VideoEncoder::EncoderInfo encoder_info;
   for (size_t video_idx = 0; video_idx < num_video_streams_; ++video_idx) {
-    video_send_configs_.push_back(VideoSendStream::Config(send_transport));
+    VideoSendStream::Config config(send_transport);
+    config.rtp.extmap_allow_mixed = true;
+    video_send_configs_.push_back(std::move(config));
     video_encoder_configs_.push_back(VideoEncoderConfig());
     num_video_substreams = params_.ss[video_idx].streams.size();
     RTC_CHECK_GT(num_video_substreams, 0);
@@ -769,6 +772,12 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
           kGenericFrameDescriptorExtensionId00);
     }
 
+    if (params_.call.dependency_descriptor) {
+      video_send_configs_[video_idx].rtp.extensions.emplace_back(
+          RtpExtension::kDependencyDescriptorUri,
+          kRtpExtensionDependencyDescriptor);
+    }
+
     video_send_configs_[video_idx].rtp.extensions.emplace_back(
         RtpExtension::kVideoContentTypeUri, kVideoContentTypeExtensionId);
     video_send_configs_[video_idx].rtp.extensions.emplace_back(
@@ -819,9 +828,8 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
     if (!decode_all_receive_streams)
       decode_sub_stream = params_.ss[video_idx].selected_stream;
     CreateMatchingVideoReceiveConfigs(
-        video_send_configs_[video_idx], recv_transport,
-        params_.call.send_side_bwe, &video_decoder_factory_, decode_sub_stream,
-        true, kNackRtpHistoryMs);
+        video_send_configs_[video_idx], recv_transport, &video_decoder_factory_,
+        decode_sub_stream, true, kNackRtpHistoryMs);
 
     if (params_.screenshare[video_idx].enabled) {
       // Fill out codec settings.
@@ -926,7 +934,6 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
     }
 
     CreateMatchingFecConfig(recv_transport, *GetVideoSendConfig());
-    GetFlexFecConfig()->rtp.transport_cc = params_.call.send_side_bwe;
     if (params_.call.send_side_bwe) {
       GetFlexFecConfig()->rtp.extensions.push_back(
           RtpExtension(RtpExtension::kTransportSequenceNumberUri,
@@ -994,8 +1001,7 @@ void VideoQualityTest::SetupThumbnails(Transport* send_transport,
 
     AddMatchingVideoReceiveConfigs(
         &thumbnail_receive_configs_, thumbnail_send_config, send_transport,
-        params_.call.send_side_bwe, &video_decoder_factory_, absl::nullopt,
-        false, kNackRtpHistoryMs);
+        &video_decoder_factory_, absl::nullopt, false, kNackRtpHistoryMs);
   }
   for (size_t i = 0; i < thumbnail_send_configs_.size(); ++i) {
     thumbnail_send_streams_.push_back(receiver_call_->CreateVideoSendStream(
@@ -1180,7 +1186,8 @@ VideoQualityTest::CreateSendTransport() {
       params_.video[0].selected_tl, params_.ss[0].selected_sl,
       payload_type_map_, kVideoSendSsrcs[0],
       static_cast<uint32_t>(kVideoSendSsrcs[0] + params_.ss[0].streams.size() -
-                            1));
+                            1),
+      GetRegisteredExtensions(), GetRegisteredExtensions());
 }
 
 std::unique_ptr<test::DirectTransport>
@@ -1194,7 +1201,8 @@ VideoQualityTest::CreateReceiveTransport() {
   return std::make_unique<test::DirectTransport>(
       task_queue(),
       std::make_unique<FakeNetworkPipe>(clock_, std::move(network_behavior)),
-      receiver_call_.get(), payload_type_map_);
+      receiver_call_.get(), payload_type_map_, GetRegisteredExtensions(),
+      GetRegisteredExtensions());
 }
 
 void VideoQualityTest::RunWithAnalyzer(const Params& params) {
@@ -1218,9 +1226,9 @@ void VideoQualityTest::RunWithAnalyzer(const Params& params) {
 
   if (!params.logging.rtc_event_log_name.empty()) {
     send_event_log_ = rtc_event_log_factory_.CreateRtcEventLog(
-        RtcEventLog::EncodingType::Legacy);
+        RtcEventLog::EncodingType::NewFormat);
     recv_event_log_ = rtc_event_log_factory_.CreateRtcEventLog(
-        RtcEventLog::EncodingType::Legacy);
+        RtcEventLog::EncodingType::NewFormat);
     std::unique_ptr<RtcEventLogOutputFile> send_output(
         std::make_unique<RtcEventLogOutputFile>(
             params.logging.rtc_event_log_name + "_send",
@@ -1441,9 +1449,9 @@ void VideoQualityTest::RunWithRenderers(const Params& params) {
 
   if (!params.logging.rtc_event_log_name.empty()) {
     send_event_log_ = rtc_event_log_factory_.CreateRtcEventLog(
-        RtcEventLog::EncodingType::Legacy);
+        RtcEventLog::EncodingType::NewFormat);
     recv_event_log_ = rtc_event_log_factory_.CreateRtcEventLog(
-        RtcEventLog::EncodingType::Legacy);
+        RtcEventLog::EncodingType::NewFormat);
     std::unique_ptr<RtcEventLogOutputFile> send_output(
         std::make_unique<RtcEventLogOutputFile>(
             params.logging.rtc_event_log_name + "_send",

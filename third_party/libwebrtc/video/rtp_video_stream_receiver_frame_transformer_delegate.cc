@@ -15,6 +15,7 @@
 
 #include "absl/memory/memory.h"
 #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/thread.h"
 
 namespace webrtc {
@@ -53,6 +54,10 @@ class TransformableVideoReceiverFrame
   }
 
   const VideoFrameMetadata& GetMetadata() const override { return metadata_; }
+  void SetMetadata(const VideoFrameMetadata&) override {
+    RTC_DCHECK_NOTREACHED()
+        << "TransformableVideoReceiverFrame::SetMetadata is not implemented";
+  }
 
   std::unique_ptr<RtpFrameObject> ExtractFrame() && {
     return std::move(frame_);

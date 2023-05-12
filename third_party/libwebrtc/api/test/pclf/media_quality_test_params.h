@@ -143,6 +143,13 @@ struct Params {
   PeerConnectionInterface::RTCOfferAnswerOptions rtc_offer_answer_options;
   BitrateSettings bitrate_settings;
   std::vector<VideoCodecConfig> video_codecs;
+
+  // A list of RTP header extensions which will be enforced on all video streams
+  // added to this peer.
+  std::vector<std::string> extra_video_rtp_header_extensions;
+  // A list of RTP header extensions which will be enforced on all audio streams
+  // added to this peer.
+  std::vector<std::string> extra_audio_rtp_header_extensions;
 };
 
 // Contains parameters that maybe changed by test writer during the test call.

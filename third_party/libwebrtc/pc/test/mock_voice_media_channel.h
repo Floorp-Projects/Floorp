@@ -17,6 +17,7 @@
 #include "api/call/audio_sink.h"
 #include "media/base/media_channel.h"
 #include "media/base/media_channel_impl.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/gunit.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -36,7 +37,7 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
               (override));
   MOCK_METHOD(void,
               OnPacketReceived,
-              (rtc::CopyOnWriteBuffer packet, int64_t packet_time_us),
+              (const webrtc::RtpPacketReceived& packet),
               (override));
   MOCK_METHOD(void,
               OnPacketSent,
@@ -53,6 +54,10 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
   MOCK_METHOD(bool, AddRecvStream, (const StreamParams& sp), (override));
   MOCK_METHOD(bool, RemoveRecvStream, (uint32_t ssrc), (override));
   MOCK_METHOD(void, ResetUnsignaledRecvStream, (), (override));
+  MOCK_METHOD(absl::optional<uint32_t>,
+              GetUnsignaledSsrc,
+              (),
+              (const, override));
   MOCK_METHOD(void, OnDemuxerCriteriaUpdatePending, (), (override));
   MOCK_METHOD(void, OnDemuxerCriteriaUpdateComplete, (), (override));
   MOCK_METHOD(int, GetRtpSendTimeExtnId, (), (const, override));
@@ -126,9 +131,10 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
               InsertDtmf,
               (uint32_t ssrc, int event, int duration),
               (override));
+  MOCK_METHOD(bool, GetSendStats, (VoiceMediaSendInfo * info), (override));
   MOCK_METHOD(bool,
-              GetStats,
-              (VoiceMediaInfo * info, bool get_and_clear_legacy_stats),
+              GetReceiveStats,
+              (VoiceMediaReceiveInfo * info, bool get_and_clear_legacy_stats),
               (override));
   MOCK_METHOD(void,
               SetRawAudioSink,

@@ -14,10 +14,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57a030e6e3ae9ff5
  2 files changed, 19 insertions(+)
 
 diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index dc24b387d5..4debc75394 100644
+index 5211f1acec..4baa93cab9 100644
 --- a/modules/desktop_capture/desktop_capturer.cc
 +++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -95,6 +95,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+@@ -101,6 +101,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
    return capturer;
  }
  
@@ -36,10 +36,10 @@ index dc24b387d5..4debc75394 100644
  bool DesktopCapturer::IsRunningUnderWayland() {
    const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 558217badd..3fdcd2c5d0 100644
+index 6909a57891..cf75004af5 100644
 --- a/modules/desktop_capture/desktop_capturer.h
 +++ b/modules/desktop_capture/desktop_capturer.h
-@@ -176,6 +176,10 @@ class RTC_EXPORT DesktopCapturer {
+@@ -178,6 +178,10 @@ class RTC_EXPORT DesktopCapturer {
    static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
        const DesktopCaptureOptions& options);
  
@@ -50,7 +50,7 @@ index 558217badd..3fdcd2c5d0 100644
  #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
    static bool IsRunningUnderWayland();
  
-@@ -201,6 +205,10 @@ class RTC_EXPORT DesktopCapturer {
+@@ -203,6 +207,10 @@ class RTC_EXPORT DesktopCapturer {
    // capture screens.
    static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
        const DesktopCaptureOptions& options);

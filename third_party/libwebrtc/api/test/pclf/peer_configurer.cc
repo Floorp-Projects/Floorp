@@ -119,8 +119,23 @@ PeerConfigurer* PeerConfigurer::SetVideoSubscription(
   configurable_params_->video_subscription = std::move(subscription);
   return this;
 }
+PeerConfigurer* PeerConfigurer::SetVideoCodecs(
+    std::vector<VideoCodecConfig> video_codecs) {
+  params_->video_codecs = std::move(video_codecs);
+  return this;
+}
+PeerConfigurer* PeerConfigurer::SetExtraVideoRtpHeaderExtensions(
+    std::vector<std::string> extensions) {
+  params_->extra_video_rtp_header_extensions = std::move(extensions);
+  return this;
+}
 PeerConfigurer* PeerConfigurer::SetAudioConfig(AudioConfig config) {
   params_->audio_config = std::move(config);
+  return this;
+}
+PeerConfigurer* PeerConfigurer::SetExtraAudioRtpHeaderExtensions(
+    std::vector<std::string> extensions) {
+  params_->extra_audio_rtp_header_extensions = std::move(extensions);
   return this;
 }
 PeerConfigurer* PeerConfigurer::SetUseUlpFEC(bool value) {
@@ -178,11 +193,6 @@ PeerConfigurer* PeerConfigurer::SetRTCOfferAnswerOptions(
 PeerConfigurer* PeerConfigurer::SetBitrateSettings(
     BitrateSettings bitrate_settings) {
   params_->bitrate_settings = bitrate_settings;
-  return this;
-}
-PeerConfigurer* PeerConfigurer::SetVideoCodecs(
-    std::vector<VideoCodecConfig> video_codecs) {
-  params_->video_codecs = std::move(video_codecs);
   return this;
 }
 

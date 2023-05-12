@@ -230,7 +230,6 @@ bool operator!=(
          aThis.rtcp_mode != aOther.rtcp_mode ||
          aThis.rtcp_xr.receiver_reference_time_report !=
              aOther.rtcp_xr.receiver_reference_time_report ||
-         aThis.transport_cc != aOther.transport_cc ||
          aThis.remb != aOther.remb || aThis.tmmbr != aOther.tmmbr ||
          aThis.keyframe_method != aOther.keyframe_method ||
          aThis.lntf.enabled != aOther.lntf.enabled ||
@@ -449,7 +448,6 @@ void WebrtcVideoConduit::OnControlConfigChange() {
     newRtp.rtcp_mode = rtpRtcpConfig->GetRtcpMode();
     newRtp.nack.rtp_history_ms = 0;
     newRtp.remb = false;
-    newRtp.transport_cc = false;
     newRtp.tmmbr = false;
     newRtp.keyframe_method = webrtc::KeyFrameReqMethod::kNone;
     newRtp.ulpfec_payload_type = kNullPayloadType;
@@ -515,7 +513,6 @@ void WebrtcVideoConduit::OnControlConfigChange() {
       newRtp.tmmbr |= codec_config.RtcpFbCcmIsSet(kRtcpFbCcmParamTmmbr);
       newRtp.remb |= codec_config.RtcpFbRembIsSet();
       use_fec |= codec_config.RtcpFbFECIsSet();
-      newRtp.transport_cc |= codec_config.RtcpFbTransportCCIsSet();
 
       if (codec_config.RtxPayloadTypeIsSet()) {
         newRtp.rtx_associated_payload_types[codec_config.mRTXPayloadType] =
@@ -1411,24 +1408,11 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
 
 void WebrtcVideoConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
                                        PacketType type) {
-  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-
-  if (!mCall->Call()) {
-    return;
-  }
-
-  // Bug 1499796 - we need to get passed the time the packet was received
-  webrtc::PacketReceiver::DeliveryStatus status =
-      mCall->Call()->Receiver()->DeliverPacket(webrtc::MediaType::VIDEO,
-                                               std::move(packet), -1);
-
-  if (status != webrtc::PacketReceiver::DELIVERY_OK) {
-    CSFLogError(LOGTAG, "%s DeliverPacket Failed for %s packet, %d",
-                __FUNCTION__, type == PacketType::RTP ? "RTP" : "RTCP", status);
-  }
+  // Currently unused.
+  MOZ_ASSERT(false);
 }
 
-void WebrtcVideoConduit::OnRtpReceived(MediaPacket&& aPacket,
+void WebrtcVideoConduit::OnRtpReceived(webrtc::RtpPacketReceived&& aPacket,
                                        webrtc::RTPHeader&& aHeader) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
@@ -1457,16 +1441,23 @@ void WebrtcVideoConduit::OnRtpReceived(MediaPacket&& aPacket,
     }
   }
 
-  CSFLogVerbose(
-      LOGTAG,
-      "VideoConduit %p: Received RTP packet, seq# %u, len %zu, SSRC %u (0x%x) ",
-      this, (uint16_t)ntohs(((uint16_t*)aPacket.data())[1]), aPacket.len(),
-      (uint32_t)ntohl(((uint32_t*)aPacket.data())[2]),
-      (uint32_t)ntohl(((uint32_t*)aPacket.data())[2]));
+  CSFLogVerbose(LOGTAG, "%s: seq# %u, Len %zu, SSRC %u (0x%x) ", __FUNCTION__,
+                aPacket.SequenceNumber(), aPacket.size(), aPacket.Ssrc(),
+                aPacket.Ssrc());
 
   mRtpPacketEvent.Notify();
-  DeliverPacket(rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()),
-                PacketType::RTP);
+  if (mCall->Call()) {
+    mCall->Call()->Receiver()->DeliverRtpPacket(
+        webrtc::MediaType::VIDEO, std::move(aPacket),
+        [self = RefPtr<WebrtcVideoConduit>(this)](
+            const webrtc::RtpPacketReceived& packet) {
+          CSFLogVerbose(
+              LOGTAG,
+              "VideoConduit %p: failed demuxing packet, ssrc: %u seq: %u",
+              self.get(), packet.Ssrc(), packet.SequenceNumber());
+          return false;
+        });
+  }
 }
 
 void WebrtcVideoConduit::OnRtcpReceived(MediaPacket&& aPacket) {
@@ -1475,8 +1466,10 @@ void WebrtcVideoConduit::OnRtcpReceived(MediaPacket&& aPacket) {
   CSFLogVerbose(LOGTAG, "VideoConduit %p: Received RTCP Packet, len %zu ", this,
                 aPacket.len());
 
-  DeliverPacket(rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()),
-                PacketType::RTCP);
+  if (mCall->Call()) {
+    mCall->Call()->Receiver()->DeliverRtcpPacket(
+        rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()));
+  }
 }
 
 Maybe<uint16_t> WebrtcVideoConduit::RtpSendBaseSeqFor(uint32_t aSsrc) const {
@@ -1685,7 +1678,7 @@ void WebrtcVideoConduit::OnFrame(const webrtc::VideoFrame& video_frame) {
   }
 
   // Record frame history
-  const auto historyNow = mCall->GetTimestampMaker().GetNow();
+  const auto historyNow = mCall->GetTimestampMaker().GetNow().ToDom();
   if (needsNewHistoryElement) {
     dom::RTCVideoFrameHistoryEntryInternal frameHistoryElement;
     frameHistoryElement.mConsecutiveFrames = 0;

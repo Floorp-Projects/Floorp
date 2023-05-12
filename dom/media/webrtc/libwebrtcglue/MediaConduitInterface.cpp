@@ -97,9 +97,11 @@ void MediaSessionConduit::UpdateRtpSources(
     // These timestamps are always **rounded** to milliseconds. That means they
     // can jump up to half a millisecond into the future. We compensate for that
     // here so that things seem consistent to js.
-    domEntry.mTimestamp = GetTimestampMaker().ReduceRealtimePrecision(
-        webrtc::Timestamp::Millis(source.timestamp_ms()) -
-        webrtc::TimeDelta::Micros(500));
+    domEntry.mTimestamp = dom::RTCStatsTimestamp::FromRealtime(
+                              GetTimestampMaker(),
+                              webrtc::Timestamp::Millis(source.timestamp_ms()) -
+                                  webrtc::TimeDelta::Micros(500))
+                              .ToDom();
     domEntry.mRtpTimestamp = source.rtp_timestamp();
     mSourcesCache[key] = domEntry;
   }
@@ -138,11 +140,9 @@ void MediaSessionConduit::InsertAudioLevelForContributingSource(
     domEntry.mAudioLevel.Construct(rtpToDomAudioLevel(aAudioLevel));
   }
 
-  webrtc::Timestamp libwebrtcNow = GetTimestampMaker().GetNowRealtime();
-  double jsNow = GetTimestampMaker().ReduceRealtimePrecision(libwebrtcNow);
-  double ago = jsNow - aTimestamp;
+  auto now = GetTimestampMaker().GetNow();
   webrtc::Timestamp convertedTimestamp =
-      libwebrtcNow - webrtc::TimeDelta::Millis(ago);
+      now.ToRealtime() - webrtc::TimeDelta::Millis(now.ToDom() - aTimestamp);
 
   SourceKey key(convertedTimestamp.ms<uint32_t>(), aCsrcSource);
   mSourcesCache[key] = domEntry;

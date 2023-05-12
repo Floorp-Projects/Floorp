@@ -1,34 +1,86 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 27 Feb 2023 16:22:00 +0000
-Subject: Bug 1817024 - (fix-fdcfefa708) In PhysicalSocket avoid a non-trivial
- designated initializer. r=mjf,webrtc-reviewers
+Date: Wed, 10 May 2023 07:06:00 +0000
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 7e5d9edfdf.
+ r=webrtc-reviewers,mjf
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This fixes a build failure in the base-toolchain job with GCC 7.5.0:
-  In file included from Unified_cpp_threading_gn0.cpp:38:0:
-  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc: In member function 'int rtc::PhysicalSocket::DoReadFromSocket(void*, size_t, rtc::SocketAddress*, int64_t*)':
-  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc:463:51: sorry, unimplemented: non-trivial designated initializers not supported
-       msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
-                                                   ^
+Upstream commit: https://webrtc.googlesource.com/src/+/7e5d9edfdfe82e06182b790afe848cd0da179a87
+    webrtc_libyuv: Raise warnings for unhandled types at compile time
 
-Differential Revision: https://phabricator.services.mozilla.com/D171057
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a3447f709befd84a282ca40f29b7a5ea76d5b68d
+    Bug: webrtc:14830
+    Change-Id: Ib5141e585f673098bbedd2872dbd6e6ed9df4864
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291528
+    Reviewed-by: Erik Språng <sprang@webrtc.org>
+    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
+    Commit-Queue: Erik Språng <sprang@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39408}
+
+Differential Revision: https://phabricator.services.mozilla.com/D177228
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2bc179dfe25391e4b621ce407239beaebbe09be8
 ---
- rtc_base/physical_socket_server.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ common_video/libyuv/webrtc_libyuv.cc | 23 +++++++++--------------
+ 1 file changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
-index 60d024c769..3b112e6188 100644
---- a/rtc_base/physical_socket_server.cc
-+++ b/rtc_base/physical_socket_server.cc
-@@ -460,7 +460,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
-   int received = 0;
-   if (read_scm_timestamp_experiment_) {
-     iovec iov = {.iov_base = buffer, .iov_len = length};
--    msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
-+    msghdr msg = {.msg_name = nullptr, .msg_namelen = 0, .msg_iov = &iov, .msg_iovlen = 1};
-     if (out_addr) {
-       out_addr->Clear();
-       msg.msg_name = addr;
+diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
+index 8998af191d..d07d739119 100644
+--- a/common_video/libyuv/webrtc_libyuv.cc
++++ b/common_video/libyuv/webrtc_libyuv.cc
+@@ -22,7 +22,6 @@ namespace webrtc {
+ size_t CalcBufferSize(VideoType type, int width, int height) {
+   RTC_DCHECK_GE(width, 0);
+   RTC_DCHECK_GE(height, 0);
+-  size_t buffer_size = 0;
+   switch (type) {
+     case VideoType::kI420:
+     case VideoType::kNV21:
+@@ -31,28 +30,24 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+     case VideoType::kNV12: {
+       int half_width = (width + 1) >> 1;
+       int half_height = (height + 1) >> 1;
+-      buffer_size = width * height + half_width * half_height * 2;
+-      break;
++      return width * height + half_width * half_height * 2;
+     }
+     case VideoType::kARGB4444:
+     case VideoType::kRGB565:
+     case VideoType::kARGB1555:
+     case VideoType::kYUY2:
+     case VideoType::kUYVY:
+-      buffer_size = width * height * 2;
+-      break;
++      return width * height * 2;
+     case VideoType::kRGB24:
+-      buffer_size = width * height * 3;
+-      break;
++      return width * height * 3;
+     case VideoType::kBGRA:
+     case VideoType::kARGB:
+-      buffer_size = width * height * 4;
+-      break;
+-    default:
+-      RTC_DCHECK_NOTREACHED();
+-      break;
++      return width * height * 4;
++    case VideoType::kMJPEG:
++    case VideoType::kUnknown:
+   }
+-  return buffer_size;
++  RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << type;
++  return 0;
+ }
+ 
+ int ExtractBuffer(const rtc::scoped_refptr<I420BufferInterface>& input_frame,
+@@ -120,7 +115,7 @@ int ConvertVideoType(VideoType video_type) {
+     case VideoType::kNV12:
+       return libyuv::FOURCC_NV12;
+   }
+-  RTC_DCHECK_NOTREACHED();
++  RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << video_type;
+   return libyuv::FOURCC_ANY;
+ }
+ 
 -- 
 2.34.1
 

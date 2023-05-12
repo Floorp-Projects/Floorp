@@ -869,7 +869,7 @@ void RTCRtpTransceiver::ChainToDomPromiseWithCodecStats(
     nsTArray<RefPtr<RTCStatsPromise>> aStats,
     const RefPtr<dom::Promise>& aDomPromise) {
   nsTArray<RTCCodecStats> codecStats =
-      mPc->GetCodecStats(mPc->GetTimestampMaker().GetNow());
+      mPc->GetCodecStats(mPc->GetTimestampMaker().GetNow().ToDom());
 
   AutoTArray<
       std::tuple<RTCRtpTransceiver*, RefPtr<RTCStatsPromise::AllPromiseType>>,

@@ -183,8 +183,13 @@ void GainController2::Process(absl::optional<float> speech_probability,
                                     audio->num_frames());
   // Compute speech probability.
   if (vad_) {
+    // When the VAD component runs, `speech_probability` should not be specified
+    // because APM should not run the same VAD twice (as an APM sub-module and
+    // internally in AGC2).
+    RTC_DCHECK(!speech_probability.has_value());
     speech_probability = vad_->Analyze(float_frame);
-  } else if (speech_probability.has_value()) {
+  }
+  if (speech_probability.has_value()) {
     RTC_DCHECK_GE(*speech_probability, 0.0f);
     RTC_DCHECK_LE(*speech_probability, 1.0f);
   }

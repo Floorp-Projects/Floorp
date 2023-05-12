@@ -384,6 +384,13 @@ QualityAnalyzingVideoEncoderFactory::GetSupportedFormats() const {
   return delegate_->GetSupportedFormats();
 }
 
+VideoEncoderFactory::CodecSupport
+QualityAnalyzingVideoEncoderFactory::QueryCodecSupport(
+    const SdpVideoFormat& format,
+    absl::optional<std::string> scalability_mode) const {
+  return delegate_->QueryCodecSupport(format, scalability_mode);
+}
+
 std::unique_ptr<VideoEncoder>
 QualityAnalyzingVideoEncoderFactory::CreateVideoEncoder(
     const SdpVideoFormat& format) {

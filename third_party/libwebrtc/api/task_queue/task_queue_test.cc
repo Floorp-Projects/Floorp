@@ -13,7 +13,7 @@
 
 #include "absl/cleanup/cleanup.h"
 #include "absl/strings/string_view.h"
-#include "api/task_queue/default_task_queue_factory.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/event.h"
 #include "rtc_base/ref_counter.h"
@@ -21,6 +21,13 @@
 
 namespace webrtc {
 namespace {
+
+// Avoids a dependency to system_wrappers.
+void SleepFor(TimeDelta duration) {
+  rtc::ScopedAllowBaseSyncPrimitivesForTesting allow;
+  rtc::Event event;
+  event.Wait(duration);
+}
 
 std::unique_ptr<TaskQueueBase, TaskQueueDeleter> CreateTaskQueue(
     const std::unique_ptr<webrtc::TaskQueueFactory>& factory,
@@ -145,6 +152,53 @@ TEST_P(TaskQueueTest, PostDelayedAfterDestruct) {
   // Task might outlive the TaskQueue, but still should be deleted.
   EXPECT_TRUE(deleted.Wait(TimeDelta::Seconds(1)));
   EXPECT_FALSE(run.Wait(TimeDelta::Zero()));  // and should not run.
+}
+
+TEST_P(TaskQueueTest, PostDelayedHighPrecisionAfterDestruct) {
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
+  rtc::Event run;
+  rtc::Event deleted;
+  auto queue =
+      CreateTaskQueue(factory, "PostDelayedHighPrecisionAfterDestruct");
+  absl::Cleanup cleanup = [&deleted] { deleted.Set(); };
+  queue->PostDelayedHighPrecisionTask(
+      [&run, cleanup = std::move(cleanup)] { run.Set(); },
+      TimeDelta::Millis(100));
+  // Destroy the queue.
+  queue = nullptr;
+  // Task might outlive the TaskQueue, but still should be deleted.
+  EXPECT_TRUE(deleted.Wait(TimeDelta::Seconds(1)));
+  EXPECT_FALSE(run.Wait(TimeDelta::Zero()));  // and should not run.
+}
+
+TEST_P(TaskQueueTest, PostedUnexecutedClosureDestroyedOnTaskQueue) {
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
+  auto queue =
+      CreateTaskQueue(factory, "PostedUnexecutedClosureDestroyedOnTaskQueue");
+  TaskQueueBase* queue_ptr = queue.get();
+  queue->PostTask([] { SleepFor(TimeDelta::Millis(100)); });
+  // Give the task queue a chance to start executing the first lambda.
+  SleepFor(TimeDelta::Millis(10));
+  // Then ensure the next lambda (which is likely not executing yet) is
+  // destroyed in the task queue context when the queue is deleted.
+  auto cleanup = absl::Cleanup(
+      [queue_ptr] { EXPECT_EQ(queue_ptr, TaskQueueBase::Current()); });
+  queue->PostTask([cleanup = std::move(cleanup)] {});
+  queue = nullptr;
+}
+
+TEST_P(TaskQueueTest, PostedExecutedClosureDestroyedOnTaskQueue) {
+  std::unique_ptr<webrtc::TaskQueueFactory> factory = GetParam()(nullptr);
+  auto queue =
+      CreateTaskQueue(factory, "PostedExecutedClosureDestroyedOnTaskQueue");
+  TaskQueueBase* queue_ptr = queue.get();
+  // Ensure an executed lambda is destroyed on the task queue.
+  rtc::Event finished;
+  queue->PostTask([cleanup = absl::Cleanup([queue_ptr, &finished] {
+                     EXPECT_EQ(queue_ptr, TaskQueueBase::Current());
+                     finished.Set();
+                   })] {});
+  finished.Wait(rtc::Event::kForever);
 }
 
 TEST_P(TaskQueueTest, PostAndReuse) {

@@ -176,7 +176,7 @@ typedef std::set<rtc::SocketAddress> ServerAddresses;
 // Represents a local communication mechanism that can be used to create
 // connections to similar mechanisms of the other client.  Subclasses of this
 // one add support for specific mechanisms like local UDP ports.
-class Port : public PortInterface, public sigslot::has_slots<> {
+class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
  public:
   // INIT: The state when a port is just created.
   // KEEP_ALIVE_UNTIL_PRUNED: A port should not be destroyed even if no

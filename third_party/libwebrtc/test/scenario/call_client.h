@@ -16,12 +16,15 @@
 #include <utility>
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/rtp_parameters.h"
 #include "api/test/time_controller.h"
 #include "api/units/data_rate.h"
 #include "call/call.h"
 #include "modules/audio_device/include/test_audio_device.h"
 #include "modules/congestion_controller/goog_cc/test/goog_cc_printer.h"
+#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "test/logging/log_writer.h"
 #include "test/network/network_emulation.h"
@@ -121,6 +124,11 @@ class CallClient : public EmulatedNetworkReceiverInterface {
   void UpdateBitrateConstraints(const BitrateConstraints& constraints);
   void SetRemoteBitrate(DataRate bitrate);
 
+  void SetAudioReceiveRtpHeaderExtensions(
+      rtc::ArrayView<RtpExtension> extensions);
+  void SetVideoReceiveRtpHeaderExtensions(
+      rtc::ArrayView<RtpExtension> extensions);
+
   void OnPacketReceived(EmulatedIpPacket packet) override;
   std::unique_ptr<RtcEventLogOutput> GetLogWriter(std::string name);
 
@@ -156,6 +164,8 @@ class CallClient : public EmulatedNetworkReceiverInterface {
   std::unique_ptr<Call> call_;
   std::unique_ptr<NetworkNodeTransport> transport_;
   std::vector<std::pair<EmulatedEndpoint*, uint16_t>> endpoints_;
+  RtpHeaderExtensionMap audio_extensions_;
+  RtpHeaderExtensionMap video_extensions_;
 
   int next_video_ssrc_index_ = 0;
   int next_video_local_ssrc_index_ = 0;

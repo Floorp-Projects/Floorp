@@ -51,10 +51,16 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
 
   // Schedules a `task` to execute. Tasks are executed in FIFO order.
   // When a TaskQueue is deleted, pending tasks will not be executed but they
-  // will be deleted. The deletion of tasks may happen synchronously on the
-  // TaskQueue or it may happen asynchronously after TaskQueue is deleted.
-  // This may vary from one implementation to the next so assumptions about
-  // lifetimes of pending tasks should not be made.
+  // will be deleted.
+  //
+  // As long as tasks are not posted from task destruction, posted tasks are
+  // guaranteed to be destroyed with Current() pointing to the task queue they
+  // were posted to, whether they're executed or not. That means SequenceChecker
+  // works during task destruction, a fact that can be used to guarantee
+  // thread-compatible object deletion happening on a particular task queue
+  // which can simplify class design.
+  // Note that this guarantee does not apply to delayed tasks.
+  //
   // May be called on any thread or task queue, including this task queue.
   virtual void PostTask(absl::AnyInvocable<void() &&> task) = 0;
 
