@@ -203,8 +203,6 @@ allowlist-vars = [
 # TODO(emilio): A bunch of types here can go away once we generate bindings and
 # structs together.
 allowlist-types = [
-    "RawGecko.*",
-    "RawServo.*",
     "ServoCssRules",
     "nsFontFaceRuleContainer",
     "Matrix4x4Components",
@@ -650,6 +648,10 @@ cbindgen-types = [
     { gecko = "StyleUseCounters", servo = "crate::use_counters::UseCounters" },
     { gecko = "StyleStylesheetContents", servo = "crate::stylesheets::StylesheetContents" },
     { gecko = "StyleAnimationValue", servo = "crate::properties::animated_properties::AnimationValue" },
+    { gecko = "StyleLockedDeclarationBlock", servo = "crate::gecko::arc_types::LockedDeclarationBlock" },
+    { gecko = "StyleLockedMediaList", servo = "crate::gecko::arc_types::LockedMediaList" },
+    { gecko = "StyleLockedImportRule", servo = "crate::gecko::arc_types::LockedImportRule" },
+    { gecko = "StyleLockedFontFaceRule", servo = "crate::gecko::arc_types::LockedFontFaceRule" },
 ]
 
 mapped-generic-types = [

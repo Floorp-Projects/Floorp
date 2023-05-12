@@ -14,7 +14,7 @@ using namespace mozilla::css;
 
 namespace mozilla::dom {
 
-CSSContainerRule::CSSContainerRule(RefPtr<RawServoContainerRule> aRawRule,
+CSSContainerRule::CSSContainerRule(RefPtr<StyleLockedContainerRule> aRawRule,
                                    StyleSheet* aSheet, css::Rule* aParentRule,
                                    uint32_t aLine, uint32_t aColumn)
     : css::ConditionRule(Servo_ContainerRule_GetRules(aRawRule).Consume(),
@@ -68,7 +68,7 @@ Element* CSSContainerRule::QueryContainerFor(const Element& aElement) const {
       Servo_ContainerRule_QueryContainerFor(mRawRule, &aElement));
 }
 
-void CSSContainerRule::SetRawAfterClone(RefPtr<RawServoContainerRule> aRaw) {
+void CSSContainerRule::SetRawAfterClone(RefPtr<StyleLockedContainerRule> aRaw) {
   mRawRule = std::move(aRaw);
 
   css::ConditionRule::SetRawAfterClone(

@@ -10,7 +10,7 @@
 
 namespace mozilla::dom {
 
-CSSLayerBlockRule::CSSLayerBlockRule(RefPtr<RawServoLayerBlockRule> aRawRule,
+CSSLayerBlockRule::CSSLayerBlockRule(RefPtr<StyleLockedLayerBlockRule> aRawRule,
                                      StyleSheet* aSheet, css::Rule* aParentRule,
                                      uint32_t aLine, uint32_t aColumn)
     : css::GroupRule(Servo_LayerBlockRule_GetRules(aRawRule).Consume(), aSheet,
@@ -39,7 +39,8 @@ StyleCssRuleType CSSLayerBlockRule::Type() const {
   return StyleCssRuleType::LayerBlock;
 }
 
-void CSSLayerBlockRule::SetRawAfterClone(RefPtr<RawServoLayerBlockRule> aRaw) {
+void CSSLayerBlockRule::SetRawAfterClone(
+    RefPtr<StyleLockedLayerBlockRule> aRaw) {
   mRawRule = std::move(aRaw);
   css::GroupRule::SetRawAfterClone(
       Servo_LayerBlockRule_GetRules(mRawRule).Consume());

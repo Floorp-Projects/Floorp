@@ -2362,13 +2362,13 @@ void CanvasRenderingContext2D::SetShadowColor(const nsACString& aShadowColor) {
 // filters
 //
 
-static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
+static already_AddRefed<StyleLockedDeclarationBlock> CreateDeclarationForServo(
     nsCSSPropertyID aProperty, const nsACString& aPropertyValue,
     Document* aDocument) {
   ServoCSSParser::ParsingEnvironment env{aDocument->DefaultStyleAttrURLData(),
                                          aDocument->GetCompatibilityMode(),
                                          aDocument->CSSLoader()};
-  RefPtr<RawServoDeclarationBlock> servoDeclarations =
+  RefPtr<StyleLockedDeclarationBlock> servoDeclarations =
       ServoCSSParser::ParseProperty(aProperty, aPropertyValue, env);
 
   if (!servoDeclarations) {
@@ -2389,15 +2389,15 @@ static already_AddRefed<RawServoDeclarationBlock> CreateDeclarationForServo(
   return servoDeclarations.forget();
 }
 
-static already_AddRefed<RawServoDeclarationBlock> CreateFontDeclarationForServo(
-    const nsACString& aFont, Document* aDocument) {
+static already_AddRefed<StyleLockedDeclarationBlock>
+CreateFontDeclarationForServo(const nsACString& aFont, Document* aDocument) {
   return CreateDeclarationForServo(eCSSProperty_font, aFont, aDocument);
 }
 
 static already_AddRefed<const ComputedStyle> GetFontStyleForServo(
     Element* aElement, const nsACString& aFont, PresShell* aPresShell,
     nsACString& aOutUsedFont, ErrorResult& aError) {
-  RefPtr<RawServoDeclarationBlock> declarations =
+  RefPtr<StyleLockedDeclarationBlock> declarations =
       CreateFontDeclarationForServo(aFont, aPresShell->GetDocument());
   if (!declarations) {
     // We got a syntax error.  The spec says this value must be ignored.
@@ -2426,7 +2426,7 @@ static already_AddRefed<const ComputedStyle> GetFontStyleForServo(
     }
   }
   if (!parentStyle) {
-    RefPtr<RawServoDeclarationBlock> declarations =
+    RefPtr<StyleLockedDeclarationBlock> declarations =
         CreateFontDeclarationForServo("10px sans-serif"_ns,
                                       aPresShell->GetDocument());
     MOZ_ASSERT(declarations);
@@ -2462,7 +2462,7 @@ static already_AddRefed<const ComputedStyle> GetFontStyleForServo(
   return sc.forget();
 }
 
-static already_AddRefed<RawServoDeclarationBlock>
+static already_AddRefed<StyleLockedDeclarationBlock>
 CreateFilterDeclarationForServo(const nsACString& aFilter,
                                 Document* aDocument) {
   return CreateDeclarationForServo(eCSSProperty_filter, aFilter, aDocument);
@@ -2471,7 +2471,7 @@ CreateFilterDeclarationForServo(const nsACString& aFilter,
 static already_AddRefed<const ComputedStyle> ResolveFilterStyleForServo(
     const nsACString& aFilterString, const ComputedStyle* aParentStyle,
     PresShell* aPresShell, ErrorResult& aError) {
-  RefPtr<RawServoDeclarationBlock> declarations =
+  RefPtr<StyleLockedDeclarationBlock> declarations =
       CreateFilterDeclarationForServo(aFilterString, aPresShell->GetDocument());
   if (!declarations) {
     // Refuse to accept the filter, but do not throw an error.
@@ -2538,7 +2538,7 @@ static already_AddRefed<const ComputedStyle> ResolveStyleForServo(
     nsCSSPropertyID aProperty, const nsACString& aString,
     const ComputedStyle* aParentStyle, PresShell* aPresShell,
     ErrorResult& aError) {
-  RefPtr<RawServoDeclarationBlock> declarations =
+  RefPtr<StyleLockedDeclarationBlock> declarations =
       CreateDeclarationForServo(aProperty, aString, aPresShell->GetDocument());
   if (!declarations) {
     return nullptr;
