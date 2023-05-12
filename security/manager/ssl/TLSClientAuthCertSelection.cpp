@@ -575,9 +575,8 @@ void SelectClientAuthCertificate::DoSelectClientAuthCertificate() {
   if (cars) {
     nsCString rememberedDBKey;
     bool found;
-    nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(mServerCert.get()));
     nsresult rv = cars->HasRememberedDecision(
-        hostname, mInfo.OriginAttributesRef(), cert, rememberedDBKey, &found);
+        hostname, mInfo.OriginAttributesRef(), rememberedDBKey, &found);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
@@ -661,9 +660,8 @@ void SelectClientAuthCertificate::DoSelectClientAuthCertificate() {
   }
 
   if (cars && wantRemember) {
-    nsCOMPtr<nsIX509Cert> serverCert(new nsNSSCertificate(mServerCert.get()));
     rv = cars->RememberDecision(hostname, mInfo.OriginAttributesRef(),
-                                serverCert, selectedCert);
+                                selectedCert);
     Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 }

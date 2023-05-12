@@ -31,27 +31,38 @@ class nsClientAuthRemember final : public nsIClientAuthRememberRecord {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICLIENTAUTHREMEMBERRECORD
 
+  nsClientAuthRemember(const nsACString& aHostName,
+                       const OriginAttributes& aOriginAttributes) {
+    mAsciiHost.Assign(aHostName);
+    aOriginAttributes.CreateSuffix(mOriginAttributesSuffix);
+  }
+
   nsClientAuthRemember(const nsCString& aEntryKey, const nsCString& aDBKey) {
-    mEntryKey = aEntryKey;
     if (!aDBKey.Equals(nsClientAuthRemember::SentinelValue)) {
       mDBKey = aDBKey;
     }
 
-    nsTArray<nsCString*> fields = {&mAsciiHost, &mFingerprint};
-
-    auto fieldsIter = fields.begin();
-    auto splitter = aEntryKey.Split(',');
-    auto splitterIter = splitter.begin();
-    for (; fieldsIter != fields.end() && splitterIter != splitter.end();
-         ++fieldsIter, ++splitterIter) {
-      (*fieldsIter)->Assign(*splitterIter);
+    size_t field_index = 0;
+    for (const auto& field : aEntryKey.Split(',')) {
+      switch (field_index) {
+        case 0:
+          mAsciiHost.Assign(field);
+          break;
+        case 1:
+          break;
+        case 2:
+          mOriginAttributesSuffix.Assign(field);
+          break;
+        default:
+          break;
+      }
+      field_index++;
     }
   }
 
   nsCString mAsciiHost;
-  nsCString mFingerprint;
+  nsCString mOriginAttributesSuffix;
   nsCString mDBKey;
-  nsCString mEntryKey;
   static const nsCString SentinelValue;
 
  protected:
@@ -67,11 +78,6 @@ class nsClientAuthRememberService final : public nsIClientAuthRememberService {
 
   nsresult Init();
 
-  static void GetEntryKey(const nsACString& aHostName,
-                          const OriginAttributes& aOriginAttributes,
-                          const nsACString& aFingerprint,
-                          /*out*/ nsACString& aEntryKey);
-
   static bool IsPrivateBrowsingKey(const nsCString& entryKey);
 
  protected:
@@ -84,8 +90,9 @@ class nsClientAuthRememberService final : public nsIClientAuthRememberService {
 
   nsresult AddEntryToList(const nsACString& aHost,
                           const OriginAttributes& aOriginAttributes,
-                          const nsACString& aServerFingerprint,
                           const nsACString& aDBKey);
+
+  void Migrate();
 };
 
 #endif
