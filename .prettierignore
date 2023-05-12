@@ -17,6 +17,9 @@ js/src/builtin
 # Don't format README files.
 README
 
+# Ignore testing pref files which aren't parsed normally.
+testing/profiles/**/user.js
+
 # Ignore CORS fixtures which require specific resource hashes.
 dom/security/test/sri/script*
 
