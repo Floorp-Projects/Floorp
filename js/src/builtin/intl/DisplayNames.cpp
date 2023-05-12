@@ -26,8 +26,7 @@
 #include "js/Class.h"
 #include "js/experimental/Intl.h"     // JS::AddMozDisplayNamesConstructor
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/Printer.h"
-#include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_DefineProperties
+#include "js/PropertyAndElement.h"    // JS_DefineFunctions, JS_DefineProperties
 #include "js/PropertyDescriptor.h"
 #include "js/PropertySpec.h"
 #include "js/RootingAPI.h"
@@ -36,6 +35,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/Printer.h"
 #include "vm/Runtime.h"
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"

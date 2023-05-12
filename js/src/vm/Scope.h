@@ -43,7 +43,7 @@ struct JSContext;
 
 namespace js {
 
-class JS_PUBLIC_API GenericPrinter;
+class GenericPrinter;
 
 namespace frontend {
 class ScopeStencil;

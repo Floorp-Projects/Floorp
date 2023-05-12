@@ -24,7 +24,7 @@ enum class TraceKind;
 
 namespace js {
 
-class JS_PUBLIC_API GenericPrinter;
+class GenericPrinter;
 
 extern bool RuntimeFromMainThreadIsHeapMajorCollecting(
     JS::shadow::Zone* shadowZone);

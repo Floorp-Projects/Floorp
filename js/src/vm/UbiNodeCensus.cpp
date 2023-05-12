@@ -8,11 +8,11 @@
 
 #include "builtin/MapObject.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/Printer.h"
 #include "util/Text.h"
 #include "vm/Compartment.h"
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::PlainObject
+#include "vm/Printer.h"
 
 #include "vm/NativeObject-inl.h"
 

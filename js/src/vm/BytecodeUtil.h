@@ -32,7 +32,7 @@
 #include "vm/ThrowMsgKind.h"   // ThrowMsgKind, ThrowCondition
 
 namespace js {
-class JS_PUBLIC_API Sprinter;
+class Sprinter;
 }  // namespace js
 
 /* Shorthand for type from format. */

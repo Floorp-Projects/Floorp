@@ -11,8 +11,8 @@
 
 #include <stdio.h>
 
-#include "js/Printer.h"
 #include "js/TypeDecls.h"
+#include "vm/Printer.h"
 
 class JSLinearString;
 

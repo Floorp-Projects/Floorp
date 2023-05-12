@@ -37,7 +37,6 @@
 #if !JS_HAS_INTL_API
 #  include "js/LocaleSensitive.h"
 #endif
-#include "js/Printer.h"
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
@@ -47,6 +46,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/Printer.h"
 #include "vm/RegExpObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/StaticStrings.h"

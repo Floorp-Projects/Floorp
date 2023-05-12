@@ -27,11 +27,11 @@
 #include "gc/Tenuring.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
-#include "js/Printer.h"
 #include "util/DifferentialTesting.h"
 #include "util/GetPidProvider.h"  // getpid()
 #include "util/Poison.h"
 #include "vm/JSONPrinter.h"
+#include "vm/Printer.h"
 #include "vm/Realm.h"
 #include "vm/Time.h"
 

@@ -55,7 +55,7 @@ static MOZ_ALWAYS_INLINE size_t js_strnlen(const CharT* s, size_t maxlen) {
 
 namespace js {
 
-class JS_PUBLIC_API GenericPrinter;
+class GenericPrinter;
 
 template <typename CharT>
 constexpr uint8_t AsciiDigitToNumber(CharT c) {

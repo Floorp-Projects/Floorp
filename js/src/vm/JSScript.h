@@ -56,7 +56,7 @@ class ScriptSource;
 class VarScope;
 class LexicalScope;
 
-class JS_PUBLIC_API Sprinter;
+class Sprinter;
 
 namespace coverage {
 class LCovSource;

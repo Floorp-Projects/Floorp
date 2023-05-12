@@ -28,13 +28,13 @@
 #include "builtin/String.h"
 #include "js/Conversions.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/Printer.h"
 #include "js/TypeDecls.h"
 #include "js/Wrapper.h"
 #include "vm/Compartment.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::PlainObject
+#include "vm/Printer.h"
 #include "vm/StringType.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 
