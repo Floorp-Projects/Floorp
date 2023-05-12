@@ -1027,38 +1027,83 @@ def test_apk_upload(apk_name, apk_content, should_fail, failure_message):
     "args, load_data, return_value, call_counts, exists_cache_file",
     [
         (
-            "base_commit",
+            (
+                [],
+                "base_commit",
+            ),
             {
-                "base_commit": {
-                    "base_revision_treeherder": "2b04563b5",
-                    "date": "2023-03-31",
-                }
+                "base_commit": [
+                    {
+                        "base_revision_treeherder": "2b04563b5",
+                        "date": "2023-03-31",
+                        "tasks": [],
+                    },
+                ],
             },
             "2b04563b5",
             [1, 0],
             True,
         ),
         (
-            "not_exist_cached_base_commit",
+            (
+                ["task-a"],
+                "subset_base_commit",
+            ),
             {
-                "base_commit": {
-                    "base_revision_treeherder": "2b04563b5",
-                    "date": "2023-03-31",
-                }
+                "subset_base_commit": [
+                    {
+                        "base_revision_treeherder": "2b04563b5",
+                        "date": "2023-03-31",
+                        "tasks": ["task-a", "task-b"],
+                    },
+                ],
+            },
+            "2b04563b5",
+            [1, 0],
+            True,
+        ),
+        (
+            ([], "not_exist_cached_base_commit"),
+            {
+                "base_commit": [
+                    {
+                        "base_revision_treeherder": "2b04563b5",
+                        "date": "2023-03-31",
+                        "tasks": [],
+                    },
+                ],
             },
             None,
             [1, 0],
             True,
         ),
         (
+            (
+                ["task-a", "task-b"],
+                "superset_base_commit",
+            ),
+            {
+                "superset_base_commit": [
+                    {
+                        "base_revision_treeherder": "2b04563b5",
+                        "date": "2023-03-31",
+                        "tasks": ["task-a"],
+                    },
+                ],
+            },
             None,
+            [1, 0],
+            True,
+        ),
+        (
+            ([], None),
             {},
             None,
             [1, 1],
             True,
         ),
         (
-            None,
+            ([], None),
             {},
             None,
             [0, 0],
@@ -1078,7 +1123,7 @@ def test_check_cached_revision(
     ):
         load.return_value = load_data
         is_file.return_value = exists_cache_file
-        result = PerfParser.check_cached_revision(args)
+        result = PerfParser.check_cached_revision(*args)
 
         assert load.call_count == call_counts[0]
         assert dump.call_count == call_counts[1]
@@ -1109,7 +1154,7 @@ def test_save_revision_treeherder(args, call_counts, exists_cache_file):
         "tryselect.selectors.perf.pathlib.Path.open"
     ):
         is_file.return_value = exists_cache_file
-        PerfParser.save_revision_treeherder(args[0], args[1])
+        PerfParser.save_revision_treeherder(TASKS, args[0], args[1])
 
         assert load.call_count == call_counts[0]
         assert dump.call_count == call_counts[1]
