@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1828517 - (fix-794d599741) account for moved files in BUILD.gn that we don't want to build.
+Modified build files in third_party/libwebrtc - Bug 1828517 - (fix-a138c6c8a5) handle file moves in BUILD.gn
