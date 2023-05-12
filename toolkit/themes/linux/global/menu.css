@@ -20,7 +20,7 @@ menubar {
 menu,
 menuitem,
 menucaption {
-  border-radius: 4px;
+  border-radius: calc(var(--panel-border-radius) / 2);
   align-items: center;
   flex-shrink: 0;
   padding: 4px 6px;

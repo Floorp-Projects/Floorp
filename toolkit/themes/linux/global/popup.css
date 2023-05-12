@@ -10,7 +10,7 @@
 menupopup,
 panel {
   min-width: 1px;
-  --panel-padding-block: 3px;
+  --panel-padding-block: max(0px, var(--panel-border-radius) / 2 - 1px);
   --panel-padding: var(--panel-padding-block) 0;
   --panel-color: MenuText;
   --panel-background: Menu;
