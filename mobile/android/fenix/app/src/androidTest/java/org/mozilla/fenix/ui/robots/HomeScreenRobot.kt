@@ -181,7 +181,7 @@ class HomeScreenRobot {
         itemWithResId("$packageName:id/tracking_protection_strict_default").click()
 
     fun verifyPrivacyNoticeCard() {
-        scrollToElementByText(getStringResource(R.string.onboarding_privacy_notice_header_1))
+        scrollToElementByText(getStringResource(R.string.onboarding_privacy_notice_read_button))
         assertItemContainingTextExists(privacyNoticeHeader, privacyNoticeDescription)
         assertItemWithResIdExists(privacyNoticeButton)
     }
