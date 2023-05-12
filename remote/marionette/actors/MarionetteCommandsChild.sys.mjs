@@ -318,7 +318,8 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
 
     const accessible = await lazy.accessibility.getAccessible(elem);
     if (!accessible) {
-      return null;
+      // If it's not in the a11y tree, it's probably presentational.
+      return "none";
     }
 
     return accessible.computedARIARole;
