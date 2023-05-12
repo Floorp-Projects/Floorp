@@ -583,6 +583,8 @@ class ScriptSource {
   // A string indicating how this source code was introduced into the system.
   // This is a constant, statically allocated C string, so does not need memory
   // management.
+  //
+  // TODO: Document the various additional introduction type constants.
   const char* introductionType_ = nullptr;
 
   // Bytecode offset in caller script that generated this code.  This is

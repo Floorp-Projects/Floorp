@@ -233,8 +233,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool deoptimizeModuleGlobalVars = false;
 
   /**
-   * |introductionType| is a statically allocated C string: one of "eval",
-   * "Function", or "GeneratorFunction".
+   * |introductionType| is a statically allocated C string. See JSScript.h
+   * for more information.
    */
   const char* introductionType = nullptr;
 
