@@ -33,12 +33,12 @@ LOCAL_INCLUDES += [
 ]
 
 SOURCES += [
-    "/third_party/libwebrtc/api/video/i210_buffer.cc"
+    "/third_party/libwebrtc/api/video/i210_buffer.cc",
+    "/third_party/libwebrtc/api/video/i410_buffer.cc"
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/api/video/i010_buffer.cc",
-    "/third_party/libwebrtc/api/video/i410_buffer.cc"
+    "/third_party/libwebrtc/api/video/i010_buffer.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
