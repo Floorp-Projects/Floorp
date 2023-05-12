@@ -542,6 +542,8 @@
          "UnsafeSetReservedSlot")                                              \
   MACRO_(unsized, unsized, "unsized")                                          \
   MACRO_(unwatch, unwatch, "unwatch")                                          \
+  MACRO_(UnwrapAndCallRegExpBuiltinExec, UnwrapAndCallRegExpBuiltinExec,       \
+         "UnwrapAndCallRegExpBuiltinExec")                                     \
   MACRO_(url, url, "url")                                                      \
   MACRO_(usage, usage, "usage")                                                \
   MACRO_(useAsm, useAsm, "use asm")                                            \
