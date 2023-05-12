@@ -80,6 +80,18 @@ JSObject* InitRegExpClass(JSContext* cx, HandleObject obj);
                                           HandleString input, int32_t lastIndex,
                                           int32_t* endIndex);
 
+template <bool CalledFromJit>
+[[nodiscard]] extern bool RegExpBuiltinExecMatchRaw(
+    JSContext* cx, Handle<RegExpObject*> regexp, HandleString input,
+    int32_t lastIndex, MatchPairs* maybeMatches, MutableHandleValue output);
+
+template <bool CalledFromJit>
+[[nodiscard]] extern bool RegExpBuiltinExecTestRaw(JSContext* cx,
+                                                   Handle<RegExpObject*> regexp,
+                                                   HandleString input,
+                                                   int32_t lastIndex,
+                                                   bool* result);
+
 [[nodiscard]] extern bool intrinsic_GetElemBaseForLambda(JSContext* cx,
                                                          unsigned argc,
                                                          Value* vp);
@@ -123,6 +135,12 @@ JSObject* InitRegExpClass(JSContext* cx, HandleObject obj);
 [[nodiscard]] extern bool RegExpInstanceOptimizableRaw(JSContext* cx,
                                                        JSObject* obj,
                                                        JSObject* proto);
+
+[[nodiscard]] extern bool RegExpBuiltinExec(JSContext* cx,
+                                            Handle<RegExpObject*> regexp,
+                                            Handle<JSString*> string,
+                                            bool forTest,
+                                            MutableHandle<Value> rval);
 
 [[nodiscard]] extern bool RegExpGetSubstitution(
     JSContext* cx, Handle<ArrayObject*> matchResult,
