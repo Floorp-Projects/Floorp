@@ -473,7 +473,7 @@ GeckoDriver.prototype.newSession = async function(cmd) {
       this.dialog = lazy.modal.findModalDialogs(this.curBrowser);
     }
 
-    lazy.registerCommandsActor();
+    lazy.registerCommandsActor(this.currentSession.id);
     lazy.enableEventsActor();
 
     Services.obs.addObserver(this, TOPIC_BROWSER_READY);
