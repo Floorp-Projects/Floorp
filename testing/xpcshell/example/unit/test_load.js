@@ -14,7 +14,10 @@ function run_test() {
     load("file_that_does_not_exist.js");
     subscriptLoaded = true;
   } catch (ex) {
-    Assert.equal(ex.message.substring(0, 16), "cannot open file");
+    Assert.ok(
+      ex.message.startsWith("can't open "),
+      `Unexpected message: ${ex.message}`
+    );
   }
   Assert.ok(!subscriptLoaded, "load() should throw an error");
 }
