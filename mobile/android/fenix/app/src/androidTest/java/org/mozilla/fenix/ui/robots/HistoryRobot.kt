@@ -213,7 +213,7 @@ private fun deleteHistoryPromptSummary() =
     mDevice
         .findObject(
             UiSelector()
-                .textContains(getStringResource(R.string.delete_history_prompt_body))
+                .textContains(getStringResource(R.string.delete_history_prompt_body_2))
                 .resourceId("$packageName:id/body"),
         )
 

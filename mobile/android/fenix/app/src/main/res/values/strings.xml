@@ -1312,7 +1312,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Time range to delete</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Removes history (including history synced from other devices), cookies and other browsing data.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Removes history (including history synced from other devices), cookies and other browsing data.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Removes history (including history synced from other devices)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Last hour</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
