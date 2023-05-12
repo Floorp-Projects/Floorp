@@ -3517,20 +3517,6 @@ bool WarpCacheIRTranspiler::emitCallRegExpSearcherResult(
   return resumeAfter(searcher);
 }
 
-bool WarpCacheIRTranspiler::emitCallRegExpTesterResult(
-    ObjOperandId regexpId, StringOperandId inputId,
-    Int32OperandId lastIndexId) {
-  MDefinition* regexp = getOperand(regexpId);
-  MDefinition* input = getOperand(inputId);
-  MDefinition* lastIndex = getOperand(lastIndexId);
-
-  auto* tester = MRegExpTester::New(alloc(), regexp, input, lastIndex);
-  addEffectful(tester);
-  pushResult(tester);
-
-  return resumeAfter(tester);
-}
-
 bool WarpCacheIRTranspiler::emitRegExpBuiltinExecMatchResult(
     ObjOperandId regexpId, StringOperandId inputId) {
   MDefinition* regexp = getOperand(regexpId);
