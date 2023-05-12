@@ -1093,6 +1093,22 @@
   possibly_calls: true
   can_recover: true
 
+- name: RegExpExecMatch
+  operands:
+    regexp: Object
+    string: String
+  result_type: Value
+  possibly_calls: true
+  can_recover: false
+
+- name: RegExpExecTest
+  operands:
+    regexp: Object
+    string: String
+  result_type: Boolean
+  possibly_calls: true
+  can_recover: false
+
 - name: RegExpPrototypeOptimizable
   operands:
     object: Object
