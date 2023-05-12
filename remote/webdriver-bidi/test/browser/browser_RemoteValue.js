@@ -444,14 +444,14 @@ const REMOTE_COMPLEX_VALUES = [
   },
 ];
 
-add_task(function test_deserializePrimitiveTypes() {
+add_task(async function test_deserializePrimitiveTypes() {
   const realm = new Realm();
 
   for (const type of PRIMITIVE_TYPES) {
     const { value: expectedValue, serialized } = type;
 
     info(`Checking '${serialized.type}'`);
-    const value = deserialize(realm, serialized);
+    const value = (await deserialize(realm, serialized)).data;
 
     if (serialized.value == "NaN") {
       ok(Number.isNaN(value), `Got expected value for ${serialized}`);
@@ -465,7 +465,7 @@ add_task(function test_deserializePrimitiveTypes() {
   }
 });
 
-add_task(function test_deserializeDateLocalValue() {
+add_task(async function test_deserializeDateLocalValue() {
   const realm = new Realm();
 
   const validaDateStrings = [
@@ -485,7 +485,9 @@ add_task(function test_deserializeDateLocalValue() {
   ];
   for (const dateString of validaDateStrings) {
     info(`Checking '${dateString}'`);
-    const value = deserialize(realm, { type: "date", value: dateString });
+    const value = (
+      await deserialize(realm, { type: "date", value: dateString })
+    ).data;
 
     Assert.equal(
       value.getTime(),
@@ -495,7 +497,7 @@ add_task(function test_deserializeDateLocalValue() {
   }
 });
 
-add_task(function test_deserializeLocalValues() {
+add_task(async function test_deserializeLocalValues() {
   const realm = new Realm();
 
   for (const type of REMOTE_SIMPLE_VALUES.concat(REMOTE_COMPLEX_VALUES)) {
@@ -507,7 +509,7 @@ add_task(function test_deserializeLocalValues() {
     }
 
     info(`Checking '${serialized.type}'`);
-    const value = deserialize(realm, serialized);
+    const value = (await deserialize(realm, serialized)).data;
     assertLocalValue(serialized.type, value, expectedValue);
   }
 });
@@ -537,7 +539,9 @@ add_task(async function test_deserializeChannel() {
   };
 
   info(`Checking 'channel'`);
-  const deserializedValue = deserialize(realm, channel, deserializationOptions);
+  const deserializedValue = (
+    await deserialize(realm, channel, deserializationOptions)
+  ).data;
   Assert.equal(
     Object.prototype.toString.call(deserializedValue),
     "[object Function]",
@@ -546,7 +550,7 @@ add_task(async function test_deserializeChannel() {
   Assert.equal(deserializedValue("foo"), "foo", "Got expected result");
 });
 
-add_task(function test_deserializeLocalValuesByHandle() {
+add_task(async function test_deserializeLocalValuesByHandle() {
   // Create two realms, realm1 will be used to serialize values, while realm2
   // will be used as a reference empty realm without any object reference.
   const realm1 = new Realm();
@@ -559,7 +563,7 @@ add_task(function test_deserializeLocalValuesByHandle() {
 
     info(`Checking '${serialized.type}'`);
     // Serialize the value once to get a handle.
-    const serializedValue = serialize(
+    const serializedValue = await serialize(
       expectedValue,
       { maxObjectDepth: 0 },
       "root",
@@ -572,42 +576,61 @@ add_task(function test_deserializeLocalValuesByHandle() {
     const remoteReference = { handle: serializedValue.handle };
 
     // Check that the remote reference can be deserialized in realm1.
-    const deserializedValue = deserialize(realm1, remoteReference);
+    const deserializedValue = (await deserialize(realm1, remoteReference)).data;
     assertLocalValue(serialized.type, deserializedValue, expectedValue);
 
-    Assert.throws(
-      () => deserialize(realm2, remoteReference),
-      /NoSuchHandleError:/,
-      `Got expected error when using the wrong realm for deserialize`
-    );
+    try {
+      await deserialize(realm2, remoteReference);
+      ok(false, "Expected no such handle error to be raised");
+    } catch (e) {
+      Assert.equal(
+        e.name,
+        "NoSuchHandleError",
+        "Got expected error when using the wrong realm for deserialize"
+      );
+    }
 
     realm1.removeObjectHandle(serializedValue.handle);
-    Assert.throws(
-      () => deserialize(realm1, remoteReference),
-      /NoSuchHandleError:/,
-      `Got expected error when after deleting the object handle`
-    );
+    try {
+      await deserialize(realm1, remoteReference);
+      ok(false, "Expected no such handle error to be raised");
+    } catch (e) {
+      Assert.equal(
+        e.name,
+        "NoSuchHandleError",
+        "Got expected error when after deleting the object handle"
+      );
+    }
   }
 });
 
-add_task(function test_deserializeHandleInvalidTypes() {
+add_task(async function test_deserializeHandleInvalidTypes() {
   const realm = new Realm();
 
   for (const invalidType of [false, 42, {}, []]) {
     info(`Checking type: '${invalidType}'`);
 
-    Assert.throws(
-      () => deserialize(realm, { type: "object", handle: invalidType }),
-      /InvalidArgumentError:/,
-      `Got expected error for type ${invalidType}`
-    );
+    try {
+      await deserialize(realm, { type: "object", handle: invalidType });
+      ok(false, "Expected invalid argument error to be raised");
+    } catch (e) {
+      Assert.equal(
+        e.name,
+        "InvalidArgumentError",
+        `Got expected error for type ${invalidType}`
+      );
+    }
   }
 });
 
-add_task(function test_deserializeSharedIdInvalidTypes() {
+add_task(async function test_deserializeSharedIdInvalidTypes() {
   const nodeCache = new NodeCache();
 
   const realm = new WindowRealm(browser.document.defaultView);
+
+  function getNode(bc, nodeId) {
+    return nodeCache.getNode(bc, nodeId);
+  }
 
   for (const invalidType of [false, 42, {}, []]) {
     info(`Checking type: '${invalidType}'`);
@@ -616,15 +639,20 @@ add_task(function test_deserializeSharedIdInvalidTypes() {
       sharedId: invalidType,
     };
 
-    Assert.throws(
-      () => deserialize(realm, serializedValue, { nodeCache }),
-      /InvalidArgumentError:/,
-      `Got expected error for type ${invalidType}`
-    );
+    try {
+      (await deserialize(realm, serializedValue, { getNode })).data;
+      ok(false, "Expected invalid argument error to be raised");
+    } catch (e) {
+      Assert.equal(
+        e.name,
+        "InvalidArgumentError",
+        `Got expected error for type ${invalidType}`
+      );
+    }
   }
 });
 
-add_task(function test_deserializeSharedIdInvalidValue() {
+add_task(async function test_deserializeSharedIdInvalidValue() {
   const nodeCache = new NodeCache();
 
   const serializedValue = {
@@ -633,14 +661,23 @@ add_task(function test_deserializeSharedIdInvalidValue() {
 
   const realm = new WindowRealm(browser.document.defaultView);
 
-  Assert.throws(
-    () => deserialize(realm, serializedValue, { nodeCache }),
-    /NoSuchNodeError:/,
-    "Got expected error for unknown 'sharedId'"
-  );
+  function getNode(bc, nodeId) {
+    return nodeCache.getNode(bc, nodeId);
+  }
+
+  try {
+    (await deserialize(realm, serializedValue, { getNode })).data;
+    ok(false, "Expected no such node error to be raised");
+  } catch (e) {
+    Assert.equal(
+      e.name,
+      "NoSuchNodeError",
+      "Got expected error for unknown 'sharedId'"
+    );
+  }
 });
 
-add_task(function test_deserializeSharedId() {
+add_task(async function test_deserializeSharedId() {
   const nodeCache = new NodeCache();
   const domElRef = nodeCache.getOrCreateNodeReference(domEl);
 
@@ -650,12 +687,16 @@ add_task(function test_deserializeSharedId() {
 
   const realm = new WindowRealm(browser.document.defaultView);
 
-  const node = deserialize(realm, serializedValue, { nodeCache });
+  function getNode(bc, nodeId) {
+    return nodeCache.getNode(bc, nodeId);
+  }
+
+  const node = (await deserialize(realm, serializedValue, { getNode })).data;
 
   Assert.equal(node, domEl);
 });
 
-add_task(function test_deserializeSharedIdPrecedenceOverHandle() {
+add_task(async function test_deserializeSharedIdPrecedenceOverHandle() {
   const nodeCache = new NodeCache();
   const domElRef = nodeCache.getOrCreateNodeReference(domEl);
 
@@ -666,12 +707,16 @@ add_task(function test_deserializeSharedIdPrecedenceOverHandle() {
 
   const realm = new WindowRealm(browser.document.defaultView);
 
-  const node = deserialize(realm, serializedValue, { nodeCache });
+  function getNode(bc, nodeId) {
+    return nodeCache.getNode(bc, nodeId);
+  }
+
+  const node = (await deserialize(realm, serializedValue, { getNode })).data;
 
   Assert.equal(node, domEl);
 });
 
-add_task(function test_deserializeSharedIdNoWindowRealm() {
+add_task(async function test_deserializeSharedIdNoWindowRealm() {
   const nodeCache = new NodeCache();
   const domElRef = nodeCache.getOrCreateNodeReference(domEl);
 
@@ -681,30 +726,23 @@ add_task(function test_deserializeSharedIdNoWindowRealm() {
 
   const realm = new Realm();
 
-  Assert.throws(
-    () => deserialize(realm, serializedValue, { nodeCache }),
-    /NoSuchNodeError/,
-    `Got expected error for a non-window realm`
-  );
+  function getNode(bc, nodeId) {
+    return nodeCache.getNode(bc, nodeId);
+  }
+
+  try {
+    (await deserialize(realm, serializedValue, { getNode })).data;
+    ok(false, "Expected no such node error to be raised");
+  } catch (e) {
+    Assert.equal(
+      e.name,
+      "NoSuchNodeError",
+      "Got expected error for a non-window realm"
+    );
+  }
 });
 
-// Bug 1819902: Instead of a browsing context check compare the origin
-add_task(function test_deserializeSharedIdOtherBrowsingContext() {
-  const nodeCache = new NodeCache();
-  const domElRef = nodeCache.getOrCreateNodeReference(domEl);
-
-  const serializedValue = {
-    sharedId: domElRef,
-  };
-
-  const realm = new WindowRealm(iframeEl.contentWindow);
-
-  const node = deserialize(realm, serializedValue, { nodeCache });
-
-  Assert.equal(node, null);
-});
-
-add_task(function test_deserializePrimitiveTypesInvalidValues() {
+add_task(async function test_deserializePrimitiveTypesInvalidValues() {
   const realm = new Realm();
 
   const invalidValues = [
@@ -723,16 +761,21 @@ add_task(function test_deserializePrimitiveTypesInvalidValues() {
     for (const value of values) {
       info(`Checking '${type}' with value ${value}`);
 
-      Assert.throws(
-        () => deserialize(realm, { type, value }),
-        /InvalidArgument/,
-        `Got expected error for type ${type} and value ${value}`
-      );
+      try {
+        (await deserialize(realm, { type, value })).data;
+        ok(false, "Expected invalid argument error to be raised");
+      } catch (e) {
+        Assert.equal(
+          e.name,
+          "InvalidArgumentError",
+          `Got expected error for type ${type} and value ${value}`
+        );
+      }
     }
   }
 });
 
-add_task(function test_deserializeDateLocalValueInvalidValues() {
+add_task(async function test_deserializeDateLocalValueInvalidValues() {
   const realm = new Realm();
 
   const invalidaDateStrings = [
@@ -774,15 +817,20 @@ add_task(function test_deserializeDateLocalValueInvalidValues() {
   for (const dateString of invalidaDateStrings) {
     info(`Checking '${dateString}'`);
 
-    Assert.throws(
-      () => deserialize(realm, { type: "date", value: dateString }),
-      /InvalidArgumentError:/,
-      `Got expected error for date string: ${dateString}`
-    );
+    try {
+      (await deserialize(realm, { type: "date", value: dateString })).data;
+      ok(false, "Expected invalid argument error to be raised");
+    } catch (e) {
+      Assert.equal(
+        e.name,
+        "InvalidArgumentError",
+        `Got expected error for date string: ${dateString}`
+      );
+    }
   }
 });
 
-add_task(function test_deserializeLocalValuesInvalidType() {
+add_task(async function test_deserializeLocalValuesInvalidType() {
   const realm = new Realm();
 
   const invalidTypes = [undefined, null, false, 42, {}];
@@ -790,25 +838,36 @@ add_task(function test_deserializeLocalValuesInvalidType() {
   for (const invalidType of invalidTypes) {
     info(`Checking type: '${invalidType}'`);
 
-    Assert.throws(
-      () => deserialize(realm, { type: invalidType }),
-      /InvalidArgumentError:/,
-      `Got expected error for type ${invalidType}`
-    );
+    try {
+      (await deserialize(realm, { type: invalidType })).data;
+      ok(false, "Expected invalid argument error to be raised");
+    } catch (e) {
+      Assert.equal(
+        e.name,
+        "InvalidArgumentError",
+        `Got expected error for type ${invalidType}`
+      );
+    }
 
-    Assert.throws(
-      () =>
-        deserialize(realm, {
+    try {
+      (
+        await deserialize(realm, {
           type: "array",
           value: [{ type: invalidType }],
-        }),
-      /InvalidArgumentError:/,
-      `Got expected error for nested type ${invalidType}`
-    );
+        })
+      ).data;
+      ok(false, "Expected invalid argument error to be raised");
+    } catch (e) {
+      Assert.equal(
+        e.name,
+        "InvalidArgumentError",
+        `Got expected error for nested type ${invalidType}`
+      );
+    }
   }
 });
 
-add_task(function test_deserializeLocalValuesInvalidValues() {
+add_task(async function test_deserializeLocalValuesInvalidValues() {
   const realm = new Realm();
 
   const invalidValues = [
@@ -911,16 +970,21 @@ add_task(function test_deserializeLocalValuesInvalidValues() {
     for (const value of values) {
       info(`Checking '${type}' with value ${value}`);
 
-      Assert.throws(
-        () => deserialize(realm, { type, value }),
-        /InvalidArgumentError:/,
-        `Got expected error for type ${type} and value ${value}`
-      );
+      try {
+        (await deserialize(realm, { type, value })).data;
+        ok(false, "Expected invalid argument error to be raised");
+      } catch (e) {
+        Assert.equal(
+          e.name,
+          "InvalidArgumentError",
+          `Got expected error for type ${type} and value ${value}`
+        );
+      }
     }
   }
 });
 
-add_task(function test_serializePrimitiveTypes() {
+add_task(async function test_serializePrimitiveTypes() {
   const realm = new Realm();
 
   for (const type of PRIMITIVE_TYPES) {
@@ -928,7 +992,7 @@ add_task(function test_serializePrimitiveTypes() {
     const defaultSerializationOptions = setDefaultSerializationOptions();
 
     const serializationInternalMap = new Map();
-    const serializedValue = serialize(
+    const serializedValue = await serialize(
       value,
       defaultSerializationOptions,
       "none",
@@ -941,7 +1005,7 @@ add_task(function test_serializePrimitiveTypes() {
     // For primitive values, the serialization with ownershipType=root should
     // be exactly identical to the one with ownershipType=none.
     const serializationInternalMapWithRoot = new Map();
-    const serializedWithRoot = serialize(
+    const serializedWithRoot = await serialize(
       value,
       defaultSerializationOptions,
       "root",
@@ -953,7 +1017,7 @@ add_task(function test_serializePrimitiveTypes() {
   }
 });
 
-add_task(function test_serializeRemoteSimpleValues() {
+add_task(async function test_serializeRemoteSimpleValues() {
   const realm = new Realm();
 
   for (const type of REMOTE_SIMPLE_VALUES) {
@@ -962,7 +1026,7 @@ add_task(function test_serializeRemoteSimpleValues() {
 
     info(`Checking '${serialized.type}' with none ownershipType`);
     const serializationInternalMapWithNone = new Map();
-    const serializedValue = serialize(
+    const serializedValue = await serialize(
       value,
       defaultSerializationOptions,
       "none",
@@ -975,7 +1039,7 @@ add_task(function test_serializeRemoteSimpleValues() {
 
     info(`Checking '${serialized.type}' with root ownershipType`);
     const serializationInternalMapWithRoot = new Map();
-    const serializedWithRoot = serialize(
+    const serializedWithRoot = await serialize(
       value,
       defaultSerializationOptions,
       "root",
@@ -997,7 +1061,7 @@ add_task(function test_serializeRemoteSimpleValues() {
   }
 });
 
-add_task(function test_serializeRemoteComplexValues() {
+add_task(async function test_serializeRemoteComplexValues() {
   const realm = new Realm();
 
   for (const type of REMOTE_COMPLEX_VALUES) {
@@ -1008,7 +1072,7 @@ add_task(function test_serializeRemoteComplexValues() {
 
     info(`Checking '${serialized.type}' with none ownershipType`);
     const serializationInternalMapWithNone = new Map();
-    const serializedValue = serialize(
+    const serializedValue = await serialize(
       value,
       serializationOptionsWithDefaults,
       "none",
@@ -1021,7 +1085,7 @@ add_task(function test_serializeRemoteComplexValues() {
 
     info(`Checking '${serialized.type}' with root ownershipType`);
     const serializationInternalMapWithRoot = new Map();
-    const serializedWithRoot = serialize(
+    const serializedWithRoot = await serialize(
       value,
       serializationOptionsWithDefaults,
       "root",
@@ -1043,7 +1107,7 @@ add_task(function test_serializeRemoteComplexValues() {
   }
 });
 
-add_task(function test_serializeNodeChildren() {
+add_task(async function test_serializeNodeChildren() {
   const nodeCache = new NodeCache();
   // Add the used elements to the cache so that we know the unique reference.
   const bodyElRef = nodeCache.getOrCreateNodeReference(bodyEl);
@@ -1051,6 +1115,11 @@ add_task(function test_serializeNodeChildren() {
   const iframeElRef = nodeCache.getOrCreateNodeReference(iframeEl);
 
   const realm = new WindowRealm(browser.document.defaultView);
+
+  function getOrCreateNodeReference(bc, node) {
+    Assert.equal(bc, realm.browsingContext, "Got expected browsing context");
+    return nodeCache.getOrCreateNodeReference(node);
+  }
 
   const dataSet = [
     {
@@ -1206,20 +1275,20 @@ add_task(function test_serializeNodeChildren() {
 
     const serializationInternalMap = new Map();
 
-    const serializedValue = serialize(
+    const serializedValue = await serialize(
       node,
       serializationOptions,
       "none",
       serializationInternalMap,
       realm,
-      { nodeCache }
+      { getOrCreateNodeReference }
     );
 
     Assert.deepEqual(serializedValue, serialized, "Got expected structure");
   }
 });
 
-add_task(function test_serializeShadowRoot() {
+add_task(async function test_serializeShadowRoot() {
   const nodeCache = new NodeCache();
   const realm = new WindowRealm(browser.document.defaultView);
 
@@ -1239,6 +1308,11 @@ add_task(function test_serializeShadowRoot() {
     const insideShadowRootElementRef = nodeCache.getOrCreateNodeReference(
       insideShadowRootElement
     );
+
+    function getOrCreateNodeReference(bc, node) {
+      Assert.equal(bc, realm.browsingContext, "Got expected browsing context");
+      return nodeCache.getOrCreateNodeReference(node);
+    }
 
     const dataSet = [
       {
@@ -1366,13 +1440,13 @@ add_task(function test_serializeShadowRoot() {
 
       const serializationInternalMap = new Map();
 
-      const serializedValue = serialize(
+      const serializedValue = await serialize(
         node,
         serializationOptions,
         "none",
         serializationInternalMap,
         realm,
-        { nodeCache }
+        { getOrCreateNodeReference }
       );
 
       Assert.deepEqual(serializedValue, serialized, "Got expected structure");
@@ -1380,7 +1454,7 @@ add_task(function test_serializeShadowRoot() {
   }
 });
 
-add_task(function test_serializeWithSerializationInternalMap() {
+add_task(async function test_serializeWithSerializationInternalMap() {
   const dataSet = [
     {
       data: [1],
@@ -1423,7 +1497,7 @@ add_task(function test_serializeWithSerializationInternalMap() {
       { bar: data },
     ];
 
-    const serializedValue = serialize(
+    const serializedValue = await serialize(
       value,
       { maxObjectDepth: 2 },
       "none",
@@ -1470,34 +1544,36 @@ add_task(function test_serializeWithSerializationInternalMap() {
   }
 });
 
-add_task(function test_serializeMultipleValuesWithSerializationInternalMap() {
-  const realm = new Realm();
-  const serializationInternalMap = new Map();
-  const obj1 = { foo: "bar" };
-  const obj2 = [1, 2];
-  const value = [obj1, obj2, obj1, obj2];
+add_task(
+  async function test_serializeMultipleValuesWithSerializationInternalMap() {
+    const realm = new Realm();
+    const serializationInternalMap = new Map();
+    const obj1 = { foo: "bar" };
+    const obj2 = [1, 2];
+    const value = [obj1, obj2, obj1, obj2];
 
-  serialize(
-    value,
-    { maxObjectDepth: 2 },
-    "none",
-    serializationInternalMap,
-    realm
-  );
+    await serialize(
+      value,
+      { maxObjectDepth: 2 },
+      "none",
+      serializationInternalMap,
+      realm
+    );
 
-  assertInternalIds(serializationInternalMap, 2);
+    assertInternalIds(serializationInternalMap, 2);
 
-  const internalId1 = serializationInternalMap.get(obj1).internalId;
-  const internalId2 = serializationInternalMap.get(obj2).internalId;
+    const internalId1 = serializationInternalMap.get(obj1).internalId;
+    const internalId2 = serializationInternalMap.get(obj2).internalId;
 
-  Assert.notEqual(
-    internalId1,
-    internalId2,
-    "Internal ids for different object are also different"
-  );
-});
+    Assert.notEqual(
+      internalId1,
+      internalId2,
+      "Internal ids for different object are also different"
+    );
+  }
+);
 
-add_task(function test_serializeNodeSharedId() {
+add_task(async function test_serializeNodeSharedId() {
   const nodeCache = new NodeCache();
   // Already add the domEl to the cache so that we know the unique reference.
   const domElRef = nodeCache.getOrCreateNodeReference(domEl);
@@ -1505,13 +1581,18 @@ add_task(function test_serializeNodeSharedId() {
   const realm = new WindowRealm(browser.document.defaultView);
   const serializationInternalMap = new Map();
 
-  const serializedValue = serialize(
+  function getOrCreateNodeReference(bc, node) {
+    Assert.equal(bc, realm.browsingContext, "Got expected browsing context");
+    return nodeCache.getOrCreateNodeReference(node);
+  }
+
+  const serializedValue = await serialize(
     domEl,
     { maxDomDepth: 0 },
     "root",
     serializationInternalMap,
     realm,
-    { nodeCache }
+    { getOrCreateNodeReference }
   );
 
   Assert.equal(nodeCache.size, 1, "No additional reference added");
@@ -1519,27 +1600,32 @@ add_task(function test_serializeNodeSharedId() {
   Assert.notEqual(serializedValue.handle, domElRef);
 });
 
-add_task(function test_serializeNodeSharedId_noWindowRealm() {
+add_task(async function test_serializeNodeSharedId_noWindowRealm() {
   const nodeCache = new NodeCache();
   nodeCache.getOrCreateNodeReference(domEl);
 
   const realm = new Realm();
   const serializationInternalMap = new Map();
 
-  const serializedValue = serialize(
+  function getOrCreateNodeReference(bc, node) {
+    Assert.equal(bc, realm.browsingContext, "Got expected browsing context");
+    return nodeCache.getOrCreateNodeReference(node);
+  }
+
+  const serializedValue = await serialize(
     domEl,
     { maxDomDepth: 0 },
     "none",
     serializationInternalMap,
     realm,
-    { nodeCache }
+    { getOrCreateNodeReference }
   );
 
   Assert.equal(nodeCache.size, 1, "No additional reference added");
   Assert.equal(serializedValue.sharedId, undefined);
 });
 
-add_task(function test_stringify() {
+add_task(async function test_stringify() {
   const STRINGIFY_TEST_CASES = [
     [undefined, "undefined"],
     [null, "null"],
@@ -1619,6 +1705,8 @@ function assertInternalIds(serializationInternalMap, amount) {
   );
 }
 
+function deserializeValue(realm, value) {}
+
 function deserializeInWindowRealm(serialized) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
@@ -1632,7 +1720,7 @@ function deserializeInWindowRealm(serialized) {
       );
       const realm = new WindowRealm(content);
       info(`Checking '${_serialized.type}'`);
-      return deserialize(realm, _serialized);
+      return (await deserialize(realm, _serialized)).data;
     }
   );
 }
