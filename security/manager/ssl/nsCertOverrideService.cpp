@@ -31,7 +31,6 @@
 #endif
 #include "nsISafeOutputStream.h"
 #include "nsIX509Cert.h"
-#include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
 #include "nsNetUtil.h"
@@ -386,6 +385,16 @@ nsresult nsCertOverrideService::Write(const MutexAutoLock& aProofOfLock) {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  return NS_OK;
+}
+
+nsresult GetCertSha256Fingerprint(nsIX509Cert* aCert, nsCString& aResult) {
+  nsAutoString fpStrUTF16;
+  nsresult rv = aCert->GetSha256Fingerprint(fpStrUTF16);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  aResult.Assign(NS_ConvertUTF16toUTF8(fpStrUTF16));
   return NS_OK;
 }
 
