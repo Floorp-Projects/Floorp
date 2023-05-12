@@ -6,7 +6,7 @@
 
 #include "StyleInfo.h"
 
-#include "mozilla/ServoStyleConsts.h"
+#include "nsStyleConsts.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

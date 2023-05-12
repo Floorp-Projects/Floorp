@@ -11,6 +11,7 @@
 #include "nsFrameSelection.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
+#include "nsStyleConsts.h"
 
 #include "mozilla/LookAndFeel.h"
 

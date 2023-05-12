@@ -215,7 +215,7 @@ void ServoComputedData::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
 #define STYLE_STRUCT(name_)                                       \
   static_assert(alignof(nsStyle##name_) <= sizeof(size_t),        \
                 "alignment will break AddSizeOfExcludingThis()"); \
-  const void* p##name_ = GetStyle##name_();                       \
+  const void* p##name_ = Style##name_();                          \
   if (!aSizes.mState.HaveSeenPtr(p##name_)) {                     \
     aSizes.mStyleSizes.NS_STYLE_SIZES_FIELD(name_) +=             \
         ServoStyleStructsMallocEnclosingSizeOf(p##name_);         \
@@ -223,9 +223,9 @@ void ServoComputedData::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-  if (visited_style.mPtr && !aSizes.mState.HaveSeenPtr(visited_style.mPtr)) {
-    visited_style.mPtr->AddSizeOfIncludingThis(
-        aSizes, &aSizes.mLayoutComputedValuesVisited);
+  if (visited_style && !aSizes.mState.HaveSeenPtr(visited_style)) {
+    visited_style->AddSizeOfIncludingThis(aSizes,
+                                          &aSizes.mLayoutComputedValuesVisited);
   }
 
   // Measurement of the following members may be added later if DMD finds it is

@@ -240,7 +240,7 @@ void InspectorUtils::GetCSSStyleRules(
   }
 
   if (aIncludeVisitedStyle) {
-    if (ComputedStyle* styleIfVisited = computedStyle->GetStyleIfVisited()) {
+    if (auto* styleIfVisited = computedStyle->GetStyleIfVisited()) {
       computedStyle = styleIfVisited;
     }
   }
