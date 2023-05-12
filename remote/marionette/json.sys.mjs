@@ -90,10 +90,12 @@ function cloneObject(value, seen, cloneAlgorithm) {
  *
  * - If a cyclic references is detected a JavaScriptError is thrown.
  *
- * @param {object} value
+ * @param {object} options
+ * @param {object} options.value
  *     Object to be cloned.
- * @param {NodeCache} nodeCache
- *     Node cache that holds already seen WebElement and ShadowRoot references.
+ * @param {Function} options.getOrCreateNodeReference
+ *     Callback that tries to use a known node reference from the node cache,
+ *     or creates a new one if not present yet.
  *
  * @returns {object}
  *     Same object as provided by `value` with the WebDriver specific
@@ -105,7 +107,9 @@ function cloneObject(value, seen, cloneAlgorithm) {
  *     If the element has gone stale, indicating it is no longer
  *     attached to the DOM.
  */
-json.clone = function(value, nodeCache) {
+json.clone = function(options) {
+  const { getOrCreateNodeReference, value } = options;
+
   function cloneJSON(value, seen) {
     if (seen === undefined) {
       seen = new Set();
@@ -143,8 +147,7 @@ json.clone = function(value, nodeCache) {
         );
       }
 
-      const nodeRef = nodeCache.getOrCreateNodeReference(value);
-      return lazy.WebReference.from(value, nodeRef).toJSON();
+      return getOrCreateNodeReference(value).toJSON();
     }
 
     if (isNode && lazy.element.isShadowRoot(value)) {
@@ -157,8 +160,7 @@ json.clone = function(value, nodeCache) {
         );
       }
 
-      const nodeRef = nodeCache.getOrCreateNodeReference(value);
-      return lazy.WebReference.from(value, nodeRef).toJSON();
+      return getOrCreateNodeReference(value).toJSON();
     }
 
     if (typeof value.toJSON == "function") {
@@ -183,23 +185,32 @@ json.clone = function(value, nodeCache) {
 /**
  * Deserialize an arbitrary object.
  *
- * @param {object} value
+ * @param {object} options
+ * @param {object} options.value
  *     Arbitrary object.
- * @param {NodeCache} nodeCache
- *     Node cache that holds already seen WebElement and ShadowRoot references.
- * @param {WindowProxy} win
+ * @param {WindowProxy} options.win
  *     Current window.
+ * @param {Function} options.getKnownElement
+ *     Callback that will try to resolve a WebElement reference to an Element node.
+ * @param {Function} options.getKnownShadowRoot
+ *     Callback that will try to resolve a ShadowRoot reference to a ShadowRoot node.
  *
  * @returns {object}
  *     Same object as provided by `value` with the WebDriver specific
  *     references replaced with real JavaScript objects.
  *
+ * @throws {DetachedShadowRootError}
+ *     If the ShadowRoot is detached, indicating it is no longer attached to the DOM.
  * @throws {NoSuchElementError}
  *     If the WebElement reference has not been seen before.
+ * @throws {NoSuchShadowRootError}
+ *     If the ShadowRoot reference has not been seen before.
  * @throws {StaleElementReferenceError}
  *     If the element is stale, indicating it is no longer attached to the DOM.
  */
-json.deserialize = function(value, nodeCache, win) {
+json.deserialize = function(options) {
+  const { value, win, getKnownElement, getKnownShadowRoot } = options;
+
   function deserializeJSON(value, seen) {
     if (seen === undefined) {
       seen = new Set();
@@ -222,19 +233,11 @@ json.deserialize = function(value, nodeCache, win) {
           const webRef = lazy.WebReference.fromJSON(value);
 
           if (webRef instanceof lazy.ShadowRoot) {
-            return lazy.element.getKnownShadowRoot(
-              win.browsingContext,
-              webRef.uuid,
-              nodeCache
-            );
+            return getKnownShadowRoot(win.browsingContext, webRef.uuid);
           }
 
           if (webRef instanceof lazy.WebElement) {
-            return lazy.element.getKnownElement(
-              win.browsingContext,
-              webRef.uuid,
-              nodeCache
-            );
+            return getKnownElement(win.browsingContext, webRef.uuid);
           }
 
           // WebFrame and WebWindow not supported yet
