@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/Span.h"
-#include "mozilla/SVGUtils.h"
 
 #include "nsAtom.h"
 #include "nsISelectionController.h"

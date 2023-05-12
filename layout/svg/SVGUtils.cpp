@@ -767,15 +767,6 @@ bool SVGUtils::HitTestClip(nsIFrame* aFrame, const gfxPoint& aPoint) {
   return CSSClipPathInstance::HitTestBasicShapeOrPathClip(aFrame, aPoint);
 }
 
-nsRect SVGUtils::TransformFrameRectToOuterSVG(const nsRect& aRect,
-                                              const gfxMatrix& aMatrix,
-                                              nsPresContext* aPresContext) {
-  gfxRect r(aRect.x, aRect.y, aRect.width, aRect.height);
-  r.Scale(1.0 / AppUnitsPerCSSPixel());
-  return nsLayoutUtils::RoundGfxRectToAppRect(
-      aMatrix.TransformBounds(r), aPresContext->AppUnitsPerDevPixel());
-}
-
 IntSize SVGUtils::ConvertToSurfaceSize(const gfxSize& aSize,
                                        bool* aResultOverflows) {
   IntSize surfaceSize(ClampToInt(ceil(aSize.width)),
