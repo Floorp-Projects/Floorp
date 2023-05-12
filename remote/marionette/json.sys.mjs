@@ -34,10 +34,10 @@ export const json = {};
  *     The clone algorithm to invoke for individual list entries or object
  *     properties.
  *
- * @returns {object}
- *     The cloned object.
+ * @returns {Promise<object>}
+ *     A promise that resolves to the cloned object.
  */
-function cloneObject(value, seen, cloneAlgorithm) {
+async function cloneObject(value, seen, cloneAlgorithm) {
   // Only proceed with cloning an object if it hasn't been seen yet.
   if (seen.has(value)) {
     throw new lazy.error.JavaScriptError("Cyclic object value");
@@ -47,13 +47,15 @@ function cloneObject(value, seen, cloneAlgorithm) {
   let result;
 
   if (lazy.element.isCollection(value)) {
-    result = [...value].map(entry => cloneAlgorithm(entry, seen));
+    result = await Promise.all(
+      [...value].map(entry => cloneAlgorithm(entry, seen))
+    );
   } else {
     // arbitrary objects
     result = {};
     for (let prop in value) {
       try {
-        result[prop] = cloneAlgorithm(value[prop], seen);
+        result[prop] = await cloneAlgorithm(value[prop], seen);
       } catch (e) {
         if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
           lazy.logger.debug(`Skipping ${prop}: ${e.message}`);
@@ -91,15 +93,17 @@ function cloneObject(value, seen, cloneAlgorithm) {
  * - If a cyclic references is detected a JavaScriptError is thrown.
  *
  * @param {object} options
- * @param {object} options.value
- *     Object to be cloned.
+ * @param {BrowsingContext} options.browsingContext
+ *     Current browsing context.
  * @param {Function} options.getOrCreateNodeReference
  *     Callback that tries to use a known node reference from the node cache,
  *     or creates a new one if not present yet.
+ * @param {object} options.value
+ *     Object to be cloned.
  *
- * @returns {object}
- *     Same object as provided by `value` with the WebDriver specific
- *     elements replaced by WebReference's.
+ * @returns {Promise<object>}
+ *     Promise that resolves to the same object as provided by `value` with
+ *     the WebDriver specific elements replaced by WebReference's.
  *
  * @throws {JavaScriptError}
  *     If an object contains cyclic references.
@@ -107,10 +111,18 @@ function cloneObject(value, seen, cloneAlgorithm) {
  *     If the element has gone stale, indicating it is no longer
  *     attached to the DOM.
  */
-json.clone = function(options) {
-  const { getOrCreateNodeReference, value } = options;
+json.clone = async function(options) {
+  const { browsingContext, getOrCreateNodeReference, value } = options;
 
-  function cloneJSON(value, seen) {
+  if (typeof browsingContext === "undefined") {
+    throw new TypeError("Browsing context not specified");
+  }
+
+  if (typeof getOrCreateNodeReference !== "function") {
+    throw new TypeError("Invalid callback for 'getOrCreateNodeReference'");
+  }
+
+  async function cloneJSON(value, seen) {
     if (seen === undefined) {
       seen = new Set();
     }
@@ -147,7 +159,8 @@ json.clone = function(options) {
         );
       }
 
-      return getOrCreateNodeReference(value).toJSON();
+      const ref = await getOrCreateNodeReference(browsingContext, value);
+      return ref.toJSON();
     }
 
     if (isNode && lazy.element.isShadowRoot(value)) {
@@ -160,7 +173,8 @@ json.clone = function(options) {
         );
       }
 
-      return getOrCreateNodeReference(value).toJSON();
+      const ref = await getOrCreateNodeReference(browsingContext, value);
+      return ref.toJSON();
     }
 
     if (typeof value.toJSON == "function") {
@@ -186,18 +200,18 @@ json.clone = function(options) {
  * Deserialize an arbitrary object.
  *
  * @param {object} options
- * @param {object} options.value
- *     Arbitrary object.
- * @param {WindowProxy} options.win
- *     Current window.
+ * @param {BrowsingContext} options.browsingContext
+ *     Current browsing context.
  * @param {Function} options.getKnownElement
  *     Callback that will try to resolve a WebElement reference to an Element node.
  * @param {Function} options.getKnownShadowRoot
  *     Callback that will try to resolve a ShadowRoot reference to a ShadowRoot node.
+ * @param {object} options.value
+ *     Arbitrary object.
  *
- * @returns {object}
- *     Same object as provided by `value` with the WebDriver specific
- *     references replaced with real JavaScript objects.
+ * @returns {Promise<object>}
+ *     Promise that resolves to the same object as provided by `value` with the
+ *     WebDriver specific references replaced with real JavaScript objects.
  *
  * @throws {DetachedShadowRootError}
  *     If the ShadowRoot is detached, indicating it is no longer attached to the DOM.
@@ -208,10 +222,27 @@ json.clone = function(options) {
  * @throws {StaleElementReferenceError}
  *     If the element is stale, indicating it is no longer attached to the DOM.
  */
-json.deserialize = function(options) {
-  const { value, win, getKnownElement, getKnownShadowRoot } = options;
+json.deserialize = async function(options) {
+  const {
+    browsingContext,
+    getKnownElement,
+    getKnownShadowRoot,
+    value,
+  } = options;
 
-  function deserializeJSON(value, seen) {
+  if (typeof browsingContext === "undefined") {
+    throw new TypeError("Browsing context not specified");
+  }
+
+  if (typeof getKnownElement !== "function") {
+    throw new TypeError("Invalid callback for 'getKnownElement'");
+  }
+
+  if (typeof getKnownShadowRoot !== "function") {
+    throw new TypeError("Invalid callback for 'getKnownShadowRoot'");
+  }
+
+  async function deserializeJSON(value, seen) {
     if (seen === undefined) {
       seen = new Set();
     }
@@ -233,11 +264,11 @@ json.deserialize = function(options) {
           const webRef = lazy.WebReference.fromJSON(value);
 
           if (webRef instanceof lazy.ShadowRoot) {
-            return getKnownShadowRoot(win.browsingContext, webRef.uuid);
+            return getKnownShadowRoot(browsingContext, webRef.uuid);
           }
 
           if (webRef instanceof lazy.WebElement) {
-            return getKnownElement(win.browsingContext, webRef.uuid);
+            return getKnownElement(browsingContext, webRef.uuid);
           }
 
           // WebFrame and WebWindow not supported yet

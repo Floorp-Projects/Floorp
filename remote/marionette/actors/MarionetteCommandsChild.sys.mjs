@@ -87,9 +87,9 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
       let waitForNextTick = false;
 
       const { name, data: serializedData } = msg;
-      const data = lazy.json.deserialize({
+      const data = await lazy.json.deserialize({
         value: serializedData,
-        win: this.contentWindow,
+        browsingContext: this.contentWindow.browsingContext,
         getKnownElement: this.#getKnownElement.bind(this),
         getKnownShadowRoot: this.#getKnownShadowRoot.bind(this),
       });
@@ -190,9 +190,10 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
       }
 
       return {
-        data: lazy.json.clone({
+        data: await lazy.json.clone({
           value: result,
           getOrCreateNodeReference: this.#getOrCreateNodeReference.bind(this),
+          browsingContext: this.contentWindow.browsingContext,
         }),
       };
     } catch (e) {
@@ -634,8 +635,9 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    *     If the element has gone stale, indicating its node document is no
    *     longer the active document or it is no longer attached to the DOM.
    */
-  #getKnownElement(browsingContext, nodeId) {
-    if (!this.#isNodeReferenceKnown(browsingContext, nodeId)) {
+  async #getKnownElement(browsingContext, nodeId) {
+    const isKnown = await this.#isNodeReferenceKnown(browsingContext, nodeId);
+    if (!isKnown) {
       throw new lazy.error.NoSuchElementError(
         `The element with the reference ${nodeId} is not known in the current browsing context`
       );
@@ -680,8 +682,9 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    *     If the ShadowRoot is detached, indicating its node document is no
    *     longer the active document or it is no longer attached to the DOM.
    */
-  #getKnownShadowRoot(browsingContext, nodeId) {
-    if (!this.#isNodeReferenceKnown(browsingContext, nodeId)) {
+  async #getKnownShadowRoot(browsingContext, nodeId) {
+    const isKnown = await this.#isNodeReferenceKnown(browsingContext, nodeId);
+    if (!isKnown) {
       throw new lazy.error.NoSuchShadowRootError(
         `The shadow root with the reference ${nodeId} is not known in the current browsing context`
       );
@@ -716,14 +719,23 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    * node cache, and returns it. Otherwise it creates a new reference and
    * adds it to the cache.
    *
+   * @param {BrowsingContext} browsingContext
+   *     The browsing context the element is part of.
    * @param {Node} node
    *     The node to create or get a WebReference for.
    *
    * @returns {WebReference} The web reference for the node.
    */
-  #getOrCreateNodeReference(node) {
+  async #getOrCreateNodeReference(browsingContext, node) {
     const nodeRef = this.#nodeCache.getOrCreateNodeReference(node);
-    return lazy.WebReference.from(node, nodeRef);
+    const webRef = lazy.WebReference.from(node, nodeRef);
+
+    await this.sendQuery("MarionetteCommandsChild:addNodeToSeenNodes", {
+      browsingContext,
+      nodeId: webRef.uuid,
+    });
+
+    return webRef;
   }
 
   /**
@@ -737,23 +749,14 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    * @param {ElementIdentifier} nodeId
    *     The WebElement reference identifier for a DOM element.
    *
-   * @returns {boolean}
-   *     True if the element is known in the given browsing context.
+   * @returns {Promise<boolean>}
+   *     A promise that resolved to True if the element is known in the given
+   *     browsing context.
    */
   #isNodeReferenceKnown(browsingContext, nodeId) {
-    const nodeDetails = this.#nodeCache.getReferenceDetails(nodeId);
-    if (nodeDetails === null) {
-      return false;
-    }
-
-    if (nodeDetails.isTopBrowsingContext) {
-      // As long as Navigables are not available any cross-group navigation will
-      // cause a swap of the current top-level browsing context. The only unique
-      // identifier in such a case is the browser id the top-level browsing
-      // context actually lives in.
-      return nodeDetails.browserId === browsingContext.browserId;
-    }
-
-    return nodeDetails.browsingContextId === browsingContext.id;
+    return this.sendQuery("MarionetteCommandsChild:isNodeReferenceKnown", {
+      browsingContext,
+      nodeId,
+    });
   }
 }
