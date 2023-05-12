@@ -270,10 +270,6 @@ class SVGUtils final {
    */
   static void NotifyChildrenOfSVGChange(nsIFrame* aFrame, uint32_t aFlags);
 
-  static nsRect TransformFrameRectToOuterSVG(const nsRect& aRect,
-                                             const gfxMatrix& aMatrix,
-                                             nsPresContext* aPresContext);
-
   /*
    * Convert a surface size to an integer for use by thebes
    * possibly making it smaller in the process so the surface does not
