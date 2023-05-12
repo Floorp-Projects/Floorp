@@ -1473,18 +1473,13 @@ void nsIFrame::AssertNewStyleIsSane(ComputedStyle& aNewStyle) {
 #endif
 
 void nsIFrame::ReparentFrameViewTo(nsViewManager* aViewManager,
-                                   nsView* aNewParentView,
-                                   nsView* aOldParentView) {
+                                   nsView* aNewParentView) {
   if (HasView()) {
     if (IsMenuPopupFrame()) {
       // This view must be parented by the root view, don't reparent it.
       return;
     }
     nsView* view = GetView();
-    // Verify that the current parent view is what we think it is
-    // nsView*  parentView;
-    // NS_ASSERTION(parentView == aOldParentView, "unexpected parent view");
-
     aViewManager->RemoveChild(view);
 
     // The view will remember the Z-order and other attributes that have been
@@ -1498,8 +1493,7 @@ void nsIFrame::ReparentFrameViewTo(nsViewManager* aViewManager,
       // Iterate the child frames, and check each child frame to see if it has
       // a view
       for (nsIFrame* child : childList.mList) {
-        child->ReparentFrameViewTo(aViewManager, aNewParentView,
-                                   aOldParentView);
+        child->ReparentFrameViewTo(aViewManager, aNewParentView);
       }
     }
   }
@@ -1556,7 +1550,7 @@ void nsIFrame::CreateView() {
   // we know this frame has no view, so it will crawl the children. Also,
   // we know that any descendants with views must have 'parentView' as their
   // parent view.
-  ReparentFrameViewTo(viewManager, view, parentView);
+  ReparentFrameViewTo(viewManager, view);
 
   // Remember our view
   SetView(view);
