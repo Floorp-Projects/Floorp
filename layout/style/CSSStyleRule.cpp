@@ -21,7 +21,7 @@ namespace mozilla::dom {
 // -- CSSStyleRuleDeclaration ---------------------------------------
 
 CSSStyleRuleDeclaration::CSSStyleRuleDeclaration(
-    already_AddRefed<RawServoDeclarationBlock> aDecls)
+    already_AddRefed<StyleLockedDeclarationBlock> aDecls)
     : mDecls(new DeclarationBlock(std::move(aDecls))) {
   mDecls->SetOwningRule(Rule());
 }
@@ -66,13 +66,13 @@ DeclarationBlock* CSSStyleRuleDeclaration::GetOrCreateCSSDeclaration(
   return mDecls;
 }
 
-void CSSStyleRule::SetRawAfterClone(RefPtr<RawServoStyleRule> aRaw) {
+void CSSStyleRule::SetRawAfterClone(RefPtr<StyleLockedStyleRule> aRaw) {
   mRawRule = std::move(aRaw);
   mDecls.SetRawAfterClone(Servo_StyleRule_GetStyle(mRawRule).Consume());
 }
 
 void CSSStyleRuleDeclaration::SetRawAfterClone(
-    RefPtr<RawServoDeclarationBlock> aRaw) {
+    RefPtr<StyleLockedDeclarationBlock> aRaw) {
   RefPtr<DeclarationBlock> block = new DeclarationBlock(aRaw.forget());
   mDecls->SetOwningRule(nullptr);
   mDecls = std::move(block);
@@ -106,7 +106,7 @@ CSSStyleRuleDeclaration::GetParsingEnvironment(
 
 // -- CSSStyleRule --------------------------------------------------
 
-CSSStyleRule::CSSStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
+CSSStyleRule::CSSStyleRule(already_AddRefed<StyleLockedStyleRule> aRawRule,
                            StyleSheet* aSheet, css::Rule* aParentRule,
                            uint32_t aLine, uint32_t aColumn)
     : BindingStyleRule(aSheet, aParentRule, aLine, aColumn),

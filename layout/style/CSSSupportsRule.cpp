@@ -14,7 +14,7 @@ using namespace mozilla::css;
 
 namespace mozilla::dom {
 
-CSSSupportsRule::CSSSupportsRule(RefPtr<RawServoSupportsRule> aRawRule,
+CSSSupportsRule::CSSSupportsRule(RefPtr<StyleLockedSupportsRule> aRawRule,
                                  StyleSheet* aSheet, css::Rule* aParentRule,
                                  uint32_t aLine, uint32_t aColumn)
     : css::ConditionRule(Servo_SupportsRule_GetRules(aRawRule).Consume(),
@@ -53,7 +53,7 @@ void CSSSupportsRule::GetCssText(nsACString& aCssText) const {
   Servo_SupportsRule_GetCssText(mRawRule, &aCssText);
 }
 
-void CSSSupportsRule::SetRawAfterClone(RefPtr<RawServoSupportsRule> aRaw) {
+void CSSSupportsRule::SetRawAfterClone(RefPtr<StyleLockedSupportsRule> aRaw) {
   mRawRule = std::move(aRaw);
 
   css::ConditionRule::SetRawAfterClone(

@@ -8266,9 +8266,9 @@ void nsIFrame::ListTextRuns(FILE* out, nsTHashSet<const void*>& aSeen) const {
 }
 
 void nsIFrame::ListMatchedRules(FILE* out, const char* aPrefix) const {
-  nsTArray<const RawServoStyleRule*> rawRuleList;
+  nsTArray<const StyleLockedStyleRule*> rawRuleList;
   Servo_ComputedValues_GetStyleRuleList(mComputedStyle, &rawRuleList);
-  for (const RawServoStyleRule* rawRule : rawRuleList) {
+  for (const StyleLockedStyleRule* rawRule : rawRuleList) {
     nsAutoCString ruleText;
     Servo_StyleRule_GetCssText(rawRule, &ruleText);
     fprintf_stderr(out, "%s%s\n", aPrefix, ruleText.get());
