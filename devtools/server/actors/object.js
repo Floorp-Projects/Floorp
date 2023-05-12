@@ -44,9 +44,8 @@ loader.lazyRequireGetter(
 // This is going to be used by findSafeGetters, where we want to avoid calling getters for
 // deprecated properties (otherwise a warning message is displayed in the console).
 // We could do something like EagerEvaluation, where we create a new Sandbox which is then
-// used to compare functions with `isSameNativeWithJitInfo`, but, we'd need to make new
-// classes available in the Sandbox, and possibly do it again when a new property gets
-// deprecated.
+// used to compare functions, but, we'd need to make new classes available in
+// the Sandbox, and possibly do it again when a new property gets deprecated.
 // Since this is only to be able to automatically call getters, we can simply check against
 // a list of unsafe getters that we generate from webidls.
 loader.lazyRequireGetter(

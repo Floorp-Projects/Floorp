@@ -21,7 +21,6 @@ import buildconfig
 # that we don't care about in the context of the devtools.
 PURE_INTERFACE_ALLOWLIST = set(
     [
-        "Window",
         "Document",
         "Node",
         "DOMTokenList",
@@ -82,11 +81,6 @@ results = parser.finish()
 # TODO: Bug 1616013 - Move more of these to be part of the pure list.
 pure_output = {
     "Document": {
-        "instance": {
-            "getters": [
-                "location",
-            ],
-        },
         "prototype": {
             "methods": [
                 "getSelection",
@@ -112,28 +106,6 @@ pure_output = {
         "prototype": {
             "methods": ["getRangeAt", "containsNode"],
         }
-    },
-    "Window": {
-        "instance": {
-            "getters": [
-                "location",
-            ],
-        },
-    },
-    "Location": {
-        "instance": {
-            "getters": [
-                "href",
-                "origin",
-                "protocol",
-                "host",
-                "hostname",
-                "port",
-                "pathname",
-                "search",
-                "hash",
-            ],
-        },
     },
 }
 unsafe_getters_names = []
@@ -165,15 +137,19 @@ for result in results:
                 if owner_type not in pure_output[iface]:
                     pure_output[iface][owner_type] = {}
 
+                # All DOM getters are considered eagerly-evaluate-able.
+                # Collect methods only.
+                #
+                # NOTE: We still need to calculate unsafe_getters_names for
+                #       object preview.
                 if member.isMethod():
                     prop_type = "methods"
-                else:
-                    prop_type = "getters"
 
-                if prop_type not in pure_output[iface][owner_type]:
-                    pure_output[iface][owner_type][prop_type] = []
+                    if prop_type not in pure_output[iface][owner_type]:
+                        pure_output[iface][owner_type][prop_type] = []
 
-                pure_output[iface][owner_type][prop_type].append(name)
+                    pure_output[iface][owner_type][prop_type].append(name)
+
             if (
                 not iface in DEPRECATED_INTERFACE__EXCLUDE_LIST
                 and not name in unsafe_getters_names
