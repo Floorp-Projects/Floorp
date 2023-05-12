@@ -65,7 +65,6 @@ using JS::Latin1Char;
 using JS::UniqueChars;
 using JS::UniqueLatin1Chars;
 using JS::UniqueTwoByteChars;
-using JS::UniqueWideChars;
 
 using JS::Ok;
 using JS::OOM;

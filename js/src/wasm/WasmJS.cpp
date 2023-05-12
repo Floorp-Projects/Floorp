@@ -4455,14 +4455,9 @@ static bool Reject(JSContext* cx, const CompileArgs& args,
   }
 
   RootedObject stack(cx, promise->allocationSite());
-  RootedString fileName(cx);
-  if (const char* filename = args.scriptedCaller.filename.get()) {
-    fileName =
-        JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(filename, strlen(filename)));
-  } else {
-    fileName = JS_GetEmptyString(cx);
-  }
-  if (!fileName) {
+  RootedString filename(
+      cx, JS_NewStringCopyZ(cx, args.scriptedCaller.filename.get()));
+  if (!filename) {
     return false;
   }
 
@@ -4486,7 +4481,7 @@ static bool Reject(JSContext* cx, const CompileArgs& args,
   auto cause = JS::NothingHandleValue;
 
   RootedObject errorObj(
-      cx, ErrorObject::create(cx, JSEXN_WASMCOMPILEERROR, stack, fileName, 0,
+      cx, ErrorObject::create(cx, JSEXN_WASMCOMPILEERROR, stack, filename, 0,
                               line, 0, nullptr, message, cause));
   if (!errorObj) {
     return false;

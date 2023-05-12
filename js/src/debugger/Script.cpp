@@ -347,12 +347,11 @@ bool DebuggerScript::CallData::getUrl() {
 
   if (script->filename()) {
     JSString* str;
-    if (const char* introducer = script->scriptSource()->introducerFilename()) {
-      str =
-          NewStringCopyUTF8N(cx, JS::UTF8Chars(introducer, strlen(introducer)));
+    if (script->scriptSource()->introducerFilename()) {
+      str = NewStringCopyZ<CanGC>(cx,
+                                  script->scriptSource()->introducerFilename());
     } else {
-      const char* filename = script->filename();
-      str = NewStringCopyUTF8N(cx, JS::UTF8Chars(filename, strlen(filename)));
+      str = NewStringCopyZ<CanGC>(cx, script->filename());
     }
     if (!str) {
       return false;
