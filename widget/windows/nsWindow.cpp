@@ -8335,6 +8335,9 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
   bool consumeRollupEvent = false;
   Maybe<POINT> touchPoint;  // In screen coords.
 
+  // If we rollup with animations but get occluded right away, we might not
+  // advance the refresh driver enough for the animation to finish.
+  auto allowAnimations = nsIRollupListener::AllowAnimations::Yes;
   nsWindow* popupWindow = static_cast<nsWindow*>(popup.get());
   UINT nativeMessage = WinUtils::GetNativeMessage(aMessage);
   switch (nativeMessage) {
@@ -8415,6 +8418,7 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
       return consumeRollupEvent;
 
     case WM_ACTIVATEAPP:
+      allowAnimations = nsIRollupListener::AllowAnimations::No;
       break;
 
     case WM_ACTIVATE:
@@ -8478,6 +8482,7 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
           return false;
         }
       }
+      allowAnimations = nsIRollupListener::AllowAnimations::No;
       break;
 
     case MOZ_WM_REACTIVATE:
@@ -8542,6 +8547,7 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
     case WM_SHOWWINDOW:
       // If the window is being minimized, close popups.
       if (aLParam == SW_PARENTCLOSING) {
+        allowAnimations = nsIRollupListener::AllowAnimations::No;
         break;
       }
       return false;
@@ -8550,6 +8556,7 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
       // If focus moves to other window created in different process/thread,
       // e.g., a plugin window, popups should be rolled up.
       if (IsDifferentThreadWindow(reinterpret_cast<HWND>(aWParam))) {
+        allowAnimations = nsIRollupListener::AllowAnimations::No;
         break;
       }
       return false;
@@ -8568,6 +8575,8 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
   nsIRollupListener::RollupOptions rollupOptions{
       popupsToRollup,
       nsIRollupListener::FlushViews::Yes,
+      /* mPoint = */ nullptr,
+      allowAnimations,
   };
 
   if (nativeMessage == WM_TOUCH || nativeMessage == WM_LBUTTONDOWN ||
