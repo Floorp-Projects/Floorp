@@ -174,7 +174,8 @@ class IDBEncryptionPBM(MarionetteTestCase):
         """
         if not os.path.exists(self.getIDBStoragePath()):
             return False
-        return self.findDirObj(self.idbStoragePath, ".sqlite-wal", True) is None
+        walPath = self.findDirObj(self.idbStoragePath, ".sqlite-wal", True)
+        return walPath is None or os.stat(walPath).st_size == 0
 
     def ensureInvariantHolds(self, op):
         maxWaitTime = 60

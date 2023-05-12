@@ -334,8 +334,6 @@ const uint32_t kPreparedDatastoreTimeoutMs = 20000;
 // Shadow database Write Ahead Log's maximum size is 512KB
 const uint32_t kShadowMaxWALSize = 512 * 1024;
 
-const uint32_t kShadowJournalSizeLimit = kShadowMaxWALSize * 3;
-
 bool IsOnGlobalConnectionThread();
 
 void AssertIsOnGlobalConnectionThread();
@@ -813,15 +811,10 @@ nsresult SetShadowJournalMode(mozIStorageConnection* aConnection) {
 
     MOZ_ASSERT(pageSize >= 512 && pageSize <= 65536);
 
+    // Note there is a default journal_size_limit set by mozStorage.
     QM_TRY(MOZ_TO_RESULT(aConnection->ExecuteSimpleSQL(
         "PRAGMA wal_autocheckpoint = "_ns +
         IntToCString(static_cast<int32_t>(kShadowMaxWALSize / pageSize)))));
-
-    // Set the maximum WAL log size to reduce footprint on mobile (large empty
-    // WAL files will be truncated)
-    QM_TRY(MOZ_TO_RESULT(
-        aConnection->ExecuteSimpleSQL("PRAGMA journal_size_limit = "_ns +
-                                      IntToCString(kShadowJournalSizeLimit))));
   } else {
     QM_TRY(MOZ_TO_RESULT(
         aConnection->ExecuteSimpleSQL(journalModeQueryStart + "truncate"_ns)));
