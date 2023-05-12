@@ -4402,7 +4402,8 @@ static bool ReadGeckoInterpProfilingStack(JSContext* cx, unsigned argc,
     }
 
     // Skip fake JS frame pushed for js::RunScript by GeckoProfilerEntryMarker.
-    if (!frame.dynamicString()) {
+    const char* dynamicStr = frame.dynamicString();
+    if (!dynamicStr) {
       continue;
     }
 
@@ -4412,7 +4413,8 @@ static bool ReadGeckoInterpProfilingStack(JSContext* cx, unsigned argc,
     }
 
     Rooted<JSString*> dynamicString(
-        cx, JS_NewStringCopyZ(cx, frame.dynamicString()));
+        cx, JS_NewStringCopyUTF8Z(
+                cx, JS::ConstUTF8CharsZ(dynamicStr, strlen(dynamicStr))));
     if (!dynamicString) {
       return false;
     }
