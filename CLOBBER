@@ -23,4 +23,4 @@
 # don't change CLOBBER for WebIDL changes any more.
 
 
-Modified build files in third_party/libwebrtc - Bug 1828517 (MOZ) - add i410_buffer.cc to non-unified sources
+Modified build files in third_party/libwebrtc - Bug 1828517 - Vendor libwebrtc from e6b3f48a06
