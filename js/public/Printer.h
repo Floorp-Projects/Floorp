@@ -210,7 +210,8 @@ extern JS_PUBLIC_API JS::UniqueChars QuoteString(JSContext* cx, JSString* str,
 
 // Appends the quoted string to the given Sprinter. Follows the same semantics
 // as QuoteString from above.
-extern JS_PUBLIC_API bool QuoteString(Sprinter* sp, JSString* str, char quote = '\0');
+extern JS_PUBLIC_API bool QuoteString(Sprinter* sp, JSString* str,
+                                      char quote = '\0');
 
 // Appends the quoted string to the given Sprinter. Follows the same
 // Appends the JSON quoted string to the given Sprinter.
@@ -220,7 +221,8 @@ extern JS_PUBLIC_API bool JSONQuoteString(Sprinter* sp, JSString* str);
 enum class QuoteTarget { String, JSON };
 
 template <QuoteTarget target, typename CharT>
-bool JS_PUBLIC_API QuoteString(Sprinter* sp, const mozilla::Range<const CharT> chars,
+bool JS_PUBLIC_API QuoteString(Sprinter* sp,
+                               const mozilla::Range<const CharT> chars,
                                char quote = '\0');
 
 }  // namespace js
