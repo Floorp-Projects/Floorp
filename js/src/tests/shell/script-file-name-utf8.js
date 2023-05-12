@@ -165,6 +165,20 @@ function getLcovInfoScriptName(fileName) {
   return scriptFiles[0].substring(3);
 }
 
+// Return the file name from the error during module import.
+function moduleResolutionError(fileName) {
+  const a = parseModule(`import { x } from "b";`, fileName);
+  const ma = registerModule("a", a);
+  const b = parseModule(`export var y = 10;`);
+  const mb = registerModule("b", b);
+
+  try {
+    moduleLink(ma);
+  } catch (e) {
+    return e.fileName;
+  }
+}
+
 // Return the file name from the profiler stack.
 function geckoInterpProfilingStack(fileName) {
   enableGeckoProfilingWithSlowAssertions();
@@ -191,6 +205,7 @@ const testFunctions = [
   fromErrorStackAsmJS,
   fromErrorStackStreamingWasm,
   getBacktraceScriptName,
+  moduleResolutionError,
 ];
 
 if (isLcovEnabled()) {
