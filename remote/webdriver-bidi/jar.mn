@@ -12,6 +12,7 @@ remote.jar:
 
   # WebDriver BiDi modules
   content/webdriver-bidi/modules/ModuleRegistry.sys.mjs (modules/ModuleRegistry.sys.mjs)
+  content/webdriver-bidi/modules/RootBiDiModule.sys.mjs (modules/RootBiDiModule.sys.mjs)
   content/webdriver-bidi/modules/WindowGlobalBiDiModule.sys.mjs (modules/WindowGlobalBiDiModule.sys.mjs)
 
   # WebDriver BiDi root modules

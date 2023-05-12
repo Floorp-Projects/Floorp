@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys.mjs";
+import { RootBiDiModule } from "chrome://remote/content/webdriver-bidi/modules/RootBiDiModule.sys.mjs";
 
 const lazy = {};
 
@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
 });
 
-class SessionModule extends Module {
+class SessionModule extends RootBiDiModule {
   #browsingContextIdEventMap;
   #globalEventSet;
 
