@@ -375,10 +375,17 @@ def bundle_schema(schema_def: SchemaDefinition):
         # - An object that contains id, template, and content fields
         # - An object that contains none of the above fields (empty message)
         # - An array of messages like the above
-        "oneOf": [
-            {"$ref": f"{schema_def.schema_id}#/$defs/TemplatedMessage"},
-            {"$ref": f"{schema_def.schema_id}#/$defs/MultiMessage"},
-        ],
+        "if": {
+            "type": "object",
+            "properties": {"template": {"const": "multi"}},
+            "required": ["template"],
+        },
+        "then": {
+            "$ref": f"{schema_def.schema_id}#/$defs/MultiMessage",
+        },
+        "else": {
+            "$ref": f"{schema_def.schema_id}#/$defs/TemplatedMessage",
+        },
         "$defs": defs,
     }
 
@@ -396,6 +403,7 @@ def check_diff(schema_def: SchemaDefinition, schema: Dict[str, Any]):
         json.dump(schema, sys.stdout, indent=2)
         print("\n\nOn Disk schema:")
         json.dump(on_disk, sys.stdout, indent=2)
+        print("\n\n")
 
         raise ValueError("Schemas do not match!")
 
