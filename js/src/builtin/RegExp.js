@@ -1239,35 +1239,6 @@ function RegExp_prototype_Exec(string) {
   return RegExpBuiltinExec(R, S, false);
 }
 
-// ES6 21.2.5.2.1.
-function RegExpExec(R, S, forTest) {
-  // Steps 1-2 (skipped).
-
-  // Steps 3-4.
-  var exec = R.exec;
-
-  // Step 5.
-  // If exec is the original RegExp.prototype.exec, use the same, faster,
-  // path as for the case where exec isn't callable.
-  if (exec === RegExp_prototype_Exec || !IsCallable(exec)) {
-    // ES6 21.2.5.2 steps 1-2, 4-5 (skipped) for optimized case.
-
-    // Steps 6-7 or ES6 21.2.5.2 steps 3, 6 for optimized case.
-    return RegExpBuiltinExec(R, S, forTest);
-  }
-
-  // Steps 5.a-b.
-  var result = callContentFunction(exec, R, S);
-
-  // Step 5.c.
-  if (result !== null && !IsObject(result)) {
-    ThrowTypeError(JSMSG_EXEC_NOT_OBJORNULL);
-  }
-
-  // Step 5.d.
-  return forTest ? result !== null : result;
-}
-
 function UnwrapAndCallRegExpBuiltinExec(R, S, forTest) {
   return callFunction(
     CallRegExpMethodIfWrapped,

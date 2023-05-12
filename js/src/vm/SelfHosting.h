@@ -218,10 +218,11 @@ class ScriptSourceObject;
 ScriptSourceObject* SelfHostingScriptSourceObject(JSContext* cx);
 
 /*
- * Check whether the given JSFunction is a self-hosted function whose
+ * Check whether the given JSFunction or Value is a self-hosted function whose
  * self-hosted name is the given name.
  */
 bool IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name);
+bool IsSelfHostedFunctionWithName(const Value& v, JSAtom* name);
 
 /*
  * Returns the name of the cloned function's binding in the self-hosted global.
