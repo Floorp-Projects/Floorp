@@ -1022,6 +1022,8 @@ pub struct CompositorCapabilities {
     pub max_update_rects: usize,
     /// Whether or not this compositor will create surfaces for backdrops.
     pub supports_surface_for_backdrop: bool,
+    /// Whether external compositor surface supports negative scaling.
+    pub supports_external_compositor_surface_negative_scaling: bool,
 }
 
 impl Default for CompositorCapabilities {
@@ -1037,6 +1039,7 @@ impl Default for CompositorCapabilities {
             // the native compositor should override this to be 0.
             max_update_rects: 1,
             supports_surface_for_backdrop: false,
+            supports_external_compositor_surface_negative_scaling: true,
         }
     }
 }
