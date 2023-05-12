@@ -139,7 +139,6 @@ class MigrationUtils {
     BOOKMARKS: 0x0020,
     OTHERDATA: 0x0040,
     SESSION: 0x0080,
-    PAYMENT_METHODS: 0x0100,
   });
 
   /**
@@ -768,7 +767,6 @@ class MigrationUtils {
     bookmarks: 0,
     logins: 0,
     history: 0,
-    cards: 0,
   };
 
   getImportedCount(type) {
@@ -894,18 +892,6 @@ class MigrationUtils {
         null,
         Services.scriptSecurityManager.getSystemPrincipal()
       );
-    }
-  }
-
-  async insertCreditCardsWrapper(cards) {
-    this._importQuantities.cards += cards.length;
-    let { formAutofillStorage } = ChromeUtils.import(
-      "resource://autofill/FormAutofillStorage.jsm"
-    );
-
-    await formAutofillStorage.initialize();
-    for (let card of cards) {
-      await formAutofillStorage.creditCards.add(card);
     }
   }
 

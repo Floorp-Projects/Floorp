@@ -163,8 +163,3 @@ browser-data-session-checkbox =
   .label = Windows and Tabs
 browser-data-session-label =
   .value = Windows and Tabs
-
-browser-data-payment-methods-checkbox =
-  .label = Payment methods
-browser-data-payment-methods-label =
-  .value = Payment methods
