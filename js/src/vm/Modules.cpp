@@ -885,12 +885,7 @@ static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
   }
 
   RootedString filename(cx);
-  if (const char* chars = module->script()->filename()) {
-    filename =
-        JS_NewStringCopyUTF8Z(cx, JS::ConstUTF8CharsZ(chars, strlen(chars)));
-  } else {
-    filename = cx->names().empty;
-  }
+  filename = JS_NewStringCopyZ(cx, module->script()->filename());
   if (!filename) {
     return;
   }

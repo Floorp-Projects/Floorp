@@ -459,7 +459,7 @@ JSObject* ModuleLoader::loadAndParse(JSContext* cx, HandleString pathArg) {
     return module;
   }
 
-  UniqueChars filename = JS_EncodeStringToUTF8(cx, path);
+  UniqueChars filename = JS_EncodeStringToLatin1(cx, path);
   if (!filename) {
     return nullptr;
   }

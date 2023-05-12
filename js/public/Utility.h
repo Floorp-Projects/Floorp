@@ -632,10 +632,9 @@ struct FreePolicy {
   void operator()(const void* ptr) { js_free(const_cast<void*>(ptr)); }
 };
 
-using UniqueChars = mozilla::UniquePtr<char[], JS::FreePolicy>;
-using UniqueTwoByteChars = mozilla::UniquePtr<char16_t[], JS::FreePolicy>;
-using UniqueLatin1Chars = mozilla::UniquePtr<JS::Latin1Char[], JS::FreePolicy>;
-using UniqueWideChars = mozilla::UniquePtr<wchar_t[], JS::FreePolicy>;
+typedef mozilla::UniquePtr<char[], JS::FreePolicy> UniqueChars;
+typedef mozilla::UniquePtr<char16_t[], JS::FreePolicy> UniqueTwoByteChars;
+typedef mozilla::UniquePtr<JS::Latin1Char[], JS::FreePolicy> UniqueLatin1Chars;
 
 }  // namespace JS
 

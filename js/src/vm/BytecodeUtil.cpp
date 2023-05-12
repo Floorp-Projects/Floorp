@@ -2735,17 +2735,11 @@ JSString* JS::GetPCCountScriptSummary(JSContext* cx, size_t index) {
 
   json.beginObject();
 
-  Rooted<JSString*> filenameStr(cx);
-  if (const char* filename = script->filename()) {
-    filenameStr =
-        JS_NewStringCopyUTF8N(cx, JS::UTF8Chars(filename, strlen(filename)));
-  } else {
-    filenameStr = JS_GetEmptyString(cx);
-  }
-  if (!filenameStr) {
+  RootedString filename(cx, NewStringCopyZ<CanGC>(cx, script->filename()));
+  if (!filename) {
     return nullptr;
   }
-  if (!JSONStringProperty(sp, json, "file", filenameStr)) {
+  if (!JSONStringProperty(sp, json, "file", filename)) {
     return nullptr;
   }
   json.property("line", script->lineno());
