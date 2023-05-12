@@ -10,6 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   capture: "chrome://remote/content/shared/Capture.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  session: "chrome://remote/content/shared/webdriver/Session.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
@@ -18,7 +19,6 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
 
 // Because Marionette supports a single session only we store its id
 // globally so that the parent actor can access it.
-// eslint-disable-next-line no-unused-vars
 let webDriverSessionId = null;
 
 export class MarionetteCommandsParent extends JSWindowActorParent {
@@ -30,6 +30,28 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
     return new Promise(resolve => {
       this._resolveDialogOpened = resolve;
     });
+  }
+
+  async receiveMessage(msg) {
+    const { name, data } = msg;
+
+    switch (name) {
+      case "MarionetteCommandsChild:addNodeToSeenNodes":
+        return lazy.session.addNodeToSeenNodes(
+          webDriverSessionId,
+          data.browsingContext,
+          data.nodeId
+        );
+
+      case "MarionetteCommandsChild:isNodeReferenceKnown":
+        return lazy.session.isNodeReferenceKnown(
+          webDriverSessionId,
+          data.browsingContext,
+          data.nodeId
+        );
+    }
+
+    return null;
   }
 
   async sendQuery(name, data) {

@@ -253,6 +253,25 @@ export var TabManager = {
     return browsingContext.id.toString();
   },
 
+  /**
+   * Get the navigable for the given browsing context.
+   *
+   * Because Gecko doesn't support the Navigable concept in content
+   * scope the content browser could be used to uniquely identify
+   * top-level browsing contexts.
+   *
+   * @param {BrowsingContext} browsingContext
+   *
+   * @returns {BrowsingContext|XULBrowser} The navigable
+   */
+  getNavigableForBrowsingContext(browsingContext) {
+    if (browsingContext.isContent && browsingContext.parent === null) {
+      return browsingContext.embedderElement;
+    }
+
+    return browsingContext;
+  },
+
   getTabCount() {
     let count = 0;
     for (const win of this.windows) {
