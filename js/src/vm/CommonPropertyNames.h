@@ -425,6 +425,8 @@
   MACRO_(RegExpFlagsGetter, RegExpFlagsGetter, "$RegExpFlagsGetter")           \
   MACRO_(RegExpStringIterator, RegExpStringIterator, "RegExp String Iterator") \
   MACRO_(RegExpToString, RegExpToString, "$RegExpToString")                    \
+  MACRO_(RegExp_prototype_Exec, RegExp_prototype_Exec,                         \
+         "RegExp_prototype_Exec")                                              \
   MACRO_(region, region, "region")                                             \
   MACRO_(register, register_, "register")                                      \
   MACRO_(Reify, Reify, "Reify")                                                \

@@ -20,6 +20,7 @@
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
+#include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
@@ -1870,6 +1871,67 @@ bool js::RegExpBuiltinExec(JSContext* cx, Handle<RegExpObject*> regexp,
 
   return RegExpBuiltinExecMatchRaw<false>(cx, regexp, string,
                                           int32_t(lastIndex), nullptr, rval);
+}
+
+// ES2024 draft rev d4927f9bc3706484c75dfef4bbcf5ba826d2632e
+//
+// 22.2.7.1 RegExpExec ( R, S )
+// https://tc39.es/ecma262/#sec-regexpexec
+//
+// If `forTest` is true, this is called from `RegExp.prototype.test` and we can
+// avoid allocating a result object.
+bool js::RegExpExec(JSContext* cx, Handle<JSObject*> regexp,
+                    Handle<JSString*> string, bool forTest,
+                    MutableHandle<Value> rval) {
+  // Step 1.
+  Rooted<Value> exec(cx);
+  Rooted<PropertyKey> execKey(cx, PropertyKey::NonIntAtom(cx->names().exec));
+  if (!GetProperty(cx, regexp, regexp, execKey, &exec)) {
+    return false;
+  }
+
+  // Step 2.
+  // If exec is the original RegExp.prototype.exec, use the same, faster,
+  // path as for the case where exec isn't callable.
+  PropertyName* execName = cx->names().RegExp_prototype_Exec;
+  if (MOZ_LIKELY(IsSelfHostedFunctionWithName(exec, execName)) ||
+      !IsCallable(exec)) {
+    // Steps 3-4.
+    if (MOZ_LIKELY(regexp->is<RegExpObject>())) {
+      return RegExpBuiltinExec(cx, regexp.as<RegExpObject>(), string, forTest,
+                               rval);
+    }
+    // This is either a wrapped RegExpObject or we have to throw an exception.
+    // Call UnwrapAndCallRegExpBuiltinExec to handle this.
+    FixedInvokeArgs<3> args(cx);
+    args[0].setObject(*regexp);
+    args[1].setString(string);
+    args[2].setBoolean(forTest);
+    return CallSelfHostedFunction(cx,
+                                  cx->names().UnwrapAndCallRegExpBuiltinExec,
+                                  UndefinedHandleValue, args, rval);
+  }
+
+  // Step 2.a.
+  Rooted<Value> thisv(cx, ObjectValue(*regexp));
+  FixedInvokeArgs<1> args(cx);
+  args[0].setString(string);
+  if (!js::Call(cx, exec, thisv, args, rval, CallReason::CallContent)) {
+    return false;
+  }
+
+  // Step 2.b.
+  if (!rval.isObjectOrNull()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_EXEC_NOT_OBJORNULL);
+    return false;
+  }
+
+  // Step 2.c.
+  if (forTest) {
+    rval.setBoolean(rval.isObject());
+  }
+  return true;
 }
 
 /* ES 2021 21.1.3.17.1 */

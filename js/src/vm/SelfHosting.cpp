@@ -1314,30 +1314,27 @@ static bool intrinsic_RegExpBuiltinExec(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 3);
   MOZ_ASSERT(args[0].isObject());
+  MOZ_ASSERT(args[0].toObject().is<RegExpObject>());
+  MOZ_ASSERT(args[1].isString());
+  MOZ_ASSERT(args[2].isBoolean());
+
+  Rooted<RegExpObject*> obj(cx, &args[0].toObject().as<RegExpObject>());
+  Rooted<JSString*> string(cx, args[1].toString());
+  bool forTest = args[2].toBoolean();
+  return RegExpBuiltinExec(cx, obj, string, forTest, args.rval());
+}
+
+static bool intrinsic_RegExpExec(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 3);
+  MOZ_ASSERT(args[0].isObject());
   MOZ_ASSERT(args[1].isString());
   MOZ_ASSERT(args[2].isBoolean());
 
   Rooted<JSObject*> obj(cx, &args[0].toObject());
-
-  // 21.2.5.2.1 Runtime Semantics: RegExpExec, step 5.
-  // This check is here for RegExpTest.  RegExp_prototype_Exec does the same
-  // thing already.
-  if (MOZ_LIKELY(obj->is<RegExpObject>())) {
-    Rooted<JSString*> string(cx, args[1].toString());
-    bool forTest = args[2].toBoolean();
-
-    return RegExpBuiltinExec(cx, obj.as<RegExpObject>(), string, forTest,
-                             args.rval());
-  }
-
-  // This is either a wrapped RegExpObject or we have to throw an exception.
-  // Call UnwrapAndCallRegExpBuiltinExec to handle this.
-  FixedInvokeArgs<3> args2(cx);
-  args2[0].set(args[0]);
-  args2[1].set(args[1]);
-  args2[2].set(args[2]);
-  return CallSelfHostedFunction(cx, cx->names().UnwrapAndCallRegExpBuiltinExec,
-                                UndefinedHandleValue, args2, args.rval());
+  Rooted<JSString*> string(cx, args[1].toString());
+  bool forTest = args[2].toBoolean();
+  return RegExpExec(cx, obj, string, forTest, args.rval());
 }
 
 static bool intrinsic_RegExpCreate(JSContext* cx, unsigned argc, Value* vp) {
@@ -2001,6 +1998,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("RegExpBuiltinExec", intrinsic_RegExpBuiltinExec, 3, 0),
     JS_FN("RegExpConstructRaw", regexp_construct_raw_flags, 2, 0),
     JS_FN("RegExpCreate", intrinsic_RegExpCreate, 2, 0),
+    JS_FN("RegExpExec", intrinsic_RegExpExec, 3, 0),
     JS_FN("RegExpGetSubstitution", intrinsic_RegExpGetSubstitution, 5, 0),
     JS_INLINABLE_FN("RegExpInstanceOptimizable", RegExpInstanceOptimizable, 1,
                     0, RegExpInstanceOptimizable),
@@ -2760,6 +2758,14 @@ void JSRuntime::assertSelfHostedFunctionHasCanonicalName(
 bool js::IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name) {
   return fun->isSelfHostedBuiltin() && fun->isExtended() &&
          GetClonedSelfHostedFunctionName(fun) == name;
+}
+
+bool js::IsSelfHostedFunctionWithName(const Value& v, JSAtom* name) {
+  if (!v.isObject() || !v.toObject().is<JSFunction>()) {
+    return false;
+  }
+  JSFunction* fun = &v.toObject().as<JSFunction>();
+  return IsSelfHostedFunctionWithName(fun, name);
 }
 
 static_assert(
