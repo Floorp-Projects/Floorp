@@ -8,6 +8,7 @@ from unittest import mock
 import mozunit
 import pytest
 from tryselect.selectors.perfselector.perfcomparators import (
+    BadComparatorArgs,
     BenchmarkComparator,
     ComparatorNotFound,
     get_comparator,
@@ -104,6 +105,20 @@ def test_benchmark_comparator_no_pr_links():
         extra_args = []
         comparator.setup_new_revision(extra_args)
         _verify_extra_args(extra_args)
+
+
+def test_benchmark_comparator_bad_args():
+    comparator = BenchmarkComparator(
+        None,
+        None,
+        None,
+        [
+            "base-bad-args=val",
+        ],
+    )
+
+    with pytest.raises(BadComparatorArgs):
+        comparator.setup_base_revision([])
 
 
 def test_get_comparator_bad_name():
