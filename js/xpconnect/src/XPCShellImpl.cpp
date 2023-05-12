@@ -379,24 +379,10 @@ static bool Load(JSContext* cx, unsigned argc, Value* vp) {
     if (!filename) {
       return false;
     }
-    FILE* file = fopen(filename.get(), "r");
-    if (!file) {
-      filename = JS_EncodeStringToUTF8(cx, str);
-      if (!filename) {
-        return false;
-      }
-      JS_ReportErrorUTF8(cx, "cannot open file '%s' for reading",
-                         filename.get());
-      return false;
-    }
     JS::CompileOptions options(cx);
-    options.setFileAndLine(filename.get(), 1)
-        .setIsRunOnce(true)
-        .setSkipFilenameValidation(true);
-    JS::Rooted<JSScript*> script(cx);
-    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
-    script = JS::CompileUtf8File(cx, options, file);
-    fclose(file);
+    options.setIsRunOnce(true).setSkipFilenameValidation(true);
+    JS::Rooted<JSScript*> script(
+        cx, JS::CompileUtf8Path(cx, options, filename.get()));
     if (!script) {
       return false;
     }
