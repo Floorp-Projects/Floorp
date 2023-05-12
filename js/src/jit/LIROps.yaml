@@ -1491,15 +1491,6 @@
   call_instruction: true
   mir_op: true
 
-- name: RegExpTester
-  result_type: WordSized
-  operands:
-    regexp: WordSized
-    string: WordSized
-    lastIndex: WordSized
-  call_instruction: true
-  mir_op: true
-
 - name: RegExpExecMatch
   result_type: BoxedValue
   operands:
