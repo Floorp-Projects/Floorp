@@ -98,6 +98,9 @@ $letter-fallback-color: $white;
 }
 
 // container for drop zone
+.floorp-backdrop-blur-enable .top-site-outer{
+  backdrop-filter: blur(12px);
+}
 .top-site-outer {
   width: 120px;
   padding: 20px $half-base-gutter 4px;
@@ -107,7 +110,6 @@ $letter-fallback-color: $white;
 
   background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
   border: 1px solid rgba(170, 170, 170, 0.6);
-  backdrop-filter: blur(12px);
   z-index: 1;
 
   // container for context menu

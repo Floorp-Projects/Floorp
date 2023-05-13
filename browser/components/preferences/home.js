@@ -31,6 +31,7 @@ Preferences.addAll([
   { id: "pref.browser.homepage.disable_button.restore_default", type: "bool" },
   { id: "browser.newtabpage.enabled", type: "bool" },
   { id: "browser.newtabpage.activity-stream.floorp.background.type", type: "int" },
+  { id: "browser.newtabpage.activity-stream.floorp.newtab.backdrop.blur.disable", type: "bool" },
 ]);
 
 const HOMEPAGE_OVERRIDE_KEY = "homepage_override";

@@ -666,6 +666,10 @@ main.has-snippet {
   }
 }
 
+.floorp-backdrop-blur-enable .top-site-outer {
+  backdrop-filter: blur(12px);
+}
+
 .top-site-outer {
   width: 120px;
   padding: 20px 16px 4px;
@@ -673,7 +677,6 @@ main.has-snippet {
   display: inline-block;
   background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
   border: 1px solid rgba(170, 170, 170, 0.6);
-  backdrop-filter: blur(12px);
   z-index: 1;
 }
 .top-site-outer .top-site-inner {
@@ -1690,13 +1693,16 @@ main.has-snippet {
     z-index: 1000;
   }
 }
+.floorp-backdrop-blur-enable .personalize-button {
+  backdrop-filter: blur(12px);
+}
+
 .personalize-button {
   border: 0;
   border-radius: 4px;
   padding: 15px;
   background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
   border: 1px solid rgba(170, 170, 170, 0.6);
-  backdrop-filter: blur(12px);
 }
 .personalize-button:hover {
   background-color: var(--newtab-element-hover-color);
