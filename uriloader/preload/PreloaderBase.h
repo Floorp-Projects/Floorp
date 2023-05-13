@@ -45,9 +45,10 @@ class PreloaderBase : public SupportsWeakPtr, public nsISupports {
   // preload service to provide coalescing, and access to the preload when it
   // should be used for an actual load.
   void NotifyOpen(const PreloadHashKey& aKey, dom::Document* aDocument,
-                  bool aIsPreload);
+                  bool aIsPreload, bool aIsModule = false);
   void NotifyOpen(const PreloadHashKey& aKey, nsIChannel* aChannel,
-                  dom::Document* aDocument, bool aIsPreload);
+                  dom::Document* aDocument, bool aIsPreload,
+                  bool aIsModule = false);
 
   // Called when the load is about to be started all over again and thus this
   // PreloaderBase will be registered again with the same key.  This method
