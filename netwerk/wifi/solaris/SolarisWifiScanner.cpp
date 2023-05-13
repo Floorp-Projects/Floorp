@@ -9,6 +9,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 
+#include "SolarisWifiScanner.h"
+
 #include <glib.h>
 
 #define DLADM_STRSIZE 256
@@ -53,7 +55,8 @@ static nsWifiAccessPoint* do_parse_str(char* bssid_str, char* essid_str,
   return ap;
 }
 
-static void do_dladm(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
+nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
+    nsTArray<RefPtr<nsIWifiAccessPoint>>& accessPoints) {
   GError* err = nullptr;
   char* sout = nullptr;
   char* serr = nullptr;
@@ -99,7 +102,7 @@ static void do_dladm(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
         if (section == DLADM_SECTIONS - 1) {
           ap = do_parse_str(wlan[0], wlan[1], wlan[2]);
           if (ap) {
-            accessPoints.AppendObject(ap);
+            accessPoints.AppendElement(ap);
           }
         }
         section = 0;
@@ -115,30 +118,4 @@ static void do_dladm(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
 
   g_free(sout);
   g_free(serr);
-}
-
-nsresult nsWifiMonitor::DoScan() {
-  // Regularly get the access point data.
-
-  nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
-  nsCOMArray<nsWifiAccessPoint> accessPoints;
-
-  while (mKeepGoing) {
-    accessPoints.Clear();
-    do_dladm(accessPoints);
-
-    bool accessPointsChanged =
-        !AccessPointsEqual(accessPoints, lastAccessPoints);
-    ReplaceArray(lastAccessPoints, accessPoints);
-
-    nsresult rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    LOG(("waiting on monitor\n"));
-
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mon.Wait(PR_SecondsToInterval(kDefaultWifiScanInterval));
-  }
-
-  return NS_OK;
 }

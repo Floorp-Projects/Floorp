@@ -3,12 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsWifiAccessPoint.h"
-#include "win_wifiScanner.h"
-
-// Moz headers (alphabetical)
-#include "win_wlanLibrary.h"
+#include "WinWifiScanner.h"
 
 #define DOT11_BSS_TYPE_UNUSED static_cast<DOT11_BSS_TYPE>(0)
+
+namespace mozilla {
 
 class InterfaceScanCallbackData {
  public:
@@ -57,7 +56,7 @@ static void WINAPI OnScanComplete(PWLAN_NOTIFICATION_DATA data, PVOID context) {
   cbData->OnInterfaceScanComplete();
 }
 
-WinWifiScanner::WinWifiScanner() {
+WifiScannerImpl::WifiScannerImpl() {
   // NOTE: We assume that, if we were unable to load the WLAN library when
   // we initially tried, we will not be able to load it in the future.
   // Technically, on Windows XP SP2, a user could install the redistributable
@@ -70,14 +69,14 @@ WinWifiScanner::WinWifiScanner() {
   }
 }
 
-WinWifiScanner::~WinWifiScanner() {}
+WifiScannerImpl::~WifiScannerImpl() {}
 
-nsresult WinWifiScanner::GetAccessPointsFromWLAN(
-    nsCOMArray<nsWifiAccessPoint>& accessPoints) {
+nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
+    nsTArray<RefPtr<nsIWifiAccessPoint>>& accessPoints) {
   accessPoints.Clear();
 
   // NOTE: We do not try to load the WLAN library if we previously failed
-  // to load it. See the note in WinWifiScanner constructor
+  // to load it. See the note in WifiScannerImpl constructor
   if (!mWlanLibrary) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -161,9 +160,11 @@ nsresult WinWifiScanner::GetAccessPointsFromWLAN(
       ap->setSSID(reinterpret_cast<char const*>(bss_entry.dot11Ssid.ucSSID),
                   bss_entry.dot11Ssid.uSSIDLength);
 
-      accessPoints.AppendObject(ap);
+      accessPoints.AppendElement(ap);
     }
   }
 
   return NS_OK;
 }
+
+}  // namespace mozilla
