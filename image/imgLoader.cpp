@@ -121,10 +121,6 @@ class imgMemoryReporter final : public nsIMemoryReporter {
     nsTArray<ImageMemoryCounter> uncached;
 
     for (uint32_t i = 0; i < mKnownLoaders.Length(); i++) {
-      for (imgCacheEntry* entry : mKnownLoaders[i]->mChromeCache.Values()) {
-        RefPtr<imgRequest> req = entry->GetRequest();
-        RecordCounterForRequest(req, &chrome, !entry->HasNoProxies());
-      }
       for (imgCacheEntry* entry : mKnownLoaders[i]->mCache.Values()) {
         RefPtr<imgRequest> req = entry->GetRequest();
         RecordCounterForRequest(req, &content, !entry->HasNoProxies());
@@ -1019,7 +1015,7 @@ void imgCacheEntry::UpdateCache(int32_t diff /* = 0 */) {
   // Don't update the cache if we've been removed from it or it doesn't care
   // about our size or usage.
   if (!Evicted() && HasNoProxies()) {
-    mLoader->CacheEntriesChanged(mRequest->IsChrome(), diff);
+    mLoader->CacheEntriesChanged(diff);
   }
 }
 
@@ -1255,7 +1251,6 @@ imgLoader::imgLoader()
 }
 
 imgLoader::~imgLoader() {
-  ClearChromeImageCache();
   ClearImageCache();
   {
     // If there are any of our imgRequest's left they are in the uncached
@@ -1275,9 +1270,8 @@ void imgLoader::VerifyCacheSizes() {
     return;
   }
 
-  uint32_t cachesize = mCache.Count() + mChromeCache.Count();
-  uint32_t queuesize =
-      mCacheQueue.GetNumElements() + mChromeCacheQueue.GetNumElements();
+  uint32_t cachesize = mCache.Count();
+  uint32_t queuesize = mCacheQueue.GetNumElements();
   uint32_t trackersize = 0;
   for (nsExpirationTracker<imgCacheEntry, 3>::Iterator it(mCacheTracker.get());
        it.Next();) {
@@ -1286,22 +1280,6 @@ void imgLoader::VerifyCacheSizes() {
   MOZ_ASSERT(queuesize == trackersize, "Queue and tracker sizes out of sync!");
   MOZ_ASSERT(queuesize <= cachesize, "Queue has more elements than cache!");
 #endif
-}
-
-imgLoader::imgCacheTable& imgLoader::GetCache(bool aForChrome) {
-  return aForChrome ? mChromeCache : mCache;
-}
-
-imgLoader::imgCacheTable& imgLoader::GetCache(const ImageCacheKey& aKey) {
-  return GetCache(aKey.IsChrome());
-}
-
-imgCacheQueue& imgLoader::GetCacheQueue(bool aForChrome) {
-  return aForChrome ? mChromeCacheQueue : mCacheQueue;
-}
-
-imgCacheQueue& imgLoader::GetCacheQueue(const ImageCacheKey& aKey) {
-  return GetCacheQueue(aKey.IsChrome());
 }
 
 void imgLoader::GlobalInit() {
@@ -1353,14 +1331,13 @@ NS_IMETHODIMP
 imgLoader::Observe(nsISupports* aSubject, const char* aTopic,
                    const char16_t* aData) {
   if (strcmp(aTopic, "memory-pressure") == 0) {
-    MinimizeCaches();
+    MinimizeCache();
   } else if (strcmp(aTopic, "chrome-flush-caches") == 0) {
-    MinimizeCaches();
-    ClearChromeImageCache();
+    MinimizeCache();
+    ClearImageCache({ClearOption::ChromeOnly});
   } else if (strcmp(aTopic, "last-pb-context-exited") == 0) {
     if (mRespectPrivacy) {
       ClearImageCache();
-      ClearChromeImageCache();
     }
   } else if (strcmp(aTopic, "profile-before-change") == 0) {
     mCacheTracker = nullptr;
@@ -1384,11 +1361,11 @@ imgLoader::ClearCache(bool chrome) {
       Unused << cp->SendClearImageCache(privateLoader, chrome);
     }
   }
-
+  ClearOptions options;
   if (chrome) {
-    return ClearChromeImageCache();
+    options += ClearOption::ChromeOnly;
   }
-  return ClearImageCache();
+  return ClearImageCache(options);
 }
 
 NS_IMETHODIMP
@@ -1445,9 +1422,7 @@ nsresult imgLoader::RemoveEntriesInternal(nsIPrincipal* aPrincipal,
   AutoTArray<RefPtr<imgCacheEntry>, 128> entriesToBeRemoved;
 
   // For base domain we only clear the non-chrome cache.
-  imgCacheTable& cache =
-      GetCache(aPrincipal && aPrincipal->IsSystemPrincipal());
-  for (const auto& entry : cache) {
+  for (const auto& entry : mCache) {
     const auto& key = entry.GetKey();
 
     const bool shouldRemove = [&] {
@@ -1560,10 +1535,8 @@ imgLoader::FindEntryProperties(nsIURI* uri, Document* aDoc,
   }
 
   ImageCacheKey key(uri, attrs, aDoc);
-  imgCacheTable& cache = GetCache(key);
-
   RefPtr<imgCacheEntry> entry;
-  if (cache.Get(key, getter_AddRefs(entry)) && entry) {
+  if (mCache.Get(key, getter_AddRefs(entry)) && entry) {
     if (mCacheTracker && entry->HasNoProxies()) {
       mCacheTracker->MarkUsed(entry);
     }
@@ -1582,8 +1555,7 @@ NS_IMETHODIMP_(void)
 imgLoader::ClearCacheForControlledDocument(Document* aDoc) {
   MOZ_ASSERT(aDoc);
   AutoTArray<RefPtr<imgCacheEntry>, 128> entriesToBeRemoved;
-  imgCacheTable& cache = GetCache(false);
-  for (const auto& entry : cache) {
+  for (const auto& entry : mCache) {
     const auto& key = entry.GetKey();
     if (key.ControlledDocument() == aDoc) {
       entriesToBeRemoved.AppendElement(entry.GetData());
@@ -1605,27 +1577,14 @@ void imgLoader::Shutdown() {
   gPrivateBrowsingLoader = nullptr;
 }
 
-nsresult imgLoader::ClearChromeImageCache() {
-  return EvictEntries(mChromeCache);
-}
-
-nsresult imgLoader::ClearImageCache() { return EvictEntries(mCache); }
-
-void imgLoader::MinimizeCaches() {
-  EvictEntries(mCacheQueue);
-  EvictEntries(mChromeCacheQueue);
-}
-
 bool imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry) {
-  imgCacheTable& cache = GetCache(aKey);
-
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog, "imgLoader::PutIntoCache", "uri",
                              aKey.URI());
 
   // Check to see if this request already exists in the cache. If so, we'll
   // replace the old version.
   RefPtr<imgCacheEntry> tmpCacheEntry;
-  if (cache.Get(aKey, getter_AddRefs(tmpCacheEntry)) && tmpCacheEntry) {
+  if (mCache.Get(aKey, getter_AddRefs(tmpCacheEntry)) && tmpCacheEntry) {
     MOZ_LOG(
         gImgLog, LogLevel::Debug,
         ("[this=%p] imgLoader::PutIntoCache -- Element already in the cache",
@@ -1646,7 +1605,7 @@ bool imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry) {
              nullptr));
   }
 
-  cache.InsertOrUpdate(aKey, RefPtr{entry});
+  mCache.InsertOrUpdate(aKey, RefPtr{entry});
 
   // We can be called to resurrect an evicted entry.
   if (entry->Evicted()) {
@@ -1663,8 +1622,7 @@ bool imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry) {
     }
 
     if (NS_SUCCEEDED(addrv)) {
-      imgCacheQueue& queue = GetCacheQueue(aKey);
-      queue.Push(entry);
+      mCacheQueue.Push(entry);
     }
   }
 
@@ -1685,8 +1643,6 @@ bool imgLoader::SetHasNoProxies(imgRequest* aRequest, imgCacheEntry* aEntry) {
     return false;
   }
 
-  imgCacheQueue& queue = GetCacheQueue(aRequest->IsChrome());
-
   nsresult addrv = NS_OK;
 
   if (mCacheTracker) {
@@ -1694,11 +1650,8 @@ bool imgLoader::SetHasNoProxies(imgRequest* aRequest, imgCacheEntry* aEntry) {
   }
 
   if (NS_SUCCEEDED(addrv)) {
-    queue.Push(aEntry);
+    mCacheQueue.Push(aEntry);
   }
-
-  imgCacheTable& cache = GetCache(aRequest->IsChrome());
-  CheckCacheLimits(cache, queue);
 
   return true;
 }
@@ -1707,18 +1660,16 @@ bool imgLoader::SetHasProxies(imgRequest* aRequest) {
   VerifyCacheSizes();
 
   const ImageCacheKey& key = aRequest->CacheKey();
-  imgCacheTable& cache = GetCache(key);
 
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog, "imgLoader::SetHasProxies", "uri",
                              key.URI());
 
   RefPtr<imgCacheEntry> entry;
-  if (cache.Get(key, getter_AddRefs(entry)) && entry) {
+  if (mCache.Get(key, getter_AddRefs(entry)) && entry) {
     // Make sure the cache entry is for the right request
     RefPtr<imgRequest> entryRequest = entry->GetRequest();
     if (entryRequest == aRequest && entry->HasNoProxies()) {
-      imgCacheQueue& queue = GetCacheQueue(key);
-      queue.Remove(entry);
+      mCacheQueue.Remove(entry);
 
       if (mCacheTracker) {
         mCacheTracker->RemoveObject(entry);
@@ -1733,28 +1684,26 @@ bool imgLoader::SetHasProxies(imgRequest* aRequest) {
   return false;
 }
 
-void imgLoader::CacheEntriesChanged(bool aForChrome,
-                                    int32_t aSizeDiff /* = 0 */) {
-  imgCacheQueue& queue = GetCacheQueue(aForChrome);
+void imgLoader::CacheEntriesChanged(int32_t aSizeDiff /* = 0 */) {
   // We only need to dirty the queue if there is any sorting
   // taking place.  Empty or single-entry lists can't become
   // dirty.
-  if (queue.GetNumElements() > 1) {
-    queue.MarkDirty();
+  if (mCacheQueue.GetNumElements() > 1) {
+    mCacheQueue.MarkDirty();
   }
-  queue.UpdateSize(aSizeDiff);
+  mCacheQueue.UpdateSize(aSizeDiff);
 }
 
-void imgLoader::CheckCacheLimits(imgCacheTable& cache, imgCacheQueue& queue) {
-  if (queue.GetNumElements() == 0) {
-    NS_ASSERTION(queue.GetSize() == 0,
+void imgLoader::CheckCacheLimits() {
+  if (mCacheQueue.GetNumElements() == 0) {
+    NS_ASSERTION(mCacheQueue.GetSize() == 0,
                  "imgLoader::CheckCacheLimits -- incorrect cache size");
   }
 
   // Remove entries from the cache until we're back at our desired max size.
-  while (queue.GetSize() > sCacheMaxSize) {
+  while (mCacheQueue.GetSize() > sCacheMaxSize) {
     // Remove the first entry in the queue.
-    RefPtr<imgCacheEntry> entry(queue.Pop());
+    RefPtr<imgCacheEntry> entry(mCacheQueue.Pop());
 
     NS_ASSERTION(entry, "imgLoader::CheckCacheLimits -- NULL entry pointer");
 
@@ -2103,12 +2052,8 @@ bool imgLoader::ValidateEntry(
 bool imgLoader::RemoveFromCache(const ImageCacheKey& aKey) {
   LOG_STATIC_FUNC_WITH_PARAM(gImgLog, "imgLoader::RemoveFromCache", "uri",
                              aKey.URI());
-
-  imgCacheTable& cache = GetCache(aKey);
-  imgCacheQueue& queue = GetCacheQueue(aKey);
-
   RefPtr<imgCacheEntry> entry;
-  cache.Remove(aKey, getter_AddRefs(entry));
+  mCache.Remove(aKey, getter_AddRefs(entry));
   if (entry) {
     MOZ_ASSERT(!entry->Evicted(), "Evicting an already-evicted cache entry!");
 
@@ -2117,7 +2062,7 @@ bool imgLoader::RemoveFromCache(const ImageCacheKey& aKey) {
       if (mCacheTracker) {
         mCacheTracker->RemoveObject(entry);
       }
-      queue.Remove(entry);
+      mCacheQueue.Remove(entry);
     }
 
     entry->SetEvicted(true);
@@ -2137,13 +2082,10 @@ bool imgLoader::RemoveFromCache(imgCacheEntry* entry, QueueState aQueueState) {
   RefPtr<imgRequest> request = entry->GetRequest();
   if (request) {
     const ImageCacheKey& key = request->CacheKey();
-    imgCacheTable& cache = GetCache(key);
-    imgCacheQueue& queue = GetCacheQueue(key);
-
     LOG_STATIC_FUNC_WITH_PARAM(gImgLog, "imgLoader::RemoveFromCache",
                                "entry's uri", key.URI());
 
-    cache.Remove(key);
+    mCache.Remove(key);
 
     if (entry->HasNoProxies()) {
       LOG_STATIC_FUNC(gImgLog,
@@ -2155,9 +2097,9 @@ bool imgLoader::RemoveFromCache(imgCacheEntry* entry, QueueState aQueueState) {
       // be in the queue.  If we know its not in the queue this would be
       // wasted work.
       MOZ_ASSERT_IF(aQueueState == QueueState::AlreadyRemoved,
-                    !queue.Contains(entry));
+                    !mCacheQueue.Contains(entry));
       if (aQueueState == QueueState::MaybeExists) {
-        queue.Remove(entry);
+        mCacheQueue.Remove(entry);
       }
     }
 
@@ -2171,43 +2113,54 @@ bool imgLoader::RemoveFromCache(imgCacheEntry* entry, QueueState aQueueState) {
   return false;
 }
 
-nsresult imgLoader::EvictEntries(imgCacheTable& aCacheToClear) {
-  LOG_STATIC_FUNC(gImgLog, "imgLoader::EvictEntries table");
+nsresult imgLoader::ClearImageCache(ClearOptions aOptions) {
+  const bool chromeOnly = aOptions.contains(ClearOption::ChromeOnly);
+  const auto ShouldRemove = [&](imgCacheEntry* aEntry) {
+    if (chromeOnly) {
+      // TODO: Consider also removing "resource://" etc?
+      RefPtr<imgRequest> request = aEntry->GetRequest();
+      if (!request || !request->CacheKey().URI()->SchemeIs("chrome")) {
+        return false;
+      }
+    }
+    return true;
+  };
+  if (aOptions.contains(ClearOption::UnusedOnly)) {
+    LOG_STATIC_FUNC(gImgLog, "imgLoader::ClearImageCache queue");
+    // We have to make a temporary, since RemoveFromCache removes the element
+    // from the queue, invalidating iterators.
+    nsTArray<RefPtr<imgCacheEntry>> entries(mCacheQueue.GetNumElements());
+    for (auto& entry : mCacheQueue) {
+      if (ShouldRemove(entry)) {
+        entries.AppendElement(entry);
+      }
+    }
 
+    // Iterate in reverse order to minimize array copying.
+    for (auto& entry : entries) {
+      if (!RemoveFromCache(entry)) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    MOZ_ASSERT(chromeOnly || mCacheQueue.GetNumElements() == 0);
+    return NS_OK;
+  }
+
+  LOG_STATIC_FUNC(gImgLog, "imgLoader::ClearImageCache table");
   // We have to make a temporary, since RemoveFromCache removes the element
   // from the queue, invalidating iterators.
   const auto entries =
-      ToTArray<nsTArray<RefPtr<imgCacheEntry>>>(aCacheToClear.Values());
+      ToTArray<nsTArray<RefPtr<imgCacheEntry>>>(mCache.Values());
   for (const auto& entry : entries) {
+    if (!ShouldRemove(entry)) {
+      continue;
+    }
     if (!RemoveFromCache(entry)) {
       return NS_ERROR_FAILURE;
     }
   }
-
-  MOZ_ASSERT(aCacheToClear.Count() == 0);
-
-  return NS_OK;
-}
-
-nsresult imgLoader::EvictEntries(imgCacheQueue& aQueueToClear) {
-  LOG_STATIC_FUNC(gImgLog, "imgLoader::EvictEntries queue");
-
-  // We have to make a temporary, since RemoveFromCache removes the element
-  // from the queue, invalidating iterators.
-  nsTArray<RefPtr<imgCacheEntry>> entries(aQueueToClear.GetNumElements());
-  for (auto i = aQueueToClear.begin(); i != aQueueToClear.end(); ++i) {
-    entries.AppendElement(*i);
-  }
-
-  // Iterate in reverse order to minimize array copying.
-  for (auto& entry : entries) {
-    if (!RemoveFromCache(entry)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  MOZ_ASSERT(aQueueToClear.GetNumElements() == 0);
-
+  MOZ_ASSERT(chromeOnly || mCache.IsEmpty());
   return NS_OK;
 }
 
@@ -2278,8 +2231,7 @@ bool imgLoader::IsImageAvailable(nsIURI* aURI,
   ImageCacheKey key(aURI, aTriggeringPrincipal->OriginAttributesRef(),
                     aDocument);
   RefPtr<imgCacheEntry> entry;
-  imgCacheTable& cache = GetCache(key);
-  if (!cache.Get(key, getter_AddRefs(entry)) || !entry) {
+  if (!mCache.Get(key, getter_AddRefs(entry)) || !entry) {
     return false;
   }
   RefPtr<imgRequest> request = entry->GetRequest();
@@ -2455,9 +2407,7 @@ nsresult imgLoader::LoadImage(
     attrs = aTriggeringPrincipal->OriginAttributesRef();
   }
   ImageCacheKey key(aURI, attrs, aLoadingDocument);
-  imgCacheTable& cache = GetCache(key);
-
-  if (cache.Get(key, getter_AddRefs(entry)) && entry) {
+  if (mCache.Get(key, getter_AddRefs(entry)) && entry) {
     bool newChannelCreated = false;
     if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerInfo,
                       aLoadGroup, aObserver, aLoadingDocument, requestFlags,
@@ -2707,8 +2657,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
     // XXX For now ignore aCacheKey. We will need it in the future
     // for correctly dealing with image load requests that are a result
     // of post data.
-    imgCacheTable& cache = GetCache(key);
-    if (cache.Get(key, getter_AddRefs(entry)) && entry) {
+    if (mCache.Get(key, getter_AddRefs(entry)) && entry) {
       // We don't want to kick off another network load. So we ask
       // ValidateEntry to only do validation without creating a new proxy. If
       // it says that the entry isn't valid any more, we'll only use the entry
@@ -2980,12 +2929,9 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents,
 NS_IMPL_ISUPPORTS(ProxyListener, nsIStreamListener,
                   nsIThreadRetargetableStreamListener, nsIRequestObserver)
 
-ProxyListener::ProxyListener(nsIStreamListener* dest) : mDestListener(dest) {
-  /* member initializers and constructor code */
-}
+ProxyListener::ProxyListener(nsIStreamListener* dest) : mDestListener(dest) {}
 
-ProxyListener::~ProxyListener() { /* destructor code */
-}
+ProxyListener::~ProxyListener() = default;
 
 /** nsIRequestObserver methods **/
 

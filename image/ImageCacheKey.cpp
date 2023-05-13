@@ -34,28 +34,21 @@ ImageCacheKey::ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
     : mURI(aURI),
       mOriginAttributes(aAttrs),
       mControlledDocument(GetSpecialCaseDocumentToken(aDocument)),
-      mIsolationKey(GetIsolationKey(aDocument, aURI)),
-      mIsChrome(false) {
-  if (mURI->SchemeIs("chrome")) {
-    mIsChrome = true;
-  }
-}
+      mIsolationKey(GetIsolationKey(aDocument, aURI)) {}
 
 ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
     : mURI(aOther.mURI),
       mOriginAttributes(aOther.mOriginAttributes),
       mControlledDocument(aOther.mControlledDocument),
       mIsolationKey(aOther.mIsolationKey),
-      mHash(aOther.mHash),
-      mIsChrome(aOther.mIsChrome) {}
+      mHash(aOther.mHash) {}
 
 ImageCacheKey::ImageCacheKey(ImageCacheKey&& aOther)
     : mURI(std::move(aOther.mURI)),
       mOriginAttributes(aOther.mOriginAttributes),
       mControlledDocument(aOther.mControlledDocument),
       mIsolationKey(aOther.mIsolationKey),
-      mHash(aOther.mHash),
-      mIsChrome(aOther.mIsChrome) {}
+      mHash(aOther.mHash) {}
 
 bool ImageCacheKey::operator==(const ImageCacheKey& aOther) const {
   // Don't share the image cache between a controlled document and anything
