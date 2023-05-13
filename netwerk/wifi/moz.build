@@ -18,46 +18,34 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG["OS_ARCH"] == "Darwin":
-    SOURCES += [
-        "mac/MacWifiScanner.mm",
+    UNIFIED_SOURCES += [
+        "nsWifiScannerMac.cpp",
     ]
-    LOCAL_INCLUDES += [
-        "mac",
+    SOURCES += [
+        "osx_corewlan.mm",
     ]
 elif CONFIG["OS_ARCH"] in ("DragonFly", "FreeBSD"):
     UNIFIED_SOURCES += [
-        "freebsd/FreeBsdWifiScanner.cpp",
-    ]
-    LOCAL_INCLUDES += [
-        "freebsd",
+        "nsWifiScannerFreeBSD.cpp",
     ]
 elif CONFIG["OS_ARCH"] == "WINNT":
     UNIFIED_SOURCES += [
-        "win/WinWifiScanner.cpp",
-        "win/WlanLibrary.cpp",
-    ]
-    LOCAL_INCLUDES += [
-        "win",
+        "nsWifiScannerWin.cpp",
+        "win_wifiScanner.cpp",
+        "win_wlanLibrary.cpp",
     ]
 elif CONFIG["OS_ARCH"] == "SunOS":
     CXXFLAGS += CONFIG["GLIB_CFLAGS"]
     UNIFIED_SOURCES += [
-        "solaris/SolarisWifiScanner.cpp",
+        "nsWifiScannerSolaris.cpp",
     ]
-    LOCAL_INCLUDES += [
-        "solaris",
-    ]
-elif CONFIG["NECKO_WIFI_DBUS"]:
+
+if CONFIG["NECKO_WIFI_DBUS"]:
     UNIFIED_SOURCES += [
-        "dbus/DbusWifiScanner.cpp",
+        "nsWifiScannerDBus.cpp",
     ]
-    LOCAL_INCLUDES += [
-        "dbus",
-    ]
+
+if CONFIG["NECKO_WIFI_DBUS"]:
     CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
 
-TEST_DIRS += ["gtest"]
-
 FINAL_LIBRARY = "xul"
-
-include("/ipc/chromium/chromium-config.mozbuild")

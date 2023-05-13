@@ -27,18 +27,18 @@ class WinWLANLibrary {
   decltype(::WlanScan)* GetWlanScanPtr() const;
 
  private:
-  WinWLANLibrary() = default;
+  WinWLANLibrary();
   bool Initialize();
 
-  HMODULE mWlanLibrary = nullptr;
-  HANDLE mWlanHandle = nullptr;
-  decltype(::WlanEnumInterfaces)* mWlanEnumInterfacesPtr = nullptr;
-  decltype(::WlanGetNetworkBssList)* mWlanGetNetworkBssListPtr = nullptr;
-  decltype(::WlanFreeMemory)* mWlanFreeMemoryPtr = nullptr;
-  decltype(::WlanCloseHandle)* mWlanCloseHandlePtr = nullptr;
-  decltype(::WlanOpenHandle)* mWlanOpenHandlePtr = nullptr;
-  decltype(::WlanRegisterNotification)* mWlanRegisterNotificationPtr = nullptr;
-  decltype(::WlanScan)* mWlanScanPtr = nullptr;
+  HMODULE mWlanLibrary;
+  HANDLE mWlanHandle;
+  decltype(::WlanEnumInterfaces)* mWlanEnumInterfacesPtr;
+  decltype(::WlanGetNetworkBssList)* mWlanGetNetworkBssListPtr;
+  decltype(::WlanFreeMemory)* mWlanFreeMemoryPtr;
+  decltype(::WlanCloseHandle)* mWlanCloseHandlePtr;
+  decltype(::WlanOpenHandle)* mWlanOpenHandlePtr;
+  decltype(::WlanRegisterNotification)* mWlanRegisterNotificationPtr;
+  decltype(::WlanScan)* mWlanScanPtr;
 };
 
 class ScopedWLANObject {

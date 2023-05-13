@@ -23,13 +23,12 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "FreeBsdWifiScanner.h"
 #include "nsWifiAccessPoint.h"
 
 using namespace mozilla;
 
-nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
-    nsTArray<RefPtr<nsIWifiAccessPoint>>& accessPoints) {
+static nsresult FreeBSDGetAccessPointData(
+    nsCOMArray<nsWifiAccessPoint>& accessPoints) {
   // get list of interfaces
   struct ifaddrs* ifal;
   if (getifaddrs(&ifal) < 0) {
@@ -118,7 +117,7 @@ nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
       ap->setSSID(ssid, strlen(ssid));
       ap->setMac(isr->isr_bssid);
       ap->setSignal(isr->isr_rssi);
-      accessPoints.AppendElement(ap);
+      accessPoints.AppendObject(ap);
       rv = NS_OK;
 
       // log the data
@@ -139,4 +138,31 @@ nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
   freeifaddrs(ifal);
 
   return rv;
+}
+
+nsresult nsWifiMonitor::DoScan() {
+  // Regularly get the access point data.
+
+  nsCOMArray<nsWifiAccessPoint> lastAccessPoints;
+  nsCOMArray<nsWifiAccessPoint> accessPoints;
+
+  do {
+    nsresult rv = FreeBSDGetAccessPointData(accessPoints);
+    if (NS_FAILED(rv)) return rv;
+
+    bool accessPointsChanged =
+        !AccessPointsEqual(accessPoints, lastAccessPoints);
+    ReplaceArray(lastAccessPoints, accessPoints);
+
+    rv = CallWifiListeners(lastAccessPoints, accessPointsChanged);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // wait for some reasonable amount of time. pref?
+    LOG(("waiting on monitor\n"));
+
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    mon.Wait(PR_SecondsToInterval(kDefaultWifiScanInterval));
+  } while (mKeepGoing);
+
+  return NS_OK;
 }
