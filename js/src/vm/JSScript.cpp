@@ -130,11 +130,6 @@ void js::BaseScript::finalize(JS::GCContext* gcx) {
   // the script itself will not be marked as having bytecode.
   if (hasBytecode()) {
     JSScript* script = this->asJSScript();
-    JSRuntime* rt = gcx->runtime();
-
-    if (rt->hasJitRuntime() && rt->jitRuntime()->hasInterpreterEntryMap()) {
-      rt->jitRuntime()->getInterpreterEntryMap()->remove(script);
-    }
 
     if (coverage::IsLCovEnabled()) {
       coverage::CollectScriptCoverage(script, true);
@@ -143,7 +138,14 @@ void js::BaseScript::finalize(JS::GCContext* gcx) {
     script->destroyScriptCounts();
   }
 
-  gcx->runtime()->geckoProfiler().onScriptFinalized(this);
+  {
+    JSRuntime* rt = gcx->runtime();
+    if (rt->hasJitRuntime() && rt->jitRuntime()->hasInterpreterEntryMap()) {
+      rt->jitRuntime()->getInterpreterEntryMap()->remove(this);
+    }
+
+    rt->geckoProfiler().onScriptFinalized(this);
+  }
 
 #ifdef MOZ_VTUNE
   if (zone()->scriptVTuneIdMap) {
