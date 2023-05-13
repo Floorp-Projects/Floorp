@@ -12693,6 +12693,13 @@
   value: false
   mirror: always
 
+# Wifi-scan polling period, in ms, when on a mobile network.
+# A value of 0 indicates that no polling should be done.
+- name: network.wifi.scanning_period
+  type: RelaxedAtomicUint32
+  value: 60000
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
