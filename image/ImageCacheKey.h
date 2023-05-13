@@ -53,9 +53,6 @@ class ImageCacheKey final {
 
   const nsCString& IsolationKeyRef() const { return mIsolationKey; }
 
-  /// Is this cache entry for a chrome image?
-  bool IsChrome() const { return mIsChrome; }
-
   /// A token indicating which service worker controlled document this entry
   /// belongs to, if any.
   void* ControlledDocument() const { return mControlledDocument; }
@@ -77,7 +74,6 @@ class ImageCacheKey final {
   void* mControlledDocument;
   nsCString mIsolationKey;
   mutable Maybe<PLDHashNumber> mHash;
-  bool mIsChrome;
 };
 
 }  // namespace image
