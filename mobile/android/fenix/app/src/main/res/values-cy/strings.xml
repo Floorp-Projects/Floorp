@@ -420,6 +420,8 @@
 
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Cais am gefnogaeth gwefan wedi’i gyflwyno</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Cais am gefnogaeth wedi’i anfon</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Nid yw’r wefan yn cael ei chefnogi ar hyn o bryd</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -428,6 +430,8 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Diffodd Llai o Faneri Cwcis ar %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Nid yw’r wefan hon yn cael ei chefnogi ar hyn o bryd gan Llai o Faneri Cwcis. Hoffech chi ofyn i’n tîm adolygu’r wefan hon ac ychwanegu cefnogaeth yn y dyfodol?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">Nid yw %1$s yn gallu gwrthod ceisiadau cwcis ar y wefan hon yn awtomatig. Gallwch anfon cais i gefnogi’r wefan hon yn y dyfodol.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">Bydd %1$s yn clirio cwcis y wefan hon ac yn adnewyddu’r dudalen. Gall clirio pob cwci eich allgofnodi neu wagio eich certiau siopa.</string>
 

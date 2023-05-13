@@ -408,13 +408,19 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">ຮ້ອງຂໍການຊ່ວຍເຫຼືອ</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title">ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ</string>
+    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">ຮ້ອງຂໍການສະຫນັບສະຫນູນສໍາລັບເວັບໄຊທ໌ນີ້ບໍ?</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ.</string>
+    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ.</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">ສົ່ງຄຳຮ້ອງຂໍແລ້ວ</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">ເປິດສຳລັບເວັບໄຊນີ້</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ</string>
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">ສົ່ງຄຳຮ້ອງຂໍການຊ່ວຍເຫຼືອແລ້ວ</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">ຕອນນີ້ບໍ່ຮອງຮັບເວັບໄຊ</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -422,38 +428,22 @@
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">ປິດການຫຼຸດປ້າຍໂຄສະນາຄຸກກີສຳລັບ %1$s ບໍ?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">ຕອນນີ້ເວັບໄຊນີ້ບໍ່ຮອງຮັບການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ. ທ່ານຕ້ອງການໃຫ້ທີມງານຂອງພວກເຮົາທົບທວນຄືນເວັບໄຊທ໌ນີ້ແລະເພີ່ມການສະຫນັບສະຫນູນໃນອະນາຄົດບໍ?</string>
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">ຕອນນີ້ເວັບໄຊນີ້ບໍ່ຮອງຮັບການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ. ທ່ານຕ້ອງການໃຫ້ທີມງານຂອງພວກເຮົາທົບທວນຄືນເວັບໄຊທ໌ນີ້ແລະເພີ່ມການສະຫນັບສະຫນູນໃນອະນາຄົດບໍ?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s ບໍ່ສາມາດປະຕິເສດຄຳຮ້ອງຂໍຄຸກກີໃນເວັບໄຊນີ້ໄດ້ໂດຍອັດຕະໂນມັດ. ທ່ານສາມາດສົ່ງຄໍາຮ້ອງຂໍເພື່ອສະຫນັບສະຫນູນເວັບໄຊທ໌ນີ້ໃນອະນາຄົດ.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ຈະລຶບລ້າງຄຸກກີ້ຂອງເວັບໄຊນີ້ ແລະໂຫຼດໜ້ານີ້ຄືນໃໝ່. ການລຶບລ້າງຄຸກກີ້ທັງໝົດອາດເຮັດໃຫ້ເຈົ້າອອກຈາກລະບົບ ຫຼືກະຕ່າຊື້ເຄື່ອງຫວ່າງເປົ່າ.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s ພະຍາຍາມປະຕິເສດຄຳຮ້ອງຂໍຄຸກກີທັງໝົດໃນເວັບໄຊທີ່ຮອງຮັບໂດຍອັດຕະໂນມັດ.</string>
-    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ປ້າຍໂຄສະນາຄຸກກີເລີ່ມແລ້ວ!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">ອະນຸຍາດໃຫ້ %1$s ປະຕິເສດປ້າຍໂຄສະນາຄຸກກີບໍ?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">ອະນຸຍາດໃຫ້ %1$s ປະຕິເສດຄຳຮ້ອງຂໍຄຸກກີໂດຍອັດຕະໂນມັດເມື່ອເປັນໄປໄດ້ບໍ?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_body">%1$s ສາມາດປະຕິເສດຄຳຮ້ອງຂໍປ້າຍໂຄສະນາຄຸກກີຫຼາຍອັນໂດຍອັດຕະໂນມັດ.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">ບໍ່​ແມ່ນ​ຕອນ​ນີ້</string>
-    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ປິດປ້າຍໂຄສະນາ</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">ທ່ານຈະເຫັນຄຳຮ້ອງຂໍຄຸກກີໜ້ອຍລົງ</string>
-    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ເບິ່ງປັອບອັບຄຸກກີໜ້ອຍລົງ</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">ຕອບອັດຕະໂນມັດຄຸກກີປັອບອັບສໍາລັບການທ່ອງເວັບທີ່ບໍ່ມີສິ່ງລົບກວນ. %1$s ຈະປະຕິເສດການຮ້ອງຂໍທັງໝົດຖ້າເປັນໄປໄດ້.</string>
-    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ປິດປັອບອັບ</string>
-    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">ອະນຸຍາດໃຫ້ %1$s ປະຕິເສດການຮ້ອງຂໍການຍິນຍອມເຫັນດີຈາກຄຸກກີຂອງເວັບໄຊຖ້າເປັນໄປໄດ້ບໍ?</string>
-    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ອະນຸຍາດ</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button">ອະນຸຍາດ</string>

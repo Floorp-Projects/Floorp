@@ -416,13 +416,19 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Αίτημα υποστήριξης</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title">Μείωση μηνυμάτων για cookies</string>
+    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Μείωση μηνυμάτων για cookies</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Αίτημα υποστήριξης για αυτόν τον ιστότοπο;</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text">Υποβλήθηκε αίτημα για υποστήριξη ιστοτόπου.</string>
+    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Υποβλήθηκε αίτημα για υποστήριξη ιστοτόπου.</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">Το αίτημα απεστάλη</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Ενεργή για αυτόν τον ιστότοπο</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted">Υποβλήθηκε αίτημα για υποστήριξη ιστοτόπου</string>
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Υποβλήθηκε αίτημα για υποστήριξη ιστοτόπου</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Το αίτημα υποστήριξης απεστάλη</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Ο ιστότοπος δεν υποστηρίζεται</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -431,39 +437,22 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Απενεργοποίηση μείωσης μηνυμάτων για cookies στο %1$s;</string>
 
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">Αυτός ο ιστότοπος δεν υποστηρίζεται προς το παρόν από τη Μείωση μηνυμάτων για cookies. Θα θέλατε η ομάδα μας να ελέγξει αυτόν τον ιστότοπο και να προσθέσει υποστήριξη στο μέλλον;</string>
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Αυτός ο ιστότοπος δεν υποστηρίζεται προς το παρόν από τη Μείωση μηνυμάτων για cookies. Θα θέλατε η ομάδα μας να ελέγξει αυτόν τον ιστότοπο και να προσθέσει υποστήριξη στο μέλλον;</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">Το %1$s δεν μπορεί να απορρίψει αυτόματα τα αιτήματα για cookies σε αυτόν τον ιστότοπο. Μπορείτε να στείλετε ένα αίτημα για υποστήριξη αυτού του ιστοτόπου στο μέλλον.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">Το %1$s θα απαλείψει τα cookies του ιστοτόπου και θα ανανεώσει τη σελίδα. Η απαλοιφή όλων των cookies ενδέχεται να σας αποσυνδέσει ή να αδειάσει τα καλάθια αγορών.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">Το %1$s προσπαθεί να απορρίψει αυτόματα όλα τα αιτήματα για cookies σε υποστηριζόμενους ιστότοπους.</string>
-    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Να επιτρέπεται στο Firefox η απόρριψη μηνυμάτων για cookies;</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">Να επιτρέπεται στο %1$s η απόρριψη μηνυμάτων για cookies;</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Να επιτρέπεται στο %1$s η αυτόματη απόρριψη αιτημάτων για cookies, όταν αυτό είναι δυνατό;</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_body">Το %1$s μπορεί να απορρίπτει αυτόματα πολλά μηνύματα αιτημάτων για cookies.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Όχι τώρα</string>
-    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Απόρριψη μηνυμάτων</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Θα βλέπετε λιγότερα αιτήματα για cookies</string>
-    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Λιγότερα αναδυόμενα μηνύματα για cookies</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Αυτόματη απάντηση στα αναδυόμενα μηνύματα για cookies, ώστε να περιηγείστε χωρίς περισπασμούς. Το %1$s θα απορρίπτει όλα τα αιτήματα, εάν αυτό είναι δυνατό.</string>
-    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Απόρριψη αναδυόμενων μηνυμάτων</string>
-    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Μείωση μηνυμάτων για cookies</string>
-
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Να επιτρέπεται στο %1$s η απόρριψη του αιτήματος ενός ιστοτόπου για συναίνεση με τα cookies, εάν αυτό είναι δυνατό;</string>
-    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Αποδοχή</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button">Αποδοχή</string>
