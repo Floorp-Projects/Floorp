@@ -233,7 +233,7 @@ export class BaseContent extends React.PureComponent {
     }
 
     return (
-      <div>
+      <div className={prefs["floorp.newtab.backdrop.blur.disable"] ? "" : "floorp-backdrop-blur-enable"}>
         <Background className={Background_ClassName} imageList={prefs["backgroundPaths"]} getImg={this.getImageSend} pref={prefs} />
         <CustomizeMenu
           onClose={this.closeCustomizationMenu}

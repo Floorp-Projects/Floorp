@@ -14589,7 +14589,9 @@ class BaseContent extends (external_React_default()).PureComponent {
         break;
     }
 
-    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement(Background, {
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: prefs["floorp.newtab.backdrop.blur.disable"] ? "" : "floorp-backdrop-blur-enable"
+    }, /*#__PURE__*/external_React_default().createElement(Background, {
       className: Background_ClassName,
       imageList: prefs["backgroundPaths"],
       getImg: this.getImageSend,
