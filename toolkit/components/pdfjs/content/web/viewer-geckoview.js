@@ -510,7 +510,6 @@ var _webPdf_presentation_mode = __webpack_require__(9);
 var _pdf_rendering_queue = __webpack_require__(15);
 var _pdf_scripting_manager = __webpack_require__(16);
 var _webPdf_sidebar = __webpack_require__(9);
-var _webPdf_sidebar_resizer = __webpack_require__(9);
 var _webPdf_thumbnail_viewer = __webpack_require__(9);
 var _pdf_viewer = __webpack_require__(17);
 var _webSecondary_toolbar = __webpack_require__(9);
@@ -589,7 +588,6 @@ const PDFViewerApplication = {
   pdfLinkService: null,
   pdfHistory: null,
   pdfSidebar: null,
-  pdfSidebarResizer: null,
   pdfOutlineViewer: null,
   pdfAttachmentViewer: null,
   pdfLayerViewer: null,
@@ -910,7 +908,6 @@ const PDFViewerApplication = {
         l10n: this.l10n
       });
       this.pdfSidebar.onToggled = this.forceRendering.bind(this);
-      this.pdfSidebarResizer = new _webPdf_sidebar_resizer.PDFSidebarResizer(appConfig.sidebarResizer, eventBus, this.l10n);
     }
   },
   run(config) {
@@ -2649,6 +2646,7 @@ exports.removeNullCharacters = removeNullCharacters;
 exports.roundToDivide = roundToDivide;
 exports.scrollIntoView = scrollIntoView;
 exports.toggleCheckedBtn = toggleCheckedBtn;
+exports.toggleExpandedBtn = toggleExpandedBtn;
 exports.watchScroll = watchScroll;
 const DEFAULT_SCALE_VALUE = "auto";
 exports.DEFAULT_SCALE_VALUE = DEFAULT_SCALE_VALUE;
@@ -3143,6 +3141,11 @@ function apiPageModeToSidebarView(mode) {
 function toggleCheckedBtn(button, toggle, view = null) {
   button.classList.toggle("toggled", toggle);
   button.setAttribute("aria-checked", toggle);
+  view?.classList.toggle("hidden", !toggle);
+}
+function toggleExpandedBtn(button, toggle, view = null) {
+  button.classList.toggle("toggled", toggle);
+  button.setAttribute("aria-expanded", toggle);
   view?.classList.toggle("hidden", !toggle);
 }
 
@@ -4027,7 +4030,7 @@ exports.SimpleLinkService = SimpleLinkService;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.Toolbar = exports.SecondaryToolbar = exports.PDFThumbnailViewer = exports.PDFSidebarResizer = exports.PDFSidebar = exports.PDFPresentationMode = exports.PDFOutlineViewer = exports.PDFLayerViewer = exports.PDFFindBar = exports.PDFDocumentProperties = exports.PDFCursorTools = exports.PDFAttachmentViewer = exports.AnnotationEditorParams = void 0;
+exports.Toolbar = exports.SecondaryToolbar = exports.PDFThumbnailViewer = exports.PDFSidebar = exports.PDFPresentationMode = exports.PDFOutlineViewer = exports.PDFLayerViewer = exports.PDFFindBar = exports.PDFDocumentProperties = exports.PDFCursorTools = exports.PDFAttachmentViewer = exports.AnnotationEditorParams = void 0;
 const AnnotationEditorParams = null;
 exports.AnnotationEditorParams = AnnotationEditorParams;
 const PDFAttachmentViewer = null;
@@ -4046,8 +4049,6 @@ const PDFPresentationMode = null;
 exports.PDFPresentationMode = PDFPresentationMode;
 const PDFSidebar = null;
 exports.PDFSidebar = PDFSidebar;
-const PDFSidebarResizer = null;
-exports.PDFSidebarResizer = PDFSidebarResizer;
 const PDFThumbnailViewer = null;
 exports.PDFThumbnailViewer = PDFThumbnailViewer;
 const SecondaryToolbar = null;
@@ -6086,7 +6087,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.7.17';
+    const viewerVersion = '3.7.27';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9601,8 +9602,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.7.17';
-const pdfjsBuild = 'd520754bc';
+const pdfjsVersion = '3.7.27';
+const pdfjsBuild = 'e738e15aa';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
