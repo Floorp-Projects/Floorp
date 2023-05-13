@@ -53,6 +53,7 @@
 #include "nsError.h"
 #include "nsHashKeys.h"
 #include "nsJSUtils.h"
+#include "nsLayoutUtils.h"
 #include "nsLiteralString.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
@@ -368,6 +369,11 @@ void nsRFPService::PrefChanged(const char* aPref) {
       _tzset();
     }
 #endif
+  }
+  if (XRE_IsParentProcess()) {
+    // Update the default value for enabling smooth scrolls when the resist
+    // fingerprinting preferences are changed.
+    nsLayoutUtils::RecomputeSmoothScrollDefault();
   }
 }
 
