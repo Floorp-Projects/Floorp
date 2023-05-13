@@ -463,6 +463,17 @@ void ReflowInput::Init(nsPresContext* aPresContext,
                        "intrinsic inline-size calculation");
 }
 
+static bool MightBeContainingBlockFor(nsIFrame* aMaybeContainingBlock,
+                                      nsIFrame* aFrame,
+                                      const nsStyleDisplay* aStyleDisplay) {
+  // Keep this in sync with nsIFrame::GetContainingBlock.
+  if (aFrame->IsAbsolutelyPositioned(aStyleDisplay) &&
+      aMaybeContainingBlock == aFrame->GetParent()) {
+    return true;
+  }
+  return aMaybeContainingBlock->IsBlockContainer();
+}
+
 void ReflowInput::InitCBReflowInput() {
   if (!mParentReflowInput) {
     mCBReflowInput = nullptr;
@@ -473,8 +484,12 @@ void ReflowInput::InitCBReflowInput() {
     return;
   }
 
-  if (mParentReflowInput->mFrame ==
-      mFrame->GetContainingBlock(0, mStyleDisplay)) {
+  // To avoid a long walk up the frame tree check if the parent frame can be a
+  // containing block for mFrame.
+  if (MightBeContainingBlockFor(mParentReflowInput->mFrame, mFrame,
+                                mStyleDisplay) &&
+      mParentReflowInput->mFrame ==
+          mFrame->GetContainingBlock(0, mStyleDisplay)) {
     // Inner table frames need to use the containing block of the outer
     // table frame.
     if (mFrame->IsTableFrame()) {
