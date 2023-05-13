@@ -18,10 +18,7 @@
 #include "nsIObserver.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
-
-#ifdef XP_WIN
-#  include "win_wifiScanner.h"
-#endif
+#include "WifiScanner.h"
 
 extern mozilla::LazyLogModule gWifiMonitorLog;
 #define LOG(args) MOZ_LOG(gWifiMonitorLog, mozilla::LogLevel::Debug, args)
@@ -55,7 +52,8 @@ class nsWifiMonitor final : nsIRunnable, nsIWifiMonitor, nsIObserver {
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
 
-  nsWifiMonitor();
+  explicit nsWifiMonitor(
+      mozilla::UniquePtr<mozilla::WifiScanner>&& aScanner = nullptr);
 
  private:
   ~nsWifiMonitor() = default;
@@ -71,13 +69,12 @@ class nsWifiMonitor final : nsIRunnable, nsIWifiMonitor, nsIObserver {
   mozilla::Atomic<bool> mThreadComplete;
   nsCOMPtr<nsIThread> mThread;  // only accessed on MainThread
 
+  // Background thread only (except in test).
+  mozilla::UniquePtr<mozilla::WifiScanner> mWifiScanner;
+
   nsTArray<nsWifiListener> mListeners MOZ_GUARDED_BY(mReentrantMonitor);
 
   mozilla::ReentrantMonitor mReentrantMonitor;
-
-#ifdef XP_WIN
-  mozilla::UniquePtr<WinWifiScanner> mWinWifiScanner;
-#endif
 };
 
 #endif
