@@ -27,7 +27,6 @@
 
 #include "mozilla/a11y/PDocAccessibleChild.h"
 #include "mozilla/jni/GeckoBundleUtils.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 
 // icu TRUE conflicting with java::sdk::Boolean::TRUE()
@@ -201,9 +200,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       break;
     }
     case nsIAccessibleEvent::EVENT_REORDER: {
-      if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-        sessionAcc->SendWindowContentChangedEvent();
-      }
+      sessionAcc->SendWindowContentChangedEvent();
       break;
     }
     default:

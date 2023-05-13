@@ -127,7 +127,7 @@ void SessionAccessibility::GetNodeInfo(int32_t aID,
   java::GeckoBundle::GlobalRef ret = nullptr;
   RefPtr<SessionAccessibility> self(this);
   if (Accessible* acc = GetAccessibleByID(aID)) {
-    if (acc->IsLocal() || !IsCacheEnabled()) {
+    if (acc->IsLocal()) {
       mal.Unlock();
       nsAppShell::SyncRunEvent(
           [this, self, aID, aNodeInfo = jni::Object::GlobalRef(aNodeInfo)] {
@@ -409,9 +409,7 @@ void SessionAccessibility::SendWindowStateChangedEvent(
       AccessibleWrap::GetVirtualViewID(aAccessible),
       AccessibleWrap::AndroidClass(aAccessible), nullptr);
 
-  if (IsCacheEnabled()) {
-    SendWindowContentChangedEvent();
-  }
+  SendWindowContentChangedEvent();
 }
 
 void SessionAccessibility::SendTextSelectionChangedEvent(
@@ -420,15 +418,8 @@ void SessionAccessibility::SendTextSelectionChangedEvent(
   int32_t fromIndex = aCaretOffset;
   int32_t startSel = -1;
   int32_t endSel = -1;
-  bool hasSelection = false;
-  if (aAccessible->IsRemote() && !IsCacheEnabled()) {
-    nsAutoString unused;
-    hasSelection = aAccessible->AsRemote()->SelectionBoundsAt(
-        0, unused, &startSel, &endSel);
-  } else {
-    hasSelection = aAccessible->AsHyperTextBase()->SelectionBoundsAt(
-        0, &startSel, &endSel);
-  }
+  bool hasSelection =
+      aAccessible->AsHyperTextBase()->SelectionBoundsAt(0, &startSel, &endSel);
 
   if (hasSelection) {
     fromIndex = startSel == aCaretOffset ? endSel : startSel;
@@ -462,13 +453,7 @@ void SessionAccessibility::SendTextChangedEvent(Accessible* aAccessible,
   if (aAccessible->IsHyperText()) {
     aAccessible->AsHyperTextBase()->TextSubstring(0, -1, text);
   } else if (aAccessible->IsText()) {
-    if (aAccessible->IsRemote() && !IsCacheEnabled()) {
-      // XXX: AppendTextTo is not implemented in the IPDL and only
-      // works when cache is enabled.
-      aAccessible->Name(text);
-    } else {
-      aAccessible->AppendTextTo(text, 0, -1);
-    }
+    aAccessible->AppendTextTo(text, 0, -1);
   }
   nsAutoString beforeText(text);
   if (aIsInsert) {
@@ -500,13 +485,7 @@ void SessionAccessibility::SendTextTraversedEvent(Accessible* aAccessible,
   if (aAccessible->IsHyperText()) {
     aAccessible->AsHyperTextBase()->TextSubstring(0, -1, text);
   } else if (aAccessible->IsText()) {
-    if (aAccessible->IsRemote() && !IsCacheEnabled()) {
-      // XXX: AppendTextTo is not implemented in the IPDL and only
-      // works when cache is enabled.
-      aAccessible->Name(text);
-    } else {
-      aAccessible->AppendTextTo(text, 0, -1);
-    }
+    aAccessible->AppendTextTo(text, 0, -1);
   }
 
   GECKOBUNDLE_START(eventInfo);
