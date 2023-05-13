@@ -334,8 +334,8 @@ class nsHtml5SpeculativeLoad {
 
   /**
    * True if and only if this is a speculative load initiated by <link
-   * rel="preload"> or <link rel="modulepreload"> tag encounter.  Passed to the
-   * handling loader as an indication to raise the priority.
+   * rel="preload"> tag encounter.  Passed to the handling loader as an
+   * indication to raise the priority.
    */
   bool mIsLinkPreload;
 
@@ -387,8 +387,8 @@ class nsHtml5SpeculativeLoad {
    * value of the "sizes" attribute. If the attribute is not set, this will
    * be a void string. If mOpCode is eSpeculativeLoadStyle, this
    * is the value of the "integrity" attribute. If the attribute is not set,
-   * this will be a void string. Otherwise, it is empty or the value of the type
-   * attribute.
+   * this will be a void string. Otherwise it is empty or the value of the
+   * referrer policy. Otherwise, it is empty or the value of the type attribute.
    */
   nsString mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity;
   /**
