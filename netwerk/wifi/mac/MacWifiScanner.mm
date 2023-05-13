@@ -15,8 +15,12 @@
 #include "nsCOMArray.h"
 #include "nsWifiMonitor.h"
 #include "nsWifiAccessPoint.h"
+#include "MacWifiScanner.h"
 
-nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
+namespace mozilla {
+
+nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
+    nsTArray<RefPtr<nsIWifiAccessPoint>>& accessPoints) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   accessPoints.Clear();
@@ -85,7 +89,7 @@ nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
       ap->setSignal(signal);
       ap->setSSID([[anObject ssid] UTF8String], 32);
 
-      accessPoints.AppendObject(ap);
+      accessPoints.AppendElement(ap);
     }
   } @catch (NSException*) {
     [pool release];
@@ -98,3 +102,5 @@ nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint>& accessPoints) {
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_NOT_AVAILABLE);
 }
+
+}  // namespace mozilla
