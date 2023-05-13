@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "win_wlanLibrary.h"
+#include "WlanLibrary.h"
 
 // Moz headers (alphabetical)
 
@@ -19,17 +19,6 @@ WinWLANLibrary* WinWLANLibrary::Load() {
 
   return ret;
 }
-
-WinWLANLibrary::WinWLANLibrary()
-    : mWlanLibrary(nullptr),
-      mWlanHandle(nullptr),
-      mWlanEnumInterfacesPtr(nullptr),
-      mWlanGetNetworkBssListPtr(nullptr),
-      mWlanFreeMemoryPtr(nullptr),
-      mWlanCloseHandlePtr(nullptr),
-      mWlanOpenHandlePtr(nullptr),
-      mWlanRegisterNotificationPtr(nullptr),
-      mWlanScanPtr(nullptr) {}
 
 HANDLE
 WinWLANLibrary::GetWLANHandle() const { return mWlanHandle; }
