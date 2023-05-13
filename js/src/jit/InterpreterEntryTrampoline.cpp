@@ -31,7 +31,7 @@ void EntryTrampolineMap::traceTrampolineCode(JSTracer* trc) {
 
 void EntryTrampolineMap::updateScriptsAfterMovingGC(void) {
   for (jit::EntryTrampolineMap::Enum e(*this); !e.empty(); e.popFront()) {
-    JSScript* script = e.front().key();
+    BaseScript* script = e.front().key();
     if (IsForwarded(script)) {
       script = Forwarded(script);
       e.rekeyFront(script);
@@ -47,7 +47,7 @@ void EntryTrampoline::checkTrampolineAfterMovingGC() {
 
 void EntryTrampolineMap::checkScriptsAfterMovingGC() {
   for (jit::EntryTrampolineMap::Enum r(*this); !r.empty(); r.popFront()) {
-    JSScript* script = r.front().key();
+    BaseScript* script = r.front().key();
     CheckGCThingAfterMovingGC(script);
     r.front().value().checkTrampolineAfterMovingGC();
     auto ptr = lookup(script);
