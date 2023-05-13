@@ -3405,6 +3405,13 @@ class nsIFrame : public nsQueryFrame {
   }
 
   /**
+   * If this frame can be a block container, i.e. whether it can serve as a
+   * containing block for its descendants. See also GetNearestBlockContainer()
+   * and GetContainingBlock().
+   */
+  bool IsBlockContainer() const;
+
+  /**
    * Is this frame a containing block for floating elements?
    * Note that very few frames are, so default to false.
    */

@@ -8000,6 +8000,16 @@ bool nsIFrame::IsSubgrid() const {
 }
 
 static nsIFrame* GetNearestBlockContainer(nsIFrame* frame) {
+  while (!frame->IsBlockContainer()) {
+    frame = frame->GetParent();
+    NS_ASSERTION(
+        frame,
+        "How come we got to the root frame without seeing a containing block?");
+  }
+  return frame;
+}
+
+bool nsIFrame::IsBlockContainer() const {
   // The block wrappers we use to wrap blocks inside inlines aren't
   // described in the CSS spec.  We need to make them not be containing
   // blocks.
@@ -8009,16 +8019,10 @@ static nsIFrame* GetNearestBlockContainer(nsIFrame* frame) {
   //
   // If we ever start skipping table row groups from being containing blocks,
   // you need to remove the StickyScrollContainer hack referencing bug 1421660.
-  while (frame->IsFrameOfType(nsIFrame::eLineParticipant) ||
-         frame->IsBlockWrapper() || frame->IsSubgrid() ||
+  return !IsFrameOfType(nsIFrame::eLineParticipant) && !IsBlockWrapper() &&
+         !IsSubgrid() &&
          // Table rows are not containing blocks either
-         frame->IsTableRowFrame()) {
-    frame = frame->GetParent();
-    NS_ASSERTION(
-        frame,
-        "How come we got to the root frame without seeing a containing block?");
-  }
-  return frame;
+         !IsTableRowFrame();
 }
 
 nsIFrame* nsIFrame::GetContainingBlock(
