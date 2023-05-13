@@ -18,19 +18,17 @@
 #include "nsIObserver.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Monitor.h"
-#include "WifiScanner.h"
 
-namespace mozilla {
-class TestWifiMonitor;
-}
+#ifdef XP_WIN
+#  include "win_wifiScanner.h"
+#endif
 
 extern mozilla::LazyLogModule gWifiMonitorLog;
+#define LOG(args) MOZ_LOG(gWifiMonitorLog, mozilla::LogLevel::Debug, args)
 
 class nsWifiAccessPoint;
 
-// Period between scans when on mobile network.
-#define WIFI_SCAN_INTERVAL_MS_PREF "network.wifi.scanning_period"
+#define kDefaultWifiScanInterval 5 /* seconds */
 
 #ifdef XP_MACOSX
 // Use a larger stack size for the monitor thread on macOS 13+
@@ -38,86 +36,48 @@ class nsWifiAccessPoint;
 #  define kMacOS13MonitorStackSize (512 * 1024)
 #endif
 
-struct WifiListenerHolder {
-  RefPtr<nsIWifiListener> mListener;
-  bool mShouldPoll;
-  bool mHasSentData = false;
+class nsWifiListener {
+ public:
+  explicit nsWifiListener(nsMainThreadPtrHolder<nsIWifiListener>* aListener) {
+    mListener = aListener;
+    mHasSentData = false;
+  }
+  ~nsWifiListener() = default;
 
-  explicit WifiListenerHolder(nsIWifiListener* aListener,
-                              bool aShouldPoll = false)
-      : mListener(aListener), mShouldPoll(aShouldPoll) {}
+  nsMainThreadPtrHandle<nsIWifiListener> mListener;
+  bool mHasSentData;
 };
 
-class nsWifiMonitor final : public nsIWifiMonitor, public nsIObserver {
+class nsWifiMonitor final : nsIRunnable, nsIWifiMonitor, nsIObserver {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWIFIMONITOR
+  NS_DECL_NSIRUNNABLE
   NS_DECL_NSIOBSERVER
 
-  explicit nsWifiMonitor(
-      mozilla::UniquePtr<mozilla::WifiScanner>&& aScanner = nullptr);
+  nsWifiMonitor();
 
  private:
-  friend class mozilla::TestWifiMonitor;
+  ~nsWifiMonitor() = default;
 
-  ~nsWifiMonitor();
-
-  nsresult DispatchScanToBackgroundThread(uint64_t aPollingId = 0,
-                                          uint32_t aWaitMs = 0);
-
-  void Scan(uint64_t aPollingId);
   nsresult DoScan();
 
-  nsresult CallWifiListeners(
-      nsTArray<RefPtr<nsIWifiAccessPoint>>&& aAccessPoints,
-      bool aAccessPointsChanged);
+  nsresult CallWifiListeners(const nsCOMArray<nsWifiAccessPoint>& aAccessPoints,
+                             bool aAccessPointsChanged);
 
-  nsresult PassErrorToWifiListeners(nsresult rv);
+  uint32_t GetMonitorThreadStackSize();
 
-  void Close();
+  mozilla::Atomic<bool> mKeepGoing;
+  mozilla::Atomic<bool> mThreadComplete;
+  nsCOMPtr<nsIThread> mThread;  // only accessed on MainThread
 
-  bool IsBackgroundThread();
+  nsTArray<nsWifiListener> mListeners MOZ_GUARDED_BY(mReentrantMonitor);
 
-  bool ShouldPoll() {
-    MOZ_ASSERT(!IsBackgroundThread());
-    return (mShouldPollForCurrentNetwork && !mListeners.IsEmpty()) ||
-           mNumPollingListeners > 0;
-  };
+  mozilla::ReentrantMonitor mReentrantMonitor;
 
-#ifdef ENABLE_TESTS
-  // Test-only function that confirms we "should" be polling.  May be wrong
-  // if somehow the polling tasks are not set to run on the background
-  // thread.
-  bool IsPolling() { return mThread && mPollingId; }
+#ifdef XP_WIN
+  mozilla::UniquePtr<WinWifiScanner> mWinWifiScanner;
 #endif
-
-  // Main thread only.
-  nsCOMPtr<nsIThread> mThread;
-
-  // Main thread only.
-  nsTArray<WifiListenerHolder> mListeners;
-
-  // Background thread only.
-  mozilla::UniquePtr<mozilla::WifiScanner> mWifiScanner;
-
-  // Background thread only.  Sorted.
-  nsTArray<RefPtr<nsIWifiAccessPoint>> mLastAccessPoints;
-
-  // Wifi-scanning requests may poll, meaning they will run repeatedly on
-  // a scheduled time period.  If this value is 0 then polling is not running,
-  // otherwise, it indicates the "ID" of the polling that is running.  if some
-  // other polling (with different ID) is running, it will stop, not iterate.
-  mozilla::Atomic<uint64_t> mPollingId;
-
-  // Number of current listeners that requested that the wifi scan poll
-  // periodically.
-  // Main thread only.
-  uint32_t mNumPollingListeners = 0;
-
-  // True if the current network type is one that requires polling
-  // (i.e. a "mobile" network type).
-  // Main thread only.
-  bool mShouldPollForCurrentNetwork = false;
 };
 
 #endif

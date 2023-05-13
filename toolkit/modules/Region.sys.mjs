@@ -764,7 +764,7 @@ class RegionDetector {
     this.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(
       Ci.nsIWifiMonitor
     );
-    this.wifiService.startWatching(this, false);
+    this.wifiService.startWatching(this);
 
     return new Promise(resolve => {
       this._wifiDataPromise = resolve;
