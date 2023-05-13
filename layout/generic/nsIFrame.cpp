@@ -8028,6 +8028,9 @@ bool nsIFrame::IsBlockContainer() const {
 nsIFrame* nsIFrame::GetContainingBlock(
     uint32_t aFlags, const nsStyleDisplay* aStyleDisplay) const {
   MOZ_ASSERT(aStyleDisplay == StyleDisplay());
+
+  // Keep this in sync with MightBeContainingBlockFor in ReflowInput.cpp.
+
   if (!GetParent()) {
     return nullptr;
   }
