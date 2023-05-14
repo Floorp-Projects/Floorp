@@ -63,7 +63,7 @@ object FenixVersions {
 
     const val google_ads_id_version = "16.0.0"
 
-    const val google_play_review_version = "2.0.0"
+    const val google_play_review_version = "2.0.1"
 
     // keep in sync with the versions used in AS.
     const val protobuf = "3.21.10"
