@@ -149,6 +149,7 @@ EXPORTS += [
     "GfxInfoCollector.h",
     "InputData.h",
     "nsBaseAppShell.h",
+    "nsBaseClipboard.h",
     "nsBaseDragService.h",
     "nsBaseFilePicker.h",
     "nsBaseWidget.h",
@@ -165,6 +166,8 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     "BasicEvents.h",
+    "ClipboardWriteRequestChild.h",
+    "ClipboardWriteRequestParent.h",
     "ColorScheme.h",
     "CommandList.h",
     "ContentCache.h",
@@ -212,6 +215,8 @@ EXPORTS.mozilla.widget += [
 ]
 
 UNIFIED_SOURCES += [
+    "ClipboardWriteRequestChild.cpp",
+    "ClipboardWriteRequestParent.cpp",
     "CompositorWidget.cpp",
     "ContentCache.cpp",
     "ContentData.cpp",
@@ -225,6 +230,7 @@ UNIFIED_SOURCES += [
     "InputData.cpp",
     "nsAutoRollup.cpp",
     "nsBaseAppShell.cpp",
+    "nsBaseClipboard.cpp",
     "nsClipboardHelper.cpp",
     "nsClipboardProxy.cpp",
     "nsColorPickerProxy.cpp",
@@ -309,11 +315,6 @@ EXPORTS.ipc = [
 if CONFIG["MOZ_X11"] or CONFIG["MOZ_WAYLAND"]:
     DIRS += ["x11"]
 
-if toolkit in ("cocoa", "windows"):
-    UNIFIED_SOURCES += [
-        "nsBaseClipboard.cpp",
-    ]
-
 if toolkit in {"gtk", "cocoa", "windows", "android", "uikit"}:
     UNIFIED_SOURCES += [
         "nsBaseFilePicker.cpp",
@@ -371,6 +372,10 @@ else:
         "generic/PlatformWidgetTypes.ipdlh",
         "headless/HeadlessWidgetTypes.ipdlh",
     ]
+
+IPDL_SOURCES += [
+    "PClipboardWriteRequest.ipdl",
+]
 
 PREPROCESSED_IPDL_SOURCES += [
     "LookAndFeelTypes.ipdlh",

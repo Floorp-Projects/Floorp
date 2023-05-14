@@ -60,13 +60,14 @@ void nsClipboard::SetSelectionCache(nsITransferable* aTransferable) {
 void nsClipboard::ClearSelectionCache() { sSelectionCache = nullptr; }
 
 NS_IMETHODIMP
-nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
+nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
+                                    int32_t aWhichClipboard) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard) || !mTransferable)
+  if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard) || !aTransferable)
     return NS_ERROR_FAILURE;
 
-  NSDictionary* pasteboardOutputDict = PasteboardDictFromTransferable(mTransferable);
+  NSDictionary* pasteboardOutputDict = PasteboardDictFromTransferable(aTransferable);
   if (!pasteboardOutputDict) return NS_ERROR_FAILURE;
 
   unsigned int outputCount = [pasteboardOutputDict count];

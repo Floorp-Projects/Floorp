@@ -61,8 +61,9 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BenchmarkStorageParent.h"
 #include "mozilla/Casting.h"
-#include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ClipboardWriteRequestParent.h"
+#include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/FOGIPC.h"
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/GeckoArgs.h"
@@ -3639,6 +3640,15 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboardAsync(
                aResolver(std::move(ipcDataTransfer));
              });
   return IPC_OK();
+}
+
+already_AddRefed<PClipboardWriteRequestParent>
+ContentParent::AllocPClipboardWriteRequestParent(
+    const int32_t& aClipboardType) {
+  RefPtr<ClipboardWriteRequestParent> request =
+      MakeAndAddRef<ClipboardWriteRequestParent>(this);
+  request->Init(aClipboardType);
+  return request.forget();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPlaySound(nsIURI* aURI) {

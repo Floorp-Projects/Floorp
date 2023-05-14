@@ -213,7 +213,7 @@ nsClipboard::~nsClipboard() {
   }
 }
 
-NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED(nsClipboard, ClipboardSetDataHelper, nsIObserver)
 
 nsresult nsClipboard::Init(void) {
 #if defined(MOZ_X11)
@@ -250,8 +250,9 @@ nsClipboard::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 NS_IMETHODIMP
-nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
-                     int32_t aWhichClipboard) {
+nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
+                                    nsIClipboardOwner* aOwner,
+                                    int32_t aWhichClipboard) {
   // See if we can short cut
   if ((aWhichClipboard == kGlobalClipboard &&
        aTransferable == mGlobalTransferable.get() &&
