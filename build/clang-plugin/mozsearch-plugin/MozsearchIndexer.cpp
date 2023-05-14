@@ -207,6 +207,49 @@ public:
                       const MacroDefinition &Md) override;
 };
 
+// Performs heuristic resolution of entities in template code.
+class HeuristicResolver {
+public:
+  // Try to heuristically resolve certain types of expressions to one or more
+  // likely-referenced declarations.
+  static std::vector<const NamedDecl *>
+  resolveMemberExpr(const CXXDependentScopeMemberExpr *ME) {
+    const Type *BaseType = ME->getBaseType().getTypePtrOrNull();
+    return resolveDependentMember(BaseType, ME->getMember());
+  }
+
+private:
+  // Given a dependent class type and a member name, heuristically resolve the
+  // name to one or more declarations. The current heuristic is simply to look
+  // up the name in the primary template. This is a heuristic because the
+  // template could potentially have specializations that declare different
+  // members. Multiple declarations could be returned if the name is overloaded
+  // (e.g. an overloaded method in the primary template).
+  static std::vector<const NamedDecl *>
+  resolveDependentMember(const Type *T, DeclarationName Name) {
+    if (!T)
+      return {};
+
+    const auto *TST = T->getAs<TemplateSpecializationType>();
+    if (!TST) {
+      return {};
+    }
+
+    const ClassTemplateDecl *TD = dyn_cast_or_null<ClassTemplateDecl>(
+        TST->getTemplateName().getAsTemplateDecl());
+    if (!TD)
+      return {};
+
+    CXXRecordDecl *RD = TD->getTemplatedDecl();
+    if (!RD->hasDefinition())
+      return {};
+
+    RD = RD->getDefinition();
+    return RD->lookupDependentName(Name,
+                                   [](const NamedDecl *) { return true; });
+  }
+};
+
 class IndexConsumer : public ASTConsumer,
                       public RecursiveASTVisitor<IndexConsumer>,
                       public DiagnosticConsumer {
@@ -2009,6 +2052,17 @@ public:
       return true;
     }
 
+    // If possible, provide a heuristic result without instantiation.
+    for (const NamedDecl *D : HeuristicResolver::resolveMemberExpr(E)) {
+      if (const FunctionDecl *F = dyn_cast<FunctionDecl>(D)) {
+        std::string Mangled = getMangledName(CurMangleContext, F);
+        visitIdentifier("use", "function", getQualifiedName(F), Loc, Mangled,
+                        F->getType(), getContext(Loc));
+      }
+    }
+
+    // Alsoo record this location so that if we have instantiations, we can
+    // gather more accurate results from them.
     if (TemplateStack) {
       TemplateStack->visitDependent(Loc);
     }
