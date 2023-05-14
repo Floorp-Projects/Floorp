@@ -415,13 +415,19 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Begär support</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title">Reducering av kakbanners</string>
+    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Reducering av kakbanners</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Begär support för den här webbplatsen?</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text">Begäran om supportwebbplats har skickats.</string>
+    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Begäran om supportwebbplats har skickats.</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">Begäran skickad</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">PÅ för denna webbplats</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted">Begäran om supportwebbplats har skickats</string>
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Begäran om supportwebbplats har skickats</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Supportbegäran har skickats</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Webbplatsen stöds inte för närvarande</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -429,39 +435,22 @@
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Vill du stänga av reducering av kakbanners för %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">Denna webbplats stöds för närvarande inte av reducering av kakbanners. Vill du att vårt team ska granska den här webbplatsen och lägga till support i framtiden?</string>
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Denna webbplats stöds för närvarande inte av reducering av kakbanners. Vill du att vårt team ska granska den här webbplatsen och lägga till support i framtiden?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s kan inte automatiskt avvisa kakförfrågningar på den här webbplatsen. Du kan skicka en begäran om att stödja den här webbplatsen i framtiden.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s rensar webbplatsens kakor och uppdaterar sidan. Rensa alla kakor kan logga ut dig eller tömma kundvagnar.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s försöker automatiskt avvisa alla kak-förfrågningar på webbplatser som stöds.</string>
-    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Ta bort kak-banners!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">Tillåta %1$s att avvisa kakbanners?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Vill du tillåta att %1$s automatiskt avvisar kak-förfrågningar när det är möjligt?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_body">%1$s kan automatiskt avvisa flera kakbannerförfrågningar.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Inte nu</string>
-    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Ignorera banners</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Du kommer att se färre kak-förfrågningar</string>
-    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Se färre popup-fönster för kakor</string>
-
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Svara automatiskt på popup-fönster för kakor för att surfa utan distraktion. %1$s kommer att avvisa alla förfrågningar om möjligt.</string>
-    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Ignorera popup-fönster</string>
-    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Reducering av kakbanner</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Vill du tillåta %1$s att avslå en webbplats begäran om samtycke till kakor om möjligt?</string>
-    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Tillåt</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button">Tillåt</string>

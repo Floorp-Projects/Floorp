@@ -300,10 +300,16 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">Feu que el %s sigui el vostre navegador per defecte.</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Feu que el Firefox sigui el vostre navegador per defecte</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
     <string name="juno_onboarding_default_browser_description">El %1$s prioritza les persones sobre els beneficis i defensa la vostra privadesa blocant els elements de seguiment entre llocs.\n\nTrobareu més informació en l’%2$s.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">El Firefox prioritza les persones sobre els beneficis i defensa la vostra privadesa blocant els elements de seguiment entre llocs.\n\nTrobareu més informació en l’avís de privadesa.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">avís de privadesa</string>
@@ -323,9 +329,15 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">Les notificacions us ajuden a fer més coses amb el %s</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Les notificacions us ajuden a fer més coses amb el Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_description">Envieu pestanyes entre dispositius, gestioneu les baixades i obteniu consells per a treure el màxim profit del %s.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Envieu pestanyes entre dispositius, gestioneu les baixades i obteniu consells per a treure el màxim profit del Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">Activa les notificacions</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -401,13 +413,19 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Sol·licita que sigui compatible</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title">Reducció de bàners de galetes</string>
+    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Reducció de bàners de galetes</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Voleu demanar que aquest lloc sigui compatible?</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text">S’ha enviat la sol·licitud per a fer que aquest lloc sigui compatible.</string>
+    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">S’ha enviat la sol·licitud per a fer que aquest lloc sigui compatible.</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">S’ha enviat la sol·licitud</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Activada en aquest lloc</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted">S’ha enviat la sol·licitud per a fer que aquest lloc sigui compatible</string>
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">S’ha enviat la sol·licitud per a fer que aquest lloc sigui compatible</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">S’ha enviat la sol·licitud de compatibilitat</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Aquest lloc no és compatible ara per ara</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -415,40 +433,22 @@
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Voleu desactivar la reducció de bàners de galetes per a %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">Actualment, aquest lloc web no és compatible amb la Reducció de bàners de galetes. Voleu que el nostre equip ho revisi i el faci compatible en el futur?</string>
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Actualment, aquest lloc web no és compatible amb la Reducció de bàners de galetes. Voleu que el nostre equip ho revisi i el faci compatible en el futur?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">El %1$s no pot rebutjar automàticament les sol·licituds de galetes d’aquest lloc. Podeu enviar una sol·licitud per a fer que aquest lloc sigui compatible en el futur.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">El %1$s esborrarà les galetes d’aquest lloc i actualitzarà la pàgina. En esborrar totes les galetes, pot ser que se us tanquin les sessions o que se us buidin els carros de la compra.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">El %1$s intenta rebutjar automàticament totes les sol·licituds de galetes de tots els llocs compatibles.</string>
-    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Adeu als bàners de galetes!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">Voleu el %1$s rebutgi els bàners de galetes?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Voleu permetre que el %1$s rebutgi automàticament les sol·licituds de galetes quan sigui possible?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_body">El %1$s pot rebutjar automàticament moltes sol·licituds de bàners de galetes.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ara no</string>
 
-    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Tanca els bàners</string>
-
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Veureu menys sol·licituds de galetes</string>
-    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Vegeu menys finestres emergents de galetes</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Respon automàticament les finestres emergents de galetes per a una navegació sense distraccions. El %1$s rebutjarà totes les sol·licituds, si és possible.</string>
-    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Tanca les finestres emergents</string>
-    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Reducció de bàners de galetes</string>
-
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Voleu permetre que el %1$s rebutgi la sol·licitud de consentiment de galetes d’un lloc, si és possible?</string>
-    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Permet</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button">Permet</string>
@@ -573,7 +573,7 @@
     <string name="customize_toggle_recently_visited">Visitat recentment</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket_2">Articles suggerents</string>
+    <string name="customize_toggle_pocket_2">Articles suggeridors</string>
     <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
     <string name="customize_toggle_pocket_summary">Articles recomanats pel %s</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
@@ -2073,7 +2073,7 @@
 
     <!-- Pocket recommended stories -->
     <!-- Header text for a section on the home screen. -->
-    <string name="pocket_stories_header_1">Articles suggerents</string>
+    <string name="pocket_stories_header_1">Articles suggeridors</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_categories_header">Articles per tema</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
