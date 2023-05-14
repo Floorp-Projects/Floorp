@@ -400,7 +400,7 @@ class BlobTextHandler final : public PromiseNativeHandler {
 
 NS_IMPL_ISUPPORTS0(BlobTextHandler)
 
-RefPtr<NativeEntryPromise> GetStringNativeEntry(
+static RefPtr<NativeEntryPromise> GetStringNativeEntry(
     const nsAString& aType, const OwningStringOrBlob& aData) {
   if (aData.IsString()) {
     RefPtr<nsVariantCC> variant = new nsVariantCC();
@@ -460,7 +460,7 @@ class ImageDecodeCallback final : public imgIContainerCallback {
 
 NS_IMPL_ISUPPORTS(ImageDecodeCallback, imgIContainerCallback)
 
-RefPtr<NativeEntryPromise> GetImageNativeEntry(
+static RefPtr<NativeEntryPromise> GetImageNativeEntry(
     const nsAString& aType, const OwningStringOrBlob& aData) {
   if (aData.IsString()) {
     CopyableErrorResult rv;
@@ -486,7 +486,7 @@ RefPtr<NativeEntryPromise> GetImageNativeEntry(
   return callback->Promise();
 }
 
-Result<NativeEntry, ErrorResult> SanitizeNativeEntry(
+static Result<NativeEntry, ErrorResult> SanitizeNativeEntry(
     const NativeEntry& aEntry) {
   MOZ_ASSERT(aEntry.mType.EqualsLiteral(kHTMLMime));
 
@@ -525,8 +525,8 @@ static bool IsValidType(const nsAString& aType) {
 }
 
 using NativeItemPromise = NativeEntryPromise::AllPromiseType;
-
-RefPtr<NativeItemPromise> GetClipboardNativeItem(const ClipboardItem& aItem) {
+static RefPtr<NativeItemPromise> GetClipboardNativeItem(
+    const ClipboardItem& aItem) {
   nsTArray<RefPtr<NativeEntryPromise>> promises;
   for (const auto& entry : aItem.Entries()) {
     const nsAString& type = entry->Type();
