@@ -675,12 +675,12 @@ nsresult ScriptLoader::StartLoadInternal(
        aRequest->GetScriptLoadContext()->IsTracking()));
 
   if (aRequest->GetScriptLoadContext()->IsLinkPreloadScript()) {
-    // This is <link rel="preload" as="script"> initiated speculative load,
-    // put it to the group that is not blocked by leaders and doesn't block
-    // follower at the same time. Giving it a much higher priority will make
-    // this request be processed ahead of other Unblocked requests, but with
-    // the same weight as Leaders.  This will make us behave similar way for
-    // both http2 and http1.
+    // This is <link rel="preload" as="script"> or <link rel="modulepreload">
+    // initiated speculative load, put it to the group that is not blocked by
+    // leaders and doesn't block follower at the same time. Giving it a much
+    // higher priority will make this request be processed ahead of other
+    // Unblocked requests, but with the same weight as Leaders. This will make
+    // us behave similar way for both http2 and http1.
     ScriptLoadContext::PrioritizeAsPreload(channel);
     ScriptLoadContext::AddLoadBackgroundFlag(channel);
   } else if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(channel)) {
@@ -786,7 +786,8 @@ nsresult ScriptLoader::StartLoadInternal(
       aRequest->mURI, aRequest->CORSMode(), aRequest->mKind);
   aRequest->GetScriptLoadContext()->NotifyOpen(
       key, channel, mDocument,
-      aRequest->GetScriptLoadContext()->IsLinkPreloadScript());
+      aRequest->GetScriptLoadContext()->IsLinkPreloadScript(),
+      aRequest->IsModuleRequest());
 
   if (aEarlyHintPreloaderId) {
     nsCOMPtr<nsIHttpChannelInternal> channelInternal =
@@ -1327,10 +1328,13 @@ ScriptLoadRequest* ScriptLoader::LookupPreloadRequest(
   if (i == nsTArray<PreloadInfo>::NoIndex) {
     return nullptr;
   }
+  RefPtr<ScriptLoadRequest> request = mPreloads[i].mRequest;
+  if (aScriptKind != request->mKind) {
+    return nullptr;
+  }
 
   // Found preloaded request. Note that a script-inserted script can steal a
   // preload!
-  RefPtr<ScriptLoadRequest> request = mPreloads[i].mRequest;
   request->GetScriptLoadContext()->SetIsLoadRequest(aElement);
 
   if (request->GetScriptLoadContext()->mWasCompiledOMT &&
@@ -1346,9 +1350,11 @@ ScriptLoadRequest* ScriptLoader::LookupPreloadRequest(
   nsAutoString elementCharset;
   aElement->GetScriptCharset(elementCharset);
 
-  if (!elementCharset.Equals(preloadCharset) ||
-      aElement->GetCORSMode() != request->CORSMode() ||
-      aScriptKind != request->mKind) {
+  // Bug 1832361: charset and crossorigin attributes shouldn't affect matching
+  // of module scripts and modulepreload
+  if (!request->IsModuleRequest() &&
+      (!elementCharset.Equals(preloadCharset) ||
+       aElement->GetCORSMode() != request->CORSMode())) {
     // Drop the preload.
     request->Cancel();
     AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::RequestMismatch);
