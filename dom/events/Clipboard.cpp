@@ -123,8 +123,8 @@ void Clipboard::ReadRequest::Answer() {
 
                   RefPtr<ClipboardItem::ItemEntry> entry =
                       MakeRefPtr<ClipboardItem::ItemEntry>(
-                          NS_ConvertUTF8toUTF16(format));
-                  entry->LoadData(*global, *trans);
+                          global, NS_ConvertUTF8toUTF16(format));
+                  entry->LoadDataFromSystemClipboard(*trans);
                   entries.AppendElement(std::move(entry));
                 }
 
@@ -517,6 +517,35 @@ static Result<NativeEntry, ErrorResult> SanitizeNativeEntry(
   return NativeEntry(aEntry.mType, variant);
 }
 
+static RefPtr<NativeEntryPromise> GetNativeEntry(
+    const nsAString& aType, const OwningStringOrBlob& aData) {
+  if (aType.EqualsLiteral(kPNGImageMime)) {
+    return GetImageNativeEntry(aType, aData);
+  }
+
+  RefPtr<NativeEntryPromise> promise = GetStringNativeEntry(aType, aData);
+  if (aType.EqualsLiteral(kHTMLMime)) {
+    promise = promise->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [](const NativeEntryPromise::ResolveOrRejectValue& aValue)
+            -> RefPtr<NativeEntryPromise> {
+          if (aValue.IsReject()) {
+            return NativeEntryPromise::CreateAndReject(aValue.RejectValue(),
+                                                       __func__);
+          }
+
+          auto sanitized = SanitizeNativeEntry(aValue.ResolveValue());
+          if (sanitized.isErr()) {
+            return NativeEntryPromise::CreateAndReject(
+                CopyableErrorResult(sanitized.unwrapErr()), __func__);
+          }
+          return NativeEntryPromise::CreateAndResolve(sanitized.unwrap(),
+                                                      __func__);
+        });
+  }
+  return promise;
+}
+
 // Restrict to types allowed by Chrome
 // SVG is still disabled by default in Chrome.
 static bool IsValidType(const nsAString& aType) {
@@ -537,32 +566,18 @@ static RefPtr<NativeItemPromise> GetClipboardNativeItem(
       return NativeItemPromise::CreateAndReject(rv, __func__);
     }
 
-    const OwningStringOrBlob& data = entry->Data();
-    if (type.EqualsLiteral(kPNGImageMime)) {
-      promises.AppendElement(GetImageNativeEntry(type, data));
-    } else {
-      RefPtr<NativeEntryPromise> promise = GetStringNativeEntry(type, data);
-      if (type.EqualsLiteral(kHTMLMime)) {
-        promise = promise->Then(
-            GetMainThreadSerialEventTarget(), __func__,
-            [](const NativeEntryPromise::ResolveOrRejectValue& aValue)
-                -> RefPtr<NativeEntryPromise> {
-              if (aValue.IsReject()) {
-                return NativeEntryPromise::CreateAndReject(aValue.RejectValue(),
-                                                           __func__);
-              }
+    using GetDataPromise = ClipboardItem::ItemEntry::GetDataPromise;
+    promises.AppendElement(entry->GetData()->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [t = nsString(type)](const GetDataPromise::ResolveOrRejectValue& aValue)
+            -> RefPtr<NativeEntryPromise> {
+          if (aValue.IsReject()) {
+            return NativeEntryPromise::CreateAndReject(
+                CopyableErrorResult(aValue.RejectValue()), __func__);
+          }
 
-              auto sanitized = SanitizeNativeEntry(aValue.ResolveValue());
-              if (sanitized.isErr()) {
-                return NativeEntryPromise::CreateAndReject(
-                    CopyableErrorResult(sanitized.unwrapErr()), __func__);
-              }
-              return NativeEntryPromise::CreateAndResolve(sanitized.unwrap(),
-                                                          __func__);
-            });
-      }
-      promises.AppendElement(promise);
-    }
+          return GetNativeEntry(t, aValue.ResolveValue());
+        }));
   }
   return NativeEntryPromise::All(GetCurrentSerialEventTarget(), promises);
 }
@@ -672,13 +687,16 @@ already_AddRefed<Promise> Clipboard::Write(
 already_AddRefed<Promise> Clipboard::WriteText(const nsAString& aData,
                                                nsIPrincipal& aSubjectPrincipal,
                                                ErrorResult& aRv) {
-  // Create a single-element Sequence to reuse Clipboard::Write.
-  OwningStringOrBlob data;
-  data.SetAsString() = aData;
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+  if (!global) {
+    aRv.ThrowInvalidStateError("Unable to get global.");
+    return nullptr;
+  }
 
+  // Create a single-element Sequence to reuse Clipboard::Write.
   nsTArray<RefPtr<ClipboardItem::ItemEntry>> items;
   items.AppendElement(MakeRefPtr<ClipboardItem::ItemEntry>(
-      NS_LITERAL_STRING_FROM_CSTRING(kTextMime), std::move(data)));
+      global, NS_LITERAL_STRING_FROM_CSTRING(kTextMime), aData));
 
   nsTArray<OwningNonNull<ClipboardItem>> sequence;
   RefPtr<ClipboardItem> item = MakeRefPtr<ClipboardItem>(

@@ -17,29 +17,75 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION(ClipboardItem::ItemEntry, mData,
+NS_IMPL_CYCLE_COLLECTION(ClipboardItem::ItemEntry, mGlobal, mData,
                          mPendingGetTypeRequests)
 
-void ClipboardItem::ItemEntry::SetData(already_AddRefed<Blob>&& aBlob) {
-  // XXX maybe we could consider adding a method to check whether the union
-  // object is uninitialized or initialized.
-  MOZ_DIAGNOSTIC_ASSERT(!mData.IsString() && !mData.IsBlob(),
-                        "Data should be uninitialized.");
-  MOZ_DIAGNOSTIC_ASSERT(
-      !mLoadingPromise.Exists(),
-      "Should not be in the process of loading data from clipboard.");
-  mData.SetAsBlob() = std::move(aBlob);
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ClipboardItem::ItemEntry)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ClipboardItem::ItemEntry)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ClipboardItem::ItemEntry)
+
+void ClipboardItem::ItemEntry::ResolvedCallback(JSContext* aCx,
+                                                JS::Handle<JS::Value> aValue,
+                                                ErrorResult& aRv) {
+  MOZ_ASSERT(!mLoadingPromise.Exists());
+  mIsLoadingData = false;
+  OwningStringOrBlob clipboardData;
+  if (!clipboardData.Init(aCx, aValue)) {
+    JS_ClearPendingException(aCx);
+    RejectPendingPromises(NS_ERROR_DOM_DATA_ERR);
+    return;
+  }
+
+  MaybeResolvePendingPromises(std::move(clipboardData));
 }
 
-void ClipboardItem::ItemEntry::LoadData(nsIGlobalObject& aGlobal,
-                                        nsITransferable& aTransferable) {
+void ClipboardItem::ItemEntry::RejectedCallback(JSContext* aCx,
+                                                JS::Handle<JS::Value> aValue,
+                                                ErrorResult& aRv) {
+  MOZ_ASSERT(!mLoadingPromise.Exists());
+  mIsLoadingData = false;
+  RejectPendingPromises(NS_ERROR_DOM_DATA_ERR);
+}
+
+RefPtr<ClipboardItem::ItemEntry::GetDataPromise>
+ClipboardItem::ItemEntry::GetData() {
+  // Data is still being loaded, either from the system clipboard or the data
+  // promise provided to the ClipboardItem constructor.
+  if (mIsLoadingData) {
+    MOZ_ASSERT(!mData.IsString() && !mData.IsBlob(),
+               "Data should be uninitialized");
+    MOZ_ASSERT(mLoadResult.isNothing(), "Should have no load result");
+
+    MozPromiseHolder<GetDataPromise> holder;
+    RefPtr<GetDataPromise> promise = holder.Ensure(__func__);
+    mPendingGetDataRequests.AppendElement(std::move(holder));
+    return promise.forget();
+  }
+
+  if (NS_FAILED(mLoadResult.value())) {
+    MOZ_ASSERT(!mData.IsString() && !mData.IsBlob(),
+               "Data should be uninitialized");
+    // We are not able to load data, so reject the promise directly.
+    return GetDataPromise::CreateAndReject(mLoadResult.value(), __func__);
+  }
+
+  MOZ_ASSERT(mData.IsString() || mData.IsBlob(), "Data should be initialized");
+  OwningStringOrBlob data(mData);
+  return GetDataPromise::CreateAndResolve(std::move(data), __func__);
+}
+
+void ClipboardItem::ItemEntry::LoadDataFromSystemClipboard(
+    nsITransferable& aTransferable) {
   // XXX maybe we could consider adding a method to check whether the union
   // object is uninitialized or initialized.
   MOZ_DIAGNOSTIC_ASSERT(!mData.IsString() && !mData.IsBlob(),
                         "Data should be uninitialized.");
-  MOZ_DIAGNOSTIC_ASSERT(
-      !mLoadingPromise.Exists(),
-      "Should not be in the process of loading data from clipboard.");
+  MOZ_DIAGNOSTIC_ASSERT(mLoadResult.isNothing(), "Should have no load result");
+  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mLoadingPromise.Exists(),
+                        "Should not be in the process of loading data");
 
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(
@@ -48,12 +94,14 @@ void ClipboardItem::ItemEntry::LoadData(nsIGlobalObject& aGlobal,
     return;
   }
 
+  mIsLoadingData = true;
   nsCOMPtr<nsITransferable> trans(&aTransferable);
   clipboard->AsyncGetData(trans, nsIClipboard::kGlobalClipboard)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           /* resolved */
-          [self = RefPtr{this}, global = RefPtr{&aGlobal}, trans]() {
+          [self = RefPtr{this}, trans]() {
+            self->mIsLoadingData = false;
             self->mLoadingPromise.Complete();
 
             nsCOMPtr<nsISupports> data;
@@ -61,7 +109,7 @@ void ClipboardItem::ItemEntry::LoadData(nsIGlobalObject& aGlobal,
                 NS_ConvertUTF16toUTF8(self->Type()).get(),
                 getter_AddRefs(data));
             if (NS_WARN_IF(NS_FAILED(rv))) {
-              self->RejectPendingGetTypePromises(rv);
+              self->RejectPendingPromises(rv);
               return;
             }
 
@@ -71,8 +119,8 @@ void ClipboardItem::ItemEntry::LoadData(nsIGlobalObject& aGlobal,
               nsAutoString str;
               supportsstr->GetData(str);
 
-              blob = Blob::CreateStringBlob(global, NS_ConvertUTF16toUTF8(str),
-                                            self->Type());
+              blob = Blob::CreateStringBlob(
+                  self->mGlobal, NS_ConvertUTF16toUTF8(str), self->Type());
             } else if (nsCOMPtr<nsIInputStream> istream =
                            do_QueryInterface(data)) {
               uint64_t available;
@@ -80,46 +128,76 @@ void ClipboardItem::ItemEntry::LoadData(nsIGlobalObject& aGlobal,
               nsresult rv =
                   NS_ReadInputStreamToBuffer(istream, &data, -1, &available);
               if (NS_WARN_IF(NS_FAILED(rv))) {
-                self->RejectPendingGetTypePromises(rv);
+                self->RejectPendingPromises(rv);
                 return;
               }
 
-              blob =
-                  Blob::CreateMemoryBlob(global, data, available, self->Type());
+              blob = Blob::CreateMemoryBlob(self->mGlobal, data, available,
+                                            self->Type());
             } else if (nsCOMPtr<nsISupportsCString> supportscstr =
                            do_QueryInterface(data)) {
               nsAutoCString str;
               supportscstr->GetData(str);
 
-              blob = Blob::CreateStringBlob(global, str, self->Type());
+              blob = Blob::CreateStringBlob(self->mGlobal, str, self->Type());
             }
 
             if (!blob) {
-              self->RejectPendingGetTypePromises(NS_ERROR_DOM_DATA_ERR);
+              self->RejectPendingPromises(NS_ERROR_DOM_DATA_ERR);
               return;
             }
 
-            self->ResolvePendingGetTypePromises(*blob);
-            self->SetData(blob.forget());
+            OwningStringOrBlob clipboardData;
+            clipboardData.SetAsBlob() = std::move(blob);
+            self->MaybeResolvePendingPromises(std::move(clipboardData));
           },
           /* rejected */
           [self = RefPtr{this}](nsresult rv) {
+            self->mIsLoadingData = false;
             self->mLoadingPromise.Complete();
-            self->RejectPendingGetTypePromises(rv);
+            self->RejectPendingPromises(rv);
           })
       ->Track(mLoadingPromise);
 }
 
-void ClipboardItem::ItemEntry::ReactPromise(nsIGlobalObject& aGlobal,
-                                            Promise& aPromise) {
-  // Still loading data from system clipboard.
-  if (mLoadingPromise.Exists()) {
+void ClipboardItem::ItemEntry::LoadDataFromDataPromise(Promise& aDataPromise) {
+  MOZ_DIAGNOSTIC_ASSERT(!mData.IsString() && !mData.IsBlob(),
+                        "Data should be uninitialized");
+  MOZ_DIAGNOSTIC_ASSERT(mLoadResult.isNothing(), "Should have no load result");
+  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mLoadingPromise.Exists(),
+                        "Should not be in the process of loading data");
+
+  mIsLoadingData = true;
+  aDataPromise.AppendNativeHandler(this);
+}
+
+void ClipboardItem::ItemEntry::ReactGetTypePromise(Promise& aPromise) {
+  // Data is still being loaded, either from the system clipboard or the data
+  // promise provided to the ClipboardItem constructor.
+  if (mIsLoadingData) {
+    MOZ_ASSERT(!mData.IsString() && !mData.IsBlob(),
+               "Data should be uninitialized");
+    MOZ_ASSERT(mLoadResult.isNothing(), "Should have no load result.");
     mPendingGetTypeRequests.AppendElement(&aPromise);
     return;
   }
 
-  if (mData.IsBlob()) {
-    aPromise.MaybeResolve(mData);
+  if (NS_FAILED(mLoadResult.value())) {
+    MOZ_ASSERT(!mData.IsString() && !mData.IsBlob(),
+               "Data should be uninitialized");
+    aPromise.MaybeRejectWithDataError("The data for type '"_ns +
+                                      NS_ConvertUTF16toUTF8(mType) +
+                                      "' was not found"_ns);
+    return;
+  }
+
+  MaybeResolveGetTypePromise(mData, aPromise);
+}
+
+void ClipboardItem::ItemEntry::MaybeResolveGetTypePromise(
+    const OwningStringOrBlob& aData, Promise& aPromise) {
+  if (aData.IsBlob()) {
+    aPromise.MaybeResolve(aData);
     return;
   }
 
@@ -127,12 +205,10 @@ void ClipboardItem::ItemEntry::ReactPromise(nsIGlobalObject& aGlobal,
   // maybe we should also load that into a Blob earlier. But Safari returns
   // different `Blob` instances for each `getTypes` call if the string is from
   // ClipboardItem constructor, which is more like our current setup.
-  if (mData.IsString()) {
-    if (RefPtr<Blob> blob = Blob::CreateStringBlob(
-            &aGlobal, NS_ConvertUTF16toUTF8(mData.GetAsString()), mType)) {
-      aPromise.MaybeResolve(blob);
-      return;
-    }
+  if (RefPtr<Blob> blob = Blob::CreateStringBlob(
+          mGlobal, NS_ConvertUTF16toUTF8(aData.GetAsString()), mType)) {
+    aPromise.MaybeResolve(blob);
+    return;
   }
 
   aPromise.MaybeRejectWithDataError("The data for type '"_ns +
@@ -140,21 +216,41 @@ void ClipboardItem::ItemEntry::ReactPromise(nsIGlobalObject& aGlobal,
                                     "' was not found"_ns);
 }
 
-void ClipboardItem::ItemEntry::RejectPendingGetTypePromises(nsresult rv) {
-  MOZ_ASSERT(!mLoadingPromise.Exists(),
-             "Should not be in the process of loading data from clipboard.");
-  nsTArray<RefPtr<Promise>> promises = std::move(mPendingGetTypeRequests);
-  for (auto& promise : promises) {
-    promise->MaybeReject(rv);
+void ClipboardItem::ItemEntry::RejectPendingPromises(nsresult aRv) {
+  MOZ_ASSERT(NS_FAILED(aRv), "Should have a failure code here");
+  MOZ_DIAGNOSTIC_ASSERT(!mData.IsString() && !mData.IsBlob(),
+                        "Data should be uninitialized");
+  MOZ_DIAGNOSTIC_ASSERT(mLoadResult.isNothing(), "Should not have load result");
+  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mLoadingPromise.Exists(),
+                        "Should not be in the process of loading data");
+  mLoadResult.emplace(aRv);
+  auto promiseHolders = std::move(mPendingGetDataRequests);
+  for (auto& promiseHolder : promiseHolders) {
+    promiseHolder.Reject(aRv, __func__);
+  }
+  auto getTypePromises = std::move(mPendingGetTypeRequests);
+  for (auto& promise : getTypePromises) {
+    promise->MaybeReject(aRv);
   }
 }
 
-void ClipboardItem::ItemEntry::ResolvePendingGetTypePromises(Blob& aBlob) {
-  MOZ_ASSERT(!mLoadingPromise.Exists(),
-             "Should not be in the process of loading data from clipboard.");
-  nsTArray<RefPtr<Promise>> promises = std::move(mPendingGetTypeRequests);
+void ClipboardItem::ItemEntry::MaybeResolvePendingPromises(
+    OwningStringOrBlob&& aData) {
+  MOZ_DIAGNOSTIC_ASSERT(!mData.IsString() && !mData.IsBlob(),
+                        "Data should be uninitialized");
+  MOZ_DIAGNOSTIC_ASSERT(mLoadResult.isNothing(), "Should not have load result");
+  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mLoadingPromise.Exists(),
+                        "Should not be in the process of loading data");
+  mLoadResult.emplace(NS_OK);
+  mData = std::move(aData);
+  auto getDataPromiseHolders = std::move(mPendingGetDataRequests);
+  for (auto& promiseHolder : getDataPromiseHolders) {
+    OwningStringOrBlob data(mData);
+    promiseHolder.Resolve(std::move(data), __func__);
+  }
+  auto promises = std::move(mPendingGetTypeRequests);
   for (auto& promise : promises) {
-    promise->MaybeResolve(&aBlob);
+    MaybeResolveGetTypePromise(mData, *promise);
   }
 }
 
@@ -170,20 +266,25 @@ ClipboardItem::ClipboardItem(nsISupports* aOwner,
 // static
 already_AddRefed<ClipboardItem> ClipboardItem::Constructor(
     const GlobalObject& aGlobal,
-    const Record<nsString, OwningStringOrBlob>& aItems,
+    const Record<nsString, OwningNonNull<Promise>>& aItems,
     const ClipboardItemOptions& aOptions, ErrorResult& aRv) {
   if (aItems.Entries().IsEmpty()) {
     aRv.ThrowTypeError("At least one entry required");
     return nullptr;
   }
 
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
+
   nsTArray<RefPtr<ItemEntry>> items;
   for (const auto& entry : aItems.Entries()) {
-    items.AppendElement(MakeRefPtr<ItemEntry>(entry.mKey, entry.mValue));
+    RefPtr<ItemEntry> item = MakeRefPtr<ItemEntry>(global, entry.mKey);
+    item->LoadDataFromDataPromise(*entry.mValue);
+    items.AppendElement(std::move(item));
   }
 
   RefPtr<ClipboardItem> item = MakeRefPtr<ClipboardItem>(
-      aGlobal.GetAsSupports(), aOptions.mPresentationStyle, std::move(items));
+      global, aOptions.mPresentationStyle, std::move(items));
   return item.forget();
 }
 
@@ -212,7 +313,7 @@ already_AddRefed<Promise> ClipboardItem::GetType(const nsAString& aType,
         return p.forget();
       }
 
-      item->ReactPromise(*global, *p);
+      item->ReactGetTypePromise(*p);
       return p.forget();
     }
   }
