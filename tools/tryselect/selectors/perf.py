@@ -1050,7 +1050,7 @@ class PerfParser(CompareParser):
                 # Don't cache the base revision when a custom comparison is being performed
                 # since the base revision is now unique and not general to all pushes
                 base_revision_treeherder = PerfParser.check_cached_revision(
-                    compare_commit
+                    selected_tasks, compare_commit
                 )
 
             if not (dry_run or single_run or base_revision_treeherder):
@@ -1080,7 +1080,7 @@ class PerfParser(CompareParser):
                 base_revision_treeherder = log_processor.revision
                 if base_comparator:
                     PerfParser.save_revision_treeherder(
-                        compare_commit, base_revision_treeherder
+                        selected_tasks, compare_commit, base_revision_treeherder
                     )
 
                 comparator_obj.teardown_base_revision()
