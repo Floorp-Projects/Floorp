@@ -6,6 +6,7 @@
 
 include protocol PBackgroundStarter;
 include protocol PBrowser;
+include protocol PClipboardWriteRequest;
 include protocol PCompositorManager;
 include protocol PContentPermissionRequest;
 include protocol PCycleCollectWithLogs;
@@ -475,6 +476,7 @@ union IPCDataTransferOrError {
 sync protocol PContent
 {
     manages PBrowser;
+    manages PClipboardWriteRequest;
     manages PContentPermissionRequest;
     manages PCycleCollectWithLogs;
     manages PExtensions;
@@ -1246,6 +1248,14 @@ parent:
     // constains the data for the specified type.
     async ClipboardHasTypesAsync(nsCString [] aTypes, int32_t aWhichClipboard)
         returns (nsCString [] types);
+
+    /**
+     * Notify the parent that the child has started a clipboard write request,
+     * and that the data will be sent over another IPC message once it is ready.
+     * @param  aClipboardType
+     *         The clipboard type defined in nsIClipboard.
+     */
+    async PClipboardWriteRequest(int32_t aClipboardType);
 
     // 'Play', 'Beep' and 'PlayEventSound' are the only nsISound methods used in
     // the content process.

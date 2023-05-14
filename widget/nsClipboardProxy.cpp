@@ -2,15 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsClipboardProxy.h"
+
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
 #  include "mozilla/a11y/Compatibility.h"
 #endif
+#include "mozilla/ClipboardWriteRequestChild.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Unused.h"
 #include "nsArrayUtils.h"
-#include "nsClipboardProxy.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -54,6 +56,17 @@ nsClipboardProxy::SetData(nsITransferable* aTransferable,
                           requestingPrincipal, cookieJarSettingsArgs,
                           contentPolicyType, referrerInfo, aWhichClipboard);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsClipboardProxy::AsyncSetData(
+    int32_t aWhichClipboard, nsIAsyncSetClipboardDataCallback* aCallback,
+    nsIAsyncSetClipboardData** _retval) {
+  RefPtr<ClipboardWriteRequestChild> request =
+      MakeRefPtr<ClipboardWriteRequestChild>(aCallback);
+  ContentChild::GetSingleton()->SendPClipboardWriteRequestConstructor(
+      request, aWhichClipboard);
+  request.forget(_retval);
   return NS_OK;
 }
 

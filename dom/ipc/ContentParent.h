@@ -63,6 +63,7 @@ class nsIWidget;
 class nsIX509Cert;
 
 namespace mozilla {
+class PClipboardWriteRequestParent;
 class PRemoteSpellcheckEngineParent;
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
@@ -1021,6 +1022,9 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvGetClipboardAsync(
       nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
       GetClipboardAsyncResolver&& aResolver);
+
+  already_AddRefed<PClipboardWriteRequestParent>
+  AllocPClipboardWriteRequestParent(const int32_t& aClipboardType);
 
   mozilla::ipc::IPCResult RecvPlaySound(nsIURI* aURI);
   mozilla::ipc::IPCResult RecvBeep();

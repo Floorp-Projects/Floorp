@@ -45,8 +45,9 @@ class nsClipboard : public nsBaseClipboard {
   static nsresult TransferableFromPasteboard(nsITransferable* aTransferable, NSPasteboard* pboard);
 
  protected:
-  // impelement the native clipboard behavior
-  NS_IMETHOD SetNativeClipboardData(int32_t aWhichClipboard) override;
+  // Implement the native clipboard behavior.
+  NS_IMETHOD SetNativeClipboardData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
+                                    int32_t aWhichClipboard) override;
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) override;
   void ClearSelectionCache();

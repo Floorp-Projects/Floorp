@@ -6,8 +6,8 @@
 #ifndef NS_CLIPBOARD_PROXY_H
 #define NS_CLIPBOARD_PROXY_H
 
-#include "nsIClipboard.h"
 #include "mozilla/dom/PContent.h"
+#include "nsIClipboard.h"
 
 #define NS_CLIPBOARDPROXY_IID                        \
   {                                                  \

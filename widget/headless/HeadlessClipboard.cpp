@@ -11,15 +11,15 @@
 namespace mozilla {
 namespace widget {
 
-NS_IMPL_ISUPPORTS(HeadlessClipboard, nsIClipboard)
+NS_IMPL_ISUPPORTS_INHERITED0(HeadlessClipboard, ClipboardSetDataHelper)
 
 HeadlessClipboard::HeadlessClipboard()
     : mClipboard(MakeUnique<HeadlessClipboardData>()) {}
 
 NS_IMETHODIMP
-HeadlessClipboard::SetData(nsITransferable* aTransferable,
-                           nsIClipboardOwner* anOwner,
-                           int32_t aWhichClipboard) {
+HeadlessClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
+                                          nsIClipboardOwner* aOwner,
+                                          int32_t aWhichClipboard) {
   if (aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

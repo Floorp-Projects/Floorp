@@ -5,15 +5,129 @@
 
 #include "nsBaseClipboard.h"
 
-#include "mozilla/Logging.h"
-
 #include "nsIClipboardOwner.h"
-#include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsXPCOM.h"
 
 using mozilla::GenericPromise;
 using mozilla::LogLevel;
+
+NS_IMPL_ISUPPORTS(ClipboardSetDataHelper::AsyncSetClipboardData,
+                  nsIAsyncSetClipboardData)
+
+ClipboardSetDataHelper::AsyncSetClipboardData::AsyncSetClipboardData(
+    int32_t aClipboardType, ClipboardSetDataHelper* aClipboard,
+    nsIAsyncSetClipboardDataCallback* aCallback)
+    : mClipboardType(aClipboardType),
+      mClipboard(aClipboard),
+      mCallback(aCallback) {
+  MOZ_ASSERT(mClipboard);
+  MOZ_ASSERT(mClipboard->IsClipboardTypeSupported(mClipboardType));
+}
+
+NS_IMETHODIMP
+ClipboardSetDataHelper::AsyncSetClipboardData::SetData(
+    nsITransferable* aTransferable, nsIClipboardOwner* aOwner) {
+  if (!IsValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ASSERT(mClipboard);
+  MOZ_ASSERT(mClipboard->IsClipboardTypeSupported(mClipboardType));
+  MOZ_DIAGNOSTIC_ASSERT(mClipboard->mPendingWriteRequests[mClipboardType] ==
+                        this);
+
+  RefPtr<AsyncSetClipboardData> request =
+      std::move(mClipboard->mPendingWriteRequests[mClipboardType]);
+  nsresult rv = mClipboard->SetData(aTransferable, aOwner, mClipboardType);
+  MaybeNotifyCallback(rv);
+
+  return rv;
+}
+
+NS_IMETHODIMP
+ClipboardSetDataHelper::AsyncSetClipboardData::Abort(nsresult aReason) {
+  // Note: This may be called during destructor, so it should not attempt to
+  // take a reference to mClipboard.
+
+  if (!IsValid() || !NS_FAILED(aReason)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MaybeNotifyCallback(aReason);
+  return NS_OK;
+}
+
+void ClipboardSetDataHelper::AsyncSetClipboardData::MaybeNotifyCallback(
+    nsresult aResult) {
+  // Note: This may be called during destructor, so it should not attempt to
+  // take a reference to mClipboard.
+
+  MOZ_ASSERT(IsValid());
+  if (nsCOMPtr<nsIAsyncSetClipboardDataCallback> callback =
+          mCallback.forget()) {
+    callback->OnComplete(aResult);
+  }
+  // Once the callback is notified, setData should not be allowed, so invalidate
+  // this request.
+  mClipboard = nullptr;
+}
+
+NS_IMPL_ISUPPORTS(ClipboardSetDataHelper, nsIClipboard)
+
+ClipboardSetDataHelper::~ClipboardSetDataHelper() {
+  for (auto& request : mPendingWriteRequests) {
+    if (request) {
+      request->Abort(NS_ERROR_ABORT);
+      request = nullptr;
+    }
+  }
+}
+
+void ClipboardSetDataHelper::RejectPendingAsyncSetDataRequestIfAny(
+    int32_t aClipboardType) {
+  MOZ_ASSERT(nsIClipboard::IsClipboardTypeSupported(aClipboardType));
+  auto& request = mPendingWriteRequests[aClipboardType];
+  if (request) {
+    request->Abort(NS_ERROR_ABORT);
+    request = nullptr;
+  }
+}
+
+NS_IMETHODIMP
+ClipboardSetDataHelper::SetData(nsITransferable* aTransferable,
+                                nsIClipboardOwner* aOwner,
+                                int32_t aWhichClipboard) {
+  NS_ENSURE_ARG(aTransferable);
+  if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
+  // Reject existing pending asyncSetData request if any.
+  RejectPendingAsyncSetDataRequestIfAny(aWhichClipboard);
+
+  return SetNativeClipboardData(aTransferable, aOwner, aWhichClipboard);
+}
+
+NS_IMETHODIMP ClipboardSetDataHelper::AsyncSetData(
+    int32_t aWhichClipboard, nsIAsyncSetClipboardDataCallback* aCallback,
+    nsIAsyncSetClipboardData** _retval) {
+  *_retval = nullptr;
+  if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
+  // Reject existing pending AsyncSetData request if any.
+  RejectPendingAsyncSetDataRequestIfAny(aWhichClipboard);
+
+  // Create a new AsyncSetClipboardData.
+  RefPtr<AsyncSetClipboardData> request =
+      mozilla::MakeRefPtr<AsyncSetClipboardData>(aWhichClipboard, this,
+                                                 aCallback);
+  mPendingWriteRequests[aWhichClipboard] = request;
+  request.forget(_retval);
+  return NS_OK;
+}
 
 nsBaseClipboard::nsBaseClipboard() : mEmptyingForSetData(false) {}
 
@@ -23,7 +137,7 @@ nsBaseClipboard::~nsBaseClipboard() {
   EmptyClipboard(kFindClipboard);
 }
 
-NS_IMPL_ISUPPORTS(nsBaseClipboard, nsIClipboard)
+NS_IMPL_ISUPPORTS_INHERITED0(nsBaseClipboard, ClipboardSetDataHelper)
 
 /**
  * Sets the transferable object
@@ -59,7 +173,8 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
   nsresult rv = NS_ERROR_FAILURE;
   if (mTransferable) {
     mIgnoreEmptyNotification = true;
-    rv = SetNativeClipboardData(aWhichClipboard);
+    rv = ClipboardSetDataHelper::SetData(aTransferable, anOwner,
+                                         aWhichClipboard);
     mIgnoreEmptyNotification = false;
   }
   if (NS_FAILED(rv)) {
