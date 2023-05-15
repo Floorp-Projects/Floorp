@@ -4903,7 +4903,6 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.trackingprotection.emailtracking.enabled": null,
         "privacy.trackingprotection.emailtracking.pbmode.enabled": null,
         "privacy.annotate_channels.strict_list.enabled": null,
-        "privacy.annotate_channels.strict_list.pbmode.enabled": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation": null,
         "privacy.partition.network_state.ocsp_cache": null,
@@ -4921,7 +4920,6 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.trackingprotection.emailtracking.enabled": null,
         "privacy.trackingprotection.emailtracking.pbmode.enabled": null,
         "privacy.annotate_channels.strict_list.enabled": null,
-        "privacy.annotate_channels.strict_list.pbmode.enabled": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation": null,
         "privacy.partition.network_state.ocsp_cache": null,
@@ -5013,16 +5011,6 @@ var ContentBlockingCategoriesPrefs = {
         case "-lvl2":
           this.CATEGORY_PREFS[type][
             "privacy.annotate_channels.strict_list.enabled"
-          ] = false;
-          break;
-        case "lvl2PBM":
-          this.CATEGORY_PREFS[type][
-            "privacy.annotate_channels.strict_list.pbmode.enabled"
-          ] = true;
-          break;
-        case "-lvl2PBM":
-          this.CATEGORY_PREFS[type][
-            "privacy.annotate_channels.strict_list.pbmode.enabled"
           ] = false;
           break;
         case "rp":
