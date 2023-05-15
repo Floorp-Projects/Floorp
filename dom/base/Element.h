@@ -1037,11 +1037,11 @@ class Element : public FragmentOrElement {
    * Remove an attribute so that it is no longer explicitly specified.
    *
    * @param aNameSpaceID the namespace id of the attribute
-   * @param aAttr the name of the attribute to unset
+   * @param aName the name of the attribute to unset
    * @param aNotify specifies whether or not the document should be
    * notified of the attribute change
    */
-  nsresult UnsetAttr(int32_t aNameSpaceID, nsAtom* aAttribute, bool aNotify);
+  nsresult UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify);
 
   /**
    * Get the namespace / name / prefix of a given attribute.
@@ -1836,7 +1836,7 @@ class Element : public FragmentOrElement {
    * @param aParsedValue  parsed new value of attribute. Replaced by the
    *                      old value of the attribute. This old value is only
    *                      useful if either it or the new value is StoresOwnData.
-   * @param aMaybeScriptedPrincipal
+   * @param aSubjectPrincipal
    *                      the principal of the scripted caller responsible for
    *                      setting the attribute, or null if no scripted caller
    *                      can be determined. A null value here does not
@@ -1850,12 +1850,15 @@ class Element : public FragmentOrElement {
    * @param aNotify       should we notify document-observers?
    * @param aCallAfterSetAttr should we call AfterSetAttr?
    * @param aComposedDocument The current composed document of the element.
+   * @param aGuard        For making sure that this is called with a
+   *                      mozAutoDocUpdate instance, this is here.  Specify
+   *                      an instance of it which you created for the call.
    */
   nsresult SetAttrAndNotify(int32_t aNamespaceID, nsAtom* aName,
                             nsAtom* aPrefix, const nsAttrValue* aOldValue,
                             nsAttrValue& aParsedValue,
-                            nsIPrincipal* aMaybeScriptedPrincipal,
-                            uint8_t aModType, bool aFireMutation, bool aNotify,
+                            nsIPrincipal* aSubjectPrincipal, uint8_t aModType,
+                            bool aFireMutation, bool aNotify,
                             bool aCallAfterSetAttr, Document* aComposedDocument,
                             const mozAutoDocUpdate& aGuard);
 

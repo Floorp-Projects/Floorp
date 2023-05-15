@@ -4736,16 +4736,8 @@ nsresult nsContentUtils::DispatchInputEvent(
     widgetEvent.mSpecifiedEventType = nsGkAtoms::oninput;
     widgetEvent.mFlags.mCancelable = false;
     widgetEvent.mFlags.mComposed = true;
-    if (IsSafeToRunScript()) {
-      RefPtr<nsPresContext> presContext =
-          aEventTargetElement->OwnerDoc()->GetPresContext();
-      return EventDispatcher::Dispatch(aEventTargetElement, presContext,
-                                       &widgetEvent, nullptr, aEventStatus);
-    }
-
-    (new AsyncEventDispatcher(aEventTargetElement, widgetEvent))
-        ->RunDOMEventWhenSafe();
-    return NS_OK;
+    return AsyncEventDispatcher::RunDOMEventWhenSafe(*aEventTargetElement,
+                                                     widgetEvent, aEventStatus);
   }
 
   MOZ_ASSERT_IF(aEventMessage != eEditorBeforeInput,
@@ -4846,26 +4838,15 @@ nsresult nsContentUtils::DispatchInputEvent(
 
   inputEvent.mInputType = aEditorInputType;
 
-  if (!IsSafeToRunScript()) {
-    // If we cannot dispatch an event right now, we cannot make it cancelable.
+  // If we cannot dispatch an event right now, we cannot make it cancelable.
+  if (!nsContentUtils::IsSafeToRunScript()) {
     NS_ASSERTION(
         !inputEvent.mFlags.mCancelable,
         "Cancelable beforeinput event dispatcher should run when it's safe");
     inputEvent.mFlags.mCancelable = false;
-    (new AsyncEventDispatcher(aEventTargetElement, inputEvent))
-        ->RunDOMEventWhenSafe();
-    return NS_OK;
   }
-
-  // If we're running xpcshell tests, we fail to get presShell here.
-  // Even in such case, we need to dispatch "input" event without widget.
-  RefPtr<nsPresContext> presContext =
-      aEventTargetElement->OwnerDoc()->GetPresContext();
-  nsresult rv = EventDispatcher::Dispatch(aEventTargetElement, presContext,
-                                          &inputEvent, nullptr, aEventStatus);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "Dispatching `beforeinput` or `input` event failed");
-  return rv;
+  return AsyncEventDispatcher::RunDOMEventWhenSafe(*aEventTargetElement,
+                                                   inputEvent, aEventStatus);
 }
 
 nsresult nsContentUtils::DispatchChromeEvent(
