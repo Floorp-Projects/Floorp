@@ -8,7 +8,7 @@
 #ifndef mozilla_throw_gcc_h
 #define mozilla_throw_gcc_h
 
-#ifndef __wasm__
+#if !defined(_LIBCPP_VERSION) || _LIBCPP_VERSION < 14000
 
 #  include "mozilla/Attributes.h"
 
