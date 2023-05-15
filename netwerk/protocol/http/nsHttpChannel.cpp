@@ -538,6 +538,20 @@ nsresult nsHttpChannel::OnBeforeConnect() {
         this, getter_AddRefs(resultPrincipal));
   }
 
+  // Check if we already know about the HSTS status of the host
+  nsISiteSecurityService* sss = gHttpHandler->GetSSService();
+  NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
+  bool isSecureURI;
+  OriginAttributes originAttributes;
+  if (!StoragePrincipalHelper::GetOriginAttributesForHSTS(this,
+                                                          originAttributes)) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = sss->IsSecureURI(mURI, originAttributes, &isSecureURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Save that on the loadInfo so it can later be consumed by SecurityInfo.jsm
+  mLoadInfo->SetHstsStatus(isSecureURI);
+
   // At this point it is no longer possible to call
   // HttpBaseChannel::UpgradeToSecure.
   StoreUpgradableToSecure(false);
