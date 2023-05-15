@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.DialogFragment
 import androidx.navigation.fragment.navArgs
 import org.mozilla.fenix.R
@@ -54,8 +53,6 @@ class ResearchSurfaceDialogFragment : DialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View = ComposeView(requireContext()).apply {
-        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-
         val messageText = bundleArgs.getString(KEY_MESSAGE_TEXT)
             ?: getString(R.string.nimbus_survey_message_text)
         val acceptButtonText = bundleArgs.getString(KEY_ACCEPT_BUTTON_TEXT)

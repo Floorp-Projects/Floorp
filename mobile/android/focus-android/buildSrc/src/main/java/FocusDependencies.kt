@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // If you ever need to force a toolchain rebuild (taskcluster) then edit the following comment.
-// FORCE REBUILD 2023-05-04
+// FORCE REBUILD 2023-05-05
 
 object FocusVersions {
     object Adjust {
@@ -25,7 +25,7 @@ object FocusVersions {
         const val lifecycle = "2.6.1"
         const val palette = "1.0.0"
         const val preference = "1.2.0"
-        const val recyclerview = "1.2.1"
+        const val recyclerview = "1.3.0"
         const val savedstate = "1.2.1"
         const val splashscreen = "1.0.1"
         const val transition = "1.4.1"

@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.isVisible
 import androidx.fragment.app.clearFragmentResult
 import androidx.fragment.app.setFragmentResult
@@ -121,7 +120,6 @@ class ShareFragment : AppCompatDialogFragment() {
             binding.dividerLineAppsShareAndPdfSection.isVisible = true
             binding.savePdf.apply {
                 isVisible = true
-                setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
                 setContent {
                     FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
                         SaveToPDFItem {
