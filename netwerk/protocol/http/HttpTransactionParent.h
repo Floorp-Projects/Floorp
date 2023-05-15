@@ -153,7 +153,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   bool mDataSentToChildProcess{false};
   bool mIsDocumentLoad;
   bool mRestarted{false};
-  uint32_t mCaps{0};
+  Atomic<uint32_t, ReleaseAcquire> mCaps{0};
   TimeStamp mRedirectStart;
   TimeStamp mRedirectEnd;
 
