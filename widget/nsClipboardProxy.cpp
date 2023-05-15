@@ -35,10 +35,27 @@ nsClipboardProxy::SetData(nsITransferable* aTransferable,
 #endif
 
   ContentChild* child = ContentChild::GetSingleton();
-  IPCTransferable ipcTransferable;
-  nsContentUtils::TransferableToIPCTransferable(aTransferable, &ipcTransferable,
+
+  IPCDataTransfer ipcDataTransfer;
+  nsContentUtils::TransferableToIPCTransferable(aTransferable, &ipcDataTransfer,
                                                 false, nullptr);
-  child->SendSetClipboard(std::move(ipcTransferable), aWhichClipboard);
+
+  Maybe<mozilla::net::CookieJarSettingsArgs> cookieJarSettingsArgs;
+  if (nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+          aTransferable->GetCookieJarSettings()) {
+    mozilla::net::CookieJarSettingsArgs args;
+    mozilla::net::CookieJarSettings::Cast(cookieJarSettings)->Serialize(args);
+    cookieJarSettingsArgs = Some(args);
+  }
+  bool isPrivateData = aTransferable->GetIsPrivateData();
+  nsCOMPtr<nsIPrincipal> requestingPrincipal =
+      aTransferable->GetRequestingPrincipal();
+  nsContentPolicyType contentPolicyType = aTransferable->GetContentPolicyType();
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = aTransferable->GetReferrerInfo();
+  child->SendSetClipboard(std::move(ipcDataTransfer), isPrivateData,
+                          requestingPrincipal, cookieJarSettingsArgs,
+                          contentPolicyType, referrerInfo, aWhichClipboard);
+
   return NS_OK;
 }
 
@@ -59,11 +76,11 @@ nsClipboardProxy::GetData(nsITransferable* aTransferable,
   nsTArray<nsCString> types;
   aTransferable->FlavorsTransferableCanImport(types);
 
-  IPCTransferableData transferable;
+  IPCDataTransfer dataTransfer;
   ContentChild::GetSingleton()->SendGetClipboard(types, aWhichClipboard,
-                                                 &transferable);
-  return nsContentUtils::IPCTransferableDataToTransferable(
-      transferable, false /* aAddDataFlavor */, aTransferable,
+                                                 &dataTransfer);
+  return nsContentUtils::IPCTransferableToTransferable(
+      dataTransfer, false /* aAddDataFlavor */, aTransferable,
       false /* aFilterUnknownFlavors */);
 }
 
@@ -152,17 +169,16 @@ RefPtr<GenericPromise> nsClipboardProxy::AsyncGetData(
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           /* resolve */
-          [promise, transferable](
-              const IPCTransferableDataOrError& ipcTransferableDataOrError) {
-            if (ipcTransferableDataOrError.type() ==
-                IPCTransferableDataOrError::Tnsresult) {
-              promise->Reject(ipcTransferableDataOrError.get_nsresult(),
-                              __func__);
+          [promise,
+           transferable](const IPCDataTransferOrError& ipcDataTransferOrError) {
+            if (ipcDataTransferOrError.type() ==
+                IPCDataTransferOrError::Tnsresult) {
+              promise->Reject(ipcDataTransferOrError.get_nsresult(), __func__);
               return;
             }
 
-            nsresult rv = nsContentUtils::IPCTransferableDataToTransferable(
-                ipcTransferableDataOrError.get_IPCTransferableData(),
+            nsresult rv = nsContentUtils::IPCTransferableToTransferable(
+                ipcDataTransferOrError.get_IPCDataTransfer(),
                 false /* aAddDataFlavor */, transferable,
                 false /* aFilterUnknownFlavors */);
             if (NS_FAILED(rv)) {

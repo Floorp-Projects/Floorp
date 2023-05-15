@@ -607,7 +607,7 @@ class BrowserParent final : public PBrowserParent,
 
   bool SendInsertText(const nsString& aStringToInsert);
 
-  bool SendPasteTransferable(IPCTransferableData&& aTransferableData,
+  bool SendPasteTransferable(IPCDataTransfer&& aDataTransfer,
                              const bool& aIsPrivateData,
                              nsIPrincipal* aRequestingPrincipal,
                              const nsContentPolicyType& aContentPolicyType);
@@ -667,7 +667,7 @@ class BrowserParent final : public PBrowserParent,
   void LayerTreeUpdate(const LayersObserverEpoch& aEpoch, bool aActive);
 
   mozilla::ipc::IPCResult RecvInvokeDragSession(
-      nsTArray<IPCTransferableData>&& aTransferables, const uint32_t& aAction,
+      nsTArray<IPCDataTransfer>&& aTransfers, const uint32_t& aAction,
       Maybe<BigBuffer>&& aVisualDnDData, const uint32_t& aStride,
       const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
       nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
@@ -675,7 +675,7 @@ class BrowserParent final : public PBrowserParent,
       const MaybeDiscarded<WindowContext>& aSourceWindowContext,
       const MaybeDiscarded<WindowContext>& aSourceTopWindowContext);
 
-  void AddInitialDnDDataTo(IPCTransferableData* aTransferableData,
+  void AddInitialDnDDataTo(DataTransfer* aDataTransfer,
                            nsIPrincipal** aPrincipal);
 
   bool TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,

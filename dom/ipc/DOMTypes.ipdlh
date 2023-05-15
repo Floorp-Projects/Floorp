@@ -100,6 +100,62 @@ struct MessageData {
   MessageDataType data;
 };
 
+struct IPCDataTransferString
+{
+  BigBuffer data;
+};
+
+struct IPCDataTransferCString
+{
+  BigBuffer data;
+};
+
+struct IPCDataTransferInputStream
+{
+  // NOTE: Editor currently relies on these input streams being synchronous, so
+  // we can't safely serialize them using IPCStream (see bug 1778565). Instead,
+  // they're serialized as a `BigBuffer`, and converted to a nsStringInputStream
+  // on the receiving side. If we are able to use async streams reliably in the
+  // future, we could consider switching the code which adds `nsIInputStream`s
+  // to the transferable to use `BlobImpl` instead, for more consistency between
+  // image formats.
+  BigBuffer data;
+};
+
+struct IPCDataTransferImageContainer
+{
+  BigBuffer data;
+  uint32_t width;
+  uint32_t height;
+  uint32_t stride;
+  SurfaceFormat format;
+};
+
+struct IPCDataTransferBlob
+{
+  IPCBlob blob;
+};
+
+union IPCDataTransferData
+{
+  IPCDataTransferString;
+  IPCDataTransferCString;
+  IPCDataTransferInputStream;
+  IPCDataTransferImageContainer;
+  IPCDataTransferBlob;
+};
+
+struct IPCDataTransferItem
+{
+  nsCString flavor;
+  IPCDataTransferData data;
+};
+
+struct IPCDataTransfer
+{
+  IPCDataTransferItem[] items;
+};
+
 struct ScreenDetails {
   LayoutDeviceIntRect rect;
   DesktopIntRect rectDisplayPix;
