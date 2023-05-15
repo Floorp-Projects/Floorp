@@ -15,6 +15,7 @@ import {
   getContext,
   getFirstSourceActorForGeneratedSource,
   isSourceOverridden,
+  getHideIgnoredSources,
 } from "../../selectors";
 import actions from "../../actions";
 
@@ -49,6 +50,7 @@ class SourceTreeItem extends Component {
       setOverrideSource: PropTypes.func.isRequired,
       removeOverrideSource: PropTypes.func.isRequired,
       isOverridden: PropTypes.bool,
+      hideIgnoredSources: PropTypes.bool,
     };
   }
 
@@ -371,8 +373,17 @@ class SourceTreeItem extends Component {
   }
 
   render() {
-    const { item, depth, focused, hasMatchingGeneratedSource } = this.props;
+    const {
+      item,
+      depth,
+      focused,
+      hasMatchingGeneratedSource,
+      hideIgnoredSources,
+    } = this.props;
 
+    if (hideIgnoredSources && item.isBlackBoxed) {
+      return null;
+    }
     const suffix = hasMatchingGeneratedSource ? (
       <span className="suffix">{L10N.getStr("sourceFooter.mappedSuffix")}</span>
     ) : null;
@@ -417,6 +428,7 @@ const mapStateToProps = (state, props) => {
       getFirstSourceActorForGeneratedSource: (sourceId, threadId) =>
         getFirstSourceActorForGeneratedSource(state, sourceId, threadId),
       isOverridden: isSourceOverridden(state, source),
+      hideIgnoredSources: getHideIgnoredSources(state),
     };
   }
   return {

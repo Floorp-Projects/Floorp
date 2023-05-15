@@ -2486,7 +2486,12 @@ async function toggleDebbuggerSettingsMenuItem(dbg, { className, isChecked }) {
 
   menuButton.click();
   // Waits for the debugger settings panel to appear.
-  await waitFor(() => document.querySelector("#debugger-settings-menu-list"));
+  await waitFor(() => {
+    const menuListEl = document.querySelector("#debugger-settings-menu-list");
+    // Lets check the offsetParent property to make sure the menu list is actually visible
+    // by its parents display property being no longer "none".
+    return menuListEl && menuListEl.offsetParent !== null;
+  });
 
   const menuItem = document.querySelector(className);
 

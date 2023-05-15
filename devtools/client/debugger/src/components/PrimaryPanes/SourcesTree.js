@@ -19,6 +19,7 @@ import {
   getContext,
   getGeneratedSourceByURL,
   getBlackBoxRanges,
+  getHideIgnoredSources,
 } from "../../selectors";
 
 // Actions
@@ -120,6 +121,8 @@ class SourcesTree extends Component {
       rootItems: PropTypes.object.isRequired,
       clearProjectDirectoryRoot: PropTypes.func.isRequired,
       projectRootName: PropTypes.string.isRequired,
+      setHideOrShowIgnoredSources: PropTypes.func.isRequired,
+      hideIgnoredSources: PropTypes.bool.isRequired,
     };
   }
 
@@ -382,6 +385,24 @@ class SourcesTree extends Component {
     );
   }
 
+  renderFooter() {
+    if (this.props.hideIgnoredSources) {
+      return (
+        <footer className="source-list-footer">
+          {L10N.getStr("ignoredSourcesHidden")}
+          <button
+            className="devtools-togglebutton"
+            onClick={() => this.props.setHideOrShowIgnoredSources(false)}
+            title={L10N.getStr("showIgnoredSources.tooltip.label")}
+          >
+            {L10N.getStr("showIgnoredSources")}
+          </button>
+        </footer>
+      );
+    }
+    return null;
+  }
+
   render() {
     const { projectRoot } = this.props;
     return (
@@ -397,6 +418,7 @@ class SourcesTree extends Component {
           <>
             {this.renderProjectRootHeader()}
             {this.renderTree()}
+            {this.renderFooter()}
           </>
         )}
       </div>
@@ -438,6 +460,7 @@ const mapStateToProps = state => {
     rootItems,
     blackBoxRanges: getBlackBoxRanges(state),
     projectRootName: getProjectDirectoryRootName(state),
+    hideIgnoredSources: getHideIgnoredSources(state),
   };
 };
 
@@ -446,4 +469,5 @@ export default connect(mapStateToProps, {
   setExpandedState: actions.setExpandedState,
   focusItem: actions.focusItem,
   clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
+  setHideOrShowIgnoredSources: actions.setHideOrShowIgnoredSources,
 })(SourcesTree);

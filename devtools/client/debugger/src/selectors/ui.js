@@ -75,3 +75,7 @@ export function getJavascriptTracingLogMethod(state) {
 export function getSearchOptions(state, searchKey) {
   return state.ui.mutableSearchOptions[searchKey];
 }
+
+export function getHideIgnoredSources(state) {
+  return state.ui.hideIgnoredSources;
+}

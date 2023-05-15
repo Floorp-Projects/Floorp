@@ -56,6 +56,7 @@ export const initialUIState = () => ({
       excludePatterns: "",
     },
   },
+  hideIgnoredSources: prefs.hideIgnoredSources,
 });
 
 function update(state = initialUIState(), action) {
@@ -166,6 +167,15 @@ function update(state = initialUIState(), action) {
       };
       prefs.searchOptions = state.mutableSearchOptions;
       return { ...state };
+    }
+
+    case "HIDE_IGNORED_SOURCES": {
+      const { shouldHide } = action;
+      if (shouldHide !== state.hideIgnoredSources) {
+        prefs.hideIgnoredSources = shouldHide;
+        return { ...state, hideIgnoredSources: shouldHide };
+      }
+      return state;
     }
 
     default: {
