@@ -317,6 +317,11 @@ describe("<OnboardingExperience>", () => {
     fakeWindow = {
       ResizeObserver: fakeResizeObserver,
       IntersectionObserver: buildIntersectionObserver(intersectEntries),
+      document: {
+        visibilityState: "visible",
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      },
     };
     wrapper = mount(
       <WrapWithProvider state={{}}>
