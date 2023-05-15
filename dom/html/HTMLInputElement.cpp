@@ -1578,7 +1578,6 @@ bool HTMLInputElement::IsValueEmpty() const {
 
   nsAutoString value;
   GetNonFileValueInternal(value);
-
   return value.IsEmpty();
 }
 
@@ -2767,9 +2766,9 @@ nsresult HTMLInputElement::SetValueInternal(
   return NS_OK;
 }
 
-nsresult HTMLInputElement::SetValueChanged(bool aValueChanged) {
+void HTMLInputElement::SetValueChanged(bool aValueChanged) {
   if (mValueChanged == aValueChanged) {
-    return NS_OK;
+    return;
   }
   mValueChanged = aValueChanged;
   UpdateTooLongValidityState();
@@ -2777,7 +2776,6 @@ nsresult HTMLInputElement::SetValueChanged(bool aValueChanged) {
   // We need to do this unconditionally because the validity ui bits depend on
   // this.
   UpdateState(true);
-  return NS_OK;
 }
 
 void HTMLInputElement::SetLastValueChangeWasInteractive(bool aWasInteractive) {
@@ -6780,8 +6778,7 @@ int32_t HTMLInputElement::GetWrapCols() {
 int32_t HTMLInputElement::GetRows() { return DEFAULT_ROWS; }
 
 void HTMLInputElement::GetDefaultValueFromContent(nsAString& aValue) {
-  TextControlState* state = GetEditorState();
-  if (state) {
+  if (GetEditorState()) {
     GetDefaultValue(aValue);
     // This is called by the frame to show the value.
     // We have to sanitize it when needed.

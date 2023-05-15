@@ -44,7 +44,7 @@ class TextControlElement : public nsGenericHTMLFormControlElementWithState {
   /**
    * Tell the control that value has been deliberately changed (or not).
    */
-  virtual nsresult SetValueChanged(bool changed) = 0;
+  virtual void SetValueChanged(bool) = 0;
 
   /**
    * Find out whether this is a single line text control.  (text or password)
