@@ -1036,6 +1036,8 @@ package org.mozilla.geckoview {
 
   public static class GeckoSession.GeckoPrintException extends Exception {
     ctor protected GeckoPrintException();
+    field public static final int ERROR_NO_ACTIVITY_CONTEXT = -5;
+    field public static final int ERROR_NO_ACTIVITY_CONTEXT_DELEGATE = -4;
     field public static final int ERROR_PRINT_SETTINGS_SERVICE_NOT_AVAILABLE = -1;
     field public static final int ERROR_UNABLE_TO_CREATE_PRINT_SETTINGS = -2;
     field public static final int ERROR_UNABLE_TO_RETRIEVE_CANONICAL_BROWSING_CONTEXT = -3;

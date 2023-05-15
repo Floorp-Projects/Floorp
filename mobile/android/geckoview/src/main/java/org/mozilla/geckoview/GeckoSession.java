@@ -761,6 +761,7 @@ public class GeckoSession {
           if ("GeckoView:DotPrintRequest".equals(event)) {
             final Long cbcId = message.getLong("canonicalBrowsingContextId");
             final GeckoResult<InputStream> pdfResult = saveAsPdfByBrowsingContext(cbcId);
+            final GeckoBundle bundle = new GeckoBundle();
             pdfResult
                 .accept(
                     pdfStream -> {
@@ -770,21 +771,31 @@ public class GeckoSession {
                         dialogFinished
                             .accept(
                                 isDialogFinished -> {
-                                  mEventDispatcher.dispatch("GeckoView:DotPrintFinish", null);
+                                  bundle.putBoolean("isPdfSuccessful", true);
+                                  mEventDispatcher.dispatch("GeckoView:DotPrintFinish", bundle);
                                 })
                             .exceptionally(
                                 e -> {
-                                  mEventDispatcher.dispatch("GeckoView:DotPrintFinish", null);
+                                  bundle.putBoolean("isPdfSuccessful", false);
+                                  if (e instanceof GeckoPrintException) {
+                                    bundle.putInt("errorReason", ((GeckoPrintException) e).code);
+                                  }
+                                  mEventDispatcher.dispatch("GeckoView:DotPrintFinish", bundle);
                                   return null;
                                 });
                       } catch (final Exception e) {
-                        mEventDispatcher.dispatch("GeckoView:DotPrintFinish", null);
+                        bundle.putBoolean("isPdfSuccessful", false);
+                        mEventDispatcher.dispatch("GeckoView:DotPrintFinish", bundle);
                         Log.e(LOGTAG, "Print delegate needs to be fully implemented to print.", e);
                       }
                     })
                 .exceptionally(
                     e -> {
-                      mEventDispatcher.dispatch("GeckoView:DotPrintFinish", null);
+                      bundle.putBoolean("isPdfSuccessful", false);
+                      if (e instanceof GeckoPrintException) {
+                        bundle.putInt("errorReason", ((GeckoPrintException) e).code);
+                      }
+                      mEventDispatcher.dispatch("GeckoView:DotPrintFinish", bundle);
                       Log.e(LOGTAG, "Could not complete DotPrintRequest.", e);
                       return null;
                     });
@@ -6988,6 +6999,10 @@ public class GeckoSession {
     public static final int ERROR_UNABLE_TO_CREATE_PRINT_SETTINGS = -2;
     /** An error happened while trying to find the canonical browing context */
     public static final int ERROR_UNABLE_TO_RETRIEVE_CANONICAL_BROWSING_CONTEXT = -3;
+    /** An error happened while trying to find the activity context delegate */
+    public static final int ERROR_NO_ACTIVITY_CONTEXT_DELEGATE = -4;
+    /** An error happened while trying to find the activity context */
+    public static final int ERROR_NO_ACTIVITY_CONTEXT = -5;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(
@@ -6995,6 +7010,8 @@ public class GeckoSession {
           ERROR_PRINT_SETTINGS_SERVICE_NOT_AVAILABLE,
           ERROR_UNABLE_TO_CREATE_PRINT_SETTINGS,
           ERROR_UNABLE_TO_RETRIEVE_CANONICAL_BROWSING_CONTEXT,
+          ERROR_NO_ACTIVITY_CONTEXT_DELEGATE,
+          ERROR_NO_ACTIVITY_CONTEXT
         })
     public @interface Codes {}
 
