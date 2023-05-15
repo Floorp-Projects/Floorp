@@ -1522,15 +1522,16 @@ class MediaDecoderStateMachine::LoopingDecodingState
   }
 
   bool ShouldStopPrerolling() const override {
-    // When the data has reached EOS, that means the queue has been finished. If
-    // MDSM isn't playing now, then we would preroll some data in order to let
-    // new data to reopen the queue before starting playback again.
+    // These checks is used to handle the media queue aren't opened correctly
+    // because they've been close before entering the looping state. Therefore,
+    // we need to preroll data in order to let new data to reopen the queue
+    // automatically. Otherwise, playback can't start successfully.
     bool isWaitingForNewData = false;
     if (mMaster->HasAudio()) {
-      isWaitingForNewData |= mIsReachingAudioEOS;
+      isWaitingForNewData |= (mIsReachingAudioEOS && AudioQueue().IsFinished());
     }
     if (mMaster->HasVideo()) {
-      isWaitingForNewData |= mIsReachingVideoEOS;
+      isWaitingForNewData |= (mIsReachingVideoEOS && VideoQueue().IsFinished());
     }
     return !isWaitingForNewData && DecodingState::ShouldStopPrerolling();
   }
