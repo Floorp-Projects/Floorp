@@ -43,9 +43,32 @@ runWithMSE(async (ms, el) => {
   el.currentTime = el.buffered.start(0);
   await el.play();
 
-  info(`video should be able to loop back to the start position`);
+  info(`video should trigger seeking when reaching to the end`);
+  let seekingCount = 0, seekedCount = 0;
+  el.addEventListener("seeking", () => {
+    is(++seekingCount, 1, "should only receive seeking once!");
+  });
+  el.addEventListener("seeked", () => {
+    is(++seekedCount, 1, "should only receive seeked once!");
+  });
   await once(el, "seeking");
-  await once(el, "seeked");
+
+  info(`trim old data before append new data`);
+  let p = Promise.all([once(videosb, "updateend"), once(audiosb, "updateend")]);
+  videosb.remove(videosb.buffered.start(0), videosb.buffered.end(0));
+  audiosb.remove(audiosb.buffered.start(0), audiosb.buffered.end(0));
+  await p;
+
+  info(`append new data`);
+  const seekedPromise = once(el, "seeked");
+  p = Promise.all([once(videosb, "updateend"), once(audiosb, "updateend")]);
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 2), ".m4s");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(1, 2), ".m4s");
+  await p;
+  info(`audio=[${audiosb.buffered.start(0)}-${audiosb.buffered.end(0)}], video=[${videosb.buffered.start(0)}-${videosb.buffered.end(0)}]`);
+
+  info(`now we should be able to finish seeking to the start position`);
+  await seekedPromise;
 
   SimpleTest.finish(SimpleTest);
 });
