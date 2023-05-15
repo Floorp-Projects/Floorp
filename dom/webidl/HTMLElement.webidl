@@ -50,7 +50,7 @@ interface HTMLElement : Element {
   [Pure]
   readonly attribute boolean isContentEditable;
   [CEReactions, SetterThrows, Pure, Pref="dom.element.popover.enabled"]
-           attribute DOMString popover;
+           attribute DOMString? popover;
   [CEReactions, SetterThrows, Pure]
            attribute boolean spellcheck;
   [CEReactions, Pure, SetterThrows, Pref="dom.forms.inputmode"]
