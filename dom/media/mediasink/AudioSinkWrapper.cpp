@@ -98,11 +98,13 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
     pos = GetSystemClockPosition(t);
     LOGV("%p: Getting position from the system clock %lf", this,
          pos.ToSeconds());
-    if (mAudioQueue.GetSize() > 0 && IsMuted()) {
-      // audio track, but it's muted and won't be dequeued, discard packets that
-      // are behind the current media time, to keep the queue size under
-      // control.
-      DropAudioPacketsIfNeeded(pos);
+    if (IsMuted()) {
+      if (mAudioQueue.GetSize() > 0) {
+        // audio track, but it's muted and won't be dequeued, discard packets
+        // that are behind the current media time, to keep the queue size under
+        // control.
+        DropAudioPacketsIfNeeded(pos);
+      }
       // If muted, it's necessary to manually check if the audio has "ended",
       // meaning that all the audio packets have been consumed, to resolve the
       // ended promise.
