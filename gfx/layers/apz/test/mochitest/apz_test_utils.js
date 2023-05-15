@@ -838,6 +838,10 @@ function centerOf(element) {
 }
 
 // Peform a compositor hit test at the given point and return the result.
+// |point| is expected to be in CSS coordinates relative to the layout
+// viewport, since this is what sendMouseEvent() expects. (Note that this
+// is different from sendNativeMouseEvent() which expects screen coordinates
+// relative to the screen.)
 // The returned object has two fields:
 //   hitInfo: a combination of APZHitResultFlags
 //   scrollId: the view-id of the scroll frame that was hit
