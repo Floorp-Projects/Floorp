@@ -38,19 +38,7 @@ use xpcom::interfaces::{
 };
 use xpcom::{xpcom_method, RefPtr};
 
-fn make_presence_prompt(tid: u64, origin: &str, browsing_context_id: u64) -> String {
-    format!(
-        r#"{{"is_ctap2":true,"action":"presence","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id}}}"#,
-    )
-}
-
-fn make_select_device_prompt(tid: u64, origin: &str, browsing_context_id: u64) -> String {
-    format!(
-        r#"{{"is_ctap2":true,"action":"select-device","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id}}}"#,
-    )
-}
-
-fn make_pin_error_prompt(action: &str, tid: u64, origin: &str, browsing_context_id: u64) -> String {
+fn make_prompt(action: &str, tid: u64, origin: &str, browsing_context_id: u64) -> String {
     format!(
         r#"{{"is_ctap2":true,"action":"{action}","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id}}}"#,
     )
@@ -315,7 +303,8 @@ fn status_callback(
             }
             Ok(StatusUpdate::SelectDeviceNotice) => {
                 debug!("STATUS: Please select a device by touching one of them.");
-                let notification_str = make_select_device_prompt(tid, origin, browsing_context_id);
+                let notification_str =
+                    make_prompt("select-device", tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::DeviceSelected(dev_info)) => {
@@ -323,7 +312,7 @@ fn status_callback(
             }
             Ok(StatusUpdate::PresenceRequired) => {
                 debug!("STATUS: Waiting for user presence");
-                let notification_str = make_presence_prompt(tid, origin, browsing_context_id);
+                let notification_str = make_prompt("presence", tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))) => {
@@ -355,17 +344,16 @@ fn status_callback(
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinAuthBlocked)) => {
                 let notification_str =
-                    make_pin_error_prompt("pin-auth-blocked", tid, origin, browsing_context_id);
+                    make_prompt("pin-auth-blocked", tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinBlocked)) => {
                 let notification_str =
-                    make_pin_error_prompt("device-blocked", tid, origin, browsing_context_id);
+                    make_prompt("device-blocked", tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinNotSet)) => {
-                let notification_str =
-                    make_pin_error_prompt("pin-not-set", tid, origin, browsing_context_id);
+                let notification_str = make_prompt("pin-not-set", tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(e)) => {

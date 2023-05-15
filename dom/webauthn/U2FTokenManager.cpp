@@ -48,15 +48,12 @@ static nsIThread* gBackgroundThread;
 }  // namespace
 
 // Data for WebAuthn UI prompt notifications.
-static const char16_t kRegisterPromptNotificationU2F[] =
-    u"{\"is_ctap2\":false,\"action\":\"register\",\"tid\":%llu,"
-    u"\"origin\":\"%s\",\"browsingContextId\":%llu,\"device_selected\":%s}";
+static const char16_t kPresencePromptNotificationU2F[] =
+    u"{\"is_ctap2\":false,\"action\":\"presence\",\"tid\":%llu,"
+    u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
 static const char16_t kRegisterDirectPromptNotificationU2F[] =
     u"{\"is_ctap2\":false,\"action\":\"register-direct\",\"tid\":%llu,"
     u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
-static const char16_t kSignPromptNotificationU2F[] =
-    u"{\"is_ctap2\":false,\"action\":\"sign\",\"tid\":%llu,\"origin\":\"%s\","
-    u"\"browsingContextId\":%llu,\"device_selected\":%s}";
 static const char16_t kCancelPromptNotificationU2F[] =
     u"{\"is_ctap2\":false,\"action\":\"cancel\",\"tid\":%llu}";
 
@@ -325,7 +322,7 @@ void U2FTokenManager::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
 
   // Show a prompt that lets the user cancel the ongoing transaction.
   NS_ConvertUTF16toUTF8 origin(aInfo.Origin());
-  SendPromptNotification(kRegisterPromptNotificationU2F, mLastTransactionId,
+  SendPromptNotification(kPresencePromptNotificationU2F, mLastTransactionId,
                          origin.get(), aInfo.BrowsingContextId(), "false");
 
   uint64_t tid = mLastTransactionId;
@@ -400,7 +397,7 @@ void U2FTokenManager::DoSign(const WebAuthnGetAssertionInfo& aTransactionInfo) {
   uint64_t browserCtxId = aTransactionInfo.BrowsingContextId();
 
   // Show a prompt that lets the user cancel the ongoing transaction.
-  SendPromptNotification(kSignPromptNotificationU2F, tid, origin.get(),
+  SendPromptNotification(kPresencePromptNotificationU2F, tid, origin.get(),
                          browserCtxId, "false");
 
   mTokenManagerImpl->Sign(aTransactionInfo)
