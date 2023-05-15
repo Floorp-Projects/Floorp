@@ -7573,6 +7573,14 @@ var WebAuthnPromptHelper = {
       this.pin_required(mgr, data);
     } else if (data.action == "select-sign-result") {
       this.select_sign_result(mgr, data);
+    } else if (data.action == "already-registered") {
+      this.show_info(
+        mgr,
+        data.origin,
+        data.tid,
+        "alreadyRegistered",
+        "webauthn.alreadyRegisteredPrompt"
+      );
     } else if (data.action == "select-device") {
       this.show_info(
         mgr,

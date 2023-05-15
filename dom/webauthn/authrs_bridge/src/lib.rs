@@ -66,6 +66,7 @@ fn authrs_to_nserror(e: &AuthenticatorError) -> nsresult {
         AuthenticatorError::PinError(PinError::PinAuthBlocked) => NS_ERROR_DOM_OPERATION_ERR,
         AuthenticatorError::PinError(PinError::PinBlocked) => NS_ERROR_DOM_OPERATION_ERR,
         AuthenticatorError::PinError(PinError::PinNotSet) => NS_ERROR_DOM_OPERATION_ERR,
+        AuthenticatorError::CredentialExcluded => NS_ERROR_DOM_OPERATION_ERR,
         _ => NS_ERROR_DOM_UNKNOWN_ERR,
     }
 }
@@ -547,6 +548,7 @@ impl AuthrsTransport {
         .dispatch_background_task()?;
 
         let controller = self.controller.clone();
+        let callback_origin = origin.to_string();
         let state_callback = StateCallback::<Result<RegisterResult, AuthenticatorError>>::new(
             Box::new(move |result| {
                 let result = match result {
@@ -561,6 +563,16 @@ impl AuthrsTransport {
                             attestation_object.att_statement = AttestationStatement::None;
                         }
                         Ok(RegisterResult::CTAP2(attestation_object))
+                    }
+                    Err(e @ AuthenticatorError::CredentialExcluded) => {
+                        let notification_str = make_prompt(
+                            "already-registered",
+                            tid,
+                            &callback_origin,
+                            browsing_context_id,
+                        );
+                        controller.send_prompt(tid, &notification_str);
+                        Err(e)
                     }
                     Err(e) => Err(e),
                 };
