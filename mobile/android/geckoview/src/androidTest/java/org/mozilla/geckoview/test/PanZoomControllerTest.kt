@@ -5,7 +5,6 @@ import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
-import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
@@ -585,9 +584,6 @@ class PanZoomControllerTest : BaseSessionTest() {
     @WithDisplay(width = 100, height = 100)
     @Test
     fun inputResultForFastFling() {
-        // Bug 1687842.
-        assumeTrue(false)
-
         setupDocument(TOUCHSTART_HTML_PATH)
 
         var value = sessionRule.waitForResult(fling())
@@ -601,7 +597,7 @@ class PanZoomControllerTest : BaseSessionTest() {
         assertThat(
             "The input result should be IGNORED during the fast fling",
             value,
-            equalTo(PanZoomController.INPUT_RESULT_IGNORED)
+            equalTo(PanZoomController.INPUT_RESULT_HANDLED)
         )
     }
 
