@@ -182,8 +182,16 @@ class TextControlElement : public nsGenericHTMLFormControlElementWithState {
 
   /**
    * Callback called whenever the value is changed.
+   *
+   * aKnownNewValue can be used to avoid value lookups if present (might be
+   * null, if the caller doesn't know the specific value that got set).
    */
-  virtual void OnValueChanged(ValueChangeKind) = 0;
+  virtual void OnValueChanged(ValueChangeKind, bool aNewValueEmpty,
+                              const nsAString* aKnownNewValue) = 0;
+
+  void OnValueChanged(ValueChangeKind aKind, const nsAString& aNewValue) {
+    return OnValueChanged(aKind, aNewValue.IsEmpty(), &aNewValue);
+  }
 
   /**
    * Helpers for value manipulation from SetRangeText.

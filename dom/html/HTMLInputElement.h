@@ -242,7 +242,8 @@ class HTMLInputElement final : public TextControlElement,
   void EnablePreview() override;
   bool IsPreviewEnabled() override;
   void InitializeKeyboardEventListeners() override;
-  void OnValueChanged(ValueChangeKind) override;
+  void OnValueChanged(ValueChangeKind, bool aNewValueEmpty,
+                      const nsAString* aKnownNewValue) override;
   void GetValueFromSetRangeText(nsAString& aValue) override;
   MOZ_CAN_RUN_SCRIPT nsresult
   SetValueFromSetRangeText(const nsAString& aValue) override;
@@ -851,7 +852,9 @@ class HTMLInputElement final : public TextControlElement,
    *
    * @return whether the current value is the empty string.
    */
-  bool IsValueEmpty() const;
+  bool IsValueEmpty() const {
+    return State().HasState(ElementState::VALUE_EMPTY);
+  }
 
   // Parse a simple (hex) color.
   static mozilla::Maybe<nscolor> ParseSimpleColor(const nsAString& aColor);
@@ -1092,7 +1095,12 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT
   nsresult SetDefaultValueAsValue();
 
-  void SetDirectionFromValue(bool aNotify);
+  /**
+   * Sets the direction from the input value. if aKnownValue is provided, it
+   * saves a GetValue call.
+   */
+  void SetDirectionFromValue(bool aNotify,
+                             const nsAString* aKnownValue = nullptr);
 
   /**
    * Return if an element should have a specific validity UI

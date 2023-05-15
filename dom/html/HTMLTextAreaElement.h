@@ -97,7 +97,8 @@ class HTMLTextAreaElement final : public TextControlElement,
   void EnablePreview() override;
   bool IsPreviewEnabled() override;
   void InitializeKeyboardEventListeners() override;
-  void OnValueChanged(ValueChangeKind) override;
+  void OnValueChanged(ValueChangeKind, bool aNewValueEmpty,
+                      const nsAString* aKnownNewValue) override;
   void GetValueFromSetRangeText(nsAString& aValue) override;
   MOZ_CAN_RUN_SCRIPT nsresult
   SetValueFromSetRangeText(const nsAString& aValue) override;
@@ -377,7 +378,9 @@ class HTMLTextAreaElement final : public TextControlElement,
    *
    * @return whether the current value is the empty string.
    */
-  bool IsValueEmpty() const;
+  bool IsValueEmpty() const {
+    return State().HasState(ElementState::VALUE_EMPTY);
+  }
 
   /**
    * A helper to get the current selection range.  Will throw on the ErrorResult

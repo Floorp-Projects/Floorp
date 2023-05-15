@@ -1035,7 +1035,7 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
   // until someone calls UpdateEditableState on us, apparently!  Also
   // by default we don't have to show validity UI and so forth.
   AddStatesSilently(ElementState::ENABLED | ElementState::OPTIONAL_ |
-                    ElementState::VALID);
+                    ElementState::VALID | ElementState::VALUE_EMPTY);
   UpdateApzAwareFlag();
 }
 
@@ -1569,16 +1569,6 @@ void HTMLInputElement::GetNonFileValueInternal(nsAString& aValue) const {
       }
       return;
   }
-}
-
-bool HTMLInputElement::IsValueEmpty() const {
-  if (GetValueMode() == VALUE_MODE_VALUE && IsSingleLineTextControl(false)) {
-    return !mInputData.mState->HasNonEmptyValue();
-  }
-
-  nsAutoString value;
-  GetNonFileValueInternal(value);
-  return value.IsEmpty();
 }
 
 void HTMLInputElement::ClearFiles(bool aSetValueChanged) {
@@ -2668,6 +2658,12 @@ nsresult HTMLInputElement::SetValueInternal(
         SetValueChanged(true);
       }
 
+      if (value.IsEmpty()) {
+        AddStates(ElementState::VALUE_EMPTY);
+      } else {
+        RemoveStates(ElementState::VALUE_EMPTY);
+      }
+
       if (IsSingleLineTextControl(false)) {
         // Note that if aOptions includes
         // ValueSetterOption::BySetUserInputAPI, "input" event is automatically
@@ -2711,7 +2707,7 @@ nsresult HTMLInputElement::SetValueInternal(
           }
         }
         if (mDoneCreating) {
-          OnValueChanged(ValueChangeKind::Internal);
+          OnValueChanged(ValueChangeKind::Internal, value.IsEmpty(), &value);
         }
         // else DoneCreatingElement calls us again once mDoneCreating is true
       }
@@ -2727,7 +2723,7 @@ nsresult HTMLInputElement::SetValueInternal(
 
       // This call might be useless in some situations because if the element is
       // a single line text control, TextControlState::SetValue will call
-      // nsHTMLInputElement::OnValueChanged which is going to call UpdateState()
+      // HTMLInputElement::OnValueChanged which is going to call UpdateState()
       // if the element is focused. This bug 665547.
       if (PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder)) {
         UpdateState(true);
@@ -5729,11 +5725,15 @@ nsresult HTMLInputElement::SetDefaultValueAsValue() {
   return SetValueInternal(resetVal, ValueSetterOption::ByInternalAPI);
 }
 
-void HTMLInputElement::SetDirectionFromValue(bool aNotify) {
+void HTMLInputElement::SetDirectionFromValue(bool aNotify,
+                                             const nsAString* aKnownValue) {
   if (IsSingleLineTextControl(true)) {
     nsAutoString value;
-    GetValue(value, CallerType::System);
-    SetDirectionalityFromValue(this, value, aNotify);
+    if (!aKnownValue) {
+      GetValue(value, CallerType::System);
+      aKnownValue = &value;
+    }
+    SetDirectionalityFromValue(this, *aKnownValue, aNotify);
   }
 }
 
@@ -5888,7 +5888,7 @@ HTMLInputElement::SubmitNamesValues(FormData* aFormData) {
 static nsTArray<FileContentData> SaveFileContentData(
     const nsTArray<OwningFileOrDirectory>& aArray) {
   nsTArray<FileContentData> res(aArray.Length());
-  for (auto& it : aArray) {
+  for (const auto& it : aArray) {
     if (it.IsFile()) {
       RefPtr<BlobImpl> impl = it.GetAsFile()->Impl();
       res.AppendElement(std::move(impl));
@@ -6089,11 +6089,9 @@ ElementState HTMLInputElement::IntrinsicState() const {
     }
   }
 
-  if (mType != FormControlType::InputFile && IsValueEmpty()) {
-    state |= ElementState::VALUE_EMPTY;
-    if (PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder)) {
-      state |= ElementState::PLACEHOLDER_SHOWN;
-    }
+  if (IsValueEmpty() && PlaceholderApplies() &&
+      HasAttr(nsGkAtoms::placeholder)) {
+    state |= ElementState::PLACEHOLDER_SHOWN;
   }
 
   return state;
@@ -6102,7 +6100,7 @@ ElementState HTMLInputElement::IntrinsicState() const {
 static nsTArray<OwningFileOrDirectory> RestoreFileContentData(
     nsPIDOMWindowInner* aWindow, const nsTArray<FileContentData>& aData) {
   nsTArray<OwningFileOrDirectory> res(aData.Length());
-  for (auto& it : aData) {
+  for (const auto& it : aData) {
     if (it.type() == FileContentData::TBlobImpl) {
       if (!it.get_BlobImpl()) {
         // Serialization failed, skip this file.
@@ -6810,19 +6808,27 @@ void HTMLInputElement::InitializeKeyboardEventListeners() {
   }
 }
 
-void HTMLInputElement::OnValueChanged(ValueChangeKind aKind) {
+void HTMLInputElement::OnValueChanged(ValueChangeKind aKind,
+                                      bool aNewValueEmpty,
+                                      const nsAString* aKnownNewValue) {
+  MOZ_ASSERT_IF(aKnownNewValue, aKnownNewValue->IsEmpty() == aNewValueEmpty);
   if (aKind != ValueChangeKind::Internal) {
     mLastValueChangeWasInteractive = aKind == ValueChangeKind::UserInteraction;
+  }
+
+  if (aNewValueEmpty) {
+    AddStates(ElementState::VALUE_EMPTY);
+  } else {
+    RemoveStates(ElementState::VALUE_EMPTY);
   }
 
   UpdateAllValidityStates(true);
 
   if (HasDirAuto()) {
-    SetDirectionFromValue(true);
+    SetDirectionFromValue(true, aKnownNewValue);
   }
 
-  // :placeholder-shown and value-empty pseudo-class may change when the value
-  // changes.
+  // :placeholder-shown pseudo-class may change when the value changes.
   UpdateState(true);
 }
 

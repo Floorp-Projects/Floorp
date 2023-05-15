@@ -69,7 +69,7 @@ HTMLTextAreaElement::HTMLTextAreaElement(
   // until someone calls UpdateEditableState on us, apparently!  Also
   // by default we don't have to show validity UI and so forth.
   AddStatesSilently(ElementState::ENABLED | ElementState::OPTIONAL_ |
-                    ElementState::VALID);
+                    ElementState::VALID | ElementState::VALUE_EMPTY);
 }
 
 HTMLTextAreaElement::~HTMLTextAreaElement() {
@@ -784,7 +784,7 @@ ElementState HTMLTextAreaElement::IntrinsicState() const {
     }
   }
 
-  if (HasAttr(nsGkAtoms::placeholder) && IsValueEmpty()) {
+  if (IsValueEmpty() && HasAttr(nsGkAtoms::placeholder)) {
     state |= ElementState::PLACEHOLDER_SHOWN;
   }
 
@@ -948,13 +948,6 @@ bool HTMLTextAreaElement::IsMutable() const {
   return (!HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) && !IsDisabled());
 }
 
-bool HTMLTextAreaElement::IsValueEmpty() const {
-  nsAutoString value;
-  GetValueInternal(value, true);
-
-  return value.IsEmpty();
-}
-
 void HTMLTextAreaElement::SetCustomValidity(const nsAString& aError) {
   ConstraintValidation::SetCustomValidity(aError);
 
@@ -1001,7 +994,6 @@ bool HTMLTextAreaElement::IsValueMissing() const {
   if (!Required() || !IsMutable()) {
     return false;
   }
-
   return IsValueEmpty();
 }
 
@@ -1121,18 +1113,28 @@ void HTMLTextAreaElement::InitializeKeyboardEventListeners() {
   mState->InitializeKeyboardEventListeners();
 }
 
-void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind) {
+void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind,
+                                         bool aNewValueEmpty,
+                                         const nsAString*) {
   if (aKind != ValueChangeKind::Internal) {
     mLastValueChangeWasInteractive = aKind == ValueChangeKind::UserInteraction;
   }
 
+  const bool emptyBefore = IsValueEmpty();
+  if (aNewValueEmpty) {
+    AddStates(ElementState::VALUE_EMPTY);
+  } else {
+    RemoveStates(ElementState::VALUE_EMPTY);
+  }
+
   // Update the validity state
-  bool validBefore = IsValid();
+  const bool validBefore = IsValid();
   UpdateTooLongValidityState();
   UpdateTooShortValidityState();
   UpdateValueMissingValidityState();
 
-  if (validBefore != IsValid() || HasAttr(nsGkAtoms::placeholder)) {
+  if (validBefore != IsValid() ||
+      (emptyBefore != IsValueEmpty() && HasAttr(nsGkAtoms::placeholder))) {
     UpdateState(true);
   }
 }
