@@ -2835,7 +2835,7 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyProcessPriorityChanged(
   if (StaticPrefs::threads_use_low_power_enabled() &&
       StaticPrefs::threads_lower_mainthread_priority_in_background_enabled()) {
     if (PriorityUsesLowPowerMainThread(aPriority)) {
-      pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
+      pthread_set_qos_class_self_np(QOS_CLASS_UTILITY, 0);
     } else if (PriorityUsesLowPowerMainThread(mProcessPriority)) {
       pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
     }
