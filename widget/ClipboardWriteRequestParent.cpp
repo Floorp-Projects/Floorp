@@ -55,16 +55,12 @@ NS_IMETHODIMP ClipboardWriteRequestParent::OnComplete(nsresult aResult) {
 }
 
 IPCResult ClipboardWriteRequestParent::RecvSetData(
-    const IPCTransferableData& aTransferableData, const bool& aIsPrivateData,
-    nsIPrincipal* aRequestingPrincipal,
-    Maybe<CookieJarSettingsArgs> aCookieJarSettingsArgs,
-    const nsContentPolicyType& aContentPolicyType,
-    nsIReferrerInfo* aReferrerInfo) {
+    const IPCTransferable& aTransferable) {
   if (!mManager->ValidatePrincipal(
-          aRequestingPrincipal,
+          aTransferable.requestingPrincipal(),
           {ContentParent::ValidatePrincipalOptions::AllowNullPtr})) {
     ContentParent::LogAndAssertFailedPrincipalValidationInfo(
-        aRequestingPrincipal, __func__);
+        aTransferable.requestingPrincipal(), __func__);
   }
 
   if (!mAsyncSetClipboardData) {
@@ -80,16 +76,8 @@ IPCResult ClipboardWriteRequestParent::RecvSetData(
   }
 
   trans->Init(nullptr);
-  trans->SetReferrerInfo(aReferrerInfo);
-  if (aCookieJarSettingsArgs.isSome()) {
-    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-    net::CookieJarSettings::Deserialize(aCookieJarSettingsArgs.ref(),
-                                        getter_AddRefs(cookieJarSettings));
-    trans->SetCookieJarSettings(cookieJarSettings);
-  }
-  rv = nsContentUtils::IPCTransferableDataToTransferable(
-      aTransferableData, aIsPrivateData, aRequestingPrincipal,
-      aContentPolicyType, true /* aAddDataFlavor */, trans,
+  rv = nsContentUtils::IPCTransferableToTransferable(
+      aTransferable, true /* aAddDataFlavor */, trans,
       true /* aFilterUnknownFlavors */);
   if (NS_FAILED(rv)) {
     mAsyncSetClipboardData->Abort(rv);
