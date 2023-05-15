@@ -208,6 +208,50 @@ static nsresult GetTargetGeometry(gfxRect* aBBox,
   return NS_OK;
 }
 
+void SVGPatternFrame::PaintChildren(DrawTarget* aDrawTarget,
+                                    SVGPatternFrame* aPatternWithChildren,
+                                    nsIFrame* aSource, float aGraphicOpacity,
+                                    imgDrawingParams& aImgParams) {
+  nsIFrame* firstKid = aPatternWithChildren->mFrames.FirstChild();
+
+  gfxContext ctx(aDrawTarget);
+  gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&ctx);
+
+  if (aGraphicOpacity != 1.0f) {
+    autoGroupForBlend.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
+                                            aGraphicOpacity);
+  }
+
+  // OK, now render -- note that we use "firstKid", which
+  // we got at the beginning because it takes care of the
+  // referenced pattern situation for us
+
+  if (aSource->IsSVGGeometryFrame()) {
+    // Set the geometrical parent of the pattern we are rendering
+    aPatternWithChildren->mSource = static_cast<SVGGeometryFrame*>(aSource);
+  }
+
+  // Delay checking NS_FRAME_DRAWING_AS_PAINTSERVER bit until here so we can
+  // give back a clear surface if there's a loop
+  if (!aPatternWithChildren->HasAnyStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER)) {
+    AutoSetRestorePaintServerState paintServer(aPatternWithChildren);
+    for (nsIFrame* kid = firstKid; kid; kid = kid->GetNextSibling()) {
+      gfxMatrix tm = *(aPatternWithChildren->mCTM);
+
+      // The CTM of each frame referencing us can be different
+      ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
+      if (SVGFrame) {
+        SVGFrame->NotifySVGChanged(ISVGDisplayableFrame::TRANSFORM_CHANGED);
+        tm = SVGUtils::GetTransformMatrixInUserSpace(kid) * tm;
+      }
+
+      SVGUtils::PaintFrameWithEffects(kid, ctx, tm, aImgParams);
+    }
+  }
+
+  aPatternWithChildren->mSource = nullptr;
+}
+
 already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
     const DrawTarget* aDrawTarget, Matrix* patternMatrix,
     const Matrix& aContextMatrix, nsIFrame* aSource,
@@ -230,7 +274,6 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
     // Either no kids or a bad reference
     return nullptr;
   }
-  nsIFrame* firstKid = patternWithChildren->mFrames.FirstChild();
 
   const SVGAnimatedViewBox& viewBox = GetViewBox();
 
@@ -335,42 +378,7 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
   }
   dt->ClearRect(Rect(0, 0, surfaceSize.width, surfaceSize.height));
 
-  gfxContext ctx(dt);
-  gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&ctx);
-
-  if (aGraphicOpacity != 1.0f) {
-    autoGroupForBlend.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
-                                            aGraphicOpacity);
-  }
-
-  // OK, now render -- note that we use "firstKid", which
-  // we got at the beginning because it takes care of the
-  // referenced pattern situation for us
-
-  if (aSource->IsSVGGeometryFrame()) {
-    // Set the geometrical parent of the pattern we are rendering
-    patternWithChildren->mSource = static_cast<SVGGeometryFrame*>(aSource);
-  }
-
-  // Delay checking NS_FRAME_DRAWING_AS_PAINTSERVER bit until here so we can
-  // give back a clear surface if there's a loop
-  if (!patternWithChildren->HasAnyStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER)) {
-    AutoSetRestorePaintServerState paintServer(patternWithChildren);
-    for (nsIFrame* kid = firstKid; kid; kid = kid->GetNextSibling()) {
-      gfxMatrix tm = *(patternWithChildren->mCTM);
-
-      // The CTM of each frame referencing us can be different
-      ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
-      if (SVGFrame) {
-        SVGFrame->NotifySVGChanged(ISVGDisplayableFrame::TRANSFORM_CHANGED);
-        tm = SVGUtils::GetTransformMatrixInUserSpace(kid) * tm;
-      }
-
-      SVGUtils::PaintFrameWithEffects(kid, ctx, tm, aImgParams);
-    }
-  }
-
-  patternWithChildren->mSource = nullptr;
+  PaintChildren(dt, patternWithChildren, aSource, aGraphicOpacity, aImgParams);
 
   // caller now owns the surface
   return dt->GetBackingSurface();

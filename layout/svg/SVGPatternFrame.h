@@ -95,6 +95,10 @@ class SVGPatternFrame final : public SVGPaintServerFrame {
     return GetLengthValue(aIndex, mContent);
   }
 
+  void PaintChildren(DrawTarget* aDrawTarget,
+                     SVGPatternFrame* aPatternWithChildren, nsIFrame* aSource,
+                     float aGraphicOpacity, imgDrawingParams& aImgParams);
+
   already_AddRefed<SourceSurface> PaintPattern(
       const DrawTarget* aDrawTarget, Matrix* patternMatrix,
       const Matrix& aContextMatrix, nsIFrame* aSource,

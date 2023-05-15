@@ -95,30 +95,9 @@ static void ComposeExtraMask(DrawTarget* aTarget, SourceSurface* aExtraMask) {
   aTarget->SetTransform(origin);
 }
 
-void SVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
+void SVGClipPathFrame::PaintChildren(gfxContext& aMaskContext,
                                      nsIFrame* aClippedFrame,
-                                     const gfxMatrix& aMatrix,
-                                     SourceSurface* aExtraMask) {
-  static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
-
-  // A clipPath can reference another clipPath, creating a chain of clipPaths
-  // that must all be applied.  We re-enter this method for each clipPath in a
-  // chain, so we need to protect against reference chain related crashes etc.:
-  AutoReferenceChainGuard refChainGuard(this, &mIsBeingProcessed,
-                                        &sRefChainLengthCounter);
-  if (MOZ_UNLIKELY(!refChainGuard.Reference())) {
-    return;  // Break reference chain
-  }
-
-  DrawTarget* maskDT = aMaskContext.GetDrawTarget();
-  MOZ_ASSERT(maskDT->GetFormat() == SurfaceFormat::A8);
-
-  // Paint this clipPath's contents into aMaskDT:
-  // We need to set mMatrixForChildren here so that under the PaintSVG calls
-  // on our children (below) our GetCanvasTM() method will return the correct
-  // transform.
-  mMatrixForChildren = GetClipPathTransform(aClippedFrame) * aMatrix;
-
+                                     const gfxMatrix& aMatrix) {
   // Check if this clipPath is itself clipped by another clipPath:
   SVGClipPathFrame* clipPathThatClipsClipPath;
   // XXX check return value?
@@ -149,6 +128,33 @@ void SVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
   if (maskUsage.shouldApplyClipPath) {
     aMaskContext.PopClip();
   }
+}
+
+void SVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
+                                     nsIFrame* aClippedFrame,
+                                     const gfxMatrix& aMatrix,
+                                     SourceSurface* aExtraMask) {
+  static int16_t sRefChainLengthCounter = AutoReferenceChainGuard::noChain;
+
+  // A clipPath can reference another clipPath, creating a chain of clipPaths
+  // that must all be applied.  We re-enter this method for each clipPath in a
+  // chain, so we need to protect against reference chain related crashes etc.:
+  AutoReferenceChainGuard refChainGuard(this, &mIsBeingProcessed,
+                                        &sRefChainLengthCounter);
+  if (MOZ_UNLIKELY(!refChainGuard.Reference())) {
+    return;  // Break reference chain
+  }
+
+  DrawTarget* maskDT = aMaskContext.GetDrawTarget();
+  MOZ_ASSERT(maskDT->GetFormat() == SurfaceFormat::A8);
+
+  // Paint this clipPath's contents into aMaskDT:
+  // We need to set mMatrixForChildren here so that under the PaintSVG calls
+  // on our children (below) our GetCanvasTM() method will return the correct
+  // transform.
+  mMatrixForChildren = GetClipPathTransform(aClippedFrame) * aMatrix;
+
+  PaintChildren(aMaskContext, aClippedFrame, aMatrix);
 
   if (aExtraMask) {
     ComposeExtraMask(maskDT, aExtraMask);
