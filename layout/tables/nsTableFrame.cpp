@@ -3541,8 +3541,7 @@ nscoord nsTableFrame::SynthesizeFallbackBaseline(
 
 /* virtual */
 Maybe<nscoord> nsTableFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    BaselineExportContext) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   if (StyleDisplay()->IsContainLayout()) {
     return Nothing{};
   }
