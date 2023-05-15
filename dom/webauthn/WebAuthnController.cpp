@@ -44,15 +44,12 @@ static nsIThread* gWebAuthnBackgroundThread;
 }  // namespace
 
 // Data for WebAuthn UI prompt notifications.
-static const char16_t kRegisterPromptNotification[] =
-    u"{\"is_ctap2\":true,\"action\":\"register\",\"tid\":%llu,"
-    u"\"origin\":\"%s\",\"browsingContextId\":%llu,\"device_selected\":%s}";
+static const char16_t kPresencePromptNotification[] =
+    u"{\"is_ctap2\":true,\"action\":\"presence\",\"tid\":%llu,"
+    u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
 static const char16_t kRegisterDirectPromptNotification[] =
     u"{\"is_ctap2\":true,\"action\":\"register-direct\",\"tid\":%llu,"
     u"\"origin\":\"%s\",\"browsingContextId\":%llu}";
-static const char16_t kSignPromptNotification[] =
-    u"{\"is_ctap2\":true,\"action\":\"sign\",\"tid\":%llu,\"origin\":\"%s\","
-    u"\"browsingContextId\":%llu,\"device_selected\":%s}";
 static const char16_t kCancelPromptNotification[] =
     u"{\"is_ctap2\":true,\"action\":\"cancel\",\"tid\":%llu}";
 static const char16_t kSelectSignResultNotification[] =
@@ -320,7 +317,7 @@ void WebAuthnController::DoRegister(const WebAuthnMakeCredentialInfo& aInfo,
 
   // Show a prompt that lets the user cancel the ongoing transaction.
   NS_ConvertUTF16toUTF8 origin(aInfo.Origin());
-  SendPromptNotification(kRegisterPromptNotification,
+  SendPromptNotification(kPresencePromptNotification,
                          mTransaction.ref().mTransactionId, origin.get(),
                          aInfo.BrowsingContextId(), "false");
 
@@ -484,10 +481,9 @@ void WebAuthnController::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
   mPendingSignInfo = Some(aInfo);
 
-  NS_ConvertUTF16toUTF8 origin(aInfo.Origin());
-
   // Show a prompt that lets the user cancel the ongoing transaction.
-  SendPromptNotification(kSignPromptNotification,
+  NS_ConvertUTF16toUTF8 origin(aInfo.Origin());
+  SendPromptNotification(kPresencePromptNotification,
                          mTransaction.ref().mTransactionId, origin.get(),
                          aInfo.BrowsingContextId(), "false");
 

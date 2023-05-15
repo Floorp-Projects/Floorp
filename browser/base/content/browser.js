@@ -7565,12 +7565,10 @@ var WebAuthnPromptHelper = {
       data.is_ctap2 ? Ci.nsIWebAuthnController : Ci.nsIU2FTokenManager
     );
 
-    if (data.action == "register") {
-      this.register(mgr, data);
+    if (data.action == "presence") {
+      this.presence_required(mgr, data);
     } else if (data.action == "register-direct") {
       this.registerDirect(mgr, data);
-    } else if (data.action == "sign") {
-      this.sign(mgr, data);
     } else if (data.action == "pin-required") {
       this.pin_required(mgr, data);
     } else if (data.action == "select-sign-result") {
@@ -7680,23 +7678,14 @@ var WebAuthnPromptHelper = {
     }
   },
 
-  register(mgr, { origin, tid, is_ctap2, device_selected }) {
+  presence_required(mgr, { origin, tid }) {
     let mainAction = this.buildCancelAction(mgr, tid);
     let options = { escAction: "buttoncommand" };
     let secondaryActions = [];
-    let message;
-    if (is_ctap2) {
-      if (device_selected) {
-        message = "webauthn.registerTouchDevice";
-      } else {
-        message = "webauthn.CTAP2registerPrompt";
-      }
-    } else {
-      message = "webauthn.registerPrompt2";
-    }
+    let message = "webauthn.userPresencePrompt";
     this.show(
       tid,
-      "register",
+      "presence",
       message,
       origin,
       mainAction,
@@ -7724,31 +7713,6 @@ var WebAuthnPromptHelper = {
       tid,
       "register-direct",
       "webauthn.registerDirectPrompt3",
-      origin,
-      mainAction,
-      secondaryActions,
-      options
-    );
-  },
-
-  sign(mgr, { origin, tid, is_ctap2, device_selected }) {
-    let mainAction = this.buildCancelAction(mgr, tid);
-    let options = { escAction: "buttoncommand" };
-    let secondaryActions = [];
-    let message;
-    if (is_ctap2) {
-      if (device_selected) {
-        message = "webauthn.signTouchDevice";
-      } else {
-        message = "webauthn.CTAP2signPrompt";
-      }
-    } else {
-      message = "webauthn.signPrompt2";
-    }
-    this.show(
-      tid,
-      "sign",
-      message,
       origin,
       mainAction,
       secondaryActions,

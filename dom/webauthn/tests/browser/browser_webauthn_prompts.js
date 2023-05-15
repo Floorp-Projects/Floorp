@@ -86,7 +86,7 @@ async function test_register() {
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-register");
+  await promiseNotification("webauthn-prompt-presence");
 
   // Cancel the request with the button.
   ok(active, "request should still be active");
@@ -107,7 +107,7 @@ async function test_register_escape() {
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-register");
+  await promiseNotification("webauthn-prompt-presence");
 
   // Cancel the request by hitting escape.
   ok(active, "request should still be active");
@@ -128,7 +128,7 @@ async function test_sign() {
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-sign");
+  await promiseNotification("webauthn-prompt-presence");
 
   // Cancel the request with the button.
   ok(active, "request should still be active");
@@ -149,7 +149,7 @@ async function test_sign_escape() {
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-sign");
+  await promiseNotification("webauthn-prompt-presence");
 
   // Cancel the request by hitting escape.
   ok(active, "request should still be active");
@@ -193,7 +193,7 @@ async function test_tab_switching() {
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-register");
+  await promiseNotification("webauthn-prompt-presence");
   is(PopupNotifications.panel.state, "open", "Doorhanger is visible");
 
   // Open and switch to a second tab.
@@ -210,7 +210,7 @@ async function test_tab_switching() {
   // Go back to the first tab
   await BrowserTestUtils.removeTab(tab_two);
 
-  await promiseNotification("webauthn-prompt-register");
+  await promiseNotification("webauthn-prompt-presence");
 
   await TestUtils.waitForCondition(
     () => PopupNotifications.panel.state == "open"
@@ -239,7 +239,7 @@ async function test_window_switching() {
     .then(arrivingHereIsBad)
     .catch(expectNotAllowedError)
     .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-register");
+  await promiseNotification("webauthn-prompt-presence");
 
   await TestUtils.waitForCondition(
     () => PopupNotifications.panel.state == "open"
