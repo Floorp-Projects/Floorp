@@ -35,10 +35,11 @@ class AsyncEventDispatcher : public CancelableRunnable {
    * the event is dispatched to it, otherwise the dispatch path starts
    * at the first chrome ancestor of that target.
    */
-  AsyncEventDispatcher(nsINode* aTarget, const nsAString& aEventType,
-                       CanBubble aCanBubble,
-                       ChromeOnlyDispatch aOnlyChromeDispatch,
-                       Composed aComposed = Composed::eDefault)
+  AsyncEventDispatcher(
+      dom::EventTarget* aTarget, const nsAString& aEventType,
+      CanBubble aCanBubble,
+      ChromeOnlyDispatch aOnlyChromeDispatch = ChromeOnlyDispatch::eNo,
+      Composed aComposed = Composed::eDefault)
       : CancelableRunnable("AsyncEventDispatcher"),
         mTarget(aTarget),
         mEventType(aEventType),
@@ -64,14 +65,6 @@ class AsyncEventDispatcher : public CancelableRunnable {
     mEventType.SetIsVoid(true);
     MOZ_ASSERT(mEventMessage != eUnidentifiedEvent);
   }
-
-  AsyncEventDispatcher(dom::EventTarget* aTarget, const nsAString& aEventType,
-                       CanBubble aCanBubble)
-      : CancelableRunnable("AsyncEventDispatcher"),
-        mTarget(aTarget),
-        mEventType(aEventType),
-        mEventMessage(eUnidentifiedEvent),
-        mCanBubble(aCanBubble) {}
 
   AsyncEventDispatcher(dom::EventTarget* aTarget,
                        mozilla::EventMessage aEventMessage,
@@ -119,8 +112,9 @@ class AsyncEventDispatcher : public CancelableRunnable {
    * asynchronous dispatching).
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static void RunDOMEventWhenSafe(
-      nsINode& aTarget, const nsAString& aEventType, CanBubble aCanBubble,
-      ChromeOnlyDispatch aOnlyChromeDispatch,
+      dom::EventTarget& aTarget, const nsAString& aEventType,
+      CanBubble aCanBubble,
+      ChromeOnlyDispatch aOnlyChromeDispatch = ChromeOnlyDispatch::eNo,
       Composed aComposed = Composed::eDefault);
 
   /**

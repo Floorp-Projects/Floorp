@@ -106,9 +106,8 @@ void XULFrameElement::LoadSrc() {
       return;
     }
 
-    (new AsyncEventDispatcher(this, u"XULFrameLoaderCreated"_ns,
-                              CanBubble::eYes))
-        ->RunDOMEventWhenSafe();
+    AsyncEventDispatcher::RunDOMEventWhenSafe(
+        *this, u"XULFrameLoaderCreated"_ns, CanBubble::eYes);
   }
 
   mFrameLoader->LoadFrame(false);
