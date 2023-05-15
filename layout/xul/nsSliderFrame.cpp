@@ -907,6 +907,13 @@ void nsSliderFrame::CurrentPositionChanged() {
   // XXX This out-of-band update of the frame tree is rather fishy!
   thumbFrame->SetRect(newThumbRect);
 
+  // When the thumb changes position, the mThumbStart value stored in
+  // ScrollbarData for the purpose of telling APZ about the thumb
+  // position painted by the main thread is invalidated. The ScrollbarData
+  // is stored on the nsDisplayOwnLayer item built by *this* frame, so
+  // we need to mark this frame as needing its fisplay item rebuilt.
+  MarkNeedsDisplayItemRebuild();
+
   // Request a repaint of the scrollbar
   nsIScrollbarMediator* mediator = scrollbarBox->GetScrollbarMediator();
   if (!mediator || !mediator->ShouldSuppressScrollbarRepaints()) {
