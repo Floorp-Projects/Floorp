@@ -60,7 +60,7 @@ preference = "browser.startup.homepage.abouthome_cache.enabled"
 type = "boolean"
 bug-numbers = [1614351]
 is-public = true
-default-value = {default = false, nightly = true}
+default-value = true
 
 [devtools-serviceworker-debugger-support]
 title = "experimental-features-devtools-serviceworker-debugger-support"
