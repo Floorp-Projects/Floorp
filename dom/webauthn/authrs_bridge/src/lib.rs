@@ -38,15 +38,9 @@ use xpcom::interfaces::{
 };
 use xpcom::{xpcom_method, RefPtr};
 
-fn make_register_prompt(tid: u64, origin: &str, browsing_context_id: u64) -> String {
+fn make_presence_prompt(tid: u64, origin: &str, browsing_context_id: u64) -> String {
     format!(
-        r#"{{"is_ctap2":true,"action":"register","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id},"device_selected":true}}"#,
-    )
-}
-
-fn make_sign_prompt(tid: u64, origin: &str, browsing_context_id: u64) -> String {
-    format!(
-        r#"{{"is_ctap2":true,"action":"sign","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id},"device_selected":true}}"#,
+        r#"{{"is_ctap2":true,"action":"presence","tid":{tid},"origin":"{origin}","browsingContextId":{browsing_context_id}}}"#,
     )
 }
 
@@ -294,11 +288,6 @@ impl Controller {
     }
 }
 
-enum EventType {
-    Register,
-    Sign,
-}
-
 // The state machine creates a Sender<Pin>/Receiver<Pin> channel in ask_user_for_pin. It passes the
 // Sender through status_callback, which stores the Sender in the pin_receiver field of an
 // AuthrsTransport. The u64 in PinReceiver is a transaction ID, which the AuthrsTransport uses the
@@ -311,7 +300,6 @@ fn status_callback(
     origin: &String,
     browsing_context_id: u64,
     controller: Controller,
-    event_type: EventType,
     pin_receiver: Arc<Mutex<PinReceiver>>, /* Shared with an AuthrsTransport */
 ) {
     loop {
@@ -332,10 +320,10 @@ fn status_callback(
             }
             Ok(StatusUpdate::DeviceSelected(dev_info)) => {
                 debug!("STATUS: Continuing with device: {}", dev_info);
-                let notification_str = match event_type {
-                    EventType::Register => make_register_prompt(tid, origin, browsing_context_id),
-                    EventType::Sign => make_sign_prompt(tid, origin, browsing_context_id),
-                };
+            }
+            Ok(StatusUpdate::PresenceRequired) => {
+                debug!("STATUS: Waiting for user presence");
+                let notification_str = make_presence_prompt(tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))) => {
@@ -563,7 +551,6 @@ impl AuthrsTransport {
                     &status_origin,
                     browsing_context_id,
                     controller,
-                    EventType::Register,
                     pin_receiver,
                 )
             },
@@ -665,7 +652,6 @@ impl AuthrsTransport {
                 &status_origin,
                 browsing_context_id,
                 controller,
-                EventType::Sign,
                 pin_receiver,
             )
         })

@@ -65,6 +65,9 @@ fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms:
             Ok(StatusUpdate::DeviceSelected(dev_info)) => {
                 println!("STATUS: Continuing with device: {dev_info}");
             }
+            Ok(StatusUpdate::PresenceRequired) => {
+                println!("STATUS: waiting for user presence");
+            }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))) => {
                 let raw_pin =
                     rpassword::prompt_password_stderr("Enter PIN: ").expect("Failed to read PIN");
@@ -257,6 +260,9 @@ fn main() {
             }
             Ok(StatusUpdate::DeviceSelected(dev_info)) => {
                 println!("STATUS: Continuing with device: {dev_info}");
+            }
+            Ok(StatusUpdate::PresenceRequired) => {
+                println!("STATUS: waiting for user presence");
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))) => {
                 let raw_pin =

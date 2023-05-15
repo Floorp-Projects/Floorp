@@ -12,18 +12,14 @@ use crate::ctap2::attestation::{
     AAGuid, AttestationObject, AttestationStatement, AttestationStatementFidoU2F,
     AttestedCredentialData, AuthenticatorData, AuthenticatorDataFlags,
 };
-use crate::ctap2::client_data::{Challenge, ClientDataHash, CollectedClientData, WebauthnType};
+use crate::ctap2::client_data::ClientDataHash;
 use crate::ctap2::commands::client_pin::Pin;
-use crate::ctap2::commands::get_assertion::CheckKeyHandle;
 use crate::ctap2::server::{
     PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
     RelyingPartyWrapper, RpIdHash, User, UserVerificationRequirement,
 };
 use crate::errors::AuthenticatorError;
-use crate::transport::{
-    errors::{ApduErrorStatus, HIDError},
-    FidoDevice,
-};
+use crate::transport::errors::{ApduErrorStatus, HIDError};
 use crate::u2ftypes::{CTAP1RequestAPDU, U2FDevice};
 use nom::{
     bytes::complete::{tag, take},
@@ -232,12 +228,12 @@ impl PinUvAuthCommand for MakeCredentials {
         self.options.user_verification = uv;
     }
 
-    fn get_rp_id(&self) -> Option<&String> {
-        match &self.rp {
-            // CTAP1 case: We only have the hash, not the entire RpID
-            RelyingPartyWrapper::Hash(..) => None,
-            RelyingPartyWrapper::Data(r) => Some(&r.id),
-        }
+    fn get_uv_option(&mut self) -> Option<bool> {
+        self.options.user_verification
+    }
+
+    fn get_rp(&self) -> &RelyingPartyWrapper {
+        &self.rp
     }
 
     fn can_skip_user_verification(
@@ -264,6 +260,10 @@ impl PinUvAuthCommand for MakeCredentials {
         let can_make_cred_without_uv = make_cred_uv_not_required && uv_discouraged;
 
         !always_uv && (!device_protected || can_make_cred_without_uv)
+    }
+
+    fn get_pin_uv_auth_param(&self) -> Option<&PinUvAuthParam> {
+        self.pin_uv_auth_param.as_ref()
     }
 }
 
@@ -332,40 +332,7 @@ impl RequestCtap1 for MakeCredentials {
     type Output = MakeCredentialsResult;
     type AdditionalInfo = ();
 
-    fn ctap1_format<Dev>(&self, dev: &mut Dev) -> Result<(Vec<u8>, ()), HIDError>
-    where
-        Dev: io::Read + io::Write + fmt::Debug + FidoDevice,
-    {
-        let is_already_registered = self
-            .exclude_list
-            .iter()
-            // key-handles in CTAP1 are limited to 255 bytes, but are not limited in CTAP2.
-            // Filter out key-handles that are too long (can happen if this is a CTAP2-request,
-            // but the token only speaks CTAP1). If none is found, return an error.
-            .filter(|exclude_handle| exclude_handle.id.len() < 256)
-            .map(|exclude_handle| {
-                let check_command = CheckKeyHandle {
-                    key_handle: exclude_handle.id.as_ref(),
-                    client_data_hash: self.client_data_hash.as_ref(),
-                    rp: &self.rp,
-                };
-                let res = dev.send_ctap1(&check_command);
-                res.is_ok()
-            })
-            .any(|x| x);
-
-        if is_already_registered {
-            // Now we need to send a dummy registration request, to make the token blink
-            // Spec says "dummy appid and invalid challenge". We use the same, as we do for
-            // making the token blink upon device selection.
-            let msg = dummy_make_credentials_cmd()?;
-            let _ = dev.send_ctap1(&msg); // Ignore answer, return "CrednetialExcluded"
-            return Err(HIDError::Command(CommandError::StatusCode(
-                StatusCode::CredentialExcluded,
-                None,
-            )));
-        }
-
+    fn ctap1_format(&self) -> Result<(Vec<u8>, ()), HIDError> {
         let flags = U2F_REQUEST_USER_PRESENCE;
 
         let mut register_data = Vec::with_capacity(2 * PARAMETER_SIZE);
@@ -403,10 +370,7 @@ impl RequestCtap2 for MakeCredentials {
         Command::MakeCredentials
     }
 
-    fn wire_format<Dev>(&self, _dev: &mut Dev) -> Result<Vec<u8>, HIDError>
-    where
-        Dev: U2FDevice + io::Read + io::Write + fmt::Debug,
-    {
+    fn wire_format(&self) -> Result<Vec<u8>, HIDError> {
         Ok(ser::to_vec(&self).map_err(CommandError::Serializing)?)
     }
 
@@ -443,16 +407,20 @@ impl RequestCtap2 for MakeCredentials {
     }
 }
 
-pub(crate) fn dummy_make_credentials_cmd() -> Result<MakeCredentials, HIDError> {
+pub(crate) fn dummy_make_credentials_cmd() -> MakeCredentials {
     let mut req = MakeCredentials::new(
-        CollectedClientData {
-            webauthn_type: WebauthnType::Create,
-            challenge: Challenge::new(vec![0, 1, 2, 3, 4]),
-            origin: String::new(),
-            cross_origin: false,
-            token_binding: None,
-        }
-        .hash()?,
+        // Hardcoded hash of:
+        // CollectedClientData {
+        //     webauthn_type: WebauthnType::Create,
+        //     challenge: Challenge::new(vec![0, 1, 2, 3, 4]),
+        //     origin: String::new(),
+        //     cross_origin: false,
+        //     token_binding: None,
+        // }
+        ClientDataHash([
+            208, 206, 230, 252, 125, 191, 89, 154, 145, 157, 184, 251, 149, 19, 17, 38, 159, 14,
+            183, 129, 247, 132, 28, 108, 192, 84, 74, 217, 218, 52, 21, 75,
+        ]),
         RelyingPartyWrapper::Data(RelyingParty {
             id: String::from("make.me.blink"),
             ..Default::default()
@@ -474,7 +442,7 @@ pub(crate) fn dummy_make_credentials_cmd() -> Result<MakeCredentials, HIDError> 
     // For CTAP1, this gets ignored anyways and we do a 'normal' register
     // command, which also just blinks.
     req.pin_uv_auth_param = Some(PinUvAuthParam::create_empty());
-    Ok(req)
+    req
 }
 
 #[cfg(test)]
@@ -630,7 +598,7 @@ pub mod test {
 
         let mut device = Device::new("commands/make_credentials").unwrap(); // not really used (all functions ignore it)
         let req_serialized = req
-            .wire_format(&mut device)
+            .wire_format()
             .expect("Failed to serialize MakeCredentials request");
         assert_eq!(req_serialized, MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP2);
         let attestation_object = req
@@ -686,9 +654,8 @@ pub mod test {
             None,
         );
 
-        let mut device = Device::new("commands/make_credentials").unwrap(); // not really used (all functions ignore it)
         let (req_serialized, _) = req
-            .ctap1_format(&mut device)
+            .ctap1_format()
             .expect("Failed to serialize MakeCredentials request");
         assert_eq!(
             req_serialized, MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP1,

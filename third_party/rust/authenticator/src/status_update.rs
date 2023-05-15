@@ -59,6 +59,8 @@ pub enum StatusUpdate {
     DeviceAvailable { dev_info: u2ftypes::U2FDeviceInfo },
     /// Device got removed
     DeviceUnavailable { dev_info: u2ftypes::U2FDeviceInfo },
+    /// We're waiting for the user to touch their token
+    PresenceRequired,
     /// We successfully finished the register or sign request
     Success { dev_info: u2ftypes::U2FDeviceInfo },
     /// Sent if a PIN is needed (or was wrong), or some other kind of PIN-related
