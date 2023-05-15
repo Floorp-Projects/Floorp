@@ -351,7 +351,6 @@ class nsContextMenu {
     this.initClipboardItems();
     this.initMediaPlayerItems();
     this.initLeaveDOMFullScreenItems();
-    this.initClickToPlayItems();
     this.initPasswordManagerItems();
     this.initViewSourceItems();
     this.initScreenshotItem();
@@ -1124,11 +1123,6 @@ class nsContextMenu {
         );
       }
     }
-  }
-
-  initClickToPlayItems() {
-    this.showItem("context-ctp-play", false);
-    this.showItem("context-ctp-hide", false);
   }
 
   initPasswordManagerItems() {
@@ -2118,14 +2112,6 @@ class nsContextMenu {
 
   sendMedia() {
     MailIntegration.sendMessage(this.mediaURL, "");
-  }
-
-  playPlugin() {
-    /* no-op.  TODO: Remove me. */
-  }
-
-  hidePlugin() {
-    /* no-op.  TODO: Remove me. */
   }
 
   // Generate email address and put it on clipboard.
