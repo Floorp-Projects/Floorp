@@ -41,8 +41,6 @@
       // Provide the input in window-relative coordinates,
       // otherwise coordinatesRelativeToScreen() will run into the
       // same bug as the hit-test, and the two bugs cancel out.
-      var offsetX = {}, offsetY = {};
-      SpecialPowers.getDOMWindowUtils(window).getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
       await synthesizeNativeMouseEventWithAPZ({
         type: "click",
         target: window,
