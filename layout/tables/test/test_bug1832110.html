@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<title>Test for Bug 1832110</title>
+<style>
+:root {
+  --bw: 1px;
+}
+
+div {
+  display: inline-block;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td {
+  border: var(--bw) solid black;
+  line-height: 0;
+  padding: 0;
+}
+
+span {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: grey;
+}
+
+.hide {
+  display: none;
+}
+</style>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script class="testbody" type="text/javascript">
+function set_td_border(width) {
+  document.documentElement.style.setProperty("--bw", width + "px");
+}
+
+function raf() {
+  return new Promise(resolve => {
+    requestAnimationFrame(resolve);
+  });
+}
+
+async function show_table(table, other) {
+  // TODO(dshin): Once bug 1825384 resolves, this should not be needed.
+  table.classList.remove("hide");
+  other.classList.add("hide");
+  getComputedStyle(table).getPropertyValue("display");
+  await raf();
+}
+
+async function run_test(relativeZoom, width) {
+  SpecialPowers.setFullZoom(window, relativeZoom);
+  set_td_border(width);
+  show_table(emptyrows, normal);
+  const s1 = await snapshotRect(window, emptyrows.getBoundingClientRect());
+  show_table(normal, emptyrows);
+  const s2 = await snapshotRect(window, normal.getBoundingClientRect());
+  assertSnapshots(s1, s2, true, null, "emptyrows", "normal " + relativeZoom + " " + width);
+}
+
+SimpleTest.waitForExplicitFinish();
+const zoomsToTest = [
+  100,
+  110,
+  120,
+  130,
+  140,
+  150,
+  200,
+  250,
+  300,
+];
+const originalZoom = SpecialPowers.getFullZoom(window);
+
+const widthsToTest = [
+  1,
+  3,
+  7,
+  11,
+  23,
+];
+for (let i = 0; i < zoomsToTest.length; ++i) {
+  let relativeZoom = originalZoom * zoomsToTest[i] / 100;
+  for (let j = 0; j < widthsToTest.length; ++j) {
+    add_task(async () => { await run_test(relativeZoom, widthsToTest[j]); });
+  }
+}
+add_task(async () => { SpecialPowers.setFullZoom(window, originalZoom); });
+</script>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1832110">Mozilla Bug 1832110</a><br>
+<div id="emptyrows" class="hide">
+<table>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+<tr></tr>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+<tr></tr>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+<tr></tr>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+</table>
+</div><div id="normal" class="hide">
+<table>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+</table>
+</div>

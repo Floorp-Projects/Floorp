@@ -5835,7 +5835,8 @@ struct BCBlockDirSeg {
   BCBlockDirSeg();
 
   void Start(BCPaintBorderIterator& aIter, BCBorderOwner aBorderOwner,
-             BCPixelSize aBlockSegISize, BCPixelSize aInlineSegBSize);
+             BCPixelSize aBlockSegISize, BCPixelSize aInlineSegBSize,
+             Maybe<nscoord> aEmptyRowEndSize);
 
   void Initialize(BCPaintBorderIterator& aIter);
   void GetBEndCorner(BCPaintBorderIterator& aIter, BCPixelSize aInlineSegBSize);
@@ -6530,7 +6531,8 @@ BCBlockDirSeg::BCBlockDirSeg()
 void BCBlockDirSeg::Start(BCPaintBorderIterator& aIter,
                           BCBorderOwner aBorderOwner,
                           BCPixelSize aBlockSegISize,
-                          BCPixelSize aInlineSegBSize) {
+                          BCPixelSize aInlineSegBSize,
+                          Maybe<nscoord> aEmptyRowEndBSize) {
   LogicalSide ownerSide = eLogicalSideBStart;
   bool bevel = false;
 
@@ -6549,7 +6551,14 @@ void BCBlockDirSeg::Start(BCPaintBorderIterator& aIter,
   // XXX this assumes that only corners where 2 segments join can be beveled
   mBStartBevelSide =
       (aInlineSegBSize > 0) ? eLogicalSideIEnd : eLogicalSideIStart;
-  mOffsetB += offset;
+  if (aEmptyRowEndBSize && *aEmptyRowEndBSize < offset) {
+    // This segment is starting from an empty row. This will require the the
+    // starting segment to overlap with the previously drawn segment, unless the
+    // empty row's size clears the overlap.
+    mOffsetB += *aEmptyRowEndBSize;
+  } else {
+    mOffsetB += offset;
+  }
   mLength = -offset;
   mWidth = aBlockSegISize;
   mOwner = aBorderOwner;
@@ -7263,12 +7272,14 @@ void BCPaintBorderIterator::AccumulateOrDoActionBlockDirSegment(
   if (!blockDirSeg.mCol) {  // on the first damaged row and the first segment in
                             // the col
     blockDirSeg.Initialize(*this);
-    blockDirSeg.Start(*this, borderOwner, blockSegISize, inlineSegBSize);
+    blockDirSeg.Start(*this, borderOwner, blockSegISize, inlineSegBSize,
+                      Nothing{});
   }
 
   if (!IsDamageAreaBStartMost() &&
       (isSegStart || IsDamageAreaBEndMost() || IsAfterRepeatedHeader() ||
        StartRepeatedFooter())) {
+    Maybe<nscoord> emptyRowEndSize;
     // paint the previous seg or the current one if IsDamageAreaBEndMost()
     if (blockDirSeg.mLength > 0) {
       blockDirSeg.GetBEndCorner(*this, inlineSegBSize);
@@ -7287,24 +7298,12 @@ void BCPaintBorderIterator::AccumulateOrDoActionBlockDirSegment(
         }
       }
       blockDirSeg.AdvanceOffsetB();
-      // If the row is empty and cell borders are defined, the row will be
-      // zero-sized (If there existed an empty cell, it'd be sized to contain
-      // the cell's borders). In this case, we effectively need to "pull up"
-      // where the segment starts (Unless the empty row has enough block size).
       if (mRow->PrincipalChildList().IsEmpty()) {
-        const auto rowSize = mRow->BSize(mTableWM);
-        if (blockDirSeg.mBEndOffset > 0 && blockDirSeg.mBEndOffset > rowSize) {
-          blockDirSeg.mOffsetB -= blockDirSeg.mBEndOffset - rowSize;
-        } else if (blockDirSeg.mBEndOffset < 0 &&
-                   -blockDirSeg.mBEndOffset > rowSize) {
-          // For cases of segments that don't have bevel (e.g. inner block
-          // direction borders). Since they "end early," the block end offset is
-          // negative.
-          blockDirSeg.mOffsetB += blockDirSeg.mBEndOffset + rowSize;
-        }
+        emptyRowEndSize = Some(mRow->BSize(mTableWM));
       }
     }
-    blockDirSeg.Start(*this, borderOwner, blockSegISize, inlineSegBSize);
+    blockDirSeg.Start(*this, borderOwner, blockSegISize, inlineSegBSize,
+                      emptyRowEndSize);
   }
   blockDirSeg.IncludeCurrentBorder(*this);
   mPrevInlineSegBSize = inlineSegBSize;
