@@ -33,6 +33,7 @@
   margin-inline-start: 3px;
   border-inline-start: 1px solid #a2d1ff;
   flex-shrink: 0;
+  height: 0;
 }
 
 .tree-node[data-expandable="false"] .tree-last-indent {

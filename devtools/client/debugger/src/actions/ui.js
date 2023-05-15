@@ -236,3 +236,9 @@ export function setJavascriptTracingLogMethod(value) {
     });
   };
 }
+
+export function setHideOrShowIgnoredSources(shouldHide) {
+  return ({ dispatch, getState }) => {
+    dispatch({ type: "HIDE_IGNORED_SOURCES", shouldHide });
+  };
+}

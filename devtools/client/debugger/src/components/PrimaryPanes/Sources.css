@@ -20,13 +20,8 @@
 /***********************/
 
 .sources-list {
-  display: grid;
-  grid-template-areas:
-    "custom-root"
-    "sources-tree-or-empty-message";
-  /* The custom root might not be visible */
-  grid-template-rows: auto 1fr;
-  max-height: 100%;
+  display: flex;
+  flex-direction: column;
   height: 100%;
   overflow: hidden;
 }
@@ -75,6 +70,7 @@
 
 .sources-list .managed-tree {
   display: flex;
+  flex-grow: 1;
   overflow: auto;
 }
 
@@ -136,6 +132,29 @@
   display: inline-block;
   line-height: 16px;
 }
+
+.source-list-footer {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  border: 1px solid var(--theme-warning-border);
+  user-select: none;
+  padding: 3px 10px;
+  color: var(--theme-warning-color);
+  background-color: var(--theme-warning-background);
+  white-space: nowrap;
+}
+
+.source-list-footer .devtools-togglebutton {
+  background-color: var(--theme-toolbar-hover);
+  margin-inline-start: 5px;
+}
+
+.source-list-footer .devtools-togglebutton:hover {
+  background-color: var(--theme-toolbar-hover);
+  cursor: pointer;
+}
+
 
 /* Removes start margin when a custom root is used */
 .sources-list-custom-root
