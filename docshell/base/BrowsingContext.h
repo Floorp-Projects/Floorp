@@ -54,6 +54,7 @@ class LogModule;
 
 namespace ipc {
 class IProtocol;
+class IPCResult;
 
 template <typename T>
 struct IPDLParamTraits;
@@ -789,9 +790,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   IPCInitializer GetIPCInitializer();
 
   // Create a BrowsingContext object from over IPC.
-  static void CreateFromIPC(IPCInitializer&& aInitializer,
-                            BrowsingContextGroup* aGroup,
-                            ContentParent* aOriginProcess);
+  static mozilla::ipc::IPCResult CreateFromIPC(IPCInitializer&& aInitializer,
+                                               BrowsingContextGroup* aGroup,
+                                               ContentParent* aOriginProcess);
 
   bool IsSandboxedFrom(BrowsingContext* aTarget);
 
@@ -958,7 +959,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                                        bool aHasPostData);
 
  private:
-  void Attach(bool aFromIPC, ContentParent* aOriginProcess);
+  mozilla::ipc::IPCResult Attach(bool aFromIPC, ContentParent* aOriginProcess);
 
   // Recomputes whether we can execute scripts in this BrowsingContext based on
   // the value of AllowJavascript() and whether scripts are allowed in the
