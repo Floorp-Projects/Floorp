@@ -271,6 +271,15 @@ const startupPhases = {
       condition: WIN,
       stat: 1,
     },
+    {
+      // bug 1833104 has context - this is artifact-only so doesn't affect
+      // any real users, will just show up for developer builds and
+      // artifact trypushes so we include it here.
+      path: "GreD:jogfile.json",
+      condition:
+        WIN && Services.prefs.getBoolPref("telemetry.fog.artifact_build"),
+      stat: 1,
+    },
   ],
 
   // We reach this phase right after showing the first browser window.
