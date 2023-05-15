@@ -737,6 +737,7 @@ class GitRepository(Repository):
                     cmd,
                     {
                         "stdout": subprocess.PIPE,
+                        "stderr": subprocess.STDOUT,
                         "cwd": self.path,
                         "universal_newlines": True,
                         "bufsize": 1,
