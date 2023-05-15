@@ -390,6 +390,10 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
                 TimeUnit switchTime = GetPosition();
                 DropAudioPacketsIfNeeded(switchTime);
                 mAudioSink.swap(audioSink);
+                if (mTreatUnderrunAsSilence) {
+                  mAudioSink->EnableTreatAudioUnderrunAsSilence(
+                      mTreatUnderrunAsSilence);
+                }
                 LOG("AudioSink async, start");
                 nsresult rv2 =
                     mAudioSink->Start(switchTime, mEndedPromiseHolder);
@@ -407,6 +411,9 @@ nsresult AudioSinkWrapper::StartAudioSink(const TimeUnit& aStartTime,
       mEndedPromiseHolder.RejectIfExists(rv, __func__);
       LOG("Sync AudioSinkWrapper initialization failed");
       return rv;
+    }
+    if (mTreatUnderrunAsSilence) {
+      mAudioSink->EnableTreatAudioUnderrunAsSilence(mTreatUnderrunAsSilence);
     }
     rv = mAudioSink->Start(aStartTime, mEndedPromiseHolder);
     if (NS_FAILED(rv)) {
@@ -477,6 +484,7 @@ void AudioSinkWrapper::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
 }
 
 void AudioSinkWrapper::EnableTreatAudioUnderrunAsSilence(bool aEnabled) {
+  mTreatUnderrunAsSilence = aEnabled;
   if (mAudioSink) {
     mAudioSink->EnableTreatAudioUnderrunAsSilence(aEnabled);
   }
