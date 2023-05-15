@@ -695,11 +695,12 @@ nsTreeSelection::GetShiftSelectPivot(int32_t* aIndex) {
 }
 
 nsresult nsTreeSelection::FireOnSelectHandler() {
-  if (mSuppressed || !mTree) return NS_OK;
+  if (mSuppressed || !mTree) {
+    return NS_OK;
+  }
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      mTree, u"select"_ns, CanBubble::eYes, ChromeOnlyDispatch::eNo);
-  asyncDispatcher->RunDOMEventWhenSafe();
+  AsyncEventDispatcher::RunDOMEventWhenSafe(
+      *mTree, u"select"_ns, CanBubble::eYes, ChromeOnlyDispatch::eNo);
   return NS_OK;
 }
 

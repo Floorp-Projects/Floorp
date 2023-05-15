@@ -967,9 +967,11 @@ void nsPrintJob::FirePrintPreviewUpdateEvent() {
   // listener bound to this event and therefore no need to dispatch it.
   if (mCreatedForPrintPreview && !mIsDoingPrinting) {
     nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
-    (new AsyncEventDispatcher(cv->GetDocument(), u"printPreviewUpdate"_ns,
-                              CanBubble::eYes, ChromeOnlyDispatch::eYes))
-        ->RunDOMEventWhenSafe();
+    if (Document* document = cv->GetDocument()) {
+      AsyncEventDispatcher::RunDOMEventWhenSafe(
+          *document, u"printPreviewUpdate"_ns, CanBubble::eYes,
+          ChromeOnlyDispatch::eYes);
+    }
   }
 }
 

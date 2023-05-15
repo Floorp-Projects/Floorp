@@ -54,21 +54,32 @@ AsyncEventDispatcher::Run() {
         node->OwnerDoc(), mTarget, mEventMessage, mCanBubble, Cancelable::eNo,
         nullptr /* aDefaultAction */, mOnlyChromeDispatch);
   }
-  RefPtr<Event> event = mEvent;
+  // MOZ_KnownLives because this instance shouldn't be touched while running.
+  DispatchEventOnTarget(MOZ_KnownLive(mTarget), mEventType, mCanBubble,
+                        mOnlyChromeDispatch, mComposed, MOZ_KnownLive(mEvent));
+  return NS_OK;
+}
+
+// static
+void AsyncEventDispatcher::DispatchEventOnTarget(
+    EventTarget* aTarget, const nsAString& aEventType, CanBubble aCanBubble,
+    ChromeOnlyDispatch aOnlyChromeDispatch,
+    Composed aComposed /* = Composed::eDefault */,
+    Event* aEvent /* = nullptr */) {
+  RefPtr<Event> event = aEvent;
   if (!event) {
-    event = NS_NewDOMEvent(mTarget, nullptr, nullptr);
-    event->InitEvent(mEventType, mCanBubble, Cancelable::eNo);
+    event = NS_NewDOMEvent(aTarget, nullptr, nullptr);
+    event->InitEvent(aEventType, aCanBubble, Cancelable::eNo);
     event->SetTrusted(true);
   }
-  if (mComposed != Composed::eDefault) {
-    event->WidgetEventPtr()->mFlags.mComposed = mComposed == Composed::eYes;
+  if (aComposed != Composed::eDefault) {
+    event->WidgetEventPtr()->mFlags.mComposed = aComposed == Composed::eYes;
   }
-  if (mOnlyChromeDispatch == ChromeOnlyDispatch::eYes) {
+  if (aOnlyChromeDispatch == ChromeOnlyDispatch::eYes) {
     MOZ_ASSERT(event->IsTrusted());
     event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
   }
-  mTarget->DispatchEvent(*event);
-  return NS_OK;
+  aTarget->DispatchEvent(*event);
 }
 
 nsresult AsyncEventDispatcher::Cancel() {
@@ -98,6 +109,22 @@ nsresult AsyncEventDispatcher::PostDOMEvent() {
 void AsyncEventDispatcher::RunDOMEventWhenSafe() {
   RefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
   nsContentUtils::AddScriptRunner(this);
+}
+
+// static
+void AsyncEventDispatcher::RunDOMEventWhenSafe(
+    nsINode& aTarget, const nsAString& aEventType, CanBubble aCanBubble,
+    ChromeOnlyDispatch aOnlyChromeDispatch,
+    Composed aComposed /* = Composed::eDefault */) {
+  if (nsContentUtils::IsSafeToRunScript()) {
+    OwningNonNull<nsINode> target = aTarget;
+    DispatchEventOnTarget(target, aEventType, aCanBubble, aOnlyChromeDispatch,
+                          aComposed);
+    return;
+  }
+  (new AsyncEventDispatcher(&aTarget, aEventType, aCanBubble,
+                            aOnlyChromeDispatch, aComposed))
+      ->RunDOMEventWhenSafe();
 }
 
 // static

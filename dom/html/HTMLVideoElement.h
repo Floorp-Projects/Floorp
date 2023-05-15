@@ -48,21 +48,20 @@ class HTMLVideoElement final : public HTMLMediaElement {
                               nsAttrValue& aResult) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
-      const override;
+  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
 
-  virtual nsresult Clone(NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(NodeInfo*, nsINode** aResult) const override;
 
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(bool aNullParent = true) override;
 
   mozilla::Maybe<mozilla::CSSIntSize> GetVideoSize() const;
 
-  virtual void UpdateMediaSize(const nsIntSize& aSize) override;
+  void UpdateMediaSize(const nsIntSize& aSize) override;
 
-  virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) override;
+  nsresult SetAcceptHeader(nsIHttpChannel* aChannel) override;
 
   // Element
-  virtual bool IsInteractiveHTMLContent() const override;
+  bool IsInteractiveHTMLContent() const override;
 
   // WebIDL
 

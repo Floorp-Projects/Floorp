@@ -3312,10 +3312,9 @@ void BrowsingContext::DidSet(FieldIndex<IDX_TextZoom>, float aOldValue) {
 
   if (IsTop() && XRE_IsParentProcess()) {
     if (Element* element = GetEmbedderElement()) {
-      auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
-          element, u"TextZoomChange"_ns, CanBubble::eYes,
-          ChromeOnlyDispatch::eYes);
-      dispatcher->RunDOMEventWhenSafe();
+      AsyncEventDispatcher::RunDOMEventWhenSafe(*element, u"TextZoomChange"_ns,
+                                                CanBubble::eYes,
+                                                ChromeOnlyDispatch::eYes);
     }
   }
 }
@@ -3343,10 +3342,9 @@ void BrowsingContext::DidSet(FieldIndex<IDX_FullZoom>, float aOldValue) {
 
   if (IsTop() && XRE_IsParentProcess()) {
     if (Element* element = GetEmbedderElement()) {
-      auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
-          element, u"FullZoomChange"_ns, CanBubble::eYes,
-          ChromeOnlyDispatch::eYes);
-      dispatcher->RunDOMEventWhenSafe();
+      AsyncEventDispatcher::RunDOMEventWhenSafe(*element, u"FullZoomChange"_ns,
+                                                CanBubble::eYes,
+                                                ChromeOnlyDispatch::eYes);
     }
   }
 }

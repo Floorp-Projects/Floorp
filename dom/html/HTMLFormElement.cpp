@@ -2263,9 +2263,8 @@ void HTMLFormElement::MaybeFireFormRemoved() {
     return;
   }
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      this, u"DOMFormRemoved"_ns, CanBubble::eNo, ChromeOnlyDispatch::eYes);
-  asyncDispatcher->RunDOMEventWhenSafe();
+  AsyncEventDispatcher::RunDOMEventWhenSafe(
+      *this, u"DOMFormRemoved"_ns, CanBubble::eNo, ChromeOnlyDispatch::eYes);
 }
 
 }  // namespace mozilla::dom

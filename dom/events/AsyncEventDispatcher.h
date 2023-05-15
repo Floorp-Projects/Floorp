@@ -104,10 +104,24 @@ class AsyncEventDispatcher : public CancelableRunnable {
 
   AsyncEventDispatcher(dom::EventTarget* aTarget, WidgetEvent& aEvent);
 
-  NS_IMETHOD Run() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override;
   nsresult Cancel() override;
   nsresult PostDOMEvent();
   void RunDOMEventWhenSafe();
+
+  /**
+   * Dispatch event immediately if it's safe to dispatch the event.
+   * Otherwise, posting the event into the queue to dispatch it when it's safe.
+   *
+   * Note that this method allows callers to call itself with unsafe aTarget
+   * because its lifetime is guaranteed by this method (in the case of
+   * synchronous dispatching) or AsyncEventDispatcher (in the case of
+   * asynchronous dispatching).
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static void RunDOMEventWhenSafe(
+      nsINode& aTarget, const nsAString& aEventType, CanBubble aCanBubble,
+      ChromeOnlyDispatch aOnlyChromeDispatch,
+      Composed aComposed = Composed::eDefault);
 
   /**
    * Dispatch event immediately if it's safe to dispatch the event.
@@ -127,6 +141,13 @@ class AsyncEventDispatcher : public CancelableRunnable {
   // assert.
   void RequireNodeInDocument();
 
+ protected:
+  MOZ_CAN_RUN_SCRIPT static void DispatchEventOnTarget(
+      dom::EventTarget* aTarget, const nsAString& aEventType,
+      CanBubble aCanBubble, ChromeOnlyDispatch aOnlyChromeDispatch,
+      Composed aComposed = Composed::eDefault, dom::Event* aEvent = nullptr);
+
+ public:
   nsCOMPtr<dom::EventTarget> mTarget;
   RefPtr<dom::Event> mEvent;
   // If mEventType is set, mEventMessage will be eUnidentifiedEvent.
