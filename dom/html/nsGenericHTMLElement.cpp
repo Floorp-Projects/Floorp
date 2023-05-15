@@ -184,20 +184,12 @@ nsresult nsGenericHTMLElement::CopyInnerTo(Element* aDst) {
 static const nsAttrValue::EnumTable kDirTable[] = {
     {"ltr", eDir_LTR}, {"rtl", eDir_RTL}, {"auto", eDir_Auto}, {nullptr, 0}};
 
-namespace {
-// See <https://html.spec.whatwg.org/#the-popover-attribute>.
-enum class PopoverAttributeKeyword : uint8_t { Auto, EmptyString, Manual };
-}  // namespace
-
 static const nsAttrValue::EnumTable kPopoverTable[] = {
-    {"auto", PopoverAttributeKeyword::Auto},
-    {"", PopoverAttributeKeyword::EmptyString},
-    {"manual", PopoverAttributeKeyword::Manual},
+    {"auto", PopoverState::Auto},
+    {"manual", PopoverState::Manual},
     {nullptr, 0}};
 
-// See <https://html.spec.whatwg.org/#the-popover-attribute>.
-static const nsAttrValue::EnumTable* kPopoverTableInvalidValueDefault =
-    &kPopoverTable[2];
+static const nsAttrValue::EnumTable* kPopoverTableDefault = &kPopoverTable[1];
 
 void nsGenericHTMLElement::AddToNameTable(nsAtom* aName) {
   MOZ_ASSERT(HasName(), "Node doesn't have name?");
@@ -661,36 +653,22 @@ void nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                                  aNotify);
 }
 
-namespace {
-constexpr PopoverState ToPopoverState(
-    PopoverAttributeKeyword aPopoverAttributeKeyword) {
-  // See <https://html.spec.whatwg.org/#the-popover-attribute>.
-  switch (aPopoverAttributeKeyword) {
-    case PopoverAttributeKeyword::Auto:
-      return PopoverState::Auto;
-    case PopoverAttributeKeyword::EmptyString:
-      return PopoverState::Auto;
-    case PopoverAttributeKeyword::Manual:
-      return PopoverState::Manual;
-  }
-}
-}  // namespace
-
 void nsGenericHTMLElement::AfterSetPopoverAttr() {
   const nsAttrValue* newValue = GetParsedAttr(nsGkAtoms::popover);
 
+  // https://html.spec.whatwg.org/multipage/popover.html#attr-popover
   PopoverState newState;
   if (newValue) {
-    MOZ_ASSERT(newValue->Type() == nsAttrValue::eEnum);
-    const PopoverAttributeKeyword popoverAttributeKeyword =
-        static_cast<PopoverAttributeKeyword>(newValue->GetEnumValue());
-    newState = ToPopoverState(popoverAttributeKeyword);
+    if (newValue->Type() == nsAttrValue::eEnum) {
+      newState = static_cast<dom::PopoverState>(newValue->GetEnumValue());
+    } else {
+      // The invalid value default is the manual state
+      newState = PopoverState::Manual;
+    }
   } else {
-    // The missing value default is the no popover state, see
-    // <https://html.spec.whatwg.org/multipage/popover.html#attr-popover>.
+    // The missing value default is the no popover state.
     newState = PopoverState::None;
   }
-
   PopoverState oldState = GetPopoverState();
   if (newState != oldState) {
     if (oldState != PopoverState::None) {
@@ -979,7 +957,7 @@ bool nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
     if (aAttribute == nsGkAtoms::popover &&
         StaticPrefs::dom_element_popover_enabled()) {
       return aResult.ParseEnumValue(aValue, kPopoverTable, false,
-                                    kPopoverTableInvalidValueDefault);
+                                    kPopoverTableDefault);
     }
 
     if (aAttribute == nsGkAtoms::tabindex) {
