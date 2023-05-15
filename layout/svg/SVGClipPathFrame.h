@@ -148,6 +148,9 @@ class SVGClipPathFrame final : public SVGContainerFrame {
   void PaintFrameIntoMask(nsIFrame* aFrame, nsIFrame* aClippedFrame,
                           gfxContext& aTarget);
 
+  void PaintChildren(gfxContext& aMaskContext, nsIFrame* aClippedFrame,
+                     const gfxMatrix& aMatrix);
+
   // Set, during a GetClipMask() call, to the transform that still needs to be
   // concatenated to the transform of the DrawTarget that was passed to
   // GetClipMask in order to establish the coordinate space that the clipPath
