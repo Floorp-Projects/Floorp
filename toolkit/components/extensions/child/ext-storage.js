@@ -309,6 +309,24 @@ this.storage = class extends ExtensionAPI {
       storage: {
         local,
 
+        session: {
+          async get(keys) {
+            return deserialize(
+              await context.childManager.callParentAsyncFunction(
+                "storage.session.get",
+                [serialize(keys)]
+              )
+            );
+          },
+          set(items) {
+            return context.childManager.callParentAsyncFunction(
+              "storage.session.set",
+              [serialize(items)]
+            );
+          },
+          onChanged: makeOnChangedEventTarget("storage.session.onChanged"),
+        },
+
         sync: {
           get(keys) {
             keys = sanitize(keys);
