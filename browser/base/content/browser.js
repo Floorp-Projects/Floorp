@@ -1073,57 +1073,33 @@ var gPopupBlockerObserver = {
     // it.
     if (gBrowser.selectedBrowser.popupBlocker.shouldShowNotification) {
       if (Services.prefs.getBoolPref("privacy.popups.showBrowserMessage")) {
-        var brandBundle = document.getElementById("bundle_brand");
-        var brandShortName = brandBundle.getString("brandShortName");
-
-        var stringKey =
-          AppConstants.platform == "win"
-            ? "popupWarningButton"
-            : "popupWarningButtonUnix";
-
-        var popupButtonText = gNavigatorBundle.getString(stringKey);
-        var popupButtonAccesskey = gNavigatorBundle.getString(
-          stringKey + ".accesskey"
-        );
-
-        let messageBase;
-        if (popupCount < this.maxReportedPopups) {
-          messageBase = gNavigatorBundle.getString("popupWarning.message");
-        } else {
-          messageBase = gNavigatorBundle.getString(
-            "popupWarning.exceeded.message"
-          );
-        }
-
-        var message = PluralForm.get(popupCount, messageBase)
-          .replace("#1", brandShortName)
-          .replace("#2", popupCount);
+        const label = {
+          "l10n-id":
+            popupCount < this.maxReportedPopups
+              ? "popup-warning-message"
+              : "popup-warning-exceeded-message",
+          "l10n-args": { popupCount },
+        };
 
         let notificationBox = gBrowser.getNotificationBox();
         let notification = notificationBox.getNotificationWithValue(
           "popup-blocked"
         );
         if (notification) {
-          notification.label = message;
+          notification.label = label;
         } else {
-          var buttons = [
-            {
-              label: popupButtonText,
-              accessKey: popupButtonAccesskey,
-              popup: "blockedPopupOptions",
-              callback: null,
-            },
-          ];
-
+          const image = "chrome://browser/skin/notification-icons/popup.svg";
           const priority = notificationBox.PRIORITY_INFO_MEDIUM;
           notificationBox.appendNotification(
             "popup-blocked",
-            {
-              label: message,
-              image: "chrome://browser/skin/notification-icons/popup.svg",
-              priority,
-            },
-            buttons
+            { label, image, priority },
+            [
+              {
+                "l10n-id": "popup-warning-button",
+                popup: "blockedPopupOptions",
+                callback: null,
+              },
+            ]
           );
         }
       }
@@ -1244,11 +1220,9 @@ var gPopupBlockerObserver = {
           foundUsablePopupURI = true;
 
           var menuitem = document.createXULElement("menuitem");
-          var label = gNavigatorBundle.getFormattedString(
-            "popupShowPopupPrefix",
-            [popupURIspec]
-          );
-          menuitem.setAttribute("label", label);
+          document.l10n.setAttributes(menuitem, "popup-show-popup-menuitem", {
+            popupURI: popupURIspec,
+          });
           menuitem.setAttribute(
             "oncommand",
             "gPopupBlockerObserver.showBlockedPopup(event);"
