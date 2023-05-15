@@ -147,6 +147,12 @@
              bmsController.controllFunctions.changeVisibleCommandButton(selectedURL.startsWith("floorp//"))
              for (let elem of document.getElementsByClassName("webpanels")) {
                  elem.hidden = true;
+
+                 if(elem.classList.contains("isFloorp")){   
+                    let src = elem.getAttribute("src");
+                    elem.setAttribute("src", "");
+                    elem.setAttribute("src", src);
+                }
              }
              if(document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true"){
                 bmsController.controllFunctions.changeVisibleWenpanel();
