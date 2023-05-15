@@ -10,28 +10,10 @@
 
 /* Toolbar */
 
-#placesToolbar {
-  appearance: auto;
-  -moz-default-appearance: menubar;
-  color: -moz-menubartext;
-}
-
 @media (-moz-menubar-drag) {
   #placesToolbar {
     -moz-window-dragging: drag;
   }
-}
-
-#placesToolbar > toolbarbutton {
-  color: -moz-menubartext;
-}
-
-#placesToolbar > toolbarbutton:hover {
-  color: ButtonText;
-}
-
-#placesToolbar > toolbarbutton[disabled] {
-  color: GrayText;
 }
 
 /* Back button */
