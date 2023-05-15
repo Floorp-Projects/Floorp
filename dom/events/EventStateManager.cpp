@@ -6065,15 +6065,15 @@ nsresult EventStateManager::DoContentCommandEvent(
           BrowserParent* remote = BrowserParent::GetFocused();
           if (remote) {
             nsCOMPtr<nsITransferable> transferable = aEvent->mTransferable;
-            IPCTransferableData ipcTransferableData;
-            nsContentUtils::TransferableToIPCTransferableData(
-                transferable, &ipcTransferableData, false, remote->Manager());
+            IPCDataTransfer ipcDataTransfer;
+            nsContentUtils::TransferableToIPCTransferable(
+                transferable, &ipcDataTransfer, false, remote->Manager());
             bool isPrivateData = transferable->GetIsPrivateData();
             nsCOMPtr<nsIPrincipal> requestingPrincipal =
                 transferable->GetRequestingPrincipal();
             nsContentPolicyType contentPolicyType =
                 transferable->GetContentPolicyType();
-            remote->SendPasteTransferable(std::move(ipcTransferableData),
+            remote->SendPasteTransferable(std::move(ipcDataTransfer),
                                           isPrivateData, requestingPrincipal,
                                           contentPolicyType);
             rv = NS_OK;

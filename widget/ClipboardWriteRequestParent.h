@@ -29,7 +29,12 @@ class ClipboardWriteRequestParent final
 
   nsresult Init(const int32_t& aClipboardType);
 
-  IPCResult RecvSetData(const IPCTransferable& aTransferable);
+  IPCResult RecvSetData(const IPCDataTransfer& aDataTransfer,
+                        const bool& aIsPrivateData,
+                        nsIPrincipal* aRequestingPrincipal,
+                        Maybe<CookieJarSettingsArgs> aCookieJarSettingsArgs,
+                        const nsContentPolicyType& aContentPolicyType,
+                        nsIReferrerInfo* aReferrerInfo);
   IPCResult Recv__delete__(nsresult aReason);
 
   void ActorDestroy(ActorDestroyReason aReason) override final;
