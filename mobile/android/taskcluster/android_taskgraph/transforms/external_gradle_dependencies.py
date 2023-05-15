@@ -60,13 +60,19 @@ def _get_build_gradle_paths(gradle_project):
     else:
         project_subdir = get_path(gradle_project)
 
-    return [
+    file_list = [
         "android-components/plugins/dependencies/build.gradle",
         "android-components/plugins/publicsuffixlist/build.gradle",
         f"{project_dir}/build.gradle",
         f"{project_dir}/buildSrc/build.gradle",
         f"{project_dir}/{project_subdir}/build.gradle",
     ]
+
+    # Make sure we rebuild the cache when Fenix or Focus dependencies are changed
+    if gradle_project in ("focus", "fenix"):
+        file_list.append(f"{project_dir}/buildSrc/src/main/java/*Dependencies.kt")
+
+    return file_list
 
 
 def _get_gradle_project_dir(gradle_project):
