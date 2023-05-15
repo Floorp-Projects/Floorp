@@ -22,6 +22,7 @@ namespace layers {
 class APZInputBridgeParent;
 class AsyncPanZoomController;
 class InputBlockState;
+class TouchBlockState;
 struct ScrollableLayerGuid;
 struct TargetConfirmationFlags;
 struct PointerEventsConsumableFlags;
@@ -120,6 +121,12 @@ struct APZEventResult {
                               PointerEventsConsumableFlags aConsumableFlags,
                               const AsyncPanZoomController* aTarget);
 
+  // Set mStatus and mHandledResult during in a stat of fast fling.
+  void SetStatusForFastFling(const TouchBlockState& aBlock,
+                             TargetConfirmationFlags aFlags,
+                             PointerEventsConsumableFlags aConsumableFlags,
+                             const AsyncPanZoomController* aTarget);
+
   // DO NOT USE THIS UpdateStatus DIRECTLY. THIS FUNCTION IS ONLY FOR
   // SERIALIZATION / DESERIALIZATION OF THIS STRUCT IN IPC.
   void UpdateStatus(nsEventStatus aStatus) { mStatus = aStatus; }
@@ -140,6 +147,11 @@ struct APZEventResult {
   }
 
  private:
+  void UpdateHandledResult(const InputBlockState& aBlock,
+                           PointerEventsConsumableFlags aConsumableFlags,
+                           const AsyncPanZoomController* aTarget,
+                           bool aDispatchToContent);
+
   /**
    * A status flag indicated how APZ handled the event.
    * The interpretation of each value is as follows:

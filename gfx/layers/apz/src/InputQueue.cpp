@@ -177,15 +177,15 @@ APZEventResult InputQueue::ReceiveTouchInput(
   // XXX calling ArePointerEventsConsumable on |target| may be wrong here if
   // the target isn't confirmed and the real target turns out to be something
   // else. For now assume this is rare enough that it's not an issue.
+  PointerEventsConsumableFlags consumableFlags;
+  if (target) {
+    consumableFlags = target->ArePointerEventsConsumable(block, aEvent);
+  }
   if (block->IsDuringFastFling()) {
     INPQ_LOG("dropping event due to block %p being in fast motion\n",
              block.get());
-    result.SetStatusAsConsumeNoDefault();
+    result.SetStatusForFastFling(*block, aFlags, consumableFlags, target);
   } else {  // handling depends on ArePointerEventsConsumable()
-    PointerEventsConsumableFlags consumableFlags;
-    if (target) {
-      consumableFlags = target->ArePointerEventsConsumable(block, aEvent);
-    }
     bool consumable = consumableFlags.IsConsumable();
     if (block->UpdateSlopState(aEvent, consumable)) {
       INPQ_LOG("dropping event due to block %p being in %sslop\n", block.get(),
