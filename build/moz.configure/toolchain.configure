@@ -664,32 +664,15 @@ def vc_compiler_version(vc_compiler_path):
     )
     # MSVC path with version 14.x is actually version 19.x
     if version.major == 14:
-        return Version(f"19.{version.minor}")
+        return f"19.{version.minor}"
 
 
 @depends_if(vc_compiler_version)
 def is_vs2019_or_more(vc_compiler_version):
-    return vc_compiler_version >= Version("19.20")
+    return Version(vc_compiler_version) >= Version("19.20")
 
 
 add_old_configure_assignment("IS_VS2019_OR_MORE", is_vs2019_or_more)
-
-
-@depends_if(vc_compiler_version)
-def msvs_version(vc_compiler_version):
-    # clang-cl emulates the same version scheme as cl. And MSVS_VERSION needs to
-    # be set for GYP on Windows.
-    if vc_compiler_version >= Version("19.30"):
-        return "2022"
-    if vc_compiler_version >= Version("19.20"):
-        return "2019"
-    if vc_compiler_version >= Version("19.10"):
-        return "2017"
-
-    return ""
-
-
-set_config("MSVS_VERSION", msvs_version)
 
 
 clang_search_path = bootstrap_search_path("clang/bin")
@@ -1956,6 +1939,18 @@ def gcc_use_gnu_ld(select_linker, target, c_compiler):
 set_config("GCC_USE_GNU_LD", gcc_use_gnu_ld)
 add_old_configure_assignment("GCC_USE_GNU_LD", gcc_use_gnu_ld)
 
+
+@depends(c_compiler)
+def msvs_version(info):
+    # clang-cl emulates the same version scheme as cl. And MSVS_VERSION needs to
+    # be set for GYP on Windows.
+    if info.type == "clang-cl":
+        return "2017"
+
+    return ""
+
+
+set_config("MSVS_VERSION", msvs_version)
 
 include("compile-checks.configure")
 include("arm.configure", when=depends(target.cpu)(lambda cpu: cpu == "arm"))
