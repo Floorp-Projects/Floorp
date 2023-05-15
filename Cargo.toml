@@ -182,3 +182,8 @@ uniffi_bindgen = "=0.23.0"
 uniffi_build = "=0.23.0"
 uniffi_macros = "=0.23.0"
 weedle2 = "=4.0.0"
+
+# Backport https://github.com/mozilla/authenticator-rs/commit/2da9e991 to
+# authenticator-rs 0.4.0-alpha.14 for Bug 1824811.
+[patch.crates-io.authenticator]
+path = "third_party/rust/authenticator"

@@ -19,6 +19,10 @@ url = "https://raw.githubusercontent.com/divviup/libprio-rs/main/supply-chain/au
 [imports.mozilla]
 url = "https://raw.githubusercontent.com/mozilla/supply-chain/main/audits.toml"
 
+[policy.authenticator]
+audit-as-crates-io = true
+notes = "This is v0.4.0-alpha.14 plus upstream commit 2da9e991 to fix Bug 1824811."
+
 [policy.autocfg]
 audit-as-crates-io = true
 notes = "This is the upstream code plus a few local fixes, see bug 1685697."
