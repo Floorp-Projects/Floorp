@@ -40,6 +40,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.helpers.perf.TestStrictModeManager
 import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor
+import org.mozilla.fenix.shortcut.PasswordManagerIntentProcessor
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
@@ -68,6 +69,7 @@ class IntentReceiverActivityTest {
         every { intentProcessors.fennecPageShortcutIntentProcessor } returns mockIntentProcessor()
         every { intentProcessors.externalDeepLinkIntentProcessor } returns mockIntentProcessor()
         every { intentProcessors.webNotificationsIntentProcessor } returns mockIntentProcessor()
+        every { intentProcessors.passwordManagerIntentProcessor } returns mockIntentProcessor()
 
         coEvery { intentProcessors.intentProcessor.process(any()) } returns true
     }
@@ -288,6 +290,21 @@ class IntentReceiverActivityTest {
 
         verify { intentProcessors.webNotificationsIntentProcessor.process(intent) }
         verify { activity.launch(intent, IntentProcessorType.NEW_TAB) }
+    }
+
+    @Test
+    fun `process intent with action OPEN_PASSWORD_MANAGER`() = runTest {
+        val intent = Intent()
+        intent.action = PasswordManagerIntentProcessor.ACTION_OPEN_PASSWORD_MANAGER
+
+        val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
+        attachMocks(activity)
+        activity.processIntent(intent)
+
+        val shadow = shadowOf(activity)
+        val actualIntent = shadow.peekNextStartedActivity()
+
+        assertEquals(HomeActivity::class.java.name, actualIntent.component?.className)
     }
 
     private fun attachMocks(activity: Activity) {
