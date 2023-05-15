@@ -701,6 +701,16 @@ TRRLoadInfo::SetHttpsOnlyStatus(uint32_t aHttpsOnlyStatus) {
 }
 
 NS_IMETHODIMP
+TRRLoadInfo::GetHstsStatus(bool* aHstsStatus) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetHstsStatus(bool aHstsStatus) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TRRLoadInfo::GetHasValidUserGestureActivation(
     bool* aHasValidUserGestureActivation) {
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -613,6 +613,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mCspNonce(rhs.mCspNonce),
       mSkipContentSniffing(rhs.mSkipContentSniffing),
       mHttpsOnlyStatus(rhs.mHttpsOnlyStatus),
+      mHstsStatus(rhs.mHstsStatus),
       mHasValidUserGestureActivation(rhs.mHasValidUserGestureActivation),
       mAllowDeprecatedSystemRequests(rhs.mAllowDeprecatedSystemRequests),
       mIsInDevToolsContext(rhs.mIsInDevToolsContext),
@@ -663,7 +664,7 @@ LoadInfo::LoadInfo(
     bool aServiceWorkerTaintingSynthesized, bool aDocumentHasUserInteracted,
     bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
     bool aNeedForCheckingAntiTrackingHeuristic, const nsAString& aCspNonce,
-    bool aSkipContentSniffing, uint32_t aHttpsOnlyStatus,
+    bool aSkipContentSniffing, uint32_t aHttpsOnlyStatus, bool aHstsStatus,
     bool aHasValidUserGestureActivation, bool aAllowDeprecatedSystemRequests,
     bool aIsInDevToolsContext, bool aParserCreatedScript,
     nsILoadInfo::StoragePermissionState aStoragePermission, bool aIsMetaRefresh,
@@ -731,6 +732,7 @@ LoadInfo::LoadInfo(
       mCspNonce(aCspNonce),
       mSkipContentSniffing(aSkipContentSniffing),
       mHttpsOnlyStatus(aHttpsOnlyStatus),
+      mHstsStatus(aHstsStatus),
       mHasValidUserGestureActivation(aHasValidUserGestureActivation),
       mAllowDeprecatedSystemRequests(aAllowDeprecatedSystemRequests),
       mIsInDevToolsContext(aIsInDevToolsContext),
@@ -1822,6 +1824,18 @@ LoadInfo::GetHttpsOnlyStatus(uint32_t* aHttpsOnlyStatus) {
 NS_IMETHODIMP
 LoadInfo::SetHttpsOnlyStatus(uint32_t aHttpsOnlyStatus) {
   mHttpsOnlyStatus = aHttpsOnlyStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetHstsStatus(bool* aHstsStatus) {
+  *aHstsStatus = mHstsStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetHstsStatus(bool aHstsStatus) {
+  mHstsStatus = aHstsStatus;
   return NS_OK;
 }
 

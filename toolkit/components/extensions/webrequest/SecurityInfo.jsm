@@ -18,12 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/nss_errors_service;1",
   "nsINSSErrorsService"
 );
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "sss",
-  "@mozilla.org/ssservice;1",
-  "nsISiteSecurityService"
-);
+
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "pkps",
@@ -207,7 +202,7 @@ const SecurityInfo = {
 
     // HSTS and static pinning if available.
     if (uri && uri.host) {
-      info.hsts = lazy.sss.isSecureURI(uri, channel.loadInfo.originAttributes);
+      info.hsts = channel.loadInfo.hstsStatus;
       info.hpkp = lazy.pkps.hostHasPins(uri);
     } else {
       info.hsts = false;
