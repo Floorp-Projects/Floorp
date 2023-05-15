@@ -3301,6 +3301,17 @@ option(
 
 set_config("MOZ_SYSTEM_POLICIES", True, when="--enable-system-policies")
 
+# Allow disabling the creation a legacy profile
+# ==============================================================
+
+option(
+    "--disable-legacy-profile-creation",
+    help="Disable the creation a legacy profile, to be used by old versions "
+    "of Firefox, when no profiles exist.",
+)
+
+set_config("MOZ_CREATE_LEGACY_PROFILE", True, when="--enable-legacy-profile-creation")
+
 
 # STL wrapping
 # ==============================================================
