@@ -21,9 +21,6 @@ const ignoreFiles = [
     path.join(__dirname, "tools", "rewriting", "ThirdPartyPaths.txt")
   ),
   ...readFile(path.join(__dirname, "tools", "rewriting", "Generated.txt")),
-  ...readFile(
-    path.join(__dirname, "devtools", "client", "debugger", ".stylelintignore")
-  ).map(p => `devtools/client/debugger/${p}`),
 ];
 
 module.exports = {
