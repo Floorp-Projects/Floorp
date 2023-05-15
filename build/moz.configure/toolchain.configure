@@ -544,20 +544,6 @@ def get_vc_paths(topsrcdir):
         yield (Version(install["installationVersion"]), tools_path)
 
 
-option(
-    "--with-visual-studio-version",
-    nargs=1,
-    choices=("2017",),
-    when=host_is_windows,
-    help="Select a specific Visual Studio version to use",
-)
-
-
-@depends_if("--with-visual-studio-version", when=host_is_windows)
-def vs_version(value):
-    return value[0]
-
-
 @depends(target, host)
 def is_windows(target, host):
     return host.kernel == "WINNT" or target.kernel == "WINNT"
@@ -598,7 +584,6 @@ option(
 
 @depends(
     host,
-    vs_version,
     build_environment,
     "VC_PATH",
     winsysroot,
@@ -606,10 +591,7 @@ option(
 )
 @imports("os")
 @imports(_from="operator", _import="itemgetter")
-def vc_compiler_paths_for_version(host, vs_version, env, vc_path, winsysroot):
-    if (vc_path or winsysroot) and vs_version:
-        var = "VC_PATH" if vc_path else "WINSYSROOT"
-        die(f"{var} and --with-visual-studio-version cannot be used together.")
+def vc_compiler_paths_for_version(host, env, vc_path, winsysroot):
     if winsysroot:
         if vc_path:
             die("WINSYSROOT and VC_PATH cannot be set together.")
@@ -626,15 +608,8 @@ def vc_compiler_paths_for_version(host, vs_version, env, vc_path, winsysroot):
         all_versions = sorted(get_vc_paths(env.topsrcdir), key=itemgetter(0))
     if not all_versions:
         return
-    if vs_version:
-        vs_major_version = {"2017": 15}[vs_version]
-        versions = [d for (v, d) in all_versions if v.major == vs_major_version]
-        if not versions:
-            die("Visual Studio %s could not be found!" % vs_version)
-        path = versions[0]
-    else:
-        # Choose the newest version.
-        path = all_versions[-1][1]
+    # Choose the newest version.
+    path = all_versions[-1][1]
     host_dir = {
         "x86_64": "Hostx64",
         "x86": "Hostx86",
