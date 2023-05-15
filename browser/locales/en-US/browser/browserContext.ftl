@@ -327,14 +327,6 @@ main-context-menu-audio-email =
     .label = Email Audio…
     .accesskey = a
 
-main-context-menu-plugin-play =
-    .label = Activate this plugin
-    .accesskey = c
-
-main-context-menu-plugin-hide =
-    .label = Hide this plugin
-    .accesskey = H
-
 main-context-menu-save-to-pocket =
     .label = Save Page to { -pocket-brand-name }
     .accesskey = k
