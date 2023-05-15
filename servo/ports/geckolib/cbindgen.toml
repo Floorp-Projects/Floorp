@@ -149,7 +149,6 @@ include = [
   "Position",
   "PositionOrAuto",
   "BackgroundSize",
-  "BaselineSource",
   "BorderImageSlice",
   "BorderSpacing",
   "BorderRadius",
