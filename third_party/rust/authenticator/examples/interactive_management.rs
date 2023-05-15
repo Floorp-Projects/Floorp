@@ -119,6 +119,9 @@ fn interactive_status_callback(status_rx: Receiver<StatusUpdate>) {
                 println!("STATUS: Please select a device by touching one of them.");
             }
             Ok(StatusUpdate::DeviceSelected(_dev_info)) => {}
+            Ok(StatusUpdate::PresenceRequired) => {
+                println!("STATUS: waiting for user presence");
+            }
             Ok(StatusUpdate::PinUvError(..)) => {
                 println!("STATUS: Pin Error!");
             }

@@ -13,10 +13,7 @@ impl RequestCtap2 for Selection {
         Command::Selection
     }
 
-    fn wire_format<Dev>(&self, _dev: &mut Dev) -> Result<Vec<u8>, HIDError>
-    where
-        Dev: U2FDevice,
-    {
+    fn wire_format(&self) -> Result<Vec<u8>, HIDError> {
         Ok(Vec::new())
     }
 

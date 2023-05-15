@@ -38,6 +38,7 @@ pub enum AuthenticatorError {
     PinError(PinError),
     UnsupportedOption(UnsupportedOption),
     CancelledByUser,
+    CredentialExcluded,
 }
 
 impl std::error::Error for AuthenticatorError {}
@@ -72,6 +73,9 @@ impl fmt::Display for AuthenticatorError {
             }
             AuthenticatorError::CancelledByUser => {
                 write!(f, "Cancelled by user.")
+            }
+            AuthenticatorError::CredentialExcluded => {
+                write!(f, "Credential excluded.")
             }
         }
     }

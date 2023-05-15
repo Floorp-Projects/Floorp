@@ -338,7 +338,7 @@ impl SharedSecret {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PinUvAuthToken {
     pub pin_protocol: PinUvAuthProtocol,
     pin_token: Vec<u8>,
@@ -347,26 +347,31 @@ pub struct PinUvAuthToken {
 }
 
 impl PinUvAuthToken {
-    pub fn derive(&self, message: &[u8]) -> Result<PinUvAuthParam, CryptoError> {
+    pub fn derive(self, message: &[u8]) -> Result<PinUvAuthParam, CryptoError> {
         let pin_auth = self.pin_protocol.0.authenticate(&self.pin_token, message)?;
         Ok(PinUvAuthParam {
-            pin_protocol: self.pin_protocol.clone(),
             pin_auth,
+            pin_protocol: self.pin_protocol,
+            permissions: self.permissions,
         })
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct PinUvAuthParam {
-    pub pin_protocol: PinUvAuthProtocol,
     pin_auth: Vec<u8>,
+    pub pin_protocol: PinUvAuthProtocol,
+    #[allow(dead_code)] // Not yet used
+    permissions: PinUvAuthTokenPermission,
 }
 
 impl PinUvAuthParam {
     pub(crate) fn create_empty() -> Self {
+        let pin_protocol = PinUvAuthProtocol(Box::new(PinUvAuth1 {}));
         Self {
-            pin_protocol: PinUvAuthProtocol(Box::new(PinUvAuth1 {})),
             pin_auth: vec![],
+            pin_protocol,
+            permissions: PinUvAuthTokenPermission::empty(),
         }
     }
 }
