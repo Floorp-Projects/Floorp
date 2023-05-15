@@ -382,6 +382,19 @@ def build_src(install_dir, host, targets, patches):
 
     log("Building Rust...")
 
+    example_config = ""
+    for example_toml in ("config.example.toml", "config.toml.example"):
+        path = os.path.join(rust_dir, example_toml)
+        if os.path.exists(path):
+            with open(path) as file:
+                example_config = file.read()
+                break
+
+    if "ignore-git" in example_config:
+        omit_git_hash = "ignore-git"
+    else:
+        omit_git_hash = "omit-git-hash"
+
     # Rust builds are configured primarily through a config.toml file.
     #
     # `sysconfdir` is overloaded to be relative instead of absolute.
@@ -401,7 +414,7 @@ def build_src(install_dir, host, targets, patches):
         tools = ["analysis", "cargo", "rustfmt", "clippy", "src", "rust-analyzer"]
 
         [rust]
-        ignore-git = false
+        {omit_git_hash} = false
         use-lld = true
 
         [install]
@@ -412,7 +425,8 @@ def build_src(install_dir, host, targets, patches):
         missing-tools = true
 
         """.format(
-            prefix=install_dir
+            prefix=install_dir,
+            omit_git_hash=omit_git_hash,
         )
     )
 
