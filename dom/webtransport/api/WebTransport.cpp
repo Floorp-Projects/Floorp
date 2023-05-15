@@ -396,6 +396,18 @@ void WebTransport::ResolveWaitingConnection(
   // Step 17.4: Set transport’s [[Reliability]] to "supports-unreliable".
   mReliability = aReliability;
 
+  mChild->SendGetMaxDatagramSize()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [self = RefPtr{this}](uint64_t&& aMaxDatagramSize) {
+        MOZ_ASSERT(self->mDatagrams);
+        self->mDatagrams->SetMaxDatagramSize(aMaxDatagramSize);
+        LOG(("max datagram size for the session is %" PRIu64,
+             aMaxDatagramSize));
+      },
+      [](const mozilla::ipc::ResponseRejectReason& aReason) {
+        LOG(("WebTransport fetching maxDatagramSize failed"));
+      });
+
   // Step 17.5: Resolve transport.[[Ready]] with undefined.
   mReady->MaybeResolveWithUndefined();
 

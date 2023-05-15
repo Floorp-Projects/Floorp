@@ -650,6 +650,21 @@ WebTransportParent::OnIncomingBidirectionalStreamAvailable(
   return NS_OK;
 }
 
+::mozilla::ipc::IPCResult WebTransportParent::RecvGetMaxDatagramSize(
+    GetMaxDatagramSizeResolver&& aResolver) {
+  LOG(("WebTransportParent RecvGetMaxDatagramSize"));
+  MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
+  MOZ_ASSERT(mWebTransport);
+  MOZ_ASSERT(!mMaxDatagramSizeResolver);
+
+  mMaxDatagramSizeResolver = std::move(aResolver);
+  // maximum datagram size for the session is returned from network stack
+  // synchronously via WebTransportSessionEventListener::OnMaxDatagramSize
+  // interface
+  mWebTransport->GetMaxDatagramSize();
+  return IPC_OK();
+}
+
 // The promise sent in this request will be resolved
 // in OnOutgoingDatagramOutCome which is called synchronously from
 // WebTransportSessionProxy::SendDatagram
@@ -658,7 +673,6 @@ WebTransportParent::OnIncomingBidirectionalStreamAvailable(
     OutgoingDatagramResolver&& aResolver) {
   LOG(("WebTransportParent sending datagram"));
   MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
-  MOZ_ASSERT(!mOutgoingDatagramResolver);
   MOZ_ASSERT(mWebTransport);
 
   Unused << aExpirationTime;
@@ -726,8 +740,11 @@ WebTransportParent::OnOutgoingDatagramOutCome(
 }
 
 NS_IMETHODIMP WebTransportParent::OnMaxDatagramSize(uint64_t aSize) {
-  // XXX -  we need to pass this to  WebTransportChild via IPC
-  // See Bug 1818763
+  LOG(("Max datagram size is %" PRIu64, aSize));
+  MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
+  MOZ_ASSERT(mMaxDatagramSizeResolver);
+  mMaxDatagramSizeResolver(aSize);
+  mMaxDatagramSizeResolver = nullptr;
   return NS_OK;
 }
 }  // namespace mozilla::dom
