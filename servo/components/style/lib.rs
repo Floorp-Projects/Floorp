@@ -165,14 +165,7 @@ pub use style_traits::owned_str::OwnedStr;
 
 use std::hash::{BuildHasher, Hash};
 
-/// The CSS properties supported by the style system.
-/// Generated from the properties.mako.rs template by build.rs
-#[macro_use]
-#[allow(unsafe_code)]
-#[deny(missing_docs)]
-pub mod properties {
-    include!(concat!(env!("OUT_DIR"), "/properties.rs"));
-}
+pub mod properties;
 
 #[cfg(feature = "gecko")]
 #[allow(unsafe_code)]
@@ -182,12 +175,6 @@ pub mod gecko;
 #[cfg(feature = "servo")]
 #[allow(unsafe_code)]
 pub mod servo;
-
-#[cfg(feature = "gecko")]
-#[allow(unsafe_code, missing_docs)]
-pub mod gecko_properties {
-    include!(concat!(env!("OUT_DIR"), "/gecko_properties.rs"));
-}
 
 macro_rules! reexport_computed_values {
     ( $( { $name: ident } )+ ) => {
