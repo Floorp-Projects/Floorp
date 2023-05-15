@@ -74,7 +74,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   void SetLastValueChangeWasInteractive(bool);
 
   // TextControlElement
-  nsresult SetValueChanged(bool aValueChanged) override;
+  void SetValueChanged(bool aValueChanged) override;
   bool IsSingleLineTextControl() const override;
   bool IsTextArea() const override;
   bool IsPasswordTextControl() const override;

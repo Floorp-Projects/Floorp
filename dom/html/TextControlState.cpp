@@ -3000,7 +3000,7 @@ bool TextControlState::SetValueWithoutTextEditor(
   return true;
 }
 
-bool TextControlState::HasNonEmptyValue() {
+bool TextControlState::HasNonEmptyValue() const {
   // If the frame for editor is alive, we can compute it with mTextEditor.
   // Otherwise, we need to check cached value via GetValue().
   if (mTextEditor && mBoundFrame && mEditorInitialized &&

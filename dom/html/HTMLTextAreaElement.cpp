@@ -308,25 +308,22 @@ void HTMLTextAreaElement::SetUserInput(const nsAString& aValue,
                             ValueSetterOption::MoveCursorToEndIfValueChanged});
 }
 
-nsresult HTMLTextAreaElement::SetValueChanged(bool aValueChanged) {
+void HTMLTextAreaElement::SetValueChanged(bool aValueChanged) {
   MOZ_ASSERT(mState);
 
   bool previousValue = mValueChanged;
-
   mValueChanged = aValueChanged;
   if (!aValueChanged && !mState->IsEmpty()) {
     mState->EmptyValue();
   }
-
-  if (mValueChanged != previousValue) {
-    UpdateTooLongValidityState();
-    UpdateTooShortValidityState();
-    // We need to do this unconditionally because the validity ui bits depend on
-    // this.
-    UpdateState(true);
+  if (mValueChanged == previousValue) {
+    return;
   }
-
-  return NS_OK;
+  UpdateTooLongValidityState();
+  UpdateTooShortValidityState();
+  // We need to do this unconditionally because the validity ui bits depend on
+  // this.
+  UpdateState(true);
 }
 
 void HTMLTextAreaElement::SetLastValueChangeWasInteractive(
