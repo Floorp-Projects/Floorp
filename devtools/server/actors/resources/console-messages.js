@@ -66,12 +66,19 @@ class ConsoleMessageWatcher {
     // And also ignore WebExtension as we will filter out only by addonId, which is
     // passed via consoleAPIListenerOptions. WebExtension may have multiple windows/documents
     // but all of them will be flagged with the same addon ID.
-    const window =
+    const messagesShouldMatchWindow =
       targetActor.targetType === Targets.TYPES.FRAME &&
       targetActor.typeName != "parentProcessTarget" &&
-      targetActor.typeName != "webExtensionTarget"
-        ? targetActor.window
-        : null;
+      targetActor.typeName != "webExtensionTarget";
+    const window = messagesShouldMatchWindow ? targetActor.window : null;
+
+    // If we should match messages for a given window but for some reason, targetActor.window
+    // did not return a window, bail out. Otherwise we wouldn't have anything to match against
+    // and would consume all the messages, which could lead to issue (e.g. infinite loop,
+    // see Bug 1828026).
+    if (messagesShouldMatchWindow && !window) {
+      return;
+    }
 
     const listener = new ConsoleAPIListener(window, onConsoleAPICall, {
       excludeMessagesBoundToWindow: isTargetActorContentProcess,
