@@ -4746,12 +4746,44 @@ void MediaDecoderStateMachine::CancelSuspendTimer() {
 
 void MediaDecoderStateMachine::AdjustByLooping(media::TimeUnit& aTime) const {
   MOZ_ASSERT(OnTaskQueue());
+
+  // No need to adjust time.
+  if (mOriginalDecodedDuration == media::TimeUnit::Zero()) {
+    return;
+  }
+
+  // There are situations where we need to perform subtraction instead of modulo
+  // to accurately adjust the clock. When we are not in a state of seamless
+  // looping, it is usually necessary to normalize the clock time within the
+  // range of [0, duration]. However, if the current clock time is greater than
+  // the duration (i.e., duration+1) and not in looping, we should not adjust it
+  // to 1 as we are not looping back to the starting position. Instead, we
+  // should leave the clock time unchanged and trim it later to match the
+  // maximum duration time.
+  if (mStateObj->GetState() != DECODER_STATE_LOOPING_DECODING) {
+    // Use the smaller offset rather than the larger one, as the larger offset
+    // indicates the next round of looping. For example, if the duration is X
+    // and the playback is currently in the third round of looping, both
+    // queues will have an offset of 3X. However, if the audio decoding is
+    // faster and the fourth round of data has already been added to the audio
+    // queue, the audio offset will become 4X. Since playback is still in the
+    // third round, we should use the smaller offset of 3X to adjust the time.
+    TimeUnit offset = TimeUnit::FromInfinity();
+    if (HasAudio()) {
+      offset = std::min(AudioQueue().GetOffset(), offset);
+    }
+    if (HasVideo()) {
+      offset = std::min(VideoQueue().GetOffset(), offset);
+    }
+    if (aTime > offset) {
+      aTime -= offset;
+      return;
+    }
+  }
+
   // When seamless looping happens at least once, it doesn't matter if we're
   // looping or not.
-  if (mOriginalDecodedDuration != media::TimeUnit::Zero()) {
-    aTime = aTime % mOriginalDecodedDuration;
-  }
-  // Otherwise, no need to adjust time.
+  aTime = aTime % mOriginalDecodedDuration;
 }
 
 bool MediaDecoderStateMachine::IsInSeamlessLooping() const {
