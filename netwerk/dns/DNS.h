@@ -11,7 +11,6 @@
 #include "nsString.h"
 #include "prio.h"
 #include "prnetdb.h"
-#include "plstr.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsTArray.h"

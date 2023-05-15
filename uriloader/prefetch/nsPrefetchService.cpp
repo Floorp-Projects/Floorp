@@ -27,7 +27,6 @@
 #include "nsStreamUtils.h"
 #include "prtime.h"
 #include "mozilla/Logging.h"
-#include "plstr.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsINode.h"
 #include "mozilla/dom/Document.h"

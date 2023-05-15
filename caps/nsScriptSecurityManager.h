@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringFwd.h"
-#include "plstr.h"
 #include "js/TypeDecls.h"
 
 #include <stdint.h>

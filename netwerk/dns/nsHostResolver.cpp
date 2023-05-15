@@ -28,7 +28,6 @@
 #include "prtime.h"
 #include "mozilla/Logging.h"
 #include "PLDHashTable.h"
-#include "plstr.h"
 #include "nsQueryObject.h"
 #include "nsURLHelper.h"
 #include "nsThreadUtils.h"

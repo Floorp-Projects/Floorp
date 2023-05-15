@@ -21,7 +21,6 @@
 #include "nsPrintfCString.h"
 #include "mozilla/StackWalk.h"
 #include "nsTraceRefcnt.h"
-#include "plstr.h"
 #include "prio.h"
 
 #include <algorithm>

@@ -6,7 +6,6 @@
 
 #include "nsXULPrototypeCache.h"
 
-#include "plstr.h"
 #include "nsXULPrototypeDocument.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"

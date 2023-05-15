@@ -26,7 +26,6 @@
 #include "prnetdb.h"
 #include "prmon.h"
 #include "prio.h"
-#include "plstr.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsNetAddr.h"
 #include "nsProxyRelease.h"

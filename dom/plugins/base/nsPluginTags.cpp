@@ -6,7 +6,6 @@
 #include "nsPluginTags.h"
 
 #include "prlink.h"
-#include "plstr.h"
 #include "prenv.h"
 #include "nsPluginHost.h"
 #include "nsIBlocklistService.h"

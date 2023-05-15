@@ -8,7 +8,6 @@
 #include "mozIDOMWindow.h"
 #include "nsArray.h"
 #include "nsString.h"
-#include "plstr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIWindowWatcher.h"

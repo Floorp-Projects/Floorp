@@ -12,7 +12,6 @@
 #include "mozilla/GUniquePtr.h"
 #include "mozilla/WidgetUtilsGtk.h"
 
-#include "plstr.h"
 #include "prenv.h" /* for PR_GetEnv */
 
 #include "nsComponentManagerUtils.h"
