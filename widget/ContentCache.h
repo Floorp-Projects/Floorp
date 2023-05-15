@@ -45,6 +45,8 @@ class ContentCache {
 
   ContentCache() = default;
 
+  [[nodiscard]] bool IsValid() const;
+
  protected:
   // Whole text in the target
   Maybe<nsString> mText;
@@ -88,6 +90,11 @@ class ContentCache {
         mAnchor = aSelectionChangeData.AnchorOffset();
         mFocus = aSelectionChangeData.FocusOffset();
       }
+    }
+
+    [[nodiscard]] bool IsValidIn(const nsAString& aText) const {
+      return !mHasRange ||
+             (mAnchor <= aText.Length() && mFocus <= aText.Length());
     }
 
     explicit Selection(const WidgetQueryContentEvent& aQuerySelectedTextEvent);
@@ -193,6 +200,10 @@ class ContentCache {
 
     uint32_t Offset() const { return mOffset; }
     bool HasRect() const { return !mRect.IsEmpty(); }
+
+    [[nodiscard]] bool IsValidIn(const nsAString& aText) const {
+      return mOffset <= aText.Length();
+    }
 
     friend std::ostream& operator<<(std::ostream& aStream,
                                     const Caret& aCaret) {
@@ -332,8 +343,10 @@ class ContentCacheInChild final : public ContentCache {
   /**
    * SetSelection() modifies selection with specified raw data. And also this
    * tries to retrieve text rects too.
+   *
+   * @return true if the selection is cached.  Otherwise, false.
    */
-  void SetSelection(
+  [[nodiscard]] bool SetSelection(
       nsIWidget* aWidget,
       const IMENotification::SelectionChangeDataBase& aSelectionChangeData);
 
