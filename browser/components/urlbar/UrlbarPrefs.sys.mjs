@@ -32,6 +32,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // inserted.
   ["accessibility.tabToSearch.announceResults", true],
 
+  // Feature gate pref for addon suggestions in the urlbar.
+  ["addons.featureGate", false],
+
+  // The minimum prefix length of addons keyword the user must type to trigger
+  // the suggestion. 0 means the min length should be taken from Nimbus.
+  ["addons.minKeywordLength", 0],
+
   // "Autofill" is the name of the feature that automatically completes domains
   // and URLs that the user has visited as the user is typing them in the urlbar
   // textbox.  If false, autofill will be disabled.
@@ -425,9 +432,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The maximum number of trending results to show while not in search mode.
   ["trending.maxResultsNoSearchMode", 10],
 
-  // Feature gate pref for addon suggestions in the urlbar.
-  ["addons.featureGate", false],
-
   // Feature gate pref for rich suggestions being shown in the urlbar.
   ["richSuggestions.featureGate", false],
 ]);
@@ -445,6 +449,8 @@ const PREF_OTHER_DEFAULTS = new Map([
 // Variables with fallback prefs do not need to be defined here because their
 // defaults are the values of their fallbacks.
 const NIMBUS_DEFAULTS = {
+  addonsKeywordsMinimumLength: 0,
+  addonsKeywordsMinimumLengthCap: 0,
   experimentType: "",
   isBestMatchExperiment: false,
   quickSuggestRemoteSettingsDataType: "data",

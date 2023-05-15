@@ -217,12 +217,17 @@ class ProviderQuickSuggest extends UrlbarProvider {
       this.#recordEngagement(queryContext, isPrivate, result, details);
     }
 
-    // Handle dismissals.
-    if (
-      details.result?.providerName == this.name &&
-      details.selType == "dismiss"
-    ) {
-      this.#dismissResult(queryContext, details.result);
+    if (details.result?.providerName == this.name) {
+      if (details.result.payload.dynamicType === "addons") {
+        lazy.QuickSuggest.getFeature("AddonSuggestions").handlePossibleCommand(
+          queryContext,
+          details.result,
+          details.selType
+        );
+      } else if (details.selType == "dismiss") {
+        // Handle dismissals.
+        this.#dismissResult(queryContext, details.result);
+      }
     }
 
     this.#resultFromLastQuery = null;
@@ -241,6 +246,16 @@ class ProviderQuickSuggest extends UrlbarProvider {
     return lazy.QuickSuggest.getFeature("AddonSuggestions").getViewUpdate(
       result
     );
+  }
+
+  getResultCommands(result) {
+    if (result.payload.dynamicType === "addons") {
+      return lazy.QuickSuggest.getFeature("AddonSuggestions").getResultCommands(
+        result
+      );
+    }
+
+    return null;
   }
 
   #makeResult(queryContext, suggestion) {

@@ -74,16 +74,25 @@ firefox-suggest-weather-high-low = High: { $high }°{ $unit } · Low: { $low }°
 #   $provider (String) - The name of the weather provider
 firefox-suggest-weather-sponsored = { $provider } · Sponsored
 
+firefox-suggest-command-show-less-frequently =
+  .label = Show less frequently
+firefox-suggest-command-dont-show-this =
+  .label = Don’t show this
+firefox-suggest-command-not-relevant =
+  .label = Not relevant
+firefox-suggest-command-not-interested =
+  .label = Not interested
 firefox-suggest-weather-command-inaccurate-location =
   .label = Report inaccurate location
-firefox-suggest-weather-command-show-less-frequently =
-  .label = Show less frequently
-firefox-suggest-weather-command-dont-show-this =
-  .label = Don’t show this
-firefox-suggest-weather-command-not-relevant =
-  .label = Not relevant
-firefox-suggest-weather-command-not-interested =
-  .label = Not interested
+
+# This string displays the number of reviews in the add-ons suggestion
+# Variables:
+#   $quantity (number) - The number of reviews for the add-on.
+firefox-suggest-addons-reviews =
+  { $quantity ->
+      [one] { $quantity } review
+     *[other] { $quantity } reviews
+  }
 
 ## These strings are used in the preferences UI (about:preferences). Their names
 ## follow the naming conventions of other strings used in the preferences UI.
@@ -260,12 +269,3 @@ firefox-suggest-onboarding-main-reject-option-description-3 = Leave the default 
 
 firefox-suggest-onboarding-main-submit-button = Save preferences
 firefox-suggest-onboarding-main-skip-link = Not now
-
-# This string displays the number of reviews in the add-ons suggestion
-# Variables:
-#   $quantity (number) - The number of reviews for the add-on.
-firefox-suggest-addons-reviews =
-  { $quantity ->
-      [one] { $quantity } review
-     *[other] { $quantity } reviews
-  }
