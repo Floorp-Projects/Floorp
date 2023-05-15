@@ -1516,7 +1516,7 @@ bool js::IsCallSelfHostedNonGenericMethod(NativeImpl impl) {
 }
 
 bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
-                                            const CallArgs& args) {
+                                            Handle<Value> thisValue) {
   // The contract for this function is the same as
   // CallSelfHostedNonGenericMethod. The normal ReportIncompatible function
   // doesn't work for selfhosted functions, because they always call the
@@ -1532,8 +1532,6 @@ bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
 
   static const char* const internalNames[] = {
       "IsTypedArrayEnsuringArrayBuffer",
-      "UnwrapAndCallRegExpBuiltinExec",
-      "RegExpExec",
       "RegExpSearchSlowPath",
       "RegExpReplaceSlowPath",
       "RegExpMatchSlowPath",
@@ -1555,7 +1553,7 @@ bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
             [funName](auto* name) { return strcmp(funName, name) != 0; })) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                JSMSG_INCOMPATIBLE_METHOD, funName, "method",
-                               InformalValueTypeName(args.thisv()));
+                               InformalValueTypeName(thisValue));
       return false;
     }
     ++iter;
