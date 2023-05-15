@@ -6,6 +6,9 @@
 
 package org.mozilla.geckoview;
 
+import static org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_NO_ACTIVITY_CONTEXT;
+import static org.mozilla.geckoview.GeckoSession.GeckoPrintException.ERROR_NO_ACTIVITY_CONTEXT_DELEGATE;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -1202,13 +1205,15 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
       final GeckoResult<Boolean> isDialogFinished = new GeckoResult<Boolean>();
       if (mActivityDelegate == null) {
         Log.w(LOGTAG, "Missing an activity context delegate, which is required for printing.");
-        isDialogFinished.completeExceptionally(new Exception("Missing activity context delegate."));
+        isDialogFinished.completeExceptionally(
+            new GeckoSession.GeckoPrintException(ERROR_NO_ACTIVITY_CONTEXT_DELEGATE));
         return isDialogFinished;
       }
       final Context printContext = mActivityDelegate.getActivityContext();
       if (printContext == null) {
         Log.w(LOGTAG, "An activity context is required for printing.");
-        isDialogFinished.completeExceptionally(new Exception("Missing an activity context."));
+        isDialogFinished.completeExceptionally(
+            new GeckoSession.GeckoPrintException(ERROR_NO_ACTIVITY_CONTEXT));
         return isDialogFinished;
       }
       final PrintManager printManager =

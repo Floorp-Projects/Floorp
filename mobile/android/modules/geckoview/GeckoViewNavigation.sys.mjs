@@ -278,9 +278,9 @@ export class GeckoViewNavigation extends GeckoViewModule {
         this.browser.purgeSessionHistory();
         break;
       case "GeckoView:DotPrintFinish":
-        this.moduleManager
-          .getActor("GeckoViewPrintDelegate")
-          .clearStaticClone();
+        var printActor = this.moduleManager.getActor("GeckoViewPrintDelegate");
+        printActor.clearStaticClone();
+        printActor.telemetryDotPrintPdfCompleted(aData);
         break;
     }
   }
