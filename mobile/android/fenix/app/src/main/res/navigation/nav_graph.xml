@@ -34,15 +34,9 @@
         app:popUpToInclusive="false" />
 
     <action
-        android:id="@+id/action_global_home_juno_onboarding"
+        android:id="@+id/action_global_juno_onboarding"
         app:destination="@id/junoOnboardingFragment"
         app:popUpTo="@id/startupFragment"
-        app:popUpToInclusive="true" />
-
-    <action
-        android:id="@+id/action_onboarding_home"
-        app:destination="@id/homeFragment"
-        app:popUpTo="@id/junoOnboardingFragment"
         app:popUpToInclusive="true" />
 
     <action
@@ -202,6 +196,11 @@
     <fragment
         android:id="@+id/junoOnboardingFragment"
         android:name="org.mozilla.fenix.onboarding.JunoOnboardingFragment">
+        <action
+            android:id="@+id/action_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/junoOnboardingFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment

@@ -278,7 +278,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         ) {
             // Unless activity is recreated due to config change, navigate to onboarding
             if (savedInstanceState == null) {
-                navHost.navController.navigate(NavGraphDirections.actionGlobalHomeJunoOnboarding())
+                navHost.navController.navigate(NavGraphDirections.actionGlobalJunoOnboarding())
             }
         } else {
             lifecycleScope.launch(IO) {
