@@ -2709,6 +2709,16 @@ main.has-snippet {
 [lwt-newtab-brighttext] .ds-onboarding-container .icon-pocket {
   fill: var(--newtab-text-primary-color);
 }
+@media (forced-colors: active) {
+  [lwt-newtab-brighttext] .ds-onboarding-container .icon-pocket {
+    fill: CurrentColor;
+  }
+}
+@media (forced-colors: active) {
+  .ds-onboarding-container .icon-pocket {
+    fill: CurrentColor;
+  }
+}
 @media (min-width: 610px) {
   .ds-onboarding-container .icon-pocket {
     margin-top: -5px;
@@ -3701,6 +3711,11 @@ main.has-snippet {
 }
 .ds-dismiss .ds-dismiss-button .icon {
   fill: var(--newtab-text-primary-color);
+}
+@media (forced-colors: active) {
+  .ds-dismiss .ds-dismiss-button .icon {
+    fill: CurrentColor;
+  }
 }
 .ds-dismiss .ds-dismiss-button:hover {
   background: var(--newtab-element-hover-color);

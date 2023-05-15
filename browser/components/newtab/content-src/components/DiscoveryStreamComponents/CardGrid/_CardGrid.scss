@@ -74,8 +74,15 @@ $col4-header-font-size: 14;
 
   .icon-pocket {
     @include dark-theme-only {
+      @media (forced-colors: active) {
+        fill: CurrentColor;
+      }
       fill: var(--newtab-text-primary-color);
     }
+    @media (forced-colors: active) {
+      fill: CurrentColor;
+    }
+
     fill: $pocket-icon-fill;
     margin-top: 3px;
     margin-inline-end: 8px;
