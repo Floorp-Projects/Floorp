@@ -474,6 +474,12 @@ void AudioSinkWrapper::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
   }
 }
 
+void AudioSinkWrapper::EnableTreatAudioUnderrunAsSilence(bool aEnabled) {
+  if (mAudioSink) {
+    mAudioSink->EnableTreatAudioUnderrunAsSilence(aEnabled);
+  }
+}
+
 }  // namespace mozilla
 
 #undef LOG

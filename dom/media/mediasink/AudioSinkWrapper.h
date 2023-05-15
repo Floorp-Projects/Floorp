@@ -88,6 +88,8 @@ class AudioSinkWrapper : public MediaSink {
 
   void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) override;
 
+  void EnableTreatAudioUnderrunAsSilence(bool aEnabled) override;
+
  private:
   // The clock that was in use for the previous position query, allowing to
   // detect clock switches.
