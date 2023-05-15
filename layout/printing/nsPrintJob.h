@@ -149,7 +149,7 @@ class nsPrintJob final : public nsIWebProgressListener,
   // If FinishPrintPreview() fails, caller may need to reset the state of the
   // object, for example by calling CleanupOnFailure().
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult FinishPrintPreview();
-  void FirePrintingErrorEvent(nsresult aPrintError);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FirePrintingErrorEvent(nsresult aPrintError);
 
   bool CheckBeforeDestroy() const;
   nsresult Cancel();

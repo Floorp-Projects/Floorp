@@ -624,8 +624,8 @@ void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
     return;
   }
 
-  nsCOMPtr<Document> doc = cv->GetDocument();
-  RefPtr<CustomEvent> event = NS_NewDOMCustomEvent(doc, nullptr, nullptr);
+  const RefPtr<Document> doc = cv->GetDocument();
+  const RefPtr<CustomEvent> event = NS_NewDOMCustomEvent(doc, nullptr, nullptr);
 
   MOZ_ASSERT(event);
 
@@ -640,10 +640,9 @@ void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
   event->InitCustomEvent(cx, u"PrintingError"_ns, false, false, detail);
   event->SetTrusted(true);
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(doc, event);
-  asyncDispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
-  asyncDispatcher->RunDOMEventWhenSafe();
+  // Event listeners in chrome shouldn't delete this.
+  AsyncEventDispatcher::RunDOMEventWhenSafe(*doc, *event,
+                                            ChromeOnlyDispatch::eYes);
 
   // Inform any progress listeners of the Error.
   if (mPrt) {
