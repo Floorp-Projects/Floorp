@@ -109,6 +109,19 @@ class AsyncEventDispatcher : public CancelableRunnable {
   nsresult PostDOMEvent();
   void RunDOMEventWhenSafe();
 
+  /**
+   * Dispatch event immediately if it's safe to dispatch the event.
+   * Otherwise, posting the event into the queue to dispatch it when it's safe.
+   *
+   * Note that this method allows callers to call itself with unsafe aTarget
+   * because its lifetime is guaranteed by EventDispatcher (in the case of
+   * synchronous dispatching) or AsyncEventDispatcher (in the case of
+   * asynchronous dispatching).
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult RunDOMEventWhenSafe(
+      nsINode& aTarget, WidgetEvent& aEvent,
+      nsEventStatus* aEventStatus = nullptr);
+
   // Calling this causes the Run() method to check that
   // mTarget->IsInComposedDoc(). mTarget must be an nsINode or else we'll
   // assert.

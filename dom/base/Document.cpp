@@ -11957,9 +11957,10 @@ void Document::MutationEventDispatched(nsINode* aTarget) {
 
   mSubtreeModifiedTargets.Clear();
 
-  for (nsINode* target : realTargets) {
+  for (const nsCOMPtr<nsINode>& target : realTargets) {
     InternalMutationEvent mutation(true, eLegacySubtreeModified);
-    (new AsyncEventDispatcher(target, mutation))->RunDOMEventWhenSafe();
+    // MOZ_KnownLive due to bug 1620312
+    AsyncEventDispatcher::RunDOMEventWhenSafe(MOZ_KnownLive(*target), mutation);
   }
 }
 

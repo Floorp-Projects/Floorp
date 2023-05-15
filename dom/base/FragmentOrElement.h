@@ -119,7 +119,7 @@ class FragmentOrElement : public nsIContent {
    * aNodes
    */
   static void FireNodeInserted(Document* aDoc, nsINode* aParent,
-                               nsTArray<nsCOMPtr<nsIContent> >& aNodes);
+                               const nsTArray<nsCOMPtr<nsIContent>>& aNodes);
 
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_WRAPPERCACHE_CLASS_INHERITED(
       FragmentOrElement, nsIContent)

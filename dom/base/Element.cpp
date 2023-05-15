@@ -2555,7 +2555,7 @@ nsresult Element::SetAttrAndNotify(
     const nsAttrValue* aOldValue, nsAttrValue& aParsedValue,
     nsIPrincipal* aSubjectPrincipal, uint8_t aModType, bool aFireMutation,
     bool aNotify, bool aCallAfterSetAttr, Document* aComposedDocument,
-    const mozAutoDocUpdate&) {
+    const mozAutoDocUpdate& aGuard) {
   nsresult rv;
   nsMutationGuard::DidMutate();
 
@@ -2690,7 +2690,7 @@ nsresult Element::SetAttrAndNotify(
     mutation.mAttrChange = aModType;
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
-    (new AsyncEventDispatcher(this, mutation))->RunDOMEventWhenSafe();
+    AsyncEventDispatcher::RunDOMEventWhenSafe(*this, mutation);
   }
 
   return NS_OK;
@@ -2953,7 +2953,7 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
     mutation.mAttrChange = MutationEvent_Binding::REMOVAL;
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
-    (new AsyncEventDispatcher(this, mutation))->RunDOMEventWhenSafe();
+    AsyncEventDispatcher::RunDOMEventWhenSafe(*this, mutation);
   }
 
   return NS_OK;
@@ -3919,7 +3919,9 @@ void Element::InsertAdjacentHTML(const nsAString& aPosition,
     destination = this;
   }
 
-  Document* doc = OwnerDoc();
+  // mozAutoDocUpdate keeps the owner document alive.  Therefore, using a raw
+  // pointer here is safe.
+  Document* const doc = OwnerDoc();
 
   // Needed when insertAdjacentHTML is used in combination with contenteditable
   mozAutoDocUpdate updateBatch(doc, true);
@@ -4812,7 +4814,6 @@ void Element::RegUnRegAccessKey(bool aDoReg) {
 
 void Element::SetHTML(const nsAString& aInnerHTML,
                       const SetHTMLOptions& aOptions, ErrorResult& aError) {
-  FragmentOrElement* target = this;
   // Throw for disallowed elements
   if (IsHTMLElement(nsGkAtoms::script)) {
     aError.ThrowTypeError("This does not work on <script> elements");
@@ -4827,6 +4828,10 @@ void Element::SetHTML(const nsAString& aInnerHTML,
     return;
   }
 
+  // Keep "this" alive should be guaranteed by the caller, and also the content
+  // of a template element (if this is one) should never been released from this
+  // during this call.  Therefore, using raw pointer here is safe.
+  FragmentOrElement* target = this;
   // Handle template case.
   if (target->IsTemplateElement()) {
     DocumentFragment* frag =
@@ -4838,7 +4843,9 @@ void Element::SetHTML(const nsAString& aInnerHTML,
   // TODO: Avoid parsing and implement a fast-path for non-markup input,
   // Filed as bug 1731215.
 
-  Document* doc = target->OwnerDoc();
+  // mozAutoSubtreeModified keeps the owner document alive.  Therefore, using a
+  // raw pointer here is safe.
+  Document* const doc = target->OwnerDoc();
 
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(doc, nullptr);
