@@ -399,6 +399,34 @@ const startupPhases = {
       close: 1,
     },
     {
+      path: "XREAppFeat:webcompat-reporter@mozilla.org.xpi",
+      condition: !WIN,
+      ignoreIfUnused: true,
+      stat: 1,
+      close: 1,
+    },
+    {
+      // Bug 1660582 - access while running on windows10 hardware.
+      path: "ProfD:wmfvpxvideo.guard",
+      condition: WIN,
+      ignoreIfUnused: true,
+      stat: 1,
+      close: 1,
+    },
+    {
+      // Bug 1649590
+      path: "ProfD:extensions",
+      ignoreIfUnused: true,
+      condition: WIN,
+      stat: 1,
+    },
+  ],
+
+  // Things that are expected to be completely out of the startup path
+  // and loaded lazily when used for the first time by the user should
+  // be listed here.
+  "before becoming idle": [
+    {
       // bug 1370516 - NSS should be initialized off main thread.
       path: `ProfD:cert9.db`,
       condition: WIN,
@@ -427,49 +455,21 @@ const startupPhases = {
       // bug 1370516 - NSS should be initialized off main thread.
       path: `ProfD:key4.db`,
       condition: WIN,
-      read: 8,
+      read: 10,
       stat: AppConstants.NIGHTLY_BUILD ? 5 : 4,
     },
     {
       // bug 1370516 - NSS should be initialized off main thread.
       path: `ProfD:key4.db-journal`,
       condition: WIN,
-      stat: 5,
+      stat: 7,
     },
     {
       // bug 1370516 - NSS should be initialized off main thread.
       path: `ProfD:key4.db-wal`,
       condition: WIN,
-      stat: 5,
+      stat: 7,
     },
-    {
-      path: "XREAppFeat:webcompat-reporter@mozilla.org.xpi",
-      condition: !WIN,
-      ignoreIfUnused: true,
-      stat: 1,
-      close: 1,
-    },
-    {
-      // Bug 1660582 - access while running on windows10 hardware.
-      path: "ProfD:wmfvpxvideo.guard",
-      condition: WIN,
-      ignoreIfUnused: true,
-      stat: 1,
-      close: 1,
-    },
-    {
-      // Bug 1649590
-      path: "ProfD:extensions",
-      ignoreIfUnused: true,
-      condition: WIN,
-      stat: 1,
-    },
-  ],
-
-  // Things that are expected to be completely out of the startup path
-  // and loaded lazily when used for the first time by the user should
-  // be listed here.
-  "before becoming idle": [
     {
       path: "XREAppFeat:screenshots@mozilla.org.xpi",
       ignoreIfUnused: true,
@@ -548,16 +548,6 @@ const startupPhases = {
       read: 8,
       stat: 4,
       write: 1300,
-    },
-    {
-      path: `ProfD:key4.db-journal`,
-      condition: WIN,
-      stat: 2,
-    },
-    {
-      path: `ProfD:key4.db-wal`,
-      condition: WIN,
-      stat: 2,
     },
     {
       path: "ProfD:",
