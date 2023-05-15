@@ -9,6 +9,7 @@ buildscript {
         }
 
         dependencies {
+            classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
             classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
         }
     }
@@ -56,7 +57,9 @@ dependencies {
     implementation project(':concept-fetch')
     implementation project(':support-ktx')
     implementation project(':support-utils')
-
+    implementation(project(':service-nimbus')) {
+        exclude group: 'org.mozilla.telemetry', module: 'glean-native'
+    }
     implementation ComponentsDependencies.kotlin_coroutines
 
     api ComponentsDependencies.mozilla_geckoview
@@ -89,4 +92,20 @@ dependencies {
 apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
 apply from: '../../../android-lint.gradle'
 apply from: '../../../publish.gradle'
+apply plugin: "org.mozilla.appservices.nimbus-gradle-plugin"
+nimbus {
+    // The path to the Nimbus feature manifest file
+    manifestFile = "geckoview.fml.yaml"
+
+    channels = [
+            debug: "debug",
+            release: "release",
+    ]
+
+    // This is an optional value, and updates the plugin to use a copy of application
+    // services. The path should be relative to the root project directory.
+    // *NOTE*: This example will not work for all projects, but should work for Fenix, Focus, and Android Components
+    applicationServicesDir = gradle.hasProperty('localProperties.autoPublish.application-services.dir')
+            ? gradle.getProperty('localProperties.autoPublish.application-services.dir') : null
+}
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

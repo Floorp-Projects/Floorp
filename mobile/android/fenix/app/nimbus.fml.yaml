@@ -131,6 +131,15 @@ import:
                 max-display-count: 1
             notification-config:
               refresh-interval: 120 # minutes (2 hours)
+  - path: ../../android-components/components/browser/engine-gecko/geckoview.fml.yaml
+    channel: release
+    features:
+      pdfjs:
+        - channel: developer
+          value: {
+          download-button: true,
+          open-in-app-button: true
+        }
 
 features:
   homescreen:

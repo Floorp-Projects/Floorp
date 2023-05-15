@@ -109,6 +109,17 @@ onboarding:
     order:
       type: json
       description: Determines the order of the onboarding page panels
+pdfjs:
+  description: PDF.js features
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    download-button:
+      type: boolean
+      description: Download button
+    open-in-app-button:
+      type: boolean
+      description: Open in app button
 pre-permission-notification-prompt:
   description: A feature that shows the pre-permission notification prompt.
   hasExposure: true

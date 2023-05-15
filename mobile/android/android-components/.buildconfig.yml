@@ -18,14 +18,18 @@ projects:
     publish: true
     upstream_dependencies:
     - browser-errorpages
+    - browser-state
     - concept-base
     - concept-engine
     - concept-fetch
     - concept-storage
     - lib-publicsuffixlist
+    - lib-state
     - service-glean
+    - service-nimbus
     - support-base
     - support-ktx
+    - support-locale
     - support-test
     - support-utils
     - tooling-fetch-tests
@@ -140,10 +144,12 @@ projects:
     - feature-tabs
     - lib-publicsuffixlist
     - lib-state
+    - service-nimbus
     - support-android-test
     - support-base
     - support-images
     - support-ktx
+    - support-locale
     - support-test
     - support-test-fakes
     - support-test-libstate
@@ -1077,9 +1083,11 @@ projects:
     - feature-tabs
     - lib-publicsuffixlist
     - lib-state
+    - service-nimbus
     - support-base
     - support-images
     - support-ktx
+    - support-locale
     - support-test
     - support-utils
     - tooling-lint
@@ -1551,6 +1559,7 @@ projects:
     - service-digitalassetlinks
     - service-glean
     - service-location
+    - service-nimbus
     - service-sync-logins
     - support-android-test
     - support-base
@@ -1602,9 +1611,11 @@ projects:
     - lib-state
     - service-glean
     - service-location
+    - service-nimbus
     - support-base
     - support-images
     - support-ktx
+    - support-locale
     - support-sync-telemetry
     - support-utils
     - tooling-lint
