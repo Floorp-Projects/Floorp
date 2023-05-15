@@ -6,6 +6,7 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -112,6 +113,7 @@ class OnboardingTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
     fun dismissOnboardingUsingHelpTest() {
         homeScreen {
