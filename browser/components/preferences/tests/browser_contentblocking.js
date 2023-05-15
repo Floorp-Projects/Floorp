@@ -18,7 +18,6 @@ const EMAIL_TP_PREF = "privacy.trackingprotection.emailtracking.enabled";
 const EMAIL_TP_PBM_PREF =
   "privacy.trackingprotection.emailtracking.pbmode.enabled";
 const LEVEL2_PREF = "privacy.annotate_channels.strict_list.enabled";
-const LEVEL2_PBM_PREF = "privacy.annotate_channels.strict_list.pbmode.enabled";
 const REFERRER_PREF = "network.http.referer.disallowCrossSiteRelaxingDefault";
 const REFERRER_TOP_PREF =
   "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation";
@@ -327,7 +326,6 @@ add_task(async function testContentBlockingStandardCategory() {
     [EMAIL_TP_PREF]: null,
     [EMAIL_TP_PBM_PREF]: null,
     [LEVEL2_PREF]: null,
-    [LEVEL2_PBM_PREF]: null,
     [REFERRER_PREF]: null,
     [REFERRER_TOP_PREF]: null,
     [OCSP_PREF]: null,
@@ -376,10 +374,6 @@ add_task(async function testContentBlockingStandardCategory() {
   Services.prefs.setBoolPref(
     LEVEL2_PREF,
     !Services.prefs.getBoolPref(LEVEL2_PREF)
-  );
-  Services.prefs.setBoolPref(
-    LEVEL2_PBM_PREF,
-    !Services.prefs.getBoolPref(LEVEL2_PBM_PREF)
   );
   Services.prefs.setBoolPref(
     REFERRER_PREF,
@@ -461,7 +455,6 @@ add_task(async function testContentBlockingStrictCategory() {
   Services.prefs.setBoolPref(EMAIL_TP_PREF, false);
   Services.prefs.setBoolPref(EMAIL_TP_PBM_PREF, false);
   Services.prefs.setBoolPref(LEVEL2_PREF, false);
-  Services.prefs.setBoolPref(LEVEL2_PBM_PREF, false);
   Services.prefs.setBoolPref(REFERRER_PREF, false);
   Services.prefs.setBoolPref(REFERRER_TOP_PREF, false);
   Services.prefs.setBoolPref(OCSP_PREF, false);
@@ -599,20 +592,6 @@ add_task(async function testContentBlockingStrictCategory() {
       case "-lvl2":
         is(
           Services.prefs.getBoolPref(LEVEL2_PREF),
-          false,
-          `${CM_PREF} has been set to false`
-        );
-        break;
-      case "lvl2PBM":
-        is(
-          Services.prefs.getBoolPref(LEVEL2_PBM_PREF),
-          true,
-          `${CM_PREF} has been set to true`
-        );
-        break;
-      case "-lvl2PBM":
-        is(
-          Services.prefs.getBoolPref(LEVEL2_PBM_PREF),
           false,
           `${CM_PREF} has been set to false`
         );
