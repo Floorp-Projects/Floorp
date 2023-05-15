@@ -7663,11 +7663,6 @@ mozilla::ipc::IPCResult ContentParent::RecvBlurToParent(
   CanonicalBrowsingContext* focusedBrowsingContext =
       aFocusedBrowsingContext.get_canonical();
 
-  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  if (!cpm) {
-    return IPC_OK();
-  }
-
   // If aBrowsingContextToClear and aAncestorBrowsingContextToFocusHandled
   // didn't get handled in the process that sent this IPC message and they
   // aren't in the same process as aFocusedBrowsingContext, we need to split
@@ -7685,21 +7680,25 @@ mozilla::ipc::IPCResult ContentParent::RecvBlurToParent(
        aBrowsingContextToClear.get_canonical()->OwnerProcessId())) {
     MOZ_RELEASE_ASSERT(!ancestorDifferent,
                        "This combination is not supposed to happen.");
-    ContentParent* cp = cpm->GetContentProcessById(ContentParentId(
-        aBrowsingContextToClear.get_canonical()->OwnerProcessId()));
-    Unused << cp->SendSetFocusedElement(aBrowsingContextToClear, false);
+    if (ContentParent* cp =
+            aBrowsingContextToClear.get_canonical()->GetContentParent()) {
+      Unused << cp->SendSetFocusedElement(aBrowsingContextToClear, false);
+    }
   } else if (ancestorDifferent) {
-    ContentParent* cp = cpm->GetContentProcessById(ContentParentId(
-        aAncestorBrowsingContextToFocus.get_canonical()->OwnerProcessId()));
-    Unused << cp->SendSetFocusedElement(aAncestorBrowsingContextToFocus, true);
+    if (ContentParent* cp = aAncestorBrowsingContextToFocus.get_canonical()
+                                ->GetContentParent()) {
+      Unused << cp->SendSetFocusedElement(aAncestorBrowsingContextToFocus,
+                                          true);
+    }
   }
 
-  ContentParent* cp = cpm->GetContentProcessById(
-      ContentParentId(focusedBrowsingContext->OwnerProcessId()));
-  Unused << cp->SendBlurToChild(aFocusedBrowsingContext,
-                                aBrowsingContextToClear,
-                                aAncestorBrowsingContextToFocus,
-                                aIsLeavingDocument, aAdjustWidget, aActionId);
+  if (ContentParent* cp = focusedBrowsingContext->GetContentParent()) {
+    Unused << cp->SendBlurToChild(aFocusedBrowsingContext,
+                                  aBrowsingContextToClear,
+                                  aAncestorBrowsingContextToFocus,
+                                  aIsLeavingDocument, aAdjustWidget, aActionId);
+  }
+
   return IPC_OK();
 }
 
