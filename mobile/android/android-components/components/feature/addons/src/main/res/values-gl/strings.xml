@@ -211,5 +211,5 @@
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">Abrir no menú</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button">Entendín</string>
+    <string name="mozac_feature_addons_installed_dialog_okay_button">Entendido</string>
 </resources>

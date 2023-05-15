@@ -1199,7 +1199,7 @@
     <!-- The dialog text shown when additional devices are not available -->
     <string name="sync_connect_device_dialog">Para enviar unha lapela, inicie sesión en Firefox en polo menos outro dispositivo.</string>
     <!-- Confirmation dialog button -->
-    <string name="sync_confirmation_button">Entendín</string>
+    <string name="sync_confirmation_button">Entendido</string>
     <!-- Share error message -->
     <string name="share_error_snackbar">Non é posíbel compartir con esta aplicación</string>
     <!-- Add new device screen title -->
