@@ -3467,7 +3467,7 @@ void ContentParent::OnVarChanged(const GfxVarUpdate& aVar) {
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
-    const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
+    const IPCTransferableData& aTransferableData, const bool& aIsPrivateData,
     nsIPrincipal* aRequestingPrincipal,
     mozilla::Maybe<CookieJarSettingsArgs> aCookieJarSettingsArgs,
     const nsContentPolicyType& aContentPolicyType,
@@ -3496,9 +3496,10 @@ mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
     trans->SetCookieJarSettings(cookieJarSettings);
   }
 
-  rv = nsContentUtils::IPCTransferableToTransferable(
-      aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType,
-      true /* aAddDataFlavor */, trans, true /* aFilterUnknownFlavors */);
+  rv = nsContentUtils::IPCTransferableDataToTransferable(
+      aTransferableData, aIsPrivateData, aRequestingPrincipal,
+      aContentPolicyType, true /* aAddDataFlavor */, trans,
+      true /* aFilterUnknownFlavors */);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   clipboard->SetData(trans, nullptr, aWhichClipboard);
@@ -3535,7 +3536,7 @@ static Result<nsCOMPtr<nsITransferable>, nsresult> CreateTransferable(
 
 mozilla::ipc::IPCResult ContentParent::RecvGetClipboard(
     nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
-    IPCDataTransfer* aDataTransfer) {
+    IPCTransferableData* aTransferableData) {
   nsresult rv;
   // Retrieve clipboard
   nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
@@ -3553,8 +3554,8 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboard(
   nsCOMPtr<nsITransferable> trans = result.unwrap();
   clipboard->GetData(trans, aWhichClipboard);
 
-  nsContentUtils::TransferableToIPCTransferable(
-      trans, aDataTransfer, true /* aInSyncMessage */, this);
+  nsContentUtils::TransferableToIPCTransferableData(
+      trans, aTransferableData, true /* aInSyncMessage */, this);
   return IPC_OK();
 }
 
@@ -3631,14 +3632,15 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboardAsync(
   // Get data from clipboard
   nsCOMPtr<nsITransferable> trans = result.unwrap();
   clipboard->AsyncGetData(trans, nsIClipboard::kGlobalClipboard)
-      ->Then(GetMainThreadSerialEventTarget(), __func__,
-             [trans, aResolver, self = RefPtr{this}](
-                 GenericPromise::ResolveOrRejectValue&& aValue) {
-               IPCDataTransfer ipcDataTransfer;
-               nsContentUtils::TransferableToIPCTransferable(
-                   trans, &ipcDataTransfer, false /* aInSyncMessage */, self);
-               aResolver(std::move(ipcDataTransfer));
-             });
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [trans, aResolver,
+           self = RefPtr{this}](GenericPromise::ResolveOrRejectValue&& aValue) {
+            IPCTransferableData ipcTransferableData;
+            nsContentUtils::TransferableToIPCTransferableData(
+                trans, &ipcTransferableData, false /* aInSyncMessage */, self);
+            aResolver(std::move(ipcTransferableData));
+          });
   return IPC_OK();
 }
 
@@ -5469,7 +5471,7 @@ void ContentParent::MaybeInvokeDragSession(BrowserParent* aParent) {
     nsCOMPtr<nsIDragSession> session;
     dragService->GetCurrentSession(getter_AddRefs(session));
     if (session) {
-      nsTArray<IPCDataTransfer> dataTransfers;
+      nsTArray<IPCTransferableData> ipcTransferables;
       RefPtr<DataTransfer> transfer = session->GetDataTransfer();
       if (!transfer) {
         // Pass eDrop to get DataTransfer with external
@@ -5484,8 +5486,8 @@ void ContentParent::MaybeInvokeDragSession(BrowserParent* aParent) {
       nsCOMPtr<nsILoadContext> lc =
           aParent ? aParent->GetLoadContext() : nullptr;
       nsCOMPtr<nsIArray> transferables = transfer->GetTransferables(lc);
-      nsContentUtils::TransferablesToIPCTransferables(
-          transferables, dataTransfers, false, this);
+      nsContentUtils::TransferablesToIPCTransferableDatas(
+          transferables, ipcTransferables, false, this);
       uint32_t action;
       session->GetDragAction(&action);
 
@@ -5494,7 +5496,7 @@ void ContentParent::MaybeInvokeDragSession(BrowserParent* aParent) {
       RefPtr<WindowContext> sourceTopWC;
       session->GetSourceTopWindowContext(getter_AddRefs(sourceTopWC));
       mozilla::Unused << SendInvokeDragSession(
-          sourceWC, sourceTopWC, std::move(dataTransfers), action);
+          sourceWC, sourceTopWC, std::move(ipcTransferables), action);
     }
   }
 }

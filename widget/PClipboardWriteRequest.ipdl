@@ -15,7 +15,7 @@ protocol PClipboardWriteRequest {
   manager PContent;
 
  parent:
-  async SetData(IPCDataTransfer aDataTransfer,
+  async SetData(IPCTransferableData aTransferableData,
                 bool aIsPrivateData,
                 nullable nsIPrincipal aRequestingPrincipal,
                 CookieJarSettingsArgs? cookieJarSettings,

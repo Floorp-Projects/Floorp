@@ -462,8 +462,8 @@ struct IPCImage {
     ImageIntSize size;
 };
 
-union IPCDataTransferOrError {
-    IPCDataTransfer;
+union IPCTransferableDataOrError {
+    IPCTransferableData;
     nsresult;
 };
 
@@ -821,7 +821,7 @@ child:
 
     async InvokeDragSession(MaybeDiscardedWindowContext aSourceWindowContext,
                             MaybeDiscardedWindowContext aSourceTopWindowContext,
-                            IPCDataTransfer[] transfers, uint32_t action);
+                            IPCTransferableData[] transfers, uint32_t action);
 
     async EndDragSession(bool aDoneDrag, bool aUserCancelled,
                          LayoutDeviceIntPoint aDragEndPoint,
@@ -1217,7 +1217,7 @@ parent:
                                bool fromChromeContext, ClonedMessageData stack);
 
     // Places the items within dataTransfer on the clipboard.
-    async SetClipboard(IPCDataTransfer aDataTransfer,
+    async SetClipboard(IPCTransferableData aTransferableData,
                        bool aIsPrivateData,
                        nullable nsIPrincipal aRequestingPrincipal,
                        CookieJarSettingsArgs? cookieJarSettings,
@@ -1228,14 +1228,14 @@ parent:
     // Given a list of supported types, returns the clipboard data for the
     // first type that matches.
     sync GetClipboard(nsCString[] aTypes, int32_t aWhichClipboard)
-        returns (IPCDataTransfer dataTransfer);
+        returns (IPCTransferableData transferableData);
 
     // Returns a list of formats supported by the clipboard
     sync GetExternalClipboardFormats(int32_t aWhichClipboard, bool aPlainTextOnly) returns (nsCString[] aTypes);
 
     // Given a list of supported types, returns the clipboard data for the
     // first type that matches.
-    async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard) returns (IPCDataTransferOrError dataTransfer);
+    async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard) returns (IPCTransferableDataOrError transferableData);
 
     // Clears the clipboard.
     async EmptyClipboard(int32_t aWhichClipboard);

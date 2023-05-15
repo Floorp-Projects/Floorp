@@ -29,7 +29,7 @@ class ClipboardWriteRequestParent final
 
   nsresult Init(const int32_t& aClipboardType);
 
-  IPCResult RecvSetData(const IPCDataTransfer& aDataTransfer,
+  IPCResult RecvSetData(const IPCTransferableData& aTransferableData,
                         const bool& aIsPrivateData,
                         nsIPrincipal* aRequestingPrincipal,
                         Maybe<CookieJarSettingsArgs> aCookieJarSettingsArgs,

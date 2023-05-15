@@ -100,17 +100,17 @@ struct MessageData {
   MessageDataType data;
 };
 
-struct IPCDataTransferString
+struct IPCTransferableDataString
 {
   BigBuffer data;
 };
 
-struct IPCDataTransferCString
+struct IPCTransferableDataCString
 {
   BigBuffer data;
 };
 
-struct IPCDataTransferInputStream
+struct IPCTransferableDataInputStream
 {
   // NOTE: Editor currently relies on these input streams being synchronous, so
   // we can't safely serialize them using IPCStream (see bug 1778565). Instead,
@@ -122,7 +122,7 @@ struct IPCDataTransferInputStream
   BigBuffer data;
 };
 
-struct IPCDataTransferImageContainer
+struct IPCTransferableDataImageContainer
 {
   BigBuffer data;
   uint32_t width;
@@ -131,29 +131,29 @@ struct IPCDataTransferImageContainer
   SurfaceFormat format;
 };
 
-struct IPCDataTransferBlob
+struct IPCTransferableDataBlob
 {
   IPCBlob blob;
 };
 
-union IPCDataTransferData
+union IPCTransferableDataType
 {
-  IPCDataTransferString;
-  IPCDataTransferCString;
-  IPCDataTransferInputStream;
-  IPCDataTransferImageContainer;
-  IPCDataTransferBlob;
+  IPCTransferableDataString;
+  IPCTransferableDataCString;
+  IPCTransferableDataInputStream;
+  IPCTransferableDataImageContainer;
+  IPCTransferableDataBlob;
 };
 
-struct IPCDataTransferItem
+struct IPCTransferableDataItem
 {
   nsCString flavor;
-  IPCDataTransferData data;
+  IPCTransferableDataType data;
 };
 
-struct IPCDataTransfer
+struct IPCTransferableData
 {
-  IPCDataTransferItem[] items;
+  IPCTransferableDataItem[] items;
 };
 
 struct ScreenDetails {
