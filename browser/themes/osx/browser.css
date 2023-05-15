@@ -380,14 +380,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   margin-left: 1em;
 }
 
-/* On mac, the popup notification contents are indented by default and so
-  the default closebutton margins from notification.css require adjustment */
-
-.click-to-play-plugins-notification-description-box > .popup-notification-closebutton {
-  margin-inline-end: -6px;
-  margin-top: -7px;
-}
-
 #UITourTooltipDescription {
   font-size: 1.18rem;
   line-height: 2rem;
