@@ -17,6 +17,8 @@ import { connect, useSelector } from "react-redux";
 const PREF_ONBOARDING_EXPERIENCE_DISMISSED =
   "discoverystream.onboardingExperience.dismissed";
 const INTERSECTION_RATIO = 0.5;
+const VISIBLE = "visible";
+const VISIBILITY_CHANGE_EVENT = "visibilitychange";
 const WIDGET_IDS = {
   TOPICS: 1,
 };
@@ -79,9 +81,27 @@ export function OnboardingExperience({
         intersectionObserver.unobserve(heightElement.current);
       }
     }, options);
+
+    const onVisibilityChange = () => {
+      intersectionObserver.observe(heightElement.current);
+      windowObj.document.removeEventListener(
+        VISIBILITY_CHANGE_EVENT,
+        onVisibilityChange
+      );
+    };
+
     if (heightElement.current) {
       resizeObserver.observe(heightElement.current);
-      intersectionObserver.observe(heightElement.current);
+      // Check visibility or setup a visibility event to make
+      // sure we don't fire this for off screen pre loaded tabs.
+      if (windowObj.document.visibilityState === VISIBLE) {
+        intersectionObserver.observe(heightElement.current);
+      } else {
+        windowObj.document.addEventListener(
+          VISIBILITY_CHANGE_EVENT,
+          onVisibilityChange
+        );
+      }
       setMaxHeight(heightElement.current.offsetHeight);
     }
 
@@ -89,6 +109,10 @@ export function OnboardingExperience({
     return () => {
       resizeObserver?.disconnect();
       intersectionObserver?.disconnect();
+      windowObj.document.removeEventListener(
+        VISIBILITY_CHANGE_EVENT,
+        onVisibilityChange
+      );
     };
   }, [dispatch, windowObj]);
 
