@@ -5,21 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ExtensionStorage"];
+var EXPORTED_SYMBOLS = ["ExtensionStorage", "extensionStorageSession"];
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+const {
+  ExtensionUtils: { ExtensionError, DefaultWeakMap },
+} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ExtensionUtils",
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
 });
 
 function isStructuredCloneHolder(value) {
@@ -166,7 +168,7 @@ var ExtensionStorage = {
   sanitize(value, context) {
     let json = context.jsonStringify(value === undefined ? null : value);
     if (json == undefined) {
-      throw new lazy.ExtensionUtils.ExtensionError(
+      throw new ExtensionError(
         "DataCloneError: The object could not be cloned."
       );
     }
@@ -407,7 +409,7 @@ var ExtensionStorage = {
         try {
           result[key] = new StructuredCloneHolder(value, context.cloneScope);
         } catch (e) {
-          throw new lazy.ExtensionUtils.ExtensionError(String(e));
+          throw new ExtensionError(String(e));
         }
       }
       return result;
@@ -450,3 +452,91 @@ XPCOMUtils.defineLazyGetter(ExtensionStorage, "extensionDir", () =>
 );
 
 ExtensionStorage.init();
+
+var extensionStorageSession = {
+  /** @type {WeakMap<Extension, Map<string, any>>} */
+  buckets: new DefaultWeakMap(_extension => new Map()),
+
+  /** @type {WeakMap<Extension, Set<callback>>} */
+  listeners: new DefaultWeakMap(_extension => new Set()),
+
+  /**
+   * @param {Extension} extension
+   * @param {null | undefined | string | string[] | object} items
+   * Schema normalization ensures items are normalized to one of above types.
+   */
+  get(extension, items) {
+    let bucket = this.buckets.get(extension);
+
+    let result = {};
+    let keys = [];
+
+    if (!items) {
+      keys = bucket.keys();
+    } else if (typeof items !== "object" || Array.isArray(items)) {
+      keys = [].concat(items);
+    } else {
+      keys = Object.keys(items);
+      result = items;
+    }
+
+    for (let prop of keys) {
+      if (bucket.has(prop)) {
+        result[prop] = bucket.get(prop);
+      }
+    }
+    return result;
+  },
+
+  set(extension, items) {
+    let bucket = this.buckets.get(extension);
+
+    let changes = {};
+    for (let [key, value] of Object.entries(items)) {
+      changes[key] = {
+        oldValue: bucket.get(key),
+        newValue: value,
+      };
+      bucket.set(key, value);
+    }
+    this.notifyListeners(extension, changes);
+  },
+
+  remove(extension, keys) {
+    let bucket = this.buckets.get(extension);
+    let changes = {};
+    for (let k of [].concat(keys)) {
+      if (bucket.has(k)) {
+        changes[k] = { oldValue: bucket.get(k) };
+        bucket.delete(k);
+      }
+    }
+    this.notifyListeners(extension, changes);
+  },
+
+  clear(extension) {
+    let bucket = this.buckets.get(extension);
+    let changes = {};
+    for (let k of bucket.keys()) {
+      changes[k] = { oldValue: bucket.get(k) };
+    }
+    bucket.clear();
+    this.notifyListeners(extension, changes);
+  },
+
+  registerListener(extension, listener) {
+    this.listeners.get(extension).add(listener);
+    return () => {
+      this.listeners.get(extension).delete(listener);
+    };
+  },
+
+  notifyListeners(extension, changes) {
+    if (!Object.keys(changes).length) {
+      return;
+    }
+    for (let listener of this.listeners.get(extension)) {
+      lazy.ExtensionCommon.runSafeSyncWithoutClone(listener, changes);
+    }
+  },
+};

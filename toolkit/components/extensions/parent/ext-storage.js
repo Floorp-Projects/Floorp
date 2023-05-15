@@ -7,6 +7,7 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
+  extensionStorageSession: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
   NativeManifests: "resource://gre/modules/NativeManifests.jsm",
 });
@@ -78,12 +79,18 @@ this.storage = class extends ExtensionAPIPersistent {
         // be deserialized by the onChanged handler in child/ext-storage.js.
         fire.raw(changes, "local");
       });
+      let unregisterSession = extensionStorageSession.registerListener(
+        this.extension,
+        changes => fire.async(changes, "session")
+      );
       let unregisterSync = this.registerSyncChangedListener(changes => {
         fire.async(changes, "sync");
       });
+
       return {
         unregister() {
           unregisterLocal();
+          unregisterSession();
           unregisterSync();
         },
         convert(_fire) {
@@ -97,6 +104,19 @@ this.storage = class extends ExtensionAPIPersistent {
         // be deserialized by the onChanged handler in child/ext-storage.js.
         fire.raw(changes);
       });
+      return {
+        unregister,
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
+    "session.onChanged"({ fire }) {
+      let unregister = extensionStorageSession.registerListener(
+        this.extension,
+        changes => fire.async(changes)
+      );
+
       return {
         unregister,
         convert(_fire) {
@@ -247,6 +267,27 @@ this.storage = class extends ExtensionAPIPersistent {
             context,
             module: "storage",
             event: "local.onChanged",
+            extensionApi: this,
+          }).api(),
+        },
+
+        session: {
+          get(items) {
+            return extensionStorageSession.get(extension, items);
+          },
+          set(items) {
+            extensionStorageSession.set(extension, items);
+          },
+          remove(keys) {
+            extensionStorageSession.remove(extension, keys);
+          },
+          clear() {
+            extensionStorageSession.clear(extension);
+          },
+          onChanged: new EventManager({
+            context,
+            module: "storage",
+            event: "session.onChanged",
             extensionApi: this,
           }).api(),
         },
