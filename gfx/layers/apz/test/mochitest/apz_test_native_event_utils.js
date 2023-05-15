@@ -89,9 +89,13 @@ function nativeArrowUpKey() {
   );
 }
 
+function targetIsWindow(aTarget) {
+  return aTarget.Window && aTarget instanceof aTarget.Window;
+}
+
 // Given an event target which may be a window or an element, get the associated window.
 function windowForTarget(aTarget) {
-  if (aTarget.Window && aTarget instanceof aTarget.Window) {
+  if (targetIsWindow(aTarget)) {
     return aTarget;
   }
   return aTarget.ownerDocument.defaultView;
@@ -99,7 +103,7 @@ function windowForTarget(aTarget) {
 
 // Given an event target which may be a window or an element, get the associated element.
 function elementForTarget(aTarget) {
-  if (aTarget.Window && aTarget instanceof aTarget.Window) {
+  if (targetIsWindow(aTarget)) {
     return aTarget.document.documentElement;
   }
   return aTarget;
