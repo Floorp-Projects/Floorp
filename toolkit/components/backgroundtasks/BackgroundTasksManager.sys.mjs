@@ -31,6 +31,17 @@ XPCOMUtils.defineLazyGetter(lazy, "DevToolsStartup", () => {
   ).wrappedJSObject;
 });
 
+// The default timing settings can be overriden by the preferences
+// toolkit.backgroundtasks.defaultTimeoutSec and
+// toolkit.backgroundtasks.defaultMinTaskRuntimeMS for all background tasks
+// and individually per module by
+// export const backgroundTaskTimeoutSec = X;
+// export const backgroundTaskMinRuntimeMS = Y;
+let timingSettings = {
+  minTaskRuntimeMS: 500,
+  maxTaskRuntimeSec: 600, // 10 minutes.
+};
+
 // Map resource://testing-common/ to the shared test modules directory.  This is
 // a transliteration of `register_modules_protocol_handler` from
 // https://searchfox.org/mozilla-central/rev/f081504642a115cb8236bea4d8250e5cb0f39b02/testing/xpcshell/head.js#358-389.
@@ -204,24 +215,46 @@ export class BackgroundTasksManager {
       let taskModule = findBackgroundTaskModule(name);
       addMarker("BackgroundTasksManager:AfterFindRunBackgroundTask");
 
-      let timeoutSec = Services.prefs.getIntPref(
+      // Get timing configuration. First check for default preferences,
+      // then for per module overrides.
+      timingSettings.minTaskRuntimeMS = Services.prefs.getIntPref(
+        "toolkit.backgroundtasks.defaultMinTaskRuntimeMS",
+        timingSettings.minTaskRuntimeMS
+      );
+      if (taskModule.backgroundTaskMinRuntimeMS) {
+        timingSettings.minTaskRuntimeMS = taskModule.backgroundTaskMinRuntimeMS;
+      }
+      timingSettings.maxTaskRuntimeSec = Services.prefs.getIntPref(
         "toolkit.backgroundtasks.defaultTimeoutSec",
-        10 * 60
+        timingSettings.maxTaskRuntimeSec
       );
       if (taskModule.backgroundTaskTimeoutSec) {
-        timeoutSec = taskModule.backgroundTaskTimeoutSec;
+        timingSettings.maxTaskRuntimeSec = taskModule.backgroundTaskTimeoutSec;
       }
 
       try {
+        let minimumReached = false;
+        let minRuntime = new Promise(resolve =>
+          lazy.setTimeout(() => {
+            minimumReached = true;
+            resolve(true);
+          }, timingSettings.minTaskRuntimeMS)
+        );
         exitCode = await Promise.race([
           new Promise(resolve =>
             lazy.setTimeout(() => {
               lazy.log.error(`Background task named '${name}' timed out`);
               resolve(EXIT_CODE.TIMEOUT);
-            }, timeoutSec * 1000)
+            }, timingSettings.maxTaskRuntimeSec * 1000)
           ),
           taskModule.runBackgroundTask(commandLine),
         ]);
+        if (!minimumReached) {
+          lazy.log.debug(
+            `Backgroundtask named '${name}' waiting for minimum runtime.`
+          );
+          await minRuntime;
+        }
         lazy.log.info(
           `Backgroundtask named '${name}' completed with exit code ${exitCode}`
         );
