@@ -120,7 +120,6 @@ char* nsEscape(const char* aStr, size_t aLength, size_t* aOutputLength,
   char* result = (char*)moz_xmalloc(dstSize);
 
   unsigned char* dst = (unsigned char*)result;
-  src = (const unsigned char*)aStr;
   if (aFlags == url_XPAlphas) {
     for (size_t i = 0; i < aLength; ++i) {
       unsigned char c = *src++;
