@@ -191,20 +191,6 @@ function parseNativeModifiers(aModifiers, aWindow = window) {
   return modifiers;
 }
 
-function getBoundingClientRectRelativeToVisualViewport(aElement) {
-  let utils = SpecialPowers.getDOMWindowUtils(window);
-  var rect = aElement.getBoundingClientRect();
-  var offsetX = {},
-    offsetY = {};
-  // TODO: Audit whether these offset values are correct or not for
-  // position:fixed elements especially in the case where the visual viewport
-  // offset is not 0.
-  utils.getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
-  rect.x -= offsetX.value;
-  rect.y -= offsetY.value;
-  return rect;
-}
-
 // Several event sythesization functions below (and their helpers) take a "target"
 // parameter which may be either an element or a window. For such functions,
 // the target's "bounding rect" refers to the bounding client rect for an element,
@@ -358,9 +344,8 @@ async function coordinatesRelativeToScreen(aParams) {
 
 // Get the bounding box of aElement, and return it in device pixels
 // relative to the screen.
-// TODO: This function should probably take into account the resolution
-//       and use getBoundingClientRectRelativeToVisualViewport()
-//       like coordinatesRelativeToScreen() does.
+// TODO: This function should probably take into account the resolution and
+//       the relative viewport rect like coordinatesRelativeToScreen() does.
 function rectRelativeToScreen(aElement) {
   var targetWindow = aElement.ownerDocument.defaultView;
   var scale = targetWindow.devicePixelRatio;
