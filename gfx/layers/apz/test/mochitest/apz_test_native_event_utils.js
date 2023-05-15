@@ -93,6 +93,13 @@ function targetIsWindow(aTarget) {
   return aTarget.Window && aTarget instanceof aTarget.Window;
 }
 
+function targetIsTopWindow(aTarget) {
+  if (!targetIsWindow(aTarget)) {
+    return false;
+  }
+  return aTarget == aTarget.top;
+}
+
 // Given an event target which may be a window or an element, get the associated window.
 function windowForTarget(aTarget) {
   if (targetIsWindow(aTarget)) {
@@ -1294,7 +1301,7 @@ function promiseMoveMouseAndScrollWheelOver(
   return p;
 }
 
-function scrollbarDragStart(aTarget, aScaleFactor) {
+async function scrollbarDragStart(aTarget, aScaleFactor) {
   var targetElement = elementForTarget(aTarget);
   var w = {},
     h = {};
@@ -1309,6 +1316,16 @@ function scrollbarDragStart(aTarget, aScaleFactor) {
   var startY = upArrowHeight + 5; // start dragging somewhere in the thumb
   startX *= aScaleFactor;
   startY *= aScaleFactor;
+
+  // targetElement.clientWidth is unaffected by the zoom, but if the target
+  // is the root content window, the distance from the window origin to the
+  // scrollbar in CSS pixels does decrease proportionally to the zoom,
+  // so the CSS coordinates we return need to be scaled accordingly.
+  if (targetIsTopWindow(aTarget)) {
+    var resolution = await getResolution();
+    startX /= resolution;
+    startY /= resolution;
+  }
 
   return { x: startX, y: startY };
 }
@@ -1334,7 +1351,7 @@ async function promiseVerticalScrollbarDrag(
   aIncrement = 5,
   aScaleFactor = 1
 ) {
-  var startPoint = scrollbarDragStart(aTarget, aScaleFactor);
+  var startPoint = await scrollbarDragStart(aTarget, aScaleFactor);
   var targetElement = elementForTarget(aTarget);
   if (startPoint == null) {
     return null;
@@ -1401,7 +1418,7 @@ async function promiseVerticalScrollbarTouchDrag(
   aDistance = 20,
   aScaleFactor = 1
 ) {
-  var startPoint = scrollbarDragStart(aTarget, aScaleFactor);
+  var startPoint = await scrollbarDragStart(aTarget, aScaleFactor);
   var targetElement = elementForTarget(aTarget);
   if (startPoint == null) {
     return false;
