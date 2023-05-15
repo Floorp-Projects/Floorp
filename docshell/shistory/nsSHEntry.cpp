@@ -36,7 +36,6 @@ nsSHEntry::nsSHEntry()
       mID(++gEntryID),  // SessionStore has special handling for 0 values.
       mScrollPositionX(0),
       mScrollPositionY(0),
-      mParent(nullptr),
       mLoadReplace(false),
       mURIWasModified(false),
       mIsSrcdocEntry(false),
@@ -81,7 +80,7 @@ nsSHEntry::~nsSHEntry() {
   }
 }
 
-NS_IMPL_ISUPPORTS(nsSHEntry, nsISHEntry)
+NS_IMPL_ISUPPORTS(nsSHEntry, nsISHEntry, nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsSHEntry::SetScrollPosition(int32_t aX, int32_t aY) {
@@ -443,19 +442,14 @@ nsSHEntry::Create(
 
 NS_IMETHODIMP
 nsSHEntry::GetParent(nsISHEntry** aResult) {
-  *aResult = mParent;
-  NS_IF_ADDREF(*aResult);
+  nsCOMPtr<nsISHEntry> parent = do_QueryReferent(mParent);
+  parent.forget(aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SetParent(nsISHEntry* aParent) {
-  /* parent not Addrefed on purpose to avoid cyclic reference
-   * Null parent is OK
-   *
-   * XXX this method should not be scriptable if this is the case!!
-   */
-  mParent = aParent;
+  mParent = do_GetWeakReference(aParent);
   return NS_OK;
 }
 

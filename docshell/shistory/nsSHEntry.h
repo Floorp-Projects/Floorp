@@ -11,7 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsISHEntry.h"
 #include "nsString.h"
-
+#include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
 
 class nsSHEntryShared;
@@ -19,7 +19,7 @@ class nsIInputStream;
 class nsIURI;
 class nsIReferrerInfo;
 
-class nsSHEntry : public nsISHEntry {
+class nsSHEntry : public nsISHEntry, public nsSupportsWeakReference {
  public:
   nsSHEntry();
 
@@ -54,7 +54,7 @@ class nsSHEntry : public nsISHEntry {
   uint32_t mID;
   int32_t mScrollPositionX;
   int32_t mScrollPositionY;
-  nsISHEntry* mParent;
+  nsWeakPtr mParent;
   nsCOMArray<nsISHEntry> mChildren;
   nsCOMPtr<nsIStructuredCloneContainer> mStateData;
   nsString mSrcdocData;
