@@ -15,6 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.sys.mjs",
   Message: "chrome://remote/content/marionette/message.sys.mjs",
+  PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   Response: "chrome://remote/content/marionette/message.sys.mjs",
 });
 
@@ -65,15 +66,30 @@ export class TCPListener {
     return new lazy.GeckoDriver(this);
   }
 
-  set acceptConnections(value) {
+  async setAcceptConnections(value) {
     if (value) {
       if (!this.socket) {
-        try {
-          const flags = KeepWhenOffline | LoopbackOnly;
-          const backlog = 1;
-          this.socket = new lazy.ServerSocket(this.port, flags, backlog);
-        } catch (e) {
-          throw new Error(`Could not bind to port ${this.port} (${e.name})`);
+        await lazy.PollPromise(
+          (resolve, reject) => {
+            try {
+              const flags = KeepWhenOffline | LoopbackOnly;
+              const backlog = 1;
+              this.socket = new lazy.ServerSocket(this.port, flags, backlog);
+              resolve();
+            } catch (e) {
+              lazy.logger.debug(
+                `Could not bind to port ${this.port} (${e.name})`
+              );
+              reject();
+            }
+          },
+          { interval: 250, timeout: 5000 }
+        );
+
+        // Since PollPromise doesn't throw when timeout expires,
+        // we can end up in the situation when the socket is undefined.
+        if (!this.socket) {
+          throw new Error(`Could not bind to port ${this.port}`);
         }
 
         this.port = this.socket.port;
@@ -97,24 +113,24 @@ export class TCPListener {
    * The marionette.port preference will be populated with the value
    * of {@link #port}.
    */
-  start() {
+  async start() {
     if (this.alive) {
       return;
     }
 
     // Start socket server and listening for connection attempts
-    this.acceptConnections = true;
+    await this.setAcceptConnections(true);
     lazy.MarionettePrefs.port = this.port;
     this.alive = true;
   }
 
-  stop() {
+  async stop() {
     if (!this.alive) {
       return;
     }
 
     // Shutdown server socket, and no longer listen for new connections
-    this.acceptConnections = false;
+    await this.setAcceptConnections(false);
     this.alive = false;
   }
 
