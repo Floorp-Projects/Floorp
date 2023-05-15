@@ -25,7 +25,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 #include "nsWindowsDllInterceptor.h"
-#include "plstr.h"
 
 #ifdef MOZ_REPLACE_MALLOC
 #  include "replace_malloc_bridge.h"

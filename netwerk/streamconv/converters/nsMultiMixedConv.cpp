@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMultiMixedConv.h"
-#include "plstr.h"
 #include "nsIHttpChannel.h"
 #include "nsNetCID.h"
 #include "nsMimeTypes.h"

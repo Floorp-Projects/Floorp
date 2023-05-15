@@ -26,7 +26,6 @@
 #include <netioapi.h>
 #include <netlistmgr.h>
 #include <iprtrmib.h>
-#include "plstr.h"
 #include "mozilla/Logging.h"
 #include "nsComponentManagerUtils.h"
 #include "nsThreadUtils.h"

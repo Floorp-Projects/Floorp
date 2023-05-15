@@ -29,7 +29,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "plstr.h"
 #include "nsGkAtoms.h"
 #include "nsCRT.h"
 #include "nsBaseWidget.h"

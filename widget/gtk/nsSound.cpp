@@ -8,7 +8,6 @@
 #include <string.h>
 
 #include "nscore.h"
-#include "plstr.h"
 #include "prlink.h"
 
 #include "nsSound.h"

@@ -88,7 +88,6 @@
 #include "nsZipArchive.h"
 #include "plbase64.h"
 #include "PLDHashTable.h"
-#include "plstr.h"
 #include "prdtoa.h"
 #include "prlink.h"
 #include "xpcpublic.h"

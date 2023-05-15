@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <iostream.h>
-#include "plstr.h"
 #include "prlink.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"

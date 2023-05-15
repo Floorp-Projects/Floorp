@@ -7,7 +7,6 @@
 #include "xpcpublic.h"
 #include "nsString.h"
 #include "nsJSPrincipals.h"
-#include "plstr.h"
 #include "nsCOMPtr.h"
 #include "nsStringBuffer.h"
 #include "mozilla/BasePrincipal.h"

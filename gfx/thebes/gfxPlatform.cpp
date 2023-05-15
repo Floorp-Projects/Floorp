@@ -125,7 +125,6 @@
 
 #include "imgITools.h"
 
-#include "plstr.h"
 #include "nsCRT.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"

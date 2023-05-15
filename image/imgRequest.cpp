@@ -33,7 +33,6 @@
 #include "nsContentUtils.h"
 #include "nsEscape.h"
 
-#include "plstr.h"   // PL_strcasestr(...)
 #include "prtime.h"  // for PR_Now
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
