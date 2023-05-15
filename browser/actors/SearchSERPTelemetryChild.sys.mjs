@@ -705,7 +705,9 @@ class SearchAdImpression {
    *  and adsHidden, the number of ads not visible to the user.
    */
   #countVisibleAndHiddenAds(element, adsLoaded, childElements) {
-    let elementRect = element.getBoundingClientRect();
+    let elementRect = element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(
+      element
+    );
 
     // If the element lacks a dimension, assume all ads that
     // were contained within it are hidden.
@@ -734,7 +736,9 @@ class SearchAdImpression {
     let adsVisible = 0;
     let adsHidden = 0;
     for (let child of childElements) {
-      let itemRect = child.getBoundingClientRect();
+      let itemRect = child.ownerGlobal.windowUtils.getBoundsWithoutFlushing(
+        child
+      );
 
       // If the child element we're inspecting has no dimension, it is hidden.
       if (itemRect.height == 0 || itemRect.width == 0) {
