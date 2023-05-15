@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1683931970391,
+      "derHash": "udU/I1xfqMkusx3Pyt9JWbNKMq82rKHqEPB9ZVHDmKU=",
+      "subject": "CN=DigiCert TLS RSA4096 Root G5,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "ME0xCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjElMCMGA1UEAxMcRGlnaUNlcnQgVExTIFJTQTQwOTYgUm9vdCBHNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e78e398403576ebf3e95e1feb965efad8ee75e60076714001a690c26a7873f3a",
+        "size": 1983,
+        "filename": "ape1HIIZ6T5d7GS61YBs3rD4NVvkfnVwELcCRW4Bqv0=.pem",
+        "location": "security-state-staging/intermediates/36de1839-8a27-4de6-b16b-bdecf75cf4df.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ape1HIIZ6T5d7GS61YBs3rD4NVvkfnVwELcCRW4Bqv0=",
+      "crlite_enrolled": false,
+      "id": "d7ec40fc-6f59-4d54-980e-a2fb062c608c",
+      "last_modified": 1683932264447
+    },
+    {
+      "schema": 1683910139418,
+      "derHash": "WobLKX43z/HbAf6o4U/kxeBU+LIo6Xbkp4Ljrqcj/Bs=",
+      "subject": "CN=netartSSL,O=netart.com sp. z o.o.,C=PL",
+      "subjectDN": "MEExCzAJBgNVBAYTAlBMMR4wHAYDVQQKDBVuZXRhcnQuY29tIHNwLiB6IG8uby4xEjAQBgNVBAMMCW5ldGFydFNTTA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "b4b1330598e6adddef05930d5bad06ddb76b01aa1572f7b1603a56efb5bc620d",
+        "size": 1703,
+        "filename": "5aJfMT_Pu-r4SU6c4xiGnV6b8gTNvtSaSNsRcrO8l30=.pem",
+        "location": "security-state-staging/intermediates/a21bdc47-7a06-4bc6-bcaa-506951f37a0a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "5aJfMT/Pu+r4SU6c4xiGnV6b8gTNvtSaSNsRcrO8l30=",
+      "crlite_enrolled": false,
+      "id": "6e6329ac-0c2c-4d80-87df-b7f134ff050e",
+      "last_modified": 1683910624095
+    },
+    {
       "schema": 1683686879404,
       "derHash": "EVoqRdtSA2GizfCjlcSkvYoYkC6qQDZ5KCX4RrvXaRc=",
       "subject": "CN=BJCA EV SSL CA1,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
@@ -791,24 +827,6 @@
       "crlite_enrolled": false,
       "id": "eddcc056-16e1-46d1-b6c3-4a86ea59aa4a",
       "last_modified": 1674831423067
-    },
-    {
-      "schema": 1674831022033,
-      "derHash": "4hp4Q0P3Y/Xv6JTdyB4LW5KonfZQVvyoxJrUQUzXTrQ=",
-      "subject": "CN=netartSSL,O=netart.com sp. z o.o.,C=PL",
-      "subjectDN": "MEExCzAJBgNVBAYTAlBMMR4wHAYDVQQKDBVuZXRhcnQuY29tIHNwLiB6IG8uby4xEjAQBgNVBAMMCW5ldGFydFNTTA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "057738bae1021f294dc71891bef222761d8436fb7edc08e538db6c7e392210af",
-        "size": 1707,
-        "filename": "KaszdLtbqC_Ce0PVFw_k38sW-T8Ds1ODjsYj3DtSWMc=.pem",
-        "location": "security-state-staging/intermediates/fd03be7e-e416-420c-a8c0-2b829c362d52.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "KaszdLtbqC/Ce0PVFw/k38sW+T8Ds1ODjsYj3DtSWMc=",
-      "crlite_enrolled": false,
-      "id": "3c365cf9-2f49-4979-874c-47d919ec4382",
-      "last_modified": 1674831423059
     },
     {
       "schema": 1674787704399,
@@ -27685,5 +27703,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1683687423842
+  "timestamp": 1683932264447
 }
