@@ -362,10 +362,6 @@ nsresult nsAppShell::Init() {
     unsetenv("GTK_CSD");
   }
 
-  if (PR_GetEnv("MOZ_DEBUG_PAINTS")) {
-    gdk_window_set_debug_updates(TRUE);
-  }
-
   // Whitelist of only common, stable formats - see bugs 1197059 and 1203078
   GSList* pixbufFormats = gdk_pixbuf_get_formats();
   for (GSList* iter = pixbufFormats; iter; iter = iter->next) {
