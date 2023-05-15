@@ -294,7 +294,6 @@ class TextControlState final : public SupportsWeakPtr {
    * nsContentUtils::PlatformToDOMLineBreaks().
    */
   bool ValueEquals(const nsAString& aValue) const;
-  bool HasNonEmptyValue() const;
   // The following methods are for textarea element to use whether default
   // value or not.
   // XXX We might have to add assertion when it is into editable,

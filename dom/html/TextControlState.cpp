@@ -1032,14 +1032,14 @@ nsresult TextInputListener::OnEditActionHandled(TextEditor& aTextEditor) {
     }
 
     if (weakFrame.IsAlive()) {
-      HandleValueChanged();
+      HandleValueChanged(aTextEditor);
     }
   }
 
   return mTextControlState ? mTextControlState->OnEditActionHandled() : NS_OK;
 }
 
-void TextInputListener::HandleValueChanged() {
+void TextInputListener::HandleValueChanged(TextEditor& aTextEditor) {
   // Make sure we know we were changed (do NOT set this to false if there are
   // no undo items; JS could change the value and we'd still need to save it)
   if (mSetValueChanged) {
@@ -1050,7 +1050,8 @@ void TextInputListener::HandleValueChanged() {
     // NOTE(emilio): execCommand might get here even though it might not be a
     // "proper" user-interactive change. Might be worth reconsidering which
     // ValueChangeKind are we passing down.
-    mTxtCtrlElement->OnValueChanged(ValueChangeKind::UserInteraction);
+    mTxtCtrlElement->OnValueChanged(ValueChangeKind::UserInteraction,
+                                    aTextEditor.IsEmpty(), nullptr);
     if (mTextControlState) {
       mTextControlState->ClearLastInteractiveValue();
     }
@@ -2711,7 +2712,8 @@ bool TextControlState::SetValue(const nsAString& aValue,
   // If we were handling SetValue() before, don't update the DOM state twice,
   // just let the outer call do so.
   if (!wasHandlingSetValue) {
-    handlingSetValue.GetTextControlElement()->OnValueChanged(changeKind);
+    handlingSetValue.GetTextControlElement()->OnValueChanged(
+        changeKind, handlingSetValue.GetSettingValue());
   }
   return true;
 }
@@ -2973,7 +2975,8 @@ bool TextControlState::SetValueWithoutTextEditor(
       // Update validity state before dispatching "input" event for its
       // listeners like `EditorBase::NotifyEditorObservers()`.
       aHandlingSetValue.GetTextControlElement()->OnValueChanged(
-          ValueChangeKind::UserInteraction);
+          ValueChangeKind::UserInteraction,
+          aHandlingSetValue.GetSettingValue());
 
       ClearLastInteractiveValue();
 
@@ -2998,20 +3001,6 @@ bool TextControlState::SetValueWithoutTextEditor(
   }
 
   return true;
-}
-
-bool TextControlState::HasNonEmptyValue() const {
-  // If the frame for editor is alive, we can compute it with mTextEditor.
-  // Otherwise, we need to check cached value via GetValue().
-  if (mTextEditor && mBoundFrame && mEditorInitialized &&
-      !(mHandlingState &&
-        mHandlingState->IsHandling(TextControlAction::CommitComposition))) {
-    return !mTextEditor->IsEmpty();
-  }
-
-  nsAutoString value;
-  GetValue(value, true);
-  return !value.IsEmpty();
 }
 
 void TextControlState::InitializeKeyboardEventListeners() {
