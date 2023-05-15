@@ -934,11 +934,13 @@ class MediaDecoderStateMachine::LoopingDecodingState
     if (mMaster->HasAudio() && HasDecodedLastAudioFrame()) {
       SLOG("Mark audio queue as finished");
       mMaster->mAudioDataRequest.DisconnectIfExists();
+      mMaster->mAudioWaitRequest.DisconnectIfExists();
       AudioQueue().Finish();
     }
     if (mMaster->HasVideo() && HasDecodedLastVideoFrame()) {
       SLOG("Mark video queue as finished");
       mMaster->mVideoDataRequest.DisconnectIfExists();
+      mMaster->mVideoWaitRequest.DisconnectIfExists();
       VideoQueue().Finish();
     }
 
