@@ -3816,8 +3816,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCreateBrowsingContext(
 
   RefPtr<BrowsingContextGroup> group =
       BrowsingContextGroup::GetOrCreate(aGroupId);
-  BrowsingContext::CreateFromIPC(std::move(aInit), group, nullptr);
-  return IPC_OK();
+  return BrowsingContext::CreateFromIPC(std::move(aInit), group, nullptr);
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvDiscardBrowsingContext(
