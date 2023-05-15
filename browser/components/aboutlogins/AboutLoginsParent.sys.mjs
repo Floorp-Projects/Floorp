@@ -103,7 +103,7 @@ export class AboutLoginsParent extends JSWindowActorParent {
 
     switch (message.name) {
       case "AboutLogins:CreateLogin": {
-        this.#createLogin(message.data.login);
+        await this.#createLogin(message.data.login);
         break;
       }
       case "AboutLogins:DeleteLogin": {
@@ -169,7 +169,7 @@ export class AboutLoginsParent extends JSWindowActorParent {
     return this.browsingContext.embedderElement.ownerGlobal;
   }
 
-  #createLogin(newLogin) {
+  async #createLogin(newLogin) {
     if (!Services.policies.isAllowed("removeMasterPassword")) {
       if (!lazy.LoginHelper.isPrimaryPasswordSet()) {
         this.#ownerGlobal.openDialog(
@@ -198,7 +198,7 @@ export class AboutLoginsParent extends JSWindowActorParent {
     });
     newLogin = lazy.LoginHelper.vanillaObjectToLogin(newLogin);
     try {
-      Services.logins.addLogin(newLogin);
+      await Services.logins.addLoginAsync(newLogin);
     } catch (error) {
       this.#handleLoginStorageErrors(newLogin, error);
     }
