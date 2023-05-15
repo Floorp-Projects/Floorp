@@ -25,7 +25,6 @@ import org.mozilla.fenix.customtabs.FennecWebAppIntentProcessor
 import org.mozilla.fenix.home.intent.FennecBookmarkShortcutsIntentProcessor
 import org.mozilla.fenix.intent.ExternalDeepLinkIntentProcessor
 import org.mozilla.fenix.perf.lazyMonitored
-import org.mozilla.fenix.shortcut.PasswordManagerIntentProcessor
 
 /**
  * Component group for miscellaneous components.
@@ -80,9 +79,5 @@ class IntentProcessors(
 
     val webNotificationsIntentProcessor by lazyMonitored {
         WebNotificationIntentProcessor(engine)
-    }
-
-    val passwordManagerIntentProcessor by lazyMonitored {
-        PasswordManagerIntentProcessor()
     }
 }
