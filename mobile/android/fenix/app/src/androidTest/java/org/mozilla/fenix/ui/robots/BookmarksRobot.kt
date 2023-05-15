@@ -32,7 +32,9 @@ import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
@@ -265,9 +267,20 @@ class BookmarksRobot {
     }
 
     fun dismissBookmarksSearchBarUsingBackButton() {
-        mDevice.pressBack()
-        itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view")
-            .waitUntilGone(waitingTime)
+        for (i in 1..RETRY_COUNT) {
+            try {
+                mDevice.pressBack()
+                assertTrue(
+                    itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view")
+                        .waitUntilGone(waitingTime),
+                )
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                }
+            }
+        }
     }
 
     fun verifyBookmarksSearchBar(exists: Boolean) {
