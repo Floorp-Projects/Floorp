@@ -231,13 +231,10 @@ impl StateMachine {
         cmd.set_uv_option(None);
 
         // CTAP1/U2F-only devices do not support user verification, so we skip it
-        if !dev.supports_ctap2() {
-            return Ok(PinUvAuthResult::DeviceIsCtap1);
-        }
-
-        let info = dev
-            .get_authenticator_info()
-            .ok_or(AuthenticatorError::HIDError(HIDError::DeviceNotInitialized))?;
+        let info = match dev.get_authenticator_info() {
+            Some(info) => info,
+            None => return Ok(PinUvAuthResult::DeviceIsCtap1),
+        };
 
         // Only use UV, if the device supports it and we don't skip it
         // which happens as a fallback, if UV-usage failed too many times

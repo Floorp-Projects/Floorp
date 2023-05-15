@@ -1,4 +1,4 @@
-use crate::consts::HIDCmd;
+use crate::consts::{Capability, HIDCmd};
 use crate::crypto::{PinUvAuthProtocol, PinUvAuthToken, SharedSecret};
 use crate::ctap2::commands::client_pin::{
     GetKeyAgreement, GetPinToken, GetPinUvAuthTokenUsingPinWithPermissions,
@@ -100,7 +100,7 @@ pub trait FidoDevice: HIDDevice {
             return Err(HIDError::DeviceNotInitialized);
         }
 
-        if self.supports_ctap2() {
+        if self.get_authenticator_info().is_some() {
             self.send_cbor_cancellable(msg, keep_alive)
         } else {
             self.send_ctap1_cancellable(msg, keep_alive)
@@ -185,20 +185,29 @@ pub trait FidoDevice: HIDDevice {
     // This is ugly as we have 2 init-functions now, but the fastest way currently.
     fn init(&mut self, nonce: Nonce) -> Result<(), HIDError> {
         <Self as HIDDevice>::initialize(self, nonce)?;
-        // TODO(baloo): this logic should be moved to
-        //              transport/mod.rs::Device trait
-        if self.supports_ctap2() {
-            let command = GetInfo::default();
-            let info = self.send_cbor(&command)?;
-            debug!("{:?} infos: {:?}", self.id(), info);
 
-            self.set_authenticator_info(info);
+        // If the device has the CBOR capability flag, then we'll check
+        // for CTAP2 support by sending an authenticatorGetInfo command.
+        // We're not aware of any CTAP2 devices that fail to set the CBOR
+        // capability flag, but we may need to rework this in the future.
+        if self.get_device_info().cap_flags.contains(Capability::CBOR) {
+            let command = GetInfo::default();
+            if let Ok(info) = self.send_cbor(&command) {
+                debug!("{:?}: {:?}", self.id(), info);
+                if info.max_supported_version() != AuthenticatorVersion::U2F_V2 {
+                    // Device supports CTAP2
+                    self.set_authenticator_info(info);
+                    return Ok(());
+                }
+            }
+            // An error from GetInfo might indicate that we're talking
+            // to a CTAP1 device that mistakenly claimed the CBOR capability,
+            // so we fallthrough here.
         }
-        if self.supports_ctap1() {
-            let command = GetVersion::default();
-            // We don't really use the result here
-            self.send_ctap1(&command)?;
-        }
+        // We want to return an error here if this device doesn't support CTAP1,
+        // so we send a U2F_VERSION command.
+        let command = GetVersion::default();
+        self.send_ctap1(&command)?;
         Ok(())
     }
 
@@ -251,13 +260,12 @@ pub trait FidoDevice: HIDDevice {
     }
 
     fn establish_shared_secret(&mut self) -> Result<SharedSecret, HIDError> {
-        if !self.supports_ctap2() {
-            return Err(HIDError::UnsupportedCommand);
-        }
+        // CTAP1 devices don't support establishing a shared secret
+        let info = match self.get_authenticator_info() {
+            Some(info) => info,
+            None => return Err(HIDError::UnsupportedCommand),
+        };
 
-        let info = self
-            .get_authenticator_info()
-            .ok_or(HIDError::DeviceNotInitialized)?;
         let pin_protocol = PinUvAuthProtocol::try_from(info)?;
 
         // Not reusing the shared secret here, if it exists, since we might start again
