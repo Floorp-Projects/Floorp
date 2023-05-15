@@ -15,6 +15,7 @@
 #include "nsSHEntryShared.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsTHashMap.h"
+#include "nsWeakReference.h"
 
 class nsDocShellLoadState;
 class nsIChannel;
@@ -359,7 +360,7 @@ class HistoryEntryCounterForBrowsingContext {
     }                                                \
   }
 
-class SessionHistoryEntry : public nsISHEntry {
+class SessionHistoryEntry : public nsISHEntry, public nsSupportsWeakReference {
  public:
   SessionHistoryEntry(nsDocShellLoadState* aLoadState, nsIChannel* aChannel);
   SessionHistoryEntry();
@@ -372,8 +373,8 @@ class SessionHistoryEntry : public nsISHEntry {
 
   bool IsInSessionHistory() {
     SessionHistoryEntry* entry = this;
-    while (SessionHistoryEntry* parent =
-               static_cast<SessionHistoryEntry*>(entry->mParent)) {
+    while (nsCOMPtr<SessionHistoryEntry> parent =
+               do_QueryReferent(entry->mParent)) {
       entry = parent;
     }
     return entry->SharedInfo()->mSHistory &&
@@ -442,7 +443,7 @@ class SessionHistoryEntry : public nsISHEntry {
   virtual ~SessionHistoryEntry();
 
   UniquePtr<SessionHistoryInfo> mInfo;
-  nsISHEntry* mParent = nullptr;
+  nsWeakPtr mParent;
   uint32_t mID;
   nsTArray<RefPtr<SessionHistoryEntry>> mChildren;
   Maybe<Wireframe> mWireframe;
@@ -501,5 +502,9 @@ struct IPDLParamTraits<mozilla::dom::Wireframe> {
 }  // namespace ipc
 
 }  // namespace mozilla
+
+inline nsISupports* ToSupports(mozilla::dom::SessionHistoryEntry* aEntry) {
+  return static_cast<nsISHEntry*>(aEntry);
+}
 
 #endif /* mozilla_dom_SessionHistoryEntry_h */
