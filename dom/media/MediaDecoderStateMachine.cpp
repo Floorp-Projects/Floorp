@@ -734,6 +734,8 @@ class MediaDecoderStateMachine::DecodingState
     return rv;
   }
 
+  virtual bool IsBufferingAllowed() const { return true; }
+
  private:
   void DispatchDecodeTasksIfNeeded();
   void MaybeStartBuffering();
@@ -1545,6 +1547,10 @@ class MediaDecoderStateMachine::LoopingDecodingState
       return mAudioSeekRequest.Exists() || mAudioDataRequest.Exists();
     }
     return mVideoSeekRequest.Exists() || mVideoDataRequest.Exists();
+  }
+
+  bool IsBufferingAllowed() const override {
+    return !mIsReachingAudioEOS && !mIsReachingVideoEOS;
   }
 
   bool mIsReachingAudioEOS;
@@ -3038,8 +3044,9 @@ void MediaDecoderStateMachine::DecodingState::Step() {
   mMaster->UpdatePlaybackPositionPeriodically();
   MOZ_ASSERT(!mMaster->IsPlaying() || mMaster->IsStateMachineScheduled(),
              "Must have timer scheduled");
-
-  MaybeStartBuffering();
+  if (IsBufferingAllowed()) {
+    MaybeStartBuffering();
+  }
 }
 
 void MediaDecoderStateMachine::DecodingState::HandleEndOfAudio() {
@@ -3140,10 +3147,11 @@ void MediaDecoderStateMachine::LoopingDecodingState::HandleError(
       } else {
         HandleWaitingForVideo();
       }
-      break;
+      [[fallthrough]];
     case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-      // This would happen after we've closed resource so that we won't be
-      // able to get any sample anymore.
+      // This could happen after either the resource has been close, or the data
+      // hasn't been appended in MSE, so that we won't be able to get any
+      // sample and need to fallback to normal looping.
       if (mIsReachingAudioEOS && mIsReachingVideoEOS) {
         SetState<CompletedState>();
       }
