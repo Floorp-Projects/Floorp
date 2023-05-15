@@ -150,6 +150,10 @@ class AudioSinkWrapper : public MediaSink {
   bool mAudioEnded;
   MozPromiseRequestHolder<EndedPromise> mAudioSinkEndedPromise;
   MediaQueue<AudioData>& mAudioQueue;
+
+  // True if we'd like to treat underrun as silent frames. But that can only be
+  // applied in the special situation for seamless looping.
+  bool mTreatUnderrunAsSilence = false;
 };
 
 }  // namespace mozilla
