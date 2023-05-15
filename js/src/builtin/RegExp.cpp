@@ -1842,15 +1842,27 @@ bool js::RegExpExec(JSContext* cx, Handle<JSObject*> regexp,
       return RegExpBuiltinExec(cx, regexp.as<RegExpObject>(), string, forTest,
                                rval);
     }
-    // This is either a wrapped RegExpObject or we have to throw an exception.
-    // Call UnwrapAndCallRegExpBuiltinExec to handle this.
-    FixedInvokeArgs<3> args(cx);
-    args[0].setObject(*regexp);
-    args[1].setString(string);
-    args[2].setBoolean(forTest);
-    return CallSelfHostedFunction(cx,
-                                  cx->names().UnwrapAndCallRegExpBuiltinExec,
-                                  UndefinedHandleValue, args, rval);
+
+    // Throw an exception if it's not a wrapped RegExpObject that we can safely
+    // unwrap.
+    if (!regexp->canUnwrapAs<RegExpObject>()) {
+      Rooted<Value> thisv(cx, ObjectValue(*regexp));
+      return ReportIncompatibleSelfHostedMethod(cx, thisv);
+    }
+
+    // Call RegExpBuiltinExec in the regular expression's realm.
+    Rooted<RegExpObject*> unwrapped(cx, &regexp->unwrapAs<RegExpObject>());
+    {
+      AutoRealm ar(cx, unwrapped);
+      Rooted<JSString*> wrappedString(cx, string);
+      if (!cx->compartment()->wrap(cx, &wrappedString)) {
+        return false;
+      }
+      if (!RegExpBuiltinExec(cx, unwrapped, wrappedString, forTest, rval)) {
+        return false;
+      }
+    }
+    return cx->compartment()->wrap(cx, rval);
   }
 
   // Step 2.a.

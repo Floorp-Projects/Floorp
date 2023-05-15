@@ -1239,25 +1239,6 @@ function RegExp_prototype_Exec(string) {
   return RegExpBuiltinExec(R, S);
 }
 
-function UnwrapAndCallRegExpBuiltinExec(R, S, forTest) {
-  assert(typeof forTest === "boolean", "forTest must be a boolean");
-  return callFunction(
-    CallRegExpMethodIfWrapped,
-    R,
-    S,
-    forTest,
-    "CallRegExpBuiltinExec"
-  );
-}
-
-function CallRegExpBuiltinExec(S, forTest) {
-  assert(typeof forTest === "boolean", "forTest must be a boolean");
-  if (forTest) {
-    return RegExpBuiltinExecForTest(this, S);
-  }
-  return RegExpBuiltinExec(this, S);
-}
-
 // ES6 21.2.5.13.
 function RegExpTest(string) {
   // Steps 1-2.
