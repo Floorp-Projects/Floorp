@@ -79,10 +79,17 @@ void APZEventResult::SetStatusForTouchEvent(
   // APZEventState::ProcessTouchEvent() when it determines when to send a
   // `pointercancel` event. TODO: Use something more descriptive than
   // nsEventStatus for this purpose.
-  bool consumable = aConsumableFlags.IsConsumable();
-  mStatus =
-      consumable ? nsEventStatus_eConsumeDoDefault : nsEventStatus_eIgnore;
+  mStatus = aConsumableFlags.IsConsumable() ? nsEventStatus_eConsumeDoDefault
+                                            : nsEventStatus_eIgnore;
 
+  UpdateHandledResult(aBlock, aConsumableFlags, aTarget,
+                      aFlags.mDispatchToContent);
+}
+
+void APZEventResult::UpdateHandledResult(
+    const InputBlockState& aBlock,
+    PointerEventsConsumableFlags aConsumableFlags,
+    const AsyncPanZoomController* aTarget, bool aDispatchToContent) {
   // If the touch event's effect is disallowed by touch-action, treat it as if
   // a touch event listener had preventDefault()-ed it (i.e. return
   // HandledByContent, except we can do it eagerly rather than having to wait
@@ -93,8 +100,7 @@ void APZEventResult::SetStatusForTouchEvent(
     return;
   }
 
-  if (mHandledResult && !aFlags.mDispatchToContent &&
-      !aConsumableFlags.mHasRoom) {
+  if (mHandledResult && !aDispatchToContent && !aConsumableFlags.mHasRoom) {
     // Set result to Unhandled if we have no room to scroll, unless it
     // was HandledByContent because we're over a dispatch-to-content region,
     // in which case it should remain HandledByContent.
@@ -117,14 +123,32 @@ void APZEventResult::SetStatusForTouchEvent(
       // mDispatchToContent, we need to change it to Nothing() so that
       // GeckoView can properly wait for results from the content on the
       // main-thread.
-      mHandledResult = aFlags.mDispatchToContent
-                           ? Nothing()
-                           : Some(APZHandledResult{
-                                 consumable ? APZHandledPlace::HandledByRoot
-                                            : APZHandledPlace::Unhandled,
-                                 rootApzc});
+      mHandledResult =
+          aDispatchToContent
+              ? Nothing()
+              : Some(APZHandledResult{aConsumableFlags.IsConsumable()
+                                          ? APZHandledPlace::HandledByRoot
+                                          : APZHandledPlace::Unhandled,
+                                      rootApzc});
     }
   }
+}
+
+void APZEventResult::SetStatusForFastFling(
+    const TouchBlockState& aBlock, TargetConfirmationFlags aFlags,
+    PointerEventsConsumableFlags aConsumableFlags,
+    const AsyncPanZoomController* aTarget) {
+  MOZ_ASSERT(aBlock.IsDuringFastFling());
+
+  // Set eConsumeNoDefault for fast fling since we don't want to send the event
+  // to content at all.
+  mStatus = nsEventStatus_eConsumeNoDefault;
+
+  // In the case of fast fling, the event will never be sent to content, so we
+  // want a result where `aDispatchToContent` is false whatever the original
+  // `aFlags.mDispatchToContent` is.
+  UpdateHandledResult(aBlock, aConsumableFlags, aTarget, false /*
+  aDispatchToContent */);
 }
 
 static bool WillHandleMouseEvent(const WidgetMouseEventBase& aEvent) {
