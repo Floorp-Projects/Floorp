@@ -39,6 +39,10 @@ FINAL_LIBRARY = "xul"
 for var in ("MOZ_APP_NAME", "MOZ_APP_BASENAME"):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
+for var in ("MOZ_CREATE_LEGACY_PROFILE",):
+    if CONFIG[var]:
+        DEFINES[var] = True
+
 JAR_MANIFESTS += ["jar.mn"]
 
 with Files("**"):
