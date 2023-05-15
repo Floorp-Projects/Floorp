@@ -114,6 +114,7 @@ class IntentReceiverActivity : Activity() {
             components.intentProcessors.fennecPageShortcutIntentProcessor +
             components.intentProcessors.externalDeepLinkIntentProcessor +
             components.intentProcessors.webNotificationsIntentProcessor +
+            components.intentProcessors.passwordManagerIntentProcessor +
             modeDependentProcessors +
             NewTabShortcutIntentProcessor()
     }
