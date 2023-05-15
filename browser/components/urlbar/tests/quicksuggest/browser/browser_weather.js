@@ -169,7 +169,7 @@ async function doDismissTest(command) {
   // Click the command.
   await UrlbarTestUtils.openResultMenuAndClickItem(
     window,
-    ["[data-l10n-id=firefox-suggest-weather-command-dont-show-this]", command],
+    ["[data-l10n-id=firefox-suggest-command-dont-show-this]", command],
     { resultIndex, openByMouse: true }
   );
 

@@ -7,6 +7,7 @@ import { BaseFeature } from "resource:///modules/urlbar/private/BaseFeature.sys.
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -97,6 +98,13 @@ const VIEW_TEMPLATE = {
   ],
 };
 
+const RESULT_MENU_COMMAND = {
+  HELP: "help",
+  NOT_INTERESTED: "not_interested",
+  NOT_RELEVANT: "not_relevant",
+  SHOW_LESS_FREQUENTLY: "show_less_frequently",
+};
+
 /**
  * A feature that supports Addon suggestions.
  */
@@ -116,7 +124,7 @@ export class AddonSuggestions extends BaseFeature {
   }
 
   makeResult(queryContext, suggestion, searchString) {
-    if (!this.isEnabled) {
+    if (!this.isEnabled || searchString.length < this.#minKeywordLength) {
       return null;
     }
 
@@ -128,6 +136,7 @@ export class AddonSuggestions extends BaseFeature {
       description: suggestion.description,
       rating: Number(suggestion.custom_details.amo.rating),
       reviews: Number(suggestion.custom_details.amo.number_of_ratings),
+      helpUrl: lazy.QuickSuggest.HELP_URL,
       shouldNavigate: true,
       dynamicType: "addons",
       telemetryType: "amo",
@@ -196,6 +205,69 @@ export class AddonSuggestions extends BaseFeature {
     };
   }
 
+  getResultCommands(result) {
+    const commands = [];
+
+    if (this.#canIncrementMinKeywordLength) {
+      commands.push({
+        name: RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY,
+        l10n: {
+          id: "firefox-suggest-command-show-less-frequently",
+        },
+      });
+    }
+
+    commands.push(
+      {
+        l10n: {
+          id: "firefox-suggest-command-dont-show-this",
+        },
+        children: [
+          {
+            name: RESULT_MENU_COMMAND.NOT_RELEVANT,
+            l10n: {
+              id: "firefox-suggest-command-not-relevant",
+            },
+          },
+          {
+            name: RESULT_MENU_COMMAND.NOT_INTERESTED,
+            l10n: {
+              id: "firefox-suggest-command-not-interested",
+            },
+          },
+        ],
+      },
+      { name: "separator" },
+      {
+        name: RESULT_MENU_COMMAND.HELP,
+        l10n: {
+          id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+        },
+      }
+    );
+
+    return commands;
+  }
+
+  handlePossibleCommand(queryContext, result, selType) {
+    switch (selType) {
+      case RESULT_MENU_COMMAND.HELP:
+        // "help" is handled by UrlbarInput, no need to do anything here.
+        break;
+      // selType == "dismiss" when the user presses the dismiss key shortcut.
+      case "dismiss":
+      case RESULT_MENU_COMMAND.NOT_INTERESTED:
+      case RESULT_MENU_COMMAND.NOT_RELEVANT:
+        lazy.UrlbarPrefs.set("addons.featureGate", false);
+        queryContext.view.acknowledgeDismissal(result);
+        break;
+      case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
+        queryContext.view.acknowledgeFeedback(result);
+        this.#incrementMinKeywordLength();
+        break;
+    }
+  }
+
   #getRatingStar(nth, rating) {
     // 0    <= x <  0.25 = empty
     // 0.25 <= x <  0.75 = half
@@ -209,5 +281,27 @@ export class AddonSuggestions extends BaseFeature {
       return "half";
     }
     return "full";
+  }
+
+  #incrementMinKeywordLength() {
+    if (this.#canIncrementMinKeywordLength) {
+      lazy.UrlbarPrefs.set(
+        "addons.minKeywordLength",
+        this.#minKeywordLength + 1
+      );
+    }
+  }
+
+  get #minKeywordLength() {
+    const minLength =
+      lazy.UrlbarPrefs.get("addons.minKeywordLength") ||
+      lazy.UrlbarPrefs.get("addonsKeywordsMinimumLength") ||
+      0;
+    return Math.max(minLength, 0);
+  }
+
+  get #canIncrementMinKeywordLength() {
+    const cap = lazy.UrlbarPrefs.get("addonsKeywordsMinimumLengthCap") || 0;
+    return !cap || this.#minKeywordLength < cap;
   }
 }

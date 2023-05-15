@@ -598,6 +598,13 @@ pref("browser.urlbar.bestMatch.blockingEnabled", true);
 // Enable site specific search result.
 pref("browser.urlbar.contextualSearch.enabled", false);
 
+// Feature gate pref for addon suggestions in the urlbar.
+pref("browser.urlbar.addons.featureGate", false);
+
+// The minimum prefix length of addons keyword the user must type to trigger
+// the suggestion. 0 means the min length should be taken from Nimbus.
+pref("browser.urlbar.addons.minKeywordLength", 0);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
