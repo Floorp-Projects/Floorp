@@ -12,6 +12,7 @@
 #include "IMEData.h"
 #include "TextEvents.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
@@ -40,6 +41,40 @@ static const char* GetNotificationName(const IMENotification* aNotification) {
  *****************************************************************************/
 
 LazyLogModule sContentCacheLog("ContentCacheWidgets");
+
+bool ContentCache::IsValid() const {
+  if (mText.isNothing()) {
+    // mSelection and mCaret depend on mText.
+    if (NS_WARN_IF(mSelection.isSome()) || NS_WARN_IF(mCaret.isSome())) {
+      return false;
+    }
+  } else {
+    // mSelection depends on mText.
+    if (mSelection.isSome() && (NS_WARN_IF(mText.isNothing()) ||
+                                NS_WARN_IF(!mSelection->IsValidIn(*mText)))) {
+      return false;
+    }
+
+    // mCaret depends on mSelection.
+    if (mCaret.isSome() &&
+        (NS_WARN_IF(mSelection.isNothing()) ||
+         NS_WARN_IF(!mSelection->mHasRange) ||
+         NS_WARN_IF(mSelection->StartOffset() != mCaret->Offset()))) {
+      return false;
+    }
+  }
+
+  // mTextRectArray stores character rects around composition string.
+  // Note that even if we fail to collect the rects, we may keep storing
+  // mCompositionStart.
+  if (mTextRectArray.isSome()) {
+    if (NS_WARN_IF(mCompositionStart.isNothing())) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 /*****************************************************************************
  * mozilla::ContentCacheInChild
@@ -113,16 +148,23 @@ bool ContentCacheInChild::CacheAll(nsIWidget* aWidget,
 
   const bool textCached = CacheText(aWidget, aNotification);
   const bool editorRectCached = CacheEditorRect(aWidget, aNotification);
+  MOZ_DIAGNOSTIC_ASSERT(IsValid());
   return textCached || editorRectCached;
 }
 
 bool ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
                                          const IMENotification* aNotification) {
-  MOZ_LOG(sContentCacheLog, LogLevel::Info,
-          ("0x%p CacheSelection(aWidget=0x%p, aNotification=%s)", this, aWidget,
-           GetNotificationName(aNotification)));
+  MOZ_LOG(
+      sContentCacheLog, LogLevel::Info,
+      ("0x%p CacheSelection(aWidget=0x%p, aNotification=%s), mText=%s", this,
+       aWidget, GetNotificationName(aNotification),
+       PrintStringDetail(mText, PrintStringDetail::kMaxLengthForEditor).get()));
 
   mSelection.reset();
+
+  if (mText.isNothing()) {
+    return false;
+  }
 
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
@@ -133,6 +175,8 @@ bool ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
         sContentCacheLog, LogLevel::Error,
         ("0x%p CacheSelection(), FAILED, couldn't retrieve the selected text",
          this));
+    // XXX Allowing selection-independent character rects makes things
+    //     complicated in the parent...
   }
   // ContentCache should store only editable content.  Therefore, if current
   // selection root is not editable, we don't need to store the selection, i.e.,
@@ -140,12 +184,12 @@ bool ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
   // previously editable text, let's store the selection even if it becomes
   // uneditable because not doing so would create odd situation.  E.g., IME may
   // fail only querying selection after succeeded querying text.
-  else if (NS_WARN_IF(mText.isNothing() &&
-                      !querySelectedTextEvent.mReply->mIsEditableContent)) {
+  else if (NS_WARN_IF(!querySelectedTextEvent.mReply->mIsEditableContent)) {
     MOZ_LOG(sContentCacheLog, LogLevel::Error,
             ("0x%p CacheSelection(), FAILED, editable content had already been "
              "blurred",
              this));
+    MOZ_DIAGNOSTIC_ASSERT(IsValid());
     return false;
   } else {
     mSelection.emplace(querySelectedTextEvent);
@@ -153,6 +197,7 @@ bool ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
 
   const bool caretCached = CacheCaret(aWidget, aNotification);
   const bool textRectsCached = CacheTextRects(aWidget, aNotification);
+  MOZ_DIAGNOSTIC_ASSERT(IsValid());
   return caretCached || textRectsCached || querySelectedTextEvent.Succeeded();
 }
 
@@ -188,6 +233,7 @@ bool ContentCacheInChild::CacheCaret(nsIWidget* aWidget,
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
           ("0x%p   CacheCaret(), Succeeded, mSelection=%s, mCaret=%s", this,
            ToString(mSelection).c_str(), ToString(mCaret).c_str()));
+  MOZ_DIAGNOSTIC_ASSERT(IsValid());
   return true;
 }
 
@@ -278,11 +324,11 @@ bool ContentCacheInChild::CacheText(nsIWidget* aWidget,
   // If we fail to get editable text content, it must mean that there is no
   // focused element anymore or focused element is not editable.  In this case,
   // we should not get selection of non-editable content
-  if (MOZ_UNLIKELY(queryTextContentEvent.Failed() ||
-                   !queryTextContentEvent.mReply->mIsEditableContent)) {
+  if (MOZ_UNLIKELY(mText.isNothing())) {
     mSelection.reset();
     mCaret.reset();
     mTextRectArray.reset();
+    MOZ_DIAGNOSTIC_ASSERT(IsValid());
     return false;
   }
 
@@ -564,10 +610,11 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
        ToString(mTextRectArray).c_str(), ToString(mSelection).c_str(),
        ToString(mFirstCharRect).c_str(),
        ToString(mLastCommitStringTextRectArray).c_str()));
+  MOZ_DIAGNOSTIC_ASSERT(IsValid());
   return true;
 }
 
-void ContentCacheInChild::SetSelection(
+bool ContentCacheInChild::SetSelection(
     nsIWidget* aWidget,
     const IMENotification::SelectionChangeDataBase& aSelectionChangeData) {
   MOZ_LOG(
@@ -575,6 +622,10 @@ void ContentCacheInChild::SetSelection(
       ("0x%p SetSelection(aSelectionChangeData=%s), mText=%s", this,
        ToString(aSelectionChangeData).c_str(),
        PrintStringDetail(mText, PrintStringDetail::kMaxLengthForEditor).get()));
+
+  if (MOZ_UNLIKELY(mText.isNothing())) {
+    return false;
+  }
 
   mSelection = Some(Selection(aSelectionChangeData));
 
@@ -594,6 +645,8 @@ void ContentCacheInChild::SetSelection(
 
   CacheCaret(aWidget);
   CacheTextRects(aWidget);
+
+  return mSelection.isSome();
 }
 
 /*****************************************************************************
@@ -614,6 +667,8 @@ ContentCacheInParent::ContentCacheInParent(BrowserParent& aBrowserParent)
 void ContentCacheInParent::AssignContent(const ContentCache& aOther,
                                          nsIWidget* aWidget,
                                          const IMENotification* aNotification) {
+  MOZ_DIAGNOSTIC_ASSERT(aOther.IsValid());
+
   mText = aOther.mText;
   mSelection = aOther.mSelection;
   mFirstCharRect = aOther.mFirstCharRect;
@@ -773,9 +828,8 @@ bool ContentCacheInParent::HandleQueryContentEvent(
                  this));
         return false;
       }
-      MOZ_DIAGNOSTIC_ASSERT_IF(!mSelection->IsCollapsed(), mText.isSome());
-      MOZ_DIAGNOSTIC_ASSERT_IF(!mSelection->IsCollapsed(),
-                               mSelection->EndOffset() <= mText->Length());
+      MOZ_DIAGNOSTIC_ASSERT(mText.isSome());
+      MOZ_DIAGNOSTIC_ASSERT(mSelection->IsValidIn(*mText));
       aEvent.EmplaceReply();
       aEvent.mReply->mFocusedWidget = aWidget;
       if (mSelection->mHasRange) {
