@@ -123,10 +123,9 @@ nsresult DateTimeInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
 
 void DateTimeInputTypeBase::MinMaxStepAttrChanged() {
   if (Element* dateTimeBoxElement = mInputElement->GetDateTimeBoxElement()) {
-    AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
-        dateTimeBoxElement, u"MozNotifyMinMaxStepAttrChanged"_ns,
+    AsyncEventDispatcher::RunDOMEventWhenSafe(
+        *dateTimeBoxElement, u"MozNotifyMinMaxStepAttrChanged"_ns,
         CanBubble::eNo, ChromeOnlyDispatch::eNo);
-    dispatcher->RunDOMEventWhenSafe();
   }
 }
 

@@ -187,10 +187,9 @@ void PointerLockManager::Unlock(Document* aDoc) {
     browserChild->SendReleasePointerLock();
   }
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      pointerLockedElement, u"MozDOMPointerLock:Exited"_ns, CanBubble::eYes,
+  AsyncEventDispatcher::RunDOMEventWhenSafe(
+      *pointerLockedElement, u"MozDOMPointerLock:Exited"_ns, CanBubble::eYes,
       ChromeOnlyDispatch::eYes);
-  asyncDispatcher->RunDOMEventWhenSafe();
 }
 
 /* static */

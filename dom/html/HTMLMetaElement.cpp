@@ -131,9 +131,8 @@ void HTMLMetaElement::UnbindFromTree(bool aNullParent) {
 
 void HTMLMetaElement::CreateAndDispatchEvent(Document&,
                                              const nsAString& aEventName) {
-  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-      this, aEventName, CanBubble::eYes, ChromeOnlyDispatch::eYes);
-  asyncDispatcher->RunDOMEventWhenSafe();
+  AsyncEventDispatcher::RunDOMEventWhenSafe(*this, aEventName, CanBubble::eYes,
+                                            ChromeOnlyDispatch::eYes);
 }
 
 JSObject* HTMLMetaElement::WrapNode(JSContext* aCx,

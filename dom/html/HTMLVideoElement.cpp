@@ -193,11 +193,9 @@ void HTMLVideoElement::UnbindFromTree(bool aNullParent) {
   if (mVisualCloneSource) {
     mVisualCloneSource->EndCloningVisually();
   } else if (mVisualCloneTarget) {
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(this, u"MozStopPictureInPicture"_ns,
-                                 CanBubble::eNo, ChromeOnlyDispatch::eYes);
-    asyncDispatcher->RunDOMEventWhenSafe();
-
+    AsyncEventDispatcher::RunDOMEventWhenSafe(
+        *this, u"MozStopPictureInPicture"_ns, CanBubble::eNo,
+        ChromeOnlyDispatch::eYes);
     EndCloningVisually();
   }
 

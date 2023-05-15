@@ -1371,12 +1371,11 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         // If original target is this and not the inner text control, we should
         // pass the focus to the inner text control.
         if (Element* dateTimeBoxElement = GetDateTimeBoxElement()) {
-          AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
-              dateTimeBoxElement,
+          AsyncEventDispatcher::RunDOMEventWhenSafe(
+              *dateTimeBoxElement,
               aName == nsGkAtoms::value ? u"MozDateTimeValueChanged"_ns
                                         : u"MozDateTimeAttributeChanged"_ns,
               CanBubble::eNo, ChromeOnlyDispatch::eNo);
-          dispatcher->RunDOMEventWhenSafe();
         }
       }
     }
@@ -2707,10 +2706,9 @@ nsresult HTMLInputElement::SetValueInternal(
         } else if (CreatesDateTimeWidget() &&
                    !aOptions.contains(ValueSetterOption::BySetUserInputAPI)) {
           if (Element* dateTimeBoxElement = GetDateTimeBoxElement()) {
-            AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
-                dateTimeBoxElement, u"MozDateTimeValueChanged"_ns,
+            AsyncEventDispatcher::RunDOMEventWhenSafe(
+                *dateTimeBoxElement, u"MozDateTimeValueChanged"_ns,
                 CanBubble::eNo, ChromeOnlyDispatch::eNo);
-            dispatcher->RunDOMEventWhenSafe();
           }
         }
         if (mDoneCreating) {
@@ -7246,10 +7244,9 @@ void HTMLInputElement::MaybeFireInputPasswordRemoved() {
     return;
   }
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, u"DOMInputPasswordRemoved"_ns,
-                               CanBubble::eNo, ChromeOnlyDispatch::eYes);
-  asyncDispatcher->RunDOMEventWhenSafe();
+  AsyncEventDispatcher::RunDOMEventWhenSafe(
+      *this, u"DOMInputPasswordRemoved"_ns, CanBubble::eNo,
+      ChromeOnlyDispatch::eYes);
 }
 
 }  // namespace mozilla::dom
