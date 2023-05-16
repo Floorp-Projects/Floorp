@@ -53,7 +53,7 @@ import {{ html }} from "../vendor/lit.all.mjs";
 import "./{element_name}.mjs";
 
 export default {{
-  title: "{story_name}",
+  title: "UI Widgets/{story_name}",
   component: "{element_name}",
   argTypes: {{
     variant: {{

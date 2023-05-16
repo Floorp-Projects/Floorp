@@ -18,7 +18,7 @@ const fluentStrings = [
 ];
 
 export default {
-  title: "Support Link",
+  title: "UI Widgets/Support Link",
   component: "moz-support-link",
   argTypes: {
     "data-l10n-id": {
