@@ -153,6 +153,145 @@ exported_symbols.testResolveIsCallable = async function() {
   Assert.equal(path[0], "fileName", "Resolve got the right path");
 };
 
+exported_symbols.testFileType = async function() {
+  const root = await navigator.storage.getDirectory();
+  const allowCreate = { create: true };
+  const nameStem = "testFileType";
+  const empty = "";
+
+  const extensions = [
+    "txt",
+    "jS",
+    "JSON",
+    "css",
+    "html",
+    "htm",
+    "xhtml",
+    "xml",
+    "xhtml+xml",
+    "png",
+    "apng",
+    "jPg",
+    "Jpeg",
+    "pdF",
+    "out",
+    "sh",
+    "ExE",
+    "psid",
+    "EXE ",
+    " EXE",
+    "EX\uff65",
+    "\udbff\udbff\udbff",
+    "\udc00\udc00\udc00",
+    "js\udbff",
+    "\udc00js",
+    "???",
+    "\root",
+    empty,
+    "AXS",
+    "dll",
+    "ocx",
+    "1",
+    "ps1",
+    "cmd",
+    "xpi",
+    "swf",
+  ];
+
+  const expectedTypes = [
+    "text/plain",
+    "application/javascript",
+    "application/json",
+    "text/css",
+    "text/html",
+    "text/html",
+    "application/xhtml+xml",
+    "text/xml",
+    empty,
+    "image/png",
+    "image/apng",
+    "image/jpeg",
+    "image/jpeg",
+    "application/pdf",
+    empty,
+    "application/x-sh",
+    "application/octet-stream",
+    empty,
+    empty,
+    empty,
+    empty,
+    empty,
+    empty,
+    empty,
+    empty,
+    empty,
+    empty,
+    empty,
+    "application/olescript",
+    "application/x-msdownload",
+    "application/octet-stream",
+    empty,
+    empty,
+    "text/plain",
+    "application/x-xpinstall",
+    "application/x-shockwave-flash",
+  ];
+
+  Assert.equal(extensions.length, expectedTypes.length);
+
+  await Promise.all(
+    extensions.map(async (ext, i) => {
+      const fileName = nameStem + "." + ext;
+      const fileHandle = await root.getFileHandle(fileName, allowCreate);
+      const fileObject = await fileHandle.getFile();
+      Assert.equal(fileObject.name, fileHandle.name);
+      Assert.equal(fileObject.type, expectedTypes[i]);
+    })
+  );
+};
+
+exported_symbols.testContentTypeChangesOnMove = async function() {
+  const allowCreate = { create: true };
+  const root = await navigator.storage.getDirectory();
+  const oldName = "testFile.txt";
+  const oldType = "text/plain";
+  const subdir = await root.getDirectoryHandle("subdir", allowCreate);
+
+  const testName = "testFile.json";
+  const testType = "application/json";
+
+  const fileHandle = await root.getFileHandle(oldName, allowCreate);
+
+  async function checkMove(newName, newType) {
+    Assert.equal(fileHandle.name, newName, "Has filename changed?");
+    {
+      const fileObject = await fileHandle.getFile();
+      Assert.equal(fileObject.name, newName, "Is the fileobject renamed?");
+      Assert.equal(fileObject.type, newType, "Is the fileobject type updated?");
+    }
+  }
+
+  // No name change
+  await checkMove(oldName, oldType);
+  await fileHandle.move(subdir);
+  await checkMove(oldName, oldType);
+  await fileHandle.move(root, oldName);
+  await checkMove(oldName, oldType);
+
+  // With name change
+
+  async function testMoveCall(...combo) {
+    await fileHandle.move(...combo);
+    await checkMove(testName, testType);
+    await fileHandle.move(root, oldName);
+    await checkMove(oldName, oldType);
+  }
+
+  await testMoveCall(subdir, testName);
+  await testMoveCall(root, testName);
+  await testMoveCall(testName);
+};
+
 for (const [key, value] of Object.entries(exported_symbols)) {
   Object.defineProperty(value, "name", {
     value: key,
