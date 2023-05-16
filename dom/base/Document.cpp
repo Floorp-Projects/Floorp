@@ -18154,20 +18154,30 @@ nsICookieJarSettings* Document::CookieJarSettings() {
   if (!mCookieJarSettings) {
     Document* inProcessParent = GetInProcessParentDocument();
 
-    mCookieJarSettings =
-        inProcessParent
-            ? net::CookieJarSettings::Create(
-                  inProcessParent->CookieJarSettings()->GetCookieBehavior(),
-                  mozilla::net::CookieJarSettings::Cast(
-                      inProcessParent->CookieJarSettings())
-                      ->GetPartitionKey(),
-                  inProcessParent->CookieJarSettings()
-                      ->GetIsFirstPartyIsolated(),
-                  inProcessParent->CookieJarSettings()
-                      ->GetIsOnContentBlockingAllowList(),
-                  inProcessParent->CookieJarSettings()
-                      ->GetShouldResistFingerprinting())
-            : net::CookieJarSettings::Create(NodePrincipal());
+    if (inProcessParent) {
+      mCookieJarSettings = net::CookieJarSettings::Create(
+          inProcessParent->CookieJarSettings()->GetCookieBehavior(),
+          mozilla::net::CookieJarSettings::Cast(
+              inProcessParent->CookieJarSettings())
+              ->GetPartitionKey(),
+          inProcessParent->CookieJarSettings()->GetIsFirstPartyIsolated(),
+          inProcessParent->CookieJarSettings()
+              ->GetIsOnContentBlockingAllowList(),
+          inProcessParent->CookieJarSettings()
+              ->GetShouldResistFingerprinting());
+
+      // Inherit the fingerprinting random key from the parent.
+      nsTArray<uint8_t> randomKey;
+      nsresult rv = inProcessParent->CookieJarSettings()
+                        ->GetFingerprintingRandomizationKey(randomKey);
+
+      if (NS_SUCCEEDED(rv)) {
+        net::CookieJarSettings::Cast(mCookieJarSettings)
+            ->SetFingerprintingRandomizationKey(randomKey);
+      }
+    } else {
+      mCookieJarSettings = net::CookieJarSettings::Create(NodePrincipal());
+    }
 
     if (auto* wgc = GetWindowGlobalChild()) {
       net::CookieJarSettingsArgs csArgs;
