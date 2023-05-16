@@ -942,6 +942,9 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
               "ignored");
           break;  // from the inner `for` loop
         }
+        if (MOZ_UNLIKELY(!moveChildResult.inspect().Handled())) {
+          continue;
+        }
         inserted = true;
         lastInsertedPoint.Set(child);
         pointToInsert = lastInsertedPoint.NextPoint();
@@ -1026,6 +1029,9 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
                 "ignored");
             break;  // from the inner `for` loop
           }
+          if (MOZ_UNLIKELY(!moveChildResult.inspect().Handled())) {
+            continue;
+          }
           inserted = true;
           lastInsertedPoint.Set(child);
           pointToInsert = lastInsertedPoint.NextPoint();
@@ -1106,6 +1112,9 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
               "ignored");
           break;  // from the inner `for` loop
         }
+        if (MOZ_UNLIKELY(!moveChildResult.inspect().Handled())) {
+          continue;
+        }
         CreateContentResult unwrappedMoveChildResult = moveChildResult.unwrap();
         inserted = true;
         lastInsertedPoint.Set(child);
@@ -1142,6 +1151,9 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
               MOZ_KnownLive(content), pointToInsert,
               SplitAtEdges::eDoNotCreateEmptyContainer);
       if (MOZ_LIKELY(moveContentResult.isOk())) {
+        if (MOZ_UNLIKELY(!moveContentResult.inspect().Handled())) {
+          continue;
+        }
         lastInsertedPoint.Set(content);
         pointToInsert = lastInsertedPoint;
         MOZ_ASSERT(pointToInsert.IsSetAndValidInComposedDoc());
@@ -1198,6 +1210,9 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
                 "SplitAtEdges::eDoNotCreateEmptyContainer) failed, but "
                 "ignored");
             continue;  // the inner `for` loop
+          }
+          if (MOZ_UNLIKELY(!moveParentResult.inspect().Handled())) {
+            continue;
           }
           insertedContextParentContent = oldParentContent;
           pointToInsert.Set(oldParentContent);

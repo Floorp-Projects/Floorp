@@ -2251,6 +2251,11 @@ HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
   }
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
+  if (aContentToInsert.NodeType() == nsINode::DOCUMENT_TYPE_NODE ||
+      aContentToInsert.NodeType() == nsINode::PROCESSING_INSTRUCTION_NODE) {
+    return CreateNodeResultBase<NodeType>::NotHandled();
+  }
+
   // Search up the parent chain to find a suitable container.
   EditorDOMPoint pointToInsert(aPointToInsert);
   MOZ_ASSERT(pointToInsert.IsSet());
