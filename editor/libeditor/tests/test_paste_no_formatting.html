@@ -31,9 +31,9 @@ add_task(async function test_paste_formatted() {
   window.getSelection().selectAllChildren(document.getElementById("source"));
   synthesizeKey("c", { accelKey: true });
 
-const isHeadless = await SpecialPowers.spawnChrome([], () => {
-         return Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless;
-       });
+  const isHeadless = await SpecialPowers.spawnChrome([], () => {
+          return Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless;
+        });
 
   function doKey(element, withShiftKey)
   {
@@ -47,10 +47,30 @@ const isHeadless = await SpecialPowers.spawnChrome([], () => {
     return inputEventPromise;
   }
 
+  function cancelEvent(event) {
+    event.preventDefault();
+  }
+
   // Paste into input and textarea
   for (let fieldid of ["input", "textarea"]) {
-    let field = document.getElementById(fieldid);
+    const field = document.getElementById(fieldid);
     field.focus();
+
+    field.addEventListener("paste", cancelEvent);
+    doKey(field, false);
+    is(
+      field.value,
+      "",
+      `Nothing should be pasted into <${field.tagName.toLowerCase()}> when paste event is canceled (shift key is not pressed)`
+    );
+
+    doKey(field, true);
+    is(
+      field.value,
+      "",
+      `Nothing should be pasted into <${field.tagName.toLowerCase()}> when paste event is canceled (shift key is pressed)`
+    );
+    field.removeEventListener("paste", cancelEvent);
 
     doKey(field, false);
     is(field.value, expectedText, "paste into " + fieldid);
@@ -67,6 +87,15 @@ const isHeadless = await SpecialPowers.spawnChrome([], () => {
   (function test_pasteWithFormatIntoEditableArea() {
     selection.selectAllChildren(editable);
     selection.collapseToStart();
+    editable.addEventListener("paste", cancelEvent);
+    doKey(editable, false);
+    is(
+      editable.innerHTML,
+      "",
+      "test_pasteWithFormatIntoEditableArea: Nothing should be pasted when paste event is canceled"
+    );
+    editable.removeEventListener("paste", cancelEvent);
+
     doKey(editable, false);
     is(
       editable.innerHTML,

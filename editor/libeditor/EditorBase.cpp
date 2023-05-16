@@ -1584,7 +1584,9 @@ EditorBase::DispatchClipboardEventAndUpdateClipboard(EventMessage aEventMessage,
                                                      int32_t aClipboardType) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (aEventMessage == ePaste) {
+  const bool isPasting =
+      aEventMessage == ePaste || aEventMessage == ePasteNoFormatting;
+  if (isPasting) {
     CommitComposition();
     if (NS_WARN_IF(Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
@@ -1623,7 +1625,7 @@ EditorBase::DispatchClipboardEventAndUpdateClipboard(EventMessage aEventMessage,
   // If we handle a "paste" and nsCopySupport::FireClipboardEvent sets
   // actionTaken to "false" means that it's an error.  Otherwise, the "paste"
   // event is just canceled.
-  if (aEventMessage == ePaste) {
+  if (isPasting) {
     return actionTaken ? ClipboardEventResult::DefaultPreventedOfPaste
                        : ClipboardEventResult::IgnoredOrError;
   }
