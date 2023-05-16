@@ -10,6 +10,11 @@
 @import url(chrome://devtools/content/shared/widgets/linear-widget.css);
 @import url(chrome://devtools/content/shared/widgets/spectrum.css);
 @import url(chrome://devtools/skin/variables.css);
+/*
+ * compatibility.css is primarily used by the Compatibility panel, so import it in a layer
+ * to give it a lower importance than the rule here and mitigate styling mismatch.
+ */
+@import url(chrome://devtools/skin/compatibility.css) layer(shared);
 
 /* Tooltip specific theme variables */
 
@@ -21,7 +26,6 @@
   --theme-tooltip-color: var(--theme-text-color-strong);
   --theme-tooltip-background: var(--theme-popup-background);
   --theme-tooltip-shadow: rgba(25, 25, 25, 0.76);
-  --theme-tooltip-icon-dimmed-color: rgb(255, 255, 255);
 
   /* Doorhangers */
   /* These colors are based on the colors used for doorhangers elsewhere in
@@ -43,7 +47,6 @@
   --theme-tooltip-color: var(--theme-body-color);
   --theme-tooltip-background: rgb(255, 255, 255);
   --theme-tooltip-shadow: var(--grey-90-a10);
-  --theme-tooltip-icon-dimmed-color: rgba(135, 135, 137, 0.9);
 
   /* Doorhangers */
   /* These colors are based on the colors used for doorhangers elsewhere in
@@ -59,8 +62,6 @@
 
 :root {
   --theme-arrowpanel-border-radius: 0px;
-  --compatibility-tooltip-base-unit: 4px;
-  --compatibility-tooltip-browser-icon-size: calc(var(--compatibility-tooltip-base-unit) * 4);
 }
 :root[platform="mac"] {
   --theme-arrowpanel-border-radius: 3.5px;
@@ -134,36 +135,6 @@ strong {
   padding: 0;
   column-gap: var(--compatibility-tooltip-base-unit);
   display: flex;
-}
-
-.devtools-tooltip-css-compatibility .compatibility-browser-icon {
-  display: inline-block;
-  width: var(--compatibility-tooltip-browser-icon-size);
-  height: var(--compatibility-tooltip-browser-icon-size);
-  position: relative;
-}
-
-.devtools-tooltip-css-compatibility .compatibility-browser-icon--mobile::after {
-  content: "";
-  width: calc(var(--compatibility-tooltip-base-unit) * 2);
-  height: calc(var(--compatibility-tooltip-base-unit) * 3);
-  background-color: var(--theme-arrowpanel-background);
-  background-size: calc(var(--compatibility-tooltip-base-unit) * 2 - 2px);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-image: url(chrome://devtools/skin/images/browsers/mobile.svg);
-  -moz-context-properties: fill;
-  fill: var(--theme-tooltip-icon-dimmed-color);
-  position: absolute;
-  right: calc(var(--compatibility-tooltip-base-unit) * -1);
-  bottom: calc(var(--compatibility-tooltip-base-unit) * -1);
-}
-
-.devtools-tooltip-css-compatibility .compatibility-browser-icon__image {
-  width: 100%;
-  height: 100%;
-  -moz-context-properties: fill;
-  fill: var(--theme-tooltip-icon-dimmed-color);
 }
 
 /* Tooltip: query container info */
