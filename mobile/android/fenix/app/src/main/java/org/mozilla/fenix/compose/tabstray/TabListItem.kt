@@ -10,6 +10,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.browser.state.state.TabSessionState
@@ -77,7 +79,7 @@ fun TabListItem(
                 onLongClick = { onLongClick(tab) },
                 onClick = { onClick(tab) },
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Thumbnail(
@@ -89,27 +91,32 @@ fun TabListItem(
 
         Column(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
+                .padding(start = 12.dp)
                 .weight(weight = 1f),
         ) {
             Text(
                 text = tab.toDisplayTitle().take(MAX_URI_LENGTH),
-                fontSize = 16.sp,
-                maxLines = 2,
                 color = FirefoxTheme.colors.textPrimary,
+                fontSize = 16.sp,
+                letterSpacing = 0.0.sp,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 2,
             )
 
             Text(
                 text = tab.content.url.toShortUrl(),
-                fontSize = 12.sp,
                 color = FirefoxTheme.colors.textSecondary,
+                fontSize = 14.sp,
+                letterSpacing = 0.0.sp,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
             )
         }
 
         if (!multiSelectionEnabled) {
             IconButton(
                 onClick = { onCloseClick(tab) },
-                modifier = Modifier.size(size = 24.dp),
+                modifier = Modifier.size(size = 48.dp),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.mozac_ic_close),
@@ -120,6 +127,8 @@ fun TabListItem(
                     tint = FirefoxTheme.colors.iconPrimary,
                 )
             }
+        } else {
+            Spacer(modifier = Modifier.size(48.dp))
         }
     }
 }
