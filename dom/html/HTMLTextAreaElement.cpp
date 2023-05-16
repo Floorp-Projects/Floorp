@@ -667,6 +667,16 @@ nsresult HTMLTextAreaElement::SetValueFromSetRangeText(
                                    ValueSetterOption::SetValueChanged});
 }
 
+void HTMLTextAreaElement::SetDirectionFromValue(bool aNotify,
+                                                const nsAString* aKnownValue) {
+  nsAutoString value;
+  if (!aKnownValue) {
+    GetValue(value);
+    aKnownValue = &value;
+  }
+  SetDirectionalityFromValue(this, *aKnownValue, aNotify);
+}
+
 nsresult HTMLTextAreaElement::Reset() {
   nsAutoString resetVal;
   GetDefaultValue(resetVal, IgnoreErrors());
@@ -797,6 +807,11 @@ nsresult HTMLTextAreaElement::BindToTree(BindContext& aContext,
       nsGenericHTMLFormControlElementWithState::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Set direction based on value if dir=auto
+  if (HasDirAuto()) {
+    SetDirectionFromValue(false);
+  }
+
   // If there is a disabled fieldset in the parent chain, the element is now
   // barred from constraint validation and can't suffer from value missing.
   UpdateValueMissingValidityState();
@@ -923,6 +938,9 @@ void HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (nsTextControlFrame* f = do_QueryFrame(GetPrimaryFrame())) {
         f->PlaceholderChanged(aOldValue, aValue);
       }
+    } else if (aName == nsGkAtoms::dir && aValue &&
+               aValue->Equals(nsGkAtoms::_auto, eIgnoreCase)) {
+      SetDirectionFromValue(aNotify);
     }
   }
 
@@ -1115,7 +1133,7 @@ void HTMLTextAreaElement::InitializeKeyboardEventListeners() {
 
 void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind,
                                          bool aNewValueEmpty,
-                                         const nsAString*) {
+                                         const nsAString* aKnownNewValue) {
   if (aKind != ValueChangeKind::Internal) {
     mLastValueChangeWasInteractive = aKind == ValueChangeKind::UserInteraction;
   }
@@ -1132,6 +1150,10 @@ void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind,
   UpdateTooLongValidityState();
   UpdateTooShortValidityState();
   UpdateValueMissingValidityState();
+
+  if (HasDirAuto()) {
+    SetDirectionFromValue(true, aKnownNewValue);
+  }
 
   if (validBefore != IsValid() ||
       (emptyBefore != IsValueEmpty() && HasAttr(nsGkAtoms::placeholder))) {
