@@ -11,6 +11,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/MediaDeviceInfoBinding.h"
 #include "nsCOMPtr.h"
 #include "nsID.h"
 #include "nsISupports.h"
@@ -103,9 +104,13 @@ class MediaDevices final : public DOMEventTargetHelper {
       RefPtr<const MediaDeviceSetRefCnt> aExposedDevices) const;
   RefPtr<MediaDeviceSetRefCnt> FilterExposedDevices(
       const MediaDeviceSet& aDevices) const;
+  bool CanExposeInfo(MediaDeviceKind aKind) const;
   bool ShouldQueueDeviceChange(const MediaDeviceSet& aExposedDevices) const;
   void ResolveEnumerateDevicesPromise(
       Promise* aPromise, const LocalMediaDeviceSet& aDevices) const;
+
+  // See https://www.w3.org/TR/mediacapture-streams/#device-information-exposure
+  bool DeviceInformationCanBeExposed() const;
 
   nsTHashSet<nsString> mExplicitlyGrantedAudioOutputRawIds;
   nsTArray<RefPtr<Promise>> mPendingEnumerateDevicesPromises;
