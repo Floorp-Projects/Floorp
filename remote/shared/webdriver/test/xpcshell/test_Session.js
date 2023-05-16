@@ -7,10 +7,7 @@
 const { Capabilities, Timeouts } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs"
 );
-const {
-  WebDriverSession,
-  getWebDriverSessionById,
-} = ChromeUtils.importESModule(
+const { WebDriverSession } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/Session.sys.mjs"
 );
 
@@ -19,12 +16,6 @@ add_task(function test_WebDriverSession_ctor() {
 
   equal(typeof session.id, "string");
   ok(session.capabilities instanceof Capabilities);
-});
-
-add_task(function test_WebDriverSession_destroy() {
-  const session = new WebDriverSession();
-
-  session.destroy();
 });
 
 add_task(function test_WebDriverSession_getters() {
@@ -55,20 +46,4 @@ add_task(function test_WebDriverSession_setters() {
 
   session.timeouts = timeouts;
   equal(session.timeouts, session.capabilities.get("timeouts"));
-});
-
-add_task(function test_getWebDriverSessionById() {
-  const session1 = new WebDriverSession();
-  const session2 = new WebDriverSession();
-
-  equal(getWebDriverSessionById(session1.id), session1);
-  equal(getWebDriverSessionById(session2.id), session2);
-
-  session1.destroy();
-  equal(getWebDriverSessionById(session1.id), undefined);
-  equal(getWebDriverSessionById(session2.id), session2);
-
-  session2.destroy();
-  equal(getWebDriverSessionById(session1.id), undefined);
-  equal(getWebDriverSessionById(session2.id), undefined);
 });
