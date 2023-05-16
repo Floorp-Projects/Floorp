@@ -416,8 +416,7 @@ class nsFlexContainerFrame::FlexItem final {
     // If the nsLayoutUtils getter fails, then ask the frame directly:
     auto baselineGroup = aUseFirstBaseline ? BaselineSharingGroup::First
                                            : BaselineSharingGroup::Last;
-    if (auto baseline = mFrame->GetNaturalBaselineBOffset(
-            mWM, baselineGroup, BaselineExportContext::Other)) {
+    if (auto baseline = mFrame->GetNaturalBaselineBOffset(mWM, baselineGroup)) {
       // Offset for last baseline from `GetNaturalBaselineBOffset` originates
       // from the frame's block end, so convert it back.
       mAscent = baselineGroup == BaselineSharingGroup::First
@@ -4637,8 +4636,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 }
 
 Maybe<nscoord> nsFlexContainerFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    BaselineExportContext) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   if (StyleDisplay()->IsContainLayout() ||
       HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
     return Nothing{};

@@ -313,8 +313,7 @@ void nsHTMLButtonControlFrame::ReflowButtonContents(
 }
 
 Maybe<nscoord> nsHTMLButtonControlFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    BaselineExportContext aExportContext) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   if (StyleDisplay()->IsContainLayout()) {
     return Nothing{};
   }
@@ -323,12 +322,11 @@ Maybe<nscoord> nsHTMLButtonControlFrame::GetNaturalBaselineBOffset(
   if (MOZ_UNLIKELY(inner->GetWritingMode().IsOrthogonalTo(aWM))) {
     return Nothing{};
   }
-  auto result =
-      inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aExportContext)
-          .valueOrFrom([inner, aWM, aBaselineGroup]() {
-            return Baseline::SynthesizeBOffsetFromBorderBox(inner, aWM,
-                                                            aBaselineGroup);
-          });
+  auto result = inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup)
+                    .valueOrFrom([inner, aWM, aBaselineGroup]() {
+                      return Baseline::SynthesizeBOffsetFromBorderBox(
+                          inner, aWM, aBaselineGroup);
+                    });
 
   nscoord innerBStart = inner->BStart(aWM, GetSize());
   if (aBaselineGroup == BaselineSharingGroup::First) {
