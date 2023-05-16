@@ -415,12 +415,6 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     return NS_OK;
   }
 
-  // Perform a microtask checkpoint after all actions are completed.  Note that
-  // |mMutex| *must not* be held when the checkpoint occurs -- hence, far down,
-  // the |lock.reset()|.  (|MutexAutoUnlock| as RAII wouldn't work for this task
-  // because its destructor would reacquire |mMutex| before these objects'
-  // destructors run.)
-  nsAutoMicroTask mt;
   AutoEntryScript aes(mGlobal, "fetch body data available");
 
   MOZ_DIAGNOSTIC_ASSERT(mInputStream);
