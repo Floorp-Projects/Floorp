@@ -329,10 +329,11 @@ class SearchAdImpression {
 
   /**
    * Given an element, find the href that is most likely to make the request if
-   * the element is clicked. The initial value of the anchor is an href if the
-   * attribute exists, otherwise it is a blank string. Then, if the element
-   * contains a specific data attribute known to contain hrefs, it will be
-   * used instead.
+   * the element is clicked. If the element contains a specific data attribute
+   * known to contain the url used to make the initial request, use it,
+   * otherwise use its href. Specific character conversions are done to mimic
+   * conversions likely to take place when urls are observed in network
+   * activity.
    *
    * @param {Element} element
    *  The element to inspect.
@@ -340,7 +341,10 @@ class SearchAdImpression {
    *   The href of the element.
    */
   #extractHref(element) {
-    let href = element.getAttribute("href") ?? "";
+    let href;
+    // Prioritize the href from a known data attribute value instead of
+    // its href property, as the former is the initial url the page will
+    // navigate to before being re-directed to the href.
     for (let name of this.#providerInfo.adServerAttributes) {
       if (
         element.dataset[name] &&
@@ -352,19 +356,23 @@ class SearchAdImpression {
         break;
       }
     }
-    // Some hrefs might be using relative URLs.
-    if (href?.startsWith("/")) {
+    // If a data attribute value was not found, fallback to the href.
+    href = href ?? element.getAttribute("href");
+    if (!href) {
+      return "";
+    }
+    // Hrefs can be relative.
+    if (!href.startsWith("https://") && !href.startsWith("http://")) {
       href = this.#pageUrl.origin + href;
     }
-    // Some reserved characters are converted into percent-encoded strings by
-    // the time they are observed in the network.
+    // Per Bug 376844, apostrophes in query params are escaped, and thus, are
+    // percent-encoded by the time they are observed in the network. Even
+    // though it's more comprehensive, we avoid using newURI because its more
+    // expensive and conversions should be the exception.
     // e.g. /path'?q=Mozilla's -> /path'?q=Mozilla%27s
-    if (href) {
-      try {
-        href = Services.io.newURI(href)?.spec;
-      } catch {
-        return "";
-      }
+    let arr = href.split("?");
+    if (arr.length == 2 && arr[1].includes("'")) {
+      href = arr[0] + "?" + arr[1].replaceAll("'", "%27");
     }
     return href;
   }
@@ -470,10 +478,16 @@ class SearchAdImpression {
    * @returns {boolean}
    */
   #shouldInspectAnchor(anchor) {
-    let href = anchor.href;
+    let href = anchor.getAttribute("href");
     if (!href) {
       return false;
     }
+
+    // Some hrefs might be relative.
+    if (!href.startsWith("https://") && !href.startsWith("http://")) {
+      href = this.#pageUrl.origin + href;
+    }
+
     let regexps = this.#providerInfo.extraAdServersRegexps;
     // Anchors can contain ad links in a data-attribute.
     for (let name of this.#providerInfo.adServerAttributes) {
