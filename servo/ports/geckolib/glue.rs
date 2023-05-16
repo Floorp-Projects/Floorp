@@ -2814,6 +2814,7 @@ pub extern "C" fn Servo_PageRule_SetSelectorText(
             None,
             ParsingMode::DEFAULT,
             QuirksMode::NoQuirks,
+            /* namespaces = */ Default::default(),
             None,
             None,
         );
@@ -3354,6 +3355,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_SetDescriptor(
         Some(CssRuleType::FontFace),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -3748,6 +3750,7 @@ macro_rules! counter_style_descriptors {
                 Some(CssRuleType::CounterStyle),
                 ParsingMode::DEFAULT,
                 QuirksMode::NoQuirks,
+                /* namespaces = */ Default::default(),
                 None,
                 None,
             );
@@ -4420,6 +4423,7 @@ pub extern "C" fn Servo_ParseEasing(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -4977,6 +4981,7 @@ pub unsafe extern "C" fn Servo_MediaList_SetText(
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         // TODO(emilio): Looks like error reporting could be useful here?
         None,
         None,
@@ -5018,6 +5023,7 @@ pub extern "C" fn Servo_MediaList_AppendMedium(list: &LockedMediaList, new_mediu
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -5039,6 +5045,7 @@ pub extern "C" fn Servo_MediaList_DeleteMedium(
         Some(CssRuleType::Media),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -5553,6 +5560,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetFontFamily(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -5587,6 +5595,7 @@ pub unsafe extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -5686,12 +5695,12 @@ pub extern "C" fn Servo_CSSSupports(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         quirks_mode,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
 
-    let namespaces = Default::default();
-    cond.eval(&context, &namespaces)
+    cond.eval(&context)
 }
 
 #[no_mangle]
@@ -5702,19 +5711,19 @@ pub extern "C" fn Servo_CSSSupportsForImport(after_rule: &nsACString) -> bool {
 
     // NOTE(emilio): The supports API is not associated to any stylesheet,
     // so the fact that there is no namespace map here is fine.
-    let context = ParserContext::new(
+    let mut context = ParserContext::new(
         Origin::Author,
         unsafe { dummy_url_data() },
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
 
-    let namespaces = Default::default();
     let (_layer, supports) =
-        ImportRule::parse_layer_and_supports(&mut input, &context, &namespaces);
+        ImportRule::parse_layer_and_supports(&mut input, &mut context);
 
     supports.map_or(true, |s| s.enabled)
 }
@@ -7008,6 +7017,7 @@ pub unsafe extern "C" fn Servo_IsValidCSSColor(value: &nsACString) -> bool {
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -7036,6 +7046,7 @@ pub unsafe extern "C" fn Servo_ComputeColor(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         reporter.as_ref().map(|e| e as &dyn ParseErrorReporter),
         None,
     );
@@ -7098,6 +7109,7 @@ pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_Parse(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -7138,6 +7150,7 @@ pub extern "C" fn Servo_ParseTransformIntoMatrix(
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -7181,6 +7194,7 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
         Some(CssRuleType::FontFace),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -7269,6 +7283,7 @@ pub unsafe extern "C" fn Servo_SourceSizeList_Parse(value: &nsACString) -> *mut 
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -7556,6 +7571,7 @@ pub extern "C" fn Servo_GenericFontFamily_Parse(input: &nsACString) -> GenericFo
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -7575,6 +7591,7 @@ pub extern "C" fn Servo_ColorScheme_Parse(input: &nsACString, out: &mut u8) -> b
         Some(CssRuleType::Style),
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
@@ -7679,6 +7696,7 @@ where
         None,
         ParsingMode::DEFAULT,
         QuirksMode::NoQuirks,
+        /* namespaces = */ Default::default(),
         None,
         None,
     );
