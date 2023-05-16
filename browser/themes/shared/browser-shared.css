@@ -1036,27 +1036,3 @@ popupnotificationcontent {
     fill: var(--swipe-nav-icon-primary-color);
   }
 }
-
-panel toolbarseparator {
-  appearance: none;
-  min-height: 0;
-  border-top: 1px solid var(--panel-separator-color);
-  border-bottom: none;
-  margin: var(--panel-separator-margin);
-  padding: 0;
-}
-
-/* Picture-in-Picture panel */
-#PictureInPicturePanel {
-  width: var(--menu-panel-width-wide);
-  font: caption;
-}
-
-#PictureInPicturePanelBody {
-  gap: 8px;
-  padding: 8px 16px;
-}
-
-#PictureInPicturePanelFooter {
-  margin: 8px 16px 16px;
-}

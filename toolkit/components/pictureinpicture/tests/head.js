@@ -26,7 +26,6 @@ const TEST_PAGE_MULTIPLE_CONTEXTS =
   TEST_ROOT + "test-page-multiple-contexts.html";
 const TEST_PAGE_TRANSPARENT_NESTED_IFRAMES =
   TEST_ROOT + "test-transparent-nested-iframes.html";
-const TEST_PAGE_PIP_DISABLED = TEST_ROOT + "test-page-pipDisabled.html";
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const TOGGLE_POSITION_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.position";

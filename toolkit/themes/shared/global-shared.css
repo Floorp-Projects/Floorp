@@ -301,7 +301,3 @@ button.text-link .button-text {
 .contentSelectDropdown-ingroup .menu-iconic-text {
   padding-inline-start: 2em;
 }
-
-.deemphasized {
-  color: var(--text-color-deemphasized);
-}
