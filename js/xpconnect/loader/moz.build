@@ -61,7 +61,6 @@ LOCAL_INCLUDES += [
     "/dom/base",
     "/js/loader",
     "/xpcom/base/",
-    "/xpcom/io",  # crc32c.h
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
