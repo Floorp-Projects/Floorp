@@ -18,7 +18,6 @@ class InputModule extends Module {
   destroy() {}
 
   async performActions(options = {}) {
-    this.assertExperimentalCommandsEnabled("input.performActions");
     const { actions, context: contextId } = options;
 
     lazy.assert.string(
@@ -63,7 +62,6 @@ class InputModule extends Module {
    *     If the browsing context cannot be found.
    */
   async releaseActions(options = {}) {
-    this.assertExperimentalCommandsEnabled("input.releaseActions");
     const { context: contextId } = options;
 
     lazy.assert.string(
