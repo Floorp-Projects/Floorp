@@ -7933,6 +7933,8 @@ nsresult nsContentUtils::IPCTransferableDataToTransferable(
     nsIPrincipal* aRequestingPrincipal,
     const nsContentPolicyType& aContentPolicyType, bool aAddDataFlavor,
     nsITransferable* aTransferable, const bool aFilterUnknownFlavors) {
+  // Note that we need to set privacy status of transferable before adding any
+  // data into it.
   aTransferable->SetIsPrivateData(aIsPrivateData);
 
   nsresult rv = IPCTransferableDataToTransferable(
@@ -7941,6 +7943,27 @@ nsresult nsContentUtils::IPCTransferableDataToTransferable(
 
   aTransferable->SetRequestingPrincipal(aRequestingPrincipal);
   aTransferable->SetContentPolicyType(aContentPolicyType);
+  return NS_OK;
+}
+
+nsresult nsContentUtils::IPCTransferableToTransferable(
+    const IPCTransferable& aIPCTransferable, bool aAddDataFlavor,
+    nsITransferable* aTransferable, const bool aFilterUnknownFlavors) {
+  nsresult rv = IPCTransferableDataToTransferable(
+      aIPCTransferable.data(), aIPCTransferable.isPrivateData(),
+      aIPCTransferable.requestingPrincipal(),
+      aIPCTransferable.contentPolicyType(), aAddDataFlavor, aTransferable,
+      aFilterUnknownFlavors);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aIPCTransferable.cookieJarSettings().isSome()) {
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+    net::CookieJarSettings::Deserialize(
+        aIPCTransferable.cookieJarSettings().ref(),
+        getter_AddRefs(cookieJarSettings));
+    aTransferable->SetCookieJarSettings(cookieJarSettings);
+  }
+  aTransferable->SetReferrerInfo(aIPCTransferable.referrerInfo());
   return NS_OK;
 }
 
@@ -8277,6 +8300,30 @@ void nsContentUtils::TransferableToIPCTransferableData(
       }
     }
   }
+}
+
+void nsContentUtils::TransferableToIPCTransferable(
+    nsITransferable* aTransferable, IPCTransferable* aIPCTransferable,
+    bool aInSyncMessage, mozilla::dom::ContentParent* aParent) {
+  IPCTransferableData ipcTransferableData;
+  TransferableToIPCTransferableData(aTransferable, &ipcTransferableData,
+                                    aInSyncMessage, aParent);
+
+  Maybe<net::CookieJarSettingsArgs> cookieJarSettingsArgs;
+  if (nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+          aTransferable->GetCookieJarSettings()) {
+    net::CookieJarSettingsArgs args;
+    net::CookieJarSettings::Cast(cookieJarSettings)->Serialize(args);
+    cookieJarSettingsArgs = Some(std::move(args));
+  }
+
+  aIPCTransferable->data() = std::move(ipcTransferableData);
+  aIPCTransferable->isPrivateData() = aTransferable->GetIsPrivateData();
+  aIPCTransferable->requestingPrincipal() =
+      aTransferable->GetRequestingPrincipal();
+  aIPCTransferable->cookieJarSettings() = std::move(cookieJarSettingsArgs);
+  aIPCTransferable->contentPolicyType() = aTransferable->GetContentPolicyType();
+  aIPCTransferable->referrerInfo() = aTransferable->GetReferrerInfo();
 }
 
 Maybe<BigBuffer> nsContentUtils::GetSurfaceData(DataSourceSurface& aSurface,
