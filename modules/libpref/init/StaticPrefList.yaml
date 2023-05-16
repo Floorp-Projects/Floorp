@@ -9350,7 +9350,7 @@
 # Whether supports() conditions in @import is enabled
 - name: layout.css.import-supports.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
