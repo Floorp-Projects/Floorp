@@ -613,7 +613,7 @@ void XPCWrappedNative::Trace(JSTracer* trc, JSObject* obj) {
   if (clazz->flags & JSCLASS_DOM_GLOBAL) {
     mozilla::dom::TraceProtoAndIfaceCache(trc, obj);
   }
-  MOZ_ASSERT(IS_WN_CLASS(clazz));
+  MOZ_ASSERT(clazz->isWrappedNative());
 
   XPCWrappedNative* wrapper = XPCWrappedNative::Get(obj);
   if (wrapper && wrapper->IsValid()) {
