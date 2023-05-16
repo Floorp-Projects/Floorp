@@ -17,13 +17,6 @@ add_task(async function test_setup_preexisting_permissions() {
     Ci.nsIPermissionManager.EXPIRE_SESSION
   );
 
-  PermissionTestUtils.add(
-    "https://www.pre-existing-allow.com",
-    "plugin:flash",
-    Ci.nsIPermissionManager.ALLOW_ACTION,
-    Ci.nsIPermissionManager.EXPIRE_SESSION
-  );
-
   // Pre-existing DENY permissions that should be overriden
   // with ALLOW.
   PermissionTestUtils.add(
@@ -46,17 +39,10 @@ add_task(async function test_setup_preexisting_permissions() {
     Ci.nsIPermissionManager.DENY_ACTION,
     Ci.nsIPermissionManager.EXPIRE_SESSION
   );
-
-  PermissionTestUtils.add(
-    "https://www.pre-existing-deny.com",
-    "plugin:flash",
-    Ci.nsIPermissionManager.DENY_ACTION,
-    Ci.nsIPermissionManager.EXPIRE_SESSION
-  );
 });
 
 add_task(async function test_setup_activate_policies() {
-  await setupPolicyEngineWithJson("config_popups_cookies_addons_flash.json");
+  await setupPolicyEngineWithJson("config_popups_cookies_addons.json");
   equal(
     Services.policies.status,
     Ci.nsIEnterprisePolicies.ACTIVE,
@@ -110,10 +96,6 @@ add_task(async function test_webextensions_policy() {
 
 add_task(async function test_cookies_policy() {
   checkAllPermissionsForType("cookie");
-});
-
-add_task(async function test_flash_policy() {
-  checkAllPermissionsForType("plugin:flash");
 });
 
 add_task(async function test_change_permission() {

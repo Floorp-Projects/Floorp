@@ -3,7 +3,7 @@
     "BlockAboutProfiles": true,
     "DontCheckDefaultBrowser": true,
 
-    "FlashPlugin": {
+    "InstallAddonsPermission": {
       "Allow": ["https://www.example.com"],
 
       "Block": ["https://www.example.org"]
