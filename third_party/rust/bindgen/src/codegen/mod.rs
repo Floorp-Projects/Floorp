@@ -111,7 +111,7 @@ bitflags! {
     }
 }
 
-fn derives_of_item(item: &Item, ctx: &BindgenContext) -> DerivableTraits {
+fn derives_of_item(item: &Item, ctx: &BindgenContext, forward_decl: bool) -> DerivableTraits {
     let mut derivable_traits = DerivableTraits::empty();
 
     if item.can_derive_debug(ctx) && !item.annotations().disallow_debug() {
@@ -124,7 +124,7 @@ fn derives_of_item(item: &Item, ctx: &BindgenContext) -> DerivableTraits {
 
     let all_template_params = item.all_template_params(ctx);
 
-    if item.can_derive_copy(ctx) && !item.annotations().disallow_copy() {
+    if item.can_derive_copy(ctx) && !item.annotations().disallow_copy() && !forward_decl {
         derivable_traits |= DerivableTraits::COPY;
 
         if ctx.options().rust_features().builtin_clone_impls ||
@@ -891,7 +891,7 @@ impl CodeGenerator for Type {
 
                         let mut attributes =
                             vec![attributes::repr("transparent")];
-                        let derivable_traits = derives_of_item(item, ctx);
+                        let derivable_traits = derives_of_item(item, ctx, false);
                         if !derivable_traits.is_empty() {
                             let derives: Vec<_> = derivable_traits.into();
                             attributes.push(attributes::derives(&derives))
@@ -1813,8 +1813,9 @@ impl CodeGenerator for CompInfo {
         // NOTE: This check is conveniently here to avoid the dummy fields we
         // may add for unused template parameters.
         if self.is_forward_declaration() {
+            let prefix = ctx.trait_prefix();
             fields.push(quote! {
-                _unused: [u8; 0],
+                _unused: ::#prefix::cell::UnsafeCell<[u8; 0]>,
             });
         } else if item.is_zero_sized(ctx) {
             let has_address = if is_opaque {
@@ -1891,7 +1892,7 @@ impl CodeGenerator for CompInfo {
             }
         }
 
-        let derivable_traits = derives_of_item(item, ctx);
+        let derivable_traits = derives_of_item(item, ctx, self.is_forward_declaration());
         if !derivable_traits.contains(DerivableTraits::DEBUG) {
             needs_debug_impl = ctx.options().derive_debug &&
                 ctx.options().impl_debug &&
@@ -2850,7 +2851,7 @@ impl CodeGenerator for Enum {
         }
 
         if !variation.is_const() {
-            let mut derives = derives_of_item(item, ctx);
+            let mut derives = derives_of_item(item, ctx, false);
             // For backwards compat, enums always derive Clone/Eq/PartialEq/Hash, even
             // if we don't generate those by default.
             derives.insert(
