@@ -375,4 +375,24 @@ add_task(async function validate_filename_method() {
     "filename.URL",
     "filename.URL allow invalid, sanitize only"
   );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.desktop",
+      "text/unknown",
+      mimeService.VALIDATE_SANITIZE_ONLY
+    ),
+    "filename.desktop.download",
+    "filename.desktop sanitize only"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.DESKTOP\n",
+      "text/unknown",
+      mimeService.VALIDATE_SANITIZE_ONLY |
+        mimeService.VALIDATE_ALLOW_INVALID_FILENAMES
+    ),
+    "filename.DESKTOP",
+    "filename.DESKTOP allow invalid, sanitize only"
+  );
 });
