@@ -1983,6 +1983,9 @@ void MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
   }
   PerformanceRecorder<PlaybackStage> perfRecorder(MediaStage::RequestDecode,
                                                   height, flag);
+  if (mMediaEngineId && aSample->mCrypto.IsEncrypted()) {
+    aSample->mShouldCopyCryptoToRemoteRawData = true;
+  }
   decoder.mDecoder->Decode(aSample)
       ->Then(
           mTaskQueue, __func__,
