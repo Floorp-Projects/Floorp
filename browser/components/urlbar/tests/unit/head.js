@@ -1007,8 +1007,8 @@ async function check_results({
       `result.heuristic at result index ${i}`
     );
     Assert.equal(
-      actual.isBestMatch,
-      expected.isBestMatch,
+      !!actual.isBestMatch,
+      !!expected.isBestMatch,
       `result.isBestMatch at result index ${i}`
     );
     if (expected.providerName) {
