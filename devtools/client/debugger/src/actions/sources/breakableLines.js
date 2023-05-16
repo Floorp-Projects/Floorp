@@ -59,7 +59,7 @@ export function setBreakableLines(cx, source, sourceActor) {
         return;
       }
       breakableLines = await client.getSourceActorBreakableLines(sourceActor);
-      await dispatch({
+      dispatch({
         type: "SET_SOURCE_ACTOR_BREAKABLE_LINES",
         sourceActorId: sourceActor.id,
         breakableLines,

@@ -114,7 +114,7 @@ export function toggleBlackBox(cx, source, shouldBlackBox, ranges = []) {
       if (!ranges.length) {
         dispatch({ type: "UNBLACKBOX_WHOLE_SOURCES", sources: [source] });
       } else {
-        await dispatch({ type: "UNBLACKBOX_SOURCE_RANGES", source, ranges });
+        dispatch({ type: "UNBLACKBOX_SOURCE_RANGES", source, ranges });
         const blackboxRanges = getBlackBoxRanges(getState());
         if (!blackboxRanges[source.url].length) {
           dispatch({ type: "UNBLACKBOX_WHOLE_SOURCES", sources: [source] });
