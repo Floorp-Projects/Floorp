@@ -491,7 +491,8 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
             aRightBlockElement,
             EditorDOMPoint(atLeftBlockChild.GetContainer(),
                            atLeftBlockChild.Offset()),
-            HTMLEditor::PreserveWhiteSpaceStyle::No);
+            HTMLEditor::PreserveWhiteSpaceStyle::No,
+            HTMLEditor::RemoveIfCommentNode::Yes);
     if (MOZ_UNLIKELY(moveNodeResult.isErr())) {
       if (NS_WARN_IF(moveNodeResult.inspectErr() ==
                      NS_ERROR_EDITOR_DESTROYED)) {
