@@ -136,7 +136,7 @@
     <!-- Card background, Menu background, Dialog, Banner -->
     <color name="fx_mobile_private_layer_color_2">@color/photonInk50</color>
     <!-- Search -->
-    <color name="fx_mobile_private_layer_color_3">@color/photonInk50</color>
+    <color name="fx_mobile_private_layer_color_3">@color/photonInk90</color>
     <!-- Homescreen background, Toolbar -->
     <color name="fx_mobile_private_layer_color_4_start">@color/photonPurple70</color>
     <!-- Homescreen background, Toolbar -->

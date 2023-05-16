@@ -222,7 +222,7 @@ private val lightColorPalette = FirefoxColors(
 private val privateColorPalette = darkColorPalette.copy(
     layer1 = PhotonColors.Ink50,
     layer2 = PhotonColors.Ink50,
-    layer3 = PhotonColors.Ink50,
+    layer3 = PhotonColors.Ink90,
 )
 
 /**
