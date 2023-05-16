@@ -410,7 +410,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvPasteTransferable(
-      const IPCTransferableData& aTransferableData, const bool& aIsPrivateData,
+      const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
       nsIPrincipal* aRequestingPrincipal,
       const nsContentPolicyType& aContentPolicyType);
 
