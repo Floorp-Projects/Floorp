@@ -11,9 +11,12 @@ createHTML({ title: "Run enumerateDevices code", bug: "1046245" });
   Tests covering enumerateDevices API and deviceId constraint. Exercise code.
 */
 
-async function mustSucceed(msg, f) {
+async function mustSucceedWithStream(msg, f) {
   try {
-    await f();
+    const stream = await f();
+    for (const track of stream.getTracks()) {
+      track.stop();
+    }
     ok(true, msg + " must succeed");
   } catch (e) {
     is(e.name, null, msg + " must succeed: " + e.message);
@@ -74,10 +77,10 @@ runTest(async () => {
 
   // Check deviceId failure paths for video.
 
-  await mustSucceed("unknown plain deviceId on video",
-                    () => gUM({ video: { deviceId: unknownId } }));
-  await mustSucceed("unknown plain deviceId on audio",
-                    () => gUM({ audio: { deviceId: unknownId } }));
+  await mustSucceedWithStream("unknown plain deviceId on video",
+                              () => gUM({ video: { deviceId: unknownId } }));
+  await mustSucceedWithStream("unknown plain deviceId on audio",
+                              () => gUM({ audio: { deviceId: unknownId } }));
   await mustFailWith("unknown exact deviceId on video",
                      "OverconstrainedError", "deviceId",
                      () => gUM({ video: { deviceId: { exact: unknownId } } }));

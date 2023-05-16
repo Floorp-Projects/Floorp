@@ -169,6 +169,9 @@
 
     info("Testing screenshare with size and framerate constraints");
     SpecialPowers.wrap(document).notifyUserGestureActivation();
+    for (const track of stream.getTracks()) {
+      track.stop();
+    }
     stream = await getUserMedia({
       video: {
         mediaSource: 'screen',
@@ -193,7 +196,8 @@
        `Height setting ${settings.height} should be correct after gUM (or 0 per bug 1453247)`);
     colors = ["green", "red", "white", "blue"];
     draw(colors);
-    await doVerify(stream.clone(), colors);
+    const streamClone = stream.clone();
+    await doVerify(streamClone, colors);
     settings = stream.getTracks()[0].getSettings();
     ok(settings.width >= 10 && settings.width <= 100,
        `Width setting ${settings.width} should be within constraints`);
@@ -246,6 +250,9 @@
     colors = ["white", "green", "blue", "red"];
     draw(colors);
     await doVerify(stream, colors);
+    for (const track of [...stream.getTracks(), ...streamClone.getTracks()]) {
+      track.stop();
+    }
   });
 </script>
 </pre>
