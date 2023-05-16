@@ -55,8 +55,7 @@ static bool IsOpaqueSafeListedSpecBreakingMIMEType(
   // This is not a good solution, but we need this until we solve Bug 1827684 in
   // a better way. Chromium currently allows all "audio/*" and "video/*", but
   // from discussion in bug, we want to try only "audio/mpeg".
-  if (aContentType.EqualsLiteral(AUDIO_MP3) ||
-      aContentType.EqualsLiteral(AUDIO_AAC)) {
+  if (StringBeginsWith(aContentType, "audio/mpeg"_ns)) {
     return true;
   }
 
