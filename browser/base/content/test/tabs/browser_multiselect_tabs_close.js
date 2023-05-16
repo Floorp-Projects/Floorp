@@ -140,3 +140,53 @@ add_task(async function usingTabContextMenu() {
   BrowserTestUtils.removeTab(tab3);
   BrowserTestUtils.removeTab(tab4);
 });
+
+add_task(async function closeAllMultiselectedMiddleClick() {
+  let tab1 = await addTab();
+  let tab2 = await addTab();
+  let tab3 = await addTab();
+  let tab4 = await addTab();
+  let tab5 = await addTab();
+  let tab6 = await addTab();
+
+  is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
+
+  // Close currently selected tab1
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
+  let tab1Closing = BrowserTestUtils.waitForTabClosing(tab1);
+  await triggerMiddleClickOn(tab1);
+  await tab1Closing;
+
+  // Close a not currently selected tab2
+  await BrowserTestUtils.switchTab(gBrowser, tab3);
+  let tab2Closing = BrowserTestUtils.waitForTabClosing(tab2);
+  await triggerMiddleClickOn(tab2);
+  await tab2Closing;
+
+  // Close the not multiselected middle clicked tab6
+  await triggerClickOn(tab4, { ctrlKey: true });
+  await triggerClickOn(tab5, { ctrlKey: true });
+  ok(tab3.multiselected, "Tab3 is multiselected");
+  ok(tab4.multiselected, "Tab4 is multiselected");
+  ok(tab5.multiselected, "Tab5 is multiselected");
+  ok(!tab6.multiselected, "Tab6 is not multiselected");
+  is(gBrowser.multiSelectedTabsCount, 3, "Three multiselected tabs");
+
+  let tab6Closing = BrowserTestUtils.waitForTabClosing(tab6);
+  await triggerMiddleClickOn(tab6);
+  await tab6Closing;
+
+  // Close multiselected tabs(3, 4, 5)
+  ok(tab3.multiselected, "Tab3 is multiselected");
+  ok(tab4.multiselected, "Tab4 is multiselected");
+  ok(tab5.multiselected, "Tab5 is multiselected");
+  is(gBrowser.multiSelectedTabsCount, 3, "Three multiselected tabs");
+
+  let tab3Closing = BrowserTestUtils.waitForTabClosing(tab3);
+  let tab4Closing = BrowserTestUtils.waitForTabClosing(tab4);
+  let tab5Closing = BrowserTestUtils.waitForTabClosing(tab5);
+  await triggerMiddleClickOn(tab5);
+  await tab3Closing;
+  await tab4Closing;
+  await tab5Closing;
+});

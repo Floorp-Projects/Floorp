@@ -26,6 +26,12 @@ function triggerClickOn(target, options) {
   return promise;
 }
 
+function triggerMiddleClickOn(target) {
+  let promise = BrowserTestUtils.waitForEvent(target, "click");
+  EventUtils.synthesizeMouseAtCenter(target, { button: 1 });
+  return promise;
+}
+
 async function addTab(url = "http://mochi.test:8888/", params) {
   return addTabTo(gBrowser, url, params);
 }
