@@ -107,6 +107,18 @@ jobs:
           - {weekday: 'Wednesday', hour: 10, minute: 30}
           - {weekday: 'Friday', hour: 10, minute: 30}
 
+    - name: custom-car-perf-testing
+      job:
+          type: decision-task
+          treeherder-symbol: ccar
+          target-tasks-method: custom-car_perf_testing
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              mozilla-central: [{hour: 18, minute: 30}]
+
     # For more context on this job, see:
     # https://github.com/mozsearch/mozsearch-mozilla#how-searchfoxorg-stays-up-to-date
     # Note that searchfox now runs on-push for mozilla-central, but continues
