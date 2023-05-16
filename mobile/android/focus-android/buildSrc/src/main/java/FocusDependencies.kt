@@ -34,7 +34,6 @@ object FocusVersions {
     }
 
     object Google {
-        const val accompanist = "0.16.1"
         const val compose_compiler = "1.4.7"
         const val material = "1.9.0"
         const val play = "1.10.3"
@@ -111,7 +110,6 @@ object FocusDependencies {
     const val androidx_data_store_preferences = "androidx.datastore:datastore-preferences:${FocusVersions.AndroidX.androidx_datastore_preferences}"
 
     const val google_material = "com.google.android.material:material:${FocusVersions.Google.material}"
-    const val google_accompanist_insets_ui = "com.google.accompanist:accompanist-insets-ui:${FocusVersions.Google.accompanist}"
     const val google_play = "com.google.android.play:core:${FocusVersions.Google.play}"
     const val kotlin_gradle_plugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${FocusVersions.Gradle.kotlin_plugin}"
     const val android_gradle_plugin = "com.android.tools.build:gradle:${FocusVersions.Gradle.android_plugin}"

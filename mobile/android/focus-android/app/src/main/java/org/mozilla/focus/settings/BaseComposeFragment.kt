@@ -10,23 +10,22 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.Fragment
-import com.google.accompanist.insets.LocalWindowInsets
-import com.google.accompanist.insets.rememberInsetsPaddingValues
-import com.google.accompanist.insets.ui.TopAppBar
-import mozilla.components.support.utils.StatusBarUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.hideToolbar
@@ -70,46 +69,21 @@ abstract class BaseComposeFragment : Fragment() {
         (requireActivity() as? MainActivity)?.hideStatusBarBackground()
 
         return ComposeView(requireContext()).apply {
-            StatusBarUtils.getStatusBarHeight(this) { statusBarHeight ->
-                setContent {
-                    var title = ""
-                    titleRes?.let { title = getString(it) }
-                    titleText?.let { title = it }
-
-                    FocusTheme {
-                        Scaffold {
-                            Column {
-                                CompositionLocalProvider {
-                                    TopAppBar(
-                                        title = {
-                                            Text(
-                                                text = title,
-                                                color = focusColors.toolbarColor,
-                                            )
-                                        },
-                                        contentPadding = rememberInsetsPaddingValues(
-                                            insets = LocalWindowInsets.current.statusBars,
-                                            additionalTop = LocalDensity.current.run {
-                                                (statusBarHeight - LocalWindowInsets.current.statusBars.top)
-                                                    .toDp()
-                                            },
-                                        ),
-                                        navigationIcon = {
-                                            IconButton(
-                                                onClick = onNavigateUp(),
-                                            ) {
-                                                Icon(
-                                                    painterResource(id = R.drawable.mozac_ic_back),
-                                                    stringResource(R.string.go_back),
-                                                    tint = focusColors.toolbarColor,
-                                                )
-                                            }
-                                        },
-                                        backgroundColor = colorResource(R.color.settings_background),
-                                    )
-                                }
-                                this@BaseComposeFragment.Content()
-                            }
+            setContent {
+                val title = getTitle()
+                FocusTheme {
+                    Scaffold(
+                        modifier = Modifier
+                            .background(colorResource(id = R.color.settings_background))
+                            .statusBarsPadding(),
+                    ) { paddingValues ->
+                        Column {
+                            TopAppBar(
+                                title = title,
+                                modifier = Modifier.padding(paddingValues),
+                                onNavigateUpClick = onNavigateUp(),
+                            )
+                            this@BaseComposeFragment.Content()
                         }
                     }
                 }
@@ -117,4 +91,40 @@ abstract class BaseComposeFragment : Fragment() {
             isTransitionGroup = true
         }
     }
+
+    private fun getTitle(): String {
+        var title = ""
+        titleRes?.let { title = getString(it) }
+        titleText?.let { title = it }
+        return title
+    }
+}
+
+@Composable
+private fun TopAppBar(
+    title: String,
+    modifier: Modifier = Modifier,
+    onNavigateUpClick: () -> Unit,
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = title,
+                color = focusColors.toolbarColor,
+            )
+        },
+        modifier = modifier,
+        navigationIcon = {
+            IconButton(
+                onClick = onNavigateUpClick,
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.mozac_ic_back),
+                    stringResource(R.string.go_back),
+                    tint = focusColors.toolbarColor,
+                )
+            }
+        },
+        backgroundColor = colorResource(R.color.settings_background),
+    )
 }
