@@ -390,7 +390,7 @@ static nsresult FindObjectForHasInstance(JSContext* cx, HandleObject objArg,
     // our current global.
     JSObject* o =
         js::IsWrapper(obj) ? js::CheckedUnwrapDynamic(obj, cx, false) : obj;
-    if (o && (IS_WN_REFLECTOR(o) || IsDOMObject(o))) {
+    if (o && (IsWrappedNativeReflector(o) || IsDOMObject(o))) {
       target.set(o);
       return NS_OK;
     }
@@ -437,7 +437,7 @@ nsresult HasInstance(JSContext* cx, HandleObject objArg, const nsID* iid,
   // |instanceof| doing an implicit QI if it succeeds. Do a drive-by QI to
   // preserve that behavior. This is just a compatibility hack, so we don't
   // really care if it fails.
-  if (IS_WN_REFLECTOR(obj)) {
+  if (IsWrappedNativeReflector(obj)) {
     (void)XPCWrappedNative::Get(obj)->FindTearOff(cx, *iid);
   }
 

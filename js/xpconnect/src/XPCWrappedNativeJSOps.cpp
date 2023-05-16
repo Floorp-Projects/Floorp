@@ -22,6 +22,7 @@
 
 using namespace mozilla;
 using namespace JS;
+using namespace xpc;
 
 /***************************************************************************/
 
@@ -708,7 +709,7 @@ bool XPC_WN_MaybeResolvingDeletePropertyStub(JSContext* cx, HandleObject obj,
     JS_ReportErrorASCII(cx, "Permission denied to operate on object."); \
     return false;                                                       \
   }                                                                     \
-  if (!IS_WN_REFLECTOR(unwrapped)) {                                    \
+  if (!IsWrappedNativeReflector(unwrapped)) {                           \
     return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);                  \
   }                                                                     \
   XPCWrappedNative* wrapper = XPCWrappedNative::Get(unwrapped);         \
