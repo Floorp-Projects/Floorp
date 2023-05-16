@@ -57,21 +57,6 @@ class SearchProviders {
       .filter(p => "extraAdServersRegexps" in p)
       // Pre-build the regular expressions.
       .map(p => {
-        if (p.components) {
-          p.components.forEach(component => {
-            if (component.included?.regexps) {
-              component.included.regexps = component.included.regexps.map(
-                r => new RegExp(r)
-              );
-            }
-            if (component.excluded?.regexps) {
-              component.excluded.regexps = component.excluded.regexps.map(
-                r => new RegExp(r)
-              );
-            }
-            return component;
-          });
-        }
         p.adServerAttributes = p.adServerAttributes ?? [];
         if (p.shoppingTab?.inspectRegexpInSERP) {
           p.shoppingTab.regexp = new RegExp(p.shoppingTab.regexp);
@@ -148,12 +133,6 @@ class SearchAdImpression {
   }
 
   /**
-   * An array containing RegExps that wouldn't be caught in
-   * lists of ad expressions.
-   */
-  #nonAdRegexps = [];
-
-  /**
    * An array of components to do a top-down search.
    */
   #topDownComponents = [];
@@ -184,18 +163,12 @@ class SearchAdImpression {
     this.#providerInfo = providerInfo;
 
     // Reset values.
-    this.#nonAdRegexps = [];
     this.#topDownComponents = [];
 
     for (let component of this.#providerInfo.components) {
       if (component.default) {
         this.#defaultComponent = component;
         continue;
-      }
-      if (component.nonAd && component.included?.regexps) {
-        this.#nonAdRegexps = this.#nonAdRegexps.concat(
-          component.included.regexps
-        );
       }
       if (component.topDown) {
         this.#topDownComponents.push(component);
@@ -516,10 +489,6 @@ class SearchAdImpression {
     if (regexps.some(regexp => regexp.test(href))) {
       return true;
     }
-    // Anchors can contain hrefs matching non-ad regular expressions.
-    if (this.#nonAdRegexps.some(regexp => regexp.test(href))) {
-      return true;
-    }
     return false;
   }
 
@@ -586,32 +555,18 @@ class SearchAdImpression {
         continue;
       }
 
-      // The anchor shouldn't belong to an excluded parent component.
-      if (anchor.closest(component.excluded?.parent?.selector)) {
-        continue;
-      }
-
-      // The anchor should not belong to an excluded regexp (if provided).
-      if (component.excluded?.regexps?.some(r => r.test(anchor.href))) {
-        continue;
-      }
-
-      // The anchor should belong to an included regexp (if provided).
+      // The anchor shouldn't belong to an excluded parent component if one
+      // is provided.
       if (
-        component.included.regexps &&
-        !component.included.regexps.some(r => r.test(anchor.href))
+        component.excluded?.parent?.selector &&
+        anchor.closest(component.excluded.parent.selector)
       ) {
         continue;
       }
 
-      // If no parent was provided, but it passed a previous regular
-      // expression check, return the anchor. This might be because there
-      // was no clear parent for the anchor to match against.
-      if (!component.included.parent && component.included?.regexps) {
-        return {
-          element: anchor,
-          type: component.type,
-        };
+      // All components with included should have a parent entry.
+      if (!component.included.parent) {
+        continue;
       }
 
       // Find the parent of the anchor.
