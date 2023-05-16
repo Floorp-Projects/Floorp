@@ -8,6 +8,7 @@
   --compatibility-issue-icon-size: calc(var(--compatibility-base-unit) * 3);
   --compatibility-issue-item-height: calc(var(--compatibility-base-unit) * 4);
   --compatibility-browser-icon-size: calc(var(--compatibility-base-unit) * 4);
+  --compatibility-browser-icon-fill-color: var(--theme-icon-dimmed-color);
   --compatibility-browser-version-background-color: var(--theme-icon-error-color);
   --compatibility-browser-version-color: white;
 }
@@ -21,6 +22,7 @@
  * background, so we need to adjust colors to have good contrast.
  */
 :root.theme-dark .devtools-tooltip-css-compatibility {
+  --compatibility-browser-icon-fill-color: var(--theme-icon-color);
   --compatibility-browser-version-background-color: var(--red-40-a90);
 }
 
@@ -183,7 +185,7 @@
 .compatibility-browser-icon__image {
   width: 100%;
   height: 100%;
-  fill: var(--theme-icon-dimmed-color);
+  fill: var(--compatibility-browser-icon-fill-color);
   -moz-context-properties: fill;
 }
 
