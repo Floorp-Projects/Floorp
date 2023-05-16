@@ -652,6 +652,7 @@ cbindgen-types = [
     { gecko = "StyleLockedMediaList", servo = "crate::gecko::arc_types::LockedMediaList" },
     { gecko = "StyleLockedImportRule", servo = "crate::gecko::arc_types::LockedImportRule" },
     { gecko = "StyleLockedFontFaceRule", servo = "crate::gecko::arc_types::LockedFontFaceRule" },
+    { gecko = "StyleBaselineSource", servo = "crate::values::computed::BaselineSource" },
 ]
 
 mapped-generic-types = [
