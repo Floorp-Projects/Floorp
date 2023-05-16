@@ -2899,13 +2899,10 @@ class OutOfLineRegExpExecMatch : public OutOfLineCodeBase<CodeGenerator> {
 void CodeGenerator::visitOutOfLineRegExpExecMatch(
     OutOfLineRegExpExecMatch* ool) {
   LRegExpExecMatch* lir = ool->lir();
-  Register lastIndex = ToRegister(lir->temp0());
-  MOZ_ASSERT(lastIndex == RegExpMatcherLastIndexReg);
   Register input = ToRegister(lir->string());
   Register regexp = ToRegister(lir->regexp());
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-  regs.take(lastIndex);
   regs.take(input);
   regs.take(regexp);
   Register temp = regs.takeAny();
@@ -2914,7 +2911,6 @@ void CodeGenerator::visitOutOfLineRegExpExecMatch(
       Address(masm.getStackPointer(), InputOutputDataSize), temp);
 
   pushArg(temp);
-  pushArg(lastIndex);
   pushArg(input);
   pushArg(regexp);
 
@@ -2922,8 +2918,8 @@ void CodeGenerator::visitOutOfLineRegExpExecMatch(
   // already been saved by the register allocator.
   using Fn =
       bool (*)(JSContext*, Handle<RegExpObject*> regexp, HandleString input,
-               int32_t lastIndex, MatchPairs* pairs, MutableHandleValue output);
-  callVM<Fn, RegExpBuiltinExecMatchRaw<true>>(lir);
+               MatchPairs* pairs, MutableHandleValue output);
+  callVM<Fn, RegExpBuiltinExecMatchFromJit>(lir);
   masm.jump(ool->rejoin());
 }
 
@@ -3276,20 +3272,17 @@ class OutOfLineRegExpExecTest : public OutOfLineCodeBase<CodeGenerator> {
 
 void CodeGenerator::visitOutOfLineRegExpExecTest(OutOfLineRegExpExecTest* ool) {
   LRegExpExecTest* lir = ool->lir();
-  Register lastIndex = ToRegister(lir->temp0());
-  MOZ_ASSERT(lastIndex == RegExpExecTestLastIndexReg);
   Register input = ToRegister(lir->string());
   Register regexp = ToRegister(lir->regexp());
 
-  pushArg(lastIndex);
   pushArg(input);
   pushArg(regexp);
 
   // We are not using oolCallVM because we are in a Call and live registers have
   // already been saved by the register allocator.
   using Fn = bool (*)(JSContext* cx, Handle<RegExpObject*> regexp,
-                      HandleString input, int32_t lastIndex, bool* result);
-  callVM<Fn, RegExpBuiltinExecTestRaw<true>>(lir);
+                      HandleString input, bool* result);
+  callVM<Fn, RegExpBuiltinExecTestFromJit>(lir);
 
   masm.jump(ool->rejoin());
 }
