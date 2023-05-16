@@ -8,15 +8,15 @@
 <script type="application/javascript">
 createHTML({ title: "Test group id of MediaDeviceInfo", bug: "1213453" });
 
-let getDefaultDevices = async () => {
-  let devices = await navigator.mediaDevices.enumerateDevices();
+async function getDefaultDevices() {
+  const devices = await navigator.mediaDevices.enumerateDevices();
   is(devices.length, 2, "Two fake devices found.");
 
   devices.forEach(d => isnot(d.groupId, "", "GroupId is included in every device"));
 
-  let videos = devices.filter(d => d.kind == "videoinput");
+  const videos = devices.filter(d => d.kind == "videoinput");
   is(videos.length, 1, "One video device found.");
-  let audios = devices.filter(d => d.kind == "audioinput");
+  const audios = devices.filter(d => d.kind == "audioinput");
   is(audios.length, 1, "One microphone device found.");
 
   return {audio: audios[0], video: videos[0]};
@@ -27,6 +27,11 @@ runTest(async () => {
   await pushPrefs(["media.navigator.streams.fake", true],
                   ["media.audio_loopback_dev", ""],
                   ["media.video_loopback_dev", ""]);
+
+  const afterGum = await navigator.mediaDevices.getUserMedia({
+    video: true, audio: true
+  });
+  afterGum.getTracks().forEach(track => track.stop());
 
   let {audio, video} = await getDefaultDevices();
 
