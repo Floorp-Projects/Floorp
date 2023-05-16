@@ -763,6 +763,33 @@ add_task(async function save_download_links() {
   }
 });
 
+// This test verifies that invalid extensions are not removed when they
+// have been entered in the file picker.
+add_task(async function save_page_with_invalid_after_filepicker() {
+  await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://localhost:8000/save_filename.sjs?type=html&filename=invfile.lnk"
+  );
+
+  let filename = await new Promise(resolve => {
+    MockFilePicker.showCallback = function(fp) {
+      let expectedFilename =
+        AppConstants.platform == "win" ? "invfile.lnk.htm" : "invfile.lnk.html";
+      is(fp.defaultString, expectedFilename, "supplied filename is correct");
+      setTimeout(() => {
+        resolve("otherfile.local");
+      }, 0);
+      return Ci.nsIFilePicker.returnCancel;
+    };
+
+    document.getElementById("Browser:SavePage").doCommand();
+  });
+
+  is(filename, "otherfile.local", "lnk extension has been preserved");
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
 add_task(async function save_page_with_invalid_extension() {
   await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
