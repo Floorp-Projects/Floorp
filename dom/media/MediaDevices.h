@@ -24,6 +24,7 @@ namespace mozilla {
 class LocalMediaDevice;
 class MediaDevice;
 class MediaMgrError;
+class DOMMediaStream;
 template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MozPromise;
 
@@ -42,6 +43,8 @@ struct AudioOutputOptions;
 
 class MediaDevices final : public DOMEventTargetHelper {
  public:
+  using StreamPromise =
+      MozPromise<RefPtr<DOMMediaStream>, RefPtr<MediaMgrError>, true>;
   using SinkInfoPromise = MozPromise<RefPtr<AudioDeviceInfo>, nsresult, true>;
 
   explicit MediaDevices(nsPIDOMWindowInner* aWindow);
@@ -58,6 +61,10 @@ class MediaDevices final : public DOMEventTargetHelper {
   already_AddRefed<Promise> GetUserMedia(
       const MediaStreamConstraints& aConstraints, CallerType aCallerType,
       ErrorResult& aRv);
+
+  RefPtr<StreamPromise> GetUserMedia(nsPIDOMWindowInner* aWindow,
+                                     const MediaStreamConstraints& aConstraints,
+                                     CallerType aCallerType);
 
   already_AddRefed<Promise> EnumerateDevices(ErrorResult& aRv);
 
