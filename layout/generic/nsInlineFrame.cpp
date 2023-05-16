@@ -841,7 +841,8 @@ LogicalSides nsInlineFrame::GetLogicalSkipSides() const {
 }
 
 Maybe<nscoord> nsInlineFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext) const {
   if (aBaselineGroup == BaselineSharingGroup::Last) {
     return Nothing{};
   }
