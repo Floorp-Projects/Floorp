@@ -86,7 +86,8 @@ LogicalSize nsCheckboxRadioFrame::ComputeAutoSize(
 }
 
 Maybe<nscoord> nsCheckboxRadioFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext) const {
   NS_ASSERTION(!IsSubtreeDirty(), "frame must not be dirty");
 
   if (aBaselineGroup == BaselineSharingGroup::Last) {

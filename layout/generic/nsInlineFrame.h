@@ -97,8 +97,8 @@ class nsInlineFrame : public nsContainerFrame {
   virtual void PullOverflowsFromPrevInFlow() override;
 
   Maybe<nscoord> GetNaturalBaselineBOffset(
-      mozilla::WritingMode aWM,
-      BaselineSharingGroup aBaselineGroup) const override;
+      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+      BaselineExportContext) const override;
   virtual bool DrainSelfOverflowList() override;
 
   /**

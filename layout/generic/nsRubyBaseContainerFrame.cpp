@@ -262,7 +262,8 @@ nsIFrame::SizeComputationResult nsRubyBaseContainerFrame::ComputeSize(
 }
 
 Maybe<nscoord> nsRubyBaseContainerFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext) const {
   if (aBaselineGroup == BaselineSharingGroup::Last) {
     return Nothing{};
   }
