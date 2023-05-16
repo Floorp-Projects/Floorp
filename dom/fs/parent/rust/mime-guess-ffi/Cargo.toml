@@ -1,0 +1,9 @@
+[package]
+name = "mime-guess-ffi"
+version = "0.1.0"
+license = "MPL-2.0"
+authors = ["The Mozilla Project Developers"]
+
+[dependencies]
+mime_guess = "2.0.4"
+nsstring = { path = "../../../../../xpcom/rust/nsstring" }

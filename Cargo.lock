@@ -2140,6 +2140,7 @@ dependencies = [
  "mapped_hyph",
  "mdns_service",
  "midir_impl",
+ "mime-guess-ffi",
  "mio 0.8.0",
  "moz_asserts",
  "mozglue-static",
@@ -3218,6 +3219,14 @@ name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a60c7ce501c71e03a9c9c0d35b861413ae925bd979cc7a4e30d060069aaac8d"
+
+[[package]]
+name = "mime-guess-ffi"
+version = "0.1.0"
+dependencies = [
+ "mime_guess",
+ "nsstring",
+]
 
 [[package]]
 name = "mime_guess"
