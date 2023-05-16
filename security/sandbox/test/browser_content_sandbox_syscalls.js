@@ -3,20 +3,36 @@
 /* import-globals-from browser_content_sandbox_utils.js */
 "use strict";
 
-/* global OS */
-Cc["@mozilla.org/net/osfileconstantsservice;1"]
-  .getService(Ci.nsIOSFileConstantsService)
-  .init();
-
-registerCleanupFunction(() => {
-  delete window.OS;
-});
-
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/" +
     "security/sandbox/test/browser_content_sandbox_utils.js",
   this
 );
+
+const ERRNO = {
+  EACCES: 13,
+  EINVAL: 22,
+  get ENOSYS() {
+    const os = Services.appinfo.OS;
+
+    if (["Linux", "Android"].includes(os)) {
+      // https://github.com/torvalds/linux/blob/9a48d604672220545d209e9996c2a1edbb5637f6/include/uapi/asm-generic/errno.h#L18
+      return 38;
+    } else if (["Darwin", "FreeBSD", "OpenBSD", "NetBSD"].includes(os)) {
+      /*
+       * Darwin: https://opensource.apple.com/source/xnu/xnu-201/bsd/sys/errno.h.auto.html
+       * FreeBSD: https://github.com/freebsd/freebsd-src/blob/7232e6dcc89b978825b30a537bca2e7d3a9b71bb/sys/sys/errno.h#L157
+       * OpenBSD: https://github.com/openbsd/src/blob/025fffe4c6e0113862ce4e1927e67517a2841502/sys/sys/errno.h#L151
+       * NetBSD: https://github.com/NetBSD/src/blob/ff24f695f5f53540b23b6bb4fa5c0b9d79b369e4/sys/sys/errno.h#L137
+       */
+      return 78;
+    } else if (os === "WINNT") {
+      // https://learn.microsoft.com/en-us/cpp/c-runtime-library/errno-constants?view=msvc-170
+      return 40;
+    }
+    throw new Error("Unsupported OS");
+  },
+};
 
 /*
  * This test is for executing system calls in content processes to validate
@@ -370,10 +386,14 @@ add_task(async function() {
   }
 
   if (isLinux()) {
+    // These constants are not portable.
+    const AT_EACCESS = 512;
+    const PR_CAPBSET_READ = 23;
+
     // verify we block PR_CAPBSET_READ with EINVAL
-    let option = OS.Constants.libc.PR_CAPBSET_READ;
+    let option = PR_CAPBSET_READ;
     let rv = await SpecialPowers.spawn(browser, [{ lib, option }], callPrctl);
-    ok(rv == OS.Constants.libc.EINVAL, "prctl(PR_CAPBSET_READ) is blocked");
+    ok(rv === ERRNO.EINVAL, "prctl(PR_CAPBSET_READ) is blocked");
 
     const kernelVersion = await getKernelVersion();
     const glibcVersion = getGlibcVersion();
@@ -389,18 +409,15 @@ add_task(async function() {
         [{ lib, dirfd, path, mode, flag: 0x01 }],
         callFaccessat2
       );
-      ok(
-        rv == OS.Constants.libc.ENOSYS,
-        "faccessat2 (flag=0x01) was blocked with ENOSYS"
-      );
+      ok(rv === ERRNO.ENOSYS, "faccessat2 (flag=0x01) was blocked with ENOSYS");
 
       rv = await SpecialPowers.spawn(
         browser,
-        [{ lib, dirfd, path, mode, flag: OS.Constants.libc.AT_EACCESS }],
+        [{ lib, dirfd, path, mode, flag: AT_EACCESS }],
         callFaccessat2
       );
       ok(
-        rv == OS.Constants.libc.EACCES,
+        rv === ERRNO.EACCES,
         "faccessat2 (flag=0x200) was allowed, errno=EACCES"
       );
     } else {
