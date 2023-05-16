@@ -242,7 +242,7 @@ void WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
   // those objects in a security wrapper, then we need to hand back the
   // wrapper for the new scope instead. Also, global objects don't move
   // between scopes so for those we also want to return the wrapper. So...
-  if (!IS_WN_REFLECTOR(obj) || JS_IsGlobalObject(obj)) {
+  if (!IsWrappedNativeReflector(obj) || JS_IsGlobalObject(obj)) {
     retObj.set(waive ? WaiveXray(cx, obj) : obj);
     return;
   }
@@ -295,7 +295,7 @@ void WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
   }
 
   obj.set(&v.toObject());
-  MOZ_ASSERT(IS_WN_REFLECTOR(obj), "bad object");
+  MOZ_ASSERT(IsWrappedNativeReflector(obj), "bad object");
   JS::AssertObjectIsNotGray(obj);  // We should never return gray reflectors.
 
   // Because the underlying native didn't have a PreCreate hook, we had

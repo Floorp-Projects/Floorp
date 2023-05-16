@@ -36,7 +36,7 @@ bool IsReflector(JSObject* obj, JSContext* cx) {
   if (!obj) {
     return false;
   }
-  return IS_WN_REFLECTOR(obj) || dom::IsDOMObject(obj);
+  return IsWrappedNativeReflector(obj) || dom::IsDOMObject(obj);
 }
 
 enum StackScopedCloneTags : uint32_t {

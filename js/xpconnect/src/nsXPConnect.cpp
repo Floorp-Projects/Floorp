@@ -765,7 +765,7 @@ nsresult nsIXPConnect::GetWrappedNativeOfJSObject(
   RootedObject aJSObj(aJSContext, aJSObjArg);
   aJSObj = js::CheckedUnwrapDynamic(aJSObj, aJSContext,
                                     /* stopAtWindowProxy = */ false);
-  if (!aJSObj || !IS_WN_REFLECTOR(aJSObj)) {
+  if (!aJSObj || !IsWrappedNativeReflector(aJSObj)) {
     *_retval = nullptr;
     return NS_ERROR_FAILURE;
   }
@@ -781,7 +781,7 @@ static already_AddRefed<nsISupports> ReflectorToISupports(JSObject* reflector) {
   }
 
   // Try XPCWrappedNatives.
-  if (IS_WN_REFLECTOR(reflector)) {
+  if (IsWrappedNativeReflector(reflector)) {
     XPCWrappedNative* wn = XPCWrappedNative::Get(reflector);
     if (!wn) {
       return nullptr;
