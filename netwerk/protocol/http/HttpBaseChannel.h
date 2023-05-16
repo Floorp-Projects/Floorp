@@ -1020,7 +1020,11 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
     // True if HTTPS RR is used during the connection establishment of this
     // channel.
-    (uint32_t, HasHTTPSRR, 1)
+    (uint32_t, HasHTTPSRR, 1),
+
+    // Ensures that ProcessCrossOriginSecurityHeadersCalled has been called
+    // before calling CallOnStartRequest.
+    (uint32_t, ProcessCrossOriginSecurityHeadersCalled, 1)
   ))
   // clang-format on
 
