@@ -244,7 +244,16 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
 
     if (!result.hasSuggestedIndex) {
-      if (suggestion.is_top_pick) {
+      // When `bestMatchEnabled` is true, a "Top pick" checkbox appears in
+      // about:preferences. Show top pick suggestions as top picks only if that
+      // checkbox is checked. `suggest.bestMatch` is the corresponding pref. If
+      // `bestMatchEnabled` is false, the top pick feature is disabled, so show
+      // the suggestion as a usual Suggest result.
+      if (
+        suggestion.is_top_pick &&
+        lazy.UrlbarPrefs.get("bestMatchEnabled") &&
+        lazy.UrlbarPrefs.get("suggest.bestmatch")
+      ) {
         result.isBestMatch = true;
         result.suggestedIndex = 1;
       } else if (
