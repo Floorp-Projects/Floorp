@@ -11,12 +11,9 @@ createHTML({ title: "Run enumerateDevices code", bug: "1046245" });
   Tests covering enumerateDevices API and deviceId constraint. Exercise code.
 */
 
-async function mustSucceedWithStream(msg, f) {
+async function mustSucceed(msg, f) {
   try {
-    const stream = await f();
-    for (const track of stream.getTracks()) {
-      track.stop();
-    }
+    await f();
     ok(true, msg + " must succeed");
   } catch (e) {
     is(e.name, null, msg + " must succeed: " + e.message);
@@ -35,12 +32,10 @@ async function mustFailWith(msg, reason, constraint, f) {
   }
 }
 
-const gUM = c => navigator.mediaDevices.getUserMedia(c);
+var gUM = c => navigator.mediaDevices.getUserMedia(c);
 
-const kinds = ["videoinput", "audioinput", "audiooutput"];
-
-function validateDevice({kind, label, deviceId, groupId}) {
-  ok(kinds.includes(kind), "Known device kind");
+var validateDevice = ({kind, label, deviceId, groupId}) => {
+  ok(kind == "videoinput" || kind == "audioinput", "Known device kind");
   is(deviceId.length, 44, "deviceId length id as expected for Firefox");
   ok(label.length !== undefined, "Device label: " + label);
   isnot(groupId, "", "groupId must be present.");
@@ -49,24 +44,20 @@ function validateDevice({kind, label, deviceId, groupId}) {
 runTest(async () => {
   await pushPrefs(["media.navigator.streams.fake", true]);
 
-  // Validate enumerated devices after gUM.
-  for (const track of (await gUM({video: true, audio: true})).getTracks()) {
-    track.stop();
-  }
+  // Validate enumerated devices.
 
   let devices = await navigator.mediaDevices.enumerateDevices();
   ok(devices.length, "At least one device found");
-  const jsoned = JSON.parse(JSON.stringify(devices));
+  let jsoned = JSON.parse(JSON.stringify(devices));
   is(jsoned[0].kind, devices[0].kind, "kind survived serializer");
   is(jsoned[0].deviceId, devices[0].deviceId, "deviceId survived serializer");
-  for (const device of devices) {
+  for (let device of devices) {
     validateDevice(device);
-    if (device.kind == "audiooutput") continue;
     // Test deviceId constraint
     let deviceId = device.deviceId;
     let constraints = (device.kind == "videoinput") ? { video: { deviceId } }
                                                     : { audio: { deviceId } };
-    for (const track of (await gUM(constraints)).getTracks()) {
+    for (let track of (await gUM(constraints)).getTracks()) {
       is(typeof(track.label), "string", "Track label is a string");
       is(track.label, device.label, "Track label is the device label");
       track.stop();
@@ -77,10 +68,10 @@ runTest(async () => {
 
   // Check deviceId failure paths for video.
 
-  await mustSucceedWithStream("unknown plain deviceId on video",
-                              () => gUM({ video: { deviceId: unknownId } }));
-  await mustSucceedWithStream("unknown plain deviceId on audio",
-                              () => gUM({ audio: { deviceId: unknownId } }));
+  await mustSucceed("unknown plain deviceId on video",
+                    () => gUM({ video: { deviceId: unknownId } }));
+  await mustSucceed("unknown plain deviceId on audio",
+                    () => gUM({ audio: { deviceId: unknownId } }));
   await mustFailWith("unknown exact deviceId on video",
                      "OverconstrainedError", "deviceId",
                      () => gUM({ video: { deviceId: { exact: unknownId } } }));
@@ -94,8 +85,8 @@ runTest(async () => {
   const origins = ["https://example.com", "https://test1.example.com"];
   info(window.location);
 
-  const haveDevicesMap = new Promise(resolve => {
-    const map = new Map();
+  let haveDevicesMap = new Promise(resolve => {
+    let map = new Map();
     window.addEventListener("message", ({origin, data}) => {
       ok(origins.includes(origin), "Got message from expected origin");
       map.set(origin, JSON.parse(data));
@@ -105,9 +96,9 @@ runTest(async () => {
   });
 
   await Promise.all(origins.map(origin => {
-    const iframe = document.createElement("iframe");
+    let iframe = document.createElement("iframe");
     iframe.src = origin + path;
-    iframe.allow = "camera;microphone;speaker-selection";
+    iframe.allow = "camera;microphone";
     info(iframe.src);
     document.documentElement.appendChild(iframe);
     return new Promise(resolve => iframe.onload = resolve);
@@ -115,15 +106,15 @@ runTest(async () => {
   let devicesMap = await haveDevicesMap;
   let [sameOriginDevices, differentOriginDevices] = origins.map(o => devicesMap.get(o));
 
-  is(sameOriginDevices.length, devices.length, "same origin same devices");
-  is(differentOriginDevices.length, devices.length, "cross origin same devices");
+  is(sameOriginDevices.length, devices.length);
+  is(differentOriginDevices.length, devices.length);
   [...sameOriginDevices, ...differentOriginDevices].forEach(d => validateDevice(d));
 
-  for (const device of sameOriginDevices) {
+  for (let device of sameOriginDevices) {
     ok(devices.find(d => d.deviceId == device.deviceId),
        "Same origin deviceId for " + device.label + " must match");
   }
-  for (const device of differentOriginDevices) {
+  for (let device of differentOriginDevices) {
     ok(!devices.find(d => d.deviceId == device.deviceId),
          "Different origin deviceId for " + device.label + " must be different");
   }
