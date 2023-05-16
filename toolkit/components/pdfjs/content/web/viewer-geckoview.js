@@ -371,6 +371,10 @@ class FirefoxExternalServices extends _app.DefaultExternalServices {
     const maxArea = FirefoxCom.requestSync("getCanvasMaxArea");
     return (0, _pdfjsLib.shadow)(this, "canvasMaxAreaInBytes", maxArea);
   }
+  static async getNimbusExperimentData() {
+    const nimbusData = await FirefoxCom.requestAsync("getNimbusExperimentData", null);
+    return nimbusData && JSON.parse(nimbusData);
+  }
 }
 _app.PDFViewerApplication.externalServices = FirefoxExternalServices;
 document.mozL10n.setExternalLocalizerServices({
@@ -571,6 +575,9 @@ class DefaultExternalServices {
   static get canvasMaxAreaInBytes() {
     return (0, _pdfjsLib.shadow)(this, "canvasMaxAreaInBytes", -1);
   }
+  static getNimbusExperimentData() {
+    return (0, _pdfjsLib.shadow)(this, "getNimbusExperimentData", Promise.resolve(null));
+  }
 }
 exports.DefaultExternalServices = DefaultExternalServices;
 const PDFViewerApplication = {
@@ -625,9 +632,11 @@ const PDFViewerApplication = {
   _printAnnotationStoragePromise: null,
   _touchInfo: null,
   _isCtrlKeyDown: false,
+  _nimbusDataPromise: null,
   async initialize(appConfig) {
     this.preferences = this.externalServices.createPreferences();
     this.appConfig = appConfig;
+    this._nimbusDataPromise = this.externalServices.getNimbusExperimentData();
     await this._initializeOptions();
     this._forceCssTheme();
     await this._initializeL10n();
@@ -861,7 +870,7 @@ const PDFViewerApplication = {
     }
     if (appConfig.toolbar) {
       if (_app_options.AppOptions.get("enableFloatingToolbar")) {
-        this.toolbar = new _webToolbar.Toolbar(appConfig.toolbar, eventBus, this.l10n);
+        this.toolbar = new _webToolbar.Toolbar(appConfig.toolbar, eventBus, this.l10n, await this._nimbusDataPromise);
       }
     }
     if (appConfig.secondaryToolbar) {
@@ -6087,7 +6096,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.7.27';
+    const viewerVersion = '3.7.48';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9315,15 +9324,36 @@ exports.Toolbar = void 0;
 class Toolbar {
   #buttons;
   #eventBus;
-  constructor(options, eventBus, _l10n) {
+  constructor(options, eventBus, _l10n, nimbusData) {
     this.#eventBus = eventBus;
-    this.#buttons = [{
+    const buttons = [{
       element: options.download,
-      eventName: "download"
+      eventName: "download",
+      nimbusName: "download-button"
     }, {
       element: options.openInApp,
-      eventName: "openinexternalapp"
+      eventName: "openinexternalapp",
+      nimbusName: "open-in-app-button"
     }];
+    if (nimbusData) {
+      this.#buttons = [];
+      for (const button of buttons) {
+        if (nimbusData[button.nimbusName]) {
+          this.#buttons.push(button);
+        } else {
+          button.element.remove();
+        }
+      }
+      if (this.#buttons.length > 0) {
+        options.container.classList.add("show");
+      } else {
+        options.container.remove();
+        options.mainContainer.classList.add("noToolbar");
+      }
+    } else {
+      options.container.classList.add("show");
+      this.#buttons = buttons;
+    }
     this.#bindListeners(options);
   }
   setPageNumber(pageNumber, pageLabel) {}
@@ -9602,8 +9632,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.7.27';
-const pdfjsBuild = 'e738e15aa';
+const pdfjsVersion = '3.7.48';
+const pdfjsBuild = '95ab2b8b1';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;

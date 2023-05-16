@@ -376,6 +376,10 @@ class ChromeActions {
     return AppConstants.platform === "android";
   }
 
+  getNimbusExperimentData(_data, sendResponse) {
+    sendResponse(null);
+  }
+
   reportTelemetry(data) {
     var probeInfo = JSON.parse(data);
     switch (probeInfo.type) {
