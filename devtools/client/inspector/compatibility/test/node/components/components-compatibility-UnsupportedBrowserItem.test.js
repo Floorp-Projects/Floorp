@@ -20,17 +20,19 @@ describe("UnsupportedBrowserItem component", () => {
       BrowserItem({
         id: "firefox",
         name: "Firefox",
-        versions: [
+        version: "113",
+        unsupportedVersions: [
           {
-            version: "1",
+            status: "current",
+            version: "113",
           },
           {
-            alias: "beta",
-            version: "69",
+            status: "beta",
+            version: "114",
           },
           {
-            alias: "nightly",
-            version: "70",
+            status: "release",
+            version: "115",
           },
         ],
       })

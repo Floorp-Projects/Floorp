@@ -19,10 +19,10 @@ const TEST_URI = `
 `;
 
 const TARGET_BROWSERS = [
-  { id: "firefox", version: "1" },
-  { id: "firefox", version: "70" },
-  { id: "firefox_android", version: "1" },
-  { id: "firefox_android", version: "70" },
+  { id: "firefox", name: "Firefox", version: "1" },
+  { id: "firefox", name: "Firefox", version: "70" },
+  { id: "firefox_android", name: "Firefox Android", version: "1" },
+  { id: "firefox_android", name: "Firefox Android", version: "70" },
 ];
 
 add_task(async function() {
@@ -37,8 +37,8 @@ add_task(async function() {
     {
       property: "border-block-color",
       unsupportedBrowsers: [
-        { id: "firefox", version: "1" },
-        { id: "firefox_android", version: "1" },
+        { id: "firefox", name: "Firefox", version: "1" },
+        { id: "firefox_android", name: "Firefox Android", version: "1" },
       ],
     },
   ];
