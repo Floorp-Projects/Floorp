@@ -136,8 +136,9 @@ void ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule) {
     }
     case StyleCssRuleType::Import: {
       auto& rule = static_cast<CSSImportRule&>(aRule);
-      MOZ_ASSERT(aRule.GetStyleSheet());
-      FillTableFromStyleSheet(*rule.GetStyleSheet());
+      if (auto* sheet = rule.GetStyleSheet()) {
+        FillTableFromStyleSheet(*sheet);
+      }
       break;
     }
     case StyleCssRuleType::LayerStatement:
