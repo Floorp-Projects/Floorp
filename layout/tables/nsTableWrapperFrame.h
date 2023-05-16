@@ -68,8 +68,8 @@ class nsTableWrapperFrame : public nsContainerFrame {
       mozilla::WritingMode aWM,
       BaselineSharingGroup aBaselineGroup) const override;
   Maybe<nscoord> GetNaturalBaselineBOffset(
-      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-      BaselineExportContext aExportContext) const override;
+      mozilla::WritingMode aWM,
+      BaselineSharingGroup aBaselineGroup) const override;
 
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
