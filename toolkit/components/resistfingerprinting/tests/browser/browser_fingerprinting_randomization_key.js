@@ -2,6 +2,22 @@ const TEST_DOMAIN = "https://example.com";
 const TEST_DOMAIN_ANOTHER = "https://example.org";
 const TEST_DOMAIN_THIRD = "https://example.net";
 
+const TEST_PAGE =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    TEST_DOMAIN
+  ) + "testPage.html";
+const TEST_DOMAIN_ANOTHER_PAGE =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    TEST_DOMAIN_ANOTHER
+  ) + "testPage.html";
+const TEST_DOMAIN_THIRD_PAGE =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    TEST_DOMAIN_THIRD
+  ) + "testPage.html";
+
 /**
  * A helper function to get the random key in a hex string format and test if
  * the random key works properly.
@@ -58,6 +74,23 @@ async function getRandomKeyHexFromBrowser(
     keyAboutBlankHex,
     keyHex,
     "The fingerprinting random key should match between the browser element and the about:blank iframe document."
+  );
+
+  // Get the key from the cookieJarSettings of the javascript URL iframe
+  // document.
+  let keyJavascriptURL = await SpecialPowers.spawn(browser, [], async _ => {
+    let ifr = content.document.getElementById("testFrame");
+
+    return ifr.contentDocument.cookieJarSettings.fingerprintingRandomizationKey;
+  });
+
+  let keyJavascriptURLHex = keyJavascriptURL
+    .map(bytes => bytes.toString(16).padStart(2, "0"))
+    .join("");
+  is(
+    keyJavascriptURLHex,
+    keyHex,
+    "The fingerprinting random key should match between the browser element and the javascript URL iframe document."
   );
 
   // Get the key from the cookieJarSettings of an first-party iframe.
@@ -134,7 +167,7 @@ add_task(async function test_randomization_disabled() {
 
   // Ensure accessing the fingerprinting randomization key of the browser
   // element will throw if fingerprinting randomization is disabled.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_DOMAIN);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
 
   try {
     let key =
@@ -178,7 +211,7 @@ add_task(async function test_randomization_disabled_with_rfp_disabled() {
 
   // Ensure accessing the fingerprinting randomization key of the browser
   // element will throw if fingerprinting randomization is disabled.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_DOMAIN);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
 
   try {
     let key =
@@ -230,15 +263,15 @@ add_task(async function test_generate_randomization_key() {
 
     let tabOne = await BrowserTestUtils.openNewForegroundTab(
       win.gBrowser,
-      TEST_DOMAIN
+      TEST_PAGE
     );
     let keyHexOne;
 
     try {
       keyHexOne = await getRandomKeyHexFromBrowser(
         tabOne.linkedBrowser,
-        TEST_DOMAIN,
-        TEST_DOMAIN_THIRD
+        TEST_PAGE,
+        TEST_DOMAIN_THIRD_PAGE
       );
       ok(true, `The fingerprinting random key: ${keyHexOne}`);
     } catch (e) {
@@ -251,13 +284,13 @@ add_task(async function test_generate_randomization_key() {
     // Open the test domain again and check if the key remains the same.
     let tabTwo = await BrowserTestUtils.openNewForegroundTab(
       win.gBrowser,
-      TEST_DOMAIN
+      TEST_PAGE
     );
     try {
       let keyHexTwo = await getRandomKeyHexFromBrowser(
         tabTwo.linkedBrowser,
-        TEST_DOMAIN,
-        TEST_DOMAIN_THIRD
+        TEST_PAGE,
+        TEST_DOMAIN_THIRD_PAGE
       );
       is(
         keyHexTwo,
@@ -274,13 +307,13 @@ add_task(async function test_generate_randomization_key() {
     // Open a tab with a different domain to see if the key changes.
     let tabAnother = await BrowserTestUtils.openNewForegroundTab(
       win.gBrowser,
-      TEST_DOMAIN_ANOTHER
+      TEST_DOMAIN_ANOTHER_PAGE
     );
     try {
       let keyHexAnother = await getRandomKeyHexFromBrowser(
         tabAnother.linkedBrowser,
-        TEST_DOMAIN_ANOTHER,
-        TEST_DOMAIN_THIRD
+        TEST_DOMAIN_ANOTHER_PAGE,
+        TEST_DOMAIN_THIRD_PAGE
       );
       isnot(
         keyHexAnother,
@@ -320,13 +353,13 @@ add_task(async function test_reset_key_after_pbm_session_ends() {
   // Open a tab in the private window.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     privateWin.gBrowser,
-    TEST_DOMAIN
+    TEST_PAGE
   );
 
   let keyHex = await getRandomKeyHexFromBrowser(
     tab.linkedBrowser,
-    TEST_DOMAIN,
-    TEST_DOMAIN_THIRD
+    TEST_PAGE,
+    TEST_DOMAIN_THIRD_PAGE
   );
 
   // Close the window and open another private window.
@@ -340,13 +373,13 @@ add_task(async function test_reset_key_after_pbm_session_ends() {
   // Open a tab again in the new private window.
   tab = await BrowserTestUtils.openNewForegroundTab(
     privateWin.gBrowser,
-    TEST_DOMAIN
+    TEST_PAGE
   );
 
   let keyHexNew = await getRandomKeyHexFromBrowser(
     tab.linkedBrowser,
-    TEST_DOMAIN,
-    TEST_DOMAIN_THIRD
+    TEST_PAGE,
+    TEST_DOMAIN_THIRD_PAGE
   );
 
   // Ensure the keys are different.
@@ -370,7 +403,7 @@ add_task(async function test_randomization_with_exempted_normal_window() {
   // Ensure accessing the fingerprinting randomization key of the browser
   // element will throw if fingerprinting randomization is exempted from normal
   // windows.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_DOMAIN);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
 
   try {
     let key =
@@ -410,14 +443,14 @@ add_task(async function test_randomization_with_exempted_normal_window() {
   // Open a tab in the private window.
   tab = await BrowserTestUtils.openNewForegroundTab(
     privateWin.gBrowser,
-    TEST_DOMAIN
+    TEST_PAGE
   );
 
   // Access the key, this shouldn't throw an error.
   await getRandomKeyHexFromBrowser(
     tab.linkedBrowser,
-    TEST_DOMAIN,
-    TEST_DOMAIN_THIRD
+    TEST_PAGE,
+    TEST_DOMAIN_THIRD_PAGE
   );
 
   BrowserTestUtils.removeTab(tab);
