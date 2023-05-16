@@ -7,11 +7,6 @@
  * testing of the Crashes component (CrashManager.sys.mjs).
  */
 
-/* global OS */
-Cc["@mozilla.org/net/osfileconstantsservice;1"]
-  .getService(Ci.nsIOSFileConstantsService)
-  .init();
-
 import { CrashManager } from "resource://gre/modules/CrashManager.sys.mjs";
 
 const lazy = {};
@@ -64,14 +59,10 @@ TestingCrashManager.prototype = {
       } else {
         path = PathUtils.join(this._submittedDumpsDir, "bp-" + uuid + ".txt");
       }
-      mode =
-        OS.Constants.libc.S_IRUSR |
-        OS.Constants.libc.S_IWUSR |
-        OS.Constants.libc.S_IRGRP |
-        OS.Constants.libc.S_IROTH;
+      mode = 0o644;
     } else {
       path = PathUtils.join(this._pendingDumpsDir, uuid + ".dmp");
-      mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
+      mode = 0o600;
     }
 
     return (async function() {
@@ -94,7 +85,7 @@ TestingCrashManager.prototype = {
     }
 
     return (async function() {
-      let mode = OS.Constants.libc.S_IRUSR | OS.Constants.libc.S_IWUSR;
+      let mode = 0o600;
       await IOUtils.writeUTF8(path, "");
       await IOUtils.setPermissions(path, mode);
       dump(`Create ignored dump file: ${path}\n`);
@@ -154,7 +145,7 @@ var DUMMY_DIR_COUNT = 0;
 
 export var getManager = function() {
   return (async function() {
-    const dirMode = OS.Constants.libc.S_IRWXU;
+    const dirMode = 0o700;
     let baseFile = PathUtils.profileDir;
 
     function makeDir(create = true) {
