@@ -1079,14 +1079,6 @@ pref("plugins.show_infobar", false);
   pref("plugin.default.state", 1);
 #endif
 
-// Prefer HTML5 video over Flash content, and don't
-// load plugin instances with no src declared.
-// These prefs are documented in details on all.js.
-// With the "follow-ctp" setting, this will only
-// apply to users that have plugin.state.flash = 1.
-pref("plugins.favorfallback.mode", "follow-ctp");
-pref("plugins.favorfallback.rules", "nosrc,video");
-
 // Toggling Search bar on and off in about:preferences
 pref("browser.preferences.search", true);
 #if defined(NIGHTLY_BUILD)
