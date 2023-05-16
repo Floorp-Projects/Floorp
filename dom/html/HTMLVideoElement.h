@@ -36,9 +36,9 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   using HTMLMediaElement::GetPaused;
 
-  void Invalidate(bool aImageSizeChanged,
+  void Invalidate(ImageSizeChanged aImageSizeChanged,
                   const Maybe<nsIntSize>& aNewIntrinsicSize,
-                  bool aForceInvalidate) override;
+                  ForceInvalidate aForceInvalidate) override;
 
   virtual bool IsVideo() const override { return true; }
 

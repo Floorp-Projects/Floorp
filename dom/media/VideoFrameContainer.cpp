@@ -241,12 +241,14 @@ void VideoFrameContainer::InvalidateWithFlags(uint32_t aFlags) {
     return;
   }
 
-  bool imageSizeChanged = mMainThreadState.mImageSizeChanged;
+  MediaDecoderOwner::ImageSizeChanged imageSizeChanged{
+      mMainThreadState.mImageSizeChanged};
   mMainThreadState.mImageSizeChanged = false;
 
   auto newIntrinsicSize = std::move(mMainThreadState.mNewIntrinsicSize);
 
-  bool forceInvalidate = aFlags & INVALIDATE_FORCE;
+  MediaDecoderOwner::ForceInvalidate forceInvalidate{
+      (aFlags & INVALIDATE_FORCE) != 0};
   mOwner->Invalidate(imageSizeChanged, newIntrinsicSize, forceInvalidate);
 }
 
