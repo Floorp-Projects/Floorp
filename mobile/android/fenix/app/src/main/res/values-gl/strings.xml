@@ -1876,10 +1876,10 @@
     <string name="search_delete_search_engine_success_message">Eliminouse %s</string>
 
     <!-- Heading for the instructions to allow a permission -->
-    <string name="phone_feature_blocked_intro">Para o permitir:</string>
+    <string name="phone_feature_blocked_intro">Para permitilo:</string>
 
     <!-- First step for the allowing a permission -->
-    <string name="phone_feature_blocked_step_settings">1. Vaia a Configuración de Android</string>
+    <string name="phone_feature_blocked_step_settings">1. Vaia á Configuración de Android</string>
     <!-- Second step for the allowing a permission -->
     <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Toque <b>Permisos</b>]]></string>
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
