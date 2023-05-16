@@ -55,7 +55,7 @@ NS_IMETHODIMP ClipboardWriteRequestParent::OnComplete(nsresult aResult) {
 }
 
 IPCResult ClipboardWriteRequestParent::RecvSetData(
-    const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
+    const IPCTransferableData& aTransferableData, const bool& aIsPrivateData,
     nsIPrincipal* aRequestingPrincipal,
     Maybe<CookieJarSettingsArgs> aCookieJarSettingsArgs,
     const nsContentPolicyType& aContentPolicyType,
@@ -87,9 +87,10 @@ IPCResult ClipboardWriteRequestParent::RecvSetData(
                                         getter_AddRefs(cookieJarSettings));
     trans->SetCookieJarSettings(cookieJarSettings);
   }
-  rv = nsContentUtils::IPCTransferableToTransferable(
-      aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType,
-      true /* aAddDataFlavor */, trans, true /* aFilterUnknownFlavors */);
+  rv = nsContentUtils::IPCTransferableDataToTransferable(
+      aTransferableData, aIsPrivateData, aRequestingPrincipal,
+      aContentPolicyType, true /* aAddDataFlavor */, trans,
+      true /* aFilterUnknownFlavors */);
   if (NS_FAILED(rv)) {
     mAsyncSetClipboardData->Abort(rv);
     return IPC_OK();
