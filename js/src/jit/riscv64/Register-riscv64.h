@@ -124,15 +124,21 @@ static constexpr Register IntArgReg6{Registers::a6};
 static constexpr Register IntArgReg7{Registers::a7};
 static constexpr Register HeapReg{Registers::s7};
 
-static constexpr Register RegExpTesterRegExpReg{CallTempReg0};
-static constexpr Register RegExpTesterStringReg{CallTempReg1};
-static constexpr Register RegExpTesterLastIndexReg{CallTempReg2};
-static constexpr Register RegExpTesterStickyReg{Registers::invalid_reg};
+// Registers used by RegExpMatcher and RegExpExecMatch stubs (do not use
+// JSReturnOperand).
+static constexpr Register RegExpMatcherRegExpReg = CallTempReg0;
+static constexpr Register RegExpMatcherStringReg = CallTempReg1;
+static constexpr Register RegExpMatcherLastIndexReg = CallTempReg2;
 
-static constexpr Register RegExpMatcherRegExpReg{CallTempReg0};
-static constexpr Register RegExpMatcherStringReg{CallTempReg1};
-static constexpr Register RegExpMatcherLastIndexReg{CallTempReg2};
-static constexpr Register RegExpMatcherStickyReg{Registers::invalid_reg};
+// Registers used by RegExpExecTest stub (do not use ReturnReg).
+static constexpr Register RegExpExecTestRegExpReg = CallTempReg0;
+static constexpr Register RegExpExecTestStringReg = CallTempReg1;
+static constexpr Register RegExpExecTestLastIndexReg = CallTempReg2;
+
+// Registers used by RegExpSearcher stub (do not use ReturnReg).
+static constexpr Register RegExpSearcherRegExpReg = CallTempReg0;
+static constexpr Register RegExpSearcherStringReg = CallTempReg1;
+static constexpr Register RegExpSearcherLastIndexReg = CallTempReg2;
 
 static constexpr Register JSReturnReg_Type{Registers::a3};
 static constexpr Register JSReturnReg_Data{Registers::s2};
