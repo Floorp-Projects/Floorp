@@ -9,7 +9,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
 ChromeUtils.defineModuleGetter(
@@ -22,6 +21,7 @@ const DEFAULT_FORM_HISTORY_PARAM = "searchbar-history";
 const HTTP_OK = 200;
 const BROWSER_SUGGEST_PREF = "browser.search.suggest.enabled";
 const BROWSER_SUGGEST_PRIVATE_PREF = "browser.search.suggest.enabled.private";
+const BROWSER_RICH_SUGGEST_PREF = "browser.urlbar.richSuggestions.featureGate";
 const REMOTE_TIMEOUT_PREF = "browser.search.suggest.timeout";
 const REMOTE_TIMEOUT_DEFAULT = 500; // maximum time (ms) to wait before giving up on a remote suggestions
 
@@ -750,10 +750,7 @@ export class SearchSuggestionController {
    * @returns {SearchSuggestionEntry}
    */
   #newSearchSuggestionEntry(suggestion, richSuggestionData, trending) {
-    if (
-      richSuggestionData &&
-      (!trending || lazy.UrlbarPrefs.get("richSuggestions.featureGate"))
-    ) {
+    if (richSuggestionData && (!trending || this.richSuggestionsEnabled)) {
       // We have valid rich suggestions.
       let args = {
         matchPrefix: richSuggestionData?.mp,
@@ -761,7 +758,7 @@ export class SearchSuggestionController {
         trending,
       };
 
-      if (lazy.UrlbarPrefs.get("richSuggestions.featureGate")) {
+      if (this.richSuggestionsEnabled) {
         args.icon = richSuggestionData?.i;
         args.description = richSuggestionData?.a;
       }
@@ -800,5 +797,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
   SearchSuggestionController.prototype,
   "suggestionsInPrivateBrowsingEnabled",
   BROWSER_SUGGEST_PRIVATE_PREF,
+  false
+);
+
+/**
+ * Whether or not rich suggestions are turned on.
+ */
+XPCOMUtils.defineLazyPreferenceGetter(
+  SearchSuggestionController.prototype,
+  "richSuggestionsEnabled",
+  BROWSER_RICH_SUGGEST_PREF,
   false
 );
