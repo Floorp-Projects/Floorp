@@ -372,9 +372,9 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // main thread when/if the size changes.
   virtual void UpdateMediaSize(const nsIntSize& aSize);
 
-  void Invalidate(bool aImageSizeChanged,
+  void Invalidate(ImageSizeChanged aImageSizeChanged,
                   const Maybe<nsIntSize>& aNewIntrinsicSize,
-                  bool aForceInvalidate) override;
+                  ForceInvalidate aForceInvalidate) override;
 
   // Returns the CanPlayStatus indicating if we can handle the
   // full MIME type including the optional codecs parameter.

@@ -108,7 +108,8 @@ void HTMLVideoElement::UpdateMediaSize(const nsIntSize& aSize) {
   // If we have a clone target, we should update its size as well.
   if (mVisualCloneTarget) {
     Maybe<nsIntSize> newSize = Some(aSize);
-    mVisualCloneTarget->Invalidate(true, newSize, true);
+    mVisualCloneTarget->Invalidate(ImageSizeChanged::Yes, newSize,
+                                   ForceInvalidate::Yes);
   }
 }
 
@@ -140,9 +141,9 @@ Maybe<CSSIntSize> HTMLVideoElement::GetVideoSize() const {
   return Some(size);
 }
 
-void HTMLVideoElement::Invalidate(bool aImageSizeChanged,
+void HTMLVideoElement::Invalidate(ImageSizeChanged aImageSizeChanged,
                                   const Maybe<nsIntSize>& aNewIntrinsicSize,
-                                  bool aForceInvalidate) {
+                                  ForceInvalidate aForceInvalidate) {
   HTMLMediaElement::Invalidate(aImageSizeChanged, aNewIntrinsicSize,
                                aForceInvalidate);
   if (mVisualCloneTarget) {
