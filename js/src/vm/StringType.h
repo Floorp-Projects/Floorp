@@ -54,7 +54,7 @@ struct CompilationAtomCache;
 }  // namespace frontend
 
 class ArrayObject;
-class GenericPrinter;
+class JS_PUBLIC_API GenericPrinter;
 class PropertyName;
 class StringBuffer;
 

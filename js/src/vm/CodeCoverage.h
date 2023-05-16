@@ -13,10 +13,9 @@
 
 #include "js/AllocPolicy.h"
 #include "js/HashTable.h"
+#include "js/Printer.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
-
-#include "vm/Printer.h"
 
 namespace js {
 namespace coverage {

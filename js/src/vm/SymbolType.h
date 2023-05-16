@@ -20,7 +20,7 @@
 #include "vm/StringType.h"
 
 namespace js {
-class GenericPrinter;
+class JS_PUBLIC_API GenericPrinter;
 }
 
 namespace JS {
