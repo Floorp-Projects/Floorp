@@ -69,7 +69,7 @@ fun UpgradeOnboarding(
         OnboardingPage(
             pageState = when (onboardingState) {
                 UpgradeOnboardingState.Welcome -> OnboardingPageState(
-                    image = R.drawable.ic_onboarding_welcome,
+                    imageRes = R.drawable.ic_onboarding_welcome,
                     title = stringResource(id = R.string.onboarding_home_welcome_title_2),
                     description = stringResource(id = R.string.onboarding_home_welcome_description),
                     primaryButton = Action(
@@ -88,7 +88,7 @@ fun UpgradeOnboarding(
                     },
                 )
                 UpgradeOnboardingState.SyncSignIn -> OnboardingPageState(
-                    image = R.drawable.ic_onboarding_sync,
+                    imageRes = R.drawable.ic_onboarding_sync,
                     title = stringResource(id = R.string.onboarding_home_sync_title_3),
                     description = stringResource(id = R.string.onboarding_home_sync_description),
                     primaryButton = Action(

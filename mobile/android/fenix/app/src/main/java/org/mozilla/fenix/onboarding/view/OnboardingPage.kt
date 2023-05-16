@@ -70,7 +70,7 @@ private const val URL_TAG = "URL_TAG"
  * @param modifier The modifier to be applied to the Composable.
  * @param onDismiss Invoked when the user clicks the close button. This defaults to null. When null,
  * it doesn't show the close button.
- * @param imageResContentScale The [ContentScale] for the [OnboardingPageState.image].
+ * @param imageResContentScale The [ContentScale] for the [OnboardingPageState.imageRes].
  */
 @Composable
 @Suppress("LongMethod")
@@ -114,7 +114,7 @@ fun OnboardingPage(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Image(
-                    painter = painterResource(id = pageState.image),
+                    painter = painterResource(id = pageState.imageRes),
                     contentDescription = null,
                     contentScale = imageResContentScale,
                     modifier = Modifier
@@ -249,7 +249,7 @@ private fun OnboardingPagePreview() {
     FirefoxTheme {
         OnboardingPage(
             pageState = OnboardingPageState(
-                image = R.drawable.ic_notification_permission,
+                imageRes = R.drawable.ic_notification_permission,
                 title = stringResource(
                     id = R.string.onboarding_home_enable_notifications_title,
                     formatArgs = arrayOf(stringResource(R.string.app_name)),

@@ -86,7 +86,7 @@ private fun createOnboardingPageState(
     onNegativeButtonClick: () -> Unit,
     onUrlClick: (String) -> Unit = {},
 ): OnboardingPageState = OnboardingPageState(
-    image = onboardingPageUiData.imageRes,
+    imageRes = onboardingPageUiData.imageRes,
     title = onboardingPageUiData.title,
     description = onboardingPageUiData.description,
     linkTextState = onboardingPageUiData.linkText?.let {

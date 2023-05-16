@@ -28,7 +28,7 @@ fun NotificationPermissionDialogScreen(
 ) {
     OnboardingPage(
         pageState = OnboardingPageState(
-            image = R.drawable.ic_notification_permission,
+            imageRes = R.drawable.ic_notification_permission,
             title = stringResource(
                 id = R.string.onboarding_home_enable_notifications_title,
                 formatArgs = arrayOf(stringResource(R.string.app_name)),
