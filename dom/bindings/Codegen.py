@@ -20966,11 +20966,12 @@ class CallbackMember(CGNativeMember):
             result = argval
             prepend = ""
 
-        if arg.type.isUnion() and self.wrapScope is None:
+        wrapScope = self.wrapScope
+        if arg.type.isUnion() and wrapScope is None:
             prepend += (
                 "JS::Rooted<JSObject*> callbackObj(cx, CallbackKnownNotGray());\n"
             )
-            self.wrapScope = "callbackObj"
+            wrapScope = "callbackObj"
 
         conversion = prepend + wrapForType(
             arg.type,
@@ -20980,7 +20981,7 @@ class CallbackMember(CGNativeMember):
                 "successCode": "continue;\n" if arg.variadic else "break;\n",
                 "jsvalRef": "argv[%s]" % jsvalIndex,
                 "jsvalHandle": "argv[%s]" % jsvalIndex,
-                "obj": self.wrapScope,
+                "obj": wrapScope,
                 "returnsNewObject": False,
                 "exceptionCode": self.getExceptionCode(forResult=False),
                 "spiderMonkeyInterfacesAreStructs": self.spiderMonkeyInterfacesAreStructs,
