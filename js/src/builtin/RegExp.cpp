@@ -1288,17 +1288,20 @@ bool js::RegExpSearcherRaw(JSContext* cx, HandleObject regexp,
 }
 
 template <bool CalledFromJit>
-bool js::RegExpBuiltinExecMatchRaw(JSContext* cx, Handle<RegExpObject*> regexp,
-                                   HandleString input, int32_t lastIndex,
-                                   MatchPairs* maybeMatches,
-                                   MutableHandleValue output) {
+static bool RegExpBuiltinExecMatchRaw(JSContext* cx,
+                                      Handle<RegExpObject*> regexp,
+                                      HandleString input, int32_t lastIndex,
+                                      MatchPairs* maybeMatches,
+                                      MutableHandleValue output) {
   MOZ_ASSERT(lastIndex >= 0);
   MOZ_ASSERT(size_t(lastIndex) <= input->length());
+  MOZ_ASSERT_IF(!CalledFromJit, !maybeMatches);
 
   // RegExp execution was successful only if the pairs have actually been
   // filled in. Note that IC code always passes a nullptr maybeMatches.
   int32_t lastIndexNew = 0;
-  if (maybeMatches && maybeMatches->pairsRaw()[0] > MatchPair::NoMatch) {
+  if (CalledFromJit && maybeMatches &&
+      maybeMatches->pairsRaw()[0] > MatchPair::NoMatch) {
     RootedRegExpShared shared(cx, regexp->as<RegExpObject>().getShared());
     if (!CreateRegExpMatchResult(cx, shared, input, *maybeMatches, output)) {
       return false;
@@ -1331,14 +1334,29 @@ bool js::RegExpBuiltinExecMatchRaw(JSContext* cx, Handle<RegExpObject*> regexp,
   return SetLastIndex<CalledFromJit>(cx, regexp, lastIndexNew);
 }
 
-template bool js::RegExpBuiltinExecMatchRaw<true>(
-    JSContext* cx, Handle<RegExpObject*> regexp, HandleString input,
-    int32_t lastIndex, MatchPairs* maybeMatches, MutableHandleValue output);
+bool js::RegExpBuiltinExecMatchFromJit(JSContext* cx,
+                                       Handle<RegExpObject*> regexp,
+                                       HandleString input,
+                                       MatchPairs* maybeMatches,
+                                       MutableHandleValue output) {
+  int32_t lastIndex = 0;
+  if (regexp->isGlobalOrSticky()) {
+    lastIndex = regexp->getLastIndex().toInt32();
+    MOZ_ASSERT(lastIndex >= 0);
+    if (size_t(lastIndex) > input->length()) {
+      output.setNull();
+      return SetLastIndex<true>(cx, regexp, 0);
+    }
+  }
+  return RegExpBuiltinExecMatchRaw<true>(cx, regexp, input, lastIndex,
+                                         maybeMatches, output);
+}
 
 template <bool CalledFromJit>
-bool js::RegExpBuiltinExecTestRaw(JSContext* cx, Handle<RegExpObject*> regexp,
-                                  HandleString input, int32_t lastIndex,
-                                  bool* result) {
+static bool RegExpBuiltinExecTestRaw(JSContext* cx,
+                                     Handle<RegExpObject*> regexp,
+                                     HandleString input, int32_t lastIndex,
+                                     bool* result) {
   MOZ_ASSERT(lastIndex >= 0);
   MOZ_ASSERT(size_t(lastIndex) <= input->length());
 
@@ -1360,11 +1378,20 @@ bool js::RegExpBuiltinExecTestRaw(JSContext* cx, Handle<RegExpObject*> regexp,
   return SetLastIndex<CalledFromJit>(cx, regexp, lastIndexNew);
 }
 
-template bool js::RegExpBuiltinExecTestRaw<true>(JSContext* cx,
-                                                 Handle<RegExpObject*> regexp,
-                                                 HandleString input,
-                                                 int32_t lastIndex,
-                                                 bool* result);
+bool js::RegExpBuiltinExecTestFromJit(JSContext* cx,
+                                      Handle<RegExpObject*> regexp,
+                                      HandleString input, bool* result) {
+  int32_t lastIndex = 0;
+  if (regexp->isGlobalOrSticky()) {
+    lastIndex = regexp->getLastIndex().toInt32();
+    MOZ_ASSERT(lastIndex >= 0);
+    if (size_t(lastIndex) > input->length()) {
+      *result = false;
+      return SetLastIndex<true>(cx, regexp, 0);
+    }
+  }
+  return RegExpBuiltinExecTestRaw<true>(cx, regexp, input, lastIndex, result);
+}
 
 using CapturesVector = GCVector<Value, 4>;
 
@@ -1778,8 +1805,7 @@ bool js::RegExpBuiltinExec(JSContext* cx, Handle<RegExpObject*> regexp,
   }
 
   // Steps 3-5.
-  RegExpFlags flags = regexp->getFlags();
-  bool globalOrSticky = flags.global() || flags.sticky();
+  bool globalOrSticky = regexp->isGlobalOrSticky();
 
   // Step 7.
   if (!globalOrSticky) {

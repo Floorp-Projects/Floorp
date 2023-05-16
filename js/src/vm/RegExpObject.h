@@ -143,6 +143,11 @@ class RegExpObject : public NativeObject {
   bool unicode() const { return getFlags().unicode(); }
   bool sticky() const { return getFlags().sticky(); }
 
+  bool isGlobalOrSticky() const {
+    JS::RegExpFlags flags = getFlags();
+    return flags.global() || flags.sticky();
+  }
+
   static bool isOriginalFlagGetter(JSNative native, JS::RegExpFlags* mask);
 
   static RegExpShared* getShared(JSContext* cx, Handle<RegExpObject*> regexp);
