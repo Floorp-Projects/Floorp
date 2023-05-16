@@ -2152,9 +2152,6 @@ nsIFrame::CaretBlockAxisMetrics nsIFrame::GetCaretBlockAxisMetrics(
 }
 
 const nsAtom* nsIFrame::ComputePageValue() const {
-  if (!StaticPrefs::layout_css_named_pages_enabled()) {
-    return nsGkAtoms::_empty;
-  }
   const nsAtom* value = nsGkAtoms::_empty;
   const nsIFrame* frame = this;
   do {

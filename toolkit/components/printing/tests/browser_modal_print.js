@@ -278,9 +278,6 @@ add_task(async function testPageSizeLandscape() {
 });
 
 add_task(async function testFirstPageSizePortrait() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["layout.css.named-pages.enabled", true]],
-  });
   await PrintHelper.withTestPageHTTPS(async helper => {
     await helper.startPrint();
 
@@ -296,9 +293,6 @@ add_task(async function testFirstPageSizePortrait() {
 });
 
 add_task(async function testFirstPageSizeLandscape() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["layout.css.named-pages.enabled", true]],
-  });
   await PrintHelper.withTestPageHTTPS(async helper => {
     await helper.startPrint();
 

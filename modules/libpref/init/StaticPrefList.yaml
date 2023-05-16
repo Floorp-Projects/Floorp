@@ -8810,13 +8810,6 @@
   mirror: always
   rust: true
 
-# Enables support for the named pages
-- name: layout.css.named-pages.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Enables support for different CSS page sizes on each page when printing.
 - name: layout.css.allow-mixed-page-sizes
   type: RelaxedAtomicBool
