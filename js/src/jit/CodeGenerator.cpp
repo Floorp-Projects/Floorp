@@ -2431,8 +2431,17 @@ static void CreateMatchResultFallback(MacroAssembler& masm, Register object,
   masm.initGCThing(object, temp1, templateObject);
 }
 
-JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
-  JitSpew(JitSpew_Codegen, "# Emitting RegExpMatcher stub");
+// Generate the RegExpMatcher and RegExpExecMatch stubs. These are very similar,
+// but RegExpExecMatch also has to load and update .lastIndex for global/sticky
+// regular expressions.
+static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
+                                              gc::InitialHeap initialStringHeap,
+                                              bool isExecMatch) {
+  if (isExecMatch) {
+    JitSpew(JitSpew_Codegen, "# Emitting RegExpExecMatch stub");
+  } else {
+    JitSpew(JitSpew_Codegen, "# Emitting RegExpMatcher stub");
+  }
 
   Register regexp = RegExpMatcherRegExpReg;
   Register input = RegExpMatcherStringReg;
@@ -2460,6 +2469,9 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
     maybeTemp5 = regs.takeAny();
   }
 
+  Address flagsSlot(regexp, RegExpObject::offsetOfFlags());
+  Address lastIndexSlot(regexp, RegExpObject::offsetOfLastIndex());
+
   ArrayObject* templateObject =
       cx->realm()->regExps.getOrCreateMatchResultTemplateObject(cx);
   if (!templateObject) {
@@ -2477,13 +2489,18 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx);
   StackMacroAssembler masm(cx, temp);
-  AutoCreatedBy acb(masm, "JitRealm::generateRegExpMatcherStub");
+  AutoCreatedBy acb(masm, "GenerateRegExpMatchStubShared");
 
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
 #endif
   masm.push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
+
+  Label notFoundZeroLastIndex;
+  if (isExecMatch) {
+    masm.loadRegExpLastIndex(regexp, input, lastIndex, &notFoundZeroLastIndex);
+  }
 
   // The InputOutputData is placed above the frame pointer and return address on
   // the stack.
@@ -2700,6 +2717,8 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
 
   Address firstMatchPairStartAddress(
       FramePointer, pairsVectorStartOffset + MatchPair::offsetOfStart());
+  Address firstMatchPairLimitAddress(
+      FramePointer, pairsVectorStartOffset + MatchPair::offsetOfLimit());
 
   masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
 
@@ -2709,12 +2728,34 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
   // No post barrier needed (address is within nursery object.)
   masm.storeValue(JSVAL_TYPE_STRING, input, Address(temp2, sizeof(Value)));
 
+  // For the ExecMatch stub, if the regular expression is global or sticky, we
+  // have to update its .lastIndex slot.
+  if (isExecMatch) {
+    MOZ_ASSERT(object != lastIndex);
+    Label notGlobalOrSticky;
+    masm.branchTest32(Assembler::Zero, flagsSlot,
+                      Imm32(JS::RegExpFlag::Global | JS::RegExpFlag::Sticky),
+                      &notGlobalOrSticky);
+    masm.load32(firstMatchPairLimitAddress, lastIndex);
+    masm.storeValue(JSVAL_TYPE_INT32, lastIndex, lastIndexSlot);
+    masm.bind(&notGlobalOrSticky);
+  }
+
   // All done!
   masm.tagValue(JSVAL_TYPE_OBJECT, object, result);
   masm.pop(FramePointer);
   masm.ret();
 
   masm.bind(&notFound);
+  if (isExecMatch) {
+    Label notGlobalOrSticky;
+    masm.branchTest32(Assembler::Zero, flagsSlot,
+                      Imm32(JS::RegExpFlag::Global | JS::RegExpFlag::Sticky),
+                      &notGlobalOrSticky);
+    masm.bind(&notFoundZeroLastIndex);
+    masm.storeValue(Int32Value(0), lastIndexSlot);
+    masm.bind(&notGlobalOrSticky);
+  }
   masm.moveValue(NullValue(), result);
   masm.pop(FramePointer);
   masm.ret();
@@ -2746,12 +2787,23 @@ JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
     return nullptr;
   }
 
-  CollectPerfSpewerJitCodeProfile(code, "RegExpMatcherStub");
+  const char* name = isExecMatch ? "RegExpExecMatchStub" : "RegExpMatcherStub";
+  CollectPerfSpewerJitCodeProfile(code, name);
 #ifdef MOZ_VTUNE
-  vtune::MarkStub(code, "RegExpMatcherStub");
+  vtune::MarkStub(code, name);
 #endif
 
   return code;
+}
+
+JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
+  return GenerateRegExpMatchStubShared(cx, initialStringHeap,
+                                       /* isExecMatch = */ false);
+}
+
+JitCode* JitRealm::generateRegExpExecMatchStub(JSContext* cx) {
+  return GenerateRegExpMatchStubShared(cx, initialStringHeap,
+                                       /* isExecMatch = */ true);
 }
 
 class OutOfLineRegExpMatcher : public OutOfLineCodeBase<CodeGenerator> {
@@ -2894,54 +2946,19 @@ void CodeGenerator::visitRegExpExecMatch(LRegExpExecMatch* lir) {
   static_assert(RegExpMatcherLastIndexReg != JSReturnReg);
 #endif
 
-  Label done;
-
-  Register regexp = RegExpMatcherRegExpReg;
-  Register string = RegExpMatcherStringReg;
-  Register lastIndex = RegExpMatcherLastIndexReg;
-
-  masm.loadAndUpdateRegExpLastIndex(/* forTest = */ false, regexp, string,
-                                    lastIndex, JSReturnOperand, &done);
-
   masm.reserveStack(RegExpReservedStack);
 
   auto* ool = new (alloc()) OutOfLineRegExpExecMatch(lir);
   addOutOfLineCode(ool, lir->mir());
 
   const JitRealm* jitRealm = gen->realm->jitRealm();
-  JitCode* regExpMatcherStub =
-      jitRealm->regExpMatcherStubNoBarrier(&realmStubsToReadBarrier_);
-  masm.call(regExpMatcherStub);
+  JitCode* regExpExecMatchStub =
+      jitRealm->regExpExecMatchStubNoBarrier(&realmStubsToReadBarrier_);
+  masm.call(regExpExecMatchStub);
   masm.branchTestUndefined(Assembler::Equal, JSReturnOperand, ool->entry());
-
-  // If the regular expression is global or sticky, we have to update its
-  // .lastIndex slot.
-
-  Address flagsSlot(regexp, RegExpObject::offsetOfFlags());
-  Address lastIndexSlot(regexp, RegExpObject::offsetOfLastIndex());
-
-  masm.branchTest32(Assembler::Zero, flagsSlot,
-                    Imm32(JS::RegExpFlag::Global | JS::RegExpFlag::Sticky),
-                    ool->rejoin());
-
-  Label notFound;
-  masm.branchTestNull(Assembler::Equal, JSReturnOperand, &notFound);
-
-  // Conveniently, the MatchPairs vector is still on the stack, so we can load
-  // the new lastIndex value from it.
-  int32_t offsetOfLimit =
-      RegExpPairsVectorStartOffset(0) + MatchPair::offsetOfLimit();
-  masm.load32(Address(masm.getStackPointer(), offsetOfLimit), lastIndex);
-  masm.storeValue(JSVAL_TYPE_INT32, lastIndex, lastIndexSlot);
-  masm.jump(ool->rejoin());
-
-  masm.bind(&notFound);
-  masm.storeValue(Int32Value(0), lastIndexSlot);
 
   masm.bind(ool->rejoin());
   masm.freeStack(RegExpReservedStack);
-
-  masm.bind(&done);
 }
 
 static const int32_t RegExpSearcherResultNotFound = -1;
@@ -3168,12 +3185,9 @@ JitCode* JitRealm::generateRegExpExecTestStub(JSContext* cx) {
 
   masm.reserveStack(RegExpReservedStack);
 
-  // Load/update lastIndex and skip RegExp execution if needed.
-  Label done;
-  TypedOrValueRegister output =
-      TypedOrValueRegister(MIRType::Boolean, AnyRegister(ReturnReg));
-  masm.loadAndUpdateRegExpLastIndex(/* forTest = */ true, regexp, input,
-                                    lastIndex, output, &done);
+  // Load lastIndex and skip RegExp execution if needed.
+  Label notFoundZeroLastIndex;
+  masm.loadRegExpLastIndex(regexp, input, lastIndex, &notFoundZeroLastIndex);
 
   // In visitRegExpMatcher and visitRegExpSearcher, we reserve stack space
   // before calling the stub. For RegExpExecTest we call the stub before
@@ -3198,6 +3212,7 @@ JitCode* JitRealm::generateRegExpExecTestStub(JSContext* cx) {
   // RegExpExecTestResultFailed if we have to retry in C++. If the regular
   // expression is global or sticky, we also have to update its .lastIndex slot.
 
+  Label done;
   int32_t pairsVectorStartOffset =
       RegExpPairsVectorStartOffset(inputOutputDataStartOffset);
   Address matchPairLimit(FramePointer,
@@ -3216,6 +3231,11 @@ JitCode* JitRealm::generateRegExpExecTestStub(JSContext* cx) {
   masm.branchTest32(Assembler::Zero, flagsSlot,
                     Imm32(JS::RegExpFlag::Global | JS::RegExpFlag::Sticky),
                     &done);
+  masm.storeValue(Int32Value(0), lastIndexSlot);
+  masm.jump(&done);
+
+  masm.bind(&notFoundZeroLastIndex);
+  masm.move32(Imm32(0), result);
   masm.storeValue(Int32Value(0), lastIndexSlot);
   masm.jump(&done);
 

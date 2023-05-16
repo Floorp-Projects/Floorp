@@ -8163,10 +8163,8 @@ bool CacheIRCompiler::emitRegExpBuiltinExecMatchResult(
   // Discard the stack to ensure it's balanced when we skip the vm-call.
   allocator.discardStack(masm);
 
-  Label done;
-  masm.loadAndUpdateRegExpLastIndex(/* forTest = */ false, regexp, input,
-                                    lastIndex, callvm.output().valueReg(),
-                                    &done);
+  Label notFoundZeroLastIndex;
+  masm.loadRegExpLastIndex(regexp, input, lastIndex, &notFoundZeroLastIndex);
 
   {
     callvm.prepare();
@@ -8180,6 +8178,14 @@ bool CacheIRCompiler::emitRegExpBuiltinExecMatchResult(
                         MatchPairs* pairs, MutableHandleValue output);
     callvm.call<Fn, RegExpBuiltinExecMatchRaw<true>>();
   }
+
+  Label done;
+  masm.jump(&done);
+
+  masm.bind(&notFoundZeroLastIndex);
+  Address lastIndexSlot(regexp, RegExpObject::offsetOfLastIndex());
+  masm.storeValue(Int32Value(0), lastIndexSlot);
+  masm.moveValue(NullValue(), callvm.output().valueReg());
 
   masm.bind(&done);
   return true;
@@ -8198,10 +8204,8 @@ bool CacheIRCompiler::emitRegExpBuiltinExecTestResult(ObjOperandId regexpId,
   // Discard the stack to ensure it's balanced when we skip the vm-call.
   allocator.discardStack(masm);
 
-  Label done;
-  masm.loadAndUpdateRegExpLastIndex(/* forTest = */ true, regexp, input,
-                                    lastIndex, callvm.output().valueReg(),
-                                    &done);
+  Label notFoundZeroLastIndex;
+  masm.loadRegExpLastIndex(regexp, input, lastIndex, &notFoundZeroLastIndex);
 
   {
     callvm.prepare();
@@ -8213,6 +8217,14 @@ bool CacheIRCompiler::emitRegExpBuiltinExecTestResult(ObjOperandId regexpId,
                         HandleString input, int32_t lastIndex, bool* result);
     callvm.call<Fn, RegExpBuiltinExecTestRaw<true>>();
   }
+
+  Label done;
+  masm.jump(&done);
+
+  masm.bind(&notFoundZeroLastIndex);
+  Address lastIndexSlot(regexp, RegExpObject::offsetOfLastIndex());
+  masm.storeValue(Int32Value(0), lastIndexSlot);
+  masm.moveValue(BooleanValue(false), callvm.output().valueReg());
 
   masm.bind(&done);
   return true;
