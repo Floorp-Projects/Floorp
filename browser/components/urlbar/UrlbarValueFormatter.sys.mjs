@@ -10,6 +10,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "BrowserUIUtils",
+  "resource:///modules/BrowserUIUtils.jsm"
+);
+
 /**
  * Applies URL highlighting and other styling to the text in the urlbar input,
  * depending on the text.
@@ -128,10 +134,10 @@ export class UrlbarValueFormatter {
       return null;
     }
 
-    let url = this.inputField.value;
+    let inputValue = this.inputField.value;
     // getFixupURIInfo logs an error if the URL is empty. Avoid that by
     // returning early.
-    if (!url) {
+    if (!inputValue) {
       return null;
     }
     let browser = this.window.gBrowser.selectedBrowser;
@@ -139,10 +145,10 @@ export class UrlbarValueFormatter {
     // Since doing a full URIFixup and offset calculations is expensive, we
     // keep the metadata cached in the browser itself, so when switching tabs
     // we can skip most of this.
-    if (browser._urlMetaData && browser._urlMetaData.url == url) {
+    if (browser._urlMetaData && browser._urlMetaData.inputValue == inputValue) {
       return browser._urlMetaData.data;
     }
-    browser._urlMetaData = { url, data: null };
+    browser._urlMetaData = { inputValue, data: null };
 
     // Get the URL from the fixup service:
     let flags =
@@ -151,9 +157,13 @@ export class UrlbarValueFormatter {
     if (lazy.PrivateBrowsingUtils.isWindowPrivate(this.window)) {
       flags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
     }
+
     let uriInfo;
     try {
-      uriInfo = Services.uriFixup.getFixupURIInfo(url, flags);
+      uriInfo = Services.uriFixup.getFixupURIInfo(
+        this.urlbarInput.untrimmedValue,
+        flags
+      );
     } catch (ex) {}
     // Ignore if we couldn't make a URI out of this, the URI resulted in a search,
     // or the URI has a non-http(s)/ftp protocol.
@@ -171,10 +181,15 @@ export class UrlbarValueFormatter {
     // confused by user:pass@host http URLs. We later use
     // trimmedLength to ensure we don't count the length of a trimmed protocol
     // when determining which parts of the URL to highlight as "preDomain".
+    let url = inputValue;
     let trimmedLength = 0;
-    if (uriInfo.fixedURI.scheme == "http" && !url.startsWith("http://")) {
-      url = "http://" + url;
-      trimmedLength = "http://".length;
+    let trimmedProtocol = lazy.BrowserUIUtils.trimURLProtocol;
+    if (
+      uriInfo.fixedURI.spec.startsWith(trimmedProtocol) &&
+      !inputValue.startsWith(trimmedProtocol)
+    ) {
+      url = trimmedProtocol + inputValue;
+      trimmedLength = trimmedProtocol.length;
     }
 
     // This RegExp is not a perfect match, and for specially crafted URLs it may
