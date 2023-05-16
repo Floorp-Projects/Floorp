@@ -48,6 +48,7 @@ include DOMTypes;
 include WindowGlobalTypes;
 include IPCBlob;
 include IPCStream;
+include IPCTransferable;
 include PPrintingTypes;
 include PTabContext;
 include ProtocolTypes;
@@ -1217,12 +1218,7 @@ parent:
                                bool fromChromeContext, ClonedMessageData stack);
 
     // Places the items within dataTransfer on the clipboard.
-    async SetClipboard(IPCTransferableData aTransferableData,
-                       bool aIsPrivateData,
-                       nullable nsIPrincipal aRequestingPrincipal,
-                       CookieJarSettingsArgs? cookieJarSettings,
-                       nsContentPolicyType aContentPolicyType,
-                       nullable nsIReferrerInfo aReferrerInfo,
+    async SetClipboard(IPCTransferable aTransferable,
                        int32_t aWhichClipboard);
 
     // Given a list of supported types, returns the clipboard data for the

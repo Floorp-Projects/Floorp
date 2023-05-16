@@ -3467,16 +3467,13 @@ void ContentParent::OnVarChanged(const GfxVarUpdate& aVar) {
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
-    const IPCTransferableData& aTransferableData, const bool& aIsPrivateData,
-    nsIPrincipal* aRequestingPrincipal,
-    mozilla::Maybe<CookieJarSettingsArgs> aCookieJarSettingsArgs,
-    const nsContentPolicyType& aContentPolicyType,
-    nsIReferrerInfo* aReferrerInfo, const int32_t& aWhichClipboard) {
+    const IPCTransferable& aTransferable, const int32_t& aWhichClipboard) {
   // aRequestingPrincipal is allowed to be nullptr here.
 
-  if (!ValidatePrincipal(aRequestingPrincipal,
+  if (!ValidatePrincipal(aTransferable.requestingPrincipal(),
                          {ValidatePrincipalOptions::AllowNullPtr})) {
-    LogAndAssertFailedPrincipalValidationInfo(aRequestingPrincipal, __func__);
+    LogAndAssertFailedPrincipalValidationInfo(
+        aTransferable.requestingPrincipal(), __func__);
   }
 
   nsresult rv;
@@ -3487,18 +3484,9 @@ mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
       do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
   trans->Init(nullptr);
-  trans->SetReferrerInfo(aReferrerInfo);
 
-  if (aCookieJarSettingsArgs.isSome()) {
-    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-    net::CookieJarSettings::Deserialize(aCookieJarSettingsArgs.ref(),
-                                        getter_AddRefs(cookieJarSettings));
-    trans->SetCookieJarSettings(cookieJarSettings);
-  }
-
-  rv = nsContentUtils::IPCTransferableDataToTransferable(
-      aTransferableData, aIsPrivateData, aRequestingPrincipal,
-      aContentPolicyType, true /* aAddDataFlavor */, trans,
+  rv = nsContentUtils::IPCTransferableToTransferable(
+      aTransferable, true /* aAddDataFlavor */, trans,
       true /* aFilterUnknownFlavors */);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
