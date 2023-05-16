@@ -71,7 +71,6 @@ user_pref("media.peerconnection.enabled", true);
 // relatively long time which may cause unnecessary intermittents and slow down
 // tests. This, like many things, will stop working correctly in 2038.
 user_pref("places.database.lastMaintenance", 2147483647);
-user_pref("plugin.state.flash", 0);
 user_pref("privacy.reduceTimerPrecision", false); // Bug 1445243 - reduces precision of tests
 user_pref("privacy.trackingprotection.annotate_channels", false);
 user_pref("privacy.trackingprotection.enabled", false);

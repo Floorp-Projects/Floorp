@@ -12797,20 +12797,6 @@
   mirror: always
 
 #---------------------------------------------------------------------------
-# Prefs starting with "plugin."
-#---------------------------------------------------------------------------
-
-- name: plugin.state.flash
-  type: uint32_t
-  # Flash is Click-to-Activate by default on all channels. Disabled for ARM builds.
-#if defined(_ARM64_) && defined(XP_WIN)
-  value: 0
-#else
-  value: 1
-#endif
-  mirror: always
-
-#---------------------------------------------------------------------------
 # Prefs starting with "plugins."
 #---------------------------------------------------------------------------
 
