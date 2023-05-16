@@ -307,6 +307,17 @@
 <!-- unrecognized file type starting with a dot -->
 <object id="i80" data="http://localhost:8000/save_filename.sjs?type=otherimage&filename=.alternate" data-filename="alternate"
         data-unknown="true"></object>
+
+<!-- filename with lnk extension -->
+<img id="i81" src="http://localhost:8000/save_filename.sjs?type=nonsense&filename=shortcut.lnk"
+     data-nodrag="true" data-unknown="typeonly"
+     data-filename="shortcut.lnk.download">
+
+<!-- long filename with lnk extension -->
+<img id="i82" src="http://localhost:8000/save_filename.sjs?type=nonsense&filename=longshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshort1234567890.lnk"
+     data-nodrag="true" data-unknown="typeonly"
+     data-filename="longshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshortcutnamelongshort1234567890.lnk.download">
+
 </span>
 
 <!-- This set is used to test the filename specified by the download attribute is validated correctly. -->

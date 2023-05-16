@@ -472,15 +472,28 @@ add_task(async function saveas_files() {
           let download = await downloadFinishedPromise;
 
           let filename = PathUtils.filename(download.target.path);
-          is(
-            filename,
-            expectedItems[idx].filename,
-            "open link" +
-              idx +
-              " " +
-              expectedItems[idx].filename +
-              " was downloaded with the correct name when opened as a url"
-          );
+
+          let expectedFilename = expectedItems[idx].filename;
+          if (expectedFilename.length > 240) {
+            ok(
+              checkShortenedFilename(filename, expectedFilename),
+              "open link" +
+                idx +
+                " " +
+                expectedFilename +
+                " was downloaded with the correct name when opened as a url (with long name)"
+            );
+          } else {
+            is(
+              filename,
+              expectedFilename,
+              "open link" +
+                idx +
+                " " +
+                expectedFilename +
+                " was downloaded with the correct name when opened as a url"
+            );
+          }
 
           try {
             await IOUtils.remove(download.target.path);
