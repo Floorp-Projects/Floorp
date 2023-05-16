@@ -482,6 +482,20 @@ const startupPhases = {
       close: 1,
     },
     {
+      // bug 1833110, utility process instantiation due to JS ORB validator.
+      path: "*ld.so.conf*",
+      condition:
+        LINUX &&
+        !AppConstants.MOZ_CODE_COVERAGE &&
+        Services.prefs.getBoolPref(
+          "browser.opaqueResponseBlocking.javascriptValidator"
+        ),
+      read: 14,
+      /* Whether this happens before or after idle is racy: */
+      ignoreIfUnused: true,
+      close: 7,
+    },
+    {
       // bug 1391590
       path: "ProfD:places.sqlite-journal",
       ignoreIfUnused: true,
