@@ -995,15 +995,15 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvGetGfxVars(nsTArray<GfxVarUpdate>* aVars);
 
   mozilla::ipc::IPCResult RecvSetClipboard(
-      const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
+      const IPCTransferableData& aTransferableData, const bool& aIsPrivateData,
       nsIPrincipal* aRequestingPrincipal,
       mozilla::Maybe<CookieJarSettingsArgs> aCookieJarSettingsArgs,
       const nsContentPolicyType& aContentPolicyType,
       nsIReferrerInfo* aReferrerInfo, const int32_t& aWhichClipboard);
 
-  mozilla::ipc::IPCResult RecvGetClipboard(nsTArray<nsCString>&& aTypes,
-                                           const int32_t& aWhichClipboard,
-                                           IPCDataTransfer* aDataTransfer);
+  mozilla::ipc::IPCResult RecvGetClipboard(
+      nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
+      IPCTransferableData* aTransferableData);
 
   mozilla::ipc::IPCResult RecvEmptyClipboard(const int32_t& aWhichClipboard);
 
