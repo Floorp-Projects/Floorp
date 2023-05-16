@@ -5,6 +5,7 @@
 include "mozilla/dom/MediaIPCUtils.h";
 
 using mozilla::media::TimeUnit from "TimeUnits.h";
+using mozilla::CryptoScheme from "MediaData.h";
 
 namespace mozilla {
 
@@ -16,6 +17,14 @@ struct MediaDataIPDL
   TimeUnit timecode;
   TimeUnit duration;
   bool keyframe;
+};
+
+struct CryptoInfo {
+  CryptoScheme mEncryptionScheme;
+  uint8_t[] mIV;
+  uint8_t[] mKeyId;
+  uint32_t[] mClearBytes;
+  uint32_t[] mCipherBytes;
 };
 
 } // namespace mozilla

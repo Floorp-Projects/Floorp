@@ -671,6 +671,13 @@ class MediaRawData final : public MediaData {
   // the decoder should crop the content accordingly.
   Maybe<media::TimeInterval> mOriginalPresentationWindow;
 
+  // If it's true, the `mCrypto` should be copied into the remote data as well.
+  // Currently this is only used for the media engine DRM playback.
+  bool mShouldCopyCryptoToRemoteRawData = false;
+
+  // It's only used when the remote decoder reconstructs the media raw data.
+  CryptoSample& GetWritableCrypto() { return mCryptoInternal; }
+
   // Return a deep copy or nullptr if out of memory.
   already_AddRefed<MediaRawData> Clone() const;
   // Create a MediaRawDataWriter for this MediaRawData. The writer is not
