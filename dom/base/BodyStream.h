@@ -45,10 +45,6 @@ class BodyStreamHolder : public nsISupports {
 
   BodyStreamHolder();
 
-  virtual void NullifyStream() { mReadableStreamBody = nullptr; }
-
-  virtual void MarkAsRead() {}
-
   void SetReadableStreamBody(ReadableStream* aBody) {
     mReadableStreamBody = aBody;
   }
