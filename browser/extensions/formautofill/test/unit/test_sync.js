@@ -215,7 +215,7 @@ add_task(async function test_incoming_new() {
             TEST_PROFILE_1
           ),
         }),
-        Date.now() / 1000
+        getDateForSync()
       )
     );
     server.insertWBO(
@@ -227,7 +227,7 @@ add_task(async function test_incoming_new() {
           id: deletedID,
           deleted: true,
         }),
-        Date.now() / 1000
+        getDateForSync()
       )
     );
 
@@ -393,7 +393,7 @@ add_task(async function test_applyIncoming_nonexistent_tombstone() {
         id: guid,
         deleted: true,
       }),
-      Date.now() / 1000
+      getDateForSync()
     );
 
     await engine.setLastSync(0);
@@ -573,7 +573,7 @@ add_task(async function test_reconcile_both_modified_identical() {
           id: guid,
           entry: TEST_PROFILE_1,
         }),
-        Date.now() / 1000
+        getDateForSync()
       )
     );
 
@@ -680,7 +680,7 @@ add_task(async function test_dedupe_identical_unsynced() {
             TEST_PROFILE_1
           ),
         }),
-        Date.now() / 1000
+        getDateForSync()
       )
     );
 
@@ -780,7 +780,7 @@ add_task(async function test_dedupe_multiple_candidates() {
           id: bGuid,
           entry: serverRecord,
         }),
-        Date.now() / 1000
+        getDateForSync()
       )
     );
     server.insertWBO(
@@ -792,7 +792,7 @@ add_task(async function test_dedupe_multiple_candidates() {
           id: aGuid,
           entry: serverRecord,
         }),
-        Date.now() / 1000
+        getDateForSync()
       )
     );
 
@@ -953,7 +953,7 @@ add_task(async function test_full_roundtrip_unknown_data() {
             TEST_PROFILE_1
           ),
         }),
-        Date.now() / 1000
+        getDateForSync()
       )
     );
 
