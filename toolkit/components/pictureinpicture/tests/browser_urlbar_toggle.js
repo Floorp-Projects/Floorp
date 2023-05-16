@@ -27,11 +27,15 @@ add_task(async function test_urlbar_toggle_multiple_contexts() {
       await ensureVideosReady(browser.browsingContext.children[0]);
 
       await TestUtils.waitForCondition(
-        () => PictureInPicture.getEligiblePipVideoCount(browser) === 2,
+        () =>
+          PictureInPicture.getEligiblePipVideoCount(browser).totalPipCount ===
+          2,
         "Waiting for videos to register"
       );
 
-      let totalPipCount = PictureInPicture.getEligiblePipVideoCount(browser);
+      let { totalPipCount } = PictureInPicture.getEligiblePipVideoCount(
+        browser
+      );
       is(totalPipCount, 2, "Total PiP count is 2");
 
       let pipUrlbarToggle = document.getElementById(
@@ -59,7 +63,7 @@ add_task(async function test_urlbar_toggle_multiple_contexts() {
         "PiP urlbar toggle is visible"
       );
 
-      totalPipCount = PictureInPicture.getEligiblePipVideoCount(browser);
+      ({ totalPipCount } = PictureInPicture.getEligiblePipVideoCount(browser));
       is(totalPipCount, 1, "Total PiP count is 1");
 
       let domWindowOpened = BrowserTestUtils.domWindowOpenedAndLoaded(null);
@@ -104,7 +108,7 @@ add_task(async function test_urlbar_toggle_multiple_contexts() {
         "PiP urlbar toggle is hidden because there are no videos on the page"
       );
 
-      totalPipCount = PictureInPicture.getEligiblePipVideoCount(browser);
+      ({ totalPipCount } = PictureInPicture.getEligiblePipVideoCount(browser));
       is(totalPipCount, 0, "Total PiP count is 0");
     }
   );
@@ -120,11 +124,15 @@ add_task(async function test_urlbar_toggle_switch_tabs() {
       await ensureVideosReady(browser);
 
       await TestUtils.waitForCondition(
-        () => PictureInPicture.getEligiblePipVideoCount(browser) === 1,
+        () =>
+          PictureInPicture.getEligiblePipVideoCount(browser).totalPipCount ===
+          1,
         "Waiting for video to register"
       );
 
-      let totalPipCount = PictureInPicture.getEligiblePipVideoCount(browser);
+      let { totalPipCount } = PictureInPicture.getEligiblePipVideoCount(
+        browser
+      );
       is(totalPipCount, 1, "Total PiP count is 1");
 
       let pipUrlbarToggle = document.getElementById(
@@ -182,6 +190,87 @@ add_task(async function test_urlbar_toggle_switch_tabs() {
         win,
         false
       );
+    }
+  );
+});
+
+add_task(async function test_pipDisabled() {
+  await BrowserTestUtils.withNewTab(
+    {
+      url: TEST_PAGE_PIP_DISABLED,
+      gBrowser,
+    },
+    async browser => {
+      const VIDEO_ID = "with-controls";
+      await ensureVideosReady(browser);
+
+      await TestUtils.waitForCondition(
+        () =>
+          PictureInPicture.getEligiblePipVideoCount(browser).totalPipCount ===
+          1,
+        "Waiting for video to register"
+      );
+
+      let {
+        totalPipCount,
+        totalPipDisabled,
+      } = PictureInPicture.getEligiblePipVideoCount(browser);
+      is(totalPipCount, 1, "Total PiP count is 1");
+      is(totalPipDisabled, 1, "PiP is disabled on 1 video");
+
+      // Confirm that the toggle is hidden because we are respecting disablePictureInPicture
+      await testToggleHelper(browser, VIDEO_ID, false);
+
+      let pipUrlbarToggle = document.getElementById(
+        "picture-in-picture-button"
+      );
+      ok(
+        BrowserTestUtils.is_visible(pipUrlbarToggle),
+        "PiP urlbar toggle is visible because PiP is disabled"
+      );
+
+      pipUrlbarToggle.click();
+
+      let panel = browser.ownerDocument.querySelector("#PictureInPicturePanel");
+      await BrowserTestUtils.waitForCondition(async () => {
+        if (!panel) {
+          panel = browser.ownerDocument.querySelector("#PictureInPicturePanel");
+        }
+        return panel?.state === "open" && BrowserTestUtils.is_visible(panel);
+      });
+
+      panel.querySelector("#respect-pipDisabled-switch").click();
+
+      pipUrlbarToggle.click();
+
+      await BrowserTestUtils.waitForCondition(async () => {
+        return panel?.state !== "open" && BrowserTestUtils.is_hidden(panel);
+      });
+
+      let pipActivePromise = BrowserTestUtils.waitForMutationCondition(
+        pipUrlbarToggle,
+        { attributeFilter: ["pipactive"] },
+        () => pipUrlbarToggle.hasAttribute("pipactive")
+      );
+
+      let domWindowOpened = BrowserTestUtils.domWindowOpenedAndLoaded(null);
+      pipUrlbarToggle.click();
+      let win = await domWindowOpened;
+      ok(win, "A Picture-in-Picture window opened.");
+
+      await assertVideoIsBeingCloned(browser, "video");
+
+      await pipActivePromise;
+
+      ok(
+        pipUrlbarToggle.hasAttribute("pipactive"),
+        "We are PiP'd in this tab so the icon is active"
+      );
+
+      await ensureMessageAndClosePiP(browser, VIDEO_ID, win, false);
+
+      // Confirm that the toggle is now visible because we no longer respect disablePictureInPicture
+      await testToggleHelper(browser, VIDEO_ID, true);
     }
   );
 });
