@@ -1286,27 +1286,6 @@ export var Policies = {
     },
   },
 
-  FlashPlugin: {
-    onBeforeUIStartup(manager, param) {
-      addAllowDenyPermissions("plugin:flash", param.Allow, param.Block);
-
-      const FLASH_NEVER_ACTIVATE = 0;
-      const FLASH_ASK_TO_ACTIVATE = 1;
-
-      let flashPrefVal;
-      if (param.Default === undefined || param.Default) {
-        flashPrefVal = FLASH_ASK_TO_ACTIVATE;
-      } else {
-        flashPrefVal = FLASH_NEVER_ACTIVATE;
-      }
-      if (param.Locked) {
-        setAndLockPref("plugin.state.flash", flashPrefVal);
-      } else if (param.Default !== undefined) {
-        PoliciesUtils.setDefaultPref("plugin.state.flash", flashPrefVal);
-      }
-    },
-  },
-
   GoToIntranetSiteForSingleWordEntryInAddressBar: {
     onBeforeAddons(manager, param) {
       setAndLockPref("browser.fixup.dns_first_for_single_words", param);
