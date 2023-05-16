@@ -721,6 +721,35 @@ def target_tasks_ship_geckoview(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
+@_target_task("custom-car_perf_testing")
+def target_tasks_custom_car_perf_testing(full_task_graph, parameters, graph_config):
+    """Select tasks required for running daily performance tests for custom chromium-as-release."""
+
+    def filter(task):
+        platform = task.attributes.get("test_platform")
+        attributes = task.attributes
+        if attributes.get("unittest_suite") != "raptor":
+            return False
+
+        try_name = attributes.get("raptor_try_name")
+
+        # Completely ignore all non-shippable platforms
+        if "shippable" not in platform:
+            return False
+
+        # ignore all windows 7 perf jobs scheduled automatically
+        if "windows7" in platform or "windows10-32" in platform:
+            return False
+
+        # Desktop selection only for CaR
+        if "android" not in platform:
+            if "browsertime" in try_name and "custom-car" in try_name:
+                return True
+        return False
+
+    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
+
+
 @_target_task("general_perf_testing")
 def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config):
     """
@@ -751,6 +780,9 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                     return True
                 if "chromium" in try_name:
                     return True
+                # chromium-as-release has it's own cron
+                if "custom-car" in try_name:
+                    return False
                 if "-live" in try_name:
                     return True
                 if "-fis" in try_name:
@@ -1013,6 +1045,8 @@ def target_tasks_chromium_update(full_task_graph, parameters, graph_config):
         "fetch-win32-chromium",
         "fetch-win64-chromium",
         "fetch-mac-chromium",
+        "toolchain-linux64-custom-car",
+        "toolchain-win64-custom-car",
     ]
 
 
