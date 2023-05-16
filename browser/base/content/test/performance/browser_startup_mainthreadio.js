@@ -312,8 +312,16 @@ const startupPhases = {
     {
       // We only hit this for new profiles.
       path: "XREAppDist:distribution.ini",
-      condition: WIN,
+      // check we're not msix to disambiguate from the next entry...
+      condition: WIN && !Services.sysinfo.getProperty("hasWinPackageId"),
       stat: 1,
+    },
+    {
+      // On MSIX, we actually read this file - bug 1833341.
+      path: "XREAppDist:distribution.ini",
+      condition: WIN && Services.sysinfo.getProperty("hasWinPackageId"),
+      stat: 1,
+      read: 1,
     },
     {
       // bug 1545139
