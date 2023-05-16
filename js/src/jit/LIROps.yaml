@@ -1506,7 +1506,7 @@
     regexp: WordSized
     string: WordSized
   call_instruction: true
-  num_temps: 1
+  num_temps: 0
   mir_op: true
 
 - name: RegExpPrototypeOptimizable

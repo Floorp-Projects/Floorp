@@ -64,7 +64,6 @@ static constexpr Register RegExpMatcherLastIndexReg{Registers::invalid_reg};
 
 static constexpr Register RegExpExecTestRegExpReg{Registers::invalid_reg};
 static constexpr Register RegExpExecTestStringReg{Registers::invalid_reg};
-static constexpr Register RegExpExecTestLastIndexReg{Registers::invalid_reg};
 
 static constexpr Register RegExpSearcherRegExpReg{Registers::invalid_reg};
 static constexpr Register RegExpSearcherStringReg{Registers::invalid_reg};

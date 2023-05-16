@@ -162,7 +162,6 @@ static constexpr Register RegExpMatcherLastIndexReg = CallTempReg2;
 // Registers used by RegExpExecTest stub (do not use ReturnReg).
 static constexpr Register RegExpExecTestRegExpReg = CallTempReg0;
 static constexpr Register RegExpExecTestStringReg = CallTempReg2;
-static constexpr Register RegExpExecTestLastIndexReg = CallTempReg3;
 
 // Registers used by RegExpSearcher stub (do not use ReturnReg).
 static constexpr Register RegExpSearcherRegExpReg = CallTempReg0;
