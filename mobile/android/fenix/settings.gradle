@@ -31,6 +31,20 @@ gradle.projectsLoaded { ->
                 }
             }
         }
+
+        def appServicesSrcDir = null
+        if (gradle.hasProperty('localProperties.autoPublish.application-services.dir')) {
+          appServicesSrcDir = gradle.getProperty('localProperties.autoPublish.application-services.dir')
+        } else if (gradle.hasProperty('localProperties.branchBuild.application-services.dir')) {
+          appServicesSrcDir = gradle.getProperty('localProperties.branchBuild.application-services.dir')
+        }
+        if (appServicesSrcDir) {
+            if (appServicesSrcDir.startsWith("/")) {
+                apply from: "${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+            } else {
+                apply from: "${rootProject.projectDir}/${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+            }
+        }
     }
 }
 

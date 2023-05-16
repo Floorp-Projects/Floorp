@@ -851,20 +851,6 @@ if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcd
     apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
 }
 
-def appServicesSrcDir = null
-if (gradle.hasProperty('localProperties.autoPublish.application-services.dir')) {
-  appServicesSrcDir = gradle.getProperty('localProperties.autoPublish.application-services.dir')
-} else if (gradle.hasProperty('localProperties.branchBuild.application-services.dir')) {
-  appServicesSrcDir = gradle.getProperty('localProperties.branchBuild.application-services.dir')
-}
-if (appServicesSrcDir) {
-    if (appServicesSrcDir.startsWith("/")) {
-        apply from: "${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
-    } else {
-        apply from: "../${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
-    }
-}
-
 if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
     ext.gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
     apply from: "../${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"

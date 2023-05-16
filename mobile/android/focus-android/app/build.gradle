@@ -614,11 +614,6 @@ if (project.hasProperty("coverage")) {
     }
 }
 
-if (gradle.hasProperty('localProperties.autoPublish.application-services.dir')) {
-    ext.appServicesSrcDir = gradle."localProperties.autoPublish.application-services.dir"
-    apply from: "../${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
-}
-
 if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
     ext.gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
     apply from: "../${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
