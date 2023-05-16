@@ -1416,23 +1416,6 @@ IMEState IMEStateManager::GetNewIMEState(const nsPresContext& aPresContext,
   return newIMEState;
 }
 
-static bool MayBeIMEUnawareWebApp(nsINode* aNode) {
-  bool haveKeyEventsListener = false;
-
-  while (aNode) {
-    EventListenerManager* const mgr = aNode->GetExistingListenerManager();
-    if (mgr) {
-      if (mgr->MayHaveInputOrCompositionEventListener()) {
-        return false;
-      }
-      haveKeyEventsListener |= mgr->MayHaveKeyEventListener();
-    }
-    aNode = aNode->GetParentNode();
-  }
-
-  return haveKeyEventsListener;
-}
-
 // static
 void IMEStateManager::ResetActiveChildInputContext() {
   sActiveChildInputContext.mIMEState.mEnabled = IMEEnabled::Unknown;
@@ -1743,11 +1726,6 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
     }
   }
   context.mOrigin = aOrigin;
-  context.mMayBeIMEUnaware =
-      context.mIMEState.IsEditable() &&
-      StaticPrefs::
-          intl_ime_hack_on_ime_unaware_apps_fire_key_events_for_composition() &&
-      MayBeIMEUnawareWebApp(aElement);
 
   context.mHasHandledUserInput =
       aPresContext && aPresContext->PresShell()->HasHandledUserInput();

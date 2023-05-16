@@ -405,7 +405,6 @@ struct NativeIMEContext final {
 struct InputContext final {
   InputContext()
       : mOrigin(XRE_IsParentProcess() ? ORIGIN_MAIN : ORIGIN_CONTENT),
-        mMayBeIMEUnaware(false),
         mHasHandledUserInput(false),
         mInPrivateBrowsing(false) {}
 
@@ -489,11 +488,6 @@ struct InputContext final {
     ORIGIN_CONTENT
   };
   Origin mOrigin;
-
-  /* True if the webapp may be unaware of IME events such as input event or
-   * composiion events. This enables a key-events-only mode on Android for
-   * compatibility with webapps relying on key listeners. */
-  bool mMayBeIMEUnaware;
 
   /**
    * True if the document has ever received user input
