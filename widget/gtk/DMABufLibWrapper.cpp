@@ -299,11 +299,11 @@ static const struct wl_registry_listener registry_listener = {
     global_registry_handler, global_registry_remover};
 
 void DMABufDevice::LoadFormatModifiers() {
-  MOZ_ASSERT(NS_IsMainThread());
   if (!GdkIsWaylandDisplay()) {
     return;
   }
   if (XRE_IsParentProcess()) {
+    MOZ_ASSERT(NS_IsMainThread());
     wl_display* display = WaylandDisplayGetWLDisplay();
     wl_registry* registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
