@@ -25,7 +25,7 @@
 
 namespace js {
 
-class GenericPrinter;
+class JS_PUBLIC_API GenericPrinter;
 
 namespace jit {
 

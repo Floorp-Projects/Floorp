@@ -223,6 +223,7 @@
 #include "jit/JitRuntime.h"
 #include "jit/ProcessExecutableMemory.h"
 #include "js/HeapAPI.h"  // JS::GCCellPtr
+#include "js/Printer.h"
 #include "js/SliceBudget.h"
 #include "util/DifferentialTesting.h"
 #include "vm/BigIntType.h"
@@ -232,7 +233,6 @@
 #include "vm/JitActivation.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
-#include "vm/Printer.h"
 #include "vm/PropMap.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"
