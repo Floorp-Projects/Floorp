@@ -308,4 +308,71 @@ add_task(async function validate_filename_method() {
     "filename.sCF.download",
     "filename.sCF"
   );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving("filename.lnk\n", "text/unknown", 0),
+    "filename.lnk.download",
+    "filename.lnk with newline"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.lnk\n  ",
+      "text/unknown",
+      0
+    ),
+    "filename.lnk.download",
+    "filename.lnk with newline"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.\n\t  lnk",
+      "text/unknown",
+      0
+    ),
+    "filename. lnk",
+    "filename.lnk with space and newline"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.local\u180e\u180e\u180e",
+      "text/unknown",
+      0
+    ),
+    "filename.local.download",
+    "filename.lnk with vowel separators"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.LNK",
+      "text/unknown",
+      mimeService.VALIDATE_SANITIZE_ONLY
+    ),
+    "filename.LNK.download",
+    "filename.LNK sanitize only"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.LNK\n",
+      "text/unknown",
+      mimeService.VALIDATE_ALLOW_INVALID_FILENAMES
+    ),
+    "filename.LNK",
+    "filename.LNK allow invalid"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "filename.URL\n",
+      "text/unknown",
+      mimeService.VALIDATE_SANITIZE_ONLY |
+        mimeService.VALIDATE_ALLOW_INVALID_FILENAMES
+    ),
+    "filename.URL",
+    "filename.URL allow invalid, sanitize only"
+  );
 });

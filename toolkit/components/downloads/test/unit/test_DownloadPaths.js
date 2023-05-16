@@ -85,6 +85,31 @@ add_task(async function test_sanitize() {
 
   // not compressing whitespaces.
   testSanitize("foo : bar", "foo   bar", { compressWhitespaces: false });
+
+  testSanitize("thing.lnk", "thing.lnk.download");
+  testSanitize("thing.lnk\n", "thing.lnk.download");
+  testSanitize("thing.lnk", "thing.lnk", {
+    allowInvalidFilenames: true,
+  });
+  testSanitize("thing.lnk\n", "thing.lnk", {
+    allowInvalidFilenames: true,
+  });
+  testSanitize("thing.URl", "thing.URl.download");
+  testSanitize("thing.URl  \n", "thing.URl", {
+    allowInvalidFilenames: true,
+  });
+
+  testSanitize("thing  and more   .URl", "thing and more .URl", {
+    allowInvalidFilenames: true,
+  });
+  testSanitize("thing  and more   .URl ", "thing  and more   .URl", {
+    compressWhitespaces: false,
+    allowInvalidFilenames: true,
+  });
+
+  testSanitize("thing.local|", "thing.local.download");
+  testSanitize("thing.lo|cal", "thing.lo cal");
+  testSanitize('thing.local/*"', "thing.local_");
 });
 
 add_task(async function test_splitBaseNameAndExtension() {
