@@ -19,12 +19,6 @@ enum class BaselineSharingGroup : uint8_t {
   Last = 1,
 };
 
-// Layout context under which the baseline is being exported to.
-enum class BaselineExportContext : uint8_t {
-  LineLayout = 0,
-  Other = 1,
-};
-
 class Baseline {
  public:
   /**

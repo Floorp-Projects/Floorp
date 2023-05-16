@@ -8418,17 +8418,6 @@ var gCSSProperties = {
     invalid_values: [],
     quirks_values: { "5": "5px" },
   },
-  "baseline-source": {
-    domProp: "baselineSource",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    applies_to_first_line: true,
-    applies_to_placeholder: true,
-    initial_values: ["auto"],
-    other_values: ["first", "last"],
-    invalid_values: [],
-  },
   visibility: {
     domProp: "visibility",
     inherited: true,
