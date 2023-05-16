@@ -13,8 +13,8 @@
 
 namespace mozilla {
 
-#define LOGV(msg, ...)                          \
-  MOZ_LOG(gMFMediaEngineLog, LogLevel::Verbose, \
+#define LOG(msg, ...)                           \
+  MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug,   \
           ("MFMediaStream=%p (%s), " msg, this, \
            this->GetDescriptionName().get(), ##__VA_ARGS__))
 
@@ -65,24 +65,24 @@ HRESULT MFMediaEngineAudioStream::CreateMediaType(const TrackInfo& aInfo,
       }
       AACAudioSpecificConfigToUserData(info.mExtendedProfile, blob->Elements(),
                                        blob->Length(), mAACUserData);
-      LOGV("Generated AAC user data");
+      LOG("Generated AAC user data");
     }
     RETURN_IF_FAILED(
         mediaType->SetUINT32(MF_MT_AAC_PAYLOAD_TYPE, 0x0));  // Raw AAC packet
     RETURN_IF_FAILED(mediaType->SetBlob(
         MF_MT_USER_DATA, mAACUserData.Elements(), mAACUserData.Length()));
   }
-  LOGV("Created audio type, subtype=%s, channel=%" PRIu32 ", rate=%" PRIu32
-       ", bitDepth=%" PRIu64 ", encrypted=%d",
-       GUIDToStr(subType), info.mChannels, info.mRate, bitDepth,
-       mAudioInfo.mCrypto.IsEncrypted());
+  LOG("Created audio type, subtype=%s, channel=%" PRIu32 ", rate=%" PRIu32
+      ", bitDepth=%" PRIu64 ", encrypted=%d",
+      GUIDToStr(subType), info.mChannels, info.mRate, bitDepth,
+      mAudioInfo.mCrypto.IsEncrypted());
 
   if (IsEncrypted()) {
     ComPtr<IMFMediaType> protectedMediaType;
     RETURN_IF_FAILED(wmf::MFWrapMediaType(mediaType.Get(),
                                           MFMediaType_Protected, subType,
                                           protectedMediaType.GetAddressOf()));
-    LOGV("Wrap MFMediaType_Audio into MFMediaType_Protected");
+    LOG("Wrap MFMediaType_Audio into MFMediaType_Protected");
     *aMediaType = protectedMediaType.Detach();
   } else {
     *aMediaType = mediaType.Detach();
@@ -132,6 +132,6 @@ bool MFMediaEngineAudioStream::IsEncrypted() const {
   return mAudioInfo.mCrypto.IsEncrypted();
 }
 
-#undef LOGV
+#undef LOG
 
 }  // namespace mozilla
