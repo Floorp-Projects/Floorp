@@ -436,7 +436,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
 
     if (fd >= 0) {
       pw_core_ = pw_context_connect_fd(
-          pw_context_, fcntl(fd, F_DUPFD_CLOEXEC), nullptr, 0);
+          pw_context_, fcntl(fd, F_DUPFD_CLOEXEC, 0), nullptr, 0);
     } else {
       pw_core_ = pw_context_connect(pw_context_, nullptr, 0);
     }
