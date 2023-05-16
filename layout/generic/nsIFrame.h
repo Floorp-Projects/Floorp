@@ -1298,8 +1298,7 @@ class nsIFrame : public nsQueryFrame {
   //
   // https://www.w3.org/TR/css-page-3/#using-named-pages
   //
-  // This is only tracked during paginated frame construction when
-  // layout.css.named-pages.enabled has been set to true.
+  // This is only tracked during paginated frame construction.
   // This is used to implement fragmentation based on CSS page names. During
   // frame construction, we insert page breaks when we begin a new page box and
   // the previous page box had a different name.

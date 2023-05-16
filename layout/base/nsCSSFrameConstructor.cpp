@@ -1387,8 +1387,7 @@ nsCSSFrameConstructor::AutoFrameConstructionPageName::
     AutoFrameConstructionPageName(nsFrameConstructorState& aState,
                                   nsIFrame* const aFrame)
     : mState(aState), mNameToRestore(nullptr) {
-  if (!aState.mPresContext->IsPaginated() ||
-      !StaticPrefs::layout_css_named_pages_enabled()) {
+  if (!aState.mPresContext->IsPaginated()) {
     MOZ_ASSERT(!aState.mAutoPageNameValue,
                "Page name should not have been set");
     return;
@@ -1410,10 +1409,9 @@ nsCSSFrameConstructor::AutoFrameConstructionPageName::
 
 nsCSSFrameConstructor::AutoFrameConstructionPageName::
     ~AutoFrameConstructionPageName() {
-  // This isn't actually useful when not in paginated layout or when
-  // layout.css.named-pages.enabled is false, but it's very likely cheaper to
-  // unconditionally write this pointer than to test for paginated layout and
-  // the value of the pref and then branch on the result.
+  // This isn't actually useful when not in paginated layout, but it's very
+  // likely cheaper to unconditionally write this pointer than to test for
+  // paginated layout and then branch on the result.
   mState.mAutoPageNameValue = mNameToRestore;
 }
 
@@ -6632,8 +6630,7 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
       mPresShell, GetAbsoluteContainingBlock(parentFrame, FIXED_POS),
       GetAbsoluteContainingBlock(parentFrame, ABS_POS), containingBlock);
 
-  if (mPresShell->GetPresContext()->IsPaginated() &&
-      StaticPrefs::layout_css_named_pages_enabled()) {
+  if (mPresShell->GetPresContext()->IsPaginated()) {
     // Because this function can be called outside frame construction, we need
     // to set state.mAutoPageNameValue based on what the parent frame's auto
     // value is.
@@ -7168,8 +7165,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   nsFrameConstructorSaveState floatSaveState;
   state.MaybePushFloatContainingBlock(insertion.mParentFrame, floatSaveState);
 
-  if (state.mPresContext->IsPaginated() &&
-      StaticPrefs::layout_css_named_pages_enabled()) {
+  if (state.mPresContext->IsPaginated()) {
     // Because this function can be called outside frame construction, we need
     // to set state.mAutoPageNameValue based on what the parent frame's auto
     // value is.
@@ -9521,9 +9517,7 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
   // values.
   // This assumption helps avoid unnecessarily handling page-names for frames
   // such as form controls, which also avoids bug 1819468.
-  if (aState.mPresContext->IsPaginated() &&
-      StaticPrefs::layout_css_named_pages_enabled() &&
-      aParentFrame->IsBlockFrame()) {
+  if (aState.mPresContext->IsPaginated() && aParentFrame->IsBlockFrame()) {
     // Set the start/end page values while iterating the frame list, to walk
     // up the frame tree only once after iterating the frame list.
     // This also avoids extra property lookups on these frames.
