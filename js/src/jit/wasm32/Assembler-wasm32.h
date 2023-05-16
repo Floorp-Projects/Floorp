@@ -67,15 +67,17 @@ static constexpr Register IntArgReg2{Registers::invalid_reg};
 static constexpr Register IntArgReg3{Registers::invalid_reg};
 static constexpr Register HeapReg{Registers::invalid_reg};
 
-static constexpr Register RegExpTesterRegExpReg{Registers::invalid_reg};
-static constexpr Register RegExpTesterStringReg{Registers::invalid_reg};
-static constexpr Register RegExpTesterLastIndexReg{Registers::invalid_reg};
-static constexpr Register RegExpTesterStickyReg{Registers::invalid_reg};
-
 static constexpr Register RegExpMatcherRegExpReg{Registers::invalid_reg};
 static constexpr Register RegExpMatcherStringReg{Registers::invalid_reg};
 static constexpr Register RegExpMatcherLastIndexReg{Registers::invalid_reg};
-static constexpr Register RegExpMatcherStickyReg{Registers::invalid_reg};
+
+static constexpr Register RegExpExecTestRegExpReg{Registers::invalid_reg};
+static constexpr Register RegExpExecTestStringReg{Registers::invalid_reg};
+static constexpr Register RegExpExecTestLastIndexReg{Registers::invalid_reg};
+
+static constexpr Register RegExpSearcherRegExpReg{Registers::invalid_reg};
+static constexpr Register RegExpSearcherStringReg{Registers::invalid_reg};
+static constexpr Register RegExpSearcherLastIndexReg{Registers::invalid_reg};
 
 // Uses |invalid_reg2| to avoid static_assert failures.
 static constexpr Register JSReturnReg_Type{Registers::invalid_reg2};

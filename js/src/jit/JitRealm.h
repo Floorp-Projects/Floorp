@@ -47,7 +47,7 @@ class JitRealm {
     StringConcat = 0,
     RegExpMatcher,
     RegExpSearcher,
-    RegExpTester,
+    RegExpExecTest,
     Count
   };
 
@@ -59,7 +59,7 @@ class JitRealm {
   JitCode* generateStringConcatStub(JSContext* cx);
   JitCode* generateRegExpMatcherStub(JSContext* cx);
   JitCode* generateRegExpSearcherStub(JSContext* cx);
-  JitCode* generateRegExpTesterStub(JSContext* cx);
+  JitCode* generateRegExpExecTestStub(JSContext* cx);
 
   JitCode* getStubNoBarrier(StubIndex stub,
                             uint32_t* requiredBarriersOut) const {
@@ -132,16 +132,16 @@ class JitRealm {
     return stubs_[RegExpSearcher];
   }
 
-  JitCode* regExpTesterStubNoBarrier(uint32_t* requiredBarriersOut) const {
-    return getStubNoBarrier(RegExpTester, requiredBarriersOut);
+  JitCode* regExpExecTestStubNoBarrier(uint32_t* requiredBarriersOut) const {
+    return getStubNoBarrier(RegExpExecTest, requiredBarriersOut);
   }
 
-  [[nodiscard]] bool ensureRegExpTesterStubExists(JSContext* cx) {
-    if (stubs_[RegExpTester]) {
+  [[nodiscard]] bool ensureRegExpExecTestStubExists(JSContext* cx) {
+    if (stubs_[RegExpExecTest]) {
       return true;
     }
-    stubs_[RegExpTester] = generateRegExpTesterStub(cx);
-    return stubs_[RegExpTester];
+    stubs_[RegExpExecTest] = generateRegExpExecTestStub(cx);
+    return stubs_[RegExpExecTest];
   }
 
   // Perform the necessary read barriers on stubs described by the bitmasks

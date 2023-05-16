@@ -878,7 +878,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
         }
         break;
       case CacheOp::RegExpBuiltinExecTestResult:
-        if (!cx_->realm()->jitRealm()->ensureRegExpTesterStubExists(cx_)) {
+        if (!cx_->realm()->jitRealm()->ensureRegExpExecTestStubExists(cx_)) {
           return abort(AbortReason::Error);
         }
         break;
