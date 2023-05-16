@@ -106,6 +106,8 @@ extern crate data_encoding_ffi;
 extern crate binary_http;
 extern crate oblivious_http;
 
+extern crate mime_guess_ffi;
+
 #[cfg(feature = "uniffi_fixtures")]
 mod uniffi_fixtures {
     extern crate arithmetical;
