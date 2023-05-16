@@ -25,8 +25,8 @@ use crate::values::specified::{Angle, NonNegativePercentage};
 #[cfg(feature = "gecko")]
 use cssparser::UnicodeRange;
 use cssparser::{
-    AtRuleParser, CowRcStr, RuleBodyParser, RuleBodyItemParser, DeclarationParser, Parser,
-    QualifiedRuleParser, SourceLocation,
+    AtRuleParser, CowRcStr, DeclarationListParser, DeclarationParser, Parser, QualifiedRuleParser,
+    SourceLocation,
 };
 use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Write};
@@ -465,11 +465,11 @@ pub fn parse_font_face_block(
 ) -> FontFaceRuleData {
     let mut rule = FontFaceRuleData::empty(location);
     {
-        let mut parser = FontFaceRuleParser {
-            context,
+        let parser = FontFaceRuleParser {
+            context: context,
             rule: &mut rule,
         };
-        let mut iter = RuleBodyParser::new(input, &mut parser);
+        let mut iter = DeclarationListParser::new(input, parser);
         while let Some(declaration) = iter.next() {
             if let Err((error, slice)) = declaration {
                 let location = error.location;
@@ -547,11 +547,6 @@ impl<'a, 'b, 'i> QualifiedRuleParser<'i> for FontFaceRuleParser<'a, 'b> {
     type Prelude = ();
     type QualifiedRule = ();
     type Error = StyleParseErrorKind<'i>;
-}
-
-impl<'a, 'b, 'i> RuleBodyItemParser<'i, (), StyleParseErrorKind<'i>> for FontFaceRuleParser<'a, 'b> {
-    fn parse_qualified(&self) -> bool { false }
-    fn parse_declarations(&self) -> bool { true }
 }
 
 impl Parse for Source {

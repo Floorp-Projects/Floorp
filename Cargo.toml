@@ -152,10 +152,6 @@ moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
 # Workaround for https://github.com/rust-lang/cargo/issues/11232
 rure = { path = "third_party/rust/rure" }
 
-# To-be-published changes.
-cssparser = { git = "https://github.com/servo/rust-cssparser", rev = "ba298b63893cd61e8bdc3b3399709b0e64b4a450" }
-cssparser-macros = { git = "https://github.com/servo/rust-cssparser", rev = "ba298b63893cd61e8bdc3b3399709b0e64b4a450" }
-
 # Other overrides
 chardetng = { git = "https://github.com/hsivonen/chardetng", rev="3484d3e3ebdc8931493aa5df4d7ee9360a90e76b" }
 chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
