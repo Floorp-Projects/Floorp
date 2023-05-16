@@ -53,7 +53,7 @@ jobs:
                 - linux64-clang
                 - linux64-nasm
                 - linux64-node
-                - linux64-rust-beta
+                - linux64-rust
                 - linux64-cbindgen
                 - linux64-dump_syms
                 - linux64-pkgconf

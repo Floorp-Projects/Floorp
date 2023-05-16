@@ -44,23 +44,6 @@ linux64-rust-1.69:
         toolchain:
             - linux64-clang-toolchain
 
-linux64-rust-beta:
-    treeherder:
-        symbol: TL(rust-beta)
-    run:
-        arguments: [
-            '--channel', '1.69.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'aarch64-unknown-linux-gnu',
-            '--target', 'wasm32-wasi',
-            '--compiler-builtins-hack',
-        ]
-    fetches:
-        toolchain:
-            - linux64-clang-toolchain
-
 # A patched rust toolchain that allows us to use sanitizers in our vendored
 # build environment. See the rust fetch's comments for more details.
 linux64-rust-dev:
