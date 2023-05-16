@@ -12,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
   action: "chrome://remote/content/shared/webdriver/Actions.sys.mjs",
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
-  element: "chrome://remote/content/shared/webdriver/Element.sys.mjs",
+  element: "chrome://remote/content/marionette/element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   evaluate: "chrome://remote/content/marionette/evaluate.sys.mjs",
   interaction: "chrome://remote/content/marionette/interaction.sys.mjs",
@@ -21,7 +21,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   sandbox: "chrome://remote/content/marionette/evaluate.sys.mjs",
   Sandboxes: "chrome://remote/content/marionette/evaluate.sys.mjs",
-  WebReference: "chrome://remote/content/marionette/web-reference.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
@@ -59,10 +58,6 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     return this._legacyactions;
   }
 
-  get #nodeCache() {
-    return this.#processActor.getNodeCache();
-  }
-
   actorCreated() {
     lazy.logger.trace(
       `[${this.browsingContext.id}] MarionetteCommands actor created ` +
@@ -87,12 +82,11 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
       let waitForNextTick = false;
 
       const { name, data: serializedData } = msg;
-      const data = await lazy.json.deserialize({
-        value: serializedData,
-        browsingContext: this.contentWindow.browsingContext,
-        getKnownElement: this.#getKnownElement.bind(this),
-        getKnownShadowRoot: this.#getKnownShadowRoot.bind(this),
-      });
+      const data = lazy.json.deserialize(
+        serializedData,
+        this.#processActor.getNodeCache(),
+        this.contentWindow
+      );
 
       switch (name) {
         case "MarionetteCommandsParent:clearElement":
@@ -190,11 +184,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
       }
 
       return {
-        data: await lazy.json.clone({
-          value: result,
-          getOrCreateNodeReference: this.#getOrCreateNodeReference.bind(this),
-          browsingContext: this.contentWindow.browsingContext,
-        }),
+        data: lazy.json.clone(result, this.#processActor.getNodeCache()),
       };
     } catch (e) {
       // Always wrap errors as WebDriverError
@@ -615,149 +605,5 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     const browsingContext = this.browsingContext.parent || this.browsingContext;
 
     return { browsingContextId: browsingContext.id };
-  }
-
-  // Private methods
-
-  /**
-   * Resolve element from specified web reference identifier.
-   *
-   * @param {BrowsingContext} browsingContext
-   *     The browsing context to retrieve the element from.
-   * @param {string} nodeId
-   *     The WebReference uuid for a DOM element.
-   *
-   * @returns {Element}
-   *     The DOM element that the identifier was generated for.
-   *
-   * @throws {NoSuchElementError}
-   *     If the element doesn't exist in the current browsing context.
-   * @throws {StaleElementReferenceError}
-   *     If the element has gone stale, indicating its node document is no
-   *     longer the active document or it is no longer attached to the DOM.
-   */
-  async #getKnownElement(browsingContext, nodeId) {
-    const isKnown = await this.#isNodeReferenceKnown(browsingContext, nodeId);
-    if (!isKnown) {
-      throw new lazy.error.NoSuchElementError(
-        `The element with the reference ${nodeId} is not known in the current browsing context`
-      );
-    }
-
-    const node = this.#nodeCache.getNode(browsingContext, nodeId);
-
-    // Ensure the node is of the correct Node type.
-    if (node !== null && !lazy.element.isElement(node)) {
-      throw new lazy.error.NoSuchElementError(
-        `The element with the reference ${nodeId} is not of type HTMLElement`
-      );
-    }
-
-    // If null, which may be the case if the element has been unwrapped from a
-    // weak reference, it is always considered stale.
-    if (node === null || lazy.element.isStale(node)) {
-      throw new lazy.error.StaleElementReferenceError(
-        `The element with the reference ${nodeId} ` +
-          "is stale; either its node document is not the active document, " +
-          "or it is no longer connected to the DOM"
-      );
-    }
-
-    return node;
-  }
-
-  /**
-   * Resolve ShadowRoot from specified web reference identifier.
-   *
-   * @param {BrowsingContext} browsingContext
-   *     The browsing context to retrieve the shadow root from.
-   * @param {string} nodeId
-   *     The WebReference uuid for a ShadowRoot.
-   *
-   * @returns {ShadowRoot}
-   *     The ShadowRoot that the identifier was generated for.
-   *
-   * @throws {NoSuchShadowRootError}
-   *     If the ShadowRoot doesn't exist in the current browsing context.
-   * @throws {DetachedShadowRootError}
-   *     If the ShadowRoot is detached, indicating its node document is no
-   *     longer the active document or it is no longer attached to the DOM.
-   */
-  async #getKnownShadowRoot(browsingContext, nodeId) {
-    const isKnown = await this.#isNodeReferenceKnown(browsingContext, nodeId);
-    if (!isKnown) {
-      throw new lazy.error.NoSuchShadowRootError(
-        `The shadow root with the reference ${nodeId} is not known in the current browsing context`
-      );
-    }
-
-    const node = this.#nodeCache.getNode(browsingContext, nodeId);
-
-    // Ensure the node is of the correct Node type.
-    if (node !== null && !lazy.element.isShadowRoot(node)) {
-      throw new lazy.error.NoSuchShadowRootError(
-        `The shadow root with the reference ${nodeId} is not of type ShadowRoot`
-      );
-    }
-
-    // If null, which may be the case if the element has been unwrapped from a
-    // weak reference, it is always considered stale.
-    if (node === null || lazy.element.isDetached(node)) {
-      throw new lazy.error.DetachedShadowRootError(
-        `The shadow root with the reference ${nodeId} ` +
-          "is detached; either its node document is not the active document, " +
-          "or it is no longer connected to the DOM"
-      );
-    }
-
-    return node;
-  }
-
-  /**
-   * Returns the WebReference for the given node.
-   *
-   * Hereby it tries to find a known node reference for that node in the
-   * node cache, and returns it. Otherwise it creates a new reference and
-   * adds it to the cache.
-   *
-   * @param {BrowsingContext} browsingContext
-   *     The browsing context the element is part of.
-   * @param {Node} node
-   *     The node to create or get a WebReference for.
-   *
-   * @returns {WebReference} The web reference for the node.
-   */
-  async #getOrCreateNodeReference(browsingContext, node) {
-    const nodeRef = this.#nodeCache.getOrCreateNodeReference(node);
-    const webRef = lazy.WebReference.from(node, nodeRef);
-
-    await this.sendQuery("MarionetteCommandsChild:addNodeToSeenNodes", {
-      browsingContext,
-      nodeId: webRef.uuid,
-    });
-
-    return webRef;
-  }
-
-  /**
-   * Determines if the node reference is known for the given browsing context.
-   *
-   * For WebDriver classic only nodes from the same browsing context are
-   * allowed to be accessed.
-   *
-   * @param {BrowsingContext} browsingContext
-   *     The browsing context the element has to be part of.
-   * @param {ElementIdentifier} nodeId
-   *     The WebElement reference identifier for a DOM element.
-   *
-   * @returns {Promise<boolean>}
-   *     A promise that resolved to True if the element is known in the given
-   *     browsing context.
-   */
-  #isNodeReferenceKnown(browsingContext, nodeId) {
-    return this.sendQuery("MarionetteCommandsChild:isNodeReferenceKnown", {
-      browsingContext,
-      nodeId,
-    });
   }
 }

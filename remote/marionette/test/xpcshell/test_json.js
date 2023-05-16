@@ -5,7 +5,7 @@ const { NodeCache } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/NodeCache.sys.mjs"
 );
 const { ShadowRoot, WebElement, WebReference } = ChromeUtils.importESModule(
-  "chrome://remote/content/marionette/web-reference.sys.mjs"
+  "chrome://remote/content/marionette/element.sys.mjs"
 );
 
 function setupTest() {
@@ -27,164 +27,61 @@ function setupTest() {
   browser.document.body.appendChild(iframeEl);
   const childEl = iframeEl.contentDocument.createElement("div");
 
-  return {
-    browser,
-    browsingContext: browser.browsingContext,
-    nodeCache,
-    childEl,
-    iframeEl,
-    htmlEl,
-    shadowRoot,
-    svgEl,
-  };
+  return { browser, nodeCache, childEl, iframeEl, htmlEl, shadowRoot, svgEl };
 }
 
-function clone(options = {}) {
-  const {
-    browsingContext,
-    getOrCreateNodeReference = async () =>
-      ok(false, "'getOrCreateNodeReference' called"),
-    value,
-  } = options;
-
-  return json.clone({ browsingContext, getOrCreateNodeReference, value });
-}
-
-function deserialize(options = {}) {
-  const {
-    browsingContext,
-    getKnownElement = async () => ok(false, "'getKnownElement' called"),
-    getKnownShadowRoot = async () => ok(false, "'getKnownShadowRoot' called"),
-    value,
-  } = options;
-
-  return json.deserialize({
-    browsingContext,
-    getKnownElement,
-    getKnownShadowRoot,
-    value,
-  });
-}
-
-add_task(async function test_clone_generalTypes() {
-  const { browsingContext } = setupTest();
+add_task(function test_clone_generalTypes() {
+  const { nodeCache } = setupTest();
 
   // null
-  equal(await clone({ browsingContext, value: undefined }), null);
-  equal(await clone({ browsingContext, value: null }), null);
+  equal(json.clone(undefined, nodeCache), null);
+  equal(json.clone(null, nodeCache), null);
 
   // primitives
-  equal(await clone({ browsingContext, value: true }), true);
-  equal(await clone({ browsingContext, value: 42 }), 42);
-  equal(await clone({ browsingContext, value: "foo" }), "foo");
+  equal(json.clone(true, nodeCache), true);
+  equal(json.clone(42, nodeCache), 42);
+  equal(json.clone("foo", nodeCache), "foo");
 
   // toJSON
   equal(
-    await clone({
-      browsingContext,
-      value: {
-        toJSON() {
-          return "foo";
-        },
+    json.clone({
+      toJSON() {
+        return "foo";
       },
     }),
     "foo"
   );
 });
 
-add_task(async function test_clone_ShadowRoot() {
-  const { browsingContext, nodeCache, shadowRoot } = setupTest();
-
-  async function getOrCreateNodeReference(bc, node) {
-    equal(bc, browsingContext);
-    equal(node, shadowRoot);
-
-    const nodeRef = nodeCache.getOrCreateNodeReference(node);
-    return WebReference.from(node, nodeRef);
-  }
-
-  // Fails with missing browsing context
-  await Assert.rejects(
-    json.clone({ getOrCreateNodeReference, value: shadowRoot }),
-    /TypeError/,
-    "Missing getOrCreateNodeReference callback expected to throw"
-  );
-
-  // Fails with missing getOrCreateNodeReference callback
-  await Assert.rejects(
-    json.clone({ browsingContext, value: shadowRoot }),
-    /TypeError/,
-    "Missing getOrCreateNodeReference callback expected to throw"
-  );
+add_task(function test_clone_ShadowRoot() {
+  const { nodeCache, shadowRoot } = setupTest();
 
   const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
   deepEqual(
-    await clone({
-      browsingContext,
-      getOrCreateNodeReference,
-      value: shadowRoot,
-    }),
+    json.clone(shadowRoot, nodeCache),
     WebReference.from(shadowRoot, shadowRootRef).toJSON()
   );
 });
 
-add_task(async function test_clone_WebElement() {
-  const { browsingContext, htmlEl, nodeCache, svgEl } = setupTest();
-
-  async function getOrCreateNodeReference(bc, node) {
-    equal(bc, browsingContext);
-    ok([htmlEl, svgEl].includes(node));
-
-    const nodeRef = nodeCache.getOrCreateNodeReference(node);
-    return WebReference.from(node, nodeRef);
-  }
-
-  // Fails with missing browsing context
-  await Assert.rejects(
-    json.clone({ getOrCreateNodeReference, value: htmlEl }),
-    /TypeError/,
-    "Missing getOrCreateNodeReference callback expected to throw"
-  );
-
-  // Fails with missing getOrCreateNodeReference callback
-  await Assert.rejects(
-    json.clone({ browsingContext, value: htmlEl }),
-    /TypeError/,
-    "Missing getOrCreateNodeReference callback expected to throw"
-  );
+add_task(function test_clone_WebElement() {
+  const { htmlEl, nodeCache, svgEl } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
   deepEqual(
-    await clone({
-      browsingContext,
-      getOrCreateNodeReference,
-      value: htmlEl,
-    }),
+    json.clone(htmlEl, nodeCache),
     WebReference.from(htmlEl, htmlElRef).toJSON()
   );
 
   // Check an element with a different namespace
   const svgElRef = nodeCache.getOrCreateNodeReference(svgEl);
   deepEqual(
-    await clone({
-      browsingContext,
-      getOrCreateNodeReference,
-      value: svgEl,
-    }),
+    json.clone(svgEl, nodeCache),
     WebReference.from(svgEl, svgElRef).toJSON()
   );
 });
 
-add_task(async function test_clone_Sequences() {
-  const { browsingContext, htmlEl, nodeCache } = setupTest();
-
-  async function getOrCreateNodeReference(bc, node) {
-    equal(bc, browsingContext);
-    equal(node, htmlEl);
-
-    const nodeRef = nodeCache.getOrCreateNodeReference(node);
-    return WebReference.from(node, nodeRef);
-  }
+add_task(function test_clone_Sequences() {
+  const { htmlEl, nodeCache } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
 
@@ -201,11 +98,7 @@ add_task(async function test_clone_Sequences() {
     { bar: "baz" },
   ];
 
-  const actual = await clone({
-    browsingContext,
-    getOrCreateNodeReference,
-    value: input,
-  });
+  const actual = json.clone(input, nodeCache);
 
   equal(actual[0], null);
   equal(actual[1], true);
@@ -215,16 +108,8 @@ add_task(async function test_clone_Sequences() {
   deepEqual(actual[5], { bar: "baz" });
 });
 
-add_task(async function test_clone_objects() {
-  const { browsingContext, htmlEl, nodeCache } = setupTest();
-
-  async function getOrCreateNodeReference(bc, node) {
-    equal(bc, browsingContext);
-    equal(node, htmlEl);
-
-    const nodeRef = nodeCache.getOrCreateNodeReference(node);
-    return WebReference.from(node, nodeRef);
-  }
+add_task(function test_clone_objects() {
+  const { htmlEl, nodeCache } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
 
@@ -241,11 +126,7 @@ add_task(async function test_clone_objects() {
     object: { bar: "baz" },
   };
 
-  const actual = await clone({
-    browsingContext,
-    getOrCreateNodeReference,
-    value: input,
-  });
+  const actual = json.clone(input, nodeCache);
 
   equal(actual.null, null);
   equal(actual.boolean, true);
@@ -255,163 +136,101 @@ add_task(async function test_clone_objects() {
   deepEqual(actual.object, { bar: "baz" });
 });
 
-add_task(async function test_clone_сyclicReference() {
-  const { browsingContext } = setupTest();
-
-  const array = [];
-  array.push(array);
-
-  const obj = {};
-  obj.reference = obj;
+add_task(function test_clone_сyclicReference() {
+  const { nodeCache } = setupTest();
 
   // object
-  await Assert.rejects(
-    clone({ browsingContext, value: obj }),
-    /JavaScriptError/,
-    "Cyclic reference expected to throw"
-  );
+  Assert.throws(() => {
+    const obj = {};
+    obj.reference = obj;
+    json.clone(obj, nodeCache);
+  }, /JavaScriptError/);
 
   // array
-  await Assert.rejects(
-    clone({ browsingContext, value: array }),
-    /JavaScriptError/,
-    "Cyclic reference expected to throw"
-  );
+  Assert.throws(() => {
+    const array = [];
+    array.push(array);
+    json.clone(array, nodeCache);
+  }, /JavaScriptError/);
 
   // array in object
-  await Assert.rejects(
-    clone({ browsingContext, value: { array } }),
-    /JavaScriptError/,
-    "Cyclic reference expected to throw"
-  );
+  Assert.throws(() => {
+    const array = [];
+    array.push(array);
+    json.clone({ array }, nodeCache);
+  }, /JavaScriptError/);
 
   // object in array
-  await Assert.rejects(
-    clone({ browsingContext, value: [obj] }),
-    /JavaScriptError/,
-    "Cyclic reference expected to throw"
-  );
+  Assert.throws(() => {
+    const obj = {};
+    obj.reference = obj;
+    json.clone([obj], nodeCache);
+  }, /JavaScriptError/);
 });
 
-add_task(async function test_deserialize_generalTypes() {
-  const { browsingContext } = setupTest();
+add_task(function test_deserialize_generalTypes() {
+  const { browser, nodeCache } = setupTest();
+  const win = browser.document.ownerGlobal;
 
   // null
-  equal(await deserialize({ browsingContext, value: undefined }), undefined);
-  equal(await deserialize({ browsingContext, value: null }), null);
+  equal(json.deserialize(undefined, nodeCache, win), undefined);
+  equal(json.deserialize(null, nodeCache, win), null);
 
   // primitives
-  equal(await deserialize({ browsingContext, value: true }), true);
-  equal(await deserialize({ browsingContext, value: 42 }), 42);
-  equal(await deserialize({ browsingContext, value: "foo" }), "foo");
+  equal(json.deserialize(true, nodeCache, win), true);
+  equal(json.deserialize(42, nodeCache, win), 42);
+  equal(json.deserialize("foo", nodeCache, win), "foo");
 });
 
-add_task(async function test_deserialize_ShadowRoot() {
-  const { browsingContext, nodeCache, shadowRoot } = setupTest();
+add_task(function test_deserialize_ShadowRoot() {
+  const { browser, nodeCache, shadowRoot } = setupTest();
+  const win = browser.document.ownerGlobal;
 
-  const getKnownElement = async () => ok(false, "'getKnownElement' called");
-  const getKnownShadowRoot = async (bc, nodeId) =>
-    nodeCache.getNode(bc, nodeId);
-
-  // Unknown shadow root
+  // Fails to resolve for unknown elements
   const unknownShadowRootId = { [ShadowRoot.Identifier]: "foo" };
-  equal(
-    await deserialize({
-      browsingContext,
-      getKnownElement,
-      getKnownShadowRoot,
-      value: unknownShadowRootId,
-    }),
-    null
-  );
+  Assert.throws(() => {
+    json.deserialize(unknownShadowRootId, nodeCache, win);
+  }, /NoSuchShadowRootError/);
 
   const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
   const shadowRootEl = { [ShadowRoot.Identifier]: shadowRootRef };
 
-  // Fails with missing browsing context
-  await Assert.rejects(
-    json.deserialize({
-      getKnownElement,
-      getKnownShadowRoot,
-      value: shadowRootEl,
-    }),
-    /TypeError/,
-    "Missing browsing context expected to throw"
-  );
-
-  // Fails with missing getKnownShadowRoot callback
-  await Assert.rejects(
-    json.deserialize({ browsingContext, getKnownElement, value: shadowRootEl }),
-    /TypeError/,
-    "Missing getKnownShadowRoot callback expected to throw"
-  );
+  // Fails to resolve for missing window reference
+  Assert.throws(() => json.deserialize(shadowRootEl, nodeCache), /TypeError/);
 
   // Previously seen element is associated with original web element reference
-  const root = await deserialize({
-    browsingContext,
-    getKnownShadowRoot,
-    value: shadowRootEl,
-  });
-  deepEqual(root, nodeCache.getNode(browsingContext, shadowRootRef));
+  const root = json.deserialize(shadowRootEl, nodeCache, win);
+  deepEqual(root, shadowRoot);
+  deepEqual(root, nodeCache.getNode(browser.browsingContext, shadowRootRef));
 });
 
-add_task(async function test_deserialize_WebElement() {
-  const { browsingContext, htmlEl, nodeCache } = setupTest();
+add_task(function test_deserialize_WebElement() {
+  const { browser, htmlEl, nodeCache } = setupTest();
+  const win = browser.document.ownerGlobal;
 
-  const getKnownElement = async (bc, nodeId) => nodeCache.getNode(bc, nodeId);
-  const getKnownShadowRoot = async () =>
-    ok(false, "'getKnownShadowRoot' called");
-
-  // Unknown element
+  // Fails to resolve for unknown elements
   const unknownWebElId = { [WebElement.Identifier]: "foo" };
-  equal(
-    await json.deserialize({
-      browsingContext,
-      getKnownElement,
-      getKnownShadowRoot,
-      value: unknownWebElId,
-    }),
-    null
-  );
+  Assert.throws(() => {
+    json.deserialize(unknownWebElId, nodeCache, win);
+  }, /NoSuchElementError/);
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
   const htmlWebEl = { [WebElement.Identifier]: htmlElRef };
 
-  // Fails with missing browsing context
-  await Assert.rejects(
-    json.deserialize({ getKnownElement, getKnownShadowRoot, value: htmlWebEl }),
-    /TypeError/,
-    "Missing browsing context expected to throw"
-  );
-
-  // Fails with missing getKnownElement callback
-  await Assert.rejects(
-    json.deserialize({ browsingContext, getKnownShadowRoot, value: htmlWebEl }),
-    /TypeError/,
-    "Missing getKnownElement callback expected to throw"
-  );
+  // Fails to resolve for missing window reference
+  Assert.throws(() => json.deserialize(htmlWebEl, nodeCache), /TypeError/);
 
   // Previously seen element is associated with original web element reference
-  const el = await deserialize({
-    browsingContext,
-    getKnownElement,
-    value: htmlWebEl,
-  });
+  const el = json.deserialize(htmlWebEl, nodeCache, win);
   deepEqual(el, htmlEl);
-  deepEqual(el, nodeCache.getNode(browsingContext, htmlElRef));
+  deepEqual(el, nodeCache.getNode(browser.browsingContext, htmlElRef));
 });
 
-add_task(async function test_deserialize_Sequences() {
-  const { browsingContext, htmlEl, nodeCache } = setupTest();
+add_task(function test_deserialize_Sequences() {
+  const { browser, htmlEl, nodeCache } = setupTest();
+  const win = browser.document.ownerGlobal;
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
-
-  async function getKnownElement(bc, nodeId) {
-    equal(bc, browsingContext);
-    equal(nodeId, htmlElRef);
-
-    return nodeCache.getNode(bc, nodeId);
-  }
 
   const input = [
     null,
@@ -421,11 +240,7 @@ add_task(async function test_deserialize_Sequences() {
     { bar: "baz" },
   ];
 
-  const actual = await deserialize({
-    browsingContext,
-    getKnownElement,
-    value: input,
-  });
+  const actual = json.deserialize(input, nodeCache, win);
 
   equal(actual[0], null);
   equal(actual[1], true);
@@ -434,17 +249,11 @@ add_task(async function test_deserialize_Sequences() {
   deepEqual(actual[4], { bar: "baz" });
 });
 
-add_task(async function test_deserialize_objects() {
-  const { browsingContext, htmlEl, nodeCache } = setupTest();
+add_task(function test_deserialize_objects() {
+  const { browser, htmlEl, nodeCache } = setupTest();
+  const win = browser.document.ownerGlobal;
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
-
-  async function getKnownElement(bc, nodeId) {
-    equal(bc, browsingContext);
-    equal(nodeId, htmlElRef);
-
-    return nodeCache.getNode(bc, nodeId);
-  }
 
   const input = {
     null: null,
@@ -454,11 +263,7 @@ add_task(async function test_deserialize_objects() {
     object: { bar: "baz" },
   };
 
-  const actual = await deserialize({
-    browsingContext,
-    getKnownElement,
-    value: input,
-  });
+  const actual = json.deserialize(input, nodeCache, win);
 
   equal(actual.null, null);
   equal(actual.boolean, true);

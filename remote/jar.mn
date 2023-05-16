@@ -57,7 +57,6 @@ remote.jar:
   content/shared/webdriver/Actions.sys.mjs (shared/webdriver/Actions.sys.mjs)
   content/shared/webdriver/Assert.sys.mjs (shared/webdriver/Assert.sys.mjs)
   content/shared/webdriver/Capabilities.sys.mjs (shared/webdriver/Capabilities.sys.mjs)
-  content/shared/webdriver/Element.sys.mjs (shared/webdriver/Element.sys.mjs)
   content/shared/webdriver/Errors.sys.mjs (shared/webdriver/Errors.sys.mjs)
   content/shared/webdriver/KeyData.sys.mjs (shared/webdriver/KeyData.sys.mjs)
   content/shared/webdriver/NodeCache.sys.mjs (shared/webdriver/NodeCache.sys.mjs)

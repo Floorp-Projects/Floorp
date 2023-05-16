@@ -12,12 +12,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 
   accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
-  element: "chrome://remote/content/shared/webdriver/Element.sys.mjs",
+  element: "chrome://remote/content/marionette/element.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   json: "chrome://remote/content/marionette/json.sys.mjs",
   event: "chrome://remote/content/marionette/event.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
-  WebElement: "chrome://remote/content/shared/webdriver/Element.sys.mjs",
+  WebElement: "chrome://remote/content/marionette/element.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
