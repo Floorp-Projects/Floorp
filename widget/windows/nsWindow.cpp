@@ -1909,16 +1909,6 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
  **************************************************************/
 void nsWindow::SetInputRegion(const InputRegion& aInputRegion) {
   mInputRegion = aInputRegion;
-
-  if (!mWnd) {
-    return;
-  }
-
-  const bool transparent = aInputRegion.mFullyTransparent;
-  LONG_PTR oldStyle = ::GetWindowLongPtrW(mWnd, GWL_EXSTYLE);
-  LONG_PTR newStyle = transparent ? (oldStyle | WS_EX_TRANSPARENT)
-                                  : (oldStyle & ~WS_EX_TRANSPARENT);
-  ::SetWindowLongPtrW(mWnd, GWL_EXSTYLE, newStyle);
 }
 
 /**************************************************************
