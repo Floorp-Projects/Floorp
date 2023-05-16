@@ -816,6 +816,17 @@ class ProviderQuickSuggest extends UrlbarProvider {
     this.logger.info("Checking if suggestion can be added");
     this.logger.debug(JSON.stringify({ suggestion }));
 
+    // Return false if suggestions are disabled.
+    if (
+      (suggestion.is_sponsored &&
+        !lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")) ||
+      (!suggestion.is_sponsored &&
+        !lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))
+    ) {
+      this.logger.info("Suggestions disabled, not adding suggestion");
+      return false;
+    }
+
     // Return false if an impression cap has been hit.
     if (
       (suggestion.is_sponsored &&
