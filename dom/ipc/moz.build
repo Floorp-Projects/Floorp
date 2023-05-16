@@ -168,6 +168,7 @@ PREPROCESSED_IPDL_SOURCES += [
 
 IPDL_SOURCES += [
     "DOMTypes.ipdlh",
+    "IPCTransferable.ipdlh",
     "MemoryReportTypes.ipdlh",
     "PColorPicker.ipdl",
     "PContentPermission.ipdlh",

@@ -1,0 +1,88 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/dom/PermissionMessageUtils.h";
+
+include IPCBlob;
+include NeckoChannelParams;
+
+using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
+[RefCounted] using class nsIPrincipal from "nsIPrincipal.h";
+[RefCounted] using class nsIReferrerInfo from "nsIReferrerInfo.h";
+[MoveOnly] using class mozilla::ipc::BigBuffer from "mozilla/ipc/BigBuffer.h";
+
+namespace mozilla {
+namespace dom {
+
+struct IPCTransferableDataString
+{
+  BigBuffer data;
+};
+
+struct IPCTransferableDataCString
+{
+  BigBuffer data;
+};
+
+struct IPCTransferableDataInputStream
+{
+  // NOTE: Editor currently relies on these input streams being synchronous, so
+  // we can't safely serialize them using IPCStream (see bug 1778565). Instead,
+  // they're serialized as a `BigBuffer`, and converted to a nsStringInputStream
+  // on the receiving side. If we are able to use async streams reliably in the
+  // future, we could consider switching the code which adds `nsIInputStream`s
+  // to the transferable to use `BlobImpl` instead, for more consistency between
+  // image formats.
+  BigBuffer data;
+};
+
+struct IPCTransferableDataImageContainer
+{
+  BigBuffer data;
+  uint32_t width;
+  uint32_t height;
+  uint32_t stride;
+  SurfaceFormat format;
+};
+
+struct IPCTransferableDataBlob
+{
+  IPCBlob blob;
+};
+
+union IPCTransferableDataType
+{
+  IPCTransferableDataString;
+  IPCTransferableDataCString;
+  IPCTransferableDataInputStream;
+  IPCTransferableDataImageContainer;
+  IPCTransferableDataBlob;
+};
+
+struct IPCTransferableDataItem
+{
+  nsCString flavor;
+  IPCTransferableDataType data;
+};
+
+struct IPCTransferableData
+{
+  IPCTransferableDataItem[] items;
+};
+
+struct IPCTransferable
+{
+  IPCTransferableData data;
+  bool isPrivateData;
+  nullable nsIPrincipal requestingPrincipal;
+  CookieJarSettingsArgs? cookieJarSettings;
+  nsContentPolicyType contentPolicyType;
+  nullable nsIReferrerInfo referrerInfo;
+};
+
+} // namespace dom
+} // namespace mozilla

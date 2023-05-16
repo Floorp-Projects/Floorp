@@ -182,6 +182,7 @@ class Element;
 class Event;
 class EventTarget;
 class HTMLInputElement;
+class IPCTransferable;
 class IPCTransferableData;
 class IPCTransferableDataImageContainer;
 class IPCTransferableDataItem;
@@ -2872,6 +2873,11 @@ class nsContentUtils {
       const nsContentPolicyType& aContentPolicyType, bool aAddDataFlavor,
       nsITransferable* aTransferable, const bool aFilterUnknownFlavors);
 
+  static nsresult IPCTransferableToTransferable(
+      const mozilla::dom::IPCTransferable& aIPCTransferable,
+      bool aAddDataFlavor, nsITransferable* aTransferable,
+      const bool aFilterUnknownFlavors);
+
   static nsresult IPCTransferableDataItemToVariant(
       const mozilla::dom::IPCTransferableDataItem& aItem,
       nsIWritableVariant* aVariant);
@@ -2884,6 +2890,11 @@ class nsContentUtils {
   static void TransferableToIPCTransferableData(
       nsITransferable* aTransferable,
       mozilla::dom::IPCTransferableData* aTransferableData, bool aInSyncMessage,
+      mozilla::dom::ContentParent* aParent);
+
+  static void TransferableToIPCTransferable(
+      nsITransferable* aTransferable,
+      mozilla::dom::IPCTransferable* aIPCTransferable, bool aInSyncMessage,
       mozilla::dom::ContentParent* aParent);
 
   /*

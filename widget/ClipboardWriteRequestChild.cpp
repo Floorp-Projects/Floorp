@@ -32,20 +32,10 @@ ClipboardWriteRequestChild::SetData(nsITransferable* aTransferable,
 #endif
 
   mIsValid = false;
-  IPCTransferableData ipcTransferableData;
-  nsContentUtils::TransferableToIPCTransferableData(
-      aTransferable, &ipcTransferableData, false, nullptr);
-  Maybe<net::CookieJarSettingsArgs> cookieJarSettingsArgs;
-  if (nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-          aTransferable->GetCookieJarSettings()) {
-    net::CookieJarSettingsArgs args;
-    net::CookieJarSettings::Cast(cookieJarSettings)->Serialize(args);
-    cookieJarSettingsArgs = Some(std::move(args));
-  }
-  SendSetData(std::move(ipcTransferableData), aTransferable->GetIsPrivateData(),
-              aTransferable->GetRequestingPrincipal(), cookieJarSettingsArgs,
-              aTransferable->GetContentPolicyType(),
-              aTransferable->GetReferrerInfo());
+  IPCTransferable ipcTransferable;
+  nsContentUtils::TransferableToIPCTransferable(aTransferable, &ipcTransferable,
+                                                false, nullptr);
+  SendSetData(std::move(ipcTransferable));
   return NS_OK;
 }
 
