@@ -606,9 +606,20 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       this.eligiblePipVideos.delete(video);
     }
 
+    let videos = ChromeUtils.nondeterministicGetWeakSetKeys(
+      this.eligiblePipVideos
+    );
+
     this.sendAsyncMessage("PictureInPicture:UpdateEligiblePipVideoCount", {
-      count: ChromeUtils.nondeterministicGetWeakSetKeys(this.eligiblePipVideos)
-        .length,
+      pipCount: videos.length,
+      pipDisabledCount: videos.reduce(
+        (accumulator, currentVal) =>
+          accumulator +
+          (currentVal.getAttribute("disablePictureInPicture") === "true"
+            ? 1
+            : 0),
+        0
+      ),
     });
   }
 
@@ -618,9 +629,20 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       this.eligiblePipVideos.delete(video);
     }
 
+    let videos = ChromeUtils.nondeterministicGetWeakSetKeys(
+      this.eligiblePipVideos
+    );
+
     this.sendAsyncMessage("PictureInPicture:UpdateEligiblePipVideoCount", {
-      count: ChromeUtils.nondeterministicGetWeakSetKeys(this.eligiblePipVideos)
-        .length,
+      pipCount: videos.length,
+      pipDisabledCount: videos.reduce(
+        (accumulator, currentVal) =>
+          accumulator +
+          (currentVal.getAttribute("disablePictureInPicture") === "true"
+            ? 1
+            : 0),
+        0
+      ),
     });
   }
 
