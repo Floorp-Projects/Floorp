@@ -22,11 +22,6 @@ ChromeUtils.defineESModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
 });
 
-/* global OS */
-Cc["@mozilla.org/net/osfileconstantsservice;1"]
-  .getService(Ci.nsIOSFileConstantsService)
-  .init();
-
 /**
  * Creates and starts a new download, using either DownloadCopySaver or
  * DownloadLegacySaver based on the current test run.
@@ -287,7 +282,7 @@ add_task(async function test_unix_permissions() {
           // writable as specified by the system umask.
           Assert.equal(
             stat.permissions,
-            isTemporary ? 0o400 : 0o666 & ~OS.Constants.Sys.umask
+            isTemporary ? 0o400 : 0o666 & ~Services.sysinfo.getProperty("umask")
           );
         }
       }
