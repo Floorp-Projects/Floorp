@@ -6,8 +6,7 @@
 
 #include "FileSystemDatabaseManagerVersion001.h"
 
-#include <stdint.h>
-
+#include "FileSystemContentTypeGuess.h"
 #include "FileSystemDataManager.h"
 #include "FileSystemFileManager.h"
 #include "ResultStatement.h"
@@ -903,6 +902,9 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
   QM_TRY_UNWRAP(EntryId entryId, GetUniqueEntryId(mConnection, aHandle));
   MOZ_ASSERT(!entryId.IsEmpty());
 
+  const ContentType& type =
+      aType.IsVoid() ? FileSystemContentTypeGuess::FromPath(name) : aType;
+
   mozStorageTransaction transaction(
       mConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
   {
@@ -918,7 +920,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
     QM_TRY_UNWRAP(ResultStatement stmt,
                   ResultStatement::Create(mConnection, insertFileQuery));
     QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, entryId)));
-    QM_TRY(QM_TO_RESULT(stmt.BindContentTypeByName("type"_ns, aType)));
+    QM_TRY(QM_TO_RESULT(stmt.BindContentTypeByName("type"_ns, type)));
     QM_TRY(QM_TO_RESULT(stmt.BindNameByName("name"_ns, name)));
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
   }
