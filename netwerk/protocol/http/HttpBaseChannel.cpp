@@ -2689,6 +2689,7 @@ nsresult HttpBaseChannel::ComputeCrossOriginOpenerPolicyMismatch() {
 }
 
 nsresult HttpBaseChannel::ProcessCrossOriginSecurityHeaders() {
+  StoreProcessCrossOriginSecurityHeadersCalled(true);
   nsresult rv = ProcessCrossOriginEmbedderPolicyHeader();
   if (NS_FAILED(rv)) {
     return rv;
