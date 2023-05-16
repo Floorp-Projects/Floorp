@@ -2359,9 +2359,13 @@ static Rect TransformGfxRectToAncestor(
   }
   const nsIFrame* ancestor = aOutAncestor ? *aOutAncestor : aAncestor.mFrame;
   float factor = ancestor->PresContext()->AppUnitsPerDevPixel();
+  // Caller is expected to properly clamp if the result is to be converted to
+  // app units. Technically, the clipping bound here is infinite, but that
+  // causes clipping to become unpredictable due to floating point errors.
+  const auto boundsAppUnits = Rect::MaxIntRect();
   Rect maxBounds =
-      Rect(float(nscoord_MIN) / factor * 0.5, float(nscoord_MIN) / factor * 0.5,
-           float(nscoord_MAX) / factor, float(nscoord_MAX) / factor);
+      Rect(boundsAppUnits.x / factor, boundsAppUnits.y / factor,
+           boundsAppUnits.width / factor, boundsAppUnits.height / factor);
   return ctm.TransformAndClipBounds(aRect, maxBounds);
 }
 
