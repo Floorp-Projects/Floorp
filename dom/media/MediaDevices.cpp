@@ -238,6 +238,7 @@ RefPtr<MediaDeviceSetRefCnt> MediaDevices::FilterExposedDevices(
     // they are exposed only when explicitly and individually allowed by the
     // user.
   }
+  bool legacy = StaticPrefs::media_devices_enumerate_legacy_enabled();
   bool outputIsDefault = true;  // First output is the default.
   bool haveDefaultOutput = false;
   nsTHashSet<nsString> exposedMicrophoneGroupIds;
@@ -250,7 +251,7 @@ RefPtr<MediaDeviceSetRefCnt> MediaDevices::FilterExposedDevices(
         if (mCanExposeMicrophoneInfo) {
           exposedMicrophoneGroupIds.Insert(device->mRawGroupID);
         }
-        if (!DeviceInformationCanBeExposed()) {
+        if (!DeviceInformationCanBeExposed() && !legacy) {
           dropMics = true;
         }
         break;
@@ -258,7 +259,7 @@ RefPtr<MediaDeviceSetRefCnt> MediaDevices::FilterExposedDevices(
         if (dropCams) {
           continue;
         }
-        if (!DeviceInformationCanBeExposed()) {
+        if (!DeviceInformationCanBeExposed() && !legacy) {
           dropCams = true;
         }
         break;
@@ -405,15 +406,15 @@ void MediaDevices::ResumeEnumerateDevices(
 void MediaDevices::ResolveEnumerateDevicesPromise(
     Promise* aPromise, const LocalMediaDeviceSet& aDevices) const {
   nsTArray<RefPtr<MediaDeviceInfo>> infos;
+  bool legacy = StaticPrefs::media_devices_enumerate_legacy_enabled();
 
   for (const RefPtr<LocalMediaDevice>& device : aDevices) {
-    MOZ_ASSERT(device->Kind() < MediaDeviceKind::EndGuard_);
-    bool canExposeInfo = CanExposeInfo(device->Kind());
-
+    bool exposeInfo = CanExposeInfo(device->Kind()) || legacy;
+    bool exposeLabel = legacy ? DeviceInformationCanBeExposed() : exposeInfo;
     infos.AppendElement(MakeRefPtr<MediaDeviceInfo>(
-        canExposeInfo ? device->mID : u""_ns, device->Kind(),
-        canExposeInfo ? device->mName : u""_ns,
-        canExposeInfo ? device->mGroupID : u""_ns));
+        exposeInfo ? device->mID : u""_ns, device->Kind(),
+        exposeLabel ? device->mName : u""_ns,
+        exposeInfo ? device->mGroupID : u""_ns));
   }
   aPromise->MaybeResolve(std::move(infos));
 }
