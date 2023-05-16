@@ -867,13 +867,17 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     // them.
     switch (op) {
       case CacheOp::CallRegExpMatcherResult:
-      case CacheOp::RegExpBuiltinExecMatchResult:
         if (!cx_->realm()->jitRealm()->ensureRegExpMatcherStubExists(cx_)) {
           return abort(AbortReason::Error);
         }
         break;
       case CacheOp::CallRegExpSearcherResult:
         if (!cx_->realm()->jitRealm()->ensureRegExpSearcherStubExists(cx_)) {
+          return abort(AbortReason::Error);
+        }
+        break;
+      case CacheOp::RegExpBuiltinExecMatchResult:
+        if (!cx_->realm()->jitRealm()->ensureRegExpExecMatchStubExists(cx_)) {
           return abort(AbortReason::Error);
         }
         break;

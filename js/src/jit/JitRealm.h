@@ -47,6 +47,7 @@ class JitRealm {
     StringConcat = 0,
     RegExpMatcher,
     RegExpSearcher,
+    RegExpExecMatch,
     RegExpExecTest,
     Count
   };
@@ -59,6 +60,7 @@ class JitRealm {
   JitCode* generateStringConcatStub(JSContext* cx);
   JitCode* generateRegExpMatcherStub(JSContext* cx);
   JitCode* generateRegExpSearcherStub(JSContext* cx);
+  JitCode* generateRegExpExecMatchStub(JSContext* cx);
   JitCode* generateRegExpExecTestStub(JSContext* cx);
 
   JitCode* getStubNoBarrier(StubIndex stub,
@@ -130,6 +132,18 @@ class JitRealm {
     }
     stubs_[RegExpSearcher] = generateRegExpSearcherStub(cx);
     return stubs_[RegExpSearcher];
+  }
+
+  JitCode* regExpExecMatchStubNoBarrier(uint32_t* requiredBarriersOut) const {
+    return getStubNoBarrier(RegExpExecMatch, requiredBarriersOut);
+  }
+
+  [[nodiscard]] bool ensureRegExpExecMatchStubExists(JSContext* cx) {
+    if (stubs_[RegExpExecMatch]) {
+      return true;
+    }
+    stubs_[RegExpExecMatch] = generateRegExpExecMatchStub(cx);
+    return stubs_[RegExpExecMatch];
   }
 
   JitCode* regExpExecTestStubNoBarrier(uint32_t* requiredBarriersOut) const {
