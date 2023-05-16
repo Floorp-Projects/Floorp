@@ -16,8 +16,6 @@ const UnsupportedBrowserItem = createFactory(
 );
 
 const Types = require("resource://devtools/client/inspector/compatibility/types.js");
-const FluentReact = require("resource://devtools/client/shared/vendor/fluent-react.js");
-const Localized = createFactory(FluentReact.Localized);
 
 class UnsupportedBrowserList extends PureComponent {
   static get propTypes() {
@@ -30,31 +28,47 @@ class UnsupportedBrowserList extends PureComponent {
     const { browsers } = this.props;
 
     const unsupportedBrowserItems = {};
-    const browsersList = [];
+
+    const unsupportedVersionsListByBrowser = new Map();
+
+    for (const { name, version, status } of browsers) {
+      if (!unsupportedVersionsListByBrowser.has(name)) {
+        unsupportedVersionsListByBrowser.set(name, []);
+      }
+      unsupportedVersionsListByBrowser.get(name).push({ version, status });
+    }
 
     for (const { id, name, version, status } of browsers) {
       // Only display one icon per browser
       if (!unsupportedBrowserItems[id]) {
+        if (status === "esr") {
+          // The data is ordered by version number, so we'll show the first unsupported
+          // browser version. This might be confusing for Firefox as we'll show ESR
+          // version first, and so the user wouldn't be able to tell if there's an issue
+          // only on ESR, or also on release.
+          // So only show ESR if there's no newer unsupported version
+          const newerVersionIsUnsupported = browsers.find(
+            browser => browser.id == id && browser.status !== status
+          );
+          if (newerVersionIsUnsupported) {
+            continue;
+          }
+        }
+
         unsupportedBrowserItems[id] = UnsupportedBrowserItem({
           key: id,
           id,
           name,
+          version,
+          unsupportedVersions: unsupportedVersionsListByBrowser.get(name),
         });
       }
-      browsersList.push(`${name} ${version}${status ? ` (${status})` : ""}`);
     }
-    return Localized(
+    return dom.ul(
       {
-        id: "compatibility-issue-browsers-list",
-        $browsers: browsersList.join("\n"),
-        attrs: { title: true },
+        className: "compatibility-unsupported-browser-list",
       },
-      dom.ul(
-        {
-          className: "compatibility-unsupported-browser-list",
-        },
-        Object.values(unsupportedBrowserItems)
-      )
+      Object.values(unsupportedBrowserItems)
     );
   }
 }

@@ -75,20 +75,64 @@ async function assertIssueList(panel, expectedIssues) {
     ok(issueEl, `Issue element for the ${property} is in the panel`);
 
     if (expectedIssue.unsupportedBrowsers) {
+      // We only display a single icon per unsupported browser, so we need to
+      // group the expected unsupported browsers (versions) by their browser id.
+      const expectedUnsupportedBrowsersById = new Map();
+      for (const unsupportedBrowser of expectedIssue.unsupportedBrowsers) {
+        if (!expectedUnsupportedBrowsersById.has(unsupportedBrowser.id)) {
+          expectedUnsupportedBrowsersById.set(unsupportedBrowser.id, []);
+        }
+        expectedUnsupportedBrowsersById
+          .get(unsupportedBrowser.id)
+          .push(unsupportedBrowser);
+      }
+
       const unsupportedBrowserListEl = issueEl.querySelector(
         ".compatibility-unsupported-browser-list"
       );
-      is(
-        unsupportedBrowserListEl.getAttribute("title"),
-        getFluentString("compatibility-issue-browsers-list", "title", {
-          browsers: expectedIssue.unsupportedBrowsers
-            .map(
-              ({ name, status, version }) =>
-                `${name} ${version}${status ? ` (${status})` : ""}`
-            )
-            .join("\n"),
-        })
+      const unsupportedBrowsersEl = unsupportedBrowserListEl.querySelectorAll(
+        "li"
       );
+
+      is(
+        unsupportedBrowsersEl.length,
+        expectedUnsupportedBrowsersById.size,
+        "The expected number of browser icons are displayed"
+      );
+
+      for (const unsupportedBrowserEl of unsupportedBrowsersEl) {
+        const expectedUnsupportedBrowsers = expectedUnsupportedBrowsersById.get(
+          unsupportedBrowserEl.getAttribute("data-browser-id")
+        );
+
+        ok(expectedUnsupportedBrowsers, "The expected browser is displayed");
+        // debugger;
+        is(
+          unsupportedBrowserEl.querySelector(".compatibility-browser-version")
+            .innerText,
+          // If esr is not supported, but a newest version isn't as well, we don't display
+          // the esr version number
+          (
+            expectedUnsupportedBrowsers.find(
+              ({ status }) => status !== "esr"
+            ) || expectedUnsupportedBrowsers[0]
+          ).version,
+          "The expected browser version is displayed"
+        );
+
+        is(
+          unsupportedBrowserEl.getAttribute("title"),
+          getFluentString("compatibility-issue-browsers-list", "title", {
+            browsers: expectedUnsupportedBrowsers
+              .map(
+                ({ name, status, version }) =>
+                  `${name} ${version}${status ? ` (${status})` : ""}`
+              )
+              .join("\n"),
+          }),
+          "The brower item has the expected title attribute"
+        );
+      }
     }
 
     for (const [key, value] of Object.entries(expectedIssue)) {
