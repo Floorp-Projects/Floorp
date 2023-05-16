@@ -77,14 +77,7 @@ static gboolean scrollToPointCB(AtkComponent* aComponent, AtkCoordType coords,
 AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
                                       AtkCoordType aCoordType) {
   Accessible* acc = GetInternalObj(aAtkObj);
-  if (!acc) {
-    // This might be an ATK Socket.
-    acc = GetAccessibleWrap(aAtkObj);
-    if (!acc) {
-      return nullptr;
-    }
-  }
-  if (acc->IsLocal() && acc->AsLocal()->IsDefunct()) {
+  if (!acc || (acc->IsLocal() && acc->AsLocal()->IsDefunct())) {
     return nullptr;
   }
 
