@@ -92,15 +92,15 @@ void Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
   aRetval.set(view);
 }
 
-void Crypto::RandomUUID(nsAString& aRetVal) {
+void Crypto::RandomUUID(nsACString& aRetVal) {
   // NSID_LENGTH == 39 == 36 UUID chars + 2 curly braces + 1 NUL byte
   static_assert(NSID_LENGTH == 39);
 
   nsIDToCString uuidString(nsID::GenerateUUID());
   MOZ_ASSERT(strlen(uuidString.get()) == NSID_LENGTH - 1);
 
-  // Convert UUID chars to UTF-16 retval, omitting the curly braces and NUL.
-  CopyASCIItoUTF16(Substring(uuidString.get() + 1, NSID_LENGTH - 3), aRetVal);
+  // Omit the curly braces and NUL.
+  aRetVal = Substring(uuidString.get() + 1, NSID_LENGTH - 3);
   MOZ_ASSERT(aRetVal.Length() == NSID_LENGTH - 3);
 }
 
