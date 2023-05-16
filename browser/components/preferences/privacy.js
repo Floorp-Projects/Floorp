@@ -19,6 +19,8 @@ const CONTENT_BLOCKING_PREFS = [
   "privacy.trackingprotection.fingerprinting.enabled",
   "privacy.trackingprotection.cryptomining.enabled",
   "privacy.firstparty.isolate",
+  "privacy.trackingprotection.emailtracking.enabled",
+  "privacy.trackingprotection.emailtracking.pbmode.enabled",
 ];
 
 const PREF_URLBAR_QUICKSUGGEST_BLOCKLIST =
@@ -84,6 +86,11 @@ Preferences.addAll([
   { id: "privacy.trackingprotection.pbmode.enabled", type: "bool" },
   { id: "privacy.trackingprotection.fingerprinting.enabled", type: "bool" },
   { id: "privacy.trackingprotection.cryptomining.enabled", type: "bool" },
+  { id: "privacy.trackingprotection.emailtracking.enabled", type: "bool" },
+  {
+    id: "privacy.trackingprotection.emailtracking.pbmode.enabled",
+    type: "bool",
+  },
 
   // Social tracking
   { id: "privacy.trackingprotection.socialtracking.enabled", type: "bool" },
@@ -1621,6 +1628,15 @@ var gPrivacyPane = {
     let stpCookiePref = Preferences.get(
       "privacy.socialtracking.block_cookies.enabled"
     );
+    // Currently, we don't expose the email tracking protection setting on our
+    // privacy UI. Instead, we use the existing tracking protection checkbox to
+    // control the email tracking protection.
+    let emailTPPref = Preferences.get(
+      "privacy.trackingprotection.emailtracking.enabled"
+    );
+    let emailTPPBMPref = Preferences.get(
+      "privacy.trackingprotection.emailtracking.pbmode.enabled"
+    );
     let tpMenu = document.getElementById("trackingProtectionMenu");
     let tpCheckbox = document.getElementById(
       "contentBlockingTrackingProtectionCheckbox"
@@ -1641,6 +1657,8 @@ var gPrivacyPane = {
       case "always":
         enabledPref.value = true;
         pbmPref.value = true;
+        emailTPPref.value = true;
+        emailTPPBMPref.value = true;
         if (stpCookiePref.value) {
           stpPref.value = true;
         }
@@ -1648,6 +1666,8 @@ var gPrivacyPane = {
       case "private":
         enabledPref.value = false;
         pbmPref.value = true;
+        emailTPPref.value = false;
+        emailTPPBMPref.value = true;
         if (stpCookiePref.value) {
           stpPref.value = false;
         }
@@ -1655,6 +1675,8 @@ var gPrivacyPane = {
       case "never":
         enabledPref.value = false;
         pbmPref.value = false;
+        emailTPPref.value = false;
+        emailTPPBMPref.value = false;
         if (stpCookiePref.value) {
           stpPref.value = false;
         }
