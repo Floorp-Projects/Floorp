@@ -248,8 +248,7 @@ export function loadSourceText(cx, source, sourceActor) {
     if (!sourceActor) {
       sourceActor = getFirstSourceActorForGeneratedSource(
         getState(),
-        source.id,
-        source.thread
+        source.id
       );
     }
     return dispatch(loadGeneratedSourceText({ cx, sourceActor }));

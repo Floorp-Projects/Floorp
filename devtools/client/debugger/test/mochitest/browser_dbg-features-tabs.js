@@ -32,7 +32,7 @@ add_task(async function() {
   // Open each visible source in tabs
   const uniqueUrls = new Set();
   for (const source of displayedSources) {
-    info(`Opening '${source.url}' from ${source.thread}`);
+    info(`Opening '${source.url}'`);
     await selectSource(dbg, source);
     uniqueUrls.add(source.url);
   }
@@ -54,7 +54,7 @@ add_task(async function() {
   );
 
   for (const source of displayedSources) {
-    info(`Closing '${source.url}' from ${source.thread}`);
+    info(`Closing '${source.url}'`);
     await closeTab(dbg, source);
   }
 
