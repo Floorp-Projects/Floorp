@@ -371,9 +371,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
   virtual void UpdateMediaSize(const nsIntSize& aSize);
-  // Like UpdateMediaSize, but only updates the size if no size has yet
-  // been set.
-  void UpdateInitialMediaSize(const nsIntSize& aSize);
 
   void Invalidate(bool aImageSizeChanged,
                   const Maybe<nsIntSize>& aNewIntrinsicSize,
