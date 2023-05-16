@@ -1869,8 +1869,15 @@ RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateRawDevices(
         Maybe<MediaDeviceSet> speakers;
         RefPtr devices = new MediaDeviceSetRefCnt();
 
-        // Enumerate microphones first, then cameras, then speakers, since the
-        // enumerateDevices() algorithm expects them listed in that order.
+        if (hasVideo) {
+          videoBackend = hasFakeCams ? fakeBackend : realBackend;
+          MediaDeviceSet videos;
+          LOG("EnumerateRawDevices Task: Getting video sources with %s backend",
+              videoBackend == fakeBackend ? "fake" : "real");
+          GetMediaDevices(videoBackend, aVideoInputType, videos,
+                          videoLoopDev.get());
+          devices->AppendElements(videos);
+        }
         if (hasAudio) {
           audioBackend = hasFakeMics ? fakeBackend : realBackend;
           MediaDeviceSet audios;
@@ -1884,15 +1891,6 @@ RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateRawDevices(
             micsOfVideoBackend->AppendElements(audios);
           }
           devices->AppendElements(audios);
-        }
-        if (hasVideo) {
-          videoBackend = hasFakeCams ? fakeBackend : realBackend;
-          MediaDeviceSet videos;
-          LOG("EnumerateRawDevices Task: Getting video sources with %s backend",
-              videoBackend == fakeBackend ? "fake" : "real");
-          GetMediaDevices(videoBackend, aVideoInputType, videos,
-                          videoLoopDev.get());
-          devices->AppendElements(videos);
         }
         if (hasAudioOutput) {
           MediaDeviceSet outputs;

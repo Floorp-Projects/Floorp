@@ -175,9 +175,9 @@ function addLoadEvent() {}
 
 /* import-globals-from /testing/mochitest/tests/SimpleTest/SimpleTest.js */
 /* import-globals-from head.js */
-const scriptsReady = Promise.all(
+var scriptsReady = Promise.all(
   ["/tests/SimpleTest/SimpleTest.js", "head.js"].map(script => {
-    const el = document.createElement("script");
+    var el = document.createElement("script");
     el.src = script;
     document.head.appendChild(el);
     return new Promise(r => (el.onload = r));
@@ -189,12 +189,7 @@ function createHTML(options) {
 }
 
 async function runTest(testFunction) {
-  await Promise.all([
-    scriptsReady,
-    SpecialPowers.pushPrefEnv({
-      set: [["media.navigator.permission.fake", true]],
-    }),
-  ]);
+  await scriptsReady;
   await runTestWhenReady(async (...args) => {
     await testFunction(...args);
     await noGum();
@@ -203,39 +198,22 @@ async function runTest(testFunction) {
 
 // noGum - Helper to detect whether active guM tracks still exist.
 //
-// Note it relies on the permissions system to detect active tracks, so it won't
-// catch getUserMedia use while media.navigator.permission.disabled is true
-// (which is common in automation), UNLESS we set
-// media.navigator.permission.fake to true also, like runTest() does above.
+// It relies on the fact that, by spec, device labels from enumerateDevices are
+// only visible during active gum calls. They're also visible when persistent
+// permissions are granted, so turn off media.navigator.permission.disabled
+// (which is normally on otherwise in our tests). Lastly, we must turn on
+// media.navigator.permission.fake otherwise fake devices don't count as active.
 async function noGum() {
+  await pushPrefs(
+    ["media.navigator.permission.disabled", false],
+    ["media.navigator.permission.fake", true]
+  );
   if (!navigator.mediaDevices) {
     // No mediaDevices, then gUM cannot have been called either.
     return;
   }
-  const mediaManagerService = Cc[
-    "@mozilla.org/mediaManagerService;1"
-  ].getService(Ci.nsIMediaManagerService);
-
-  const hasCamera = {};
-  const hasMicrophone = {};
-  mediaManagerService.mediaCaptureWindowState(
-    window,
-    hasCamera,
-    hasMicrophone,
-    {},
-    {},
-    {},
-    {},
-    false
-  );
-  is(
-    hasCamera.value,
-    mediaManagerService.STATE_NOCAPTURE,
-    "Test must leave no active camera gUM tracks behind."
-  );
-  is(
-    hasMicrophone.value,
-    mediaManagerService.STATE_NOCAPTURE,
-    "Test must leave no active microphone gUM tracks behind."
-  );
+  const [device] = await navigator.mediaDevices.enumerateDevices();
+  if (device) {
+    is(device.label, "", "Test must leave no active gUM streams behind.");
+  }
 }
