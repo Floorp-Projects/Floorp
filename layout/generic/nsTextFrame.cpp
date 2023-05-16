@@ -10058,7 +10058,8 @@ bool nsTextFrame::IsAtEndOfLine() const {
 }
 
 Maybe<nscoord> nsTextFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext) const {
   if (aBaselineGroup == BaselineSharingGroup::Last) {
     return Nothing{};
   }
