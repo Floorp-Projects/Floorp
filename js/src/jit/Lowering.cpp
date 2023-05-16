@@ -3139,8 +3139,7 @@ void LIRGenerator::visitRegExpExecMatch(MRegExpExecMatch* ins) {
 
   auto* lir = new (alloc())
       LRegExpExecMatch(useFixedAtStart(ins->regexp(), RegExpMatcherRegExpReg),
-                       useFixedAtStart(ins->string(), RegExpMatcherStringReg),
-                       tempFixed(RegExpMatcherLastIndexReg));
+                       useFixedAtStart(ins->string(), RegExpMatcherStringReg));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

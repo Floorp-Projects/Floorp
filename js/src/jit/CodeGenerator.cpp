@@ -2926,7 +2926,6 @@ void CodeGenerator::visitOutOfLineRegExpExecMatch(
 void CodeGenerator::visitRegExpExecMatch(LRegExpExecMatch* lir) {
   MOZ_ASSERT(ToRegister(lir->regexp()) == RegExpMatcherRegExpReg);
   MOZ_ASSERT(ToRegister(lir->string()) == RegExpMatcherStringReg);
-  MOZ_ASSERT(ToRegister(lir->temp0()) == RegExpMatcherLastIndexReg);
   MOZ_ASSERT(ToOutValue(lir) == JSReturnOperand);
 
 #if defined(JS_NUNBOX32)
@@ -2934,12 +2933,9 @@ void CodeGenerator::visitRegExpExecMatch(LRegExpExecMatch* lir) {
   static_assert(RegExpMatcherRegExpReg != JSReturnReg_Data);
   static_assert(RegExpMatcherStringReg != JSReturnReg_Type);
   static_assert(RegExpMatcherStringReg != JSReturnReg_Data);
-  static_assert(RegExpMatcherLastIndexReg != JSReturnReg_Type);
-  static_assert(RegExpMatcherLastIndexReg != JSReturnReg_Data);
 #elif defined(JS_PUNBOX64)
   static_assert(RegExpMatcherRegExpReg != JSReturnReg);
   static_assert(RegExpMatcherStringReg != JSReturnReg);
-  static_assert(RegExpMatcherLastIndexReg != JSReturnReg);
 #endif
 
   masm.reserveStack(RegExpReservedStack);
