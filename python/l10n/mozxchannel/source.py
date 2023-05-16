@@ -83,6 +83,6 @@ class HgTOMLParser(paths.TOMLParser):
             raise paths.ConfigNotFound(parse_ctx.path)
 
         try:
-            parse_ctx.data = toml.loads(data)
+            parse_ctx.data = toml.loads(data.decode())
         except toml.TomlDecodeError as e:
             raise RuntimeError(f"In file '{parse_ctx.path}':\n  {e!s}") from e
