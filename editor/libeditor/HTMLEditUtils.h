@@ -237,6 +237,8 @@ class HTMLEditUtils final {
                              const nsIContent& aChild) {
     switch (aChild.NodeType()) {
       case nsINode::TEXT_NODE:
+      case nsINode::COMMENT_NODE:
+      case nsINode::CDATA_SECTION_NODE:
       case nsINode::ELEMENT_NODE:
       case nsINode::DOCUMENT_FRAGMENT_NODE:
         return HTMLEditUtils::CanNodeContain(aParentNodeName,
@@ -246,12 +248,14 @@ class HTMLEditUtils final {
   }
 
   // XXX Only this overload does not check the node type.  Therefore, only this
-  //     treat Document, Comment, CDATASection, etc.
+  //     handle Document and ProcessingInstructionTagName.
   static bool CanNodeContain(nsAtom& aParentNodeName, nsAtom& aChildNodeName) {
     nsHTMLTag childTagEnum;
-    // XXX Should this handle #cdata-section too?
     if (&aChildNodeName == nsGkAtoms::textTagName) {
       childTagEnum = eHTMLTag_text;
+    } else if (&aChildNodeName == nsGkAtoms::commentTagName ||
+               &aChildNodeName == nsGkAtoms::cdataTagName) {
+      childTagEnum = eHTMLTag_comment;
     } else {
       childTagEnum = nsHTMLTags::AtomTagToId(&aChildNodeName);
     }
