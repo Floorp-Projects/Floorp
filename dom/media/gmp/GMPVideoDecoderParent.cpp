@@ -40,6 +40,7 @@ GMPVideoDecoderParent::GMPVideoDecoderParent(GMPContentParent* aPlugin)
       mCallback(nullptr),
       mVideoHost(this),
       mPluginId(aPlugin->GetPluginId()),
+      mPluginType(aPlugin->GetPluginType()),
       mFrameCount(0) {
   MOZ_ASSERT(mPlugin);
 }
@@ -213,13 +214,12 @@ nsresult GMPVideoDecoderParent::Drain() {
   return NS_OK;
 }
 
-const nsCString& GMPVideoDecoderParent::GetDisplayName() const {
-  if (!mIsOpen) {
-    NS_WARNING("Trying to use an dead GMP video decoder");
+nsCString GMPVideoDecoderParent::GetDisplayName() const {
+  if (NS_WARN_IF(!mIsOpen)) {
+    return ""_ns;
   }
 
   MOZ_ASSERT(mPlugin->GMPEventTarget()->IsOnCurrentThread());
-
   return mPlugin->GetDisplayName();
 }
 
