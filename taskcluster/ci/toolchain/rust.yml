@@ -37,12 +37,8 @@ linux64-rust-1.69:
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'aarch64-unknown-linux-gnu',
             '--target', 'wasm32-wasi',
-            '--compiler-builtins-hack',
         ]
         toolchain-alias: linux64-rust
-    fetches:
-        toolchain:
-            - linux64-clang-toolchain
 
 # A patched rust toolchain that allows us to use sanitizers in our vendored
 # build environment. See the rust fetch's comments for more details.
@@ -173,12 +169,8 @@ linux64-rust-android-1.69:
             '--target', 'aarch64-linux-android',
             '--target', 'i686-linux-android',
             '--target', 'x86_64-linux-android',
-            '--compiler-builtins-hack',
         ]
         toolchain-alias: linux64-rust-android
-    fetches:
-        toolchain:
-            - linux64-clang-toolchain
 
 linux64-rust-windows-1.65:
     description: "rust repack with windows-cross support"
