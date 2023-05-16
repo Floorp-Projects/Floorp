@@ -268,6 +268,26 @@ TEST_F(RtpSenderEgressTest,
   EXPECT_TRUE(transport_.last_packet()->options.included_in_allocation);
 }
 
+TEST_F(RtpSenderEgressTest,
+       DoesntWriteTransmissionOffsetOnRtxPaddingBeforeMedia) {
+  header_extensions_.RegisterByUri(kTransmissionOffsetExtensionId,
+                                   TransmissionOffset::Uri());
+
+  // Prior to sending media, timestamps are 0.
+  std::unique_ptr<RtpPacketToSend> padding =
+      BuildRtpPacket(/*marker_bit=*/true, /*capture_time_ms=*/0);
+  padding->set_packet_type(RtpPacketMediaType::kPadding);
+  padding->SetSsrc(kRtxSsrc);
+  EXPECT_TRUE(padding->HasExtension<TransmissionOffset>());
+
+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
+  sender->SendPacket(std::move(padding), PacedPacketInfo());
+
+  absl::optional<int32_t> offset =
+      transport_.last_packet()->packet.GetExtension<TransmissionOffset>();
+  EXPECT_EQ(offset, 0);
+}
+
 TEST_F(RtpSenderEgressTest, OnSendSideDelayUpdated) {
   StrictMock<MockSendSideDelayObserver> send_side_delay_observer;
   RtpRtcpInterface::Configuration config = DefaultConfig();
