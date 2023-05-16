@@ -210,8 +210,9 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
   // In case of VideoTimingExtension, since it's present not in every packet,
   // data after rtp header may be corrupted if these packets are protected by
   // the FEC.
-  TimeDelta diff = now - packet->capture_time();
-  if (packet->HasExtension<TransmissionOffset>()) {
+  if (packet->HasExtension<TransmissionOffset>() &&
+      packet->capture_time() > Timestamp::Zero()) {
+    TimeDelta diff = now - packet->capture_time();
     packet->SetExtension<TransmissionOffset>(kTimestampTicksPerMs * diff.ms());
   }
   if (packet->HasExtension<AbsoluteSendTime>()) {
