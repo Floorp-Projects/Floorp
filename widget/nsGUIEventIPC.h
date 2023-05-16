@@ -815,7 +815,6 @@ struct ParamTraits<mozilla::widget::InputContext> {
     WriteParam(aWriter, aParam.mActionHint);
     WriteParam(aWriter, aParam.mAutocapitalize);
     WriteParam(aWriter, aParam.mOrigin);
-    WriteParam(aWriter, aParam.mMayBeIMEUnaware);
     WriteParam(aWriter, aParam.mHasHandledUserInput);
     WriteParam(aWriter, aParam.mInPrivateBrowsing);
     mozilla::ipc::WriteIPDLParam(aWriter, aWriter->GetActor(), aParam.mURI);
@@ -828,7 +827,6 @@ struct ParamTraits<mozilla::widget::InputContext> {
            ReadParam(aReader, &aResult->mActionHint) &&
            ReadParam(aReader, &aResult->mAutocapitalize) &&
            ReadParam(aReader, &aResult->mOrigin) &&
-           ReadParam(aReader, &aResult->mMayBeIMEUnaware) &&
            ReadParam(aReader, &aResult->mHasHandledUserInput) &&
            ReadParam(aReader, &aResult->mInPrivateBrowsing) &&
            mozilla::ipc::ReadIPDLParam(aReader, aReader->GetActor(),
