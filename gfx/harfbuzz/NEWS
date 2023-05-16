@@ -1,3 +1,52 @@
+Overview of changes leading to 7.3.0
+Tuesday, May 9, 2023
+====================================
+- Speedup applying glyph variation in VarComposites fonts (over 40% speedup).
+  (Behdad Esfahbod)
+- Speedup instancing some fonts (over 20% speedup in instancing RobotoFlex).
+  (Behdad Esfahbod)
+- Speedup shaping some fonts (over 30% speedup in shaping Roboto).
+  (Behdad Esfahbod)
+- Support subsetting VarComposites and beyond-64k fonts. (Behdad Esfahbod)
+- New configuration macro HB_MINIMIZE_MEMORY_USAGE to favor optimizing memory
+  usage over speed. (Behdad Esfahbod)
+- Supporting setting the mapping between old and new glyph indices during
+  subsetting. (Garret Rieger)
+- Various fixes and improvements.
+  (Behdad Esfahbod, Denis Rochette, Garret Rieger, Han Seung Min, Qunxin Liu)
+
+- New API:
++hb_subset_input_old_to_new_glyph_mapping()
+
+
+Overview of changes leading to 7.2.0
+Thursday, April 27, 2023
+====================================
+- Add Tifinagh to the list of scripts that can natively be either right-to-left
+  or left-to-right, to improve handling of its glyph positioning.
+  (Simon Cozens)
+- Return also single substitution from hb_ot_layout_lookup_get_glyph_alternates()
+  (Behdad Esfahbod)
+- Fix 4.2.0 regression in applying across syllables in syllabic scripts.
+  (Behdad Esfahbod)
+- Add flag to avoid glyph substitution closure during subsetting, and the
+  corresponding “--no-layout-closure” option to “hb-subset” command line tool.
+  (Garret Rieger)
+- Support instancing COLRv1 table. (Qunxin Liu)
+- Don’t drop used user-defined name table entries during subsetting.
+  (Qunxin Liu)
+- Optimize handling of “gvar” table. (Behdad Esfahbod)
+- Various subsetter bug fixes and improvements. (Garret Rieger, Qunxin Liu)
+- Various documentation improvements. (Behdad Esfahbod, Josef Friedrich)
+
+- New API:
++HB_SUBSET_FLAGS_NO_LAYOUT_CLOSURE
++HB_UNICODE_COMBINING_CLASS_CCC132
+
+- Deprecated API:
++HB_UNICODE_COMBINING_CLASS_CCC133
+
+
 Overview of changes leading to 7.1.0
 Friday, March 3, 2023
 ====================================
@@ -7,6 +56,7 @@ Friday, March 3, 2023
 
 - New API:
 +hb_font_set_variation()
+
 
 Overview of changes leading to 7.0.1
 Monday, February 20, 2023

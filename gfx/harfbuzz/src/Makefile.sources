@@ -362,6 +362,7 @@ HB_SUBSET_sources = \
 	hb-subset-accelerator.hh \
 	hb-subset-plan.cc \
 	hb-subset-plan.hh \
+	hb-subset-plan-member-list.hh \
 	hb-subset-repacker.cc \
 	hb-subset.cc \
 	hb-subset.hh \

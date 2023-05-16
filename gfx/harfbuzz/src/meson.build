@@ -361,6 +361,7 @@ hb_subset_sources = files(
   'hb-subset-instancer-solver.cc',
   'hb-subset-plan.cc',
   'hb-subset-plan.hh',
+  'hb-subset-plan-member-list.hh',
   'hb-subset-repacker.cc',
   'graph/gsubgpos-context.cc',
   'graph/gsubgpos-context.hh',
@@ -668,6 +669,7 @@ if get_option('tests').enabled()
       'test-ot-name': 'test-ot-name.cc',
       'test-ot-glyphname': 'test-ot-glyphname.cc',
       'test-ot-gpos-size-params': 'test-gpos-size-params.cc',
+      'test-ot-gsub-get-alternates': 'test-gsub-get-alternates.cc',
       'test-ot-gsub-would-substitute': 'test-gsub-would-substitute.cc',
       'test-use-table': 'test-use-table.cc',
     }
