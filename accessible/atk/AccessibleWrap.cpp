@@ -892,24 +892,15 @@ AtkRelationSet* refRelationSetCB(AtkObject* aAtkObj) {
 // Check if aAtkObj is a valid MaiAtkObject, and return the AccessibleWrap
 // for it.
 AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj) {
-  bool isMAIObject = IS_MAI_OBJECT(aAtkObj);
-  NS_ENSURE_TRUE(isMAIObject || MAI_IS_ATK_SOCKET(aAtkObj), nullptr);
+  NS_ENSURE_TRUE(IS_MAI_OBJECT(aAtkObj), nullptr);
 
-  AccessibleWrap* accWrap = nullptr;
-  if (isMAIObject) {
-    // If we're working with an ATK object, we need to convert the Accessible
-    // back to an AccessibleWrap:
-    Accessible* storedAcc = MAI_ATK_OBJECT(aAtkObj)->acc;
-    if (!storedAcc) {
-      return nullptr;
-    }
-
-    accWrap = static_cast<AccessibleWrap*>(storedAcc->AsLocal());
-  } else {
-    // The ATK socket stores an AccessibleWrap directly, so we can get the value
-    // with no casting.
-    accWrap = MAI_ATK_SOCKET(aAtkObj)->accWrap;
+  // If we're working with an ATK object, we need to convert the Accessible
+  // back to an AccessibleWrap:
+  Accessible* storedAcc = MAI_ATK_OBJECT(aAtkObj)->acc;
+  if (!storedAcc) {
+    return nullptr;
   }
+  auto* accWrap = static_cast<AccessibleWrap*>(storedAcc->AsLocal());
 
   // Check if the accessible was deconstructed.
   if (!accWrap) return nullptr;

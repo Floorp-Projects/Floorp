@@ -43,10 +43,6 @@
 #include "TreeWalker.h"
 #include "xpcAccessibleApplication.h"
 
-#ifdef MOZ_ACCESSIBILITY_ATK
-#  include "AtkSocketAccessible.h"
-#endif
-
 #ifdef XP_WIN
 #  include "mozilla/a11y/Compatibility.h"
 #  include "mozilla/dom/ContentChild.h"
