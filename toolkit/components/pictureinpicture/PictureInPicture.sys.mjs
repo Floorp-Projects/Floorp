@@ -54,12 +54,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "media.videocontrols.picture-in-picture.urlbar-button.enabled",
   false
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "RESPECT_PIP_DISABLED",
-  "media.videocontrols.picture-in-picture.respect-disablePictureInPicture",
-  true
-);
 
 /**
  * Tracks the number of currently open player windows for Telemetry tracking
@@ -95,11 +89,8 @@ export class PictureInPictureToggleParent extends JSWindowActorParent {
         break;
       }
       case "PictureInPicture:UpdateEligiblePipVideoCount": {
-        let { pipCount, pipDisabledCount } = aMessage.data;
-        PictureInPicture.updateEligiblePipVideoCount(browsingContext, {
-          pipCount,
-          pipDisabledCount,
-        });
+        let { count } = aMessage.data;
+        PictureInPicture.updateEligiblePipVideoCount(browsingContext, count);
         PictureInPicture.updateUrlbarToggle(browser);
         break;
       }
@@ -225,28 +216,6 @@ export var PictureInPicture = {
       return null;
     }
     return playerWin;
-  },
-
-  /**
-   * Get the PiP panel for a browser. Create the panel if needed.
-   * @param {Browser} browser The current browser
-   * @returns panel The panel element
-   */
-  getPanelForBrowser(browser) {
-    let panel = browser.ownerDocument.querySelector("#PictureInPicturePanel");
-
-    if (!panel) {
-      browser.ownerGlobal.ensureCustomElements("moz-toggle");
-      browser.ownerGlobal.ensureCustomElements("moz-support-link");
-      let template = browser.ownerDocument.querySelector(
-        "#PictureInPicturePanelTemplate"
-      );
-      let clone = template.content.cloneNode(true);
-      template.replaceWith(clone);
-
-      panel = this.getPanelForBrowser(browser);
-    }
-    return panel;
   },
 
   handleEvent(event) {
@@ -438,40 +407,20 @@ export var PictureInPicture = {
   },
 
   /**
-   * Update the respect PiPDisabled pref value when the toggle is clicked.
-   * @param {Event} event The event from toggling the respect
-   *   PiPDisabled in the PiP panel
-   */
-  toggleRespectDisablePip(event) {
-    let toggle = event.target;
-    let force = !(toggle.getAttribute("enabled") === "true");
-    toggle.setAttribute("enabled", force);
-
-    Services.prefs.setBoolPref(
-      "media.videocontrols.picture-in-picture.respect-disablePictureInPicture",
-      !force
-    );
-  },
-
-  /**
-   * Updates the PiP count and PiPDisabled count of eligible PiP videos for a
-   * respective WindowGlobal.
+   * Updates the count of eligible PiP videos for a respective WindowGlobal.
    * @param {BrowsingContext} browsingContext The BrowsingContext with eligible videos
-   * @param {Object} object
-   *    pipCount: The number of eligible videos for the respective WindowGlobal
-   *    pipDisabledCount: The number of disablePiP videos for the respective WindowGlobal
+   * @param {Number} count The number of eligible videos for the respective WindowGlobal
    */
-  updateEligiblePipVideoCount(browsingContext, object) {
+  updateEligiblePipVideoCount(browsingContext, count) {
     let windowGlobal = browsingContext.currentWindowGlobal;
 
     if (windowGlobal) {
-      this.weakGlobalToEligiblePipCount.set(windowGlobal, object);
+      this.weakGlobalToEligiblePipCount.set(windowGlobal, count);
     }
   },
 
   /**
-   * A generator function that yeilds a WindowGlobal, it's respective PiP
-   * count, and if any of the videos have PiPDisabled set.
+   * A generator function that yeilds a WindowGlobal and it's respective PiP count.
    * @param {Browser} browser The selected browser
    */
   *windowGlobalPipCountGenerator(browser) {
@@ -484,39 +433,28 @@ export var PictureInPicture = {
         continue;
       }
 
-      let {
-        pipCount,
-        pipDisabledCount,
-      } = this.weakGlobalToEligiblePipCount.get(windowGlobal) || {
-        pipCount: 0,
-        pipDisabledCount: 0,
-      };
+      let pipCountForGlobal =
+        this.weakGlobalToEligiblePipCount.get(windowGlobal) || 0;
 
       contextsToVisit.push(...currentBC.children);
 
-      yield { windowGlobal, pipCount, pipDisabledCount };
+      yield { windowGlobal, count: pipCountForGlobal };
     }
   },
 
   /**
-   * Gets the total eligible video count and total PiPDisabled count for a
-   * given browser.
+   * Gets the total eligible video count for a given browser.
    * @param {Browser} browser The selected browser
    * @returns Total count of eligible PiP videos for the selected broser
    */
   getEligiblePipVideoCount(browser) {
     let totalPipCount = 0;
-    let totalPipDisabled = 0;
 
-    for (let {
-      pipCount,
-      pipDisabledCount,
-    } of this.windowGlobalPipCountGenerator(browser)) {
-      totalPipCount += pipCount;
-      totalPipDisabled += pipDisabledCount;
+    for (let { count } of this.windowGlobalPipCountGenerator(browser)) {
+      totalPipCount += count;
     }
 
-    return { totalPipCount, totalPipDisabled };
+    return totalPipCount;
   },
 
   /**
@@ -535,8 +473,7 @@ export var PictureInPicture = {
 
   /**
    * Toggles the visibility of the PiP urlbar button. If the total video count
-   * is 1, then we will show the button. If any eligible video has PiPDisabled,
-   * then the button will show. Otherwise the button is hidden.
+   * is 1, then we will show the button. Otherwise the button is hidden.
    * @param {Browser} browser The selected browser
    */
   updateUrlbarToggle(browser) {
@@ -549,15 +486,10 @@ export var PictureInPicture = {
       return;
     }
 
-    let { totalPipCount, totalPipDisabled } = this.getEligiblePipVideoCount(
-      browser
-    );
+    let totalPipCount = this.getEligiblePipVideoCount(browser);
 
     let pipToggle = win.document.getElementById("picture-in-picture-button");
-    pipToggle.hidden = !(
-      totalPipCount === 1 ||
-      (totalPipDisabled > 0 && lazy.RESPECT_PIP_DISABLED)
-    );
+    pipToggle.hidden = !(totalPipCount === 1);
 
     let browserHasPip = !!this.browserWeakMap.get(browser);
     if (browserHasPip) {
@@ -568,8 +500,7 @@ export var PictureInPicture = {
   },
 
   /**
-   * Open the PiP panel if any video has PiPDisabled, otherwise finds the
-   * correct WindowGlobal to open the eligible PiP video.
+   * Finds the correct WindowGlobal to open the eligible PiP video.
    * @param {Event} event Event from clicking the PiP urlbar button
    */
   toggleUrlbar(event) {
@@ -580,64 +511,14 @@ export var PictureInPicture = {
     let win = event.target.ownerGlobal;
     let browser = win.gBrowser.selectedBrowser;
 
-    let pipPanel = this.getPanelForBrowser(browser);
-
-    for (let {
-      windowGlobal,
-      pipCount,
-      pipDisabledCount,
-    } of this.windowGlobalPipCountGenerator(browser)) {
-      if (
-        (pipDisabledCount > 0 && lazy.RESPECT_PIP_DISABLED) ||
-        (pipPanel && pipPanel.state !== "closed")
-      ) {
-        this.togglePipPanel(browser);
-        return;
-      } else if (pipCount === 1) {
+    for (let { windowGlobal, count } of this.windowGlobalPipCountGenerator(
+      browser
+    )) {
+      if (count === 1) {
         let actor = windowGlobal.getActor("PictureInPictureToggle");
         actor.sendAsyncMessage("PictureInPicture:UrlbarToggle");
         return;
       }
-    }
-  },
-
-  /**
-   * Set the toggle for PiPDisabled when the panel is shown.
-   * If the pref is set from about:config, we need to update
-   * the toggle switch in the panel to match the pref.
-   * @param {Event} event The panel shown event
-   */
-  onPipPanelShown(event) {
-    let toggle = event.target.querySelector("#respect-pipDisabled-switch");
-    toggle.pressed = !lazy.RESPECT_PIP_DISABLED;
-  },
-
-  /**
-   * Update the visibility of the urlbar PiP button when the panel is hidden.
-   * The button will show when there is more than 1 video and at least 1 video
-   * has PiPDisabled. If we no longer want to respect PiPDisabled then we
-   * need to check if the urlbar button should still be visible.
-   * @param {Event} event The panel hidden event
-   */
-  onPipPanelHidden(event) {
-    this.updateUrlbarToggle(event.view.gBrowser.selectedBrowser);
-  },
-
-  /**
-   * Create the PiP panel if needed and toggle the display of the panel
-   * @param {Browser} browser The current browser
-   */
-  togglePipPanel(browser) {
-    let pipPanel = this.getPanelForBrowser(browser);
-
-    if (pipPanel.state === "closed") {
-      let anchor = browser.ownerDocument.querySelector(
-        "#picture-in-picture-button"
-      );
-
-      pipPanel.openPopup(anchor, "bottomright topright");
-    } else {
-      pipPanel.hidePopup();
     }
   },
 

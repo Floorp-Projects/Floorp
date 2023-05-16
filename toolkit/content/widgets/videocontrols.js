@@ -150,15 +150,6 @@ this.VideoControlsWidget = class {
     someVideo,
     reflowedDimensions
   ) {
-    if (
-      prefs[
-        "media.videocontrols.picture-in-picture.respect-disablePictureInPicture"
-      ] &&
-      someVideo.getAttribute("disablePictureInPicture") === "true"
-    ) {
-      return false;
-    }
-
     if (isNaN(someVideo.duration)) {
       return false;
     }

@@ -268,11 +268,6 @@ pref("media.videocontrols.picture-in-picture.video-toggle.has-used", false);
 pref("media.videocontrols.picture-in-picture.display-text-tracks.toggle.enabled", true);
 pref("media.videocontrols.picture-in-picture.display-text-tracks.size", "medium");
 pref("media.videocontrols.picture-in-picture.improved-video-controls.enabled", true);
-#ifdef NIGHTLY_BUILD
-  pref("media.videocontrols.picture-in-picture.respect-disablePictureInPicture", true);
-#else
-  pref("media.videocontrols.picture-in-picture.respect-disablePictureInPicture", false);
-#endif
 pref("media.videocontrols.keyboard-tab-to-all-controls", true);
 
 #ifdef MOZ_WEBRTC
