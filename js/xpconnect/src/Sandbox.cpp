@@ -1418,7 +1418,7 @@ nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
           return NS_ERROR_INVALID_ARG;
         }
         const JSClass* unwrappedClass = JS::GetClass(unwrappedProto);
-        useSandboxProxy = IS_WN_CLASS(unwrappedClass) ||
+        useSandboxProxy = unwrappedClass->isWrappedNative() ||
                           mozilla::dom::IsDOMClass(unwrappedClass);
       }
 
