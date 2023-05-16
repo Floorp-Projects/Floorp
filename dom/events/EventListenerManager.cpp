@@ -107,8 +107,6 @@ EventListenerManagerBase::EventListenerManagerBase()
       mMayHaveTouchEventListener(false),
       mMayHaveMouseEnterLeaveEventListener(false),
       mMayHavePointerEnterLeaveEventListener(false),
-      mMayHaveKeyEventListener(false),
-      mMayHaveInputOrCompositionEventListener(false),
       mMayHaveSelectionChangeEventListener(false),
       mMayHaveFormSelectEventListener(false),
       mMayHaveTransitionEventListener(false),
@@ -380,21 +378,6 @@ void EventListenerManager::AddEventListenerInternal(
           window->SetHasMouseEnterLeaveEventListeners();
         }
         break;
-      case eKeyDown:
-      case eKeyPress:
-      case eKeyUp:
-        if (!aFlags.mInSystemGroup) {
-          mMayHaveKeyEventListener = true;
-        }
-        break;
-      case eCompositionEnd:
-      case eCompositionStart:
-      case eCompositionUpdate:
-      case eEditorInput:
-        if (!aFlags.mInSystemGroup) {
-          mMayHaveInputOrCompositionEventListener = true;
-        }
-        break;
       case eEditorBeforeInput:
         if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
           window->SetHasBeforeInputEventListenersForTelemetry();
@@ -550,34 +533,6 @@ void EventListenerManager::AddEventListenerInternal(
                                      ToChar(resolvedEventMessage))
                          .get());
         NS_ASSERTION(aTypeAtom != nsGkAtoms::onmouseleave,
-                     nsPrintfCString("resolvedEventMessage=%s",
-                                     ToChar(resolvedEventMessage))
-                         .get());
-        NS_ASSERTION(aTypeAtom != nsGkAtoms::onkeydown,
-                     nsPrintfCString("resolvedEventMessage=%s",
-                                     ToChar(resolvedEventMessage))
-                         .get());
-        NS_ASSERTION(aTypeAtom != nsGkAtoms::onkeypress,
-                     nsPrintfCString("resolvedEventMessage=%s",
-                                     ToChar(resolvedEventMessage))
-                         .get());
-        NS_ASSERTION(aTypeAtom != nsGkAtoms::onkeyup,
-                     nsPrintfCString("resolvedEventMessage=%s",
-                                     ToChar(resolvedEventMessage))
-                         .get());
-        NS_ASSERTION(aTypeAtom != nsGkAtoms::oncompositionend,
-                     nsPrintfCString("resolvedEventMessage=%s",
-                                     ToChar(resolvedEventMessage))
-                         .get());
-        NS_ASSERTION(aTypeAtom != nsGkAtoms::oncompositionstart,
-                     nsPrintfCString("resolvedEventMessage=%s",
-                                     ToChar(resolvedEventMessage))
-                         .get());
-        NS_ASSERTION(aTypeAtom != nsGkAtoms::oncompositionupdate,
-                     nsPrintfCString("resolvedEventMessage=%s",
-                                     ToChar(resolvedEventMessage))
-                         .get());
-        NS_ASSERTION(aTypeAtom != nsGkAtoms::oninput,
                      nsPrintfCString("resolvedEventMessage=%s",
                                      ToChar(resolvedEventMessage))
                          .get());
