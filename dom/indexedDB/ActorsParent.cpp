@@ -7045,8 +7045,10 @@ Result<bool, nsresult> DatabaseConnection::ReclaimFreePagesWhileIdle(
     mInWriteTransaction = false;
   };
 
+  uint64_t previousFreelistCount = (uint64_t)aFreelistCount + 1;
+
   QM_TRY(CollectWhile(
-             [&aFreelistCount, &interrupted,
+             [&aFreelistCount, &previousFreelistCount, &interrupted,
               currentThread]() -> Result<bool, nsresult> {
                if (NS_HasPendingEvents(currentThread)) {
                  // Abort if something else wants to use the thread, and
@@ -7056,7 +7058,15 @@ Result<bool, nsresult> DatabaseConnection::ReclaimFreePagesWhileIdle(
                  interrupted = true;
                  return false;
                }
-               return aFreelistCount != 0;
+               // If we were not able to free anything, we might either see
+               // a DB that has no auto-vacuum support at all or some other
+               // (hopefully temporary) condition that prevents vacuum from
+               // working. Just carry on in non-DEBUG.
+               bool madeProgress = previousFreelistCount != aFreelistCount;
+               previousFreelistCount = aFreelistCount;
+               MOZ_ASSERT(madeProgress);
+               QM_WARNONLY_TRY(MOZ_TO_RESULT(!madeProgress));
+               return madeProgress && (aFreelistCount != 0);
              },
              [&aFreelistStatement, &aFreelistCount, &incrementalVacuumStmt,
               &freedSomePages, this]() -> mozilla::Result<Ok, nsresult> {
