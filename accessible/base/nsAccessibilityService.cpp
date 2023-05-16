@@ -535,17 +535,20 @@ void nsAccessibilityService::NotifyOfComputedStyleChange(
     // the Accessible's bounds using the parent process cache. Ditto for
     // position: fixed/sticky and content with overflow styling (hidden, auto,
     // scroll)
-    const nsIFrame* frame = aContent->GetPrimaryFrame();
-    const ComputedStyle* newStyle = frame ? frame->Style() : nullptr;
-    nsAutoCString overflow;
-    newStyle->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
-    if (newStyle &&
-        (newStyle->StyleDisplay()->HasTransform(frame) ||
-         newStyle->StyleDisplay()->mPosition == StylePositionProperty::Fixed ||
-         newStyle->StyleDisplay()->mPosition == StylePositionProperty::Sticky ||
-         (overflow.Equals("hidden"_ns) || overflow.Equals("scroll"_ns) ||
-          overflow.Equals("auto"_ns)))) {
-      document->ContentInserted(aContent, aContent->GetNextSibling());
+    if (const nsIFrame* frame = aContent->GetPrimaryFrame()) {
+      const ComputedStyle* newStyle = frame->Style();
+      nsAutoCString overflow;
+      newStyle->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
+      if (newStyle &&
+          (newStyle->StyleDisplay()->HasTransform(frame) ||
+           newStyle->StyleDisplay()->mPosition ==
+               StylePositionProperty::Fixed ||
+           newStyle->StyleDisplay()->mPosition ==
+               StylePositionProperty::Sticky ||
+           (overflow.Equals("hidden"_ns) || overflow.Equals("scroll"_ns) ||
+            overflow.Equals("auto"_ns)))) {
+        document->ContentInserted(aContent, aContent->GetNextSibling());
+      }
     }
   } else if (accessible && IPCAccessibilityActive() &&
              StaticPrefs::accessibility_cache_enabled_AtStartup()) {
