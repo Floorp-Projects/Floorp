@@ -147,7 +147,6 @@ export function addBreakpoint(
     const id = makeBreakpointId(location);
     const breakpoint = createBreakpoint({
       id,
-      thread: generatedLocation.source.thread,
       disabled,
       options,
       location,
