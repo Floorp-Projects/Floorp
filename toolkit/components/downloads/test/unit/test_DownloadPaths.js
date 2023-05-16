@@ -110,6 +110,11 @@ add_task(async function test_sanitize() {
   testSanitize("thing.local|", "thing.local.download");
   testSanitize("thing.lo|cal", "thing.lo cal");
   testSanitize('thing.local/*"', "thing.local_");
+
+  testSanitize("thing.desktoP", "thing.desktoP.download");
+  testSanitize("thing.desktoP  \n", "thing.desktoP", {
+    allowInvalidFilenames: true,
+  });
 });
 
 add_task(async function test_splitBaseNameAndExtension() {
