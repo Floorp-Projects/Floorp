@@ -42,6 +42,7 @@ const MERINO_SUGGESTIONS = [
 add_setup(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
   UrlbarPrefs.set("bestMatch.enabled", true);
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
 
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
@@ -49,6 +50,42 @@ add_setup(async function init() {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: MERINO_SUGGESTIONS,
   });
+});
+
+// When non-sponsored suggestions are disabled, navigational suggestions should
+// be disabled.
+add_task(async function nonsponsoredDisabled() {
+  // Disable sponsored suggestions. Navigational suggestions are non-sponsored,
+  // so doing this should not prevent them from being enabled.
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+
+  // First make sure the suggestion is added when non-sponsored suggestions are
+  // enabled.
+  await check_results({
+    context: createContext(SUGGESTION_SEARCH_STRING, {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [
+      makeExpectedResult({
+        isBestMatch: true,
+        suggestedIndex: 1,
+      }),
+    ],
+  });
+
+  // Now disable them.
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
+  await check_results({
+    context: createContext(SUGGESTION_SEARCH_STRING, {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
 });
 
 // Test that bestMatch navigational suggestion results are not shown when there
