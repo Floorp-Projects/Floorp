@@ -25,6 +25,8 @@ struct ParamTraits;
 // defines TimeStampValue as a complex value keeping both
 // GetTickCount and QueryPerformanceCounter values
 #  include "TimeStamp_windows.h"
+
+#  include "mozilla/Maybe.h"  // For TimeStamp::RawQueryPerformanceCounterValue
 #endif
 
 namespace mozilla {
@@ -449,6 +451,24 @@ class TimeStamp {
    * the process was created.
    */
   static MFBT_API void RecordProcessRestart();
+
+#ifdef XP_LINUX
+  uint64_t RawClockMonotonicNanosecondsSinceBoot() {
+    return static_cast<uint64_t>(mValue);
+  }
+#endif
+
+#ifdef XP_MACOSX
+  uint64_t RawMachAbsoluteTimeValue() { return static_cast<uint64_t>(mValue); }
+#endif
+
+#ifdef XP_WIN
+  Maybe<uint64_t> RawQueryPerformanceCounterValue() {
+    // mQPC is stored in `mt` i.e. QueryPerformanceCounter * 1000
+    // so divide out the 1000
+    return mValue.mHasQPC ? Some(mValue.mQPC / 1000ULL) : Nothing();
+  }
+#endif
 
   /**
    * Compute the difference between two timestamps. Both must be non-null.
