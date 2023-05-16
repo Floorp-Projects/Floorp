@@ -26,6 +26,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
 
+#include "crc32c.h"
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/experimental/JSStencil.h"
 #include "js/Transcoding.h"
@@ -401,7 +402,7 @@ Result<nsCOMPtr<nsIFile>, nsresult> ScriptPreloader::GetCacheFile(
   return std::move(cacheFile);
 }
 
-static const uint8_t MAGIC[] = "mozXDRcachev002";
+static const uint8_t MAGIC[] = "mozXDRcachev003";
 
 Result<Ok, nsresult> ScriptPreloader::OpenCache() {
   MOZ_TRY(NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(mProfD)));
@@ -510,7 +511,8 @@ Result<Ok, nsresult> ScriptPreloader::InitCacheInternal(
   auto size = mCacheData->size();
 
   uint32_t headerSize;
-  if (size < sizeof(MAGIC) + sizeof(headerSize)) {
+  uint32_t crc;
+  if (size < sizeof(MAGIC) + sizeof(headerSize) + sizeof(crc)) {
     return Err(NS_ERROR_UNEXPECTED);
   }
 
@@ -527,7 +529,14 @@ Result<Ok, nsresult> ScriptPreloader::InitCacheInternal(
   headerSize = LittleEndian::readUint32(data.get());
   data += sizeof(headerSize);
 
+  crc = LittleEndian::readUint32(data.get());
+  data += sizeof(crc);
+
   if (data + headerSize > end) {
+    return Err(NS_ERROR_UNEXPECTED);
+  }
+
+  if (crc != ComputeCrc32c(~0, data.get(), headerSize)) {
     return Err(NS_ERROR_UNEXPECTED);
   }
 
@@ -726,8 +735,12 @@ Result<Ok, nsresult> ScriptPreloader::WriteCache() {
     uint8_t headerSize[4];
     LittleEndian::writeUint32(headerSize, buf.cursor());
 
+    uint8_t crc[4];
+    LittleEndian::writeUint32(crc, ComputeCrc32c(~0, buf.Get(), buf.cursor()));
+
     MOZ_TRY(Write(fd, MAGIC, sizeof(MAGIC)));
     MOZ_TRY(Write(fd, headerSize, sizeof(headerSize)));
+    MOZ_TRY(Write(fd, crc, sizeof(crc)));
     MOZ_TRY(Write(fd, buf.Get(), buf.cursor()));
 
     // Align the start of the scripts section to the transcode alignment.
