@@ -27,7 +27,7 @@ class RemoteDragStartData {
   NS_INLINE_DECL_REFCOUNTING(RemoteDragStartData)
 
   RemoteDragStartData(BrowserParent* aBrowserParent,
-                      nsTArray<IPCTransferableData>&& aTransferableData,
+                      nsTArray<IPCDataTransfer>&& aDataTransfer,
                       const LayoutDeviceIntRect& aRect,
                       nsIPrincipal* aPrincipal, nsIContentSecurityPolicy* aCsp,
                       nsICookieJarSettings* aCookieJarSettings,
@@ -59,7 +59,7 @@ class RemoteDragStartData {
   virtual ~RemoteDragStartData();
 
   RefPtr<BrowserParent> mBrowserParent;
-  nsTArray<IPCTransferableData> mTransferableData;
+  nsTArray<IPCDataTransfer> mDataTransfer;
   const LayoutDeviceIntRect mRect;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> mCsp;

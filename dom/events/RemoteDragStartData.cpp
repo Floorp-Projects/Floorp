@@ -20,13 +20,12 @@ namespace mozilla::dom {
 RemoteDragStartData::~RemoteDragStartData() = default;
 
 RemoteDragStartData::RemoteDragStartData(
-    BrowserParent* aBrowserParent,
-    nsTArray<IPCTransferableData>&& aTransferableData,
+    BrowserParent* aBrowserParent, nsTArray<IPCDataTransfer>&& aDataTransfer,
     const LayoutDeviceIntRect& aRect, nsIPrincipal* aPrincipal,
     nsIContentSecurityPolicy* aCsp, nsICookieJarSettings* aCookieJarSettings,
     WindowContext* aSourceWindowContext, WindowContext* aSourceTopWindowContext)
     : mBrowserParent(aBrowserParent),
-      mTransferableData(std::move(aTransferableData)),
+      mDataTransfer(std::move(aDataTransfer)),
       mRect(aRect),
       mPrincipal(aPrincipal),
       mCsp(aCsp),
@@ -42,10 +41,10 @@ void RemoteDragStartData::AddInitialDnDDataTo(
   NS_IF_ADDREF(*aCsp = mCsp);
   NS_IF_ADDREF(*aCookieJarSettings = mCookieJarSettings);
 
-  for (uint32_t i = 0; i < mTransferableData.Length(); ++i) {
-    nsTArray<IPCTransferableDataItem>& itemArray = mTransferableData[i].items();
+  for (uint32_t i = 0; i < mDataTransfer.Length(); ++i) {
+    nsTArray<IPCDataTransferItem>& itemArray = mDataTransfer[i].items();
     for (auto& item : itemArray) {
-      if (!nsContentUtils::IPCTransferableDataItemHasKnownFlavor(item)) {
+      if (!nsContentUtils::IPCDataTransferItemHasKnownFlavor(item)) {
         NS_WARNING(
             "Ignoring unknown flavor in "
             "RemoteDragStartData::AddInitialDnDDataTo");
@@ -61,7 +60,7 @@ void RemoteDragStartData::AddInitialDnDDataTo(
         variant->SetAsISupports(flavorDataProvider);
       } else {
         nsresult rv =
-            nsContentUtils::IPCTransferableDataItemToVariant(item, variant);
+            nsContentUtils::IPCTransferableItemToVariant(item, variant);
         if (NS_FAILED(rv)) {
           continue;
         }
@@ -76,7 +75,7 @@ void RemoteDragStartData::AddInitialDnDDataTo(
   }
 
   // Clear things that are no longer needed.
-  mTransferableData.Clear();
+  mDataTransfer.Clear();
   mPrincipal = nullptr;
 }
 
