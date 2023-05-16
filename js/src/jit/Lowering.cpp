@@ -3151,8 +3151,7 @@ void LIRGenerator::visitRegExpExecTest(MRegExpExecTest* ins) {
 
   auto* lir = new (alloc())
       LRegExpExecTest(useFixedAtStart(ins->regexp(), RegExpExecTestRegExpReg),
-                      useFixedAtStart(ins->string(), RegExpExecTestStringReg),
-                      tempFixed(RegExpExecTestLastIndexReg));
+                      useFixedAtStart(ins->string(), RegExpExecTestStringReg));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

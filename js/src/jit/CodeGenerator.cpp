@@ -3148,11 +3148,7 @@ JitCode* JitRealm::generateRegExpExecTestStub(JSContext* cx) {
 
   Register regexp = RegExpExecTestRegExpReg;
   Register input = RegExpExecTestStringReg;
-  Register lastIndex = RegExpExecTestLastIndexReg;
   Register result = ReturnReg;
-
-  static_assert(RegExpExecTestLastIndexReg != ReturnReg,
-                "setting ReturnReg must not clobber LastIndexReg");
 
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx);
@@ -3170,8 +3166,11 @@ JitCode* JitRealm::generateRegExpExecTestStub(JSContext* cx) {
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
   regs.take(input);
   regs.take(regexp);
-  regs.take(lastIndex);
 
+  // Ensure lastIndex != result.
+  regs.take(result);
+  Register lastIndex = regs.takeAny();
+  regs.add(result);
   Register temp1 = regs.takeAny();
   Register temp2 = regs.takeAny();
   Register temp3 = regs.takeAny();
@@ -3290,12 +3289,10 @@ void CodeGenerator::visitOutOfLineRegExpExecTest(OutOfLineRegExpExecTest* ool) {
 void CodeGenerator::visitRegExpExecTest(LRegExpExecTest* lir) {
   MOZ_ASSERT(ToRegister(lir->regexp()) == RegExpExecTestRegExpReg);
   MOZ_ASSERT(ToRegister(lir->string()) == RegExpExecTestStringReg);
-  MOZ_ASSERT(ToRegister(lir->temp0()) == RegExpExecTestLastIndexReg);
   MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
 
   static_assert(RegExpExecTestRegExpReg != ReturnReg);
   static_assert(RegExpExecTestStringReg != ReturnReg);
-  static_assert(RegExpExecTestLastIndexReg != ReturnReg);
 
   auto* ool = new (alloc()) OutOfLineRegExpExecTest(lir);
   addOutOfLineCode(ool, lir->mir());
