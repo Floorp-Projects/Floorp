@@ -29,6 +29,7 @@ const kDataToStringMap = new Map([
   ["bookmarks", "browser-data-bookmarks"],
   ["otherdata", "browser-data-otherdata"],
   ["session", "browser-data-session"],
+  ["payment_methods", "browser-data-payment-methods"],
 ]);
 
 var MigrationWizard = {
