@@ -77,7 +77,16 @@ HRESULT MFMediaEngineAudioStream::CreateMediaType(const TrackInfo& aInfo,
        GUIDToStr(subType), info.mChannels, info.mRate, bitDepth,
        mAudioInfo.mCrypto.IsEncrypted());
 
-  *aMediaType = mediaType.Detach();
+  if (IsEncrypted()) {
+    ComPtr<IMFMediaType> protectedMediaType;
+    RETURN_IF_FAILED(wmf::MFWrapMediaType(mediaType.Get(),
+                                          MFMediaType_Protected, subType,
+                                          protectedMediaType.GetAddressOf()));
+    LOGV("Wrap MFMediaType_Audio into MFMediaType_Protected");
+    *aMediaType = protectedMediaType.Detach();
+  } else {
+    *aMediaType = mediaType.Detach();
+  }
   return S_OK;
 }
 
