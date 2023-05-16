@@ -1177,15 +1177,12 @@ void SetDirectionalityFromValue(Element* aElement, const nsAString& value,
     dir = eDir_LTR;
   }
 
-  if (aElement->GetDirectionality() != dir) {
-    aElement->SetDirectionality(dir, aNotify);
-  }
+  aElement->SetDirectionality(dir, aNotify);
 }
 
 void OnSetDirAttr(Element* aElement, const nsAttrValue* aNewValue,
                   bool hadValidDir, bool hadDirAuto, bool aNotify) {
-  if (aElement->IsHTMLElement(nsGkAtoms::input) ||
-      aElement->IsHTMLElement(nsGkAtoms::textarea)) {
+  if (aElement->IsHTMLElement(nsGkAtoms::input)) {
     return;
   }
 
