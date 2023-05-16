@@ -201,18 +201,6 @@ void MFCDMSession::OnSessionKeysChange() {
   UINT count = 0;
   RETURN_VOID_IF_FAILED(mSession->GetKeyStatuses(&keyStatuses, &count));
 
-  static auto ByteArrayFromGUID = [](REFGUID aGuid,
-                                     nsTArray<uint8_t>& aByteArrayOut) {
-    aByteArrayOut.SetLength(sizeof(GUID));
-    // GUID is little endian. The byte array in network order is big endian.
-    GUID* reversedGuid = reinterpret_cast<GUID*>(aByteArrayOut.Elements());
-    *reversedGuid = aGuid;
-    reversedGuid->Data1 = _byteswap_ulong(aGuid.Data1);
-    reversedGuid->Data2 = _byteswap_ushort(aGuid.Data2);
-    reversedGuid->Data3 = _byteswap_ushort(aGuid.Data3);
-    // Data4 is already a byte array so no need to byte swap.
-  };
-
   static auto ToMediaKeyStatus = [](MF_MEDIAKEY_STATUS aStatus) {
     // https://learn.microsoft.com/en-us/windows/win32/api/mfidl/ne-mfidl-mf_mediakey_status
     switch (aStatus) {

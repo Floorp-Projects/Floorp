@@ -135,6 +135,9 @@ class MFMediaEngineStream
 
   void SendRequestSampleEvent(bool aIsEnough);
 
+  HRESULT AddEncryptAttributes(IMFSample* aSample,
+                               const CryptoSample& aCryptoConfig);
+
   void AssertOnTaskQueue() const;
   void AssertOnMFThreadPool() const;
 
