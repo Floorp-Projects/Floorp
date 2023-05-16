@@ -457,6 +457,7 @@ void EventTargetChainItem::HandleEventTargetChain(
   }
 
   uint32_t chainLength = aChain.Length();
+  EventTargetChainItem* chain = aChain.Elements();
   uint32_t firstCanHandleEventTargetIdx =
       EventTargetChainItem::GetFirstCanHandleEventTargetIdx(aChain);
 
@@ -464,7 +465,7 @@ void EventTargetChainItem::HandleEventTargetChain(
   aVisitor.mEvent->mFlags.mInCapturePhase = true;
   aVisitor.mEvent->mFlags.mInBubblingPhase = false;
   for (uint32_t i = chainLength - 1; i > firstCanHandleEventTargetIdx; --i) {
-    EventTargetChainItem& item = aChain[i];
+    EventTargetChainItem& item = chain[i];
     if (item.PreHandleEventOnly()) {
       continue;
     }
@@ -478,7 +479,7 @@ void EventTargetChainItem::HandleEventTargetChain(
       // item is at anonymous boundary. Need to retarget for the child items.
       for (uint32_t j = i; j > 0; --j) {
         uint32_t childIndex = j - 1;
-        EventTarget* newTarget = aChain[childIndex].GetNewTarget();
+        EventTarget* newTarget = chain[childIndex].GetNewTarget();
         if (newTarget) {
           aVisitor.mEvent->mTarget = newTarget;
           break;
@@ -497,7 +498,7 @@ void EventTargetChainItem::HandleEventTargetChain(
       for (uint32_t j = i; j > 0; --j) {
         uint32_t childIndex = j - 1;
         EventTarget* relatedTarget =
-            aChain[childIndex].GetRetargetedRelatedTarget();
+            chain[childIndex].GetRetargetedRelatedTarget();
         if (relatedTarget) {
           found = true;
           aVisitor.mEvent->mRelatedTarget = relatedTarget;
@@ -514,10 +515,10 @@ void EventTargetChainItem::HandleEventTargetChain(
       bool found = false;
       for (uint32_t j = i; j > 0; --j) {
         uint32_t childIndex = j - 1;
-        if (aChain[childIndex].HasRetargetTouchTargets()) {
+        if (chain[childIndex].HasRetargetTouchTargets()) {
           found = true;
-          aChain[childIndex].RetargetTouchTargets(touchEvent,
-                                                  aVisitor.mDOMEvent);
+          chain[childIndex].RetargetTouchTargets(touchEvent,
+                                                 aVisitor.mDOMEvent);
           break;
         }
       }
@@ -532,7 +533,7 @@ void EventTargetChainItem::HandleEventTargetChain(
 
   // Target
   aVisitor.mEvent->mFlags.mInBubblingPhase = true;
-  EventTargetChainItem& targetItem = aChain[firstCanHandleEventTargetIdx];
+  EventTargetChainItem& targetItem = chain[firstCanHandleEventTargetIdx];
   // Need to explicitly retarget touch targets so that initial targets get set
   // properly in case nothing else retargeted touches.
   if (targetItem.HasRetargetTouchTargets()) {
@@ -550,7 +551,7 @@ void EventTargetChainItem::HandleEventTargetChain(
   // Bubble
   aVisitor.mEvent->mFlags.mInCapturePhase = false;
   for (uint32_t i = firstCanHandleEventTargetIdx + 1; i < chainLength; ++i) {
-    EventTargetChainItem& item = aChain[i];
+    EventTargetChainItem& item = chain[i];
     if (item.PreHandleEventOnly()) {
       continue;
     }
