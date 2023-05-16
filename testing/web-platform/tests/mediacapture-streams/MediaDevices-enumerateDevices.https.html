@@ -34,6 +34,14 @@ promise_test(async () => {
                          1, "there should be zero or one audio input device.");
   assert_less_than_equal(devices.filter(({kind}) => kind == "videoinput").length,
                          1, "there should be zero or one video input device.");
+  assert_equals(devices.filter(({kind}) => kind == "audiooutput").length,
+                0, "there should be no audio output devices.");
+  assert_less_than_equal(devices.length, 2,
+                         "there should be no more than two devices.");
+  if (devices.length > 1) {
+    assert_equals(devices[0].kind, "audioinput", "audioinput is first");
+    assert_equals(devices[1].kind, "videoinput", "videoinput is second");
+  }
 }, "mediaDevices.enumerateDevices() is present and working - before capture");
 
 promise_test(async t => {
@@ -66,9 +74,9 @@ promise_test(async t => {
   assert_equals(devices.filter(({kind}) => kind != "audiooutput").length,
                 devices1.filter(({kind}) => kind != "audiooutput").length,
                 "same number of input devices");
-  const kinds = ["audioinput", "videoinput", "audiooutput"];
+  const order = ["audioinput", "videoinput", "audiooutput"];
   for (const {kind, deviceId} of devices) {
-    assert_in_array(kind, kinds, "expected kind");
+    assert_in_array(kind, order, "expected kind");
     assert_equals(typeof deviceId, "string", "deviceId is a string.");
     switch (kind) {
       case "videoinput":
@@ -79,6 +87,9 @@ promise_test(async t => {
         break;
     }
   }
+  const kinds = devices.map(({kind}) => kind);
+  const correct = [...kinds].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  assert_equals(JSON.stringify(kinds), JSON.stringify(correct), "correct order");
 }, "mediaDevices.enumerateDevices() is working - after video then audio capture");
 
 promise_test(async () => {
