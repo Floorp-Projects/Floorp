@@ -942,7 +942,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.7.27',
+    apiVersion: '3.7.48',
     data,
     password,
     disableAutoFetch,
@@ -2614,9 +2614,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.7.27';
+const version = '3.7.48';
 exports.version = version;
-const build = 'e738e15aa';
+const build = '95ab2b8b1';
 exports.build = build;
 
 /***/ }),
@@ -4699,7 +4699,12 @@ class FontLoader {
         await fontFace.load();
         this.#systemFonts.add(loadedName);
       } catch {
-        (0, _util.warn)(`Cannot load system font: ${loadedName} for style ${style.style} and weight ${style.weight}.`);
+        if (info.guessFallback) {
+          const match = src.match(/^local\((.*)\)$/);
+          (0, _util.warn)(`Cannot load system font: ${match?.[1]}, installing it could help to improve PDF rendering.`);
+        } else {
+          (0, _util.warn)(`Cannot load system font: ${loadedName} for style ${style.style} and weight ${style.weight}.`);
+        }
         this.removeNativeFontFace(fontFace);
       }
       return;
@@ -13298,8 +13303,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.7.27';
-const pdfjsBuild = 'e738e15aa';
+const pdfjsVersion = '3.7.48';
+const pdfjsBuild = '95ab2b8b1';
 })();
 
 /******/ 	return __webpack_exports__;

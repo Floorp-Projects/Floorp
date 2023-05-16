@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.7.27';
+    const workerVersion = '3.7.48';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -11002,6 +11002,8 @@ class PartialEvaluator {
     }
     if (isMonospace) {
       properties.flags |= _fonts_utils.FontFlags.FixedPitch;
+    } else {
+      properties.flags &= ~_fonts_utils.FontFlags.FixedPitch;
     }
     properties.defaultWidth = defaultWidth;
     properties.widths = glyphsWidths;
@@ -11220,9 +11222,9 @@ class PartialEvaluator {
         if (standardFontName) {
           file = await this.fetchStandardFontData(standardFontName);
           properties.isInternalFont = !!file;
-          if (!properties.isInternalFont && this.options.useSystemFonts) {
-            properties.systemFontInfo = (0, _font_substitutions.getFontSubstitution)(this.systemFontCache, this.idFactory, this.options.standardFontDataUrl, baseFontName, standardFontName);
-          }
+        }
+        if (!properties.isInternalFont && this.options.useSystemFonts) {
+          properties.systemFontInfo = (0, _font_substitutions.getFontSubstitution)(this.systemFontCache, this.idFactory, this.options.standardFontDataUrl, baseFontName, standardFontName);
         }
         return this.extractDataStructures(dict, dict, properties).then(newProperties => {
           if (widths) {
@@ -11300,9 +11302,9 @@ class PartialEvaluator {
       if (standardFontName) {
         fontFile = await this.fetchStandardFontData(standardFontName);
         isInternalFont = !!fontFile;
-        if (!isInternalFont && this.options.useSystemFonts) {
-          systemFontInfo = (0, _font_substitutions.getFontSubstitution)(this.systemFontCache, this.idFactory, this.options.standardFontDataUrl, fontName.name, standardFontName);
-        }
+      }
+      if (!isInternalFont && this.options.useSystemFonts) {
+        systemFontInfo = (0, _font_substitutions.getFontSubstitution)(this.systemFontCache, this.idFactory, this.options.standardFontDataUrl, fontName.name, standardFontName);
       }
     }
     properties = {
@@ -21438,6 +21440,7 @@ class Font {
     } = properties;
     this.type = type;
     this.subtype = subtype;
+    this.systemFontInfo = properties.systemFontInfo;
     const matches = name.match(/^InvalidPDFjsFont_(.*)_\d+$/);
     this.isInvalidPDFjsFont = !!matches;
     if (this.isInvalidPDFjsFont) {
@@ -21449,7 +21452,10 @@ class Font {
     } else {
       this.fallbackName = "sans-serif";
     }
-    this.systemFontInfo = properties.systemFontInfo;
+    if (this.systemFontInfo?.guessFallback) {
+      this.systemFontInfo.guessFallback = false;
+      this.systemFontInfo.css += `,${this.fallbackName}`;
+    }
     this.differences = properties.differences;
     this.widths = properties.widths;
     this.defaultWidth = properties.defaultWidth;
@@ -29614,6 +29620,9 @@ const getStdFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
   t["Arial-BoldItalicMT"] = "Helvetica-BoldOblique";
   t["Arial-BoldMT"] = "Helvetica-Bold";
   t["Arial-ItalicMT"] = "Helvetica-Oblique";
+  t["Arial-BoldItalicMT-BoldItalic"] = "Helvetica-BoldOblique";
+  t["Arial-BoldMT-Bold"] = "Helvetica-Bold";
+  t["Arial-ItalicMT-Italic"] = "Helvetica-Oblique";
   t.ArialUnicodeMS = "Helvetica";
   t["ArialUnicodeMS-Bold"] = "Helvetica-Bold";
   t["ArialUnicodeMS-BoldItalic"] = "Helvetica-BoldOblique";
@@ -38974,24 +38983,15 @@ const substitutionMap = new Map([["Times-Roman", {
   style: NORMAL,
   ultimate: "serif"
 }], ["Times-Bold", {
-  local: {
-    alias: "Times-Roman",
-    append: "Bold"
-  },
+  alias: "Times-Roman",
   style: BOLD,
   ultimate: "serif"
 }], ["Times-Italic", {
-  local: {
-    alias: "Times-Roman",
-    append: "Italic"
-  },
+  alias: "Times-Roman",
   style: ITALIC,
   ultimate: "serif"
 }], ["Times-BoldItalic", {
-  local: {
-    alias: "Times-Roman",
-    append: "Bold Italic"
-  },
+  alias: "Times-Roman",
   style: BOLDITALIC,
   ultimate: "serif"
 }], ["Helvetica", {
@@ -39000,26 +39000,17 @@ const substitutionMap = new Map([["Times-Roman", {
   style: NORMAL,
   ultimate: "sans-serif"
 }], ["Helvetica-Bold", {
-  local: {
-    alias: "Helvetica",
-    append: "Bold"
-  },
+  alias: "Helvetica",
   path: "LiberationSans-Bold.ttf",
   style: BOLD,
   ultimate: "sans-serif"
 }], ["Helvetica-Oblique", {
-  local: {
-    alias: "Helvetica",
-    append: "Italic"
-  },
+  alias: "Helvetica",
   path: "LiberationSans-Italic.ttf",
   style: ITALIC,
   ultimate: "sans-serif"
 }], ["Helvetica-BoldOblique", {
-  local: {
-    alias: "Helvetica",
-    append: "Bold Italic"
-  },
+  alias: "Helvetica",
   path: "LiberationSans-BoldItalic.ttf",
   style: BOLDITALIC,
   ultimate: "sans-serif"
@@ -39028,28 +39019,19 @@ const substitutionMap = new Map([["Times-Roman", {
   style: NORMAL,
   ultimate: "monospace"
 }], ["Courier-Bold", {
-  local: {
-    alias: "Courier",
-    append: "Bold"
-  },
+  alias: "Courier",
   style: BOLD,
   ultimate: "monospace"
 }], ["Courier-Oblique", {
-  local: {
-    alias: "Courier",
-    append: "Italic"
-  },
+  alias: "Courier",
   style: ITALIC,
   ultimate: "monospace"
 }], ["Courier-BoldOblique", {
-  local: {
-    alias: "Courier",
-    append: "Bold Italic"
-  },
+  alias: "Courier",
   style: BOLDITALIC,
   ultimate: "monospace"
 }], ["ArialBlack", {
-  prepend: ["Arial Black"],
+  local: ["Arial Black"],
   style: {
     style: "normal",
     weight: "900"
@@ -39058,11 +39040,7 @@ const substitutionMap = new Map([["Times-Roman", {
 }], ["ArialBlack-Bold", {
   alias: "ArialBlack"
 }], ["ArialBlack-Italic", {
-  prepend: ["Arial Black Italic"],
-  local: {
-    alias: "ArialBlack",
-    append: "Italic"
-  },
+  alias: "ArialBlack",
   style: {
     style: "italic",
     weight: "900"
@@ -39071,68 +39049,97 @@ const substitutionMap = new Map([["Times-Roman", {
 }], ["ArialBlack-BoldItalic", {
   alias: "ArialBlack-Italic"
 }], ["ArialNarrow", {
-  prepend: ["Arial Narrow", "Liberation Sans Narrow", "Helvetica Condensed", "Nimbus Sans Narrow", "TeX Gyre Heros Cn"],
+  local: ["Arial Narrow", "Liberation Sans Narrow", "Helvetica Condensed", "Nimbus Sans Narrow", "TeX Gyre Heros Cn"],
   style: NORMAL,
   fallback: "Helvetica"
 }], ["ArialNarrow-Bold", {
-  local: {
-    alias: "ArialNarrow",
-    append: "Bold"
-  },
+  alias: "ArialNarrow",
   style: BOLD,
   fallback: "Helvetica-Bold"
 }], ["ArialNarrow-Italic", {
-  local: {
-    alias: "ArialNarrow",
-    append: "Italic"
-  },
+  alias: "ArialNarrow",
   style: ITALIC,
   fallback: "Helvetica-Oblique"
 }], ["ArialNarrow-BoldItalic", {
-  local: {
-    alias: "ArialNarrow",
-    append: "Bold Italic"
-  },
+  alias: "ArialNarrow",
   style: BOLDITALIC,
   fallback: "Helvetica-BoldOblique"
 }], ["Calibri", {
-  prepend: ["Calibri", "Carlito"],
+  local: ["Calibri", "Carlito"],
   style: NORMAL,
   fallback: "Helvetica"
 }], ["Calibri-Bold", {
-  local: {
-    alias: "Calibri",
-    append: "Bold"
-  },
+  alias: "Calibri",
   style: BOLD,
   fallback: "Helvetica-Bold"
 }], ["Calibri-Italic", {
-  local: {
-    alias: "Calibri",
-    append: "Italic"
-  },
+  alias: "Calibri",
   style: ITALIC,
   fallback: "Helvetica-Oblique"
 }], ["Calibri-BoldItalic", {
-  local: {
-    alias: "Calibri",
-    append: "Bold Italic"
-  },
+  alias: "Calibri",
   style: BOLDITALIC,
   fallback: "Helvetica-BoldOblique"
 }]]);
 const fontAliases = new Map([["Arial-Black", "ArialBlack"]]);
-function makeLocal(prepend, local) {
-  let append = "";
-  if (!Array.isArray(local)) {
-    append = ` ${local.append}`;
-    local = substitutionMap.get(local.alias).local;
+function getStyleToAppend(style) {
+  switch (style) {
+    case BOLD:
+      return "Bold";
+    case ITALIC:
+      return "Italic";
+    case BOLDITALIC:
+      return "Bold Italic";
+    default:
+      if (style?.weight === "bold") {
+        return "Bold";
+      }
+      if (style?.style === "italic") {
+        return "Italic";
+      }
   }
-  let prependedPaths = "";
-  if (prepend) {
-    prependedPaths = prepend.map(name => `local(${name})`).join(",") + ",";
+  return "";
+}
+function generateFont({
+  alias,
+  local,
+  path,
+  fallback,
+  style,
+  ultimate
+}, src, localFontPath, useFallback = true, usePath = true, append = "") {
+  const result = {
+    style: null,
+    ultimate: null
+  };
+  if (local) {
+    const extra = append ? ` ${append}` : "";
+    for (const name of local) {
+      src.push(`local(${name}${extra})`);
+    }
   }
-  return prependedPaths + local.map(name => `local(${name}${append})`).join(",");
+  if (alias) {
+    const substitution = substitutionMap.get(alias);
+    const aliasAppend = append || getStyleToAppend(style);
+    Object.assign(result, generateFont(substitution, src, localFontPath, useFallback && !fallback, usePath && !path, aliasAppend));
+  }
+  if (style) {
+    result.style = style;
+  }
+  if (ultimate) {
+    result.ultimate = ultimate;
+  }
+  if (useFallback && fallback) {
+    const fallbackInfo = substitutionMap.get(fallback);
+    const {
+      ultimate: fallbackUltimate
+    } = generateFont(fallbackInfo, src, localFontPath, useFallback, usePath && !path, append);
+    result.ultimate ||= fallbackUltimate;
+  }
+  if (usePath && path && localFontPath) {
+    src.push(`url(${localFontPath}${path})`);
+  }
+  return result;
 }
 function getFontSubstitution(systemFontCache, idFactory, localFontPath, baseFontName, standardFontName) {
   let mustAddBaseFont = false;
@@ -39166,7 +39173,8 @@ function getFontSubstitution(systemFontCache, idFactory, localFontPath, baseFont
     const italic = /oblique|italic/gi.test(baseFontName);
     const style = bold && italic && BOLDITALIC || bold && BOLD || italic && ITALIC || NORMAL;
     substitutionInfo = {
-      css: `${loadedName},sans-serif`,
+      css: loadedName,
+      guessFallback: true,
       loadedName,
       src: `local(${baseFontName})`,
       style
@@ -39174,34 +39182,19 @@ function getFontSubstitution(systemFontCache, idFactory, localFontPath, baseFont
     systemFontCache.set(key, substitutionInfo);
     return substitutionInfo;
   }
-  while (substitution.alias) {
-    substitution = substitutionMap.get(substitution.alias);
-  }
-  const {
-    fallback,
-    style
-  } = substitution;
-  let prepend = substitution.prepend;
-  if (fallback) {
-    prepend ||= substitutionMap.get(substitution.local.alias).prepend;
-    substitution = substitutionMap.get(fallback);
-  }
-  const {
-    local,
-    path,
-    ultimate
-  } = substitution;
-  let src = makeLocal(prepend, local);
-  if (path && localFontPath !== null) {
-    src += `,url(${localFontPath}${path})`;
-  }
+  const src = [];
   if (mustAddBaseFont && (0, _core_utils.validateFontName)(baseFontName)) {
-    src = `local(${baseFontName}),${src}`;
+    src.push(`local(${baseFontName})`);
   }
+  const {
+    style,
+    ultimate
+  } = generateFont(substitution, src, localFontPath);
   substitutionInfo = {
     css: `${loadedName},${ultimate}`,
+    guessFallback: false,
     loadedName,
-    src,
+    src: src.join(","),
     style
   };
   systemFontCache.set(key, substitutionInfo);
@@ -57509,8 +57502,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.7.27';
-const pdfjsBuild = 'e738e15aa';
+const pdfjsVersion = '3.7.48';
+const pdfjsBuild = '95ab2b8b1';
 })();
 
 /******/ 	return __webpack_exports__;
