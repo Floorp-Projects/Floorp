@@ -217,7 +217,6 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
 
   // This is the Reader used to retrieve data from the body. This needs to be
   // traversed by subclasses.
-  RefPtr<ReadableStreamDefaultReader> mReadableStreamReader;
   RefPtr<FetchStreamReader> mFetchStreamReader;
 
   explicit FetchBody(nsIGlobalObject* aOwner);

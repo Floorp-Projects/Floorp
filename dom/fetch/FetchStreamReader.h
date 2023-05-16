@@ -55,7 +55,7 @@ class FetchStreamReader final : public nsIOutputStreamCallback {
   void CloseAndRelease(JSContext* aCx, nsresult aStatus);
 
   void StartConsuming(JSContext* aCx, ReadableStream* aStream,
-                      ReadableStreamDefaultReader** aReader, ErrorResult& aRv);
+                      ErrorResult& aRv);
 
  private:
   explicit FetchStreamReader(nsIGlobalObject* aGlobal);

@@ -173,7 +173,6 @@ void FetchStreamReader::CloseAndRelease(JSContext* aCx, nsresult aStatus) {
 
 // https://fetch.spec.whatwg.org/#body-incrementally-read
 void FetchStreamReader::StartConsuming(JSContext* aCx, ReadableStream* aStream,
-                                       ReadableStreamDefaultReader** aReader,
                                        ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(!mReader);
   MOZ_DIAGNOSTIC_ASSERT(aStream);
@@ -186,7 +185,6 @@ void FetchStreamReader::StartConsuming(JSContext* aCx, ReadableStream* aStream,
   }
 
   mReader = reader;
-  reader.forget(aReader);
 
   mAsyncWaitWorkerRef = mWorkerRef;
   aRv = mPipeOut->AsyncWait(this, 0, 0, mOwningEventTarget);

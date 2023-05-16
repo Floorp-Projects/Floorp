@@ -1185,7 +1185,7 @@ nsresult ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
 
 template <class Derived>
 FetchBody<Derived>::FetchBody(nsIGlobalObject* aOwner)
-    : mOwner(aOwner), mReadableStreamReader(nullptr), mBodyUsed(false) {
+    : mOwner(aOwner), mBodyUsed(false) {
   MOZ_ASSERT(aOwner);
 
   if (!NS_IsMainThread()) {
@@ -1252,14 +1252,10 @@ void FetchBody<Derived>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv) {
     } else {
       MOZ_ASSERT(mFetchStreamReader);
       //  Let's activate the FetchStreamReader.
-      RefPtr<ReadableStreamDefaultReader> reader;
-      mFetchStreamReader->StartConsuming(aCx, mReadableStreamBody,
-                                         getter_AddRefs(reader), aRv);
+      mFetchStreamReader->StartConsuming(aCx, mReadableStreamBody, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }
-
-      mReadableStreamReader = reader.forget();
     }
   }
 }
@@ -1509,8 +1505,6 @@ void FetchBody<Derived>::LockStream(JSContext* aCx, ReadableStream* aStream,
   if (aRv.Failed()) {
     return;
   }
-
-  mReadableStreamReader = reader;
 }
 
 template void FetchBody<Request>::LockStream(JSContext* aCx,
@@ -1610,7 +1604,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(EmptyBody, FetchBody<EmptyBody>)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAbortSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchStreamReader)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadableStreamReader)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EmptyBody,
@@ -1618,7 +1611,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EmptyBody,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAbortSignalImpl)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchStreamReader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadableStreamReader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(EmptyBody, FetchBody<EmptyBody>)
