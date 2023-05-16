@@ -183,14 +183,3 @@ pub fn _cssparser_internal_to_lowercase<'a>(
         },
     )
 }
-
-#[cfg(feature = "dummy_match_byte")]
-macro_rules! match_byte {
-    ($value:expr, $($rest:tt)* ) => {
-        match $value {
-            $(
-                $rest
-            )+
-        }
-    };
-}

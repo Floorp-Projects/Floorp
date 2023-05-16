@@ -4,8 +4,7 @@
 
 // https://drafts.csswg.org/css-syntax/#parsing
 
-use super::{BasicParseError, BasicParseErrorKind, Delimiter};
-use super::{ParseError, Parser, Token};
+use super::{BasicParseError, BasicParseErrorKind, Delimiter, Delimiters, ParseError, Parser, Token};
 use crate::cow_rc_str::CowRcStr;
 use crate::parser::{parse_nested_block, parse_until_after, parse_until_before, ParserState};
 
@@ -50,14 +49,9 @@ pub trait DeclarationParser<'i> {
         &mut self,
         name: CowRcStr<'i>,
         input: &mut Parser<'i, 't>,
-    ) -> Result<Self::Declaration, ParseError<'i, Self::Error>>;
-
-    /// Whether to try to parse qualified rules along with declarations. See
-    /// <https://github.com/w3c/csswg-drafts/issues/7961> for the current state of the discussion.
-    /// This is a low effort opt-in to be able to experiment with it, but it's likely to be needed
-    /// when nesting is less experimental as well (e.g., you probably don't want to allow nesting
-    /// in a style attribute anyways).
-    fn enable_nesting(&self) -> bool { false }
+    ) -> Result<Self::Declaration, ParseError<'i, Self::Error>> {
+        Err(input.new_error(BasicParseErrorKind::UnexpectedToken(Token::Ident(name))))
+    }
 }
 
 /// A trait to provide various parsing of at-rules.
@@ -99,8 +93,6 @@ pub trait AtRuleParser<'i> {
         name: CowRcStr<'i>,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self::Prelude, ParseError<'i, Self::Error>> {
-        let _ = name;
-        let _ = input;
         Err(input.new_error(BasicParseErrorKind::AtRuleInvalid(name)))
     }
 
@@ -140,7 +132,6 @@ pub trait AtRuleParser<'i> {
     ) -> Result<Self::AtRule, ParseError<'i, Self::Error>> {
         let _ = prelude;
         let _ = start;
-        let _ = input;
         Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid))
     }
 }
@@ -178,7 +169,6 @@ pub trait QualifiedRuleParser<'i> {
         &mut self,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self::Prelude, ParseError<'i, Self::Error>> {
-        let _ = input;
         Err(input.new_error(BasicParseErrorKind::QualifiedRuleInvalid))
     }
 
@@ -197,24 +187,35 @@ pub trait QualifiedRuleParser<'i> {
     ) -> Result<Self::QualifiedRule, ParseError<'i, Self::Error>> {
         let _ = prelude;
         let _ = start;
-        let _ = input;
         Err(input.new_error(BasicParseErrorKind::QualifiedRuleInvalid))
     }
 }
 
-/// Provides an iterator for declaration list parsing.
-pub struct DeclarationListParser<'i, 't, 'a, P> {
-    /// The input given to `DeclarationListParser::new`
+/// Provides an iterator for rule bodies and declaration lists.
+pub struct RuleBodyParser<'i, 't, 'a, P, I, E> {
+    /// The input given to the parser.
     pub input: &'a mut Parser<'i, 't>,
-
     /// The parser given to `DeclarationListParser::new`
-    pub parser: P,
+    pub parser: &'a mut P,
+
+    _phantom: std::marker::PhantomData<(I, E)>,
 }
 
-impl<'i, 't, 'a, I, P, E: 'i> DeclarationListParser<'i, 't, 'a, P>
-where
-    P: DeclarationParser<'i, Declaration = I, Error = E> + AtRuleParser<'i, AtRule = I, Error = E>,
+/// A parser for a rule body item.
+pub trait RuleBodyItemParser<'i, DeclOrRule, Error: 'i>:
+    DeclarationParser<'i, Declaration = DeclOrRule, Error = Error>
+    + QualifiedRuleParser<'i, QualifiedRule = DeclOrRule, Error = Error>
+    + AtRuleParser<'i, AtRule = DeclOrRule, Error = Error>
 {
+    /// Whether we should attempt to parse declarations. If you know you won't, returning false
+    /// here is slightly faster.
+    fn parse_declarations(&self) -> bool;
+    /// Whether we should attempt to parse qualified rules. If you know you won't, returning false
+    /// would be slightly faster.
+    fn parse_qualified(&self) -> bool;
+}
+
+impl<'i, 't, 'a, P, I, E> RuleBodyParser<'i, 't, 'a, P, I, E> {
     /// Create a new `DeclarationListParser` for the given `input` and `parser`.
     ///
     /// Note that all CSS declaration lists can on principle contain at-rules.
@@ -229,55 +230,69 @@ where
     /// The return type for finished declarations and at-rules also needs to be the same,
     /// since `<DeclarationListParser as Iterator>::next` can return either.
     /// It could be a custom enum.
-    pub fn new(input: &'a mut Parser<'i, 't>, parser: P) -> Self {
-        DeclarationListParser { input, parser }
+    pub fn new(input: &'a mut Parser<'i, 't>, parser: &'a mut P) -> Self {
+        Self {
+            input,
+            parser,
+            _phantom: std::marker::PhantomData,
+        }
     }
 }
 
 /// `DeclarationListParser` is an iterator that yields `Ok(_)` for a valid declaration or at-rule
 /// or `Err(())` for an invalid one.
-impl<'i, 't, 'a, I, P, E: 'i> Iterator for DeclarationListParser<'i, 't, 'a, P>
+impl<'i, 't, 'a, I, P, E: 'i> Iterator for RuleBodyParser<'i, 't, 'a, P, I, E>
 where
-    P: DeclarationParser<'i, Declaration = I, Error = E>
-        + AtRuleParser<'i, AtRule = I, Error = E>
-        + QualifiedRuleParser<'i, QualifiedRule = I, Error = E>,
+    P: RuleBodyItemParser<'i, I, E>,
 {
     type Item = Result<I, (ParseError<'i, E>, &'i str)>;
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             let start = self.input.state();
-            match self.input.next_including_whitespace_and_comments() {
-                Ok(&Token::WhiteSpace(_)) | Ok(&Token::Comment(_)) | Ok(&Token::Semicolon) => {
-                    continue
+            match self.input.next_including_whitespace_and_comments().ok()? {
+                Token::WhiteSpace(_) | Token::Comment(_) | Token::Semicolon => {
+                    continue;
                 }
-                Ok(&Token::Ident(ref name)) => {
+                Token::Ident(ref name) if self.parser.parse_declarations() => {
                     let name = name.clone();
+                    let parse_qualified = self.parser.parse_qualified();
+                    let delimiters = if parse_qualified {
+                        Delimiter::Semicolon | Delimiter::CurlyBracketBlock
+                    } else {
+                        Delimiter::Semicolon
+                    };
                     let mut result = {
                         let parser = &mut self.parser;
-                        parse_until_after(self.input, Delimiter::Semicolon, |input| {
+                        parse_until_after(self.input, delimiters, |input| {
                             input.expect_colon()?;
                             parser.parse_value(name, input)
                         })
                     };
 
-                    if result.is_err() && self.parser.enable_nesting() {
+                    if result.is_err() && parse_qualified {
                         self.input.reset(&start);
-                        result = parse_qualified_rule(&start, self.input, &mut self.parser);
+                        result =
+                            parse_qualified_rule(&start, self.input, &mut *self.parser, delimiters);
                     }
 
                     return Some(result.map_err(|e| (e, self.input.slice_from(start.position()))));
                 }
-                Ok(&Token::AtKeyword(ref name)) => {
+                Token::AtKeyword(ref name) => {
                     let name = name.clone();
-                    return Some(parse_at_rule(&start, name, self.input, &mut self.parser));
+                    return Some(parse_at_rule(&start, name, self.input, &mut *self.parser));
                 }
-                Ok(token) => {
-                    let result = if self.parser.enable_nesting() {
+                token => {
+                    let result = if self.parser.parse_qualified() {
                         self.input.reset(&start);
-                        // XXX do we need to, if we fail, consume only until the next semicolon,
-                        // rather than until the next `{`?
-                        parse_qualified_rule(&start, self.input, &mut self.parser)
+                        // TODO(emilio, nesting): do we need to, if we fail, consume only until the
+                        // next semicolon, rather than until the next `{`?
+                        parse_qualified_rule(
+                            &start,
+                            self.input,
+                            &mut *self.parser,
+                            Delimiter::CurlyBracketBlock,
+                        )
                     } else {
                         let token = token.clone();
                         self.input.parse_until_after(Delimiter::Semicolon, |_| {
@@ -286,66 +301,44 @@ where
                     };
                     return Some(result.map_err(|e| (e, self.input.slice_from(start.position()))));
                 }
-                Err(..) => return None,
             }
         }
     }
 }
 
-/// Provides an iterator for rule list parsing.
-pub struct RuleListParser<'i, 't, 'a, P> {
-    /// The input given to `RuleListParser::new`
+/// Provides an iterator for rule list parsing at the top-level of a stylesheet.
+pub struct StyleSheetParser<'i, 't, 'a, P> {
+    /// The input given.
     pub input: &'a mut Parser<'i, 't>,
 
-    /// The parser given to `RuleListParser::new`
-    pub parser: P,
+    /// The parser given.
+    pub parser: &'a mut P,
 
-    is_stylesheet: bool,
     any_rule_so_far: bool,
 }
 
-impl<'i, 't, 'a, R, P, E: 'i> RuleListParser<'i, 't, 'a, P>
+impl<'i, 't, 'a, R, P, E: 'i> StyleSheetParser<'i, 't, 'a, P>
 where
     P: QualifiedRuleParser<'i, QualifiedRule = R, Error = E>
         + AtRuleParser<'i, AtRule = R, Error = E>,
 {
-    /// Create a new `RuleListParser` for the given `input` at the top-level of a stylesheet
-    /// and the given `parser`.
-    ///
     /// The given `parser` needs to implement both `QualifiedRuleParser` and `AtRuleParser` traits.
-    /// However, either of them can be an empty `impl`
-    /// since the traits provide default implementations of their methods.
+    /// However, either of them can be an empty `impl` since the traits provide default
+    /// implementations of their methods.
     ///
     /// The return type for finished qualified rules and at-rules also needs to be the same,
-    /// since `<RuleListParser as Iterator>::next` can return either.
-    /// It could be a custom enum.
-    pub fn new_for_stylesheet(input: &'a mut Parser<'i, 't>, parser: P) -> Self {
-        RuleListParser {
+    /// since `<RuleListParser as Iterator>::next` can return either. It could be a custom enum.
+    pub fn new(input: &'a mut Parser<'i, 't>, parser: &'a mut P) -> Self {
+        Self {
             input,
             parser,
-            is_stylesheet: true,
-            any_rule_so_far: false,
-        }
-    }
-
-    /// Same is `new_for_stylesheet`, but should be used for rule lists inside a block
-    /// such as the body of an `@media` rule.
-    ///
-    /// This differs in that `<!--` and `-->` tokens
-    /// should only be ignored at the stylesheet top-level.
-    /// (This is to deal with legacy workarounds for `<style>` HTML element parsing.)
-    pub fn new_for_nested_rule(input: &'a mut Parser<'i, 't>, parser: P) -> Self {
-        RuleListParser {
-            input,
-            parser,
-            is_stylesheet: false,
             any_rule_so_far: false,
         }
     }
 }
 
 /// `RuleListParser` is an iterator that yields `Ok(_)` for a rule or `Err(())` for an invalid one.
-impl<'i, 't, 'a, R, P, E: 'i> Iterator for RuleListParser<'i, 't, 'a, P>
+impl<'i, 't, 'a, R, P, E: 'i> Iterator for StyleSheetParser<'i, 't, 'a, P>
 where
     P: QualifiedRuleParser<'i, QualifiedRule = R, Error = E>
         + AtRuleParser<'i, AtRule = R, Error = E>,
@@ -354,13 +347,8 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            if self.is_stylesheet {
-                self.input.skip_cdc_and_cdo()
-            } else {
-                self.input.skip_whitespace()
-            }
+            self.input.skip_cdc_and_cdo();
             let start = self.input.state();
-
             let at_keyword = match self.input.next_byte()? {
                 b'@' => match self.input.next_including_whitespace_and_comments() {
                     Ok(&Token::AtKeyword(ref name)) => Some(name.clone()),
@@ -373,7 +361,7 @@ where
             };
 
             if let Some(name) = at_keyword {
-                let first_stylesheet_rule = self.is_stylesheet && !self.any_rule_so_far;
+                let first_stylesheet_rule = !self.any_rule_so_far;
                 self.any_rule_so_far = true;
                 if first_stylesheet_rule && name.eq_ignore_ascii_case("charset") {
                     let delimiters = Delimiter::Semicolon | Delimiter::CurlyBracketBlock;
@@ -384,12 +372,17 @@ where
                         &start,
                         name.clone(),
                         self.input,
-                        &mut self.parser,
+                        &mut *self.parser,
                     ));
                 }
             } else {
                 self.any_rule_so_far = true;
-                let result = parse_qualified_rule(&start, self.input, &mut self.parser);
+                let result = parse_qualified_rule(
+                    &start,
+                    self.input,
+                    &mut *self.parser,
+                    Delimiter::CurlyBracketBlock,
+                );
                 return Some(result.map_err(|e| (e, self.input.slice_from(start.position()))));
             }
         }
@@ -441,7 +434,7 @@ where
         if let Some(name) = at_keyword {
             parse_at_rule(&start, name, input, parser).map_err(|e| e.0)
         } else {
-            parse_qualified_rule(&start, input, parser)
+            parse_qualified_rule(&start, input, parser, Delimiter::CurlyBracketBlock)
         }
     })
 }
@@ -485,19 +478,14 @@ fn parse_qualified_rule<'i, 't, P, E>(
     start: &ParserState,
     input: &mut Parser<'i, 't>,
     parser: &mut P,
+    delimiters: Delimiters,
 ) -> Result<<P as QualifiedRuleParser<'i>>::QualifiedRule, ParseError<'i, E>>
 where
     P: QualifiedRuleParser<'i, Error = E>,
 {
-    let prelude = parse_until_before(input, Delimiter::CurlyBracketBlock, |input| {
-        parser.parse_prelude(input)
-    });
-    match *input.next()? {
-        Token::CurlyBracketBlock => {
-            // Do this here so that we consume the `{` even if the prelude is `Err`.
-            let prelude = prelude?;
-            parse_nested_block(input, |input| parser.parse_block(prelude, &start, input))
-        }
-        _ => unreachable!(),
-    }
+    let prelude = parse_until_before(input, delimiters, |input| parser.parse_prelude(input));
+    input.expect_curly_bracket_block()?;
+    // Do this here so that we consume the `{` even if the prelude is `Err`.
+    let prelude = prelude?;
+    parse_nested_block(input, |input| parser.parse_block(prelude, &start, input))
 }
