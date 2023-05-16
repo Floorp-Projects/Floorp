@@ -38,24 +38,6 @@ const TEST_PROVIDER_INFO = [
             },
           ],
         },
-        excluded: {
-          regexps: [/^https:\/\/example\.com\/search\?(?:.+)&prs=/],
-        },
-      },
-      {
-        type: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
-        included: {
-          parent: {
-            selector: ".moz-carousel",
-          },
-          children: [
-            {
-              selector: ".moz-carousel-text",
-            },
-          ],
-          regexps: [/^https:\/\/example\.com\/search\?(?:.+)&prs=/],
-        },
-        nonAd: true,
       },
       {
         type: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
@@ -69,7 +51,6 @@ const TEST_PROVIDER_INFO = [
             },
           ],
         },
-        nonAd: true,
         topDown: true,
       },
       {
@@ -416,8 +397,8 @@ add_task(async function test_impressions_without_ads() {
   assertAdImpressionEvents([
     {
       component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
-      ads_loaded: "2",
-      ads_visible: "2",
+      ads_loaded: "1",
+      ads_visible: "1",
       ads_hidden: "0",
     },
   ]);

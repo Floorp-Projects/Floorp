@@ -91,22 +91,6 @@ const TEST_PROVIDER_INFO = [
           },
         },
         topDown: true,
-        nonAd: true,
-      },
-      {
-        type: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
-        included: {
-          parent: {
-            selector: ".moz-carousel",
-          },
-          children: [
-            {
-              selector: ".moz-carousel-text",
-            },
-          ],
-          regexps: [/^https:\/\/example\.com\/search\?(?:.+)&prs=/],
-        },
-        nonAd: true,
       },
       {
         type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
