@@ -37,11 +37,7 @@ module.exports = {
     "../**/*.stories.md",
     "../stories/**/*.stories.mdx",
     "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|md)",
-    {
-      directory: `${projectRoot}/toolkit/content/widgets`,
-      files: `**/*.stories.@(js|jsx|mjs|ts|tsx|md)`,
-      titlePrefix: "UI Widgets",
-    },
+    `${projectRoot}/toolkit/content/widgets/**/*.stories.@(js|jsx|mjs|ts|tsx|md)`,
   ],
   // Additions to the staticDirs might also need to get added to
   // MozXULElement.importCss in preview.mjs to enable auto-reloading.

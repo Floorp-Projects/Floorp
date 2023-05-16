@@ -88,7 +88,8 @@ module.exports = function markdownStoryLoader(source) {
     let componentName = storyNameRegex.exec(relativePath)?.groups?.name;
     if (componentName) {
       // Get the common name for a component e.g. Toggle for moz-toggle
-      storyPath = separateWords(componentName).replace(/^Moz/g, "");
+      storyPath =
+        "UI Widgets/" + separateWords(componentName).replace(/^Moz/g, "");
     }
   }
 
@@ -100,7 +101,7 @@ module.exports = function markdownStoryLoader(source) {
 import { Meta, Description, Canvas } from "@storybook/addon-docs";
 
 <Meta 
-  title="${storyPath}/${storyTitle}" 
+  title="${storyPath}/${storyTitle}"
   parameters={{
     previewTabs: {
       canvas: { hidden: true },
