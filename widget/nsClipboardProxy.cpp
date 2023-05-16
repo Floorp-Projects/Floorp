@@ -35,27 +35,10 @@ nsClipboardProxy::SetData(nsITransferable* aTransferable,
 #endif
 
   ContentChild* child = ContentChild::GetSingleton();
-
-  IPCTransferableData ipcTransferableData;
-  nsContentUtils::TransferableToIPCTransferableData(
-      aTransferable, &ipcTransferableData, false, nullptr);
-
-  Maybe<mozilla::net::CookieJarSettingsArgs> cookieJarSettingsArgs;
-  if (nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-          aTransferable->GetCookieJarSettings()) {
-    mozilla::net::CookieJarSettingsArgs args;
-    mozilla::net::CookieJarSettings::Cast(cookieJarSettings)->Serialize(args);
-    cookieJarSettingsArgs = Some(args);
-  }
-  bool isPrivateData = aTransferable->GetIsPrivateData();
-  nsCOMPtr<nsIPrincipal> requestingPrincipal =
-      aTransferable->GetRequestingPrincipal();
-  nsContentPolicyType contentPolicyType = aTransferable->GetContentPolicyType();
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = aTransferable->GetReferrerInfo();
-  child->SendSetClipboard(std::move(ipcTransferableData), isPrivateData,
-                          requestingPrincipal, cookieJarSettingsArgs,
-                          contentPolicyType, referrerInfo, aWhichClipboard);
-
+  IPCTransferable ipcTransferable;
+  nsContentUtils::TransferableToIPCTransferable(aTransferable, &ipcTransferable,
+                                                false, nullptr);
+  child->SendSetClipboard(std::move(ipcTransferable), aWhichClipboard);
   return NS_OK;
 }
 
