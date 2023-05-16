@@ -25,8 +25,8 @@ use crate::values::specified::{self, NoCalcLength};
 use crate::values::specified::{NonNegativeLengthPercentageOrAuto, ViewportPercentageLength};
 use app_units::Au;
 use cssparser::{
-    parse_important, AtRuleParser, CowRcStr, DeclarationListParser, DeclarationParser, Parser,
-    QualifiedRuleParser,
+    parse_important, AtRuleParser, CowRcStr, DeclarationParser, Parser, QualifiedRuleParser,
+    RuleBodyItemParser, RuleBodyParser,
 };
 use euclid::Size2D;
 use selectors::parser::SelectorParseErrorKind;
@@ -241,15 +241,17 @@ fn parse_shorthand<'i, 't>(
     }
 }
 
+type ViewportDeclarations = Vec<ViewportDescriptorDeclaration>;
+
 impl<'a, 'b, 'i> AtRuleParser<'i> for ViewportRuleParser<'a, 'b> {
     type Prelude = ();
-    type AtRule = Vec<ViewportDescriptorDeclaration>;
+    type AtRule = ViewportDeclarations;
     type Error = StyleParseErrorKind<'i>;
 }
 
 impl<'a, 'b, 'i> QualifiedRuleParser<'i> for ViewportRuleParser<'a, 'b> {
     type Prelude = ();
-    type QualifiedRule = Vec<ViewportDescriptorDeclaration>;
+    type QualifiedRule = ViewportDeclarations;
     type Error = StyleParseErrorKind<'i>;
 }
 
@@ -316,6 +318,11 @@ impl<'a, 'b, 'i> DeclarationParser<'i> for ViewportRuleParser<'a, 'b> {
     }
 }
 
+impl<'a, 'b, 'i> RuleBodyItemParser<'i, ViewportDeclarations, StyleParseErrorKind<'i>> for ViewportRuleParser<'a, 'b> {
+    fn parse_declarations(&self) -> bool { true }
+    fn parse_qualified(&self) -> bool { false }
+}
+
 /// A `@viewport` rule.
 #[derive(Clone, Debug, PartialEq, ToShmem)]
 #[cfg_attr(feature = "servo", derive(MallocSizeOf))]
@@ -345,10 +352,10 @@ impl ViewportRule {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        let parser = ViewportRuleParser { context };
+        let mut parser = ViewportRuleParser { context };
 
         let mut cascade = Cascade::new();
-        let mut parser = DeclarationListParser::new(input, parser);
+        let mut parser = RuleBodyParser::new(input, &mut parser);
         while let Some(result) = parser.next() {
             match result {
                 Ok(declarations) => {
@@ -463,9 +470,7 @@ impl ViewportRule {
 
         let declarations: Vec<_> = declarations.into_iter().filter_map(|entry| entry).collect();
         if !declarations.is_empty() {
-            Some(ViewportRule {
-                declarations: declarations,
-            })
+            Some(ViewportRule { declarations })
         } else {
             None
         }
@@ -792,8 +797,8 @@ impl MaybeNew for ViewportConstraints {
             min_zoom: min_zoom.map(PinchZoomFactor::new),
             max_zoom: max_zoom.map(PinchZoomFactor::new),
 
-            user_zoom: user_zoom,
-            orientation: orientation,
+            user_zoom,
+            orientation,
         })
     }
 }
