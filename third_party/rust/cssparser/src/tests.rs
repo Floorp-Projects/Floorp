@@ -16,10 +16,10 @@ use self::test::Bencher;
 
 use super::{
     parse_important, parse_nth, parse_one_declaration, parse_one_rule, stylesheet_encoding,
-    AtRuleParser, BasicParseError, BasicParseErrorKind, Color, CowRcStr, DeclarationParser,
-    Delimiter, EncodingSupport, ParseError, ParseErrorKind, Parser, ParserInput, ParserState,
-    QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser, SourceLocation, StyleSheetParser,
-    ToCss, Token, TokenSerializationType, UnicodeRange, RGBA,
+    AtRuleParser, BasicParseError, BasicParseErrorKind, Color, CowRcStr, DeclarationListParser,
+    DeclarationParser, Delimiter, EncodingSupport, ParseError, ParseErrorKind, Parser, ParserInput,
+    ParserState, QualifiedRuleParser, RuleListParser, SourceLocation, ToCss, Token,
+    TokenSerializationType, UnicodeRange, RGBA,
 };
 
 macro_rules! JArray {
@@ -83,7 +83,7 @@ fn assert_json_eq(results: Value, mut expected: Value, message: &str) {
 fn run_raw_json_tests<F: Fn(Value, Value) -> ()>(json_data: &str, run: F) {
     let items = match serde_json::from_str(json_data) {
         Ok(Value::Array(items)) => items,
-        other => panic!("Invalid JSON: {:?}", other),
+        _ => panic!("Invalid JSON"),
     };
     assert!(items.len() % 2 == 0);
     let mut input = None;
@@ -136,7 +136,7 @@ fn declaration_list() {
         include_str!("css-parsing-tests/declaration_list.json"),
         |input| {
             Value::Array(
-                RuleBodyParser::new(input, &mut JsonParser)
+                DeclarationListParser::new(input, JsonParser)
                     .map(|result| result.unwrap_or(JArray!["error", "invalid"]))
                     .collect(),
             )
@@ -158,7 +158,7 @@ fn one_declaration() {
 fn rule_list() {
     run_json_tests(include_str!("css-parsing-tests/rule_list.json"), |input| {
         Value::Array(
-            RuleBodyParser::new(input, &mut JsonParser)
+            RuleListParser::new_for_nested_rule(input, JsonParser)
                 .map(|result| result.unwrap_or(JArray!["error", "invalid"]))
                 .collect(),
         )
@@ -169,7 +169,7 @@ fn rule_list() {
 fn stylesheet() {
     run_json_tests(include_str!("css-parsing-tests/stylesheet.json"), |input| {
         Value::Array(
-            StyleSheetParser::new(input, &mut JsonParser)
+            RuleListParser::new_for_stylesheet(input, JsonParser)
                 .map(|result| result.unwrap_or(JArray!["error", "invalid"]))
                 .collect(),
         )
@@ -234,7 +234,7 @@ fn stylesheet_from_bytes() {
                 let (css_unicode, used_encoding, _) = encoding.decode(&css);
                 let mut input = ParserInput::new(&css_unicode);
                 let input = &mut Parser::new(&mut input);
-                let rules = StyleSheetParser::new(input, &mut JsonParser)
+                let rules = RuleListParser::new_for_stylesheet(input, JsonParser)
                     .map(|result| result.unwrap_or(JArray!["error", "invalid"]))
                     .collect::<Vec<_>>();
                 JArray![rules, used_encoding.name().to_lowercase()]
@@ -1069,15 +1069,6 @@ impl<'i> QualifiedRuleParser<'i> for JsonParser {
             prelude,
             component_values_to_json(input),
         ])
-    }
-}
-
-impl<'i> RuleBodyItemParser<'i, Value, ()> for JsonParser {
-    fn parse_qualified(&self) -> bool {
-        true
-    }
-    fn parse_declarations(&self) -> bool {
-        true
     }
 }
 

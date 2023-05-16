@@ -13,7 +13,7 @@ use crate::shared_lock::{
 };
 use crate::str::CssStringWriter;
 use crate::stylesheets::{
-    layer_rule::LayerName, supports_rule::SupportsCondition, CssRule,
+    layer_rule::LayerName, stylesheet::Namespaces, supports_rule::SupportsCondition, CssRule,
     CssRuleType, StylesheetInDocument,
 };
 use crate::values::CssUrl;
@@ -212,7 +212,8 @@ impl ImportRule {
     /// whole import rule or parse the media query list or what not.
     pub fn parse_layer_and_supports<'i, 't>(
         input: &mut Parser<'i, 't>,
-        context: &mut ParserContext,
+        context: &ParserContext,
+        namespaces: &Namespaces,
     ) -> (ImportLayer, Option<ImportSupportsCondition>) {
         let layer = if input
             .try_parse(|input| input.expect_ident_matching("layer"))
@@ -236,9 +237,9 @@ impl ImportRule {
             input
                 .try_parse(SupportsCondition::parse_for_import)
                 .map(|condition| {
-                    let enabled = context.nest_for_rule(CssRuleType::Style, |context| {
-                        condition.eval(context)
-                    });
+                    let eval_context =
+                        ParserContext::new_with_rule_type(context, CssRuleType::Style, namespaces);
+                    let enabled = condition.eval(&eval_context, namespaces);
                     ImportSupportsCondition { condition, enabled }
                 })
                 .ok()

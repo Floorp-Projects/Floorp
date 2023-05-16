@@ -700,7 +700,10 @@ impl<'i: 't, 't> Parser<'i, 't> {
     /// Caller must deal with the fact that the resulting list might be empty,
     /// if there's no valid component on the list.
     #[inline]
-    pub fn parse_comma_separated_ignoring_errors<F, T, E: 'i>(&mut self, parse_one: F) -> Vec<T>
+    pub fn parse_comma_separated_ignoring_errors<F, T, E: 'i>(
+        &mut self,
+        parse_one: F,
+    ) -> Vec<T>
     where
         F: for<'tt> FnMut(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>>,
     {
