@@ -21,5 +21,5 @@ interface Crypto {
   ArrayBufferView getRandomValues(ArrayBufferView array);
 
   [SecureContext, Pref="dom.crypto.randomUUID.enabled"]
-  DOMString randomUUID();
+  UTF8String randomUUID();
 };
