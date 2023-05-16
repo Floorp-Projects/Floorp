@@ -182,9 +182,9 @@ class Element;
 class Event;
 class EventTarget;
 class HTMLInputElement;
-class IPCDataTransfer;
-class IPCDataTransferImageContainer;
-class IPCDataTransferItem;
+class IPCTransferableData;
+class IPCTransferableDataImageContainer;
+class IPCTransferableDataItem;
 struct LifecycleCallbackArgs;
 class MessageBroadcaster;
 class NodeInfo;
@@ -2848,8 +2848,8 @@ class nsContentUtils {
    * Given an IPCDataTransferImageContainer construct an imgIContainer for the
    * image encoded by the transfer item.
    */
-  static nsresult DeserializeDataTransferImageContainer(
-      const mozilla::dom::IPCDataTransferImageContainer& aData,
+  static nsresult DeserializeTransferableDataImageContainer(
+      const mozilla::dom::IPCTransferableDataImageContainer& aData,
       imgIContainer** aContainer);
 
   /**
@@ -2858,30 +2858,32 @@ class nsContentUtils {
    */
   static bool IsFlavorImage(const nsACString& aFlavor);
 
-  static bool IPCDataTransferItemHasKnownFlavor(
-      const mozilla::dom::IPCDataTransferItem& aItem);
+  static bool IPCTransferableDataItemHasKnownFlavor(
+      const mozilla::dom::IPCTransferableDataItem& aItem);
 
-  static nsresult IPCTransferableToTransferable(
-      const mozilla::dom::IPCDataTransfer& aDataTransfer, bool aAddDataFlavor,
-      nsITransferable* aTransferable, const bool aFilterUnknownFlavors);
+  static nsresult IPCTransferableDataToTransferable(
+      const mozilla::dom::IPCTransferableData& aTransferableData,
+      bool aAddDataFlavor, nsITransferable* aTransferable,
+      const bool aFilterUnknownFlavors);
 
-  static nsresult IPCTransferableToTransferable(
-      const mozilla::dom::IPCDataTransfer& aDataTransfer,
+  static nsresult IPCTransferableDataToTransferable(
+      const mozilla::dom::IPCTransferableData& aTransferableData,
       const bool& aIsPrivateData, nsIPrincipal* aRequestingPrincipal,
       const nsContentPolicyType& aContentPolicyType, bool aAddDataFlavor,
       nsITransferable* aTransferable, const bool aFilterUnknownFlavors);
 
-  static nsresult IPCTransferableItemToVariant(
-      const mozilla::dom::IPCDataTransferItem& aDataTransferItem,
+  static nsresult IPCTransferableDataItemToVariant(
+      const mozilla::dom::IPCTransferableDataItem& aItem,
       nsIWritableVariant* aVariant);
 
-  static void TransferablesToIPCTransferables(
-      nsIArray* aTransferables, nsTArray<mozilla::dom::IPCDataTransfer>& aIPC,
-      bool aInSyncMessage, mozilla::dom::ContentParent* aParent);
+  static void TransferablesToIPCTransferableDatas(
+      nsIArray* aTransferables,
+      nsTArray<mozilla::dom::IPCTransferableData>& aIPC, bool aInSyncMessage,
+      mozilla::dom::ContentParent* aParent);
 
-  static void TransferableToIPCTransferable(
+  static void TransferableToIPCTransferableData(
       nsITransferable* aTransferable,
-      mozilla::dom::IPCDataTransfer* aIPCDataTransfer, bool aInSyncMessage,
+      mozilla::dom::IPCTransferableData* aTransferableData, bool aInSyncMessage,
       mozilla::dom::ContentParent* aParent);
 
   /*
