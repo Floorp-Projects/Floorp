@@ -826,6 +826,7 @@ add_task(async function selected_result_addons() {
           amo: {
             rating: "4.8",
             number_of_ratings: "1234567",
+            guid: "good@addon",
           },
         },
         is_top_pick: true,
