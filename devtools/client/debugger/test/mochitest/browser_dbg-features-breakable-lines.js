@@ -19,7 +19,7 @@ add_task(async function testBreakableLinesOverReloads() {
   );
 
   info("Assert breakable lines of the first html page load");
-  await assertBreakableLines(dbg, "index.html", 75, [
+  await assertBreakableLines(dbg, "index.html", 78, [
     ...getRange(16, 17),
     21,
     ...getRange(24, 25),
