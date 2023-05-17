@@ -608,6 +608,8 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onTextChanged(event: AccessibilityEvent) {
                 assertThat("text should be pasted", event.text[0].toString(), equalTo("hello cruel cruel world"))
+                assertThat("fromIndex is correct", event.fromIndex, equalTo(12))
+                assertThat("addedCount is correct", event.addedCount, equalTo(6))
             }
         })
 
@@ -619,6 +621,8 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled
             override fun onTextChanged(event: AccessibilityEvent) {
                 assertThat("text should be pasted", event.text[0].toString(), equalTo("hello cruel cruel cruel"))
+                assertThat("fromIndex is correct", event.fromIndex, equalTo(18))
+                assertThat("removedCount is correct", event.removedCount, equalTo(5))
             }
         })
 
@@ -637,6 +641,8 @@ class AccessibilityTest : BaseSessionTest() {
             @AssertCalled
             override fun onTextChanged(event: AccessibilityEvent) {
                 assertThat("text should be cut", event.text[0].toString(), equalTo(" cruel cruel cruel"))
+                assertThat("fromIndex is correct", event.fromIndex, equalTo(0))
+                assertThat("removedCount is correct", event.removedCount, equalTo(5))
             }
         })
     }

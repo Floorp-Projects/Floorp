@@ -473,6 +473,7 @@ void SessionAccessibility::SendTextChangedEvent(Accessible* aAccessible,
   GECKOBUNDLE_START(eventInfo);
   GECKOBUNDLE_PUT(eventInfo, "text", jni::StringParam(text));
   GECKOBUNDLE_PUT(eventInfo, "beforeText", jni::StringParam(beforeText));
+  GECKOBUNDLE_PUT(eventInfo, "fromIndex", java::sdk::Integer::ValueOf(aStart));
   GECKOBUNDLE_PUT(eventInfo, "addedCount",
                   java::sdk::Integer::ValueOf(aIsInsert ? aLen : 0));
   GECKOBUNDLE_PUT(eventInfo, "removedCount",
