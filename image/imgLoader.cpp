@@ -3314,13 +3314,10 @@ imgCacheValidator::OnRedirectVerifyCallback(nsresult aResult) {
   // an external application, e.g. mailto:
   nsCOMPtr<nsIURI> uri;
   mRedirectChannel->GetURI(getter_AddRefs(uri));
-  bool doesNotReturnData = false;
-  NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
-                      &doesNotReturnData);
 
   nsresult result = NS_OK;
 
-  if (doesNotReturnData) {
+  if (nsContentUtils::IsExternalProtocol(uri)) {
     result = NS_ERROR_ABORT;
   }
 
