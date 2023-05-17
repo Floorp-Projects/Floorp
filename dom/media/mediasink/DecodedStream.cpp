@@ -478,7 +478,8 @@ RefPtr<DecodedStream::EndedPromise> DecodedStream::OnEnded(TrackType aType) {
 
   if (aType == TrackInfo::kAudioTrack && mInfo.HasAudio()) {
     return mAudioEndedPromise;
-  } else if (aType == TrackInfo::kVideoTrack && mInfo.HasVideo()) {
+  }
+  if (aType == TrackInfo::kVideoTrack && mInfo.HasVideo()) {
     return mVideoEndedPromise;
   }
   return nullptr;
@@ -1155,7 +1156,7 @@ void DecodedStream::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
   aInfo.mDecodedStream.mLastAudio =
       lastAudio ? lastAudio->GetEndTime().ToMicroseconds() : -1;
   aInfo.mDecodedStream.mAudioQueueFinished = mAudioQueue.IsFinished();
-  aInfo.mDecodedStream.mAudioQueueSize = mAudioQueue.GetSize();
+  aInfo.mDecodedStream.mAudioQueueSize = AssertedCast<int>(mAudioQueue.GetSize());
   if (mData) {
     mData->GetDebugInfo(aInfo.mDecodedStream.mData);
   }
