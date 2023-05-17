@@ -47,7 +47,7 @@
 #  pragma warning(disable : 4514)
 #endif
 
-#define NSCAP_FEATURE_USE_BASE
+// #define NSCAP_FEATURE_USE_BASE
 
 #ifdef DEBUG
 #  define NSCAP_FEATURE_TEST_DONTQUERY_CASES
