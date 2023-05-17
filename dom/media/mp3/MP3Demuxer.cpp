@@ -665,7 +665,9 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
         mEncoderDelay = mParser.VBRInfo().EncoderDelay();
         mEncoderPadding = mParser.VBRInfo().EncoderPadding();
         if (mEncoderDelay == 0) {
-          mEncoderDelay = mSamplesPerFrame;
+          // Skip the VBR frame + the decoder delay, that is always 529 frames
+          // in practice for the decoder we're using.
+          mEncoderDelay = mSamplesPerFrame + 529;
           MP3LOG("No explicit delay present in vbr header, delay is assumed to be %u frames\n",
                  mEncoderDelay);
         }
