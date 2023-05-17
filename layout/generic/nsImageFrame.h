@@ -293,9 +293,14 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   friend class nsImageLoadingContent;
   friend class mozilla::PresShell;
 
-  void OnSizeAvailable(imgIRequest* aRequest);
+  void OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
   void OnFrameUpdate(imgIRequest* aRequest, const nsIntRect* aRect);
-  void OnLoadComplete(imgIRequest* aRequest);
+  void OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
+
+  /**
+   * Notification that aRequest will now be the current request.
+   */
+  void NotifyNewCurrentRequest(imgIRequest* aRequest, nsresult aStatus);
 
   /// Always sync decode our image when painting if @aForce is true.
   void SetForceSyncDecoding(bool aForce) { mForceSyncDecoding = aForce; }
@@ -352,7 +357,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
    * (both can be null), and invalidate layout and paint as needed.
    */
   void UpdateImage(imgIRequest*, imgIContainer*);
-  void UpdateImage(imgIRequest*);
 
   /**
    * Function to convert a dirty rect in the source image to a dirty
