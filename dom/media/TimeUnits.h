@@ -123,6 +123,8 @@ class TimeUnit final {
 
   bool IsPositive() const { return mValue.value() > 0; }
 
+  bool IsPositiveOrZero() const { return mValue.value() >= 0; }
+
   bool IsNegative() const { return mValue.value() < 0; }
 
   bool operator==(const TimeUnit& aOther) const {
