@@ -25,6 +25,7 @@
 #include "gc/ObjectKind-inl.h"
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -322,7 +323,7 @@ bool WarpBuilder::buildInline() {
 MInstruction* WarpBuilder::buildNamedLambdaEnv(MDefinition* callee,
                                                MDefinition* env,
                                                NamedLambdaObject* templateObj) {
-  MOZ_ASSERT(!templateObj->hasDynamicSlots());
+  MOZ_ASSERT(templateObj->numDynamicSlots() == 0);
 
   MInstruction* namedLambda = MNewNamedLambdaObject::New(alloc(), templateObj);
   current->add(namedLambda);

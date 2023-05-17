@@ -50,6 +50,7 @@
 #include "jit/TemplateObject-inl.h"
 #include "vm/BytecodeUtil-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -932,7 +933,7 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
 
     // If the object has dynamic slots, the slots member has already been
     // filled in.
-    if (!ntemplate.hasDynamicSlots()) {
+    if (ntemplate.numDynamicSlots() == 0) {
       storePtr(ImmPtr(emptyObjectSlots),
                Address(obj, NativeObject::offsetOfSlots()));
     }
