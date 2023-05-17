@@ -242,12 +242,12 @@ void MediaDecoder::SetOutputTracksPrincipal(
 
 double MediaDecoder::GetDuration() {
   MOZ_ASSERT(NS_IsMainThread());
-  return mDuration;
+  return mDuration.IsValid() ? mDuration.ToSeconds() : std::numeric_limits<double>::quiet_NaN();
 }
 
 bool MediaDecoder::IsInfinite() const {
   MOZ_ASSERT(NS_IsMainThread());
-  return std::isinf(mDuration);
+  return mDuration.IsInfinite();
 }
 
 #define INIT_MIRROR(name, val) \
@@ -258,7 +258,7 @@ bool MediaDecoder::IsInfinite() const {
 MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
     : mWatchManager(this, aInit.mOwner->AbstractMainThread()),
       mLogicalPosition(0.0),
-      mDuration(std::numeric_limits<double>::quiet_NaN()),
+      mDuration(TimeUnit::Invalid()),
       mOwner(aInit.mOwner),
       mAbstractMainThread(aInit.mOwner->AbstractMainThread()),
       mFrameStats(new FrameStatistics()),
@@ -964,15 +964,15 @@ void MediaDecoder::UpdateTelemetryHelperBasedOnPlayState(
 }
 
 MediaDecoder::PositionUpdate MediaDecoder::GetPositionUpdateReason(
-    double aPrevPos, double aCurPos) const {
+    double aPrevPos, const TimeUnit& aCurPos) const {
   MOZ_ASSERT(NS_IsMainThread());
   // If current position is earlier than previous position and we didn't do
   // seek, that means we looped back to the start position.
   const bool notSeeking = !mSeekRequest.Exists();
-  if (mLooping && notSeeking && aCurPos < aPrevPos) {
+  if (mLooping && notSeeking && aCurPos.ToSeconds() < aPrevPos) {
     return PositionUpdate::eSeamlessLoopingSeeking;
   }
-  return aPrevPos != aCurPos && notSeeking ? PositionUpdate::ePeriodicUpdate
+  return aPrevPos != aCurPos.ToSeconds() && notSeeking ? PositionUpdate::ePeriodicUpdate
                                            : PositionUpdate::eOther;
 }
 
@@ -980,7 +980,7 @@ void MediaDecoder::UpdateLogicalPositionInternal() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
-  double currentPosition = CurrentPosition().ToSeconds();
+  TimeUnit currentPosition = CurrentPosition();
   if (mPlayState == PLAY_STATE_ENDED) {
     currentPosition = std::max(currentPosition, mDuration);
   }
@@ -1017,12 +1017,15 @@ void MediaDecoder::UpdateLogicalPositionInternal() {
   Invalidate();
 }
 
-void MediaDecoder::SetLogicalPosition(double aNewPosition) {
+void MediaDecoder::SetLogicalPosition(const TimeUnit& aNewPosition) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mLogicalPosition == aNewPosition) {
+  if (mLogicalPosition == aNewPosition.ToSeconds()) {
     return;
   }
-  mLogicalPosition = aNewPosition;
+  if (std::abs(mLogicalPosition - aNewPosition.ToSeconds()) < 1. / USECS_PER_S) {
+    return;
+  }
+  mLogicalPosition = aNewPosition.ToSeconds();
   DDLOG(DDLogCategory::Property, "currentTime", mLogicalPosition);
 }
 
@@ -1030,31 +1033,31 @@ void MediaDecoder::DurationChanged() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
-  double oldDuration = mDuration;
+  TimeUnit oldDuration = mDuration;
 
   // Use the explicit duration if we have one.
   // Otherwise use the duration mirrored from MDSM.
   if (mExplicitDuration.isSome()) {
-    mDuration = mExplicitDuration.ref();
+    mDuration = TimeUnit::FromSeconds(mExplicitDuration.ref());
   } else if (mStateMachineDuration.Ref().isSome()) {
-    mDuration = mStateMachineDuration.Ref().ref().ToSeconds();
+    mDuration = mStateMachineDuration.Ref().ref();
   }
 
-  if (mDuration == oldDuration || std::isnan(mDuration)) {
+  if (oldDuration.IsValid() && mDuration == oldDuration) {
     return;
   }
 
-  LOG("Duration changed to %f", mDuration);
+  LOG("Duration changed to %f", mDuration.ToSeconds());
 
   // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=28822 for a discussion
   // of whether we should fire durationchange on explicit infinity.
   if (mFiredMetadataLoaded &&
-      (!std::isinf(mDuration) || mExplicitDuration.isSome())) {
+      (!mDuration.IsInfinite() || mExplicitDuration.isSome())) {
     GetOwner()->DispatchAsyncEvent(u"durationchange"_ns);
   }
 
-  if (CurrentPosition() > TimeUnit::FromSeconds(mDuration)) {
-    Seek(mDuration, SeekTarget::Accurate);
+  if (CurrentPosition() > mDuration) {
+    Seek(mDuration.ToSeconds(), SeekTarget::Accurate);
   }
 }
 
@@ -1215,7 +1218,7 @@ media::TimeIntervals MediaDecoder::GetSeekable() {
   }
   return media::TimeIntervals(media::TimeInterval(
       TimeUnit::Zero(), IsInfinite() ? TimeUnit::FromInfinity()
-                                     : TimeUnit::FromSeconds(GetDuration())));
+                                     : mDuration));
 }
 
 void MediaDecoder::SetFragmentEndTime(double aTime) {
