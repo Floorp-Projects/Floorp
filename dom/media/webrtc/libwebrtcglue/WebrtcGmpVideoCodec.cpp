@@ -15,10 +15,12 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsServiceManagerUtils.h"
 #include "transport/runnable_utils.h"
 #include "api/video/video_frame_type.h"
+#include "api/video_codecs/h264_profile_level_id.h"
 #include "common_video/include/video_frame_buffer.h"
 #include "media/base/media_constants.h"
 // #include "rtc_base/bind.h"
@@ -120,6 +122,66 @@ static int SizeNumBytes(GMPBufferType aBufferType) {
   }
 }
 
+static GMPProfile WebRtcH264ProfileToGMP(webrtc::H264Profile aProfile) {
+  switch (aProfile) {
+    case webrtc::H264Profile::kProfileBaseline:
+    case webrtc::H264Profile::kProfileConstrainedBaseline:
+      // OpenH264 baseline is always constrained baseline.
+      return kGMPH264ProfileBaseline;
+    case webrtc::H264Profile::kProfileMain:
+      return kGMPH264ProfileMain;
+    case webrtc::H264Profile::kProfileConstrainedHigh:
+    case webrtc::H264Profile::kProfileHigh:
+      // OpenH264 high is always constrained high.
+      return kGMPH264ProfileHigh;
+    case webrtc::H264Profile::kProfilePredictiveHigh444:
+      return kGMPH264ProfileHigh444;
+    default:
+      return kGMPH264ProfileUnknown;
+  }
+}
+
+static GMPLevel WebRtcH264LevelToGMP(webrtc::H264Level aLevel) {
+  switch (aLevel) {
+    case webrtc::H264Level::kLevel1_b:
+      return kGMPH264Level1_B;
+    case webrtc::H264Level::kLevel1:
+      return kGMPH264Level1_0;
+    case webrtc::H264Level::kLevel1_1:
+      return kGMPH264Level1_1;
+    case webrtc::H264Level::kLevel1_2:
+      return kGMPH264Level1_2;
+    case webrtc::H264Level::kLevel1_3:
+      return kGMPH264Level1_3;
+    case webrtc::H264Level::kLevel2:
+      return kGMPH264Level2_0;
+    case webrtc::H264Level::kLevel2_1:
+      return kGMPH264Level2_1;
+    case webrtc::H264Level::kLevel2_2:
+      return kGMPH264Level2_2;
+    case webrtc::H264Level::kLevel3:
+      return kGMPH264Level3_0;
+    case webrtc::H264Level::kLevel3_1:
+      return kGMPH264Level3_1;
+    case webrtc::H264Level::kLevel3_2:
+      return kGMPH264Level3_2;
+    case webrtc::H264Level::kLevel4:
+      return kGMPH264Level4_0;
+    case webrtc::H264Level::kLevel4_1:
+      return kGMPH264Level4_1;
+    case webrtc::H264Level::kLevel4_2:
+      return kGMPH264Level4_2;
+    case webrtc::H264Level::kLevel5:
+      return kGMPH264Level5_0;
+    case webrtc::H264Level::kLevel5_1:
+      return kGMPH264Level5_1;
+    case webrtc::H264Level::kLevel5_2:
+      return kGMPH264Level5_2;
+    default:
+      return kGMPH264LevelUnknown;
+  }
+}
+
 int32_t WebrtcGmpVideoEncoder::InitEncode(
     const webrtc::VideoCodec* aCodecSettings,
     const webrtc::VideoEncoder::Settings& aSettings) {
@@ -141,11 +203,12 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
   GMPVideoCodec codecParams;
   memset(&codecParams, 0, sizeof(codecParams));
 
-  codecParams.mGMPApiVersion = kGMPVersion34;
+  codecParams.mGMPApiVersion = kGMPVersion35;
   codecParams.mStartBitrate = aCodecSettings->startBitrate;
   codecParams.mMinBitrate = aCodecSettings->minBitrate;
   codecParams.mMaxBitrate = aCodecSettings->maxBitrate;
   codecParams.mMaxFramerate = aCodecSettings->maxFramerate;
+  codecParams.mRateControlMode = kGMPRateControlBitrate;
 
   memset(&mCodecSpecificInfo.codecSpecific, 0,
          sizeof(mCodecSpecificInfo.codecSpecific));
@@ -156,10 +219,30 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
           ? webrtc::H264PacketizationMode::NonInterleaved
           : webrtc::H264PacketizationMode::SingleNalUnit;
 
+  const absl::optional<webrtc::H264ProfileLevelId> profileLevel =
+      webrtc::ParseSdpForH264ProfileLevelId(mFormatParams);
+  if (StaticPrefs::media_webrtc_gmp_encoder_use_h264_profile_level() &&
+      profileLevel) {
+    codecParams.mProfile = WebRtcH264ProfileToGMP(profileLevel->profile);
+    codecParams.mLevel = WebRtcH264LevelToGMP(profileLevel->level);
+  } else {
+    codecParams.mProfile = kGMPH264ProfileUnknown;
+    codecParams.mLevel = kGMPH264LevelUnknown;
+  }
+
+  codecParams.mUseThreadedEncode =
+      StaticPrefs::media_webrtc_gmp_encoder_multithreaded();
+
   uint32_t maxPayloadSize = aSettings.max_payload_size;
   if (mCodecSpecificInfo.codecSpecific.H264.packetization_mode ==
       webrtc::H264PacketizationMode::NonInterleaved) {
     maxPayloadSize = 0;  // No limit, use FUAs
+  }
+
+  if (maxPayloadSize != 0) {
+    codecParams.mSliceMode = kGMPSliceSizeLimited;
+  } else {
+    codecParams.mSliceMode = kGMPSliceSingle;
   }
 
   if (aCodecSettings->mode == webrtc::VideoCodecMode::kScreensharing) {
