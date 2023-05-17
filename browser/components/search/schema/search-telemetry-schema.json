@@ -112,6 +112,144 @@
       "items": {
         "type": "string"
       }
+    },
+    "components": {
+      "type": "array",
+      "title": "Components",
+      "description": "An array of components that could be on the SERP.",
+      "items": {
+        "required": ["type"],
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "ad_carousel",
+              "ad_link",
+              "ad_sitelink",
+              "ad_sidebar",
+              "incontent_searchbox",
+              "refined_search_buttons",
+              "shopping_tab"
+            ],
+            "description": "The type of component the anchor or DOM element should belong to."
+          },
+          "included": {
+            "type": "object",
+            "description": "Conditions that should be fulfilled.",
+            "properties": {
+              "parent": {
+                "title": "Parent",
+                "description": "The DOM element that should only contain elements applicable to a single component type.",
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "description": "If topDown is true for this component, then this will be the value used in querySelectorAll(). Otherwise, it will be the value to in closest() from the context of an anchor.",
+                    "type": "string"
+                  }
+                },
+                "required": ["selector"]
+              },
+              "children": {
+                "type": "array",
+                "title": "Children",
+                "description": "Child DOM elements of the parent. Optional.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "selector": {
+                      "type": "string",
+                      "description": "The selector to use querySelectorAll from the context of the parent."
+                    },
+                    "type": {
+                      "enum": [
+                        "ad_carousel",
+                        "ad_link",
+                        "ad_sitelink",
+                        "ad_sidebar",
+                        "incontent_searchbox",
+                        "refined_search_buttons",
+                        "shopping_tab"
+                      ],
+                      "description": "The component type to use if this child is present."
+                    },
+                    "countChildren": {
+                      "type": "boolean",
+                      "description": "Whether we should count all instances of the child element instead of anchor links found inside of the parent. Defaults to false."
+                    }
+                  },
+                  "required": ["selector"]
+                }
+              },
+              "related": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "The selector to use querySelectorAll from the context of the parent. Any elements specified will have their click events registered and categorized as expanded unless explicitly overwritten in SearchSERPTelemetryChild."
+                  }
+                },
+                "required": ["selector"]
+              }
+            },
+            "required": ["parent"]
+          },
+          "excluded": {
+            "type": "object",
+            "description": "Conditions that should not be included.",
+            "properties": {
+              "parent": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "The root DOM element that shouldn't be a parent from the context of the anchor being inspected."
+                  }
+                },
+                "required": ["selector"]
+              }
+            }
+          },
+          "default": {
+            "type": "boolean",
+            "description": "Whether this component should be the fallback option if a link was included in both ad-related regular expressions as well as regular expressions matching non-ad elements but couldn't be categorized. Defaults to false."
+          },
+          "topDown": {
+            "type": "boolean",
+            "description": "Whether the component should be found first by using document.querySelectorAll on the parent selector definition. Defaults to false."
+          },
+          "dependentRequired": {
+            "topDown": ["included"]
+          }
+        }
+      }
+    },
+    "nonAdsLinkRegexps": {
+      "type": "array",
+      "title": "Non-ads link matching regular expressions",
+      "description": "An array containing known patterns that match non-ad links from a search provider.",
+      "items": {
+        "type": "string",
+        "description": "The matching regular expression."
+      }
+    },
+    "shoppingTab": {
+      "type": "object",
+      "title": "Shopping Tab",
+      "properties": {
+        "selector": {
+          "type": "string",
+          "description": "The elements on the page to inspect for the shopping tab. Should be anchor elements."
+        },
+        "regexp": {
+          "type": "string",
+          "description": "The regular expression to match against a possible shopping tab. Must be provided if using this feature."
+        },
+        "inspectRegexpInSERP": {
+          "type": "boolean",
+          "description": "Whether the regexp should be used against hrefs the selector matches against."
+        }
+      },
+      "required": ["selector", "regexp"]
     }
   }
 }
