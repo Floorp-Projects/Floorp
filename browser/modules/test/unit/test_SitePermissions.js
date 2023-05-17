@@ -3,8 +3,8 @@
  */
 "use strict";
 
-const { SitePermissions } = ChromeUtils.import(
-  "resource:///modules/SitePermissions.jsm"
+const { SitePermissions } = ChromeUtils.importESModule(
+  "resource:///modules/SitePermissions.sys.mjs"
 );
 
 const RESIST_FINGERPRINTING_ENABLED = Services.prefs.getBoolPref(
@@ -254,7 +254,7 @@ add_task(async function testExactHostMatch() {
       Assert.ok(
         false,
         `Found an unknown permission ${permission} in exact host match test.` +
-          "Please add new permissions from SitePermissions.jsm to this test."
+          "Please add new permissions from SitePermissions.sys.mjs to this test."
       );
     }
 

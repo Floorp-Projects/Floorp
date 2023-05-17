@@ -5,9 +5,8 @@
 import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys.mjs";
 
-const { SitePermissions } = ChromeUtils.import(
-  "resource:///modules/SitePermissions.jsm"
-);
+import { SitePermissions } from "resource:///modules/SitePermissions.sys.mjs";
+
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 

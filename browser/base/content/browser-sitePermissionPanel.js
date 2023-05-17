@@ -542,7 +542,7 @@ var gPermissionPanel = {
    * It is up to the caller to actually insert the element somewhere.
    *
    * @param permission - An object containing information representing the
-   *                     permission, typically obtained via SitePermissions.jsm
+   *                     permission, typically obtained via SitePermissions.sys.mjs
    * @param isContainer - If true, the permission item will be added to a vbox
    *                      and the vbox will be returned.
    * @param permClearButton - Whether to show an "x" button to clear the permission

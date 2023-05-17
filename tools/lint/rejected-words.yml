@@ -67,7 +67,7 @@ avoid-blacklist-and-whitelist:
         - browser/components/urlbar/tests/unit/test_tokenizer.js
         - browser/extensions/screenshots/background/main.js
         - browser/extensions/webcompat/shims/nielsen.js
-        - browser/modules/SitePermissions.jsm
+        - browser/modules/SitePermissions.sys.mjs
         - browser/tools/mozscreenshots/mozscreenshots/extension/configurations/PermissionPrompts.sys.mjs
         - build/clang-plugin/CustomMatchers.h
         - build/clang-plugin/FopenUsageChecker.cpp

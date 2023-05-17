@@ -8,12 +8,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SitePermissions",
-  "resource:///modules/SitePermissions.jsm"
-);
 ChromeUtils.defineModuleGetter(
   lazy,
   "webrtcUI",
