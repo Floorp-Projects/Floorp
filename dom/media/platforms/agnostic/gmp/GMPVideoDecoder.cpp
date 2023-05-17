@@ -115,7 +115,11 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
                                   aStage.SetColorRange(b.mColorRange);
                                 });
 
-    mReorderQueue.Push(std::move(v));
+    if (mReorderFrames) {
+      mReorderQueue.Push(std::move(v));
+    } else {
+      mUnorderedData.AppendElement(std::move(v));
+    }
 
     if (mSamples.IsEmpty()) {
       // If we have no remaining samples in the table, then we have processed
@@ -124,6 +128,7 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
     }
   } else {
     mReorderQueue.Clear();
+    mUnorderedData.Clear();
     mSamples.Clear();
     mDecodePromise.RejectIfExists(
         MediaResult(NS_ERROR_OUT_OF_MEMORY,
@@ -186,6 +191,11 @@ void GMPVideoDecoder::ProcessReorderQueue(
     return;
   }
 
+  if (!mReorderFrames) {
+    aPromise.Resolve(std::move(mUnorderedData), aMethodName);
+    return;
+  }
+
   DecodedData results;
   size_t availableFrames = mReorderQueue.Length();
   if (availableFrames > mMaxRefFrames) {
@@ -196,7 +206,7 @@ void GMPVideoDecoder::ProcessReorderQueue(
     } while (--resolvedFrames > 0);
   }
 
-  aPromise.ResolveIfExists(std::move(results), aMethodName);
+  aPromise.Resolve(std::move(results), aMethodName);
 }
 
 GMPVideoDecoder::GMPVideoDecoder(const GMPVideoDecoderParams& aParams)
@@ -208,7 +218,8 @@ GMPVideoDecoder::GMPVideoDecoder(const GMPVideoDecoderParams& aParams)
       mImageContainer(aParams.mImageContainer),
       mKnowsCompositor(aParams.mKnowsCompositor),
       mTrackingId(aParams.mTrackingId),
-      mCanDecodeBatch(StaticPrefs::media_gmp_decoder_decode_batch()) {}
+      mCanDecodeBatch(StaticPrefs::media_gmp_decoder_decode_batch()),
+      mReorderFrames(StaticPrefs::media_gmp_decoder_reorder_frames()) {}
 
 void GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags) {
   if (MP4Decoder::IsH264(mConfig.mMimeType)) {
