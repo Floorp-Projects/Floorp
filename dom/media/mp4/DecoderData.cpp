@@ -254,8 +254,8 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
   mChannels = aAudio->sample_info[0].channels;
   mBitDepth = aAudio->sample_info[0].bit_depth;
   mExtendedProfile = AssertedCast<int8_t>(aAudio->sample_info[0].extended_profile);
-  mDuration = TimeUnit::FromMicroseconds(AssertedCast<int64_t>(aTrack->duration));
-  mMediaTime = TimeUnit::FromMicroseconds(aTrack->media_time);
+  mDuration = TimeUnit(AssertedCast<int64_t>(aTrack->duration), aTrack->time_scale);
+  mMediaTime = TimeUnit(aTrack->media_time, aTrack->time_scale);
   mTrackId = aTrack->track_id;
 
   // In stagefright, mProfile is kKeyAACProfile, mExtendedProfile is kKeyAACAOT.
@@ -315,8 +315,8 @@ MediaResult MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
     mMimeType = "video/mp4v-es"_ns;
   }
   mTrackId = track->track_id;
-  mDuration = TimeUnit::FromMicroseconds(AssertedCast<int64_t>(track->duration));
-  mMediaTime = TimeUnit::FromMicroseconds(track->media_time);
+  mDuration = TimeUnit(AssertedCast<int64_t>(track->duration), track->time_scale);
+  mMediaTime = TimeUnit(track->media_time, track->time_scale);
   mDisplay.width = AssertedCast<int32_t>(video->display_width);
   mDisplay.height = AssertedCast<int32_t>(video->display_height);
   mImage.width = video->sample_info[0].image_width;

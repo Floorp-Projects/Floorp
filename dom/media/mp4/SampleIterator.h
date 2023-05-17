@@ -60,9 +60,9 @@ class MP4SampleIndex {
   struct Indice {
     uint64_t start_offset;
     uint64_t end_offset;
-    uint64_t start_composition;
-    uint64_t end_composition;
-    uint64_t start_decode;
+    int64_t start_composition;
+    int64_t end_composition;
+    int64_t start_decode;
     bool sync;
   };
 
@@ -99,7 +99,7 @@ class MP4SampleIndex {
   };
 
   MP4SampleIndex(const mozilla::IndiceWrapper& aIndices, ByteStream* aSource,
-                 uint32_t aTrackId, bool aIsAudio);
+                 uint32_t aTrackId, bool aIsAudio, int32_t aTimeScale);
 
   void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges,
                        bool aCanEvict);

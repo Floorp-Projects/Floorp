@@ -275,6 +275,7 @@ class TrackInfo {
   nsCString mMimeType;
   media::TimeUnit mDuration;
   media::TimeUnit mMediaTime;
+  int32_t mTimeScale = 0;
   CryptoTrack mCrypto;
 
   CopyableTArray<MetadataTag> mTags;
