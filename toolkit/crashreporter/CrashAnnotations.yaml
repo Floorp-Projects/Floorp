@@ -583,12 +583,18 @@ JSOutOfMemory:
     to satisfy the allocation.
   type: string
 
+
 LastInteractionDuration:
   description: >
     How long the user had been inactive in seconds if the user was inactive
     at crash.  The value is not set if the user state was active.
   type: integer
   ping: true
+
+LastStartupWasCrash:
+  description: >
+    True if the last startup was detected to have been a crash.
+  type: boolean
 
 MacMemoryPressure:
   description: >
@@ -830,6 +836,12 @@ ShutdownReason:
     "OSSessionEnd", "OSShutdown" or "WinUnexpectedMozQuit".
   type: string
   ping: true
+
+StartupCacheValid:
+  description: >
+    True if the startup cache was deemed valid and usable. Will be false if the
+    last session used a different browser version or had a startup cache.
+  type: boolean
 
 StartupCrash:
   description: >
