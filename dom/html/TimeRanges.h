@@ -32,7 +32,9 @@ class TimeRanges final : public nsISupports, public nsWrapperCache {
   TimeRanges();
   explicit TimeRanges(nsISupports* aParent);
   explicit TimeRanges(const media::TimeIntervals& aTimeIntervals);
+  explicit TimeRanges(const media::TimeRanges& aTimeRanges);
   TimeRanges(nsISupports* aParent, const media::TimeIntervals& aTimeIntervals);
+  TimeRanges(nsISupports* aParent, const media::TimeRanges& aTimeRanges);
 
   media::TimeIntervals ToTimeIntervals() const;
 

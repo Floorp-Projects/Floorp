@@ -31,6 +31,7 @@ class MediaSourceDecoder : public MediaDecoder,
 
   nsresult Load(nsIPrincipal* aPrincipal);
   media::TimeIntervals GetSeekable() override;
+  media::TimeRanges GetSeekableTimeRanges() override;
   media::TimeIntervals GetBuffered() override;
 
   void Shutdown() override;
@@ -76,6 +77,10 @@ class MediaSourceDecoder : public MediaDecoder,
  private:
   MediaDecoderStateMachineBase* CreateStateMachine(
       bool aDisableExternalEngine) override;
+
+  template<typename IntervalType>
+  IntervalType GetSeekableImpl();
+
   void DoSetMediaSourceDuration(double aDuration);
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);
   bool CanPlayThroughImpl() override;
