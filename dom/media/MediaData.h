@@ -241,9 +241,9 @@ class AlignedBuffer {
     return true;
   }
   Type* mData;
-  size_t mLength;  // number of elements
+  size_t mLength{};  // number of elements
   UniquePtr<uint8_t[]> mBuffer;
-  size_t mCapacity;  // in bytes
+  size_t mCapacity{};  // in bytes
 };
 
 typedef AlignedBuffer<uint8_t> AlignedByteBuffer;
