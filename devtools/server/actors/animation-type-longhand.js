@@ -22,6 +22,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "background-image",
       "background-origin",
       "background-repeat",
+      "baseline-source",
       "border-bottom-style",
       "border-collapse",
       "border-image-repeat",
