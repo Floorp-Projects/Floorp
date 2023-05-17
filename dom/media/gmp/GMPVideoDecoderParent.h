@@ -50,8 +50,7 @@ class GMPVideoDecoderParent final : public PGMPVideoDecoderParent,
   nsresult Reset() override;
   nsresult Drain() override;
   uint32_t GetPluginId() const override { return mPluginId; }
-  GMPPluginType GetPluginType() const override { return mPluginType; }
-  nsCString GetDisplayName() const override;
+  const nsCString& GetDisplayName() const override;
 
   // GMPSharedMemManager
   bool Alloc(size_t aSize, Shmem* aMem) override {
@@ -93,7 +92,6 @@ class GMPVideoDecoderParent final : public PGMPVideoDecoderParent,
   RefPtr<GMPVideoDecoderCallbackProxy> mCallback;
   GMPVideoHostImpl mVideoHost;
   const uint32_t mPluginId;
-  GMPPluginType mPluginType = GMPPluginType::Unknown;
   int32_t mFrameCount;
   RefPtr<SimpleTimer> mResetCompleteTimeout;
 };
