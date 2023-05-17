@@ -4355,7 +4355,7 @@ fn parse_property_into(
     let parsing_mode = ParsingMode::from_bits_truncate(parsing_mode);
 
     if let Some(non_custom) = property_id.non_custom_id() {
-        if !non_custom.allowed_in_rule(rule_type) {
+        if !non_custom.allowed_in_rule(rule_type.into()) {
             return Err(());
         }
     }
@@ -4384,7 +4384,7 @@ pub unsafe extern "C" fn Servo_ParseProperty(
     rule_type: CssRuleType,
 ) -> Strong<LockedDeclarationBlock> {
     let id = get_property_id_from_nscsspropertyid!(property, Strong::null());
-    let mut declarations = SourcePropertyDeclaration::new();
+    let mut declarations = SourcePropertyDeclaration::default();
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, data);
     let data = UrlExtraData::from_ptr_ref(&data);
     let result = parse_property_into(
@@ -4753,7 +4753,7 @@ fn set_property(
     rule_type: CssRuleType,
     before_change_closure: DeclarationBlockMutationClosure,
 ) -> bool {
-    let mut source_declarations = SourcePropertyDeclaration::new();
+    let mut source_declarations = SourcePropertyDeclaration::default();
     let reporter = ErrorReporter::new(ptr::null_mut(), loader, data.ptr());
     let non_custom_property_id = property_id.non_custom_id();
     let result = parse_property_into(
@@ -5639,7 +5639,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetAspectRatio(
 pub extern "C" fn Servo_CSSSupports2(property: &nsACString, value: &nsACString) -> bool {
     let id = unsafe { get_property_id_from_property!(property, false) };
 
-    let mut declarations = SourcePropertyDeclaration::new();
+    let mut declarations = SourcePropertyDeclaration::default();
     parse_property_into(
         &mut declarations,
         id,

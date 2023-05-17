@@ -96,8 +96,7 @@ fn extract_error_param<'a>(err: ErrorKind<'a>) -> Option<ErrorString<'a>> {
             ErrorString::UnexpectedToken(t)
         },
 
-        ParseErrorKind::Basic(BasicParseErrorKind::AtRuleInvalid(i)) |
-        ParseErrorKind::Custom(StyleParseErrorKind::UnsupportedAtRule(i)) => {
+        ParseErrorKind::Basic(BasicParseErrorKind::AtRuleInvalid(i)) => {
             let mut s = String::from("@");
             serialize_identifier(&i, &mut s).unwrap();
             ErrorString::Snippet(s.into())
@@ -309,13 +308,6 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
                 _,
                 ParseError {
                     kind: ParseErrorKind::Basic(BasicParseErrorKind::AtRuleInvalid(_)),
-                    ..
-                },
-            ) |
-            ContextualParseError::InvalidRule(
-                _,
-                ParseError {
-                    kind: ParseErrorKind::Custom(StyleParseErrorKind::UnsupportedAtRule(_)),
                     ..
                 },
             ) => (cstr!("PEUnknownAtRule"), Action::Nothing),
