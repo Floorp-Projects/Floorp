@@ -165,6 +165,12 @@ let AVAILABLE_PIP_OVERRIDES;
       "https://*.netflix.com/search*": { policy: TOGGLE_POLICIES.HIDDEN },
     },
 
+    nytimes: {
+      "https://*.nytimes.com/*": {
+        videoWrapperScriptPath: "video-wrappers/nytimes.js",
+      },
+    },
+
     pbs: {
       "https://*.pbs.org/*": {
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
