@@ -2035,11 +2035,11 @@ class WebKitGTKMiniBrowser(WebKit):
                     os_id = line.split('=')[1].strip().strip('"')
                 if line.startswith('VERSION_ID='):
                     version_id = line.split('=')[1].strip().strip('"')
-        assert(os_id)
-        assert(version_id)
+        assert os_id
+        assert version_id
         osidversion = os_id + '-' + version_id
-        assert(' ' not in osidversion)
-        assert(len(osidversion) > 3)
+        assert ' ' not in osidversion
+        assert len(osidversion) > 3
         return osidversion.capitalize()
 
 

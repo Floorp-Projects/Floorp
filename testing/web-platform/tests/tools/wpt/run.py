@@ -158,8 +158,8 @@ in PowerShell with Administrator privileges.""" % (wpt_path, hosts_path)
 
 
 class BrowserSetup:
-    name = None  # type: ClassVar[str]
-    browser_cls = None  # type: ClassVar[Type[browser.Browser]]
+    name: ClassVar[str]
+    browser_cls: ClassVar[Type[browser.Browser]]
 
     def __init__(self, venv, prompt=True):
         self.browser = self.browser_cls(logger)
@@ -337,8 +337,8 @@ class FirefoxAndroid(BrowserSetup):
 
 class Chrome(BrowserSetup):
     name = "chrome"
-    browser_cls = browser.Chrome  # type: ClassVar[Type[browser.ChromeChromiumBase]]
-    experimental_channels = ("dev", "canary", "nightly")  # type: ClassVar[Tuple[str, ...]]
+    browser_cls: ClassVar[Type[browser.ChromeChromiumBase]] = browser.Chrome
+    experimental_channels: ClassVar[Tuple[str, ...]] = ("dev", "canary", "nightly")
 
     def setup_kwargs(self, kwargs):
         browser_channel = kwargs["browser_channel"]
@@ -431,7 +431,7 @@ class ContentShell(BrowserSetup):
 
 class Chromium(Chrome):
     name = "chromium"
-    browser_cls = browser.Chromium  # type: ClassVar[Type[browser.ChromeChromiumBase]]
+    browser_cls: ClassVar[Type[browser.ChromeChromiumBase]] = browser.Chromium
     experimental_channels = ("nightly",)
 
 
