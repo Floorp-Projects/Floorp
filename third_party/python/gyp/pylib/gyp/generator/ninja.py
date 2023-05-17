@@ -14,6 +14,7 @@ import re
 import signal
 import subprocess
 import sys
+import six
 import gyp
 import gyp.common
 from gyp.common import OrderedSet
@@ -751,7 +752,7 @@ class NinjaWriter(object):
         if self.flavor == 'win':
           # WriteNewNinjaRule uses unique_name for creating an rsp file on win.
           extra_bindings.append(('unique_name',
-              hashlib.md5(outputs[0]).hexdigest()))
+              hashlib.md5(six.ensure_binary(outputs[0])).hexdigest()))
 
         self.ninja.build(outputs, rule_name, self.GypPathToNinja(source),
                          implicit=inputs,
