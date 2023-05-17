@@ -7,6 +7,7 @@ import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddressParser: "resource://gre/modules/shared/AddressParser.sys.mjs",
   FormAutofillNameUtils:
     "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
@@ -152,35 +153,7 @@ class AddressField {
    * @returns {string} The normalized field value.
    */
   normalizeUserValue(options) {
-    let s = this.#userValue;
-
-    if (typeof s != "string") {
-      return s;
-    }
-
-    if (options.ignore_case) {
-      s = s.toLowerCase();
-    }
-
-    // process punctuation before whitespace because if a punctuation
-    // is replaced with whitespace, we might want to merge it later
-    if (options.remove_punctuation) {
-      const regex = /\p{Punctuation}/gu;
-      s = s?.replace(regex, "");
-    } else if ("replace_punctuation" in options) {
-      const replace = options.replace_punctuation;
-      const regex = /\p{Punctuation}/gu;
-      s = s?.replace(regex, replace);
-    }
-
-    // prcess whitespace
-    if (options.merge_whitespace) {
-      s = s?.replace(/\s{2,}/g, " ");
-    } else if (options.remove_whitespace) {
-      s = s?.replace(/[\s]/g, "");
-    }
-
-    return s.trim();
+    return lazy.AddressParser.normalizeString(this.#userValue, options);
   }
 
   /**
@@ -192,16 +165,12 @@ class AddressField {
   }
 
   /**
-   * Checks if the field value is empty.
+   * Checks if the field value is valid.
    *
-   * @returns {boolean} True if the field value is empty, false otherwise.
+   * @returns {boolean} True if the field value is valid, false otherwise.
    */
   isValid() {
-    if (this.#userValue) {
-      const pattern = /^[\p{Punctuation}]*$/u;
-      return !pattern.test(this.#userValue);
-    }
-    return true;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   /**
@@ -223,7 +192,87 @@ class AddressField {
  * A street address.
  * See autocomplete="street-address".
  */
-class StreetAddress extends AddressField {}
+class StreetAddress extends AddressField {
+  #structuredStreetAddress = null;
+
+  constructor(value, region) {
+    super(value, region);
+
+    this.#structuredStreetAddress = lazy.AddressParser.parseStreetAddress(
+      lazy.AddressParser.replaceControlCharacters(this.userValue, " ")
+    );
+  }
+
+  get structuredStreetAddress() {
+    return this.#structuredStreetAddress;
+  }
+  get street_number() {
+    return this.#structuredStreetAddress?.street_number;
+  }
+  get street_name() {
+    return this.#structuredStreetAddress?.street_name;
+  }
+  get floor_number() {
+    return this.#structuredStreetAddress?.floor_number;
+  }
+  get apartment_number() {
+    return this.#structuredStreetAddress?.apartment_number;
+  }
+
+  isValid() {
+    return this.userValue ? !!/[\p{Letter}]/u.exec(this.userValue) : true;
+  }
+
+  equals(other) {
+    return (
+      this.street_number?.toLowerCase() == other.street_number?.toLowerCase() &&
+      this.street_name?.toLowerCase() == other.street_name?.toLowerCase() &&
+      this.apartment_number?.toLowerCase() ==
+        other.apartment_number?.toLowerCase() &&
+      this.floor_number?.toLowerCase() == other.floor_number?.toLowerCase()
+    );
+  }
+
+  contains(other) {
+    let selfStreetName = this.userValue;
+    let otherStreetName = other.userValue;
+
+    // Compare street number, apartment number and floor number if
+    // both addresses are parsed successfully.
+    if (this.structuredStreetAddress && other.structuredStreetAddress) {
+      if (
+        (other.street_number && this.street_number != other.street_number) ||
+        (other.apartment_number &&
+          this.apartment_number != other.apartment_number) ||
+        (other.floor_number && this.floor_number != other.floor_number)
+      ) {
+        return false;
+      }
+
+      // Use parsed street name to compare
+      selfStreetName = this.street_name;
+      otherStreetName = other.street_name;
+    }
+
+    // Check if one street name contains the other
+    const options = {
+      ignore_case: true,
+      replace_punctuation: " ",
+    };
+    const selfTokens = new Tokens(
+      lazy.AddressParser.normalizeString(selfStreetName, options),
+      /[\s\n\r]+/
+    );
+    const otherTokens = new Tokens(
+      lazy.AddressParser.normalizeString(otherStreetName, options),
+      /[\s\n\r]+/
+    );
+
+    return otherTokens.isSubsetInOrder(selfTokens, (a, b) =>
+      this.localeCompare(a, b)
+    );
+  }
+}
 
 /**
  * A postal code / zip code
@@ -289,6 +338,10 @@ class City extends AddressField {
 
   get city() {
     return this.#city;
+  }
+
+  isValid() {
+    return this.userValue ? !!/[\p{Letter}]/u.exec(this.userValue) : true;
   }
 
   equals(other) {
@@ -402,7 +455,7 @@ class Country extends AddressField {
   }
 
   contains(other) {
-    return this.equals(other);
+    return false;
   }
 }
 
@@ -440,6 +493,10 @@ class Name extends AddressField {
     return variants.map(v => lazy.AddressParser.normalizeString(v, options));
   }
 
+  isValid() {
+    return this.userValue ? !!/[\p{Letter}]/u.exec(this.userValue) : true;
+  }
+
   equals(other) {
     const options = {
       ignore_case: true,
@@ -472,7 +529,7 @@ class Name extends AddressField {
     }
 
     // Remove puncutation from self and test whether current contains other
-    // Ex. John O'Brian is similar to John OBrian 
+    // Ex. John O'Brian is similar to John OBrian
     selfName = this.normalizeUserValue({
       ignore_case: true,
       remove_punctuation: true,
@@ -628,6 +685,12 @@ class Organization extends AddressField {
     super(value, region);
   }
 
+  isValid() {
+    return this.userValue
+      ? !!/[\p{Letter}\p{Number}]/u.exec(this.userValue)
+      : true;
+  }
+
   /**
    * Two company names are considered equal only when everything is the same.
    */
@@ -717,7 +780,7 @@ class Email extends AddressField {
   }
 
   contains(other) {
-    return this.equals(other);
+    return false;
   }
 }
 
