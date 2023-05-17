@@ -10136,6 +10136,14 @@
     mirror: always
 #endif  # MOZ_FFMPEG
 
+#if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
+# Allow using openh264 decoding with ffmpeg
+-   name: media.ffmpeg.allow-openh264
+    type: RelaxedAtomicBool
+    value: @IS_NOT_NIGHTLY_BUILD@
+    mirror: always
+#endif  # MOZ_FFMPEG || MOZ_FFVPX
+
 #ifdef MOZ_WIDGET_GTK
 # Use VA-API for ffmpeg video playback on Linux
 - name: media.ffmpeg.vaapi.enabled
