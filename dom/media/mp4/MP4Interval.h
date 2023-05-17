@@ -12,7 +12,7 @@ namespace mozilla {
 
 template <typename T>
 struct MP4Interval {
-  MP4Interval() : start(0), end(0) {}
+  MP4Interval() : start{}, end{} {}
   MP4Interval(T aStart, T aEnd) : start(aStart), end(aEnd) {
     MOZ_ASSERT(aStart <= aEnd);
   }

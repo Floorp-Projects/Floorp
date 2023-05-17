@@ -356,7 +356,7 @@ RefPtr<MP4TrackDemuxer::SeekPromise> MP4TrackDemuxer::Seek(
   auto seekTime = aTime;
   mQueuedSample = nullptr;
 
-  mIterator->Seek(seekTime.ToMicroseconds());
+  mIterator->Seek(seekTime);
 
   // Check what time we actually seeked to.
   do {
@@ -480,16 +480,16 @@ RefPtr<MP4TrackDemuxer::SamplesPromise> MP4TrackDemuxer::GetSamples(
 
 void MP4TrackDemuxer::SetNextKeyFrameTime() {
   mNextKeyframeTime.reset();
-  Microseconds frameTime = mIterator->GetNextKeyframeTime();
-  if (frameTime != -1) {
-    mNextKeyframeTime.emplace(media::TimeUnit::FromMicroseconds(frameTime));
+  media::TimeUnit frameTime = mIterator->GetNextKeyframeTime();
+  if (frameTime.IsValid()) {
+    mNextKeyframeTime.emplace(frameTime);
   }
 }
 
 void MP4TrackDemuxer::Reset() {
   mQueuedSample = nullptr;
-  // TODO, Seek to first frame available, which isn't always 0.
-  mIterator->Seek(0);
+  // TODO: verify this
+  mIterator->Seek(media::TimeUnit::FromNegativeInfinity());
   SetNextKeyFrameTime();
 }
 
