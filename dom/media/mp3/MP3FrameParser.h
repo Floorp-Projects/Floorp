@@ -69,7 +69,7 @@ class ID3Parser {
     bool Update(uint8_t c);
 
     // The currently parsed byte sequence.
-    uint8_t mRaw[SIZE];
+    uint8_t mRaw[SIZE] = {};
 
     // The derived size as provided by the size fields.
     // The header size fields holds a 4 byte sequence with each MSB set to 0,
@@ -78,7 +78,7 @@ class ID3Parser {
 
     // The current byte position in the parsed sequence. Reset via Reset and
     // incremented via Update.
-    int mPos;
+    int mPos = 0;
   };
 
   // Check if the buffer is starting with ID3v2 tag.
@@ -188,11 +188,11 @@ class FrameParser {
     bool Update(const uint8_t c);
 
     // The currently parsed byte sequence.
-    uint8_t mRaw[SIZE];
+    uint8_t mRaw[SIZE] = {};
 
     // The current byte position in the parsed sequence. Reset via Reset and
     // incremented via Update.
-    int mPos;
+    int mPos = 0;
   };
 
   // VBR frames may contain Xing or VBRI headers for additional info, we use
@@ -283,7 +283,7 @@ class FrameParser {
   class Frame {
    public:
     // Returns the length of the frame excluding the header in bytes.
-    int32_t Length() const;
+    uint32_t Length() const;
 
     // Returns the parsed frame header.
     const FrameHeader& Header() const;
