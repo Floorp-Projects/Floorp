@@ -113,7 +113,7 @@ export class BaseFeature {
    * @returns {UrlbarResult}
    *   A new result for the suggestion.
    */
-  makeResult(queryContext, suggestion, searchString) {
+  async makeResult(queryContext, suggestion, searchString) {
     return null;
   }
 

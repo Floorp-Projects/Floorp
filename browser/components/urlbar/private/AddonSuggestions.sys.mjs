@@ -14,6 +14,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
 
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+
 const VIEW_TEMPLATE = {
   attributes: {
     selectable: true,
@@ -123,8 +129,16 @@ export class AddonSuggestions extends BaseFeature {
     return ["addons.featureGate"];
   }
 
-  makeResult(queryContext, suggestion, searchString) {
+  async makeResult(queryContext, suggestion, searchString) {
     if (!this.isEnabled || searchString.length < this.#minKeywordLength) {
+      return null;
+    }
+
+    const addon = await lazy.AddonManager.getAddonByID(
+      suggestion.custom_details.amo.guid
+    );
+    if (addon) {
+      // Addon suggested is already installed.
       return null;
     }
 

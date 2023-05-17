@@ -6,6 +6,17 @@
 
 "use strict";
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionTestCommon",
+  "resource://testing-common/ExtensionTestCommon.jsm"
+);
+
 const MERINO_SUGGESTIONS = [
   {
     provider: "amo",
@@ -18,6 +29,7 @@ const MERINO_SUGGESTIONS = [
       amo: {
         rating: "5",
         number_of_ratings: "1234567",
+        guid: "test@addon",
       },
     },
   },
@@ -71,6 +83,44 @@ add_task(async function nonsponsoredDisabled() {
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+});
+
+add_task(async function hideIfAlreadyInstalled() {
+  // Show suggestion.
+  await check_results({
+    context: createContext("test", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [
+      makeExpectedResult({
+        isBestMatch: true,
+        suggestedIndex: 1,
+      }),
+    ],
+  });
+
+  // Install an addon for the suggestion.
+  const xpi = ExtensionTestCommon.generateXPI({
+    manifest: {
+      browser_specific_settings: {
+        gecko: { id: "test@addon" },
+      },
+    },
+  });
+  const addon = await AddonManager.installTemporaryAddon(xpi);
+
+  // Show suggestion for the addon installed.
+  await check_results({
+    context: createContext("test", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+
+  await addon.uninstall();
+  xpi.remove(false);
 });
 
 function makeExpectedResult({ isBestMatch, suggestedIndex }) {

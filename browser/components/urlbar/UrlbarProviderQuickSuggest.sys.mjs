@@ -165,7 +165,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
       }
 
       let result;
-      if (canAdd && (result = this.#makeResult(queryContext, suggestion))) {
+      if (
+        canAdd &&
+        (result = await this.#makeResult(queryContext, suggestion))
+      ) {
         this.#resultFromLastQuery = result;
         addCallback(this, result);
         return;
@@ -258,19 +261,17 @@ class ProviderQuickSuggest extends UrlbarProvider {
     return null;
   }
 
-  #makeResult(queryContext, suggestion) {
+  async #makeResult(queryContext, suggestion) {
     let result;
     switch (suggestion.provider) {
       case "amo":
-        result = lazy.QuickSuggest.getFeature("AddonSuggestions").makeResult(
-          queryContext,
-          suggestion,
-          this._trimmedSearchString
-        );
+        result = await lazy.QuickSuggest.getFeature(
+          "AddonSuggestions"
+        ).makeResult(queryContext, suggestion, this._trimmedSearchString);
         break;
       case "adm": // Merino
       case "AdmWikipedia": // remote settings
-        result = lazy.QuickSuggest.getFeature("AdmWikipedia").makeResult(
+        result = await lazy.QuickSuggest.getFeature("AdmWikipedia").makeResult(
           queryContext,
           suggestion,
           this._trimmedSearchString

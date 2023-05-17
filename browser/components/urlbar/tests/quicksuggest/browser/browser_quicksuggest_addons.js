@@ -16,6 +16,7 @@ const TEST_MERINO_SUGGESTIONS = [
       amo: {
         rating: "5",
         number_of_ratings: "1234567",
+        guid: "first@addon",
       },
     },
     is_top_pick: true,
@@ -30,6 +31,7 @@ const TEST_MERINO_SUGGESTIONS = [
       amo: {
         rating: "4.5",
         number_of_ratings: "123",
+        guid: "second@addon",
       },
     },
     is_sponsored: true,
@@ -44,6 +46,7 @@ const TEST_MERINO_SUGGESTIONS = [
       amo: {
         rating: "0",
         number_of_ratings: "0",
+        guid: "third@addon",
       },
     },
   },
