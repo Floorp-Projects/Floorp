@@ -238,8 +238,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "-F%s" % CONFIG["MACOS_PRIVATE_FRAMEWORKS_DIR"],
         "-framework CoreUI",
         "-framework CoreSymbolication",
-        # Workaround for bug 1801419
-        "-weak_framework SidecarCore",
         "cups",
     ]
 
