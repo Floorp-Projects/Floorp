@@ -754,6 +754,14 @@ nsIXULRuntime::ContentWin32kLockdownState GetLiveWin32kLockdownState() {
 
   // HasUserValue The Pref functions can only be called on main thread
   MOZ_ASSERT(NS_IsMainThread());
+
+#  ifdef MOZ_BACKGROUNDTASKS
+  if (BackgroundTasks::IsBackgroundTaskMode()) {
+    // Let's bail out before loading all the graphics libs.
+    return nsIXULRuntime::ContentWin32kLockdownState::DisabledByDefault;
+  }
+#  endif
+
   mozilla::EnsureWin32kInitialized();
   gfxPlatform::GetPlatform();
 
