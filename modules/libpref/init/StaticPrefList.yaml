@@ -4312,7 +4312,7 @@
 # Whether to shim a Components object on untrusted windows.
 - name: dom.use_components_shim
   type: bool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 - name: dom.vibrator.enabled
