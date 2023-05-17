@@ -1057,6 +1057,7 @@
   --toolbar-fg-color: #15141a;
 
   --toolbarButton-download-icon: url(images/gv-toolbarButton-download.svg);
+  --toolbarButton-openinapp-icon: url(images/gv-toolbarButton-openinapp.svg);
 }
 
 :root:dir(rtl) {
@@ -1237,6 +1238,10 @@ body {
 
 #download::before {
   mask-image: var(--toolbarButton-download-icon);
+}
+
+#openInApp::before {
+  mask-image: var(--toolbarButton-openinapp-icon);
 }
 
 .dialogButton {
