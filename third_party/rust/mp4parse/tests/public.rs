@@ -68,6 +68,10 @@ static IMAGE_AVIF_CLAP_MISSING_ESSENTIAL: &str = "tests/clap-missing-essential.a
 static IMAGE_AVIF_UNKNOWN_MDAT_SIZE: &str = "tests/unknown_mdat.avif";
 static IMAGE_AVIF_UNKNOWN_MDAT_SIZE_IN_OVERSIZED_META: &str =
     "tests/unknown_mdat_in_oversized_meta.avif";
+static IMAGE_AVIF_VALID_WITH_GARBAGE_OVERREAD_AT_END: &str =
+    "tests/valid_with_garbage_overread.avif";
+static IMAGE_AVIF_VALID_WITH_GARBAGE_BYTE_AT_END: &str = "tests/valid_with_garbage_byte.avif";
+static IMAGE_AVIF_WIDE_BOX_SIZE_0: &str = "tests/wide_box_size_0.avif";
 static AVIF_TEST_DIRS: &[&str] = &["tests", "av1-avif/testFiles", "link-u-avif-sample-images"];
 
 // These files are
@@ -127,6 +131,7 @@ static AVIF_UNSUPPORTED_IMAGES: &[&str] = &[
 // TODO: make this into a map of expected errors?
 static AV1_AVIF_CORRUPT_IMAGES: &[&str] = &[
     IMAGE_AVIF_UNKNOWN_MDAT_SIZE_IN_OVERSIZED_META,
+    IMAGE_AVIF_WIDE_BOX_SIZE_0,
     "av1-avif/testFiles/Link-U/kimono.crop.avif",
     "av1-avif/testFiles/Link-U/kimono.mirror-horizontal.avif",
     "av1-avif/testFiles/Link-U/kimono.mirror-vertical.avif",
@@ -1277,6 +1282,28 @@ fn public_avif_avis_with_no_pitm_no_iloc() {
 #[test]
 fn public_avif_avis_with_pitm_no_iloc() {
     assert_avif_should(AVIF_AVIS_WITH_PITM_NO_ILOC, Status::PitmNotFound);
+}
+
+#[test]
+fn public_avif_valid_with_garbage_overread_at_end() {
+    assert_avif_should(
+        IMAGE_AVIF_VALID_WITH_GARBAGE_OVERREAD_AT_END,
+        Status::CheckParserStateErr,
+    );
+}
+
+#[test]
+fn public_avif_valid_with_garbage_byte_at_end() {
+    assert_avif_should(IMAGE_AVIF_VALID_WITH_GARBAGE_BYTE_AT_END, Status::Eof);
+}
+
+#[test]
+fn public_avif_bad_video_sample_entry() {
+    let input = &mut File::open(IMAGE_AVIF_WIDE_BOX_SIZE_0).expect("Unknown file");
+    assert_eq!(
+        Status::from(mp4::read_avif(input, ParseStrictness::Normal)),
+        Status::BoxBadWideSize
+    );
 }
 
 fn public_avis_loop_impl(path: &str, looped: bool) {
