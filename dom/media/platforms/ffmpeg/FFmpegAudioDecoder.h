@@ -50,14 +50,9 @@ class FFmpegAudioDecoder<LIBAV_VER>
   // discard padding frames, based on the number of frames decoded and the total
   // frame count of the media.
   uint64_t TotalFrames() const;
-  // This is the total number of media frames that have been decoded, and does
-  // not include the frames discarded because part of the encoder delay.
-  uint64_t mDecodedFrames = 0;
   // The number of frames of encoder delay, that need to be discarded at the
   // beginning of the stream.
   uint32_t mEncoderDelay = 0;
-  // The remaining encoder delay for this loop iteration.
-  uint32_t mRemainingEncoderDelay = 0;
   // This holds either the encoder padding (when this decoder decodes mp3), or
   // the total frame count of the media (when this decoder decodes AAC).
   // It is best accessed via the `Padding` and `TotalFrames` methods, for
