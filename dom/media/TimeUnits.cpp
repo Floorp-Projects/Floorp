@@ -14,6 +14,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "nsPrintfCString.h"
+#include "nsStringFwd.h"
 
 namespace mozilla::media {
 class TimeIntervals;
@@ -202,7 +203,11 @@ bool TimeUnit::operator>=(const TimeUnit& aOther) const {
 
   nsCString TimeUnit::ToString() const {
     nsCString dump;
-    dump += nsPrintfCString("{%" PRId64 ",%" PRId64 "}", mTicks.value(), mBase);
+    if (mTicks.isValid()) {
+      dump += nsPrintfCString("{%" PRId64 ",%" PRId64 "}", mTicks.value(), mBase);
+    } else {
+      dump += nsLiteralCString("{invalid}"_ns);
+    }
     return dump;
   }
   // last ditch, convert the reduced fractions to doubles
