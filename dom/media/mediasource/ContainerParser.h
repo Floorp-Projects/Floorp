@@ -47,8 +47,8 @@ class ContainerParser : public DecoderDoctorLifeLogger<ContainerParser> {
   // if aStart and aEnd have been updated and NS_ERROR_NOT_AVAILABLE otherwise
   // when no error were encountered.
   virtual MediaResult ParseStartAndEndTimestamps(const MediaSpan& aData,
-                                                 int64_t& aStart,
-                                                 int64_t& aEnd);
+                                                 media::TimeUnit& aStart,
+                                                 media::TimeUnit& aEnd);
 
   // Compare aLhs and rHs, considering any error that may exist in the
   // timestamps from the format's base representation.  Return true if aLhs
