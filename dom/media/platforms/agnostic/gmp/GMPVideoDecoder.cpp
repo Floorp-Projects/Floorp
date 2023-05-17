@@ -158,7 +158,22 @@ void GMPVideoDecoder::DrainComplete() {
   GMP_LOG_DEBUG("GMPVideoDecoder::DrainComplete");
   MOZ_ASSERT(IsOnGMPThread());
   mSamples.Clear();
-  ProcessReorderQueue(mDrainPromise, __func__);
+
+  if (mDrainPromise.IsEmpty()) {
+    return;
+  }
+
+  DecodedData results;
+  if (mReorderFrames) {
+    results.SetCapacity(mReorderQueue.Length());
+    while (!mReorderQueue.IsEmpty()) {
+      results.AppendElement(mReorderQueue.Pop());
+    }
+  } else {
+    results = std::move(mUnorderedData);
+  }
+
+  mDrainPromise.Resolve(std::move(results), __func__);
 }
 
 void GMPVideoDecoder::ResetComplete() {
