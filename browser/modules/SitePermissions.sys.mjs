@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["SitePermissions"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -427,7 +423,7 @@ const GloballyBlockedPermissions = {
  * Some methods have the side effect of dispatching a "PermissionStateChange"
  * event on changes to temporary permissions, as mentioned in the respective docs.
  */
-var SitePermissions = {
+export var SitePermissions = {
   // Permission states.
   UNKNOWN: Services.perms.UNKNOWN_ACTION,
   ALLOW: Services.perms.ALLOW_ACTION,

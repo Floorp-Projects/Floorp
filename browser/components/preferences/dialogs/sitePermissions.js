@@ -7,8 +7,8 @@
 var { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
-const { SitePermissions } = ChromeUtils.import(
-  "resource:///modules/SitePermissions.jsm"
+const { SitePermissions } = ChromeUtils.importESModule(
+  "resource:///modules/SitePermissions.sys.mjs"
 );
 
 const sitePermissionsL10n = {

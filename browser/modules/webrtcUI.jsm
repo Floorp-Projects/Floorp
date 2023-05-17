@@ -26,11 +26,9 @@ ChromeUtils.defineModuleGetter(
   "BrowserWindowTracker",
   "resource:///modules/BrowserWindowTracker.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SitePermissions",
-  "resource:///modules/SitePermissions.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
+});
 XPCOMUtils.defineLazyGetter(
   lazy,
   "syncL10n",

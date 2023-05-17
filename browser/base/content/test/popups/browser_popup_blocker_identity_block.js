@@ -217,7 +217,7 @@ add_task(async function check_explicit_default_permission() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
 
   // DENY only works if triggered through Services.perms (it's very edge-casey),
-  // since SitePermissions.jsm considers setting default permissions to be removal.
+  // since SitePermissions.sys.mjs considers setting default permissions to be removal.
   PermissionTestUtils.add(URI, "popup", Ci.nsIPermissionManager.DENY_ACTION);
 
   await openPermissionPopup();

@@ -73,13 +73,9 @@ ChromeUtils.defineModuleGetter(
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SitePermissions",
-  "resource:///modules/SitePermissions.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

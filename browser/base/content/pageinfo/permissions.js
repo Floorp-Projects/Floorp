@@ -4,8 +4,8 @@
 
 /* import-globals-from pageInfo.js */
 
-const { SitePermissions } = ChromeUtils.import(
-  "resource:///modules/SitePermissions.jsm"
+const { SitePermissions } = ChromeUtils.importESModule(
+  "resource:///modules/SitePermissions.sys.mjs"
 );
 
 var gPermPrincipal;
