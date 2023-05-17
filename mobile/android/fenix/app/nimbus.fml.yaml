@@ -260,21 +260,6 @@ features:
         value:
           enabled: true
 
-  client-deduplication:
-    description: A feature to control the sending of the client-deduplication ping.
-    variables:
-      enabled:
-        description: If true, the ping will be sent.
-        type: Boolean
-        default: false
-    defaults:
-      - channel: nightly
-        value:
-          enabled: false
-      - channel: developer
-        value:
-          enabled: false
-
   growth-data:
     description: A feature measuring campaign growth data
     variables:

@@ -65,24 +65,6 @@ spoc:
   notification_emails:
     - android-probes@mozilla.com
 
-client-deduplication:
-  description: |
-    Contains data to help identify if client IDs are being regenerated
-    erroneously.
-  include_client_id: true
-  reasons:
-    active: |
-      The ping is being sent when the app is coming to the foreground.
-    inactive: |
-      The ping is being sent when the app is going to the background.
-  bugs:
-    - https://bugzilla.mozilla.org/show_bug.cgi?id=1817029
-  data_reviews:
-    - https://bugzilla.mozilla.org/show_bug.cgi?id=1813195#c11
-  notification_emails:
-    - android-probes@mozilla.com
-    - fbertsch@mozilla.com
-
 cookie-banner-report-site:
   description: |
     This ping is needed when the cookie banner reducer doesn't work on

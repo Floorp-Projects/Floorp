@@ -258,7 +258,6 @@ events:
     send_in_pings:
       - metrics
       - baseline
-      - client-deduplication
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/17089
     data_reviews:
@@ -1837,7 +1836,6 @@ metrics:
     send_in_pings:
       - metrics
       - baseline
-      - client-deduplication
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1158
       - https://github.com/mozilla-mobile/fenix/issues/6556
@@ -2109,7 +2107,6 @@ metrics:
       please see `has_open_tabs`.
     send_in_pings:
       - metrics
-      - client-deduplication
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/11479
     data_reviews:
@@ -2927,7 +2924,6 @@ search.default_engine:
     send_in_pings:
       - metrics
       - baseline
-      - client-deduplication
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/800
     data_reviews:
@@ -2957,7 +2953,6 @@ search.default_engine:
     send_in_pings:
       - metrics
       - baseline
-      - client-deduplication
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/800
     data_reviews:
@@ -3543,8 +3538,6 @@ sync_auth:
     notification_emails:
       - android-probes@mozilla.com
       - cgordon@mozilla.com
-    send_in_pings:
-      - client-deduplication
     expires: never
     metadata:
       tags:
@@ -6977,7 +6970,6 @@ browser.search:
     send_in_pings:
       - metrics
       - baseline
-      - client-deduplication
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6558
       - https://github.com/mozilla-mobile/fenix/issues/28010
@@ -7012,7 +7004,6 @@ browser.search:
     send_in_pings:
       - metrics
       - baseline
-      - client-deduplication
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6558
       - https://github.com/mozilla-mobile/fenix/issues/28010
@@ -7038,7 +7029,6 @@ browser.search:
     send_in_pings:
       - metrics
       - baseline
-      - client-deduplication
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6557
     data_reviews:
@@ -9452,56 +9442,6 @@ review_prompt:
     data_sensitivity:
       - interaction
     expires: 121
-client_deduplication:
-  valid_advertising_id:
-    type: boolean
-    description: |
-      Whether or not we get a valid advertising ID from the device.
-    send_in_pings:
-      - client-deduplication
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817029
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813195#c11
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-      - fbertsch@mozilla.com
-    expires: 122
-  experiment_timeframe:
-    type: string
-    description: |
-      A string we use to identify which run of the experiment this is.
-    send_in_pings:
-      - client-deduplication
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817029
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813195#c11
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-      - fbertsch@mozilla.com
-    expires: 122
-  hashed_gaid:
-    type: string
-    lifetime: ping
-    description: |
-      A hashed and salted version of the Google Advertising ID from the device.
-    send_in_pings:
-      - client-deduplication
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817029
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813195#c11
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-      - fbertsch@mozilla.com
-    expires: 122
 
 private_browsing_shortcut_cfr:
   add_shortcut:
