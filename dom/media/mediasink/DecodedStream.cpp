@@ -791,7 +791,7 @@ already_AddRefed<AudioData> DecodedStream::CreateSilenceDataIfGapExists(
     NS_WARNING("OOM in DecodedStream::CreateSilenceDataIfGapExists");
     return nullptr;
   }
-  auto duration = FramesToTimeUnit(missingFrames.value(), aNextAudio->mRate);
+  auto duration = media::TimeUnit(missingFrames.value(), aNextAudio->mRate);
   if (!duration.IsValid()) {
     NS_WARNING("Int overflow in DecodedStream::CreateSilenceDataIfGapExists");
     return nullptr;
@@ -1059,7 +1059,7 @@ TimeUnit DecodedStream::GetEndTime(TrackType aType) const {
   TRACE("DecodedStream::GetEndTime");
   if (aType == TrackInfo::kAudioTrack && mInfo.HasAudio() && mData) {
     auto t = mStartTime.ref() +
-             FramesToTimeUnit(mData->mAudioFramesWritten, mInfo.mAudio.mRate);
+             media::TimeUnit(mData->mAudioFramesWritten, mInfo.mAudio.mRate);
     if (t.IsValid()) {
       return t;
     }

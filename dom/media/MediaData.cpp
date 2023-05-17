@@ -41,8 +41,10 @@ const char* VideoData::sTypeName = "video";
 AudioData::AudioData(int64_t aOffset, const media::TimeUnit& aTime,
                      AlignedAudioBuffer&& aData, uint32_t aChannels,
                      uint32_t aRate, uint32_t aChannelMap)
-    : MediaData(sType, aOffset, aTime,
-                FramesToTimeUnit(AssertedCast<int64_t>(aData.Length()) / aChannels, aRate)),
+    // Passing TimeUnit::Zero() here because we can't pass the result of an
+    // arithmetic operation to the CheckedInt ctor. We set the duration in the
+    // ctor body below.
+    : MediaData(sType, aOffset, aTime, TimeUnit::Zero()),
       mChannels(aChannels),
       mChannelMap(aChannelMap),
       mRate(aRate),
@@ -53,6 +55,7 @@ AudioData::AudioData(int64_t aOffset, const media::TimeUnit& aTime,
                      "Can't create an AudioData with 0 channels.");
   MOZ_RELEASE_ASSERT(aRate != 0,
                      "Can't create an AudioData with a sample-rate of 0.");
+  mDuration = TimeUnit(mFrames, aRate);
 }
 
 Span<AudioDataValue> AudioData::Data() const {
