@@ -425,7 +425,15 @@ void SessionAccessibility::SendTextSelectionChangedEvent(
     fromIndex = startSel == aCaretOffset ? endSel : startSel;
   }
 
+  nsAutoString text;
+  if (aAccessible->IsHyperText()) {
+    aAccessible->AsHyperTextBase()->TextSubstring(0, -1, text);
+  } else if (aAccessible->IsText()) {
+    aAccessible->AppendTextTo(text, 0, -1);
+  }
+
   GECKOBUNDLE_START(eventInfo);
+  GECKOBUNDLE_PUT(eventInfo, "text", jni::StringParam(text));
   GECKOBUNDLE_PUT(eventInfo, "fromIndex",
                   java::sdk::Integer::ValueOf(fromIndex));
   GECKOBUNDLE_PUT(eventInfo, "toIndex",

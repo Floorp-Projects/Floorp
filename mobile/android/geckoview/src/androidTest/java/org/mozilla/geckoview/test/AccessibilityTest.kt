@@ -489,17 +489,20 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
-    private fun waitUntilTextSelectionChanged(fromIndex: Int, toIndex: Int) {
-        var eventFromIndex = 0
-        var eventToIndex = 0
+    private fun waitUntilTextSelectionChanged(fromIndex: Int, toIndex: Int, text: String) {
+        var eventFromIndex = -1
+        var eventToIndex = -1
+        var eventText = ""
         do {
             sessionRule.waitUntilCalled(object : EventDelegate {
                 override fun onTextSelectionChanged(event: AccessibilityEvent) {
                     eventFromIndex = event.fromIndex
                     eventToIndex = event.toIndex
+                    eventText = event.text[0].toString()
                 }
             })
         } while (fromIndex != eventFromIndex || toIndex != eventToIndex)
+        assertThat("text selection event text matches", eventText, equalTo(text))
     }
 
     private fun waitUntilTextTraversed(
@@ -593,12 +596,12 @@ class AccessibilityTest : BaseSessionTest() {
         })
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(5, 11))
-        waitUntilTextSelectionChanged(5, 11)
+        waitUntilTextSelectionChanged(5, 11, "hello cruel world")
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_COPY, null)
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(11, 11))
-        waitUntilTextSelectionChanged(11, 11)
+        waitUntilTextSelectionChanged(11, 11, "hello cruel world")
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_PASTE, null)
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -609,7 +612,7 @@ class AccessibilityTest : BaseSessionTest() {
         })
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(17, 23))
-        waitUntilTextSelectionChanged(17, 23)
+        waitUntilTextSelectionChanged(17, 23, "hello cruel cruel world")
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_PASTE, null)
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -620,14 +623,14 @@ class AccessibilityTest : BaseSessionTest() {
         })
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SET_SELECTION, setSelectionArguments(0, 0))
-        waitUntilTextSelectionChanged(0, 0)
+        waitUntilTextSelectionChanged(0, 0, "hello cruel cruel cruel")
 
         provider.performAction(
             nodeId,
             AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY,
             moveByGranularityArguments(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD, true)
         )
-        waitUntilTextSelectionChanged(0, 5)
+        waitUntilTextSelectionChanged(0, 5, "hello cruel cruel cruel")
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_CUT, null)
         sessionRule.waitUntilCalled(object : EventDelegate {
