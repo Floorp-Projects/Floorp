@@ -362,13 +362,6 @@ export class IdentityCredentialPromptService {
       let description = browser.ownerDocument.getElementById(
         "identity-credential-policy-explanation"
       );
-      description.setAttribute(
-        "data-l10n-args",
-        JSON.stringify({
-          host: currentBaseDomain,
-          provider: providerDisplayDomain,
-        })
-      );
       browser.ownerDocument.l10n.setAttributes(
         description,
         "identity-credential-policy-description",
@@ -406,7 +399,6 @@ export class IdentityCredentialPromptService {
 
       // Show the popup
       let ownerDocument = browser.ownerDocument;
-      ownerDocument.l10n.translateFragment(description);
       ownerDocument.getElementById(
         "identity-credential-provider"
       ).hidden = true;
