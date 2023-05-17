@@ -400,7 +400,8 @@ nsresult WebMDemuxer::ReadMetadata() {
               static_cast<decltype(params.rate)>(AudioInfo::MAX_RATE) ||
           params.rate <= static_cast<decltype(params.rate)>(0) ||
           params.channels > AudioConfig::ChannelLayout::MAX_CHANNELS) {
-        WEBM_DEBUG("Invalid audio param rate: %lf channel count: %d", params.rate, params.channels);
+        WEBM_DEBUG("Invalid audio param rate: %lf channel count: %d",
+                   params.rate, params.channels);
         return NS_ERROR_DOM_MEDIA_METADATA_ERR;
       }
 
@@ -466,7 +467,8 @@ nsresult WebMDemuxer::ReadMetadata() {
       r = nestegg_duration(context, &duration);
       if (!r) {
         mInfo.mAudio.mDuration = TimeUnit::FromNanoseconds(duration);
-        WEBM_DEBUG("audio track duration: %lf", mInfo.mAudio.mDuration.ToSeconds());
+        WEBM_DEBUG("audio track duration: %lf",
+                   mInfo.mAudio.mDuration.ToSeconds());
       }
       mInfo.mAudio.mCrypto = GetTrackCrypto(TrackInfo::kAudioTrack, track);
       if (mInfo.mAudio.mCrypto.IsEncrypted()) {

@@ -667,14 +667,16 @@ already_AddRefed<MediaRawData> ADTSTrackDemuxer::GetNextFrame(
   // part of preroll.
   MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
 
-  ADTSLOG("ADTS packet demuxed: pts [%lf, %lf] (duration: %lf)", frame->mTime.ToSeconds(),
-          frame->GetEndTime().ToSeconds(), frame->mDuration.ToSeconds());
+  ADTSLOG("ADTS packet demuxed: pts [%lf, %lf] (duration: %lf)",
+          frame->mTime.ToSeconds(), frame->GetEndTime().ToSeconds(),
+          frame->mDuration.ToSeconds());
 
   // Indicate original packet information to trim after decoding.
   if (frame->mDuration != rawDuration) {
-    frame->mOriginalPresentationWindow = Some(media::TimeInterval{rawpts, rawend});
+    frame->mOriginalPresentationWindow =
+        Some(media::TimeInterval{rawpts, rawend});
     ADTSLOG("Total packet time excluding trimming: [%lf, %lf]",
-             rawpts.ToSeconds(), rawend.ToSeconds());
+            rawpts.ToSeconds(), rawend.ToSeconds());
   }
 
   ADTSLOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64

@@ -129,7 +129,8 @@ TimeRanges* SourceBuffer::GetBuffered(ErrorResult& aRv) {
   // as the current value of this attribute, then update the current value of
   // this attribute to intersection ranges.
   if (rangeChanged) {
-    mBuffered = new TimeRanges(ToSupports(this), intersection.ToMicrosecondResolution());
+    mBuffered = new TimeRanges(ToSupports(this),
+                               intersection.ToMicrosecondResolution());
   }
   // 6. Return the current value of this attribute.
   return mBuffered;

@@ -131,8 +131,7 @@ bool MP3TrackDemuxer::Init() {
 
   MP3LOG("Init mInfo={mRate=%d mChannels=%d mBitDepth=%d mDuration=%s (%lfs)}",
          mInfo->mRate, mInfo->mChannels, mInfo->mBitDepth,
-         mInfo->mDuration.ToString().get(),
-         mInfo->mDuration.ToSeconds());
+         mInfo->mDuration.ToString().get(), mInfo->mDuration.ToSeconds());
 
   return mSamplesPerSecond && mChannels;
 }
@@ -529,7 +528,10 @@ MediaByteRange MP3TrackDemuxer::FindNextFrame() {
 
     if ((mOffset - startOffset > maxSkippableBytes) ||
         (read = Read(buffer, mOffset, BUFFER_SIZE)) == 0) {
-      MP3LOG("FindNext() EOS or exceeded maxSkippeableBytes without a frame (read: %d)", read);
+      MP3LOG(
+          "FindNext() EOS or exceeded maxSkippeableBytes without a frame "
+          "(read: %d)",
+          read);
       // This is not a valid MPEG audio stream or we've reached EOS, give up.
       break;
     }
@@ -577,7 +579,8 @@ MediaByteRange MP3TrackDemuxer::FindNextFrame() {
           " mSamplesPerFrame=%d mSamplesPerSecond=%d"
           " mChannels=%d, mEOS=%s",
           mOffset, mNumParsedFrames, mFrameIndex, frameHeaderOffset,
-          mTotalFrameLen, mSamplesPerFrame, mSamplesPerSecond, mChannels, mEOS ? "true" : "false");
+          mTotalFrameLen, mSamplesPerFrame, mSamplesPerSecond, mChannels,
+          mEOS ? "true" : "false");
 
   return {frameHeaderOffset,
           frameHeaderOffset + mParser.CurrentFrame().Length()};
@@ -605,17 +608,13 @@ media::TimeUnit MP3TrackDemuxer::EncoderDelay() const {
   return media::TimeUnit(mEncoderDelay, mSamplesPerSecond);
 }
 
-uint32_t MP3TrackDemuxer::EncoderDelayFrames() const {
-  return mEncoderDelay;
-}
+uint32_t MP3TrackDemuxer::EncoderDelayFrames() const { return mEncoderDelay; }
 
 media::TimeUnit MP3TrackDemuxer::Padding() const {
   return media::TimeUnit(mEncoderPadding, mSamplesPerSecond);
 }
 
-uint32_t MP3TrackDemuxer::PaddingFrames() const {
-  return mEncoderPadding;
-}
+uint32_t MP3TrackDemuxer::PaddingFrames() const { return mEncoderPadding; }
 
 already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
     const MediaByteRange& aRange) {
@@ -660,8 +659,10 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
           // Skip the VBR frame + the decoder delay, that is always 529 frames
           // in practice for the decoder we're using.
           mEncoderDelay = mSamplesPerFrame + 529;
-          MP3LOG("No explicit delay present in vbr header, delay is assumed to be %u frames\n",
-                 mEncoderDelay);
+          MP3LOG(
+              "No explicit delay present in vbr header, delay is assumed to be "
+              "%u frames\n",
+              mEncoderDelay);
         }
       } else if (mParser.VBRInfo().Type() == FrameParser::VBRHeader::VBRI) {
         MP3LOG("VBRI header present, skipping encoder delay (%u frames)",
@@ -685,7 +686,8 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
   // Handle decoder delay. A packet must be trimmed if its pts, adjusted for
   // decoder delay, is negative. A packet can be trimmed entirely.
   if (rawPts.IsNegative()) {
-    frame->mDuration = std::max(TimeUnit::Zero(mSamplesPerSecond), rawEnd - frame->mTime);
+    frame->mDuration =
+        std::max(TimeUnit::Zero(mSamplesPerSecond), rawEnd - frame->mTime);
   }
 
   // It's possible to create an mp3 file that has a padding value that somehow
@@ -702,7 +704,8 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
     TimeUnit originalEnd = frame->GetEndTime();
     TimeUnit originalPts = frame->mTime;
     frame->mDuration -= inPaddingZone;
-    // Packet is entirely padding and will be completely discarded by the decoder.
+    // Packet is entirely padding and will be completely discarded by the
+    // decoder.
     if (frame->mDuration.IsNegative()) {
       frame->mDuration = TimeUnit::Zero(mSamplesPerSecond);
     }
@@ -715,10 +718,8 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
   } else if (frame->mEOS && Padding() <= frame->mDuration) {
     frame->mDuration -= Padding();
     MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
-    MP3LOG("Trimming last packet %s to [%s,%s]",
-           Padding().ToString().get(),
-           frame->mTime.ToString().get(),
-           frame->GetEndTime().ToString().get());
+    MP3LOG("Trimming last packet %s to [%s,%s]", Padding().ToString().get(),
+           frame->mTime.ToString().get(), frame->GetEndTime().ToString().get());
   }
 
   MP3LOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
@@ -734,8 +735,7 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
   MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
 
   MP3LOG("Packet demuxed: pts [%s, %s] (duration: %s)",
-         frame->mTime.ToString().get(),
-         frame->GetEndTime().ToString().get(),
+         frame->mTime.ToString().get(), frame->GetEndTime().ToString().get(),
          frame->mDuration.ToString().get());
 
   // Indicate original packet information to trim after decoding.
@@ -756,7 +756,9 @@ int64_t MP3TrackDemuxer::OffsetFromFrameIndex(int64_t aFrameIndex) const {
     offset = mFirstFrameOffset + aFrameIndex * vbr.NumBytes().value() /
                                      vbr.NumAudioFrames().value();
   } else if (AverageFrameLength() > 0) {
-    offset = mFirstFrameOffset + AssertedCast<int64_t>(static_cast<float>(aFrameIndex) * AverageFrameLength());
+    offset = mFirstFrameOffset +
+             AssertedCast<int64_t>(static_cast<float>(aFrameIndex) *
+                                   AverageFrameLength());
   }
 
   MP3LOGV("OffsetFromFrameIndex(%" PRId64 ") -> %" PRId64, aFrameIndex, offset);
@@ -786,7 +788,8 @@ int64_t MP3TrackDemuxer::FrameIndexFromTime(
     const media::TimeUnit& aTime) const {
   int64_t frameIndex = 0;
   if (mSamplesPerSecond > 0 && mSamplesPerFrame > 0) {
-    frameIndex = AssertedCast<int64_t>(aTime.ToSeconds() * mSamplesPerSecond / mSamplesPerFrame - 1);
+    frameIndex = AssertedCast<int64_t>(
+        aTime.ToSeconds() * mSamplesPerSecond / mSamplesPerFrame - 1);
   }
 
   MP3LOGV("FrameIndexFromOffset(%fs) -> %" PRId64, aTime.ToSeconds(),
@@ -843,7 +846,8 @@ uint32_t MP3TrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset,
 
 double MP3TrackDemuxer::AverageFrameLength() const {
   if (mNumParsedFrames) {
-    return static_cast<double>(mTotalFrameLen) / static_cast<double>(mNumParsedFrames);
+    return static_cast<double>(mTotalFrameLen) /
+           static_cast<double>(mNumParsedFrames);
   }
   const auto& vbr = mParser.VBRInfo();
   if (vbr.IsComplete() && vbr.NumAudioFrames().value() + 1) {

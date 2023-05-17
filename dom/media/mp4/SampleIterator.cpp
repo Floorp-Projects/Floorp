@@ -434,7 +434,9 @@ MP4SampleIndex::MP4SampleIndex(const IndiceWrapper& aIndices,
     int64_t lastOffset = 0;
     for (size_t i = 0; i < aIndices.Length(); i++) {
       Indice indice{};
-      int32_t timescale = mMoofParser ? AssertedCast<int32_t>(mMoofParser->mMvhd.mTimescale) : aTimeScale;
+      int32_t timescale =
+          mMoofParser ? AssertedCast<int32_t>(mMoofParser->mMvhd.mTimescale)
+                      : aTimeScale;
       if (!aIndices.GetIndice(i, indice)) {
         // Out of index?
         return;
@@ -656,7 +658,7 @@ TimeIntervals MP4SampleIndex::ConvertByteRangesToTimeRanges(
       }
 
       MP4Interval<media::TimeUnit>::SemiNormalAppend(timeRanges,
-                                                  sample.mCompositionRange);
+                                                     sample.mCompositionRange);
     }
   }
 
