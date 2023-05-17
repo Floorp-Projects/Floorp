@@ -218,21 +218,25 @@ struct ParamTraits<mozilla::MediaDataDecoder::ConversionRequired>
 
 template <>
 struct ParamTraits<mozilla::media::TimeUnit> {
-  typedef mozilla::media::TimeUnit paramType;
+  using paramType = mozilla::media::TimeUnit;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.IsValid());
-    WriteParam(aWriter, aParam.IsValid() ? aParam.ToMicroseconds() : 0);
+    WriteParam(aWriter, aParam.IsValid() ? aParam.mTicks.value() : 0);
+    WriteParam(aWriter,
+               aParam.IsValid() ? aParam.mBase : 1);  // base can't be 0
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     bool valid;
-    int64_t value;
-    if (ReadParam(aReader, &valid) && ReadParam(aReader, &value)) {
-      if (!valid) {
-        *aResult = mozilla::media::TimeUnit::Invalid();
+    int64_t ticks;
+    int64_t base;
+    if (ReadParam(aReader, &valid) && ReadParam(aReader, &ticks) &&
+        ReadParam(aReader, &base)) {
+      if (valid) {
+        *aResult = mozilla::media::TimeUnit(ticks, base);
       } else {
-        *aResult = mozilla::media::TimeUnit::FromMicroseconds(value);
+        *aResult = mozilla::media::TimeUnit::Invalid();
       }
       return true;
     }

@@ -28,4 +28,22 @@ nsCString DumpTimeRanges(const media::TimeIntervals& aRanges) {
   return dump;
 }
 
+nsCString DumpTimeRangesRaw(const media::TimeIntervals& aRanges) {
+  nsCString dump;
+
+  dump = "[";
+
+  for (uint32_t i = 0; i < aRanges.Length(); ++i) {
+    if (i > 0) {
+      dump += ", ";
+    }
+    dump += nsPrintfCString("(%s, %s)", aRanges.Start(i).ToString().get(),
+                            aRanges.End(i).ToString().get());
+  }
+
+  dump += "]";
+
+  return dump;
+}
+
 }  // namespace mozilla
