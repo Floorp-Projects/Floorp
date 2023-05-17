@@ -367,7 +367,8 @@ int64_t FrameParser::VBRHeader::Offset(media::TimeUnit aTime, media::TimeUnit aD
     double frameDuration = duration / mTOC.size()+1;
   }
   // TODO: VBRI TOC seeking
-  MP3LOG("VBRHeader::Offset (%s): %f is at byte %ld", mType == XING ? "XING" : "VBRI", aTime.ToSeconds(), offset);
+  MP3LOG("VBRHeader::Offset (%s): %f is at byte %" PRId64 "",
+         mType == XING ? "XING" : "VBRI", aTime.ToSeconds(), offset);
 
   return offset;
 }

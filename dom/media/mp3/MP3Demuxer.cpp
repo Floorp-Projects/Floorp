@@ -536,7 +536,7 @@ MediaByteRange MP3TrackDemuxer::FindNextFrame() {
 
     if ((mOffset - startOffset > maxSkippableBytes) ||
         (read = Read(buffer, mOffset, BUFFER_SIZE)) == 0) {
-      MP3LOG("FindNext() EOS or exceeded maxSkippeableBytes without a frame");
+      MP3LOG("FindNext() EOS or exceeded maxSkippeableBytes without a frame (read: %d)", read);
       // This is not a valid MPEG audio stream or we've reached EOS, give up.
       break;
     }
@@ -554,6 +554,7 @@ MediaByteRange MP3TrackDemuxer::FindNextFrame() {
 
     if (foundFrame && mParser.FirstFrame().Length() &&
         !VerifyFrameConsistency(mParser.FirstFrame(), mParser.CurrentFrame())) {
+      MP3LOG("Skipping frame");
       // We've likely hit a false-positive, ignore it and proceed with the
       // search for the next valid frame.
       foundFrame = false;
@@ -568,26 +569,22 @@ MediaByteRange MP3TrackDemuxer::FindNextFrame() {
     }
   }
 
+  mEOS = frameHeaderOffset + mParser.CurrentFrame().Length() + BUFFER_SIZE >
+         StreamLength();
+
   if (!foundFrame || !mParser.CurrentFrame().Length()) {
     MP3LOG("FindNext() Exit foundFrame=%d mParser.CurrentFrame().Length()=%d ",
            foundFrame, mParser.CurrentFrame().Length());
     return {0, 0};
   }
 
-  if (frameHeaderOffset + mParser.CurrentFrame().Length() + BUFFER_SIZE >
-      StreamLength()) {
-    mEOS = true;
-  } else {
-    mEOS = false;
-  }
-
   MP3LOGV("FindNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
           " mFrameIndex=%" PRId64 " frameHeaderOffset=%" PRId64
           " mTotalFrameLen=%" PRIu64
           " mSamplesPerFrame=%d mSamplesPerSecond=%d"
-          " mChannels=%d",
+          " mChannels=%d, mEOS=%s",
           mOffset, mNumParsedFrames, mFrameIndex, frameHeaderOffset,
-          mTotalFrameLen, mSamplesPerFrame, mSamplesPerSecond, mChannels);
+          mTotalFrameLen, mSamplesPerFrame, mSamplesPerSecond, mChannels, mEOS ? "true" : "false");
 
   return {frameHeaderOffset,
           frameHeaderOffset + mParser.CurrentFrame().Length()};
@@ -656,18 +653,6 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
 
   UpdateState(aRange);
 
-  frame->mTime = Duration(mFrameIndex - 1) - FramesToTimeUnit(mEncoderDelay, mSamplesPerSecond);
-  frame->mDuration = Duration(1);
-  frame->mTimecode = frame->mTime;
-  frame->mKeyframe = true;
-  frame->mEOS = mEOS;
-
-  if (frame->mEOS) {
-    frame->mDuration -= FramesToTimeUnit(mEncoderPadding, mSamplesPerSecond);
-  }
-
-  MOZ_ASSERT(frame->mDuration.IsPositive());
-
   if (mNumParsedFrames == 1) {
     // First frame parsed, let's read VBR info if available.
     BufferReader reader(frame->Data(), frame->Size());
@@ -692,6 +677,22 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
       }
     }
   }
+
+  frame->mTime = Duration(mFrameIndex - 1) - EncoderDelay();
+
+  // It's possible for the duration of a frame to be zero if the frame is to be
+  // trimmed entirely because it's fully comprised of decoder delay samples.
+  MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
+
+  frame->mDuration = Duration(1);
+  frame->mTimecode = frame->mTime;
+  frame->mKeyframe = true;
+  frame->mEOS = mEOS;
+
+  if (frame->mEOS) {
+    frame->mDuration -= Padding();
+  }
+
 
   MP3LOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
           " mFrameIndex=%" PRId64 " mTotalFrameLen=%" PRIu64
