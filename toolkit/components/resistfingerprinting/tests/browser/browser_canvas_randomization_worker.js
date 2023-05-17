@@ -57,7 +57,9 @@ var TEST_CASES = [
 
       const imageData = context.getImageData(0, 0, 100, 100);
 
-      return imageData.data;
+      const imageDataSecond = context.getImageData(0, 0, 100, 100);
+
+      return [imageData.data, imageDataSecond.data];
     },
     isDataRandomized(data1, data2, isCompareOriginal) {
       let diffCnt = compareUint8Arrays(data1, data2);
@@ -100,7 +102,17 @@ var TEST_CASES = [
         fileReader.readAsArrayBuffer(blob);
       });
 
-      return data;
+      let blobSecond = await offscreenCanvas.convertToBlob();
+
+      let dataSecond = await new Promise(resolve => {
+        let fileReader = new FileReader();
+        fileReader.onload = () => {
+          resolve(fileReader.result);
+        };
+        fileReader.readAsArrayBuffer(blobSecond);
+      });
+
+      return [data, dataSecond];
     },
     isDataRandomized(data1, data2) {
       return compareArrayBuffer(data1, data2);
@@ -135,7 +147,17 @@ var TEST_CASES = [
         fileReader.readAsArrayBuffer(blob);
       });
 
-      return data;
+      let blobSecond = await offscreenCanvas.convertToBlob();
+
+      let dataSecond = await new Promise(resolve => {
+        let fileReader = new FileReader();
+        fileReader.onload = () => {
+          resolve(fileReader.result);
+        };
+        fileReader.readAsArrayBuffer(blobSecond);
+      });
+
+      return [data, dataSecond];
     },
     isDataRandomized(data1, data2) {
       return compareArrayBuffer(data1, data2);
@@ -168,7 +190,17 @@ var TEST_CASES = [
         fileReader.readAsArrayBuffer(blob);
       });
 
-      return data;
+      let blobSecond = await bitmapCanvas.convertToBlob();
+
+      let dataSecond = await new Promise(resolve => {
+        let fileReader = new FileReader();
+        fileReader.onload = () => {
+          resolve(fileReader.result);
+        };
+        fileReader.readAsArrayBuffer(blobSecond);
+      });
+
+      return [data, dataSecond];
     },
     isDataRandomized(data1, data2) {
       return compareArrayBuffer(data1, data2);
@@ -209,11 +241,16 @@ async function runTest(enabled) {
       test.extractCanvasData
     );
 
-    let result = test.isDataRandomized(data, test.originalData);
+    let result = test.isDataRandomized(data[0], test.originalData);
     is(
       result,
       enabled,
       `The image data is ${enabled ? "randomized" : "the same"}.`
+    );
+
+    ok(
+      !test.isDataRandomized(data[0], data[1]),
+      "The data of first and second access should be the same."
     );
 
     let privateData = await await runFunctionInWorker(
@@ -222,16 +259,21 @@ async function runTest(enabled) {
     );
 
     // Check if we add noise to canvas data in private windows.
-    result = test.isDataRandomized(privateData, test.originalData, true);
+    result = test.isDataRandomized(privateData[0], test.originalData, true);
     is(
       result,
       enabled,
       `The private image data is ${enabled ? "randomized" : "the same"}.`
     );
 
+    ok(
+      !test.isDataRandomized(privateData[0], privateData[1]),
+      "The data of first and second access should be the same."
+    );
+
     // Make sure the noises are different between normal window and private
     // windows.
-    result = test.isDataRandomized(privateData, data);
+    result = test.isDataRandomized(privateData[0], data[0]);
     is(
       result,
       enabled,
@@ -262,10 +304,11 @@ add_setup(async function() {
 
   // Extract the original canvas data without random noise.
   for (let test of TEST_CASES) {
-    test.originalData = await runFunctionInWorker(
+    let data = await runFunctionInWorker(
       tab.linkedBrowser,
       test.extractCanvasData
     );
+    test.originalData = data[0];
   }
 
   BrowserTestUtils.removeTab(tab);

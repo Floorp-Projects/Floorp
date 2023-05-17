@@ -1872,10 +1872,11 @@ UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
 
   mBufferProvider->ReturnSnapshot(snapshot.forget());
 
-  if (ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
-    nsRFPService::RandomizePixels(GetCookieJarSettings(), ret.get(),
-                                  GetWidth() * GetHeight() * 4,
-                                  SurfaceFormat::A8R8G8B8_UINT32);
+  if (ret && ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+    nsRFPService::RandomizePixels(
+        GetCookieJarSettings(), ret.get(),
+        out_imageSize->width * out_imageSize->height * 4,
+        SurfaceFormat::A8R8G8B8_UINT32);
   }
 
   return ret;
@@ -5829,11 +5830,6 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
   RefPtr<DataSourceSurface> readback = snapshot->GetDataSurface();
   mBufferProvider->ReturnSnapshot(snapshot.forget());
 
-  DataSourceSurface::MappedSurface rawData;
-  if (!readback || !readback->Map(DataSourceSurface::READ, &rawData)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   // Check for site-specific permission.  This check is not needed if the
   // canvas was created with a docshell (that is only done for special
   // internal uses).
@@ -5845,6 +5841,24 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
   } else if (mOffscreenCanvas) {
     usePlaceholder = mOffscreenCanvas->ShouldResistFingerprinting(
         RFPTarget::CanvasImageExtractionPrompt);
+  }
+
+  // Clone the data source surface if canvas randomization is enabled. We need
+  // to do this because we don't want to alter the actual image buffer.
+  // Otherwise, we will provide inconsistent image data with multiple calls.
+  //
+  // Note that we don't need to clone if we will use the place holder because
+  // the place holder doesn't use actual image data.
+  bool needRandomizePixels = false;
+  if (!usePlaceholder &&
+      ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+    needRandomizePixels = true;
+    readback = CreateDataSourceSurfaceByCloning(readback);
+  }
+
+  DataSourceSurface::MappedSurface rawData;
+  if (!readback || !readback->Map(DataSourceSurface::READ, &rawData)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   do {
@@ -5866,16 +5880,17 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
       break;
     }
 
+    // Apply the random noises if canvan randomization is enabled.
+    if (needRandomizePixels) {
+      const IntSize size = readback->GetSize();
+      nsRFPService::RandomizePixels(GetCookieJarSettings(), rawData.mData,
+                                    size.height * size.width * 4,
+                                    SurfaceFormat::A8R8G8B8_UINT32);
+    }
+
     uint32_t srcStride = rawData.mStride;
     uint8_t* src =
         rawData.mData + srcReadRect.y * srcStride + srcReadRect.x * 4;
-
-    // Apply the random noises if canvan randomization is enabled.
-    if (ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
-      nsRFPService::RandomizePixels(GetCookieJarSettings(), src,
-                                    GetWidth() * GetHeight() * 4,
-                                    SurfaceFormat::A8R8G8B8_UINT32);
-    }
 
     uint8_t* dst = data + dstWriteRect.y * (aWidth * 4) + dstWriteRect.x * 4;
 
