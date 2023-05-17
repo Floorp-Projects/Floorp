@@ -275,8 +275,9 @@ impl Default for Mp4parseTrackVideoInfo {
 #[derive(Default, Debug)]
 pub struct Mp4parseFragmentInfo {
     pub fragment_duration: u64, // in ticks
-                                // TODO:
-                                // info in trex box.
+    pub time_scale: u64,
+    // TODO:
+    // info in trex box.
 }
 
 #[derive(Default)]
@@ -649,7 +650,9 @@ pub unsafe extern "C" fn mp4parse_get_track_info(
                 info.duration = 0
             }
         }
-    };
+    } else {
+        return Mp4parseStatus::Invalid;
+    }
 
     info.track_id = match track.track_id {
         Some(track_id) => track_id,
@@ -1307,6 +1310,10 @@ pub unsafe extern "C" fn mp4parse_avif_get_indice_table(
         return Mp4parseStatus::BadArg;
     }
 
+    if timescale.is_null() {
+        return Mp4parseStatus::BadArg;
+    }
+
     // Initialize fields to default values to ensure all fields are always valid.
     *indices = Default::default();
 
@@ -1421,14 +1428,12 @@ pub unsafe extern "C" fn mp4parse_get_fragment_info(
         None => return Mp4parseStatus::Invalid,
     };
 
-    match duration {
-        Some(duration_ticks) => {
-            info.fragment_duration = duration_ticks.0;
-        }
-        None => return Mp4parseStatus::Invalid,
+    if let (Some(time), Some(scale)) = (duration, context.timescale) {
+        info.fragment_duration = time.0;
+        info.time_scale = scale.0;
+        return Mp4parseStatus::Ok;
     };
-
-    Mp4parseStatus::Ok
+    Mp4parseStatus::Invalid
 }
 
 /// Determine if an mp4 file is fragmented. A fragmented file needs mvex table
@@ -1834,4 +1839,25 @@ fn minimal_mp4_get_track_info_invalid_track_number() {
     unsafe {
         mp4parse_free(parser);
     }
+}
+
+#[test]
+fn parse_no_timescale() {
+    let mut file = std::fs::File::open("tests/no_timescale.mp4").expect("Unknown file");
+    let io = Mp4parseIo {
+        read: Some(valid_read),
+        userdata: &mut file as *mut _ as *mut std::os::raw::c_void,
+    };
+
+    unsafe {
+        let mut parser = std::ptr::null_mut();
+        let mut rv = mp4parse_new(&io, &mut parser);
+        assert_eq!(rv, Mp4parseStatus::Ok);
+        assert!(!parser.is_null());
+
+        // The file has a video track, but the track has a timescale of 0, so.
+        let mut track_info = Mp4parseTrackInfo::default();
+        rv = mp4parse_get_track_info(parser, 0, &mut track_info);
+        assert_eq!(rv, Mp4parseStatus::Invalid);
+    };
 }
