@@ -1107,7 +1107,12 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       // URLs that return data (e.g. "http:" URLs) should be prefixed with
       // "view-source:".  URLs that don't return data should just be returned
       // undecorated.
-      if (!nsContentUtils::IsExternalProtocol(uri)) {
+      bool doesNotReturnData = false;
+      rv =
+          NS_URIChainHasFlags(uri, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+                              &doesNotReturnData);
+      NS_ENSURE_SUCCESS(rv, NS_OK);
+      if (!doesNotReturnData) {
         viewSourceUrl.AssignLiteral("view-source:");
       }
 
