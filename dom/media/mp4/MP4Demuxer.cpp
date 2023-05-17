@@ -17,6 +17,7 @@
 #include "MP4Metadata.h"
 #include "MoofParser.h"
 #include "ResourceStream.h"
+#include "TimeUnits.h"
 #include "VPXDecoder.h"
 #include "mozilla/Span.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -33,6 +34,10 @@ mozilla::LogModule* GetDemuxerLog() { return gMediaDemuxerLog; }
 
 namespace mozilla {
 
+using TimeUnit = media::TimeUnit;
+using TimeInterval = media::TimeInterval;
+using TimeIntervals = media::TimeIntervals;
+
 DDLoggedTypeDeclNameAndBase(MP4TrackDemuxer, MediaTrackDemuxer);
 
 class MP4TrackDemuxer : public MediaTrackDemuxer,
@@ -43,18 +48,18 @@ class MP4TrackDemuxer : public MediaTrackDemuxer,
 
   UniquePtr<TrackInfo> GetInfo() const override;
 
-  RefPtr<SeekPromise> Seek(const media::TimeUnit& aTime) override;
+  RefPtr<SeekPromise> Seek(const TimeUnit& aTime) override;
 
   RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
 
   void Reset() override;
 
-  nsresult GetNextRandomAccessPoint(media::TimeUnit* aTime) override;
+  nsresult GetNextRandomAccessPoint(TimeUnit* aTime) override;
 
   RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(
-      const media::TimeUnit& aTimeThreshold) override;
+      const TimeUnit& aTimeThreshold) override;
 
-  media::TimeIntervals GetBuffered() override;
+  TimeIntervals GetBuffered() override;
 
   void NotifyDataRemoved();
   void NotifyDataArrived();
@@ -68,11 +73,11 @@ class MP4TrackDemuxer : public MediaTrackDemuxer,
   UniquePtr<TrackInfo> mInfo;
   RefPtr<MP4SampleIndex> mIndex;
   UniquePtr<SampleIterator> mIterator;
-  Maybe<media::TimeUnit> mNextKeyframeTime;
+  Maybe<TimeUnit> mNextKeyframeTime;
   // Queued samples extracted by the demuxer, but not yet returned.
   RefPtr<MediaRawData> mQueuedSample;
   bool mNeedReIndex;
-  enum CodecType { kH264, kVP9, kOther } mType = kOther;
+  enum CodecType { kH264, kVP9, kAAC, kOther } mType = kOther;
 };
 
 MP4Demuxer::MP4Demuxer(MediaResource* aResource)
@@ -316,6 +321,7 @@ MP4TrackDemuxer::MP4TrackDemuxer(MediaResource* aResource,
   EnsureUpToDateIndex();  // Force update of index
 
   VideoInfo* videoInfo = mInfo->GetAsVideoInfo();
+  AudioInfo* audioInfo = mInfo->GetAsAudioInfo();
   if (videoInfo && MP4Decoder::IsH264(mInfo->mMimeType)) {
     mType = kH264;
     RefPtr<MediaByteBuffer> extraData = videoInfo->mExtraData;
@@ -328,10 +334,10 @@ MP4TrackDemuxer::MP4TrackDemuxer(MediaResource* aResource,
       videoInfo->mDisplay.width = spsdata.display_width;
       videoInfo->mDisplay.height = spsdata.display_height;
     }
-  } else {
-    if (videoInfo && VPXDecoder::IsVP9(mInfo->mMimeType)) {
+  } else if (videoInfo && VPXDecoder::IsVP9(mInfo->mMimeType)) {
       mType = kVP9;
-    }
+  } else if (audioInfo && MP4Decoder::IsAAC(mInfo->mMimeType)) {
+      mType = kAAC;
   }
 }
 
@@ -352,7 +358,7 @@ void MP4TrackDemuxer::EnsureUpToDateIndex() {
 }
 
 RefPtr<MP4TrackDemuxer::SeekPromise> MP4TrackDemuxer::Seek(
-    const media::TimeUnit& aTime) {
+    const TimeUnit& aTime) {
   auto seekTime = aTime;
   mQueuedSample = nullptr;
 
@@ -438,6 +444,56 @@ already_AddRefed<MediaRawData> MP4TrackDemuxer::GetNextSample() {
     }
   }
 
+  // Adjust trimming information if needed.
+  if (mInfo->GetAsAudioInfo()) {
+    AudioInfo* info = mInfo->GetAsAudioInfo();
+    TimeUnit originalPts = sample->mTime;
+    TimeUnit originalEnd = sample->GetEndTime();
+    if (sample->mTime.IsNegative()) {
+      sample->mTime = TimeUnit::Zero(originalPts);
+      sample->mDuration = std::max(TimeUnit::Zero(sample->mTime),
+                                   originalPts + sample->mDuration);
+      sample->mOriginalPresentationWindow = Some(TimeInterval{originalPts, originalEnd});
+    }
+    // The demuxer only knows the presentation time of the packet, not the
+    // actual number of samples that will be decoded from this packet.
+    // However we need to trim the last packet to the correct duration.
+    // Find the actual size of the decoded packet to know how many samples to
+    // trim. This only works because the packet size are constant.
+    TimeUnit totalMediaDurationIncludingTrimming = info->mDuration - info->mMediaTime;
+    if (mType == kAAC && sample->GetEndTime() == totalMediaDurationIncludingTrimming) {
+      MOZ_ASSERT(!mIterator->HasNext());
+      // Seek backward a bit.
+      mIterator->Seek(sample->mTime - sample->mDuration);
+      RefPtr<MediaRawData> previousSample = mIterator->GetNext();
+      if (previousSample) {
+        TimeInterval fullPacketDuration{previousSample->mTime, previousSample->GetEndTime()};
+        sample->mOriginalPresentationWindow = Some(
+            TimeInterval{originalPts, originalPts + fullPacketDuration.Length()});
+      }
+      // Seek back so we're back at the orignal location -- there's no packet left.
+      mIterator->Seek(sample->mTime);
+      RefPtr<MediaRawData> dummy = mIterator->GetNext();
+      MOZ_ASSERT(!mIterator->HasNext());
+    }
+  }
+
+  if (MOZ_LOG_TEST(GetDemuxerLog(), LogLevel::Verbose)) {
+    bool isAudio = mInfo->GetAsAudioInfo();
+    TimeUnit originalStart = TimeUnit::Invalid();
+    TimeUnit originalEnd = TimeUnit::Invalid();
+    if (sample->mOriginalPresentationWindow) {
+      originalStart = sample->mOriginalPresentationWindow->mStart;
+      originalEnd = sample->mOriginalPresentationWindow->mEnd;
+    }
+    LOG("%s packet demuxed (track id: %d): [%s,%s], duration: %s (original "
+        "time: [%s,%s])",
+        isAudio ? "Audio" : "Video", mInfo->mTrackId,
+        sample->mTime.ToString().get(), sample->GetEndTime().ToString().get(),
+        sample->mDuration.ToString().get(), originalStart.ToString().get(),
+        originalEnd.ToString().get());
+  }
+
   return sample.forget();
 }
 
@@ -480,7 +536,7 @@ RefPtr<MP4TrackDemuxer::SamplesPromise> MP4TrackDemuxer::GetSamples(
 
 void MP4TrackDemuxer::SetNextKeyFrameTime() {
   mNextKeyframeTime.reset();
-  media::TimeUnit frameTime = mIterator->GetNextKeyframeTime();
+  TimeUnit frameTime = mIterator->GetNextKeyframeTime();
   if (frameTime.IsValid()) {
     mNextKeyframeTime.emplace(frameTime);
   }
@@ -489,14 +545,14 @@ void MP4TrackDemuxer::SetNextKeyFrameTime() {
 void MP4TrackDemuxer::Reset() {
   mQueuedSample = nullptr;
   // TODO: verify this
-  mIterator->Seek(media::TimeUnit::FromNegativeInfinity());
+  mIterator->Seek(TimeUnit::FromNegativeInfinity());
   SetNextKeyFrameTime();
 }
 
-nsresult MP4TrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime) {
+nsresult MP4TrackDemuxer::GetNextRandomAccessPoint(TimeUnit* aTime) {
   if (mNextKeyframeTime.isNothing()) {
     // There's no next key frame.
-    *aTime = media::TimeUnit::FromInfinity();
+    *aTime = TimeUnit::FromInfinity();
   } else {
     *aTime = mNextKeyframeTime.value();
   }
@@ -505,7 +561,7 @@ nsresult MP4TrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime) {
 
 RefPtr<MP4TrackDemuxer::SkipAccessPointPromise>
 MP4TrackDemuxer::SkipToNextRandomAccessPoint(
-    const media::TimeUnit& aTimeThreshold) {
+    const TimeUnit& aTimeThreshold) {
   mQueuedSample = nullptr;
   // Loop until we reach the next keyframe after the threshold.
   uint32_t parsed = 0;
@@ -527,14 +583,14 @@ MP4TrackDemuxer::SkipToNextRandomAccessPoint(
   return SkipAccessPointPromise::CreateAndReject(std::move(failure), __func__);
 }
 
-media::TimeIntervals MP4TrackDemuxer::GetBuffered() {
+TimeIntervals MP4TrackDemuxer::GetBuffered() {
   EnsureUpToDateIndex();
   AutoPinned<MediaResource> resource(mResource);
   MediaByteRangeSet byteRanges;
   nsresult rv = resource->GetCachedRanges(byteRanges);
 
   if (NS_FAILED(rv)) {
-    return media::TimeIntervals();
+    return TimeIntervals();
   }
 
   return mIndex->ConvertByteRangesToTimeRanges(byteRanges);
