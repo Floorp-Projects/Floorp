@@ -5392,6 +5392,8 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   DispatchAsyncEvent(u"durationchange"_ns);
   if (IsVideo() && HasVideo()) {
     DispatchAsyncEvent(u"resize"_ns);
+    Invalidate(ImageSizeChanged::No, Some(mMediaInfo.mVideo.mDisplay),
+               ForceInvalidate::No);
   }
   NS_ASSERTION(!HasVideo() || (mMediaInfo.mVideo.mDisplay.width > 0 &&
                                mMediaInfo.mVideo.mDisplay.height > 0),
