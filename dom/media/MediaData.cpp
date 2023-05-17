@@ -31,7 +31,6 @@
 namespace mozilla {
 
 using namespace mozilla::gfx;
-using layers::ImageContainer;
 using layers::PlanarYCbCrData;
 using layers::PlanarYCbCrImage;
 using media::TimeUnit;
@@ -43,7 +42,7 @@ AudioData::AudioData(int64_t aOffset, const media::TimeUnit& aTime,
                      AlignedAudioBuffer&& aData, uint32_t aChannels,
                      uint32_t aRate, uint32_t aChannelMap)
     : MediaData(sType, aOffset, aTime,
-                FramesToTimeUnit(aData.Length() / aChannels, aRate)),
+                FramesToTimeUnit(AssertedCast<int64_t>(aData.Length()) / aChannels, aRate)),
       mChannels(aChannels),
       mChannelMap(aChannelMap),
       mRate(aRate),
@@ -87,7 +86,7 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
     return false;
   }
   const size_t originalFrames = mAudioData.Length() / mChannels;
-  const TimeUnit originalDuration = FramesToTimeUnit(originalFrames, mRate);
+  const TimeUnit originalDuration = FramesToTimeUnit(AssertedCast<int64_t>(originalFrames), mRate);
   if (aTrim.mStart < mOriginalTime ||
       aTrim.mEnd > mOriginalTime + originalDuration) {
     return false;
@@ -278,13 +277,13 @@ PlanarYCbCrData ConstructPlanarYCbCrData(const VideoInfo& aInfo,
 
   PlanarYCbCrData data;
   data.mYChannel = Y.mData;
-  data.mYStride = Y.mStride;
-  data.mYSkip = Y.mSkip;
+  data.mYStride = AssertedCast<int32_t>(Y.mStride);
+  data.mYSkip = AssertedCast<int32_t>(Y.mSkip);
   data.mCbChannel = Cb.mData;
   data.mCrChannel = Cr.mData;
-  data.mCbCrStride = Cb.mStride;
-  data.mCbSkip = Cb.mSkip;
-  data.mCrSkip = Cr.mSkip;
+  data.mCbCrStride = AssertedCast<int32_t>(Cb.mStride);
+  data.mCbSkip = AssertedCast<int32_t>(Cb.mSkip);
+  data.mCrSkip = AssertedCast<int32_t>(Cr.mSkip);
   data.mPictureRect = aPicture;
   data.mStereoMode = aInfo.mStereoMode;
   data.mYUVColorSpace = aBuffer.mYUVColorSpace;
@@ -311,9 +310,8 @@ bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
 
   if (aCopyData) {
     return aVideoImage->CopyData(data);
-  } else {
-    return aVideoImage->AdoptData(data);
   }
+  return aVideoImage->AdoptData(data);
 }
 
 /* static */
