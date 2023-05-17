@@ -229,7 +229,47 @@ class StreetAddress extends AddressField {}
  * A postal code / zip code
  * See autocomplete="postal-code"
  */
-class PostalCode extends AddressField {}
+class PostalCode extends AddressField {
+  constructor(value, region) {
+    super(value, region);
+  }
+
+  isValid() {
+    const { postalCodePattern } = lazy.FormAutofillUtils.getFormFormat(
+      this.region
+    );
+    const regexp = new RegExp(`^${postalCodePattern}$`);
+    return regexp.test(this.userValue);
+  }
+
+  equals(other) {
+    const options = {
+      ignore_case: true,
+      remove_whitespace: true,
+      remove_punctuation: true,
+    };
+
+    return (
+      this.normalizeUserValue(options) == other.normalizeUserValue(options)
+    );
+  }
+
+  contains(other) {
+    const options = {
+      ignore_case: true,
+      remove_whitespace: true,
+      remove_punctuation: true,
+    };
+
+    const self_normalized_value = this.normalizeUserValue(options);
+    const other_normalized_value = other.normalizeUserValue(options);
+
+    return (
+      self_normalized_value.endsWith(other_normalized_value) ||
+      self_normalized_value.startsWith(other_normalized_value)
+    );
+  }
+}
 
 /**
  * City name.
