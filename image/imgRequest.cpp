@@ -1219,17 +1219,8 @@ imgRequest::OnRedirectVerifyCallback(nsresult result) {
 
   // Make sure we have a protocol that returns data rather than opens an
   // external application, e.g. 'mailto:'.
-  bool doesNotReturnData = false;
-  nsresult rv = NS_URIChainHasFlags(
-      mFinalURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
-      &doesNotReturnData);
-
-  if (NS_SUCCEEDED(rv) && doesNotReturnData) {
-    rv = NS_ERROR_ABORT;
-  }
-
-  if (NS_FAILED(rv)) {
-    mRedirectCallback->OnRedirectVerifyCallback(rv);
+  if (nsContentUtils::IsExternalProtocol(mFinalURI)) {
+    mRedirectCallback->OnRedirectVerifyCallback(NS_ERROR_ABORT);
     mRedirectCallback = nullptr;
     return NS_OK;
   }

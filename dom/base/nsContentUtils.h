@@ -3405,6 +3405,8 @@ class nsContentUtils {
    */
   static nsIContent* GetClosestLinkInFlatTree(nsIContent* aContent);
 
+  static bool IsExternalProtocol(nsIURI* aURI);
+
  private:
   static bool InitializeEventTable();
 
