@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { GeckoViewActorChild } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewActorChild.sys.mjs"
-);
-
-const EXPORTED_SYMBOLS = ["GeckoViewSettingsChild"];
+import { GeckoViewActorChild } from "resource://gre/modules/GeckoViewActorChild.sys.mjs";
 
 // Handles GeckoView content settings
-class GeckoViewSettingsChild extends GeckoViewActorChild {
+export class GeckoViewSettingsChild extends GeckoViewActorChild {
   receiveMessage(message) {
     const { name } = message;
     debug`receiveMessage: ${name}`;

@@ -1,21 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = ["GeckoViewPermissionParent"];
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
+import { GeckoViewActorParent } from "resource://gre/modules/GeckoViewActorParent.sys.mjs";
 
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { GeckoViewActorParent } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewActorParent.sys.mjs"
-);
-
-class GeckoViewPermissionParent extends GeckoViewActorParent {
+export class GeckoViewPermissionParent extends GeckoViewActorParent {
   _appPermissions = {};
 
   async getAppPermissions(aPermissions) {

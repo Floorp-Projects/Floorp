@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { GeckoViewActorChild } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewActorChild.sys.mjs"
-);
+import { GeckoViewActorChild } from "resource://gre/modules/GeckoViewActorChild.sys.mjs";
 
 const lazy = {};
 
@@ -12,9 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ManifestObtainer: "resource://gre/modules/ManifestObtainer.sys.mjs",
 });
 
-var EXPORTED_SYMBOLS = ["ContentDelegateChild"];
-
-class ContentDelegateChild extends GeckoViewActorChild {
+export class ContentDelegateChild extends GeckoViewActorChild {
   notifyParentOfViewportFit() {
     if (this.triggerViewportFitChange) {
       this.contentWindow.cancelIdleCallback(this.triggerViewportFitChange);

@@ -2,12 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { GeckoViewActorChild } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewActorChild.sys.mjs"
-);
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
+import { GeckoViewActorChild } from "resource://gre/modules/GeckoViewActorChild.sys.mjs";
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
 const lazy = {};
 
@@ -17,9 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LoginManagerChild: "resource://gre/modules/LoginManagerChild.sys.mjs",
 });
 
-const EXPORTED_SYMBOLS = ["GeckoViewAutoFillChild"];
-
-class GeckoViewAutoFillChild extends GeckoViewActorChild {
+export class GeckoViewAutoFillChild extends GeckoViewActorChild {
   constructor() {
     super();
 

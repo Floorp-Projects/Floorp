@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { GeckoViewActorChild } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewActorChild.sys.mjs"
-);
+import { GeckoViewActorChild } from "resource://gre/modules/GeckoViewActorChild.sys.mjs";
 
 const lazy = {};
 
@@ -15,9 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
-var EXPORTED_SYMBOLS = ["MediaControlDelegateChild"];
-
-class MediaControlDelegateChild extends GeckoViewActorChild {
+export class MediaControlDelegateChild extends GeckoViewActorChild {
   handleEvent(aEvent) {
     debug`handleEvent: ${aEvent.type}`;
 

@@ -573,10 +573,10 @@ function startup() {
         actors: {
           GeckoViewContent: {
             parent: {
-              moduleURI: "resource:///actors/GeckoViewContentParent.jsm",
+              esModuleURI: "resource:///actors/GeckoViewContentParent.sys.mjs",
             },
             child: {
-              moduleURI: "resource:///actors/GeckoViewContentChild.jsm",
+              esModuleURI: "resource:///actors/GeckoViewContentChild.sys.mjs",
               events: {
                 mozcaretstatechanged: { capture: true, mozSystemGroup: true },
                 pageshow: { mozSystemGroup: true },
@@ -591,10 +591,10 @@ function startup() {
         actors: {
           ContentDelegate: {
             parent: {
-              moduleURI: "resource:///actors/ContentDelegateParent.jsm",
+              esModuleURI: "resource:///actors/ContentDelegateParent.sys.mjs",
             },
             child: {
-              moduleURI: "resource:///actors/ContentDelegateChild.jsm",
+              esModuleURI: "resource:///actors/ContentDelegateChild.sys.mjs",
               events: {
                 DOMContentLoaded: {},
                 DOMMetaViewportFitChanged: {},
@@ -632,10 +632,10 @@ function startup() {
         actors: {
           ProgressDelegate: {
             parent: {
-              moduleURI: "resource:///actors/ProgressDelegateParent.jsm",
+              esModuleURI: "resource:///actors/ProgressDelegateParent.sys.mjs",
             },
             child: {
-              moduleURI: "resource:///actors/ProgressDelegateChild.jsm",
+              esModuleURI: "resource:///actors/ProgressDelegateChild.sys.mjs",
               events: {
                 MozAfterPaint: { capture: false, mozSystemGroup: true },
                 DOMContentLoaded: { capture: false, mozSystemGroup: true },
@@ -653,10 +653,10 @@ function startup() {
         actors: {
           ScrollDelegate: {
             parent: {
-              moduleURI: "resource:///actors/ScrollDelegateParent.jsm",
+              esModuleURI: "resource:///actors/ScrollDelegateParent.sys.mjs",
             },
             child: {
-              moduleURI: "resource:///actors/ScrollDelegateChild.jsm",
+              esModuleURI: "resource:///actors/ScrollDelegateChild.sys.mjs",
               events: {
                 mozvisualscroll: { mozSystemGroup: true },
               },
@@ -673,10 +673,12 @@ function startup() {
         actors: {
           SelectionActionDelegate: {
             parent: {
-              moduleURI: "resource:///actors/SelectionActionDelegateParent.jsm",
+              esModuleURI:
+                "resource:///actors/SelectionActionDelegateParent.sys.mjs",
             },
             child: {
-              moduleURI: "resource:///actors/SelectionActionDelegateChild.jsm",
+              esModuleURI:
+                "resource:///actors/SelectionActionDelegateChild.sys.mjs",
               events: {
                 mozcaretstatechanged: { mozSystemGroup: true },
                 pagehide: { capture: true, mozSystemGroup: true },
@@ -696,7 +698,7 @@ function startup() {
         actors: {
           GeckoViewSettings: {
             child: {
-              moduleURI: "resource:///actors/GeckoViewSettingsChild.jsm",
+              esModuleURI: "resource:///actors/GeckoViewSettingsChild.sys.mjs",
             },
           },
         },
@@ -726,10 +728,10 @@ function startup() {
         actors: {
           GeckoViewAutoFill: {
             parent: {
-              moduleURI: "resource:///actors/GeckoViewAutoFillParent.jsm",
+              esModuleURI: "resource:///actors/GeckoViewAutoFillParent.sys.mjs",
             },
             child: {
-              moduleURI: "resource:///actors/GeckoViewAutoFillChild.jsm",
+              esModuleURI: "resource:///actors/GeckoViewAutoFillChild.sys.mjs",
               events: {
                 DOMFormHasPassword: {
                   mozSystemGroup: true,
@@ -771,10 +773,12 @@ function startup() {
         actors: {
           MediaControlDelegate: {
             parent: {
-              moduleURI: "resource:///actors/MediaControlDelegateParent.jsm",
+              esModuleURI:
+                "resource:///actors/MediaControlDelegateParent.sys.mjs",
             },
             child: {
-              moduleURI: "resource:///actors/MediaControlDelegateChild.jsm",
+              esModuleURI:
+                "resource:///actors/MediaControlDelegateChild.sys.mjs",
               events: {
                 "MozDOMFullscreen:Entered": {},
                 "MozDOMFullscreen:Exited": {},
@@ -813,10 +817,10 @@ function startup() {
         actors: {
           GeckoViewPrompter: {
             parent: {
-              moduleURI: "resource:///actors/GeckoViewPrompterParent.jsm",
+              esModuleURI: "resource:///actors/GeckoViewPrompterParent.sys.mjs",
             },
             child: {
-              moduleURI: "resource:///actors/GeckoViewPrompterChild.jsm",
+              esModuleURI: "resource:///actors/GeckoViewPrompterChild.sys.mjs",
             },
             allFrames: true,
             includeChrome: true,
@@ -830,10 +834,12 @@ function startup() {
         actors: {
           GeckoViewPrintDelegate: {
             parent: {
-              moduleURI: "resource:///actors/GeckoViewPrintDelegateParent.jsm",
+              esModuleURI:
+                "resource:///actors/GeckoViewPrintDelegateParent.sys.mjs",
             },
             child: {
-              moduleURI: "resource:///actors/GeckoViewPrintDelegateChild.jsm",
+              esModuleURI:
+                "resource:///actors/GeckoViewPrintDelegateChild.sys.mjs",
             },
             allFrames: true,
           },

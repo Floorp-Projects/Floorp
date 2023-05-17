@@ -35,10 +35,11 @@ function InitLater(fn, object, name) {
 const JSPROCESSACTORS = {
   GeckoViewPermissionProcess: {
     parent: {
-      moduleURI: "resource:///actors/GeckoViewPermissionProcessParent.jsm",
+      esModuleURI:
+        "resource:///actors/GeckoViewPermissionProcessParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/GeckoViewPermissionProcessChild.jsm",
+      esModuleURI: "resource:///actors/GeckoViewPermissionProcessChild.sys.mjs",
       observers: [
         "getUserMedia:ask-device-permission",
         "getUserMedia:request",
@@ -52,26 +53,26 @@ const JSPROCESSACTORS = {
 const JSWINDOWACTORS = {
   LoadURIDelegate: {
     parent: {
-      moduleURI: "resource:///actors/LoadURIDelegateParent.jsm",
+      esModuleURI: "resource:///actors/LoadURIDelegateParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/LoadURIDelegateChild.jsm",
+      esModuleURI: "resource:///actors/LoadURIDelegateChild.sys.mjs",
     },
     messageManagerGroups: ["browsers"],
   },
   GeckoViewPermission: {
     parent: {
-      moduleURI: "resource:///actors/GeckoViewPermissionParent.jsm",
+      esModuleURI: "resource:///actors/GeckoViewPermissionParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/GeckoViewPermissionChild.jsm",
+      esModuleURI: "resource:///actors/GeckoViewPermissionChild.sys.mjs",
     },
     allFrames: true,
     includeChrome: true,
   },
   GeckoViewPrompt: {
     child: {
-      moduleURI: "resource:///actors/GeckoViewPromptChild.jsm",
+      esModuleURI: "resource:///actors/GeckoViewPromptChild.sys.mjs",
       events: {
         click: { capture: false, mozSystemGroup: true },
         contextmenu: { capture: false, mozSystemGroup: true },
@@ -86,7 +87,7 @@ const JSWINDOWACTORS = {
   },
   GeckoViewFormValidation: {
     child: {
-      moduleURI: "resource:///actors/GeckoViewFormValidationChild.jsm",
+      esModuleURI: "resource:///actors/GeckoViewFormValidationChild.sys.mjs",
       events: {
         MozInvalidForm: {},
       },
@@ -96,10 +97,12 @@ const JSWINDOWACTORS = {
   },
   GeckoViewClipboardPermission: {
     parent: {
-      moduleURI: "resource:///actors/GeckoViewClipboardPermissionParent.jsm",
+      esModuleURI:
+        "resource:///actors/GeckoViewClipboardPermissionParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/GeckoViewClipboardPermissionChild.jsm",
+      esModuleURI:
+        "resource:///actors/GeckoViewClipboardPermissionChild.sys.mjs",
       events: {
         MozClipboardReadPaste: {},
         deactivate: { mozSystemGroup: true },
