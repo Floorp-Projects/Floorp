@@ -282,7 +282,7 @@ void GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP,
     return;
   }
 
-  bool isOpenH264 = aGMP->GetPluginType() == GMPPluginType::OpenH264;
+  bool isOpenH264 = aGMP->GetDisplayName().EqualsLiteral("gmpopenh264");
 
   GMPVideoCodec codec;
   memset(&codec, 0, sizeof(codec));
@@ -372,7 +372,7 @@ RefPtr<MediaDataDecoder::DecodePromise> GMPVideoDecoder::Decode(
     MediaInfoFlag flag = MediaInfoFlag::None;
     flag |= (aSample->mKeyframe ? MediaInfoFlag::KeyFrame
                                 : MediaInfoFlag::NonKeyFrame);
-    if (mGMP->GetPluginType() == GMPPluginType::OpenH264) {
+    if (mGMP->GetDisplayName().EqualsLiteral("gmpopenh264")) {
       flag |= MediaInfoFlag::SoftwareDecoding;
     }
     if (MP4Decoder::IsH264(mConfig.mMimeType)) {
