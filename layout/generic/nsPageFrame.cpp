@@ -542,33 +542,41 @@ static gfx::Matrix4x4 ComputePagesPerSheetAndPageSizeTransform(
     const nsIFrame* aFrame, float aAppUnitsPerPixel) {
   MOZ_ASSERT(aFrame->IsPageFrame());
   auto* pageFrame = static_cast<const nsPageFrame*>(aFrame);
+  const nsSize contentPageSize = pageFrame->ComputePageSize();
+  nsSharedPageData* pd = pageFrame->GetSharedPageData();
+  const auto* ppsInfo = pd->PagesPerSheetInfo();
+
+  gfx::Matrix4x4 transform;
+
+  if (ppsInfo->mNumPages == 1) {
+    float scale = pageFrame->ComputePageSizeScale(contentPageSize);
+    transform = gfx::Matrix4x4::Scaling(scale, scale, 1);
+    return transform;
+  }
+
+  // The multiple pages-per-sheet case.
 
   const nsContainerFrame* const parentFrame = pageFrame->GetParent();
   MOZ_ASSERT(parentFrame->IsPrintedSheetFrame(),
              "Parent of nsPageFrame should be PrintedSheetFrame");
   auto* sheetFrame = static_cast<const PrintedSheetFrame*>(parentFrame);
 
-  // Variables that we use in our transform (initialized with reasonable
-  // defaults that work for the regular one-page-per-sheet scenario):
-  const nsSize contentPageSize = pageFrame->ComputePageSize();
-  float scale = pageFrame->ComputePageSizeScale(contentPageSize);
-  nsPoint gridOrigin;
-  uint32_t rowIdx = 0;
-  uint32_t colIdx = 0;
+  // Begin with the offset of the grid origin (which accounts for the sheet's
+  // unwritable margins).
+  nsPoint gridOrigin = sheetFrame->GetPagesPerSheetGridOrigin();
+  transform = gfx::Matrix4x4::Translation(
+      NSAppUnitsToFloatPixels(gridOrigin.x, aAppUnitsPerPixel),
+      NSAppUnitsToFloatPixels(gridOrigin.y, aAppUnitsPerPixel), 0);
 
-  nsSharedPageData* pd = pageFrame->GetSharedPageData();
-  const auto* ppsInfo = pd->PagesPerSheetInfo();
-  if (ppsInfo->mNumPages > 1) {
-    scale *= sheetFrame->GetPagesPerSheetScale();
-    gridOrigin = sheetFrame->GetPagesPerSheetGridOrigin();
-    std::tie(rowIdx, colIdx) = GetRowAndColFromIdx(
-        pageFrame->IndexOnSheet(), sheetFrame->GetPagesPerSheetNumCols());
-  }
+  // Scale the page to fit its pages-per-sheet grid cell.
+  float scale = pageFrame->ComputePageSizeScale(contentPageSize) *
+                sheetFrame->GetPagesPerSheetScale();
+  transform.PreScale(scale, scale, 1);
 
-  // Scale down the page based on the above-computed scale:
-  auto transform = gfx::Matrix4x4::Scaling(scale, scale, 1);
-
-  // Draw the page at an offset, to get it in its pages-per-sheet "cell":
+  // Translate the page to its pages-per-sheet grid "cell":
+  uint32_t rowIdx, colIdx;
+  std::tie(rowIdx, colIdx) = GetRowAndColFromIdx(
+      pageFrame->IndexOnSheet(), sheetFrame->GetPagesPerSheetNumCols());
   transform.PreTranslate(
       NSAppUnitsToFloatPixels(colIdx * contentPageSize.width,
                               aAppUnitsPerPixel),
@@ -576,9 +584,8 @@ static gfx::Matrix4x4 ComputePagesPerSheetAndPageSizeTransform(
                               aAppUnitsPerPixel),
       0);
 
-  // Apply 'page-orientation' for multiple pages-per-sheet, if applicable:
-  if (ppsInfo->mNumPages > 1 &&
-      StaticPrefs::layout_css_page_orientation_enabled()) {
+  // Apply 'page-orientation' to any applicable pages:
+  if (StaticPrefs::layout_css_page_orientation_enabled()) {
     const StylePageOrientation& orientation =
         pageFrame->PageContentFrame()->StylePage()->mPageOrientation;
 
@@ -620,14 +627,7 @@ static gfx::Matrix4x4 ComputePagesPerSheetAndPageSizeTransform(
     }
   }
 
-  // Also add the grid origin as an offset (so that we're not drawing into the
-  // sheet's unwritable area). Note that this is a PostTranslate operation
-  // (vs. PreTranslate above), since gridOrigin is an offset on the sheet
-  // itself, whereas the offset above was in the scaled coordinate space of the
-  // pages.
-  return transform.PostTranslate(
-      NSAppUnitsToFloatPixels(gridOrigin.x, aAppUnitsPerPixel),
-      NSAppUnitsToFloatPixels(gridOrigin.y, aAppUnitsPerPixel), 0);
+  return transform;
 }
 
 nsIFrame::ComputeTransformFunction nsPageFrame::GetTransformGetter() const {
