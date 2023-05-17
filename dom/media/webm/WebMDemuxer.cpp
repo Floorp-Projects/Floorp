@@ -245,9 +245,11 @@ void WebMDemuxer::Reset(TrackInfo::TrackType aType) {
 nsresult WebMDemuxer::ReadMetadata() {
   int r = mVideoContext.Init();
   if (r == -1) {
+    WEBM_DEBUG("mVideoContext::Init failure");
     return NS_ERROR_FAILURE;
   }
   if (mAudioContext.Init() == -1) {
+    WEBM_DEBUG("mAudioContext::Init failure");
     return NS_ERROR_FAILURE;
   }
 
@@ -259,10 +261,12 @@ nsresult WebMDemuxer::ReadMetadata() {
     // Check how much data nestegg read and force feed it to BufferedState.
     RefPtr<MediaByteBuffer> buffer = resource.MediaReadAt(0, resource.Tell());
     if (!buffer) {
+      WEBM_DEBUG("resource.MediaReadAt error");
       return NS_ERROR_FAILURE;
     }
     mBufferedState->NotifyDataArrived(buffer->Elements(), buffer->Length(), 0);
     if (mBufferedState->GetInitEndOffset() < 0) {
+      WEBM_DEBUG("Couldn't find init end");
       return NS_ERROR_FAILURE;
     }
     MOZ_ASSERT(mBufferedState->GetInitEndOffset() <= resource.Tell());
@@ -270,18 +274,21 @@ nsresult WebMDemuxer::ReadMetadata() {
   mInitData = resource.MediaReadAt(0, mBufferedState->GetInitEndOffset());
   if (!mInitData ||
       mInitData->Length() != size_t(mBufferedState->GetInitEndOffset())) {
+    WEBM_DEBUG("Couldn't read init data");
     return NS_ERROR_FAILURE;
   }
 
   unsigned int ntracks = 0;
   r = nestegg_track_count(context, &ntracks);
   if (r == -1) {
+    WEBM_DEBUG("nestegg_track_count error");
     return NS_ERROR_FAILURE;
   }
 
   for (unsigned int track = 0; track < ntracks; ++track) {
     int id = nestegg_track_codec_id(context, track);
     if (id == -1) {
+      WEBM_DEBUG("nestegg_track_codec_id error");
       return NS_ERROR_FAILURE;
     }
     int type = nestegg_track_type(context, track);
@@ -289,6 +296,7 @@ nsresult WebMDemuxer::ReadMetadata() {
       nestegg_video_params params;
       r = nestegg_track_video_params(context, track, &params);
       if (r == -1) {
+        WEBM_DEBUG("nestegg_track_video_params error");
         return NS_ERROR_FAILURE;
       }
       mVideoCodec = nestegg_track_codec_id(context, track);
@@ -374,6 +382,7 @@ nsresult WebMDemuxer::ReadMetadata() {
       if (!r) {
         mInfo.mVideo.mDuration = TimeUnit::FromNanoseconds(duration);
       }
+      WEBM_DEBUG("stream duration: %lf\n", mInfo.mVideo.mDuration.ToSeconds());
       mInfo.mVideo.mCrypto = GetTrackCrypto(TrackInfo::kVideoTrack, track);
       if (mInfo.mVideo.mCrypto.IsEncrypted()) {
         MOZ_ASSERT(mInfo.mVideo.mCrypto.mCryptoScheme == CryptoScheme::Cenc,
@@ -384,12 +393,14 @@ nsresult WebMDemuxer::ReadMetadata() {
       nestegg_audio_params params;
       r = nestegg_track_audio_params(context, track, &params);
       if (r == -1) {
+        WEBM_DEBUG("nestegg_track_audio_params error");
         return NS_ERROR_FAILURE;
       }
       if (params.rate >
               static_cast<decltype(params.rate)>(AudioInfo::MAX_RATE) ||
           params.rate <= static_cast<decltype(params.rate)>(0) ||
           params.channels > AudioConfig::ChannelLayout::MAX_CHANNELS) {
+        WEBM_DEBUG("Invalid audio param rate: %lf channel count: %d", params.rate, params.channels);
         return NS_ERROR_DOM_MEDIA_METADATA_ERR;
       }
 
@@ -407,6 +418,7 @@ nsresult WebMDemuxer::ReadMetadata() {
         opusCodecSpecificData.mContainerCodecDelayMicroSeconds = codecDelayUs;
         mInfo.mAudio.mCodecSpecificConfig =
             AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
+        WEBM_DEBUG("Preroll for Opus: %lu\n", codecDelayUs);
       }
       mSeekPreroll = params.seek_preroll;
       mInfo.mAudio.mRate = params.rate;
@@ -415,6 +427,7 @@ nsresult WebMDemuxer::ReadMetadata() {
       unsigned int nheaders = 0;
       r = nestegg_track_codec_data_count(context, track, &nheaders);
       if (r == -1) {
+        WEBM_DEBUG("nestegg_track_codec_data_count error");
         return NS_ERROR_FAILURE;
       }
 
@@ -425,6 +438,7 @@ nsresult WebMDemuxer::ReadMetadata() {
         size_t length = 0;
         r = nestegg_track_codec_data(context, track, header, &data, &length);
         if (r == -1) {
+          WEBM_DEBUG("nestegg_track_codec_data error");
           return NS_ERROR_FAILURE;
         }
         headers.AppendElement(data);
@@ -441,6 +455,7 @@ nsresult WebMDemuxer::ReadMetadata() {
       if (nheaders > 1) {
         if (!XiphHeadersToExtradata(audioCodecSpecificBlob, headers,
                                     headerLens)) {
+          WEBM_DEBUG("Couldn't parse Xiph headers");
           return NS_ERROR_FAILURE;
         }
       } else {
@@ -450,6 +465,7 @@ nsresult WebMDemuxer::ReadMetadata() {
       r = nestegg_duration(context, &duration);
       if (!r) {
         mInfo.mAudio.mDuration = TimeUnit::FromNanoseconds(duration);
+        WEBM_DEBUG("audio track duration: %lf", mInfo.mAudio.mDuration.ToSeconds());
       }
       mInfo.mAudio.mCrypto = GetTrackCrypto(TrackInfo::kAudioTrack, track);
       if (mInfo.mAudio.mCrypto.IsEncrypted()) {
@@ -459,6 +475,7 @@ nsresult WebMDemuxer::ReadMetadata() {
       }
     }
   }
+  WEBM_DEBUG("Read metadata OK");
   return NS_OK;
 }
 
@@ -918,6 +935,7 @@ nsresult WebMDemuxer::SeekInternal(TrackInfo::TrackType aType,
   uint32_t trackToSeek = mHasVideo ? mVideoTrack : mAudioTrack;
   MOZ_ASSERT(aTarget.ToNanoseconds() >= 0, "Seek time can't be negative");
   uint64_t target = static_cast<uint64_t>(aTarget.ToNanoseconds());
+  WEBM_DEBUG("Seeking to %lf", aTarget.ToSeconds());
 
   Reset(aType);
 
