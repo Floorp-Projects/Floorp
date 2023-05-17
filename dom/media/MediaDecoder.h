@@ -51,6 +51,31 @@ class MediaDecoderStateMachineBase;
 struct MediaPlaybackEvent;
 struct SharedDummyTrack;
 
+struct DurationToDouble {
+  double operator()(double aDouble) { return aDouble; }
+  double operator()(const media::TimeUnit& aTimeUnit) {
+    if (aTimeUnit.IsValid()) {
+      if (aTimeUnit.IsPosInf()) {
+        return std::numeric_limits<double>::infinity();
+      }
+      if (aTimeUnit.IsNegInf()) {
+        return -std::numeric_limits<double>::infinity();
+      }
+      return aTimeUnit.ToSeconds();
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+};
+
+struct DurationToTimeUnit {
+  media::TimeUnit operator()(double aDouble) {
+    return media::TimeUnit::FromSeconds(aDouble);
+  }
+  media::TimeUnit operator()(const media::TimeUnit& aTimeUnit) {
+    return aTimeUnit;
+  }
+};
+
 struct MOZ_STACK_CLASS MediaDecoderInit {
   MediaDecoderOwner* const mOwner;
   TelemetryProbesReporterOwner* const mReporterOwner;
@@ -477,7 +502,10 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   already_AddRefed<layers::KnowsCompositor> GetCompositor();
 
   // Official duration of the media resource as observed by script.
-  media::TimeUnit mDuration;
+  // This can be a TimeUnit representing the exact duration found by demuxing,
+  // as a TimeUnit. This can also be a duration set explicitly by script, as a
+  // double.
+  Variant<media::TimeUnit, double> mDuration;
 
   /******
    * The following member variables can be accessed from any thread.

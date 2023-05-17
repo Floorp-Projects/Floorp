@@ -139,6 +139,7 @@ class MediaSource final : public DOMEventTargetHelper,
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 
+  void DurationChange(const media::TimeUnit& aNewDuration, ErrorResult& aRv);
   void DurationChange(double aNewDuration, ErrorResult& aRv);
 
   // SetDuration with no checks.
