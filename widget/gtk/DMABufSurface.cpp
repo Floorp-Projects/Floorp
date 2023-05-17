@@ -1030,15 +1030,18 @@ bool DMABufSurfaceYUV::ImportPRIMESurfaceDescriptor(
   mBufferPlaneCount = aDesc.num_layers;
 
   for (unsigned int i = 0; i < aDesc.num_layers; i++) {
+    // All supported formats have 4:2:0 chroma sub-sampling.
+    unsigned int subsample = i == 0 ? 0 : 1;
+
     unsigned int object = aDesc.layers[i].object_index[0];
     mBufferModifiers[i] = aDesc.objects[object].drm_format_modifier;
     mDrmFormats[i] = aDesc.layers[i].drm_format;
     mOffsets[i] = aDesc.layers[i].offset[0];
     mStrides[i] = aDesc.layers[i].pitch[0];
-    mWidthAligned[i] = aDesc.width >> i;
-    mHeightAligned[i] = aDesc.height >> i;
-    mWidth[i] = aWidth >> i;
-    mHeight[i] = aHeight >> i;
+    mWidthAligned[i] = aDesc.width >> subsample;
+    mHeightAligned[i] = aDesc.height >> subsample;
+    mWidth[i] = aWidth >> subsample;
+    mHeight[i] = aHeight >> subsample;
     LOGDMABUF(("    plane %d size %d x %d format %x", i, mWidth[i], mHeight[i],
                mDrmFormats[i]));
   }
