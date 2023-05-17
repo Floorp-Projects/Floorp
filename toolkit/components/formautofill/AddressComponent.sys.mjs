@@ -13,6 +13,69 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 /**
+ * Class representing a collection of tokens extracted from a string.
+ */
+class Tokens {
+  #tokens = null;
+
+  // By default we split passed string with whitespace.
+  constructor(value, sep = /\s+/) {
+    this.#tokens = value.split(sep);
+  }
+
+  get tokens() {
+    return this.#tokens;
+  }
+
+  /**
+   * Checks if all the tokens in the current object can be found in another
+   * token object.
+   *
+   * @param   {Tokens}   other   The other Tokens instance to compare with.
+   * @param   {Function} compare An optional custom comparison function.
+   * @returns {boolean}          True if the current Token object is a subset of the
+   *                             other Token object, false otherwise.
+   */
+  isSubset(other, compare = (a, b) => a == b) {
+    return this.tokens.every(tokenSelf => {
+      for (const tokenOther of other.tokens) {
+        if (compare(tokenSelf, tokenOther)) {
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+
+  /**
+   * Checks if all the tokens in the current object can be found in another
+   * Token object's tokens (in order).
+   * For example, ["John", "Doe"] is a subset of ["John", "Michael", "Doe"]
+   * in order but not a subset of ["Doe", "Michael", "John"] in order.
+   *
+   * @param   {Tokens}   other   The other Tokens instance to compare with.
+   * @param   {Function} compare An optional custom comparison function.
+   * @returns {boolean}          True if the current Token object is a subset of the
+   *                             other Token object, false otherwise.
+   */
+  isSubsetInOrder(other, compare = (a, b) => a == b) {
+    if (this.tokens.length > other.tokens.length) {
+      return false;
+    }
+
+    let idx = 0;
+    return this.tokens.every(tokenSelf => {
+      for (; idx < other.tokens.length; idx++) {
+        if (compare(tokenSelf, other.tokens[idx])) {
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+}
+
+/**
  * The AddressField class is a base class representing a single address field.
  */
 class AddressField {
@@ -198,7 +261,34 @@ class Tel extends AddressField {}
  * A company or organization name.
  * See autocomplete="organization".
  */
-class Organization extends AddressField {}
+class Organization extends AddressField {
+  constructor(value, region) {
+    super(value, region);
+  }
+
+  /**
+   * Two company names are considered equal only when everything is the same.
+   */
+  equals(other) {
+    return this.userValue == other.userValue;
+  }
+
+  // Mergeable use locale compare
+  contains(other) {
+    const options = {
+      replace_punctuation: " ", // mozilla org vs mozilla-org
+      merge_whitespace: true,
+      ignore_case: true, // mozilla vs Mozilla
+    };
+
+    // If every token in B can be found in A without considering order
+    // Example, 'Food & Pharmacy' contains 'Pharmacy & Food'
+    const selfTokens = new Tokens(this.normalizeUserValue(options));
+    const otherTokens = new Tokens(other.normalizeUserValue(options));
+
+    return otherTokens.isSubset(selfTokens, (a, b) => this.localeCompare(a, b));
+  }
+}
 
 /**
  * An email address
