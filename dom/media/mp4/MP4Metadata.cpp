@@ -432,7 +432,8 @@ MP4Metadata::ResultAndCryptoFile MP4Metadata::Crypto() const {
   return {NS_OK, &mCrypto};
 }
 
-MP4Metadata::ResultAndIndice MP4Metadata::GetTrackIndice(uint32_t aTrackId) {
+MP4Metadata::ResultAndIndice MP4Metadata::GetTrackIndice(
+    uint32_t aTrackId) const {
   Mp4parseByteData indiceRawData = {};
 
   uint8_t fragmented = false;
