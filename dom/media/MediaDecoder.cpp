@@ -242,12 +242,12 @@ void MediaDecoder::SetOutputTracksPrincipal(
 
 double MediaDecoder::GetDuration() {
   MOZ_ASSERT(NS_IsMainThread());
-  return mDuration.IsValid() ? mDuration.ToSeconds() : std::numeric_limits<double>::quiet_NaN();
+  return ToMicrosecondResolution(mDuration.match(DurationToDouble()));
 }
 
 bool MediaDecoder::IsInfinite() const {
   MOZ_ASSERT(NS_IsMainThread());
-  return mDuration.IsInfinite();
+  return std::isinf(mDuration.match(DurationToDouble()));
 }
 
 #define INIT_MIRROR(name, val) \
@@ -982,7 +982,7 @@ void MediaDecoder::UpdateLogicalPositionInternal() {
 
   TimeUnit currentPosition = CurrentPosition();
   if (mPlayState == PLAY_STATE_ENDED) {
-    currentPosition = std::max(currentPosition, mDuration);
+    currentPosition = std::max(currentPosition, mDuration.match(DurationToTimeUnit()));
   }
 
   const PositionUpdate reason =
@@ -1033,31 +1033,40 @@ void MediaDecoder::DurationChanged() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
-  TimeUnit oldDuration = mDuration;
+  Variant<TimeUnit, double> oldDuration = mDuration;
 
   // Use the explicit duration if we have one.
   // Otherwise use the duration mirrored from MDSM.
   if (mExplicitDuration.isSome()) {
-    mDuration = TimeUnit::FromSeconds(mExplicitDuration.ref());
+    mDuration.emplace<double>(mExplicitDuration.ref());
   } else if (mStateMachineDuration.Ref().isSome()) {
-    mDuration = mStateMachineDuration.Ref().ref();
+    MOZ_ASSERT(mStateMachineDuration.Ref().ref().IsValid());
+    mDuration.emplace<TimeUnit>(mStateMachineDuration.Ref().ref());
   }
 
-  if (oldDuration.IsValid() && mDuration == oldDuration) {
-    return;
+  LOG("New duration to %s", mDuration.match(DurationToTimeUnit()).ToString().get());
+  if (oldDuration.is<TimeUnit>() && oldDuration.as<TimeUnit>().IsValid()) {
+    LOG("Duration %s", oldDuration.match(DurationToTimeUnit()).ToString().get());
   }
 
-  LOG("Duration changed to %f", mDuration.ToSeconds());
+  if ((oldDuration.is<double>() || oldDuration.as<TimeUnit>().IsValid())) {
+    if (mDuration.match(DurationToDouble()) ==
+        oldDuration.match(DurationToDouble())) {
+      return;
+    }
+  }
+
+  LOG("Duration changed to %s", mDuration.match(DurationToTimeUnit()).ToString().get());
 
   // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=28822 for a discussion
   // of whether we should fire durationchange on explicit infinity.
   if (mFiredMetadataLoaded &&
-      (!mDuration.IsInfinite() || mExplicitDuration.isSome())) {
+      (!std::isinf(mDuration.match(DurationToDouble())) || mExplicitDuration.isSome())) {
     GetOwner()->DispatchAsyncEvent(u"durationchange"_ns);
   }
 
-  if (CurrentPosition() > mDuration) {
-    Seek(mDuration.ToSeconds(), SeekTarget::Accurate);
+  if (CurrentPosition().ToSeconds() > mDuration.match(DurationToDouble())) {
+    Seek(mDuration.match(DurationToDouble()), SeekTarget::Accurate);
   }
 }
 
@@ -1218,7 +1227,7 @@ media::TimeIntervals MediaDecoder::GetSeekable() {
   }
   return media::TimeIntervals(media::TimeInterval(
       TimeUnit::Zero(), IsInfinite() ? TimeUnit::FromInfinity()
-                                     : mDuration));
+                                     : mDuration.match(DurationToTimeUnit()).ToBase(1000000)));
 }
 
 void MediaDecoder::SetFragmentEndTime(double aTime) {

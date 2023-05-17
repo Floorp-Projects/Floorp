@@ -120,10 +120,10 @@ class SourceBuffer final : public DOMEventTargetHelper,
 
   void Ended();
 
-  double GetBufferedStart();
-  double GetBufferedEnd();
-  double HighestStartTime();
-  double HighestEndTime();
+  media::TimeIntervals GetBufferedIntervals();
+  media::TimeUnit GetBufferedEnd();
+  media::TimeUnit HighestStartTime();
+  media::TimeUnit HighestEndTime();
 
   // Runs the range removal algorithm as defined by the MSE spec.
   void RangeRemoval(double aStart, double aEnd);
