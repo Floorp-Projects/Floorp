@@ -957,13 +957,6 @@ mozilla::EventClassID nsContentUtils::GetEventClassIDFromMessage(
   }
 }
 
-bool nsContentUtils::IsExternalProtocol(nsIURI* aURI) {
-  bool doesNotReturnData = false;
-  nsresult rv = NS_URIChainHasFlags(
-      aURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA, &doesNotReturnData);
-  return NS_SUCCEEDED(rv) && doesNotReturnData;
-}
-
 static nsAtom* GetEventTypeFromMessage(EventMessage aEventMessage) {
   switch (aEventMessage) {
 #define MESSAGE_TO_EVENT(name_, message_, type_, struct_) \

@@ -175,11 +175,6 @@ void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
     }
     aRv.Throw(rv);
   }
-
-  Document* doc = bc->GetDocument();
-  if (doc && nsContentUtils::IsExternalProtocol(aURI)) {
-    doc->EnsureNotEnteringAndExitFullscreen();
-  }
 }
 
 void LocationBase::SetHref(const nsAString& aHref,

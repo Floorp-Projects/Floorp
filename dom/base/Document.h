@@ -1549,8 +1549,6 @@ class Document : public nsINode,
   void InitFeaturePolicy();
   nsresult InitFeaturePolicy(nsIChannel* aChannel);
 
-  void EnsureNotEnteringAndExitFullscreen();
-
  protected:
   friend class nsUnblockOnloadEvent;
 

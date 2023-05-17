@@ -10186,7 +10186,11 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
     if (StaticPrefs::dom_block_external_protocol_in_iframes()) {
       // Only allow URLs able to return data in iframes.
-      if (nsContentUtils::IsExternalProtocol(aLoadState->URI())) {
+      bool doesNotReturnData = false;
+      NS_URIChainHasFlags(aLoadState->URI(),
+                          nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+                          &doesNotReturnData);
+      if (doesNotReturnData) {
         // The context to check user-interaction with for the purposes of
         // popup-blocking.
         //
@@ -12845,11 +12849,6 @@ nsresult nsDocShell::OnLinkClick(
 
   if (aContent->IsEditable()) {
     return NS_OK;
-  }
-
-  Document* ownerDoc = aContent->OwnerDoc();
-  if (nsContentUtils::IsExternalProtocol(aURI)) {
-    ownerDoc->EnsureNotEnteringAndExitFullscreen();
   }
 
   bool noOpenerImplied = false;
