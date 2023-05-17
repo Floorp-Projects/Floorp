@@ -399,7 +399,7 @@
             android:paddingEnd="0dp"
             android:text="@string/addresses_email"
             android:textColor="?attr/textPrimary"
-            android:labelFor="@id/city_input"
+            android:labelFor="@id/email_input"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/phone_layout" />
 
