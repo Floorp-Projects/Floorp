@@ -44,11 +44,11 @@ def side_by_side_modifier(task, input):
     if task.label != input["label"]:
         return task
 
-    # Make side-by-side job searchable by the platform and test name
+    # Make side-by-side job searchable by the platform, test name, and revisions
     # it was triggered for
     task.task["metadata"][
         "name"
-    ] = f"{input['platform']} {input['test_name']} {input['label']}"
+    ] = f"{input['label']} for {input['platform']} {input['test_name']} from revision {input['base_revision'][:12]} to {input['new_revision'][:12]}"
     # Use a job symbol to include the symbol of the job the side-by-side
     # is running for
     task.task["extra"]["treeherder"]["symbol"] += f"-{input['symbol']}"
@@ -101,9 +101,9 @@ def side_by_side_action(parameters, graph_config, input, task_group_id, task_id)
     )
     # TODO: find another way to detect side-by-side comparable jobs
     # (potentially lookig at the visual metrics flag)
-    if (
-        "browsertime-tp6" not in task["metadata"]["name"]
-        or "welcome" not in task["metadata"]["name"]
+    if not (
+        "browsertime-tp6" in task["metadata"]["name"]
+        or "welcome" in task["metadata"]["name"]
     ):
         logger.exception(
             f"Task {task['metadata']['name']} is not side-by-side comparable."
