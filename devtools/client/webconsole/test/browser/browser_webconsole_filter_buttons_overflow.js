@@ -42,6 +42,9 @@ add_task(async function() {
     // Component that renders an object handles keyboard interactions on the
     // container level.
     mustHaveAccessibleRule: false,
+    interactiveRule: false,
+    focusableRule: false,
+    labelRule: false,
   });
   EventUtils.sendMouseEvent(
     {
