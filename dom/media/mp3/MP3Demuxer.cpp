@@ -129,9 +129,9 @@ bool MP3TrackDemuxer::Init() {
   mInfo->mCodecSpecificConfig =
       AudioCodecSpecificVariant{std::move(mp3CodecData)};
 
-  MP3LOG("Init mInfo={mRate=%d mChannels=%d mBitDepth=%d mDuration=%ld (%lfs)}",
+  MP3LOG("Init mInfo={mRate=%d mChannels=%d mBitDepth=%d mDuration=%s (%lfs)}",
          mInfo->mRate, mInfo->mChannels, mInfo->mBitDepth,
-         mInfo->mDuration.ToTicksAtRate(mInfo->mRate),
+         mInfo->mDuration.ToString().get(),
          mInfo->mDuration.ToSeconds());
 
   return mSamplesPerSecond && mChannels;
@@ -707,20 +707,18 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
       frame->mDuration = TimeUnit::Zero(mSamplesPerSecond);
     }
     MP3LOG(
-        "Found padding spanning multiple packets -- trimming [%ld,%ld] to "
-        "[%ld,%ld] (stream duration: %ld)",
-        originalPts.ToTicksAtRate(mSamplesPerSecond),
-        originalEnd.ToTicksAtRate(mSamplesPerSecond),
-        frame->mTime.ToTicksAtRate(mSamplesPerSecond),
-        frame->GetEndTime().ToTicksAtRate(mSamplesPerSecond),
-        duration.ToTicksAtRate(mSamplesPerSecond));
+        "Found padding spanning multiple packets -- trimming [%s, %s] to "
+        "[%s,%s] (stream duration: %s)",
+        originalPts.ToString().get(), originalEnd.ToString().get(),
+        frame->mTime.ToString().get(), frame->GetEndTime().ToString().get(),
+        duration.ToString().get());
   } else if (frame->mEOS && Padding() <= frame->mDuration) {
     frame->mDuration -= Padding();
     MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
-    MP3LOG("Trimming last packet %ld to [%ld,%ld]",
-           Padding().ToTicksAtRate(mSamplesPerSecond),
-           frame->mTime.ToTicksAtRate(mSamplesPerSecond),
-           frame->GetEndTime().ToTicksAtRate(mSamplesPerSecond));
+    MP3LOG("Trimming last packet %s to [%s,%s]",
+           Padding().ToString().get(),
+           frame->mTime.ToString().get(),
+           frame->GetEndTime().ToString().get());
   }
 
   MP3LOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
@@ -735,17 +733,16 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
   // This is common at the beginning of an stream.
   MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
 
-  MP3LOG("Packet demuxed: pts [%ld, %ld] (duration: %ld)",
-         frame->mTime.ToTicksAtRate(mSamplesPerSecond),
-         frame->GetEndTime().ToTicksAtRate(mSamplesPerSecond),
-         frame->mDuration.ToTicksAtRate(mSamplesPerSecond));
+  MP3LOG("Packet demuxed: pts [%s, %s] (duration: %s)",
+         frame->mTime.ToString().get(),
+         frame->GetEndTime().ToString().get(),
+         frame->mDuration.ToString().get());
 
   // Indicate original packet information to trim after decoding.
   if (frame->mDuration != rawDuration) {
     frame->mOriginalPresentationWindow = Some(TimeInterval{rawPts, rawEnd});
-    MP3LOG("Total packet time excluding trimming: [%ld, %ld]",
-           rawpts.ToTicksAtRate(mSamplesPerSecond),
-           rawend.ToTicksAtRate(mSamplesPerSecond));
+    MP3LOG("Total packet time excluding trimming: [%s, %s]",
+           rawPts.ToString().get(), rawEnd.ToString().get());
   }
 
   return frame.forget();
