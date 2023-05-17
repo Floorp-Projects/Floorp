@@ -93,7 +93,7 @@ where
 #[test]
 fn read_box_header_short() {
     let mut stream = make_box(BoxSize::Short(8), b"test", |s| s);
-    let header = super::read_box_header(&mut stream).unwrap().unwrap();
+    let header = super::read_box_header(&mut stream).unwrap();
     assert_eq!(header.name, BoxType::UnknownBox(0x7465_7374)); // "test"
     assert_eq!(header.size, 8);
     assert!(header.uuid.is_none());
@@ -102,7 +102,7 @@ fn read_box_header_short() {
 #[test]
 fn read_box_header_long() {
     let mut stream = make_box(BoxSize::Long(16), b"test", |s| s);
-    let header = super::read_box_header(&mut stream).unwrap().unwrap();
+    let header = super::read_box_header(&mut stream).unwrap();
     assert_eq!(header.name, BoxType::UnknownBox(0x7465_7374)); // "test"
     assert_eq!(header.size, 16);
     assert!(header.uuid.is_none());
@@ -177,9 +177,9 @@ fn read_box_header_uuid_past_eof() {
     let mut cursor = Cursor::new(HEADER_UUID);
     let mut iter = super::BoxIter::new(&mut cursor);
     match iter.next_box() {
-        Err(Error::UnexpectedEOF) => (),
-        Ok(_) => panic!("expected an error result"),
-        _ => panic!("expected a different error result"),
+        Ok(None) => (),
+        Ok(_) => panic!("unexpected box read"),
+        _ => panic!("unexpected error"),
     };
 }
 
