@@ -18094,7 +18094,7 @@
   "HTTP_PRELOAD_IMAGE_STARTREQUEST_DELAY": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "expires_in_version": "116",
+    "expires_in_version": "120",
     "kind": "exponential",
     "high": 5000,
     "n_buckets": 50,
@@ -18105,7 +18105,7 @@
   "DOCUMENT_PRELOAD_IMAGE_ASYNCOPEN_DELAY": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "expires_in_version": "116",
+    "expires_in_version": "130",
     "kind": "exponential",
     "high": 5000,
     "n_buckets": 50,
