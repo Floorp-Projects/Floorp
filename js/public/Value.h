@@ -463,6 +463,11 @@ static MOZ_ALWAYS_INLINE double GenericNaN() {
   return mozilla::BitwiseCast<double>(detail::CanonicalizedNaNBits);
 }
 
+// Return the infinity the engine uses
+static MOZ_ALWAYS_INLINE double Infinity() {
+  return mozilla::BitwiseCast<double>(detail::InfinityBits);
+}
+
 // Convert an arbitrary double to one compatible with JS::Value representation
 // by replacing any NaN value with a canonical one.
 static MOZ_ALWAYS_INLINE double CanonicalizeNaN(double d) {
