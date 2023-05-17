@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>insertion</title>
+    <title>mark</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -21,13 +21,13 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_CONTENT_INSERTION"
+                  "ROLE_MARK"
                ],
                [
                   "property",
                   "objectAttributes",
                   "contains",
-                  "xml-roles:insertion"
+                  "xml-roles:mark"
                ]
             ],
             "AXAPI" : [
@@ -39,15 +39,15 @@
                ],
                [
                   "property",
-                  "AXSubrole",
+                  "AXRoleDescription",
                   "is",
-                  "AXInsertStyleGroup"
+                  "highlight"
                ],
                [
                   "result",
                   "AXAttributedStringForTextMarkerRange"
                   "contains",
-                  "AXIsSuggestedInsertion"
+                  "AXHighlight"
                ]
             ],
             "IAccessible2" : [
@@ -55,7 +55,13 @@
                   "property",
                   "role",
                   "is",
-                  "IA2_ROLE_CONTENT_INSERTION"
+                  "IA2_ROLE_MARK"
+               ],
+               [
+                  "property",
+                  "objectAttributes",
+                  "contains",
+                  "xml-roles:mark"
                ]
             ],
             "UIA" : [
@@ -63,13 +69,7 @@
                   "property",
                   "ControlType",
                   "is",
-                  "Text"
-               ],
-               [
-                  "property",
-                  "LocalizedControlType",
-                  "is",
-                  "ins"
+                  "Group"
                ]
             ]
          },
@@ -77,17 +77,15 @@
          "type" : "test"
       }
    ],
-   "title" : "insertion"
+   "title" : "mark"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>
-    This test examines the ARIA properties for insertion.
-  </p>
-  <div role="insertion" id="test">content</div>
+  <p>This test examines the ARIA properties for mark.</p>
+  <div role="mark" id="test">content</div>
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>
