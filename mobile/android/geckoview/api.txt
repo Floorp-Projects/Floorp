@@ -988,6 +988,7 @@ package org.mozilla.geckoview {
     method @UiThread default public void onFirstContentfulPaint(@NonNull GeckoSession);
     method @UiThread default public void onFocusRequest(@NonNull GeckoSession);
     method @UiThread default public void onFullScreen(@NonNull GeckoSession, boolean);
+    method @AnyThread @Nullable default public JSONObject onGetNimbusFeature(@NonNull GeckoSession, @NonNull String);
     method @UiThread default public void onKill(@NonNull GeckoSession);
     method @UiThread default public void onMetaViewportFitChange(@NonNull GeckoSession, @NonNull String);
     method @UiThread default public void onPaintStatusReset(@NonNull GeckoSession);

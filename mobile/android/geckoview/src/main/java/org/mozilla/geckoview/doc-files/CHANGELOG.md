@@ -20,11 +20,13 @@ exclude: true
   ([bug 1824083]({{bugzilla}}1824083))
 - Add [`onPrintWithStatus`][115.3] to retrieve additional printing status information.
 - Added new [`GeckoPrintException`][115.4] errors of `ERROR_NO_ACTIVITY_CONTEXT` and `ERROR_NO_ACTIVITY_CONTEXT_DELEGATE`
+- Added [`GeckoSession.ContentDelegate.onGetNimbusFeature`][115.5]
 
 [115.1]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(byte[], String, String, boolean, boolean)
 [115.2]: {{javadoc_uri}}/GeckoDisplay.NewSurfaceProvider.html
 [115.3]: {{javadoc_uri}}/GeckoSession.PrintDelegate.html#onPrintWithStatus
 [115.4]: {{javadoc_uri}}/GeckoSession.GeckoPrintException.html
+[115.5]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onGetNimbusFeature(org.mozilla.geckoview.GeckoSession)
 
 ## v114
 - Add [`SessionPdfFileSaver.createResponse`][114.1] to response of saving PDF.
@@ -1368,4 +1370,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 206323452b40602d20d42c3e73aa88647da74696
+[api-version]: cf897ca76efac25bbe2b17bb3a0a47d6f94a6bdb
