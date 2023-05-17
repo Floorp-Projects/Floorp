@@ -921,6 +921,13 @@ nsCSSRendering::CreateNullBorderRendererWithStyleBorder(
   if (appearance != StyleAppearance::None) {
     nsITheme* theme = aPresContext->Theme();
     if (theme->ThemeSupportsWidget(aPresContext, aForFrame, appearance)) {
+      // The border will be draw as part of the themed background item created
+      // for this same frame. If no themed background item was created then not
+      // drawing also matches that we do without webrender and what
+      // nsDisplayBorder does for themed borders.
+      if (aOutBorderIsEmpty) {
+        *aOutBorderIsEmpty = true;
+      }
       return Nothing();
     }
   }
