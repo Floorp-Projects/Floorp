@@ -247,7 +247,47 @@ class State extends AddressField {}
  * A country or territory code.
  * See autocomplete="country"
  */
-class Country extends AddressField {}
+class Country extends AddressField {
+  // iso 3166 2-alpha code
+  #country_code = null;
+
+  constructor(value, region) {
+    super(value, region);
+
+    if (this.isEmpty()) {
+      return;
+    }
+
+    const options = {
+      merge_whitespace: true,
+      remove_punctuation: true,
+    };
+
+    const country = this.normalizeUserValue(options);
+    this.#country_code = lazy.FormAutofillUtils.identifyCountryCode(country);
+
+    // When the country name is not a valid one, we use the current region instead
+    if (!this.#country_code) {
+      this.#country_code = lazy.FormAutofillUtils.identifyCountryCode(region);
+    }
+  }
+
+  get country_code() {
+    return this.#country_code;
+  }
+
+  isValid() {
+    return !!this.#country_code;
+  }
+
+  equals(other) {
+    return this.country_code == other.country_code;
+  }
+
+  contains(other) {
+    return this.equals(other);
+  }
+}
 
 /**
  * The field expects the value to be a person's full name.
@@ -732,12 +772,15 @@ export class AddressComponent {
     defaultRegion = FormAutofill.DEFAULT_REGION,
     { ignoreInvalid = false } = {}
   ) {
-    const region = record.country ?? defaultRegion;
-
     const fieldValue = this.#recordToFieldValue(record);
+
+    // Get country code first so we can use it to parse other fields
+    const country = new Country(fieldValue.country, defaultRegion);
+    this.#fields[Country.name] = country;
+    const region = country.isEmpty() ? defaultRegion : country.country_code;
+
     this.#fields[State.name] = new State(fieldValue.state, region);
     this.#fields[City.name] = new City(fieldValue.city, region);
-    this.#fields[Country.name] = new Country(fieldValue.country, region);
     this.#fields[PostalCode.name] = new PostalCode(
       fieldValue.postal_code,
       region
