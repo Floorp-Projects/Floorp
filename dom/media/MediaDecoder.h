@@ -455,7 +455,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
                               UniquePtr<MetadataTags> aTags,
                               MediaDecoderEventVisibility aEventVisibility);
 
-  void SetLogicalPosition(double aNewPosition);
+  void SetLogicalPosition(const media::TimeUnit& aNewPosition);
 
   /******
    * The following members should be accessed with the decoder lock held.
@@ -477,7 +477,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   already_AddRefed<layers::KnowsCompositor> GetCompositor();
 
   // Official duration of the media resource as observed by script.
-  double mDuration;
+  media::TimeUnit mDuration;
 
   /******
    * The following member variables can be accessed from any thread.
@@ -759,7 +759,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
     eSeamlessLoopingSeeking,
     eOther,
   };
-  PositionUpdate GetPositionUpdateReason(double aPrevPos, double aCurPos) const;
+  PositionUpdate GetPositionUpdateReason(double aPrevPos,
+                                         const media::TimeUnit& aCurPos) const;
 
   // Notify owner when the audible state changed
   void NotifyAudibleStateChanged();
