@@ -77,6 +77,10 @@ class MP3TrackDemuxer : public MediaTrackDemuxer,
       const media::TimeUnit& aTimeThreshold) override;
   int64_t GetResourceOffset() const override;
   media::TimeIntervals GetBuffered() override;
+  // Return the duration in frames of the encoder delay.
+  uint32_t EncoderDelayFrames() const;
+  // Return the duration  in frames of the padding.
+  uint32_t PaddingFrames() const;
 
  private:
   // Destructor.
@@ -125,6 +129,12 @@ class MP3TrackDemuxer : public MediaTrackDemuxer,
   // Returns the number of frames reported by the header if it's valid. Nothing
   // otherwise.
   Maybe<uint32_t> ValidNumAudioFrames() const;
+
+  // Return the duration of the encoder delay.
+  media::TimeUnit EncoderDelay() const;
+
+  // Return the duration of the padding.
+  media::TimeUnit Padding() const;
 
   // The (hopefully) MPEG resource.
   MediaResourceIndex mSource;
