@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.ui
 
-import android.view.View
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -19,7 +18,8 @@ import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.getEnhancedTrackingProtectionAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
-import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
+import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
+import org.mozilla.fenix.helpers.TestHelper.waitUntilSnackbarGone
 import org.mozilla.fenix.ui.robots.addonsMenu
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -102,13 +102,12 @@ class SettingsAddonsTest {
             verifyAddonInstallCompleted(addonName, activityTestRule)
             closeAddonInstallCompletePrompt()
         }.openDetailedMenuForAddon(addonName) {
-            registerAndCleanupIdlingResources(
-                ViewVisibilityIdlingResource(
-                    activityTestRule.activity.findViewById(R.id.addon_container),
-                    View.VISIBLE,
-                ),
-            ) {}
-        }.removeAddon {
+        }.removeAddon(activityTestRule) {
+            verifySnackBarText("Successfully uninstalled $addonName")
+            waitUntilSnackbarGone()
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openAddonsManagerMenu {
             verifyAddonCanBeInstalled(addonName)
         }
     }

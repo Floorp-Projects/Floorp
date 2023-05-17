@@ -137,6 +137,15 @@ object TestHelper {
         ).waitUntilGone(waitingTime)
     }
 
+    fun verifySnackBarText(expectedText: String) {
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .textContains(expectedText),
+            ).waitForExists(waitingTime),
+        )
+    }
+
     fun verifyUrl(urlSubstring: String, resourceName: String, resId: Int) {
         waitUntilObjectIsFound(resourceName)
         mDevice.findObject(UiSelector().text(urlSubstring)).waitForExists(waitingTime)
@@ -333,7 +342,7 @@ object TestHelper {
         )
     }
 
-    fun getStringResource(id: Int) = appContext.resources.getString(id, appName)
+    fun getStringResource(id: Int, argument: String = appName) = appContext.resources.getString(id, argument)
 
     fun setCustomSearchEngine(searchEngine: SearchEngine) {
         with(appContext.components.useCases.searchUseCases) {
