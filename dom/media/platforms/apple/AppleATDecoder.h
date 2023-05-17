@@ -70,9 +70,7 @@ class AppleATDecoder final : public MediaDataDecoder,
   nsresult GetImplicitAACMagicCookie(const MediaRawData* aSample);
   nsresult SetupChannelLayout();
   uint32_t mParsedFramesForAACMagicCookie;
-  uint32_t mDecodedFrames = 0;
-  uint32_t mEncoderDelay;
-  uint32_t mRemainingEncoderDelay;
+  uint32_t mEncoderDelay = 0;
   uint64_t mTotalMediaFrames = 0;
   bool mErrored;
 };
