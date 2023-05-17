@@ -151,19 +151,18 @@ export function getColumnBreakpoints(
   return formatPositions(positions, selectedSource, breakpointMap);
 }
 
-function getVisibleBreakpointPositions(state) {
-  const source = getSelectedSource(state);
-  if (!source) {
-    return [];
+const getVisibleBreakpointPositions = createSelector(
+  state => {
+    const source = getSelectedSource(state);
+    if (!source) {
+      return null;
+    }
+    return getBreakpointPositionsForSource(state, source.id);
+  },
+  sourcePositions => {
+    return convertToList(sourcePositions || []);
   }
-
-  const sourcePositions = getBreakpointPositionsForSource(state, source.id);
-  if (!sourcePositions) {
-    return [];
-  }
-
-  return convertToList(sourcePositions);
-}
+);
 
 export const visibleColumnBreakpoints = createSelector(
   getVisibleBreakpointPositions,
