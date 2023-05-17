@@ -168,6 +168,43 @@ void DoCreateTicketAfterAppShutdownOffMain() {
   NS_ShutdownXPCOM(nullptr);
 }
 
+void DoTwoTicketsWithSameNameBothBlockShutdown() {
+  auto reporter = ScopedTestResultReporter::Create(ExitMode::ExitOnDtor);
+
+  const auto name = u"Test"_ns;
+  auto ticket1 = ShutdownBlockingTicket::Create(
+      name, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__);
+  EXPECT_TRUE(ticket1);
+  auto ticket2 = ShutdownBlockingTicket::Create(
+      name, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__);
+  EXPECT_TRUE(ticket2);
+
+  ticket1 = nullptr;
+
+  // A copyable holder for the std::function in NS_NewTimerWithCallback.
+  auto ticket2Holder =
+      MakeRefPtr<Refcountable<UniquePtr<ShutdownBlockingTicket>>>(
+          ticket2.release());
+
+  const auto waitBeforeDestroyingTicket = TimeDuration::FromMilliseconds(100);
+  TimeStamp before = TimeStamp::Now();
+  auto timerResult = NS_NewTimerWithCallback(
+      [t = std::move(ticket2Holder)](nsITimer* aTimer) {},
+      waitBeforeDestroyingTicket, nsITimer::TYPE_ONE_SHOT, __func__);
+  ASSERT_TRUE(timerResult.isOk());
+
+  AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownNetTeardown);
+  AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownTeardown);
+  AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdown);
+  AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownQM);
+  AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownTelemetry);
+
+  NS_ShutdownXPCOM(nullptr);
+  TimeStamp after = TimeStamp::Now();
+  EXPECT_GT((after - before).ToMilliseconds(),
+            waitBeforeDestroyingTicket.ToMilliseconds());
+}
+
 TEST(ShutdownBlockingTicketDeathTest, CreateTicketBeforeAppShutdownOnMain)
 {
   EXPECT_EXIT(DoCreateTicketBeforeAppShutdownOnMain(),
@@ -189,6 +226,12 @@ TEST(ShutdownBlockingTicketDeathTest, CreateTicketBeforeAppShutdownOffMain)
 TEST(ShutdownBlockingTicketDeathTest, CreateTicketAfterAppShutdownOffMain)
 {
   EXPECT_EXIT(DoCreateTicketAfterAppShutdownOffMain(),
+              testing::ExitedWithCode(0), "");
+}
+
+TEST(ShutdownBlockingTicketDeathTest, TwoTicketsWithSameNameBothBlockShutdown)
+{
+  EXPECT_EXIT(DoTwoTicketsWithSameNameBothBlockShutdown(),
               testing::ExitedWithCode(0), "");
 }
 
