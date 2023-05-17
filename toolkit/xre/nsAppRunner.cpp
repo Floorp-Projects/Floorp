@@ -5093,10 +5093,16 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 
   bool lastStartupWasCrash = CheckLastStartupWasCrash().unwrapOr(false);
 
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::LastStartupWasCrash, lastStartupWasCrash);
+
   if (CheckArg("purgecaches") || PR_GetEnv("MOZ_PURGE_CACHES") ||
       lastStartupWasCrash || gSafeMode) {
     cachesOK = false;
   }
+
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::StartupCacheValid, cachesOK && versionOK);
 
   // Every time a profile is loaded by a build with a different version,
   // it updates the compatibility.ini file saying what version last wrote
