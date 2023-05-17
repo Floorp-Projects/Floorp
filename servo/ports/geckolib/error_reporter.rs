@@ -48,7 +48,7 @@ impl ErrorReporter {
         let uri = unsafe {
             extra_data
                 .as_ref()
-                .map(|d| d.mBaseURI.raw::<nsIURI>())
+                .map(|d| d.mBaseURI.raw())
                 .unwrap_or(ptr::null_mut())
         };
 
