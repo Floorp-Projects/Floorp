@@ -241,7 +241,50 @@ class City extends AddressField {}
  * State.
  * See autocomplete="address-level2"
  */
-class State extends AddressField {}
+class State extends AddressField {
+  // The abbreviated region name. For example, California is abbreviated as CA
+  #state = null;
+
+  constructor(value, region) {
+    super(value, region);
+
+    if (!this.userValue) {
+      return;
+    }
+
+    const options = {
+      merge_whitespace: true,
+      remove_punctuation: true,
+    };
+    this.#state = lazy.FormAutofillUtils.getAbbreviatedSubregionName(
+      this.normalizeUserValue(options),
+      region
+    );
+  }
+
+  get state() {
+    return this.#state;
+  }
+
+  isValid() {
+    // If we can't get the abbreviated name, assume this is an invalid state name
+    return !!this.#state;
+  }
+
+  equals(other) {
+    // If we have an abbreviated name, compare with it.
+    if (this.state) {
+      return this.state == other.state;
+    }
+
+    // If we don't have an abbreviated name, just compare the userValue
+    return this.userValue == other.userValue;
+  }
+
+  contains(other) {
+    return this.equals(other);
+  }
+}
 
 /**
  * A country or territory code.
