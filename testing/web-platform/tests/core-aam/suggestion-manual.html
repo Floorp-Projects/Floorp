@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>insertion</title>
+    <title>suggestion</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -21,13 +21,13 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_CONTENT_INSERTION"
+                  "ROLE_SUGGESTION"
                ],
                [
                   "property",
                   "objectAttributes",
                   "contains",
-                  "xml-roles:insertion"
+                  "xml-roles:suggestion"
                ]
             ],
             "AXAPI" : [
@@ -38,16 +38,10 @@
                   "AXGroup"
                ],
                [
-                  "property",
-                  "AXSubrole",
-                  "is",
-                  "AXInsertStyleGroup"
-               ],
-               [
                   "result",
                   "AXAttributedStringForTextMarkerRange"
                   "contains",
-                  "AXIsSuggestedInsertion"
+                  "AXIsSuggestion"
                ]
             ],
             "IAccessible2" : [
@@ -55,7 +49,7 @@
                   "property",
                   "role",
                   "is",
-                  "IA2_ROLE_CONTENT_INSERTION"
+                  "IA2_ROLE_SUGGESTION"
                ]
             ],
             "UIA" : [
@@ -63,13 +57,13 @@
                   "property",
                   "ControlType",
                   "is",
-                  "Text"
+                  "Group"
                ],
                [
                   "property",
                   "LocalizedControlType",
                   "is",
-                  "ins"
+                  "suggestion"
                ]
             ]
          },
@@ -77,17 +71,15 @@
          "type" : "test"
       }
    ],
-   "title" : "insertion"
+   "title" : "suggestion"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>
-    This test examines the ARIA properties for insertion.
-  </p>
-  <div role="insertion" id="test">content</div>
+  <p>This test examines the ARIA properties for suggestion.</p>
+  <div role="suggestion" id="test">content</div>
   <div id="manualMode"></div>
   <div id="log"></div>
   <div id="ATTAmessages"></div>
