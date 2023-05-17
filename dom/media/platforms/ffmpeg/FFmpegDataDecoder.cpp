@@ -222,9 +222,11 @@ RefPtr<MediaDataDecoder::FlushPromise>
 FFmpegDataDecoder<LIBAV_VER>::ProcessFlush() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   if (mCodecContext) {
+    FFMPEG_LOG("FFmpegDataDecoder: flushing buffers");
     mLib->avcodec_flush_buffers(mCodecContext);
   }
   if (mCodecParser) {
+    FFMPEG_LOG("FFmpegDataDecoder: reinitializing parser");
     mLib->av_parser_close(mCodecParser);
     mCodecParser = mLib->av_parser_init(mCodecID);
   }
@@ -236,6 +238,7 @@ void FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown() {
   StaticMutexAutoLock mon(sMutex);
 
   if (mCodecContext) {
+    FFMPEG_LOG("FFmpegDataDecoder: shutdown");
     if (mCodecContext->extradata) {
       mLib->av_freep(&mCodecContext->extradata);
     }
