@@ -417,7 +417,7 @@ TimeUnit SampleIterator::GetNextKeyframeTime() {
 
 MP4SampleIndex::MP4SampleIndex(const IndiceWrapper& aIndices,
                                ByteStream* aSource, uint32_t aTrackId,
-                               bool aIsAudio)
+                               bool aIsAudio, int32_t aTimeScale)
     : mSource(aSource), mIsAudio(aIsAudio) {
   if (!aIndices.Length()) {
     mMoofParser =
@@ -434,6 +434,7 @@ MP4SampleIndex::MP4SampleIndex(const IndiceWrapper& aIndices,
     int64_t lastOffset = 0;
     for (size_t i = 0; i < aIndices.Length(); i++) {
       Indice indice{};
+      int32_t timescale = mMoofParser ? AssertedCast<int32_t>(mMoofParser->mMvhd.mTimescale) : aTimeScale;
       if (!aIndices.GetIndice(i, indice)) {
         // Out of index?
         return;
@@ -448,9 +449,9 @@ MP4SampleIndex::MP4SampleIndex(const IndiceWrapper& aIndices,
       sample.mByteRange =
           MediaByteRange(indice.start_offset, indice.end_offset);
       sample.mCompositionRange = MP4Interval<media::TimeUnit>(
-          TimeUnit::FromMicroseconds(indice.start_composition),
-          TimeUnit::FromMicroseconds(indice.end_composition));
-      sample.mDecodeTime = TimeUnit::FromMicroseconds(indice.start_decode);
+          TimeUnit(indice.start_composition, timescale),
+          TimeUnit(indice.end_composition, timescale));
+      sample.mDecodeTime = TimeUnit(indice.start_decode, timescale);
       sample.mSync = indice.sync || mIsAudio;
       // FIXME: Make this infallible after bug 968520 is done.
       MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample, fallible));

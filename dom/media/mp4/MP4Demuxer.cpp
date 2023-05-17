@@ -44,7 +44,7 @@ class MP4TrackDemuxer : public MediaTrackDemuxer,
                         public DecoderDoctorLifeLogger<MP4TrackDemuxer> {
  public:
   MP4TrackDemuxer(MediaResource* aResource, UniquePtr<TrackInfo>&& aInfo,
-                  const IndiceWrapper& aIndices);
+                  const IndiceWrapper& aIndices, int32_t aTimeScale);
 
   UniquePtr<TrackInfo> GetInfo() const override;
 
@@ -190,7 +190,7 @@ RefPtr<MP4Demuxer::InitPromise> MP4Demuxer::Init() {
         continue;
       }
       RefPtr<MP4TrackDemuxer> demuxer = new MP4TrackDemuxer(
-          mResource, std::move(info.Ref()), *indices.Ref().get());
+          mResource, std::move(info.Ref()), *indices.Ref().get(), info.Ref()->mTimeScale);
       DDLINKCHILD("audio demuxer", demuxer.get());
       mAudioDemuxers.AppendElement(std::move(demuxer));
     }
@@ -227,7 +227,7 @@ RefPtr<MP4Demuxer::InitPromise> MP4Demuxer::Init() {
         continue;
       }
       RefPtr<MP4TrackDemuxer> demuxer = new MP4TrackDemuxer(
-          mResource, std::move(info.Ref()), *indices.Ref().get());
+          mResource, std::move(info.Ref()), *indices.Ref().get(), info.Ref()->mTimeScale);
       DDLINKCHILD("video demuxer", demuxer.get());
       mVideoDemuxers.AppendElement(std::move(demuxer));
     }
@@ -310,12 +310,12 @@ UniquePtr<EncryptionInfo> MP4Demuxer::GetCrypto() {
 
 MP4TrackDemuxer::MP4TrackDemuxer(MediaResource* aResource,
                                  UniquePtr<TrackInfo>&& aInfo,
-                                 const IndiceWrapper& aIndices)
+                                 const IndiceWrapper& aIndices, int32_t aTimeScale)
     : mResource(aResource),
       mStream(new ResourceStream(aResource)),
       mInfo(std::move(aInfo)),
       mIndex(new MP4SampleIndex(aIndices, mStream, mInfo->mTrackId,
-                                mInfo->IsAudio())),
+                                mInfo->IsAudio(), aTimeScale)),
       mIterator(MakeUnique<SampleIterator>(mIndex)),
       mNeedReIndex(true) {
   EnsureUpToDateIndex();  // Force update of index
@@ -471,7 +471,8 @@ already_AddRefed<MediaRawData> MP4TrackDemuxer::GetNextSample() {
         sample->mOriginalPresentationWindow = Some(
             TimeInterval{originalPts, originalPts + fullPacketDuration.Length()});
       }
-      // Seek back so we're back at the orignal location -- there's no packet left.
+      // Seek back so we're back at the original location -- there's no packet
+      // left anyway.
       mIterator->Seek(sample->mTime);
       RefPtr<MediaRawData> dummy = mIterator->GetNext();
       MOZ_ASSERT(!mIterator->HasNext());
