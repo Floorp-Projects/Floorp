@@ -43,8 +43,14 @@ class TicketBlocker : public ShutdownBlocker {
   using ShutdownMozPromise = ShutdownBlockingTicket::ShutdownMozPromise;
 
  public:
-  explicit TicketBlocker(nsString aName)
-      : ShutdownBlocker(std::move(aName)), mPromise(mHolder.Ensure(__func__)) {}
+  explicit TicketBlocker(const nsAString& aName)
+      : ShutdownBlocker([this, &aName] {
+          // TODO: Remove in bug 1832820.
+          nsString n(aName);
+          n.AppendPrintf(" - %p", this);
+          return n;
+        }()),
+        mPromise(mHolder.Ensure(__func__)) {}
 
   NS_IMETHOD
   BlockShutdown(nsIAsyncShutdownClient* aProfileBeforeChange) override {
@@ -74,14 +80,11 @@ class ShutdownBlockingTicketImpl : public ShutdownBlockingTicket {
   static UniquePtr<ShutdownBlockingTicket> Create(const nsAString& aName,
                                                   const nsAString& aFileName,
                                                   int32_t aLineNr) {
-    nsString name(aName);
-    auto blocker = MakeRefPtr<TicketBlocker>(name);
-    name.AppendPrintf(" - %p", blocker.get());
+    auto blocker = MakeRefPtr<TicketBlocker>(aName);
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "ShutdownBlockingTicketImpl::AddBlocker",
-        [blocker, file = nsString(aFileName), aLineNr,
-         name = std::move(name)]() mutable {
-          MustGetShutdownBarrier()->AddBlocker(blocker, file, aLineNr, name);
+        [blocker, file = nsString(aFileName), aLineNr] {
+          MustGetShutdownBarrier()->AddBlocker(blocker, file, aLineNr, u""_ns);
         }));
     if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
       // Adding a blocker is not guaranteed to succeed. Remove the blocker in
