@@ -165,7 +165,8 @@ class AddressField {
     // process punctuation before whitespace because if a punctuation
     // is replaced with whitespace, we might want to merge it later
     if (options.remove_punctuation) {
-      s = s?.replace(/[.,\/#!$%\^&\*;:{}=\-_~()]/g, "");
+      const regex = /\p{Punctuation}/gu;
+      s = s?.replace(regex, "");
     } else if ("replace_punctuation" in options) {
       const replace = options.replace_punctuation;
       const regex = /\p{Punctuation}/gu;
@@ -252,7 +253,140 @@ class Country extends AddressField {}
  * The field expects the value to be a person's full name.
  * See autocomplete="name"
  */
-class Name extends AddressField {}
+class Name extends AddressField {
+  constructor(value, region) {
+    super(value, region);
+  }
+
+  // Reference:
+  // https://source.chromium.org/chromium/chromium/src/+/main:components/autofill/core/browser/data_model/autofill_profile_comparator.cc;drc=566369da19275cc306eeb51a3d3451885299dabb;bpv=1;bpt=1;l=935
+  static createNameVariants(name) {
+    let tokens = name.trim().split(" ");
+
+    let variants = [""];
+    if (!tokens[0]) {
+      return variants;
+    }
+
+    for (const token of tokens) {
+      let tmp = [];
+      for (const variant of variants) {
+        tmp.push(variant + " " + token);
+        tmp.push(variant + " " + token[0]);
+      }
+      variants = variants.concat(tmp);
+    }
+
+    const options = {
+      merge_whitespace: true,
+    };
+    return variants.map(v => lazy.AddressParser.normalizeString(v, options));
+  }
+
+  equals(other) {
+    const options = {
+      ignore_case: true,
+    };
+    return (
+      this.normalizeUserValue(options) == other.normalizeUserValue(options)
+    );
+  }
+
+  contains(other) {
+    // Unify puncutation while comparing so users can choose the right one
+    // if the only different part is puncutation
+    // Ex. John O'Brian is similar to John O`Brian
+    let options = {
+      ignore_case: true,
+      replace_punctuation: " ",
+      merge_whitespace: true,
+    };
+    let selfName = this.normalizeUserValue(options);
+    let otherName = other.normalizeUserValue(options);
+    let selfTokens = new Tokens(selfName);
+    let otherTokens = new Tokens(otherName);
+
+    if (
+      otherTokens.isSubsetInOrder(selfTokens, (a, b) =>
+        this.localeCompare(a, b)
+      )
+    ) {
+      return true;
+    }
+
+    // Remove puncutation from self and test whether current contains other
+    // Ex. John O'Brian is similar to John OBrian 
+    selfName = this.normalizeUserValue({
+      ignore_case: true,
+      remove_punctuation: true,
+      merge_whitespace: true,
+    });
+    otherName = other.normalizeUserValue({
+      ignore_case: true,
+      remove_punctuation: true,
+      merge_whitespace: true,
+    });
+
+    selfTokens = new Tokens(selfName);
+    otherTokens = new Tokens(otherName);
+    if (
+      otherTokens.isSubsetInOrder(selfTokens, (a, b) =>
+        this.localeCompare(a, b)
+      )
+    ) {
+      return true;
+    }
+
+    // Create variants of the names by generating initials for given and middle names.
+
+    selfName = lazy.FormAutofillNameUtils.splitName(selfName);
+    otherName = lazy.FormAutofillNameUtils.splitName(otherName);
+    // In the following we compare cases when people abbreviate first name
+    // and middle name with initials. So if family name is different,
+    // we can just skip and assume the two names are different
+    if (!this.localeCompare(selfName.family, otherName.family)) {
+      return false;
+    }
+
+    const otherNameWithoutFamily = lazy.FormAutofillNameUtils.joinNameParts({
+      given: otherName.given,
+      middle: otherName.middle,
+    });
+    let givenVariants = Name.createNameVariants(selfName.given);
+    let middleVariants = Name.createNameVariants(selfName.middle);
+
+    for (const given of givenVariants) {
+      for (const middle of middleVariants) {
+        const nameVariant = lazy.FormAutofillNameUtils.joinNameParts({
+          given,
+          middle,
+        });
+
+        if (this.localeCompare(nameVariant, otherNameWithoutFamily)) {
+          return true;
+        }
+      }
+    }
+
+    // Check cases when given name and middle name are abbreviated with initial
+    // and the initials are put together. ex. John Michael Doe to JM. Doe
+    if (selfName.given && selfName.middle) {
+      const nameVariant = [
+        ...selfName.given.split(" "),
+        ...selfName.middle.split(" "),
+      ].reduce((initials, name) => {
+        initials += name[0];
+        return initials;
+      }, "");
+
+      if (this.localeCompare(nameVariant, otherNameWithoutFamily)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+}
 
 /**
  * A full telephone number, including the country code.
