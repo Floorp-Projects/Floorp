@@ -18,6 +18,7 @@ from yaml.loader import FullLoader
 
 METRICS_FILENAME = "../app/metrics.yaml"
 NEW_METRICS_FILENAME = "../app/metrics_new.yaml"
+GLEAN_DICTIONARY_PREFIX = "https://dictionary.telemetry.mozilla.org/apps/fenix/metrics/"
 
 # This is to make sure we only write headers for the csv file once
 write_header = True
@@ -32,9 +33,6 @@ _KEY_FILTER = [
     "description",
     "bugs",
     "data_reviews",
-    "data_sensitivity",
-    "notification_emails",
-    "notification",
     "expires",
 ]
 
@@ -44,6 +42,8 @@ def response(last_key, content, expire_version, writer, renewal):
     global total_count
     for key, value in content.items():
         if (key == "$schema") or (key == "no_lint"):
+            continue
+        if key == "disabled":
             continue
 
         if ("expires" in value) and (
@@ -60,10 +60,13 @@ def response(last_key, content, expire_version, writer, renewal):
             for key in remove_keys:
                 content.pop(key)
 
+            content["bugs"] = content["bugs"][0]
+            content["data_reviews"] = content["data_reviews"][0]
             total_count += 1
 
             # name of the telemtry
-            result = {"#": total_count, "name": last_key.lstrip(".")}
+            dictionary_url = GLEAN_DICTIONARY_PREFIX + last_key.lstrip(".").replace(".", "_")
+            result = {"#": total_count, "name": last_key.lstrip("."), "glean dictionary": dictionary_url}
             result.update(content)
 
             # add columns for product to fille out, these should always be added at the end
@@ -87,7 +90,7 @@ def response(last_key, content, expire_version, writer, renewal):
             renewal.write(
                 "1) Provide a link to the initial Data Collection Review Request for this collection.\n"
             )
-            renewal.write("    - " + content["data_reviews"][0] + "\n")
+            renewal.write("    - " + content["data_reviews"] + "\n")
             renewal.write("\n")
             renewal.write("2) When will this collection now expire?\n")
             renewal.write("    - TBD\n")
