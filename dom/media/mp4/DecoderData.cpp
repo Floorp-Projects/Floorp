@@ -209,8 +209,8 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
         // duration of the media in microseconds, excluding decoder delay and
         // padding. Convert to frames and give to the decoder so that trimming
         // can be done properly.
-        mediaFrameCount = static_cast<uint64_t>(indice.end_composition) *
-                          aAudio->sample_info->sample_rate / USECS_PER_S;
+        mediaFrameCount = AssertedCast<uint64_t>(static_cast<double>(indice.end_composition) *
+                          aAudio->sample_info->sample_rate / USECS_PER_S);
         LOG("AAC stream in MP4 container, total media duration is %" PRIu64
             " frames",
             mediaFrameCount);
@@ -253,14 +253,14 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
   mRate = aAudio->sample_info[0].sample_rate;
   mChannels = aAudio->sample_info[0].channels;
   mBitDepth = aAudio->sample_info[0].bit_depth;
-  mExtendedProfile = aAudio->sample_info[0].extended_profile;
-  mDuration = TimeUnit::FromMicroseconds(aTrack->duration);
+  mExtendedProfile = AssertedCast<int8_t>(aAudio->sample_info[0].extended_profile);
+  mDuration = TimeUnit::FromMicroseconds(AssertedCast<int64_t>(aTrack->duration));
   mMediaTime = TimeUnit::FromMicroseconds(aTrack->media_time);
   mTrackId = aTrack->track_id;
 
   // In stagefright, mProfile is kKeyAACProfile, mExtendedProfile is kKeyAACAOT.
   if (aAudio->sample_info[0].profile <= 4) {
-    mProfile = aAudio->sample_info[0].profile;
+    mProfile = AssertedCast<int8_t>(aAudio->sample_info[0].profile);
   }
 
   if (mCodecSpecificConfig.is<NoCodecSpecificData>()) {
@@ -315,10 +315,10 @@ MediaResult MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
     mMimeType = "video/mp4v-es"_ns;
   }
   mTrackId = track->track_id;
-  mDuration = TimeUnit::FromMicroseconds(track->duration);
+  mDuration = TimeUnit::FromMicroseconds(AssertedCast<int64_t>(track->duration));
   mMediaTime = TimeUnit::FromMicroseconds(track->media_time);
-  mDisplay.width = video->display_width;
-  mDisplay.height = video->display_height;
+  mDisplay.width = AssertedCast<int32_t>(video->display_width);
+  mDisplay.height = AssertedCast<int32_t>(video->display_height);
   mImage.width = video->sample_info[0].image_width;
   mImage.height = video->sample_info[0].image_height;
   mRotation = ToSupportedRotation(video->rotation);
