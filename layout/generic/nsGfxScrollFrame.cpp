@@ -1421,7 +1421,8 @@ nscoord nsHTMLScrollFrame::SynthesizeFallbackBaseline(
 }
 
 Maybe<nscoord> nsHTMLScrollFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext aExportContext) const {
   // Block containers that are scrollable always have a last baseline
   // that are synthesized from block-end margin edge.
   // Note(dshin): This behaviour is really only relevant to `inline-block`
@@ -1429,7 +1430,8 @@ Maybe<nscoord> nsHTMLScrollFrame::GetNaturalBaselineBOffset(
   // baselines are calculated through `GetFirstLineBaseline`, which does
   // calculations of its own.
   // https://drafts.csswg.org/css-align/#baseline-export
-  if (aBaselineGroup == BaselineSharingGroup::Last &&
+  if (aExportContext == BaselineExportContext::LineLayout &&
+      aBaselineGroup == BaselineSharingGroup::Last &&
       mScrolledFrame->IsBlockFrameOrSubclass()) {
     return Some(SynthesizeFallbackBaseline(aWM, aBaselineGroup));
   }
@@ -1439,7 +1441,8 @@ Maybe<nscoord> nsHTMLScrollFrame::GetNaturalBaselineBOffset(
   }
 
   // OK, here's where we defer to our scrolled frame.
-  return mScrolledFrame->GetNaturalBaselineBOffset(aWM, aBaselineGroup)
+  return mScrolledFrame
+      ->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aExportContext)
       .map([this, aWM](nscoord aBaseline) {
         // We have to add our border BStart thickness to whatever it returns, to
         // produce an offset in our frame-rect's coordinate system. (We don't

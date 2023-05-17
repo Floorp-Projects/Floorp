@@ -131,8 +131,8 @@ class nsGridContainerFrame final : public nsContainerFrame,
                         const nsDisplayListSet& aLists) override;
 
   Maybe<nscoord> GetNaturalBaselineBOffset(
-      mozilla::WritingMode aWM,
-      BaselineSharingGroup aBaselineGroup) const override {
+      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+      BaselineExportContext) const override {
     if (StyleDisplay()->IsContainLayout() ||
         HasAnyStateBits(NS_STATE_GRID_SYNTHESIZE_BASELINE)) {
       return Nothing{};
