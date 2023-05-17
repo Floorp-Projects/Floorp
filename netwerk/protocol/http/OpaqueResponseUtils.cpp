@@ -42,6 +42,7 @@ static bool IsOpaqueSafeListedSpecBreakingMIMEType(
   // Avoid trouble with DASH/HLS. See bug 1698040.
   if (aContentType.EqualsLiteral(APPLICATION_DASH_XML) ||
       aContentType.EqualsLiteral(APPLICATION_MPEGURL) ||
+      aContentType.EqualsLiteral(AUDIO_MPEG_URL) ||
       aContentType.EqualsLiteral(TEXT_VTT)) {
     return true;
   }
@@ -55,7 +56,8 @@ static bool IsOpaqueSafeListedSpecBreakingMIMEType(
   // This is not a good solution, but we need this until we solve Bug 1827684 in
   // a better way. Chromium currently allows all "audio/*" and "video/*", but
   // from discussion in bug, we want to try only "audio/mpeg".
-  if (StringBeginsWith(aContentType, "audio/mpeg"_ns)) {
+  if (aContentType.EqualsLiteral(AUDIO_MP3) ||
+      aContentType.EqualsLiteral(AUDIO_AAC)) {
     return true;
   }
 
