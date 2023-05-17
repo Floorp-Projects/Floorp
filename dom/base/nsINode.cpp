@@ -3230,7 +3230,8 @@ Element* nsINode::GetTopmostClickedPopover() const {
   if (!clickedPopover) {
     return invokedPopover;
   }
-  for (Element* el : Reversed(clickedPopover->OwnerDoc()->AutoPopoverList())) {
+  auto autoPopoverList = clickedPopover->OwnerDoc()->AutoPopoverList();
+  for (Element* el : Reversed(autoPopoverList)) {
     if (el == clickedPopover || el == invokedPopover) {
       return el;
     }
