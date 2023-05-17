@@ -3468,10 +3468,14 @@ main.has-snippet {
   margin-inline-start: auto;
   margin-inline-end: 18.5px;
 }
-.ds-card:hover .card-stp-button-hover-background, .ds-card.active .card-stp-button-hover-background {
+.ds-card.active .card-stp-button-hover-background, .ds-card:focus-within .card-stp-button-hover-background, .ds-card:hover .card-stp-button-hover-background {
   display: block;
   opacity: 1;
   transition-duration: 0.3s;
+}
+.ds-card.active .card-stp-button-hover-background .context-menu-button, .ds-card:focus-within .card-stp-button-hover-background .context-menu-button, .ds-card:hover .card-stp-button-hover-background .context-menu-button {
+  opacity: 1;
+  transform: scale(1);
 }
 .ds-card .img {
   height: 0;
