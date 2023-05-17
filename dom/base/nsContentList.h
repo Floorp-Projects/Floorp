@@ -350,6 +350,8 @@ class nsContentList : public nsBaseContentList,
 
   void LastRelease() override;
 
+  class HashEntry;
+
  protected:
   // A cache from name to the first named item in mElements. Only possibly
   // non-null when mState is State::UpToDate. Elements are kept alive by our
@@ -531,6 +533,8 @@ class nsCacheableFuncStringContentList : public nsContentList {
 #ifdef DEBUG
   ContentListType mType;
 #endif
+
+  class HashEntry;
 
  protected:
   nsCacheableFuncStringContentList(
