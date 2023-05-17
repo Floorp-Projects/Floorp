@@ -91,10 +91,11 @@ class FirefoxCom {
 exports.FirefoxCom = FirefoxCom;
 class DownloadManager {
   #openBlobUrls = new WeakMap();
-  downloadUrl(url, filename) {
+  downloadUrl(url, filename, options = {}) {
     FirefoxCom.request("download", {
       originalUrl: url,
-      filename
+      filename,
+      options
     });
   }
   downloadData(data, filename, contentType) {
@@ -132,12 +133,13 @@ class DownloadManager {
     this.downloadData(data, filename, contentType);
     return false;
   }
-  download(blob, url, filename) {
+  download(blob, url, filename, options = {}) {
     const blobUrl = URL.createObjectURL(blob);
     FirefoxCom.request("download", {
       blobUrl,
       originalUrl: url,
-      filename
+      filename,
+      options
     });
   }
 }
@@ -1146,7 +1148,7 @@ const PDFViewerApplication = {
     }
     throw new Error("PDF document not downloaded.");
   },
-  async download() {
+  async download(options = {}) {
     const url = this._downloadUrl,
       filename = this._docFilename;
     try {
@@ -1155,12 +1157,12 @@ const PDFViewerApplication = {
       const blob = new Blob([data], {
         type: "application/pdf"
       });
-      await this.downloadManager.download(blob, url, filename);
+      await this.downloadManager.download(blob, url, filename, options);
     } catch (reason) {
-      await this.downloadManager.downloadUrl(url, filename);
+      await this.downloadManager.downloadUrl(url, filename, options);
     }
   },
-  async save() {
+  async save(options = {}) {
     if (this._saveInProgress) {
       return;
     }
@@ -1174,10 +1176,10 @@ const PDFViewerApplication = {
       const blob = new Blob([data], {
         type: "application/pdf"
       });
-      await this.downloadManager.download(blob, url, filename);
+      await this.downloadManager.download(blob, url, filename, options);
     } catch (reason) {
       console.error(`Error when saving the document: ${reason.message}`);
-      await this.download();
+      await this.download(options);
     } finally {
       await this.pdfScriptingManager.dispatchDidSave();
       this._saveInProgress = false;
@@ -1191,12 +1193,17 @@ const PDFViewerApplication = {
       });
     }
   },
-  downloadOrSave() {
+  downloadOrSave(options = {}) {
     if (this.pdfDocument?.annotationStorage.size > 0) {
-      this.save();
+      this.save(options);
     } else {
-      this.download();
+      this.download(options);
     }
+  },
+  openInExternalApp() {
+    this.downloadOrSave({
+      openInExternalApp: true
+    });
   },
   _documentError(message, moreInfo = null) {
     this._unblockDocumentLoadEvent();
@@ -1726,6 +1733,7 @@ const PDFViewerApplication = {
     eventBus._on("switchannotationeditorparams", webViewerSwitchAnnotationEditorParams);
     eventBus._on("print", webViewerPrint);
     eventBus._on("download", webViewerDownload);
+    eventBus._on("openinexternalapp", webViewerOpenInExternalApp);
     eventBus._on("firstpage", webViewerFirstPage);
     eventBus._on("lastpage", webViewerLastPage);
     eventBus._on("nextpage", webViewerNextPage);
@@ -2080,6 +2088,9 @@ function webViewerPrint() {
 }
 function webViewerDownload() {
   PDFViewerApplication.downloadOrSave();
+}
+function webViewerOpenInExternalApp() {
+  PDFViewerApplication.openInExternalApp();
 }
 function webViewerFirstPage() {
   PDFViewerApplication.page = 1;
@@ -8653,7 +8664,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.6.125';
+    const viewerVersion = '3.6.126';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -12844,8 +12855,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.6.125';
-const pdfjsBuild = '0ee0fcc6b';
+const pdfjsVersion = '3.6.126';
+const pdfjsBuild = '3f89a99a5';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
