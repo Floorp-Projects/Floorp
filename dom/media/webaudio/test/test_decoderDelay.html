@@ -9,7 +9,10 @@
 <body>
   <script class="testbody" type="text/javascript">
     SimpleTest.waitForExplicitFinish();
-    var tests = [
+    const {AppConstants} =
+      SpecialPowers.ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
+    var tests_half_a_second = [
       "half-a-second-1ch-44100-aac.mp4",
       "half-a-second-1ch-44100-flac.flac",
       "half-a-second-1ch-44100-libmp3lame.mp3",
@@ -59,16 +62,30 @@
       "half-a-second-2ch-48000-libvorbis.webm",
     ];
 
+    // Other files that have interesting characteristics.
+    var tests_others = [
+      {
+        // Very short VBR file, 16 frames of audio at 44100. Padding spanning two
+        // packets.
+        "path": "sixteen-frames.mp3",
+        "frameCount": 16,
+        "samplerate": 44100,
+        "fuzz": {}
+      }
+    ];
+
+    var all_tests = [tests_half_a_second, tests_adts, tests_others].flat();
+
     var count = 0;
     function checkDone() {
-      if (++count == tests_adts.length + tests.length) {
+      if (++count == all_tests.length) {
         SimpleTest.finish();
       }
     }
 
     async function doit() {
       var context = new OfflineAudioContext(1, 128, 48000);
-      tests.forEach(async testfile => {
+      tests_half_a_second.forEach(async testfile => {
         var response = await fetch(testfile);
         var buffer = await response.arrayBuffer();
         var decoded = await context.decodeAudioData(buffer);
@@ -97,6 +114,15 @@
           Math.abs(decoded.duration - 0.5) < 0.02,
           `The ADTS file ${testfile} is about half a second (${decoded.duration}, error: ${Math.abs(decoded.duration-0.5)}).`
         );
+        checkDone();
+      });
+      tests_others.forEach(async test => {
+        // Get an context at a specific rate to avoid duration changes due to resampling.
+        var contextAtRate = new OfflineAudioContext(1, 128, test.samplerate);
+        var response = await fetch(test.path);
+        var buffer = await response.arrayBuffer();
+        var decoded = await contextAtRate.decodeAudioData(buffer);
+        is(decoded.length, test.frameCount, `${test.path} is ${decoded.duration} frames long`);
         checkDone();
       });
     }
