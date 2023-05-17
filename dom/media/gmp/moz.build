@@ -36,6 +36,7 @@ EXPORTS += [
     "GMPCrashHelperHolder.h",
     "GMPLoader.h",
     "GMPMessageUtils.h",
+    "GMPNativeTypes.h",
     "GMPParent.h",
     "GMPPlatform.h",
     "GMPProcessChild.h",

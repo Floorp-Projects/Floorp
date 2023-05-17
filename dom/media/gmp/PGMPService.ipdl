@@ -7,6 +7,7 @@ include protocol PGMPContent;
 include GMPTypes;
 
 using base::ProcessId from "base/process.h";
+using GMPPluginType from "GMPNativeTypes.h";
 
 namespace mozilla {
 namespace gmp {
@@ -20,6 +21,7 @@ parent:
                  nsCString[] tags,
                  ProcessId[] alreadyBridgedTo)
     returns (uint32_t pluginId,
+             GMPPluginType pluginType,
              ProcessId id,
              nsCString displayName,
              Endpoint<PGMPContentParent> endpoint,

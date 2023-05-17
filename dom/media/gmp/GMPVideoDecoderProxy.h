@@ -12,6 +12,7 @@
 #include "gmp-video-frame-encoded.h"
 
 #include "GMPCallbackBase.h"
+#include "GMPNativeTypes.h"
 #include "GMPUtils.h"
 
 class GMPVideoDecoderCallbackProxy : public GMPCallbackBase,
@@ -44,12 +45,13 @@ class GMPVideoDecoderProxy {
   virtual nsresult Reset() = 0;
   virtual nsresult Drain() = 0;
   virtual uint32_t GetPluginId() const = 0;
+  virtual GMPPluginType GetPluginType() const = 0;
 
   // Call to tell GMP/plugin the consumer will no longer use this
   // interface/codec.
   virtual void Close() = 0;
 
-  virtual const nsCString& GetDisplayName() const = 0;
+  virtual nsCString GetDisplayName() const = 0;
 };
 
 #endif
