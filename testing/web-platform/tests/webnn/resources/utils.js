@@ -270,6 +270,7 @@ const PrecisionMetrics = {
   hardSigmoid: {ULP: {float32: 2, float16: 2}},
   hardSwish: {ULP: {float32: 4, float16: 4}},
   leakyRelu: {ULP: {float32: 1, float16: 1}},
+  linear: {ULP: {float32: 2, float16: 2}},
   matmul: {ULP: {float32: getMatmulPrecisionTolerance, float16: getMatmulPrecisionTolerance}},
   pad: {ULP: {float32: 0, float16: 0}},
   // Begin Pooling operations
