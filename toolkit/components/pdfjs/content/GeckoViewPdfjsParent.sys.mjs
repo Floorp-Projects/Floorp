@@ -260,6 +260,8 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
         return this.#addEventListener();
       case "PDFJS:Parent:saveURL":
         return this.#save(aMsg);
+      case "PDFJS:Parent:getNimbus":
+        return this.#getNimbus();
       default:
         break;
     }
@@ -318,6 +320,23 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
 
   #save({ data }) {
     this.#fileSaver.save(data);
+  }
+
+  async #getNimbus() {
+    let result = null;
+    try {
+      result = await this.eventDispatcher.sendRequestForResult({
+        type: "GeckoView:GetNimbusFeature",
+        featureId: "pdfjs",
+      });
+    } catch (e) {
+      warn`Cannot get Nimbus: ${e}`;
+    }
+    this.browser.sendMessageToActor(
+      "PDFJS:Child:getNimbus",
+      result,
+      "GeckoViewPdfjs"
+    );
   }
 }
 

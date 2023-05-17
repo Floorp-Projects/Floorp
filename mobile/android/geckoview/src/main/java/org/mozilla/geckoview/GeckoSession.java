@@ -521,7 +521,8 @@ public class GeckoSession {
             "GeckoView:PreviewImage",
             "GeckoView:CookieBannerEvent:Detected",
             "GeckoView:CookieBannerEvent:Handled",
-            "GeckoView:SavePdf"
+            "GeckoView:SavePdf",
+            "GeckoView:GetNimbusFeature"
           }) {
         @Override
         public void handleMessage(
@@ -594,6 +595,19 @@ public class GeckoSession {
               return;
             }
             delegate.onExternalResponse(GeckoSession.this, response);
+          } else if ("GeckoView:GetNimbusFeature".equals(event)) {
+            final String featureId = message.getString("featureId");
+            final JSONObject res = delegate.onGetNimbusFeature(GeckoSession.this, featureId);
+            if (res == null) {
+              callback.sendError("No Nimbus data for the feature " + featureId);
+              return;
+            }
+            try {
+              callback.sendSuccess(GeckoBundle.fromJSONObject(res));
+            } catch (final JSONException e) {
+              callback.sendError(
+                  "No Nimbus data for the feature " + featureId + ": conversion failed.");
+            }
           }
         }
       };
@@ -3621,6 +3635,20 @@ public class GeckoSession {
      */
     @AnyThread
     default void onCookieBannerHandled(@NonNull final GeckoSession session) {}
+
+    /**
+     * This method is called when GeckoView is requesting a specific Nimbus feature in using message
+     * `GeckoView:GetNimbusFeature`.
+     *
+     * @param session GeckoSession that initiated the callback.
+     * @param featureId Nimbus feature id of the collected data.
+     * @return A {@link JSONObject} with the feature.
+     */
+    @AnyThread
+    default @Nullable JSONObject onGetNimbusFeature(
+        @NonNull final GeckoSession session, @NonNull final String featureId) {
+      return null;
+    }
   }
 
   public interface SelectionActionDelegate {
