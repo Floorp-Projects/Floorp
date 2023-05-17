@@ -788,28 +788,32 @@ bool EventListenerManager::ListenerCanHandle(const Listener* aListener,
                  aEventMessage == GetLegacyEventMessage(aEvent->mMessage),
              "aEvent and aEventMessage should agree, modulo legacyness");
 
-  // The listener has been removed, it cannot handle anything.
-  if (aListener->mListenerType == Listener::eNoListener) {
-    return false;
-  }
+  auto listenerEnabled = [&]() {
+    // The listener has been removed, it cannot handle anything.
+    if (aListener->mListenerType == Listener::eNoListener) {
+      return false;
+    }
 
-  // The listener has been disabled, for example by devtools.
-  if (!aListener->mEnabled) {
-    return false;
-  }
+    // The listener has been disabled, for example by devtools.
+    if (!aListener->mEnabled) {
+      return false;
+    }
+    return true;
+  };
 
   // This is slightly different from EVENT_TYPE_EQUALS in that it returns
   // true even when aEvent->mMessage == eUnidentifiedEvent and
   // aListener=>mEventMessage != eUnidentifiedEvent as long as the atoms are
   // the same
   if (MOZ_UNLIKELY(aListener->mAllEvents)) {
-    return true;
+    return listenerEnabled();
   }
   if (aEvent->mMessage == eUnidentifiedEvent) {
-    return aListener->mTypeAtom == aEvent->mSpecifiedEventType;
+    return aListener->mTypeAtom == aEvent->mSpecifiedEventType &&
+           listenerEnabled();
   }
   MOZ_ASSERT(mIsMainThreadELM);
-  return aListener->mEventMessage == aEventMessage;
+  return aListener->mEventMessage == aEventMessage && listenerEnabled();
 }
 
 static bool IsDefaultPassiveWhenOnRoot(EventMessage aMessage) {
