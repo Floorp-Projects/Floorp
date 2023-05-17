@@ -51,9 +51,22 @@
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Бу вебсайт хәвефсез бәйләнеш таләп итә.</string>
 
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+    <ul>
+    <li>Күрәсегез килгән сәхифә күрсәтелә алмый, чөнки бу вебсайт хәвефсез бәйләнеш таләп итә.</li>
+    <li>Проблема сайтта булырга тиеш һәм аны чишү өчен Сез эшли алырлык бернәрсә дә юк.</li>
+    <li>Вебсайтның администраторына проблема турында хәбәр итә аласыз.</li>
+    </ul>
+    ]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Киңәйтелгән…</string>
 
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+    <label><b>%1$s</b> сәхифәсенең HTTP Strict Transport Security (HSTS) дип аталган хәвефсезлек сәясәте бар, шуңа күрә <b>%2$s</b> аңа хәвефсез рәвештә генә тоташа ала. Сез бу сайтка керү өчен чыгарма өсти алмыйсыз.</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Кире кайту</string>
 
@@ -72,6 +85,17 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Бәйләнешне көтү вакыты чыкты</string>
 
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+    <p>Соралган сайт тоташу соравына җавап бирмәде һәм браузер җавап көтүдән туктады.</p>
+    <ul>
+    <li>Сайт серверы вакытлыча сүнгән яки артык йөкләнгән булырга мөмкинме? Соңрак янәдән тырышып карагыз.</li>
+    <li>Башка сайтлар да ачылмаса, җиһазыгызның интернетка бәйләнешен тикшерегез.</li>
+    <li>Җиһазыгыз яки челтәрегез иминлек дивары яисә прокси сервер белән сакланган булса, аларның көйләүләрен тикшерегез, чөнки ялгыш көйләүләр вебсайтларның ачылуына киртә була ал.</li>
+    <li>Проблема чишелмәсә, челтәр администраторыгыз яки интернет-провайдерыгыз белән элемтәгә керегез.</li>
+    </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Тоташып булмады</string>
     <!-- The error message shown when a website could not be reached. -->
@@ -84,6 +108,11 @@
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Сервердан көтелмәгән җавап</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+    <p>Сайт сорауга көтелмәгәнчә җавап бирде һәм браузер дәвам итә алмый.</p>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Сәхифә икенче сәхифәгә дөрес юнәлтми</string>
