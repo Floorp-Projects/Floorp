@@ -475,6 +475,7 @@ void gfxTextRun::DrawPartialLigature(gfxFont* aFont, Range aRange,
     ClipPartialLigature(this, &start, &end, aPt->x, &data);
   }
 
+  gfxClipAutoSaveRestore autoSaveClip(aParams.context);
   {
     // use division here to ensure that when the rect is aligned on multiples
     // of mAppUnitsPerDevUnit, we clip to true device unit boundaries.
@@ -487,7 +488,7 @@ void gfxTextRun::DrawPartialLigature(gfxFont* aFont, Range aRange,
                    (end - start) / mAppUnitsPerDevUnit, clipExtents.Height());
     MaybeSnapToDevicePixels(clipRect, *aParams.dt, true);
 
-    aParams.context->Clip(clipRect);
+    autoSaveClip.Clip(clipRect);
   }
 
   gfx::Point pt;
@@ -498,7 +499,6 @@ void gfxTextRun::DrawPartialLigature(gfxFont* aFont, Range aRange,
   }
 
   DrawGlyphs(aFont, data.mRange, &pt, aProvider, aRange, aParams, aOrientation);
-  aParams.context->PopClip();
 
   if (aParams.isVerticalRun) {
     aPt->y += aParams.direction * data.mPartWidth;

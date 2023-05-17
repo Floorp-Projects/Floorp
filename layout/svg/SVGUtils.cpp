@@ -834,17 +834,6 @@ gfxRect SVGUtils::GetClipRectForFrame(const nsIFrame* aFrame, float aX,
   return clipRect;
 }
 
-void SVGUtils::SetClipRect(gfxContext* aContext, const gfxMatrix& aCTM,
-                           const gfxRect& aRect) {
-  if (aCTM.IsSingular()) {
-    return;
-  }
-
-  gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(aContext);
-  aContext->Multiply(aCTM);
-  aContext->Clip(aRect);
-}
-
 gfxRect SVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
                           const gfxMatrix* aToBoundsSpace) {
   if (aFrame->IsTextFrame()) {

@@ -740,6 +740,42 @@ class MOZ_STACK_CLASS gfxGroupForBlendAutoSaveRestore final {
   bool mPushedGroup = false;
 };
 
+class MOZ_STACK_CLASS gfxClipAutoSaveRestore final {
+ public:
+  using Rect = mozilla::gfx::Rect;
+
+  explicit gfxClipAutoSaveRestore(gfxContext* aContext) : mContext(aContext) {}
+
+  void Clip(const gfxRect& aRect) { Clip(ToRect(aRect)); }
+
+  void Clip(const Rect& aRect) {
+    MOZ_ASSERT(!mClipped, "Already called Clip once");
+    mContext->Clip(aRect);
+    mClipped = true;
+  }
+
+  void TransformedClip(const gfxMatrix& aTransform, const gfxRect& aRect) {
+    MOZ_ASSERT(!mClipped, "Already called Clip once");
+    if (aTransform.IsSingular()) {
+      return;
+    }
+    gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(mContext);
+    mContext->Multiply(aTransform);
+    mContext->Clip(aRect);
+    mClipped = true;
+  }
+
+  ~gfxClipAutoSaveRestore() {
+    if (mClipped) {
+      mContext->PopClip();
+    }
+  }
+
+ private:
+  gfxContext* mContext;
+  bool mClipped = false;
+};
+
 class MOZ_STACK_CLASS DrawTargetAutoDisableSubpixelAntialiasing final {
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;

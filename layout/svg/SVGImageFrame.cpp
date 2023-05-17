@@ -342,13 +342,15 @@ void SVGImageFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
   }
 
   if (mImageContainer) {
-    gfxContextAutoSaveRestore autoRestorer(&aContext);
+    gfxClipAutoSaveRestore autoSaveClip(&aContext);
 
     if (StyleDisplay()->IsScrollableOverflow()) {
       gfxRect clipRect =
           SVGUtils::GetClipRectForFrame(this, x, y, width, height);
-      SVGUtils::SetClipRect(&aContext, aTransform, clipRect);
+      autoSaveClip.TransformedClip(aTransform, clipRect);
     }
+
+    gfxContextMatrixAutoSaveRestore autoSaveMatrix(&aContext);
 
     if (!TransformContextForPainting(&aContext, aTransform)) {
       return;
@@ -404,8 +406,6 @@ void SVGImageFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
           nsLayoutUtils::GetSamplingFilterForFrame(this), nsPoint(0, 0),
           nullptr, SVGImageContext(), flags);
     }
-
-    // gfxContextAutoSaveRestore goes out of scope & cleans up our gfxContext
   }
 }
 
