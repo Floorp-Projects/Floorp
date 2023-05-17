@@ -3,7 +3,7 @@
 /* exported BOTH_EMPTY, A_IS_EMPTY, B_IS_EMPTY, A_CONTAINS_B, B_CONTAINS_A, SIMILAR, SAME, DIFFERENT, runIsValidTest, runCompareTest */
 
 const { AddressComparison, AddressComponent } = ChromeUtils.importESModule(
-  "resource://autofill/AddressComponent.sys.mjs"
+  "resource://gre/modules/shared/AddressComponent.sys.mjs"
 );
 
 const { FormAutofill } = ChromeUtils.import(

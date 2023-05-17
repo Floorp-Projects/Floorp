@@ -34,7 +34,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  AddressComponent: "resource://autofill/AddressComponent.sys.mjs",
+  AddressComponent: "resource://gre/modules/shared/AddressComponent.sys.mjs",
   FormAutofillPreferences:
     "resource://autofill/FormAutofillPreferences.sys.mjs",
   FormAutofillPrompter: "resource://autofill/FormAutofillPrompter.sys.mjs",
