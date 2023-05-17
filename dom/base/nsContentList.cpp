@@ -27,8 +27,10 @@
 #include <algorithm>
 #include "mozilla/dom/NodeInfoInlines.h"
 #include "mozilla/MruCache.h"
+#include "mozilla/StaticPtr.h"
 
 #include "PLDHashTable.h"
+#include "nsTHashtable.h"
 
 #ifdef DEBUG_CONTENT_LIST
 #  define ASSERT_IN_SYNC AssertInSync()
@@ -144,9 +146,6 @@ void nsEmptyContentList::GetSupportedNames(nsTArray<nsString>& aNames) {}
 
 nsIContent* nsEmptyContentList::Item(uint32_t aIndex) { return nullptr; }
 
-// Hashtable for storing nsContentLists
-static PLDHashTable* gContentListHashTable;
-
 struct ContentListCache
     : public MruCache<nsContentListKey, nsContentList*, ContentListCache> {
   static HashNumber Hash(const nsContentListKey& aKey) {
@@ -159,24 +158,43 @@ struct ContentListCache
 
 static ContentListCache sRecentlyUsedContentLists;
 
-struct ContentListHashEntry : public PLDHashEntryHdr {
-  nsContentList* mContentList;
+class ContentListHashEntry : public PLDHashEntryHdr {
+ public:
+  using KeyType = const nsContentListKey*;
+  using KeyTypePointer = KeyType;
+
+  // Note that this is creating a blank entry, so you'll have to manually
+  // initialize it after it has been inserted into the hash table.
+  explicit ContentListHashEntry(KeyTypePointer aKey) : mContentList(nullptr) {}
+
+  ContentListHashEntry(ContentListHashEntry&& aEnt)
+      : mContentList(std::move(aEnt.mContentList)) {}
+
+  ~ContentListHashEntry() = default;
+
+  bool KeyEquals(KeyTypePointer aKey) const {
+    return mContentList->MatchesKey(*aKey);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return aKey->GetHash(); }
+
+  nsContentList* GetContentList() const { return mContentList; }
+  void SetContentList(nsContentList* aContentList) {
+    mContentList = aContentList;
+  }
+
+  enum { ALLOW_MEMMOVE = true };
+
+ private:
+  nsContentList* MOZ_UNSAFE_REF(
+      "This entry will be removed in nsContentList::RemoveFromHashtable "
+      "before mContentList is destroyed") mContentList;
 };
 
-static PLDHashNumber ContentListHashtableHashKey(const void* key) {
-  const nsContentListKey* list = static_cast<const nsContentListKey*>(key);
-  return list->GetHash();
-}
-
-static bool ContentListHashtableMatchEntry(const PLDHashEntryHdr* entry,
-                                           const void* key) {
-  const ContentListHashEntry* e =
-      static_cast<const ContentListHashEntry*>(entry);
-  const nsContentList* list = e->mContentList;
-  const nsContentListKey* ourKey = static_cast<const nsContentListKey*>(key);
-
-  return list->MatchesKey(*ourKey);
-}
+// Hashtable for storing nsContentLists
+static StaticAutoPtr<nsTHashtable<ContentListHashEntry>> gContentListHashTable;
 
 already_AddRefed<nsContentList> NS_GetContentList(nsINode* aRootNode,
                                                   int32_t aMatchNameSpaceId,
@@ -192,20 +210,16 @@ already_AddRefed<nsContentList> NS_GetContentList(nsINode* aRootNode,
     return list.forget();
   }
 
-  static const PLDHashTableOps hash_table_ops = {
-      ContentListHashtableHashKey, ContentListHashtableMatchEntry,
-      PLDHashTable::MoveEntryStub, PLDHashTable::ClearEntryStub};
-
   // Initialize the hashtable if needed.
   if (!gContentListHashTable) {
-    gContentListHashTable =
-        new PLDHashTable(&hash_table_ops, sizeof(ContentListHashEntry));
+    gContentListHashTable = new nsTHashtable<ContentListHashEntry>();
   }
 
   // First we look in our hashtable.  Then we create a content list if needed
-  auto entry = static_cast<ContentListHashEntry*>(
-      gContentListHashTable->Add(&hashKey, fallible));
-  if (entry) list = entry->mContentList;
+  auto entry = gContentListHashTable->PutEntry(&hashKey, fallible);
+  if (entry) {
+    list = entry->GetContentList();
+  }
 
   if (!list) {
     // We need to create a ContentList and add it to our new entry, if
@@ -221,7 +235,7 @@ already_AddRefed<nsContentList> NS_GetContentList(nsINode* aRootNode,
     }
     list = new nsContentList(aRootNode, aMatchNameSpaceId, htmlAtom, xmlAtom);
     if (entry) {
-      entry->mContentList = list;
+      entry->SetContentList(list);
     }
   }
 
@@ -900,10 +914,9 @@ void nsContentList::RemoveFromHashtable() {
 
   if (!gContentListHashTable) return;
 
-  gContentListHashTable->Remove(&key);
+  gContentListHashTable->RemoveEntry(&key);
 
-  if (gContentListHashTable->EntryCount() == 0) {
-    delete gContentListHashTable;
+  if (gContentListHashTable->Count() == 0) {
     gContentListHashTable = nullptr;
   }
 }
