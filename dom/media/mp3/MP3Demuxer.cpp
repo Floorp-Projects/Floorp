@@ -129,10 +129,10 @@ bool MP3TrackDemuxer::Init() {
   mInfo->mCodecSpecificConfig =
       AudioCodecSpecificVariant{std::move(mp3CodecData)};
 
-  MP3LOG("Init mInfo={mRate=%d mChannels=%d mBitDepth=%d mDuration=%" PRId64
-         "}",
+  MP3LOG("Init mInfo={mRate=%d mChannels=%d mBitDepth=%d mDuration=%ld (%lfs)}",
          mInfo->mRate, mInfo->mChannels, mInfo->mBitDepth,
-         mInfo->mDuration.ToMicroseconds());
+         mInfo->mDuration.ToTicksAtRate(mInfo->mRate),
+         mInfo->mDuration.ToSeconds());
 
   return mSamplesPerSecond && mChannels;
 }
@@ -181,7 +181,7 @@ TimeUnit MP3TrackDemuxer::FastSeek(const TimeUnit& aTime) {
          mFrameIndex, mOffset);
 
   const auto& vbr = mParser.VBRInfo();
-  if (!aTime.ToMicroseconds()) {
+  if (aTime.IsZero()) {
     // Quick seek to the beginning of the stream.
     mFrameIndex = 0;
   } else if (vbr.IsTOCPresent() && Duration() &&
@@ -216,7 +216,7 @@ TimeUnit MP3TrackDemuxer::ScanUntil(const TimeUnit& aTime) {
          aTime.ToMicroseconds(), AverageFrameLength(), mNumParsedFrames,
          mFrameIndex, mOffset);
 
-  if (!aTime.ToMicroseconds()) {
+  if (aTime.IsZero()) {
     return FastSeek(aTime);
   }
 
@@ -352,7 +352,6 @@ media::NullableTimeUnit MP3TrackDemuxer::Duration() const {
   int64_t numFrames = 0;
   const auto numAudioFrames = ValidNumAudioFrames();
   if (numAudioFrames) {
-    MP3LOG("Using VBR header to compute duration.");
     // VBR headers don't include the VBR header frame.
     numFrames = numAudioFrames.value() + 1;
     return Some(Duration(numFrames) - (EncoderDelay() + Padding()));
@@ -360,7 +359,6 @@ media::NullableTimeUnit MP3TrackDemuxer::Duration() const {
 
   const int64_t streamLen = StreamLength();
   if (streamLen < 0) {  // Live streams.
-    MP3LOG("Unknown stream length can't compute duration.");
     // Unknown length, we can't estimate duration.
     return Nothing();
   }
@@ -372,34 +370,30 @@ media::NullableTimeUnit MP3TrackDemuxer::Duration() const {
   MOZ_ASSERT(size);
 
   if (mParser.ID3v1MetadataFound() && size > 128) {
-    MP3LOG("ID3v1 tag found, subtracting from size");
     size -= 128;
   }
 
   // If it's CBR, calculate the duration by bitrate.
   if (!mParser.VBRInfo().IsValid()) {
     const uint32_t bitrate = mParser.CurrentFrame().Header().Bitrate();
-    MP3LOG("Using frame stream size to compute duration size: %ld bitrate: %d, %zu %zu.", size, bitrate, mFirstFrameOffset, streamLen);
     return Some(
         media::TimeUnit::FromSeconds(static_cast<double>(size) * 8 / bitrate));
   }
 
   if (AverageFrameLength() > 0) {
-    MP3LOG("Using average frame length to compute duration.");
     numFrames = std::lround(AssertedCast<double>(size) / AverageFrameLength());
   }
 
-  MP3LOG("Using frame count and their size to compute duration.");
   return Some(Duration(numFrames) - (EncoderDelay() + Padding()));
 }
 
 TimeUnit MP3TrackDemuxer::Duration(int64_t aNumFrames) const {
   if (!mSamplesPerSecond) {
-    return TimeUnit::FromMicroseconds(-1);
+    return TimeUnit::Invalid();
   }
 
   const int64_t frameCount = aNumFrames * mSamplesPerFrame;
-  return FramesToTimeUnit(frameCount, mSamplesPerSecond);
+  return TimeUnit(frameCount, mSamplesPerSecond);
 }
 
 MediaByteRange MP3TrackDemuxer::FindFirstFrame() {
@@ -608,8 +602,7 @@ bool MP3TrackDemuxer::SkipNextFrame(const MediaByteRange& aRange) {
 }
 
 media::TimeUnit MP3TrackDemuxer::EncoderDelay() const {
-  return media::TimeUnit::FromSeconds(AssertedCast<double>(mEncoderDelay) /
-                                      mSamplesPerSecond);
+  return media::TimeUnit(mEncoderDelay, mSamplesPerSecond);
 }
 
 uint32_t MP3TrackDemuxer::EncoderDelayFrames() const {
@@ -617,8 +610,7 @@ uint32_t MP3TrackDemuxer::EncoderDelayFrames() const {
 }
 
 media::TimeUnit MP3TrackDemuxer::Padding() const {
-  return media::TimeUnit::FromSeconds(AssertedCast<double>(mEncoderPadding) /
-                                      mSamplesPerSecond);
+  return media::TimeUnit(mEncoderPadding, mSamplesPerSecond);
 }
 
 uint32_t MP3TrackDemuxer::PaddingFrames() const {
@@ -679,17 +671,22 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
     }
   }
 
-  frame->mTime = Duration(mFrameIndex - 1) - EncoderDelay();
+  TimeUnit rawPts = Duration(mFrameIndex - 1) - EncoderDelay();
+  TimeUnit rawDuration = Duration(1);
+  TimeUnit rawEnd = rawPts + rawDuration;
 
-  // It's possible for the duration of a frame to be zero if the frame is to be
-  // trimmed entirely because it's fully comprised of decoder delay samples.
-  // This is common at the beginning of an stream.
-  MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
+  frame->mTime = std::max(TimeUnit::Zero(mSamplesPerSecond), rawPts);
 
   frame->mDuration = Duration(1);
   frame->mTimecode = frame->mTime;
   frame->mKeyframe = true;
   frame->mEOS = mEOS;
+
+  // Handle decoder delay. A packet must be trimmed if its pts, adjusted for
+  // decoder delay, is negative. A packet can be trimmed entirely.
+  if (rawPts.IsNegative()) {
+    frame->mDuration = std::max(TimeUnit::Zero(mSamplesPerSecond), rawEnd - frame->mTime);
+  }
 
   // It's possible to create an mp3 file that has a padding value that somehow
   // spans multiple packets. In that case the duration is probably known,
@@ -707,23 +704,24 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
     frame->mDuration -= inPaddingZone;
     // Packet is entirely padding and will be completely discarded by the decoder.
     if (frame->mDuration.IsNegative()) {
-      frame->mDuration = TimeUnit::Zero();
+      frame->mDuration = TimeUnit::Zero(mSamplesPerSecond);
     }
     MP3LOG(
-        "Found padding spanning multiple packets -- trimming [%lf,%lf] to "
-        "[%lf,%lf] (stream duration: %lf)",
-        originalPts.ToSeconds(), originalEnd.ToSeconds(),
-        frame->mTime.ToSeconds(), frame->GetEndTime().ToSeconds(),
-        duration.ToSeconds());
+        "Found padding spanning multiple packets -- trimming [%ld,%ld] to "
+        "[%ld,%ld] (stream duration: %ld)",
+        originalPts.ToTicksAtRate(mSamplesPerSecond),
+        originalEnd.ToTicksAtRate(mSamplesPerSecond),
+        frame->mTime.ToTicksAtRate(mSamplesPerSecond),
+        frame->GetEndTime().ToTicksAtRate(mSamplesPerSecond),
+        duration.ToTicksAtRate(mSamplesPerSecond));
   } else if (frame->mEOS && Padding() <= frame->mDuration) {
     frame->mDuration -= Padding();
     MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
-    MP3LOG(
-        "Trimming last packet %lf to [%lf,%lf]",
-        Padding().ToSeconds(), frame->mTime.ToSeconds(),
-        frame->GetEndTime().ToSeconds());
+    MP3LOG("Trimming last packet %ld to [%ld,%ld]",
+           Padding().ToTicksAtRate(mSamplesPerSecond),
+           frame->mTime.ToTicksAtRate(mSamplesPerSecond),
+           frame->GetEndTime().ToTicksAtRate(mSamplesPerSecond));
   }
-
 
   MP3LOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
           " mFrameIndex=%" PRId64 " mTotalFrameLen=%" PRIu64
@@ -731,6 +729,24 @@ already_AddRefed<MediaRawData> MP3TrackDemuxer::GetNextFrame(
           mOffset, mNumParsedFrames, mFrameIndex, mTotalFrameLen,
           mSamplesPerFrame, mSamplesPerSecond, mChannels,
           mEOS ? "true" : "false");
+
+  // It's possible for the duration of a frame to be zero if the frame is to be
+  // trimmed entirely because it's fully comprised of decoder delay samples.
+  // This is common at the beginning of an stream.
+  MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
+
+  MP3LOG("Packet demuxed: pts [%ld, %ld] (duration: %ld)",
+         frame->mTime.ToTicksAtRate(mSamplesPerSecond),
+         frame->GetEndTime().ToTicksAtRate(mSamplesPerSecond),
+         frame->mDuration.ToTicksAtRate(mSamplesPerSecond));
+
+  // Indicate original packet information to trim after decoding.
+  if (frame->mDuration != rawDuration) {
+    frame->mOriginalPresentationWindow = Some(TimeInterval{rawPts, rawEnd});
+    MP3LOG("Total packet time excluding trimming: [%ld, %ld]",
+           rawpts.ToTicksAtRate(mSamplesPerSecond),
+           rawend.ToTicksAtRate(mSamplesPerSecond));
+  }
 
   return frame.forget();
 }
