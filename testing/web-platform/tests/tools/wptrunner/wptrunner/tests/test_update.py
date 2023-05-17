@@ -1758,6 +1758,8 @@ leak-total: 110""")]
 
 
 class TestStep(Step):
+    __test__ = False
+
     def create(self, state):
         tests = [("path/to/test.htm", [test_id], "testharness", "")]
         state.foo = create_test_manifest(tests)
