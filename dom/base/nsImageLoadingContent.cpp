@@ -1181,7 +1181,7 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
                    "How could we not have a current request here?");
 
         if (nsImageFrame* f = do_QueryFrame(GetOurPrimaryImageFrame())) {
-          f->NotifyNewCurrentRequest(mCurrentRequest, NS_OK);
+          f->UpdateImage(mCurrentRequest);
         }
       }
     }

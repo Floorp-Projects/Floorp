@@ -688,7 +688,7 @@ void nsImageFrame::UpdateXULImage() {
   }
 
   if (!mOwnedRequest) {
-    UpdateImage(nullptr, nullptr);
+    UpdateImage(nullptr);
   }
 }
 
@@ -761,16 +761,12 @@ void nsImageFrame::SetupOwnedRequest() {
   // need to add it to the image tracker manually.
   PresContext()->Document()->ImageTracker()->Add(mOwnedRequest);
 
+  UpdateImage(mOwnedRequest);
+
   uint32_t status = 0;
   nsresult rv = mOwnedRequest->GetImageStatus(&status);
   if (NS_FAILED(rv)) {
     return;
-  }
-
-  if (status & imgIRequest::STATUS_SIZE_AVAILABLE) {
-    nsCOMPtr<imgIContainer> image;
-    mOwnedRequest->GetImage(getter_AddRefs(image));
-    OnSizeAvailable(mOwnedRequest, image);
   }
 
   if (status & imgIRequest::STATUS_FRAME_COMPLETE) {
@@ -1096,9 +1092,7 @@ auto nsImageFrame::ImageFrameTypeFor(const Element& aElement,
 void nsImageFrame::Notify(imgIRequest* aRequest, int32_t aType,
                           const nsIntRect* aRect) {
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
-    nsCOMPtr<imgIContainer> image;
-    aRequest->GetImage(getter_AddRefs(image));
-    return OnSizeAvailable(aRequest, image);
+    return OnSizeAvailable(aRequest);
   }
 
   if (aType == imgINotificationObserver::FRAME_UPDATE) {
@@ -1116,33 +1110,31 @@ void nsImageFrame::Notify(imgIRequest* aRequest, int32_t aType,
   }
 
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
-    uint32_t imgStatus;
-    aRequest->GetImageStatus(&imgStatus);
-    nsresult status =
-        imgStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
-    return OnLoadComplete(aRequest, status);
+    return OnLoadComplete(aRequest);
   }
 }
 
-void nsImageFrame::OnSizeAvailable(imgIRequest* aRequest,
-                                   imgIContainer* aImage) {
-  if (!aImage) {
+void nsImageFrame::OnSizeAvailable(imgIRequest* aRequest) {
+  nsCOMPtr<imgIContainer> image;
+  aRequest->GetImage(getter_AddRefs(image));
+  if (!image) {
     return;
   }
-
-  /* Get requested animation policy from the pres context:
-   *   normal = 0
-   *   one frame = 1
-   *   one loop = 2
-   */
-  aImage->SetAnimationMode(PresContext()->ImageAnimationMode());
 
   if (IsPendingLoad(aRequest)) {
     // We don't care
     return;
   }
 
-  UpdateImage(aRequest, aImage);
+  UpdateImage(aRequest, image);
+}
+
+void nsImageFrame::UpdateImage(imgIRequest* aRequest) {
+  nsCOMPtr<imgIContainer> image;
+  if (aRequest) {
+    aRequest->GetImage(getter_AddRefs(image));
+  }
+  UpdateImage(aRequest, image);
 }
 
 void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
@@ -1153,6 +1145,8 @@ void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
     // container, orienting according to our style.
     mImage = nsLayoutUtils::OrientImage(aImage, orientation);
     MOZ_ASSERT(mImage);
+    // Get requested animation policy from the pres context.
+    mImage->SetAnimationMode(PresContext()->ImageAnimationMode());
   } else {
     // We no longer have a valid image, so release our stored image container.
     mImage = mPrevImage = nullptr;
@@ -1267,8 +1261,9 @@ void nsImageFrame::MaybeSendIntrinsicSizeAndRatioToEmbedder(
   }
 }
 
-void nsImageFrame::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus) {
-  NotifyNewCurrentRequest(aRequest, aStatus);
+void nsImageFrame::OnLoadComplete(imgIRequest* aRequest) {
+  MOZ_ASSERT(aRequest);
+  UpdateImage(aRequest);
 }
 
 void nsImageFrame::ElementStateChanged(ElementState aStates) {
@@ -1279,7 +1274,7 @@ void nsImageFrame::ElementStateChanged(ElementState aStates) {
     return;
   }
   if (!ImageOk(mContent->AsElement()->State())) {
-    UpdateImage(nullptr, nullptr);
+    UpdateImage(nullptr);
   }
 }
 
@@ -1318,15 +1313,6 @@ void nsImageFrame::UpdateIntrinsicSizeAndRatio() {
     // so we're ready to request a decode.
     MaybeDecodeForPredictedSize();
   }
-}
-
-void nsImageFrame::NotifyNewCurrentRequest(imgIRequest* aRequest,
-                                           nsresult aStatus) {
-  nsCOMPtr<imgIContainer> image;
-  aRequest->GetImage(getter_AddRefs(image));
-  NS_ASSERTION(image || NS_FAILED(aStatus),
-               "Successful load with no container?");
-  UpdateImage(aRequest, image);
 }
 
 void nsImageFrame::MaybeDecodeForPredictedSize() {
