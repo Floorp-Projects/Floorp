@@ -229,8 +229,7 @@ nsAVIFDecoder::DecodeResult AVIFParser::GetImage(AVIFImage& aImage) {
     }
 
     aImage.mFrameNum = mFrameNum++;
-    int64_t durationMs =
-        aImage.mColorImage->mDuration.ToMilliseconds();
+    int64_t durationMs = aImage.mColorImage->mDuration.ToMilliseconds();
     aImage.mDuration = FrameTimeout::FromRawMilliseconds(
         static_cast<int32_t>(std::min<int64_t>(durationMs, INT32_MAX)));
 

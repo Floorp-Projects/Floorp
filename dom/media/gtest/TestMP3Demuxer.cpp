@@ -54,12 +54,15 @@ struct MP3Resource {
 
     Duration(int64_t aMicroseconds, float aTolerableRate)
         : mMicroseconds(aMicroseconds), mTolerableRate(aTolerableRate) {}
-    int64_t Tolerance() const { return AssertedCast<int64_t>(mTolerableRate * static_cast<float>(mMicroseconds)); }
+    int64_t Tolerance() const {
+      return AssertedCast<int64_t>(mTolerableRate *
+                                   static_cast<float>(mMicroseconds));
+    }
   };
 
   const char* mFilePath{};
   bool mIsVBR{};
-  HeaderType mHeaderType{ HeaderType::NONE };
+  HeaderType mHeaderType{HeaderType::NONE};
   int64_t mFileSize{};
   uint32_t mMPEGLayer{};
   uint32_t mMPEGVersion{};

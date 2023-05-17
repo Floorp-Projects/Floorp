@@ -121,9 +121,7 @@ class Tfdt : public Atom {
 
 class Edts : public Atom {
  public:
-  Edts()
-      : mMediaStart(0),
-        mEmptyOffset(0) {}
+  Edts() : mMediaStart(0), mEmptyOffset(0) {}
   explicit Edts(Box& aBox);
   virtual bool IsValid() override {
     // edts is optional

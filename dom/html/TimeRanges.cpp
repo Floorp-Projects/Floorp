@@ -52,7 +52,6 @@ TimeRanges::TimeRanges(const media::TimeIntervals& aTimeIntervals)
 TimeRanges::TimeRanges(const media::TimeRanges& aTimeRanges)
     : TimeRanges(nullptr, aTimeRanges) {}
 
-
 media::TimeIntervals TimeRanges::ToTimeIntervals() const {
   media::TimeIntervals t;
   for (uint32_t i = 0; i < Length(); i++) {

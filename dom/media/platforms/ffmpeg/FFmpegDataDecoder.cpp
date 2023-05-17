@@ -102,7 +102,8 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder() {
   InitCodecContext();
   MediaResult ret = AllocateExtraData();
   if (NS_FAILED(ret)) {
-    FFMPEG_LOG("  couldn't allocate ffmpeg extra data for codec %s", codec->name);
+    FFMPEG_LOG("  couldn't allocate ffmpeg extra data for codec %s",
+               codec->name);
     mLib->av_freep(&mCodecContext);
     return ret;
   }
