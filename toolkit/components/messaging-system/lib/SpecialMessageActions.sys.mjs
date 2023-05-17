@@ -191,6 +191,10 @@ export const SpecialMessageActions = {
     // Array of prefs that are allowed to be edited by SET_PREF
     const allowedPrefs = [
       "browser.dataFeatureRecommendations.enabled",
+      "browser.migrate.content-modal.about-welcome-behavior",
+      "browser.migrate.content-modal.enabled",
+      "browser.migrate.content-modal.import-all.enabled",
+      "browser.migrate.preferences-entrypoint.enabled",
       "browser.startup.homepage",
       "browser.privateWindowSeparation.enabled",
       "browser.firefox-view.feature-tour",
