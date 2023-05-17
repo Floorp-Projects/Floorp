@@ -230,7 +230,7 @@ class FrameParser {
 
     // Returns the byte offset for the given duration percentage as a factor
     // (0: begin, 1.0: end).
-    int64_t Offset(float aDurationFac) const;
+    int64_t Offset(media::TimeUnit aTime, media::TimeUnit aDuration) const;
 
     // Parses contents of given ByteReader for a valid VBR header.
     // The offset of the passed ByteReader needs to point to an MPEG frame
@@ -268,6 +268,8 @@ class FrameParser {
 
     // The detected VBR header type.
     VBRHeaderType mType;
+
+    uint16_t mVBRISeekOffsetsFramesPerEntry = 0;
 
     // Delay and padding values found in the LAME header. The encoder delay is a
     // number of frames that has to be skipped at the beginning of the stream,

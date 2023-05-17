@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <inttypes.h>
 
+#include "TimeUnits.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ResultExtensions.h"
@@ -329,7 +330,8 @@ const Maybe<uint32_t>& FrameParser::VBRHeader::NumBytes() const {
 const Maybe<uint32_t>& FrameParser::VBRHeader::Scale() const { return mScale; }
 
 bool FrameParser::VBRHeader::IsTOCPresent() const {
-  return mTOC.size() == vbr_header::TOC_SIZE;
+  // This doesn't use VBRI TOC
+  return !mTOC.empty() && mType != VBRI;
 }
 
 bool FrameParser::VBRHeader::IsValid() const { return mType != NONE; }
@@ -341,23 +343,31 @@ bool FrameParser::VBRHeader::IsComplete() const {
       ;
 }
 
-int64_t FrameParser::VBRHeader::Offset(float aDurationFac) const {
+int64_t FrameParser::VBRHeader::Offset(media::TimeUnit aTime, media::TimeUnit aDuration) const {
   if (!IsTOCPresent()) {
     return -1;
   }
 
-  // Constrain the duration percentage to [0, 99].
-  const float durationPer =
-      100.0f * std::min(0.99f, std::max(0.0f, aDurationFac));
-  const size_t fullPer = durationPer;
-  const float rest = durationPer - fullPer;
+  int64_t offset = -1;
+  if (mType == XING) {
+    // Constrain the duration percentage to [0, 99].
+    double percent = 100. * aTime.ToSeconds() / aDuration.ToSeconds();
+    const double durationPer = std::clamp(percent, 0., 99.);
+    double integer;
+    const double fractional = modf(durationPer, &integer);
+    size_t integerPer = AssertedCast<size_t>(integer);
 
-  MOZ_ASSERT(fullPer < mTOC.size());
-  int64_t offset = mTOC.at(fullPer);
-
-  if (rest > 0.0 && fullPer + 1 < mTOC.size()) {
-    offset += rest * (mTOC.at(fullPer + 1) - offset);
+    MOZ_ASSERT(integerPer < mTOC.size());
+    offset = mTOC.at(integerPer);
+    if (fractional > 0.0 && integerPer + 1 < mTOC.size()) {
+      offset += AssertedCast<int64_t>(fractional) *
+                (mTOC.at(integerPer + 1) - offset);
+    }
+    double duration = aDuration.ToMicroseconds() / 1000.;
+    double frameDuration = duration / mTOC.size()+1;
   }
+  // TODO: VBRI TOC seeking
+  MP3LOG("VBRHeader::Offset (%s): %f is at byte %ld", mType == XING ? "XING" : "VBRI", aTime.ToSeconds(), offset);
 
   return offset;
 }
@@ -464,11 +474,17 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseXing(BufferReader* aReader,
   return mType == XING;
 }
 
+
+template<typename T>
+int readAndConvertToInt(BufferReader* aReader) {
+  int value = AssertedCast<int>(aReader->ReadType<T>());
+  return value;
+}
+
 Result<bool, nsresult> FrameParser::VBRHeader::ParseVBRI(
     BufferReader* aReader) {
   static const uint32_t TAG = BigEndian::readUint32("VBRI");
   static const uint32_t OFFSET = 32 + FrameParser::FrameHeader::SIZE;
-  static const uint32_t FRAME_COUNT_OFFSET = OFFSET + 14;
   static const uint32_t MIN_FRAME_SIZE = OFFSET + 26;
 
   MOZ_ASSERT(aReader);
@@ -487,12 +503,73 @@ Result<bool, nsresult> FrameParser::VBRHeader::ParseVBRI(
   // VBRI have a fixed relative position, so let's check for it there.
   if (aReader->Remaining() > MIN_FRAME_SIZE) {
     aReader->Seek(prevReaderOffset + OFFSET);
-    uint32_t tag, frames;
+    uint32_t tag;
     MOZ_TRY_VAR(tag, aReader->ReadU32());
     if (tag == TAG) {
-      aReader->Seek(prevReaderOffset + FRAME_COUNT_OFFSET);
-      MOZ_TRY_VAR(frames, aReader->ReadU32());
-      mNumAudioFrames = Some(frames);
+      uint16_t vbriEncoderVersion, vbriEncoderDelay, vbriQuality;
+      uint32_t vbriBytes, vbriFrames;
+      uint16_t vbriSeekOffsetsTableSize, vbriSeekOffsetsScaleFactor,
+          vbriSeekOffsetsBytesPerEntry, vbriSeekOffsetsFramesPerEntry;
+      MOZ_TRY_VAR(vbriEncoderVersion, aReader->ReadU16());
+      MOZ_TRY_VAR(vbriEncoderDelay, aReader->ReadU16());
+      MOZ_TRY_VAR(vbriQuality, aReader->ReadU16());
+      MOZ_TRY_VAR(vbriBytes, aReader->ReadU32());
+      MOZ_TRY_VAR(vbriFrames, aReader->ReadU32());
+      MOZ_TRY_VAR(vbriSeekOffsetsTableSize, aReader->ReadU16());
+      MOZ_TRY_VAR(vbriSeekOffsetsScaleFactor, aReader->ReadU32());
+      MOZ_TRY_VAR(vbriSeekOffsetsBytesPerEntry, aReader->ReadU16());
+      MOZ_TRY_VAR(vbriSeekOffsetsFramesPerEntry, aReader->ReadU16());
+
+      mTOC.reserve(vbriSeekOffsetsTableSize+1);
+
+      int (*readFunc)(BufferReader*);
+      switch(vbriSeekOffsetsBytesPerEntry) {
+          case 1:
+            readFunc = &readAndConvertToInt<uint8_t>;
+          break;
+          case 2:
+            readFunc = &readAndConvertToInt<int16_t>;
+          break;
+          case 4:
+            readFunc = &readAndConvertToInt<int32_t>;
+            break;
+          case 8:
+            readFunc = &readAndConvertToInt<int64_t>;
+            break;
+          default:
+            MP3LOG("Unhandled vbriSeekOffsetsBytesPerEntry size of %hd", vbriSeekOffsetsBytesPerEntry);
+            break;
+      }
+      for (uint32_t i = 0; i < vbriSeekOffsetsTableSize; i++) {
+        int entry = readFunc(aReader);
+        mTOC.push_back(entry * vbriSeekOffsetsScaleFactor);
+      }
+      MP3LOG("Header::Parse found valid  header: EncoderVersion=%hu "
+              "EncoderDelay=%hu "
+              "Quality=%hu "
+              "Bytes=%u "
+              "Frames=%u "
+              "SeekOffsetsTableSize=%u "
+              "SeekOffsetsScaleFactor=%hu "
+              "SeekOffsetsBytesPerEntry=%hu "
+              "SeekOffsetsFramesPerEntry=%hu",
+              vbriEncoderVersion , vbriEncoderDelay , vbriQuality , vbriBytes ,
+              vbriFrames , vbriSeekOffsetsTableSize, vbriSeekOffsetsScaleFactor,
+              vbriSeekOffsetsBytesPerEntry, vbriSeekOffsetsFramesPerEntry);
+      // Adjust the number of frames so it's counted the same way as in the XING
+      // header
+      if (vbriFrames < 1) {
+        return false;
+      }
+      mNumAudioFrames = Some(vbriFrames - 1);
+      mNumBytes = Some(vbriBytes);
+      mEncoderDelay = vbriEncoderDelay;
+      mVBRISeekOffsetsFramesPerEntry = vbriSeekOffsetsFramesPerEntry;
+      MP3LOG("TOC:");
+      for (auto entry : mTOC) {
+        MP3LOG("%" PRId64, entry);
+      }
+
       mType = VBRI;
       return true;
     }
@@ -507,9 +584,9 @@ bool FrameParser::VBRHeader::Parse(BufferReader* aReader, size_t aFrameSize) {
   if (rv) {
     MP3LOG(
         "VBRHeader::Parse found valid VBR/CBR header: type=%s"
-        " NumAudioFrames=%u NumBytes=%u Scale=%u TOC-size=%zu",
+        " NumAudioFrames=%u NumBytes=%u Scale=%u TOC-size=%zu Delay=%u",
         vbr_header::TYPE_STR[Type()], NumAudioFrames().valueOr(0),
-        NumBytes().valueOr(0), Scale().valueOr(0), mTOC.size());
+        NumBytes().valueOr(0), Scale().valueOr(0), mTOC.size(), mEncoderDelay);
   }
   return rv;
 }
