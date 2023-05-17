@@ -4,7 +4,7 @@
 
 import { html } from "lit.all.mjs";
 // eslint-disable-next-line import/no-unassigned-import
-import "browser/components/firefoxview/moz-tab-list.mjs";
+import "browser/components/firefoxview/fxview-tab-list.mjs";
 
 const DATE_TIME_FORMATS = {
   relative: "relative",
@@ -14,8 +14,8 @@ const DATE_TIME_FORMATS = {
 };
 
 export default {
-  title: "Domain-specific UI Widgets/Tab List",
-  component: "moz-tab-list",
+  title: "Domain-specific UI Widgets/Firefox View/Tab List",
+  component: "fxview-tab-list",
   argTypes: {
     dateTimeFormat: {
       options: Object.keys(DATE_TIME_FORMATS),
@@ -38,10 +38,10 @@ const Template = ({
     main {
       max-width: 750px;
     }
-    moz-tab-list.menu::part(secondary-button) {
+    fxview-tab-list.menu::part(secondary-button) {
       background-image: url("chrome://global/skin/icons/more.svg");
     }
-    moz-tab-list.dismiss::part(secondary-button) {
+    fxview-tab-list.dismiss::part(secondary-button) {
       background-image: url("chrome://global/skin/icons/close.svg");
     }
     :host panel-item::part(button) {
@@ -50,27 +50,31 @@ const Template = ({
     }
   </style>
   <main>
-    <moz-tab-list
+    <fxview-tab-list
       class=${listClass}
       .hasPopup=${hasPopup}
       .dateTimeFormat=${dateTimeFormat}
       .maxTabsLength=${maxTabsLength}
       .tabItems=${tabItems}
-      @moz-tab-list-secondary-action=${secondaryAction}
-      @moz-tab-list-primary-action=${primaryAction}
+      @fxview-tab-list-secondary-action=${secondaryAction}
+      @fxview-tab-list-primary-action=${primaryAction}
     >
       <panel-list slot="menu">
-        <panel-item data-l10n-id="mztabrow-delete"></panel-item>
-        <panel-item data-l10n-id="mztabrow-forget-about-this-site"></panel-item>
+        <panel-item data-l10n-id="fxviewtabrow-delete"></panel-item>
+        <panel-item
+          data-l10n-id="fxviewtabrow-forget-about-this-site"
+        ></panel-item>
         <hr />
-        <panel-item data-l10n-id="mztabrow-open-in-window"></panel-item>
-        <panel-item data-l10n-id="mztabrow-open-in-private-window"></panel-item>
+        <panel-item data-l10n-id="fxviewtabrow-open-in-window"></panel-item>
+        <panel-item
+          data-l10n-id="fxviewtabrow-open-in-private-window"
+        ></panel-item>
         <hr />
-        <panel-item data-l10n-id="mztabrow-add-bookmark"></panel-item>
-        <panel-item data-l10n-id="mztabrow-save-to-pocket"></panel-item>
-        <panel-item data-l10n-id="mztabrow-copy-link"></panel-item>
+        <panel-item data-l10n-id="fxviewtabrow-add-bookmark"></panel-item>
+        <panel-item data-l10n-id="fxviewtabrow-save-to-pocket"></panel-item>
+        <panel-item data-l10n-id="fxviewtabrow-copy-link"></panel-item>
       </panel-list>
-    </moz-tab-list>
+    </fxview-tab-list>
   </main>
 `;
 
@@ -90,27 +94,27 @@ const tabItems = [
     title: "Example Domain",
     url: "example.net",
     time: 1678141738136,
-    primaryL10nId: "mztabrow-tabs-list-tab",
+    primaryL10nId: "fxviewtabrow-tabs-list-tab",
     primaryL10nArgs: JSON.stringify({ targetURI: "example.net" }),
-    secondaryL10nId: "mztabrow-open-menu-button",
+    secondaryL10nId: "fxviewtabrow-open-menu-button",
   },
   {
     icon: "chrome://global/skin/icons/defaultFavicon.svg",
     title: "Example Domain",
     url: "example.org",
     time: 1678141738136,
-    primaryL10nId: "mztabrow-tabs-list-tab",
+    primaryL10nId: "fxviewtabrow-tabs-list-tab",
     primaryL10nArgs: JSON.stringify({ targetURI: "example.org" }),
-    secondaryL10nId: "mztabrow-open-menu-button",
+    secondaryL10nId: "fxviewtabrow-open-menu-button",
   },
   {
     icon: "chrome://global/skin/icons/defaultFavicon.svg",
     title: "Example Domain",
     url: "example.com",
     time: 1678141738136,
-    primaryL10nId: "mztabrow-tabs-list-tab",
+    primaryL10nId: "fxviewtabrow-tabs-list-tab",
     primaryL10nArgs: JSON.stringify({ targetURI: "example.com" }),
-    secondaryL10nId: "mztabrow-open-menu-button",
+    secondaryL10nId: "fxviewtabrow-open-menu-button",
   },
 ];
 const recentlyClosedItems = [
@@ -120,9 +124,9 @@ const recentlyClosedItems = [
     url: "example.net",
     tabid: 1,
     time: 1678141738136,
-    primaryL10nId: "mztabrow-tabs-list-tab",
+    primaryL10nId: "fxviewtabrow-tabs-list-tab",
     primaryL10nArgs: JSON.stringify({ targetURI: "example.net" }),
-    secondaryL10nId: "mztabrow-dismiss-tab-button",
+    secondaryL10nId: "fxviewtabrow-dismiss-tab-button",
     secondaryL10nArgs: JSON.stringify({
       tabTitle: "Example Domain",
     }),
@@ -133,9 +137,9 @@ const recentlyClosedItems = [
     url: "example.org",
     tabid: 2,
     time: 1678141738136,
-    primaryL10nId: "mztabrow-tabs-list-tab",
+    primaryL10nId: "fxviewtabrow-tabs-list-tab",
     primaryL10nArgs: JSON.stringify({ targetURI: "example.net" }),
-    secondaryL10nId: "mztabrow-dismiss-tab-button",
+    secondaryL10nId: "fxviewtabrow-dismiss-tab-button",
     secondaryL10nArgs: JSON.stringify({
       tabTitle: "Example Domain",
     }),
@@ -146,9 +150,9 @@ const recentlyClosedItems = [
     url: "example.com",
     tabid: 3,
     time: 1678141738136,
-    primaryL10nId: "mztabrow-tabs-list-tab",
+    primaryL10nId: "fxviewtabrow-tabs-list-tab",
     primaryL10nArgs: JSON.stringify({ targetURI: "example.net" }),
-    secondaryL10nId: "mztabrow-dismiss-tab-button",
+    secondaryL10nId: "fxviewtabrow-dismiss-tab-button",
     secondaryL10nArgs: JSON.stringify({
       tabTitle: "Example Domain",
     }),
