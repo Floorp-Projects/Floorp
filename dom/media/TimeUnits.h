@@ -7,6 +7,7 @@
 #ifndef TIME_UNITS_H
 #define TIME_UNITS_H
 
+#include <limits>
 #include <type_traits>
 
 #include "Intervals.h"
@@ -182,9 +183,11 @@ using NullableTimeUnit = Maybe<TimeUnit>;
 
 using TimeInterval = Interval<TimeUnit>;
 
+// A set of intervals, containing TimeUnit.
 class TimeIntervals : public IntervalSet<TimeUnit> {
  public:
   using BaseType = IntervalSet<TimeUnit>;
+  using InnerType = TimeUnit;
 
   // We can't use inherited constructors yet. So we have to duplicate all the
   // constructors found in IntervalSet base class.
@@ -223,6 +226,45 @@ class TimeIntervals : public IntervalSet<TimeUnit> {
   }
 
   TimeIntervals() = default;
+};
+
+using TimeRange = Interval<double>;
+
+// A set of intervals, containing doubles that are seconds.
+class TimeRanges : public IntervalSet<double> {
+ public:
+  using BaseType = IntervalSet<double>;
+  using InnerType = double;
+  using nld = std::numeric_limits<double>;
+
+  // We can't use inherited constructors yet. So we have to duplicate all the
+  // constructors found in IntervalSet base class.
+  // all this could be later replaced with:
+  // using IntervalSet<TimeUnit>::IntervalSet;
+
+  // MOZ_IMPLICIT as we want to enable initialization in the form:
+  // TimeIntervals i = ... like we would do with IntervalSet<T> i = ...
+  MOZ_IMPLICIT TimeRanges(const BaseType& aOther) : BaseType(aOther) {}
+  MOZ_IMPLICIT TimeRanges(BaseType&& aOther) : BaseType(std::move(aOther)) {}
+  explicit TimeRanges(const BaseType::ElemType& aOther) : BaseType(aOther) {}
+  explicit TimeRanges(BaseType::ElemType&& aOther)
+      : BaseType(std::move(aOther)) {}
+
+  static TimeRanges Invalid() {
+    return TimeRanges(TimeRange(-nld::infinity(), nld::infinity()));
+  }
+  bool IsInvalid() const {
+    return Length() == 1 && Start(0) == -nld::infinity() &&
+           End(0) == nld::infinity();
+  }
+  // Convert from TimeUnit-based intervals to second-based TimeRanges.
+  explicit TimeRanges(const TimeIntervals& aIntervals) {
+    for (const auto& interval : aIntervals) {
+      Add(TimeRange(interval.mStart.ToSeconds(), interval.mEnd.ToSeconds()));
+    }
+  }
+
+  TimeRanges() = default;
 };
 
 }  // namespace media

@@ -3223,13 +3223,13 @@ void HTMLMediaElement::Seek(double aTime, SeekTarget::Type aSeekType,
   }
 
   // Clamp the seek target to inside the seekable ranges.
-  media::TimeIntervals seekableIntervals = mDecoder->GetSeekable();
-  if (seekableIntervals.IsInvalid()) {
+  media::TimeRanges seekableRanges = mDecoder->GetSeekableTimeRanges();
+  if (seekableRanges.IsInvalid()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
   RefPtr<TimeRanges> seekable =
-      new TimeRanges(ToSupports(OwnerDoc()), seekableIntervals);
+      new TimeRanges(ToSupports(OwnerDoc()), seekableRanges);
   uint32_t length = seekable->Length();
   if (length == 0) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);

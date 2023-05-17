@@ -80,14 +80,15 @@ nsresult MediaSourceDecoder::Load(nsIPrincipal* aPrincipal) {
   return CreateAndInitStateMachine(!mEnded);
 }
 
-media::TimeIntervals MediaSourceDecoder::GetSeekable() {
+template <typename IntervalType>
+IntervalType MediaSourceDecoder::GetSeekableImpl() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mMediaSource) {
     NS_WARNING("MediaSource element isn't attached");
-    return media::TimeIntervals::Invalid();
+    return IntervalType();
   }
 
-  media::TimeIntervals seekable;
+  TimeIntervals seekable;
   double duration = mMediaSource->Duration();
   if (std::isnan(duration)) {
     // Return empty range.
@@ -105,18 +106,33 @@ media::TimeIntervals MediaSourceDecoder::GetSeekable() {
       // union ranges and abort these steps.
       seekable +=
           media::TimeInterval(unionRanges.GetStart(), unionRanges.GetEnd());
-      return seekable;
+      return IntervalType(seekable);
     }
 
     if (!buffered.IsEmpty()) {
       seekable += media::TimeInterval(TimeUnit::Zero(), buffered.GetEnd());
     }
   } else {
-      seekable +=
-          media::TimeInterval(TimeUnit::Zero(), mDuration.match(DurationToTimeUnit()));
+    if constexpr (std::is_same<IntervalType, TimeRanges>::value) {
+      // Common case: seekable in entire range of the media.
+      return TimeRanges(TimeRange(0, duration));
+    } else if constexpr (std::is_same<IntervalType, TimeIntervals>::value) {
+      seekable += media::TimeInterval(TimeUnit::Zero(),
+                                      mDuration.match(DurationToTimeUnit()));
+    } else {
+      MOZ_RELEASE_ASSERT(false);
+    }
   }
   MSE_DEBUG("ranges=%s", DumpTimeRanges(seekable).get());
-  return seekable;
+  return IntervalType(seekable);
+}
+
+media::TimeIntervals MediaSourceDecoder::GetSeekable() {
+  return GetSeekableImpl<media::TimeIntervals>();
+}
+
+media::TimeRanges MediaSourceDecoder::GetSeekableTimeRanges() {
+  return GetSeekableImpl<media::TimeRanges>();
 }
 
 media::TimeIntervals MediaSourceDecoder::GetBuffered() {

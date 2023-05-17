@@ -51,7 +51,14 @@ class MediaDecoderStateMachineBase;
 struct MediaPlaybackEvent;
 struct SharedDummyTrack;
 
-struct DurationToDouble {
+template <typename T>
+struct DurationToType {
+  double operator()(double aDouble);
+  double operator()(const media::TimeUnit& aTimeUnit);
+};
+
+template <>
+struct DurationToType<double> {
   double operator()(double aDouble) { return aDouble; }
   double operator()(const media::TimeUnit& aTimeUnit) {
     if (aTimeUnit.IsValid()) {
@@ -67,7 +74,10 @@ struct DurationToDouble {
   }
 };
 
-struct DurationToTimeUnit {
+using DurationToDouble = DurationToType<double>;
+
+template <>
+struct DurationToType<media::TimeUnit> {
   media::TimeUnit operator()(double aDouble) {
     return media::TimeUnit::FromSeconds(aDouble);
   }
@@ -75,6 +85,8 @@ struct DurationToTimeUnit {
     return aTimeUnit;
   }
 };
+
+using DurationToTimeUnit = DurationToType<media::TimeUnit>;
 
 struct MOZ_STACK_CLASS MediaDecoderInit {
   MediaDecoderOwner* const mOwner;
@@ -248,8 +260,14 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // supports range requests, we are playing a file, etc.).
   virtual bool IsTransportSeekable() = 0;
 
-  // Return the time ranges that can be seeked into.
+  // Return the time ranges that can be seeked into, in TimeUnits.
   virtual media::TimeIntervals GetSeekable();
+  // Return the time ranges that can be seeked into, in seconds, double
+  // precision.
+  virtual media::TimeRanges GetSeekableTimeRanges();
+
+  template <typename T>
+  T GetSeekableImpl();
 
   // Set the end time of the media resource. When playback reaches
   // this point the media pauses. aTime is in seconds.
