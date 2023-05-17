@@ -159,7 +159,7 @@
 .urlbarView-row[dynamicType=quickactions] .urlbarView-label {
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 11px;
+  font-size: .8em;
   font-weight: 500;
 }
 
