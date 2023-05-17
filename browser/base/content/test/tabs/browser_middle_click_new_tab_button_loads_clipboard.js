@@ -10,7 +10,14 @@ const { SearchTestUtils } = ChromeUtils.importESModule(
 );
 
 add_setup(async function() {
-  await SpecialPowers.pushPrefEnv({ set: [[searchclipboardforPref, true]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [searchclipboardforPref, true],
+      // set preloading to false so we can await the new tab being opened.
+      ["browser.newtab.preload", false],
+    ],
+  });
+  NewTabPagePreloading.removePreloadedBrowser(window);
   // Create an engine to use for the test.
   SearchTestUtils.init(this);
   await SearchTestUtils.installSearchExtension(
@@ -57,14 +64,10 @@ add_task(async function middleclick_tabs_newtab_button_with_url_in_clipboard() {
     safeUrl,
     true
   );
-  try {
-    EventUtils.synthesizeMouseAtCenter(
-      document.getElementById("tabs-newtab-button"),
-      { button: 1 }
-    );
-  } catch (error) {
-    info(error);
-  }
+  EventUtils.synthesizeMouseAtCenter(
+    document.getElementById("tabs-newtab-button"),
+    { button: 1 }
+  );
 
   await promiseTabLoaded;
   is(gBrowser.tabs.length, previousTabsLength + 1, "We created a tab");
@@ -106,17 +109,12 @@ add_task(
       searchUrl,
       true
     );
-    try {
-      EventUtils.synthesizeMouseAtCenter(
-        document.getElementById("tabs-newtab-button"),
-        { button: 1 }
-      );
-    } catch (error) {
-      info(error);
-    }
+    EventUtils.synthesizeMouseAtCenter(
+      document.getElementById("tabs-newtab-button"),
+      { button: 1 }
+    );
 
     await promiseTabLoaded;
-    info(gBrowser.currentURI.spec);
     is(gBrowser.tabs.length, previousTabsLength + 1, "We created a tab");
     is(
       gBrowser.currentURI.spec,
@@ -161,14 +159,10 @@ add_task(async function middleclick_new_tab_button_with_url_in_clipboard() {
     safeUrl,
     true
   );
-  try {
-    EventUtils.synthesizeMouseAtCenter(
-      document.getElementById("new-tab-button"),
-      { button: 1 }
-    );
-  } catch (error) {
-    info(error);
-  }
+  EventUtils.synthesizeMouseAtCenter(
+    document.getElementById("new-tab-button"),
+    { button: 1 }
+  );
 
   await promiseTabLoaded;
   is(gBrowser.tabs.length, previousTabsLength + 1, "We created a tab");
@@ -209,22 +203,52 @@ add_task(async function middleclick_new_tab_button_with_word_in_clipboard() {
     searchUrl,
     true
   );
-  try {
-    EventUtils.synthesizeMouseAtCenter(
-      document.getElementById("new-tab-button"),
-      { button: 1 }
-    );
-  } catch (error) {
-    info(error);
-  }
+  EventUtils.synthesizeMouseAtCenter(
+    document.getElementById("new-tab-button"),
+    { button: 1 }
+  );
 
   await promiseTabLoaded;
-  info(gBrowser.currentURI.spec);
   is(gBrowser.tabs.length, previousTabsLength + 1, "We created a tab");
   is(
     gBrowser.currentURI.spec,
     searchUrl,
     "New Tab URL is the search engine with the content of the clipboard"
+  );
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function middleclick_new_tab_button_with_spaces_in_clipboard() {
+  let spaces = "    \n    ";
+  await new Promise((resolve, reject) => {
+    SimpleTest.waitForClipboard(
+      spaces,
+      () => {
+        Cc["@mozilla.org/widget/clipboardhelper;1"]
+          .getService(Ci.nsIClipboardHelper)
+          .copyString(spaces);
+      },
+      resolve,
+      () => {
+        ok(false, "Clipboard copy failed");
+        reject();
+      }
+    );
+  });
+
+  info("Middle clicking 'new tab' button");
+  let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser);
+  EventUtils.synthesizeMouseAtCenter(
+    document.getElementById("new-tab-button"),
+    { button: 1 }
+  );
+
+  await promiseTabOpened;
+  is(
+    gBrowser.currentURI.spec,
+    "about:newtab",
+    "New Tab URL is the regular new tab page."
   );
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

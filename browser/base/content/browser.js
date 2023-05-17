@@ -2871,20 +2871,19 @@ function BrowserOpenTab({ event, url } = {}) {
   Services.obs.notifyObservers(
     {
       wrappedJSObject: new Promise(resolve => {
+        let options = {
+          relatedToCurrent,
+          resolveOnNewTabCreated: resolve,
+        };
         if (!werePassedURL && searchClipboard) {
           let clipboard = readFromClipboard();
-          clipboard = UrlbarUtils.stripUnsafeProtocolOnPaste(clipboard);
-          openTrustedLinkIn(clipboard, where, {
-            relatedToCurrent,
-            resolveOnNewTabCreated: resolve,
-            allowThirdPartyFixup: true,
-          });
-        } else {
-          openTrustedLinkIn(url, where, {
-            relatedToCurrent,
-            resolveOnNewTabCreated: resolve,
-          });
+          clipboard = UrlbarUtils.stripUnsafeProtocolOnPaste(clipboard).trim();
+          if (clipboard) {
+            url = clipboard;
+            options.allowThirdPartyFixup = true;
+          }
         }
+        openTrustedLinkIn(url, where, options);
       }),
     },
     "browser-open-newtab-start"
