@@ -10766,6 +10766,13 @@
   #endif
     mirror: always
 
+#if defined(MOZ_WIDGET_GTK)
+  # Use hardware acceleration for VP8 decoding on Linux.
+-   name: media.navigator.mediadatadecoder_vp8_hardware_enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+#endif
 #endif  # MOZ_WEBRTC
 
 # HTMLMediaElement.allowedToPlay should be exposed to web content when
