@@ -349,7 +349,7 @@ bool ADTSTrackDemuxer::Init() {
   // https://developer.apple.com/library/content/documentation/QuickTime/QTFF/QTFFAppenG/QTFFAppenG.html
   // In an attempt to not trim valid audio data, and because ADTS doesn't
   // provide a way to know this pre-roll value, this offets by 1024 frames.
-  mPreRoll = TimeUnit::FromMicroseconds(1024u * 1000000ULL / mSamplesPerSecond);
+  mPreRoll = TimeUnit(1024, mSamplesPerSecond);
   return mChannels;
 }
 
@@ -498,13 +498,13 @@ int64_t ADTSTrackDemuxer::StreamLength() const { return mSource.GetLength(); }
 
 TimeUnit ADTSTrackDemuxer::Duration() const {
   if (!mNumParsedFrames) {
-    return TimeUnit::FromMicroseconds(-1);
+    return TimeUnit::Invalid();
   }
 
   const int64_t streamLen = StreamLength();
   if (streamLen < 0) {
     // Unknown length, we can't estimate duration.
-    return TimeUnit::FromMicroseconds(-1);
+    return TimeUnit::Invalid();
   }
   const int64_t firstFrameOffset = mParser->FirstFrame().Offset();
   int64_t numFrames = (streamLen - firstFrameOffset) / AverageFrameLength();
@@ -513,10 +513,10 @@ TimeUnit ADTSTrackDemuxer::Duration() const {
 
 TimeUnit ADTSTrackDemuxer::Duration(int64_t aNumFrames) const {
   if (!mSamplesPerSecond) {
-    return TimeUnit::FromMicroseconds(-1);
+    return TimeUnit::Invalid();
   }
 
-  return FramesToTimeUnit(aNumFrames * mSamplesPerFrame, mSamplesPerSecond);
+  return TimeUnit(aNumFrames * mSamplesPerFrame, mSamplesPerSecond);
 }
 
 const adts::Frame& ADTSTrackDemuxer::FindNextFrame(
@@ -648,12 +648,34 @@ already_AddRefed<MediaRawData> ADTSTrackDemuxer::GetNextFrame(
 
   UpdateState(aFrame);
 
-  frame->mTime = Duration(mFrameIndex - 1) - mPreRoll;
+  TimeUnit rawpts = Duration(mFrameIndex - 1) - mPreRoll;
+  TimeUnit rawDuration = Duration(1);
+  TimeUnit rawend = rawpts + rawDuration;
+
+  frame->mTime = std::max(TimeUnit::Zero(), rawpts);
   frame->mDuration = Duration(1);
   frame->mTimecode = frame->mTime;
   frame->mKeyframe = true;
 
-  MOZ_ASSERT(frame->mDuration.IsPositive());
+  // Handle decoder delay. A packet must be trimmed if its pts, adjusted for
+  // decoder delay, is negative. A packet can be trimmed entirely.
+  if (rawpts.IsNegative()) {
+    frame->mDuration = std::max(TimeUnit::Zero(), rawend - frame->mTime);
+  }
+
+  // ADTS frames can have a presentation duration of zero, e.g. when a frame is
+  // part of preroll.
+  MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
+
+  ADTSLOG("ADTS packet demuxed: pts [%lf, %lf] (duration: %lf)", frame->mTime.ToSeconds(),
+          frame->GetEndTime().ToSeconds(), frame->mDuration.ToSeconds());
+
+  // Indicate original packet information to trim after decoding.
+  if (frame->mDuration != rawDuration) {
+    frame->mOriginalPresentationWindow = Some(media::TimeInterval{rawpts, rawend});
+    ADTSLOG("Total packet time excluding trimming: [%lf, %lf]",
+             rawpts.ToSeconds(), rawend.ToSeconds());
+  }
 
   ADTSLOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
            " mFrameIndex=%" PRId64 " mTotalFrameLen=%" PRIu64
