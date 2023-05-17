@@ -54,7 +54,7 @@ class FFmpegDataDecoder<LIBAV_VER>
   MediaResult InitDecoder();
   MediaResult AllocateExtraData();
   MediaResult DoDecode(MediaRawData* aSample, bool* aGotFrame,
-                       DecodedData& aResults);
+                       DecodedData& aOutResults);
 
   FFmpegLibWrapper* mLib;  // set in constructor
 

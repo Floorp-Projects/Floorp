@@ -10127,12 +10127,6 @@
     type: bool
     value: false
     mirror: always
-
-# Allow using openh264 decoding with ffmpeg
--   name: media.ffmpeg.allow-openh264
-    type: RelaxedAtomicBool
-    value: @IS_NOT_NIGHTLY_BUILD@
-    mirror: always
 #endif  # MOZ_FFMPEG
 
 #ifdef MOZ_WIDGET_GTK
