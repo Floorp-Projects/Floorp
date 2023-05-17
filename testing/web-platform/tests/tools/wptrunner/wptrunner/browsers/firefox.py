@@ -195,7 +195,8 @@ def run_info_extras(**kwargs):
           "fission": not kwargs.get("disable_fission"),
           "sessionHistoryInParent": (not kwargs.get("disable_fission") or
                                      not get_bool_pref("fission.disableSessionHistoryInParent")),
-          "swgl": get_bool_pref("gfx.webrender.software")}
+          "swgl": get_bool_pref("gfx.webrender.software"),
+          "editorLegacyDirectionMode": get_bool_pref_if_exists("editor.join_split_direction.compatible_with_the_other_browsers") is False}
 
     rv.update(run_info_browser_version(**kwargs))
 
@@ -217,7 +218,7 @@ def run_info_browser_version(**kwargs):
 
 
 def update_properties():
-    return (["os", "debug", "fission", "processor", "swgl", "domstreams"],
+    return (["os", "debug", "fission", "processor", "swgl", "domstreams", "editorLegacyDirectionMode"],
             {"os": ["version"], "processor": ["bits"]})
 
 

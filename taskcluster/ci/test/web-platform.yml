@@ -65,6 +65,7 @@ web-platform-tests:
         - no-fission
         - webrender-sw+no-fission
         - webrender-sw
+        - editor-legacy-direction
     run-on-projects:
         by-variant:
             webrender-sw:
@@ -86,6 +87,10 @@ web-platform-tests:
                     android.*: built-projects
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    default: []
+            editor-legacy-direction:
+                by-test-platform:
+                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
@@ -159,6 +164,7 @@ web-platform-tests-reftest:
         - no-fission
         - webrender-sw+no-fission
         - webrender-sw
+        - editor-legacy-direction
     run-on-projects:
         by-variant:
             webrender-sw:
@@ -179,6 +185,10 @@ web-platform-tests-reftest:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
+                    default: []
+            editor-legacy-direction:
+                by-test-platform:
+                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
@@ -264,6 +274,7 @@ web-platform-tests-wdspec:
         - webrender-sw+no-fission
         - webrender-sw
         - headless
+        - editor-legacy-direction
     run-on-projects:
         by-variant:
             webrender-sw+no-fission:
@@ -288,6 +299,10 @@ web-platform-tests-wdspec:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
+                    default: []
+            editor-legacy-direction:
+                by-test-platform:
+                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
@@ -341,6 +356,7 @@ web-platform-tests-crashtest:
         - no-fission
         - webrender-sw
         - webrender-sw+no-fission
+        - editor-legacy-direction
     run-on-projects:
         by-variant:
             webrender-sw:
@@ -363,6 +379,10 @@ web-platform-tests-crashtest:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
+                    default: []
+            editor-legacy-direction:
+                by-test-platform:
+                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
