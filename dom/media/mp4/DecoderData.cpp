@@ -254,7 +254,11 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
   mChannels = aAudio->sample_info[0].channels;
   mBitDepth = aAudio->sample_info[0].bit_depth;
   mExtendedProfile = AssertedCast<int8_t>(aAudio->sample_info[0].extended_profile);
-  mDuration = TimeUnit(AssertedCast<int64_t>(aTrack->duration), aTrack->time_scale);
+  if (aTrack->duration > TimeUnit::MaxTicks()) {
+    mDuration = TimeUnit::FromInfinity();
+  } else {
+    mDuration = TimeUnit(AssertedCast<int64_t>(aTrack->duration), aTrack->time_scale);
+  }
   mMediaTime = TimeUnit(aTrack->media_time, aTrack->time_scale);
   mTrackId = aTrack->track_id;
 
@@ -315,7 +319,11 @@ MediaResult MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
     mMimeType = "video/mp4v-es"_ns;
   }
   mTrackId = track->track_id;
-  mDuration = TimeUnit(AssertedCast<int64_t>(track->duration), track->time_scale);
+  if (track->duration > TimeUnit::MaxTicks()) {
+    mDuration = TimeUnit::FromInfinity();
+  } else {
+    mDuration = TimeUnit(AssertedCast<int64_t>(track->duration), track->time_scale);
+  }
   mMediaTime = TimeUnit(track->media_time, track->time_scale);
   mDisplay.width = AssertedCast<int32_t>(video->display_width);
   mDisplay.height = AssertedCast<int32_t>(video->display_height);

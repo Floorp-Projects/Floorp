@@ -87,6 +87,11 @@ class TimeUnit final {
   explicit constexpr TimeUnit(CheckedInt64 aTicks)
       : mTicks(aTicks), mBase(USECS_PER_S) {}
 
+  // Return the maximum number of ticks that a TimeUnit can contain.
+  static constexpr int64_t MaxTicks() {
+    return std::numeric_limits<int64_t>::max() - 1;
+  }
+
   // This is only precise up to a point, which is aValue * aBase <= 2^53 - 1
   static TimeUnit FromSeconds(double aValue, int64_t aBase = USECS_PER_S);
   static constexpr TimeUnit FromMicroseconds(int64_t aValue) {
