@@ -6,6 +6,7 @@
 #ifndef GMPParent_h_
 #define GMPParent_h_
 
+#include "GMPNativeTypes.h"
 #include "GMPProcessParent.h"
 #include "GMPServiceParent.h"
 #include "GMPVideoDecoderParent.h"
@@ -109,6 +110,7 @@ class GMPParent final
   const nsCString& GetDisplayName() const;
   const nsCString& GetVersion() const;
   uint32_t GetPluginId() const;
+  GMPPluginType GetPluginType() const { return mPluginType; }
   nsString GetPluginBaseName() const;
 
   // Returns true if a plugin can be or is being used across multiple NodeIds.
@@ -144,6 +146,7 @@ class GMPParent final
 
  private:
   ~GMPParent();
+  void UpdatePluginType();
 
   RefPtr<GeckoMediaPluginServiceParent> mService;
   bool EnsureProcessLoaded();
@@ -206,6 +209,7 @@ class GMPParent final
 #endif
   nsString mAdapter;
   const uint32_t mPluginId;
+  GMPPluginType mPluginType = GMPPluginType::Unknown;
   nsTArray<GMPCapability> mCapabilities;
   GMPProcessParent* mProcess;
   bool mDeleteProcessOnlyOnUnload;

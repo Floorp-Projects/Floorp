@@ -28,6 +28,7 @@ GMPContentParent::GMPContentParent(GMPParent* aParent)
   if (mParent) {
     SetDisplayName(mParent->GetDisplayName());
     SetPluginId(mParent->GetPluginId());
+    SetPluginType(mParent->GetPluginType());
   }
 }
 
