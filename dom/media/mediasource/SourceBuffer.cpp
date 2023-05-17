@@ -124,7 +124,7 @@ TimeRanges* SourceBuffer::GetBuffered(ErrorResult& aRv) {
   // as the current value of this attribute, then update the current value of
   // this attribute to intersection ranges.
   if (rangeChanged) {
-    mBuffered = new TimeRanges(ToSupports(this), intersection);
+    mBuffered = new TimeRanges(ToSupports(this), intersection.ToMicrosecondResolution());
   }
   // 6. Return the current value of this attribute.
   return mBuffered;
@@ -532,9 +532,9 @@ void SourceBuffer::AbortUpdating() {
 void SourceBuffer::CheckEndTime() {
   MOZ_ASSERT(NS_IsMainThread());
   // Check if we need to update mMediaSource duration
-  double endTime = mCurrentAttributes.GetGroupEndTimestamp().ToSeconds();
+  TimeUnit endTime = mCurrentAttributes.GetGroupEndTimestamp();
   double duration = mMediaSource->Duration();
-  if (endTime > duration) {
+  if (!std::isnan(duration) && endTime > TimeUnit::FromSeconds(duration)) {
     mMediaSource->SetDuration(endTime);
   }
 }
