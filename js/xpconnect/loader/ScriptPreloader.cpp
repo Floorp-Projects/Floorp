@@ -25,6 +25,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/scache/StartupCache.h"
 
 #include "crc32c.h"
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
@@ -65,6 +66,9 @@ using mozilla::dom::AutoJSAPI;
 using mozilla::dom::ContentChild;
 using mozilla::dom::ContentParent;
 using namespace mozilla::loader;
+using mozilla::scache::StartupCache;
+
+using namespace JS;
 
 ProcessType ScriptPreloader::sProcessType;
 
@@ -405,6 +409,10 @@ Result<nsCOMPtr<nsIFile>, nsresult> ScriptPreloader::GetCacheFile(
 static const uint8_t MAGIC[] = "mozXDRcachev003";
 
 Result<Ok, nsresult> ScriptPreloader::OpenCache() {
+  if (StartupCache::GetIgnoreDiskCache()) {
+    return Err(NS_ERROR_ABORT);
+  }
+
   MOZ_TRY(NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(mProfD)));
 
   nsCOMPtr<nsIFile> cacheFile;
