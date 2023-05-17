@@ -7,9 +7,12 @@ import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   FormAutofillNameUtils:
     "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
+  FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
+  PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.sys.mjs",
+  PhoneNumberNormalizer:
+    "resource://autofill/phonenumberutils/PhoneNumberNormalizer.sys.mjs",
 });
 
 /**
@@ -255,7 +258,75 @@ class Name extends AddressField {}
  * A full telephone number, including the country code.
  * See autocomplete="tel"
  */
-class Tel extends AddressField {}
+class Tel extends AddressField {
+  #valid = false;
+
+  // The country code part of a telphone number, such as "1" for the United States
+  #country_code = null;
+
+  // The national part of a telphone number. For example, the phone number "+1 520-248-6621"
+  // national part is "520-248-6621".
+  #national_number = null;
+
+  constructor(value, region) {
+    super(value, region);
+
+    if (!this.userValue) {
+      return;
+    }
+
+    // TODO: Support parse telephone extension
+    // We compress all tel-related fields into a single tel field when an an form
+    // is submitted, so we need to decompress it here.
+    const parsed_tel = lazy.PhoneNumber.Parse(this.userValue, region);
+    if (parsed_tel) {
+      this.#national_number = parsed_tel?.nationalNumber;
+      this.#country_code = parsed_tel?.countryCode;
+
+      this.#valid = true;
+    } else {
+      this.#national_number = lazy.PhoneNumberNormalizer.Normalize(
+        this.userValue
+      );
+
+      const md = lazy.PhoneNumber.FindMetaDataForRegion(region);
+      this.#country_code = md ? "+" + md.nationalPrefix : null;
+
+      this.#valid = lazy.PhoneNumber.IsValid(this.#national_number, md);
+    }
+  }
+
+  get country_code() {
+    return this.#country_code;
+  }
+
+  get national_number() {
+    return this.#national_number;
+  }
+
+  isValid() {
+    return this.#valid;
+  }
+
+  equals(other) {
+    return (
+      this.national_number == other.national_number &&
+      this.country_code == other.country_code
+    );
+  }
+
+  contains(other) {
+    if (!this.country_code || this.country_code != other.country_code) {
+      return false;
+    }
+
+    return this.national_number.endsWith(other.national_number);
+  }
+
+  toString() {
+    return `${this.constructor.name}: ${this.country_code} ${this.national_number}\n`;
+  }
+}
 
 /**
  * A company or organization name.
