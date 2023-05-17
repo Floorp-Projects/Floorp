@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla::media {
 class TimeIntervals;
@@ -28,16 +29,16 @@ struct nsTArray_RelocationStrategy<mozilla::media::TimeIntervals> {
 
 namespace mozilla {
 
+// Number of milliseconds per second. 1e3.
+static const int64_t MSECS_PER_S = 1000;
+
 // Number of microseconds per second. 1e6.
 static const int64_t USECS_PER_S = 1000000;
 
-// Number of microseconds per millisecond.
-static const int64_t USECS_PER_MS = 1000;
-
-namespace media {
-
 // Number of nanoseconds per second. 1e9.
 static const int64_t NSECS_PER_S = 1000000000;
+
+namespace media {
 
 #ifndef PROCESS_DECODE_LOG
 #  define PROCESS_DECODE_LOG(sample)                                   \
@@ -49,160 +50,108 @@ static const int64_t NSECS_PER_S = 1000000000;
              (sample)->mTimecode.ToMicroseconds()))
 #endif  // PROCESS_DECODE_LOG
 
-// TimeUnit at present uses a CheckedInt64 as storage.
-// INT64_MAX has the special meaning of being +oo.
+// TimeUnit is a class that represents a time value, that can be negative or
+// positive.
+//
+// Internally, it works by storing a numerator (the tick numbers), that uses
+// checked arithmetics, and a denominator (the base), that is a regular integer
+// on which arithmetics is never performed, and is only set at construction, or
+// replaced.
+//
+// Dividing the tick count by the base always yields a value in seconds,
+// but it's very useful to have a base that is dependant on the context: it can
+// be the sample-rate of an audio stream, the time base of an mp4, that's often
+// 90000 because it's divisible by 24, 25 and 30.
+//
+// Keeping time like this allows performing calculations on time values with
+// maximum precision, without having to have to care about rounding errors or
+// precision loss.
+//
+// If not specified, the base is 1e6, representing microseconds, for historical
+// reasons. Users can gradually move to more precise representations when
+// needed.
+//
+// INT64_MAX has the special meaning of being +∞, and INT64_MIN means -∞. Any
+// other value corresponds to a valid time.
+//
+// If an overflow or other problem occurs, the underlying CheckedInt<int64_t> is
+// invalid and a crash is triggered.
 class TimeUnit final {
  public:
-  static TimeUnit FromSeconds(double aValue) {
-    MOZ_ASSERT(!std::isnan(aValue));
-
-    if (std::isinf(aValue)) {
-      return aValue > 0 ? FromInfinity() : FromNegativeInfinity();
-    }
-    // Due to internal double representation, this
-    // operation is not commutative, do not attempt to simplify.
-    double halfUsec = .0000005;
-    double val =
-        (aValue <= 0 ? aValue - halfUsec : aValue + halfUsec) * USECS_PER_S;
-    if (val >= double(INT64_MAX)) {
-      return FromMicroseconds(INT64_MAX);
-    }
-    if (val <= double(INT64_MIN)) {
-      return FromMicroseconds(INT64_MIN);
-    }
-    return FromMicroseconds(int64_t(val));
+  constexpr TimeUnit(CheckedInt64 aTicks, int64_t aBase)
+      : mTicks(aTicks), mBase(aBase) {
+    MOZ_RELEASE_ASSERT(mBase > 0);
   }
 
+  explicit constexpr TimeUnit(CheckedInt64 aTicks)
+      : mTicks(aTicks), mBase(USECS_PER_S) {}
+
+  // This is only precise up to a point, which is aValue * aBase <= 2^53 - 1
+  static TimeUnit FromSeconds(double aValue, int64_t aBase = USECS_PER_S);
   static constexpr TimeUnit FromMicroseconds(int64_t aValue) {
-    return TimeUnit(aValue);
+    return TimeUnit(aValue, USECS_PER_S);
   }
-
   static constexpr TimeUnit FromNanoseconds(int64_t aValue) {
-    return TimeUnit(aValue / 1000);
+    return TimeUnit(aValue, NSECS_PER_S);
   }
-
-  static constexpr TimeUnit FromInfinity() { return TimeUnit(INT64_MAX); }
-
-  static constexpr TimeUnit FromNegativeInfinity() {
-    return TimeUnit(INT64_MIN);
+  static TimeUnit FromInfinity();
+  static TimeUnit FromNegativeInfinity();
+  static TimeUnit FromTimeDuration(const TimeDuration& aDuration);
+  static constexpr TimeUnit Zero(int64_t aBase = USECS_PER_S) {
+    return TimeUnit(0, aBase);
   }
+  static TimeUnit Invalid();
+  int64_t ToMilliseconds() const;
+  int64_t ToMicroseconds() const;
+  int64_t ToNanoseconds() const;
+  int64_t ToTicksAtRate(int64_t aRate) const;
+  double ToSeconds() const;
+  nsCString ToString() const;
+  TimeDuration ToTimeDuration() const;
+  bool IsInfinite() const;
+  bool IsPositive() const;
+  bool IsPositiveOrZero() const;
+  bool IsZero() const;
+  bool IsNegative() const;
 
-  static TimeUnit FromTimeDuration(const TimeDuration& aDuration) {
-    return FromSeconds(aDuration.ToSeconds());
-  }
-
-  static constexpr TimeUnit Zero() { return TimeUnit(0); }
-
-  static TimeUnit Invalid() {
-    TimeUnit ret;
-    ret.mValue = CheckedInt64(INT64_MAX);
-    // Force an overflow to render the CheckedInt invalid.
-    ret.mValue += 1;
-    return ret;
-  }
-
-  int64_t ToMicroseconds() const { return mValue.value(); }
-
-  int64_t ToNanoseconds() const { return mValue.value() * 1000; }
-
-  double ToSeconds() const {
-    if (IsPosInf()) {
-      return PositiveInfinity<double>();
-    }
-    if (IsNegInf()) {
-      return NegativeInfinity<double>();
-    }
-    return double(mValue.value()) / USECS_PER_S;
-  }
-
-  TimeDuration ToTimeDuration() const {
-    return TimeDuration::FromMicroseconds(mValue.value());
-  }
-
-  bool IsInfinite() const { return IsPosInf() || IsNegInf(); }
-
-  bool IsPositive() const { return mValue.value() > 0; }
-
-  bool IsPositiveOrZero() const { return mValue.value() >= 0; }
-
-  bool IsZero() const { return mValue.value() == 0; }
-
-  bool IsNegative() const { return mValue.value() < 0; }
-
-  bool operator==(const TimeUnit& aOther) const {
-    MOZ_ASSERT(IsValid() && aOther.IsValid());
-    return mValue.value() == aOther.mValue.value();
-  }
-  bool operator!=(const TimeUnit& aOther) const {
-    MOZ_ASSERT(IsValid() && aOther.IsValid());
-    return mValue.value() != aOther.mValue.value();
-  }
-  bool operator>=(const TimeUnit& aOther) const {
-    MOZ_ASSERT(IsValid() && aOther.IsValid());
-    return mValue.value() >= aOther.mValue.value();
-  }
-  bool operator>(const TimeUnit& aOther) const { return !(*this <= aOther); }
-  bool operator<=(const TimeUnit& aOther) const {
-    MOZ_ASSERT(IsValid() && aOther.IsValid());
-    return mValue.value() <= aOther.mValue.value();
-  }
-  bool operator<(const TimeUnit& aOther) const { return !(*this >= aOther); }
-  TimeUnit operator%(const TimeUnit& aOther) const {
-    MOZ_ASSERT(IsValid() && aOther.IsValid());
-    return TimeUnit(mValue % aOther.mValue);
-  }
-
-  TimeUnit operator+(const TimeUnit& aOther) const {
-    if (IsInfinite() || aOther.IsInfinite()) {
-      // When adding at least one infinite value, the result is either
-      // +/-Inf, or NaN. So do the calculation in floating point for
-      // simplicity.
-      double result = ToSeconds() + aOther.ToSeconds();
-      return std::isnan(result) ? TimeUnit::Invalid() : FromSeconds(result);
-    }
-    return TimeUnit(mValue + aOther.mValue);
-  }
-
-  TimeUnit operator-(const TimeUnit& aOther) const {
-    if (IsInfinite() || aOther.IsInfinite()) {
-      // When subtracting at least one infinite value, the result is either
-      // +/-Inf, or NaN. So do the calculation in floating point for
-      // simplicity.
-      double result = ToSeconds() - aOther.ToSeconds();
-      return std::isnan(result) ? TimeUnit::Invalid() : FromSeconds(result);
-    }
-    MOZ_ASSERT(!IsInfinite() && !aOther.IsInfinite());
-    return TimeUnit(mValue - aOther.mValue);
-  }
-  TimeUnit& operator+=(const TimeUnit& aOther) {
-    *this = *this + aOther;
-    return *this;
-  }
-  TimeUnit& operator-=(const TimeUnit& aOther) {
-    *this = *this - aOther;
-    return *this;
-  }
-
+  // Returns true if the fractions are equal when converted to the smallest
+  // base.
+  bool EqualsAtLowestResolution(const TimeUnit& aOther) const;
+  // Strict equality -- the fractions must be exactly equal
+  bool operator==(const TimeUnit& aOther) const;
+  bool operator!=(const TimeUnit& aOther) const;
+  bool operator>=(const TimeUnit& aOther) const;
+  bool operator>(const TimeUnit& aOther) const;
+  bool operator<=(const TimeUnit& aOther) const;
+  bool operator<(const TimeUnit& aOther) const;
+  TimeUnit operator%(const TimeUnit& aOther) const;
+  TimeUnit operator+(const TimeUnit& aOther) const;
+  TimeUnit operator-(const TimeUnit& aOther) const;
+  TimeUnit& operator+=(const TimeUnit& aOther);
+  TimeUnit& operator-=(const TimeUnit& aOther);
   template <typename T>
   TimeUnit operator*(T aVal) const {
     // See bug 853398 for the reason to block double multiplier.
     // If required, use MultDouble below and with caution.
     static_assert(std::is_integral_v<T>, "Must be an integral type");
-    return TimeUnit(mValue * aVal);
+    return TimeUnit(mTicks * aVal, mBase);
   }
-  TimeUnit MultDouble(double aVal) const {
-    return TimeUnit::FromSeconds(ToSeconds() * aVal);
-  }
+  TimeUnit MultDouble(double aVal) const;
   friend TimeUnit operator/(const TimeUnit& aUnit, int64_t aVal) {
     MOZ_DIAGNOSTIC_ASSERT(0 <= aVal && aVal <= UINT32_MAX);
-    return TimeUnit(aUnit.mValue / aVal);
+    return TimeUnit(aUnit.mTicks / aVal, aUnit.mBase);
   }
   friend TimeUnit operator%(const TimeUnit& aUnit, int64_t aVal) {
     MOZ_DIAGNOSTIC_ASSERT(0 <= aVal && aVal <= UINT32_MAX);
-    return TimeUnit(aUnit.mValue % aVal);
+    return TimeUnit(aUnit.mTicks % aVal, aUnit.mBase);
   }
 
-  bool IsValid() const { return mValue.isValid(); }
+  TimeUnit ToBase(int64_t aTargetBase) const;
+  TimeUnit ToBase(const TimeUnit& aTimeUnit) const;
+  // Allow returning the same value, in a base that matches another TimeUnit.
+  TimeUnit ToBase(const TimeUnit& aTimeUnit, double& aOutError) const;
+  TimeUnit ToBase(int64_t aTargetBase, double& aOutError) const;
+  bool IsValid() const;
 
   constexpr TimeUnit() = default;
 
@@ -210,28 +159,32 @@ class TimeUnit final {
 
   TimeUnit& operator=(const TimeUnit&) = default;
 
-  bool IsPosInf() const {
-    return mValue.isValid() && mValue.value() == INT64_MAX;
-  }
-  bool IsNegInf() const {
-    return mValue.isValid() && mValue.value() == INT64_MIN;
-  }
+  bool IsPosInf() const;
+  bool IsNegInf() const;
 
+  // Allow serializing a TimeUnit via IPC
+  friend IPC::ParamTraits<mozilla::media::TimeUnit>;
+
+#ifndef VISIBLE_TIMEUNIT_INTERNALS
  private:
-  explicit constexpr TimeUnit(CheckedInt64 aMicroseconds)
-      : mValue(aMicroseconds) {}
+#endif
+  int64_t ToCommonUnit(int64_t aRatio) const;
+  // Reduce a TimeUnit to the smallest possible ticks and base. This is useful
+  // to comparison with big time values that can otherwise overflow.
+  TimeUnit Reduced() const;
 
-  // Our internal representation is in microseconds.
-  CheckedInt64 mValue{0};
+  CheckedInt64 mTicks{0};
+  // Default base is microseconds.
+  int64_t mBase{USECS_PER_S};
 };
 
-typedef Maybe<TimeUnit> NullableTimeUnit;
+using NullableTimeUnit = Maybe<TimeUnit>;
 
-typedef Interval<TimeUnit> TimeInterval;
+using TimeInterval = Interval<TimeUnit>;
 
 class TimeIntervals : public IntervalSet<TimeUnit> {
  public:
-  typedef IntervalSet<TimeUnit> BaseType;
+  using BaseType = IntervalSet<TimeUnit>;
 
   // We can't use inherited constructors yet. So we have to duplicate all the
   // constructors found in IntervalSet base class.
@@ -252,6 +205,21 @@ class TimeIntervals : public IntervalSet<TimeUnit> {
   }
   bool IsInvalid() const {
     return Length() == 1 && Start(0).IsNegInf() && End(0).IsNegInf();
+  }
+
+  // Returns the same interval, with a microsecond resolution. This is used to
+  // compare TimeUnits internal to demuxers (that use a base from the container)
+  // to floating point numbers in seconds from content.
+  TimeIntervals ToMicrosecondResolution() const {
+    TimeIntervals output;
+
+    for (const auto& interval : mIntervals) {
+      TimeInterval reducedPrecision{interval.mStart.ToBase(USECS_PER_S),
+                                    interval.mEnd.ToBase(USECS_PER_S),
+                                    interval.mFuzz.ToBase(USECS_PER_S)};
+      output += reducedPrecision;
+    }
+    return output;
   }
 
   TimeIntervals() = default;
