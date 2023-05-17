@@ -31,7 +31,7 @@ void SVGViewportFrame::PaintSVG(gfxContext& aContext,
   NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
                "Only painting of non-display SVG should take this code path");
 
-  gfxContextAutoSaveRestore autoSR;
+  gfxClipAutoSaveRestore autoSaveClip(&aContext);
 
   if (StyleDisplay()->IsScrollableOverflow()) {
     float x, y, width, height;
@@ -42,9 +42,8 @@ void SVGViewportFrame::PaintSVG(gfxContext& aContext,
       return;
     }
 
-    autoSR.SetContext(&aContext);
     gfxRect clipRect = SVGUtils::GetClipRectForFrame(this, x, y, width, height);
-    SVGUtils::SetClipRect(&aContext, aTransform, clipRect);
+    autoSaveClip.TransformedClip(aTransform, clipRect);
   }
 
   SVGDisplayContainerFrame::PaintSVG(aContext, aTransform, aImgParams);

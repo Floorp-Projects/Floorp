@@ -298,9 +298,6 @@ class SVGUtils final {
   static gfxRect GetClipRectForFrame(const nsIFrame* aFrame, float aX, float aY,
                                      float aWidth, float aHeight);
 
-  static void SetClipRect(gfxContext* aContext, const gfxMatrix& aCTM,
-                          const gfxRect& aRect);
-
   /* Using group opacity instead of fill or stroke opacity on a
    * geometry object seems to be a common authoring mistake.  If we're
    * not applying filters and not both stroking and filling, we can

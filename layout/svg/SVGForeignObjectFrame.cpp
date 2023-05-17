@@ -173,7 +173,7 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
     return;
   }
 
-  aContext.Save();
+  gfxClipAutoSaveRestore autoSaveClip(&aContext);
 
   if (StyleDisplay()->IsScrollableOverflow()) {
     float x, y, width, height;
@@ -183,7 +183,7 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
 
     gfxRect clipRect =
         SVGUtils::GetClipRectForFrame(this, 0.0f, 0.0f, width, height);
-    SVGUtils::SetClipRect(&aContext, aTransform, clipRect);
+    autoSaveClip.TransformedClip(aTransform, clipRect);
   }
 
   // SVG paints in CSS px, but normally frames paint in dev pixels. Here we
@@ -210,8 +210,6 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   nsLayoutUtils::PaintFrame(&aContext, kid, nsRegion(kid->InkOverflowRect()),
                             NS_RGBA(0, 0, 0, 0),
                             nsDisplayListBuilderMode::Painting, flags);
-
-  aContext.Restore();
 }
 
 nsIFrame* SVGForeignObjectFrame::GetFrameForPoint(const gfxPoint& aPoint) {
