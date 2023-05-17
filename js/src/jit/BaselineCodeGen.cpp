@@ -3226,39 +3226,8 @@ bool BaselineCodeGen<Handler>::emit_NewPrivateName() {
   return true;
 }
 
-template <>
-bool BaselineCompilerCodeGen::tryOptimizeGetGlobalName() {
-  PropertyName* name = handler.script()->getName(handler.pc());
-
-  // These names are non-configurable on the global and cannot be shadowed.
-  if (name == cx->names().undefined) {
-    frame.push(UndefinedValue());
-    return true;
-  }
-  if (name == cx->names().NaN) {
-    frame.push(JS::NaNValue());
-    return true;
-  }
-  if (name == cx->names().Infinity) {
-    frame.push(JS::InfinityValue());
-    return true;
-  }
-
-  return false;
-}
-
-template <>
-bool BaselineInterpreterCodeGen::tryOptimizeGetGlobalName() {
-  // Interpreter doesn't optimize simple GETGNAMEs.
-  return false;
-}
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_GetGName() {
-  if (tryOptimizeGetGlobalName()) {
-    return true;
-  }
-
   frame.syncStack(0);
 
   loadGlobalLexicalEnvironment(R0.scratchReg());

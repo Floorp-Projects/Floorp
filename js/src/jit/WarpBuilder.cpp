@@ -1846,23 +1846,6 @@ bool WarpBuilder::build_GetName(BytecodeLocation loc) {
 bool WarpBuilder::build_GetGName(BytecodeLocation loc) {
   MOZ_ASSERT(!script_->hasNonSyntacticScope());
 
-  // Try to optimize undefined/NaN/Infinity.
-  PropertyName* name = loc.getPropertyName(script_);
-  const JSAtomState& names = mirGen().runtime->names();
-
-  if (name == names.undefined) {
-    pushConstant(UndefinedValue());
-    return true;
-  }
-  if (name == names.NaN) {
-    pushConstant(JS::NaNValue());
-    return true;
-  }
-  if (name == names.Infinity) {
-    pushConstant(JS::InfinityValue());
-    return true;
-  }
-
   MDefinition* env = globalLexicalEnvConstant();
   return buildIC(loc, CacheKind::GetName, {env});
 }
