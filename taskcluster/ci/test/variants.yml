@@ -104,6 +104,18 @@ xorigin:
                 - "--enable-xorigin-tests"
                 - "--setpref=privacy.partition.always_partition_third_party_non_cookie_storage=false"
 
+editor-legacy-direction:
+    description: "{description} with compatible join/split node direction of editor disabled"
+    component: "Core::DOM: Editor"
+    expiration: "2023-09-01"
+    suffix: "editor-legacy-dir"
+    replace:
+        tier: 2
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=editor.join_split_direction.compatible_with_the_other_browsers=false"
+
 conditioned_profile:
     description: "{description} with conditioned profile"
     component: "Testing::General"
