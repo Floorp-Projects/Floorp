@@ -235,7 +235,41 @@ class PostalCode extends AddressField {}
  * City name.
  * See autocomplete="address-level1"
  */
-class City extends AddressField {}
+class City extends AddressField {
+  #city = null;
+
+  constructor(value, region) {
+    super(value, region);
+
+    const options = {
+      ignore_case: true,
+    };
+    this.#city = this.normalizeUserValue(options);
+  }
+
+  get city() {
+    return this.#city;
+  }
+
+  equals(other) {
+    return this.city == other.city;
+  }
+
+  contains(other) {
+    const options = {
+      ignore_case: true,
+      replace_punctuation: " ",
+      merge_whitespace: true,
+    };
+
+    const selfTokens = new Tokens(this.normalizeUserValue(options));
+    const otherTokens = new Tokens(other.normalizeUserValue(options));
+
+    return otherTokens.isSubsetInOrder(selfTokens, (a, b) =>
+      this.localeCompare(a, b)
+    );
+  }
+}
 
 /**
  * State.
