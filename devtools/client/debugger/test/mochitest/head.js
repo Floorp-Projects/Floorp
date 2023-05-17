@@ -116,6 +116,7 @@ const INTEGRATION_TEST_PAGE_SOURCES = [
   "replaced-bundle.js",
   "removed-original.js",
   "named-eval.js",
+  "react-component-module.js",
   // This is the JS file with encoded characters and custom protocol
   "文字コード.js",
   // Webpack generated some extra sources:
