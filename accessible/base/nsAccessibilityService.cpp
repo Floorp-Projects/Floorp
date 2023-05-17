@@ -536,17 +536,11 @@ void nsAccessibilityService::NotifyOfComputedStyleChange(
     // position: fixed/sticky and content with overflow styling (hidden, auto,
     // scroll)
     if (const nsIFrame* frame = aContent->GetPrimaryFrame()) {
-      const ComputedStyle* newStyle = frame->Style();
-      nsAutoCString overflow;
-      newStyle->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
-      if (newStyle &&
-          (newStyle->StyleDisplay()->HasTransform(frame) ||
-           newStyle->StyleDisplay()->mPosition ==
-               StylePositionProperty::Fixed ||
-           newStyle->StyleDisplay()->mPosition ==
-               StylePositionProperty::Sticky ||
-           (overflow.Equals("hidden"_ns) || overflow.Equals("scroll"_ns) ||
-            overflow.Equals("auto"_ns)))) {
+      const auto& disp = *frame->StyleDisplay();
+      if (disp.HasTransform(frame) ||
+          disp.mPosition == StylePositionProperty::Fixed ||
+          disp.mPosition == StylePositionProperty::Sticky ||
+          disp.IsScrollableOverflow()) {
         document->ContentInserted(aContent, aContent->GetNextSibling());
       }
     }
