@@ -88,7 +88,9 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
     // MoveableData got called. Can no longer work on it.
     return false;
   }
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   const size_t originalFrames = mAudioData.Length() / mChannels;
+#endif
   if (aTrim.mStart < mOriginalTime || aTrim.mEnd > GetEndTime()) {
     return false;
   }
