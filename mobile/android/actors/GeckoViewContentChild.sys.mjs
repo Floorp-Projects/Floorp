@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { GeckoViewActorChild } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewActorChild.sys.mjs"
-);
-
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { GeckoViewActorChild } from "resource://gre/modules/GeckoViewActorChild.sys.mjs";
 
 // This needs to match ScreenLength.java
 const SCREEN_LENGTH_TYPE_PIXEL = 0;
@@ -32,9 +26,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Utils: "resource://gre/modules/sessionstore/Utils.sys.mjs",
 });
 
-var EXPORTED_SYMBOLS = ["GeckoViewContentChild"];
-
-class GeckoViewContentChild extends GeckoViewActorChild {
+export class GeckoViewContentChild extends GeckoViewActorChild {
   constructor() {
     super();
     this.lastOrientation = SCREEN_ORIENTATION_PORTRAIT;

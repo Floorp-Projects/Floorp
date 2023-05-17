@@ -1,19 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = ["GeckoViewPermissionProcessChild"];
-
-const { GeckoViewActorChild } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewActorChild.sys.mjs"
-);
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -29,7 +19,7 @@ const STATUS_INACTIVE = "inactive";
 const TYPE_CAMERA = "camera";
 const TYPE_MICROPHONE = "microphone";
 
-class GeckoViewPermissionProcessChild extends JSProcessActorChild {
+export class GeckoViewPermissionProcessChild extends JSProcessActorChild {
   getActor(window) {
     return window.windowGlobalChild.getActor("GeckoViewPermission");
   }

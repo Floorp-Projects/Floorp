@@ -2,15 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { GeckoViewActorChild } from "resource://gre/modules/GeckoViewActorChild.sys.mjs";
 
-const { GeckoViewActorChild } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewActorChild.sys.mjs"
-);
-
-const EXPORTED_SYMBOLS = ["GeckoViewFormValidationChild"];
-
-class GeckoViewFormValidationChild extends GeckoViewActorChild {
+export class GeckoViewFormValidationChild extends GeckoViewActorChild {
   handleEvent(aEvent) {
     switch (aEvent.type) {
       case "MozInvalidForm": {
