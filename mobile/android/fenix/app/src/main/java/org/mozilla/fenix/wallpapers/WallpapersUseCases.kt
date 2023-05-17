@@ -12,11 +12,8 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.fetch.Client
-import org.mozilla.fenix.FeatureFlags
-import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.ext.isSystemInDarkTheme
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 import java.io.File
@@ -46,57 +43,33 @@ class WallpapersUseCases(
     private val downloader = WallpaperDownloader(storageRootDirectory, client)
     private val fileManager = WallpaperFileManager(storageRootDirectory)
     val initialize: InitializeWallpapersUseCase by lazy {
-        if (FeatureFlags.wallpaperV2Enabled) {
-            val metadataFetcher = WallpaperMetadataFetcher(client)
-            val migrationHelper = LegacyWallpaperMigration(
-                storageRootDirectory = storageRootDirectory,
-                settings = context.settings(),
-                selectWallpaper::invoke,
-            )
-            DefaultInitializeWallpaperUseCase(
-                appStore = appStore,
-                downloader = downloader,
-                fileManager = fileManager,
-                metadataFetcher = metadataFetcher,
-                migrationHelper = migrationHelper,
-                settings = context.settings(),
-                currentLocale = currentLocale,
-            )
-        } else {
-            val fileManager = LegacyWallpaperFileManager(storageRootDirectory)
-            val downloader = LegacyWallpaperDownloader(context, client)
-            LegacyInitializeWallpaperUseCase(
-                appStore = appStore,
-                downloader = downloader,
-                fileManager = fileManager,
-                settings = context.settings(),
-                currentLocale = currentLocale,
-            )
-        }
+        val metadataFetcher = WallpaperMetadataFetcher(client)
+        val migrationHelper = LegacyWallpaperMigration(
+            storageRootDirectory = storageRootDirectory,
+            settings = context.settings(),
+            selectWallpaper::invoke,
+        )
+        DefaultInitializeWallpaperUseCase(
+            appStore = appStore,
+            downloader = downloader,
+            fileManager = fileManager,
+            metadataFetcher = metadataFetcher,
+            migrationHelper = migrationHelper,
+            settings = context.settings(),
+            currentLocale = currentLocale,
+        )
     }
     val loadBitmap: LoadBitmapUseCase by lazy {
-        if (FeatureFlags.wallpaperV2Enabled) {
-            DefaultLoadBitmapUseCase(
-                filesDir = context.filesDir,
-                getOrientation = { context.resources.configuration.orientation },
-            )
-        } else {
-            LegacyLoadBitmapUseCase(context)
-        }
+        DefaultLoadBitmapUseCase(
+            filesDir = context.filesDir,
+            getOrientation = { context.resources.configuration.orientation },
+        )
     }
     val loadThumbnail: LoadThumbnailUseCase by lazy {
-        if (FeatureFlags.wallpaperV2Enabled) {
-            DefaultLoadThumbnailUseCase(storageRootDirectory)
-        } else {
-            LegacyLoadThumbnailUseCase(context)
-        }
+        DefaultLoadThumbnailUseCase(storageRootDirectory)
     }
     val selectWallpaper: SelectWallpaperUseCase by lazy {
-        if (FeatureFlags.wallpaperV2Enabled) {
-            DefaultSelectWallpaperUseCase(context.settings(), appStore, fileManager, downloader)
-        } else {
-            LegacySelectWallpaperUseCase(context.settings(), appStore)
-        }
+        DefaultSelectWallpaperUseCase(context.settings(), appStore, fileManager, downloader)
     }
 
     /**
@@ -108,133 +81,6 @@ class WallpapersUseCases(
          * retrieval and determining the currently selected wallpaper.
          */
         suspend operator fun invoke()
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal class LegacyInitializeWallpaperUseCase(
-        private val appStore: AppStore,
-        private val downloader: LegacyWallpaperDownloader,
-        private val fileManager: LegacyWallpaperFileManager,
-        private val settings: Settings,
-        private val currentLocale: String,
-        private val possibleWallpapers: List<Wallpaper> = allWallpapers,
-    ) : InitializeWallpapersUseCase {
-
-        /**
-         * Downloads the currently available wallpaper metadata from a remote source.
-         * Updates the [appStore] with that metadata and with the selected wallpaper found in storage.
-         * Removes any unused promotional or time-limited assets from local storage.
-         * Should usually be called early the app's lifetime to ensure that metadata and thumbnails
-         * are available as soon as they are needed.
-         */
-        override suspend operator fun invoke() {
-            // Quite a bit of code needs to be executed off the main thread in some of this setup.
-            // This should be cleaned up as improvements are made to the storage, file management,
-            // and download utilities.
-            withContext(Dispatchers.IO) {
-                val dispatchedCurrent = Wallpaper.getCurrentWallpaperFromSettings(settings)?.let {
-                    // Dispatch this ASAP so the home screen can render.
-                    appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
-                    true
-                } ?: false
-                val availableWallpapers = possibleWallpapers.getAvailableWallpapers()
-                val currentWallpaperName = settings.currentWallpaperName
-                val currentWallpaper = possibleWallpapers.find { it.name == currentWallpaperName }
-                    ?: fileManager.lookupExpiredWallpaper(currentWallpaperName)
-                    ?: Wallpaper.Default
-
-                fileManager.clean(
-                    currentWallpaper,
-                    possibleWallpapers,
-                )
-                downloadAllRemoteWallpapers(availableWallpapers)
-                appStore.dispatch(AppAction.WallpaperAction.UpdateAvailableWallpapers(availableWallpapers))
-                if (!dispatchedCurrent) {
-                    appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(currentWallpaper))
-                }
-            }
-        }
-
-        private fun List<Wallpaper>.getAvailableWallpapers() =
-            this.filter { !it.isExpired() && it.isAvailableInLocale() }
-
-        private suspend fun downloadAllRemoteWallpapers(availableWallpapers: List<Wallpaper>) {
-            for (wallpaper in availableWallpapers) {
-                if (wallpaper != Wallpaper.Default) {
-                    downloader.downloadWallpaper(wallpaper)
-                }
-            }
-        }
-
-        private fun Wallpaper.isExpired(): Boolean {
-            val expired = this.collection.endDate?.let { Date().after(it) } ?: false
-            return expired && this.name != settings.currentWallpaperName
-        }
-
-        private fun Wallpaper.isAvailableInLocale(): Boolean =
-            this.collection.availableLocales?.contains(currentLocale) ?: true
-
-        companion object {
-            private val firefoxClassicCollection = Wallpaper.Collection(
-                name = Wallpaper.firefoxCollectionName,
-                heading = null,
-                description = null,
-                availableLocales = null,
-                startDate = null,
-                endDate = null,
-                learnMoreUrl = null,
-            )
-            private val localWallpapers: List<Wallpaper> = listOf(
-                Wallpaper(
-                    name = Wallpaper.amethystName,
-                    collection = firefoxClassicCollection,
-                    textColor = null,
-                    cardColorLight = null,
-                    cardColorDark = null,
-                    thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
-                    assetsFileState = Wallpaper.ImageFileState.Downloaded,
-                ),
-                Wallpaper(
-                    name = Wallpaper.ceruleanName,
-                    collection = firefoxClassicCollection,
-                    textColor = null,
-                    cardColorLight = null,
-                    cardColorDark = null,
-                    thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
-                    assetsFileState = Wallpaper.ImageFileState.Downloaded,
-                ),
-                Wallpaper(
-                    name = Wallpaper.sunriseName,
-                    collection = firefoxClassicCollection,
-                    textColor = null,
-                    cardColorLight = null,
-                    cardColorDark = null,
-                    thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
-                    assetsFileState = Wallpaper.ImageFileState.Downloaded,
-                ),
-            )
-            private val remoteWallpapers: List<Wallpaper> = listOf(
-                Wallpaper(
-                    name = Wallpaper.twilightHillsName,
-                    collection = firefoxClassicCollection,
-                    textColor = null,
-                    cardColorLight = null,
-                    cardColorDark = null,
-                    thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
-                    assetsFileState = Wallpaper.ImageFileState.Downloaded,
-                ),
-                Wallpaper(
-                    name = Wallpaper.beachVibeName,
-                    collection = firefoxClassicCollection,
-                    textColor = null,
-                    cardColorLight = null,
-                    cardColorDark = null,
-                    thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
-                    assetsFileState = Wallpaper.ImageFileState.Downloaded,
-                ),
-            )
-            val allWallpapers = listOf(Wallpaper.Default) + localWallpapers + remoteWallpapers
-        }
     }
 
     @Suppress("LongParameterList")
@@ -317,64 +163,6 @@ class WallpapersUseCases(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal class LegacyLoadBitmapUseCase(private val context: Context) : LoadBitmapUseCase {
-        /**
-         * Load the bitmap for a [wallpaper], if available.
-         *
-         * @param wallpaper The wallpaper to load a bitmap for.
-         */
-        override suspend operator fun invoke(wallpaper: Wallpaper): Bitmap? = when (wallpaper.name) {
-            Wallpaper.amethystName, Wallpaper.ceruleanName, Wallpaper.sunriseName -> {
-                loadWallpaperFromDrawable(context, wallpaper)
-            }
-            Wallpaper.twilightHillsName, Wallpaper.beachVibeName -> {
-                loadWallpaperFromDisk(context, wallpaper)
-            }
-            else -> null
-        }
-
-        private suspend fun loadWallpaperFromDrawable(
-            context: Context,
-            wallpaper: Wallpaper,
-        ): Bitmap? = Result.runCatching {
-            val drawableRes = when (wallpaper.name) {
-                Wallpaper.amethystName -> R.drawable.amethyst
-                Wallpaper.ceruleanName -> R.drawable.cerulean
-                Wallpaper.sunriseName -> R.drawable.sunrise
-                else -> return@runCatching null
-            }
-            withContext(Dispatchers.IO) {
-                BitmapFactory.decodeResource(context.resources, drawableRes)
-            }
-        }.getOrNull()
-
-        private suspend fun loadWallpaperFromDisk(
-            context: Context,
-            wallpaper: Wallpaper,
-        ): Bitmap? = Result.runCatching {
-            val path = wallpaper.getLocalPathFromContext(context)
-            withContext(Dispatchers.IO) {
-                val file = File(context.filesDir, path)
-                BitmapFactory.decodeStream(file.inputStream())
-            }
-        }.getOrNull()
-
-        /**
-         * Get the expected local path on disk for a wallpaper. This will differ depending
-         * on orientation and app theme.
-         */
-        private fun Wallpaper.getLocalPathFromContext(context: Context): String {
-            val orientation = if (context.isLandscape()) "landscape" else "portrait"
-            val theme = if (context.isSystemInDarkTheme()) "dark" else "light"
-            return Wallpaper.legacyGetLocalPath(orientation, theme, name)
-        }
-
-        private fun Context.isLandscape(): Boolean {
-            return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        }
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal class DefaultLoadBitmapUseCase(
         private val filesDir: File,
         private val getOrientation: () -> Int,
@@ -423,12 +211,6 @@ class WallpapersUseCases(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal class LegacyLoadThumbnailUseCase(private val context: Context) : LoadThumbnailUseCase {
-        override suspend fun invoke(wallpaper: Wallpaper): Bitmap? =
-            LegacyLoadBitmapUseCase(context).invoke(wallpaper)
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal class DefaultLoadThumbnailUseCase(private val filesDir: File) : LoadThumbnailUseCase {
         override suspend fun invoke(wallpaper: Wallpaper): Bitmap? = withContext(Dispatchers.IO) {
             Result.runCatching {
@@ -451,26 +233,6 @@ class WallpapersUseCases(
          * @param wallpaper The selected wallpaper.
          */
         suspend operator fun invoke(wallpaper: Wallpaper): Wallpaper.ImageFileState
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal class LegacySelectWallpaperUseCase(
-        private val settings: Settings,
-        private val appStore: AppStore,
-    ) : SelectWallpaperUseCase {
-        /**
-         * Select a new wallpaper. Storage and the app store will be updated appropriately.
-         *
-         * @param wallpaper The selected wallpaper.
-         */
-        override suspend fun invoke(wallpaper: Wallpaper): Wallpaper.ImageFileState {
-            settings.currentWallpaperName = wallpaper.name
-            settings.currentWallpaperTextColor = wallpaper.textColor ?: 0
-            settings.currentWallpaperCardColorLight = wallpaper.cardColorLight ?: 0
-            settings.currentWallpaperCardColorDark = wallpaper.cardColorDark ?: 0
-            appStore.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper))
-            return Wallpaper.ImageFileState.Downloaded
-        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

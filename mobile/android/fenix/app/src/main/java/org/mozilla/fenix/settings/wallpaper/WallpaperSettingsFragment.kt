@@ -18,7 +18,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -57,11 +56,7 @@ class WallpaperSettingsFragment : Fragment() {
                     val coroutineScope = rememberCoroutineScope()
 
                     WallpaperSettings(
-                        wallpaperGroups = if (FeatureFlags.wallpaperV2Enabled) {
-                            wallpapers.groupByDisplayableCollection()
-                        } else {
-                            mapOf(Wallpaper.ClassicFirefoxCollection to wallpapers)
-                        },
+                        wallpaperGroups = wallpapers.groupByDisplayableCollection(),
                         defaultWallpaper = Wallpaper.Default,
                         selectedWallpaper = currentWallpaper,
                         loadWallpaperResource = {
