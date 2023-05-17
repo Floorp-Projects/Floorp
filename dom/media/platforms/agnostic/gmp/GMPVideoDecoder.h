@@ -114,13 +114,14 @@ class GMPVideoDecoder final : public MediaDataDecoder,
 
   uint32_t mMaxRefFrames = 0;
   ReorderQueue mReorderQueue;
+  DecodedData mUnorderedData;
 
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;
   MozPromiseHolder<FlushPromise> mFlushPromise;
-  DecodedData mDecodedData;
   bool mConvertToAnnexB = false;
   bool mCanDecodeBatch = false;
+  bool mReorderFrames = true;
 };
 
 }  // namespace mozilla

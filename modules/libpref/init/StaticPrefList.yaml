@@ -10373,6 +10373,12 @@
   value: false
   mirror: always
 
+# True if we want to reorder frames from the decoder based on the timestamp.
+- name: media.gmp.decoder.reorder_frames
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Whether to suspend decoding of videos in background tabs.
 - name: media.suspend-bkgnd-video.enabled
   type: RelaxedAtomicBool
