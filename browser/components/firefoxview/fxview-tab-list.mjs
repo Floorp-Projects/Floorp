@@ -37,13 +37,13 @@ if (!window.IS_STORYBOOK) {
  * @property {number} maxTabsLength - The max number of tabs for the list
  * @property {Array} tabItems - Items to show in the tab list
  */
-export default class MozTabList extends MozLitElement {
+export default class FxviewTabList extends MozLitElement {
   constructor() {
     super();
     window.MozXULElement.insertFTLIfNeeded("toolkit/branding/brandings.ftl");
-    window.MozXULElement.insertFTLIfNeeded("browser/mozTabList.ftl");
+    window.MozXULElement.insertFTLIfNeeded("browser/fxviewTabList.ftl");
     this.activeIndex = 0;
-    this.currentActiveElementId = "moz-tab-row-main";
+    this.currentActiveElementId = "fxview-tab-row-main";
     this.hasPopup = null;
     this.dateTimeFormat = "relative";
     this.maxTabsLength = 25;
@@ -61,7 +61,7 @@ export default class MozTabList extends MozLitElement {
   };
 
   static queries = {
-    rowEls: { all: "moz-tab-row" },
+    rowEls: { all: "fxview-tab-row" },
   };
 
   willUpdate(changes) {
@@ -127,15 +127,17 @@ export default class MozTabList extends MozLitElement {
 
   onIntervalUpdate() {
     this.requestUpdate();
-    Array.from(this.rowEls).forEach(mozTabRow => mozTabRow.requestUpdate());
+    Array.from(this.rowEls).forEach(fxviewTabRow =>
+      fxviewTabRow.requestUpdate()
+    );
   }
 
   /**
-   * Focuses the expected element (either the link or button) within moz-tab-row
+   * Focuses the expected element (either the link or button) within fxview-tab-row
    * The currently focused/active element ID within a row is stored in this.currentActiveElementId
    */
   handleFocusElementInRow(e) {
-    let mozTabRow = e.target;
+    let fxviewTabRow = e.target;
     if (e.code == "ArrowUp") {
       // Focus either the link or button of the previous row based on this.currentActiveElementId
       e.preventDefault();
@@ -149,18 +151,18 @@ export default class MozTabList extends MozLitElement {
       // set this.currentActiveElementId to that element's ID
       e.preventDefault();
       if (document.dir == "rtl") {
-        this.currentActiveElementId = mozTabRow.focusLink();
+        this.currentActiveElementId = fxviewTabRow.focusLink();
       } else {
-        this.currentActiveElementId = mozTabRow.focusButton();
+        this.currentActiveElementId = fxviewTabRow.focusButton();
       }
     } else if (e.code == "ArrowLeft") {
       // Focus either the link or the button in the current row and
       // set this.currentActiveElementId to that element's ID
       e.preventDefault();
       if (document.dir == "rtl") {
-        this.currentActiveElementId = mozTabRow.focusButton();
+        this.currentActiveElementId = fxviewTabRow.focusButton();
       } else {
-        this.currentActiveElementId = mozTabRow.focusLink();
+        this.currentActiveElementId = fxviewTabRow.focusLink();
       }
     }
   }
@@ -185,8 +187,8 @@ export default class MozTabList extends MozLitElement {
 
   // Use a relative URL in storybook to get faster reloads on style changes.
   static stylesheetUrl = window.IS_STORYBOOK
-    ? "./moz-tab-list.css"
-    : "chrome://browser/content/firefoxview/moz-tab-list.css";
+    ? "./fxview-tab-list.css"
+    : "chrome://browser/content/firefoxview/fxview-tab-list.css";
 
   render() {
     this.tabItems = this.tabItems.slice(0, this.maxTabsLength);
@@ -200,15 +202,15 @@ export default class MozTabList extends MozLitElement {
     return html`
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
       <div
-        id="moz-tab-list"
-        class="moz-tab-list"
+        id="fxview-tab-list"
+        class="fxview-tab-list"
         role="list"
         @keydown=${this.handleFocusElementInRow}
       >
         ${tabItems.map(
           (tabItem, i) =>
             html`
-              <moz-tab-row
+              <fxview-tab-row
                 exportparts="secondary-button"
                 ?active=${i == activeIndex}
                 .hasPopup=${hasPopup}
@@ -229,7 +231,7 @@ export default class MozTabList extends MozLitElement {
                 .title=${tabItem.title}
                 .url=${tabItem.url}
               >
-              </moz-tab-row>
+              </fxview-tab-row>
             `
         )}
       </div>
@@ -237,7 +239,7 @@ export default class MozTabList extends MozLitElement {
     `;
   }
 }
-customElements.define("moz-tab-list", MozTabList);
+customElements.define("fxview-tab-list", FxviewTabList);
 
 /**
  * A tab item that displays favicon, title, url, and time of last access
@@ -257,11 +259,11 @@ customElements.define("moz-tab-list", MozTabList);
  * @property {string} url - The url for the tab item.
  * @property {number} timeMsPref - The frequency in milliseconds of updates to relative time
  */
-export class MozTabRow extends MozLitElement {
+export class FxviewTabRow extends MozLitElement {
   constructor() {
     super();
     this.active = false;
-    this.currentActiveElementId = "moz-tab-row-main";
+    this.currentActiveElementId = "fxview-tab-row-main";
   }
 
   static properties = {
@@ -282,8 +284,8 @@ export class MozTabRow extends MozLitElement {
   };
 
   static queries = {
-    mainEl: ".moz-tab-row-main",
-    buttonEl: ".moz-tab-row-button:not([hidden])",
+    mainEl: ".fxview-tab-row-main",
+    buttonEl: ".fxview-tab-row-button:not([hidden])",
   };
 
   get currentFocusable() {
@@ -310,8 +312,8 @@ export class MozTabRow extends MozLitElement {
 
   // Use a relative URL in storybook to get faster reloads on style changes.
   static stylesheetUrl = window.IS_STORYBOOK
-    ? "./moz-tab-row.css"
-    : "chrome://browser/content/firefoxview/moz-tab-row.css";
+    ? "./fxview-tab-row.css"
+    : "chrome://browser/content/firefoxview/fxview-tab-row.css";
 
   dateFluentArgs(timestamp, dateTimeFormat) {
     if (dateTimeFormat === "date" || dateTimeFormat === "dateTime") {
@@ -328,11 +330,11 @@ export class MozTabRow extends MozLitElement {
       const elapsed = Date.now() - timestamp;
       if (elapsed <= _nowThresholdMs || !lazy.relativeTimeFormat) {
         // Use a different string for very recent timestamps
-        return "mztabrow-just-now-timestamp";
+        return "fxviewtabrow-just-now-timestamp";
       }
       return null;
     } else if (dateTimeFormat === "date" || dateTimeFormat === "dateTime") {
-      return "mztabrow-date";
+      return "fxviewtabrow-date";
     }
     return null;
   }
@@ -349,7 +351,7 @@ export class MozTabRow extends MozLitElement {
 
   timeFluentId(dateTimeFormat) {
     if (dateTimeFormat === "time" || dateTimeFormat === "dateTime") {
-      return "mztabrow-time";
+      return "fxviewtabrow-time";
     }
     return null;
   }
@@ -378,7 +380,7 @@ export class MozTabRow extends MozLitElement {
       event.preventDefault();
       if (!window.IS_STORYBOOK) {
         this.dispatchEvent(
-          new CustomEvent("moz-tab-list-primary-action", {
+          new CustomEvent("fxview-tab-list-primary-action", {
             bubbles: true,
             composed: true,
             detail: { originalEvent: event, item: this },
@@ -396,7 +398,7 @@ export class MozTabRow extends MozLitElement {
     ) {
       event.preventDefault();
       this.dispatchEvent(
-        new CustomEvent("moz-tab-list-secondary-action", {
+        new CustomEvent("fxview-tab-list-secondary-action", {
           bubbles: true,
           composed: true,
           detail: { originalEvent: event, item: this },
@@ -429,10 +431,10 @@ export class MozTabRow extends MozLitElement {
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
       <a
         href=${this.url}
-        class="moz-tab-row-main"
-        id="moz-tab-row-main"
+        class="fxview-tab-row-main"
+        id="fxview-tab-row-main"
         tabindex=${this.active &&
-        this.currentActiveElementId === "moz-tab-row-main"
+        this.currentActiveElementId === "fxview-tab-row-main"
           ? "0"
           : "-1"}
         data-l10n-id=${this.primaryL10nId}
@@ -441,19 +443,19 @@ export class MozTabRow extends MozLitElement {
         @keydown=${this.primaryActionHandler}
       >
         <span
-          class="moz-tab-row-favicon icon"
-          id="moz-tab-row-favicon"
+          class="fxview-tab-row-favicon icon"
+          id="fxview-tab-row-favicon"
           style=${styleMap({
             backgroundImage: `url(${this.getImageUrl(this.favicon, this.url)})`,
           })}
         ></span>
-        <span class="moz-tab-row-title" id="moz-tab-row-title">
+        <span class="fxview-tab-row-title" id="fxview-tab-row-title">
           ${title}
         </span>
-        <span class="moz-tab-row-url" id="moz-tab-row-url">
+        <span class="fxview-tab-row-url" id="fxview-tab-row-url">
           ${this.formatURIForDisplay(this.url)}
         </span>
-        <span class="moz-tab-row-date" id="moz-tab-row-date">
+        <span class="fxview-tab-row-date" id="fxview-tab-row-date">
           <span
             ?hidden=${relativeString || !dateString}
             data-l10n-id=${ifDefined(dateString)}
@@ -462,8 +464,8 @@ export class MozTabRow extends MozLitElement {
           <span ?hidden=${!relativeString}>${relativeString}</span>
         </span>
         <span
-          class="moz-tab-row-time"
-          id="moz-tab-row-time"
+          class="fxview-tab-row-time"
+          id="fxview-tab-row-time"
           ?hidden=${!timeString}
           data-timestamp=${this.time}
           data-l10n-id=${ifDefined(timeString)}
@@ -472,15 +474,15 @@ export class MozTabRow extends MozLitElement {
         </span>
       </a>
       <button
-        class="moz-tab-row-button ghost-button icon-button semi-transparent"
-        id="moz-tab-row-secondary-button"
+        class="fxview-tab-row-button ghost-button icon-button semi-transparent"
+        id="fxview-tab-row-secondary-button"
         part="secondary-button"
         data-l10n-id=${this.secondaryL10nId}
         data-l10n-args=${ifDefined(this.secondaryL10nArgs)}
         aria-haspopup=${ifDefined(this.hasPopup)}
         @click=${this.secondaryActionHandler}
         tabindex="${this.active &&
-        this.currentActiveElementId === "moz-tab-row-secondary-button"
+        this.currentActiveElementId === "fxview-tab-row-secondary-button"
           ? "0"
           : "-1"}"
       ></button>
@@ -488,4 +490,4 @@ export class MozTabRow extends MozLitElement {
   }
 }
 
-customElements.define("moz-tab-row", MozTabRow);
+customElements.define("fxview-tab-row", FxviewTabRow);

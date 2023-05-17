@@ -2,35 +2,35 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>MozTabList Tests</title>
+  <title>FxviewTabList Tests</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <link rel="localization" href="browser/places.ftl">
   <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
-  <script type="module" src="chrome://browser/content/firefoxview/moz-tab-list.mjs"></script>
+  <script type="module" src="chrome://browser/content/firefoxview/fxview-tab-list.mjs"></script>
 </head>
 <body>
   <style>
-    moz-tab-list.history::part(secondary-button) {
+    fxview-tab-list.history::part(secondary-button) {
       background-image: url("chrome://global/skin/icons/more.svg");
     }
   </style>
 <p id="display"></p>
 <div id="content" style="max-width: 750px">
-  <moz-tab-list class="history" .dateTimeFormat="relative" .hasPopup="menu">
+  <fxview-tab-list class="history" .dateTimeFormat="relative" .hasPopup="menu">
     <panel-list slot="menu">
-      <panel-item data-l10n-id="mztabrow-delete"></panel-item>
-      <panel-item data-l10n-id="mztabrow-forget-about-this-site"></panel-item>
+      <panel-item data-l10n-id="fxviewtabrow-delete"></panel-item>
+      <panel-item data-l10n-id="fxviewtabrow-forget-about-this-site"></panel-item>
       <hr />
-      <panel-item data-l10n-id="mztabrow-open-in-window"></panel-item>
-      <panel-item data-l10n-id="mztabrow-open-in-private-window"></panel-item>
+      <panel-item data-l10n-id="fxviewtabrow-open-in-window"></panel-item>
+      <panel-item data-l10n-id="fxviewtabrow-open-in-private-window"></panel-item>
       <hr />
-      <panel-item data-l10n-id="mztabrow-add-bookmark"></panel-item>
-      <panel-item data-l10n-id="mztabrow-save-to-pocket"></panel-item>
-      <panel-item data-l10n-id="mztabrow-copy-link"></panel-item>
+      <panel-item data-l10n-id="fxviewtabrow-add-bookmark"></panel-item>
+      <panel-item data-l10n-id="fxviewtabrow-save-to-pocket"></panel-item>
+      <panel-item data-l10n-id="fxviewtabrow-copy-link"></panel-item>
     </panel-list>
-  </moz-tab-list>
+  </fxview-tab-list>
 </div>
 <pre id="test">
 <script class="testbody" type="application/javascript">
@@ -61,7 +61,7 @@
     "resource://testing-common/TestUtils.jsm"
   );
 
-  const mozTabList = document.querySelector("moz-tab-list");
+  const fxviewTabList = document.querySelector("fxview-tab-list");
   let tabItems = [];
   const placesQuery = new PlacesQuery();
 
@@ -118,31 +118,31 @@
     await historyUpdated.promise;
 
     let normalized = normalizeHistoryData(history);
-    mozTabList.tabItems = normalized;
+    fxviewTabList.tabItems = normalized;
 
-    await mozTabList.getUpdateComplete();
-    tabItems = Array.from(mozTabList.rowEls);
+    await fxviewTabList.getUpdateComplete();
+    tabItems = Array.from(fxviewTabList.rowEls);
   }
 
   function normalizeHistoryData(history) {
     history.forEach(historyItem => {
       historyItem.time = historyItem.date.getTime();
       historyItem.icon = `page-icon:${historyItem.url}`;
-      historyItem.primaryL10nId = "mztabrow-tabs-list-tab";
+      historyItem.primaryL10nId = "fxviewtabrow-tabs-list-tab";
       historyItem.primaryL10nArgs = JSON.stringify({ targetURI: historyItem.url });
-      historyItem.secondaryL10nId = "mztabrow-open-menu-button";
+      historyItem.secondaryL10nId = "fxviewtabrow-open-menu-button";
     });
     return history;
   }
 
   function getCurrentDisplayDate() {
     let lastItemMainEl = tabItems[tabItems.length - 1].mainEl;
-    return lastItemMainEl.querySelector("#moz-tab-row-date span:not([hidden])")?.textContent.trim() ?? "";
+    return lastItemMainEl.querySelector("#fxview-tab-row-date span:not([hidden])")?.textContent.trim() ?? "";
   }
 
   function getCurrentDisplayTime() {
     let lastItemMainEl = tabItems[tabItems.length - 1].mainEl;
-    return lastItemMainEl.querySelector("#moz-tab-row-time")?.textContent.trim() ?? "";
+    return lastItemMainEl.querySelector("#fxview-tab-row-time")?.textContent.trim() ?? "";
   }
 
   function isActiveElement(expectedLinkEl) {
@@ -159,8 +159,8 @@
   }
 
   add_setup(function setup() {
-    mozTabList.addEventListener("moz-tab-list-primary-action", onPrimaryAction);
-    mozTabList.addEventListener("moz-tab-list-secondary-action", onSecondaryAction);
+    fxviewTabList.addEventListener("fxview-tab-list-primary-action", onPrimaryAction);
+    fxviewTabList.addEventListener("fxview-tab-list-secondary-action", onSecondaryAction);
   });
 
   /**
@@ -177,12 +177,12 @@
     // Check ordering
     ok(
       tabItems[0].title === "Example Domain 4",
-      "First history item in moz-tab-list is in the correct order."
+      "First history item in fxview-tab-list is in the correct order."
     )
 
     ok(
       tabItems[3].title === "Example Domain 1",
-      "Last history item in moz-tab-list is in the correct order."
+      "Last history item in fxview-tab-list is in the correct order."
     )
   });
 
@@ -206,19 +206,19 @@
   });
 
   /**
-  * Tests that a max tabs length value can be given to moz-tab-list
+  * Tests that a max tabs length value can be given to fxview-tab-list
   */
   add_task(async function test_max_list_items() {
     const mockMaxTabsLength = 3;
 
     // override this value for testing purposes
-    mozTabList.maxTabsLength = mockMaxTabsLength;
+    fxviewTabList.maxTabsLength = mockMaxTabsLength;
     await addHistoryItems();
 
     is(
       tabItems.length,
       mockMaxTabsLength,
-      `moz-tabs-list should have ${mockMaxTabsLength} list items`
+      `fxview-tabs-list should have ${mockMaxTabsLength} list items`
     );
 
     // Add new history items
@@ -242,48 +242,48 @@
       "Five total history items after inserting another node"
     );
 
-    // Update moz-tab-list component with latest history data
+    // Update fxview-tab-list component with latest history data
     let normalized = normalizeHistoryData(history);
-    mozTabList.tabItems = normalized;
-    await mozTabList.getUpdateComplete();
-    tabItems = Array.from(mozTabList.rowEls);
+    fxviewTabList.tabItems = normalized;
+    await fxviewTabList.getUpdateComplete();
+    tabItems = Array.from(fxviewTabList.rowEls);
 
     is(
       tabItems.length,
       mockMaxTabsLength,
-      `moz-tabs-list should have ${mockMaxTabsLength} list items`
+      `fxview-tabs-list should have ${mockMaxTabsLength} list items`
     );
 
     ok(
       tabItems[0].title === "Internet for people, not profits - Mozilla",
       "History list has been updated with the expected maxTabsLength."
     )
-    mozTabList.maxTabsLength = 25;
+    fxviewTabList.maxTabsLength = 25;
   });
 
     /**
-   * Tests keyboard navigation of the moz-tab-list component
+   * Tests keyboard navigation of the fxview-tab-list component
    */
   add_task(async function test_keyboard_navigation() {
     const arrowDown = async () => {
       info("Arrow down");
       synthesizeKey("KEY_ArrowDown", {});
-      await mozTabList.getUpdateComplete();
+      await fxviewTabList.getUpdateComplete();
     };
     const arrowUp = async () => {
       info("Arrow up");
       synthesizeKey("KEY_ArrowUp", {});
-      await mozTabList.getUpdateComplete();
+      await fxviewTabList.getUpdateComplete();
     };
     const arrowRight = async () => {
       info("Arrow right");
       synthesizeKey("KEY_ArrowRight", {});
-      await mozTabList.getUpdateComplete();
+      await fxviewTabList.getUpdateComplete();
     };
     const arrowLeft = async () => {
       info("Arrow left");
       synthesizeKey("KEY_ArrowLeft", {});
-      await mozTabList.getUpdateComplete();
+      await fxviewTabList.getUpdateComplete();
     };
 
     await addHistoryItems();
@@ -347,7 +347,7 @@
   });
 
   /**
-  * Tests relative time format for the moz-tab-list component
+  * Tests relative time format for the fxview-tab-list component
   */
   add_task(async function test_relative_format() {
     await addHistoryItems();
@@ -362,14 +362,14 @@
   });
 
   /**
-  * Tests date only format for the moz-tab-list component
+  * Tests date only format for the fxview-tab-list component
   */
   add_task(async function test_date_only_format() {
     await addHistoryItems();
 
     // Check date only format
-    mozTabList.dateTimeFormat = "date";
-    await mozTabList.getUpdateComplete();
+    fxviewTabList.dateTimeFormat = "date";
+    await fxviewTabList.getUpdateComplete();
     await BrowserTestUtils.waitForCondition(() => {
       return getCurrentDisplayDate().includes("/");
     });
@@ -384,14 +384,14 @@
   });
 
   /**
-  * Tests time only format for the moz-tab-list component
+  * Tests time only format for the fxview-tab-list component
   */
   add_task(async function test_time_only_format() {
     await addHistoryItems();
 
     // Check time only format
-    mozTabList.dateTimeFormat = "time";
-    await mozTabList.getUpdateComplete();
+    fxviewTabList.dateTimeFormat = "time";
+    await fxviewTabList.getUpdateComplete();
     await BrowserTestUtils.waitForCondition(() => {
       return getCurrentDisplayTime().includes("AM") || getCurrentDisplayTime().includes("PM");
     });
@@ -406,14 +406,14 @@
   });
 
   /**
-  * Tests date and time format for the moz-tab-list component
+  * Tests date and time format for the fxview-tab-list component
   */
   add_task(async function test_date_and_time_format() {
     await addHistoryItems();
 
     // Check date and time format
-    mozTabList.dateTimeFormat = "dateTime";
-    await mozTabList.getUpdateComplete();
+    fxviewTabList.dateTimeFormat = "dateTime";
+    await fxviewTabList.getUpdateComplete();
     await BrowserTestUtils.waitForCondition(() => {
       return getCurrentDisplayDate().includes("/") &&
       (getCurrentDisplayTime().includes("AM") || getCurrentDisplayTime().includes("PM"));
@@ -428,12 +428,12 @@
     );
 
     // Reset dateTimeFormat to relative before next test
-    mozTabList.dateTimeFormat = "relative";
-    await mozTabList.getUpdateComplete();
+    fxviewTabList.dateTimeFormat = "relative";
+    await fxviewTabList.getUpdateComplete();
   });
 
   /**
-  * Tests that relative time updates properly for the moz-tab-list component
+  * Tests that relative time updates properly for the fxview-tab-list component
   */
   add_task(async function test_relative_time_updates() {
     await addHistoryItems();
