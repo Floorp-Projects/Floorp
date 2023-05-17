@@ -452,3 +452,33 @@ addAccessibleTask(
   },
   { topLevel: true, iframe: true, remoteIframe: true, chrome: true }
 );
+
+/**
+ * Test invalid state determined via DOM.
+ */
+addAccessibleTask(
+  `<input type="email" id="email">`,
+  async function(browser, docAcc) {
+    const email = findAccessibleChildByID(docAcc, "email");
+    info("Focusing email");
+    let focused = waitForEvent(EVENT_FOCUS, email);
+    email.takeFocus();
+    await focused;
+    info("Typing a");
+    let invalidChanged = waitForStateChange(email, STATE_INVALID, true);
+    EventUtils.sendString("a");
+    await invalidChanged;
+    testStates(email, STATE_INVALID);
+    info("Typing @b");
+    invalidChanged = waitForStateChange(email, STATE_INVALID, false);
+    EventUtils.sendString("@b");
+    await invalidChanged;
+    testStates(email, 0, 0, STATE_INVALID);
+    info("Typing backspace");
+    invalidChanged = waitForStateChange(email, STATE_INVALID, true);
+    EventUtils.synthesizeKey("KEY_Backspace");
+    await invalidChanged;
+    testStates(email, STATE_INVALID);
+  },
+  { chrome: true, topLevel: true, remoteIframe: true }
+);

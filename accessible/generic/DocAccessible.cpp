@@ -987,7 +987,7 @@ void DocAccessible::ElementStateChanged(dom::Document* aDocument,
 
   if (aStateMask.HasState(dom::ElementState::INVALID)) {
     RefPtr<AccEvent> event =
-        new AccStateChangeEvent(accessible, states::INVALID, true);
+        new AccStateChangeEvent(accessible, states::INVALID);
     FireDelayedEvent(event);
   }
 
