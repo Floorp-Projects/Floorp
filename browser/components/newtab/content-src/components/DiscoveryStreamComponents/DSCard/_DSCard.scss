@@ -104,12 +104,19 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     }
   }
 
-  &:hover,
-  &.active {
+  // The active class is added when the context menu is open.
+  &.active,
+  &:focus-within,
+  &:hover {
     .card-stp-button-hover-background {
       display: block;
       opacity: 1;
       transition-duration: 0.3s;
+
+      .context-menu-button {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
   }
 
