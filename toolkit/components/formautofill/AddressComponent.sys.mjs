@@ -8,346 +8,333 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
-  PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.sys.mjs",
+  FormAutofillNameUtils:
+    "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
 });
 
+/**
+ * The AddressField class is a base class representing a single address field.
+ */
 class AddressField {
-  constructor(collator) {
-    this.collator = collator;
+  #userValue = null;
+
+  #region = null;
+
+  /**
+   * Create a representation of a single address field.
+   *
+   * @param {string} value
+   *        The unnormalized value of an address field.
+   *
+   * @param {string} region
+   *        The region of a single address field. Used to determine what collator should be
+   *        for string comparisons of the address's field value.
+   */
+  constructor(value, region) {
+    this.#userValue = value?.trim();
+    this.#region = region;
   }
 
+  /**
+   * Get the unnormalized value of the address field.
+   *
+   * @returns {string} The unnormalized field value.
+   */
+  get userValue() {
+    return this.#userValue;
+  }
+
+  /**
+   * Get the collator used for string comparisons.
+   *
+   * @returns {Intl.Collator} The collator.
+   */
+  get collator() {
+    return lazy.FormAutofillUtils.getSearchCollators(this.#region, {
+      ignorePunctuation: false,
+    });
+  }
+
+  get region() {
+    return this.#region;
+  }
+
+  /**
+   * Compares two strings using the collator.
+   *
+   * @param   {string} a The first string to compare.
+   * @param   {string} b The second string to compare.
+   * @returns {number} A negative, zero, or positive value, depending on the comparison result.
+   */
+  localeCompare(a, b) {
+    return lazy.FormAutofillUtils.strCompare(a, b, this.collator);
+  }
+
+  /**
+   * Checks if the field value is empty.
+   *
+   * @returns {boolean} True if the field value is empty, false otherwise.
+   */
   isEmpty() {
+    return !this.#userValue;
+  }
+
+  /**
+   * Normalizes the unnormalized field value using the provided options.
+   *
+   * @param {object} options - Options for normalization.
+   * @returns {string} The normalized field value.
+   */
+  normalizeUserValue(options) {
+    let s = this.#userValue;
+
+    if (typeof s != "string") {
+      return s;
+    }
+
+    if (options.ignore_case) {
+      s = s.toLowerCase();
+    }
+
+    // process punctuation before whitespace because if a punctuation
+    // is replaced with whitespace, we might want to merge it later
+    if (options.remove_punctuation) {
+      s = s?.replace(/[.,\/#!$%\^&\*;:{}=\-_~()]/g, "");
+    } else if ("replace_punctuation" in options) {
+      const replace = options.replace_punctuation;
+      const regex = /\p{Punctuation}/gu;
+      s = s?.replace(regex, replace);
+    }
+
+    // prcess whitespace
+    if (options.merge_whitespace) {
+      s = s?.replace(/\s{2,}/g, " ");
+    } else if (options.remove_whitespace) {
+      s = s?.replace(/[\s]/g, "");
+    }
+
+    return s.trim();
+  }
+
+  /**
+   * Returns a string representation of the address field.
+   * Ex. "Country: US", "PostalCode: 55123", etc.
+   */
+  toString() {
+    return `${this.constructor.name}: ${this.#userValue}\n`;
+  }
+
+  /**
+   * Checks if the field value is empty.
+   *
+   * @returns {boolean} True if the field value is empty, false otherwise.
+   */
+  isValid() {
+    if (this.#userValue) {
+      const pattern = /^[\p{Punctuation}]*$/u;
+      return !pattern.test(this.#userValue);
+    }
+    return true;
+  }
+
+  /**
+   * Compares the current field value with another field value for equality.
+   */
+  equals() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
-  isSame() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  include() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  toString() {
+  /**
+   * Checks if the current field value contains another field value.
+   */
+  contains() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 }
 
 /**
- * TODO: This is only a prototype now
- * Bug 1820526 - Implement Address field Deduplication algorithm
+ * A street address.
+ * See autocomplete="street-address".
  */
-class StreetAddress extends AddressField {
-  street_address = null;
-
-  constructor(record, collator) {
-    super(collator);
-
-    // TODO: Convert street-address to "hause number", "street name", "floor" and "apartment number"
-    this.street_address = record["street-address"];
-  }
-
-  isEmpty() {
-    return !this.street_address;
-  }
-
-  isSame(field) {
-    return lazy.FormAutofillUtils.compareStreetAddress(
-      this.street_address,
-      field.street_address,
-      this.collator
-    );
-  }
-
-  include(field) {
-    return this.isSame(field);
-  }
-
-  toString() {
-    return `Street Address: ${this.street_address}\n`;
-  }
-}
+class StreetAddress extends AddressField {}
 
 /**
- * TODO: This class is only a prototype now
- * Bug 1820526 - Implement Address field Deduplication algorithm
+ * A postal code / zip code
+ * See autocomplete="postal-code"
  */
-class PostalCode extends AddressField {
-  postal_code = null;
-
-  constructor(record, collator) {
-    super(collator);
-
-    this.postal_code = record["postal-code"];
-  }
-
-  isEmpty() {
-    return !this.postal_code;
-  }
-
-  isSame(field) {
-    return this.postal_code == field.postal_code;
-  }
-
-  include(field) {
-    return this.isSame(field);
-  }
-
-  toString() {
-    return `Postal Code: ${this.postal_code}\n`;
-  }
-}
+class PostalCode extends AddressField {}
 
 /**
- * TODO: This is only a prototype now
- * Bug 1820526 - Implement Address field Deduplication algorithm
+ * City name.
+ * See autocomplete="address-level1"
  */
-class Country extends AddressField {
-  country = null;
-
-  constructor(record, collator) {
-    super(collator);
-
-    this.country = record.country;
-  }
-
-  // TODO: Support isEmpty, isSame and includes
-  isEmpty() {
-    return !this.country;
-  }
-
-  isSame(field) {
-    return this.country?.toLowerCase() == field.country?.toLowerCase();
-  }
-
-  include(field) {
-    return this.isSame(field);
-  }
-
-  toString() {
-    return `Country: ${this.country}\n`;
-  }
-}
+class City extends AddressField {}
 
 /**
- * TODO: This is only a prototype now
- * Bug 1820525 - Implement Name field Deduplication algorithm
+ * State.
+ * See autocomplete="address-level2"
  */
-class Name extends AddressField {
-  given = null;
-  additional = null;
-  family = null;
-
-  constructor(record, collator) {
-    super(collator);
-
-    this.given = record["given-name"] ?? "";
-    this.additional = record["additional-name"] ?? "";
-    this.family = record["family-name"] ?? "";
-  }
-
-  // TODO: Support isEmpty, isSame and includes
-  isEmpty() {
-    return !this.given && !this.additional && !this.family;
-  }
-
-  // TODO: Consider Name Variant
-  isSame(field) {
-    return (
-      lazy.FormAutofillUtils.strCompare(
-        this.given,
-        field.given,
-        this.collator
-      ) &&
-      lazy.FormAutofillUtils.strCompare(
-        this.additional,
-        field.additional,
-        this.collator
-      ) &&
-      lazy.FormAutofillUtils.strCompare(
-        this.family,
-        field.family,
-        this.collator
-      )
-    );
-  }
-
-  include(field) {
-    return (
-      (!field.given ||
-        lazy.FormAutofillUtils.strInclude(
-          this.given,
-          field.given,
-          this.collator
-        )) &&
-      (!field.additional ||
-        lazy.FormAutofillUtils.strInclude(
-          this.additional,
-          field.additional,
-          this.collator
-        )) &&
-      (!field.family ||
-        lazy.FormAutofillUtils.strInclude(
-          this.family,
-          field.family,
-          this.collator
-        ))
-    );
-  }
-
-  toString() {
-    return (
-      `Given Name: ${this.given}\n` +
-      `Middle Name: ${this.additional}\n` +
-      `Family Name: ${this.family}\n`
-    );
-  }
-}
+class State extends AddressField {}
 
 /**
- * TODO: This is only a prototype now
- * Bug 1820524 - Implement Telephone field Deduplication algorithm
+ * A country or territory code.
+ * See autocomplete="country"
  */
-class Tel extends AddressField {
-  country = null;
-  national = null;
+class Country extends AddressField {}
 
-  constructor(record, collator) {
-    super(collator);
+/**
+ * The field expects the value to be a person's full name.
+ * See autocomplete="name"
+ */
+class Name extends AddressField {}
 
-    // We compress all tel-related fields into a single tel field when an an form
-    // is submitted, so we need to decompress it here.
-    let parsedTel = lazy.PhoneNumber.Parse(record.tel);
-    this.country = parsedTel?.countryCode;
-    this.national = parsedTel?.nationalNumber;
+/**
+ * A full telephone number, including the country code.
+ * See autocomplete="tel"
+ */
+class Tel extends AddressField {}
+
+/**
+ * A company or organization name.
+ * See autocomplete="organization".
+ */
+class Organization extends AddressField {}
+
+/**
+ * An email address
+ * See autocomplete="email".
+ */
+class Email extends AddressField {
+  constructor(value, region) {
+    super(value, region);
   }
 
-  isEmpty() {
-    return !this.country && !this.national;
-  }
-
-  isSame(field) {
-    return this.country == field.country && this.national == field.national;
-  }
-
-  include(field) {
-    if (this.country != field.country && field.country) {
+  // Since we are using the valid check to determine whether we capture the email field when users submitting a forma,
+  // use a less restrict email verification method so we capture an email for most of the cases.
+  // The current algorithm is based on the regular expression defined in
+  // https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
+  //
+  // We might also change this to something similar to the algorithm used in
+  // EmailInputType::IsValidEmailAddress if we want a more strict email validation algorithm.
+  isValid() {
+    const regex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    const match = this.userValue.match(regex);
+    if (!match) {
       return false;
     }
 
-    return this.national == field.national;
+    return true;
   }
 
-  toString() {
-    return `Telephone Number: ${this.country} ${this.national}\n`;
-  }
-}
+  /*
+  // JS version of EmailInputType::IsValidEmailAddress
+  isValid() {
+    const regex = /^([a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+)@([a-zA-Z0-9-]+\.[a-zA-Z]{2,})$/;
+    const match = this.userValue.match(regex);
+    if (!match) {
+      return false;
+    }
+    const local = match[1];
+    const domain = match[2];
 
-/**
- * TODO: This is only a prototype now
- * Bug 1820523 - Implement Organiztion field Deduplication algorithm
- */
-class Organization extends AddressField {
-  constructor(record, collator) {
-    super(collator);
-    this.organization = record.organization ?? "";
-  }
+    // The domain name can't begin with a dot or a dash.
+    if (['-', '.'].includes(domain[0])) {
+      return false;
+    }
 
-  // TODO: Support isEmpty, isSame and includes
-  isEmpty() {
-    return !this.organization;
-  }
+    // A dot can't follow a dot or a dash.
+    // A dash can't follow a dot.
+    const pattern = /(\.\.)|(\.-)|(-\.)/;
+    if (pattern.test(domain)) {
+      return false;
+    }
 
-  isSame(field) {
-    let x = lazy.FormAutofillUtils.strCompare(
-      this.organization,
-      field.organization,
-      this.collator
+    return true;
+  }
+*/
+
+  equals(other) {
+    const options = {
+      ignore_case: true,
+    };
+
+    // email is case-insenstive
+    return (
+      this.normalizeUserValue(options) == other.normalizeUserValue(options)
     );
-    return x;
   }
 
-  include(field) {
-    // TODO: Split organization into components
-    return lazy.FormAutofillUtils.strInclude(
-      this.organization,
-      field.organization,
-      this.collator
-    );
-  }
-
-  toString() {
-    return `Company Name: ${this.organization}\n`;
+  contains(other) {
+    return this.equals(other);
   }
 }
 
 /**
- * TODO: This is only a prototype now
- * Bug 1820522 - Implement Email field Deduplication algorithm
- */
-class Email extends AddressField {
-  constructor(record, collator) {
-    super(collator);
-    this.email = record.email ?? "";
-  }
-
-  isEmpty() {
-    return !this.email;
-  }
-
-  isSame(field) {
-    return this.email?.toLowerCase() == field?.email.toLowerCase();
-  }
-
-  // TODO: include should be rename to isMergeable
-  include(field) {
-    // TODO: Do we want to popup update doorhanger when test@gmail.com -> test2@gmail.com
-    return this.isSame(field);
-  }
-
-  toString() {
-    return `Email: ${this.email}\n`;
-  }
-}
-
-/**
- * Class to compare two address components and store their comparison result.
+ * The AddressComparison class compares two AddressComponent instances and
+ * provides information about the differences or similarities between them.
+ *
+ * The comparison result is stored and the object and can be retrieved by calling
+ * 'result' getter.
  */
 export class AddressComparison {
-  // Store the comparion result in an object, keyed by field name.
-  #result = {};
-
-  constructor(addressA, addressB) {
-    for (const fieldA of addressA.getAllFields()) {
-      const fieldName = fieldA.constructor.name;
-      let fieldB = addressB.getField(fieldName);
-      this.#result[fieldName] = AddressComparison.compareFields(fieldA, fieldB);
-    }
-  }
-
-  // Const to define the comparison result for two given fields
+  // Const to define the comparison result for two address fields
   static BOTH_EMPTY = 0;
   static A_IS_EMPTY = 1;
   static B_IS_EMPTY = 2;
-  static A_IS_SUBSET_OF_B = 3;
-  static A_IS_SUPERSET_OF_B = 4;
-  static SAME = 5;
-  static DIFFERENT = 6;
+  static A_CONTAINS_B = 3;
+  static B_CONTAINS_A = 4;
+  // When A contains B and B contains A Ex. "Pizza & Food vs Food & Pizza"
+  static SIMILAR = 5;
+  static SAME = 6;
+  static DIFFERENT = 7;
 
-  static isFieldDifferent(result) {
-    return [AddressComparison.DIFFERENT].includes(result);
-  }
+  // The comparion result, keyed by field name.
+  #result = {};
 
-  static isFieldMergeable(result) {
-    return [
-      AddressComparison.A_IS_SUPERSET_OF_B,
-      AddressComparison.B_IS_EMPTY,
-    ].includes(result);
-  }
   /**
-   * Compare two address fields and return the comparison result
+   * Constructs AddressComparison by comparing two AddressComponent objects.
+   *
+   * @class
+   * @param {AddressComponent} addressA - The first address to compare.
+   * @param {AddressComponent} addressB - The second address to compare.
    */
-  static compareFields(fieldA, fieldB) {
+  constructor(addressA, addressB) {
+    for (const fieldA of addressA.getAllFields()) {
+      const fieldName = fieldA.constructor.name;
+      const fieldB = addressB.getField(fieldName);
+      if (fieldB) {
+        this.#result[fieldName] = AddressComparison.compare(fieldA, fieldB);
+      } else {
+        this.#result[fieldName] = AddressComparison.B_IS_EMPTY;
+      }
+    }
+
+    for (const fieldB of addressB.getAllFields()) {
+      const fieldName = fieldB.constructor.name;
+      if (!addressB.getField(fieldName)) {
+        this.#result[fieldName] = AddressComparison.A_IS_EMPTY;
+      }
+    }
+  }
+
+  /**
+   * Retrieves the result object containing the comparison results.
+   *
+   * @returns {object} The result object with keys corresponding to field names
+   *                  and values being comparison constants.
+   */
+  get result() {
+    return this.#result;
+  }
+
+  /**
+   * Compares two address fields and returns the comparison result.
+   *
+   * @param  {AddressField} fieldA The first field to compare.
+   * @param  {AddressField} fieldB The second field to compare.
+   * @returns {number}       A constant representing the comparison result.
+   */
+  static compare(fieldA, fieldB) {
     if (fieldA.isEmpty()) {
       return fieldB.isEmpty()
         ? AddressComparison.BOTH_EMPTY
@@ -356,144 +343,229 @@ export class AddressComparison {
       return AddressComparison.B_IS_EMPTY;
     }
 
-    if (fieldA.isSame(fieldB)) {
+    if (fieldA.equals(fieldB)) {
       return AddressComparison.SAME;
     }
 
-    if (fieldB.include(fieldA)) {
-      return AddressComparison.A_IS_SUBSET_OF_B;
-    }
-
-    if (fieldA.include(fieldB)) {
-      return AddressComparison.A_IS_SUPERSET_OF_B;
+    if (fieldB.contains(fieldA)) {
+      if (fieldA.contains(fieldB)) {
+        return AddressComparison.SIMILAR;
+      }
+      return AddressComparison.B_CONTAINS_A;
+    } else if (fieldA.contains(fieldB)) {
+      return AddressComparison.A_CONTAINS_B;
     }
 
     return AddressComparison.DIFFERENT;
   }
 
   /**
-   * Determine whether addressA is a duplicate of addressB
+   * Converts a comparison result constant to a readable string.
    *
-   * An address is considered as duplicated of another address when every field
-   * in the address are either the same or is subset of another address.
-   *
-   * @returns {boolean} True if address1 is a duplicate of address2
+   * @param  {number} result The comparison result constant.
+   * @returns {string}        A readable string representing the comparison result.
    */
-  isDuplicate() {
-    return Object.values(this.#result).every(v =>
-      [
-        AddressComparison.BOTH_EMPTY,
-        AddressComparison.SAME,
-        AddressComparison.A_IS_EMPTY,
-        AddressComparison.A_IS_SUBSET_OF_B,
-      ].includes(v)
-    );
-  }
-
-  /**
-   * Determine whether addressA may be merged into addressB
-   *
-   * An address can be merged into another address when none of any
-   * fields are different and the address has at least one mergeable
-   * field.
-   *
-   * @returns {boolean} True if address1 can be merged into address2
-   */
-  isMergeable() {
-    let hasMergeableField = false;
-    for (const result of Object.values(this.#result)) {
-      // As long as any of the field is different, these two addresses are not mergeable
-      if (AddressComparison.isFieldDifferent(result)) {
-        return false;
-      } else if (AddressComparison.isFieldMergeable(result)) {
-        hasMergeableField = true;
-      }
+  static resultToString(result) {
+    switch (result) {
+      case AddressComparison.BOTH_EMPTY:
+        return "both fields are empty";
+      case AddressComparison.A_IS_EMPTY:
+        return "field A is empty";
+      case AddressComparison.B_IS_EMPTY:
+        return "field B is empty";
+      case AddressComparison.A_CONTAINS_B:
+        return "field A contains field B";
+      case AddressComparison.B_CONTAINS_B:
+        return "field B contains field A";
+      case AddressComparison.SIMILAR:
+        return "field A and field B are similar";
+      case AddressComparison.SAME:
+        return "two fields are the same";
+      case AddressComparison.DIFFERENT:
+        return "two fields are different";
     }
-    return hasMergeableField;
+    return "";
   }
 
   /**
-   * Return fields that are mergeable. note that this function doesn't consider
-   * whether two address component may be merged. If you want to get mergeable
-   * fields when two address are mergeable, call isMergeable first.
+   * Returns a formatted string representing the comparison results for each field.
    *
-   * @returns {Array} fields of address1 that can be merged into address2
-   */
-  getMergeableFields() {
-    return Object.entries(this.#result)
-      .filter(e => AddressComparison.isFieldMergeable(e[1]))
-      .map(e => e[0]);
-  }
-
-  /**
-   * For debugging
+   * @returns {string} A formatted string with field names and their respective
+   *                  comparison results.
    */
   toString() {
-    function resultToString(result) {
-      switch (result) {
-        case AddressComparison.BOTH_EMPTY:
-          return "both fields are empty";
-        case AddressComparison.A_IS_EMPTY:
-          return "field A is empty";
-        case AddressComparison.B_IS_EMPTY:
-          return "field B is empty";
-        case AddressComparison.A_IS_SUBSET_OF_B:
-          return "field A is a subset of field B";
-        case AddressComparison.A_IS_SUPERSET_OF_B:
-          return "field A is a superset of field B";
-        case AddressComparison.SAME:
-          return "two fields are the same";
-        case AddressComparison.DIFFERENT:
-          return "two fields are different";
-      }
-      return "";
-    }
-    let ret = "Comparison Result:\n";
+    let string = "Comparison Result:\n";
     for (const [name, result] of Object.entries(this.#result)) {
-      ret += `${name}: ${resultToString(result)}\n`;
+      string += `${name}: ${AddressComparison.resultToString(result)}\n`;
     }
-    return ret;
+    return string;
   }
 }
 
 /**
- * Class that transforms record (created in FormAutofillHandler createRecord)
- * into an address component object to more easily compare two address records.
+ * The AddressComponent class represents a structured address that is transformed
+ * from address record created in FormAutofillHandler 'createRecord' function.
+ *
+ * An AddressComponent object consisting of various fields such as state, city,
+ * country, postal code, etc. The class provides a compare methods
+ * to compare another AddressComponent against the current instance.
  *
  * Note. This class assumes records that pass to it have already been normalized.
  */
 export class AddressComponent {
-  #fields = [];
+  /**
+   * An object that stores individual address field instances
+   * (e.g., class State, class City, class Country, etc.), keyed by the
+   * field's clas name.
+   */
+  #fields = {};
 
-  constructor(record) {
-    const region = record.country ?? FormAutofill.DEFAULT_REGION;
-    const collator = lazy.FormAutofillUtils.getSearchCollators(region);
+  /**
+   * Constructs an AddressComponent object by converting passed address record object.
+   *
+   * @class
+   * @param {object}  record         The address record object containing address data.
+   * @param {string}  defaultRegion  The default region to use if the record's
+   *                                 country is not specified.
+   * @param {object}  [options = {}] a list of options for this method
+   * @param {boolean} [options.ignoreInvalid = true]  Whether to ignore invalid address
+   *                                 fields in the AddressComponent object. If set to true,
+   *                                 invalid fields will be ignored.
+   */
+  constructor(
+    record,
+    defaultRegion = FormAutofill.DEFAULT_REGION,
+    { ignoreInvalid = false } = {}
+  ) {
+    const region = record.country ?? defaultRegion;
 
-    this.#fields.push(new StreetAddress(record, collator));
-    this.#fields.push(new Country(record, collator));
-    this.#fields.push(new PostalCode(record, collator));
-    this.#fields.push(new Name(record, collator));
-    this.#fields.push(new Tel(record, collator));
-    this.#fields.push(new Organization(record, collator));
-    this.#fields.push(new Email(record, collator));
-  }
+    const fieldValue = this.#recordToFieldValue(record);
+    this.#fields[State.name] = new State(fieldValue.state, region);
+    this.#fields[City.name] = new City(fieldValue.city, region);
+    this.#fields[Country.name] = new Country(fieldValue.country, region);
+    this.#fields[PostalCode.name] = new PostalCode(
+      fieldValue.postal_code,
+      region
+    );
+    this.#fields[Tel.name] = new Tel(fieldValue.tel, region);
+    this.#fields[StreetAddress.name] = new StreetAddress(
+      fieldValue.street_address,
+      region
+    );
+    this.#fields[Name.name] = new Name(fieldValue.name, region);
+    this.#fields[Organization.name] = new Organization(
+      fieldValue.organization,
+      region
+    );
+    this.#fields[Email.name] = new Email(fieldValue.email, region);
 
-  getField(name) {
-    return this.#fields.find(field => field.constructor.name == name);
-  }
-
-  getAllFields() {
-    return this.#fields;
+    if (ignoreInvalid) {
+      // TODO: We have to reset it or ignore non-existing fields while comparing
+      this.#fields.filter(f => f.IsValid());
+    }
   }
 
   /**
-   * For debugging
+   * Converts address record to a field value object.
+   *
+   * @param  {object} record The record object containing address data.
+   * @returns {object}       A value object with keys corresponding to specific
+   *                         address fields and their respective values.
+   */
+  #recordToFieldValue(record) {
+    let value = {};
+
+    if (record.name) {
+      value.name = record.name;
+    } else {
+      value.name = lazy.FormAutofillNameUtils.joinNameParts({
+        given: record["given-name"],
+        middle: record["additional-name"],
+        family: record["family-name"],
+      });
+    }
+
+    value.email = record.email ?? "";
+    value.organization = record.organization ?? "";
+    value.street_address = record["street-address"] ?? "";
+    value.state = record["address-level1"] ?? "";
+    value.city = record["address-level2"] ?? "";
+    value.country = record.country ?? "";
+    value.postal_code = record["postal-code"] ?? "";
+    value.tel = record.tel ?? "";
+
+    return value;
+  }
+
+  /**
+   * Retrieves all the address fields.
+   *
+   * @returns {Array} An array of address field objects.
+   */
+  getAllFields() {
+    return Object.values(this.#fields);
+  }
+
+  /**
+   * Retrieves the field object with the specified name.
+   *
+   * @param  {string} name The name of the field to retrieve.
+   * @returns {object}      The address field object with the specified name,
+   *                       or undefined if the field is not found.
+   */
+  getField(name) {
+    return this.#fields[name];
+  }
+
+  /**
+   * Compares the current AddressComponent with another AddressComponent.
+   *
+   * @param  {AddressComponent} address The AddressComponent object to compare
+   *                                    against the current one.
+   * @returns {object} An object containing comparison results. The keys of the object represent
+   *                  individual address field, and the values are strings indicating the comparison result:
+   *                  - "same" if both components are either empty or the same,
+   *                  - "superset" if the current contains the input or the input is empty,
+   *                  - "subset" if the input contains the current or the current is empty,
+   *                  - "similar" if the two address components are similar,
+   *                  - "different" if the two address components are different.
+   */
+  compare(address) {
+    let result = {};
+
+    const comparison = new AddressComparison(this, address);
+    for (const [k, v] of Object.entries(comparison.result)) {
+      if ([AddressComparison.BOTH_EMPTY, AddressComparison.SAME].includes(v)) {
+        result[k] = "same";
+      } else if (
+        [AddressComparison.B_IS_EMPTY, AddressComparison.A_CONTAINS_B].includes(
+          v
+        )
+      ) {
+        result[k] = "superset";
+      } else if (
+        [AddressComparison.A_IS_EMPTY, AddressComparison.B_CONTAINS_A].includes(
+          v
+        )
+      ) {
+        result[k] = "subset";
+      } else if ([AddressComparison.SIMILAR].includes(v)) {
+        result[k] = "similar";
+      } else {
+        result[k] = "different";
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Print all the fields in this AddressComponent object.
    */
   toString() {
-    let ret = "";
-    for (const field of this.#fields) {
-      ret += field.toString();
+    let string = "";
+    for (const field of Object.values(this.#fields)) {
+      string += field.toString();
     }
-    return ret;
+    return string;
   }
 }
