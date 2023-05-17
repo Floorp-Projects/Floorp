@@ -21,7 +21,6 @@ extern mozilla::LazyLogModule gMediaDemuxerLog;
 #define MP3LOGV(msg, ...) \
   DDMOZ_LOG(gMediaDemuxerLog, LogLevel::Verbose, msg, ##__VA_ARGS__)
 
-using mozilla::BufferReader;
 using mozilla::media::TimeInterval;
 using mozilla::media::TimeIntervals;
 using mozilla::media::TimeUnit;
@@ -379,7 +378,7 @@ media::NullableTimeUnit MP3TrackDemuxer::Duration() const {
 
   // If it's CBR, calculate the duration by bitrate.
   if (!mParser.VBRInfo().IsValid()) {
-    const int32_t bitrate = mParser.CurrentFrame().Header().Bitrate();
+    const uint32_t bitrate = mParser.CurrentFrame().Header().Bitrate();
     MP3LOG("Using frame stream size to compute duration size: %ld bitrate: %d, %zu %zu.", size, bitrate, mFirstFrameOffset, streamLen);
     return Some(
         media::TimeUnit::FromSeconds(static_cast<double>(size) * 8 / bitrate));
@@ -387,7 +386,7 @@ media::NullableTimeUnit MP3TrackDemuxer::Duration() const {
 
   if (AverageFrameLength() > 0) {
     MP3LOG("Using average frame length to compute duration.");
-    numFrames = size / AverageFrameLength();
+    numFrames = std::lround(AssertedCast<double>(size) / AverageFrameLength());
   }
 
   MP3LOG("Using frame count and their size to compute duration.");
@@ -712,7 +711,7 @@ int64_t MP3TrackDemuxer::OffsetFromFrameIndex(int64_t aFrameIndex) const {
     offset = mFirstFrameOffset + aFrameIndex * vbr.NumBytes().value() /
                                      vbr.NumAudioFrames().value();
   } else if (AverageFrameLength() > 0) {
-    offset = mFirstFrameOffset + aFrameIndex * AverageFrameLength();
+    offset = mFirstFrameOffset + AssertedCast<int64_t>(static_cast<float>(aFrameIndex) * AverageFrameLength());
   }
 
   MP3LOGV("OffsetFromFrameIndex(%" PRId64 ") -> %" PRId64, aFrameIndex, offset);
@@ -724,11 +723,14 @@ int64_t MP3TrackDemuxer::FrameIndexFromOffset(int64_t aOffset) const {
   const auto& vbr = mParser.VBRInfo();
 
   if (vbr.IsComplete()) {
-    frameIndex = static_cast<float>(aOffset - mFirstFrameOffset) /
-                 vbr.NumBytes().value() * vbr.NumAudioFrames().value();
+    frameIndex =
+        AssertedCast<int64_t>(static_cast<float>(aOffset - mFirstFrameOffset) /
+                              static_cast<float>(vbr.NumBytes().value()) *
+                              static_cast<float>(vbr.NumAudioFrames().value()));
     frameIndex = std::min<int64_t>(vbr.NumAudioFrames().value(), frameIndex);
   } else if (AverageFrameLength() > 0) {
-    frameIndex = (aOffset - mFirstFrameOffset) / AverageFrameLength();
+    frameIndex = AssertedCast<int64_t>(
+        static_cast<float>(aOffset - mFirstFrameOffset) / AverageFrameLength());
   }
 
   MP3LOGV("FrameIndexFromOffset(%" PRId64 ") -> %" PRId64, aOffset, frameIndex);
@@ -739,7 +741,7 @@ int64_t MP3TrackDemuxer::FrameIndexFromTime(
     const media::TimeUnit& aTime) const {
   int64_t frameIndex = 0;
   if (mSamplesPerSecond > 0 && mSamplesPerFrame > 0) {
-    frameIndex = aTime.ToSeconds() * mSamplesPerSecond / mSamplesPerFrame - 1;
+    frameIndex = AssertedCast<int64_t>(aTime.ToSeconds() * mSamplesPerSecond / mSamplesPerFrame - 1);
   }
 
   MP3LOGV("FrameIndexFromOffset(%fs) -> %" PRId64, aTime.ToSeconds(),
@@ -776,13 +778,13 @@ void MP3TrackDemuxer::UpdateState(const MediaByteRange& aRange) {
 }
 
 uint32_t MP3TrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset,
-                               int32_t aSize) {
+                               uint32_t aSize) {
   MP3LOGV("MP3TrackDemuxer::Read(%p %" PRId64 " %d)", aBuffer, aOffset, aSize);
 
   const int64_t streamLen = StreamLength();
   if (mInfo && streamLen > 0) {
     // Prevent blocking reads after successful initialization.
-    uint64_t max = streamLen > aOffset ? streamLen - aOffset : 0;
+    int64_t max = streamLen > aOffset ? streamLen - aOffset : 0;
     aSize = std::min<int64_t>(aSize, max);
   }
 
@@ -796,7 +798,7 @@ uint32_t MP3TrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset,
 
 double MP3TrackDemuxer::AverageFrameLength() const {
   if (mNumParsedFrames) {
-    return static_cast<double>(mTotalFrameLen) / mNumParsedFrames;
+    return static_cast<double>(mTotalFrameLen) / static_cast<double>(mNumParsedFrames);
   }
   const auto& vbr = mParser.VBRInfo();
   if (vbr.IsComplete() && vbr.NumAudioFrames().value() + 1) {
