@@ -726,6 +726,8 @@ class XcodeSettings(object):
   def _AddObjectiveCARCFlags(self, flags):
     if self._Test('CLANG_ENABLE_OBJC_ARC', 'YES', default='NO'):
       flags.append('-fobjc-arc')
+    if self._Test('CLANG_ENABLE_OBJC_WEAK', 'YES', default='NO'):
+      flags.append('-fobjc-weak')
 
   def _AddObjectiveCMissingPropertySynthesisFlags(self, flags):
     if self._Test('CLANG_WARN_OBJC_MISSING_PROPERTY_SYNTHESIS',

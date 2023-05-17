@@ -81,6 +81,7 @@ class TestSequenceFunctions(unittest.TestCase):
                        '\'Debug|Win32\'" Label="Configuration">'
           '<ConfigurationType>Application</ConfigurationType>'
           '<CharacterSet>Unicode</CharacterSet>'
+          '<SpectreMitigation>SpectreLoadCF</SpectreMitigation>'
         '</PropertyGroup>'
       '</Project>')
 
@@ -96,7 +97,8 @@ class TestSequenceFunctions(unittest.TestCase):
             {'Condition': "'$(Configuration)|$(Platform)'=='Debug|Win32'",
              'Label': 'Configuration'},
             ['ConfigurationType', 'Application'],
-            ['CharacterSet', 'Unicode']
+            ['CharacterSet', 'Unicode'],
+            ['SpectreMitigation', 'SpectreLoadCF']
           ]
         ])
     self.assertEqual(xml, target)

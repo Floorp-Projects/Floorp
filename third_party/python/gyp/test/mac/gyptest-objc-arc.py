@@ -21,6 +21,7 @@ if sys.platform == 'darwin':
   test.run_gyp('test.gyp', chdir=CHDIR)
 
   test.build('test.gyp', 'arc_enabled', chdir=CHDIR)
+  test.build('test.gyp', 'weak_enabled', chdir=CHDIR)
   test.build('test.gyp', 'arc_disabled', chdir=CHDIR)
 
   test.pass_test()
