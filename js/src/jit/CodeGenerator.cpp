@@ -2007,8 +2007,37 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
   // Initialize MatchPairs::pairs[0]::start to MatchPair::NoMatch
   masm.store32(Imm32(MatchPair::NoMatch), firstMatchStartAddress);
 
-  // Check for a linear input string.
-  masm.branchIfRope(input, failure);
+  // Determine the set of volatile inputs to save when calling into C++ or
+  // regexp code.
+  LiveGeneralRegisterSet volatileRegs;
+  if (lastIndex.volatile_()) {
+    volatileRegs.add(lastIndex);
+  }
+  if (input.volatile_()) {
+    volatileRegs.add(input);
+  }
+  if (regexp.volatile_()) {
+    volatileRegs.add(regexp);
+  }
+
+  // Ensure the input string is not a rope.
+  Label isLinear;
+  masm.branchIfNotRope(input, &isLinear);
+  {
+    masm.PushRegsInMask(volatileRegs);
+
+    using Fn = JSLinearString* (*)(JSString*);
+    masm.setupUnalignedABICall(temp1);
+    masm.passABIArg(input);
+    masm.callWithABI<Fn, js::jit::LinearizeForCharAccessPure>();
+
+    MOZ_ASSERT(!volatileRegs.has(temp1));
+    masm.storeCallPointerResult(temp1);
+    masm.PopRegsInMask(volatileRegs);
+
+    masm.branchTestPtr(Assembler::Zero, temp1, temp1, failure);
+  }
+  masm.bind(&isLinear);
 
   // Load the RegExpShared.
   Register regexpReg = temp1;
@@ -2023,14 +2052,9 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
                  Address(regexpReg, RegExpShared::offsetOfPatternAtom()),
                  ImmWord(0), &notAtom);
   {
-    LiveGeneralRegisterSet regsToSave(GeneralRegisterSet::Volatile());
-    regsToSave.takeUnchecked(temp1);
-    regsToSave.takeUnchecked(temp2);
-    regsToSave.takeUnchecked(temp3);
-
     masm.computeEffectiveAddress(matchPairsAddress, temp3);
 
-    masm.PushRegsInMask(regsToSave);
+    masm.PushRegsInMask(volatileRegs);
     using Fn = RegExpRunStatus (*)(RegExpShared* re, JSLinearString* input,
                                    size_t start, MatchPairs* matchPairs);
     masm.setupUnalignedABICall(temp2);
@@ -2040,8 +2064,9 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
     masm.passABIArg(temp3);
     masm.callWithABI<Fn, js::ExecuteRegExpAtomRaw>();
 
+    MOZ_ASSERT(!volatileRegs.has(temp1));
     masm.storeCallInt32Result(temp1);
-    masm.PopRegsInMask(regsToSave);
+    masm.PopRegsInMask(volatileRegs);
 
     masm.jump(&checkSuccess);
   }
@@ -2103,18 +2128,6 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
   masm.computeEffectiveAddress(matchPairsAddress, temp2);
   masm.storePtr(temp2, matchesAddress);
   masm.storePtr(lastIndex, startIndexAddress);
-
-  // Save any volatile inputs.
-  LiveGeneralRegisterSet volatileRegs;
-  if (lastIndex.volatile_()) {
-    volatileRegs.add(lastIndex);
-  }
-  if (input.volatile_()) {
-    volatileRegs.add(input);
-  }
-  if (regexp.volatile_()) {
-    volatileRegs.add(regexp);
-  }
 
   // Execute the RegExp.
   masm.computeEffectiveAddress(
