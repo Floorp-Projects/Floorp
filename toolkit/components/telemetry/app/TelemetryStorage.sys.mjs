@@ -771,7 +771,7 @@ var TelemetryStorageImpl = {
       await checkSize(pathCompressed);
       ping = await this.loadPingFile(pathCompressed, /* compressed*/ true);
     } catch (ex) {
-      if (!DOMException.isInstance(ex) || ex.name !== "NotFoundError") {
+      if (!ex.becauseNoSuchFile) {
         throw ex;
       }
       // If that fails, look for the uncompressed version.
@@ -2011,7 +2011,7 @@ var TelemetryStorageImpl = {
     try {
       ping = await this.loadPingFile(lazy.gAbortedSessionFilePath);
     } catch (ex) {
-      if (DOMException.isInstance(ex) && ex.name === "NotFoundError") {
+      if (ex.becauseNoSuchFile) {
         this._log.trace("loadAbortedSessionPing - no such file");
       } else {
         this._log.error("loadAbortedSessionPing - error loading ping", ex);
