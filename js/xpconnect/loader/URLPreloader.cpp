@@ -17,6 +17,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"
+#include "mozilla/scache/StartupCache.h"
 
 #include "crc32c.h"
 #include "MainThreadUtils.h"
@@ -45,6 +46,7 @@ bool StartsWith(const T& haystack, const T& needle) {
 }  // anonymous namespace
 
 using namespace mozilla::loader;
+using mozilla::scache::StartupCache;
 
 nsresult URLPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
                                       nsISupports* aData, bool aAnonymize) {
@@ -169,6 +171,10 @@ Result<nsCOMPtr<nsIFile>, nsresult> URLPreloader::GetCacheFile(
 static const uint8_t URL_MAGIC[] = "mozURLcachev003";
 
 Result<nsCOMPtr<nsIFile>, nsresult> URLPreloader::FindCacheFile() {
+  if (StartupCache::GetIgnoreDiskCache()) {
+    return Err(NS_ERROR_ABORT);
+  }
+
   nsCOMPtr<nsIFile> cacheFile;
   MOZ_TRY_VAR(cacheFile, GetCacheFile(u".bin"_ns));
 
