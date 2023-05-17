@@ -3094,11 +3094,11 @@ bool HTMLMediaElement::Seeking() const {
 
 double HTMLMediaElement::CurrentTime() const {
   if (mMediaStreamRenderer) {
-    return mMediaStreamRenderer->CurrentTime();
+    return ToMicrosecondResolution(mMediaStreamRenderer->CurrentTime());
   }
 
   if (mDefaultPlaybackStartPosition == 0.0 && mDecoder) {
-    return mDecoder->GetCurrentTime();
+    return std::clamp(mDecoder->GetCurrentTime(), 0.0, mDecoder->GetDuration());
   }
 
   return mDefaultPlaybackStartPosition;
@@ -3202,7 +3202,7 @@ void HTMLMediaElement::Seek(double aTime, SeekTarget::Type aSeekType,
     if (mCurrentPlayRangeStart != rangeEndTime) {
       // Don't round the left of the interval: it comes from script and needs
       // to be exact.
-      mPlayed->Add(mCurrentPlayRangeStart, ToMicrosecondResolution(rangeEndTime));
+      mPlayed->Add(mCurrentPlayRangeStart, rangeEndTime);
     }
     // Reset the current played range start time. We'll re-set it once
     // the seek completes.
@@ -3302,7 +3302,8 @@ double HTMLMediaElement::Duration() const {
 already_AddRefed<TimeRanges> HTMLMediaElement::Seekable() const {
   media::TimeIntervals seekable =
       mDecoder ? mDecoder->GetSeekable() : media::TimeIntervals();
-  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()), seekable);
+  RefPtr<TimeRanges> ranges = new TimeRanges(
+      ToSupports(OwnerDoc()), seekable.ToMicrosecondResolution());
   return ranges.forget();
 }
 
@@ -3324,7 +3325,7 @@ already_AddRefed<TimeRanges> HTMLMediaElement::Played() {
     if (mCurrentPlayRangeStart != now) {
       // Don't round the left of the interval: it comes from script and needs
       // to be exact.
-      ranges->Add(mCurrentPlayRangeStart, ToMicrosecondResolution(now));
+      ranges->Add(mCurrentPlayRangeStart, now);
     }
   }
 
