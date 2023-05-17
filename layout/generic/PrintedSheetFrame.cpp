@@ -92,9 +92,7 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   // Target for numPagesOnThisSheet.
   const uint32_t desiredPagesPerSheet = mPD->PagesPerSheetInfo()->mNumPages;
 
-  // If we're the first continuation and we're doing >1 pages per sheet,
-  // precompute some metrics that we'll use when painting the pages:
-  if (desiredPagesPerSheet > 1 && !GetPrevContinuation()) {
+  if (desiredPagesPerSheet > 1) {
     ComputePagesPerSheetOriginAndScale();
   }
 
