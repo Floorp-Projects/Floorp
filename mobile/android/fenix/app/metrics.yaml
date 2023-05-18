@@ -6959,6 +6959,7 @@ play_store_attribution:
     expires: 124
     metadata:
       tags:
+        - Attribution
         - Performance
 browser.search:
   with_ads:

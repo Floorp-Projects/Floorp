@@ -152,13 +152,13 @@ data class UTMParams(
          *
          * Once the url ceases to decode anymore, it gives up.
          */
-        fun fromURLString(string: String): UTMParams? {
+        fun fromURLString(urlString: String): UTMParams? {
             // Look for the first time 'utm_' is detected, after the first '?'.
-            val utmIndex = string.indexOf("utm_", string.indexOf('?'))
+            val utmIndex = urlString.indexOf("utm_", urlString.indexOf('?'))
             if (utmIndex < 0) {
                 return null
             }
-            var url = string.substring(utmIndex)
+            var url = urlString.substring(utmIndex)
             while (true) {
                 val params = fromQueryString(url)
                 if (!params.isEmpty()) {
