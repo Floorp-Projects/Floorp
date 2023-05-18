@@ -9,8 +9,8 @@ const FOREIGN_PAGE = "https://example.net";
 const FOREIGN_PAGE2 = "https://example.net^partitionKey=(https,example.com)";
 const FOREIGN_PAGE3 = "https://example.net^partitionKey=(https,example.org)";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 const { SiteDataTestUtils } = ChromeUtils.import(
   "resource://testing-common/SiteDataTestUtils.jsm"

@@ -15,8 +15,8 @@ const BLOCKED_URL =
   TRACKER_URL +
   "browser/devtools/client/webconsole/test/browser/test-image.png";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 UrlClassifierTestUtils.addTestTrackers();
 registerCleanupFunction(function() {

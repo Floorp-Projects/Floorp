@@ -19,13 +19,13 @@ ChromeUtils.defineESModuleGetters(this, {
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.sys.mjs",
   RemoteSecuritySettings:
     "resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs",
+  SafeBrowsing: "resource://gre/modules/SafeBrowsing.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Blocklist: "resource://gre/modules/Blocklist.jsm",
   HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.jsm",
   InitializationTracker: "resource://gre/modules/GeckoViewTelemetry.jsm",
-  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "WindowEventDispatcher", () =>

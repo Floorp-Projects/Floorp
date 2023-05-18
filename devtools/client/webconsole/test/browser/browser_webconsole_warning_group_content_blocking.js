@@ -31,8 +31,8 @@ const COOKIE_BEHAVIORS = {
   REJECT_TRACKER: 4,
 };
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 UrlClassifierTestUtils.addTestTrackers();
 registerCleanupFunction(function() {

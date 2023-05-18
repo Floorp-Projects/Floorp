@@ -10,9 +10,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const COLLECTION_NAME = "tracking-protection-lists";
 
 // SafeBrowsing protocol parameters.
-const SBRS_UPDATE_MINIMUM_DELAY = 21600; // Minimum delay before polling again in seconds
+export const SBRS_UPDATE_MINIMUM_DELAY = 21600; // Minimum delay before polling again in seconds
 
-function UrlClassifierRemoteSettingsService() {}
+export function UrlClassifierRemoteSettingsService() {}
 UrlClassifierRemoteSettingsService.prototype = {
   classID: Components.ID("{1980624c-c50b-4b46-a91c-dfaba7792706}"),
   QueryInterface: ChromeUtils.generateQI([
@@ -136,8 +136,3 @@ UrlClassifierRemoteSettingsService.prototype = {
     this._entries = {};
   },
 };
-
-const EXPORTED_SYMBOLS = [
-  "UrlClassifierRemoteSettingsService",
-  "SBRS_UPDATE_MINIMUM_DELAY",
-];

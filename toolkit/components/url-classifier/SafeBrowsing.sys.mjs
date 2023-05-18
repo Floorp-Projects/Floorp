@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["SafeBrowsing"];
-
 const PREF_DEBUG_ENABLED = "browser.safebrowsing.debug";
 let loggingEnabled = false;
 
@@ -297,7 +295,7 @@ const FEATURES = [
   },
 ];
 
-var SafeBrowsing = {
+export var SafeBrowsing = {
   init() {
     if (this.initialized) {
       log("Already initialized");

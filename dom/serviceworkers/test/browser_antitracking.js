@@ -1,8 +1,8 @@
 const BEHAVIOR_ACCEPT = Ci.nsICookieService.BEHAVIOR_ACCEPT;
 const BEHAVIOR_REJECT_TRACKER = Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
 
-let { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+let { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
 const TOP_DOMAIN = "http://mochi.test:8888/";

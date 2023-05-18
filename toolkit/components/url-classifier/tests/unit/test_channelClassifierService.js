@@ -9,8 +9,8 @@
 var httpserver = new HttpServer();
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
 const FEATURE_STP_PREF = "privacy.trackingprotection.socialtracking.enabled";

@@ -21,8 +21,8 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://gre/modules/ContentBlockingAllowList.sys.mjs",
 });
 
-var { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+var { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
 async function openProtectionsPanel(toast, win = window) {

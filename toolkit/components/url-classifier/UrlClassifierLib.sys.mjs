@@ -8,6 +8,7 @@
 
 const PREF_DISABLE_TEST_BACKOFF =
   "browser.safebrowsing.provider.test.disableBackoff";
+
 /**
  * Partially applies a function to a particular "this object" and zero or
  * more arguments. The result is a new function with some arguments of the first
@@ -28,7 +29,7 @@ const PREF_DISABLE_TEST_BACKOFF =
  *
  * @returns {function} A partially-applied form of the speficied function.
  */
-function BindToObject(fn, self, opt_args) {
+export function BindToObject(fn, self, opt_args) {
   var boundargs = fn.boundArgs_ || [];
   boundargs = boundargs.concat(
     Array.prototype.slice.call(arguments, 2, arguments.length)
@@ -215,13 +216,12 @@ function RequestBackoffV4(maxRequests, requestPeriod, provider = null) {
   );
 }
 
-function UrlClassifierLib() {
+export function UrlClassifierLib() {
   this.wrappedJSObject = {
     RequestBackoff,
     RequestBackoffV4,
     BindToObject,
   };
 }
-UrlClassifierLib.prototype.QueryInterface = ChromeUtils.generateQI([]);
 
-var EXPORTED_SYMBOLS = ["UrlClassifierLib", "BindToObject"];
+UrlClassifierLib.prototype.QueryInterface = ChromeUtils.generateQI([]);

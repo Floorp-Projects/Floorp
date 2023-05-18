@@ -36,8 +36,8 @@ const COOKIE_BEHAVIORS = {
   PARTITION_FOREIGN: 5,
 };
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
 registerCleanupFunction(async function() {

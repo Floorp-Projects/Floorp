@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 // This is the only implementation of nsIUrlListManager.
 // A class that manages lists, namely exception and block lists for
@@ -844,7 +842,7 @@ function Init() {
   initialized = true;
 }
 
-function RegistrationData() {
+export function RegistrationData() {
   Init();
   return new PROT_ListManager();
 }
@@ -857,5 +855,3 @@ XPCOMUtils.defineLazyPreferenceGetter(
   PREF_TEST_NOTIFICATIONS,
   false
 );
-
-var EXPORTED_SYMBOLS = ["RegistrationData"];

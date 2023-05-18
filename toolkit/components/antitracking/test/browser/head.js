@@ -90,8 +90,8 @@ requestLongerTimeout = function AntiTrackingRequestLongerTimeout(factor) {
 
 requestLongerTimeout(3);
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
 const { PermissionTestUtils } = ChromeUtils.importESModule(
