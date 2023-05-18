@@ -148,16 +148,17 @@ fun TabGridItem(
                         )
                     }
 
-                    Icon(
-                        painter = painterResource(id = R.drawable.mozac_ic_close),
-                        contentDescription = stringResource(id = R.string.close_tab),
-                        tint = FirefoxTheme.colors.iconPrimary,
-                        modifier = Modifier
-                            .clickable { onCloseClick(tab) }
-                            .size(24.dp)
-                            .align(Alignment.CenterVertically),
-
-                    )
+                    if (!multiSelectionEnabled) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.mozac_ic_close),
+                            contentDescription = stringResource(id = R.string.close_tab),
+                            tint = FirefoxTheme.colors.iconPrimary,
+                            modifier = Modifier
+                                .clickable { onCloseClick(tab) }
+                                .size(24.dp)
+                                .align(Alignment.CenterVertically),
+                        )
+                    }
                 }
 
                 Divider()
