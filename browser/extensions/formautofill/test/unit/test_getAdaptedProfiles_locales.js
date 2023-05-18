@@ -8,13 +8,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-let FormAutofillHandler;
-add_task(async function() {
-  ({ FormAutofillHandler } = ChromeUtils.importESModule(
-    "resource://gre/modules/shared/FormAutofillHandler.sys.mjs"
-  ));
-});
-
 const DEFAULT_CREDITCARD_RECORD = {
   guid: "123",
   "cc-exp-month": 1,

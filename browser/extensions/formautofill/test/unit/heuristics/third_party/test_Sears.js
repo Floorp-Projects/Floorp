@@ -8,6 +8,7 @@ runHeuristicsTest(
       fixturePath: "ShippingAddress.html",
       expectedResult: [
         {
+          invalid: true,
           default: {
             reason: "regex-heuristic",
           },
@@ -31,6 +32,7 @@ runHeuristicsTest(
             { fieldName: "tel" },
             { fieldName: "tel-extension" },
             { fieldName: "email" },
+            { fieldName: "email" },  // TODO: This should be fixed by adding visibility check
           ],
         },
         {
@@ -53,6 +55,7 @@ runHeuristicsTest(
           ],
         },
         {
+          invalid: true,
           default: {
             reason: "regex-heuristic",
           },
@@ -62,6 +65,7 @@ runHeuristicsTest(
           ]
         },
         {
+          invalid: true,
           default: {
             reason: "regex-heuristic",
           },
@@ -115,27 +119,23 @@ runHeuristicsTest(
             // FIXME: bug 1392934 - this should be detected as address-level1 since
             // it's for Driver's license or state identification.
             { fieldName: "address-level1" },
+            { fieldName: "address-level1" },
             // { fieldName: "bday-month"},
             // { fieldName: "bday-day"},
             // { fieldName: "bday-year"},
           ],
         },
         {
-          default: {
-            reason: "fathom",
-          },
+          invalid: true,
           fields: [
-            // FIXME: bug 1392950 - the bank routing number should not be detected
-            // as cc-number.
-            { fieldName: "cc-number" },
+            // FIXME: bug 1392950 - the bank routing number should not be detected as cc-number.
+            { fieldName: "cc-number", reason: "fathom", },
           ],
         },
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "email" },
+            { fieldName: "email", reason: "regex-heuristic", },
           ],
         },
       ],

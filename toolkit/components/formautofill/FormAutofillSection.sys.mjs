@@ -19,8 +19,15 @@ export class FormAutofillSection {
   static SHOULD_FOCUS_ON_AUTOFILL = true;
   #focusedInput = null;
 
-  constructor(fieldDetails, handler) {
-    this.fieldDetails = fieldDetails;
+  #section = null;
+
+  constructor(section, handler) {
+    this.#section = section;
+
+    if (!this.isValidSection()) {
+      return;
+    }
+
     this.handler = handler;
     this.filledRecordGUID = null;
 
@@ -40,13 +47,6 @@ export class FormAutofillSection {
       FormAutofill.defineLogGetter(this, "FormAutofillHandler")
     );
 
-    if (!this.isValidSection()) {
-      this.fieldDetails = [];
-      this.log.debug(
-        `Ignoring ${this.constructor.name} related fields since it is an invalid section`
-      );
-    }
-
     this._cacheValue = {
       allFieldNames: null,
       matchingSelectOption: null,
@@ -58,6 +58,10 @@ export class FormAutofillSection {
       "Creating new credit card section with flowId =",
       this.flowId
     );
+  }
+
+  get fieldDetails() {
+    return this.#section.fieldDetails;
   }
 
   /*
@@ -672,6 +676,10 @@ export class FormAutofillAddressSection extends FormAutofillSection {
   constructor(fieldDetails, handler) {
     super(fieldDetails, handler);
 
+    if (!this.isValidSection()) {
+      return;
+    }
+
     this._cacheValue.oneLineStreetAddress = null;
 
     lazy.AutofillTelemetry.recordDetectedSectionCount(this);
@@ -679,6 +687,7 @@ export class FormAutofillAddressSection extends FormAutofillSection {
   }
 
   isValidSection() {
+    // TODO: Should check distinfuish fieldName
     return (
       this.fieldDetails.length >= FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD
     );
@@ -999,11 +1008,11 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
     // Condition B. One of the field is identified by fathom, if this section also
     // contains another cc field found by our heuristic (Case 2, 3, or 4), we consider
     // this section a valid credit card seciton
-    if (ccNumberDetail?.confidence > 0) {
+    if (ccNumberDetail?.reason == "fathom") {
       if (ccNameDetail || ccExpiryDetail) {
         return true;
       }
-    } else if (ccNameDetail?.confidence > 0) {
+    } else if (ccNameDetail?.reason == "fathom") {
       if (ccNumberDetail || ccExpiryDetail) {
         return true;
       }

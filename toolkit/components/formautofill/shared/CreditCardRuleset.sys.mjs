@@ -1183,7 +1183,7 @@ const biases = [
 // all the tyoes). When the above case exists, the coefficient of the rule will be
 // overwritten, which means, we can't have different coefficient for the same rule on
 // different types. To workaround this issue, we create a new ruleset for each type.
-export var creditCardRulesets = {
+export var CreditCardRulesets = {
   init() {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -1204,6 +1204,6 @@ export var creditCardRulesets = {
   },
 };
 
-creditCardRulesets.init();
+CreditCardRulesets.init();
 
-export default creditCardRulesets;
+export default CreditCardRulesets;

@@ -20,6 +20,7 @@ runHeuristicsTest(
             { fieldName: "address-level2" }, // city
             { fieldName: "address-level1" }, // state
             { fieldName: "postal-code" },
+            { fieldName: "postal-code" }, // EXt
             { fieldName: "email" },
             { fieldName: "tel" },
             { fieldName: "tel-extension" },
@@ -43,6 +44,7 @@ runHeuristicsTest(
             { fieldName: "address-level2" }, // city
             { fieldName: "address-level1" }, // state
             { fieldName: "postal-code" },
+            { fieldName: "postal-code" }, // Ext
           ],
         },
         {

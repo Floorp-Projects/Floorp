@@ -8,19 +8,15 @@ runHeuristicsTest(
       fixturePath: "Checkout.html",
       expectedResult: [
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "postal-code" },
+            { fieldName: "postal-code", reason: "regex-heuristic" },
           ],
         },
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "email" },
+            { fieldName: "email", reason: "regex-heuristic" },
             // { fieldName: "password"}, // ac-off
           ],
         },
@@ -70,11 +66,9 @@ runHeuristicsTest(
       fixturePath: "Shipping.html",
       expectedResult: [
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "postal-code" },
+            { fieldName: "postal-code", reason: "regex-heuristic" },
           ],
         },
         {

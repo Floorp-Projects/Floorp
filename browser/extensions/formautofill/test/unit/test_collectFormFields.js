@@ -144,7 +144,7 @@ const TESTCASES = [
                <input id="given-name" autocomplete="shipping given-name">
                <input autocomplete="shipping address-level2">
                </form>`,
-    sections: [[]],
+    sections: [],
   },
   /*
    * Valid Credit Card Form with autocomplete attribute
@@ -282,7 +282,7 @@ const TESTCASES = [
     description:
       "A credit card form is invalid when a fathom detected cc-number field is the only field in the form",
     document: `<form><input id="cc-number" name="cc-number"></form>`,
-    sections: [[]],
+    sections: [],
     prefs: [
       [
         "extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold",
@@ -298,7 +298,7 @@ const TESTCASES = [
     description:
       "A credit card form is invalid when a fathom detected cc-name field is the only field in the form",
     document: `<form><input id="cc-name" name="cc-name"></form>`,
-    sections: [[]],
+    sections: [],
     prefs: [
       [
         "extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold",
@@ -356,7 +356,7 @@ const TESTCASES = [
                  <input id="cc-name" name="cc-name">
                  <input id="cc-exp" name="cc-exp">
                </form>`,
-    sections: [[]],
+    sections: [],
     prefs: [
       ["extensions.formautofill.creditCards.heuristics.fathom.types", ""],
     ],
@@ -369,7 +369,7 @@ const TESTCASES = [
                <input id="cc-name" name="cc-name">
                <input id="password" type="password">
                </form>`,
-    sections: [[]],
+    sections: [],
     prefs: [
       [
         "extensions.formautofill.creditCards.heuristics.fathom.highConfidenceThreshold",
@@ -427,7 +427,6 @@ const TESTCASES = [
                  <input id="otherPrefix" name="phone" maxlength="3">
                  <input id="otherSuffix" name="phone" maxlength="4">
                </form>`,
-    allowDuplicates: true,
     sections: [
       [
         { fieldName: "tel-area-code" },
@@ -467,7 +466,7 @@ const TESTCASES = [
   },
   {
     description:
-      "Dedup the same field names of the different telephone fields.",
+      "Do not dedup the same field names of the different telephone fields.",
     document: `<form>
                  <input id="i1" autocomplete="given-name">
                  <input id="i2" autocomplete="family-name">
@@ -485,9 +484,11 @@ const TESTCASES = [
         { fieldName: "street-address" },
         { fieldName: "email" },
         { fieldName: "tel" },
+        { fieldName: "tel" },
+        { fieldName: "tel" },
       ],
     ],
-    ids: ["i1", "i2", "i3", "i4", "homePhone"],
+    ids: ["i1", "i2", "i3", "i4", "homePhone", "mobilePhone", "officePhone"],
   },
   {
     description:
@@ -542,9 +543,17 @@ const TESTCASES = [
         { addressType: "shipping", fieldName: "given-name" },
         { addressType: "shipping", fieldName: "family-name" },
         { addressType: "shipping", fieldName: "tel" },
+        { addressType: "shipping", fieldName: "tel" },
+        { addressType: "shipping", fieldName: "tel" },
       ],
     ],
-    ids: ["given-name", "family-name", "dummyAreaCode"],
+    ids: [
+      "given-name",
+      "family-name",
+      "dummyAreaCode",
+      "dummyPrefix",
+      "dummySuffix",
+    ],
   },
 ];
 
@@ -608,9 +617,7 @@ for (let tc of TESTCASES) {
       let formLike = FormLikeFactory.createFromForm(form);
 
       let handler = new FormAutofillHandler(formLike);
-      let validFieldDetails = handler.collectFormFields(
-        testcase.allowDuplicates
-      );
+      let validFieldDetails = handler.collectFormFields();
 
       Assert.equal(
         handler.sections.length,

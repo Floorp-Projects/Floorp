@@ -13,6 +13,9 @@ var { ObjectUtils } = ChromeUtils.import(
 var { FormLikeFactory } = ChromeUtils.importESModule(
   "resource://gre/modules/FormLikeFactory.sys.mjs"
 );
+var { FormAutofillHandler } = ChromeUtils.importESModule(
+  "resource://gre/modules/shared/FormAutofillHandler.sys.mjs"
+);
 var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
@@ -207,12 +210,15 @@ function verifySectionFieldDetails(sections, expectedSectionsInfo) {
       `Expected field count.`
     );
 
+    if (!section.isValidSection()) {
+      Assert.ok(expectedSection.invalid, "Should be an invalid section");
+    }
+
     fieldDetails.forEach((field, fieldIndex) => {
       const expectedFieldDetail = expectedFieldDetails[fieldIndex];
 
       const expected = {
         ...{
-          part: null,
           reason: "autocomplete",
           section: "",
           contactType: "",
@@ -224,6 +230,7 @@ function verifySectionFieldDetails(sections, expectedSectionsInfo) {
 
       delete field.elementWeakRef;
       delete field.confidence;
+      delete field.part;
       const keys = new Set([...Object.keys(field), ...Object.keys(expected)]);
       for (const key of keys) {
         const expectedValue = expected[key];
@@ -264,24 +271,25 @@ function autofillFieldSelector(doc) {
 //
 // Example test data:
 //  expectedResult: [
-//  {
-//    description: "address form with only two address fields"
-//    fields: [
-//      { fieldName: "organization", reason: "autocomplete" },
-//      { fieldName: "street-address", reason: "regex-heuristic" },
-//    ]
-//  },
-//  {
-//    default: {
-//      reason: "regex-heuristic",
-//      section: "billing",
+//    {
+//      description: "address form with only two address fields"
+//      fields: [
+//        { fieldName: "organization", reason: "autocomplete" },
+//        { fieldName: "street-address", reason: "regex-heuristic" },
+//      ]
 //    },
-//    fields: [
-//      { fieldName: "cc-number", reason: "fathom" },
-//      { fieldName: "cc-nane" },
-//      { fieldName: "cc-exp" },
-//    ],
-//  },
+//    {
+//      default: {
+//        reason: "regex-heuristic",
+//        section: "billing",
+//      },
+//      fields: [
+//        { fieldName: "cc-number", reason: "fathom" },
+//        { fieldName: "cc-nane" },
+//        { fieldName: "cc-exp" },
+//      ],
+//    },
+//  ]
 //
 async function runHeuristicsTest(patterns, fixturePathPrefix) {
   add_setup(async () => {
@@ -299,6 +307,13 @@ async function runHeuristicsTest(patterns, fixturePathPrefix) {
   patterns.forEach(testPattern => {
     add_task(async function() {
       info(`Starting test fixture: ${testPattern.fixturePath ?? ""}`);
+      if (testPattern.description) {
+        info(`test "${testPattern.description}"`);
+      }
+
+      if (testPattern.prefs) {
+        testPattern.prefs.forEach(pref => SetPref(pref[0], pref[1]));
+      }
 
       const url = "http://localhost:8080/test/";
       const doc = testPattern.fixtureData
@@ -320,7 +335,9 @@ async function runHeuristicsTest(patterns, fixturePathPrefix) {
       );
 
       const sections = forms.flatMap(form => {
-        return FormAutofillHeuristics.getFormInfo(form);
+        const handler = new FormAutofillHandler(form);
+        handler.collectFormFields(false /* ignoreInvalid */);
+        return handler.sections;
       });
 
       Assert.equal(
@@ -330,6 +347,12 @@ async function runHeuristicsTest(patterns, fixturePathPrefix) {
       );
 
       verifySectionFieldDetails(sections, testPattern.expectedResult);
+
+      if (testPattern.prefs) {
+        testPattern.prefs.forEach(pref =>
+          Services.prefs.clearUserPref(pref[0])
+        );
+      }
     });
   });
 }

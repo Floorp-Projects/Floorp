@@ -18,7 +18,7 @@ runHeuristicsTest(
             { fieldName: "address-line1" },
             { fieldName: "email" },
             { fieldName: "tel" },
-            // {fieldName: "tel-extension"},
+            { fieldName: "tel" },  // Extension
             { fieldName: "organization" },
           ]
         },
@@ -37,7 +37,7 @@ runHeuristicsTest(
             { fieldName: "address-line1" },
             { fieldName: "email" },
             { fieldName: "tel" },
-            // {fieldName: "tel-extension"},
+            { fieldName: "tel" },  // Extension
             { fieldName: "organization" },
           ],
         },
