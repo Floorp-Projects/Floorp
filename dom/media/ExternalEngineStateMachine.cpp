@@ -282,6 +282,17 @@ void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
     return;
   }
 
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  // Only support encrypted playback.
+  if (!mInfo->IsEncrypted() &&
+      StaticPrefs::media_wmf_media_engine_enabled() == 2) {
+    LOG("External engine only supports encrypted playback by the pref");
+    DecodeError(
+        MediaResult(NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR));
+    return;
+  }
+#endif
+
   mEngine->SetMediaInfo(*mInfo);
 
   if (Info().mMetadataDuration.isSome()) {
