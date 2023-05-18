@@ -177,10 +177,6 @@ this.VideoControlsWidget = class {
       return false;
     }
 
-    if (!someVideo.mozHasAudio) {
-      return false;
-    }
-
     return true;
   }
 
