@@ -112,7 +112,7 @@ unified-extensions-item > .subviewbutton {
 }
 
 .unified-extensions-item-message {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 .unified-extensions-item-menu-button.subviewbutton {

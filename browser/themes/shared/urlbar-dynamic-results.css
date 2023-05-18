@@ -494,7 +494,7 @@
 .urlbarView-dynamic-addons-description {
   grid-area: description;
   font-size: 0.85em;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
   margin-block: 2px 9px;
 }
 
@@ -535,5 +535,5 @@
 
 .urlbarView-dynamic-addons-reviews {
   font-size: 0.85em;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
