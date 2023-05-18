@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -77,7 +78,9 @@ fun TabsTrayFab(
     if (isInNormalMode) {
         FloatingActionButton(
             icon = icon,
-            modifier = Modifier.padding(bottom = 16.dp, end = 16.dp),
+            modifier = Modifier
+                .padding(bottom = 16.dp, end = 16.dp)
+                .testTag(TabsTrayTestTag.fab),
             contentDescription = contentDescription,
             label = label,
             onClick = onClick,

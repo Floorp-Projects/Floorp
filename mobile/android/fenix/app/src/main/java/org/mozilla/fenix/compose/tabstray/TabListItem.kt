@@ -22,6 +22,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -35,6 +36,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ThumbnailCard
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.ext.toShortUrl
+import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -116,7 +118,9 @@ fun TabListItem(
         if (!multiSelectionEnabled) {
             IconButton(
                 onClick = { onCloseClick(tab) },
-                modifier = Modifier.size(size = 48.dp),
+                modifier = Modifier
+                    .size(size = 48.dp)
+                    .testTag(TabsTrayTestTag.tabItemClose),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.mozac_ic_close),

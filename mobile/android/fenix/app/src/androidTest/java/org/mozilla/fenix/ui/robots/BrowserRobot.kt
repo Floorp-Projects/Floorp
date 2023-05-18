@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.SystemClock
 import android.util.Log
 import android.widget.TimePicker
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -38,6 +39,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
+import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
@@ -57,6 +59,7 @@ import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import java.time.LocalDate
 
 class BrowserRobot {
@@ -917,6 +920,37 @@ class BrowserRobot {
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
+        }
+
+        fun openComposeTabDrawer(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+            for (i in 1..RETRY_COUNT) {
+                try {
+                    mDevice.waitForObjects(
+                        mDevice.findObject(
+                            UiSelector()
+                                .resourceId("$packageName:id/mozac_browser_toolbar_browser_actions"),
+                        ),
+                        waitingTime,
+                    )
+
+                    tabsCounter().click()
+
+                    composeTestRule.onNodeWithTag(TabsTrayTestTag.tabsTray).assertExists()
+
+                    break
+                } catch (e: AssertionError) {
+                    if (i == RETRY_COUNT) {
+                        throw e
+                    } else {
+                        mDevice.waitForIdle()
+                    }
+                }
+            }
+
+            composeTestRule.onNodeWithTag(TabsTrayTestTag.fab).assertExists()
+
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return ComposeTabDrawerRobot.Transition(composeTestRule)
         }
 
         fun openTabButtonShortcutsMenu(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {

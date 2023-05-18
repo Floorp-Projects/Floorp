@@ -53,6 +53,7 @@ fun TabLayout(
     displayTabsInGrid: Boolean,
     selectedTabId: String?,
     selectionMode: TabsTrayState.Mode,
+    modifier: Modifier = Modifier,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
@@ -74,6 +75,7 @@ fun TabLayout(
             selectedTabId = selectedTabId,
             selectedTabIndex = selectedTabIndex,
             selectionMode = selectionMode,
+            modifier = modifier,
             onTabClose = onTabClose,
             onTabMediaClick = onTabMediaClick,
             onTabClick = onTabClick,
@@ -86,6 +88,7 @@ fun TabLayout(
             selectedTabId = selectedTabId,
             selectedTabIndex = selectedTabIndex,
             selectionMode = selectionMode,
+            modifier = modifier,
             onTabClose = onTabClose,
             onTabMediaClick = onTabMediaClick,
             onTabClick = onTabClick,
@@ -102,6 +105,7 @@ private fun TabGrid(
     selectedTabId: String?,
     selectedTabIndex: Int,
     selectionMode: TabsTrayState.Mode,
+    modifier: Modifier = Modifier,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
@@ -114,7 +118,7 @@ private fun TabGrid(
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = MIN_COLUMN_WIDTH_DP.dp),
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         state = state,
     ) {
         header?.let {
@@ -152,6 +156,7 @@ private fun TabList(
     selectedTabId: String?,
     selectedTabIndex: Int,
     selectionMode: TabsTrayState.Mode,
+    modifier: Modifier = Modifier,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
@@ -163,7 +168,7 @@ private fun TabList(
     val isInMultiSelectMode = selectionMode is TabsTrayState.Mode.Select
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         state = state,
     ) {
         header?.let {

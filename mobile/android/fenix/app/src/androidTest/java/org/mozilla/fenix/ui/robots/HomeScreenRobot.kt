@@ -57,6 +57,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
+import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertCheckedItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
@@ -80,6 +81,7 @@ import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.withBitmapDrawable
+import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -548,6 +550,15 @@ class HomeScreenRobot {
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
+        }
+
+        fun openComposeTabDrawer(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+            mDevice.waitForIdle(waitingTime)
+            onView(withId(R.id.tab_button)).click()
+            composeTestRule.onNodeWithTag(TabsTrayTestTag.tabsTray).assertExists()
+
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return ComposeTabDrawerRobot.Transition(composeTestRule)
         }
 
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {

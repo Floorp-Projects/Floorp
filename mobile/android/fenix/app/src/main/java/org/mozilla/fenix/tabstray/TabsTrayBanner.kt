@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -173,7 +174,9 @@ private fun SingleSelectBanner(
                     Tab(
                         selected = selectedPage == Page.NormalTabs,
                         onClick = { onTabPageIndicatorClicked(Page.NormalTabs) },
-                        modifier = Modifier.fillMaxHeight(),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .testTag(TabsTrayTestTag.normalTabsPageButton),
                         selectedContentColor = selectedColor,
                         unselectedContentColor = inactiveColor,
                     ) {
@@ -183,7 +186,9 @@ private fun SingleSelectBanner(
                     Tab(
                         selected = selectedPage == Page.PrivateTabs,
                         onClick = { onTabPageIndicatorClicked(Page.PrivateTabs) },
-                        modifier = Modifier.fillMaxHeight(),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .testTag(TabsTrayTestTag.privateTabsPageButton),
                         icon = {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_private_browsing),
@@ -197,7 +202,9 @@ private fun SingleSelectBanner(
                     Tab(
                         selected = selectedPage == Page.SyncedTabs,
                         onClick = { onTabPageIndicatorClicked(Page.SyncedTabs) },
-                        modifier = Modifier.fillMaxHeight(),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .testTag(TabsTrayTestTag.syncedTabsPageButton),
                         icon = {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_synced_tabs),

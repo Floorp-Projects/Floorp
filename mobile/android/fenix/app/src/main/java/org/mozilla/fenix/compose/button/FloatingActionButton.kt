@@ -22,7 +22,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
@@ -47,7 +46,7 @@ fun FloatingActionButton(
 ) {
     FloatingActionButton(
         onClick = onClick,
-        modifier = Modifier.testTag("button.fab").then(modifier),
+        modifier = modifier,
         backgroundColor = FirefoxTheme.colors.actionPrimary,
         contentColor = FirefoxTheme.colors.textActionPrimary,
     ) {

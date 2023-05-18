@@ -77,6 +77,11 @@ interface FeatureSettingsHelper {
      */
     var isOpenInAppBannerEnabled: Boolean
 
+    /**
+     * Enable or disable the Tabs Tray to Compose rewrite.
+     */
+    var tabsTrayRewriteEnabled: Boolean
+
     fun applyFlagUpdates()
 
     fun resetAllFeatureFlags()
