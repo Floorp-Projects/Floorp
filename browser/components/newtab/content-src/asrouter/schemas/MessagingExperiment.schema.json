@@ -150,6 +150,10 @@
               "type": "boolean",
               "description": "Prevent the doorhanger from being dismissed if user interacts with the page or switches between applications."
             },
+            "show_in_private_browsing": {
+              "type": "boolean",
+              "description": "Whether to allow the message to be shown in private browsing mode. Defaults to false."
+            },
             "notification_text": {
               "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/localizableText",
               "description": "The text in the small blue chicklet that appears in the URL bar. This can be a reference to a localized string in Firefox or just a plain string."

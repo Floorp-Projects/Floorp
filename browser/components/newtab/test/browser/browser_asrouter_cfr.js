@@ -21,6 +21,7 @@ const createDummyRecommendation = ({
   heading_text,
   layout,
   skip_address_bar_notifier,
+  show_in_private_browsing,
   template,
 }) => {
   let recommendation = {
@@ -31,6 +32,7 @@ const createDummyRecommendation = ({
       category,
       anchor_id: "page-action-buttons",
       skip_address_bar_notifier,
+      show_in_private_browsing,
       heading_text: heading_text || "Mochitest",
       info_icon: {
         label: { attributes: { tooltiptext: "Why am I seeing this" } },
@@ -147,6 +149,7 @@ function trigger_cfr_panel(
     layout,
     skip_address_bar_notifier = false,
     use_single_secondary_button = false,
+    show_in_private_browsing = false,
     template = "cfr_doorhanger",
   } = {}
 ) {
@@ -157,6 +160,7 @@ function trigger_cfr_panel(
     heading_text,
     layout,
     skip_address_bar_notifier,
+    show_in_private_browsing,
     template,
   });
   if (category !== "cfrAddons") {
@@ -845,4 +849,67 @@ add_task(async function test_heartbeat_tactic_2() {
   document.getElementById("contextual-feature-recommendation").click();
 
   await newTabPromise;
+});
+
+add_task(async function test_cfr_doorhanger_in_private_window() {
+  const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
+  const sendPingStub = sinon.stub(
+    TelemetryFeed.prototype,
+    "sendStructuredIngestionEvent"
+  );
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    win.gBrowser,
+    "http://example.com/"
+  );
+  const browser = tab.linkedBrowser;
+
+  const response1 = await trigger_cfr_panel(browser, "example.com");
+  Assert.ok(
+    !response1,
+    "CFR should not be shown in a private window if show_in_private_browsing is false"
+  );
+
+  const response2 = await trigger_cfr_panel(browser, "example.com", {
+    show_in_private_browsing: true,
+  });
+  Assert.ok(
+    response2,
+    "CFR should be shown in a private window if show_in_private_browsing is true"
+  );
+
+  const shownPromise = BrowserTestUtils.waitForEvent(
+    win.PopupNotifications.panel,
+    "popupshown"
+  );
+  win.document.getElementById("contextual-feature-recommendation").click();
+  await shownPromise;
+
+  const hiddenPromise = BrowserTestUtils.waitForEvent(
+    win.PopupNotifications.panel,
+    "popuphidden"
+  );
+  const button = win.document.getElementById(
+    "contextual-feature-recommendation-notification"
+  )?.button;
+  Assert.ok(button, "CFR doorhanger button found");
+  button.click();
+  await hiddenPromise;
+
+  Assert.greater(sendPingStub.callCount, 0, "Recorded CFR telemetry");
+  const cfrPing = sendPingStub.args.find(args => args[2] === "cfr");
+  Assert.equal(cfrPing[0].source, "CFR", "Got a CFR event");
+  Assert.equal(
+    cfrPing[0].message_id,
+    "n/a",
+    "Omitted message_id consistent with CFR telemetry policy"
+  );
+  Assert.equal(
+    cfrPing[0].client_id,
+    undefined,
+    "Omitted client_id consistent with CFR telemetry policy"
+  );
+
+  sendPingStub.restore();
+  await BrowserTestUtils.closeWindow(win);
 });

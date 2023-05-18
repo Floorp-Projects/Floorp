@@ -158,7 +158,7 @@ Notification.prototype = {
    * Adds a value to the specified histogram, that must be keyed by ID.
    */
   _recordTelemetry(histogramId, value) {
-    if (this.isPrivate) {
+    if (this.isPrivate && !this.options.recordTelemetryInPrivateBrowsing) {
       // The reason why we don't record telemetry in private windows is because
       // the available actions can be different from regular mode. The main
       // difference is that all of the persistent permission options like
@@ -535,6 +535,15 @@ PopupNotifications.prototype = {
    *        popupOptions:
    *                     An optional object containing popup options passed to
    *                     `openPopup()` when defined.
+   *        recordTelemetryInPrivateBrowsing:
+   *                     An optional boolean indicating whether popup telemetry
+   *                     should be recorded in private browsing windows. By default,
+   *                     telemetry is NOT recorded in PBM, because the available
+   *                     options for persistent permission notifications are
+   *                     different between normal and PBM windows, potentially
+   *                     skewing the data. But for notifications that do not differ
+   *                     in PBM, this option can be used to ensure that popups in
+   *                     both PBM and normal windows record the same interactions.
    * @returns the Notification object corresponding to the added notification.
    */
   show: function PopupNotifications_show(
