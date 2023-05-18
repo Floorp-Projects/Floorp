@@ -169,7 +169,12 @@ class nsContentList::HashEntry : public PLDHashEntryHdr {
 
   HashEntry(HashEntry&& aEnt) : mContentList(std::move(aEnt.mContentList)) {}
 
-  ~HashEntry() = default;
+  ~HashEntry() {
+    if (mContentList) {
+      MOZ_RELEASE_ASSERT(mContentList->mInHashtable);
+      mContentList->mInHashtable = false;
+    }
+  }
 
   bool KeyEquals(KeyTypePointer aKey) const {
     return mContentList->MatchesKey(*aKey);
@@ -181,7 +186,11 @@ class nsContentList::HashEntry : public PLDHashEntryHdr {
 
   nsContentList* GetContentList() const { return mContentList; }
   void SetContentList(nsContentList* aContentList) {
+    MOZ_RELEASE_ASSERT(!mContentList);
+    MOZ_ASSERT(aContentList);
+    MOZ_RELEASE_ASSERT(!aContentList->mInHashtable);
     mContentList = aContentList;
+    mContentList->mInHashtable = true;
   }
 
   enum { ALLOW_MEMMOVE = true };
@@ -263,7 +272,12 @@ class nsCacheableFuncStringContentList::HashEntry : public PLDHashEntryHdr {
 
   HashEntry(HashEntry&& aEnt) : mContentList(std::move(aEnt.mContentList)) {}
 
-  ~HashEntry() = default;
+  ~HashEntry() {
+    if (mContentList) {
+      MOZ_RELEASE_ASSERT(mContentList->mInHashtable);
+      mContentList->mInHashtable = false;
+    }
+  }
 
   bool KeyEquals(KeyTypePointer aKey) const {
     return mContentList->Equals(aKey);
@@ -277,7 +291,11 @@ class nsCacheableFuncStringContentList::HashEntry : public PLDHashEntryHdr {
     return mContentList;
   }
   void SetContentList(nsCacheableFuncStringContentList* aContentList) {
+    MOZ_RELEASE_ASSERT(!mContentList);
+    MOZ_ASSERT(aContentList);
+    MOZ_RELEASE_ASSERT(!aContentList->mInHashtable);
     mContentList = aContentList;
+    mContentList->mInHashtable = true;
   }
 
   enum { ALLOW_MEMMOVE = true };
@@ -370,7 +388,8 @@ nsContentList::nsContentList(nsINode* aRootNode, int32_t aMatchNameSpaceId,
       mDeep(aDeep),
       mFuncMayDependOnAttr(false),
       mIsHTMLDocument(aRootNode->OwnerDoc()->IsHTMLDocument()),
-      mIsLiveList(aLiveList) {
+      mIsLiveList(aLiveList),
+      mInHashtable(false) {
   NS_ASSERTION(mRootNode, "Must have root");
   if (nsGkAtoms::_asterisk == mHTMLMatchAtom) {
     NS_ASSERTION(mXMLMatchAtom == nsGkAtoms::_asterisk,
@@ -379,7 +398,8 @@ nsContentList::nsContentList(nsINode* aRootNode, int32_t aMatchNameSpaceId,
   } else {
     mMatchAll = false;
   }
-  if (mIsLiveList) {
+  // This is aLiveList instead of mIsLiveList to avoid Valgrind errors.
+  if (aLiveList) {
     mRootNode->AddMutationObserver(this);
   }
 
@@ -410,9 +430,11 @@ nsContentList::nsContentList(nsINode* aRootNode, nsContentListMatchFunc aFunc,
       mDeep(aDeep),
       mFuncMayDependOnAttr(aFuncMayDependOnAttr),
       mIsHTMLDocument(false),
-      mIsLiveList(aLiveList) {
+      mIsLiveList(aLiveList),
+      mInHashtable(false) {
   NS_ASSERTION(mRootNode, "Must have root");
-  if (mIsLiveList) {
+  // This is aLiveList instead of mIsLiveList to avoid Valgrind errors.
+  if (aLiveList) {
     mRootNode->AddMutationObserver(this);
   }
 
@@ -836,7 +858,12 @@ void nsContentList::PopulateSelf(uint32_t aNeededLength,
 
 void nsContentList::RemoveFromHashtable() {
   if (mFunc) {
-    // This can't be in the table anyway
+    // nsCacheableFuncStringContentList can be in a hash table without being
+    // in gContentListHashTable, but it will have been removed from the hash
+    // table in its dtor before it runs the nsContentList dtor.
+    MOZ_RELEASE_ASSERT(!mInHashtable);
+
+    // This can't be in gContentListHashTable.
     return;
   }
 
@@ -844,13 +871,15 @@ void nsContentList::RemoveFromHashtable() {
   nsContentListKey key(mRootNode, mMatchNameSpaceId, str, mIsHTMLDocument);
   sRecentlyUsedContentLists.Remove(key);
 
-  if (!gContentListHashTable) return;
+  if (gContentListHashTable) {
+    gContentListHashTable->RemoveEntry(&key);
 
-  gContentListHashTable->RemoveEntry(&key);
-
-  if (gContentListHashTable->Count() == 0) {
-    gContentListHashTable = nullptr;
+    if (gContentListHashTable->Count() == 0) {
+      gContentListHashTable = nullptr;
+    }
   }
+
+  MOZ_RELEASE_ASSERT(!mInHashtable);
 }
 
 void nsContentList::BringSelfUpToDate(bool aDoFlush) {
@@ -876,6 +905,7 @@ nsCacheableFuncStringContentList::~nsCacheableFuncStringContentList() {
 
 void nsCacheableFuncStringContentList::RemoveFromFuncStringHashtable() {
   if (!gFuncStringContentListHashTable) {
+    MOZ_RELEASE_ASSERT(!mInHashtable);
     return;
   }
 
@@ -885,6 +915,8 @@ void nsCacheableFuncStringContentList::RemoveFromFuncStringHashtable() {
   if (gFuncStringContentListHashTable->Count() == 0) {
     gFuncStringContentListHashTable = nullptr;
   }
+
+  MOZ_RELEASE_ASSERT(!mInHashtable);
 }
 
 #ifdef DEBUG_CONTENT_LIST
