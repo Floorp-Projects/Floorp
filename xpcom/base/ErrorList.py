@@ -1169,6 +1169,7 @@ with modules["DOM_MEDIA"]:
     # Internal platform-related errors
     errors["NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR"] = FAILURE(101)
     errors["NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR"] = FAILURE(102)
+    errors["NS_ERROR_DOM_MEDIA_CDM_PROXY_NOT_SUPPORTED_ERR"] = FAILURE(103)
 
 # =======================================================================
 # 42: NS_ERROR_MODULE_URL_CLASSIFIER

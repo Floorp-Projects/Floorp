@@ -156,6 +156,8 @@ class MediaDecoderStateMachine
   void InvokeSuspendMediaSink() override;
   void InvokeResumeMediaSink() override;
 
+  bool IsCDMProxySupported(CDMProxy* aProxy) override;
+
  private:
   class StateObject;
   class DecodeMetadataState;

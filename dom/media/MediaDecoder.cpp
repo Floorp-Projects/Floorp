@@ -426,7 +426,8 @@ void MediaDecoder::OnPlaybackErrorEvent(const MediaResult& aError) {
 #ifndef MOZ_WMF_MEDIA_ENGINE
   DecodeError(aError);
 #else
-  if (aError != NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR) {
+  if (aError != NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR &&
+      aError != NS_ERROR_DOM_MEDIA_CDM_PROXY_NOT_SUPPORTED_ERR) {
     DecodeError(aError);
     return;
   }
@@ -443,7 +444,6 @@ void MediaDecoder::OnPlaybackErrorEvent(const MediaResult& aError) {
   // anything related with the old state machine, create a new state machine and
   // setup events/mirror/etc, then shutdown the old one and release its
   // reference once it finishes shutdown.
-  MOZ_ASSERT(aError == NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR);
   RefPtr<MediaDecoderStateMachineBase> discardStateMachine =
       mDecoderStateMachine;
 
@@ -452,12 +452,25 @@ void MediaDecoder::OnPlaybackErrorEvent(const MediaResult& aError) {
   DisconnectEvents();
 
   // Recreate a state machine and shutdown the old one.
-  LOG("Need to create a new state machine");
-  nsresult rv =
-      CreateAndInitStateMachine(false, true /* disable external engine*/);
+  bool needExternalEngine = false;
+  if (aError == NS_ERROR_DOM_MEDIA_CDM_PROXY_NOT_SUPPORTED_ERR) {
+#  ifdef MOZ_WMF_CDM
+    if (aError.GetCDMProxy()->AsWMFCDMProxy()) {
+      needExternalEngine = true;
+    }
+#  endif
+  }
+  LOG("Need to create a new %s state machine",
+      needExternalEngine ? "external engine" : "normal");
+
+  nsresult rv = CreateAndInitStateMachine(
+      false /* live stream */,
+      !needExternalEngine /* disable external engine */);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG("Failed to create a new state machine!");
   }
+
+  // TODO : need to make the new MDSM have the same status as the previous one
   discardStateMachine->BeginShutdown()->Then(
       AbstractThread::MainThread(), __func__, [discardStateMachine] {});
 #endif
@@ -1435,15 +1448,16 @@ bool MediaDecoder::CanPlayThrough() {
 RefPtr<SetCDMPromise> MediaDecoder::SetCDMProxy(CDMProxy* aProxy) {
   MOZ_ASSERT(NS_IsMainThread());
 #ifdef MOZ_WMF_MEDIA_ENGINE
-  // DRM playback via the media engine is disabled, switch back to the state
-  // machine using Gecko's media pipeline.
-  if (GetStateMachine()->IsExternalStateMachine() &&
-      !StaticPrefs::media_wmf_media_engine_drm_playback()) {
-    LOG("Disable external state machine due to DRM playback not allowed");
+  // Switch to another state machine if the current one doesn't support the
+  // given CDM proxy.
+  if (aProxy && !GetStateMachine()->IsCDMProxySupported(aProxy)) {
+    LOG("CDM proxy not supported! Switch to another state machine.");
     OnPlaybackErrorEvent(
-        MediaResult{NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR});
+        MediaResult{NS_ERROR_DOM_MEDIA_CDM_PROXY_NOT_SUPPORTED_ERR, aProxy});
   }
 #endif
+  MOZ_DIAGNOSTIC_ASSERT_IF(aProxy,
+                           GetStateMachine()->IsCDMProxySupported(aProxy));
   return GetStateMachine()->SetCDMProxy(aProxy);
 }
 
