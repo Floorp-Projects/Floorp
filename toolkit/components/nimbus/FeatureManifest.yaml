@@ -127,6 +127,13 @@ urlbar:
     the event is recorded once per app session when the user first encounters
     the UI of the experiment in which they're enrolled.
   variables:
+    addonsFeatureGate:
+      type: boolean
+      fallbackPref: browser.urlbar.addons.featureGate
+      description: >-
+        Feature gate that controls whether all aspects of the addons suggestion
+        feature are exposed to the user. See also `addonsKeywordsMinimumLength`
+        and `addonsKeywordsMinimumLengthCap`.
     addonsKeywordsMinimumLength:
       type: int
       description: >-

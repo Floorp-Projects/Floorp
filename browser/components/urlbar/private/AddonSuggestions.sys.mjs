@@ -123,18 +123,14 @@ export class AddonSuggestions extends BaseFeature {
 
   get shouldEnable() {
     return (
-      lazy.UrlbarPrefs.get("addons.featureGate") &&
+      lazy.UrlbarPrefs.get("addonsFeatureGate") &&
       lazy.UrlbarPrefs.get("suggest.addons") &&
       lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored")
     );
   }
 
   get enablingPreferences() {
-    return [
-      "addons.featureGate",
-      "suggest.addons",
-      "suggest.quicksuggest.nonsponsored",
-    ];
+    return ["suggest.addons", "suggest.quicksuggest.nonsponsored"];
   }
 
   async makeResult(queryContext, suggestion, searchString) {
