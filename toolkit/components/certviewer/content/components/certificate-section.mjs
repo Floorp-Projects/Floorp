@@ -31,8 +31,8 @@ class CertificateSection extends HTMLElement {
 
   render() {
     let title = this.shadowRoot.querySelector(".title");
-    title.setAttribute(
-      "data-l10n-id",
+    document.l10n.setAttributes(
+      title,
       "certificate-viewer-certificate-section-title"
     );
 
