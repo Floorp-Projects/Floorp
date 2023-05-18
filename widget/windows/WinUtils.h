@@ -467,16 +467,6 @@ class WinUtils {
   static bool GetIsMouseFromTouch(EventMessage aEventType);
 
   /**
-   * GetShellItemPath return the file or directory path of a shell item.
-   * Internally calls IShellItem's GetDisplayName.
-   *
-   * aItem  the shell item containing the path.
-   * aResultString  the resulting string path.
-   * returns  true if a path was retreived.
-   */
-  static bool GetShellItemPath(IShellItem* aItem, nsString& aResultString);
-
-  /**
    * ConvertHRGNToRegion converts a Windows HRGN to an LayoutDeviceIntRegion.
    *
    * aRgn the HRGN to convert.

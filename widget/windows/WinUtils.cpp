@@ -1226,16 +1226,6 @@ int32_t FaviconHelper::GetICOCacheSecondsTimeout() {
 }
 
 /* static */
-bool WinUtils::GetShellItemPath(IShellItem* aItem, nsString& aResultString) {
-  NS_ENSURE_TRUE(aItem, false);
-  LPWSTR str = nullptr;
-  if (FAILED(aItem->GetDisplayName(SIGDN_FILESYSPATH, &str))) return false;
-  aResultString.Assign(str);
-  CoTaskMemFree(str);
-  return !aResultString.IsEmpty();
-}
-
-/* static */
 LayoutDeviceIntRegion WinUtils::ConvertHRGNToRegion(HRGN aRgn) {
   NS_ASSERTION(aRgn, "Don't pass NULL region here");
 
