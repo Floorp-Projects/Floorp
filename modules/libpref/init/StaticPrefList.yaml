@@ -10276,19 +10276,15 @@
     mirror: always
 
 # Using Windows Media Foundation Media Engine for encrypted playback
+# 0 : disable, 1 : enable for encrypted and clear,
+# 2 : enable for encrypted only (TODO), 3 : enable for clear only
 -   name: media.wmf.media-engine.enabled
-    type: RelaxedAtomicBool
-    value: false
+    type: RelaxedAtomicUint32
+    value: 0
     mirror: always
 
 # Testing purpose, enable media engine on channel decoder as well.
 -   name: media.wmf.media-engine.channel-decoder.enabled
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
-
-# This allows playing DRM video via the media engine pipeline.
--   name: media.wmf.media-engine.drm-playback
     type: RelaxedAtomicBool
     value: false
     mirror: always

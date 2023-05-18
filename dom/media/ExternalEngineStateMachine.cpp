@@ -1161,10 +1161,15 @@ RefPtr<SetCDMPromise> ExternalEngineStateMachine::SetCDMProxy(
 bool ExternalEngineStateMachine::IsCDMProxySupported(CDMProxy* aProxy) {
 #ifdef MOZ_WMF_CDM
   MOZ_ASSERT(aProxy);
+  // 1=enabled encrypted and clear, 2=enabled encrytped
+  if (StaticPrefs::media_wmf_media_engine_enabled() != 1 &&
+      StaticPrefs::media_wmf_media_engine_enabled() != 2) {
+    return false;
+  }
+
   // The CDM needs to be hosted in the same process of the external engine, and
   // only WMFCDM meets this requirement.
-  return StaticPrefs::media_wmf_media_engine_drm_playback() &&
-         aProxy->AsWMFCDMProxy();
+  return aProxy->AsWMFCDMProxy();
 #else
   return false;
 #endif
