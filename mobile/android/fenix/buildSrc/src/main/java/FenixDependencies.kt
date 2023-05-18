@@ -58,7 +58,9 @@ object FenixVersions {
 
     const val google_play_review_version = "2.0.0"
 
-    const val protobuf = "3.21.10" // keep in sync with the version used in AS.
+    // keep in sync with the versions used in AS.
+    const val protobuf = "3.21.10"
+    const val protobuf_plugin = "0.8.19"
 }
 
 @Suppress("unused")

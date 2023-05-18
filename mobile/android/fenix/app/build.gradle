@@ -1,9 +1,17 @@
 import org.apache.tools.ant.util.StringUtils
 import org.mozilla.fenix.gradle.tasks.ApkSizeTask
 
+// Variables in plugins {} aren't directly supported. Hack around it by setting an
+// intermediate variable which can pull from FenixDependencies.kt and be used later.
+buildscript {
+    ext {
+        protobuf_plugin_version = FenixVersions.protobuf_plugin
+    }
+}
+
 plugins {
     id "com.jetbrains.python.envs" version "0.0.26"
-    id "com.google.protobuf" version "0.8.19"
+    id "com.google.protobuf" version "$protobuf_plugin_version"
 }
 
 apply plugin: 'com.android.application'
