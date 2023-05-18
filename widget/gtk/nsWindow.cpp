@@ -6446,7 +6446,15 @@ nsAutoCString nsWindow::GetDebugTag() const {
 }
 
 void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
-  GdkPoint topLeft = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
+  GdkPoint topLeft = [&] {
+    auto target = mBounds.TopLeft();
+    // gtk_window_move will undo the csd offset, but nothing else, so only add
+    // the client offset if drawing to the csd titlebar.
+    if (DrawsToCSDTitlebar()) {
+      target += mClientOffset;
+    }
+    return DevicePixelsToGdkPointRoundDown(target);
+  }();
   GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mLastSizeRequest);
 
   LOG("nsWindow::NativeMoveResize move %d resize %d to %d,%d -> %d x %d\n",
@@ -9515,7 +9523,7 @@ void nsWindow::LockNativePointer() {
     return;
   }
 
-  auto waylandDisplay = WaylandDisplayGet();
+  auto* waylandDisplay = WaylandDisplayGet();
 
   auto* pointerConstraints = waylandDisplay->GetPointerConstraints();
   if (!pointerConstraints) {
