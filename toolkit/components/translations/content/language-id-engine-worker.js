@@ -50,13 +50,14 @@ addEventListener("message", handleInitializationMessage);
  * The "initialize" message must be received before any other message handling
  * requests will be processed.
  *
- * @param {Object} data
- * @property {string} data.type - The message type, expects "initialize".
- * @property {ArrayBuffer} data.wasmBuffer - The buffer containing the wasm binary.
- * @property {ArrayBuffer} data.modelBuffer - The buffer containing the language-id model binary.
- * @property {string} data.langTag - The mocked language tag value (only present when mocking).
- * @property {number} data.confidence - The mocked confidence value (only present when mocking).
- * @property {boolean} data.isLoggingEnabled
+ * @param {Object} event
+ * @param {Object} event.data
+ * @param {string} event.data.type - The message type, expects "initialize".
+ * @param {ArrayBuffer} event.data.wasmBuffer - The buffer containing the wasm binary.
+ * @param {ArrayBuffer} event.data.modelBuffer - The buffer containing the language-id model binary.
+ * @param {null | string} event.data.mockedLangTag - The mocked language tag value (only present when mocking).
+ * @param {null | number} event.data.mockedConfidence - The mocked confidence value (only present when mocking).
+ * @param {boolean} event.data.isLoggingEnabled
  */
 async function handleInitializationMessage({ data }) {
   if (data.type !== "initialize") {
@@ -74,8 +75,13 @@ async function handleInitializationMessage({ data }) {
 
     /** @type {LanguageIdEngine | MockedLanguageIdEngine} */
     let languageIdEngine;
-    if (isMockedDataPayload(data)) {
-      languageIdEngine = initializeMockedLanguageIdEngine(data);
+    const { mockedLangTag, mockedConfidence } = data;
+    if (mockedLangTag !== null && mockedConfidence !== null) {
+      // Don't actually use the engine as it is mocked.
+      languageIdEngine = new MockedLanguageIdEngine(
+        mockedLangTag,
+        mockedConfidence
+      );
     } else {
       languageIdEngine = await initializeLanguageIdEngine(data);
     }
@@ -88,19 +94,6 @@ async function handleInitializationMessage({ data }) {
   }
 
   removeEventListener("message", handleInitializationMessage);
-}
-
-/**
- * Returns true if this data payload contains mocked values for the langTag
- * and the confidence, otherwise returns false.
- *
- * @property {string} data.langTag
- * @property {number} data.confidence
- * @returns {boolean}
- */
-function isMockedDataPayload(data) {
-  let { langTag, confidence } = data;
-  return langTag && confidence;
 }
 
 /**
@@ -147,25 +140,6 @@ async function initializeLanguageIdEngine(data) {
   }
   const model = await initializeFastTextModel(modelBuffer, wasmBuffer);
   return new LanguageIdEngine(model);
-}
-
-/**
- * Initialize the MockedLanguageIdEngine from the data payload by loading
- * assigning it a pre-determined langTag and confidence values.
- *
- * @param {Object} data
- * @property {string} data.langTag - The pre-determined mocked language tag
- * @property {number} data.confidence - the pre-determined mocked confidence
- */
-function initializeMockedLanguageIdEngine(data) {
-  const { langTag, confidence } = data;
-  if (!langTag) {
-    throw new Error('MockedLanguageIdEngine missing "langTag"');
-  }
-  if (!confidence) {
-    throw new Error('MockedLanguageIdEngine missing "confidence"');
-  }
-  return new MockedLanguageIdEngine(langTag, confidence);
 }
 
 /**

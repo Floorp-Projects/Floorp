@@ -117,11 +117,10 @@ export class TranslationsParent extends JSWindowActorParent {
 
   /**
    * The remote settings client that retrieves the language-identification model binary.
-   * This is public so that tests can provide a mocked RemoteSettingsClient.
    *
    * @type {RemoteSettingsClient | null}
    */
-  static languageIdModelsRemoteClient = null;
+  static #languageIdModelsRemoteClient = null;
 
   /**
    * A map of the TranslationModelRecord["id"] to the record of the model in Remote Settings.
@@ -253,14 +252,18 @@ export class TranslationsParent extends JSWindowActorParent {
       case "Translations:GetBergamotWasmArrayBuffer": {
         return this.#getBergamotWasmArrayBuffer();
       }
-      case "Translations:GetLanguageIdModelArrayBuffer": {
-        return this.#getLanguageIdModelArrayBuffer();
       }
-      case "Translations:GetLanguageIdWasmArrayBuffer": {
-        return this.#getLanguageIdWasmArrayBuffer();
-      }
-      case "Translations:GetLanguageIdEngineMockedPayload": {
-        return this.#getLanguageIdEngineMockedPayload();
+      case "Translations:GetLanguageIdEnginePayload": {
+        const [modelBuffer, wasmBuffer] = await Promise.all([
+          this.#getLanguageIdModelArrayBuffer(),
+          this.#getLanguageIdWasmArrayBuffer(),
+        ]);
+        return {
+          modelBuffer,
+          wasmBuffer,
+          mockedConfidence: TranslationsParent.#mockedLanguageIdConfidence,
+          mockedLangTag: TranslationsParent.#mockedLangTag,
+        };
       }
       case "Translations:GetIsTranslationsEngineMocked": {
         return Boolean(TranslationsParent.#mockedLanguagePairs);
@@ -392,15 +395,15 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {RemoteSettingsClient}
    */
   #getLanguageIdModelRemoteClient() {
-    if (TranslationsParent.languageIdModelsRemoteClient) {
-      return TranslationsParent.languageIdModelsRemoteClient;
+    if (TranslationsParent.#languageIdModelsRemoteClient) {
+      return TranslationsParent.#languageIdModelsRemoteClient;
     }
 
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-identification-models");
     bypassSignatureVerificationIfDev(client);
 
-    TranslationsParent.languageIdModelsRemoteClient = client;
+    TranslationsParent.#languageIdModelsRemoteClient = client;
     return client;
   }
 
@@ -1250,22 +1253,27 @@ export class TranslationsParent extends JSWindowActorParent {
    *
    * @param {string} langTag - The BCP 47 language tag.
    * @param {number} confidence  - The confidence score of the detected language.
+   * @param {RemoteSettingsClient} client
    */
-  static mockLanguageIdentification(langTag, confidence) {
+  static mockLanguageIdentification(langTag, confidence, client) {
+    lazy.console.log("Mocking language identification.", {
+      langTag,
+      confidence,
+    });
     TranslationsParent.#mockedLangTag = langTag;
     TranslationsParent.#mockedLanguageIdConfidence = confidence;
-    if (langTag) {
-      lazy.console.log("Mocking detected language tag", langTag);
-    } else {
-      lazy.console.log("Removing detected language tag mock");
-    }
-    if (langTag) {
-      lazy.console.log("Mocking detected language confidence", confidence);
-    } else {
-      lazy.console.log("Removing detected-language confidence mock");
-    }
+    TranslationsParent.#languageIdModelsRemoteClient = client;
   }
 
+  /**
+   * Remove the mocks
+   */
+  static unmockLanguageIdentification() {
+    lazy.console.log("Removing language identification mock.");
+    TranslationsParent.#mockedLangTag = null;
+    TranslationsParent.#mockedLanguageIdConfidence = null;
+    TranslationsParent.#languageIdModelsRemoteClient = null;
+  }
   /**
    * Report an error. Having this as a method allows tests to check that an error
    * was properly reported.
