@@ -273,6 +273,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include sponsored quick suggest suggestions.
   ["suggest.quicksuggest.sponsored", false],
 
+  // If `browser.urlbar.addons.featureGate` is true, this controls whether
+  // addon suggestions are turned on.
+  ["suggest.addons", true],
+
   // Whether results will include search suggestions.
   ["suggest.searches", false],
 

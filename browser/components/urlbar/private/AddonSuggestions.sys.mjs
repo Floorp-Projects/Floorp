@@ -122,11 +122,19 @@ export class AddonSuggestions extends BaseFeature {
   }
 
   get shouldEnable() {
-    return lazy.UrlbarPrefs.get("addons.featureGate");
+    return (
+      lazy.UrlbarPrefs.get("addons.featureGate") &&
+      lazy.UrlbarPrefs.get("suggest.addons") &&
+      lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored")
+    );
   }
 
   get enablingPreferences() {
-    return ["addons.featureGate"];
+    return [
+      "addons.featureGate",
+      "suggest.addons",
+      "suggest.quicksuggest.nonsponsored",
+    ];
   }
 
   async makeResult(queryContext, suggestion, searchString) {
@@ -272,7 +280,7 @@ export class AddonSuggestions extends BaseFeature {
       case "dismiss":
       case RESULT_MENU_COMMAND.NOT_INTERESTED:
       case RESULT_MENU_COMMAND.NOT_RELEVANT:
-        lazy.UrlbarPrefs.set("addons.featureGate", false);
+        lazy.UrlbarPrefs.set("suggest.addons", false);
         queryContext.view.acknowledgeDismissal(result);
         break;
       case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:

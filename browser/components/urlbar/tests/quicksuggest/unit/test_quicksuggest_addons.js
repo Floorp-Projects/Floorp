@@ -85,6 +85,40 @@ add_task(async function nonsponsoredDisabled() {
   UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
 });
 
+// When addon suggestions specific preference is disabled, addon suggestions
+// should not be added.
+add_task(async function addonSuggestionsSpecificPrefDisabled() {
+  const prefs = ["suggest.addons", "addons.featureGate"];
+  for (const pref of prefs) {
+    // First make sure the suggestion is added.
+    await check_results({
+      context: createContext("test", {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [
+        makeExpectedResult({
+          isBestMatch: true,
+          suggestedIndex: 1,
+        }),
+      ],
+    });
+
+    // Now disable the pref.
+    UrlbarPrefs.set(pref, false);
+    await check_results({
+      context: createContext("test", {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [],
+    });
+
+    // Revert.
+    UrlbarPrefs.set(pref, true);
+  }
+});
+
 add_task(async function hideIfAlreadyInstalled() {
   // Show suggestion.
   await check_results({
