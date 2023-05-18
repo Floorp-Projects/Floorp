@@ -10900,16 +10900,6 @@
 #endif
   mirror: always
 
-- name: media.webrtc.gmp.encoder.use_h264_profile_level
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: media.webrtc.gmp.encoder.multithreaded
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: media.webrtc.platformencoder.sw_mft
   type: RelaxedAtomicBool
   value: @IS_EARLY_BETA_OR_EARLIER@
