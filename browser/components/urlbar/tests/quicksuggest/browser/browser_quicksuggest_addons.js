@@ -293,7 +293,7 @@ add_task(async function resultMenu_showLessFrequently() {
     },
   });
 
-  await cleanUpNimbus;
+  await cleanUpNimbus();
   await SpecialPowers.popPrefEnv();
 });
 
@@ -344,7 +344,7 @@ add_task(async function resultMenu_showLessFrequentlyWithNimbusMinimumLength() {
     },
   });
 
-  await cleanUpNimbus;
+  await cleanUpNimbus();
   await SpecialPowers.popPrefEnv();
 });
 
@@ -514,7 +514,7 @@ async function doDismissTest(command) {
 
   await UrlbarTestUtils.promisePopupClose(window);
 
-  await cleanUpNimbus;
+  await cleanUpNimbus();
   await SpecialPowers.popPrefEnv();
   UrlbarPrefs.clear("suggest.addons");
 }
