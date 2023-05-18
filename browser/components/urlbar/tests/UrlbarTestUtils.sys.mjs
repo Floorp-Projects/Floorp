@@ -291,6 +291,76 @@ export var UrlbarTestUtils = {
   },
 
   /**
+   * Opens the result menu of a specific result and gets a menu item by either
+   * accesskey or command name. Either `accesskey` or `command` must be given.
+   *
+   * @param {object} options
+   *   The options object.
+   * @param {object} options.window
+   *   The window containing the urlbar.
+   * @param {string} options.accesskey
+   *   The access key of the menu item to return.
+   * @param {string} options.command
+   *   The command name of the menu item to return.
+   * @param {number} options.resultIndex
+   *   The index of the result. Defaults to the current selected index.
+   * @param {boolean} options.openByMouse
+   *   Whether to open the menu by mouse or keyboard.
+   * @param {Array} options.submenuSelectors
+   *   If the command is in the top-level result menu, leave this as an empty
+   *   array. If it's in a submenu, set this to an array where each element i is
+   *   a selector that can be used to get the i'th menu item that opens a
+   *   submenu.
+   */
+  async openResultMenuAndGetItem({
+    window,
+    accesskey,
+    command,
+    resultIndex = window.gURLBar.view.selectedRowIndex,
+    openByMouse = false,
+    submenuSelectors = [],
+  }) {
+    await this.openResultMenu(window, { resultIndex, byMouse: openByMouse });
+
+    // Open the sequence of submenus that contains the item.
+    for (let selector of submenuSelectors) {
+      let menuitem = window.gURLBar.view.resultMenu.querySelector(selector);
+      if (!menuitem) {
+        throw new Error("Submenu item not found for selector: " + selector);
+      }
+
+      this._testScope?.info("Clicking submenu item with selector: " + selector);
+      let promisePopup = lazy.BrowserTestUtils.waitForEvent(
+        window.gURLBar.view.resultMenu,
+        "popupshown"
+      );
+      this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, window);
+      this._testScope?.info("Waiting for submenu popupshown event");
+      await promisePopup;
+      this._testScope?.info("Got the submenu popupshown event");
+    }
+
+    // Now get the item.
+    let menuitem;
+    if (accesskey) {
+      await lazy.BrowserTestUtils.waitForCondition(() => {
+        menuitem = window.gURLBar.view.resultMenu.querySelector(
+          `menuitem[accesskey=${accesskey}]`
+        );
+        return menuitem;
+      }, "Waiting for strings to load");
+    } else if (command) {
+      menuitem = window.gURLBar.view.resultMenu.querySelector(
+        `menuitem[data-command=${command}]`
+      );
+    } else {
+      throw new Error("accesskey or command must be specified");
+    }
+
+    return menuitem;
+  },
+
+  /**
    * Opens the result menu of a specific result and presses an access key to
    * activate a menu item.
    *
@@ -310,14 +380,12 @@ export var UrlbarTestUtils = {
       openByMouse = false,
     } = {}
   ) {
-    await this.openResultMenu(win, { resultIndex, byMouse: openByMouse });
-    await lazy.BrowserTestUtils.waitForCondition(
-      () =>
-        win.gURLBar.view.resultMenu.querySelector(
-          `menuitem[accesskey=${accesskey}]`
-        ),
-      "Waiting for strings to load"
-    );
+    await this.openResultMenuAndGetItem({
+      accesskey,
+      resultIndex,
+      openByMouse,
+      window: win,
+    });
 
     this._testScope?.info(
       `pressing access key (${accesskey}) to activate menu item`
@@ -358,36 +426,18 @@ export var UrlbarTestUtils = {
       openByMouse = false,
     } = {}
   ) {
-    await this.openResultMenu(win, { resultIndex, byMouse: openByMouse });
-
-    let selectors = Array.isArray(commandOrArray)
+    let submenuSelectors = Array.isArray(commandOrArray)
       ? commandOrArray
       : [commandOrArray];
+    let command = submenuSelectors.pop();
 
-    let command = selectors.pop();
-
-    // Open the sequence of submenus that contains the command.
-    for (let selector of selectors) {
-      let menuitem = win.gURLBar.view.resultMenu.querySelector(selector);
-      if (!menuitem) {
-        throw new Error("Menu item not found for selector: " + selector);
-      }
-
-      this._testScope?.info("Clicking menu item with selector: " + selector);
-      let promisePopup = lazy.BrowserTestUtils.waitForEvent(
-        win.gURLBar.view.resultMenu,
-        "popupshown"
-      );
-      this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, win);
-      this._testScope?.info("Waiting for submenu popupshown event");
-      await promisePopup;
-      this._testScope?.info("Got the submenu popupshown event");
-    }
-
-    // Now click the command.
-    let menuitem = win.gURLBar.view.resultMenu.querySelector(
-      `menuitem[data-command=${command}]`
-    );
+    let menuitem = await this.openResultMenuAndGetItem({
+      resultIndex,
+      openByMouse,
+      command,
+      submenuSelectors,
+      window: win,
+    });
     if (!menuitem) {
       throw new Error("Menu item not found for command: " + command);
     }
