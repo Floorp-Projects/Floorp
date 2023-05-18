@@ -3435,9 +3435,6 @@
           let lastRelatedTab =
             openerTab && this._lastRelatedTabMap.get(openerTab);
           let previousTab = lastRelatedTab || openerTab || this.selectedTab;
-          if (previousTab.multiselected) {
-            previousTab = this.selectedTabs.at(-1);
-          }
           if (!previousTab.hidden) {
             index = previousTab._tPos + 1;
           } else if (previousTab == FirefoxViewHandler.tab) {
