@@ -64,7 +64,7 @@ namespace mozilla::gmp {
 #define __CLASS__ "GMPParent"
 
 GMPParent::GMPParent()
-    : mState(GMPState::NotLoaded),
+    : mState(GMPStateNotLoaded),
       mPluginId(GeckoChildProcessHost::GetUniqueID()),
       mProcess(nullptr),
       mDeleteProcessOnlyOnUnload(false),
@@ -270,7 +270,7 @@ RefPtr<GenericPromise> GMPParent::Init(GeckoMediaPluginServiceParent* aService,
 }
 
 void GMPParent::Crash() {
-  if (mState != GMPState::NotLoaded) {
+  if (mState != GMPStateNotLoaded) {
     Unused << SendCrashPluginNow();
   }
 }
@@ -321,7 +321,7 @@ class NotifyGMPProcessLoadedTask : public Runnable {
 nsresult GMPParent::LoadProcess() {
   MOZ_ASSERT(mDirectory, "Plugin directory cannot be NULL!");
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
-  MOZ_ASSERT(mState == GMPState::NotLoaded);
+  MOZ_ASSERT(mState == GMPStateNotLoaded);
 
   nsAutoString path;
   if (NS_WARN_IF(NS_FAILED(mDirectory->GetPath(path)))) {
@@ -398,7 +398,7 @@ nsresult GMPParent::LoadProcess() {
     GMP_PARENT_LOG_DEBUG("%s: Sent StartPlugin to child process", __FUNCTION__);
   }
 
-  mState = GMPState::Loaded;
+  mState = GMPStateLoaded;
 
   return NS_OK;
 }
@@ -421,8 +421,8 @@ void GMPParent::CloseIfUnused() {
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   GMP_PARENT_LOG_DEBUG("%s", __FUNCTION__);
 
-  if ((mDeleteProcessOnlyOnUnload || mState == GMPState::Loaded ||
-       mState == GMPState::Unloading) &&
+  if ((mDeleteProcessOnlyOnUnload || mState == GMPStateLoaded ||
+       mState == GMPStateUnloading) &&
       !IsUsed()) {
     // Ensure all timers are killed.
     for (uint32_t i = mTimers.Length(); i > 0; i--) {
@@ -440,15 +440,15 @@ void GMPParent::CloseIfUnused() {
 
 void GMPParent::CloseActive(bool aDieWhenUnloaded) {
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
-  GMP_PARENT_LOG_DEBUG("%s: state %d", __FUNCTION__, GMPState(mState));
+  GMP_PARENT_LOG_DEBUG("%s: state %d", __FUNCTION__, mState);
 
   if (aDieWhenUnloaded) {
     mDeleteProcessOnlyOnUnload = true;  // don't allow this to go back...
   }
-  if (mState == GMPState::Loaded) {
-    mState = GMPState::Unloading;
+  if (mState == GMPStateLoaded) {
+    mState = GMPStateUnloading;
   }
-  if (mState != GMPState::NotLoaded && IsUsed()) {
+  if (mState != GMPStateNotLoaded && IsUsed()) {
     Unused << SendCloseActive();
     CloseIfUnused();
   }
@@ -470,7 +470,7 @@ void GMPParent::Shutdown() {
   }
 
   MOZ_ASSERT(!IsUsed());
-  if (mState == GMPState::NotLoaded || mState == GMPState::Closing) {
+  if (mState == GMPStateNotLoaded || mState == GMPStateClosing) {
     return;
   }
 
@@ -483,7 +483,7 @@ void GMPParent::Shutdown() {
     // Destroy ourselves and rise from the fire to save memory
     mService->ReAddOnGMPThread(self);
   }  // else we've been asked to die and stay dead
-  MOZ_ASSERT(mState == GMPState::NotLoaded);
+  MOZ_ASSERT(mState == GMPStateNotLoaded);
 }
 
 class NotifyGMPShutdownTask : public Runnable {
@@ -527,10 +527,10 @@ void GMPParent::DeleteProcess() {
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   GMP_PARENT_LOG_DEBUG("%s", __FUNCTION__);
 
-  if (mState != GMPState::Closing) {
+  if (mState != GMPStateClosing) {
     // Don't Close() twice!
     // Probably remove when bug 1043671 is resolved
-    mState = GMPState::Closing;
+    mState = GMPStateClosing;
     Close();
   }
   mProcess->Delete(NewRunnableMethod("gmp::GMPParent::ChildTerminated", this,
@@ -539,7 +539,7 @@ void GMPParent::DeleteProcess() {
   mProcess = nullptr;
 
 #if defined(MOZ_WIDGET_ANDROID)
-  if (mState != GMPState::NotLoaded) {
+  if (mState != GMPStateNotLoaded) {
     nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
     MOZ_ASSERT(launcherThread);
 
@@ -556,7 +556,7 @@ void GMPParent::DeleteProcess() {
   }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
-  mState = GMPState::NotLoaded;
+  mState = GMPStateNotLoaded;
 
   nsCOMPtr<nsIRunnable> r =
       new NotifyGMPShutdownTask(NS_ConvertUTF8toUTF16(mNodeId));
@@ -621,15 +621,16 @@ bool GMPCapability::Supports(const nsTArray<GMPCapability>& aCapabilities,
 }
 
 bool GMPParent::EnsureProcessLoaded() {
-  switch (mState) {
-    case GMPState::NotLoaded:
-      return NS_SUCCEEDED(LoadProcess());
-    case GMPState::Loaded:
-      return true;
-    case GMPState::Unloading:
-    case GMPState::Closing:
-      return false;
+  if (mState == GMPStateLoaded) {
+    return true;
   }
+  if (mState == GMPStateClosing || mState == GMPStateUnloading) {
+    return false;
+  }
+
+  nsresult rv = LoadProcess();
+
+  return NS_SUCCEEDED(rv);
 }
 
 void GMPParent::AddCrashAnnotations() {
@@ -692,7 +693,7 @@ void GMPParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 
   // warn us off trying to close again
-  mState = GMPState::Closing;
+  mState = GMPStateClosing;
   mAbnormalShutdownInProgress = true;
   CloseActive(false);
 
@@ -701,7 +702,7 @@ void GMPParent::ActorDestroy(ActorDestroyReason aWhy) {
     RefPtr<GMPParent> self(this);
     // Must not call Close() again in DeleteProcess(), as we'll recurse
     // infinitely if we do.
-    MOZ_ASSERT(mState == GMPState::Closing);
+    MOZ_ASSERT(mState == GMPStateClosing);
     DeleteProcess();
     // Note: final destruction will be Dispatched to ourself
     mService->ReAddOnGMPThread(self);
