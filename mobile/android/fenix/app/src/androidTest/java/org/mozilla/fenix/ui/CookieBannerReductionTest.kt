@@ -1,6 +1,7 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -16,6 +17,7 @@ class CookieBannerReductionTest {
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
 
     // Bug causing flakiness https://bugzilla.mozilla.org/show_bug.cgi?id=1807440
+    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1807440")
     @SmokeTest
     @Test
     fun verifyCookieBannerReductionTest() {
@@ -64,6 +66,7 @@ class CookieBannerReductionTest {
     }
 
     // Bug causing flakiness https://bugzilla.mozilla.org/show_bug.cgi?id=1807440
+    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1807440")
     @SmokeTest
     @Test
     fun verifyCookieBannerReductionInPrivateBrowsingTest() {
