@@ -19,6 +19,7 @@ const TEST_PAGE = TEST_ROOT + "test-page.html";
 const TEST_PAGE_2 = TEST_ROOT_2 + "test-page.html";
 const TEST_PAGE_WITH_IFRAME = TEST_ROOT_2 + "test-page-with-iframe.html";
 const TEST_PAGE_WITH_SOUND = TEST_ROOT + "test-page-with-sound.html";
+const TEST_PAGE_WITHOUT_AUDIO = TEST_ROOT + "test-page-without-audio.html";
 const TEST_PAGE_WITH_NAN_VIDEO_DURATION =
   TEST_ROOT + "test-page-with-nan-video-duration.html";
 const TEST_PAGE_WITH_WEBVTT = TEST_ROOT + "test-page-with-webvtt.html";
