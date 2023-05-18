@@ -13,6 +13,7 @@ import com.android.installreferrer.api.InstallReferrerStateListener
 import org.mozilla.fenix.GleanMetrics.PlayStoreAttribution
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
+import java.net.URLDecoder
 
 /**
  * A metrics service used to derive the UTM parameters with the Google Play Install Referrer library.
@@ -83,7 +84,10 @@ class InstallReferrerMetricsService(private val context: Context) : MetricsServi
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun recordInstallReferrer(settings: Settings, url: String?) {
-        val params = url?.let(UTMParams::fromUrl)
+        if (url.isNullOrBlank()) {
+            return
+        }
+        val params = UTMParams.fromURLString(url)
         if (params == null || params.isEmpty()) {
             return
         }
@@ -144,13 +148,39 @@ data class UTMParams(
         const val UTM_CONTENT = "utm_content"
 
         /**
+         * Try and unpack the referrer URL by successively URLDecoding the URL.
+         *
+         * Once the url ceases to decode anymore, it gives up.
+         */
+        fun fromURLString(string: String): UTMParams? {
+            // Look for the first time 'utm_' is detected, after the first '?'.
+            val utmIndex = string.indexOf("utm_", string.indexOf('?'))
+            if (utmIndex < 0) {
+                return null
+            }
+            var url = string.substring(utmIndex)
+            while (true) {
+                val params = fromQueryString(url)
+                if (!params.isEmpty()) {
+                    return params
+                }
+                val newValue = URLDecoder.decode(url, "UTF-8")
+                if (newValue == url) {
+                    break
+                }
+                url = newValue
+            }
+            return null
+        }
+
+        /**
          * Derive a set of UTM parameters from a string URL.
          */
-        fun fromUrl(url: String): UTMParams =
+        fun fromQueryString(queryString: String): UTMParams =
             with(UrlQuerySanitizer()) {
                 allowUnregisteredParamaters = true
                 unregisteredParameterValueSanitizer = UrlQuerySanitizer.getUrlAndSpaceLegal()
-                parseUrl(url)
+                parseQuery(queryString)
                 UTMParams(
                     source = getValue(UTM_SOURCE),
                     medium = getValue(UTM_MEDIUM),
