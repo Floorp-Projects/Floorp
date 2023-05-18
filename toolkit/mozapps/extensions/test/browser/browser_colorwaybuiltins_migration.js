@@ -117,7 +117,7 @@ const assertDetailView = async (win, { addonId, expectThemeName }) => {
   );
 };
 
-add_task(async function test_update_expired_colorways_builtins() {
+async function test_update_expired_colorways_builtins() {
   // Set expired theme as a retained colorway theme
   const retainedThemePrefName = "browser.theme.retainedExpiredThemes";
   await SpecialPowers.pushPrefEnv({
@@ -241,4 +241,22 @@ add_task(async function test_update_expired_colorways_builtins() {
 
   await closeView(win);
   await uninstallTestAddons();
+
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async function test_colorways_builtin_theme_migration() {
+  await test_update_expired_colorways_builtins();
 });
+
+add_task(
+  async function test_colorways_builtin_theme_migration_on_disabledAutoUpdates() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["extensions.update.autoUpdateDefault", false]],
+    });
+
+    await test_update_expired_colorways_builtins();
+
+    await SpecialPowers.popPrefEnv();
+  }
+);
