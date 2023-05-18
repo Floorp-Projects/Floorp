@@ -754,14 +754,14 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 }
 
 #fxa-menu-header-description {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
   font-weight: 600;
 }
 
 #PanelUI-appMenu-fxa-label-last-synced {
   font-size: 10px;
   font-style: italic;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 #PanelUI-fxa-menu-send-button {
@@ -893,7 +893,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 }
 
 .PanelUI-remotetabs-notabsforclient-label {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
   /* This margin is to line this label up with the labels in toolbarbuttons. */
   margin-inline-start: 28px;
 }
@@ -948,7 +948,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 }
 
 .PanelUI-remotetabs-clientcontainer > label[itemtype="client"] {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 /* Collapse the non-active vboxes in the remotetabs deck to use only the
@@ -988,7 +988,7 @@ panelview .toolbarbutton-1,
 .subview-subheader {
   font-size: 11px;
   font-weight: inherit;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
   padding-block: 4px;
   box-sizing: border-box;
 }
@@ -1475,7 +1475,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
 }
 
 #PanelUI-panic-actionlist-main-label {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
   font-size: 0.9em;
 }
 
@@ -1937,7 +1937,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 #PanelUI-profiler-content-description {
   margin-block: 4px;
   font-size: .9em;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 #PanelUI-profiler-content-recording:not([hidden]) {

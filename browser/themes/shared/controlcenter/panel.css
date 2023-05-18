@@ -112,7 +112,7 @@
 
 #identity-popup-security-httpsonlymode-info {
   font-size: 0.85em;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 #identity-popup-security-httpsonlymode-info > description {
@@ -165,7 +165,7 @@
 
 #permission-popup-permissions-content > description,
 #protections-popup-content > description {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 /* This element needs the pre-wrap because we add newlines to it in the code. */
@@ -345,7 +345,7 @@
 }
 
 .protections-popup-empty-label {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 .protections-popup-trackersView-empty-image {
@@ -361,7 +361,7 @@
 }
 
 .protections-popup-cookiesView-list-header {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
   margin: 5px 0;
 }
 
@@ -397,11 +397,11 @@
   margin: 4.85em 7.25em;
   font-size: 1.1em;
   text-align: center;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 .protections-popup-section-header {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 :root[uidensity="compact"] .protections-popup-section-header {
@@ -482,7 +482,7 @@
 
 #permission-popup-storage-access-permission-list-hint {
   margin-top: 0.25em;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 #permission-popup-storage-access-permission-list-hint,
@@ -651,7 +651,7 @@
 
 #protections-popup-trackers-blocked-counter-description,
 #protections-popup-footer-protection-type-label {
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 .protections-popup-description > description {
@@ -770,7 +770,7 @@
 
 #geo-access-indicator-item {
   font-size: 0.8em;
-  color: var(--panel-description-color);
+  color: var(--text-color-deemphasized);
 }
 
 /** Shim-allow warning and indicator icons **/
