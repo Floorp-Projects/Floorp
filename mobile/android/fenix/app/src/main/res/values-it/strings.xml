@@ -209,7 +209,7 @@
     <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
     <string name="browser_menu_read_close">Chiudi Modalità lettura</string>
     <!-- Browser menu button to open the current page in an external app -->
-    <string name="browser_menu_open_app_link">Apri in un’app</string>
+    <string name="browser_menu_open_app_link">Apri in app</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Personalizza modalità lettura</string>

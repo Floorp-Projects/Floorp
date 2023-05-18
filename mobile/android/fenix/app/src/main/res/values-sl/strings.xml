@@ -410,12 +410,18 @@
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Zaprosi za podporo</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Zmanjšanje števila pasic s piškotki</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Zahtevam podporo za to spletno mesto?</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Zahtevek spletnemu mestu za podporo poslan.</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">Zahtevek poslan</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Vključeno na tem spletnem mestu</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Zahtevek spletnemu mestu za podporo poslan</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Zahtevek za podporo je poslan</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Spletno mesto trenutno ni podprto</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -424,6 +430,8 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Izključim zmanjšanje števila pasic s piškotki za %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Zmanjšanje pasic s piškotki zaenkrat ne podpira tega spletnega mesta. Ali želite, da spletno mesto pregleda naša ekipa in doda podporo v prihodnjih različicah?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s na tem spletnem mestu ni mogel samodejno zavrniti zahtev za shranjevanje piškotkov. Pošljete lahko zahtevek, naj se v prihodnosti uvede podpora za to spletno mesto.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s bo počistil piškotke tega spletnega mesta in osvežil stran. Če počistite vse piškotke, boste morda odjavljeni ali se bo izpraznila vaša nakupovalna košarica.</string>
 
@@ -717,15 +725,15 @@
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
-    <string name="preference_gestures_website_pull_to_refresh">Povlecite za osvežitev</string>
+    <string name="preference_gestures_website_pull_to_refresh">Osvežitev s potegom navzdol</string>
 
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">Pomaknite se, da skrijete orodno vrstico</string>
+    <string name="preference_gestures_dynamic_toolbar">Skritje orodne vrstice ob pomiku</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Podrsaj orodno vrstico vstran za preklop med zavihki</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Preklop med zavihki s potegom orodne vrstice vstran</string>
 
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
-    <string name="preference_gestures_swipe_toolbar_show_tabs">Podrsaj orodno vrstico navzgor za odpiranje zavihkov</string>
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Odpiranje zavihkov s potegom orodne vrstice navzgor</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
@@ -1727,7 +1735,7 @@
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Povečava na vseh spletnih straneh</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Omogočite, da dovolite povečanje s približevanjem prstov, tudi na straneh, ki to preprečujejo.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Možnost omogoča povečevanje s približevanjem prstov tudi na straneh, ki to preprečujejo.</string>
 
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Imenu (A–Ž)</string>

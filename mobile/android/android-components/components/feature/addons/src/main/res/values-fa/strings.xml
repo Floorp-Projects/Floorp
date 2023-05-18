@@ -35,9 +35,9 @@
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">پاک کردن تاریخچهٔ مرور اخیر،‌ کلوچک‌ها و اطلاعات مرتبط</string>
     <!-- Description for clipboard_read permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_read_description">دریافت اطلاعات از تخته نسخه برداری</string>
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">دریافت داده از تخته‌گیره</string>
     <!-- Description for clipboard_write permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_write_description">ورود اطلاعات به تخته نسخه برداری</string>
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">ورود داده به تخته‌گیره</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">محتوا را در هر صفحه‌ای مسدود کن</string>
     <!-- Description for declarativeNetRequestFeedback permission. -->

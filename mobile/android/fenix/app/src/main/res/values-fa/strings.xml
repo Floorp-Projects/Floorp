@@ -235,7 +235,7 @@
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">تنظیمات موتور جست‌وجو</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
-    <string name="awesomebar_clipboard_title">تکمیل پیوند از بُریده‌دان</string>
+    <string name="awesomebar_clipboard_title">تکمیل پیوند از تخته‌گیره</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">مجاز</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
@@ -509,7 +509,7 @@
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
     <string name="preferences_show_search_suggestions_in_private">نمایش در جلسات خصوصی</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
-    <string name="preferences_show_clipboard_suggestions">نمایش پیشنهادات بُریده‌دان</string>
+    <string name="preferences_show_clipboard_suggestions">نمایش پیشنهادات تخته‌گیره</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
     <string name="preferences_search_browsing_history">جست‌وجوی تاریخچهٔ مرور</string>
 
@@ -1681,10 +1681,10 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">گذرواژه</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
-    <string name="logins_password_copied">گذرواژه به کلیپ‌بورد ریخته شد</string>
+    <string name="logins_password_copied">گذرواژه به تخته‌گیره رونوشت شد</string>
 
     <!-- Shown in snackbar to tell user that the username has been copied -->
-    <string name="logins_username_copied">نام کاربری به کلیپ بورد ریخته شد</string>
+    <string name="logins_username_copied">نام کاربری به تخته‌گیره رونوشت شد</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">رونوشت از گذرواژه</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->

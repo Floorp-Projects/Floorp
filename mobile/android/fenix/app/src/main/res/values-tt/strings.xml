@@ -264,7 +264,7 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">Искәртүләр Сезгә %@ белән күбрәк эш эшләргә ярдәм итә</string>
+    <string name="onboarding_home_enable_notifications_title">Искәртүләр Сезгә %s ярдәмендә күбрәк эш эшләргә ярдәм итә</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button">Дәвам итү</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
