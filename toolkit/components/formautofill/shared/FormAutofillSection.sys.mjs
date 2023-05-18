@@ -683,10 +683,8 @@ export class FormAutofillAddressSection extends FormAutofillSection {
   }
 
   isValidSection() {
-    // TODO: Should check distinfuish fieldName
-    return (
-      this.fieldDetails.length >= FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD
-    );
+    const fields = new Set(this.fieldDetails.map(f => f.fieldName));
+    return fields.size >= FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD;
   }
 
   isEnabled() {

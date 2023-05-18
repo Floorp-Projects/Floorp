@@ -231,10 +231,6 @@ function verifySectionFieldDetails(sections, expectedSectionsInfo) {
       `Expected field count.`
     );
 
-    if (!section.isValidSection()) {
-      Assert.ok(expectedSection.invalid, "Should be an invalid section");
-    }
-
     fieldDetails.forEach((field, fieldIndex) => {
       const expectedFieldDetail = expectedFieldDetails[fieldIndex];
 
@@ -264,6 +260,12 @@ function verifySectionFieldDetails(sections, expectedSectionsInfo) {
         );
       }
     });
+
+    Assert.equal(
+      section.isValidSection(),
+      !expectedSection.invalid,
+      `Should be an ${expectedSection.invalid ? "invalid" : "valid"} section`
+    );
   });
 }
 
