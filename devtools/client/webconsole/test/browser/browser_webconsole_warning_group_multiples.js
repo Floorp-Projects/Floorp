@@ -27,8 +27,8 @@ const STORAGE_BLOCKED_GROUP_LABEL =
   "was blocked because we are blocking all third-party storage access requests and " +
   "content blocking is enabled.";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 UrlClassifierTestUtils.addTestTrackers();
 registerCleanupFunction(function() {

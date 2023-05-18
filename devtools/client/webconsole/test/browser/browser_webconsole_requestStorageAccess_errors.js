@@ -9,8 +9,8 @@ const LEARN_MORE_URI =
   "https://developer.mozilla.org/docs/Web/API/Document/requestStorageAccess" +
   DOCS_GA_PARAMS;
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
 UrlClassifierTestUtils.addTestTrackers();

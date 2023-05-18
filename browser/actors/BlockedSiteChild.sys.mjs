@@ -5,11 +5,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "SafeBrowsing",
-  "resource://gre/modules/SafeBrowsing.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  SafeBrowsing: "resource://gre/modules/SafeBrowsing.sys.mjs",
+});
 
 function getSiteBlockedErrorDetails(docShell) {
   let blockedInfo = {};

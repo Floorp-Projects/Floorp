@@ -17,18 +17,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
-
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
-
   Corroborate: "resource://gre/modules/Corroborate.sys.mjs",
   DAPTelemetrySender: "resource://gre/modules/DAPTelemetrySender.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   DoHController: "resource:///modules/DoHController.sys.mjs",
-
   DownloadsViewableInternally:
     "resource:///modules/DownloadsViewableInternally.sys.mjs",
-
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   FeatureGate: "resource://featuregates/FeatureGate.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
@@ -51,17 +47,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PluginManager: "resource:///actors/PluginParent.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ProvenanceData: "resource:///modules/ProvenanceData.sys.mjs",
-
   PublicSuffixList:
     "resource://gre/modules/netwerk-dns/PublicSuffixList.sys.mjs",
-
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   RFPHelper: "resource://gre/modules/RFPHelper.sys.mjs",
-
   RemoteSecuritySettings:
     "resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs",
-
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  SafeBrowsing: "resource://gre/modules/SafeBrowsing.sys.mjs",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
@@ -69,10 +62,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
-
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
-
   TRRRacer: "resource:///modules/TRRPerformance.sys.mjs",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
   UIState: "resource://services-sync/UIState.sys.mjs",
@@ -102,7 +93,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://activity-stream/lib/OnboardingMessageProvider.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
-  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabUnloader: "resource:///modules/TabUnloader.jsm",
@@ -306,7 +296,6 @@ let JSWINDOWACTORS = {
 
     matches: ["about:plugins"],
   },
-
   AboutPocket: {
     parent: {
       esModuleURI: "resource:///actors/AboutPocketParent.sys.mjs",

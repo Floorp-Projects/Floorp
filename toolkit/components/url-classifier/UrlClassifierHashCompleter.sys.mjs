@@ -12,9 +12,8 @@ const PARTIAL_LENGTH = 4;
 const MIN_WAIT_DURATION_MAX_VALUE = 24 * 60 * 60 * 1000;
 const PREF_DEBUG_ENABLED = "browser.safebrowsing.debug";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const lazy = {};
@@ -170,7 +169,7 @@ FullHashMatch.prototype = {
   cacheDuration: null,
 };
 
-function HashCompleter() {
+export function HashCompleter() {
   // The current HashCompleterRequest in flight. Once it is started, it is set
   // to null. It may be used by multiple calls to |complete| in succession to
   // avoid creating multiple requests to the same gethash URL.
@@ -965,5 +964,3 @@ function errorWithStack() {
   err.value = Cr.NS_ERROR_FAILURE;
   return err;
 }
-
-var EXPORTED_SYMBOLS = ["HashCompleter"];

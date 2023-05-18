@@ -25,8 +25,8 @@ const DISABLE_SHIM4_PREF = "extensions.webcompat.disabled_shims.MochitestShim4";
 const GLOBAL_PREF = "extensions.webcompat.enable_shims";
 const TRACKING_PREF = "privacy.trackingprotection.enabled";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 
 async function testShimRuns(

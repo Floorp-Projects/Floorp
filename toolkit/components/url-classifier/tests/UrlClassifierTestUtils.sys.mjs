@@ -1,7 +1,3 @@
-"use strict";
-
-var EXPORTED_SYMBOLS = ["UrlClassifierTestUtils"];
-
 const ANNOTATION_TABLE_NAME = "mochitest1-track-simple";
 const ANNOTATION_TABLE_PREF = "urlclassifier.trackingAnnotationTable";
 const ANNOTATION_ENTITYLIST_TABLE_NAME = "mochitest1-trackwhite-simple";
@@ -25,7 +21,7 @@ const EMAIL_TRACKING_TABLE_PREF =
 
 let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
-var UrlClassifierTestUtils = {
+export var UrlClassifierTestUtils = {
   addTestTrackers() {
     // Add some URLs to the tracking databases
     let annotationURL1 = "tracking.example.org/"; // only for annotations

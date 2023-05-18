@@ -18,8 +18,8 @@ const BLOCKED_URL =
   "browser/devtools/client/webconsole/test/browser/test-image.png";
 const WARNING_GROUP_PREF = "devtools.webconsole.groupWarningMessages";
 
-const { UrlClassifierTestUtils } = ChromeUtils.import(
-  "resource://testing-common/UrlClassifierTestUtils.jsm"
+const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 UrlClassifierTestUtils.addTestTrackers();
 registerCleanupFunction(function() {
