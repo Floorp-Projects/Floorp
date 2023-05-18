@@ -87,23 +87,27 @@ export class AboutTranslationsChild extends JSWindowActorChild {
   #convertToContentPromise(promise) {
     return new this.contentWindow.Promise((resolve, reject) =>
       promise.then(resolve, error => {
-        // Create an error in the content window, if the content window is still around.
-        if (this.contentWindow) {
-          let message = "An error occured in the AboutTranslations actor.";
-          if (typeof error === "string") {
-            message = error;
-          }
-          if (typeof error?.message === "string") {
-            message = error.message;
-          }
-          if (typeof error?.stack === "string") {
-            message += `\n\nOriginal stack:\n\n${error.stack}\n`;
-          }
-
-          reject(new this.contentWindow.Error(message));
-        } else {
+        let contentWindow;
+        try {
+          contentWindow = this.contentWindow;
+        } catch (error) {
+          // The content window is no longer available.
           reject();
+          return;
         }
+        // Create an error in the content window, if the content window is still around.
+        let message = "An error occured in the AboutTranslations actor.";
+        if (typeof error === "string") {
+          message = error;
+        }
+        if (typeof error?.message === "string") {
+          message = error.message;
+        }
+        if (typeof error?.stack === "string") {
+          message += `\n\nOriginal stack:\n\n${error.stack}\n`;
+        }
+
+        reject(new contentWindow.Error(message));
       })
     );
   }
