@@ -258,6 +258,7 @@ type LanguageTranslationModelFilesAligned = {
 interface TranslationsEnginePayload {
   bergamotWasmArrayBuffer: ArrayBuffer,
   languageModelFiles: LanguageTranslationModelFiles[]
+  isMocked: boolean,
 }
 
 /**

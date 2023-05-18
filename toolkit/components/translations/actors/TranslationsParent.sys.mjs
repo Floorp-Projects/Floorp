@@ -131,20 +131,18 @@ export class TranslationsParent extends JSWindowActorParent {
   #translationModelRecords = new Map();
 
   /**
-   * The RemoteSettingsClient that downloads the translation models. This is public so
-   * that tests can provide a mocked RemoteSettingsClient.
+   * The RemoteSettingsClient that downloads the translation models.
    *
    * @type {RemoteSettingsClient | null}
    */
-  static translationModelsRemoteClient = null;
+  static #translationModelsRemoteClient = null;
 
   /**
-   * The RemoteSettingsClient that downloads the wasm binaries. This is public so that
-   * tests can provide a mocked RemoteSettingsClient.
+   * The RemoteSettingsClient that downloads the wasm binaries.
    *
    * @type {RemoteSettingsClient | null}
    */
-  static translationsWasmRemoteClient = null;
+  static #translationsWasmRemoteClient = null;
 
   /**
    * If "browser.translations.autoTranslate" is set to "true" then the page will
@@ -154,11 +152,12 @@ export class TranslationsParent extends JSWindowActorParent {
   static #isPageRestoredForAutoTranslate = false;
 
   /**
-   * The translation engine can be mocked for testing.
+   * Allows the actor's behavior to be changed when the translations engine is mocked via
+   * a dummy RemoteSettingsClient.
    *
-   * @type {LanguagePair[]>}
+   * @type {bool}
    */
-  static #mockedLanguagePairs = null;
+  static #isTranslationsEngineMocked = false;
 
   /**
    * The language identification engine can be mocked for testing
@@ -175,14 +174,6 @@ export class TranslationsParent extends JSWindowActorParent {
    * @type {number | null}
    */
   static #mockedLanguageIdConfidence = null;
-
-  /**
-   * The RemoteSettings client can be mocked for testing to ensure
-   * that logic for filtering records is behaving correctly.
-   *
-   * @type {RemoteSettingsClient | null}
-   */
-  static #mockedRemoteSettingsClient = null;
 
   /**
    * @type {null | Promise<boolean>}
@@ -222,7 +213,7 @@ export class TranslationsParent extends JSWindowActorParent {
       return Promise.resolve(false);
     }
 
-    if (TranslationsParent.#mockedLanguagePairs) {
+    if (TranslationsParent.#isTranslationsEngineMocked) {
       // A mocked translations engine is always supported.
       return Promise.resolve(true);
     }
@@ -249,9 +240,37 @@ export class TranslationsParent extends JSWindowActorParent {
 
   async receiveMessage({ name, data }) {
     switch (name) {
-      case "Translations:GetBergamotWasmArrayBuffer": {
-        return this.#getBergamotWasmArrayBuffer();
-      }
+      case "Translations:GetTranslationsEnginePayload": {
+        const { fromLanguage, toLanguage } = data;
+        const bergamotWasmArrayBuffer = this.#getBergamotWasmArrayBuffer();
+
+        let files = await this.getLanguageTranslationModelFiles(
+          fromLanguage,
+          toLanguage
+        );
+
+        let languageModelFiles;
+        if (files) {
+          languageModelFiles = [files];
+        } else {
+          // No matching model was found, try to pivot between English.
+          const [files1, files2] = await Promise.all([
+            this.getLanguageTranslationModelFiles(fromLanguage, PIVOT_LANGUAGE),
+            this.getLanguageTranslationModelFiles(PIVOT_LANGUAGE, toLanguage),
+          ]);
+          if (!files1 || !files2) {
+            throw new Error(
+              `No language models were found for ${fromLanguage} to ${toLanguage}`
+            );
+          }
+          languageModelFiles = [files1, files2];
+        }
+
+        return {
+          bergamotWasmArrayBuffer: await bergamotWasmArrayBuffer,
+          languageModelFiles,
+          isMocked: TranslationsParent.#isTranslationsEngineMocked,
+        };
       }
       case "Translations:GetLanguageIdEnginePayload": {
         const [modelBuffer, wasmBuffer] = await Promise.all([
@@ -266,7 +285,7 @@ export class TranslationsParent extends JSWindowActorParent {
         };
       }
       case "Translations:GetIsTranslationsEngineMocked": {
-        return Boolean(TranslationsParent.#mockedLanguagePairs);
+        return TranslationsParent.#isTranslationsEngineMocked;
       }
       case "Translations:GetIsTranslationsEngineSupported": {
         return TranslationsParent.getIsTranslationsEngineSupported();
@@ -274,28 +293,6 @@ export class TranslationsParent extends JSWindowActorParent {
       case "Translations:FullPageTranslationFailed": {
         this.languageState.error = data.reason;
         break;
-      }
-      case "Translations:GetLanguageTranslationModelFiles": {
-        const { fromLanguage, toLanguage } = data;
-        const files = await this.getLanguageTranslationModelFiles(
-          fromLanguage,
-          toLanguage
-        );
-        if (files) {
-          // No pivoting is required.
-          return [files];
-        }
-        // No matching model was found, try to pivot between English.
-        const [files1, files2] = await Promise.all([
-          this.getLanguageTranslationModelFiles(fromLanguage, PIVOT_LANGUAGE),
-          this.getLanguageTranslationModelFiles(PIVOT_LANGUAGE, toLanguage),
-        ]);
-        if (!files1 || !files2) {
-          throw new Error(
-            `No language models were found for ${fromLanguage} to ${toLanguage}`
-          );
-        }
-        return [files1, files2];
       }
       case "Translations:GetSupportedLanguages": {
         return this.getSupportedLanguages();
@@ -495,10 +492,6 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {Promise<Array<LanguagePair>>}
    */
   async getLanguagePairs() {
-    if (TranslationsParent.#mockedLanguagePairs) {
-      return TranslationsParent.#mockedLanguagePairs;
-    }
-
     const records = await this.#getTranslationModelRecords();
     const languagePairMap = new Map();
 
@@ -592,13 +585,13 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {RemoteSettingsClient}
    */
   #getTranslationModelsRemoteClient() {
-    if (TranslationsParent.translationModelsRemoteClient) {
-      return TranslationsParent.translationModelsRemoteClient;
+    if (TranslationsParent.#translationModelsRemoteClient) {
+      return TranslationsParent.#translationModelsRemoteClient;
     }
 
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-models");
-    TranslationsParent.translationModelsRemoteClient = client;
+    TranslationsParent.#translationModelsRemoteClient = client;
 
     bypassSignatureVerificationIfDev(client);
 
@@ -671,9 +664,7 @@ export class TranslationsParent extends JSWindowActorParent {
       // Pull the records from the network.
       syncIfEmpty: true,
       // Don't verify the signature if the client is mocked.
-      verifySignature: TranslationsParent.#mockedRemoteSettingsClient
-        ? false
-        : VERIFY_SIGNATURES_FROM_FS,
+      verifySignature: VERIFY_SIGNATURES_FROM_FS,
       // Apply any filters for retrieving the records.
       filters,
     });
@@ -830,14 +821,14 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {RemoteSettingsClient}
    */
   #getTranslationsWasmRemoteClient() {
-    if (TranslationsParent.translationsWasmRemoteClient) {
-      return TranslationsParent.translationsWasmRemoteClient;
+    if (TranslationsParent.#translationsWasmRemoteClient) {
+      return TranslationsParent.#translationsWasmRemoteClient;
     }
 
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-wasm");
 
-    TranslationsParent.translationsWasmRemoteClient = client;
+    TranslationsParent.#translationsWasmRemoteClient = client;
 
     bypassSignatureVerificationIfDev(client);
 
@@ -1209,42 +1200,29 @@ export class TranslationsParent extends JSWindowActorParent {
    * For testing purposes, allow the Translations Engine to be mocked. If called
    * with `null` the mock is removed.
    *
-   * @param {null | Array<{ fromLang: string, toLang: string }>} languagePairs
+   * @param {null | RemoteSettingsClient} [translationModelsRemoteClient]
+   * @param {null | RemoteSettingsClient} [translationsWasmRemoteClient]
    */
-  static mockLanguagePairs(languagePairs) {
-    if (languagePairs) {
-      // Apply the same pivot logic to mocked language pairs so that this behavior
-      // gets tested.
-      TranslationsParent.#mockedLanguagePairs = TranslationsParent.ensureLanguagePairsHavePivots(
-        languagePairs
-      );
-    } else {
-      TranslationsParent.#mockedLanguagePairs = null;
-    }
-
-    if (languagePairs) {
-      lazy.console.log(
-        "Mocking language pairs",
-        TranslationsParent.#mockedLanguagePairs
-      );
-    } else {
-      lazy.console.log("Removing language pair mocks");
-    }
+  static mockTranslationsEngine(
+    translationModelsRemoteClient,
+    translationsWasmRemoteClient
+  ) {
+    lazy.console.log("Mocking RemoteSettings for the translations engine.");
+    TranslationsParent.#translationModelsRemoteClient = translationModelsRemoteClient;
+    TranslationsParent.#translationsWasmRemoteClient = translationsWasmRemoteClient;
+    TranslationsParent.#isTranslationsEngineMocked = true;
   }
 
   /**
-   * For testing purposes, allow the RemoteSettingsClient to be mocked. If called
-   * with `null` the mock is removed.
-   *
-   * @param {null | RemoteSettingsClient>} client
+   * Remove the mocks.
    */
-  static mockRemoteSettingsClient(client) {
-    TranslationsParent.#mockedRemoteSettingsClient = client;
-    if (client) {
-      console.log("Mocking RemoteSettings client");
-    } else {
-      console.log("Removing RemoteSettings client mock");
-    }
+  static unmockTranslationsEngine() {
+    lazy.console.log(
+      "Removing RemoteSettings mock for the translations engine."
+    );
+    TranslationsParent.#translationModelsRemoteClient = null;
+    TranslationsParent.#translationsWasmRemoteClient = null;
+    TranslationsParent.#isTranslationsEngineMocked = false;
   }
 
   /**

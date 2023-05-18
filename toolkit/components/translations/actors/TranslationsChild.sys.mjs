@@ -180,9 +180,10 @@ class TranslationsEngineCache {
       this.#engines[key] = enginePromise;
 
       // Remove the engine if it fails to initialize.
-      enginePromise.catch(() => {
-        lazy.console.log(
-          `The engine failed to load for translating "${fromLanguage}" to "${toLanguage}". Removing it from the cache.`
+      enginePromise.catch(error => {
+        lazy.console.error(
+          `The engine failed to load for translating "${fromLanguage}" to "${toLanguage}". Removing it from the cache.`,
+          error
         );
         this.#engines[key] = null;
       });
@@ -271,7 +272,7 @@ export class TranslationsEngine {
    *
    * @param {string} fromLanguage
    * @param {string} toLanguage
-   * @param {TranslationsEnginePayload} [enginePayload] - If there is no engine payload
+   * @param {TranslationsEnginePayload} enginePayload - If there is no engine payload
    *   then the engine will be mocked. This allows this class to be used in tests.
    * @param {number} innerWindowId - This only used for creating profiler markers in
    *   the initial creation of the engine.
@@ -438,22 +439,6 @@ export class TranslationsChild extends JSWindowActorChild {
   }
 
   /**
-   * @override https://firefox-source-docs.mozilla.org/dom/ipc/jsactors.html#actorcreated
-   */
-  actorCreated() {
-    this.#isTranslationsEngineMocked = this.sendQuery(
-      "Translations:GetIsTranslationsEngineMocked"
-    );
-  }
-
-  /**
-   * The translations engine could be mocked for tests, since the wasm and the language
-   * models must be downloaded from Remote Settings.
-   * @type {undefined | Promise<boolean>}
-   */
-  #isTranslationsEngineMocked;
-
-  /**
    * The getter for the TranslationsEngine, managed by the EngineCache.
    *
    * @type {null | (() => Promise<TranslationsEngine>) | ((fromCache: true) => Promise<TranslationsEngine | null>)}
@@ -494,35 +479,6 @@ export class TranslationsChild extends JSWindowActorChild {
    */
   static languagePairKey(fromLanguage, toLanguage) {
     return `${fromLanguage},${toLanguage}`;
-  }
-
-  /**
-   * @returns {Promise<ArrayBuffer>}
-   */
-  async #getBergamotWasmArrayBuffer() {
-    if (await this.#isTranslationsEngineMocked) {
-      throw new Error(
-        "The engine is mocked, the Bergamot wasm is not available."
-      );
-    }
-    return this.sendQuery("Translations:GetBergamotWasmArrayBuffer");
-  }
-
-  /**
-   * @param {string} fromLanguage
-   * @param {string} toLanguage
-   * @returns {Promise<LanguageTranslationModelFiles[]>}
-   */
-  async #getLanguageTranslationModelFiles(fromLanguage, toLanguage) {
-    if (await this.#isTranslationsEngineMocked) {
-      throw new Error(
-        "The engine is mocked, there are no language model files available."
-      );
-    }
-    return this.sendQuery("Translations:GetLanguageTranslationModelFiles", {
-      fromLanguage,
-      toLanguage,
-    });
   }
 
   /**
@@ -932,24 +888,15 @@ export class TranslationsChild extends JSWindowActorChild {
   }
 
   /**
-   * The engine is not available in tests.
-   *
    * @param {string} fromLanguage
    * @param {string} toLanguage
-   * @returns {null | TranslationsEnginePayload}
+   * @returns {TranslationsEnginePayload}
    */
   async #getTranslationsEnginePayload(fromLanguage, toLanguage) {
-    if (!this.#isTranslationsEngineMocked) {
-      throw new Error("Expected #isTranslationsEngineMocked to be a promise.");
-    }
-    if (await this.#isTranslationsEngineMocked) {
-      return null;
-    }
-    const [bergamotWasmArrayBuffer, languageModelFiles] = await Promise.all([
-      this.#getBergamotWasmArrayBuffer(),
-      this.#getLanguageTranslationModelFiles(fromLanguage, toLanguage),
-    ]);
-    return { bergamotWasmArrayBuffer, languageModelFiles };
+    return this.sendQuery("Translations:GetTranslationsEnginePayload", {
+      fromLanguage,
+      toLanguage,
+    });
   }
 
   /**
@@ -978,7 +925,6 @@ export class TranslationsChild extends JSWindowActorChild {
    */
   async createTranslationsEngine(fromLanguage, toLanguage) {
     const startTime = this.docShell.now();
-
     const enginePayload = await this.#getTranslationsEnginePayload(
       fromLanguage,
       toLanguage
