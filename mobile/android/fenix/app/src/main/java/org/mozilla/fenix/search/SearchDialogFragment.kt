@@ -79,6 +79,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Core.Companion.BOOKMARKS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.Core.Companion.HISTORY_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.Core.Companion.TABS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentSearchDialogBinding
 import org.mozilla.fenix.databinding.SearchSuggestionsHintBinding
@@ -106,8 +107,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     @VisibleForTesting internal lateinit var interactor: SearchDialogInteractor
     private lateinit var store: SearchDialogFragmentStore
-    private lateinit var toolbarView: ToolbarView
-    private lateinit var inlineAutocompleteEditText: InlineAutocompleteEditText
+
+    @VisibleForTesting internal lateinit var toolbarView: ToolbarView
+
+    @VisibleForTesting internal lateinit var inlineAutocompleteEditText: InlineAutocompleteEditText
     private lateinit var awesomeBarView: AwesomeBarView
     private lateinit var startForResult: ActivityResultLauncher<Intent>
 
@@ -478,7 +481,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         consumeFrom(store) {
             updateSearchSuggestionsHintVisibility(it)
-            updateToolbarContentDescription(it.searchEngineSource)
+            updateToolbarContentDescription(
+                it.searchEngineSource.searchEngine,
+                it.searchEngineSource.searchEngine == it.defaultEngine,
+            )
             toolbarView.update(it)
             awesomeBarView.update(it)
 
@@ -949,10 +955,35 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
     }
 
-    private fun updateToolbarContentDescription(source: SearchEngineSource) {
-        source.searchEngine?.let { engine ->
-            toolbarView.view.contentDescription = engine.name + ", " + inlineAutocompleteEditText.hint
+    // investigate when engine is null
+    @VisibleForTesting
+    internal fun updateToolbarContentDescription(
+        engine: SearchEngine?,
+        selectedOrDefaultSearchEngine: Boolean,
+    ) {
+        val hint = when (engine?.type) {
+            null -> requireContext().getString(R.string.search_hint)
+            SearchEngine.Type.APPLICATION ->
+                when (engine.id) {
+                    HISTORY_SEARCH_ENGINE_ID -> requireContext().getString(R.string.history_search_hint)
+                    BOOKMARKS_SEARCH_ENGINE_ID -> requireContext().getString(R.string.bookmark_search_hint)
+                    TABS_SEARCH_ENGINE_ID -> requireContext().getString(R.string.tab_search_hint)
+                    else -> requireContext().getString(R.string.application_search_hint)
+                }
+            else -> {
+                if (!engine.isGeneral) {
+                    requireContext().getString(R.string.application_search_hint)
+                } else {
+                    if (selectedOrDefaultSearchEngine) {
+                        requireContext().getString(R.string.search_hint)
+                    } else {
+                        requireContext().getString(R.string.search_hint_general_engine)
+                    }
+                }
+            }
         }
+        inlineAutocompleteEditText.hint = hint
+        toolbarView.view.contentDescription = engine?.name + ", " + hint
 
         inlineAutocompleteEditText.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
