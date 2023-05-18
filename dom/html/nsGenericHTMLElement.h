@@ -86,9 +86,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   void SetDir(const nsAString& aDir, mozilla::ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::dir, aDir, aError);
   }
-  void GetPopover(nsString& aPopover) {
-    GetHTMLEnumAttr(nsGkAtoms::popover, aPopover);
-  }
+  void GetPopover(nsString& aPopover) const;
   void SetPopover(const nsAString& aPopover, mozilla::ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::popover, aPopover, aError);
   }
