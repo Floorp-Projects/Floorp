@@ -576,6 +576,9 @@ class ProviderWeather extends UrlbarProvider {
       case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
         queryContext.view.acknowledgeFeedback(result);
         lazy.QuickSuggest.weather.incrementMinKeywordLength();
+        if (!lazy.QuickSuggest.weather.canIncrementMinKeywordLength) {
+          queryContext.view.invalidateResultMenuCommands();
+        }
         break;
     }
   }

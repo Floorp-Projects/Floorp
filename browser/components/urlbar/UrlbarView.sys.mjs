@@ -853,6 +853,15 @@ export class UrlbarView {
   }
 
   /**
+   * Clears the result menu commands cache, removing the cached commands for all
+   * results. This is useful when the commands for one or more results change
+   * while the results remain in the view.
+   */
+  invalidateResultMenuCommands() {
+    this.#resultMenuCommands = new WeakMap();
+  }
+
+  /**
    * Passes DOM events for the view to the on_<event type> methods.
    *
    * @param {Event} event
