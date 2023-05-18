@@ -33,7 +33,8 @@ class Runnable;
 - (NSInteger)asynchronouslyOpenMenu:(NSMenu*)aMenu
                    atScreenPosition:(NSPoint)aPosition
                             forView:(NSView*)aView
-                     withAppearance:(NSAppearance*)aAppearance;
+                     withAppearance:(NSAppearance*)aAppearance
+                      asContextMenu:(BOOL)aIsContextMenu;
 
 // If the menu opening request for aHandle hasn't been processed yet, cancel it.
 // Can only be called on the main thread.

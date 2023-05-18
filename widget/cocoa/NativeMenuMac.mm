@@ -237,7 +237,8 @@ static NSAppearance* NativeAppearanceForContent(nsIContent* aContent) {
   return NSAppearanceForColorScheme(LookAndFeel::ColorSchemeForFrame(f));
 }
 
-void NativeMenuMac::ShowAsContextMenu(nsIFrame* aClickedFrame, const CSSIntPoint& aPosition) {
+void NativeMenuMac::ShowAsContextMenu(nsIFrame* aClickedFrame, const CSSIntPoint& aPosition,
+                                      bool aIsContextMenu) {
   nsPresContext* pc = aClickedFrame->PresContext();
   auto cssToDesktopScale =
       pc->CSSToDevPixelScale() / pc->DeviceContext()->GetDesktopToDeviceScale();
@@ -255,7 +256,8 @@ void NativeMenuMac::ShowAsContextMenu(nsIFrame* aClickedFrame, const CSSIntPoint
   mOpeningHandle = [MOZMenuOpeningCoordinator.sharedInstance asynchronouslyOpenMenu:menu
                                                                    atScreenPosition:locationOnScreen
                                                                             forView:view
-                                                                     withAppearance:appearance];
+                                                                     withAppearance:appearance
+                                                                      asContextMenu:aIsContextMenu];
 }
 
 bool NativeMenuMac::Close() {

@@ -329,12 +329,24 @@ export var UrlbarTestUtils = {
         throw new Error("Submenu item not found for selector: " + selector);
       }
 
-      this._testScope?.info("Clicking submenu item with selector: " + selector);
       let promisePopup = lazy.BrowserTestUtils.waitForEvent(
         window.gURLBar.view.resultMenu,
         "popupshown"
       );
-      this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, window);
+
+      if (AppConstants.platform == "macosx") {
+        // Synthesized clicks don't work in the native Mac menu.
+        this._testScope?.info(
+          "Calling openMenu() on submenu item with selector: " + selector
+        );
+        menuitem.openMenu(true);
+      } else {
+        this._testScope?.info(
+          "Clicking submenu item with selector: " + selector
+        );
+        this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, window);
+      }
+
       this._testScope?.info("Waiting for submenu popupshown event");
       await promisePopup;
       this._testScope?.info("Got the submenu popupshown event");
@@ -380,21 +392,33 @@ export var UrlbarTestUtils = {
       openByMouse = false,
     } = {}
   ) {
-    await this.openResultMenuAndGetItem({
+    let menuitem = await this.openResultMenuAndGetItem({
       accesskey,
       resultIndex,
       openByMouse,
       window: win,
     });
+    if (!menuitem) {
+      throw new Error("Menu item not found for accesskey: " + accesskey);
+    }
 
-    this._testScope?.info(
-      `pressing access key (${accesskey}) to activate menu item`
-    );
     let promiseCommand = lazy.BrowserTestUtils.waitForEvent(
       win.gURLBar.view.resultMenu,
       "command"
     );
-    this.EventUtils.synthesizeKey(accesskey, {}, win);
+
+    if (AppConstants.platform == "macosx") {
+      // The native Mac menu doesn't support access keys.
+      this._testScope?.info("calling doCommand() to activate menu item");
+      menuitem.doCommand();
+      win.gURLBar.view.resultMenu.hidePopup(true);
+    } else {
+      this._testScope?.info(
+        `pressing access key (${accesskey}) to activate menu item`
+      );
+      this.EventUtils.synthesizeKey(accesskey, {}, win);
+    }
+
     this._testScope?.info("waiting for command event");
     await promiseCommand;
     this._testScope?.info("got the command event");
@@ -442,12 +466,21 @@ export var UrlbarTestUtils = {
       throw new Error("Menu item not found for command: " + command);
     }
 
-    this._testScope?.info("Clicking menu item with command: " + command);
     let promiseCommand = lazy.BrowserTestUtils.waitForEvent(
       win.gURLBar.view.resultMenu,
       "command"
     );
-    this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, win);
+
+    if (AppConstants.platform == "macosx") {
+      // Synthesized clicks don't work in the native Mac menu.
+      this._testScope?.info("calling doCommand() to activate menu item");
+      menuitem.doCommand();
+      win.gURLBar.view.resultMenu.hidePopup(true);
+    } else {
+      this._testScope?.info("Clicking menu item with command: " + command);
+      this.EventUtils.synthesizeMouseAtCenter(menuitem, {}, win);
+    }
+
     this._testScope?.info("Waiting for command event");
     await promiseCommand;
     this._testScope?.info("Got the command event");

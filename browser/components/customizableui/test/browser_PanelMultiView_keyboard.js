@@ -540,7 +540,7 @@ add_task(async function testArowsContext() {
   await expectFocusAfterKey("ArrowDown", gMainButton1);
   let shown = BrowserTestUtils.waitForEvent(gMainContext, "popupshown");
   // There's no cross-platform way to open a context menu from the keyboard.
-  gMainContext.openPopup();
+  gMainContext.openPopup(gMainButton1);
   await shown;
   let item = gMainContext.children[0];
   ok(
