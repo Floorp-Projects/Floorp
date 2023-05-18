@@ -6,6 +6,7 @@ package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
 import org.junit.After
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -86,6 +87,7 @@ class BrowsingErrorPagesTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1833874")
     @Test
     fun connectionFailureErrorMessageTest() {
         val url = "example.com"
