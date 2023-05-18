@@ -48,8 +48,6 @@ static const nsLiteralCString kHSTSKeySuffix = ":HSTS"_ns;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(SiteHSTSState, nsISiteSecurityState, nsISiteHSTSState)
-
 namespace {
 
 class SSSTokenizer final : public Tokenizer {
@@ -170,42 +168,6 @@ void SiteHSTSState::ToString(nsCString& aString) {
   aString.AppendInt(static_cast<uint32_t>(mHSTSIncludeSubdomains));
 }
 
-NS_IMETHODIMP
-SiteHSTSState::GetHostname(nsACString& aHostname) {
-  aHostname = mHostname;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SiteHSTSState::GetExpireTime(int64_t* aExpireTime) {
-  NS_ENSURE_ARG(aExpireTime);
-  *aExpireTime = mHSTSExpireTime;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SiteHSTSState::GetSecurityPropertyState(int16_t* aSecurityPropertyState) {
-  NS_ENSURE_ARG(aSecurityPropertyState);
-  *aSecurityPropertyState = mHSTSState;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SiteHSTSState::GetIncludeSubdomains(bool* aIncludeSubdomains) {
-  NS_ENSURE_ARG(aIncludeSubdomains);
-  *aIncludeSubdomains = mHSTSIncludeSubdomains;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SiteHSTSState::GetOriginAttributes(
-    JSContext* aCx, JS::MutableHandle<JS::Value> aOriginAttributes) {
-  if (!ToJSValue(aCx, mOriginAttributes, aOriginAttributes)) {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
 nsSiteSecurityService::nsSiteSecurityService()
     : mUsePreloadList(true), mPreloadListTimeOffset(0), mDafsa(kDafsa) {}
 
@@ -304,10 +266,10 @@ nsresult nsSiteSecurityService::SetHSTSState(
              "HSTS State must be SecurityPropertySet");
 
   int64_t expiretime = ExpireTimeFromMaxAge(maxage);
-  RefPtr<SiteHSTSState> siteState = new SiteHSTSState(
-      hostname, aOriginAttributes, expiretime, aHSTSState, includeSubdomains);
+  SiteHSTSState siteState(hostname, aOriginAttributes, expiretime, aHSTSState,
+                          includeSubdomains);
   nsAutoCString stateString;
-  siteState->ToString(stateString);
+  siteState.ToString(stateString);
   SSSLOG(("SSS: setting state for %s", hostname.get()));
   bool isPrivate = aOriginAttributes.mPrivateBrowsingId > 0;
   mozilla::DataStorageType storageType = isPrivate
@@ -317,16 +279,14 @@ nsresult nsSiteSecurityService::SetHSTSState(
   SetStorageKey(hostname, aOriginAttributes, storageKey);
   SSSLOG(("SSS: storing HSTS site entry for %s", hostname.get()));
   nsCString value = mSiteStateStorage->Get(storageKey, storageType);
-  RefPtr<SiteHSTSState> curSiteState =
-      new SiteHSTSState(hostname, aOriginAttributes, value);
+  SiteHSTSState curSiteState(hostname, aOriginAttributes, value);
   // Only update the backing storage if the currently-stored state is
   // different. In the case of expiration time, "different" means "is different
   // by more than a day".
-  if (curSiteState->mHSTSState != siteState->mHSTSState ||
-      curSiteState->mHSTSIncludeSubdomains !=
-          siteState->mHSTSIncludeSubdomains ||
-      AbsoluteDifference(curSiteState->mHSTSExpireTime,
-                         siteState->mHSTSExpireTime) > sOneDayInMilliseconds) {
+  if (curSiteState.mHSTSState != siteState.mHSTSState ||
+      curSiteState.mHSTSIncludeSubdomains != siteState.mHSTSIncludeSubdomains ||
+      AbsoluteDifference(curSiteState.mHSTSExpireTime,
+                         siteState.mHSTSExpireTime) > sOneDayInMilliseconds) {
     nsresult rv = mSiteStateStorage->Put(storageKey, stateString, storageType);
     if (NS_FAILED(rv)) {
       return rv;
@@ -351,10 +311,10 @@ nsresult nsSiteSecurityService::MarkHostAsNotHSTS(
 
   if (GetPreloadStatus(aHost)) {
     SSSLOG(("SSS: storing knockout entry for %s", aHost.get()));
-    RefPtr<SiteHSTSState> siteState = new SiteHSTSState(
-        aHost, aOriginAttributes, 0, SecurityPropertyKnockout, false);
+    SiteHSTSState siteState(aHost, aOriginAttributes, 0,
+                            SecurityPropertyKnockout, false);
     nsAutoCString stateString;
-    siteState->ToString(stateString);
+    siteState.ToString(stateString);
     nsresult rv = mSiteStateStorage->Put(storageKey, stateString, storageType);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
@@ -368,6 +328,7 @@ nsresult nsSiteSecurityService::MarkHostAsNotHSTS(
 NS_IMETHODIMP
 nsSiteSecurityService::ResetState(nsIURI* aURI,
                                   JS::Handle<JS::Value> aOriginAttributes,
+                                  nsISiteSecurityService::ResetStateBy aScope,
                                   JSContext* aCx, uint8_t aArgc) {
   if (!aURI) {
     return NS_ERROR_INVALID_ARG;
@@ -381,8 +342,14 @@ nsSiteSecurityService::ResetState(nsIURI* aURI,
       return NS_ERROR_INVALID_ARG;
     }
   }
+  nsISiteSecurityService::ResetStateBy scope =
+      nsISiteSecurityService::ResetStateBy::ExactDomain;
+  if (aArgc > 1) {
+    // ResetStateBy scope was passed in
+    scope = aScope;
+  }
 
-  return ResetStateInternal(aURI, originAttributes);
+  return ResetStateInternal(aURI, originAttributes, scope);
 }
 
 // Helper function to reset stored state of the given type for the host
@@ -392,7 +359,8 @@ nsSiteSecurityService::ResetState(nsIURI* aURI,
 // header with max-age=0 (meaning preloaded information will then not be used
 // for that host).
 nsresult nsSiteSecurityService::ResetStateInternal(
-    nsIURI* aURI, const OriginAttributes& aOriginAttributes) {
+    nsIURI* aURI, const OriginAttributes& aOriginAttributes,
+    nsISiteSecurityService::ResetStateBy aScope) {
   if (!aURI) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -401,14 +369,57 @@ nsresult nsSiteSecurityService::ResetStateInternal(
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  if (aScope == ResetStateBy::ExactDomain) {
+    ResetStateForExactDomain(hostname, aOriginAttributes);
+    return NS_OK;
+  }
+
+  nsTArray<DataStorageItem> items;
+  mSiteStateStorage->GetAll(&items);
+  for (const auto& item : items) {
+    if (!StringEndsWith(item.key, kHSTSKeySuffix)) {
+      // The key does not end with correct suffix, so is not the type we want.
+      continue;
+    }
+    nsCString origin(
+        StringHead(item.key, item.key.Length() - kHSTSKeySuffix.Length()));
+    nsAutoCString itemHostname;
+    OriginAttributes itemOriginAttributes;
+    if (!itemOriginAttributes.PopulateFromOrigin(origin, itemHostname)) {
+      return NS_ERROR_FAILURE;
+    }
+    bool hasRootDomain = false;
+    nsresult rv = net::HasRootDomain(itemHostname, hostname, &hasRootDomain);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (hasRootDomain) {
+      ResetStateForExactDomain(itemHostname, itemOriginAttributes);
+    } else if (aScope == ResetStateBy::BaseDomain) {
+      mozilla::dom::PartitionKeyPatternDictionary partitionKeyPattern;
+      partitionKeyPattern.mBaseDomain.Construct(
+          NS_ConvertUTF8toUTF16(hostname));
+      OriginAttributesPattern originAttributesPattern;
+      originAttributesPattern.mPartitionKeyPattern.Construct(
+          partitionKeyPattern);
+      if (originAttributesPattern.Matches(itemOriginAttributes)) {
+        ResetStateForExactDomain(itemHostname, itemOriginAttributes);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+void nsSiteSecurityService::ResetStateForExactDomain(
+    const nsCString& aHostname, const OriginAttributes& aOriginAttributes) {
   nsAutoCString storageKey;
-  SetStorageKey(hostname, aOriginAttributes, storageKey);
+  SetStorageKey(aHostname, aOriginAttributes, storageKey);
   bool isPrivate = aOriginAttributes.mPrivateBrowsingId > 0;
   mozilla::DataStorageType storageType = isPrivate
                                              ? mozilla::DataStorage_Private
                                              : mozilla::DataStorage_Persistent;
   mSiteStateStorage->Remove(storageKey, storageType);
-  return NS_OK;
 }
 
 bool nsSiteSecurityService::HostIsIPAddress(const nsCString& hostname) {
@@ -706,16 +717,15 @@ bool nsSiteSecurityService::HostHasHSTSEntry(
   SSSLOG(("Seeking HSTS entry for %s", aHost.get()));
   SetStorageKey(aHost, aOriginAttributes, storageKey);
   nsCString value = mSiteStateStorage->Get(storageKey, storageType);
-  RefPtr<SiteHSTSState> siteState =
-      new SiteHSTSState(aHost, aOriginAttributes, value);
-  if (siteState->mHSTSState != SecurityPropertyUnset) {
+  SiteHSTSState siteState(aHost, aOriginAttributes, value);
+  if (siteState.mHSTSState != SecurityPropertyUnset) {
     SSSLOG(("Found HSTS entry for %s", aHost.get()));
-    bool expired = siteState->IsExpired();
+    bool expired = siteState.IsExpired();
     if (!expired) {
       SSSLOG(("Entry for %s is not expired", aHost.get()));
-      if (siteState->mHSTSState == SecurityPropertySet) {
-        *aResult = aRequireIncludeSubdomains ? siteState->mHSTSIncludeSubdomains
-                                             : true;
+      if (siteState.mHSTSState == SecurityPropertySet) {
+        *aResult =
+            aRequireIncludeSubdomains ? siteState.mHSTSIncludeSubdomains : true;
         return true;
       }
     }
@@ -733,7 +743,7 @@ bool nsSiteSecurityService::HostHasHSTSEntry(
   bool includeSubdomains = false;
 
   // Finally look in the static preload list.
-  if (siteState->mHSTSState == SecurityPropertyUnset &&
+  if (siteState.mHSTSState == SecurityPropertyUnset &&
       GetPreloadStatus(aHost, &includeSubdomains)) {
     SSSLOG(("%s is a preloaded HSTS host", aHost.get()));
     *aResult = aRequireIncludeSubdomains ? includeSubdomains : true;
@@ -796,36 +806,6 @@ nsresult nsSiteSecurityService::IsSecureHost(
 
 NS_IMETHODIMP
 nsSiteSecurityService::ClearAll() { return mSiteStateStorage->Clear(); }
-
-NS_IMETHODIMP
-nsSiteSecurityService::Enumerate(nsISimpleEnumerator** aEnumerator) {
-  NS_ENSURE_ARG(aEnumerator);
-
-  nsTArray<DataStorageItem> items;
-  mSiteStateStorage->GetAll(&items);
-  nsCOMArray<nsISiteSecurityState> states;
-  for (const DataStorageItem& item : items) {
-    if (!StringEndsWith(item.key, kHSTSKeySuffix)) {
-      // The key does not end with correct suffix, so is not the type we want.
-      continue;
-    }
-
-    nsCString origin(
-        StringHead(item.key, item.key.Length() - kHSTSKeySuffix.Length()));
-    nsAutoCString hostname;
-    OriginAttributes originAttributes;
-    if (!originAttributes.PopulateFromOrigin(origin, hostname)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsISiteSecurityState> state(
-        new SiteHSTSState(hostname, originAttributes, item.value));
-    states.AppendObject(state);
-  }
-
-  NS_NewArrayEnumerator(aEnumerator, states, NS_GET_IID(nsISiteSecurityState));
-  return NS_OK;
-}
 
 //------------------------------------------------------------
 // nsSiteSecurityService::nsIObserver
