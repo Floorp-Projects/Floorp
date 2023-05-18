@@ -648,13 +648,15 @@ class TelemetryFeed {
 
   /**
    * Per Bug 1484035, CFR metrics comply with following policies:
-   * 1). In release, it collects impression_id, and treats bucket_id as message_id
+   * 1). In release, it collects impression_id and bucket_id
    * 2). In prerelease, it collects client_id and message_id
    * 3). In shield experiments conducted in release, it collects client_id and message_id
+   * 4). In Private Browsing windows, unless in experiment, collects impression_id and bucket_id
    */
   async applyCFRPolicy(ping) {
     if (
-      lazy.UpdateUtils.getUpdateChannel(true) === "release" &&
+      (lazy.UpdateUtils.getUpdateChannel(true) === "release" ||
+        ping.is_private) &&
       !this.isInCFRCohort
     ) {
       ping.message_id = "n/a";
@@ -663,6 +665,7 @@ class TelemetryFeed {
       ping.client_id = await this.telemetryClientId;
     }
     delete ping.action;
+    delete ping.is_private;
     return { ping, pingType: "cfr" };
   }
 

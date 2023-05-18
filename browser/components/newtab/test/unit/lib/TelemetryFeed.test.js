@@ -872,6 +872,51 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "bucket_id", "cfr_bucket_01");
       assert.propertyVal(ping, "message_id", "cfr_message_01");
     });
+    it("should use impression_id and bucket_id in Private Browsing", async () => {
+      globals.set("UpdateUtils", {
+        getUpdateChannel() {
+          return "release";
+        },
+      });
+      const data = {
+        action: "cfr_user_event",
+        event: "IMPRESSION",
+        is_private: true,
+        message_id: "cfr_message_01",
+        bucket_id: "cfr_bucket_01",
+      };
+      const { ping, pingType } = await instance.applyCFRPolicy(data);
+
+      assert.equal(pingType, "cfr");
+      assert.isUndefined(ping.client_id);
+      assert.propertyVal(ping, "impression_id", FAKE_UUID);
+      assert.propertyVal(ping, "message_id", "n/a");
+      assert.propertyVal(ping, "bucket_id", "cfr_bucket_01");
+    });
+    it("should use client_id and message_id in the experiment cohort in Private Browsing", async () => {
+      globals.set("UpdateUtils", {
+        getUpdateChannel() {
+          return "release";
+        },
+      });
+      sandbox.stub(ExperimentAPI, "getExperimentMetaData").returns({
+        slug: "SOME-CFR-EXP",
+      });
+      const data = {
+        action: "cfr_user_event",
+        event: "IMPRESSION",
+        is_private: true,
+        message_id: "cfr_message_01",
+        bucket_id: "cfr_bucket_01",
+      };
+      const { ping, pingType } = await instance.applyCFRPolicy(data);
+
+      assert.equal(pingType, "cfr");
+      assert.isUndefined(ping.impression_id);
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
+      assert.propertyVal(ping, "bucket_id", "cfr_bucket_01");
+      assert.propertyVal(ping, "message_id", "cfr_message_01");
+    });
   });
   describe("#applyWhatsNewPolicy", () => {
     it("should set client_id and set pingType", async () => {
