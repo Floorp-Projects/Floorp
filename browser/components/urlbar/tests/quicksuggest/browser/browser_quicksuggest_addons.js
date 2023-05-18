@@ -446,6 +446,9 @@ async function doDismissTest(command) {
     "Addons suggestion should be present"
   );
 
+  // Sanity check.
+  Assert.ok(UrlbarPrefs.get("suggest.addons"));
+
   // Click the command.
   await UrlbarTestUtils.openResultMenuAndClickItem(
     window,
@@ -454,8 +457,8 @@ async function doDismissTest(command) {
   );
 
   Assert.ok(
-    !UrlbarPrefs.get("addons.featureGate"),
-    "addons.featureGate pref should be set to false after dismissal"
+    !UrlbarPrefs.get("suggest.addons"),
+    "suggest.addons pref should be set to false after dismissal"
   );
 
   // The row should be a tip now.
@@ -513,5 +516,5 @@ async function doDismissTest(command) {
 
   await cleanUpNimbus;
   await SpecialPowers.popPrefEnv();
-  UrlbarPrefs.clear("addons.featureGate");
+  UrlbarPrefs.clear("suggest.addons");
 }
