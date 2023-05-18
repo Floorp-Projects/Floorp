@@ -17,12 +17,10 @@ exclude: true
 - Add [`SessionPdfFileSaver.createResponse`][114.1] to response of saving PDF.
 - Added [`requestExternalApp`][114.2] and [`skipConfirmation`][114.3] with builder fields on a WebResponse to request that a downloaded file be opened in an external application or to skip a confirmation, respectively.
 - ⚠️ Removed deprecated [`CookieBannerMode.COOKIE_BANNER_MODE_DETECT_ONLY`][111.1]
-- Add [`onPrintWithStatus`][115.3] to retrieve additional printing status information.
 
 [114.1]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(byte[], String, String)
 [114.2]: {{javadoc_uri}}/WebResponse.html#requestExternalApp
 [114.3]: {{javadoc_uri}}/WebResponse.html#skipConfirmation
-[114.4]: {{javadoc_uri}}/GeckoSession.PrintDelegate.html#onPrintWithStatus
 
 ## v113
 - Add `DisplayMdoe` annotation to [`displayMode`][113.1], [`getDisplayMode`][113.2] and [`setDisplayMode`][113.3].
@@ -1357,8 +1355,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-<<<<<<< local
 [api-version]: 0345baae42369dfaee76ce5f7420526ca21b6b8f
-=======
-[api-version]: 3caf920d1b5feeadb1d929f6ac70ce5730e46fde
->>>>>>> graft
