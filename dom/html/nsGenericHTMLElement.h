@@ -88,7 +88,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   }
   void GetPopover(nsString& aPopover) const;
   void SetPopover(const nsAString& aPopover, mozilla::ErrorResult& aError) {
-    SetHTMLAttr(nsGkAtoms::popover, aPopover, aError);
+    SetOrRemoveNullableStringAttr(nsGkAtoms::popover, aPopover, aError);
   }
   bool Hidden() const { return GetBoolAttr(nsGkAtoms::hidden); }
   void SetHidden(bool aHidden, mozilla::ErrorResult& aError) {
