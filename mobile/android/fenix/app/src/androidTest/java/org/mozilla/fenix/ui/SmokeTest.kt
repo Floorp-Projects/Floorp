@@ -16,6 +16,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -31,6 +32,7 @@ import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.assertYoutubeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
+import org.mozilla.fenix.helpers.TestHelper.isKeyboardVisible
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -138,7 +140,7 @@ class SmokeTest {
         for (searchEngine in enginesList) {
             homeScreen {
             }.openSearch {
-                verifyKeyboardVisibility()
+                assertTrue(isKeyboardVisible())
                 clickSearchEngineShortcutButton()
                 verifySearchEngineList(activityTestRule)
                 changeDefaultSearchEngine(activityTestRule, searchEngine)

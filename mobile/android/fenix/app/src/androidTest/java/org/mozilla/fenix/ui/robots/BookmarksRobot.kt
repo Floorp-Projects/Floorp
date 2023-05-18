@@ -30,7 +30,6 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
@@ -115,10 +114,6 @@ class BookmarksRobot {
             itemWithResId("$packageName:id/bookmarkParentFolderSelector"),
         )
     }
-
-    fun verifyKeyboardHidden() = assertKeyboardVisibility(isExpectedToBeVisible = false)
-
-    fun verifyKeyboardVisible() = assertKeyboardVisibility(isExpectedToBeVisible = true)
 
     fun verifyShareOverlay() = assertShareOverlay()
 
@@ -503,14 +498,6 @@ private fun assertUndoDeleteSnackBarButton() =
 
 private fun assertSnackBarText(text: String) =
     snackBarText().check(matches(withText(containsString(text))))
-
-private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
-    assertEquals(
-        isExpectedToBeVisible,
-        mDevice
-            .executeShellCommand("dumpsys input_method | grep mInputShown")
-            .contains("mInputShown=true"),
-    )
 
 private fun assertShareOverlay() =
     onView(withId(R.id.shareWrapper)).check(matches(isDisplayed()))

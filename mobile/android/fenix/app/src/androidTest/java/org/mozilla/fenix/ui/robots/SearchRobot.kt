@@ -30,7 +30,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
@@ -178,7 +177,6 @@ class SearchRobot {
         assertSearchEnginePrompt(rule, searchEngineName)
     fun verifySearchBarEmpty() = assertSearchBarEmpty()
 
-    fun verifyKeyboardVisibility() = assertKeyboardVisibility(isExpectedToBeVisible = true)
     fun verifySearchEngineList(rule: ComposeTestRule) = rule.assertSearchEngineList()
     fun verifySearchEngineIcon(expectedText: String) {
         onView(withContentDescription(expectedText))
@@ -442,18 +440,6 @@ private fun assertSearchBarEmpty() =
 fun searchScreen(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
     SearchRobot().interact()
     return SearchRobot.Transition()
-}
-
-private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean): () -> Unit = {
-    searchWrapper().waitForExists(waitingTime)
-
-    assertEquals(
-        "Keyboard not shown",
-        isExpectedToBeVisible,
-        mDevice
-            .executeShellCommand("dumpsys input_method | grep mInputShown")
-            .contains("mInputShown=true"),
-    )
 }
 
 private fun ComposeTestRule.assertSearchEngineList() {
