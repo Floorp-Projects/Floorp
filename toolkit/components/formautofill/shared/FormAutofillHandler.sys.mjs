@@ -8,11 +8,12 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  FormAutofillAddressSection:
+    "resource://gre/modules/shared/FormAutofillSection.sys.mjs",
+  FormAutofillCreditCardSection:
+    "resource://gre/modules/shared/FormAutofillSection.sys.mjs",
   FormAutofillHeuristics:
     "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs",
-  FormAutofillAddressSection: "resource://autofill/FormAutofillSection.sys.mjs",
-  FormAutofillCreditCardSection:
-    "resource://autofill/FormAutofillSection.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
   FormSection: "resource://gre/modules/shared/FieldScanner.sys.mjs",
 });

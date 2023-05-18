@@ -300,12 +300,8 @@ export class FormAutofillSection {
     }
   }
 
-  fillFieldValue(
-    element,
-    value,
-    shouldFocus = FormAutofillSection.SHOULD_FOCUS_ON_AUTOFILL
-  ) {
-    if (shouldFocus) {
+  fillFieldValue(element, value) {
+    if (FormAutofillUtils.focusOnAutofill) {
       element.focus({ preventScroll: true });
     }
     if (HTMLInputElement.isInstance(element)) {

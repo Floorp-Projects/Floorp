@@ -1248,3 +1248,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   null,
   pref => parseFloat(pref)
 );
+
+// This is only used in iOS
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "focusOnAutofill",
+  "extensions.formautofill.focusOnAutofill",
+  true
+);

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
-import { FormAutofillCreditCardSection } from "resource://autofill/FormAutofillSection.sys.mjs";
+import { FormAutofillCreditCardSection } from "resource://gre/modules/shared/FormAutofillSection.sys.mjs";
 
 const { FIELD_STATES } = FormAutofillUtils;
 
