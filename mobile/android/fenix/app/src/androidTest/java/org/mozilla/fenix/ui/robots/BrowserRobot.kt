@@ -1229,7 +1229,7 @@ private val currentDate = LocalDate.now()
 private val currentDay = currentDate.dayOfMonth
 private val currentMonth = currentDate.month
 private val currentYear = currentDate.year
-private val cookieBanner = itemWithResId("CybotCookiebotDialog")
+private val cookieBanner = itemWithResId("startsiden-gdpr-disclaimer")
 private val totalCookieProtectionHintMessage =
     itemContainingText(getStringResource(R.string.tcp_cfr_message))
 private val totalCookieProtectionHintLearnMoreLink =
