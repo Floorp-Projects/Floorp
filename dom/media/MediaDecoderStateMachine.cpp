@@ -4802,6 +4802,16 @@ bool MediaDecoderStateMachine::HasLastDecodedData(MediaData::Type aType) {
   return mDecodedVideoEndTime != TimeUnit::Zero();
 }
 
+bool MediaDecoderStateMachine::IsCDMProxySupported(CDMProxy* aProxy) {
+#ifdef MOZ_WMF_CDM
+  MOZ_ASSERT(aProxy);
+  // This proxy only works with the external state machine.
+  return !aProxy->AsWMFCDMProxy();
+#else
+  return true;
+#endif
+}
+
 }  // namespace mozilla
 
 // avoid redefined macro in unified build
