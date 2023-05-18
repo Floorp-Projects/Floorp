@@ -2340,7 +2340,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMEFocus(
     aResolve(IMENotificationRequests());
     return IPC_OK();
   }
-
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
+  }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   IMEStateManager::NotifyIME(aIMENotification, widget, this);
 
@@ -2360,6 +2362,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMETextChange(
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
+  }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
   return IPC_OK();
@@ -2371,6 +2376,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMECompositionUpdate(
   nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
+  }
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
   }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
@@ -2384,6 +2392,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMESelection(
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
+  }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
   return IPC_OK();
@@ -2395,7 +2406,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvUpdateContentCache(
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
-
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
+  }
   mContentCache.AssignContent(aContentCache, widget);
   return IPC_OK();
 }
@@ -2418,6 +2431,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMEPositionChange(
   nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
   if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
     return IPC_OK();
+  }
+  if (NS_WARN_IF(!aContentCache.IsValid())) {
+    return IPC_FAIL(this, "Invalid content cache data");
   }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
