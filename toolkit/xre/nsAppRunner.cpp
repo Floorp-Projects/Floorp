@@ -3570,19 +3570,7 @@ static bool RemoveComponentRegistries(nsIFile* aProfileDir,
   aLocalProfileDir->Clone(getter_AddRefs(file));
   if (!file) return false;
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#  define PLATFORM_FASL_SUFFIX ".mfasl"
-#elif defined(XP_WIN)
-#  define PLATFORM_FASL_SUFFIX ".mfl"
-#endif
-
-  file->AppendNative(nsLiteralCString("XUL" PLATFORM_FASL_SUFFIX));
-  file->Remove(false);
-
-  file->SetNativeLeafName(nsLiteralCString("XPC" PLATFORM_FASL_SUFFIX));
-  file->Remove(false);
-
-  file->SetNativeLeafName("startupCache"_ns);
+  file->AppendNative("startupCache"_ns);
   nsresult rv = file->Remove(true);
   return NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_NOT_FOUND;
 }
