@@ -428,7 +428,7 @@ VariablesView.prototype = {
       "input"
     ));
     searchbox.className = "variables-view-searchinput devtools-filterinput";
-    document.l10n.setAttributes(searchbox, "storage-variable-view-search-box");
+    searchbox.setAttribute("data-l10n-id", "storage-variable-view-search-box");
     searchbox.addEventListener("input", this._onSearchboxInput);
     searchbox.addEventListener("keydown", this._onSearchboxKeyDown);
 
@@ -1862,7 +1862,7 @@ Scope.prototype = {
     const name = (this._name = document.createXULElement("label"));
     name.className = "plain name";
     if (l10nId) {
-      document.l10n.setAttributes(name, l10nId);
+      name.setAttribute("data-l10n-id", l10nId);
     } else {
       name.setAttribute("value", value);
     }

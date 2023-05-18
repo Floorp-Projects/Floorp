@@ -68,10 +68,9 @@ export default class VPNCard {
       RPMSendQuery("FetchVPNSubStatus", {}).then(async hasVPN => {
         if (hasVPN) {
           vpnCard.classList.add("subscribed");
-          document.l10n.setAttributes(
-            vpnCard.querySelector(".card-title"),
-            "vpn-title-subscribed"
-          );
+          vpnCard
+            .querySelector(".card-title")
+            .setAttribute("data-l10n-id", "vpn-title-subscribed");
 
           // hide the promo banner if the user is already subscribed to vpn
           await RPMSetBoolPref(

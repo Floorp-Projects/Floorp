@@ -648,7 +648,7 @@ const PanelUI = {
       // their localization IDs are set on "appmenu-data-l10n-id" attributes.
       let l10nId = node.getAttribute("appmenu-data-l10n-id");
       if (l10nId) {
-        document.l10n.setAttributes(button, l10nId);
+        button.setAttribute("data-l10n-id", l10nId);
       }
 
       if (node.id) {
