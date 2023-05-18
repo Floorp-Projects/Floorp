@@ -7,9 +7,8 @@
  * Check that the full page translation feature works.
  */
 add_task(async function test_full_page_translation() {
-  await loadTestPageAndRun({
+  await autoTranslatePage({
     page: TRANSLATIONS_TESTER_ES,
-    prefs: [["browser.translations.autoTranslate", true]],
     languagePairs: [
       { fromLang: "es", toLang: "en", isBeta: false },
       { fromLang: "en", toLang: "es", isBeta: false },
@@ -61,9 +60,8 @@ add_task(async function test_about_translations_enabled() {
     return;
   }
 
-  await loadTestPageAndRun({
+  await autoTranslatePage({
     page: TRANSLATIONS_TESTER_EN,
-    prefs: [["browser.translations.autoTranslate", true]],
     languagePairs: [
       { fromLang: "es", toLang: "en", isBeta: false },
       { fromLang: "en", toLang: "es", isBeta: false },
@@ -98,11 +96,11 @@ add_task(async function test_about_translations_enabled() {
  * Check that the full page translation feature works.
  */
 add_task(async function test_language_identification_for_page_translation() {
-  await loadTestPageAndRun({
+  await autoTranslatePage({
     page: TRANSLATIONS_TESTER_NO_TAG,
-    prefs: [["browser.translations.autoTranslate", true]],
     detectedLangTag: "es",
     detectedLanguageConfidence: 0.95,
+    resolveLanguageIdDownloads: true,
     languagePairs: [
       { fromLang: "es", toLang: "en", isBeta: false },
       { fromLang: "en", toLang: "es", isBeta: false },
