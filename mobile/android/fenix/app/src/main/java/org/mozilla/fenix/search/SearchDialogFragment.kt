@@ -288,7 +288,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                         }
                         else -> isPrivateButtonClicked = false
                     }
-                    requireActivity().dispatchTouchEvent(event)
+                    if (binding.awesomeBar.visibility != View.VISIBLE) {
+                        requireActivity().dispatchTouchEvent(event)
+                    }
                     false
                 }
             }
