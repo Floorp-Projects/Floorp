@@ -92,9 +92,7 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   // Target for numPagesOnThisSheet.
   const uint32_t desiredPagesPerSheet = mPD->PagesPerSheetInfo()->mNumPages;
 
-  // If we're the first continuation and we're doing >1 pages per sheet,
-  // precompute some metrics that we'll use when painting the pages:
-  if (desiredPagesPerSheet > 1 && !GetPrevContinuation()) {
+  if (desiredPagesPerSheet > 1) {
     ComputePagesPerSheetOriginAndScale();
   }
 
@@ -226,8 +224,6 @@ void PrintedSheetFrame::ComputePagesPerSheetOriginAndScale() {
   MOZ_ASSERT(mPD->PagesPerSheetInfo()->mNumPages > 1,
              "Unnecessary to call this in a regular 1-page-per-sheet scenario; "
              "the computed values won't ever be used in that case");
-  MOZ_ASSERT(!GetPrevContinuation(),
-             "Only needs to be called once, so 1st continuation handles it");
 
   // The "full-scale" size of a page (if it weren't shrunk down into a grid):
   const nsSize pageSize = PresContext()->GetPageSize();
