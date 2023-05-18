@@ -602,7 +602,7 @@ dependencies {
     implementation FenixDependencies.androidx_lifecycle_livedata
     implementation FenixDependencies.androidx_lifecycle_process
     implementation FenixDependencies.androidx_lifecycle_runtime
-    
+
     implementation FenixDependencies.androidx_lifecycle_viewmodel
     implementation FenixDependencies.androidx_core
     implementation FenixDependencies.androidx_core_ktx
@@ -684,14 +684,8 @@ dependencies {
 }
 
 protobuf {
-    // Mac M1 workaround until we can bump the version. Dependent on A-S.
-    // See https://github.com/mozilla-mobile/fenix/issues/22321
     protoc {
-        if (osdetector.os == "osx") {
-            artifact = "${FenixDependencies.protobuf_compiler}:osx-x86_64"
-        } else {
-            artifact = FenixDependencies.protobuf_compiler
-        }
+        artifact = FenixDependencies.protobuf_compiler
     }
 
     // Generates the java Protobuf-lite code for the Protobufs in this project. See
