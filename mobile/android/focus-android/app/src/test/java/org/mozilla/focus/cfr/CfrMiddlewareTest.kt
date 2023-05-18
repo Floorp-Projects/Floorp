@@ -39,7 +39,7 @@ class CfrMiddlewareTest {
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        onboardingExperiment = FocusNimbus.features.onboarding.value(testContext)
+        onboardingExperiment = FocusNimbus.features.onboarding.value()
     }
 
     @Test

@@ -223,7 +223,7 @@ class Settings(
     var isNewOnboardingEnable: Boolean
         get() = preferences.getBoolean(
             getPreferenceKey(R.string.new_onboarding_enabled),
-            FocusNimbus.features.onboarding.value(context).isEnabled,
+            FocusNimbus.features.onboarding.value().isEnabled,
         )
         set(value) {
             preferences.edit()
@@ -459,7 +459,7 @@ class Settings(
     var isCookieBannerEnable: Boolean
         get() = preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_cookie_banner_enabled),
-            FocusNimbus.features.cookieBanner.value(context).isCookieHandlingEnabled,
+            FocusNimbus.features.cookieBanner.value().isCookieHandlingEnabled,
         )
         set(value) {
             preferences.edit()

@@ -39,7 +39,7 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
         next: (BrowserAction) -> Unit,
         action: BrowserAction,
     ) {
-        onboardingConfig = onboardingFeature.value(context = appContext)
+        onboardingConfig = onboardingFeature.value()
         if (onboardingConfig.isCfrEnabled) {
             next(action)
             showCookieBannerCfr(action)
