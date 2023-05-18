@@ -70,7 +70,7 @@ this.startBackground = (function() {
         zoomFactor = await browser.tabs.getZoom(tab.id);
         if (type === "contextMenu") {
           main.onClickedContextMenu(tab);
-        } else if (type === "toolbar") {
+        } else if (type === "toolbar" || type === "quickaction") {
           main.onClicked(tab);
         } else if (type === "shortcut") {
           main.onShortcut(tab);
