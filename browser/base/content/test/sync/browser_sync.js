@@ -619,8 +619,7 @@ async function checkFxaToolbarButtonPanel({
 
   for (const id of hiddenItems) {
     const el = document.getElementById(id);
-    let elShown = window.getComputedStyle(el).display == "none";
-    is(elShown, true, id + " is hidden");
+    is(el.getAttribute("hidden"), "true", id + " is hidden");
   }
 }
 
