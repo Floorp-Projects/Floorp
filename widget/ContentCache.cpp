@@ -195,10 +195,8 @@ bool ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
     mSelection.emplace(querySelectedTextEvent);
   }
 
-  const bool caretCached = CacheCaret(aWidget, aNotification);
-  const bool textRectsCached = CacheTextRects(aWidget, aNotification);
-  MOZ_DIAGNOSTIC_ASSERT(IsValid());
-  return caretCached || textRectsCached || querySelectedTextEvent.Succeeded();
+  return CacheCaretAndTextRects(aWidget, aNotification) ||
+         querySelectedTextEvent.Succeeded();
 }
 
 bool ContentCacheInChild::CacheCaret(nsIWidget* aWidget,
@@ -268,6 +266,19 @@ bool ContentCacheInChild::CacheEditorRect(
           ("0x%p   CacheEditorRect(), Succeeded, mEditorRect=%s", this,
            ToString(mEditorRect).c_str()));
   return true;
+}
+
+bool ContentCacheInChild::CacheCaretAndTextRects(
+    nsIWidget* aWidget, const IMENotification* aNotification) {
+  MOZ_LOG(sContentCacheLog, LogLevel::Info,
+          ("0x%p CacheCaretAndTextRects(aWidget=0x%p, aNotification=%s)", this,
+           aWidget, GetNotificationName(aNotification)));
+
+  const bool caretCached =
+      mSelection.isSome() && CacheCaret(aWidget, aNotification);
+  const bool textRectsCached = CacheTextRects(aWidget, aNotification);
+  MOZ_DIAGNOSTIC_ASSERT(IsValid());
+  return caretCached || textRectsCached;
 }
 
 bool ContentCacheInChild::CacheText(nsIWidget* aWidget,
