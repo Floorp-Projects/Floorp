@@ -486,6 +486,7 @@ function setupEnvironment() {
 async function matchPlatformH264CodecPrefs() {
   const hasHW264 =
     SpecialPowers.getBoolPref("media.webrtc.platformencoder") &&
+    !SpecialPowers.getBoolPref("media.webrtc.platformencoder.sw_only") &&
     (navigator.userAgent.includes("Android") ||
       navigator.userAgent.includes("Mac OS X"));
 
