@@ -4070,7 +4070,7 @@ bool BaseCompiler::emitCatch() {
   // to perform an allocation here to accomodate the variable number of values.
   // There is enough headroom for the fixed number of values.  The general case
   // is handled in emitBody.
-  if (!stk_.reserve(stk_.length() + params.length())) {
+  if (!stk_.reserve(stk_.length() + params.length() + 1)) {
     return false;
   }
 
