@@ -141,12 +141,13 @@ fn derives_of_item(
     item: &Item,
     ctx: &BindgenContext,
     packed: bool,
+    forward_decl: bool,
 ) -> DerivableTraits {
     let mut derivable_traits = DerivableTraits::empty();
 
     let all_template_params = item.all_template_params(ctx);
 
-    if item.can_derive_copy(ctx) && !item.annotations().disallow_copy() {
+    if item.can_derive_copy(ctx) && !item.annotations().disallow_copy() && !forward_decl {
         derivable_traits |= DerivableTraits::COPY;
 
         if ctx.options().rust_features().builtin_clone_impls ||
@@ -991,7 +992,7 @@ impl CodeGenerator for Type {
                             vec![attributes::repr("transparent")];
                         let packed = false; // Types can't be packed in Rust.
                         let derivable_traits =
-                            derives_of_item(item, ctx, packed);
+                            derives_of_item(item, ctx, packed, false);
                         if !derivable_traits.is_empty() {
                             let derives: Vec<_> = derivable_traits.into();
                             attributes.push(attributes::derives(&derives))
@@ -2032,8 +2033,9 @@ impl CodeGenerator for CompInfo {
         }
 
         if forward_decl {
+            let prefix = ctx.trait_prefix();
             fields.push(quote! {
-                _unused: [u8; 0],
+                _unused: ::#prefix::cell::UnsafeCell<[u8; 0]>,
             });
         }
 
@@ -2095,7 +2097,7 @@ impl CodeGenerator for CompInfo {
             }
         }
 
-        let derivable_traits = derives_of_item(item, ctx, packed);
+        let derivable_traits = derives_of_item(item, ctx, packed, self.is_forward_declaration());
         if !derivable_traits.contains(DerivableTraits::DEBUG) {
             needs_debug_impl = ctx.options().derive_debug &&
                 ctx.options().impl_debug &&
@@ -3127,7 +3129,7 @@ impl CodeGenerator for Enum {
 
         if !variation.is_const() {
             let packed = false; // Enums can't be packed in Rust.
-            let mut derives = derives_of_item(item, ctx, packed);
+            let mut derives = derives_of_item(item, ctx, packed, false);
             // For backwards compat, enums always derive
             // Clone/Eq/PartialEq/Hash, even if we don't generate those by
             // default.

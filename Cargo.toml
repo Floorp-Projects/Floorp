@@ -122,7 +122,7 @@ base64 = { path = "build/rust/base64" }
 wasi = { path = "build/rust/wasi" }
 
 # Patch bindgen 0.63 to 0.64
-bindgen = { path = "build/rust/bindgen" }
+bindgen_0_63 = { package = "bindgen", path = "build/rust/bindgen" }
 
 # Patch ntapi 0.3 to 0.4
 ntapi = { path = "build/rust/ntapi" }
@@ -144,6 +144,9 @@ web-sys = { path = "build/rust/dummy-web/web-sys" }
 
 # Overrides to allow easier use of common internal crates.
 moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
+
+# Patch bindgen to work around issues with some unsound transmutes when compiling with LLVM 16+.
+bindgen = { path = "third_party/rust/bindgen" }
 
 # Patch `rure` to disable building the cdylib and staticlib targets
 # Cargo has no way to disable building targets your dependencies provide which
