@@ -243,6 +243,8 @@ class QuotaManager final : public BackgroundThreadObject {
   Result<FullOriginMetadata, nsresult> LoadFullOriginMetadataWithRestore(
       nsIFile* aDirectory);
 
+  Result<OriginMetadata, nsresult> GetOriginMetadata(nsIFile* aDirectory);
+
   // This is the main entry point into the QuotaManager API.
   // Any storage API implementation (quota client) that participates in
   // centralized quota and storage handling should call this method to get
