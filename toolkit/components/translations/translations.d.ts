@@ -268,16 +268,8 @@ interface TranslationsEnginePayload {
 interface LanguageIdEnginePayload {
   wasmBuffer: ArrayBuffer,
   modelBuffer: ArrayBuffer,
-}
-
-/**
- * These are the values which a LanguageIdEngine returns after identifying a language.
- * These values are pre-determined when creating a mocked language-identification engine
- * and the mocked engine will always return those values.
- */
-interface LanguageIdEngineMockedPayload {
-  confidence: number,
-  langTag: string,
+  mockedConfidence: null | number,
+  mockedLangTag: null | string,
 }
 
 /**

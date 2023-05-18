@@ -4,7 +4,6 @@
 
 /**
  * @typedef {import("../content/translations-document.sys.mjs").TranslationsDocument} TranslationsDocument
- * @typedef {import("../translations").LanguageIdEngineMockedPayload} LanguageIdEngineMockedPayload
  * @typedef {import("../translations").LanguageIdEnginePayload} LanguageIdEnginePayload
  * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
  * @typedef {import("../translations").TranslationsEnginePayload} TranslationsEnginePayload
@@ -71,8 +70,10 @@ export class LanguageIdEngine {
    *
    * @param {Object} data
    * @param {string} data.type - The message type, expects "initialize".
-   * @param {ArrayBuffer} [data.wasmBuffer] - The buffer containing the wasm binary.
-   * @param {ArrayBuffer} [data.modelBuffer] - The buffer containing the language-id model binary.
+   * @param {ArrayBuffer} data.wasmBuffer - The buffer containing the wasm binary.
+   * @param {ArrayBuffer} data.modelBuffer - The buffer containing the language-id model binary.
+   * @param {null | string} data.mockedLangTag - The mocked language tag value (only present when mocking).
+   * @param {null | number} data.mockedConfidence - The mocked confidence value (only present when mocking).
    * @param {boolean} data.isLoggingEnabled
    */
   constructor(data) {
@@ -93,11 +94,9 @@ export class LanguageIdEngine {
     });
 
     const transferables = [];
-    if (data.wasmBuffer && data.modelBuffer) {
-      // Make sure the ArrayBuffers are transferred, not cloned.
-      // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects
-      transferables.push(data.wasmBuffer, data.modelBuffer);
-    }
+    // Make sure the ArrayBuffers are transferred, not cloned.
+    // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects
+    transferables.push(data.wasmBuffer, data.modelBuffer);
 
     this.#languageIdWorker.postMessage(data, transferables);
   }
@@ -507,24 +506,6 @@ export class TranslationsChild extends JSWindowActorChild {
       );
     }
     return this.sendQuery("Translations:GetBergamotWasmArrayBuffer");
-  }
-
-  /**
-   * Retrieves the language-identification model binary from the TranslationsParent.
-   *
-   * @returns {Promise<ArrayBuffer>}
-   */
-  #getLanguageIdModelArrayBuffer() {
-    return this.sendQuery("Translations:GetLanguageIdModelArrayBuffer");
-  }
-
-  /**
-   * Retrieves the language-identification wasm binary from the TranslationsParent.
-   *
-   * @returns {Promise<ArrayBuffer>}
-   */
-  async #getLanguageIdWasmArrayBuffer() {
-    return this.sendQuery("Translations:GetLanguageIdWasmArrayBuffer");
   }
 
   /**
@@ -944,31 +925,10 @@ export class TranslationsChild extends JSWindowActorChild {
   /**
    * Retrieve the payload for creating a LanguageIdEngine.
    *
-   * @returns {Promise<LanguageIdEnginePayload | LanguageIdEngineMockedPayload>}
+   * @returns {Promise<LanguageIdEnginePayload>}
    */
   async #getLanguageIdEnginePayload() {
-    // If the TranslationsParent has a mocked payload defined for testing purposes,
-    // then we will return the mocked payload, otherwise we will attempt to retrieve
-    // the full payload from Remote Settings.
-    const mockedPayload = await this.sendQuery(
-      "Translations:GetLanguageIdEngineMockedPayload"
-    );
-    if (mockedPayload) {
-      const { langTag, confidence } = mockedPayload;
-      return {
-        langTag,
-        confidence,
-      };
-    }
-
-    const [wasmBuffer, modelBuffer] = await Promise.all([
-      this.#getLanguageIdWasmArrayBuffer(),
-      this.#getLanguageIdModelArrayBuffer(),
-    ]);
-    return {
-      modelBuffer,
-      wasmBuffer,
-    };
+    return this.sendQuery("Translations:GetLanguageIdEnginePayload");
   }
 
   /**
@@ -998,20 +958,12 @@ export class TranslationsChild extends JSWindowActorChild {
    * @returns {LanguageIdEngine}
    */
   async createLanguageIdEngine() {
-    const {
-      confidence,
-      langTag,
-      modelBuffer,
-      wasmBuffer,
-    } = await this.#getLanguageIdEnginePayload();
+    const payload = await this.#getLanguageIdEnginePayload();
     const engine = new LanguageIdEngine({
       type: "initialize",
-      confidence,
-      langTag,
-      modelBuffer,
-      wasmBuffer,
       isLoggingEnabled:
         Services.prefs.getCharPref("browser.translations.logLevel") === "All",
+      ...payload,
     });
     await engine.isReady;
     return engine;
