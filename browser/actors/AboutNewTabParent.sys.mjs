@@ -26,6 +26,23 @@ export class AboutNewTabParent extends JSWindowActorParent {
     return browser ? gLoadedTabs.get(browser) : null;
   }
 
+  handleEvent(event) {
+    if (event.type == "SwapDocShells") {
+      let oldBrowser = this.browsingContext.top.embedderElement;
+      let newBrowser = event.detail;
+
+      let tabDetails = gLoadedTabs.get(oldBrowser);
+      if (tabDetails) {
+        tabDetails.browser = newBrowser;
+        gLoadedTabs.delete(oldBrowser);
+        gLoadedTabs.set(newBrowser, tabDetails);
+
+        oldBrowser.removeEventListener("SwapDocShells", this);
+        newBrowser.addEventListener("SwapDocShells", this);
+      }
+    }
+  }
+
   async receiveMessage(message) {
     switch (message.name) {
       case "AboutNewTabVisible":
@@ -55,6 +72,9 @@ export class AboutNewTabParent extends JSWindowActorParent {
         };
         gLoadedTabs.set(browser, tabDetails);
 
+        browser.addEventListener("SwapDocShells", this);
+        browser.addEventListener("EndSwapDocShells", this);
+
         this.notifyActivityStreamChannel("onNewTabInit", message, tabDetails);
         break;
       }
@@ -76,6 +96,8 @@ export class AboutNewTabParent extends JSWindowActorParent {
         if (!tabDetails) {
           return;
         }
+
+        tabDetails.browser.removeEventListener("EndSwapDocShells", this);
 
         gLoadedTabs.delete(tabDetails.browser);
 
