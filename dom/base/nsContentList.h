@@ -487,6 +487,15 @@ class nsContentList : public nsBaseContentList,
    * Whether the list observes mutations to the DOM tree.
    */
   const bool mIsLiveList : 1;
+  /*
+   * True if this content list is cached in a hash table.
+   * For nsContentList (but not its subclasses), the hash table is
+   * gContentListHashTable.
+   * For nsCacheableFuncStringContentList, the hash table is
+   * gFuncStringContentListHashTable.
+   * Other subclasses of nsContentList can't be in hash tables.
+   */
+  bool mInHashtable : 1;
 
 #ifdef DEBUG_CONTENT_LIST
   void AssertInSync();
