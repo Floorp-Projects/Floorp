@@ -16,7 +16,6 @@
 #include "mozilla/SandboxLaunch.h"
 #include "mozilla/SandboxSettings.h"
 #include "mozilla/StaticPrefs_security.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsComponentManagerUtils.h"
@@ -62,9 +61,6 @@ static const int rdwrcr = rdwr | SandboxBroker::MAY_CREATE;
 static const int access = SandboxBroker::MAY_ACCESS;
 static const int deny = SandboxBroker::FORCE_DENY;
 }  // namespace
-
-using CacheE = std::pair<nsCString, int>;
-using FileCacheT = nsTArray<CacheE>;
 
 static void AddDriPaths(SandboxBroker::Policy* aPolicy) {
   // Bug 1401666: Mesa driver loader part 2: Mesa <= 12 using libudev
@@ -161,11 +157,12 @@ static void JoinPathIfRelative(const nsACString& aCwd, const nsACString& inPath,
   }
 }
 
-static void CachePathsFromFile(FileCacheT& aCache, const nsACString& aPath);
+static void AddPathsFromFile(SandboxBroker::Policy* aPolicy,
+                             const nsACString& aPath);
 
-static void CachePathsFromFileInternal(FileCacheT& aCache,
-                                       const nsACString& aCwd,
-                                       const nsACString& aPath) {
+static void AddPathsFromFileInternal(SandboxBroker::Policy* aPolicy,
+                                     const nsACString& aCwd,
+                                     const nsACString& aPath) {
   nsresult rv;
   nsCOMPtr<nsIFile> ldconfig(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) {
@@ -226,7 +223,7 @@ static void CachePathsFromFileInternal(FileCacheT& aCache,
                   &globbuf)) {
           for (size_t fileIdx = 0; fileIdx < globbuf.gl_pathc; fileIdx++) {
             nsAutoCString filePath(globbuf.gl_pathv[fileIdx]);
-            CachePathsFromFile(aCache, filePath);
+            AddPathsFromFile(aPolicy, filePath);
           }
           globfree(&globbuf);
         }
@@ -240,13 +237,14 @@ static void CachePathsFromFileInternal(FileCacheT& aCache,
     }
     char* resolvedPath = realpath(line.get(), nullptr);
     if (resolvedPath) {
-      aCache.AppendElement(std::make_pair(nsCString(resolvedPath), rdonly));
+      aPolicy->AddDir(rdonly, resolvedPath);
       free(resolvedPath);
     }
   } while (more);
 }
 
-static void CachePathsFromFile(FileCacheT& aCache, const nsACString& aPath) {
+static void AddPathsFromFile(SandboxBroker::Policy* aPolicy,
+                             const nsACString& aPath) {
   // Find the new base path where that file sits in.
   nsresult rv;
   nsCOMPtr<nsIFile> includeFile(
@@ -277,22 +275,12 @@ static void CachePathsFromFile(FileCacheT& aCache, const nsACString& aPath) {
   if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
     SANDBOX_LOG("Parent path is %s", PromiseFlatCString(parentPath).get());
   }
-  CachePathsFromFileInternal(aCache, parentPath, aPath);
+  AddPathsFromFileInternal(aPolicy, parentPath, aPath);
 }
 
 static void AddLdconfigPaths(SandboxBroker::Policy* aPolicy) {
-  static StaticMutex sMutex;
-  StaticMutexAutoLock lock(sMutex);
-
-  static FileCacheT ldConfigCache{};
-  static bool ldConfigCachePopulated = false;
-  if (!ldConfigCachePopulated) {
-    CachePathsFromFile(ldConfigCache, "/etc/ld.so.conf"_ns);
-    ldConfigCachePopulated = true;
-  }
-  for (const CacheE& e : ldConfigCache) {
-    aPolicy->AddDir(e.second, e.first.get());
-  }
+  nsAutoCString ldConfig("/etc/ld.so.conf"_ns);
+  AddPathsFromFile(aPolicy, ldConfig);
 }
 
 static void AddLdLibraryEnvPaths(SandboxBroker::Policy* aPolicy) {
