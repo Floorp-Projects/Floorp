@@ -158,8 +158,8 @@ const char* ExternalEngineStateMachine::GetStateStr() const {
 }
 
 void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
-  LOG("Change state : '%s' -> '%s'", StateToStr(mState.mName),
-      StateToStr(aNextState));
+  LOG("Change state : '%s' -> '%s' (play-state=%d)", StateToStr(mState.mName),
+      StateToStr(aNextState), mPlayState.Ref());
   // Assert the possible state transitions.
   MOZ_ASSERT_IF(mState.IsInitEngine(), aNextState == State::ReadingMetadata ||
                                            aNextState == State::ShutdownEngine);
@@ -238,10 +238,6 @@ void ExternalEngineStateMachine::OnEngineInitSuccess() {
   mEngine->SetMediaInfo(*mInfo);
   SeekTarget target(mCurrentPosition.Ref(), SeekTarget::Type::Accurate);
   Seek(target);
-  // If the engine was playing before, ask the new engine to play as well.
-  if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
-    mEngine->Play();
-  }
 }
 
 void ExternalEngineStateMachine::OnEngineInitFailure() {
@@ -728,6 +724,11 @@ void ExternalEngineStateMachine::MaybeFinishWaitForData() {
 
 void ExternalEngineStateMachine::StartRunningEngine() {
   ChangeStateTo(State::RunningEngine);
+  // Manually check the play state because the engine might be recovered from
+  // crash or just get recreated, so PlayStateChanged() won't be triggered.
+  if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
+    mEngine->Play();
+  }
   if (HasAudio()) {
     RunningEngineUpdate(MediaData::Type::AUDIO_DATA);
   }
