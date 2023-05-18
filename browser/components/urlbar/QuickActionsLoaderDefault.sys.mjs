@@ -30,6 +30,13 @@ if (AppConstants.MOZ_UPDATER) {
   );
 }
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "SCREENSHOT_BROWSER_COMPONENT",
+  "screenshots.browser.component.enabled",
+  false
+);
+
 let openUrlFun = url => () => openUrl(url);
 let openUrl = url => {
   let window = lazy.BrowserWindowTracker.getTopWindow();
@@ -180,11 +187,19 @@ const DEFAULT_ACTIONS = {
       return !lazy.BrowserWindowTracker.getTopWindow().gScreenshots.shouldScreenshotsButtonBeDisabled();
     },
     onPick: () => {
-      Services.obs.notifyObservers(
-        lazy.BrowserWindowTracker.getTopWindow(),
-        "menuitem-screenshot",
-        "quick_actions"
-      );
+      if (lazy.SCREENSHOT_BROWSER_COMPONENT) {
+        Services.obs.notifyObservers(
+          lazy.BrowserWindowTracker.getTopWindow(),
+          "menuitem-screenshot",
+          "quick_actions"
+        );
+      } else {
+        Services.obs.notifyObservers(
+          null,
+          "menuitem-screenshot-extension",
+          "quickaction"
+        );
+      }
       return { focusContent: true };
     },
   },
