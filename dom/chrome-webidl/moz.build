@@ -35,7 +35,7 @@ with Files("IOUtils.webidl"):
     BUG_COMPONENT = ("Toolkit", "IOUtils and PathUtils")
 
 with Files("PathUtils.webidl"):
-    BUG_COMPONENT = ("Toolkit", "OS.File")
+    BUG_COMPONENT = ("Toolkit", "IOUtils and PathUtils")
 
 PREPROCESSED_WEBIDL_FILES = [
     "ChromeUtils.webidl",
