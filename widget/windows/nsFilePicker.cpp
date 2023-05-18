@@ -25,8 +25,6 @@
 #include "WinUtils.h"
 #include "nsPIDOMWindow.h"
 
-using mozilla::IsWin8OrLater;
-using mozilla::MakeUnique;
 using mozilla::UniquePtr;
 
 using namespace mozilla::widget;
@@ -35,8 +33,6 @@ UniquePtr<char16_t[], nsFilePicker::FreeDeleter>
     nsFilePicker::sLastUsedUnicodeDirectory;
 
 #define MAX_EXTENSION_LENGTH 10
-
-typedef DWORD FILEOPENDIALOGOPTIONS;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper classes
@@ -280,12 +276,15 @@ bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
   }
 
   // filter types and the default index
-  if (!mComFilterList.IsEmpty()) {
-    hr = dialog->SetFileTypes(mComFilterList.Length(), mComFilterList.get());
+  if (!mFilterList.IsEmpty()) {
+    std::vector<COMDLG_FILTERSPEC> filterSpecs;
+    for (auto const& filter : mFilterList) {
+      filterSpecs.push_back({filter.title.get(), filter.filter.get()});
+    }
+    hr = dialog->SetFileTypes(filterSpecs.size(), filterSpecs.data());
     if (FAILED(hr)) {
       return false;
     }
-
     hr = dialog->SetFileTypeIndex(mSelectedType);
     if (FAILED(hr)) {
       return false;
@@ -513,9 +512,19 @@ void nsFilePicker::InitNative(nsIWidget* aParent, const nsAString& aTitle) {
 
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter) {
-  nsAutoString sanitizedFilter(aFilter);
+  nsString sanitizedFilter(aFilter);
   sanitizedFilter.ReplaceChar('%', '_');
-  mComFilterList.Append(aTitle, sanitizedFilter);
+
+  if (sanitizedFilter == u"..apps"_ns) {
+    sanitizedFilter = u"*.exe;*.com"_ns;
+  } else {
+    sanitizedFilter.StripWhitespace();
+    if (sanitizedFilter == u"*"_ns) {
+      sanitizedFilter = u"*.*"_ns;
+    }
+  }
+  mFilterList.AppendElement(
+      Filter{.title = nsString(aTitle), .filter = std::move(sanitizedFilter)});
   return NS_OK;
 }
 
@@ -551,10 +560,8 @@ bool nsFilePicker::IsDefaultPathLink() {
   NS_ConvertUTF16toUTF8 ext(mDefaultFilePath);
   ext.Trim(" .", false, true);  // watch out for trailing space and dots
   ToLowerCase(ext);
-  if (StringEndsWith(ext, ".lnk"_ns) || StringEndsWith(ext, ".pif"_ns) ||
-      StringEndsWith(ext, ".url"_ns))
-    return true;
-  return false;
+  return StringEndsWith(ext, ".lnk"_ns) || StringEndsWith(ext, ".pif"_ns) ||
+         StringEndsWith(ext, ".url"_ns);
 }
 
 bool nsFilePicker::IsDefaultPathHtml() {
@@ -568,32 +575,4 @@ bool nsFilePicker::IsDefaultPathHtml() {
       return true;
   }
   return false;
-}
-
-void nsFilePicker::ComDlgFilterSpec::Append(const nsAString& aTitle,
-                                            const nsAString& aFilter) {
-  COMDLG_FILTERSPEC* pSpecForward = mSpecList.AppendElement();
-  if (!pSpecForward) {
-    NS_WARNING("mSpecList realloc failed.");
-    return;
-  }
-  memset(pSpecForward, 0, sizeof(*pSpecForward));
-  nsString* pStr = mStrings.AppendElement(aTitle);
-  if (!pStr) {
-    NS_WARNING("mStrings.AppendElement failed.");
-    return;
-  }
-  pSpecForward->pszName = pStr->get();
-  pStr = mStrings.AppendElement(aFilter);
-  if (!pStr) {
-    NS_WARNING("mStrings.AppendElement failed.");
-    return;
-  }
-  if (aFilter.EqualsLiteral("..apps"))
-    pStr->AssignLiteral("*.exe;*.com");
-  else {
-    pStr->StripWhitespace();
-    if (pStr->EqualsLiteral("*")) pStr->AppendLiteral(".*");
-  }
-  pSpecForward->pszSpec = pStr->get();
 }
