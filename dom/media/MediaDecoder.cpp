@@ -470,7 +470,12 @@ void MediaDecoder::OnPlaybackErrorEvent(const MediaResult& aError) {
     LOG("Failed to create a new state machine!");
   }
 
-  // TODO : need to make the new MDSM have the same status as the previous one
+  // Some attributes might have been set on the destroyed state machine, and
+  // won't be reflected on the new MDSM by the state mirroring. We need to
+  // update them manually later, after MDSM finished reading the
+  // metadata because the MDSM might not be ready to perform the operations yet.
+  mPendingStatusUpdateForNewlyCreatedStateMachine = true;
+
   discardStateMachine->BeginShutdown()->Then(
       AbstractThread::MainThread(), __func__, [discardStateMachine] {});
 #endif
@@ -778,6 +783,18 @@ void MediaDecoder::MetadataLoaded(
   // So we call Invalidate() after calling GetOwner()->MetadataLoaded to ensure
   // the media element has the latest dimensions.
   Invalidate();
+
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (mPendingStatusUpdateForNewlyCreatedStateMachine) {
+    mPendingStatusUpdateForNewlyCreatedStateMachine = false;
+    if (mLogicalPosition != 0) {
+      Seek(mLogicalPosition, SeekTarget::Accurate);
+    }
+    if (mPlaybackRate != 0 && mPlaybackRate != 1.0) {
+      mDecoderStateMachine->DispatchSetPlaybackRate(mPlaybackRate);
+    }
+  }
+#endif
 
   EnsureTelemetryReported();
 }

@@ -818,6 +818,12 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   bool mCanPlayThrough = false;
 
   UniquePtr<TelemetryProbesReporter> mTelemetryProbesReporter;
+
+#  ifdef MOZ_WMF_MEDIA_ENGINE
+  // True when we need to update the newly created MDSM's status to make it
+  // consistent with the previous destroyed one.
+  bool mPendingStatusUpdateForNewlyCreatedStateMachine = false;
+#  endif
 };
 
 typedef MozPromise<mozilla::dom::MediaMemoryInfo, nsresult, true>
