@@ -19,6 +19,7 @@ jobs:
           target-tasks-method: nightly-test
       when:
         - {hour: 5, minute: 0}
+        - {hour: 16, minute: 0}
     - name: screenshots
       job:
           type: decision-task
