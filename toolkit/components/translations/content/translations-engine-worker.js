@@ -82,7 +82,10 @@ async function handleInitializationMessage({ data }) {
     }
 
     let engine;
-    if (enginePayload) {
+    if (enginePayload.isMocked) {
+      // The engine is testing mode, and no Bergamot wasm is available.
+      engine = new MockedEngine(fromLanguage, toLanguage);
+    } else {
       const { bergamotWasmArrayBuffer, languageModelFiles } = enginePayload;
       const bergamot = await BergamotUtils.initializeWasm(
         bergamotWasmArrayBuffer
@@ -93,9 +96,6 @@ async function handleInitializationMessage({ data }) {
         bergamot,
         languageModelFiles
       );
-    } else {
-      // The engine is testing mode, and no Bergamot wasm is available.
-      engine = new MockedEngine(fromLanguage, toLanguage);
     }
 
     ChromeUtils.addProfilerMarker(
