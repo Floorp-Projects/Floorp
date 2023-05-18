@@ -643,7 +643,8 @@ void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
   if (surfaceHandle && surfaceHandle != INVALID_HANDLE_VALUE) {
     LOG("EnsureDcompSurfaceHandle, handle=%p, size=[%lux%lu]", surfaceHandle,
         width, height);
-    mMediaSource->SetDCompSurfaceHandle(surfaceHandle);
+    mMediaSource->SetDCompSurfaceHandle(surfaceHandle,
+                                        gfx::IntSize{width, height});
   } else {
     NS_WARNING("SurfaceHandle is not ready yet");
   }

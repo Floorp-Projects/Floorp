@@ -393,11 +393,13 @@ void MFMediaSource::HandleStreamEnded(TrackInfo::TrackType aType) {
   }
 }
 
-void MFMediaSource::SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle) {
+void MFMediaSource::SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle,
+                                          gfx::IntSize aDisplay) {
   AssertOnManagerThread();
   MutexAutoLock lock(mMutex);
   if (mVideoStream) {
-    mVideoStream->AsVideoStream()->SetDCompSurfaceHandle(aDCompSurfaceHandle);
+    mVideoStream->AsVideoStream()->SetDCompSurfaceHandle(aDCompSurfaceHandle,
+                                                         aDisplay);
   }
 }
 

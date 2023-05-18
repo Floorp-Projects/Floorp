@@ -36,7 +36,7 @@ MFMediaEngineVideoStream* MFMediaEngineVideoStream::Create(
       GetStreamTypeFromMimeType(aInfo.GetAsVideoInfo()->mMimeType);
   MOZ_ASSERT(StreamTypeIsVideo(stream->mStreamType));
   stream->mHasReceivedInitialCreateDecoderConfig = false;
-  stream->SetDCompSurfaceHandle(INVALID_HANDLE_VALUE);
+  stream->SetDCompSurfaceHandle(INVALID_HANDLE_VALUE, gfx::IntSize{});
   return stream;
 }
 
@@ -53,17 +53,26 @@ void MFMediaEngineVideoStream::SetKnowsCompositor(
       }));
 }
 
-void MFMediaEngineVideoStream::SetDCompSurfaceHandle(
-    HANDLE aDCompSurfaceHandle) {
+void MFMediaEngineVideoStream::SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle,
+                                                     gfx::IntSize aDisplay) {
   ComPtr<MFMediaEngineVideoStream> self = this;
   Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
       "MFMediaEngineStream::SetDCompSurfaceHandle",
-      [self, aDCompSurfaceHandle, this]() {
+      [self, aDCompSurfaceHandle, aDisplay, this]() {
         if (mDCompSurfaceHandle == aDCompSurfaceHandle) {
           return;
         }
         mDCompSurfaceHandle = aDCompSurfaceHandle;
         mNeedRecreateImage = true;
+        {
+          MutexAutoLock lock(mMutex);
+          if (aDCompSurfaceHandle != INVALID_HANDLE_VALUE &&
+              aDisplay != mDisplay) {
+            LOG("Update display [%dx%d] -> [%dx%d]", mDisplay.Width(),
+                mDisplay.Height(), aDisplay.Width(), aDisplay.Height());
+            mDisplay = aDisplay;
+          }
+        }
         LOG("Set DCompSurfaceHandle, handle=%p", mDCompSurfaceHandle);
         ResolvePendingDrainPromiseIfNeeded();
       }));
