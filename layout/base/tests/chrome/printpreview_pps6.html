@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <!-- This is a testcase for a "6-pages-per-sheet" scenario.
-     There are 6 full-page color-swatches. -->
+     There are 12 full-page color-swatches, which should be layed out over 2
+     sheets.
+
+     This test is specifically given more pages than fit on a sheet so that
+     at least one of our tests checks the case where we have more than one
+     sheet. -->
 <style>
 html, body { margin: 0; height: 100%; }
 .swatch {
@@ -14,7 +19,19 @@ html, body { margin: 0; height: 100%; }
 .swatch:nth-child(4) { border-color: orange; }
 .swatch:nth-child(5) { border-color: purple; }
 .swatch:nth-child(6) { border-color: olive; }
+.swatch:nth-child(7) { border-color: blue; }
+.swatch:nth-child(8) { border-color: tan; }
+.swatch:nth-child(9) { border-color: fuchsia; }
+.swatch:nth-child(10) { border-color: salmon; }
+.swatch:nth-child(11) { border-color: lightgreen; }
+.swatch:nth-child(12) { border-color: navy; }
 </style>
+<div class="swatch"></div>
+<div class="swatch"></div>
+<div class="swatch"></div>
+<div class="swatch"></div>
+<div class="swatch"></div>
+<div class="swatch"></div>
 <div class="swatch"></div>
 <div class="swatch"></div>
 <div class="swatch"></div>
