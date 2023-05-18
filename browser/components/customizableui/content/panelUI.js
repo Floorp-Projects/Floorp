@@ -5,12 +5,8 @@
 ChromeUtils.defineESModuleGetters(this, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
 ChromeUtils.defineModuleGetter(
   this,
   "ToolbarPanelHub",

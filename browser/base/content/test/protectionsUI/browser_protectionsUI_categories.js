@@ -7,8 +7,8 @@ const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const ST_PREF = "privacy.trackingprotection.socialtracking.enabled";
 const STC_PREF = "privacy.socialtracking.block_cookies.enabled";
 
-const { CustomizableUITestUtils } = ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm"
+const { CustomizableUITestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/CustomizableUITestUtils.sys.mjs"
 );
 
 registerCleanupFunction(function() {

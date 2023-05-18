@@ -4,6 +4,8 @@
 ChromeUtils.defineESModuleGetters(this, {
   ADLINK_CHECK_TIMEOUT_MS:
     "resource:///actors/SearchSERPTelemetryChild.sys.mjs",
+  CustomizableUITestUtils:
+    "resource://testing-common/CustomizableUITestUtils.sys.mjs",
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   FormHistoryTestUtils:
     "resource://testing-common/FormHistoryTestUtils.sys.mjs",
@@ -16,8 +18,6 @@ ChromeUtils.defineESModuleGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
-  CustomizableUITestUtils:
-    "resource://testing-common/CustomizableUITestUtils.jsm",
 });
 
 let gCUITestUtils = new CustomizableUITestUtils(window);

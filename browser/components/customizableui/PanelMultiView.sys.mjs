@@ -97,13 +97,8 @@
  *       └───┴───┴── Open views
  */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["PanelMultiView", "PanelView"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -267,7 +262,7 @@ var AssociatedToNode = class {
 /**
  * This is associated to <panelmultiview> elements.
  */
-var PanelMultiView = class extends AssociatedToNode {
+export var PanelMultiView = class extends AssociatedToNode {
   /**
    * Tries to open the specified <panel> and displays the main view specified
    * with the "mainViewId" attribute on the <panelmultiview> node it contains.
@@ -1306,7 +1301,7 @@ var PanelMultiView = class extends AssociatedToNode {
 /**
  * This is associated to <panelview> elements.
  */
-var PanelView = class extends AssociatedToNode {
+export var PanelView = class extends AssociatedToNode {
   constructor(node) {
     super(node);
 

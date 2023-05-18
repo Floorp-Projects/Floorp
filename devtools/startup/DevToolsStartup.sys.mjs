@@ -41,6 +41,7 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineESModuleGetters(lazy, {
   CustomizableWidgets: "resource:///modules/CustomizableWidgets.sys.mjs",
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
 });
@@ -48,11 +49,6 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "ProfilerMenuButton",
   "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
 );
 
 // We don't want to spend time initializing the full loader here so we create
