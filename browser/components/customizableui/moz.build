@@ -12,7 +12,7 @@ BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
 TESTING_JS_MODULES += [
-    "test/CustomizableUITestUtils.jsm",
+    "test/CustomizableUITestUtils.sys.mjs",
 ]
 
 EXTRA_JS_MODULES += [
@@ -20,7 +20,7 @@ EXTRA_JS_MODULES += [
     "CustomizableWidgets.sys.mjs",
     "CustomizeMode.sys.mjs",
     "DragPositionManager.sys.mjs",
-    "PanelMultiView.jsm",
+    "PanelMultiView.sys.mjs",
     "SearchWidgetTracker.sys.mjs",
 ]
 

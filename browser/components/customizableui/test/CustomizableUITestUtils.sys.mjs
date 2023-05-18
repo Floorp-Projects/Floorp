@@ -1,24 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
-
 /**
  * Shared functions generally available for tests involving PanelMultiView and
  * the CustomizableUI elements in the browser window.
  */
 
-var EXPORTED_SYMBOLS = ["CustomizableUITestUtils"];
+import { Assert } from "resource://testing-common/Assert.sys.mjs";
 
-const { Assert } = ChromeUtils.importESModule(
-  "resource://testing-common/Assert.sys.mjs"
-);
-const { BrowserTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/BrowserTestUtils.sys.mjs"
-);
-const { TestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TestUtils.sys.mjs"
-);
+import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys.mjs";
+import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 
 const lazy = {};
 
@@ -28,7 +19,7 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/CustomizableUI.jsm"
 );
 
-class CustomizableUITestUtils {
+export class CustomizableUITestUtils {
   /**
    * Constructs an instance that operates with the specified browser window.
    */

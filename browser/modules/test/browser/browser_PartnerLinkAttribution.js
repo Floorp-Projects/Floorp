@@ -17,14 +17,15 @@ const SUGGESTION_ENGINE_NAME =
   "browser_UsageTelemetry usageTelemetrySearchSuggestions.xml";
 
 ChromeUtils.defineESModuleGetters(this, {
+  CustomizableUITestUtils:
+    "resource://testing-common/CustomizableUITestUtils.sys.mjs",
+
   Region: "resource://gre/modules/Region.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  CustomizableUITestUtils:
-    "resource://testing-common/CustomizableUITestUtils.jsm",
   HttpServer: "resource://testing-common/httpd.js",
 });
 

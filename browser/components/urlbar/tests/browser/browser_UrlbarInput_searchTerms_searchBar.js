@@ -5,8 +5,8 @@
 // These tests check the behavior of the Urlbar when a user enables
 // the search bar and showSearchTerms is true.
 
-const { CustomizableUITestUtils } = ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm"
+const { CustomizableUITestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/CustomizableUITestUtils.sys.mjs"
 );
 
 const gCUITestUtils = new CustomizableUITestUtils(window);

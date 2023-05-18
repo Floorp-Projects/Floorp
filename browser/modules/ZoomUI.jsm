@@ -14,11 +14,9 @@ const gZoomPropertyName = "browser.content.full-zoom";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
+});
 
 var ZoomUI = {
   init(aWindow) {

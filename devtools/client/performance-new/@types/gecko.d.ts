@@ -32,7 +32,7 @@ declare namespace MockedExports {
     "resource://devtools/client/performance-new/popup/menu-button.jsm.js": typeof import("resource://devtools/client/performance-new/popup/menu-button.jsm.js");
     "resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js": typeof import("resource://devtools/client/performance-new/shared/typescript-lazy-load.jsm.js");
     "resource://devtools/client/performance-new/popup/logic.jsm.js": typeof import("resource://devtools/client/performance-new/popup/logic.jsm.js");
-    "resource:///modules/PanelMultiView.jsm": typeof import("resource:///modules/PanelMultiView.jsm");
+    "resource:///modules/PanelMultiView.sys.mjs": typeof import("resource:///modules/PanelMultiView.sys.mjs");
   }
 
   interface ChromeUtils {
@@ -235,7 +235,7 @@ declare namespace MockedExports {
   // TS-TODO
   const CustomizableUIJSM: any;
   const CustomizableWidgetsSYSMJS: any;
-  const PanelMultiViewJSM: any;
+  const PanelMultiViewSYSMJS: any;
 
   const LoaderESM: {
     require: (path: string) => any;
@@ -356,8 +356,8 @@ declare module "resource:///modules/CustomizableWidgets.sys.mjs" {
   export = MockedExports.CustomizableWidgetsSYSMJS;
 }
 
-declare module "resource:///modules/PanelMultiView.jsm" {
-  export = MockedExports.PanelMultiViewJSM;
+declare module "resource:///modules/PanelMultiView.sys.mjs" {
+  export = MockedExports.PanelMultiViewSYSMJS;
 }
 
 declare module "resource://devtools/shared/loader/Loader.sys.mjs" {

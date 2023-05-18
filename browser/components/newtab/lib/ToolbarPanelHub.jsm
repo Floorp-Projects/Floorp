@@ -9,6 +9,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SpecialMessageActions:
@@ -19,11 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   EveryWindow: "resource:///modules/EveryWindow.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
   "TrackingDBService",
@@ -283,7 +279,7 @@ class _ToolbarPanelHub {
    */
   _attachCommandListener(win, element, message) {
     // Add event listener for `mouseup` not to overlap with the
-    // `mousedown` & `click` events dispatched from PanelMultiView.jsm
+    // `mousedown` & `click` events dispatched from PanelMultiView.sys.mjs
     // https://searchfox.org/mozilla-central/rev/7531325c8660cfa61bf71725f83501028178cbb9/browser/components/customizableui/PanelMultiView.jsm#1830-1837
     element.addEventListener("mouseup", () => {
       this._dispatchUserAction(win, message);

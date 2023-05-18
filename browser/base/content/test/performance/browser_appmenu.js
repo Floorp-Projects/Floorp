@@ -1,8 +1,8 @@
 "use strict";
 /* global PanelUI */
 
-const { CustomizableUITestUtils } = ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm"
+const { CustomizableUITestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/CustomizableUITestUtils.sys.mjs"
 );
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
@@ -18,14 +18,14 @@ let gCUITestUtils = new CustomizableUITestUtils(window);
 const EXPECTED_APPMENU_OPEN_REFLOWS = [
   {
     stack: [
-      "openPopup/this._openPopupPromise<@resource:///modules/PanelMultiView.jsm",
+      "openPopup/this._openPopupPromise<@resource:///modules/PanelMultiView.sys.mjs",
     ],
   },
 
   {
     stack: [
-      "_calculateMaxHeight@resource:///modules/PanelMultiView.jsm",
-      "handleEvent@resource:///modules/PanelMultiView.jsm",
+      "_calculateMaxHeight@resource:///modules/PanelMultiView.sys.mjs",
+      "handleEvent@resource:///modules/PanelMultiView.sys.mjs",
     ],
 
     maxCount: 7, // This number should only ever go down - never up.

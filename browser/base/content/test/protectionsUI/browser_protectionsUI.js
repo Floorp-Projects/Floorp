@@ -14,8 +14,8 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://gre/modules/ContentBlockingAllowList.sys.mjs",
 });
 
-const { CustomizableUITestUtils } = ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm"
+const { CustomizableUITestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/CustomizableUITestUtils.sys.mjs"
 );
 
 add_setup(async function() {

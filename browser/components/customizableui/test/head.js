@@ -4,10 +4,13 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  CustomizableUITestUtils:
+    "resource://testing-common/CustomizableUITestUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
-  CustomizableUITestUtils:
-    "resource://testing-common/CustomizableUITestUtils.jsm",
 });
 
 var EventUtils = {};

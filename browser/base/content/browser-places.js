@@ -24,11 +24,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
       ?._placesView?.updateNodesVisibility();
   }
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
+  RecentlyClosedTabsAndWindowsMenuUtils:
+    "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.sys.mjs",
+});
 
 var StarUI = {
   _itemGuids: null,
@@ -574,11 +574,6 @@ var PlacesCommandHook = {
     });
   },
 };
-
-ChromeUtils.defineESModuleGetters(this, {
-  RecentlyClosedTabsAndWindowsMenuUtils:
-    "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.sys.mjs",
-});
 
 // View for the history menu.
 class HistoryMenu extends PlacesMenu {

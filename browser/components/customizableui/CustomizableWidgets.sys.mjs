@@ -12,6 +12,7 @@ import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtil
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   RecentlyClosedTabsAndWindowsMenuUtils:
     "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
@@ -22,12 +23,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Sanitizer: "resource:///modules/Sanitizer.jsm",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
 
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPrefScreenshots = "extensions.screenshots.disabled";

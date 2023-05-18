@@ -6,11 +6,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
+});
 
 var EXPORTED_SYMBOLS = ["TabsPanel"];
 
