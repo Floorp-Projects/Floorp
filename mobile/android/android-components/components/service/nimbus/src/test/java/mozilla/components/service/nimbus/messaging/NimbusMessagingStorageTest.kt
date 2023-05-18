@@ -678,7 +678,7 @@ class NimbusMessagingStorageTest {
         )
 
         // We should not be using the feature holder until getMessages is called.
-        verify(messagingFeature, never()).value(any())
+        verify(messagingFeature, never()).value()
     }
 
     @Test
