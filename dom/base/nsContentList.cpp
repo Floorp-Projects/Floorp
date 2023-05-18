@@ -158,19 +158,18 @@ struct ContentListCache
 
 static ContentListCache sRecentlyUsedContentLists;
 
-class ContentListHashEntry : public PLDHashEntryHdr {
+class nsContentList::HashEntry : public PLDHashEntryHdr {
  public:
   using KeyType = const nsContentListKey*;
   using KeyTypePointer = KeyType;
 
   // Note that this is creating a blank entry, so you'll have to manually
   // initialize it after it has been inserted into the hash table.
-  explicit ContentListHashEntry(KeyTypePointer aKey) : mContentList(nullptr) {}
+  explicit HashEntry(KeyTypePointer aKey) : mContentList(nullptr) {}
 
-  ContentListHashEntry(ContentListHashEntry&& aEnt)
-      : mContentList(std::move(aEnt.mContentList)) {}
+  HashEntry(HashEntry&& aEnt) : mContentList(std::move(aEnt.mContentList)) {}
 
-  ~ContentListHashEntry() = default;
+  ~HashEntry() = default;
 
   bool KeyEquals(KeyTypePointer aKey) const {
     return mContentList->MatchesKey(*aKey);
@@ -194,7 +193,8 @@ class ContentListHashEntry : public PLDHashEntryHdr {
 };
 
 // Hashtable for storing nsContentLists
-static StaticAutoPtr<nsTHashtable<ContentListHashEntry>> gContentListHashTable;
+static StaticAutoPtr<nsTHashtable<nsContentList::HashEntry>>
+    gContentListHashTable;
 
 already_AddRefed<nsContentList> NS_GetContentList(nsINode* aRootNode,
                                                   int32_t aMatchNameSpaceId,
@@ -212,7 +212,7 @@ already_AddRefed<nsContentList> NS_GetContentList(nsINode* aRootNode,
 
   // Initialize the hashtable if needed.
   if (!gContentListHashTable) {
-    gContentListHashTable = new nsTHashtable<ContentListHashEntry>();
+    gContentListHashTable = new nsTHashtable<nsContentList::HashEntry>();
   }
 
   // First we look in our hashtable.  Then we create a content list if needed
@@ -252,20 +252,18 @@ const nsCacheableFuncStringContentList::ContentListType
         nsCacheableFuncStringContentList::eHTMLCollection;
 #endif
 
-class FuncStringContentListHashEntry : public PLDHashEntryHdr {
+class nsCacheableFuncStringContentList::HashEntry : public PLDHashEntryHdr {
  public:
   using KeyType = const nsFuncStringCacheKey*;
   using KeyTypePointer = KeyType;
 
   // Note that this is creating a blank entry, so you'll have to manually
   // initialize it after it has been inserted into the hash table.
-  explicit FuncStringContentListHashEntry(KeyTypePointer aKey)
-      : mContentList(nullptr) {}
+  explicit HashEntry(KeyTypePointer aKey) : mContentList(nullptr) {}
 
-  FuncStringContentListHashEntry(FuncStringContentListHashEntry&& aEnt)
-      : mContentList(std::move(aEnt.mContentList)) {}
+  HashEntry(HashEntry&& aEnt) : mContentList(std::move(aEnt.mContentList)) {}
 
-  ~FuncStringContentListHashEntry() = default;
+  ~HashEntry() = default;
 
   bool KeyEquals(KeyTypePointer aKey) const {
     return mContentList->Equals(aKey);
@@ -292,7 +290,7 @@ class FuncStringContentListHashEntry : public PLDHashEntryHdr {
 };
 
 // Hashtable for storing nsCacheableFuncStringContentList
-static StaticAutoPtr<nsTHashtable<FuncStringContentListHashEntry>>
+static StaticAutoPtr<nsTHashtable<nsCacheableFuncStringContentList::HashEntry>>
     gFuncStringContentListHashTable;
 
 template <class ListType>
@@ -308,10 +306,10 @@ already_AddRefed<nsContentList> GetFuncStringContentList(
   // Initialize the hashtable if needed.
   if (!gFuncStringContentListHashTable) {
     gFuncStringContentListHashTable =
-        new nsTHashtable<FuncStringContentListHashEntry>();
+        new nsTHashtable<nsCacheableFuncStringContentList::HashEntry>();
   }
 
-  FuncStringContentListHashEntry* entry = nullptr;
+  nsCacheableFuncStringContentList::HashEntry* entry = nullptr;
   // First we look in our hashtable.  Then we create a content list if needed
   if (gFuncStringContentListHashTable) {
     nsFuncStringCacheKey hashKey(aRootNode, aFunc, aString);
