@@ -4916,12 +4916,12 @@ class DeleteFilesRunnable final : public Runnable,
 
 class Maintenance final : public Runnable, public OpenDirectoryListener {
   struct DirectoryInfo final {
-    InitializedOnce<const FullOriginMetadata> mFullOriginMetadata;
+    InitializedOnce<const OriginMetadata> mOriginMetadata;
     InitializedOnce<const nsTArray<nsString>> mDatabasePaths;
     const PersistenceType mPersistenceType;
 
     DirectoryInfo(PersistenceType aPersistenceType,
-                  FullOriginMetadata aFullOriginMetadata,
+                  OriginMetadata aOriginMetadata,
                   nsTArray<nsString>&& aDatabasePaths);
 
     DirectoryInfo(const DirectoryInfo& aOther) = delete;
@@ -5076,15 +5076,15 @@ class Maintenance final : public Runnable, public OpenDirectoryListener {
   void DirectoryLockFailed() override;
 };
 
-Maintenance::DirectoryInfo::DirectoryInfo(
-    PersistenceType aPersistenceType, FullOriginMetadata aFullOriginMetadata,
-    nsTArray<nsString>&& aDatabasePaths)
-    : mFullOriginMetadata(std::move(aFullOriginMetadata)),
+Maintenance::DirectoryInfo::DirectoryInfo(PersistenceType aPersistenceType,
+                                          OriginMetadata aOriginMetadata,
+                                          nsTArray<nsString>&& aDatabasePaths)
+    : mOriginMetadata(std::move(aOriginMetadata)),
       mDatabasePaths(std::move(aDatabasePaths)),
       mPersistenceType(aPersistenceType) {
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
-  MOZ_ASSERT(!mFullOriginMetadata->mGroup.IsEmpty());
-  MOZ_ASSERT(!mFullOriginMetadata->mOrigin.IsEmpty());
+  MOZ_ASSERT(!mOriginMetadata->mGroup.IsEmpty());
+  MOZ_ASSERT(!mOriginMetadata->mOrigin.IsEmpty());
 #ifdef DEBUG
   MOZ_ASSERT(!mDatabasePaths->IsEmpty());
   for (const nsAString& databasePath : *mDatabasePaths) {
@@ -13012,7 +13012,7 @@ nsresult Maintenance::DirectoryWork() {
     QM_TRY(OkIf(isDirectory), NS_ERROR_FAILURE);
   }
 
-  // There are currently only 3 persistence types, and we want to iterate them
+  // There are currently only 4 persistence types, and we want to iterate them
   // in this order:
   static const PersistenceType kPersistenceTypes[] = {
       PERSISTENCE_TYPE_PERSISTENT, PERSISTENCE_TYPE_DEFAULT,
@@ -13030,6 +13030,12 @@ nsresult Maintenance::DirectoryWork() {
     if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
         IsAborted()) {
       return NS_ERROR_ABORT;
+    }
+
+    // Don't do any maintenance for private browsing databases, which are only
+    // temporary.
+    if (persistenceType == PERSISTENCE_TYPE_PRIVATE) {
+      continue;
     }
 
     const bool persistent = persistenceType == PERSISTENCE_TYPE_PERSISTENT;
@@ -13085,18 +13091,18 @@ nsresult Maintenance::DirectoryWork() {
 
             case nsIFileKind::ExistsAsDirectory: {
               // Get the necessary information about the origin
-              // (LoadFullOriginMetadataWithRestore also checks if it's a valid
-              // origin).
+              // (GetOriginMetadata also checks if it's a valid origin).
 
-              QM_TRY_INSPECT(
-                  const auto& metadata,
-                  quotaManager->LoadFullOriginMetadataWithRestore(originDir),
-                  // Not much we can do here...
-                  Ok{});
+              QM_TRY_INSPECT(const auto& metadata,
+                             quotaManager->GetOriginMetadata(originDir),
+                             // Not much we can do here...
+                             Ok{});
 
-              // Don't do any maintenance for private browsing databases, which
-              // are only temporary.
-              if (OriginAttributes::IsPrivateBrowsing(metadata.mOrigin)) {
+              // We now use a dedicated repository for private browsing
+              // databases, but there could be some forgotten private browsing
+              // databases in other repositories, so it's better to check for
+              // that and don't do any maintenance for such databases.
+              if (metadata.mIsPrivate) {
                 return Ok{};
               }
 
@@ -13257,8 +13263,8 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
       if (Helper::IsSafeToRunMaintenance(databasePath)) {
         if (!directoryLock) {
           directoryLock = mDirectoryLock->SpecializeForClient(
-              directoryInfo.mPersistenceType,
-              *directoryInfo.mFullOriginMetadata, Client::IDB);
+              directoryInfo.mPersistenceType, *directoryInfo.mOriginMetadata,
+              Client::IDB);
           MOZ_ASSERT(directoryLock);
         }
 
@@ -13267,7 +13273,7 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
         // mode.
         const auto databaseMaintenance = MakeRefPtr<DatabaseMaintenance>(
             this, directoryLock, directoryInfo.mPersistenceType,
-            *directoryInfo.mFullOriginMetadata, databasePath, Nothing{});
+            *directoryInfo.mOriginMetadata, databasePath, Nothing{});
 
         if (!threadPool) {
           threadPool = mQuotaClient->GetOrCreateThreadPool();
