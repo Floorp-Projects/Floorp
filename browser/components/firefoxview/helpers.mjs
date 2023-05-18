@@ -57,12 +57,13 @@ export function getImageUrl(icon, targetURI) {
 }
 
 export function onToggleContainer(detailsContainer) {
+  const doc = detailsContainer.ownerDocument;
   // Ignore early `toggle` events, which may either be fired because the
   // UI sections update visibility on component connected (based on persisted
   // UI state), or because <details> elements fire `toggle` events when added
   // to the DOM with the "open" attribute set. In either case, we don't want
   // to record telemetry as these events aren't the result of user action.
-  if (detailsContainer.ownerDocument.readyState != "complete") {
+  if (doc.readyState != "complete") {
     return;
   }
 
@@ -73,9 +74,10 @@ export function onToggleContainer(detailsContainer) {
     ? "firefoxview-collapse-button-hide"
     : "firefoxview-collapse-button-show";
 
-  detailsContainer
-    .querySelector(".twisty")
-    .setAttribute("data-l10n-id", newFluentString);
+  doc.l10n.setAttributes(
+    detailsContainer.querySelector(".twisty"),
+    newFluentString
+  );
 
   if (isTabPickup) {
     Services.telemetry.recordEvent(
