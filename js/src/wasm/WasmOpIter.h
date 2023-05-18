@@ -463,7 +463,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   //
   // If the block's stack contains polymorphic values at its base (because we
   // are in unreachable code) then suitable extra values are inserted into the
-  // value stack, as controlled by `retypePolymorphics`: if this is true,
+  // value stack, as controlled by `rewriteStackTypes`: if this is true,
   // polymorphic values have their types created/updated from `expected`.  If
   // it is false, such values are left as `StackType::bottom()`.
   //
@@ -471,7 +471,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   // relevant stack entries, including those of any new entries created.
   [[nodiscard]] bool checkTopTypeMatches(ResultType expected,
                                          ValueVector* values,
-                                         bool retypePolymorphics);
+                                         bool rewriteStackTypes);
 
   [[nodiscard]] bool pushControl(LabelKind kind, BlockType type);
   [[nodiscard]] bool checkStackAtEndOfBlock(ResultType* type,
@@ -1075,7 +1075,7 @@ inline bool OpIter<Policy>::popWithRefType(Value* value, StackType* type) {
 template <typename Policy>
 inline bool OpIter<Policy>::checkTopTypeMatches(ResultType expected,
                                                 ValueVector* values,
-                                                bool retypePolymorphics) {
+                                                bool rewriteStackTypes) {
   if (expected.empty()) {
     return true;
   }
@@ -1111,11 +1111,11 @@ inline bool OpIter<Policy>::checkTopTypeMatches(ResultType expected,
       // If the base of this block's stack is polymorphic, then we can just
       // pull out as many fake values as we need to validate, and create dummy
       // stack entries accordingly; they won't be used since we're in
-      // unreachable code.  However, if `retypePolymorphics` is true, we must
+      // unreachable code.  However, if `rewriteStackTypes` is true, we must
       // set the types on these new entries to whatever `expected` requires
       // them to be.
       TypeAndValue newTandV =
-          retypePolymorphics ? TypeAndValue(expectedType) : TypeAndValue();
+          rewriteStackTypes ? TypeAndValue(expectedType) : TypeAndValue();
       if (!valueStack_.insert(valueStack_.begin() + currentValueStackLength,
                               newTandV)) {
         return false;
@@ -1126,11 +1126,6 @@ inline bool OpIter<Policy>::checkTopTypeMatches(ResultType expected,
       TypeAndValue& observed = valueStack_[currentValueStackLength - 1];
 
       if (observed.type().isBottom()) {
-        if (retypePolymorphics) {
-          // As above, update polymorphic values as required by `expected`.
-          observed.setType(StackType(expectedType));
-        }
-
         collectValue(Value());
       } else {
         if (!checkIsSubtypeOf(observed.type().valType(), expectedType)) {
@@ -1138,6 +1133,10 @@ inline bool OpIter<Policy>::checkTopTypeMatches(ResultType expected,
         }
 
         collectValue(observed.value());
+      }
+
+      if (rewriteStackTypes) {
+        observed.setType(StackType(expectedType));
       }
     }
   }
@@ -1149,7 +1148,7 @@ inline bool OpIter<Policy>::pushControl(LabelKind kind, BlockType type) {
   ResultType paramType = type.params();
 
   ValueVector values;
-  if (!checkTopTypeMatches(paramType, &values, /*retypePolymorphics=*/true)) {
+  if (!checkTopTypeMatches(paramType, &values, /*rewriteStackTypes=*/true)) {
     return false;
   }
   MOZ_ASSERT(valueStack_.length() >= paramType.length());
@@ -1169,7 +1168,7 @@ inline bool OpIter<Policy>::checkStackAtEndOfBlock(ResultType* expectedType,
   }
 
   return checkTopTypeMatches(*expectedType, values,
-                             /*retypePolymorphics=*/true);
+                             /*rewriteStackTypes=*/true);
 }
 
 template <typename Policy>
@@ -1477,7 +1476,7 @@ inline bool OpIter<Policy>::checkBranchValueAndPush(uint32_t relativeDepth,
   }
 
   *type = block->branchTargetType();
-  return checkTopTypeMatches(*type, values, /*retypePolymorphics=*/false);
+  return checkTopTypeMatches(*type, values, /*rewriteStackTypes=*/false);
 }
 
 template <typename Policy>
@@ -1539,7 +1538,7 @@ inline bool OpIter<Policy>::checkBrTableEntryAndPush(
     branchValues = nullptr;
   }
 
-  return checkTopTypeMatches(*type, branchValues, /*retypePolymorphics=*/false);
+  return checkTopTypeMatches(*type, branchValues, /*rewriteStackTypes=*/false);
 }
 
 template <typename Policy>
@@ -2140,7 +2139,7 @@ inline bool OpIter<Policy>::readTeeLocal(const ValTypeVector& locals,
 
   ValueVector single;
   if (!checkTopTypeMatches(ResultType::Single(locals[*id]), &single,
-                           /*retypePolymorphics=*/true)) {
+                           /*rewriteStackTypes=*/true)) {
     return false;
   }
 
@@ -2210,7 +2209,7 @@ inline bool OpIter<Policy>::readTeeGlobal(uint32_t* id, Value* value) {
   ValueVector single;
   if (!checkTopTypeMatches(ResultType::Single(env_.globals[*id].type()),
                            &single,
-                           /*retypePolymorphics=*/true)) {
+                           /*rewriteStackTypes=*/true)) {
     return false;
   }
 
@@ -2391,7 +2390,7 @@ inline bool OpIter<Policy>::readBrOnNonNull(uint32_t* relativeDepth,
   }
 
   // Check if the type stack matches the branch target type.
-  if (!checkTopTypeMatches(*type, values, /*retypePolymorphics=*/false)) {
+  if (!checkTopTypeMatches(*type, values, /*rewriteStackTypes=*/false)) {
     return false;
   }
 
@@ -3708,7 +3707,7 @@ inline bool OpIter<Policy>::readBrOnCast(bool* onSuccess,
   fallthroughTypes[labelTypeNumValues - 1] = typeOnFallthrough;
 
   return checkTopTypeMatches(ResultType::Vector(fallthroughTypes), values,
-                             /*retypePolymorphics=*/false);
+                             /*rewriteStackTypes=*/false);
 }
 
 template <typename Policy>
@@ -3763,7 +3762,7 @@ inline bool OpIter<Policy>::checkBrOnCastCommonV5(uint32_t labelRelativeDepth,
   // Validates the first half of (3), if we pretend that topType is eqref,
   // which it isn't really.
   return checkTopTypeMatches(ResultType::Vector(fallthroughType), values,
-                             /*retypePolymorphics=*/false);
+                             /*rewriteStackTypes=*/false);
 }
 
 // `br_on_cast <labelRelativeDepth> null? <castTypeIndex>`
@@ -3878,7 +3877,7 @@ inline bool OpIter<Policy>::checkBrOnCastFailCommonV5(
 
   // Check all operands match the failure label's target type.  Validates (2).
   if (!checkTopTypeMatches(*labelType, values,
-                           /*retypePolymorphics=*/false)) {
+                           /*rewriteStackTypes=*/false)) {
     return false;
   }
 
