@@ -452,7 +452,7 @@ int QuotaFullPathname(sqlite3_vfs* vfs, const char* zName, int nOut,
           NS_ConvertUTF8toUTF16 name(zName);
 
           if (name.First() == '/') {
-            return name;
+            return std::move(name);
           }
 
           QM_TRY_INSPECT(const auto& file,
