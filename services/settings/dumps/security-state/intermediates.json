@@ -1,6 +1,78 @@
 {
   "data": [
     {
+      "schema": 1684208871446,
+      "derHash": "v2TAbR1I2XegvC38kX6ODWNCvRFZBHFjbXoIBsyN8AM=",
+      "subject": "CN=Root Networks CA,O=Root Networks\\, LLC,C=US",
+      "subjectDN": "MEUxCzAJBgNVBAYTAlVTMRswGQYDVQQKDBJSb290IE5ldHdvcmtzLCBMTEMxGTAXBgNVBAMMEFJvb3QgTmV0d29ya3MgQ0E=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c0151985717258bcc0e50a2be4573b9396de5876dcc0cbc7c5b24e367f08dba3",
+        "size": 1687,
+        "filename": "aSd-MMsqlGu57jni9roFhyhvrMQMlaQVHgpMQZ3xAz8=.pem",
+        "location": "security-state-staging/intermediates/5e78b1fa-f64a-4b1f-b3dd-dde122a631c4.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "aSd+MMsqlGu57jni9roFhyhvrMQMlaQVHgpMQZ3xAz8=",
+      "crlite_enrolled": false,
+      "id": "9fd12cb8-6138-4e3c-9fe9-7f7cf09f79d6",
+      "last_modified": 1684209423740
+    },
+    {
+      "schema": 1684208871891,
+      "derHash": "NfjMiWEFCLwWvTMtpUOWRpjHLWeJX+tOBovqXgZoZFc=",
+      "subject": "CN=cyber_Folks,O=cyber_Folks S.A.,C=PL",
+      "subjectDN": "MD4xCzAJBgNVBAYTAlBMMRkwFwYDVQQKDBBjeWJlcl9Gb2xrcyBTLkEuMRQwEgYDVQQDDAtjeWJlcl9Gb2xrcw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2c1b7dc7e000bf1a833bf34a23d0a4fa7b4a3c986ed17757b209ea41dbade460",
+        "size": 1703,
+        "filename": "kq5-Wv6p_Qk1dZ4-Cq4ScIsLfvt3RrBBE40y3Wwntkg=.pem",
+        "location": "security-state-staging/intermediates/faa069e8-f47c-4f98-a875-e0c3b31e05d9.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "kq5+Wv6p/Qk1dZ4+Cq4ScIsLfvt3RrBBE40y3Wwntkg=",
+      "crlite_enrolled": false,
+      "id": "5dc895a3-7c85-4dc4-966a-03d1b98dc2d8",
+      "last_modified": 1684209423738
+    },
+    {
+      "schema": 1683931970391,
+      "derHash": "udU/I1xfqMkusx3Pyt9JWbNKMq82rKHqEPB9ZVHDmKU=",
+      "subject": "CN=DigiCert TLS RSA4096 Root G5,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "ME0xCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjElMCMGA1UEAxMcRGlnaUNlcnQgVExTIFJTQTQwOTYgUm9vdCBHNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e78e398403576ebf3e95e1feb965efad8ee75e60076714001a690c26a7873f3a",
+        "size": 1983,
+        "filename": "ape1HIIZ6T5d7GS61YBs3rD4NVvkfnVwELcCRW4Bqv0=.pem",
+        "location": "security-state-staging/intermediates/36de1839-8a27-4de6-b16b-bdecf75cf4df.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ape1HIIZ6T5d7GS61YBs3rD4NVvkfnVwELcCRW4Bqv0=",
+      "crlite_enrolled": false,
+      "id": "d7ec40fc-6f59-4d54-980e-a2fb062c608c",
+      "last_modified": 1683932264447
+    },
+    {
+      "schema": 1683910139418,
+      "derHash": "WobLKX43z/HbAf6o4U/kxeBU+LIo6Xbkp4Ljrqcj/Bs=",
+      "subject": "CN=netartSSL,O=netart.com sp. z o.o.,C=PL",
+      "subjectDN": "MEExCzAJBgNVBAYTAlBMMR4wHAYDVQQKDBVuZXRhcnQuY29tIHNwLiB6IG8uby4xEjAQBgNVBAMMCW5ldGFydFNTTA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "b4b1330598e6adddef05930d5bad06ddb76b01aa1572f7b1603a56efb5bc620d",
+        "size": 1703,
+        "filename": "5aJfMT_Pu-r4SU6c4xiGnV6b8gTNvtSaSNsRcrO8l30=.pem",
+        "location": "security-state-staging/intermediates/a21bdc47-7a06-4bc6-bcaa-506951f37a0a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "5aJfMT/Pu+r4SU6c4xiGnV6b8gTNvtSaSNsRcrO8l30=",
+      "crlite_enrolled": false,
+      "id": "6e6329ac-0c2c-4d80-87df-b7f134ff050e",
+      "last_modified": 1683910624095
+    },
+    {
       "schema": 1683686879404,
       "derHash": "EVoqRdtSA2GizfCjlcSkvYoYkC6qQDZ5KCX4RrvXaRc=",
       "subject": "CN=BJCA EV SSL CA1,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
@@ -613,24 +685,6 @@
       "last_modified": 1679518623527
     },
     {
-      "schema": 1679496492018,
-      "derHash": "LhmMIn+T+c+W97ihmG9llzVQLJVkB9s28NSj1gH0JHI=",
-      "subject": "CN=cyber_Folks,O=cyber_Folks S.A.,C=PL",
-      "subjectDN": "MD4xCzAJBgNVBAYTAlBMMRkwFwYDVQQKDBBjeWJlcl9Gb2xrcyBTLkEuMRQwEgYDVQQDDAtjeWJlcl9Gb2xrcw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "af7452cf60f895407cabded55c5f101c501466461b80c9552ae1d72d1ca49017",
-        "size": 1703,
-        "filename": "shhKME0KxqZQ2wHqxgxToMHmEKhynXo_W0VCw1DIHRU=.pem",
-        "location": "security-state-staging/intermediates/9eb81bcd-faf9-49a0-910e-d37386c11aec.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "shhKME0KxqZQ2wHqxgxToMHmEKhynXo/W0VCw1DIHRU=",
-      "crlite_enrolled": false,
-      "id": "2da2da44-5d5f-4bbe-9515-f533a291ad43",
-      "last_modified": 1679497023553
-    },
-    {
       "schema": 1679348884403,
       "derHash": "/jy+2DjTC6uQAYTB8hpLJ9MhHLXJJX1+mFwq5DrGqJ8=",
       "subject": "CN=DigiCert QuoVadis G3 Qualified TLS RSA4096 SHA256 2023 CA1,O=QuoVadis Trustlink B.V.,C=NL",
@@ -791,24 +845,6 @@
       "crlite_enrolled": false,
       "id": "eddcc056-16e1-46d1-b6c3-4a86ea59aa4a",
       "last_modified": 1674831423067
-    },
-    {
-      "schema": 1674831022033,
-      "derHash": "4hp4Q0P3Y/Xv6JTdyB4LW5KonfZQVvyoxJrUQUzXTrQ=",
-      "subject": "CN=netartSSL,O=netart.com sp. z o.o.,C=PL",
-      "subjectDN": "MEExCzAJBgNVBAYTAlBMMR4wHAYDVQQKDBVuZXRhcnQuY29tIHNwLiB6IG8uby4xEjAQBgNVBAMMCW5ldGFydFNTTA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "057738bae1021f294dc71891bef222761d8436fb7edc08e538db6c7e392210af",
-        "size": 1707,
-        "filename": "KaszdLtbqC_Ce0PVFw_k38sW-T8Ds1ODjsYj3DtSWMc=.pem",
-        "location": "security-state-staging/intermediates/fd03be7e-e416-420c-a8c0-2b829c362d52.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "KaszdLtbqC/Ce0PVFw/k38sW+T8Ds1ODjsYj3DtSWMc=",
-      "crlite_enrolled": false,
-      "id": "3c365cf9-2f49-4979-874c-47d919ec4382",
-      "last_modified": 1674831423059
     },
     {
       "schema": 1674787704399,
@@ -8099,24 +8135,6 @@
       "crlite_enrolled": false,
       "id": "e04bc9de-e9d2-45e5-a6d5-3e29309132df",
       "last_modified": 1666727870309
-    },
-    {
-      "schema": 1666727329716,
-      "derHash": "XLnp3jKxh+QLoU/fIA/aYse0+/iNZPd84C3W6+a8wbA=",
-      "subject": "CN=Hongkong Post e-Cert CA 1 - 15,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK",
-      "subjectDN": "MHYxCzAJBgNVBAYTAkhLMRIwEAYDVQQIEwlIb25nIEtvbmcxEjAQBgNVBAcTCUhvbmcgS29uZzEWMBQGA1UEChMNSG9uZ2tvbmcgUG9zdDEnMCUGA1UEAxMeSG9uZ2tvbmcgUG9zdCBlLUNlcnQgQ0EgMSAtIDE1",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b1dec54f97f654e9b417aea0e0d23a22852001ddaf0a4b9b7a4c8d05cb468de6",
-        "size": 1743,
-        "filename": "nJWwmV0E5pEw1Pt8yzqltuQOo94m9iy9I53BzzbPaqE=.pem",
-        "location": "security-state-staging/intermediates/6388fa41-6293-4a28-b765-3fe9a3137870.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "nJWwmV0E5pEw1Pt8yzqltuQOo94m9iy9I53BzzbPaqE=",
-      "crlite_enrolled": false,
-      "id": "136210c9-de18-49a4-bbd8-4b85d01b0cfc",
-      "last_modified": 1666727870295
     },
     {
       "schema": 1666727379118,
@@ -20071,24 +20089,6 @@
       "last_modified": 1659056262846
     },
     {
-      "schema": 1658926111792,
-      "derHash": "VUSiT+sh9oHxmH0w4K9cSen5//1VUKiJtAseycyB5mc=",
-      "subject": "CN=Hongkong Post Root CA 3,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK",
-      "subjectDN": "MG8xCzAJBgNVBAYTAkhLMRIwEAYDVQQIEwlIb25nIEtvbmcxEjAQBgNVBAcTCUhvbmcgS29uZzEWMBQGA1UEChMNSG9uZ2tvbmcgUG9zdDEgMB4GA1UEAxMXSG9uZ2tvbmcgUG9zdCBSb290IENBIDM=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4c5b0700bc71b4e78f0834cea51449926e4366fc6bd55fe838cb5acad8f51f36",
-        "size": 2020,
-        "filename": "JUHlO6WzsHrL5wl6xKA-BAwRz3ptSmfLIT1Vi1AWegY=.pem",
-        "location": "security-state-staging/intermediates/34ab8f6d-6a63-4e28-b53b-850c3ac5899d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "JUHlO6WzsHrL5wl6xKA+BAwRz3ptSmfLIT1Vi1AWegY=",
-      "crlite_enrolled": false,
-      "id": "00188779-96d0-4934-89ac-f7b56f182eef",
-      "last_modified": 1658926623098
-    },
-    {
       "schema": 1658342922602,
       "derHash": "cQ3k0iZCnhZXwVBCs/QE3lv23r/gD3ff1nGuxno3Tkg=",
       "subject": "CN=GlobalSign Atlas ECCR5 DV TLS CA 2022 Q4,O=GlobalSign nv-sa,C=BE",
@@ -21869,42 +21869,6 @@
       "crlite_enrolled": false,
       "id": "772a5e91-e4ab-4bc1-b2a7-9d88c0c7e9bf",
       "last_modified": 1649973509629
-    },
-    {
-      "schema": 1648781340337,
-      "derHash": "F2rr8pcr1vRxee3j3mOEixVDtFrilUvqRRhbFSU3ucQ=",
-      "subject": "CN=Hongkong Post Root CA 3,O=Hongkong Post,L=Hong Kong,ST=Hong Kong,C=HK",
-      "subjectDN": "MG8xCzAJBgNVBAYTAkhLMRIwEAYDVQQIEwlIb25nIEtvbmcxEjAQBgNVBAcTCUhvbmcgS29uZzEWMBQGA1UEChMNSG9uZ2tvbmcgUG9zdDEgMB4GA1UEAxMXSG9uZ2tvbmcgUG9zdCBSb290IENBIDM=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b4ba7c31c249eb874c39b6a3e78147e6623a6ccbab1429cce2313067069229b7",
-        "size": 2020,
-        "filename": "JUHlO6WzsHrL5wl6xKA-BAwRz3ptSmfLIT1Vi1AWegY=.pem",
-        "location": "security-state-staging/intermediates/39b3dcba-a7a7-4969-9493-b50803c7a8a2.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "JUHlO6WzsHrL5wl6xKA+BAwRz3ptSmfLIT1Vi1AWegY=",
-      "crlite_enrolled": false,
-      "id": "842fdd33-8665-48df-a734-9fa716c62edb",
-      "last_modified": 1648781848995
-    },
-    {
-      "schema": 1648781339361,
-      "derHash": "FEIqG9WpHtunOXuGmJIjabavaYT/h6z2E52qkZ55WhQ=",
-      "subject": "CN=Hongkong Post e-Cert CA 1 - 14,O=Hongkong Post,C=HK",
-      "subjectDN": "ME4xCzAJBgNVBAYTAkhLMRYwFAYDVQQKEw1Ib25na29uZyBQb3N0MScwJQYDVQQDEx5Ib25na29uZyBQb3N0IGUtQ2VydCBDQSAxIC0gMTQ=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "5a4d38e1effb5367e3fd8c4536f7e3be9e065be0cb93778e4484d32658a3c99c",
-        "size": 1626,
-        "filename": "vSKE_tMDVyGX2f0WYoCAXCvfnFi2nosboVhJtpmvc10=.pem",
-        "location": "security-state-staging/intermediates/85cc6392-76ad-4ab9-8327-9f8d7cbb9b9a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "vSKE/tMDVyGX2f0WYoCAXCvfnFi2nosboVhJtpmvc10=",
-      "crlite_enrolled": false,
-      "id": "a4269288-d28d-456b-84f5-cdd8b22a22d5",
-      "last_modified": 1648781848986
     },
     {
       "schema": 1648667430650,
@@ -27685,5 +27649,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1683687423842
+  "timestamp": 1684357023297
 }
