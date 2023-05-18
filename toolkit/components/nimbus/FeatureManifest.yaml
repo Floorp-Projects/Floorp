@@ -56,7 +56,7 @@ nimbus-qa-2:
       description: The value to set for the pref.
 
 search:
-  description: The Search Services
+  description: Search engine experimentation support and testing features.
   owner: search-and-suggest-program@mozilla.com
   hasExposure: false
   variables:
@@ -68,7 +68,33 @@ search:
         `experiment`
     extraParams:
       type: json
-      description: Query parameters values for search engine configurations.
+      description: >-
+        This allows extra parameters to be set for search engines, where the
+        search engine configuration defines those parameters.
+
+        The use of this field should be coordinated with the Search team.
+
+        The field value is an array of objects with key/value fields. For example:
+
+        [
+          {"key": "google_channel_row", "value": "foo"}
+        ]
+
+        This is matched to a section in the search configuration:
+
+        "extraParams": [
+          {
+            "name": "channel",
+            "pref": "google_channel_row",
+            "condition": "pref"
+          }
+        ],
+
+        In this case, the resulting URL for the appropriate search engine would have
+        `&channel=foo` added to the URL when doing searches.
+
+        If the key is not referenced in the search configuration, then no parameter
+        will be added. Only the search team can update the configuration.
     seperatePrivateDefaultUIEnabled:
       type: boolean
       description: Whether the UI for the separate private default feature is enabled.
@@ -78,11 +104,15 @@ search:
     cbhStudyUs:
       type: string
       setPref: browser.search.param.google_channel_us
-      description: A string pref set by Nimbus tests for US search cohort
+      description: >-
+        NOTE: Please use `extraParams` rather than this field.
+        A string pref set by Nimbus tests for US search cohort
     cbhStudyRow:
       type: string
       setPref: browser.search.param.google_channel_row
-      description: A string pref set by Nimbus tests for Rest of World search cohort
+      description: >-
+        NOTE: Please use `extraParams` rather than this field.
+        A string pref set by Nimbus tests for Rest of World (ROW) search cohort
     serpEventTelemetryEnabled:
       type: boolean
       setPref: browser.search.serpEventTelemetry.enabled
