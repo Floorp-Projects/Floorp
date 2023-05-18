@@ -119,6 +119,57 @@ add_task(async function addonSuggestionsSpecificPrefDisabled() {
   }
 });
 
+// Check wheather the addon suggestions will be shown by the setup of Nimbus
+// variable.
+add_task(async function nimbus() {
+  // Disable the fature gate.
+  UrlbarPrefs.set("addons.featureGate", false);
+  await check_results({
+    context: createContext("test", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+
+  // Enable by Nimbus.
+  const cleanUpNimbusEnable = await UrlbarTestUtils.initNimbusFeature({
+    addonsFeatureGate: true,
+  });
+  await check_results({
+    context: createContext("test", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [
+      makeExpectedResult({
+        isBestMatch: true,
+        suggestedIndex: 1,
+      }),
+    ],
+  });
+  await cleanUpNimbusEnable();
+
+  // Enable locally.
+  UrlbarPrefs.set("addons.featureGate", true);
+
+  // Disable by Nimbus.
+  const cleanUpNimbusDisable = await UrlbarTestUtils.initNimbusFeature({
+    addonsFeatureGate: false,
+  });
+  await check_results({
+    context: createContext("test", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+  await cleanUpNimbusDisable();
+
+  // Revert.
+  UrlbarPrefs.set("addons.featureGate", true);
+});
+
 add_task(async function hideIfAlreadyInstalled() {
   // Show suggestion.
   await check_results({
