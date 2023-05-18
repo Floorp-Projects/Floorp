@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- This is a reference case for a "6-pages-per-sheet" scenario. This file is
-     a mockup of a sheet with 6 pages, with the pages all having a 0.4x scale
-     scale factor applied. -->
+     a mockup of a sheet with 6 pages, followed by a sheet with another 6 pages,
+     with the pages all having a 0.4x scale factor applied. -->
 <style>
 html { height: 100%; }
 body {
@@ -14,6 +14,11 @@ body {
      0.1in to the left and right of the page grid. We mock that up as padding
      here: */
   padding: 0 0.1in;
+
+}
+
+.sheet {
+  height: 100%;
 
   /* We lay out the body as a column-oriented flex container (whose children,
      in turn, are rows). */
@@ -40,13 +45,23 @@ body {
      'align-self' behavior.) */
   flex: 1;
 }
-.row:nth-child(1) > .swatch:nth-child(1) { border-color: cyan; }
-.row:nth-child(1) > .swatch:nth-child(2) { border-color: yellow; }
-.row:nth-child(2) > .swatch:nth-child(1) { border-color: pink; }
-.row:nth-child(2) > .swatch:nth-child(2) { border-color: orange; }
-.row:nth-child(3) > .swatch:nth-child(1) { border-color: purple; }
-.row:nth-child(3) > .swatch:nth-child(2) { border-color: olive; }
+
+.sheet:nth-child(1) > .row:nth-child(1) > .swatch:nth-child(1) { border-color: cyan; }
+.sheet:nth-child(1) > .row:nth-child(1) > .swatch:nth-child(2) { border-color: yellow; }
+.sheet:nth-child(1) > .row:nth-child(2) > .swatch:nth-child(1) { border-color: pink; }
+.sheet:nth-child(1) > .row:nth-child(2) > .swatch:nth-child(2) { border-color: orange; }
+.sheet:nth-child(1) > .row:nth-child(3) > .swatch:nth-child(1) { border-color: purple; }
+.sheet:nth-child(1) > .row:nth-child(3) > .swatch:nth-child(2) { border-color: olive; }
+
+.sheet:nth-child(2) { break-before: always; }
+.sheet:nth-child(2) > .row:nth-child(1) > .swatch:nth-child(1) { border-color: blue; }
+.sheet:nth-child(2) > .row:nth-child(1) > .swatch:nth-child(2) { border-color: tan; }
+.sheet:nth-child(2) > .row:nth-child(2) > .swatch:nth-child(1) { border-color: fuchsia; }
+.sheet:nth-child(2) > .row:nth-child(2) > .swatch:nth-child(2) { border-color: salmon; }
+.sheet:nth-child(2) > .row:nth-child(3) > .swatch:nth-child(1) { border-color: lightgreen; }
+.sheet:nth-child(2) > .row:nth-child(3) > .swatch:nth-child(2) { border-color: navy; }
 </style>
+<div class="sheet">
 <div class="row">
   <div class="swatch"></div>
   <div class="swatch"></div>
@@ -58,4 +73,19 @@ body {
 <div class="row">
   <div class="swatch"></div>
   <div class="swatch"></div>
+</div>
+</div>
+<div class="sheet">
+<div class="row">
+  <div class="swatch"></div>
+  <div class="swatch"></div>
+</div>
+<div class="row">
+  <div class="swatch"></div>
+  <div class="swatch"></div>
+</div>
+<div class="row">
+  <div class="swatch"></div>
+  <div class="swatch"></div>
+</div>
 </div>
