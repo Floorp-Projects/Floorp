@@ -361,12 +361,6 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
   assertSourceIcon(dbg, "script.js", "javascript");
   assertSourceIcon(dbg, "query.js?x=1", "javascript");
   assertSourceIcon(dbg, "original.js", "javascript");
-  // Framework icons are only displayed when we parse the source,
-  // which happens when we select the source
-  assertSourceIcon(dbg, "react-component-module.js", "javascript");
-  await selectSource(dbg, "react-component-module.js");
-  assertSourceIcon(dbg, "react-component-module.js", "react");
-
   info("Verify blackbox source icon");
   await selectSource(dbg, "script.js");
   await clickElement(dbg, "blackbox");

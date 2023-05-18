@@ -14,12 +14,7 @@ import {
   getSourceQueryString,
   getFileURL,
 } from "../../../utils/source";
-import { createLocation } from "../../../utils/location";
-import {
-  getBreakpointsForSource,
-  getContext,
-  getFirstSourceActorForGeneratedSource,
-} from "../../../selectors";
+import { getBreakpointsForSource, getContext } from "../../../selectors";
 
 import SourceIcon from "../../shared/SourceIcon";
 
@@ -31,7 +26,6 @@ class BreakpointHeading extends PureComponent {
       cx: PropTypes.object.isRequired,
       sources: PropTypes.array.isRequired,
       source: PropTypes.object.isRequired,
-      firstSourceActor: PropTypes.object,
       selectSource: PropTypes.func.isRequired,
     };
   }
@@ -53,14 +47,7 @@ class BreakpointHeading extends PureComponent {
         onContextMenu={this.onContextMenu}
       >
         <SourceIcon
-          // Breakpoints are displayed per source and may relate to many source actors.
-          // Arbitrarily pick the first source actor to compute the matching source icon
-          // The source actor is used to pick one specific source text content and guess
-          // the related framework icon.
-          location={createLocation({
-            source,
-            sourceActor: this.props.firstSourceActor,
-          })}
+          source={source}
           modifier={icon =>
             ["file", "javascript"].includes(icon) ? null : icon
           }
@@ -77,7 +64,6 @@ class BreakpointHeading extends PureComponent {
 const mapStateToProps = (state, { source }) => ({
   cx: getContext(state),
   breakpointsForSource: getBreakpointsForSource(state, source.id),
-  firstSourceActor: getFirstSourceActorForGeneratedSource(state, source.id),
 });
 
 export default connect(mapStateToProps, {
