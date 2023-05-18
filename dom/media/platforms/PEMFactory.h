@@ -22,7 +22,7 @@ class PEMFactory final {
   // instance. It's expected that there will be multiple
   // PlatformEncoderModules alive at the same time.
   already_AddRefed<MediaDataEncoder> CreateEncoder(
-      const CreateEncoderParams& aParams);
+      const CreateEncoderParams& aParams, const bool aHardwareNotAllowed);
 
   bool SupportsMimeType(const nsACString& aMimeType) const;
 

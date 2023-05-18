@@ -14,7 +14,8 @@ class AndroidEncoderModule final : public PlatformEncoderModule {
   bool SupportsMimeType(const nsACString& aMimeType) const override;
 
   already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
-      const CreateEncoderParams& aParams) const override;
+      const CreateEncoderParams& aParams,
+      const bool aHardwareNotAllowed) const override;
 };
 
 }  // namespace mozilla
