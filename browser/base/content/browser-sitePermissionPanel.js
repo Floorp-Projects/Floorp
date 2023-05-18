@@ -990,9 +990,11 @@ var gPermissionPanel = {
     MozXULElement.insertFTLIfNeeded("browser/sitePermissions.ftl");
     let text = document.createXULElement("label", { is: "text-link" });
     text.setAttribute("class", "permission-popup-permission-label");
-    document.l10n.setAttributes(text, "site-permissions-open-blocked-popups", {
-      count: aTotalBlockedPopups,
-    });
+    text.setAttribute("data-l10n-id", "site-permissions-open-blocked-popups");
+    text.setAttribute(
+      "data-l10n-args",
+      JSON.stringify({ count: aTotalBlockedPopups })
+    );
 
     text.addEventListener("click", () => {
       gBrowser.selectedBrowser.popupBlocker.unblockAllPopups();

@@ -4155,9 +4155,11 @@ class AddSearchEngineHelper {
     elt.setAttribute("anonid", `add-engine-${index}`);
     elt.classList.add("menuitem-iconic");
     elt.classList.add("context-menu-add-engine");
-    this.input.document.l10n.setAttributes(elt, "search-one-offs-add-engine", {
-      engineName: engine.title,
-    });
+    elt.setAttribute("data-l10n-id", "search-one-offs-add-engine");
+    elt.setAttribute(
+      "data-l10n-args",
+      JSON.stringify({ engineName: engine.title })
+    );
     elt.setAttribute("uri", engine.uri);
     if (engine.icon) {
       elt.setAttribute("image", engine.icon);
@@ -4173,10 +4175,7 @@ class AddSearchEngineHelper {
     elt.setAttribute("anonid", "add-engine-menu");
     elt.classList.add("menu-iconic");
     elt.classList.add("context-menu-add-engine");
-    this.input.document.l10n.setAttributes(
-      elt,
-      "search-one-offs-add-engine-menu"
-    );
+    elt.setAttribute("data-l10n-id", "search-one-offs-add-engine-menu");
     if (engine.icon) {
       elt.setAttribute("image", engine.icon);
     }

@@ -19,11 +19,11 @@ export class ErrorSection extends HTMLElement {
 
   render() {
     let title = this.shadowRoot.querySelector(".title");
-    document.l10n.setAttributes(title, "certificate-viewer-error-title");
+    title.setAttribute("data-l10n-id", "certificate-viewer-error-title");
 
     let errorMessage = this.shadowRoot.querySelector(".error");
-    document.l10n.setAttributes(
-      errorMessage,
+    errorMessage.setAttribute(
+      "data-l10n-id",
       "certificate-viewer-error-message"
     );
   }

@@ -308,7 +308,7 @@ function generateDocumentation() {
     row.appendChild(link(policyName));
     let descriptionColumn = col("");
     let stringID = string_mapping[policyName] || policyName;
-    document.l10n.setAttributes(descriptionColumn, `policy-${stringID}`);
+    descriptionColumn.setAttribute("data-l10n-id", `policy-${stringID}`);
     row.appendChild(descriptionColumn);
     main_tbody.appendChild(row);
     let sec_tbody = document.createElement("tbody");
