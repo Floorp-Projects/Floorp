@@ -110,18 +110,12 @@ export class FieldDetail {
     }
   }
 
-  get sectionName() {
-    return this.section || this.addressType;
+  get element() {
+    return this.elementWeakRef.get();
   }
 
-  isSame(other) {
-    return (
-      this.fieldName == other.fieldName &&
-      this.section == other.section &&
-      this.addressType == other.addressType &&
-      !this.part &&
-      !other.part
-    );
+  get sectionName() {
+    return this.section || this.addressType;
   }
 }
 

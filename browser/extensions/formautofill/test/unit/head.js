@@ -190,8 +190,29 @@ async function initProfileStorage(
   return profileStorage;
 }
 
+function verifySectionAutofillResult(sections, expectedSectionsInfo) {
+  sections.forEach((section, index) => {
+    const expectedSection = expectedSectionsInfo[index];
+
+    const fieldDetails = section.fieldDetails;
+    const expectedFieldDetails = expectedSection.fields;
+
+    info(`verify autofill section[${index}]`);
+
+    fieldDetails.forEach((field, fieldIndex) => {
+      const expeceted = expectedFieldDetails[fieldIndex];
+
+      Assert.equal(
+        expeceted.autofill,
+        field.element.value,
+        `Autofilled value for element(id=${field.element.id}, field name=${field.fieldName}) should be equal`
+      );
+    });
+  });
+}
+
 function verifySectionFieldDetails(sections, expectedSectionsInfo) {
-  sections.map((section, index) => {
+  sections.forEach((section, index) => {
     const expectedSection = expectedSectionsInfo[index];
 
     const fieldDetails = section.fieldDetails;
@@ -228,10 +249,11 @@ function verifySectionFieldDetails(sections, expectedSectionsInfo) {
         ...expectedFieldDetail,
       };
 
-      delete field.elementWeakRef;
-      delete field.confidence;
-      delete field.part;
       const keys = new Set([...Object.keys(field), ...Object.keys(expected)]);
+      ["autofill", "elementWeakRef", "confidence", "part"].forEach(k =>
+        keys.delete(k)
+      );
+
       for (const key of keys) {
         const expectedValue = expected[key];
         const actualValue = field[key];
@@ -252,46 +274,80 @@ function autofillFieldSelector(doc) {
   return doc.querySelectorAll("input, select");
 }
 
-// The `patterns.expectedResult` array contains test data for different address or credit card sections.
-// Each section in the array is represented by an object and can include the following properties:
-// - description (optional): A string describing the section, primarily used for debugging purposes.
-// - default (optional): An object that sets the default values for the fields within this section.
-//            The default object contains the same keys as the individual field objects.
-// - fields: An array of field objects within the section.
-//
-// Each field object can have the following keys:
-// - fieldName: The name of the field (e.g., "street-name", "cc-name" or "cc-number").
-// - reason: The reason for the field value (e.g., "autocomplete", "regex-heuristic" or "fathom").
-// - section: The section to which the field belongs (e.g., "billing", "shipping").
-// - part: The part of the field.
-// - contactType: The contact type of the field.
-// - addressType: The address type of the field.
-//
-// For more information on the field object properties, refer to the FieldDetails class.
-//
-// Example test data:
-//  expectedResult: [
-//    {
-//      description: "address form with only two address fields"
-//      fields: [
-//        { fieldName: "organization", reason: "autocomplete" },
-//        { fieldName: "street-address", reason: "regex-heuristic" },
-//      ]
-//    },
-//    {
-//      default: {
-//        reason: "regex-heuristic",
-//        section: "billing",
-//      },
-//      fields: [
-//        { fieldName: "cc-number", reason: "fathom" },
-//        { fieldName: "cc-nane" },
-//        { fieldName: "cc-exp" },
-//      ],
-//    },
-//  ]
-//
-async function runHeuristicsTest(patterns, fixturePathPrefix) {
+/**
+ * Runs heuristics test for form autofill on given patterns.
+ *
+ * @param {Array<object>} patterns - An array of test patterns to run the heuristics test on.
+ * @param {string} pattern.description - Description of this heuristic test
+ * @param {string} pattern.fixurePath - The path of the test document
+ * @param {string} pattern.fixureData - Test document by string. Use either fixurePath or fixtureData.
+ * @param {object} pattern.profile - The profile to autofill. This is required only when running autofill test
+ * @param {Array}  pattern.expectedResult - The expected result of this heuristic test. See below for detailed explanation
+ *
+ * @param {string} [fixturePathPrefix=""] - The prefix to the path of fixture files.
+ * @param {object} [options={ testAutofill: false }] - An options object containing additional configuration for running the test.
+ * @param {boolean} [options.testAutofill=false] - A boolean indicating whether to run the test for autofill or not.
+ * @returns {Promise} A promise that resolves when all the tests are completed.
+ *
+ * The `patterns.expectedResult` array contains test data for different address or credit card sections.
+ * Each section in the array is represented by an object and can include the following properties:
+ * - description (optional): A string describing the section, primarily used for debugging purposes.
+ * - default (optional): An object that sets the default values for all the fields within this section.
+ *            The default object contains the same keys as the individual field objects.
+ * - fields: An array of field details (class FieldDetails) within the section.
+ *
+ * Each field object can have the following keys:
+ * - fieldName: The name of the field (e.g., "street-name", "cc-name" or "cc-number").
+ * - reason: The reason for the field value (e.g., "autocomplete", "regex-heuristic" or "fathom").
+ * - section: The section to which the field belongs (e.g., "billing", "shipping").
+ * - part: The part of the field.
+ * - contactType: The contact type of the field.
+ * - addressType: The address type of the field.
+ * - autofill: Set to true when running autofill test
+ *
+ * For more information on the field object properties, refer to the FieldDetails class.
+ *
+ * Example test data:
+ * runHeuristicsTest(
+ * [{
+ *   description: "first test pattern",
+ *   fixuturePath: "autocomplete_off.html",
+ *   profile: {organization: "Mozilla", country: "US", tel: "123"},
+ *   expectedResult: [
+ *   {
+ *     description: "First section"
+ *     fields: [
+ *       { fieldName: "organization", reason: "autocomplete", autofill: "Mozilla" },
+ *       { fieldName: "country", reason: "regex-heuristic", autofill: "US" },
+ *       { fieldName: "tel", reason: "regex-heuristic", autofill: "123" },
+ *     ]
+ *   },
+ *   {
+ *     default: {
+ *       reason: "regex-heuristic",
+ *       section: "billing",
+ *     },
+ *     fields: [
+ *       { fieldName: "cc-number", reason: "fathom" },
+ *       { fieldName: "cc-nane" },
+ *       { fieldName: "cc-exp" },
+ *     ],
+ *    }],
+ *  },
+ *  {
+ *    // second test pattern //
+ *  }
+ * ],
+ * "/fixturepath",
+ * {testAutofill: true}  // test options
+ * )
+ */
+
+async function runHeuristicsTest(
+  patterns,
+  fixturePathPrefix = "",
+  options = { testAutofill: false }
+) {
   add_setup(async () => {
     ({ FormAutofillHeuristics } = ChromeUtils.importESModule(
       "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs"
@@ -348,6 +404,14 @@ async function runHeuristicsTest(patterns, fixturePathPrefix) {
 
       verifySectionFieldDetails(sections, testPattern.expectedResult);
 
+      if (options.testAutofill) {
+        for (const section of sections) {
+          section.focusedInput = section.fieldDetails[0].element;
+          await section.autofillFields(testPattern.profile);
+        }
+        verifySectionAutofillResult(sections, testPattern.expectedResult);
+      }
+
       if (testPattern.prefs) {
         testPattern.prefs.forEach(pref =>
           Services.prefs.clearUserPref(pref[0])
@@ -355,6 +419,10 @@ async function runHeuristicsTest(patterns, fixturePathPrefix) {
       }
     });
   });
+}
+
+async function runAutofillHeuristicsTest(patterns, fixturePathPrefix = "") {
+  runHeuristicsTest(patterns, fixturePathPrefix, { testAutofill: true });
 }
 
 /**
