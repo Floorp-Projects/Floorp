@@ -265,7 +265,10 @@ add_task(async function test_get_records_with_multiple_versions() {
     client.db.create(record);
   }
 
-  TranslationsParent.mockRemoteSettingsClient(client);
+  TranslationsParent.mockTranslationsEngine(
+    client,
+    await createTranslationsWasmRemoteClient()
+  );
 
   const retrievedRecords = await TranslationsParent.getMaxVersionRecords(
     client,
@@ -296,5 +299,5 @@ add_task(async function test_get_records_with_multiple_versions() {
     ), but found ${retrievedRecords.length}\n`
   );
 
-  TranslationsParent.mockRemoteSettingsClient(null);
+  TranslationsParent.unmockTranslationsEngine();
 });
