@@ -21,6 +21,17 @@ runHeuristicsTest(
           ],
         },
         {
+          invalid: true,
+          fields: [
+            {
+              fieldName: "street-address",
+              reason: "autocomplete",
+              addressType: "billing",
+            },
+          ],
+        },
+        // THis should be fixed by visibility check
+        {
           default: {
             reason: "autocomplete",
           },
@@ -32,18 +43,14 @@ runHeuristicsTest(
             { fieldName: "cc-exp-month" },
             { fieldName: "cc-exp-year" },
             { fieldName: "cc-number", reason: "fathom" },
-            // {fieldName: "cc-csc"},
           ],
         },
         {
-          default: {
-            reason: "autocomplete",
-            addressType: "billing",
-          },
+          invalid: true,
           fields: [
-            {
-              fieldName: "street-address",
-            }, // <select>
+            { fieldName: "cc-exp-month", reason: "regex-heuristic"},
+            { fieldName: "cc-exp-year", reason: "regex-heuristic"},
+            // {fieldName: "cc-csc"},
           ],
         },
       ],
@@ -52,19 +59,15 @@ runHeuristicsTest(
       fixturePath: "SignIn.html",
       expectedResult: [
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "email" },
+            { fieldName: "email",reason: "regex-heuristic" },
           ],
         },
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "email" },
+            { fieldName: "email",reason: "regex-heuristic" },
           ],
         },
       ],

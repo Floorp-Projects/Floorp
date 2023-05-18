@@ -29,6 +29,18 @@ runHeuristicsTest(
       expectedResult: [
         {
           default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "cc-type" }, // ac-off
+            { fieldName: "cc-number", reason: "fathom" }, // ac-off
+            { fieldName: "cc-exp-month" }, // ac-off
+            { fieldName: "cc-exp-year" }, // ac-off
+            // {fieldName: "cc-csc"}, // ac-off
+          ],
+        },
+        {
+          default: {
             reason: "autocomplete",
           },
           fields: [
@@ -43,48 +55,30 @@ runHeuristicsTest(
             { fieldName: "email" },
           ],
         },
-        {
-          default: {
-            reason: "regex-heuristic",
-          },
-          fields: [
-            { fieldName: "cc-type" }, // ac-off
-            { fieldName: "cc-number", reason: "fathom" }, // ac-off
-            { fieldName: "cc-exp-month" }, // ac-off
-            { fieldName: "cc-exp-year" }, // ac-off
-            // {fieldName: "cc-csc"}, // ac-off
-          ],
-        },
       ],
     },
     {
       fixturePath: "SignIn.html",
       expectedResult: [
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
             // Sign in
-            { fieldName: "email" },
+            { fieldName: "email", reason: "regex-heuristic"},
             // {fieldName: "password"},
           ],
         },
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
             // Forgot password
-            { fieldName: "email" },
+            { fieldName: "email", reason: "regex-heuristic"},
           ],
         },
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "email" },
+            { fieldName: "email", reason: "regex-heuristic"},
           ],
         },
       ],

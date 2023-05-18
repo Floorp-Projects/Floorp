@@ -18,8 +18,9 @@ runHeuristicsTest(
             { fieldName: "address-line1" },
             { fieldName: "address-line2" },
             { fieldName: "postal-code" },
-            { fieldName: "address-level2" },
-            { fieldName: "address-level1" }, // state
+            { fieldName: "address-level2" }, // City & State
+            { fieldName: "address-level2" }, // City
+            { fieldName: "address-level1" }, // State
             { fieldName: "tel-area-code" },
             { fieldName: "tel-local-prefix" },
             { fieldName: "tel-local-suffix" },
@@ -33,6 +34,17 @@ runHeuristicsTest(
       fixturePath: "Payment.html",
       expectedResult: [
         {
+          invalid: true, // because non of them is identified by fathom
+          default: {
+            reason: "regex-heuristic",
+          },
+          fields: [
+            { fieldName: "cc-exp-month" },
+            { fieldName: "cc-exp-year" },
+            { fieldName: "cc-number" },
+          ],
+        },
+        {
           default: {
             reason: "regex-heuristic",
           },
@@ -43,7 +55,8 @@ runHeuristicsTest(
             { fieldName: "address-line1" },
             { fieldName: "address-line2" },
             { fieldName: "postal-code" },
-            { fieldName: "address-level2" },
+            { fieldName: "address-level2" }, // City & State
+            { fieldName: "address-level2" }, // City
             { fieldName: "address-level1" }, // state
             { fieldName: "tel-area-code" },
             { fieldName: "tel-local-prefix" },
@@ -52,31 +65,16 @@ runHeuristicsTest(
             { fieldName: "email" },
           ],
         },
-        {
-          default: {
-            reason: "regex-heuristic",
-          },
-          fields: [
-            { fieldName: "cc-exp-month" },
-            { fieldName: "cc-exp-year" },
-            // FIXME: bug 1392950 - the membership number should not be detected
-            // as cc-number.
-            { fieldName: "cc-number" },
-          ],
-        },
       ],
     },
     {
       fixturePath: "SignIn.html",
       expectedResult: [
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            // ac-off
-            { fieldName: "email" }
-          ]
+            { fieldName: "email", reason: "regex-heuristic" },
+          ],
         },
       ],
     },

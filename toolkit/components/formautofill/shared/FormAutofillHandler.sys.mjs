@@ -10,10 +10,11 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofillHeuristics:
     "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs",
-  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
   FormAutofillAddressSection: "resource://autofill/FormAutofillSection.sys.mjs",
   FormAutofillCreditCardSection:
     "resource://autofill/FormAutofillSection.sys.mjs",
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
+  FormSection: "resource://gre/modules/shared/FieldScanner.sys.mjs",
 });
 
 const { FIELD_STATES } = FormAutofillUtils;
@@ -232,28 +233,29 @@ export class FormAutofillHandler {
    *
    * @returns {Array} The valid address and credit card details.
    */
-  collectFormFields() {
+  collectFormFields(ignoreInvalid = true) {
     const sections = lazy.FormAutofillHeuristics.getFormInfo(this.form);
     const allValidDetails = [];
-    for (const { fieldDetails, type } of sections) {
-      let section;
-      if (type == FormAutofillUtils.SECTION_TYPES.ADDRESS) {
-        section = new lazy.FormAutofillAddressSection(
-          fieldDetails,
-          this,
-          this.onAutofillCallback
-        );
-      } else if (type == FormAutofillUtils.SECTION_TYPES.CREDIT_CARD) {
-        section = new lazy.FormAutofillCreditCardSection(
-          fieldDetails,
-          this,
-          this.onAutofillCallback
+    for (const section of sections) {
+      let autofillableSection;
+      if (section.type == lazy.FormSection.ADDRESS) {
+        autofillableSection = new lazy.FormAutofillAddressSection(
+          section,
+          this
         );
       } else {
-        throw new Error("Unknown field type.");
+        autofillableSection = new lazy.FormAutofillCreditCardSection(
+          section,
+          this
+        );
       }
-      this.sections.push(section);
-      allValidDetails.push(...section.fieldDetails);
+
+      if (ignoreInvalid && !autofillableSection.isValidSection()) {
+        continue;
+      }
+
+      this.sections.push(autofillableSection);
+      allValidDetails.push(...autofillableSection.fieldDetails);
     }
 
     this.fieldDetails = allValidDetails;

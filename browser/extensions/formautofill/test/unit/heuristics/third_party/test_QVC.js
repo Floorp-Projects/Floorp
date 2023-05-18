@@ -8,42 +8,34 @@ runHeuristicsTest(
       fixturePath: "YourInformation.html",
       expectedResult: [
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "tel"}, // ac-off
-            { fieldName: "email" },
+            { fieldName: "tel", reason: "regex-heuristic" },
+            { fieldName: "email", reason: "regex-heuristic" },
             // { fieldName: "bday-month"}, // select
             // { fieldName: "bday-day"}, // select
             // { fieldName: "bday-year"},
           ],
         },
         {
-          default: {
-            reason: "fathom",
-          },
           fields: [
             { fieldName: "cc-type", reason: "regex-heuristic" },
-            { fieldName: "cc-number" },
+            { fieldName: "cc-number", reason: "fathom" },
             { fieldName: "cc-exp", reason: "regex-heuristic" },
             // { fieldName: "cc-csc"},
           ],
         },
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "cc-number" }, // txtQvcGiftCardNumber
+            { fieldName: "cc-number", reason: "regex-heuristic" }, // txtQvcGiftCardNumber
           ],
         },
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "email" },
+            { fieldName: "email", reason: "regex-heuristic" },
+            { fieldName: "email", reason: "regex-heuristic" },
           ],
         },
       ],
@@ -52,12 +44,10 @@ runHeuristicsTest(
       fixturePath: "PaymentMethod.html",
       expectedResult: [
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "tel" }, // ac-off
-            { fieldName: "email" },
+            { fieldName: "tel", reason: "regex-heuristic" },
+            { fieldName: "email", reason: "regex-heuristic" },
             // { fieldName: "bday-month"}, // select
             // { fieldName: "bday-day"}, // select
             // { fieldName: "bday-year"}, // select
@@ -75,19 +65,16 @@ runHeuristicsTest(
           ],
         },
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "cc-number" }, // txtQvcGiftCardNumbe, ac-off
+            { fieldName: "cc-number", reason: "regex-heuristic" }, // txtQvcGiftCardNumbe, ac-off
           ],
         },
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "email" },
+            { fieldName: "email", reason: "regex-heuristic" },
+            { fieldName: "email", reason: "regex-heuristic" },
           ],
         },
       ],
@@ -97,11 +84,9 @@ runHeuristicsTest(
       expectedResult: [
         {
           // Sign in
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "email" },
+            { fieldName: "email", reason: "regex-heuristic" },
           ],
         },
       ],

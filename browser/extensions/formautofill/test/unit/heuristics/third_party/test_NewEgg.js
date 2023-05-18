@@ -40,6 +40,18 @@ runHeuristicsTest(
         },
         {
           default: {
+            reason: "fathom",
+          },
+          fields: [
+            { fieldName: "cc-name" },
+            { fieldName: "cc-number" }, // ac-off
+            { fieldName: "cc-exp-month", reason: "regex-heuristic" },
+            { fieldName: "cc-exp-year", reason: "regex-heuristic" },
+            // { fieldName: "cc-csc"},
+          ],
+        },
+        {
+          default: {
             reason: "regex-heuristic",
           },
           fields: [
@@ -50,18 +62,6 @@ runHeuristicsTest(
             { fieldName: "address-level1" }, // state
             { fieldName: "postal-code" },
             { fieldName: "tel" },
-          ],
-        },
-        {
-          default: {
-            reason: "fathom",
-          },
-          fields: [
-            { fieldName: "cc-name" },
-            { fieldName: "cc-number" }, // ac-off
-            { fieldName: "cc-exp-month", reason: "regex-heuristic" },
-            { fieldName: "cc-exp-year", reason: "regex-heuristic" },
-            // { fieldName: "cc-csc"},
           ],
         },
         {
@@ -90,19 +90,16 @@ runHeuristicsTest(
       fixturePath: "Login.html",
       expectedResult: [
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "email" },
+            { fieldName: "email", reason: "regex-heuristic" },
           ],
         },
         {
-          default: {
-            reason: "regex-heuristic",
-          },
+          invalid: true,
           fields: [
-            { fieldName: "email" },
+            { fieldName: "email", reason: "regex-heuristic" }, // Email Address
+            { fieldName: "email", reason: "regex-heuristic" }, // Confirm Email Address
           ],
         },
       ],
