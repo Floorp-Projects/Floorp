@@ -354,6 +354,8 @@ class nsContentList : public nsBaseContentList,
 
   virtual void LastRelease() override;
 
+  class HashEntry;
+
  protected:
   /**
    * Returns whether the element matches our criterion
@@ -517,6 +519,8 @@ class nsCacheableFuncStringContentList : public nsContentList {
 #ifdef DEBUG
   ContentListType mType;
 #endif
+
+  class HashEntry;
 
  protected:
   nsCacheableFuncStringContentList(
