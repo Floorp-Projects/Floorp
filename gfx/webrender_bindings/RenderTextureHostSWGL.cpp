@@ -153,6 +153,9 @@ void RenderTextureHostSWGL::CleanupPlanes() {
     return;
   }
   if (!mPlanes.empty()) {
+    if (mLocked) {
+      gfxCriticalNote << "Clearing locked planes!";
+    }
     wr_swgl_make_current(mContext);
     for (const auto& plane : mPlanes) {
       wr_swgl_delete_texture(mContext, plane.mTexture);
@@ -176,7 +179,7 @@ bool RenderTextureHostSWGL::LockSWGLCompositeSurface(
     }
     mLocked = true;
   }
-  MOZ_ASSERT(mPlanes.size() <= 3);
+  MOZ_RELEASE_ASSERT(mPlanes.size() <= 3);
   for (size_t i = 0; i < mPlanes.size(); i++) {
     aInfo->textures[i] = mPlanes[i].mTexture;
   }
@@ -200,6 +203,7 @@ bool RenderTextureHostSWGL::LockSWGLCompositeSurface(
       MOZ_RELEASE_ASSERT(false, "Unhandled external image format");
       break;
   }
+  MOZ_RELEASE_ASSERT(mPlanes.size() > 0);
   aInfo->size.width = mPlanes[0].mSize.width;
   aInfo->size.height = mPlanes[0].mSize.height;
   return true;
