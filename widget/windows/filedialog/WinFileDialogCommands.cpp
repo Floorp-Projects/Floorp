@@ -149,13 +149,12 @@ mozilla::Result<Results, nsresult> GetFileResults(::IFileDialog* dialog) {
   MOZ_ENSURE_HRESULT_OK(items->GetCount(&count));
   for (DWORD idx = 0; idx < count; idx++) {
     RefPtr<IShellItem> item;
+    MOZ_ENSURE_HRESULT_OK(items->GetItemAt(idx, getter_AddRefs(item)));
+
     nsAutoString str;
-    // skip failed items; return successful items
-    if (SUCCEEDED(items->GetItemAt(idx, getter_AddRefs(item)))) {
-      if (SUCCEEDED(GetShellItemPath(item, str))) {
-        paths.EmplaceBack(str);
-      }
-    }
+    MOZ_ENSURE_HRESULT_OK(GetShellItemPath(item, str));
+
+    paths.EmplaceBack(str);
   }
 
   return Results(std::move(paths), std::move(index));
