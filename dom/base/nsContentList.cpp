@@ -252,28 +252,48 @@ const nsCacheableFuncStringContentList::ContentListType
         nsCacheableFuncStringContentList::eHTMLCollection;
 #endif
 
-// Hashtable for storing nsCacheableFuncStringContentList
-static PLDHashTable* gFuncStringContentListHashTable;
+class FuncStringContentListHashEntry : public PLDHashEntryHdr {
+ public:
+  using KeyType = const nsFuncStringCacheKey*;
+  using KeyTypePointer = KeyType;
 
-struct FuncStringContentListHashEntry : public PLDHashEntryHdr {
-  nsCacheableFuncStringContentList* mContentList;
+  // Note that this is creating a blank entry, so you'll have to manually
+  // initialize it after it has been inserted into the hash table.
+  explicit FuncStringContentListHashEntry(KeyTypePointer aKey)
+      : mContentList(nullptr) {}
+
+  FuncStringContentListHashEntry(FuncStringContentListHashEntry&& aEnt)
+      : mContentList(std::move(aEnt.mContentList)) {}
+
+  ~FuncStringContentListHashEntry() = default;
+
+  bool KeyEquals(KeyTypePointer aKey) const {
+    return mContentList->Equals(aKey);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return aKey->GetHash(); }
+
+  nsCacheableFuncStringContentList* GetContentList() const {
+    return mContentList;
+  }
+  void SetContentList(nsCacheableFuncStringContentList* aContentList) {
+    mContentList = aContentList;
+  }
+
+  enum { ALLOW_MEMMOVE = true };
+
+ private:
+  nsCacheableFuncStringContentList* MOZ_UNSAFE_REF(
+      "This entry will be removed in "
+      "nsCacheableFuncStringContentList::RemoveFromFuncStringHashtable "
+      "before mContentList is destroyed") mContentList;
 };
 
-static PLDHashNumber FuncStringContentListHashtableHashKey(const void* key) {
-  const nsFuncStringCacheKey* funcStringKey =
-      static_cast<const nsFuncStringCacheKey*>(key);
-  return funcStringKey->GetHash();
-}
-
-static bool FuncStringContentListHashtableMatchEntry(
-    const PLDHashEntryHdr* entry, const void* key) {
-  const FuncStringContentListHashEntry* e =
-      static_cast<const FuncStringContentListHashEntry*>(entry);
-  const nsFuncStringCacheKey* ourKey =
-      static_cast<const nsFuncStringCacheKey*>(key);
-
-  return e->mContentList->Equals(ourKey);
-}
+// Hashtable for storing nsCacheableFuncStringContentList
+static StaticAutoPtr<nsTHashtable<FuncStringContentListHashEntry>>
+    gFuncStringContentListHashTable;
 
 template <class ListType>
 already_AddRefed<nsContentList> GetFuncStringContentList(
@@ -285,15 +305,10 @@ already_AddRefed<nsContentList> GetFuncStringContentList(
 
   RefPtr<nsCacheableFuncStringContentList> list;
 
-  static const PLDHashTableOps hash_table_ops = {
-      FuncStringContentListHashtableHashKey,
-      FuncStringContentListHashtableMatchEntry, PLDHashTable::MoveEntryStub,
-      PLDHashTable::ClearEntryStub};
-
   // Initialize the hashtable if needed.
   if (!gFuncStringContentListHashTable) {
-    gFuncStringContentListHashTable = new PLDHashTable(
-        &hash_table_ops, sizeof(FuncStringContentListHashEntry));
+    gFuncStringContentListHashTable =
+        new nsTHashtable<FuncStringContentListHashEntry>();
   }
 
   FuncStringContentListHashEntry* entry = nullptr;
@@ -301,10 +316,9 @@ already_AddRefed<nsContentList> GetFuncStringContentList(
   if (gFuncStringContentListHashTable) {
     nsFuncStringCacheKey hashKey(aRootNode, aFunc, aString);
 
-    entry = static_cast<FuncStringContentListHashEntry*>(
-        gFuncStringContentListHashTable->Add(&hashKey, fallible));
+    entry = gFuncStringContentListHashTable->PutEntry(&hashKey, fallible);
     if (entry) {
-      list = entry->mContentList;
+      list = entry->GetContentList();
 #ifdef DEBUG
       MOZ_ASSERT_IF(list, list->mType == ListType::sType);
 #endif
@@ -317,7 +331,7 @@ already_AddRefed<nsContentList> GetFuncStringContentList(
     list =
         new ListType(aRootNode, aFunc, aDestroyFunc, aDataAllocator, aString);
     if (entry) {
-      entry->mContentList = list;
+      entry->SetContentList(list);
     }
   }
 
@@ -949,10 +963,9 @@ void nsCacheableFuncStringContentList::RemoveFromFuncStringHashtable() {
   }
 
   nsFuncStringCacheKey key(mRootNode, mFunc, mString);
-  gFuncStringContentListHashTable->Remove(&key);
+  gFuncStringContentListHashTable->RemoveEntry(&key);
 
-  if (gFuncStringContentListHashTable->EntryCount() == 0) {
-    delete gFuncStringContentListHashTable;
+  if (gFuncStringContentListHashTable->Count() == 0) {
     gFuncStringContentListHashTable = nullptr;
   }
 }
