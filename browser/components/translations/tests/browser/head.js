@@ -169,3 +169,14 @@ async function waitForViewShown(callback) {
   await promise;
   await new Promise(resolve => setTimeout(resolve, 0));
 }
+
+const ENGLISH_PAGE_URL = TRANSLATIONS_TESTER_EN;
+const SPANISH_PAGE_URL = TRANSLATIONS_TESTER_ES;
+const LANGUAGE_PAIRS = [
+  { fromLang: "es", toLang: "en", isBeta: false },
+  { fromLang: "en", toLang: "es", isBeta: false },
+  { fromLang: "fr", toLang: "en", isBeta: false },
+  { fromLang: "en", toLang: "fr", isBeta: false },
+  { fromLang: "en", toLang: "uk", isBeta: true },
+  { fromLang: "uk", toLang: "en", isBeta: true },
+];
