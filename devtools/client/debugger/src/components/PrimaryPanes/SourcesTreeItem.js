@@ -22,7 +22,6 @@ import actions from "../../actions";
 import { shouldBlackbox, sourceTypes } from "../../utils/source";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { saveAsLocalFile } from "../../utils/utils";
-import { createLocation } from "../../utils/location";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
@@ -304,10 +303,10 @@ class SourceTreeItem extends Component {
       return <AccessibleImage className="folder" />;
     }
     if (item.type == "source") {
-      const { source, sourceActor } = item;
+      const { source } = item;
       return (
         <SourceIcon
-          location={createLocation({ source, sourceActor })}
+          source={source}
           modifier={icon => {
             // In the SourceTree, extension files should use the file-extension based icon,
             // whereas we use the extension icon in other Components (eg. source tabs and breakpoints pane).

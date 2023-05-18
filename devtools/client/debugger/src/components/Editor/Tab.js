@@ -24,7 +24,6 @@ import {
   shouldBlackbox,
 } from "../../utils/source";
 import { getTabMenuItems } from "../../utils/tabs";
-import { createLocation } from "../../utils/location";
 
 import {
   getSelectedLocation,
@@ -228,7 +227,7 @@ class Tab extends PureComponent {
         title={getFileURL(source, false)}
       >
         <SourceIcon
-          location={createLocation({ source, sourceActor })}
+          source={source}
           forTab={true}
           modifier={icon =>
             ["file", "javascript"].includes(icon) ? null : icon
