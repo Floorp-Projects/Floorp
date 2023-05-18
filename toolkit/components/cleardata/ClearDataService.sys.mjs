@@ -1221,16 +1221,12 @@ const HSTSCleaner = {
     let sss = Cc["@mozilla.org/ssservice;1"].getService(
       Ci.nsISiteSecurityService
     );
-    // Remove HSTS information for subdomains by enumerating
-    // the information in the site security service.
-    for (let entry of sss.enumerate()) {
-      let hostname = entry.hostname;
-      if (Services.eTLD.hasRootDomain(hostname, aHost)) {
-        // This uri is used as a key to reset the state.
-        let uri = Services.io.newURI("https://" + hostname);
-        sss.resetState(uri, entry.originAttributes);
-      }
-    }
+    let uri = Services.io.newURI("https://" + aHost);
+    sss.resetState(
+      uri,
+      aOriginAttributes,
+      Ci.nsISiteSecurityService.RootDomain
+    );
   },
 
   deleteByPrincipal(aPrincipal) {
@@ -1241,18 +1237,8 @@ const HSTSCleaner = {
     let sss = Cc["@mozilla.org/ssservice;1"].getService(
       Ci.nsISiteSecurityService
     );
-
-    // Remove HSTS information by enumerating entries of the site security
-    // service.
-    Array.from(sss.enumerate())
-      .filter(({ hostname, originAttributes }) =>
-        hasBaseDomain({ host: hostname, originAttributes }, aDomain)
-      )
-      .forEach(({ hostname, originAttributes }) => {
-        // This uri is used as a key to reset the state.
-        let uri = Services.io.newURI("https://" + hostname);
-        sss.resetState(uri, originAttributes);
-      });
+    let uri = Services.io.newURI("https://" + aDomain);
+    sss.resetState(uri, {}, Ci.nsISiteSecurityService.BaseDomain);
   },
 
   async deleteAll() {
