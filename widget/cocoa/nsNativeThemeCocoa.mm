@@ -64,6 +64,13 @@ void CUIDraw(CUIRendererRef r, CGRect rect, CGContextRef ctx, CFDictionaryRef op
              CFDictionaryRef* result);
 }
 
+static bool IsDarkAppearance(NSAppearance* appearance) {
+  if (@available(macOS 10.14, *)) {
+    return [appearance.name isEqualToString:NSAppearanceNameDarkAqua];
+  }
+  return false;
+}
+
 // Workaround for NSCell control tint drawing
 // Without this workaround, NSCells are always drawn with the clear control tint
 // as long as they're not attached to an NSControl which is a subview of an active window.
@@ -1096,8 +1103,19 @@ void nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRec
                                                                             : paddingStartX),
                                aRect.origin.y + ceil(paddingY / 2), size.width, size.height);
 
-  NSString* state =
-      aParams.disabled ? @"disabled" : (aParams.insideActiveMenuItem ? @"pressed" : @"normal");
+  NSString* state;
+  if (aParams.disabled) {
+    state = @"disabled";
+  } else if (aParams.insideActiveMenuItem) {
+    state = @"pressed";
+  } else if (IsDarkAppearance(NSAppearance.currentAppearance)) {
+    // CUIDraw draws the image with a color that's too faint for the dark
+    // appearance. The "pressed" state happens to use white, which looks better
+    // and matches the white text color, so use it instead of "normal".
+    state = @"pressed";
+  } else {
+    state = @"normal";
+  }
 
   NSString* imageName = GetMenuIconName(aParams);
 
@@ -1149,10 +1167,17 @@ void nsNativeThemeCocoa::DrawMenuSeparator(CGContextRef cgContext, const CGRect&
     separatorRect.size.height = 1;
     separatorRect.size.width -= 42;
     separatorRect.origin.x += 21;
-    // Use transparent black with an alpha similar to the native separator.
-    // The values 231 (menu background) and 205 (separator color) have been
-    // sampled from a window screenshot of a native context menu.
-    CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.0, (231 - 205) / 231.0);
+    if (!IsDarkAppearance(NSAppearance.currentAppearance)) {
+      // Use transparent black with an alpha similar to the native separator.
+      // The values 231 (menu background) and 205 (separator color) have been
+      // sampled from a window screenshot of a native context menu.
+      CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.0, (231 - 205) / 231.0);
+    } else {
+      // Similar to above, use white with an alpha. The values 45 (menu
+      // background) and 81 (separator color) were sampled on macOS 12 with the
+      // "Reduce transparency" system setting turned on.
+      CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0 + ((45 - 81) / 45.0));
+    }
     CGContextFillRect(cgContext, separatorRect);
     return;
   }
