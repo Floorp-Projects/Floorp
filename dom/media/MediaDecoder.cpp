@@ -476,6 +476,11 @@ void MediaDecoder::OnPlaybackErrorEvent(const MediaResult& aError) {
   // metadata because the MDSM might not be ready to perform the operations yet.
   mPendingStatusUpdateForNewlyCreatedStateMachine = true;
 
+  // If there is ongoing seek performed on the old MDSM, cancel it because we
+  // will perform seeking later again and don't want the old seeking affecting
+  // us.
+  DiscardOngoingSeekIfExists();
+
   discardStateMachine->BeginShutdown()->Then(
       AbstractThread::MainThread(), __func__, [discardStateMachine] {});
 #endif
