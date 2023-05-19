@@ -261,14 +261,23 @@ export var UrlbarTestUtils = {
       win.gURLBar.view.resultMenu,
       "popupshown"
     );
-    this._testScope?.info(`selecting the result at index ${resultIndex}`);
-    while (win.gURLBar.view.selectedRowIndex != resultIndex) {
-      this.EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-    }
     if (byMouse) {
+      this._testScope?.info(
+        `synthesizing mousemove on row to make the menu button visible`
+      );
+      await this.EventUtils.promiseElementReadyForUserInput(
+        menuButton.closest(".urlbarView-row"),
+        win,
+        this._testScope?.info
+      );
+      this._testScope?.info(`got mousemove, now clicking the menu button`);
       this.EventUtils.synthesizeMouseAtCenter(menuButton, {}, win);
       this._testScope?.info(`waiting for the menu popup to open via mouse`);
     } else {
+      this._testScope?.info(`selecting the result at index ${resultIndex}`);
+      while (win.gURLBar.view.selectedRowIndex != resultIndex) {
+        this.EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+      }
       if (this.getSelectedElement(win) != menuButton) {
         this.EventUtils.synthesizeKey("KEY_Tab", {}, win);
       }
