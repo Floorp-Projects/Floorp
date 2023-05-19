@@ -555,7 +555,7 @@ details[open] > .page-section-header > .twisty {
   padding-inline-start: 10px;
   font-weight: 500;
   grid-column: span 3;
-  color: var(--fxview-text-primary-color) !important;
+  color: currentColor !important;
 }
 
 .closed-tab-li-url {
