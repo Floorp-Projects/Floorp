@@ -8,6 +8,9 @@
 var testGenerator = testSteps();
 
 function* testSteps() {
+  let profd = Services.env.get("XPCSHELL_TEST_PROFILE_DIR");
+  Services.env.set("XPCSHELL_TEST_PROFILE_DIR", "0");
+
   let uri = Services.io.newURI("https://www.example.com");
   let principal = Services.scriptSecurityManager.createContentPrincipal(
     uri,
@@ -92,7 +95,7 @@ function* testSteps() {
         let objectStore = db.createObjectStore("foo");
 
         // Add lots of data...
-        for (let j = 0; j < 100; j++) {
+        for (let j = 0; j < 10000; j++) {
           objectStore.add("abcdefghijklmnopqrstuvwxyz0123456789", j);
         }
 
@@ -112,6 +115,9 @@ function* testSteps() {
       dbCount++;
     }
   }
+
+  info("Waiting for in-flight operations");
+  setTimeout(continueToNextStep, 2000);
   yield undefined;
 
   info("Getting usage before maintenance");
@@ -124,27 +130,51 @@ function* testSteps() {
     usageBeforeMaintenance = usage;
     continueToNextStep();
   });
+
+  setTimeout(continueToNextStep, 2000);
   yield undefined;
+
+  // The connection may not be interrupted every time this test is run because
+  // is is possible that maintenance completes before a connection interrupt
+  // is triggered. In these cases, the test succeeds when maintenance succeeds.
+  //
+  // If there is a regression related to the interruption stack,
+  // this test will begin to emit intermittent failures.
+  info("Delay maintenance with requests to keep it alive until interrupted");
 
   info("Sending fake 'idle-daily' notification to QuotaManager");
 
   let observer = Services.qms.QueryInterface(Ci.nsIObserver);
   observer.observe(null, "idle-daily", "");
 
-  info("Opening database while maintenance is performed");
+  info("Opening a database while maintenance is performed");
 
   req = indexedDB.open("foo-c", 1);
   req.onerror = errorHandler;
   req.onsuccess = grabEventAndContinueHandler;
+
+  info("Sending another fake 'idle-daily' notification to QuotaManager");
+  observer.observe(null, "idle-daily", "");
+
+  info("Opening database again while maintenance is performed");
+
+  req = indexedDB.open("foo-c", 1);
+  req.onerror = errorHandler;
+  req.onsuccess = grabEventAndContinueHandler;
+
+  setTimeout(continueToNextStep, 2000);
   yield undefined;
 
-  info("Waiting for maintenance to start");
+  info("Sending one more fake 'idle-daily' notification to QuotaManager");
+  observer.observe(null, "idle-daily", "");
 
   // This time is totally arbitrary. Most likely directory scanning will have
   // completed, QuotaManager locks will be acquired, and  maintenance tasks will
   // be scheduled before this time has elapsed, so we will be testing the
   // maintenance code. However, if something is slow then this will test
   // shutting down in the middle of maintenance.
+
+  info("Waiting for maintenance to start");
   setTimeout(continueToNextStep, 10000);
   yield undefined;
 
@@ -156,23 +186,22 @@ function* testSteps() {
     let usage = request.result.usage;
     ok(usage > 0, "Usage is non-zero");
     usageAfterMaintenance = usage;
+    info(
+      "Usage before: " +
+        usageBeforeMaintenance +
+        ". " +
+        "Usage after: " +
+        usageAfterMaintenance
+    );
+    ok(
+      usageAfterMaintenance <= usageBeforeMaintenance,
+      "Maintenance decreased file sizes or left them the same"
+    );
     continueToNextStep();
   });
   yield undefined;
 
-  info(
-    "Usage before: " +
-      usageBeforeMaintenance +
-      ". " +
-      "Usage after: " +
-      usageAfterMaintenance
-  );
-
-  ok(
-    usageAfterMaintenance <= usageBeforeMaintenance,
-    "Maintenance decreased file sizes or left them the same"
-  );
-
+  Services.env.set("XPCSHELL_TEST_PROFILE_DIR", profd);
   finishTest();
   yield undefined;
 }

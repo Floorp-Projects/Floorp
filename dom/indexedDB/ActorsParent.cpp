@@ -715,7 +715,7 @@ Result<MovingNotNull<nsCOMPtr<mozIStorageConnection>>, nsresult> OpenDatabase(
                 MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
                     nsCOMPtr<mozIStorageConnection>, aStorageService,
                     OpenDatabaseWithFileURL, &aFileURL, telemetryFilename,
-                    mozIStorageService::CONNECTION_DEFAULT));
+                    mozIStorageService::CONNECTION_INTERRUPTIBLE));
 
   return WrapMovingNotNull(std::move(connection));
 }
@@ -4781,6 +4781,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   static void DeleteTimerCallback(nsITimer* aTimer, void* aClosure);
 
+  void AbortAllMaintenances();
+
   Result<nsCOMPtr<nsIFile>, nsresult> GetDirectory(
       const OriginMetadata& aOriginMetadata);
 
@@ -4982,11 +4984,7 @@ class Maintenance final : public Runnable, public OpenDirectoryListener {
     Unused << this->Run();
   }
 
-  void Abort() {
-    AssertIsOnBackgroundThread();
-
-    mAborted = true;
-  }
+  void Abort();
 
   void RegisterDatabaseMaintenance(DatabaseMaintenance* aDatabaseMaintenance);
 
@@ -5088,8 +5086,6 @@ class DatabaseMaintenance final : public Runnable {
   // then we will attempt a full vacuum.
   static const int32_t kPercentUnusedThreshold = 20;
 
-  class AutoProgressHandler;
-
   enum class MaintenanceAction { Nothing = 0, IncrementalVacuum, FullVacuum };
 
   RefPtr<Maintenance> mMaintenance;
@@ -5100,6 +5096,8 @@ class DatabaseMaintenance final : public Runnable {
   nsCOMPtr<nsIRunnable> mCompleteCallback;
   const PersistenceType mPersistenceType;
   const Maybe<CipherKey> mMaybeKey;
+  Atomic<bool> mAborted;
+  DataMutex<nsCOMPtr<mozIStorageConnection>> mSharedStorageConnection;
 
  public:
   DatabaseMaintenance(Maintenance* aMaintenance, DirectoryLock* aDirectoryLock,
@@ -5113,7 +5111,9 @@ class DatabaseMaintenance final : public Runnable {
         mOriginMetadata(aOriginMetadata),
         mDatabasePath(aDatabasePath),
         mPersistenceType(aPersistenceType),
-        mMaybeKey{aMaybeKey} {
+        mMaybeKey{aMaybeKey},
+        mAborted(false),
+        mSharedStorageConnection("sharedStorageConnection") {
     MOZ_ASSERT(aDirectoryLock);
 
     MOZ_ASSERT(mDirectoryLock->Id() >= 0);
@@ -5130,6 +5130,8 @@ class DatabaseMaintenance final : public Runnable {
   }
 
   void Stringify(nsACString& aResult) const;
+
+  nsresult Abort();
 
  private:
   ~DatabaseMaintenance() override = default;
@@ -5160,64 +5162,14 @@ class DatabaseMaintenance final : public Runnable {
   // is called.
   void RunOnConnectionThread();
 
+  // TODO: Could QuotaClient::IsShuttingDownOnNonBackgroundThread() call
+  // be part of mMaintenance::IsAborted() ?
+  inline bool IsAborted() const {
+    return mMaintenance->IsAborted() || mAborted ||
+           NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread());
+  }
+
   NS_DECL_NSIRUNNABLE
-};
-
-class MOZ_STACK_CLASS DatabaseMaintenance::AutoProgressHandler final
-    : public mozIStorageProgressHandler {
-  Maintenance* mMaintenance;
-  LazyInitializedOnce<const NotNull<mozIStorageConnection*>> mConnection;
-
-  NS_DECL_OWNINGTHREAD
-
-#ifdef DEBUG
-  // This class is stack-based so we never actually allow AddRef/Release to do
-  // anything. But we need to know if any consumer *thinks* that they have a
-  // reference to this object so we track the reference countin DEBUG builds.
-  nsrefcnt mDEBUGRefCnt;
-#endif
-
- public:
-  explicit AutoProgressHandler(Maintenance* aMaintenance)
-      : mMaintenance(aMaintenance),
-        mConnection()
-#ifdef DEBUG
-        ,
-        mDEBUGRefCnt(0)
-#endif
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(!IsOnBackgroundThread());
-    NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
-    MOZ_ASSERT(aMaintenance);
-  }
-
-  ~AutoProgressHandler() {
-    NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
-
-    if (mConnection) {
-      Unregister();
-    }
-
-    MOZ_ASSERT(!mDEBUGRefCnt);
-  }
-
-  nsresult Register(NotNull<mozIStorageConnection*> aConnection);
-
-  // We don't want the mRefCnt member but this class does not "inherit"
-  // nsISupports.
-  NS_DECL_ISUPPORTS_INHERITED
-
- private:
-  void Unregister();
-
-  NS_DECL_MOZISTORAGEPROGRESSHANDLER
-
-  // Not available for the heap!
-  void* operator new(size_t) = delete;
-  void* operator new[](size_t) = delete;
-  void operator delete(void*) = delete;
-  void operator delete[](void*) = delete;
 };
 
 #ifdef DEBUG
@@ -12479,6 +12431,8 @@ void QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId) {
 void QuotaClient::AbortAllOperations() {
   AssertIsOnBackgroundThread();
 
+  AbortAllMaintenances();
+
   InvalidateLiveDatabasesMatching([](const auto&) { return true; });
 }
 
@@ -12498,13 +12452,7 @@ void QuotaClient::StartIdleMaintenance() {
 void QuotaClient::StopIdleMaintenance() {
   AssertIsOnBackgroundThread();
 
-  if (mCurrentMaintenance) {
-    mCurrentMaintenance->Abort();
-  }
-
-  for (const auto& maintenance : mMaintenanceQueue) {
-    maintenance->Abort();
-  }
+  AbortAllMaintenances();
 }
 
 void QuotaClient::InitiateShutdown() {
@@ -12626,6 +12574,16 @@ void QuotaClient::DeleteTimerCallback(nsITimer* aTimer, void* aClosure) {
   }
 
   self->mPendingDeleteInfos.Clear();
+}
+
+void QuotaClient::AbortAllMaintenances() {
+  if (mCurrentMaintenance) {
+    mCurrentMaintenance->Abort();
+  }
+
+  for (const auto& maintenance : mMaintenanceQueue) {
+    maintenance->Abort();
+  }
 }
 
 Result<nsCOMPtr<nsIFile>, nsresult> QuotaClient::GetDirectory(
@@ -12855,6 +12813,20 @@ void DeleteFilesRunnable::DirectoryLockFailed() {
   MOZ_ASSERT(!mDirectoryLock);
 
   Finish();
+}
+
+void Maintenance::Abort() {
+  AssertIsOnBackgroundThread();
+
+  // Safe because mDatabaseMaintenances is modified
+  // only in the background thread
+  for (const auto& aDatabaseMaintenance : mDatabaseMaintenances) {
+    aDatabaseMaintenance.GetData()->Abort();
+  }
+
+  // mDirectoryLock must be cleared before transition to finished state
+  mDirectoryLock = nullptr;
+  mAborted = true;
 }
 
 void Maintenance::RegisterDatabaseMaintenance(
@@ -13487,6 +13459,31 @@ void DatabaseMaintenance::Stringify(nsACString& aResult) const {
   aResult.AppendInt((PR_Now() - mMaintenance->StartTime()) / PR_USEC_PER_MSEC);
 }
 
+nsresult DatabaseMaintenance::Abort() {
+  AssertIsOnBackgroundThread();
+
+  // StopIdleMaintenance and AbortAllOperations may request abort independently
+  if (!mAborted.compareExchange(false, true)) {
+    return NS_OK;
+  }
+
+  {
+    auto shardStorageConnectionLocked = mSharedStorageConnection.Lock();
+    if (nsCOMPtr<mozIStorageConnection> connection =
+            *shardStorageConnectionLocked) {
+      QM_TRY(MOZ_TO_RESULT(connection->Interrupt()));
+    }
+  }
+
+  // mDirectoryLock must not be released here - otherwise QuotaVFS of storage
+  // emits a crash to disallow getting a quota object for an unregistered
+  // directory lock when connection is closed.
+  // mDirectoryLock will be dropped by RunOnOwningThread in a timely fashion
+  // after the interrupted maintenance completes.
+
+  return NS_OK;
+}
+
 void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
@@ -13497,19 +13494,7 @@ void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
   MOZ_ASSERT(!mOriginMetadata.mGroup.IsEmpty());
   MOZ_ASSERT(!mOriginMetadata.mOrigin.IsEmpty());
 
-  class MOZ_STACK_CLASS AutoClose final {
-    NotNull<nsCOMPtr<mozIStorageConnection>> mConnection;
-
-   public:
-    explicit AutoClose(
-        MovingNotNull<nsCOMPtr<mozIStorageConnection>> aConnection)
-        : mConnection(std::move(aConnection)) {}
-
-    ~AutoClose() { MOZ_ALWAYS_SUCCEEDS(mConnection->Close()); }
-  };
-
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
-      mMaintenance->IsAborted()) {
+  if (NS_WARN_IF(IsAborted())) {
     return;
   }
 
@@ -13522,32 +13507,30 @@ void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
                            TelemetryIdForFile(databaseFile), mMaybeKey),
       QM_VOID);
 
-  AutoClose autoClose(connection);
+  auto autoClearConnection = MakeScopeExit([&]() {
+    auto sharedStorageConnectionLocked = mSharedStorageConnection.Lock();
+    sharedStorageConnectionLocked.ref() = nullptr;
+    connection->Close();
+  });
 
-  AutoProgressHandler progressHandler(mMaintenance);
-  if (NS_WARN_IF(NS_FAILED(progressHandler.Register(connection)))) {
-    return;
+  {
+    auto sharedStorageConnectionLocked = mSharedStorageConnection.Lock();
+    sharedStorageConnectionLocked.ref() = connection;
   }
 
-  bool databaseIsOk;
-  nsresult rv = CheckIntegrity(*connection, &databaseIsOk);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  auto databaseIsOk = false;
+  QM_TRY(MOZ_TO_RESULT(CheckIntegrity(*connection, &databaseIsOk)), QM_VOID);
 
-  if (NS_WARN_IF(!databaseIsOk)) {
+  QM_TRY(OkIf(databaseIsOk), QM_VOID, [](auto result) {
     // XXX Handle this somehow! Probably need to clear all storage for the
-    //     origin. Needs followup.
+    //     origin. See Bug 1760612.
     MOZ_ASSERT(false, "Database corruption detected!");
-    return;
-  }
+  });
 
   MaintenanceAction maintenanceAction;
-  rv =
-      DetermineMaintenanceAction(*connection, databaseFile, &maintenanceAction);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
+  QM_TRY(MOZ_TO_RESULT(DetermineMaintenanceAction(*connection, databaseFile,
+                                                  &maintenanceAction)),
+         QM_VOID);
 
   switch (maintenanceAction) {
     case MaintenanceAction::Nothing:
@@ -13572,8 +13555,7 @@ nsresult DatabaseMaintenance::CheckIntegrity(mozIStorageConnection& aConnection,
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aOk);
 
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
-      mMaintenance->IsAborted()) {
+  if (NS_WARN_IF(IsAborted())) {
     return NS_ERROR_ABORT;
   }
 
@@ -13636,8 +13618,7 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
   MOZ_ASSERT(aDatabaseFile);
   MOZ_ASSERT(aMaintenanceAction);
 
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
-      mMaintenance->IsAborted()) {
+  if (NS_WARN_IF(IsAborted())) {
     return NS_ERROR_ABORT;
   }
 
@@ -13778,8 +13759,7 @@ void DatabaseMaintenance::IncrementalVacuum(
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
 
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
-      mMaintenance->IsAborted()) {
+  if (NS_WARN_IF(IsAborted())) {
     return;
   }
 
@@ -13795,8 +13775,7 @@ void DatabaseMaintenance::FullVacuum(mozIStorageConnection& aConnection,
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aDatabaseFile);
 
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
-      mMaintenance->IsAborted()) {
+  if (NS_WARN_IF(IsAborted())) {
     return;
   }
 
@@ -13858,77 +13837,6 @@ DatabaseMaintenance::Run() {
   } else {
     RunOnConnectionThread();
   }
-
-  return NS_OK;
-}
-
-nsresult DatabaseMaintenance::AutoProgressHandler::Register(
-    NotNull<mozIStorageConnection*> aConnection) {
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(!IsOnBackgroundThread());
-
-  // We want to quickly bail out of any operation if the user becomes active, so
-  // use a small granularity here since database performance isn't critical.
-  static const int32_t kProgressGranularity = 50;
-
-  nsCOMPtr<mozIStorageProgressHandler> oldHandler;
-  nsresult rv = aConnection->SetProgressHandler(kProgressGranularity, this,
-                                                getter_AddRefs(oldHandler));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  MOZ_ASSERT(!oldHandler);
-  mConnection.init(aConnection);
-
-  return NS_OK;
-}
-
-void DatabaseMaintenance::AutoProgressHandler::Unregister() {
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(mConnection);
-
-  nsCOMPtr<mozIStorageProgressHandler> oldHandler;
-  nsresult rv =
-      mConnection->get()->RemoveProgressHandler(getter_AddRefs(oldHandler));
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-
-  MOZ_ASSERT_IF(NS_SUCCEEDED(rv), oldHandler == this);
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-DatabaseMaintenance::AutoProgressHandler::AddRef() {
-  NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
-
-#ifdef DEBUG
-  mDEBUGRefCnt++;
-#endif
-  return 2;
-}
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-DatabaseMaintenance::AutoProgressHandler::Release() {
-  NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
-
-#ifdef DEBUG
-  mDEBUGRefCnt--;
-#endif
-  return 1;
-}
-
-NS_IMPL_QUERY_INTERFACE(DatabaseMaintenance::AutoProgressHandler,
-                        mozIStorageProgressHandler)
-
-NS_IMETHODIMP
-DatabaseMaintenance::AutoProgressHandler::OnProgress(
-    mozIStorageConnection* aConnection, bool* _retval) {
-  NS_ASSERT_OWNINGTHREAD(DatabaseMaintenance::AutoProgressHandler);
-  MOZ_ASSERT(*mConnection == aConnection);
-  MOZ_ASSERT(_retval);
-
-  *_retval = QuotaClient::IsShuttingDownOnNonBackgroundThread() ||
-             mMaintenance->IsAborted();
 
   return NS_OK;
 }
