@@ -50,6 +50,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
+#include "mozilla/StaticPrefs_plugin.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_zoom.h"
 
