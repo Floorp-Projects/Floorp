@@ -10,6 +10,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   L10nCache: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
@@ -1761,7 +1763,9 @@ export class UrlbarView {
       default:
         if (result.heuristic && !result.payload.title) {
           isVisitAction = true;
-        } else if (result.providerName != "UrlbarProviderQuickSuggest") {
+        } else if (
+          result.providerName != lazy.UrlbarProviderQuickSuggest.name
+        ) {
           setURL = true;
         }
         break;
@@ -1796,7 +1800,7 @@ export class UrlbarView {
     }
 
     if (
-      result.providerName == "UrlbarProviderQuickSuggest" &&
+      result.providerName == lazy.UrlbarProviderQuickSuggest.name &&
       result.payload.isSponsored
     ) {
       item.toggleAttribute("firefox-suggest-sponsored", true);
@@ -2114,6 +2118,10 @@ export class UrlbarView {
 
     if (!this.#queryContext?.searchString || row.result.heuristic) {
       return null;
+    }
+
+    if (row.result.providerName == lazy.UrlbarProviderQuickSuggest.name) {
+      return { id: "urlbar-group-firefox-suggest" };
     }
 
     switch (row.result.type) {
