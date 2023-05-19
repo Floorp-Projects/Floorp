@@ -487,7 +487,7 @@ var TPS = {
         switch (action) {
           case ACTION_ADD:
             lazy.Logger.AssertTrue(
-              passwordOb.Create() > -1,
+              (await passwordOb.Create()) > -1,
               "error adding password"
             );
             break;
