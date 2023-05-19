@@ -321,6 +321,7 @@ class alignas(TypicalCacheLineSize) GCMarker {
 
   bool isDrained() const { return stack.isEmpty() && otherStack.isEmpty(); }
 
+  bool hasEntriesForCurrentColor() { return stack.hasEntries(); }
   bool hasBlackEntries() const { return hasEntries(gc::MarkColor::Black); }
   bool hasGrayEntries() const { return hasEntries(gc::MarkColor::Gray); }
   bool hasEntries(gc::MarkColor color) const;
@@ -366,8 +367,6 @@ class alignas(TypicalCacheLineSize) GCMarker {
 
   template <uint32_t markingOptions, gc::MarkColor>
   bool markOneColor(SliceBudget& budget);
-  template <gc::MarkColor>
-  bool markOneColorInParallel(SliceBudget& budget);
 
   static void moveWork(GCMarker* dst, GCMarker* src);
 
