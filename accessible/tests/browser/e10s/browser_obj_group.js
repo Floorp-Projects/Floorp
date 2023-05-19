@@ -57,9 +57,9 @@ addAccessibleTask(
     testGroupAttrs(getAcc("select2_opt2"), 2, 2, 2);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -110,9 +110,9 @@ addAccessibleTask(
     testGroupAttrs(getAcc("radio7"), 0, 0);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -232,9 +232,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("aria-list_3"), 2, true);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -272,9 +272,9 @@ addAccessibleTask(
     todoAttr(getAcc("menu"), "child-item-count", "5");
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -297,9 +297,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("tablist_1"), 3, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -322,9 +322,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("rg1"), 3, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -422,9 +422,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("tree_3"), 2, true);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );

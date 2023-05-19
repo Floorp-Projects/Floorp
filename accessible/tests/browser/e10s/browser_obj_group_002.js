@@ -33,9 +33,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("grid"), 2, false, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -77,9 +77,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("treegrid_row1"), 4, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -110,9 +110,9 @@ addAccessibleTask(
     testAbsentAttrs(getAcc("headings"), { "child-item-count": "", tree: "" });
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -136,9 +136,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("combo1"), 4, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -163,9 +163,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("table_row"), 4, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -191,9 +191,9 @@ addAccessibleTask(
     testGroupAttrs(getAcc("wrapped_row_2"), 2, 2, null);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -215,9 +215,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("aria-list_4"), 3, false);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -257,9 +257,9 @@ addAccessibleTask(
     testGroupAttrs(getAcc("comm_nested_3"), 3, 3, 1);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -286,9 +286,9 @@ addAccessibleTask(
     testGroupParentAttrs(getAcc("tree4"), 1, true);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -357,9 +357,9 @@ addAccessibleTask(
     testGroupAttrs(getAcc("r2"), 2, 2, 0);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
@@ -382,9 +382,9 @@ addAccessibleTask(
     testGroupAttrs(getAcc("ti2"), 1, 1, 1);
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );

@@ -59,9 +59,9 @@ The only thing I found in the fridge was a dead dove in a bag.
     );
   },
   {
-    topLevel: !isWinNoCache,
-    iframe: !isWinNoCache,
-    remoteIframe: !isWinNoCache,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
     chrome: true,
   }
 );
