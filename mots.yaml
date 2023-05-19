@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-05-08T10:19:39.816442'
+updated_at: '2023-05-18T13:14:57.659022'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -744,6 +744,10 @@ people:
     bmo_id: 697976
     name: ''
     nick: nkulatova
+  - &nlapre
+    bmo_id: 711793
+    name: Nathan LaPré
+    nick: nlapre
   - &nohlmeier
     bmo_id: 499343
     name: ''
@@ -1050,6 +1054,7 @@ modules:
         - Ginn Chen
         - Yan Evan
         - Yura Zenevich
+        - *MarcoZ
       group: dev-accessibility
       url: https://developer.mozilla.org/docs/Web/Accessibility
       components:
@@ -1058,8 +1063,8 @@ modules:
       - *Jamie
     peers:
       - *eeejay
-      - *MarcoZ
       - *morgan
+      - *nlapre
     machine_name: core_accessibility
 
   - name: 'Core: Animation'
@@ -4088,5 +4093,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 744d9670bbabb63a47b90e323e7bfd7b257d2975
-  export: 2ab8326405a3e9fd5ed2519554d6df2aaa95a57e
+  config: f059c3a6184630098e185576137541bda3a4533a
+  export: 344e67b2da67e3431d33f0bfb4dd7deba8f26a4f
