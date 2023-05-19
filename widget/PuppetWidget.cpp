@@ -789,8 +789,7 @@ nsresult PuppetWidget::NotifyIMEOfCompositionUpdate(
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_WARN_IF(
-          !mContentCache.CacheCaretAndTextRects(this, &aIMENotification))) {
+  if (NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
   mBrowserChild->SendNotifyIMECompositionUpdate(mContentCache,
@@ -837,13 +836,7 @@ nsresult PuppetWidget::NotifyIMEOfSelectionChange(
 
   // Note that selection change must be notified after text change if it occurs.
   // Therefore, we don't need to query text content again here.
-  if (MOZ_UNLIKELY(!mContentCache.SetSelection(
-          this, aIMENotification.mSelectionChangeData))) {
-    // If there is no text cache yet, caching text will cache selection too.
-    // Therefore, in the case, we don't need to notify IME of selection change
-    // right now.
-    return NS_OK;
-  }
+  mContentCache.SetSelection(this, aIMENotification.mSelectionChangeData);
 
   mBrowserChild->SendNotifyIMESelection(mContentCache, aIMENotification);
 
@@ -876,8 +869,7 @@ nsresult PuppetWidget::NotifyIMEOfPositionChange(
   if (NS_WARN_IF(!mContentCache.CacheEditorRect(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
-  if (NS_WARN_IF(
-          !mContentCache.CacheCaretAndTextRects(this, &aIMENotification))) {
+  if (NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
   if (mIMENotificationRequestsOfParent.WantPositionChanged()) {
