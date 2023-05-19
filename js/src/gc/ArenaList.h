@@ -21,6 +21,7 @@ namespace js {
 
 class Nursery;
 class SliceBudget;
+class TenuringTracer;
 
 namespace gcstats {
 struct Statistics;
@@ -33,7 +34,6 @@ class BackgroundUnmarkTask;
 struct FinalizePhase;
 class FreeSpan;
 class TenuredCell;
-class TenuringTracer;
 
 /*
  * A single segment of a SortedArenaList. Each segment has a head and a tail,
@@ -377,7 +377,7 @@ class ArenaLists {
   friend class BackgroundUnmarkTask;
   friend class GCRuntime;
   friend class js::Nursery;
-  friend class TenuringTracer;
+  friend class js::TenuringTracer;
 };
 
 } /* namespace gc */

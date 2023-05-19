@@ -128,13 +128,9 @@ class NativeShape;
 class Shape;
 class PropertyIteratorObject;
 
-namespace gc {
-class TenuringTracer;
-}  // namespace gc
-
 namespace wasm {
 class RecGroup;
-}  // namespace wasm
+};
 
 // Hash policy for ShapeCachePtr's ShapeSetForAdd. Maps the new property key and
 // flags to the new shape.
@@ -233,6 +229,8 @@ class ShapeCachePtr {
   friend class js::jit::MacroAssembler;
 } JS_HAZ_GC_POINTER;
 
+class TenuringTracer;
+
 // BaseShapes store the object's class, realm and prototype. BaseShapes are
 // immutable tuples stored in a per-Zone hash table.
 class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
@@ -307,9 +305,9 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   friend class NativeObject;
   friend class SharedShape;
   friend class PropertyTree;
-  friend class gc::TenuringTracer;
+  friend class TenuringTracer;
   friend class JS::ubi::Concrete<Shape>;
-  friend class gc::RelocationOverlay;
+  friend class js::gc::RelocationOverlay;
 
  public:
   // Base shape, stored in the cell header.

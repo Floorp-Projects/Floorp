@@ -31,7 +31,6 @@
 namespace js {
 
 class ArrayObject;
-class PlainObject;
 class RegExpRealm;
 class RegExpShared;
 class RegExpStatics;

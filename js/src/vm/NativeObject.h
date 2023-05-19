@@ -31,10 +31,7 @@
 namespace js {
 
 class PropertyResult;
-
-namespace gc {
 class TenuringTracer;
-}  // namespace gc
 
 #ifdef ENABLE_RECORD_TUPLE
 // Defined in vm/RecordTupleShared.{h,cpp}. We cannot include that file
@@ -255,7 +252,7 @@ class ObjectElements {
   friend class ::JSObject;
   friend class ArrayObject;
   friend class NativeObject;
-  friend class gc::TenuringTracer;
+  friend class TenuringTracer;
 #ifdef ENABLE_RECORD_TUPLE
   friend class TupleType;
 #endif
@@ -753,7 +750,7 @@ class NativeObject : public JSObject {
 
   inline void setDictionaryModeSlotSpan(uint32_t span);
 
-  friend class gc::TenuringTracer;
+  friend class TenuringTracer;
 
   // Given a slot range from |start| to |end| exclusive, call |fun| with
   // pointers to the corresponding fixed slot and/or dynamic slot ranges.
