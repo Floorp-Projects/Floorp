@@ -2219,10 +2219,10 @@ describe("Top Sites Feed", () => {
       assert.equal(feed._contile.sites[1].url, "https://test1.com");
     });
 
-    it("should still return two tiles when Contile provides more than 2 tiles", async () => {
+    it("should still return two tiles with replacement if the Nimbus variable was unset", async () => {
       fakeNimbusFeatures.newtab.getVariable.reset();
       fakeNimbusFeatures.newtab.getVariable.onCall(0).returns(true);
-      fakeNimbusFeatures.newtab.getVariable.onCall(1).returns(null);
+      fakeNimbusFeatures.newtab.getVariable.onCall(1).returns(undefined);
       fetchStub.resolves({
         ok: true,
         status: 200,
@@ -2237,18 +2237,18 @@ describe("Top Sites Feed", () => {
                 name: "test",
               },
               {
+                url: "https://foo.com",
+                image_url: "images/foo-com.png",
+                click_url: "https://www.foo-click.com",
+                impression_url: "https://www.foo-impression.com",
+                name: "foo",
+              },
+              {
                 url: "https://test1.com",
                 image_url: "images/test1-com.png",
                 click_url: "https://www.test1-click.com",
                 impression_url: "https://www.test1-impression.com",
                 name: "test1",
-              },
-              {
-                url: "https://test2.com",
-                image_url: "images/test2-com.png",
-                click_url: "https://www.test2-click.com",
-                impression_url: "https://www.test2-impression.com",
-                name: "test2",
               },
             ],
           }),
