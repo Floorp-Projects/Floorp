@@ -962,6 +962,10 @@ class PlacesToolbar extends PlacesViewBase {
   _openedMenuButton = null;
   _allowPopupShowing = true;
 
+  promiseRebuilt() {
+    return this._rebuilding?.promise;
+  }
+
   get _isAlive() {
     return this._resultNode && this._rootElt;
   }
@@ -1036,12 +1040,12 @@ class PlacesToolbar extends PlacesViewBase {
       for (let i = startIndex; i < limit; ++i) {
         this._insertNewItem(this._resultNode.getChild(i), fragment);
       }
-      window.requestAnimationFrame(() => {
-        if (this._isAlive) {
-          this._rootElt.appendChild(fragment);
-          this.updateNodesVisibility();
-        }
-      });
+      await new Promise(resolve => window.requestAnimationFrame(resolve));
+      if (!this._isAlive) {
+        return;
+      }
+      this._rootElt.appendChild(fragment);
+      this.updateNodesVisibility();
     }
 
     if (this._chevronPopup.hasAttribute("type")) {
@@ -1055,7 +1059,7 @@ class PlacesToolbar extends PlacesViewBase {
     let otherBookmarks = document.getElementById("OtherBookmarks");
     otherBookmarks?.remove();
 
-    BookmarkingUI.maybeShowOtherBookmarksFolder();
+    BookmarkingUI.maybeShowOtherBookmarksFolder().catch(console.error);
   }
 
   _insertNewItem(aChild, aInsertionNode, aBefore = null) {
@@ -1494,7 +1498,18 @@ class PlacesToolbar extends PlacesViewBase {
 
     if (elt == this._rootElt) {
       // Container is the toolbar itself.
-      this._rebuild().catch(console.error);
+      let instance = (this._rebuildingInstance = {});
+      if (!this._rebuilding) {
+        this._rebuilding = PromiseUtils.defer();
+      }
+      this._rebuild()
+        .catch(console.error)
+        .finally(() => {
+          if (instance == this._rebuildingInstance) {
+            this._rebuilding.resolve();
+            this._rebuilding = null;
+          }
+        });
       return;
     }
 

@@ -1520,7 +1520,7 @@ export var Bookmarks = Object.freeze({
       behavior
     );
 
-    return (async function() {
+    return (async () => {
       let results;
       if (fetchInfo.hasOwnProperty("url")) {
         results = await fetchBookmarksByURL(fetchInfo, options);
@@ -1546,7 +1546,12 @@ export var Bookmarks = Object.freeze({
         results = [results];
       }
       // Remove non-enumerable properties.
-      results = results.map(r => Object.assign({}, r));
+      results = results.map(r => {
+        if (r.type == this.TYPE_FOLDER) {
+          r.childCount = r._childCount;
+        }
+        return Object.assign({}, r);
+      });
 
       if (options.includePath) {
         for (let result of results) {
@@ -2454,7 +2459,7 @@ async function fetchBookmarksByGUIDPrefix(info, options = {}) {
       `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
               b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
               h.url AS url, b.id AS _id, b.parent AS _parentId,
-              NULL AS _childCount,
+              (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus
        FROM moz_bookmarks b
        LEFT JOIN moz_bookmarks p ON p.id = b.parent
@@ -2527,7 +2532,7 @@ async function fetchBookmarksByParentGUID(info, options = {}) {
               h.url AS url,
               NULL AS _id,
               NULL AS _parentId,
-              NULL AS _childCount,
+              (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
               NULL AS _grandParentId,
               NULL AS _syncStatus
        FROM moz_bookmarks b

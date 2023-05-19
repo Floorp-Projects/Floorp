@@ -178,6 +178,7 @@ add_task(async function fetch_bookmark() {
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
   Assert.equal(bm2.url.href, "http://example.com/");
   Assert.equal(bm2.title, "a bookmark");
+  Assert.strictEqual(bm2.childCount, undefined);
 
   await PlacesUtils.bookmarks.remove(bm1.guid);
 });
@@ -208,14 +209,27 @@ add_task(async function fetch_folder() {
     title: "a folder",
   });
   checkBookmarkObject(bm1);
+  Assert.deepEqual(bm1.dateAdded, bm1.lastModified);
+
+  // Inserting a child updates both the childCount and lastModified of bm1,
+  // though the bm1 object is static once fetched, thus later we'll manually
+  // update it.
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: bm1.guid,
+    url: "https://www.mozilla.org/",
+    title: "",
+  });
 
   let bm2 = await PlacesUtils.bookmarks.fetch(bm1.guid);
   checkBookmarkObject(bm2);
 
+  Assert.equal(bm2.childCount, 1);
+  bm1.childCount = bm2.childCount;
+  bm1.lastModified = bm2.lastModified;
+
   Assert.deepEqual(bm1, bm2);
   Assert.equal(bm2.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
   Assert.equal(bm2.index, 0);
-  Assert.deepEqual(bm2.dateAdded, bm2.lastModified);
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_FOLDER);
   Assert.equal(bm2.title, "a folder");
   Assert.ok(!("url" in bm2));
@@ -233,6 +247,11 @@ add_task(async function fetch_folder_empty_title() {
 
   let bm2 = await PlacesUtils.bookmarks.fetch(bm1.guid);
   checkBookmarkObject(bm2);
+
+  Assert.equal(bm2.childCount, 0);
+  // Insert doesn't populate childCount (it would always be 0 anyway), so set
+  // it to be able to just use deepEqual.
+  bm1.childCount = bm2.childCount;
 
   Assert.deepEqual(bm1, bm2);
   Assert.equal(bm2.index, 0);
@@ -289,6 +308,11 @@ add_task(async function fetch_byguid_prefix() {
     guid: PlacesUtils.generateGuidWithPrefix(PREFIX),
     title: "a folder",
   });
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: bm3.guid,
+    url: "https://www.mozilla.org/",
+    title: "",
+  });
   checkBookmarkObject(bm3);
   Assert.ok(bm3.guid.startsWith(PREFIX));
 
@@ -312,7 +336,12 @@ add_task(async function fetch_byguid_prefix() {
   // inserted is the last one in the returned array.
   Assert.deepEqual(bm1, gAccumulator.results[2]);
   Assert.deepEqual(bm2, gAccumulator.results[1]);
+  Assert.equal(gAccumulator.results[0].childCount, 1);
+  bm3.childCount = gAccumulator.results[0].childCount;
+  bm3.lastModified = gAccumulator.results[0].lastModified;
   Assert.deepEqual(bm3, gAccumulator.results[0]);
+
+  Assert.equal(bm3.childCount, 1);
 
   await PlacesUtils.bookmarks.remove(bm1);
   await PlacesUtils.bookmarks.remove(bm2);
@@ -525,11 +554,16 @@ add_task(async function fetch_by_parent() {
 
   let bm3 = await PlacesUtils.bookmarks.insert({
     parentGuid: folder1.guid,
-    url: "http://bm3.example.com/",
-    title: "bookmark 3",
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "sub folder",
     index: 0,
   });
   checkBookmarkObject(bm2);
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: bm3.guid,
+    url: "http://mozilla.org/",
+    title: "sub bookmark",
+  });
 
   await PlacesUtils.bookmarks.fetch(
     { parentGuid: folder1.guid },
@@ -538,7 +572,10 @@ add_task(async function fetch_by_parent() {
 
   Assert.equal(gAccumulator.results.length, 3);
 
-  Assert.equal(bm3.url.href, gAccumulator.results[0].url.href);
+  Assert.equal(gAccumulator.results[0].childCount, 1);
+  bm3.childCount = gAccumulator.results[0].childCount;
+  bm3.lastModified = gAccumulator.results[0].lastModified;
+  Assert.deepEqual(bm3, gAccumulator.results[0]);
   Assert.equal(bm1.url.href, gAccumulator.results[1].url.href);
   Assert.equal(bm2.url.href, gAccumulator.results[2].url.href);
 

@@ -96,10 +96,16 @@ add_task(async function test() {
   }
 
   info("Move of existing bookmark / bookmarklet on toolbar");
-  //clean previous bookmarks to ensure right ids count
+  // Clean previous bookmarks to ensure right ids count.
   await PlacesUtils.bookmarks.eraseEverything();
 
-  info("Insert list of bookamrks to have bookamrks (ids) for moving");
+  info("Insert list of bookamrks to have bookmarks (ids) for moving");
+  // Ensure bookmarks are visible on the toolbar.
+  let promiseBookmarksOnToolbar = BrowserTestUtils.waitForMutationCondition(
+    placesItems,
+    { childList: true },
+    () => placesItems.childNodes.length == 3
+  );
   bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.toolbarGuid,
     children: [
@@ -117,6 +123,7 @@ add_task(async function test() {
       },
     ],
   });
+  await promiseBookmarksOnToolbar;
 
   let spy = sandbox
     .stub(PlacesUIUtils, "showBookmarkDialog")
@@ -136,7 +143,7 @@ add_task(async function test() {
   );
 
   EventUtils.synthesizeDrop(
-    toolbar,
+    placesItems,
     placesItems.childNodes[0],
     [
       [
