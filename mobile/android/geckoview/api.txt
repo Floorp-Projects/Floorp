@@ -1001,6 +1001,7 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.ContentDelegate.ContextElement {
+    ctor protected ContextElement(@Nullable String, @Nullable String, @Nullable String, @Nullable String, @NonNull String, @Nullable String, @Nullable String);
     ctor protected ContextElement(@Nullable String, @Nullable String, @Nullable String, @Nullable String, @NonNull String, @Nullable String);
     field public static final int TYPE_AUDIO = 3;
     field public static final int TYPE_IMAGE = 1;
@@ -1010,6 +1011,7 @@ package org.mozilla.geckoview {
     field @Nullable public final String baseUri;
     field @Nullable public final String linkUri;
     field @Nullable public final String srcUri;
+    field @Nullable public final String textContent;
     field @Nullable public final String title;
     field public final int type;
   }
