@@ -63,6 +63,30 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         composeTestRule.emptyPrivateTabsList().assertExists()
     }
 
+    fun verifyAccountSettingsButton() {
+        composeTestRule.dropdownMenuItemAccountSettings().assertExists()
+    }
+
+    fun verifyCloseAllTabsButton() {
+        composeTestRule.dropdownMenuItemCloseAllTabs().assertExists()
+    }
+
+    fun verifySelectTabsButton() {
+        composeTestRule.dropdownMenuItemSelectTabs().assertExists()
+    }
+
+    fun verifyShareAllTabsButton() {
+        composeTestRule.dropdownMenuItemShareAllTabs().assertExists()
+    }
+
+    fun verifyRecentlyClosedTabsButton() {
+        composeTestRule.dropdownMenuItemRecentlyClosedTabs().assertExists()
+    }
+
+    fun verifyTabSettingsButton() {
+        composeTestRule.dropdownMenuItemTabSettings().assertExists()
+    }
+
     /**
      * Closes a tab when there is only one tab open.
      */
@@ -95,6 +119,18 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
             composeTestRule.privateBrowsingButton().performClick()
             ComposeTabDrawerRobot(composeTestRule).interact()
             return Transition(composeTestRule)
+        }
+
+        fun openThreeDotMenu(interact: ComposeTabDrawerRobot.() -> Unit): Transition {
+            composeTestRule.threeDotButton().performClick()
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return Transition(composeTestRule)
+        }
+
+        fun closeAllTabs(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            composeTestRule.dropdownMenuItemCloseAllTabs().performClick()
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
         }
     }
 }
@@ -148,3 +184,38 @@ private fun ComposeTestRule.emptyPrivateTabsList() = onNodeWithTag(TabsTrayTestT
  * Obtains an open tab's close button when there's only one tab open.
  */
 private fun ComposeTestRule.closeTabButton() = onNodeWithTag(TabsTrayTestTag.tabItemClose)
+
+/**
+ * Obtains the three dot button in the Tabs Tray banner.
+ */
+private fun ComposeTestRule.threeDotButton() = onNodeWithTag(TabsTrayTestTag.threeDotButton)
+
+/**
+ * Obtains the dropdown menu item to access account settings.
+ */
+private fun ComposeTestRule.dropdownMenuItemAccountSettings() = onNodeWithTag(TabsTrayTestTag.accountSettings)
+
+/**
+ * Obtains the dropdown menu item to close all tabs.
+ */
+private fun ComposeTestRule.dropdownMenuItemCloseAllTabs() = onNodeWithTag(TabsTrayTestTag.closeAllTabs)
+
+/**
+ * Obtains the dropdown menu item to access recently closed tabs.
+ */
+private fun ComposeTestRule.dropdownMenuItemRecentlyClosedTabs() = onNodeWithTag(TabsTrayTestTag.recentlyClosedTabs)
+
+/**
+ * Obtains the dropdown menu item to select tabs.
+ */
+private fun ComposeTestRule.dropdownMenuItemSelectTabs() = onNodeWithTag(TabsTrayTestTag.selectTabs)
+
+/**
+ * Obtains the dropdown menu item to share all tabs.
+ */
+private fun ComposeTestRule.dropdownMenuItemShareAllTabs() = onNodeWithTag(TabsTrayTestTag.shareAllTabs)
+
+/**
+ * Obtains the dropdown menu item to access tab settings.
+ */
+private fun ComposeTestRule.dropdownMenuItemTabSettings() = onNodeWithTag(TabsTrayTestTag.tabSettings)

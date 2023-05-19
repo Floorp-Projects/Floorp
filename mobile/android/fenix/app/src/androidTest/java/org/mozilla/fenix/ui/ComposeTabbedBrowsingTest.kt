@@ -113,37 +113,35 @@ class ComposeTabbedBrowsingTest {
         }
     }
 
-    @Ignore("Being converted in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832606")
     @Test
     fun closeAllTabsTest() {
-//        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-//
-//        navigationToolbar {
-//        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-//        }.openTabDrawer {
-//            verifyExistingTabList()
-//        }.openTabsListThreeDotMenu {
-//            verifyCloseAllTabsButton()
-//            verifyShareTabButton()
-//            verifySelectTabs()
-//        }.closeAllTabs {
-//            verifyTabCounter("0")
-//        }
-//
-//        // Repeat for Private Tabs
-//        homeScreen {
-//        }.togglePrivateBrowsingMode()
-//
-//        navigationToolbar {
-//        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-//        }.openTabDrawer {
-//            verifyPrivateModeSelected()
-//            verifyExistingTabList()
-//        }.openTabsListThreeDotMenu {
-//            verifyCloseAllTabsButton()
-//        }.closeAllTabs {
-//            verifyTabCounter("0")
-//        }
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyNormalTabsList()
+        }.openThreeDotMenu {
+            verifyCloseAllTabsButton()
+            verifyShareAllTabsButton()
+            verifySelectTabsButton()
+        }.closeAllTabs {
+            verifyTabCounter("0")
+        }
+
+        // Repeat for Private Tabs
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyPrivateTabsList()
+        }.openThreeDotMenu {
+            verifyCloseAllTabsButton()
+        }.closeAllTabs {
+            verifyTabCounter("0")
+        }
     }
 
     @Ignore("Being converted in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832617")

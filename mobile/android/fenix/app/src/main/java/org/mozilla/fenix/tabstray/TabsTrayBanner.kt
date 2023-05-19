@@ -36,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -221,7 +220,9 @@ private fun SingleSelectBanner(
 
             IconButton(
                 onClick = { showMenu = true },
-                modifier = Modifier.align(Alignment.CenterVertically),
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .testTag(TabsTrayTestTag.threeDotButton),
             ) {
                 DropdownMenu(
                     menuItems = generateSingleSelectBannerMenuItems(
@@ -263,34 +264,34 @@ private fun generateSingleSelectBannerMenuItems(
     onAccountSettingsClick: () -> Unit,
 ): List<MenuItem> {
     val tabSettingsItem = MenuItem(
-        stringResource(id = R.string.tab_tray_menu_tab_settings),
-        colorResource(id = R.color.fx_mobile_text_color_primary),
-        onTabSettingsClick,
+        title = stringResource(id = R.string.tab_tray_menu_tab_settings),
+        testTag = TabsTrayTestTag.tabSettings,
+        onClick = onTabSettingsClick,
     )
     val recentlyClosedTabsItem = MenuItem(
-        stringResource(id = R.string.tab_tray_menu_recently_closed),
-        colorResource(id = R.color.fx_mobile_text_color_primary),
-        onRecentlyClosedClick,
+        title = stringResource(id = R.string.tab_tray_menu_recently_closed),
+        testTag = TabsTrayTestTag.recentlyClosedTabs,
+        onClick = onRecentlyClosedClick,
     )
     val enterSelectModeItem = MenuItem(
-        stringResource(id = R.string.tabs_tray_select_tabs),
-        colorResource(id = R.color.fx_mobile_text_color_primary),
-        onEnterMultiselectModeClick,
+        title = stringResource(id = R.string.tabs_tray_select_tabs),
+        testTag = TabsTrayTestTag.selectTabs,
+        onClick = onEnterMultiselectModeClick,
     )
     val shareAllTabsItem = MenuItem(
-        stringResource(id = R.string.tab_tray_menu_item_share),
-        colorResource(id = R.color.fx_mobile_text_color_primary),
-        onShareAllTabsClick,
+        title = stringResource(id = R.string.tab_tray_menu_item_share),
+        testTag = TabsTrayTestTag.shareAllTabs,
+        onClick = onShareAllTabsClick,
     )
     val deleteAllTabsItem = MenuItem(
-        stringResource(id = R.string.tab_tray_menu_item_close),
-        colorResource(id = R.color.fx_mobile_text_color_primary),
-        onDeleteAllTabsClick,
+        title = stringResource(id = R.string.tab_tray_menu_item_close),
+        testTag = TabsTrayTestTag.closeAllTabs,
+        onClick = onDeleteAllTabsClick,
     )
     val accountSettingsItem = MenuItem(
-        stringResource(id = R.string.tab_tray_menu_account_settings),
-        colorResource(id = R.color.fx_mobile_text_color_primary),
-        onAccountSettingsClick,
+        title = stringResource(id = R.string.tab_tray_menu_account_settings),
+        testTag = TabsTrayTestTag.accountSettings,
+        onClick = onAccountSettingsClick,
     )
     return when {
         selectedPage == Page.NormalTabs && normalTabCount == 0 ||

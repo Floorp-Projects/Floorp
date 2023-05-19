@@ -13,6 +13,16 @@ internal object TabsTrayTestTag {
     const val privateTabsPageButton = "$bannerTestTagRoot.privateTabsPageButton"
     const val syncedTabsPageButton = "$bannerTestTagRoot.syncedTabsPageButton"
 
+    // Tabs Tray Banner three dot menu
+    const val threeDotButton = "$bannerTestTagRoot.threeDotButton"
+
+    const val accountSettings = "$threeDotButton.accountSettings"
+    const val closeAllTabs = "$threeDotButton.closeAllTabs"
+    const val recentlyClosedTabs = "$threeDotButton.recentlyClosedTabs"
+    const val selectTabs = "$threeDotButton.selectTabs"
+    const val shareAllTabs = "$threeDotButton.shareAllTabs"
+    const val tabSettings = "$threeDotButton.tabSettings"
+
     // FAB
     const val fab = "$tabsTray.fab"
 

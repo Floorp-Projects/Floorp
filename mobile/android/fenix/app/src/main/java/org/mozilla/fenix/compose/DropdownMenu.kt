@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -54,6 +55,7 @@ fun DropdownMenu(
         ) {
             for (item in menuItems) {
                 DropdownMenuItem(
+                    modifier = Modifier.testTag(item.testTag),
                     onClick = {
                         onDismissRequest()
                         item.onClick()
@@ -79,11 +81,13 @@ fun DropdownMenu(
  *
  * @property title Text the item should display.
  * @property color Color used to display the text.
+ * @property testTag Tag used to identify the item in automated tests.
  * @property onClick Callback to be called when the item is clicked.
  */
 data class MenuItem(
     val title: String,
     val color: Color? = null,
+    val testTag: String = "",
     val onClick: () -> Unit,
 )
 
