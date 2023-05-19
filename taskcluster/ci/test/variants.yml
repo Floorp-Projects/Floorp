@@ -267,16 +267,6 @@ wmf-media-engine:
                 - "--setpref=media.wmf.media-engine.enabled=true"
                 - "--setpref=media.wmf.media-engine.channel-decoder.enabled=true"
 
-a11y-no-cache:
-    description: "{description} with accessibility cache disabled"
-    component: "Core::Disability Access APIs"
-    expiration: "2023-08-01"
-    suffix: "a11y-no-cache"
-    merge:
-        mozharness:
-            extra-options:
-                - "--setpref=accessibility.cache.enabled=false"
-
 msix:
     description: "{description} from msix packages"
     component: "Firefox:Installer"
