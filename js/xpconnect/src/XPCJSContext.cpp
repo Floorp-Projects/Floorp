@@ -952,7 +952,7 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
 #endif
 
 #if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64) && \
-    !defined(JS_CODEGEN_RISCV64)
+    !defined(JS_CODEGEN_RISCV64) && !defined(JS_CODEGEN_LOONG64)
   JS_SetGlobalJitCompilerOption(
       cx, JSJITCOMPILER_SPECTRE_INDEX_MASKING,
       StaticPrefs::javascript_options_spectre_index_masking_DoNotUseDirectly());
