@@ -31,8 +31,6 @@ import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import mozilla.components.browser.state.selector.normalTabs
-import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
@@ -122,10 +120,6 @@ fun TabsTray(
     onDeleteSelectedTabsClick: () -> Unit,
     onForceSelectedTabsAsInactiveClick: () -> Unit,
 ) {
-    val normalTabCount = browserStore
-        .observeAsComposableState { state -> state.normalTabs.size }.value ?: 0
-    val privateTabCount = browserStore
-        .observeAsComposableState { state -> state.privateTabs.size }.value ?: 0
     val multiselectMode = tabsTrayStore
         .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
     val selectedPage = tabsTrayStore
@@ -160,13 +154,9 @@ fun TabsTray(
     ) {
         Box(modifier = Modifier.nestedScroll(rememberNestedScrollInteropConnection())) {
             TabsTrayBanner(
-                selectMode = multiselectMode,
-                selectedPage = selectedPage,
-                normalTabCount = normalTabCount,
-                privateTabCount = privateTabCount,
+                tabsTrayStore = tabsTrayStore,
                 isInDebugMode = isInDebugMode,
                 onTabPageIndicatorClicked = onTabPageClick,
-                onExitSelectModeClick = { tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode) },
                 onSaveToCollectionClick = onSaveToCollectionClick,
                 onShareSelectedTabsClick = onShareSelectedTabsClick,
                 onEnterMultiselectModeClick = { tabsTrayStore.dispatch(TabsTrayAction.EnterSelectMode) },
