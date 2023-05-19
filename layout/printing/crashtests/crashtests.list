@@ -3,7 +3,7 @@ load 509839-2.html
 load 576878.xhtml
 asserts-if(Android,0-1) load 793844.html
 skip-if(Android) load 1662259.html
-skip-if(Android) load 1663722.html
+skip-if(Android) pref(dom.window.sizeToContent.enabled,true) load 1663722.html
 skip-if(Android) load 1671503.html
 load 1748277.html # Bug 1751260
 load 1758199-1.html
