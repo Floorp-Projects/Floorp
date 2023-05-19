@@ -41,15 +41,6 @@ AppleATDecoder::AppleATDecoder(const AudioInfo& aConfig)
     mFormatID = kAudioFormatMPEGLayer3;
   } else if (mConfig.mMimeType.EqualsLiteral("audio/mp4a-latm")) {
     mFormatID = kAudioFormatMPEG4AAC;
-    if (aConfig.mCodecSpecificConfig.is<AacCodecSpecificData>()) {
-      const AacCodecSpecificData& aacCodecSpecificData =
-          aConfig.mCodecSpecificConfig.as<AacCodecSpecificData>();
-      mEncoderDelay = aacCodecSpecificData.mEncoderDelayFrames;
-      mTotalMediaFrames = aacCodecSpecificData.mMediaFrameCount;
-      LOG("AppleATDecoder (aac), found encoder delay (%" PRIu32
-          ") and total frame count (%" PRIu64 ") in codec-specific side data",
-          mEncoderDelay, mTotalMediaFrames);
-    }
   } else {
     mFormatID = 0;
   }
@@ -181,8 +172,8 @@ static OSStatus _PassthroughInputDataCallback(
 RefPtr<MediaDataDecoder::DecodePromise> AppleATDecoder::Decode(
     MediaRawData* aSample) {
   MOZ_ASSERT(mThread->IsOnCurrentThread());
-  LOG("mp4 input sample pts=%s duration=%s %s %llu bytes audio",
-      aSample->mTime.ToString().get(), aSample->GetEndTime().ToString().get(),
+  LOG("mp4 input sample %p %lld us %lld pts%s %llu bytes audio", aSample,
+      aSample->mDuration.ToMicroseconds(), aSample->mTime.ToMicroseconds(),
       aSample->mKeyframe ? " keyframe" : "",
       (unsigned long long)aSample->Size());
 
@@ -219,9 +210,8 @@ MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
   nsTArray<AudioDataValue> outputData;
   UInt32 channels = mOutputFormat.mChannelsPerFrame;
   // Pick a multiple of the frame size close to a power of two
-  // for efficient allocation. We're mainly using this decoder to decode AAC,
-  // that has packets of 1024 audio frames.
-  const uint32_t MAX_AUDIO_FRAMES = 1024;
+  // for efficient allocation.
+  const uint32_t MAX_AUDIO_FRAMES = 128;
   const uint32_t maxDecodedSamples = MAX_AUDIO_FRAMES * channels;
 
   // Descriptions for _decompressed_ audio packets. ignored.
@@ -258,13 +248,12 @@ MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
       LOG("Error decoding audio sample: %d\n", static_cast<int>(rv));
       return MediaResult(
           NS_ERROR_DOM_MEDIA_DECODE_ERR,
-          RESULT_DETAIL("Error decoding audio sample: %d @ %s",
-                        static_cast<int>(rv), aSample->mTime.ToString().get()));
+          RESULT_DETAIL("Error decoding audio sample: %d @ %lld",
+                        static_cast<int>(rv), aSample->mTime.ToMicroseconds()));
     }
 
     if (numFrames) {
-      AudioDataValue* outputFrames = decoded.get();
-      outputData.AppendElements(outputFrames, numFrames * channels);
+      outputData.AppendElements(decoded.get(), numFrames * channels);
     }
 
     if (rv == kNoMoreDataErr) {
@@ -278,7 +267,7 @@ MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
 
   size_t numFrames = outputData.Length() / channels;
   int rate = mOutputFormat.mSampleRate;
-  media::TimeUnit duration(numFrames, rate);
+  media::TimeUnit duration = FramesToTimeUnit(numFrames, rate);
   if (!duration.IsValid()) {
     NS_WARNING("Invalid count of accumulated audio samples");
     return MediaResult(
@@ -288,9 +277,10 @@ MediaResult AppleATDecoder::DecodeSample(MediaRawData* aSample) {
             uint64_t(numFrames), rate));
   }
 
-  LOG("Decoded audio packet [%s, %s] (duration: %s)\n",
-      aSample->mTime.ToString().get(), aSample->GetEndTime().ToString().get(),
-      duration.ToString().get());
+#ifdef LOG_SAMPLE_DECODE
+  LOG("pushed audio at time %lfs; duration %lfs\n",
+      (double)aSample->mTime / USECS_PER_S, duration.ToSeconds());
+#endif
 
   AudioSampleBuffer data(outputData.Elements(), outputData.Length());
   if (!data.Data()) {

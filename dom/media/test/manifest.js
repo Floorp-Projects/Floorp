@@ -2126,19 +2126,6 @@ var gEMENonMSEFailTests = [
   },
 ];
 
-// Test files that are supposed to loop seamlessly when played back.
-var gSeamlessLoopingTests = [
-  // MP4 files dont't loop seamlessly yet, the seeking logic seeks to 0, not the
-  // actual first packet, resulting in incorrect decoding.
-  // See bug 1817989
-  // { name: "sin-441-1s-44100-fdk_aac.mp4", type: "audio/mp4" },
-  // { name: "sin-441-1s-44100-afconvert.mp4", type: "audio/mp4" },
-  // { name: "sin-441-1s-44100.ogg", type: "audio/vorbis" },
-  // { name: "sin-441-1s-44100.opus", type: "audio/opus" },
-  { name: "sin-441-1s-44100-lame.mp3", type: "audio/mpeg" },
-  { name: "sin-441-1s-44100.flac", type: "audio/flac" },
-];
-
 // These are files that are used for video decode suspend in
 // background tabs tests.
 var gDecodeSuspendTests = [

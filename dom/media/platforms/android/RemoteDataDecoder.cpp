@@ -83,7 +83,7 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
 
   class InputInfo {
    public:
-    InputInfo() = default;
+    InputInfo() {}
 
     InputInfo(const int64_t aDurationUs, const gfx::IntSize& aImageSize,
               const gfx::IntSize& aDisplaySize)
@@ -91,9 +91,9 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
           mImageSize(aImageSize),
           mDisplaySize(aDisplaySize) {}
 
-    int64_t mDurationUs = {};
-    gfx::IntSize mImageSize = {};
-    gfx::IntSize mDisplaySize = {};
+    int64_t mDurationUs;
+    gfx::IntSize mImageSize;
+    gfx::IntSize mDisplaySize;
   };
 
   class CallbacksSupport final : public JavaCallbacksSupport {
@@ -109,7 +109,7 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
                       java::SampleBuffer::Param aBuffer) override {
       MOZ_ASSERT(!aBuffer, "Video sample should be bufferless");
       // aSample will be implicitly converted into a GlobalRef.
-      mDecoder->ProcessOutput(aSample);
+      mDecoder->ProcessOutput(std::move(aSample));
     }
 
     void HandleOutputFormatChanged(
@@ -539,7 +539,7 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
 
   const VideoInfo mConfig;
   java::GeckoSurface::GlobalRef mSurface;
-  AndroidSurfaceTextureHandle mSurfaceHandle{};
+  AndroidSurfaceTextureHandle mSurfaceHandle;
   // Used to override the SurfaceTexture transform on some devices where the
   // decoder provides a buggy value.
   Maybe<gfx::Matrix4x4> mTransformOverride;
@@ -561,7 +561,7 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
   const Maybe<TrackingId> mTrackingId;
   // Can be accessed on any thread, but only written during init.
   // Pre-filled decode info used by the performance recorder.
-  MediaInfoFlag mMediaInfoFlag = {};
+  MediaInfoFlag mMediaInfoFlag;
   // Only accessed on mThread.
   // Records decode performance to the profiler.
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
@@ -660,7 +660,7 @@ class RemoteAudioDecoder final : public RemoteDataDecoder {
                       java::SampleBuffer::Param aBuffer) override {
       MOZ_ASSERT(aBuffer, "Audio sample should have buffer");
       // aSample will be implicitly converted into a GlobalRef.
-      mDecoder->ProcessOutput(aSample, aBuffer);
+      mDecoder->ProcessOutput(std::move(aSample), std::move(aBuffer));
     }
 
     void HandleOutputFormatChanged(
@@ -801,8 +801,8 @@ class RemoteAudioDecoder final : public RemoteDataDecoder {
     mOutputSampleRate = aSampleRate;
   }
 
-  int32_t mOutputChannels{};
-  int32_t mOutputSampleRate{};
+  int32_t mOutputChannels;
+  int32_t mOutputSampleRate;
   Maybe<TimeUnit> mFirstDemuxedSampleTime;
 };
 
@@ -916,7 +916,7 @@ using CryptoInfoResult =
     Result<java::sdk::MediaCodec::CryptoInfo::LocalRef, nsresult>;
 
 static CryptoInfoResult GetCryptoInfoFromSample(const MediaRawData* aSample) {
-  const auto& cryptoObj = aSample->mCrypto;
+  auto& cryptoObj = aSample->mCrypto;
   java::sdk::MediaCodec::CryptoInfo::LocalRef cryptoInfo;
 
   if (!cryptoObj.IsEncrypted()) {
@@ -935,10 +935,10 @@ static CryptoInfoResult GetCryptoInfoFromSample(const MediaRawData* aSample) {
       cryptoObj.mPlainSizes.Length(), cryptoObj.mEncryptedSizes.Length());
 
   uint32_t totalSubSamplesSize = 0;
-  for (const auto& size : cryptoObj.mPlainSizes) {
+  for (auto& size : cryptoObj.mPlainSizes) {
     totalSubSamplesSize += size;
   }
-  for (const auto& size : cryptoObj.mEncryptedSizes) {
+  for (auto& size : cryptoObj.mEncryptedSizes) {
     totalSubSamplesSize += size;
   }
 
@@ -982,9 +982,7 @@ static CryptoInfoResult GetCryptoInfoFromSample(const MediaRawData* aSample) {
     tempIV.AppendElement(0);
   }
 
-  MOZ_ASSERT(numSubSamples <= INT32_MAX);
-  cryptoInfo->Set(static_cast<int32_t>(numSubSamples),
-                  mozilla::jni::IntArray::From(plainSizes),
+  cryptoInfo->Set(numSubSamples, mozilla::jni::IntArray::From(plainSizes),
                   mozilla::jni::IntArray::From(cryptoObj.mEncryptedSizes),
                   mozilla::jni::ByteArray::From(cryptoObj.mKeyId),
                   mozilla::jni::ByteArray::From(tempIV), mode);
@@ -1005,9 +1003,7 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Decode(
       const_cast<uint8_t*>(aSample->Data()), aSample->Size());
 
   SetState(State::DRAINABLE);
-  MOZ_ASSERT(aSample->Size() <= INT32_MAX);
-  mInputBufferInfo->Set(0, static_cast<int32_t>(aSample->Size()),
-                        aSample->mTime.ToMicroseconds(), 0);
+  mInputBufferInfo->Set(0, aSample->Size(), aSample->mTime.ToMicroseconds(), 0);
   CryptoInfoResult crypto = GetCryptoInfoFromSample(aSample);
   if (crypto.isErr()) {
     return DecodePromise::CreateAndReject(

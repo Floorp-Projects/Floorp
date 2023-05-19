@@ -263,7 +263,7 @@ TEST(VP8VideoTrackEncoder, RoundingErrorFramesEncode)
   TimeStamp now = TimeStamp::Now();
 
   // Pass nine frames with timestamps not expressable in 90kHz sample rate,
-  // then one frame to make the total duration close to one second.
+  // then one frame to make the total duration one second.
   VideoSegment segment;
   uint32_t usPerFrame = 99999;  // 99.999ms
   for (uint32_t i = 0; i < 9; ++i) {
@@ -291,8 +291,7 @@ TEST(VP8VideoTrackEncoder, RoundingErrorFramesEncode)
   while (RefPtr<EncodedFrame> frame = encoder.mEncodedVideoQueue.PopFront()) {
     totalDuration += frame->mDuration;
   }
-  // Not exact, the stream is encoded in time base 90kHz.
-  const uint64_t oneSecond = PR_USEC_PER_SEC - 1;
+  const uint64_t oneSecond = PR_USEC_PER_SEC;
   EXPECT_EQ(oneSecond, totalDuration);
 }
 
