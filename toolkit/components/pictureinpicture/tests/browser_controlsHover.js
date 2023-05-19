@@ -42,6 +42,8 @@ add_task(async () => {
         subtitles,
         pause,
         mute,
+        fullscreenEnter,
+        fullscreenExit,
       ] = l10n.formatMessagesSync([
         {
           id: "pictureinpicture-close-btn",
@@ -71,6 +73,22 @@ add_task(async () => {
             ),
           },
         },
+        {
+          id: "pictureinpicture-fullscreen-btn2",
+          args: {
+            shortcut: ShortcutUtils.prettifyShortcut(
+              pipWin.document.getElementById("fullscreenToggleShortcut")
+            ),
+          },
+        },
+        {
+          id: "pictureinpicture-exit-fullscreen-btn2",
+          args: {
+            shortcut: ShortcutUtils.prettifyShortcut(
+              pipWin.document.getElementById("fullscreenToggleShortcut")
+            ),
+          },
+        },
       ]);
 
       let closeButton = pipWin.document.getElementById("close");
@@ -78,6 +96,7 @@ add_task(async () => {
       let unpipButton = pipWin.document.getElementById("unpip");
       let muteUnmuteButton = pipWin.document.getElementById("audio");
       let subtitlesButton = pipWin.document.getElementById("closed-caption");
+      let fullscreenButton = pipWin.document.getElementById("fullscreen");
 
       // checks hover title for close button
       await pipWin.document.l10n.translateFragment(closeButton);
@@ -145,6 +164,27 @@ add_task(async () => {
         unmute.attributes[1].value,
         muteUnmuteButton.getAttribute("tooltip"),
         "The mute button title matches Fluent string"
+      );
+
+      // checks hover title for enter fullscreen button
+      await pipWin.document.l10n.translateFragment(fullscreenButton);
+      Assert.equal(
+        fullscreenEnter.attributes[1].value,
+        fullscreenButton.getAttribute("tooltip"),
+        "The enter fullscreen button title matches Fluent string"
+      );
+
+      // enable fullscreen
+      await promiseFullscreenEntered(pipWin, async () => {
+        EventUtils.synthesizeMouseAtCenter(fullscreenButton, {}, pipWin);
+      });
+
+      // checks hover title for exit fullscreen button
+      await pipWin.document.l10n.translateFragment(fullscreenButton);
+      Assert.equal(
+        fullscreenExit.attributes[1].value,
+        fullscreenButton.getAttribute("tooltip"),
+        "The exit fullscreen button title matches Fluent string"
       );
     }
   );
