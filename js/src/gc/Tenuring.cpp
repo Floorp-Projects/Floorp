@@ -46,7 +46,9 @@ constexpr size_t MAX_DEDUPLICATABLE_STRING_LENGTH = 500;
 TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
     : JSTracer(rt, JS::TracerKind::Tenuring,
                JS::WeakMapTraceAction::TraceKeysAndValues),
-      nursery_(*nursery) {}
+      nursery_(*nursery) {
+  stringDeDupSet.emplace();
+}
 
 size_t TenuringTracer::getTenuredSize() const {
   return tenuredSize + tenuredCells * sizeof(NurseryCellHeader);
@@ -413,7 +415,7 @@ void js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const {
 }
 
 // Visit all object children of the object and trace them.
-void js::TenuringTracer::traceObject(JSObject* obj) {
+void js::gc::TenuringTracer::traceObject(JSObject* obj) {
   const JSClass* clasp = obj->getClass();
   MOZ_ASSERT(clasp);
 
@@ -435,29 +437,29 @@ void js::TenuringTracer::traceObject(JSObject* obj) {
   traceObjectSlots(nobj, 0, nobj->slotSpan());
 }
 
-void js::TenuringTracer::traceObjectSlots(NativeObject* nobj, uint32_t start,
-                                          uint32_t end) {
+void js::gc::TenuringTracer::traceObjectSlots(NativeObject* nobj,
+                                              uint32_t start, uint32_t end) {
   auto traceRange = [this](HeapSlot* slotStart, HeapSlot* slotEnd) {
     traceSlots(slotStart->unbarrieredAddress(), slotEnd->unbarrieredAddress());
   };
   nobj->forEachSlotRange(start, end, traceRange);
 }
 
-void js::TenuringTracer::traceSlots(Value* vp, Value* end) {
+void js::gc::TenuringTracer::traceSlots(Value* vp, Value* end) {
   for (; vp != end; ++vp) {
     traverse(vp);
   }
 }
 
-inline void js::TenuringTracer::traceSlots(JS::Value* vp, uint32_t nslots) {
+inline void js::gc::TenuringTracer::traceSlots(JS::Value* vp, uint32_t nslots) {
   traceSlots(vp, vp + nslots);
 }
 
-void js::TenuringTracer::traceString(JSString* str) {
+void js::gc::TenuringTracer::traceString(JSString* str) {
   str->traceChildren(this);
 }
 
-void js::TenuringTracer::traceBigInt(JS::BigInt* bi) {
+void js::gc::TenuringTracer::traceBigInt(JS::BigInt* bi) {
   bi->traceChildren(this);
 }
 
@@ -471,19 +473,19 @@ static inline ptrdiff_t OffsetToChunkEnd(void* p) {
 #endif
 
 /* Insert the given relocation entry into the list of things to visit. */
-inline void js::TenuringTracer::insertIntoObjectFixupList(
+inline void js::gc::TenuringTracer::insertIntoObjectFixupList(
     RelocationOverlay* entry) {
   entry->setNext(objHead);
   objHead = entry;
 }
 
 template <typename T>
-inline T* js::TenuringTracer::allocTenured(Zone* zone, AllocKind kind) {
+inline T* js::gc::TenuringTracer::allocTenured(Zone* zone, AllocKind kind) {
   return static_cast<T*>(static_cast<Cell*>(AllocateCellInGC(zone, kind)));
 }
 
-JSString* js::TenuringTracer::allocTenuredString(JSString* src, Zone* zone,
-                                                 AllocKind dstKind) {
+JSString* js::gc::TenuringTracer::allocTenuredString(JSString* src, Zone* zone,
+                                                     AllocKind dstKind) {
   JSString* dst = allocTenured<JSString>(zone, dstKind);
   tenuredSize += moveStringToTenured(dst, src, dstKind);
   tenuredCells++;
@@ -491,7 +493,7 @@ JSString* js::TenuringTracer::allocTenuredString(JSString* src, Zone* zone,
   return dst;
 }
 
-JSObject* js::TenuringTracer::moveToTenuredSlow(JSObject* src) {
+JSObject* js::gc::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   MOZ_ASSERT(IsInsideNursery(src));
   MOZ_ASSERT(!src->is<PlainObject>());
 
@@ -560,7 +562,7 @@ JSObject* js::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   return dst;
 }
 
-inline JSObject* js::TenuringTracer::movePlainObjectToTenured(
+inline JSObject* js::gc::TenuringTracer::movePlainObjectToTenured(
     PlainObject* src) {
   // Fast path version of moveToTenuredSlow() for specialized for PlainObject.
 
@@ -591,8 +593,8 @@ inline JSObject* js::TenuringTracer::movePlainObjectToTenured(
   return dst;
 }
 
-size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
-                                              NativeObject* src) {
+size_t js::gc::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
+                                                  NativeObject* src) {
   /* Fixed slots have already been copied over. */
   if (!src->hasDynamicSlots()) {
     return 0;
@@ -635,9 +637,9 @@ size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
   return allocSize;
 }
 
-size_t js::TenuringTracer::moveElementsToTenured(NativeObject* dst,
-                                                 NativeObject* src,
-                                                 AllocKind dstKind) {
+size_t js::gc::TenuringTracer::moveElementsToTenured(NativeObject* dst,
+                                                     NativeObject* src,
+                                                     AllocKind dstKind) {
   if (src->hasEmptyElements()) {
     return 0;
   }
@@ -696,13 +698,13 @@ size_t js::TenuringTracer::moveElementsToTenured(NativeObject* dst,
   return allocSize;
 }
 
-inline void js::TenuringTracer::insertIntoStringFixupList(
+inline void js::gc::TenuringTracer::insertIntoStringFixupList(
     StringRelocationOverlay* entry) {
   entry->setNext(stringHead);
   stringHead = entry;
 }
 
-JSString* js::TenuringTracer::moveToTenured(JSString* src) {
+JSString* js::gc::TenuringTracer::moveToTenured(JSString* src) {
   MOZ_ASSERT(IsInsideNursery(src));
   MOZ_ASSERT(!src->isExternal());
 
@@ -751,8 +753,8 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
   // 4. It matches an entry in stringDeDupSet.
 
   if (src->length() < MAX_DEDUPLICATABLE_STRING_LENGTH && src->isLinear() &&
-      src->isDeduplicatable() && nursery().stringDeDupSet.isSome()) {
-    if (auto p = nursery().stringDeDupSet->lookup(src)) {
+      src->isDeduplicatable() && stringDeDupSet.isSome()) {
+    if (auto p = stringDeDupSet->lookup(src)) {
       // Deduplicate to the looked-up string!
       dst = *p;
       zone->stringStats.ref().noteDeduplicated(src->length(), src->allocSize());
@@ -763,10 +765,10 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
 
     dst = allocTenuredString(src, zone, dstKind);
 
-    if (!nursery().stringDeDupSet->putNew(dst)) {
+    if (!stringDeDupSet->putNew(dst)) {
       // When there is oom caused by the stringDeDupSet, stop deduplicating
       // strings.
-      nursery().stringDeDupSet.reset();
+      stringDeDupSet.reset();
     }
   } else {
     dst = allocTenuredString(src, zone, dstKind);
@@ -789,7 +791,7 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
 }
 
 template <typename CharT>
-void js::TenuringTracer::relocateDependentStringChars(
+void js::gc::TenuringTracer::relocateDependentStringChars(
     JSDependentString* tenuredDependentStr, JSLinearString* baseOrRelocOverlay,
     size_t* offset, bool* rootBaseNotYetForwarded, JSLinearString** rootBase) {
   MOZ_ASSERT(*offset == 0);
@@ -852,7 +854,7 @@ void js::TenuringTracer::relocateDependentStringChars(
   }
 }
 
-JS::BigInt* js::TenuringTracer::moveToTenured(JS::BigInt* src) {
+JS::BigInt* js::gc::TenuringTracer::moveToTenured(JS::BigInt* src) {
   MOZ_ASSERT(IsInsideNursery(src));
 
   AllocKind dstKind = src->getAllocKind();
@@ -869,7 +871,7 @@ JS::BigInt* js::TenuringTracer::moveToTenured(JS::BigInt* src) {
   return dst;
 }
 
-void js::TenuringTracer::collectToObjectFixedPoint() {
+void js::gc::TenuringTracer::collectToObjectFixedPoint() {
   while (RelocationOverlay* p = objHead) {
     objHead = objHead->next();
     auto* obj = static_cast<JSObject*>(p->forwardingAddress());
@@ -877,7 +879,7 @@ void js::TenuringTracer::collectToObjectFixedPoint() {
   }
 }
 
-void js::TenuringTracer::collectToStringFixedPoint() {
+void js::gc::TenuringTracer::collectToStringFixedPoint() {
   while (StringRelocationOverlay* p = stringHead) {
     stringHead = stringHead->next();
 
@@ -927,8 +929,8 @@ void js::TenuringTracer::collectToStringFixedPoint() {
   }
 }
 
-size_t js::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
-                                               AllocKind dstKind) {
+size_t js::gc::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
+                                                   AllocKind dstKind) {
   size_t size = Arena::thingSize(dstKind);
 
   // At the moment, strings always have the same AllocKind between src and
@@ -948,8 +950,9 @@ size_t js::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
   return size;
 }
 
-size_t js::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst, JS::BigInt* src,
-                                               AllocKind dstKind) {
+size_t js::gc::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst,
+                                                   JS::BigInt* src,
+                                                   AllocKind dstKind) {
   size_t size = Arena::thingSize(dstKind);
 
   // At the moment, BigInts always have the same AllocKind between src and

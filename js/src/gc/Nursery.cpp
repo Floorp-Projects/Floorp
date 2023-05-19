@@ -42,7 +42,7 @@
 #include "vm/GeckoProfiler-inl.h"
 
 using namespace js;
-using namespace gc;
+using namespace js::gc;
 
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
@@ -379,7 +379,6 @@ bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
 }
 
 void js::Nursery::disable() {
-  stringDeDupSet.reset();
   MOZ_ASSERT(isEmpty());
   if (!isEnabled()) {
     return;
@@ -1220,10 +1219,6 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
 
   stats().beginNurseryCollection(reason);
   gcprobes::MinorGCStart();
-
-  stringDeDupSet.emplace();
-  auto guardStringDedupSet =
-      mozilla::MakeScopeExit([&] { stringDeDupSet.reset(); });
 
   maybeClearProfileDurations();
   startProfile(ProfileKey::Total);

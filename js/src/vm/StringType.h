@@ -803,7 +803,7 @@ static_assert(sizeof(JSRope) == sizeof(JSString),
 class JSLinearString : public JSString {
   friend class JSString;
   friend class JS::AutoStableStringChars;
-  friend class js::TenuringTracer;
+  friend class js::gc::TenuringTracer;
   friend class js::gc::CellAllocator;
 
   /* Vacuous and therefore unimplemented. */
