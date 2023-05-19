@@ -577,31 +577,14 @@ class Field extends _pdf_object.PDFObject {
       this._setChoiceValue(value);
       return;
     }
-    if (value === "") {
-      this._value = "";
-    } else if (typeof value === "string") {
-      switch (this._fieldType) {
-        case _common.FieldType.none:
-          {
-            this._originalValue = value;
-            const _value = value.trim().replace(",", ".");
-            this._value = !isNaN(_value) ? parseFloat(_value) : value;
-            break;
-          }
-        case _common.FieldType.number:
-        case _common.FieldType.percent:
-          {
-            const _value = value.trim().replace(",", ".");
-            const number = parseFloat(_value);
-            this._value = !isNaN(number) ? number : 0;
-            break;
-          }
-        default:
-          this._value = value;
-      }
-    } else {
+    if (value === "" || typeof value !== "string") {
+      this._originalValue = undefined;
       this._value = value;
+      return;
     }
+    this._originalValue = value;
+    const _value = value.trim().replace(",", ".");
+    this._value = !isNaN(_value) ? parseFloat(_value) : value;
   }
   _getValue() {
     return this._originalValue ?? this.value;
@@ -692,7 +675,7 @@ class Field extends _pdf_object.PDFObject {
     }
     if (nIdx === null) {
       nIdx = Array.isArray(this._currentValueIndices) ? this._currentValueIndices[0] : this._currentValueIndices;
-      nIdx = nIdx || 0;
+      nIdx ||= 0;
     }
     if (nIdx < 0 || nIdx >= this.numItems) {
       nIdx = this.numItems - 1;
@@ -2389,13 +2372,7 @@ class EventDispatcher {
     const event = globalThis.event = new Event({});
     for (const source of Object.values(this._objects)) {
       event.value = source.obj.value;
-      if (this.runActions(source, source, event, "Format")) {
-        source.obj._send({
-          id: source.obj._id,
-          siblings: source.obj._siblings,
-          formattedValue: event.value?.toString?.()
-        });
-      }
+      this.runActions(source, source, event, "Format");
     }
   }
   runValidation(source, event) {
@@ -4258,8 +4235,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.7.48';
-const pdfjsBuild = '95ab2b8b1';
+const pdfjsVersion = '3.7.67';
+const pdfjsBuild = '38287d943';
 })();
 
 /******/ 	return __webpack_exports__;

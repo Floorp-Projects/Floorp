@@ -942,7 +942,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.7.48',
+    apiVersion: '3.7.67',
     data,
     password,
     disableAutoFetch,
@@ -2614,9 +2614,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.7.48';
+const version = '3.7.67';
 exports.version = version;
-const build = '95ab2b8b1';
+const build = '38287d943';
 exports.build = build;
 
 /***/ }),
@@ -4252,9 +4252,7 @@ class PDFDateString {
     if (!input || typeof input !== "string") {
       return null;
     }
-    if (!pdfDateStringRegex) {
-      pdfDateStringRegex = new RegExp("^D:" + "(\\d{4})" + "(\\d{2})?" + "(\\d{2})?" + "(\\d{2})?" + "(\\d{2})?" + "(\\d{2})?" + "([Z|+|-])?" + "(\\d{2})?" + "'?" + "(\\d{2})?" + "'?");
-    }
+    pdfDateStringRegex ||= new RegExp("^D:" + "(\\d{4})" + "(\\d{2})?" + "(\\d{2})?" + "(\\d{2})?" + "(\\d{2})?" + "(\\d{2})?" + "([Z|+|-])?" + "(\\d{2})?" + "'?" + "(\\d{2})?" + "'?");
     const matches = pdfDateStringRegex.exec(input);
     if (!matches) {
       return null;
@@ -4699,12 +4697,7 @@ class FontLoader {
         await fontFace.load();
         this.#systemFonts.add(loadedName);
       } catch {
-        if (info.guessFallback) {
-          const match = src.match(/^local\((.*)\)$/);
-          (0, _util.warn)(`Cannot load system font: ${match?.[1]}, installing it could help to improve PDF rendering.`);
-        } else {
-          (0, _util.warn)(`Cannot load system font: ${loadedName} for style ${style.style} and weight ${style.weight}.`);
-        }
+        (0, _util.warn)(`Cannot load system font: ${info.baseFontName}, installing it could help to improve PDF rendering.`);
         this.removeNativeFontFace(fontFace);
       }
       return;
@@ -6246,7 +6239,7 @@ class CanvasGraphics {
       }
     }
     if (isAddToPathSet) {
-      const paths = this.pendingTextPaths || (this.pendingTextPaths = []);
+      const paths = this.pendingTextPaths ||= [];
       paths.push({
         transform: (0, _display_utils.getCurrentTransform)(ctx),
         x,
@@ -11448,29 +11441,33 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
       const storedData = storage.getValue(id, {
         value: this.data.fieldValue
       });
-      let textContent = storedData.formattedValue || storedData.value || "";
+      let textContent = storedData.value || "";
       const maxLen = storage.getValue(id, {
         charLimit: this.data.maxLen
       }).charLimit;
       if (maxLen && textContent.length > maxLen) {
         textContent = textContent.slice(0, maxLen);
       }
+      let fieldFormattedValues = storedData.formattedValue || this.data.textContent?.join("\n") || null;
+      if (fieldFormattedValues && this.data.comb) {
+        fieldFormattedValues = fieldFormattedValues.replaceAll(/\s+/g, "");
+      }
       const elementData = {
         userValue: textContent,
-        formattedValue: null,
+        formattedValue: fieldFormattedValues,
         lastCommittedValue: null,
         commitKey: 1
       };
       if (this.data.multiLine) {
         element = document.createElement("textarea");
-        element.textContent = textContent;
+        element.textContent = fieldFormattedValues ?? textContent;
         if (this.data.doNotScroll) {
           element.style.overflowY = "hidden";
         }
       } else {
         element = document.createElement("input");
         element.type = "text";
-        element.setAttribute("value", textContent);
+        element.setAttribute("value", fieldFormattedValues ?? textContent);
         if (this.data.doNotScroll) {
           element.style.overflowX = "hidden";
         }
@@ -13303,8 +13300,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.7.48';
-const pdfjsBuild = '95ab2b8b1';
+const pdfjsVersion = '3.7.67';
+const pdfjsBuild = '38287d943';
 })();
 
 /******/ 	return __webpack_exports__;
