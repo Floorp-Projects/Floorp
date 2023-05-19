@@ -419,6 +419,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   static bool CachesEnabled(JSContext* aCx, JSObject*);
 
+  static bool IsSizeToContentEnabled(JSContext*, JSObject*);
+
   bool DoResolve(
       JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
       JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> aDesc);

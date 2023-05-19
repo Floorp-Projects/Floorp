@@ -4768,6 +4768,12 @@
   value: false
   mirror: always
 
+# Whether Window.sizeToContent() is enabled.
+- name: dom.window.sizeToContent.enabled
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
 - name: dom.worker.canceling.timeoutMilliseconds
   type: RelaxedAtomicUint32
   value: 30000    # 30 seconds

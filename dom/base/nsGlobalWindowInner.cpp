@@ -3338,6 +3338,12 @@ bool nsGlobalWindowInner::CachesEnabled(JSContext* aCx, JSObject*) {
   return true;
 }
 
+/* static */
+bool nsGlobalWindowInner::IsSizeToContentEnabled(JSContext* aCx, JSObject*) {
+  return StaticPrefs::dom_window_sizeToContent_enabled() ||
+         nsContentUtils::IsSystemCaller(aCx);
+}
+
 nsDOMOfflineResourceList* nsGlobalWindowInner::GetApplicationCache(
     ErrorResult& aError) {
   if (!mApplicationCache) {
