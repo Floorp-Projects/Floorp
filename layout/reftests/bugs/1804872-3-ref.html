@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<style>
+html {
+  /* Suppress scrollbars to avoid periodical unthrottling for transform */
+  /* animations on the compositor. */
+  overflow: hidden;
+}
+body {
+  margin: 0px;
+  padding: 0px;
+}
+
+#target {
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  background-color: green;
+  background-image: url(pinwheel_logo.svg);
+  background-size: 200px 200px;
+  background-position: -50px -50px;
+  scale:2;
+}
+</style>
+<div id="target">
+</html>

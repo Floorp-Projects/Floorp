@@ -6670,9 +6670,24 @@ IntSize nsLayoutUtils::ComputeImageContainerDrawingParameters(
   LayerIntRect destRect = SnapRectForImage(itm, scaleFactors, aDestRect);
 
   // Since we always decode entire raster images, we only care about the
-  // ImageIntRegion for vector images, for which we may only draw part of in
-  // some cases.
-  if (aImage->GetType() != imgIContainer::TYPE_VECTOR) {
+  // ImageIntRegion for vector images when we are recording blobs, for which we
+  // may only draw part of in some cases.
+  if ((aImage->GetType() != imgIContainer::TYPE_VECTOR) ||
+      !(aFlags & imgIContainer::FLAG_RECORD_BLOB)) {
+    // If the transform scale of our stacking context helper is being animated
+    // on the compositor then the transform will have the current value of the
+    // scale, but the scale factors will have max value of the scale animation.
+    // So we want to ask for a decoded image that can fulfill that larger size.
+    int32_t scaleWidth = int32_t(ceil(aDestRect.Width() * scaleFactors.xScale));
+    if (scaleWidth > destRect.width + 2) {
+      destRect.width = scaleWidth;
+    }
+    int32_t scaleHeight =
+        int32_t(ceil(aDestRect.Height() * scaleFactors.yScale));
+    if (scaleHeight > destRect.height + 2) {
+      destRect.height = scaleHeight;
+    }
+
     return aImage->OptimalImageSizeForDest(
         gfxSize(destRect.Width(), destRect.Height()),
         imgIContainer::FRAME_CURRENT, samplingFilter, aFlags);
