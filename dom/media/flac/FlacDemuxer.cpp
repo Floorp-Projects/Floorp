@@ -334,7 +334,7 @@ class Frame {
       return TimeUnit::Invalid();
     }
     MOZ_ASSERT(Header().Info().mRate, "Invalid Frame. Need Header");
-    return media::TimeUnit(Header().mIndex, Header().Info().mRate);
+    return FramesToTimeUnit(Header().mIndex, Header().Info().mRate);
   }
 
   TimeUnit Duration() const {
@@ -342,7 +342,7 @@ class Frame {
       return TimeUnit();
     }
     MOZ_ASSERT(Header().Info().mRate, "Invalid Frame. Need Header");
-    return media::TimeUnit(mDuration, Header().Info().mRate);
+    return FramesToTimeUnit(mDuration, Header().Info().mRate);
   }
 
   // Returns the parsed frame header.

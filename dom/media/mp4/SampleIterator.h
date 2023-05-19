@@ -21,14 +21,16 @@ class IndiceWrapper;
 class MP4SampleIndex;
 struct Sample;
 
+typedef int64_t Microseconds;
+
 class SampleIterator {
  public:
   explicit SampleIterator(MP4SampleIndex* aIndex);
   ~SampleIterator();
   bool HasNext();
   already_AddRefed<mozilla::MediaRawData> GetNext();
-  void Seek(const media::TimeUnit& aTime);
-  media::TimeUnit GetNextKeyframeTime();
+  void Seek(Microseconds aTime);
+  Microseconds GetNextKeyframeTime();
 
  private:
   Sample* Get();
@@ -60,9 +62,9 @@ class MP4SampleIndex {
   struct Indice {
     uint64_t start_offset;
     uint64_t end_offset;
-    int64_t start_composition;
-    int64_t end_composition;
-    int64_t start_decode;
+    uint64_t start_composition;
+    uint64_t end_composition;
+    uint64_t start_decode;
     bool sync;
   };
 
@@ -95,20 +97,20 @@ class MP4SampleIndex {
     uint32_t mIndex;
     int64_t mStartOffset;
     int64_t mEndOffset;
-    MP4Interval<media::TimeUnit> mTime;
+    MP4Interval<Microseconds> mTime;
   };
 
   MP4SampleIndex(const mozilla::IndiceWrapper& aIndices, ByteStream* aSource,
-                 uint32_t aTrackId, bool aIsAudio, int32_t aTimeScale);
+                 uint32_t aTrackId, bool aIsAudio);
 
   void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges,
                        bool aCanEvict);
   void UpdateMoofIndex(const mozilla::MediaByteRangeSet& aByteRanges);
-  media::TimeUnit GetEndCompositionIfBuffered(
+  Microseconds GetEndCompositionIfBuffered(
       const mozilla::MediaByteRangeSet& aByteRanges);
   mozilla::media::TimeIntervals ConvertByteRangesToTimeRanges(
       const mozilla::MediaByteRangeSet& aByteRanges);
-  uint64_t GetEvictionOffset(const media::TimeUnit& aTime);
+  uint64_t GetEvictionOffset(Microseconds aTime);
   bool IsFragmented() { return !!mMoofParser; }
 
   friend class SampleIterator;

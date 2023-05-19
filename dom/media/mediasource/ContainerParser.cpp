@@ -65,8 +65,8 @@ MediaResult ContainerParser::IsMediaSegmentPresent(const MediaSpan& aData) {
 }
 
 MediaResult ContainerParser::ParseStartAndEndTimestamps(const MediaSpan& aData,
-                                                        media::TimeUnit& aStart,
-                                                        media::TimeUnit& aEnd) {
+                                                        int64_t& aStart,
+                                                        int64_t& aEnd) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
@@ -140,8 +140,8 @@ class WebMContainerParser
   }
 
   MediaResult ParseStartAndEndTimestamps(const MediaSpan& aData,
-                                         media::TimeUnit& aStart,
-                                         media::TimeUnit& aEnd) override {
+                                         int64_t& aStart,
+                                         int64_t& aEnd) override {
     bool initSegment = NS_SUCCEEDED(IsInitSegmentPresent(aData));
 
     if (mLastMapping &&
@@ -284,16 +284,14 @@ class WebMContainerParser
             ? mapping[completeIdx + 1].mTimecode -
                   mapping[completeIdx].mTimecode
             : mapping[completeIdx].mTimecode - previousMapping.ref().mTimecode;
-    aStart = media::TimeUnit::FromNanoseconds(
-        AssertedCast<int64_t>(mapping[0].mTimecode));
-    aEnd = media::TimeUnit::FromNanoseconds(
-        AssertedCast<int64_t>(mapping[completeIdx].mTimecode + frameDuration));
+    aStart = mapping[0].mTimecode / NS_PER_USEC;
+    aEnd = (mapping[completeIdx].mTimecode + frameDuration) / NS_PER_USEC;
 
     MSE_DEBUG("[%" PRId64 ", %" PRId64 "] [fso=%" PRId64 ", leo=%" PRId64
               ", l=%zu processedIdx=%u fs=%" PRId64 "]",
-              aStart.ToMicroseconds(), aEnd.ToMicroseconds(),
-              mapping[0].mSyncOffset, mapping[completeIdx].mEndOffset,
-              mapping.Length(), completeIdx, mCompleteMediaSegmentRange.mEnd);
+              aStart, aEnd, mapping[0].mSyncOffset,
+              mapping[completeIdx].mEndOffset, mapping.Length(), completeIdx,
+              mCompleteMediaSegmentRange.mEnd);
 
     return NS_OK;
   }
@@ -514,8 +512,8 @@ class MP4ContainerParser : public ContainerParser,
 
  public:
   MediaResult ParseStartAndEndTimestamps(const MediaSpan& aData,
-                                         media::TimeUnit& aStart,
-                                         media::TimeUnit& aEnd) override {
+                                         int64_t& aStart,
+                                         int64_t& aEnd) override {
     bool initSegment = NS_SUCCEEDED(IsInitSegmentPresent(aData));
     if (initSegment) {
       mResource = new SourceBufferResource();
@@ -565,7 +563,7 @@ class MP4ContainerParser : public ContainerParser,
     }
     mTotalParsed += aData.Length();
 
-    MP4Interval<media::TimeUnit> compositionRange =
+    MP4Interval<Microseconds> compositionRange =
         mParser->GetCompositionRange(byteRanges);
 
     mCompleteMediaHeaderRange =
@@ -582,8 +580,7 @@ class MP4ContainerParser : public ContainerParser,
     }
     aStart = compositionRange.start;
     aEnd = compositionRange.end;
-    MSE_DEBUG("[%" PRId64 ", %" PRId64 "]", aStart.ToMicroseconds(),
-              aEnd.ToMicroseconds());
+    MSE_DEBUG("[%" PRId64 ", %" PRId64 "]", aStart, aEnd);
     return NS_OK;
   }
 
@@ -696,8 +693,8 @@ class ADTSContainerParser
   }
 
   MediaResult ParseStartAndEndTimestamps(const MediaSpan& aData,
-                                         media::TimeUnit& aStart,
-                                         media::TimeUnit& aEnd) override {
+                                         int64_t& aStart,
+                                         int64_t& aEnd) override {
     // ADTS header.
     Header header;
     if (!Parse(aData, header)) {
@@ -727,8 +724,7 @@ class ADTSContainerParser
     // media segment.
     mCompleteMediaHeaderRange = mCompleteMediaSegmentRange;
 
-    MSE_DEBUG("[%" PRId64 ", %" PRId64 "]", aStart.ToMicroseconds(),
-              aEnd.ToMicroseconds());
+    MSE_DEBUG("[%" PRId64 ", %" PRId64 "]", aStart, aEnd);
     // We don't update timestamps, regardless.
     return NS_ERROR_NOT_AVAILABLE;
   }

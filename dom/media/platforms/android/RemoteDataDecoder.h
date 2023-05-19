@@ -37,7 +37,7 @@ class RemoteDataDecoder : public MediaDataDecoder,
   }
 
  protected:
-  virtual ~RemoteDataDecoder() = default;
+  virtual ~RemoteDataDecoder() {}
   RemoteDataDecoder(MediaData::Type aType, const nsACString& aMimeType,
                     java::sdk::MediaFormat::Param aFormat,
                     const nsString& aDrmStubId);

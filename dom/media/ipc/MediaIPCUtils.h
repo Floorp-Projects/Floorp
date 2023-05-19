@@ -113,15 +113,11 @@ struct ParamTraits<mozilla::AacCodecSpecificData> {
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, *aParam.mEsDescriptorBinaryBlob);
     WriteParam(aWriter, *aParam.mDecoderConfigDescriptorBinaryBlob);
-    WriteParam(aWriter, aParam.mEncoderDelayFrames);
-    WriteParam(aWriter, aParam.mMediaFrameCount);
   }
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, aResult->mEsDescriptorBinaryBlob.get()) &&
            ReadParam(aReader,
-                     aResult->mDecoderConfigDescriptorBinaryBlob.get()) &&
-           ReadParam(aReader, &aResult->mEncoderDelayFrames) &&
-           ReadParam(aReader, &aResult->mMediaFrameCount);
+                     aResult->mDecoderConfigDescriptorBinaryBlob.get());
   }
 };
 
@@ -218,25 +214,21 @@ struct ParamTraits<mozilla::MediaDataDecoder::ConversionRequired>
 
 template <>
 struct ParamTraits<mozilla::media::TimeUnit> {
-  using paramType = mozilla::media::TimeUnit;
+  typedef mozilla::media::TimeUnit paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.IsValid());
-    WriteParam(aWriter, aParam.IsValid() ? aParam.mTicks.value() : 0);
-    WriteParam(aWriter,
-               aParam.IsValid() ? aParam.mBase : 1);  // base can't be 0
+    WriteParam(aWriter, aParam.IsValid() ? aParam.ToMicroseconds() : 0);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     bool valid;
-    int64_t ticks;
-    int64_t base;
-    if (ReadParam(aReader, &valid) && ReadParam(aReader, &ticks) &&
-        ReadParam(aReader, &base)) {
-      if (valid) {
-        *aResult = mozilla::media::TimeUnit(ticks, base);
-      } else {
+    int64_t value;
+    if (ReadParam(aReader, &valid) && ReadParam(aReader, &value)) {
+      if (!valid) {
         *aResult = mozilla::media::TimeUnit::Invalid();
+      } else {
+        *aResult = mozilla::media::TimeUnit::FromMicroseconds(value);
       }
       return true;
     }

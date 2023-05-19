@@ -31,6 +31,7 @@
 namespace mozilla {
 
 using namespace mozilla::gfx;
+using layers::ImageContainer;
 using layers::PlanarYCbCrData;
 using layers::PlanarYCbCrImage;
 using media::TimeUnit;
@@ -41,10 +42,8 @@ const char* VideoData::sTypeName = "video";
 AudioData::AudioData(int64_t aOffset, const media::TimeUnit& aTime,
                      AlignedAudioBuffer&& aData, uint32_t aChannels,
                      uint32_t aRate, uint32_t aChannelMap)
-    // Passing TimeUnit::Zero() here because we can't pass the result of an
-    // arithmetic operation to the CheckedInt ctor. We set the duration in the
-    // ctor body below.
-    : MediaData(sType, aOffset, aTime, TimeUnit::Zero()),
+    : MediaData(sType, aOffset, aTime,
+                FramesToTimeUnit(aData.Length() / aChannels, aRate)),
       mChannels(aChannels),
       mChannelMap(aChannelMap),
       mRate(aRate),
@@ -55,7 +54,6 @@ AudioData::AudioData(int64_t aOffset, const media::TimeUnit& aTime,
                      "Can't create an AudioData with 0 channels.");
   MOZ_RELEASE_ASSERT(aRate != 0,
                      "Can't create an AudioData with a sample-rate of 0.");
-  mDuration = TimeUnit(mFrames, aRate);
 }
 
 Span<AudioDataValue> AudioData::Data() const {
@@ -88,34 +86,37 @@ bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
     // MoveableData got called. Can no longer work on it.
     return false;
   }
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   const size_t originalFrames = mAudioData.Length() / mChannels;
-#endif
-  if (aTrim.mStart < mOriginalTime || aTrim.mEnd > GetEndTime()) {
+  const TimeUnit originalDuration = FramesToTimeUnit(originalFrames, mRate);
+  if (aTrim.mStart < mOriginalTime ||
+      aTrim.mEnd > mOriginalTime + originalDuration) {
     return false;
   }
 
-  auto trimBefore = aTrim.mStart - mOriginalTime;
-  auto trimAfter = aTrim.mEnd - mOriginalTime;
-  if (!trimBefore.IsValid() || !trimAfter.IsValid()) {
+  auto trimBefore = TimeUnitToFrames(aTrim.mStart - mOriginalTime, mRate);
+  auto trimAfter = aTrim.mEnd == GetEndTime()
+                       ? originalFrames
+                       : TimeUnitToFrames(aTrim.mEnd - mOriginalTime, mRate);
+  if (!trimBefore.isValid() || !trimAfter.isValid()) {
     // Overflow.
     return false;
   }
-  if (!mTrimWindow && trimBefore.IsZero() && trimAfter == mDuration) {
+  MOZ_DIAGNOSTIC_ASSERT(trimAfter.value() >= trimBefore.value(),
+                        "Something went wrong with trimming value");
+  if (!mTrimWindow && trimBefore == 0 && trimAfter == originalFrames) {
     // Nothing to change, abort early to prevent rounding errors.
     return true;
   }
 
-  size_t frameOffset = trimBefore.ToTicksAtRate(mRate);
   mTrimWindow = Some(aTrim);
-  mDataOffset = frameOffset * mChannels;
+  mDataOffset = trimBefore.value() * mChannels;
   MOZ_DIAGNOSTIC_ASSERT(mDataOffset <= mAudioData.Length(),
                         "Data offset outside original buffer");
-  mFrames = (trimAfter - trimBefore).ToTicksAtRate(mRate);
+  mFrames = (trimAfter - trimBefore).value();
   MOZ_DIAGNOSTIC_ASSERT(mFrames <= originalFrames,
                         "More frames than found in container");
-  mTime = mOriginalTime + trimBefore;
-  mDuration = TimeUnit(mFrames, mRate);
+  mTime = mOriginalTime + FramesToTimeUnit(trimBefore.value(), mRate);
+  mDuration = FramesToTimeUnit(mFrames, mRate);
 
   return true;
 }
@@ -277,13 +278,13 @@ PlanarYCbCrData ConstructPlanarYCbCrData(const VideoInfo& aInfo,
 
   PlanarYCbCrData data;
   data.mYChannel = Y.mData;
-  data.mYStride = AssertedCast<int32_t>(Y.mStride);
-  data.mYSkip = AssertedCast<int32_t>(Y.mSkip);
+  data.mYStride = Y.mStride;
+  data.mYSkip = Y.mSkip;
   data.mCbChannel = Cb.mData;
   data.mCrChannel = Cr.mData;
-  data.mCbCrStride = AssertedCast<int32_t>(Cb.mStride);
-  data.mCbSkip = AssertedCast<int32_t>(Cb.mSkip);
-  data.mCrSkip = AssertedCast<int32_t>(Cr.mSkip);
+  data.mCbCrStride = Cb.mStride;
+  data.mCbSkip = Cb.mSkip;
+  data.mCrSkip = Cr.mSkip;
   data.mPictureRect = aPicture;
   data.mStereoMode = aInfo.mStereoMode;
   data.mYUVColorSpace = aBuffer.mYUVColorSpace;
@@ -310,8 +311,9 @@ bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
 
   if (aCopyData) {
     return aVideoImage->CopyData(data);
+  } else {
+    return aVideoImage->AdoptData(data);
   }
-  return aVideoImage->AdoptData(data);
 }
 
 /* static */
@@ -483,8 +485,7 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
   // The naming convention in the gfx stack is byte-order.
   ConvertI420AlphaToARGB(aBuffer.mPlanes[0].mData, aBuffer.mPlanes[1].mData,
                          aBuffer.mPlanes[2].mData, aAlphaPlane.mData,
-                         AssertedCast<int>(aBuffer.mPlanes[0].mStride),
-                         AssertedCast<int>(aBuffer.mPlanes[1].mStride),
+                         aBuffer.mPlanes[0].mStride, aBuffer.mPlanes[1].mStride,
                          buffer.data, buffer.stride, buffer.size.width,
                          buffer.size.height);
 

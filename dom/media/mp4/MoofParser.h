@@ -6,7 +6,6 @@
 #define MOOF_PARSER_H_
 
 #include "mozilla/ResultExtensions.h"
-#include "TimeUnits.h"
 #include "mozilla/Variant.h"
 #include "Atom.h"
 #include "AtomType.h"
@@ -17,6 +16,8 @@
 
 namespace mozilla {
 
+typedef int64_t Microseconds;
+
 class Box;
 class BoxContext;
 class BoxReader;
@@ -26,10 +27,10 @@ class Moof;
 // in the preceeding Moof, so that we can smooth tracks' timestamps
 // across Moofs.
 struct TrackEndCts {
-  TrackEndCts(uint32_t aTrackId, const media::TimeUnit& aCtsEndTime)
+  TrackEndCts(uint32_t aTrackId, Microseconds aCtsEndTime)
       : mTrackId(aTrackId), mCtsEndTime(aCtsEndTime) {}
   uint32_t mTrackId;
-  media::TimeUnit mCtsEndTime;
+  Microseconds mCtsEndTime;
 };
 
 class Mvhd : public Atom {
@@ -38,12 +39,14 @@ class Mvhd : public Atom {
       : mCreationTime(0), mModificationTime(0), mTimescale(0), mDuration(0) {}
   explicit Mvhd(Box& aBox);
 
-  Result<media::TimeUnit, nsresult> ToTimeUnit(int64_t aTimescaleUnits) {
+  Result<Microseconds, nsresult> ToMicroseconds(int64_t aTimescaleUnits) {
     if (!mTimescale) {
       NS_WARNING("invalid mTimescale");
       return Err(NS_ERROR_FAILURE);
     }
-    return media::TimeUnit(aTimescaleUnits, mTimescale);
+    int64_t major = aTimescaleUnits / mTimescale;
+    int64_t remainder = aTimescaleUnits % mTimescale;
+    return major * 1000000ll + remainder * 1000000ll / mTimescale;
   }
 
   uint64_t mCreationTime;
@@ -138,8 +141,8 @@ class Edts : public Atom {
 struct Sample {
   mozilla::MediaByteRange mByteRange;
   mozilla::MediaByteRange mCencRange;
-  media::TimeUnit mDecodeTime;
-  MP4Interval<media::TimeUnit> mCompositionRange;
+  Microseconds mDecodeTime;
+  MP4Interval<Microseconds> mCompositionRange;
   bool mSync;
 };
 
@@ -248,7 +251,7 @@ class Moof final : public Atom {
 
   mozilla::MediaByteRange mRange;
   mozilla::MediaByteRange mMdatRange;
-  MP4Interval<media::TimeUnit> mTimeRange;
+  MP4Interval<Microseconds> mTimeRange;
   FallibleTArray<Sample> mIndex;
 
   FallibleTArray<CencSampleEncryptionInfoEntry>
@@ -276,7 +279,7 @@ class Moof final : public Atom {
   // from that standard. I.e. this function is used to handle up auxiliary
   // information from the cenc and cbcs schemes.
   bool ProcessCencAuxInfo(AtomType aScheme);
-  media::TimeUnit mMaxRoundingError;
+  uint64_t mMaxRoundingError;
 };
 
 DDLoggedTypeDeclName(MoofParser);
@@ -305,7 +308,7 @@ class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
   bool RebuildFragmentedIndex(const mozilla::MediaByteRangeSet& aByteRanges,
                               bool* aCanEvict);
   bool RebuildFragmentedIndex(BoxContext& aContext);
-  MP4Interval<media::TimeUnit> GetCompositionRange(
+  MP4Interval<Microseconds> GetCompositionRange(
       const mozilla::MediaByteRangeSet& aByteRanges);
   bool ReachedEnd();
   void ParseMoov(Box& aBox);

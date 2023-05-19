@@ -631,11 +631,11 @@ bool TrackBuffersManager::CodedFrameRemoval(TimeInterval aInterval) {
 #if DEBUG
   if (HasVideo()) {
     MSE_DEBUG("before video ranges=%s",
-              DumpTimeRangesRaw(mVideoTracks.mBufferedRanges).get());
+              DumpTimeRanges(mVideoTracks.mBufferedRanges).get());
   }
   if (HasAudio()) {
     MSE_DEBUG("before audio ranges=%s",
-              DumpTimeRangesRaw(mAudioTracks.mBufferedRanges).get());
+              DumpTimeRanges(mAudioTracks.mBufferedRanges).get());
   }
 #endif
 
@@ -796,11 +796,11 @@ void TrackBuffersManager::UpdateBufferedRanges() {
 #if DEBUG
   if (HasVideo()) {
     MSE_DEBUG("after video ranges=%s",
-              DumpTimeRangesRaw(mVideoTracks.mBufferedRanges).get());
+              DumpTimeRanges(mVideoTracks.mBufferedRanges).get());
   }
   if (HasAudio()) {
     MSE_DEBUG("after audio ranges=%s",
-              DumpTimeRangesRaw(mAudioTracks.mBufferedRanges).get());
+              DumpTimeRanges(mAudioTracks.mBufferedRanges).get());
   }
 #endif
 }
@@ -869,7 +869,8 @@ void TrackBuffersManager::SegmentParserLoop() {
                mSourceBufferAttributes->GetAppendState() ==
                    AppendState::PARSING_MEDIA_SEGMENT);
 
-    TimeUnit start, end;
+    int64_t start = 0;
+    int64_t end = 0;
     MediaResult newData = NS_ERROR_NOT_AVAILABLE;
 
     if (mSourceBufferAttributes->GetAppendState() ==
@@ -916,7 +917,7 @@ void TrackBuffersManager::SegmentParserLoop() {
       // monotonically increasing data.
       if (mNewMediaSegmentStarted) {
         if (NS_SUCCEEDED(newData) && mLastParsedEndTime.isSome() &&
-            start < mLastParsedEndTime.ref()) {
+            start < mLastParsedEndTime.ref().ToMicroseconds()) {
           MSE_DEBUG("Re-creating demuxer");
           ResetDemuxingState();
           return;
@@ -1119,7 +1120,7 @@ void TrackBuffersManager::OnDemuxerResetDone(const MediaResult& aResult) {
   if (mPendingInputBuffer) {
     // We had a partial media segment header stashed aside.
     // Reparse its content so we can continue parsing the current input buffer.
-    TimeUnit start, end;
+    int64_t start, end;
     mParser->ParseStartAndEndTimestamps(*mPendingInputBuffer, start, end);
     mProcessedInput += mPendingInputBuffer->Length();
   }
@@ -1270,16 +1271,17 @@ void TrackBuffersManager::OnDemuxerInitDone(const MediaResult& aResult) {
     info.mAudio.mTrackId = 1;
   }
 
-  TimeUnit videoDuration = numVideos ? info.mVideo.mDuration : TimeUnit::Zero();
-  TimeUnit audioDuration = numAudios ? info.mAudio.mDuration : TimeUnit::Zero();
+  int64_t videoDuration =
+      numVideos ? info.mVideo.mDuration.ToMicroseconds() : 0;
+  int64_t audioDuration =
+      numAudios ? info.mAudio.mDuration.ToMicroseconds() : 0;
 
-  TimeUnit duration = std::max(videoDuration, audioDuration);
+  int64_t duration = std::max(videoDuration, audioDuration);
   // 1. Update the duration attribute if it currently equals NaN.
   // Those steps are performed by the MediaSourceDecoder::SetInitialDuration
-  mAbstractMainThread->Dispatch(NewRunnableMethod<TimeUnit>(
+  mAbstractMainThread->Dispatch(NewRunnableMethod<int64_t>(
       "MediaSourceDecoder::SetInitialDuration", mParentDecoder.get(),
-      &MediaSourceDecoder::SetInitialDuration,
-      !duration.IsZero() ? duration : TimeUnit::FromInfinity()));
+      &MediaSourceDecoder::SetInitialDuration, duration ? duration : -1));
 
   // 2. If the initialization segment has no audio, video, or text tracks, then
   // run the append error algorithm with the decode error parameter set to true
@@ -1893,9 +1895,7 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     TimeUnit sampleTime = sample->mTime;
     TimeUnit sampleTimecode = sample->mTimecode;
     TimeUnit sampleDuration = sample->mDuration;
-    // Keep the timestamp, set by js, in the time base of the container.
-    TimeUnit timestampOffset =
-        mSourceBufferAttributes->GetTimestampOffset().ToBase(sample->mTime);
+    TimeUnit timestampOffset = mSourceBufferAttributes->GetTimestampOffset();
 
     TimeInterval sampleInterval =
         mSourceBufferAttributes->mGenerateTimestamps
@@ -1920,6 +1920,7 @@ void TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples,
     // is less than last decode timestamp: OR If last decode timestamp for track
     // buffer is set and the difference between decode timestamp and last decode
     // timestamp is greater than 2 times last frame duration:
+
     if (needDiscontinuityCheck && trackBuffer.mLastDecodeTimestamp.isSome() &&
         (decodeTimestamp < trackBuffer.mLastDecodeTimestamp.ref() ||
          (decodeTimestamp - trackBuffer.mLastDecodeTimestamp.ref() >
@@ -2463,7 +2464,7 @@ void TrackBuffersManager::RecreateParser(bool aReuseInitData) {
   mParser = ContainerParser::CreateForMIMEType(mType);
   DDLINKCHILD("parser", mParser.get());
   if (aReuseInitData && mInitData) {
-    TimeUnit start, end;
+    int64_t start, end;
     mParser->ParseStartAndEndTimestamps(MediaSpan(mInitData), start, end);
     mProcessedInput = mInitData->Length();
   } else {
