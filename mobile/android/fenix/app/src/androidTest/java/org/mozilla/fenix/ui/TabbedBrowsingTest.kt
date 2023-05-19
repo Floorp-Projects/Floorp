@@ -141,6 +141,7 @@ class TabbedBrowsingTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1830870")
     @Test
     fun closeTabTest() {
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
