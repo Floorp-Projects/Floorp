@@ -198,8 +198,6 @@ NS_DECLARE_FRAME_PROPERTY_RELEASABLE(UninflatedTextRunProperty, gfxTextRun)
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(FontSizeInflationProperty, float)
 
 NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(HangableWhitespaceProperty, nscoord)
-NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(TrimmableWhitespaceProperty,
-                                      gfxTextRun::TrimmableWS)
 
 struct nsTextFrame::PaintTextSelectionParams : nsTextFrame::PaintTextParams {
   Point textBaselinePt;
@@ -2231,7 +2229,8 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
     flags |= GetSpacingFlags(f);
     nsTextFrameUtils::CompressionMode compression =
         GetCSSWhitespaceToCompressionMode(f, textStyle);
-    if ((enabledJustification || f->ShouldSuppressLineBreak()) && !isSVG) {
+    if ((enabledJustification || f->ShouldSuppressLineBreak()) &&
+        !textStyle->WhiteSpaceIsSignificant() && !isSVG) {
       flags |= gfx::ShapedTextFlags::TEXT_ENABLE_SPACING;
     }
     fontStyle = f->StyleFont();
@@ -3890,7 +3889,7 @@ nsTArray<nsTextFrame*>* nsTextFrame::GetContinuations() {
   if (!mNextContinuation) {
     return nullptr;
   }
-  if (mPropertyFlags & PropertyFlags::Continuations) {
+  if (mHasContinuationsProperty) {
     return GetProperty(ContinuationsProperty());
   }
   size_t count = 0;
@@ -3908,7 +3907,7 @@ nsTArray<nsTextFrame*>* nsTextFrame::GetContinuations() {
     continuations = nullptr;
   }
   AddProperty(ContinuationsProperty(), continuations);
-  mPropertyFlags |= PropertyFlags::Continuations;
+  mHasContinuationsProperty = true;
   return continuations;
 }
 
@@ -8157,53 +8156,20 @@ void nsTextFrame::SetFontSizeInflation(float aInflation) {
 void nsTextFrame::SetHangableISize(nscoord aISize) {
   MOZ_ASSERT(aISize >= 0, "unexpected negative hangable advance");
   if (aISize <= 0) {
-    ClearHangableISize();
+    if (mHasHangableWS) {
+      RemoveProperty(HangableWhitespaceProperty());
+    }
+    mHasHangableWS = false;
     return;
   }
   SetProperty(HangableWhitespaceProperty(), aISize);
-  mPropertyFlags |= PropertyFlags::HangableWS;
+  mHasHangableWS = true;
 }
 
 nscoord nsTextFrame::GetHangableISize() const {
-  MOZ_ASSERT(!!(mPropertyFlags & PropertyFlags::HangableWS) ==
-                 HasProperty(HangableWhitespaceProperty()),
+  MOZ_ASSERT(mHasHangableWS == HasProperty(HangableWhitespaceProperty()),
              "flag/property mismatch!");
-  return (mPropertyFlags & PropertyFlags::HangableWS)
-             ? GetProperty(HangableWhitespaceProperty())
-             : 0;
-}
-
-void nsTextFrame::ClearHangableISize() {
-  if (mPropertyFlags & PropertyFlags::HangableWS) {
-    RemoveProperty(HangableWhitespaceProperty());
-    mPropertyFlags &= ~PropertyFlags::HangableWS;
-  }
-}
-
-void nsTextFrame::SetTrimmableWS(gfxTextRun::TrimmableWS aTrimmableWS) {
-  MOZ_ASSERT(aTrimmableWS.mAdvance >= 0, "negative trimmable size");
-  if (aTrimmableWS.mAdvance <= 0) {
-    ClearTrimmableWS();
-    return;
-  }
-  SetProperty(TrimmableWhitespaceProperty(), aTrimmableWS);
-  mPropertyFlags |= PropertyFlags::TrimmableWS;
-}
-
-gfxTextRun::TrimmableWS nsTextFrame::GetTrimmableWS() const {
-  MOZ_ASSERT(!!(mPropertyFlags & PropertyFlags::TrimmableWS) ==
-                 HasProperty(TrimmableWhitespaceProperty()),
-             "flag/property mismatch!");
-  return (mPropertyFlags & PropertyFlags::TrimmableWS)
-             ? GetProperty(TrimmableWhitespaceProperty())
-             : gfxTextRun::TrimmableWS{};
-}
-
-void nsTextFrame::ClearTrimmableWS() {
-  if (mPropertyFlags & PropertyFlags::TrimmableWS) {
-    RemoveProperty(TrimmableWhitespaceProperty());
-    mPropertyFlags &= ~PropertyFlags::TrimmableWS;
-  }
+  return mHasHangableWS ? GetProperty(HangableWhitespaceProperty()) : 0;
 }
 
 /* virtual */
@@ -9202,7 +9168,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   gfxTextRun::Metrics textMetrics;
   uint32_t transformedLastBreak = 0;
   bool usedHyphenation = false;
-  gfxTextRun::TrimmableWS trimmableWS;
+  gfxFloat trimmableWidth = 0;
   gfxFloat availWidth = aAvailableWidth;
   if (Style()->IsTextCombined()) {
     // If text-combine-upright is 'all', we would compress whatever long
@@ -9227,7 +9193,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
       availWidth, provider, suppressBreak, boundingBoxType, aDrawTarget,
       textStyle->WordCanWrap(this), isBreakSpaces,
       // The following are output parameters:
-      canTrimTrailingWhitespace || whitespaceCanHang ? &trimmableWS : nullptr,
+      canTrimTrailingWhitespace || whitespaceCanHang ? &trimmableWidth
+                                                     : nullptr,
       textMetrics, usedHyphenation, transformedLastBreak,
       // In/out
       breakPriority);
@@ -9288,7 +9255,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
 
   bool brokeText = forceBreak >= 0 || transformedCharsFit < transformedLength;
-  if (trimmableWS.mAdvance > 0.0) {
+  if (trimmableWidth > 0.0) {
     if (canTrimTrailingWhitespace) {
       // Optimization: if we we can be sure this frame will be at end of line,
       // then trim the whitespace now.
@@ -9296,41 +9263,32 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
         // We're definitely going to break so our trailing whitespace should
         // definitely be trimmed. Record that we've already done it.
         AddStateBits(TEXT_TRIMMED_TRAILING_WHITESPACE);
-        textMetrics.mAdvanceWidth -= trimmableWS.mAdvance;
-        trimmableWS.mAdvance = 0.0;
+        textMetrics.mAdvanceWidth -= trimmableWidth;
+        trimmableWidth = 0.0;
       }
-      ClearHangableISize();
-      ClearTrimmableWS();
+      SetHangableISize(0);
     } else if (whitespaceCanHang) {
       // Figure out how much whitespace will hang if at end-of-line.
       gfxFloat hang =
           std::min(std::max(0.0, textMetrics.mAdvanceWidth - availWidth),
-                   gfxFloat(trimmableWS.mAdvance));
-      SetHangableISize(NSToCoordRound(trimmableWS.mAdvance - hang));
-      // nsLineLayout only needs the TrimmableWS property if justifying, so
-      // check whether this is relevant.
-      if (textStyle->mTextAlign == StyleTextAlign::Justify ||
-          textStyle->mTextAlignLast == StyleTextAlignLast::Justify) {
-        SetTrimmableWS(trimmableWS);
-      }
+                   trimmableWidth);
+      SetHangableISize(NSToCoordRound(trimmableWidth - hang));
       textMetrics.mAdvanceWidth -= hang;
-      trimmableWS.mAdvance = 0.0;
+      trimmableWidth = 0.0;
     } else {
-      MOZ_ASSERT_UNREACHABLE("How did trimmableWS get set?!");
-      ClearHangableISize();
-      ClearTrimmableWS();
-      trimmableWS.mAdvance = 0.0;
+      MOZ_ASSERT_UNREACHABLE("How did trimmableWidth get set?!");
+      SetHangableISize(0);
+      trimmableWidth = 0.0;
     }
   } else {
-    // Remove any stale frame properties.
-    ClearHangableISize();
-    ClearTrimmableWS();
+    // Remove any stale frame property.
+    SetHangableISize(0);
   }
 
   if (!brokeText && lastBreak >= 0) {
     // Since everything fit and no break was forced,
     // record the last break opportunity
-    NS_ASSERTION(textMetrics.mAdvanceWidth - trimmableWS.mAdvance <= availWidth,
+    NS_ASSERTION(textMetrics.mAdvanceWidth - trimmableWidth <= availWidth,
                  "If the text doesn't fit, and we have a break opportunity, "
                  "why didn't MeasureText use it?");
     MOZ_ASSERT(lastBreak >= offset, "Strange break position");
@@ -9458,7 +9416,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // at most one space so there's no way for trimmable width from a previous
   // frame to accumulate with trimmable width from this frame.)
   if (transformedCharsFit > 0) {
-    aLineLayout.SetTrimmableISize(NSToCoordFloor(trimmableWS.mAdvance));
+    aLineLayout.SetTrimmableISize(NSToCoordFloor(trimmableWidth));
     AddStateBits(TEXT_HAS_NONCOLLAPSED_CHARACTERS);
   }
   bool breakAfter = forceBreakAfter;
@@ -9486,7 +9444,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
       // trailing whitespace. So we need to subtract trimmableWidth here
       // because if we did break at this point, that much width would be
       // trimmed.
-      if (textMetrics.mAdvanceWidth - trimmableWS.mAdvance > availWidth) {
+      if (textMetrics.mAdvanceWidth - trimmableWidth > availWidth) {
         breakAfter = true;
       } else {
         aLineLayout.NotifyOptionalBreakPosition(this, length, true,
@@ -9541,7 +9499,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   }
 
   // Compute space and letter counts for justification, if required
-  if ((lineContainer->StyleText()->mTextAlign == StyleTextAlign::Justify ||
+  if (!textStyle->WhiteSpaceIsSignificant() &&
+      (lineContainer->StyleText()->mTextAlign == StyleTextAlign::Justify ||
        lineContainer->StyleText()->mTextAlignLast ==
            StyleTextAlignLast::Justify ||
        shouldSuppressLineBreak) &&
