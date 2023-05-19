@@ -20,7 +20,7 @@ jobs:
     if: github.actor != 'github-actions[bot]' && github.actor != 'dependabot[bot]' && github.actor != 'MickeyMoz'
     steps:
       - name: Pull Request Labeler
-        uses: gabrielluong/pull-request-labeler@1.0.5
+        uses: gabrielluong/pull-request-labeler@1.0.6
         if: github.repository == 'mozilla-mobile/firefox-android'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
