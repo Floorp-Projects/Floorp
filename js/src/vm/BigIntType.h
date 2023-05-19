@@ -23,11 +23,15 @@
 #include "js/TypeDecls.h"
 
 namespace js {
+
+namespace gc {
 class TenuringTracer;
+}  // namespace gc
 
 namespace jit {
 class MacroAssembler;
-}
+}  // namespace jit
+
 }  // namespace js
 
 namespace JS {
@@ -434,7 +438,7 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   static constexpr size_t inlineDigitsLength() { return InlineDigitsLength; }
 
  private:
-  friend class js::TenuringTracer;
+  friend class js::gc::TenuringTracer;
 };
 
 static_assert(
