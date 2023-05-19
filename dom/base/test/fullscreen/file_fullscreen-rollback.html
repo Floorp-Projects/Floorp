@@ -8,7 +8,8 @@ element full-screen.
 
 Tests:
 * Request full-screen in doc.
-* Request full-screen in doc on element not descended from full-screen element. Request should be denied.
+* Request full-screen in doc on element not descended from full-screen element.
+* Cancel full-screen, FSE should rollback to previous FSE.
 * Request full-screen in subdoc.
 * Cancel full-screen in subdoc, doc should be full-screen.
 * Request full-screen in subdoc.
@@ -78,39 +79,43 @@ function begin() {
 function change1() {
   is(document.fullscreenElement, e("fse"), "Body should be FSE");
   // Request full-screen from element not descendent from current FSE.
-  addFullscreenErrorContinuation(error1);
-  requestFullscreen(e("non-fse"));
-}
-
-function error1() {
-  is(document.fullscreenElement, e("fse"), "FSE should not change");
-  var iframe = e("subdoc");
-  enterFullscreen(iframe.contentDocument.body, change2);
+  enterFullscreen(e("non-fse"), change2);
 }
 
 function change2() {
-  var iframe = e("subdoc");
-  is(document.fullscreenElement, iframe, "Subdoc container should be FSE.");
-  is(iframe.contentDocument.fullscreenElement, iframe.contentDocument.body, "Subdoc body should be FSE in subdoc");
+  is(document.fullscreenElement, e("non-fse"), "FSE should be e('non-fse')");
   revertFullscreen(document, change3);
 }
 
 function change3() {
   is(document.fullscreenElement, e("fse"), "FSE should rollback to FSE.");
-  revertFullscreen(document, change4);
+  var iframe = e("subdoc");
+  enterFullscreen(iframe.contentDocument.body, change4);
 }
 
 function change4() {
-  is(document.fullscreenElement, null, "Should have left full-screen entirely");
-  enterFullscreen(e("fse"), change5);
+  var iframe = e("subdoc");
+  is(document.fullscreenElement, iframe, "Subdoc container should be FSE.");
+  is(iframe.contentDocument.fullscreenElement, iframe.contentDocument.body, "Subdoc body should be FSE in subdoc");
+  revertFullscreen(document, change5);
 }
 
 function change5() {
-  is(document.fullscreenElement, e("fse"), "FSE should be e('fse')");
-  enterFullscreen(e("fse-inner"), change6);
+  is(document.fullscreenElement, e("fse"), "FSE should rollback to FSE.");
+  revertFullscreen(document, change6);
 }
 
 function change6() {
+  is(document.fullscreenElement, null, "Should have left full-screen entirely");
+  enterFullscreen(e("fse"), change7);
+}
+
+function change7() {
+  is(document.fullscreenElement, e("fse"), "FSE should be e('fse')");
+  enterFullscreen(e("fse-inner"), change8);
+}
+
+function change8() {
   var element = e('fse-inner');
   is(document.fullscreenElement, element, "FSE should be e('fse-inner')");
 
@@ -119,12 +124,12 @@ function change6() {
   // we set the fullscreenChangeEnters value to 1. This is a hack, but
   // it is a hack that supports the expected behavior.
   setFullscreenChangeEnters(1);
-  addFullscreenChangeContinuation("exit", change7);
+  addFullscreenChangeContinuation("exit", change9);
   info(`Removing FSE should exit fullscreen.`);
   element.remove();
 }
 
-function change7() {
+function change9() {
   is(document.fullscreenElement, null, "Should have fully exited full-screen mode when removed FSE from doc");
   opener.nextTest();
 }
