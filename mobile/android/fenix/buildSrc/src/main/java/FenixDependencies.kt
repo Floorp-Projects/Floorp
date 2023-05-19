@@ -60,7 +60,7 @@ object FenixVersions {
 
     // keep in sync with the versions used in AS.
     const val protobuf = "3.21.10"
-    const val protobuf_plugin = "0.8.19"
+    const val protobuf_plugin = "0.9.3"
 }
 
 @Suppress("unused")
