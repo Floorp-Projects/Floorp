@@ -297,7 +297,6 @@
     <ID>UndocumentedPublicFunction:String.kt$fun String.isGeoLocation()</ID>
     <ID>UndocumentedPublicFunction:String.kt$fun String.isPhone()</ID>
     <ID>UndocumentedPublicFunction:SyncAuthInfoCache.kt$SyncAuthInfoCache$fun expired(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:SyncTelemetry.kt$SyncTelemetry$fun processFxaTelemetry(jsonStr: String, crashReporter: CrashReporting? = null)</ID>
     <ID>UndocumentedPublicFunction:SystemEngineSession.kt$SystemEngineSession.WebSetting$operator fun getValue(thisRef: Any?, property: KProperty&lt;*&gt;): T</ID>
     <ID>UndocumentedPublicFunction:SystemEngineSession.kt$SystemEngineSession.WebSetting$operator fun setValue(thisRef: Any?, property: KProperty&lt;*&gt;, value: T)</ID>
     <ID>UndocumentedPublicFunction:SystemEngineSessionState.kt$SystemEngineSessionState.Companion$fun fromJSON(json: JSONObject): SystemEngineSessionState</ID>

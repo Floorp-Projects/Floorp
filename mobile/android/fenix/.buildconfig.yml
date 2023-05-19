@@ -80,7 +80,6 @@ projects:
     - support-rusterrors
     - support-rusthttp
     - support-rustlog
-    - support-sync-telemetry
     - support-test
     - support-test-libstate
     - support-utils

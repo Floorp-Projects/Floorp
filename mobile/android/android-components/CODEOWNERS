@@ -116,7 +116,6 @@
 /components/support/locale/                 @amejia481
 /components/support/rusthttp/               @mozilla-mobile/ast
 /components/support/rustlog/                @mozilla-mobile/ast
-/components/support/sync-telemetry/         @mozilla-mobile/act
 /components/support/test-appservices/       @mozilla-mobile/act
 /components/support/test-libstate/          @csadilek
 /components/support/test/                   @amejia481

@@ -133,7 +133,6 @@ treeherder:
         support-rusthttp: support-rusthttp
         support-rusterrors: support-rusterrors
         support-rustlog: support-rustlog
-        support-sync-telemetry: support-sync-telemetry
         support-test-appservices: support-test-appservices
         support-test-fakes: support-test-fakes
         support-test-libstate: support-test-libstate

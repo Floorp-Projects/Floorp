@@ -40,7 +40,6 @@ dependencies {
 
     // Observable is part of public API of the FxaAccountManager.
     api project(':support-base')
-    implementation project(':support-sync-telemetry')
     implementation project(':support-ktx')
     implementation project(':support-utils')
     implementation project(':lib-dataprotect')

@@ -39,9 +39,9 @@ dependencies {
 
     implementation project(':concept-toolbar')
     implementation project(':support-utils')
-    implementation project(':support-sync-telemetry')
 
     implementation ComponentsDependencies.androidx_work_runtime
+    implementation ComponentsDependencies.mozilla_sync_manager
 
     testImplementation project(':support-test')
 

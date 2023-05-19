@@ -5,7 +5,7 @@ A syncable implementation of `concept-storage` backed by [application-services' 
 ## Before using this component
 Products sending telemetry and using this component *must request* a data-review following [this process](https://wiki.mozilla.org/Firefox/Data_Collection).
 This component provides data collection using the [Glean SDK](https://mozilla.github.io/glean/book/index.html).
-The list of metrics being collected is available in the [metrics documentation](../../support/sync-telemetry/docs/metrics.md).
+The list of metrics being collected is available in the [metrics documentation](https://github.com/mozilla/application-services/tree/main/components/sync_manager/android/metrics.md).
 
 ### Setting up the dependency
 

@@ -43,7 +43,6 @@ dependencies {
     api project(':lib-dataprotect')
 
     implementation project(':concept-storage')
-    implementation project(':support-sync-telemetry')
     implementation project(':support-utils')
     implementation project(':service-glean')
 

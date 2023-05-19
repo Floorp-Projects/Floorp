@@ -30,7 +30,7 @@ pushd "$WORKING_DIR"
 # the Miniconda Python environment and doesn't have (almost) any other transitive dependencies.
 # If that happens concurrently with other tasks then this seems to fail quite often. So let's do it
 # here first and also not use the "--parallel` flag.
-./gradlew $REPOS support-sync-telemetry:assemble
+./gradlew $REPOS service-nimbus:assemble
 
 # Plugins aren't automatically built. That's why we build them one by one here
 if [[ $WORKING_DIR == ${ANDROID_COMPONENTS_DIR}* ]]; then

@@ -27,6 +27,7 @@ import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.appservices.syncmanager.ServiceStatus
 import mozilla.appservices.syncmanager.SyncEngineSelection
 import mozilla.appservices.syncmanager.SyncParams
+import mozilla.appservices.syncmanager.SyncTelemetry
 import mozilla.components.concept.storage.KeyProvider
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.SyncAuthInfoCache
@@ -37,7 +38,6 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import mozilla.components.support.sync.telemetry.SyncTelemetry
 import java.io.Closeable
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
