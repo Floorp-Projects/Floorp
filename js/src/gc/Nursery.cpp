@@ -21,6 +21,7 @@
 #include "debugger/DebugAPI.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
+#include "gc/GCParallelTask.h"
 #include "gc/GCProbes.h"
 #include "gc/Memory.h"
 #include "gc/PublicIterators.h"
@@ -58,6 +59,7 @@ struct alignas(gc::CellAlignBytes) js::Nursery::Canary {
 #endif
 
 namespace js {
+
 struct NurseryChunk : public ChunkBase {
   char data[Nursery::NurseryChunkUsableSize];
 
@@ -85,6 +87,33 @@ struct NurseryChunk : public ChunkBase {
 };
 static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
               "Nursery chunk size must match gc::Chunk size.");
+
+class NurseryDecommitTask : public GCParallelTask {
+ public:
+  explicit NurseryDecommitTask(gc::GCRuntime* gc);
+  bool reserveSpaceForBytes(size_t nbytes);
+
+  bool isEmpty(const AutoLockHelperThreadState& lock) const;
+
+  void queueChunk(NurseryChunk* chunk, const AutoLockHelperThreadState& lock);
+  void queueRange(size_t newCapacity, NurseryChunk& chunk,
+                  const AutoLockHelperThreadState& lock);
+
+ private:
+  using NurseryChunkVector = Vector<NurseryChunk*, 0, SystemAllocPolicy>;
+
+  void run(AutoLockHelperThreadState& lock) override;
+
+  NurseryChunkVector& chunksToDecommit() { return chunksToDecommit_.ref(); }
+  const NurseryChunkVector& chunksToDecommit() const {
+    return chunksToDecommit_.ref();
+  }
+
+  MainThreadOrGCTaskData<NurseryChunkVector> chunksToDecommit_;
+
+  MainThreadOrGCTaskData<NurseryChunk*> partialChunk;
+  MainThreadOrGCTaskData<size_t> partialCapacity;
+};
 
 }  // namespace js
 
@@ -212,8 +241,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       reportPretenuringThreshold_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
       hasRecentGrowthData(false),
-      smoothedTargetSize(0.0),
-      decommitTask(gc)
+      smoothedTargetSize(0.0)
 #ifdef JS_GC_ZEAL
       ,
       lastCanary_(nullptr)
@@ -288,6 +316,11 @@ bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
       "\tallocation sites with at least N allocations.\n",
       &reportPretenuring_, &reportPretenuringThreshold_);
 
+  decommitTask = MakeUnique<NurseryDecommitTask>(gc);
+  if (!decommitTask) {
+    return false;
+  }
+
   if (!gc->storeBuffer().enable()) {
     return false;
   }
@@ -329,7 +362,7 @@ bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
 
   capacity_ = tunables().gcMinNurseryBytes();
 
-  if (!decommitTask.reserveSpaceForBytes(capacity_) ||
+  if (!decommitTask->reserveSpaceForBytes(capacity_) ||
       !allocateNextChunk(0, lock)) {
     capacity_ = 0;
     return false;
@@ -353,9 +386,9 @@ void js::Nursery::disable() {
   }
 
   // Free all chunks.
-  decommitTask.join();
+  decommitTask->join();
   freeChunksFrom(0);
-  decommitTask.runFromMainThread();
+  decommitTask->runFromMainThread();
 
   capacity_ = 0;
 
@@ -451,7 +484,7 @@ void js::Nursery::enterZealMode() {
 
   MOZ_ASSERT(isEmpty());
 
-  decommitTask.join();
+  decommitTask->join();
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
 
@@ -470,7 +503,7 @@ void js::Nursery::enterZealMode() {
 
   capacity_ = RoundUp(tunables().gcMaxNurseryBytes(), ChunkSize);
 
-  if (!decommitTask.reserveSpaceForBytes(capacity_)) {
+  if (!decommitTask->reserveSpaceForBytes(capacity_)) {
     oomUnsafe.crash("Nursery::enterZealMode");
   }
 
@@ -1796,7 +1829,7 @@ void js::Nursery::maybeResizeNursery(JS::GCOptions options,
   }
 #endif
 
-  decommitTask.join();
+  decommitTask->join();
 
   size_t newCapacity = mozilla::Clamp(targetSize(options, reason),
                                       tunables().gcMinNurseryBytes(),
@@ -1811,8 +1844,8 @@ void js::Nursery::maybeResizeNursery(JS::GCOptions options,
   }
 
   AutoLockHelperThreadState lock;
-  if (!decommitTask.isEmpty(lock)) {
-    decommitTask.startOrRunIfIdle(lock);
+  if (!decommitTask->isEmpty(lock)) {
+    decommitTask->startOrRunIfIdle(lock);
   }
 }
 
@@ -1947,7 +1980,7 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
   MOZ_ASSERT(newCapacity <= tunables().gcMaxNurseryBytes());
   MOZ_ASSERT(newCapacity > capacity());
 
-  if (!decommitTask.reserveSpaceForBytes(newCapacity)) {
+  if (!decommitTask->reserveSpaceForBytes(newCapacity)) {
     return;
   }
 
@@ -1994,7 +2027,7 @@ void js::Nursery::freeChunksFrom(const unsigned firstFreeChunk) {
   {
     AutoLockHelperThreadState lock;
     for (size_t i = firstChunkToDecommit; i < chunks_.length(); i++) {
-      decommitTask.queueChunk(chunks_[i], lock);
+      decommitTask->queueChunk(chunks_[i], lock);
     }
   }
 
@@ -2035,7 +2068,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
                          MemCheckKind::MakeNoAccess);
 
     AutoLockHelperThreadState lock;
-    decommitTask.queueRange(capacity_, chunk(0), lock);
+    decommitTask->queueRange(capacity_, chunk(0), lock);
   }
 }
 
@@ -2073,6 +2106,8 @@ void js::Nursery::sweepMapAndSetObjects() {
   }
   setsWithNurseryMemory_.clearAndFree();
 }
+
+void js::Nursery::joinDecommitTask() { decommitTask->join(); }
 
 JS_PUBLIC_API void JS::EnableNurseryStrings(JSContext* cx) {
   AutoEmptyNursery empty(cx);

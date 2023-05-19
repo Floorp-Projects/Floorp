@@ -14,6 +14,7 @@
 #include "gc/Barrier.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
+#include "threading/ProtectedData.h"
 
 class JSRope;
 
