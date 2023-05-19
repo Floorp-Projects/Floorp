@@ -12,8 +12,8 @@ add_task(async function test_translations_panel_cancel() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const button = await assertTranslationsButton(
-    b => !b.hidden,
+  const { button } = await assertTranslationsButton(
+    { button: true },
     "The button is available."
   );
 

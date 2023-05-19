@@ -12,8 +12,8 @@ add_task(async function test_translations_panel_basics() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const button = await assertTranslationsButton(
-    b => !b.hidden,
+  const { button } = await assertTranslationsButton(
+    { button: true, circleArrows: false, locale: false, icon: true },
     "The button is available."
   );
 
@@ -37,7 +37,19 @@ add_task(async function test_translations_panel_basics() {
     );
   });
 
+  await assertTranslationsButton(
+    { button: true, circleArrows: true, locale: false, icon: true },
+    "The icon presents the loading indicator."
+  );
+
   await resolveDownloads(1);
+
+  const { locale } = await assertTranslationsButton(
+    { button: true, circleArrows: false, locale: true, icon: true },
+    "The icon presents the locale."
+  );
+
+  is(locale.innerText, "en", "The English language tag is shown.");
 
   await runInPage(async TranslationsTest => {
     const { getH1 } = TranslationsTest.getSelectors();
@@ -67,6 +79,11 @@ add_task(async function test_translations_panel_basics() {
       "Don Quijote de La Mancha"
     );
   });
+
+  await assertTranslationsButton(
+    { button: true, circleArrows: false, locale: false, icon: true },
+    "The button is reverted to have an icon."
+  );
 
   await cleanup();
 });
