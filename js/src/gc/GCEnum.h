@@ -49,7 +49,6 @@ enum class State {
   D(CheckHashTablesOnMinorGC, 13)        \
   D(Compact, 14)                         \
   D(CheckHeapAfterGC, 15)                \
-  D(CheckNursery, 16)                    \
   D(YieldBeforeSweepingAtoms, 17)        \
   D(CheckGrayMarking, 18)                \
   D(YieldBeforeSweepingCaches, 19)       \
