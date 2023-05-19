@@ -105,20 +105,14 @@ nsCertOverride::GetAsciiHost(/*out*/ nsACString& aAsciiHost) {
 }
 
 NS_IMETHODIMP
-nsCertOverride::GetDbKey(/*out*/ nsACString& aDBKey) {
-  aDBKey = mDBKey;
+nsCertOverride::GetFingerprint(/*out*/ nsACString& aFingerprint) {
+  aFingerprint = mFingerprint;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCertOverride::GetPort(/*out*/ int32_t* aPort) {
   *aPort = mPort;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCertOverride::GetIsTemporary(/*out*/ bool* aIsTemporary) {
-  *aIsTemporary = mIsTemporary;
   return NS_OK;
 }
 
@@ -219,7 +213,6 @@ void nsCertOverrideService::RemoveAllTemporaryOverrides() {
   for (auto iter = mSettingsTable.Iter(); !iter.Done(); iter.Next()) {
     nsCertOverrideEntry* entry = iter.Get();
     if (entry->mSettings->mIsTemporary) {
-      entry->mSettings->mCert = nullptr;
       iter.Remove();
       removedAny = true;
     }
@@ -257,9 +250,9 @@ nsresult nsCertOverrideService::Read(const MutexAutoLock& aProofOfLock) {
   bool isMore = true;
 
   // Each line is of the form:
-  // host:port:originAttributes \t sSHA256OIDString \t fingerprint \t \t dbKey
-  // There may be some "bits" identifiers between the `fingerprint` and `dbKey`
-  // fields, but these are now ignored.
+  // host:port:originAttributes \t sSHA256OIDString \t fingerprint \t
+  // There may be some "bits" identifiers and "dbKey" after the `fingerprint`
+  // field in 'fingerprint \t \t dbKey' format, but these are now ignored.
   // Lines that don't match this form are silently dropped.
 
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore))) {
@@ -302,21 +295,10 @@ nsresult nsCertOverrideService::Read(const MutexAutoLock& aProofOfLock) {
         fingerprint.Length() == 0) {
       continue;
     }
-    nsDependentCSubstring bitsString;
-    if (!parser.ReadUntil(Tokenizer::Token::Whitespace(), bitsString)) {
-      continue;
-    }
-    Unused << bitsString;
-    nsDependentCSubstring dbKey;
-    if (!parser.ReadUntil(Tokenizer::Token::EndOfFile(), dbKey) ||
-        dbKey.Length() == 0) {
-      continue;
-    }
 
     AddEntryToList(host, port, attributes,
-                   nullptr,  // don't have the cert
-                   false,    // not temporary
-                   fingerprint, dbKey, aProofOfLock);
+                   false,  // not temporary
+                   fingerprint, aProofOfLock);
   }
 
   return NS_OK;
@@ -360,8 +342,7 @@ nsresult nsCertOverrideService::Write(const MutexAutoLock& aProofOfLock) {
     output.Append(settings->mFingerprint);
     output.Append(kTab);
     // the "bits" string used to go here, but it no longer exists
-    output.Append(kTab);
-    output.Append(settings->mDBKey);
+    // the "\t dbKey" string used to go here, but it no longer exists
     output.Append(NS_LINEBREAK);
   }
 
@@ -418,41 +399,16 @@ nsCertOverrideService::RememberValidityOverride(
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoCString nickname;
-  nsresult rv = DefaultServerNicknameForCert(nsscert.get(), nickname);
-  if (!aTemporary && NS_SUCCEEDED(rv)) {
-    UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
-    if (!slot) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // This can fail (for example, if we're in read-only mode). Luckily, we
-    // don't even need it to succeed - we always match on the stored hash of the
-    // certificate rather than the full certificate. It makes the display a bit
-    // less informative (since we won't have a certificate to display), but it's
-    // better than failing the entire operation.
-    Unused << PK11_ImportCert(slot.get(), nsscert.get(), CK_INVALID_HANDLE,
-                              nickname.get(), false);
-  }
-
   nsAutoCString fpStr;
-  rv = GetCertSha256Fingerprint(aCert, fpStr);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsAutoCString dbkey;
-  rv = aCert->GetDbKey(dbkey);
+  nsresult rv = GetCertSha256Fingerprint(aCert, fpStr);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   {
     MutexAutoLock lock(mMutex);
-    AddEntryToList(aHostName, aPort, aOriginAttributes,
-                   aTemporary ? aCert : nullptr,
-                   // keep a reference to the cert for temporary overrides
-                   aTemporary, fpStr, dbkey, lock);
+    AddEntryToList(aHostName, aPort, aOriginAttributes, aTemporary, fpStr,
+                   lock);
     if (!aTemporary) {
       Write(lock);
     }
@@ -552,9 +508,8 @@ nsCertOverrideService::HasMatchingOverrideScriptable(
 
 nsresult nsCertOverrideService::AddEntryToList(
     const nsACString& aHostName, int32_t aPort,
-    const OriginAttributes& aOriginAttributes, nsIX509Cert* aCert,
-    const bool aIsTemporary, const nsACString& fingerprint,
-    const nsACString& dbKey, const MutexAutoLock& aProofOfLock) {
+    const OriginAttributes& aOriginAttributes, const bool aIsTemporary,
+    const nsACString& fingerprint, const MutexAutoLock& aProofOfLock) {
   mMutex.AssertCurrentThreadOwns();
   nsAutoCString keyString;
   GetKeyString(aHostName, aPort, aOriginAttributes, keyString);
@@ -575,10 +530,6 @@ nsresult nsCertOverrideService::AddEntryToList(
   settings->mOriginAttributes = aOriginAttributes;
   settings->mIsTemporary = aIsTemporary;
   settings->mFingerprint = fingerprint;
-  settings->mDBKey = dbKey;
-  // remove whitespace from stored dbKey for backwards compatibility
-  settings->mDBKey.StripWhitespace();
-  settings->mCert = aCert;
   entry->mSettings = settings;
 
   return NS_OK;
