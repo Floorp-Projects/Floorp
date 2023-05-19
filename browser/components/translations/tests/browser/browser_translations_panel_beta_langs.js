@@ -44,8 +44,8 @@ add_task(async function test_translations_panel_display_beta_languages() {
     }
   }
 
-  const button = await assertTranslationsButton(
-    b => !b.hidden,
+  const { button } = await assertTranslationsButton(
+    { button: true },
     "The button is available."
   );
 

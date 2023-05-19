@@ -11,22 +11,44 @@ Services.scriptloader.loadSubScript(
 /**
  * Assert some property about the translations button.
  *
- * @param {Function} assertion
+ * @param {Record<string, boolean>} visibleAssertions
  * @param {string} message The messag for the assertion.
  * @returns {HTMLElement}
  */
-function assertTranslationsButton(assertion, message) {
-  return TestUtils.waitForCondition(() => {
-    const button = document.getElementById("translations-button");
-    if (!button) {
-      return false;
+async function assertTranslationsButton(visibleAssertions, message) {
+  const elements = {
+    button: document.getElementById("translations-button"),
+    icon: document.getElementById("translations-button-icon"),
+    circleArrows: document.getElementById("translations-button-circle-arrows"),
+    locale: document.getElementById("translations-button-locale"),
+  };
+
+  for (const [name, element] of Object.entries(elements)) {
+    if (!element) {
+      throw new Error("Could not find the " + name);
     }
-    if (assertion(button)) {
-      ok(button, message);
-      return button;
+  }
+
+  try {
+    // Test that the visibilities match.
+    await TestUtils.waitForCondition(() => {
+      for (const [name, visible] of Object.entries(visibleAssertions)) {
+        if (elements[name].hidden === visible) {
+          return false;
+        }
+      }
+      return true;
+    }, message);
+  } catch (error) {
+    // On a mismatch, report it.
+    for (const [name, expected] of Object.entries(visibleAssertions)) {
+      is(!elements[name].hidden, expected, `Visibility for "${name}"`);
     }
-    return false;
-  }, message);
+  }
+
+  ok(true, message);
+
+  return elements;
 }
 
 /**

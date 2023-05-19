@@ -12,8 +12,8 @@ add_task(async function test_translations_panel_manage_languages() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const button = await assertTranslationsButton(
-    b => !b.hidden,
+  const { button } = await assertTranslationsButton(
+    { button: true },
     "The button is available."
   );
 
@@ -50,8 +50,8 @@ add_task(async function test_translations_panel_switch_language() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const button = await assertTranslationsButton(
-    b => !b.hidden,
+  const { button } = await assertTranslationsButton(
+    { button: true },
     "The button is available."
   );
 

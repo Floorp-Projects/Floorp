@@ -14,21 +14,21 @@ add_task(async function test_button_visible_navigation() {
   });
 
   await assertTranslationsButton(
-    button => !button.hidden,
+    { button: true },
     "The button should be visible since the page can be translated from Spanish."
   );
 
   navigate(ENGLISH_PAGE_URL, "Navigate to an English page.");
 
   await assertTranslationsButton(
-    button => button.hidden,
+    { button: false },
     "The button should be invisible since the page is in English."
   );
 
   navigate(SPANISH_PAGE_URL, "Navigate back to a Spanish page.");
 
   await assertTranslationsButton(
-    button => !button.hidden,
+    { button: true },
     "The button should be visible again since the page is in Spanish."
   );
 
@@ -47,7 +47,7 @@ add_task(async function test_button_visible() {
   });
 
   await assertTranslationsButton(
-    button => !button.hidden,
+    { button: true },
     "The button should be visible since the page can be translated from Spanish."
   );
 
@@ -57,21 +57,21 @@ add_task(async function test_button_visible() {
   );
 
   await assertTranslationsButton(
-    button => button.hidden,
+    { button: false },
     "The button should be invisible since the tab is in English."
   );
 
   await switchTab(spanishTab);
 
   await assertTranslationsButton(
-    button => !button.hidden,
+    { button: true },
     "The button should be visible again since the page is in Spanish."
   );
 
   await switchTab(englishTab);
 
   await assertTranslationsButton(
-    button => button.hidden,
+    { button: false },
     "Don't show for english pages"
   );
 
