@@ -5,7 +5,7 @@
 # Inspired by:
 # https://hub.docker.com/r/runmymind/docker-android-sdk/~/dockerfile/
 
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 MAINTAINER Sebastian Kaspari "skaspari@mozilla.com"
 
