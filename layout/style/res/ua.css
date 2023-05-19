@@ -301,7 +301,7 @@
   /* Collection of pages in print/print preview. Visual styles may only appear
    * in print preview. */
   display: block;
-  background: #606060 linear-gradient(#606060, #8a8a8a) fixed;
+  background: linear-gradient(#606060, #8a8a8a) fixed;
   print-color-adjust: exact;
   /* We always fill the available space in both directions */
   height: 100%;

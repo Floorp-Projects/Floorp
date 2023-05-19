@@ -906,6 +906,15 @@ class PresShell final : public nsStubDocumentObserver,
   void UpdateCanvasBackground();
 
   /**
+   * Add a solid color item to the bottom of aList with frame aFrame and
+   * bounds aBounds representing the dark grey background behind the page of a
+   * print preview presentation.
+   */
+  void AddPrintPreviewBackgroundItem(nsDisplayListBuilder* aBuilder,
+                                     nsDisplayList* aList, nsIFrame* aFrame,
+                                     const nsRect& aBounds);
+
+  /**
    * Computes the backstop color for the view: transparent if in a transparent
    * widget, otherwise the PresContext default background color. This color is
    * only visible if the contents of the view as a whole are translucent.
