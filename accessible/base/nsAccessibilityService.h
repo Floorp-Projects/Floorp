@@ -90,6 +90,14 @@ void PrefChanged(const char* aPref, void* aClosure);
  */
 EPlatformDisabledState ReadPlatformDisabledState();
 
+/**
+ * Returns true if all accessibility trees from content processes are cached in
+ * the parent process.
+ * XXX This is a temporary function until all non-caching code paths are
+ * removed. It always returns true.
+ */
+inline bool IsCacheActive() { return true; }
+
 }  // namespace a11y
 }  // namespace mozilla
 
