@@ -8,6 +8,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 ChromeUtils.defineESModuleGetters(this, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
+  SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
@@ -31,6 +32,12 @@ const TEST_PROVIDER_INFO = [
     shoppingTab: {
       regexp: "&site=shop",
     },
+    components: [
+      {
+        type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        default: true,
+      },
+    ],
   },
   {
     telemetryId: "example2",
@@ -42,6 +49,12 @@ const TEST_PROVIDER_INFO = [
     organicCodes: ["foo"],
     followOnParamNames: ["a"],
     extraAdServersRegexps: [/^https:\/\/www\.example\.com\/ad2/],
+    components: [
+      {
+        type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        default: true,
+      },
+    ],
   },
 ];
 

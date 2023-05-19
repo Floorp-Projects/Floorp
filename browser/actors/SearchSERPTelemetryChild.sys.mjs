@@ -918,7 +918,7 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
 
     if (
       lazy.serpEventsEnabled &&
-      providerInfo?.components &&
+      providerInfo?.components.length &&
       (eventType == "load" || eventType == "pageshow")
     ) {
       searchAdImpression.pageUrl = new URL(url);
@@ -956,19 +956,20 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
   #checkForPageImpressionComponents() {
     let url = this.document.documentURI;
     let providerInfo = this._getProviderInfoForUrl(url);
-    searchAdImpression.providerInfo = providerInfo;
-
-    let start = Cu.now();
-    let hasShoppingTab = searchAdImpression.hasShoppingTab(this.document);
-    ChromeUtils.addProfilerMarker(
-      "SearchSERPTelemetryChild.#recordImpression",
-      start,
-      "Checked for shopping tab"
-    );
-    this.sendAsyncMessage("SearchTelemetry:PageImpression", {
-      url,
-      hasShoppingTab,
-    });
+    if (providerInfo.components?.length) {
+      searchAdImpression.providerInfo = providerInfo;
+      let start = Cu.now();
+      let hasShoppingTab = searchAdImpression.hasShoppingTab(this.document);
+      ChromeUtils.addProfilerMarker(
+        "SearchSERPTelemetryChild.#recordImpression",
+        start,
+        "Checked for shopping tab"
+      );
+      this.sendAsyncMessage("SearchTelemetry:PageImpression", {
+        url,
+        hasShoppingTab,
+      });
+    }
   }
 
   /**

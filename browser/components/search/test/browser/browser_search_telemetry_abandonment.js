@@ -194,3 +194,51 @@ add_task(async function test_click_ad() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_without_components() {
+  // Mock a provider that doesn't have components.
+  let providerInfo = [
+    {
+      ...TEST_PROVIDER_INFO[0],
+      components: [],
+    },
+  ];
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(providerInfo);
+  await waitForIdle();
+  resetTelemetry();
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    getSERPUrl("searchTelemetryAd.html")
+  );
+
+  // We shouldn't expect a SERP impression, so instead wait roughly
+  // around how long it would usually take to receive an impression following
+  // a page load.
+  await promiseWaitForAdLinkCheck();
+  Assert.equal(
+    !!Glean.serp.impression.testGetValue(),
+    false,
+    "Should not have any impression events."
+  );
+
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    gBrowser,
+    false,
+    "https://www.example.com/"
+  );
+  BrowserTestUtils.loadURIString(gBrowser, "https://www.example.com");
+  await browserLoadedPromise;
+
+  Assert.equal(
+    !!Glean.serp.abandonment.testGetValue(),
+    false,
+    "Should not have any abandonment events."
+  );
+
+  BrowserTestUtils.removeTab(tab);
+
+  // Allow subsequent tests to use the default provider.
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
+  await waitForIdle();
+});
