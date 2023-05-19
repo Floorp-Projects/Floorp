@@ -34,7 +34,6 @@
 #include "mozilla/widget/GeckoViewSupport.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 
 #ifdef DEBUG
 #  include <android/log.h>
@@ -116,9 +115,7 @@ void SessionAccessibility::Init() {
   Settings::Init();
 }
 
-bool SessionAccessibility::IsCacheEnabled() {
-  return StaticPrefs::accessibility_cache_enabled_AtStartup();
-}
+bool SessionAccessibility::IsCacheEnabled() { return a11y::IsCacheActive(); }
 
 void SessionAccessibility::GetNodeInfo(int32_t aID,
                                        mozilla::jni::Object::Param aNodeInfo) {

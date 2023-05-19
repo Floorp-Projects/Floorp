@@ -18,7 +18,7 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerMarkers.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;
@@ -980,9 +980,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 #if defined(XP_WIN)
       parentIPCDoc->ConstructChildDocInParentProcess(
           ipcDoc, id,
-          StaticPrefs::accessibility_cache_enabled_AtStartup()
-              ? 0
-              : MsaaAccessible::GetChildIDFor(childDoc));
+          a11y::IsCacheActive() ? 0 : MsaaAccessible::GetChildIDFor(childDoc));
 #else
       nsCOMPtr<nsIBrowserChild> browserChild =
           do_GetInterface(mDocument->DocumentNode()->GetDocShell());

@@ -7,7 +7,7 @@
 
 #include "AccAttributes.h"
 #include "mozilla/a11y/Accessible.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "TextLeafRange.h"
@@ -421,7 +421,7 @@ void HyperTextAccessibleBase::AdjustOriginIfEndBoundary(
 void HyperTextAccessibleBase::TextBeforeOffset(
     int32_t aOffset, AccessibleTextBoundary aBoundaryType,
     int32_t* aStartOffset, int32_t* aEndOffset, nsAString& aText) {
-  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  MOZ_ASSERT(a11y::IsCacheActive());
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
 
@@ -479,7 +479,7 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
                                            int32_t* aStartOffset,
                                            int32_t* aEndOffset,
                                            nsAString& aText) {
-  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  MOZ_ASSERT(a11y::IsCacheActive());
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
 
@@ -549,7 +549,7 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
 void HyperTextAccessibleBase::TextAfterOffset(
     int32_t aOffset, AccessibleTextBoundary aBoundaryType,
     int32_t* aStartOffset, int32_t* aEndOffset, nsAString& aText) {
-  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  MOZ_ASSERT(a11y::IsCacheActive());
   *aStartOffset = *aEndOffset = 0;
   aText.Truncate();
 
@@ -680,7 +680,7 @@ int32_t HyperTextAccessibleBase::LinkIndexOf(Accessible* aLink) {
 already_AddRefed<AccAttributes> HyperTextAccessibleBase::TextAttributes(
     bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
     int32_t* aEndOffset) {
-  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  MOZ_ASSERT(a11y::IsCacheActive());
   *aStartOffset = *aEndOffset = 0;
   index_t offset = ConvertMagicOffset(aOffset);
   if (!offset.IsValid() || offset > CharacterCount()) {

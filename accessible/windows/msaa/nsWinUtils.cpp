@@ -14,7 +14,6 @@
 
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "nsArrayUtils.h"
 #include "nsICSSDeclaration.h"
 #include "mozilla/dom/Document.h"
@@ -145,7 +144,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
           DocAccessibleParent* docParent = static_cast<DocAccessibleParent*>(
               ::GetPropW(hWnd, kPropNameDocAccParent));
           if (docParent) {
-            if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+            if (a11y::IsCacheActive()) {
               msaaAccessible = MsaaAccessible::GetFrom(docParent);
             } else {
               docParent->GetCOMInterface(getter_AddRefs(msaaAccessible));

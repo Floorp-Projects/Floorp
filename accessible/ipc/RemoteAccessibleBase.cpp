@@ -19,7 +19,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/gfx/Matrix.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "mozilla/Unused.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
@@ -58,7 +58,7 @@ void RemoteAccessibleBase<Derived>::Shutdown() {
     CachedTableAccessible::Invalidate(this);
   }
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     // Remove this acc's relation map from the doc's map of
     // reverse relations. Prune forward relations associated with this
     // acc's reverse relations. This also removes the acc's map of reverse
@@ -335,7 +335,7 @@ bool RemoteAccessibleBase<Derived>::SetCurValue(double aValue) {
     return false;
   }
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     // XXX: If cache is disabled there is a slight regression
     // where we don't check the readonly/unavailable state or the min/max
     // values. This will go away once cache is enabled by default.
@@ -1887,7 +1887,7 @@ void RemoteAccessibleBase<Derived>::SetSelected(bool aSelect) {
 
 template <class Derived>
 TableAccessibleBase* RemoteAccessibleBase<Derived>::AsTableBase() {
-  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  MOZ_ASSERT(a11y::IsCacheActive());
   if (IsTable()) {
     return CachedTableAccessible::GetFrom(this);
   }
@@ -1896,7 +1896,7 @@ TableAccessibleBase* RemoteAccessibleBase<Derived>::AsTableBase() {
 
 template <class Derived>
 TableCellAccessibleBase* RemoteAccessibleBase<Derived>::AsTableCellBase() {
-  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  MOZ_ASSERT(a11y::IsCacheActive());
   if (IsTableCell()) {
     return CachedTableCellAccessible::GetFrom(this);
   }
@@ -1905,7 +1905,7 @@ TableCellAccessibleBase* RemoteAccessibleBase<Derived>::AsTableCellBase() {
 
 template <class Derived>
 bool RemoteAccessibleBase<Derived>::TableIsProbablyForLayout() {
-  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  MOZ_ASSERT(a11y::IsCacheActive());
   if (mCachedFields) {
     if (auto layoutGuess =
             mCachedFields->GetAttribute<bool>(nsGkAtoms::layout_guess)) {

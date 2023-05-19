@@ -11,7 +11,7 @@
 
 #include "nsCocoaUtils.h"
 #include "DocAccessibleParent.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 
 using namespace mozilla::a11y;
@@ -129,8 +129,8 @@ using namespace mozilla::a11y;
   // In that case, we should act as if no AXSearchText was given.
   // When caching is enabled we filter the tree in the pivot rule
   // and don't need to apply the post search filter.
-  return !mozilla::StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-         !!mSearchText && [mSearchText length] > 0;
+  return !mozilla::a11y::IsCacheActive() && !!mSearchText &&
+         [mSearchText length] > 0;
 }
 
 - (NSArray<mozAccessible*>*)applyPostFilter:(NSArray<mozAccessible*>*)matches {
@@ -180,7 +180,7 @@ using namespace mozilla::a11y;
       // of the current ipcDoc.
       nsTArray<uint64_t> matchIds;
       MOZ_ASSERT(
-          !mozilla::StaticPrefs::accessibility_cache_enabled_AtStartup(),
+          !mozilla::a11y::IsCacheActive(),
           "Should call SendApplyPostSearchFilter when cache is enabled!");
       mozilla::Unused
           << ipcDoc->GetPlatformExtension()->SendApplyPostSearchFilter(

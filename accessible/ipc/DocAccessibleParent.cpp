@@ -12,7 +12,7 @@
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "xpcAccessibleDocument.h"
 #include "xpcAccEvents.h"
 #include "nsAccUtils.h"
@@ -158,7 +158,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
   RemoteAccessible* target = parent->RemoteChildAt(newChildIdx);
   ProxyShowHideEvent(target, parent, true, aFromUser);
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     if (nsCOMPtr<nsIObserverService> obsService =
             services::GetObserverService()) {
       obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);
@@ -210,12 +210,12 @@ uint32_t DocAccessibleParent::AddSubtree(
     ProxyCreated(newProxy);
 
     if (RefPtr<AccAttributes> fields = newChild.CacheFields()) {
-      MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+      MOZ_ASSERT(a11y::IsCacheActive());
       newProxy->ApplyCache(CacheUpdateType::Initial, fields);
     }
 
 #if defined(XP_WIN)
-    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    if (!a11y::IsCacheActive()) {
       MsaaAccessible::GetFrom(newProxy)->SetID(newChild.MsaaID());
     }
 #endif
@@ -320,7 +320,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvHideEvent(
   ProxyShowHideEvent(root, parent, false, aFromUser);
 #ifdef XP_WIN
   if (!parent) {
-    MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
+    MOZ_ASSERT(!a11y::IsCacheActive());
     return IPC_FAIL(this, "Parent removed while removing child");
   }
 #endif
@@ -380,7 +380,7 @@ void DocAccessibleParent::FireEvent(RemoteAccessible* aAcc,
     mFocus = aAcc->ID();
   }
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     if (aEventType == nsIAccessibleEvent::EVENT_REORDER ||
         aEventType == nsIAccessibleEvent::EVENT_INNER_REORDER) {
       for (RemoteAccessible* child = aAcc->RemoteFirstChild(); child;
@@ -428,7 +428,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvStateChangeEvent(
     return IPC_OK();
   }
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     target->UpdateStateCache(aState, aEnabled);
     if (nsCOMPtr<nsIObserverService> obsService =
             services::GetObserverService()) {
@@ -773,7 +773,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvTextSelectionChangeEvent(
     return IPC_OK();
   }
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     mTextSelections.ClearAndRetainStorage();
     mTextSelections.AppendElements(aSelection);
   }
@@ -905,7 +905,7 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
         embeddedBrowser->GetBrowserBridgeParent();
     if (bridge) {
 #if defined(XP_WIN)
-      if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      if (!a11y::IsCacheActive()) {
         RefPtr<DocAccessibleParent> thisDoc = this;
         RefPtr<DocAccessibleParent> childDoc = aChildDoc;
         // Send a COM proxy for the embedded document to the embedder process

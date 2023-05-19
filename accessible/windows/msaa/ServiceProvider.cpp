@@ -17,7 +17,7 @@
 
 #include "mozilla/a11y/DocAccessibleChild.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 
 #include "ISimpleDOM.h"
 
@@ -84,9 +84,8 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
       }
     }
 
-    MOZ_ASSERT(
-        acc->IsLocal() || StaticPrefs::accessibility_cache_enabled_AtStartup(),
-        "We should only handle remote accs here if the cache is on!");
+    MOZ_ASSERT(acc->IsLocal() || a11y::IsCacheActive(),
+               "We should only handle remote accs here if the cache is on!");
     Relation rel = acc->RelationByType(RelationType::CONTAINING_TAB_PANE);
     RefPtr<IAccessible> next = MsaaAccessible::GetFrom(rel.Next());
     if (!next) {

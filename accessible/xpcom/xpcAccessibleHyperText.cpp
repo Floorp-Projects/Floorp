@@ -9,7 +9,7 @@
 #include "LocalAccessible-inl.h"
 #include "HyperTextAccessible-inl.h"
 #include "mozilla/a11y/PDocAccessible.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "TextRange.h"
 #include "AccAttributes.h"
 #include "nsComponentManagerUtils.h"
@@ -47,8 +47,7 @@ xpcAccessibleHyperText::GetCharacterCount(int32_t* aCharacterCount) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -125,8 +124,7 @@ xpcAccessibleHyperText::GetCharacterAtOffset(int32_t aOffset,
   if (!mIntl) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -147,8 +145,7 @@ xpcAccessibleHyperText::GetTextAttributes(
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -178,8 +175,7 @@ xpcAccessibleHyperText::GetDefaultTextAttributes(
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -215,8 +211,7 @@ xpcAccessibleHyperText::GetCharacterExtents(int32_t aOffset, int32_t* aX,
   if (!mIntl) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -240,8 +235,7 @@ xpcAccessibleHyperText::GetRangeExtents(int32_t aStartOffset,
   if (!mIntl) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -292,8 +286,7 @@ xpcAccessibleHyperText::GetSelectionCount(int32_t* aSelectionCount) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -314,8 +307,7 @@ xpcAccessibleHyperText::GetSelectionBounds(int32_t aSelectionNum,
 
   if (aSelectionNum < 0) return NS_ERROR_INVALID_ARG;
 
-  if (mIntl->IsLocal() ||
-      StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsLocal() || a11y::IsCacheActive()) {
     if (aSelectionNum >= Intl()->SelectionCount()) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -342,8 +334,7 @@ xpcAccessibleHyperText::SetSelectionBounds(int32_t aSelectionNum,
   if (aSelectionNum < 0) return NS_ERROR_INVALID_ARG;
 
 #if defined(XP_WIN)
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -357,8 +348,7 @@ xpcAccessibleHyperText::AddSelection(int32_t aStartOffset, int32_t aEndOffset) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -372,8 +362,7 @@ xpcAccessibleHyperText::RemoveSelection(int32_t aSelectionNum) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -431,7 +420,7 @@ xpcAccessibleHyperText::GetSelectionRanges(nsIArray** aRanges) {
   NS_ENSURE_ARG_POINTER(aRanges);
   *aRanges = nullptr;
 
-  if (!IntlLocal() && !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (!IntlLocal() && !a11y::IsCacheActive()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -627,8 +616,7 @@ xpcAccessibleHyperText::GetLinkCount(int32_t* aLinkCount) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -646,8 +634,7 @@ xpcAccessibleHyperText::GetLinkAt(int32_t aIndex,
   if (!mIntl) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -668,8 +655,7 @@ xpcAccessibleHyperText::GetLinkIndex(nsIAccessibleHyperLink* aLink,
   nsCOMPtr<nsIAccessible> xpcLink(do_QueryInterface(aLink));
   Accessible* accLink = xpcLink->ToInternalGeneric();
 #if defined(XP_WIN)
-  if (accLink->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (accLink->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -686,8 +672,7 @@ xpcAccessibleHyperText::GetLinkIndexAtOffset(int32_t aOffset,
   if (!mIntl) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (mIntl->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
