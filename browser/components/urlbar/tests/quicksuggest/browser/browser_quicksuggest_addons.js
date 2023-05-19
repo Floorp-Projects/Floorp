@@ -226,6 +226,7 @@ add_task(async function disable() {
   const { result } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(result.payload.telemetryType, "adm_sponsored");
 
+  MerinoTestUtils.server.response.body.suggestions = TEST_MERINO_SUGGESTIONS;
   await SpecialPowers.popPrefEnv();
 });
 
@@ -236,7 +237,7 @@ add_task(async function resultMenu_showLessFrequently() {
       ["browser.urlbar.addons.minKeywordLength", 0],
     ],
   });
-  MerinoTestUtils.server.response.body.suggestions = TEST_MERINO_SUGGESTIONS;
+
   const cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
     addonsKeywordsMinimumLengthCap: 3,
   });
@@ -304,7 +305,7 @@ add_task(async function resultMenu_showLessFrequentlyWithNimbusMinimumLength() {
       ["browser.urlbar.addons.minKeywordLength", 0],
     ],
   });
-  MerinoTestUtils.server.response.body.suggestions = TEST_MERINO_SUGGESTIONS;
+
   const cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
     addonsKeywordsMinimumLengthCap: 3,
     addonsKeywordsMinimumLength: 2,
@@ -356,6 +357,43 @@ add_task(async function resultMenu_notInterested() {
 // Tests the "Not relevant" result menu dismissal command.
 add_task(async function notRelevant() {
   await doDismissTest("not_relevant");
+});
+
+add_task(async function rowLabel() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.addons.featureGate", true]],
+  });
+
+  const testCases = [
+    {
+      bestMatch: true,
+      expected: "Top pick",
+    },
+    {
+      bestMatch: false,
+      expected: "Firefox Suggest",
+    },
+  ];
+
+  for (const { bestMatch, expected } of testCases) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.bestMatch.enabled", bestMatch]],
+    });
+
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "only match the Merino suggestion",
+    });
+    Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+
+    const { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+    const row = element.row;
+    Assert.equal(row.getAttribute("label"), expected);
+
+    await SpecialPowers.popPrefEnv();
+  }
+
+  await SpecialPowers.popPrefEnv();
 });
 
 async function doShowLessFrequently({ input, expected }) {
