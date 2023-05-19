@@ -5288,6 +5288,15 @@ void AddDisplayItemToBottom(nsDisplayListBuilder* aBuilder,
   aList->AppendToTop(&list);
 }
 
+void PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder* aBuilder,
+                                              nsDisplayList* aList,
+                                              nsIFrame* aFrame,
+                                              const nsRect& aBounds) {
+  nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
+      aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115));
+  AddDisplayItemToBottom(aBuilder, aList, item);
+}
+
 static bool AddCanvasBackgroundColor(const nsDisplayList* aList,
                                      nsIFrame* aCanvasFrame, nscolor aColor,
                                      bool aCSSBackgroundColor) {
