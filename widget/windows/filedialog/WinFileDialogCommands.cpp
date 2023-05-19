@@ -6,7 +6,7 @@
 
 #include "mozilla/widget/filedialog/WinFileDialogCommands.h"
 
-#include <shobjidl_core.h>
+#include <shobjidl.h>
 #include <shtypes.h>
 #include <winerror.h>
 #include "WinUtils.h"
