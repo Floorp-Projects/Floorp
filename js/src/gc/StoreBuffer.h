@@ -28,6 +28,8 @@ struct GCSizes;
 
 namespace js {
 
+class NativeObject;
+
 #ifdef DEBUG
 extern bool CurrentThreadIsGCMarking();
 #endif
