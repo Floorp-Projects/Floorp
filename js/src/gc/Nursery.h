@@ -17,7 +17,6 @@
 #include "js/AllocPolicy.h"
 #include "js/Class.h"
 #include "js/GCAPI.h"
-#include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
@@ -54,8 +53,6 @@ namespace js {
 struct StringStats;
 class AutoLockGCBgAlloc;
 class ObjectElements;
-class PlainObject;
-class NativeObject;
 struct NurseryChunk;
 class HeapSlot;
 class JSONPrinter;
@@ -65,20 +62,10 @@ class JS_PUBLIC_API Sprinter;
 
 namespace gc {
 class AutoGCSession;
-class AutoMaybeStartBackgroundAllocation;
-class AutoTraceSession;
 struct Cell;
 class GCSchedulingTunables;
-class MinorCollectionTracer;
-class RelocationOverlay;
-class StringRelocationOverlay;
 class TenuringTracer;
-enum class AllocKind : uint8_t;
 }  // namespace gc
-
-namespace jit {
-class MacroAssembler;
-}  // namespace jit
 
 // Classes with JSCLASS_SKIP_NURSERY_FINALIZE or Wrapper classes with
 // CROSS_COMPARTMENT flags will not have their finalizer called if they are
@@ -704,8 +691,6 @@ class alignas(TypicalCacheLineSize) Nursery {
 
   friend class gc::GCRuntime;
   friend class gc::TenuringTracer;
-  friend class gc::MinorCollectionTracer;
-  friend class jit::MacroAssembler;
   friend struct NurseryChunk;
 };
 
