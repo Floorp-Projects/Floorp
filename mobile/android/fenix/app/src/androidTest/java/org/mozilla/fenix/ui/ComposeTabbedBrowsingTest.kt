@@ -17,6 +17,8 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -176,31 +178,30 @@ class ComposeTabbedBrowsingTest {
 //        }
     }
 
-    @Ignore("Being converted in: https://bugzilla.mozilla.org/show_bug.cgi?id=1832608")
     @Test
     fun verifyUndoSnackBarTest() {
         // disabling these features because they interfere with the snackbar visibility
-//        activityTestRule.applySettingsExceptions {
-//            it.isPocketEnabled = false
-//            it.isRecentTabsFeatureEnabled = false
-//        }
-//
-//        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-//
-//        navigationToolbar {
-//        }.enterURLAndEnterToBrowser(genericURL.url) {
-//        }.openTabDrawer {
-//            verifyExistingOpenTabs("Test_Page_1")
-//            closeTab()
-//            verifySnackBarText("Tab closed")
-//            snackBarButtonClick("UNDO")
-//        }
-//
-//        browserScreen {
-//            verifyTabCounter("1")
-//        }.openTabDrawer {
-//            verifyExistingOpenTabs("Test_Page_1")
-//        }
+        composeTestRule.activityRule.applySettingsExceptions {
+            it.isPocketEnabled = false
+            it.isRecentTabsFeatureEnabled = false
+        }
+
+        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1")
+            closeTab()
+            TestHelper.verifySnackBarText("Tab closed")
+            TestHelper.clickSnackbarButton("UNDO")
+        }
+
+        browserScreen {
+            verifyTabCounter("1")
+        }.openComposeTabDrawer(composeTestRule) {
+            verifyExistingOpenTabs("Test_Page_1")
+        }
     }
 
     @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1829838")
