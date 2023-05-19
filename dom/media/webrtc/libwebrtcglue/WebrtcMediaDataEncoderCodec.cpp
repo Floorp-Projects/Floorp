@@ -350,7 +350,7 @@ static already_AddRefed<VideoData> CreateVideoDataFromWebrtcVideoFrame(
   // discontinuous time and confuses the video receiver when switching from
   // platform to libwebrtc encoder.
   TimeUnit timestamp =
-      media::TimeUnit(aFrame.timestamp(), cricket::kVideoCodecClockrate);
+      FramesToTimeUnit(aFrame.timestamp(), cricket::kVideoCodecClockrate);
   return VideoData::CreateFromImage(image->GetSize(), 0, timestamp, aDuration,
                                     image, aIsKeyFrame, timestamp);
 }

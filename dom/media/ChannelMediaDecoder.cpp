@@ -19,8 +19,6 @@
 
 namespace mozilla {
 
-using TimeUnit = media::TimeUnit;
-
 extern LazyLogModule gMediaDecoderLog;
 #define LOG(x, ...) \
   DDMOZ_LOG(gMediaDecoderLog, LogLevel::Debug, x, ##__VA_ARGS__)
@@ -314,8 +312,7 @@ void ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus) {
         "ChannelMediaDecoder::UpdatePlaybackRate",
         [stats = mPlaybackStatistics,
          res = RefPtr<BaseMediaResource>(mResource), duration = mDuration]() {
-          auto rate = ComputePlaybackRate(stats, res,
-                                          duration.match(DurationToTimeUnit()));
+          auto rate = ComputePlaybackRate(stats, res, duration);
           UpdatePlaybackRate(rate, res);
         });
     nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
@@ -373,8 +370,7 @@ void ChannelMediaDecoder::DurationChanged() {
       "ChannelMediaDecoder::UpdatePlaybackRate",
       [stats = mPlaybackStatistics, res = RefPtr<BaseMediaResource>(mResource),
        duration = mDuration]() {
-        auto rate = ComputePlaybackRate(stats, res,
-                                        duration.match(DurationToTimeUnit()));
+        auto rate = ComputePlaybackRate(stats, res, duration);
         UpdatePlaybackRate(rate, res);
       });
   nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
@@ -393,8 +389,7 @@ void ChannelMediaDecoder::DownloadProgressed() {
               [playbackStats = mPlaybackStatistics,
                res = RefPtr<BaseMediaResource>(mResource), duration = mDuration,
                pos = mPlaybackPosition]() {
-                auto rate = ComputePlaybackRate(
-                    playbackStats, res, duration.match(DurationToTimeUnit()));
+                auto rate = ComputePlaybackRate(playbackStats, res, duration);
                 UpdatePlaybackRate(rate, res);
                 MediaStatistics stats = GetStatistics(rate, res, pos);
                 return StatsPromise::CreateAndResolve(stats, __func__);
@@ -418,13 +413,13 @@ void ChannelMediaDecoder::DownloadProgressed() {
 /* static */ ChannelMediaDecoder::PlaybackRateInfo
 ChannelMediaDecoder::ComputePlaybackRate(const MediaChannelStatistics& aStats,
                                          BaseMediaResource* aResource,
-                                         const TimeUnit& aDuration) {
+                                         double aDuration) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   int64_t length = aResource->GetLength();
-  if (aDuration.IsInfinite() && aDuration.IsPositive() > 0 && length >= 0 &&
-      length / aDuration.ToSeconds() < UINT32_MAX) {
-    return {uint32_t(length / aDuration.ToSeconds()), true};
+  if (std::isfinite(aDuration) && aDuration > 0 && length >= 0 &&
+      length / aDuration < UINT32_MAX) {
+    return {uint32_t(length / aDuration), true};
   }
 
   bool reliable = false;

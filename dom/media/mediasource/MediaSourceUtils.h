@@ -13,7 +13,6 @@
 namespace mozilla {
 
 nsCString DumpTimeRanges(const media::TimeIntervals& aRanges);
-nsCString DumpTimeRangesRaw(const media::TimeIntervals& aRanges);
 
 }  // namespace mozilla
 

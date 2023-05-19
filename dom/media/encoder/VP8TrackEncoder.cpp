@@ -408,7 +408,7 @@ Result<RefPtr<EncodedFrame>, nsresult> VP8TrackEncoder::ExtractEncodedData() {
   }
 
   // Convert the timestamp and duration to Usecs.
-  media::TimeUnit timestamp = media::TimeUnit(pkt->data.frame.pts, mTrackRate);
+  media::TimeUnit timestamp = FramesToTimeUnit(pkt->data.frame.pts, mTrackRate);
   if (!timestamp.IsValid()) {
     NS_ERROR("Microsecond timestamp overflow");
     return Err(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR);
@@ -421,7 +421,7 @@ Result<RefPtr<EncodedFrame>, nsresult> VP8TrackEncoder::ExtractEncodedData() {
   }
 
   media::TimeUnit totalDuration =
-      media::TimeUnit(mExtractedDuration.value(), mTrackRate);
+      FramesToTimeUnit(mExtractedDuration.value(), mTrackRate);
   if (!totalDuration.IsValid()) {
     NS_ERROR("Duration overflow");
     return Err(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR);
@@ -511,12 +511,12 @@ nsresult VP8TrackEncoder::Encode(VideoSegment* aSegment) {
       // Sum duration of non-key frames and force keyframe if exceeded the
       // given keyframe interval
       if (mKeyFrameInterval > TimeDuration::FromSeconds(0)) {
-        if (media::TimeUnit(mDurationSinceLastKeyframe, mTrackRate)
+        if (FramesToTimeUnit(mDurationSinceLastKeyframe, mTrackRate)
                 .ToTimeDuration() >= mKeyFrameInterval) {
           VP8LOG(LogLevel::Warning,
                  "Reached mKeyFrameInterval without seeing a keyframe. Forcing "
                  "one. time: %.2f, interval: %.2f",
-                 media::TimeUnit(mDurationSinceLastKeyframe, mTrackRate)
+                 FramesToTimeUnit(mDurationSinceLastKeyframe, mTrackRate)
                      .ToSeconds(),
                  mKeyFrameInterval.ToSeconds());
           mDurationSinceLastKeyframe = 0;
@@ -570,7 +570,7 @@ nsresult VP8TrackEncoder::Encode(VideoSegment* aSegment) {
       }
 
       media::TimeUnit totalDuration =
-          media::TimeUnit(mExtractedDuration.value(), mTrackRate);
+          FramesToTimeUnit(mExtractedDuration.value(), mTrackRate);
       media::TimeUnit skippedDuration = totalDuration - mExtractedDurationUs;
       mExtractedDurationUs = totalDuration;
       if (!skippedDuration.IsValid()) {
@@ -587,7 +587,7 @@ nsresult VP8TrackEncoder::Encode(VideoSegment* aSegment) {
 
     mMeanFrameEncodeDuration.insert(TimeStamp::Now() - timebase);
     mMeanFrameDuration.insert(
-        media::TimeUnit(chunk.GetDuration(), mTrackRate).ToTimeDuration());
+        FramesToTimeUnit(chunk.GetDuration(), mTrackRate).ToTimeDuration());
     nextEncodeOperation = GetNextEncodeOperation(
         mMeanFrameEncodeDuration.mean(), mMeanFrameDuration.mean());
 

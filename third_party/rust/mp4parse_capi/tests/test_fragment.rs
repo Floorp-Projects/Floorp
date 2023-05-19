@@ -36,7 +36,6 @@ fn parse_fragment() {
         assert_eq!(track_info.track_id, 1);
         assert_eq!(track_info.duration, 0);
         assert_eq!(track_info.media_time, 0);
-        assert_eq!(track_info.time_scale, 22050);
 
         let mut audio = Default::default();
         rv = mp4parse_get_track_audio_info(parser, 0, &mut audio);
@@ -58,8 +57,7 @@ fn parse_fragment() {
         let mut fragment_info = Mp4parseFragmentInfo::default();
         rv = mp4parse_get_fragment_info(parser, &mut fragment_info);
         assert_eq!(rv, Mp4parseStatus::Ok);
-        assert_eq!(fragment_info.fragment_duration, 10_032);
-        assert_eq!(fragment_info.time_scale, 1000);
+        assert_eq!(fragment_info.fragment_duration, 10_032_000);
 
         mp4parse_free(parser);
     }
@@ -91,7 +89,6 @@ fn parse_opus_fragment() {
         assert_eq!(track_info.track_id, 1);
         assert_eq!(track_info.duration, 0);
         assert_eq!(track_info.media_time, 0);
-        assert_eq!(track_info.time_scale, 48000);
 
         let mut audio = Default::default();
         rv = mp4parse_get_track_audio_info(parser, 0, &mut audio);

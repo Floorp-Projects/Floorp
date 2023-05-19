@@ -2333,10 +2333,7 @@ impl<'a, T> Drop for BMFFBox<'a, T> {
 ///
 /// See ISOBMFF (ISO 14496-12:2020) § 4.2
 fn read_box_header<T: ReadBytesExt>(src: &mut T) -> Result<BoxHeader> {
-    let size32 = match be_u32(src) {
-        Ok(v) => v,
-        Err(error) => return Err(error),
-    };
+    let size32 = be_u32(src)?;
     let name = BoxType::from(be_u32(src)?);
     let size = match size32 {
         // valid only for top-level box and indicates it's the last box in the file.  usually mdat.
@@ -2347,8 +2344,19 @@ fn read_box_header<T: ReadBytesExt>(src: &mut T) -> Result<BoxHeader> {
                 return Err(Error::Unsupported("unknown sized box"));
             }
         }
-        1 => be_u64(src)?,
-        _ => u64::from(size32),
+        1 => {
+            let size64 = be_u64(src)?;
+            if size64 < BoxHeader::MIN_LARGE_SIZE {
+                return Status::BoxBadWideSize.into();
+            }
+            size64
+        }
+        _ => {
+            if u64::from(size32) < BoxHeader::MIN_SIZE {
+                return Status::BoxBadSize.into();
+            }
+            u64::from(size32)
+        }
     };
     trace!("read_box_header: name: {:?}, size: {}", name, size);
     let mut offset = match size32 {
@@ -2363,21 +2371,17 @@ fn read_box_header<T: ReadBytesExt>(src: &mut T) -> Result<BoxHeader> {
             if count == 16 {
                 Some(buffer)
             } else {
-                debug!("malformed uuid (short read)");
-                return Err(Error::UnexpectedEOF);
+                debug!("malformed uuid (short read), skipping");
+                None
             }
         } else {
+            debug!("malformed uuid, skipping");
             None
         }
     } else {
         None
     };
-    match size32 {
-        0 => (),
-        1 if offset > size => return Err(Error::from(Status::BoxBadWideSize)),
-        _ if offset > size => return Err(Error::from(Status::BoxBadSize)),
-        _ => (),
-    }
+    assert!(offset <= size || size == 0);
     Ok(BoxHeader {
         name,
         size,
@@ -2517,19 +2521,7 @@ pub fn read_avif<T: Read>(f: &mut T, strictness: ParseStrictness) -> Result<Avif
     let mut image_sequence = None;
     let mut media_storage = TryVec::new();
 
-    loop {
-        let mut b = match iter.next_box() {
-            Ok(Some(b)) => b,
-            Ok(_) => break,
-            Err(Error::UnexpectedEOF) => {
-                if strictness == ParseStrictness::Strict {
-                    return Err(Error::UnexpectedEOF);
-                }
-                break;
-            }
-            Err(error) => return Err(error),
-        };
-
+    while let Some(mut b) = iter.next_box()? {
         trace!("read_avif parsing {:?} box", b.head.name);
         match b.head.name {
             BoxType::MetadataBox => {
@@ -2572,14 +2564,7 @@ pub fn read_avif<T: Read>(f: &mut T, strictness: ParseStrictness) -> Result<Avif
                 };
                 media_storage.push(DataBox::from_mdat(file_offset, data))?;
             }
-            _ => {
-                let result = skip_box_content(&mut b);
-                // Allow garbage at EOF if we aren't in strict mode.
-                if b.bytes_left() > 0 && strictness != ParseStrictness::Strict {
-                    break;
-                }
-                result?;
-            }
+            _ => skip_box_content(&mut b)?,
         }
 
         check_parser_state!(b.content);

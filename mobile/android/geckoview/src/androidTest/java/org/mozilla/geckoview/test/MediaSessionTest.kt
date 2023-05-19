@@ -39,7 +39,7 @@ class MediaSessionTest : BaseSessionTest() {
         const val DOM_TEST_ALBUM2 = "dahoots"
         const val DOM_TEST_ALBUM3 = "mahoots"
         const val DEFAULT_TEST_TITLE1 = "MediaSessionDefaultTest1"
-        const val TEST_DURATION1 = 3.34
+        const val TEST_DURATION1 = 3.37
         const val WEBM_TEST_DURATION = 5.59
         const val WEBM_TEST_WIDTH = 560L
         const val WEBM_TEST_HEIGHT = 320L

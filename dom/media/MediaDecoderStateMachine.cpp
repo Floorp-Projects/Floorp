@@ -3194,11 +3194,8 @@ void MediaDecoderStateMachine::LoopingDecodingState::HandleError(
 void MediaDecoderStateMachine::SeekingState::SeekCompleted() {
   const auto newCurrentTime = CalculateNewCurrentTime();
 
-  if ((newCurrentTime == mMaster->Duration() ||
-       newCurrentTime.EqualsAtLowestResolution(
-           mMaster->Duration().ToBase(USECS_PER_S))) &&
-      !mMaster->mIsLiveStream) {
-    SLOG("Seek completed, seeked to end: %s", newCurrentTime.ToString().get());
+  if (newCurrentTime == mMaster->Duration() && !mMaster->mIsLiveStream) {
+    // Seeked to end of media. Explicitly finish the queues so DECODING
     // will transition to COMPLETED immediately. Note we don't do
     // this when playing a live stream, since the end of media will advance
     // once we download more data!
