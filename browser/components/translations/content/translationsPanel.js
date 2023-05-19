@@ -100,6 +100,8 @@ var TranslationsPanel = new (class {
       };
 
       getter("button", "translations-button");
+      getter("buttonLocale", "translations-button-locale");
+      getter("buttonCircleArrows", "translations-button-circle-arrows");
       getter("defaultDescription", "translations-panel-default-description");
       getter("defaultToMenuList", "translations-panel-default-to");
       getter("dualFromMenuList", "translations-panel-dual-from");
@@ -482,15 +484,36 @@ var TranslationsPanel = new (class {
           detectedLanguages,
           requestedTranslationPair,
           error,
+          isEngineReady,
         } = event.detail;
-        const { panel, button } = this.elements;
+        const {
+          panel,
+          button,
+          buttonLocale,
+          buttonCircleArrows,
+        } = this.elements;
 
         if (detectedLanguages) {
           button.hidden = false;
           if (requestedTranslationPair) {
+            // The translation is active, update the urlbar button.
             button.setAttribute("translationsactive", true);
+            if (isEngineReady) {
+              // Show the locale of the page in the button.
+              buttonLocale.hidden = false;
+              buttonCircleArrows.hidden = true;
+              buttonLocale.innerText = requestedTranslationPair.toLanguage;
+            } else {
+              // Show the spinning circle arrows to indicate that the engine is
+              // still loading.
+              buttonCircleArrows.hidden = false;
+              buttonLocale.hidden = true;
+            }
           } else {
+            // The translation is not active, update the urlbar button.
             button.removeAttribute("translationsactive");
+            buttonLocale.hidden = true;
+            buttonCircleArrows.hidden = true;
           }
         } else {
           button.removeAttribute("translationsactive");
