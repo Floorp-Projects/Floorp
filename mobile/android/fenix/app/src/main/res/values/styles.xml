@@ -343,6 +343,13 @@
         <item name="android:windowExitAnimation">@anim/fade_out</item>
     </style>
 
+    <!-- On some android versions (known about OneUI 2.5) the entering animation is played every -->
+    <!-- time DialogFragment goes though an onStart() lifecycle call. We want to prevent the -->
+    <!-- animation from being repeated after app returns from background.-->
+    <style name="DialogFragmentRestoreAnimation" parent="Animation.MaterialComponents.BottomSheetDialog">
+        <item name="android:windowEnterAnimation">@null</item>
+    </style>
+
     <!-- UI button styling -->
     <style name="NeutralButton" parent="Widget.MaterialComponents.Button.TextButton">
         <item name="iconTint">@color/fx_mobile_icon_color_action_secondary</item>

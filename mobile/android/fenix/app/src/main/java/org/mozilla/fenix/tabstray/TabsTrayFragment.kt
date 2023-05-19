@@ -194,6 +194,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         return tabsTrayDialog
     }
 
+    override fun onPause() {
+        super.onPause()
+
+        dialog?.window?.setWindowAnimations(R.style.DialogFragmentRestoreAnimation)
+    }
+
     @Suppress("LongMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
