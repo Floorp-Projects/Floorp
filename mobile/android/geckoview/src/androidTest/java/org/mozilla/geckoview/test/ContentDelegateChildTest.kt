@@ -235,6 +235,11 @@ class ContentDelegateChildTest : BaseSessionTest() {
                     element.linkUri,
                     endsWith("hello.html")
                 )
+                assertThat(
+                    "The element link text content should be the text content of the anchor.",
+                    element.textContent,
+                    equalTo("Hello World")
+                )
             }
         })
     }

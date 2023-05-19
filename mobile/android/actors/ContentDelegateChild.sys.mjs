@@ -90,6 +90,7 @@ export class ContentDelegateChild extends GeckoViewActorChild {
             alt,
             elementType,
             elementSrc: elementSrc || null,
+            textContent: node.textContent || null,
           };
 
           this.eventDispatcher.sendRequest(msg);

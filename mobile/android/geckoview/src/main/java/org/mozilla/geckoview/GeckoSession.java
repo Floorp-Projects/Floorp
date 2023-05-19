@@ -544,7 +544,8 @@ public class GeckoSession {
                     message.getString("title"),
                     message.getString("alt"),
                     message.getString("elementType"),
-                    message.getString("elementSrc"));
+                    message.getString("elementSrc"),
+                    message.getString("textContent"));
 
             delegate.onContextMenu(
                 GeckoSession.this, message.getInt("screenX"), message.getInt("screenY"), elem);
@@ -3442,8 +3443,40 @@ public class GeckoSession {
       /** The source URI (src) of the element. Set for (nested) media elements. */
       public final @Nullable String srcUri;
 
+      /** The text content of the element */
+      public final @Nullable String textContent;
+
       // TODO: Bug 1595822 make public
       final List<WebExtension.Menu> extensionMenus;
+
+      /**
+       * ContextElement constructor.
+       *
+       * @param baseUri The base URI.
+       * @param linkUri The absolute link URI (href).
+       * @param title The title text.
+       * @param altText The alternative text (alt).
+       * @param typeStr The type of the element.
+       * @param srcUri The source URI (src).
+       * @param textContent The text content.
+       */
+      protected ContextElement(
+          final @Nullable String baseUri,
+          final @Nullable String linkUri,
+          final @Nullable String title,
+          final @Nullable String altText,
+          final @NonNull String typeStr,
+          final @Nullable String srcUri,
+          final @Nullable String textContent) {
+        this.baseUri = baseUri;
+        this.linkUri = linkUri;
+        this.title = title;
+        this.altText = altText;
+        this.type = getType(typeStr);
+        this.srcUri = srcUri;
+        this.textContent = textContent;
+        this.extensionMenus = null;
+      }
 
       protected ContextElement(
           final @Nullable String baseUri,
@@ -3452,13 +3485,7 @@ public class GeckoSession {
           final @Nullable String altText,
           final @NonNull String typeStr,
           final @Nullable String srcUri) {
-        this.baseUri = baseUri;
-        this.linkUri = linkUri;
-        this.title = title;
-        this.altText = altText;
-        this.type = getType(typeStr);
-        this.srcUri = srcUri;
-        this.extensionMenus = null;
+        this(baseUri, linkUri, title, altText, typeStr, srcUri, null);
       }
 
       private static int getType(final String name) {
