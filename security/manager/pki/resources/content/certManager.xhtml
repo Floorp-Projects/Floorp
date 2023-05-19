@@ -156,18 +156,13 @@
 
           <listheader equalsize="always">
             <treecol id="sitecol" data-l10n-id="certmgr-cert-server" primary="true" flex="1"/>
-            <treecol id="certcol" data-l10n-id="certmgr-cert-name" flex="1"/>
-            <treecol id="lifetimecol" data-l10n-id="certmgr-override-lifetime" flex="1"/>
+            <treecol id="sha256col" data-l10n-id="certmgr-fingerprint-sha-256" flex="1"/>
           </listheader>
           <richlistbox ondblclick="serverRichList.viewSelectedRichListItem();" id="serverList" flex="1" selected="false"/>
 
         <separator class="thin"/>
 
         <hbox>
-          <button id="websites_viewButton"
-                  data-l10n-id="certmgr-view" oncommand="serverRichList.viewSelectedRichListItem();"/>
-          <button id="websites_exportButton"
-                  data-l10n-id="certmgr-export" oncommand="serverRichList.exportSelectedRichListItem();"/>
           <button id="websites_deleteButton"
                   data-l10n-id="certmgr-delete" oncommand="serverRichList.deleteSelectedRichListItem();"/>
           <button id="websites_exceptionButton"

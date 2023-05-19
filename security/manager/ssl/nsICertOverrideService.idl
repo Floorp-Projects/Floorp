@@ -33,22 +33,16 @@ interface nsICertOverride : nsISupports {
   readonly attribute int32_t port;
 
   /**
-  *   Whether or not the override is only used for this
-  *   session (true) or stored persistently (false)
-  */
-  readonly attribute boolean isTemporary;
-
-  /**
-  *   The database key for the associated certificate.
-  */
-  readonly attribute ACString dbKey;
-
-  /**
   *   A combination of hostname and port in the form host:port.
   *   Since the port can be -1 which is equivalent to port 433 we use an
   *   existing function of nsCertOverrideService to create this property.
   */
   readonly attribute ACString hostPort;
+
+  /**
+  *   The fingerprint for the associated certificate.
+  */
+  readonly attribute ACString fingerprint;
 
   /**
   *   The origin attributes associated with this override.

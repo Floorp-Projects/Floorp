@@ -64,22 +64,16 @@ var serverRichList = {
 
   buildRichList() {
     let overrides = overrideService.getOverrides().map(item => {
-      let cert = null;
-      if (item.dbKey !== "") {
-        cert = certdb.findCertByDBKey(item.dbKey);
-      }
       return {
         hostPort: item.hostPort,
-        dbKey: item.dbKey,
         asciiHost: item.asciiHost,
         port: item.port,
         originAttributes: item.originAttributes,
-        isTemporary: item.isTemporary,
-        displayName: cert !== null ? cert.displayName : "",
+        fingerprint: item.fingerprint,
       };
     });
     overrides.sort((a, b) => {
-      let criteria = ["hostPort", "displayName"];
+      let criteria = ["hostPort", "fingerprint"];
       for (let c of criteria) {
         let res = a[c].localeCompare(b[c]);
         if (res !== 0) {
@@ -106,10 +100,10 @@ var serverRichList = {
   _richBoxAddItem(item) {
     let richlistitem = document.createXULElement("richlistitem");
 
-    richlistitem.setAttribute("dbKey", item.dbKey);
     richlistitem.setAttribute("host", item.asciiHost);
     richlistitem.setAttribute("port", item.port);
     richlistitem.setAttribute("hostPort", item.hostPort);
+    richlistitem.setAttribute("fingerprint", item.fingerprint);
     richlistitem.setAttribute(
       "originAttributes",
       JSON.stringify(item.originAttributes)
@@ -120,18 +114,7 @@ var serverRichList = {
     hbox.setAttribute("equalsize", "always");
 
     hbox.appendChild(createRichlistItem({ raw: item.hostPort }));
-    hbox.appendChild(
-      createRichlistItem(
-        item.displayName !== ""
-          ? { raw: item.displayName }
-          : { l10nid: "no-cert-stored-for-override" }
-      )
-    );
-    hbox.appendChild(
-      createRichlistItem({
-        l10nid: item.isTemporary ? "temporary-override" : "permanent-override",
-      })
-    );
+    hbox.appendChild(createRichlistItem({ raw: item.fingerprint }));
 
     richlistitem.appendChild(hbox);
 
@@ -170,32 +153,6 @@ var serverRichList = {
     }
   },
 
-  viewSelectedRichListItem() {
-    let selectedItem = this.richlist.selectedItem;
-    if (!selectedItem) {
-      return;
-    }
-
-    let dbKey = selectedItem.getAttribute("dbKey");
-    if (dbKey) {
-      let cert = certdb.findCertByDBKey(dbKey);
-      viewCertHelper(window, cert);
-    }
-  },
-
-  exportSelectedRichListItem() {
-    let selectedItem = this.richlist.selectedItem;
-    if (!selectedItem) {
-      return;
-    }
-
-    let dbKey = selectedItem.getAttribute("dbKey");
-    if (dbKey) {
-      let cert = certdb.findCertByDBKey(dbKey);
-      exportToFile(window, cert);
-    }
-  },
-
   addException() {
     let retval = {
       exceptionAdded: false,
@@ -212,16 +169,8 @@ var serverRichList = {
   },
 
   _setButtonState() {
-    let websiteViewButton = document.getElementById("websites_viewButton");
-    let websiteExportButton = document.getElementById("websites_exportButton");
     let websiteDeleteButton = document.getElementById("websites_deleteButton");
-
-    let certKey = this.richlist.selectedItem?.getAttribute("dbKey");
-    let cert = certKey && certdb.findCertByDBKey(certKey);
-
     websiteDeleteButton.disabled = this.richlist.selectedIndex < 0;
-    websiteExportButton.disabled = !cert;
-    websiteViewButton.disabled = websiteExportButton.disabled;
   },
 };
 /**

@@ -51,9 +51,6 @@ certmgr-cert-name =
 certmgr-cert-server =
     .label = Server
 
-certmgr-override-lifetime =
-    .label = Lifetime
-
 certmgr-token-name =
     .label = Security Device
 
@@ -68,6 +65,9 @@ certmgr-email =
 
 certmgr-serial =
     .label = Serial Number
+
+certmgr-fingerprint-sha-256 =
+    .label = SHA-256 Fingerprint
 
 certmgr-view =
     .label = View…
