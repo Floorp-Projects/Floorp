@@ -395,7 +395,10 @@ class IMEContentObserver final : public nsStubMutationObserver,
   class DocumentObserver final : public nsStubDocumentObserver {
    public:
     explicit DocumentObserver(IMEContentObserver& aIMEContentObserver)
-        : mIMEContentObserver(&aIMEContentObserver), mDocumentUpdating(0) {}
+        : mIMEContentObserver(&aIMEContentObserver), mDocumentUpdating(0) {
+      SetEnabledCallbacks(nsIMutationObserver::kBeginUpdate |
+                          nsIMutationObserver::kEndUpdate);
+    }
 
     NS_DECL_CYCLE_COLLECTION_CLASS(DocumentObserver)
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
