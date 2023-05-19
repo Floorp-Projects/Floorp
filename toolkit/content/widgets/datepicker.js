@@ -104,7 +104,6 @@ function DatePicker(context) {
         setMonthByOffset: offset => {
           dateKeeper.setMonthByOffset(offset);
           this._update();
-          this._dispatchState();
         },
         setYear: year => {
           dateKeeper.setYear(year);
@@ -150,7 +149,6 @@ function DatePicker(context) {
                 month,
               });
               this._update();
-              this._dispatchState();
             },
             getDayString: this.state.getDayString,
             getWeekHeaderString: this.state.getWeekHeaderString,
