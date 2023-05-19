@@ -610,6 +610,8 @@ html {
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .checkbox-container {
   font-size: 13px;
   margin-block: 1em;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .checkbox-container:not(.multi-select-item) {
   transition: var(--transition);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .checkbox-container input,
@@ -1469,11 +1471,11 @@ html {
 .onboardingContainer .dialog-initial .brand-logo {
   transition-delay: 0.6s;
 }
-.onboardingContainer .dialog-initial .welcome-text,
-.onboardingContainer .dialog-initial .multi-select-container {
+.onboardingContainer .dialog-initial .welcome-text {
   transition-delay: 0.8s;
 }
 .onboardingContainer .dialog-initial .tiles-theme-section,
+.onboardingContainer .dialog-initial .multi-select-container,
 .onboardingContainer .dialog-initial migration-wizard {
   transition-delay: 0.9s;
 }
@@ -1485,6 +1487,7 @@ html {
   transition-delay: 1s;
 }
 .onboardingContainer .screen:not(.dialog-initial) .tiles-theme-section,
+.onboardingContainer .screen:not(.dialog-initial) .multi-select-container,
 .onboardingContainer .screen:not(.dialog-initial) .colorway-text {
   transition-delay: 0.2s;
 }
@@ -1540,10 +1543,11 @@ html {
   translate: 0 calc(-1 * var(--translate));
 }
 .onboardingContainer.transition-in .screen .welcome-text,
+.onboardingContainer.transition-in .screen .multi-select-container,
 .onboardingContainer.transition-in .screen .tiles-theme-section,
 .onboardingContainer.transition-in .screen .colorway-text,
 .onboardingContainer.transition-in .screen .primary,
-.onboardingContainer.transition-in .screen .checkbox-container,
+.onboardingContainer.transition-in .screen .checkbox-container:not(.multi-select-item),
 .onboardingContainer.transition-in .screen .secondary,
 .onboardingContainer.transition-in .screen .secondary-cta:not(.top),
 .onboardingContainer.transition-in .screen .cta-link,
@@ -1577,7 +1581,7 @@ html {
   transition-delay: 0.2s;
 }
 .onboardingContainer.transition-out .screen:not(.dialog-last) .primary,
-.onboardingContainer.transition-out .screen:not(.dialog-last) .checkbox-container,
+.onboardingContainer.transition-out .screen:not(.dialog-last) .checkbox-container:not(.multi-select-item),
 .onboardingContainer.transition-out .screen:not(.dialog-last) .secondary,
 .onboardingContainer.transition-out .screen:not(.dialog-last) .secondary-cta:not(.top),
 .onboardingContainer.transition-out .screen:not(.dialog-last) .cta-link {

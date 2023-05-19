@@ -418,7 +418,10 @@ html {
             .checkbox-container {
               font-size: 13px;
               margin-block: 1em;
-              transition: var(--transition);
+
+              &:not(.multi-select-item) {
+                transition: var(--transition);
+              }
 
               input,
               label {
@@ -1464,12 +1467,12 @@ html {
       transition-delay: 0.6s;
     }
 
-    .welcome-text,
-    .multi-select-container {
+    .welcome-text {
       transition-delay: 0.8s;
     }
 
     .tiles-theme-section,
+    .multi-select-container,
     migration-wizard {
       transition-delay: 0.9s;
     }
@@ -1486,6 +1489,7 @@ html {
   // Delays for transitioning-in of intermediate screens
   .screen:not(.dialog-initial) {
     .tiles-theme-section,
+    .multi-select-container,
     .colorway-text {
       transition-delay: 0.2s;
     }
@@ -1559,10 +1563,11 @@ html {
 
     .screen {
       .welcome-text,
+      .multi-select-container,
       .tiles-theme-section,
       .colorway-text,
       .primary,
-      .checkbox-container,
+      .checkbox-container:not(.multi-select-item),
       .secondary,
       .secondary-cta:not(.top),
       .cta-link,
@@ -1610,7 +1615,7 @@ html {
       }
 
       .primary,
-      .checkbox-container,
+      .checkbox-container:not(.multi-select-item),
       .secondary,
       .secondary-cta:not(.top),
       .cta-link {
