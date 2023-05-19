@@ -12,10 +12,12 @@ import {
   originalToGeneratedId,
 } from "devtools/client/shared/source-map-loader/index";
 import { recordEvent } from "../../utils/telemetry";
+import { toggleBreakpoints } from "../breakpoints";
 import {
   getSourceActorsForSource,
   isSourceBlackBoxed,
   getBlackBoxRanges,
+  getBreakpointsForSource,
 } from "../../selectors";
 
 async function _blackboxSourceActorsForSource(
@@ -93,6 +95,12 @@ export function toggleBlackBox(cx, source, shouldBlackBox, ranges = []) {
       // source. To do that lets reset the content to an empty array.
       if (!ranges.length) {
         dispatch({ type: "BLACKBOX_WHOLE_SOURCES", sources: [source] });
+        await toggleBreakpointsInBlackboxedSources({
+          thunkArgs,
+          cx,
+          shouldDisable: true,
+          sources: [source],
+        });
       } else {
         const currentRanges = getBlackBoxRanges(getState())[source.url] || [];
         ranges = ranges.filter(newRange => {
@@ -106,6 +114,13 @@ export function toggleBlackBox(cx, source, shouldBlackBox, ranges = []) {
           return duplicate == -1;
         });
         dispatch({ type: "BLACKBOX_SOURCE_RANGES", source, ranges });
+        await toggleBreakpointsInRangesForBlackboxedSource({
+          thunkArgs,
+          cx,
+          shouldDisable: true,
+          source,
+          ranges,
+        });
       }
     } else {
       // if there are no ranges to blackbox, then we are unblackboxing
@@ -113,16 +128,57 @@ export function toggleBlackBox(cx, source, shouldBlackBox, ranges = []) {
       // eslint-disable-next-line no-lonely-if
       if (!ranges.length) {
         dispatch({ type: "UNBLACKBOX_WHOLE_SOURCES", sources: [source] });
+        toggleBreakpointsInBlackboxedSources({
+          thunkArgs,
+          cx,
+          shouldDisable: false,
+          sources: [source],
+        });
       } else {
         dispatch({ type: "UNBLACKBOX_SOURCE_RANGES", source, ranges });
         const blackboxRanges = getBlackBoxRanges(getState());
         if (!blackboxRanges[source.url].length) {
           dispatch({ type: "UNBLACKBOX_WHOLE_SOURCES", sources: [source] });
         }
+        await toggleBreakpointsInRangesForBlackboxedSource({
+          thunkArgs,
+          cx,
+          shouldDisable: false,
+          source,
+          ranges,
+        });
       }
     }
   };
 }
+
+async function toggleBreakpointsInRangesForBlackboxedSource({
+  thunkArgs,
+  cx,
+  shouldDisable,
+  source,
+  ranges,
+}) {
+  const { dispatch, getState } = thunkArgs;
+  for (const range of ranges) {
+    const breakpoints = getBreakpointsForSource(getState(), source.id, range);
+    await dispatch(toggleBreakpoints(cx, shouldDisable, breakpoints));
+  }
+}
+
+async function toggleBreakpointsInBlackboxedSources({
+  thunkArgs,
+  cx,
+  shouldDisable,
+  sources,
+}) {
+  const { dispatch, getState } = thunkArgs;
+  for (const source of sources) {
+    const breakpoints = getBreakpointsForSource(getState(), source.id);
+    await dispatch(toggleBreakpoints(cx, shouldDisable, breakpoints));
+  }
+}
+
 /*
  * Blackboxes a group of sources together
  *
@@ -155,6 +211,12 @@ export function blackBoxSources(cx, sourcesToBlackBox, shouldBlackBox) {
       type: shouldBlackBox
         ? "BLACKBOX_WHOLE_SOURCES"
         : "UNBLACKBOX_WHOLE_SOURCES",
+      sources,
+    });
+    await toggleBreakpointsInBlackboxedSources({
+      thunkArgs,
+      cx,
+      shouldDisable: shouldBlackBox,
       sources,
     });
   };

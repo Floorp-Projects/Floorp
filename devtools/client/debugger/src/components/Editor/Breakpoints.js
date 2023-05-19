@@ -6,7 +6,11 @@ import PropTypes from "prop-types";
 import React, { Component } from "react";
 import Breakpoint from "./Breakpoint";
 
-import { getSelectedSource, getFirstVisibleBreakpoints } from "../../selectors";
+import {
+  getSelectedSource,
+  getFirstVisibleBreakpoints,
+  getBlackBoxRanges,
+} from "../../selectors";
 import { makeBreakpointId } from "../../utils/breakpoint";
 import { connect } from "../../utils/connect";
 import { breakpointItemActions } from "./menus/breakpoints";
@@ -21,6 +25,7 @@ class Breakpoints extends Component {
       breakpointActions: PropTypes.object,
       editorActions: PropTypes.object,
       selectedSource: PropTypes.object,
+      blackboxedRanges: PropTypes.object,
     };
   }
   render() {
@@ -31,6 +36,7 @@ class Breakpoints extends Component {
       editor,
       breakpointActions,
       editorActions,
+      blackboxedRanges,
     } = this.props;
 
     if (!selectedSource || !breakpoints) {
@@ -46,6 +52,9 @@ class Breakpoints extends Component {
               key={makeBreakpointId(bp.location)}
               breakpoint={bp}
               selectedSource={selectedSource}
+              blackboxedRangesForSelectedSource={
+                blackboxedRanges[selectedSource.url]
+              }
               editor={editor}
               breakpointActions={breakpointActions}
               editorActions={editorActions}
@@ -63,6 +72,7 @@ export default connect(
     // breakpoint marker represents only the first breakpoint
     breakpoints: getFirstVisibleBreakpoints(state),
     selectedSource: getSelectedSource(state),
+    blackboxedRanges: getBlackBoxRanges(state),
   }),
   dispatch => ({
     breakpointActions: breakpointItemActions(dispatch),

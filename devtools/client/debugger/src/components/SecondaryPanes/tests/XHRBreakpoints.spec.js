@@ -30,6 +30,15 @@ function generateDefaultState(propsOverride) {
         text: 'URL contains ""',
       },
     ],
+    enableXHRBreakpoint: () => {},
+    disableXHRBreakpoint: () => {},
+    updateXHRBreakpoint: () => {},
+    removeXHRBreakpoint: () => {},
+    setXHRBreakpoint: () => {},
+    togglePauseOnAny: () => {},
+    showInput: false,
+    shouldPauseOnAny: false,
+    onXHRAdded: () => {},
     ...propsOverride,
   };
 }

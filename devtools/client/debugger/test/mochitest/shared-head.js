@@ -1476,6 +1476,89 @@ async function getEditorLineEl(dbg, line) {
 }
 
 /**
+ * Opens the debugger editor context menu in either codemirror or the
+ * the debugger gutter.
+ * @param {Object} dbg
+ * @param {String} elementName
+ *                  The element to select
+ * @param {Number} line
+ *                  The line to open the context menu on.
+ */
+async function openContextMenuInDebugger(dbg, elementName, line) {
+  const waitForOpen = waitForContextMenu(dbg);
+  info(`Open ${elementName} context menu on line ${line || ""}`);
+  rightClickElement(dbg, elementName, line);
+  return waitForOpen;
+}
+
+/**
+ * Select a range of lines in the editor and open the contextmenu
+ * @param {Object} dbg
+ * @param {Object} lines
+ * @returns
+ */
+async function selectEditorLinesAndOpenContextMenu(dbg, lines) {
+  const { startLine, endLine } = lines;
+  const elementName = "line";
+  if (!endLine) {
+    await clickElement(dbg, elementName, startLine);
+  } else {
+    getCM(dbg).setSelection(
+      { line: startLine - 1, ch: 0 },
+      { line: endLine, ch: 0 }
+    );
+  }
+  return openContextMenuInDebugger(dbg, elementName, startLine);
+}
+
+/**
+ * Asserts that the styling for ignored lines are applied
+ * @param {Object} dbg
+ * @param {Object} options
+ *                 lines {null | Number[]} [lines] Line(s) to assert.
+ *                   - If null is passed, the assertion is on all the blackboxed lines
+ *                   - If an array of one item (start line) is passed, the assertion is on the specified line
+ *                   - If an array (start and end lines) is passed, the assertion is on the multiple lines seelected
+ *                 hasBlackboxedLinesClass
+ *                   If `true` assert that style exist, else assert that style does not exist
+ */
+function assertIgnoredStyleInSourceLines(
+  dbg,
+  { lines, hasBlackboxedLinesClass }
+) {
+  if (lines) {
+    let currentLine = lines[0];
+    do {
+      const element = findElement(dbg, "line", currentLine);
+      const hasStyle = hasBlackboxedLinesClass
+        ? element.parentNode.classList.contains("blackboxed-line")
+        : !element.parentNode.classList.contains("blackboxed-line");
+      ok(
+        hasStyle,
+        `Line ${currentLine} ${
+          hasBlackboxedLinesClass ? "does not have" : "has"
+        } ignored styling`
+      );
+      currentLine = currentLine + 1;
+    } while (currentLine <= lines[1]);
+  } else {
+    const codeLines = findAllElementsWithSelector(
+      dbg,
+      ".CodeMirror-code .CodeMirror-line"
+    );
+    const blackboxedLines = findAllElementsWithSelector(
+      dbg,
+      ".CodeMirror-code .blackboxed-line"
+    );
+    is(
+      hasBlackboxedLinesClass ? codeLines.length : 0,
+      blackboxedLines.length,
+      `${blackboxedLines.length} of ${codeLines.length} lines are blackboxed`
+    );
+  }
+}
+
+/**
  * Assert the text content on the line matches what is
  * expected.
  *
@@ -2595,4 +2678,29 @@ if (protocolHandler.hasSubstitution("testing-common")) {
   );
   PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
   this.PromiseTestUtils = PromiseTestUtils;
+}
+
+/**
+ * Selects the specific black box context menu item
+ * @param {Object} dbg
+ * @param {String} itemName
+ *                  The name of the context menu item.
+ */
+async function selectBlackBoxContextMenuItem(dbg, itemName) {
+  let wait = null;
+  if (itemName == "blackbox-line" || itemName == "blackbox-lines") {
+    wait = Promise.any([
+      waitForDispatch(dbg.store, "BLACKBOX_SOURCE_RANGES"),
+      waitForDispatch(dbg.store, "UNBLACKBOX_SOURCE_RANGES"),
+    ]);
+  } else if (itemName == "blackbox") {
+    wait = Promise.any([
+      waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES"),
+      waitForDispatch(dbg.store, "UNBLACKBOX_WHOLE_SOURCES"),
+    ]);
+  }
+
+  info(`Select the ${itemName} context menu item`);
+  selectContextMenuItem(dbg, `#node-menu-${itemName}`);
+  return wait;
 }

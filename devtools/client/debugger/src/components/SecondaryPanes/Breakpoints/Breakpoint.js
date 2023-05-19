@@ -13,6 +13,7 @@ import { CloseButton } from "../../shared/Button";
 
 import { getSelectedText, makeBreakpointId } from "../../../utils/breakpoint";
 import { getSelectedLocation } from "../../../utils/selected-location";
+import { isLineBlackboxed } from "../../../utils/source";
 
 import {
   getBreakpointsList,
@@ -38,6 +39,7 @@ class Breakpoint extends PureComponent {
       selectSpecificLocation: PropTypes.func.isRequired,
       selectedSource: PropTypes.object,
       source: PropTypes.object.isRequired,
+      blackboxedRangesForSource: PropTypes.array.isRequired,
     };
   }
 
@@ -117,7 +119,7 @@ class Breakpoint extends PureComponent {
   }
 
   render() {
-    const { breakpoint, editor } = this.props;
+    const { breakpoint, editor, blackboxedRangesForSource } = this.props;
     const text = this.getBreakpointText();
     const labelId = `${breakpoint.id}-label`;
 
@@ -139,6 +141,10 @@ class Breakpoint extends PureComponent {
           type="checkbox"
           className="breakpoint-checkbox"
           checked={!breakpoint.disabled}
+          disabled={isLineBlackboxed(
+            blackboxedRangesForSource,
+            breakpoint.location.line
+          )}
           onChange={this.handleBreakpointCheckbox}
           onClick={ev => ev.stopPropagation()}
           aria-labelledby={labelId}
