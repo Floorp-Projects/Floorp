@@ -12,6 +12,7 @@
 #include "mozilla/TimeStamp.h"
 
 #include "gc/GCMarker.h"
+#include "gc/GCParallelTask.h"
 #include "js/HeapAPI.h"
 #include "js/SliceBudget.h"
 #include "threading/ConditionVariable.h"
