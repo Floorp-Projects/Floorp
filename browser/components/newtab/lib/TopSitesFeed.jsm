@@ -201,11 +201,15 @@ class ContileIntegration {
       }
       const body = await response.json();
       if (body?.tiles && Array.isArray(body.tiles)) {
+        const useAdditionalTiles = lazy.NimbusFeatures.newtab.getVariable(
+          NIMBUS_VARIABLE_ADDITIONAL_TILES
+        );
+
         let { tiles } = body;
         if (
-          !lazy.NimbusFeatures.newtab.getVariable(
-            NIMBUS_VARIABLE_ADDITIONAL_TILES
-          )
+          useAdditionalTiles !== undefined &&
+          !useAdditionalTiles &&
+          tiles.length > CONTILE_MAX_NUM_SPONSORED
         ) {
           tiles.length = CONTILE_MAX_NUM_SPONSORED;
         }
