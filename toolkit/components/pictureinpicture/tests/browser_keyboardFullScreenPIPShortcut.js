@@ -4,7 +4,7 @@
 "use strict";
 
 /**
- * tests that the F-key would enter and exit full screen mode in PiP.
+ * Tests that the F-key would enter and exit full screen mode in PiP for the default locale (en-US).
  */
 add_task(async () => {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
