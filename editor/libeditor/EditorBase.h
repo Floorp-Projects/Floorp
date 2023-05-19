@@ -2856,14 +2856,14 @@ class EditorBase : public nsIEditor,
   // Listens to all low level actions on the doc.
   // Edit action listener is currently used by highlighter of the findbar and
   // the spellchecker.  So, we should reserve only 2 items.
-  typedef AutoTArray<OwningNonNull<nsIEditActionListener>, 2>
-      AutoActionListenerArray;
+  using AutoActionListenerArray =
+      AutoTArray<OwningNonNull<nsIEditActionListener>, 2>;
   AutoActionListenerArray mActionListeners;
   // Listen to overall doc state (dirty or not, just created, etc.).
   // Document state listener is currently used by FinderHighlighter and
   // BlueGriffon so that reserving only one is enough.
-  typedef AutoTArray<OwningNonNull<nsIDocumentStateListener>, 1>
-      AutoDocumentStateListenerArray;
+  using AutoDocumentStateListenerArray =
+      AutoTArray<OwningNonNull<nsIDocumentStateListener>, 1>;
   AutoDocumentStateListenerArray mDocStateListeners;
 
   // Number of modifications (for undo/redo stack).

@@ -26,17 +26,17 @@ namespace dom {
 class Element;
 }  // namespace dom
 
-typedef void (*nsProcessValueFunc)(const nsAString* aInputString,
-                                   nsAString& aOutputString,
-                                   const char* aDefaultValueString,
-                                   const char* aPrependString,
-                                   const char* aAppendString);
+using nsProcessValueFunc = void (*)(const nsAString* aInputString,
+                                    nsAString& aOutputString,
+                                    const char* aDefaultValueString,
+                                    const char* aPrependString,
+                                    const char* aAppendString);
 
 class CSSEditUtils final {
+ public:
   // To prevent the class being instantiated
   CSSEditUtils() = delete;
 
- public:
   enum nsCSSEditableProperty {
     eCSSEditableProperty_NONE = 0,
     eCSSEditableProperty_background_color,
