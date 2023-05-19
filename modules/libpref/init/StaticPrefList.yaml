@@ -7791,10 +7791,10 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
-#if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64)
+#if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64) && !defined(JS_CODEGEN_LOONG64)
   # Spectre security vulnerability mitigations for the JS JITs.
   #
-  # NOTE: The MIPS backends do not support these mitigations (and generally
+  # NOTE: The MIPS and LoongArch backends do not support these mitigations (and generally
   #       do not need them). In that case, leave the pref unlisted with its
   #       default value of false.
 -   name: javascript.options.spectre.index_masking
@@ -7826,7 +7826,7 @@
     value: true
     mirror: always  # LoadStartupJSPrefs
     do_not_use_directly: true
-#endif  // !defined(JS_CODEGEN_MIPSXX)
+#endif  // !defined(JS_CODEGEN_MIPSXX) && !defined(JS_CODEGEN_LOONG64)
 
 # Separate pref to override the values of the Spectre-related prefs above for
 # isolated web content processes, where we don't need these mitigations.
