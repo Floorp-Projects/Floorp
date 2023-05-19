@@ -787,6 +787,9 @@ void MediaDecoder::MetadataLoaded(
 #ifdef MOZ_WMF_MEDIA_ENGINE
   if (mPendingStatusUpdateForNewlyCreatedStateMachine) {
     mPendingStatusUpdateForNewlyCreatedStateMachine = false;
+    LOG("Set pending statuses if necessary (mLogicallySeeking=%d, "
+        "mLogicalPosition=%f, mPlaybackRate=%f)",
+        mLogicallySeeking.Ref(), mLogicalPosition, mPlaybackRate);
     if (mLogicalPosition != 0) {
       Seek(mLogicalPosition, SeekTarget::Accurate);
     }
@@ -932,6 +935,7 @@ void MediaDecoder::NotifyPrincipalChanged() {
 void MediaDecoder::OnSeekResolved() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+  LOG("MediaDecoder::OnSeekResolved");
   mLogicallySeeking = false;
 
   // Ensure logical position is updated after seek.
@@ -943,6 +947,7 @@ void MediaDecoder::OnSeekResolved() {
 
 void MediaDecoder::OnSeekRejected() {
   MOZ_ASSERT(NS_IsMainThread());
+  LOG("MediaDecoder::OnSeekRejected");
   mSeekRequest.Complete();
   mLogicallySeeking = false;
 
