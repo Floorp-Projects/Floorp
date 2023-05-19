@@ -508,24 +508,6 @@ void js::Nursery::leaveZealMode() {
 }
 #endif  // JS_GC_ZEAL
 
-void* js::Nursery::allocateObject(gc::AllocSite* site, size_t size,
-                                  const JSClass* clasp) {
-  // Ensure there's enough space to replace the contents with a
-  // RelocationOverlay.
-  MOZ_ASSERT(size >= sizeof(RelocationOverlay));
-
-  // Sanity check the finalizer.
-  MOZ_ASSERT_IF(clasp->hasFinalize(), CanNurseryAllocateFinalizedClass(clasp) ||
-                                          clasp->isProxyObject());
-
-  void* ptr = allocateCell(site, size, JS::TraceKind::Object);
-  if (!ptr) {
-    return nullptr;
-  }
-
-  return ptr;
-}
-
 void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
                                 JS::TraceKind kind) {
   // Ensure there's enough space to replace the contents with a

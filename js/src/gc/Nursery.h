@@ -134,11 +134,11 @@ class alignas(TypicalCacheLineSize) Nursery {
 
   // Allocate and return a pointer to a new GC object with its |slots|
   // pointer pre-filled. Returns nullptr if the Nursery is full.
-  void* allocateObject(gc::AllocSite* site, size_t size, const JSClass* clasp);
-
-  // Allocate and return a pointer to a new GC thing. Returns nullptr if the
-  // Nursery is full.
-  void* allocateCell(gc::AllocSite* site, size_t size, JS::TraceKind kind);
+  void* allocateObject(gc::AllocSite* site, size_t size, const JSClass* clasp) {
+    MOZ_ASSERT_IF(clasp->hasFinalize() && !clasp->isProxyObject(),
+                  CanNurseryAllocateFinalizedClass(clasp));
+    return allocateCell(site, size, JS::TraceKind::Object);
+  }
 
   void* allocateBigInt(gc::AllocSite* site, size_t size) {
     MOZ_ASSERT(canAllocateBigInts());
@@ -148,6 +148,10 @@ class alignas(TypicalCacheLineSize) Nursery {
     MOZ_ASSERT(canAllocateStrings());
     return allocateCell(site, size, JS::TraceKind::String);
   }
+
+  // Allocate and return a pointer to a new GC thing. Returns nullptr if the
+  // Nursery is full.
+  void* allocateCell(gc::AllocSite* site, size_t size, JS::TraceKind kind);
 
   static size_t nurseryCellHeaderSize() {
     return sizeof(gc::NurseryCellHeader);
