@@ -21,7 +21,6 @@
 #include "debugger/DebugAPI.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
-#include "gc/GCParallelTask.h"
 #include "gc/GCProbes.h"
 #include "gc/Memory.h"
 #include "gc/PublicIterators.h"
@@ -42,15 +41,23 @@
 #include "vm/GeckoProfiler-inl.h"
 
 using namespace js;
-using namespace js::gc;
+using namespace gc;
 
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
-namespace js {
+#ifdef JS_GC_ZEAL
+constexpr uint32_t CanaryMagicValue = 0xDEADB15D;
 
+struct alignas(gc::CellAlignBytes) js::Nursery::Canary {
+  uint32_t magicValue;
+  Canary* next;
+};
+#endif
+
+namespace js {
 struct NurseryChunk : public ChunkBase {
   char data[Nursery::NurseryChunkUsableSize];
 
@@ -78,33 +85,6 @@ struct NurseryChunk : public ChunkBase {
 };
 static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
               "Nursery chunk size must match gc::Chunk size.");
-
-class NurseryDecommitTask : public GCParallelTask {
- public:
-  explicit NurseryDecommitTask(gc::GCRuntime* gc);
-  bool reserveSpaceForBytes(size_t nbytes);
-
-  bool isEmpty(const AutoLockHelperThreadState& lock) const;
-
-  void queueChunk(NurseryChunk* chunk, const AutoLockHelperThreadState& lock);
-  void queueRange(size_t newCapacity, NurseryChunk& chunk,
-                  const AutoLockHelperThreadState& lock);
-
- private:
-  using NurseryChunkVector = Vector<NurseryChunk*, 0, SystemAllocPolicy>;
-
-  void run(AutoLockHelperThreadState& lock) override;
-
-  NurseryChunkVector& chunksToDecommit() { return chunksToDecommit_.ref(); }
-  const NurseryChunkVector& chunksToDecommit() const {
-    return chunksToDecommit_.ref();
-  }
-
-  MainThreadOrGCTaskData<NurseryChunkVector> chunksToDecommit_;
-
-  MainThreadOrGCTaskData<NurseryChunk*> partialChunk;
-  MainThreadOrGCTaskData<size_t> partialCapacity;
-};
 
 }  // namespace js
 
@@ -232,7 +212,13 @@ js::Nursery::Nursery(GCRuntime* gc)
       reportPretenuringThreshold_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
       hasRecentGrowthData(false),
-      smoothedTargetSize(0.0) {
+      smoothedTargetSize(0.0),
+      decommitTask(gc)
+#ifdef JS_GC_ZEAL
+      ,
+      lastCanary_(nullptr)
+#endif
+{
   const char* env = getenv("MOZ_NURSERY_STRINGS");
   if (env && *env) {
     canAllocateStrings_ = (*env == '1');
@@ -302,11 +288,6 @@ bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
       "\tallocation sites with at least N allocations.\n",
       &reportPretenuring_, &reportPretenuringThreshold_);
 
-  decommitTask = MakeUnique<NurseryDecommitTask>(gc);
-  if (!decommitTask) {
-    return false;
-  }
-
   if (!gc->storeBuffer().enable()) {
     return false;
   }
@@ -348,7 +329,7 @@ bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
 
   capacity_ = tunables().gcMinNurseryBytes();
 
-  if (!decommitTask->reserveSpaceForBytes(capacity_) ||
+  if (!decommitTask.reserveSpaceForBytes(capacity_) ||
       !allocateNextChunk(0, lock)) {
     capacity_ = 0;
     return false;
@@ -365,15 +346,16 @@ bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
 }
 
 void js::Nursery::disable() {
+  stringDeDupSet.reset();
   MOZ_ASSERT(isEmpty());
   if (!isEnabled()) {
     return;
   }
 
   // Free all chunks.
-  decommitTask->join();
+  decommitTask.join();
   freeChunksFrom(0);
-  decommitTask->runFromMainThread();
+  decommitTask.runFromMainThread();
 
   capacity_ = 0;
 
@@ -469,7 +451,7 @@ void js::Nursery::enterZealMode() {
 
   MOZ_ASSERT(isEmpty());
 
-  decommitTask->join();
+  decommitTask.join();
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
 
@@ -488,7 +470,7 @@ void js::Nursery::enterZealMode() {
 
   capacity_ = RoundUp(tunables().gcMaxNurseryBytes(), ChunkSize);
 
-  if (!decommitTask->reserveSpaceForBytes(capacity_)) {
+  if (!decommitTask.reserveSpaceForBytes(capacity_)) {
     oomUnsafe.crash("Nursery::enterZealMode");
   }
 
@@ -507,6 +489,24 @@ void js::Nursery::leaveZealMode() {
   poisonAndInitCurrentChunk();
 }
 #endif  // JS_GC_ZEAL
+
+void* js::Nursery::allocateObject(gc::AllocSite* site, size_t size,
+                                  const JSClass* clasp) {
+  // Ensure there's enough space to replace the contents with a
+  // RelocationOverlay.
+  MOZ_ASSERT(size >= sizeof(RelocationOverlay));
+
+  // Sanity check the finalizer.
+  MOZ_ASSERT_IF(clasp->hasFinalize(), CanNurseryAllocateFinalizedClass(clasp) ||
+                                          clasp->isProxyObject());
+
+  void* ptr = allocateCell(site, size, JS::TraceKind::Object);
+  if (!ptr) {
+    return nullptr;
+  }
+
+  return ptr;
+}
 
 void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
                                 JS::TraceKind kind) {
@@ -548,6 +548,12 @@ inline void* js::Nursery::allocate(size_t size) {
   MOZ_ASSERT(position() % CellAlignBytes == 0);
   MOZ_ASSERT(size % CellAlignBytes == 0);
 
+#ifdef JS_GC_ZEAL
+  if (gc->hasZealMode(ZealMode::CheckNursery)) {
+    size += sizeof(Canary);
+  }
+#endif
+
   if (MOZ_UNLIKELY(currentEnd() < position() + size)) {
     return moveToNextChunkAndAllocate(size);
   }
@@ -557,6 +563,12 @@ inline void* js::Nursery::allocate(size_t size) {
 
   DebugOnlyPoison(thing, JS_ALLOCATED_NURSERY_PATTERN, size,
                   MemCheckKind::MakeUndefined);
+
+#ifdef JS_GC_ZEAL
+  if (gc->hasZealMode(ZealMode::CheckNursery)) {
+    writeCanary(position() - sizeof(Canary));
+  }
+#endif
 
   return thing;
 }
@@ -585,10 +597,28 @@ void* Nursery::moveToNextChunkAndAllocate(size_t size) {
   poisonAndInitCurrentChunk();
 
   // We know there's enough space to allocate now so we can call allocate()
-  // recursively.
+  // recursively. Adjust the size for the nursery canary which it will add on.
   MOZ_ASSERT(currentEnd() >= position() + size);
+#ifdef JS_GC_ZEAL
+  if (gc->hasZealMode(ZealMode::CheckNursery)) {
+    size -= sizeof(Canary);
+  }
+#endif
   return allocate(size);
 }
+
+#ifdef JS_GC_ZEAL
+inline void Nursery::writeCanary(uintptr_t address) {
+  auto* canary = reinterpret_cast<Canary*>(address);
+  new (canary) Canary{CanaryMagicValue, nullptr};
+  if (lastCanary_) {
+    MOZ_ASSERT(!lastCanary_->next);
+    lastCanary_->next = canary;
+  }
+  lastCanary_ = canary;
+}
+#endif
+
 void* js::Nursery::allocateBuffer(Zone* zone, size_t nbytes) {
   MOZ_ASSERT(nbytes > 0);
 
@@ -1146,8 +1176,21 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
 
   AutoGCSession session(gc, JS::HeapState::MinorCollecting);
 
+#ifdef JS_GC_ZEAL
+  if (gc->hasZealMode(ZealMode::CheckNursery)) {
+    for (auto canary = lastCanary_; canary; canary = canary->next) {
+      MOZ_ASSERT(canary->magicValue == CanaryMagicValue);
+    }
+  }
+  lastCanary_ = nullptr;
+#endif
+
   stats().beginNurseryCollection(reason);
   gcprobes::MinorGCStart();
+
+  stringDeDupSet.emplace();
+  auto guardStringDedupSet =
+      mozilla::MakeScopeExit([&] { stringDeDupSet.reset(); });
 
   maybeClearProfileDurations();
   startProfile(ProfileKey::Total);
@@ -1753,7 +1796,7 @@ void js::Nursery::maybeResizeNursery(JS::GCOptions options,
   }
 #endif
 
-  decommitTask->join();
+  decommitTask.join();
 
   size_t newCapacity = mozilla::Clamp(targetSize(options, reason),
                                       tunables().gcMinNurseryBytes(),
@@ -1768,8 +1811,8 @@ void js::Nursery::maybeResizeNursery(JS::GCOptions options,
   }
 
   AutoLockHelperThreadState lock;
-  if (!decommitTask->isEmpty(lock)) {
-    decommitTask->startOrRunIfIdle(lock);
+  if (!decommitTask.isEmpty(lock)) {
+    decommitTask.startOrRunIfIdle(lock);
   }
 }
 
@@ -1904,7 +1947,7 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
   MOZ_ASSERT(newCapacity <= tunables().gcMaxNurseryBytes());
   MOZ_ASSERT(newCapacity > capacity());
 
-  if (!decommitTask->reserveSpaceForBytes(newCapacity)) {
+  if (!decommitTask.reserveSpaceForBytes(newCapacity)) {
     return;
   }
 
@@ -1951,7 +1994,7 @@ void js::Nursery::freeChunksFrom(const unsigned firstFreeChunk) {
   {
     AutoLockHelperThreadState lock;
     for (size_t i = firstChunkToDecommit; i < chunks_.length(); i++) {
-      decommitTask->queueChunk(chunks_[i], lock);
+      decommitTask.queueChunk(chunks_[i], lock);
     }
   }
 
@@ -1992,7 +2035,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
                          MemCheckKind::MakeNoAccess);
 
     AutoLockHelperThreadState lock;
-    decommitTask->queueRange(capacity_, chunk(0), lock);
+    decommitTask.queueRange(capacity_, chunk(0), lock);
   }
 }
 
@@ -2030,8 +2073,6 @@ void js::Nursery::sweepMapAndSetObjects() {
   }
   setsWithNurseryMemory_.clearAndFree();
 }
-
-void js::Nursery::joinDecommitTask() { decommitTask->join(); }
 
 JS_PUBLIC_API void JS::EnableNurseryStrings(JSContext* cx) {
   AutoEmptyNursery empty(cx);

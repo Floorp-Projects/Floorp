@@ -589,6 +589,7 @@ const char gc::ZealModeHelpText[] =
     "    14: (Compact) Perform a shrinking collection every N allocations\n"
     "    15: (CheckHeapAfterGC) Walk the heap to check its integrity after "
     "every GC\n"
+    "    16: (CheckNursery) Check nursery integrity on minor GC\n"
     "    17: (YieldBeforeSweepingAtoms) Incremental GC in two slices that "
     "yields\n"
     "        before sweeping the atoms table\n"

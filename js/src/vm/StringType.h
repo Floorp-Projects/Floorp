@@ -37,26 +37,26 @@ class JSInlineString;
 class JSRope;
 
 namespace JS {
+
 class JS_PUBLIC_API AutoStableStringChars;
+
 }  // namespace JS
 
 namespace js {
 
-class ArrayObject;
-class GenericPrinter;
-class PropertyName;
-class StringBuffer;
-
 namespace frontend {
+
 class ParserAtomsTable;
 class TaggedParserAtomIndex;
 class WellKnownParserAtoms;
 struct CompilationAtomCache;
+
 }  // namespace frontend
 
-namespace jit JS_PUBLIC_API {
-class MacroAssembler;
-}  // namespace jit JS_PUBLIC_API
+class ArrayObject;
+class JS_PUBLIC_API GenericPrinter;
+class PropertyName;
+class StringBuffer;
 
 /* The buffer length required to contain any unsigned 32-bit integer. */
 static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
@@ -803,7 +803,7 @@ static_assert(sizeof(JSRope) == sizeof(JSString),
 class JSLinearString : public JSString {
   friend class JSString;
   friend class JS::AutoStableStringChars;
-  friend class js::gc::TenuringTracer;
+  friend class js::TenuringTracer;
   friend class js::gc::CellAllocator;
 
   /* Vacuous and therefore unimplemented. */
