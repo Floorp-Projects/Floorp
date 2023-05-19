@@ -91,13 +91,3 @@ type = "boolean"
 bug-numbers = [1673971]
 is-public = true
 default-value = false
-
-[accessibility-cache]
-title = "experimental-features-accessibility-cache"
-description = "experimental-features-accessibility-cache-description"
-restart-required = true
-preference = "accessibility.cache.enabled"
-type = "boolean"
-bug-numbers = [1694563]
-is-public = {default = false, nightly = true}
-default-value = true
