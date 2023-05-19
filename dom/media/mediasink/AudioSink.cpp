@@ -250,7 +250,7 @@ void AudioSink::ReenqueueUnplayedAudioDataIfNeeded() {
   while (!packetsToReenqueue.IsEmpty()) {
     auto packetData = packetsToReenqueue.PopLastElement();
     uint32_t packetFrameCount = packetData.Length() / channelCount;
-    auto duration = TimeUnit(packetFrameCount, rate);
+    auto duration = FramesToTimeUnit(packetFrameCount, rate);
     if (!duration.IsValid()) {
       NS_WARNING("Int overflow in AudioSink");
       mErrored = true;
@@ -333,8 +333,7 @@ void AudioSink::SetPlaying(bool aPlaying) {
 }
 
 TimeUnit AudioSink::GetEndTime() const {
-  uint64_t written = mWritten;
-  TimeUnit played = media::TimeUnit(written, mOutputRate) + mStartTime;
+  TimeUnit played = FramesToTimeUnit(mWritten, mOutputRate) + mStartTime;
   if (!played.IsValid()) {
     NS_WARNING("Int overflow calculating audio end time");
     return TimeUnit::Zero();
@@ -590,7 +589,7 @@ already_AddRefed<AudioData> AudioSink::CreateAudioFromBuffer(
   if (!frames) {
     return nullptr;
   }
-  auto duration = media::TimeUnit(frames, mOutputRate);
+  auto duration = FramesToTimeUnit(frames, mOutputRate);
   if (!duration.IsValid()) {
     NS_WARNING("Int overflow in AudioSink");
     mErrored = true;

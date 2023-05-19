@@ -229,7 +229,8 @@ nsAVIFDecoder::DecodeResult AVIFParser::GetImage(AVIFImage& aImage) {
     }
 
     aImage.mFrameNum = mFrameNum++;
-    int64_t durationMs = aImage.mColorImage->mDuration.ToMilliseconds();
+    int64_t durationMs =
+        aImage.mColorImage->mDuration.ToMicroseconds() / USECS_PER_MS;
     aImage.mDuration = FrameTimeout::FromRawMilliseconds(
         static_cast<int32_t>(std::min<int64_t>(durationMs, INT32_MAX)));
 
@@ -297,16 +298,14 @@ static Mp4parseStatus CreateSampleIterator(
     Mp4parseAvifParser* aParser, ByteStream* aBuffer, uint32_t trackID,
     UniquePtr<SampleIterator>& aIteratorOut) {
   Mp4parseByteData data;
-  uint64_t timescale;
-  Mp4parseStatus rv =
-      mp4parse_avif_get_indice_table(aParser, trackID, &data, &timescale);
+  Mp4parseStatus rv = mp4parse_avif_get_indice_table(aParser, trackID, &data);
   if (rv != MP4PARSE_STATUS_OK) {
     return rv;
   }
 
   UniquePtr<IndiceWrapper> wrapper = MakeUnique<IndiceWrapper>(data);
-  RefPtr<MP4SampleIndex> index = new MP4SampleIndex(
-      *wrapper, aBuffer, trackID, false, AssertedCast<int32_t>(timescale));
+  RefPtr<MP4SampleIndex> index =
+      new MP4SampleIndex(*wrapper, aBuffer, trackID, false);
   aIteratorOut = MakeUnique<SampleIterator>(index);
   return MP4PARSE_STATUS_OK;
 }

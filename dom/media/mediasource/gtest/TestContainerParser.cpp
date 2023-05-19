@@ -11,7 +11,6 @@
 #include "mozilla/gtest/MozAssertions.h"
 
 using namespace mozilla;
-using TimeUnit = mozilla::media::TimeUnit;
 
 TEST(ContainerParser, MIMETypes)
 {
@@ -82,8 +81,8 @@ TEST(ContainerParser, ADTSHeader)
   header = make_adts_header();
   EXPECT_FALSE(NS_SUCCEEDED(parser->IsMediaSegmentPresent(MediaSpan(header))))
       << "Found media segment when there was just a header.";
-  TimeUnit start;
-  TimeUnit end;
+  int64_t start = 0;
+  int64_t end = 0;
   EXPECT_TRUE(NS_FAILED(
       parser->ParseStartAndEndTimestamps(MediaSpan(header), start, end)));
 
@@ -123,13 +122,13 @@ TEST(ContainerParser, ADTSBlankMedia)
       << "Rejected a valid header.";
   EXPECT_TRUE(NS_SUCCEEDED(parser->IsMediaSegmentPresent(MediaSpan(header))))
       << "Rejected a full (but zeroed) media segment.";
-  TimeUnit start;
-  TimeUnit end;
+  int64_t start = 0;
+  int64_t end = 0;
   // We don't report timestamps from ADTS.
   EXPECT_TRUE(NS_FAILED(
       parser->ParseStartAndEndTimestamps(MediaSpan(header), start, end)));
-  EXPECT_TRUE(start.IsZero());
-  EXPECT_TRUE(end.IsZero());
+  EXPECT_EQ(start, 0);
+  EXPECT_EQ(end, 0);
 
   // Verify the parser calculated header and packet data boundaries.
   EXPECT_TRUE(parser->HasInitData());

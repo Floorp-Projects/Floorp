@@ -59,7 +59,6 @@ class OpusDataDecoder final : public MediaDataDecoder,
   // will raise an error so we can indicate that the file is invalid.
   bool mPaddingDiscarded;
   int64_t mFrames;
-  int64_t mTotalFrames = 0;
   Maybe<int64_t> mLastFrameTime;
   AutoTArray<uint8_t, 8> mMappingTable;
   AudioConfig::ChannelLayout::ChannelMap mChannelMap;

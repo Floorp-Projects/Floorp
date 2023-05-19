@@ -43,21 +43,8 @@ class FFmpegAudioDecoder<LIBAV_VER>
  private:
   MediaResult DoDecode(MediaRawData* aSample, uint8_t* aData, int aSize,
                        bool* aGotFrame, DecodedData& aResults) override;
-  // This method is to be called only when decoding mp3, in order to correctly
-  // discard padding frames.
-  uint64_t Padding() const;
-  // This method is to be called only when decoding AAC, in order to correctly
-  // discard padding frames, based on the number of frames decoded and the total
-  // frame count of the media.
-  uint64_t TotalFrames() const;
-  // The number of frames of encoder delay, that need to be discarded at the
-  // beginning of the stream.
   uint32_t mEncoderDelay = 0;
-  // This holds either the encoder padding (when this decoder decodes mp3), or
-  // the total frame count of the media (when this decoder decodes AAC).
-  // It is best accessed via the `Padding` and `TotalFrames` methods, for
-  // clarity.
-  uint64_t mEncoderPaddingOrTotalFrames = 0;
+  uint32_t mEncoderPadding = 0;
 };
 
 }  // namespace mozilla

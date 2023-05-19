@@ -51,16 +51,16 @@ fn parse_sample_table() {
             start_offset: 27_046.into(),
             end_offset: 27_052.into(),
             start_composition: 0.into(),
-            end_composition: 1024.into(),
+            end_composition: 46_439.into(),
             start_decode: 0.into(),
             sync: true,
         };
         let audio_indice_215 = Indice {
             start_offset: 283_550.into(),
             end_offset: 283_556.into(),
-            start_composition: 220160.into(),
-            end_composition: 221184.into(),
-            start_decode: 220160.into(),
+            start_composition: 9_984_580.into(),
+            end_composition: 10_031_020.into(),
+            start_decode: 9_984_580.into(),
             sync: true,
         };
         assert_eq!(indice.length, 216);
@@ -85,17 +85,17 @@ fn parse_sample_table() {
         let video_indice_291 = Indice {
             start_offset: 280_226.into(),
             end_offset: 280_855.into(),
-            start_composition: 876995.into(),
-            end_composition: 879996.into(),
-            start_decode: 873900.into(),
+            start_composition: 9_838_333.into(),
+            end_composition: 9_871_677.into(),
+            start_decode: 9_710_000.into(),
             sync: false,
         };
         let video_indice_292 = Indice {
             start_offset: 280_855.into(),
             end_offset: 281_297.into(),
-            start_composition: 873996.into(),
-            end_composition: 876995.into(),
-            start_decode: 873901.into(),
+            start_composition: 9_805_011.into(),
+            end_composition: 9_838_333.into(),
+            start_decode: 9_710_011.into(),
             sync: false,
         };
         // TODO: start_composition time in stagefright is 9905000, but it is 9904999 in parser, it
@@ -105,17 +105,17 @@ fn parse_sample_table() {
         let video_indice_295 = Indice {
             start_offset: 282_391.into(),
             end_offset: 283_032.into(),
-            start_composition: 888995.into(),
-            end_composition: 888996.into(),
-            start_decode: 885900.into(),
+            start_composition: 9_971_666.into(),
+            end_composition: 9_971_677.into(),
+            start_decode: 9_843_333.into(),
             sync: false,
         };
         let video_indice_296 = Indice {
             start_offset: 283_092.into(),
             end_offset: 283_526.into(),
-            start_composition: 885996.into(),
-            end_composition: 888995.into(),
-            start_decode: 885901.into(),
+            start_composition: 9_938_344.into(),
+            end_composition: 9_971_666.into(),
+            start_decode: 9_843_344.into(),
             sync: false,
         };
 
@@ -171,25 +171,25 @@ fn parse_sample_table_with_elst() {
         let audio_indice_0 = Indice {
             start_offset: 6992.into(),
             end_offset: 7363.into(),
-            start_composition: (-1600).into(),
-            end_composition: (-576).into(),
+            start_composition: (-36281).into(),
+            end_composition: (-13062).into(),
             start_decode: 0.into(),
             sync: true,
         };
         let audio_indice_1 = Indice {
             start_offset: 7363.into(),
             end_offset: 7735.into(),
-            start_composition: (-576).into(),
-            end_composition: 448.into(),
-            start_decode: 1024.into(),
+            start_composition: (-13062).into(),
+            end_composition: 10158.into(),
+            start_decode: 23219.into(),
             sync: true,
         };
         let audio_indice_2 = Indice {
             start_offset: 7735.into(),
             end_offset: 8106.into(),
-            start_composition: 448.into(),
-            end_composition: 1472.into(),
-            start_decode: 2048.into(),
+            start_composition: 10158.into(),
+            end_composition: 33378.into(),
+            start_decode: 46439.into(),
             sync: true,
         };
         assert_eq!(indice.length, 21);
@@ -239,32 +239,32 @@ fn parse_sample_table_with_negative_ctts() {
             start_offset: 48.into(),
             end_offset: 890.into(),
             start_composition: 0.into(),
-            end_composition: 100.into(),
+            end_composition: 33_333.into(),
             start_decode: 0.into(),
             sync: true,
         };
         let video_indice_1 = Indice {
             start_offset: 890.into(),
             end_offset: 913.into(),
-            start_composition: 400.into(),
-            end_composition: 500.into(),
-            start_decode: 100.into(),
+            start_composition: 133_333.into(),
+            end_composition: 166_666.into(),
+            start_decode: 33_333.into(),
             sync: false,
         };
         let video_indice_2 = Indice {
             start_offset: 913.into(),
             end_offset: 934.into(),
-            start_composition: 200.into(),
-            end_composition: 300.into(),
-            start_decode: 200.into(),
+            start_composition: 66_666.into(),
+            end_composition: 100_000.into(),
+            start_decode: 66_666.into(),
             sync: false,
         };
         let video_indice_3 = Indice {
             start_offset: 934.into(),
             end_offset: 955.into(),
-            start_composition: 100.into(),
-            end_composition: 200.into(),
-            start_decode: 300.into(),
+            start_composition: 33_333.into(),
+            end_composition: 66_666.into(),
+            start_decode: 100_000.into(),
             sync: false,
         };
         assert_eq!(indice.length, 300);

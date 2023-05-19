@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "mp4parse_capi"
-version = "0.17.0"
+version = "0.16.0"
 authors = [
     "Ralph Giles <giles@mozilla.com>",
     "Matthew Gregan <kinetik@flim.org>",
@@ -37,7 +37,7 @@ version = "0.4"
 features = ["std_io"]
 
 [dependencies.mp4parse]
-version = "0.17.0"
+version = "0.16.0"
 path = "../mp4parse"
 features = ["unstable-api"]
 

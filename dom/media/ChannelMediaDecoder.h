@@ -125,7 +125,7 @@ class ChannelMediaDecoder
   // The actual playback rate computation.
   static PlaybackRateInfo ComputePlaybackRate(
       const MediaChannelStatistics& aStats, BaseMediaResource* aResource,
-      const media::TimeUnit& aDuration);
+      double aDuration);
 
   // Something has changed that could affect the computed playback rate,
   // so recompute it.

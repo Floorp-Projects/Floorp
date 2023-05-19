@@ -343,13 +343,11 @@ bool ADTSTrackDemuxer::Init() {
           mInfo->mRate, mInfo->mChannels, mInfo->mBitDepth,
           mInfo->mDuration.ToMicroseconds());
 
-  // AAC encoder delay can be 2112 (typical value when using Apple AAC encoder),
-  // or 1024 (typical value when encoding using fdk_aac, often via ffmpeg).
+  // AAC encoder delay is by default 2112 audio frames.
   // See
   // https://developer.apple.com/library/content/documentation/QuickTime/QTFF/QTFFAppenG/QTFFAppenG.html
-  // In an attempt to not trim valid audio data, and because ADTS doesn't
-  // provide a way to know this pre-roll value, this offets by 1024 frames.
-  mPreRoll = TimeUnit(1024, mSamplesPerSecond);
+  // So we always seek 2112 frames prior the seeking point.
+  mPreRoll = TimeUnit::FromMicroseconds(2112 * 1000000ULL / mSamplesPerSecond);
   return mChannels;
 }
 
@@ -498,13 +496,13 @@ int64_t ADTSTrackDemuxer::StreamLength() const { return mSource.GetLength(); }
 
 TimeUnit ADTSTrackDemuxer::Duration() const {
   if (!mNumParsedFrames) {
-    return TimeUnit::Invalid();
+    return TimeUnit::FromMicroseconds(-1);
   }
 
   const int64_t streamLen = StreamLength();
   if (streamLen < 0) {
     // Unknown length, we can't estimate duration.
-    return TimeUnit::Invalid();
+    return TimeUnit::FromMicroseconds(-1);
   }
   const int64_t firstFrameOffset = mParser->FirstFrame().Offset();
   int64_t numFrames = (streamLen - firstFrameOffset) / AverageFrameLength();
@@ -513,10 +511,10 @@ TimeUnit ADTSTrackDemuxer::Duration() const {
 
 TimeUnit ADTSTrackDemuxer::Duration(int64_t aNumFrames) const {
   if (!mSamplesPerSecond) {
-    return TimeUnit::Invalid();
+    return TimeUnit::FromMicroseconds(-1);
   }
 
-  return TimeUnit(aNumFrames * mSamplesPerFrame, mSamplesPerSecond);
+  return FramesToTimeUnit(aNumFrames * mSamplesPerFrame, mSamplesPerSecond);
 }
 
 const adts::Frame& ADTSTrackDemuxer::FindNextFrame(
@@ -648,36 +646,13 @@ already_AddRefed<MediaRawData> ADTSTrackDemuxer::GetNextFrame(
 
   UpdateState(aFrame);
 
-  TimeUnit rawpts = Duration(mFrameIndex - 1) - mPreRoll;
-  TimeUnit rawDuration = Duration(1);
-  TimeUnit rawend = rawpts + rawDuration;
-
-  frame->mTime = std::max(TimeUnit::Zero(), rawpts);
+  frame->mTime = Duration(mFrameIndex - 1);
   frame->mDuration = Duration(1);
   frame->mTimecode = frame->mTime;
   frame->mKeyframe = true;
 
-  // Handle decoder delay. A packet must be trimmed if its pts, adjusted for
-  // decoder delay, is negative. A packet can be trimmed entirely.
-  if (rawpts.IsNegative()) {
-    frame->mDuration = std::max(TimeUnit::Zero(), rawend - frame->mTime);
-  }
-
-  // ADTS frames can have a presentation duration of zero, e.g. when a frame is
-  // part of preroll.
-  MOZ_ASSERT(frame->mDuration.IsPositiveOrZero());
-
-  ADTSLOG("ADTS packet demuxed: pts [%lf, %lf] (duration: %lf)",
-          frame->mTime.ToSeconds(), frame->GetEndTime().ToSeconds(),
-          frame->mDuration.ToSeconds());
-
-  // Indicate original packet information to trim after decoding.
-  if (frame->mDuration != rawDuration) {
-    frame->mOriginalPresentationWindow =
-        Some(media::TimeInterval{rawpts, rawend});
-    ADTSLOG("Total packet time excluding trimming: [%lf, %lf]",
-            rawpts.ToSeconds(), rawend.ToSeconds());
-  }
+  MOZ_ASSERT(!frame->mTime.IsNegative());
+  MOZ_ASSERT(frame->mDuration.IsPositive());
 
   ADTSLOGV("GetNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
            " mFrameIndex=%" PRId64 " mTotalFrameLen=%" PRIu64
