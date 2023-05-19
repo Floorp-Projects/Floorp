@@ -11,6 +11,7 @@ updater.app/Contents/MacOS/org.mozilla.updater
 
 plugin-container.app/Contents/PkgInfo
 updater.app/Contents/PkgInfo
+media-plugin-helper.app/Contents/PkgInfo
 
 # Duplicated on Linux by browser/branding/branding-common.mozbuild
 #ifdef XP_LINUX

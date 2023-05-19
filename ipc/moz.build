@@ -6,6 +6,7 @@
 
 DIRS += [
     "app",
+    "mediapluginhelper",
     "chromium",
     "glue",
     "ipdl",

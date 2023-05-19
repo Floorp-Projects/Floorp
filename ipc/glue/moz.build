@@ -279,7 +279,12 @@ FINAL_LIBRARY = "xul"
 if CONFIG["OS_ARCH"] == "Darwin":
     OS_LIBS += ["bsm"]  # for audit_token_to_pid
 
-for var in ("MOZ_CHILD_PROCESS_NAME", "MOZ_CHILD_PROCESS_BUNDLE"):
+for var in (
+    "MOZ_CHILD_PROCESS_NAME",
+    "MOZ_CHILD_PROCESS_BUNDLENAME",
+    "MOZ_EME_PROCESS_NAME_BRANDED",
+    "MOZ_EME_PROCESS_BUNDLENAME",
+):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
 if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
