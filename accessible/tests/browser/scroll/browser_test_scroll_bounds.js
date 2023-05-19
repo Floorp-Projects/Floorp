@@ -102,13 +102,6 @@ addAccessibleTask(
   </div>
   `,
   async function(browser, docAcc) {
-    // We can only access the `cache` attribute of an accessible when
-    // the cache is enabled and we're in a remote browser. Verify
-    // both these conditions hold, and return early if they don't.
-    if (!isCacheEnabled || !browser.isRemoteBrowser) {
-      return;
-    }
-
     ok(docAcc, "iframe document acc is present");
     await untilCacheOk(
       () => testCachedScrollPosition(docAcc, 0, 0),
@@ -627,13 +620,6 @@ addAccessibleTask(
   </div>
   `,
   async function(browser, docAcc) {
-    // We can only access the `cache` attribute of an accessible when
-    // the cache is enabled and we're in a remote browser. Verify
-    // both these conditions hold, and return early if they don't.
-    if (!isCacheEnabled || !browser.isRemoteBrowser) {
-      return;
-    }
-
     const square = findAccessibleChildByID(docAcc, "square");
     await untilCacheOk(
       () => testCachedScrollPosition(square, 0, 0, true),

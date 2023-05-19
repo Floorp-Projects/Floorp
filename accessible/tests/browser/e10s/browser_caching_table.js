@@ -74,9 +74,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -111,9 +111,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -154,9 +154,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -192,9 +192,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -279,15 +279,10 @@ addAccessibleTask(
     const layout = findAccessibleChildByID(docAcc, "layout");
     testAttrs(layout, { "layout-guess": "true" }, true);
     info("changing border style on table cell");
-    let styleChanged = waitForEvent(EVENT_TABLE_STYLING_CHANGED, layout);
     await invokeContentTask(browser, [], () => {
       content.document.getElementById("cell").style.border = "1px solid black";
       content.document.body.offsetTop; // Flush layout.
     });
-    if (!isCacheEnabled) {
-      // this event doesn't get fired when the cache is on, so we can't await it
-      await styleChanged;
-    }
     await untilCacheOk(() => {
       // manually verify the attribute doesn't exist, since `testAbsentAttrs`
       // has internal calls to ok() which fail if the cache hasn't yet updated
@@ -350,9 +345,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -406,26 +401,19 @@ addAccessibleTask(
     await setNodeHidden(browser, "b", false);
     await reordered;
     is(table.columnCount, 2, "table columnCount correct");
-    if (isCacheEnabled) {
-      info("Moving b out of table using aria-owns");
-      reordered = waitForEvent(EVENT_REORDER, "r1");
-      await invokeContentTask(browser, [], () => {
-        content.document.getElementById("owner").setAttribute("aria-owns", "b");
-      });
-      await reordered;
-      is(table.columnCount, 1, "table columnCount correct");
-    } else {
-      todo(
-        false,
-        "CachedTableAccessible disabled, so counts broken when cell moved with aria-owns"
-      );
-    }
+    info("Moving b out of table using aria-owns");
+    reordered = waitForEvent(EVENT_REORDER, "r1");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("owner").setAttribute("aria-owns", "b");
+    });
+    await reordered;
+    is(table.columnCount, 1, "table columnCount correct");
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -451,9 +439,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -486,9 +474,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 

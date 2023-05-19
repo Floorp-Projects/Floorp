@@ -175,9 +175,9 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -285,5 +285,5 @@ addAccessibleTask(
   async function(browser, accDoc) {
     await testCachedRelation(accDoc, RELATION_NODE_CHILD_OF, accDoc.parent);
   },
-  { topLevel: isCacheEnabled, chrome: true }
+  { topLevel: true, chrome: true }
 );

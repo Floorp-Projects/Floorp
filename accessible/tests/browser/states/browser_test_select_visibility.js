@@ -21,7 +21,7 @@ addAccessibleTask(
       "select should be on screen and visible"
     );
 
-    if (!isCacheEnabled || !browser.isRemoteBrowser) {
+    if (!browser.isRemoteBrowser) {
       await untilCacheOk(
         () => testVisibility(select.firstChild, false, true),
         "combobox list should be on screen and invisible"

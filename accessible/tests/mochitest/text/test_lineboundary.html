@@ -13,14 +13,14 @@
     function doTest() {
       testTextAtOffset("line_test_1", BOUNDARY_LINE_START,
                        [[0, 6, "Line 1 ", 0, 7],
-                        // See the kOkIfCache test below.
+                        // See the kOk test below.
                         // [7, 7, kEmbedChar, 7, 8],
                         [8, 15, "Line 3 ", 8, 15]]);
       testTextAtOffset(/* aOffset */ 7, BOUNDARY_LINE_START,
         kEmbedChar, /* aStartOffset */ 7, /* aEndOffset */ 8,
         "line_test_1",
-        /* returned text */ kOkIfCache,
-        /* returned start offset */ kOk, /* returned end offset */ kOkIfCache);
+        /* returned text */ kOk,
+        /* returned start offset */ kOk, /* returned end offset */ kOk);
 
       // ////////////////////////////////////////////////////////////////////////
       // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__
@@ -228,16 +228,16 @@
 
       // A line with an empty display: contents leaf in the middle.
       testTextAtOffset([ "displayContents" ], BOUNDARY_LINE_START,
-                       // See the kOkIfCache test below.
+                       // See the kOk test below.
                        // [ [0, 3, `a${kEmbedChar}b`, 0, 3] ]);
                        [ [0, 0, `a${kEmbedChar}b`, 0, 3],
                          [2, 3, `a${kEmbedChar}b`, 0, 3] ]);
       testTextAtOffset(/* aOffset */ 1, BOUNDARY_LINE_START,
         `a${kEmbedChar}b`, /* aStartOffset */ 0, /* aEndOffset */ 3,
         "displayContents",
-        /* returned text */ kOkIfCache,
-        /* returned start offset */ kOkIfCache,
-        /* returned end offset */ kOkIfCache);
+        /* returned text */ kOk,
+        /* returned start offset */ kOk,
+        /* returned end offset */ kOk);
 
       // A line which wraps, followed by a br, followed by another line.
       testTextAtOffset([ "brAfterWrapped" ], BOUNDARY_LINE_START,
@@ -248,28 +248,28 @@
       testTextAtOffset([ "inlineInput" ], BOUNDARY_LINE_END,
                        [ [0, 1, "a", 0, 1],
                          [2, 7, `\nb ${kEmbedChar} d`, 1, 7,
-                          [ [ 4, "inlineInput", kOkIfCache, kOk, kOkIfCache] ] ] ]);
+                          [ [ 4, "inlineInput", kOk, kOk, kOk] ] ] ]);
 
       testTextAtOffset([ "inlineInput2" ], BOUNDARY_LINE_END,
                        [ [0, 1, "a", 0, 1],
                          [2, 7, `\n${kEmbedChar} c d`, 1, 7,
-                          [ [ 2, "inlineInput2", kOkIfCache, kOk, kOkIfCache] ] ] ]);
+                          [ [ 2, "inlineInput2", kOk, kOk, kOk] ] ] ]);
 
       testTextAtOffset([ "inlineInput3" ], BOUNDARY_LINE_END,
                        [ [0, 1, "a", 0, 1],
                          [2, 8, `\nb${kEmbedChar} c d`, 1, 8,
-                          [ [ 3, "inlineInput3", kOkIfCache, kOkIfCache, kOkIfCache] ] ] ]);
+                          [ [ 3, "inlineInput3", kOk, kOk, kOk] ] ] ]);
 
       testTextAtOffset([ "inlineInput4" ], BOUNDARY_LINE_END,
                        [ [0, 1, "a", 0, 1],
                          [2, 7, `\n${kEmbedChar}b c d`, 1, 8,
-                          [ [ 2, "inlineInput4", kOkIfCache, kOkIfCache, kOkIfCache ] ] ] ]);
+                          [ [ 2, "inlineInput4", kOk, kOk, kOk ] ] ] ]);
 
       testTextAtOffset(/* aOffset */ 0, BOUNDARY_LINE_START,
         kEmbedChar, 0, 1, "contentEditableTable",
-          /* returned text */ kOkIfCache,
+          /* returned text */ kOk,
           /* returned start offset */ kOk,
-          /* returned end offset */ kOkIfCache);
+          /* returned end offset */ kOk);
 
       SimpleTest.finish();
     }

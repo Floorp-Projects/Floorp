@@ -59,13 +59,6 @@ function testSelectionRange(
   endContainer,
   endOffset
 ) {
-  if (browser.isRemoteBrowser && !isCacheEnabled) {
-    todo(
-      false,
-      "selectionRanges not implemented for non-cached RemoteAccessible"
-    );
-    return;
-  }
   let selRange = root.selectionRanges.queryElementAt(0, nsIAccessibleTextRange);
   testTextRange(
     selRange,
@@ -153,7 +146,7 @@ addAccessibleTask(
     testTextGetSelection(editable, 0, 1, 0);
     testTextGetSelection(p1, 0, 1, 0);
     const p2 = findAccessibleChildByID(docAcc, "p2", [nsIAccessibleText]);
-    if (isCacheEnabled && browser.isRemoteBrowser) {
+    if (browser.isRemoteBrowser) {
       is(p2.selectionCount, 0, "p2 selectionCount is 0");
     } else {
       todo(
@@ -212,35 +205,28 @@ addAccessibleTask(
       content.window.getSelection().addRange(r);
     });
     await selChanged;
-    if (browser.isRemoteBrowser && !isCacheEnabled) {
-      todo(
-        false,
-        "selectionRanges not implemented for non-cached RemoteAccessible"
-      );
-    } else {
-      let selRanges = editable.selectionRanges;
-      is(selRanges.length, 2, "2 selection ranges");
-      testTextRange(
-        selRanges.queryElementAt(0, nsIAccessibleTextRange),
-        "range 0",
-        p1,
-        0,
-        p1,
-        1
-      );
-      testTextRange(
-        selRanges.queryElementAt(1, nsIAccessibleTextRange),
-        "range 1",
-        p2,
-        0,
-        p2,
-        1
-      );
-    }
+    let selRanges = editable.selectionRanges;
+    is(selRanges.length, 2, "2 selection ranges");
+    testTextRange(
+      selRanges.queryElementAt(0, nsIAccessibleTextRange),
+      "range 0",
+      p1,
+      0,
+      p1,
+      1
+    );
+    testTextRange(
+      selRanges.queryElementAt(1, nsIAccessibleTextRange),
+      "range 1",
+      p2,
+      0,
+      p2,
+      1
+    );
     is(editable.selectionCount, 2, "editable selectionCount is 2");
     testTextGetSelection(editable, 0, 1, 0);
     testTextGetSelection(editable, 1, 2, 1);
-    if (isCacheEnabled && browser.isRemoteBrowser) {
+    if (browser.isRemoteBrowser) {
       is(p1.selectionCount, 1, "p1 selectionCount is 1");
       testTextGetSelection(p1, 0, 1, 0);
       is(p2.selectionCount, 1, "p2 selectionCount is 1");

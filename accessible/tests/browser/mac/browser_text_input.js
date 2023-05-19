@@ -178,10 +178,6 @@ function testSelectionEventLeftChar(event, expectedChar) {
 }
 
 function testSelectionEventLine(event, expectedLine) {
-  if (!expectedLine && !isCacheEnabled) {
-    todo(false, "Blank lines are broken with cache disabled");
-    return;
-  }
   const selStart = event.macIface.getParameterizedAttributeValue(
     "AXStartTextMarkerForTextMarkerRange",
     event.data.AXSelectedTextMarkerRange

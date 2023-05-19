@@ -8,7 +8,7 @@
 /* import-globals-from ../mochitest/layout.js */
 /* import-globals-from ../mochitest/promisified-events.js */
 
-/* exported Logger, MOCHITESTS_DIR, isCacheEnabled, invokeSetAttribute, invokeFocus,
+/* exported Logger, MOCHITESTS_DIR, invokeSetAttribute, invokeFocus,
             invokeSetStyle, getAccessibleDOMNodeID, getAccessibleTagName,
             addAccessibleTask, findAccessibleChildByID, isDefunct,
             CURRENT_CONTENT_DIR, loadScripts, loadContentScripts, snippetToURL,
@@ -43,11 +43,6 @@ const DEFAULT_IFRAME_DOC_BODY_ID = "default-iframe-body-id";
 
 const HTML_MIME_TYPE = "text/html";
 const XHTML_MIME_TYPE = "application/xhtml+xml";
-
-const isCacheEnabled = Services.prefs.getBoolPref(
-  "accessibility.cache.enabled",
-  false
-);
 
 function loadHTMLFromFile(path) {
   // Load the HTML to return in the response from file.

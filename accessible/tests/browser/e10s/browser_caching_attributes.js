@@ -131,10 +131,10 @@ addAccessibleTask(
     }
   },
   {
-    // These tests don't work yet with the parent process cache enabled.
-    topLevel: !isCacheEnabled,
-    iframe: !isCacheEnabled,
-    remoteIframe: !isCacheEnabled,
+    // These tests don't work yet with the parent process cache.
+    topLevel: false,
+    iframe: false,
+    remoteIframe: false,
   }
 );
 
@@ -617,7 +617,7 @@ addAccessibleTask(
   async function(browser, docAcc) {
     const noAlt = findAccessibleChildByID(docAcc, "noAlt");
     testAttrs(noAlt, { src: kImgUrl }, true);
-    if (isCacheEnabled && browser.isRemoteBrowser) {
+    if (browser.isRemoteBrowser) {
       // To avoid wasting memory, we don't cache src if there's a name.
       const alt = findAccessibleChildByID(docAcc, "alt");
       testAbsentAttrs(alt, { src: "" });
