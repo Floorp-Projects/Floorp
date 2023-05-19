@@ -49,15 +49,6 @@ using mozilla::PodCopy;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
-#ifdef JS_GC_ZEAL
-constexpr uint32_t CanaryMagicValue = 0xDEADB15D;
-
-struct alignas(gc::CellAlignBytes) js::Nursery::Canary {
-  uint32_t magicValue;
-  Canary* next;
-};
-#endif
-
 namespace js {
 
 struct NurseryChunk : public ChunkBase {
@@ -241,12 +232,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       reportPretenuringThreshold_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
       hasRecentGrowthData(false),
-      smoothedTargetSize(0.0)
-#ifdef JS_GC_ZEAL
-      ,
-      lastCanary_(nullptr)
-#endif
-{
+      smoothedTargetSize(0.0) {
   const char* env = getenv("MOZ_NURSERY_STRINGS");
   if (env && *env) {
     canAllocateStrings_ = (*env == '1');
@@ -580,12 +566,6 @@ inline void* js::Nursery::allocate(size_t size) {
   MOZ_ASSERT(position() % CellAlignBytes == 0);
   MOZ_ASSERT(size % CellAlignBytes == 0);
 
-#ifdef JS_GC_ZEAL
-  if (gc->hasZealMode(ZealMode::CheckNursery)) {
-    size += sizeof(Canary);
-  }
-#endif
-
   if (MOZ_UNLIKELY(currentEnd() < position() + size)) {
     return moveToNextChunkAndAllocate(size);
   }
@@ -595,12 +575,6 @@ inline void* js::Nursery::allocate(size_t size) {
 
   DebugOnlyPoison(thing, JS_ALLOCATED_NURSERY_PATTERN, size,
                   MemCheckKind::MakeUndefined);
-
-#ifdef JS_GC_ZEAL
-  if (gc->hasZealMode(ZealMode::CheckNursery)) {
-    writeCanary(position() - sizeof(Canary));
-  }
-#endif
 
   return thing;
 }
@@ -629,28 +603,10 @@ void* Nursery::moveToNextChunkAndAllocate(size_t size) {
   poisonAndInitCurrentChunk();
 
   // We know there's enough space to allocate now so we can call allocate()
-  // recursively. Adjust the size for the nursery canary which it will add on.
+  // recursively.
   MOZ_ASSERT(currentEnd() >= position() + size);
-#ifdef JS_GC_ZEAL
-  if (gc->hasZealMode(ZealMode::CheckNursery)) {
-    size -= sizeof(Canary);
-  }
-#endif
   return allocate(size);
 }
-
-#ifdef JS_GC_ZEAL
-inline void Nursery::writeCanary(uintptr_t address) {
-  auto* canary = reinterpret_cast<Canary*>(address);
-  new (canary) Canary{CanaryMagicValue, nullptr};
-  if (lastCanary_) {
-    MOZ_ASSERT(!lastCanary_->next);
-    lastCanary_->next = canary;
-  }
-  lastCanary_ = canary;
-}
-#endif
-
 void* js::Nursery::allocateBuffer(Zone* zone, size_t nbytes) {
   MOZ_ASSERT(nbytes > 0);
 
@@ -1207,15 +1163,6 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   }
 
   AutoGCSession session(gc, JS::HeapState::MinorCollecting);
-
-#ifdef JS_GC_ZEAL
-  if (gc->hasZealMode(ZealMode::CheckNursery)) {
-    for (auto canary = lastCanary_; canary; canary = canary->next) {
-      MOZ_ASSERT(canary->magicValue == CanaryMagicValue);
-    }
-  }
-  lastCanary_ = nullptr;
-#endif
 
   stats().beginNurseryCollection(reason);
   gcprobes::MinorGCStart();
