@@ -65,8 +65,6 @@ PortLink::PortLink(MessageChannel* aChan, ScopedPort aPort)
   mObserver = new PortObserverThunk(mChan->mMonitor, this);
   mNode->SetPortObserver(mPort, mObserver);
 
-  mChan->mChannelState = ChannelConnected;
-
   // Dispatch an event to the IO loop to trigger an initial
   // `OnPortStatusChanged` to deliver any pending messages. This needs to be run
   // asynchronously from a different thread (or in the case of a same-thread
@@ -132,12 +130,8 @@ void PortLink::SendMessage(UniquePtr<Message> aMessage) {
   }
 }
 
-void PortLink::SendClose() {
+void PortLink::Close() {
   mChan->mMonitor->AssertCurrentThreadOwns();
-
-  // Our channel has been closed, mark it as such.
-  mChan->mChannelState = ChannelClosed;
-  mChan->mMonitor->Notify();
 
   if (!mObserver) {
     // We're already being closed.

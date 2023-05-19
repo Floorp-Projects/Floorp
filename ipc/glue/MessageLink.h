@@ -53,7 +53,11 @@ class MessageLink {
   // n.b.: These methods all require that the channel monitor is
   // held when they are invoked.
   virtual void SendMessage(mozilla::UniquePtr<Message> msg) = 0;
-  virtual void SendClose() = 0;
+
+  // Synchronously close the connection, such that no further notifications will
+  // be delivered to the MessageChannel instance. Must be called with the
+  // channel monitor held.
+  virtual void Close() = 0;
 
   virtual bool IsClosed() const = 0;
 
@@ -76,7 +80,7 @@ class PortLink final : public MessageLink {
   virtual ~PortLink();
 
   void SendMessage(UniquePtr<Message> aMessage) override;
-  void SendClose() override;
+  void Close() override;
 
   bool IsClosed() const override;
 
