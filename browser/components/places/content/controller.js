@@ -588,7 +588,9 @@ PlacesController.prototype = {
           hideIfSingleClickOpens ||
           hideIfNotSearch ||
           !this._shouldShowMenuItem(item, metadata);
-        item.hidden = item.disabled = shouldHideItem;
+        item.hidden = shouldHideItem;
+        item.disabled =
+          shouldHideItem || item.getAttribute("start-disabled") == "true";
 
         if (!item.hidden) {
           visibleItemsBeforeSep = true;

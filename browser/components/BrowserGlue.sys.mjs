@@ -3401,14 +3401,10 @@ BrowserGlue.prototype = {
       this._bookmarksBackupIdleTime = idleTime;
 
       if (this._isNewProfile) {
-        try {
-          // New profiles may have existing bookmarks (imported from another browser or
-          // copied into the profile) and we want to show the bookmark toolbar for them
-          // in some cases.
-          lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibility();
-        } catch (ex) {
-          console.error(ex);
-        }
+        // New profiles may have existing bookmarks (imported from another browser or
+        // copied into the profile) and we want to show the bookmark toolbar for them
+        // in some cases.
+        await lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibility();
       }
     })()
       .catch(ex => {

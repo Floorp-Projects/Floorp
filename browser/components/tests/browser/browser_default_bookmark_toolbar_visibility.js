@@ -7,6 +7,13 @@
  * If new default bookmarks are added to the toolbar then the threshold of > 3
  * in NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE may need to be adjusted there.
  */
+
+add_setup(async function() {
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.toolbars.bookmarks.visibility");
+  });
+});
+
 add_task(async function test_default_bookmark_toolbar_visibility() {
   // The Bookmarks Toolbar visibility state should be set only after
   // Places has notified that it's done initializing.
@@ -67,7 +74,7 @@ add_task(async function test_bookmark_toolbar_visible_when_populated() {
     Bookmarks.insert(Object.assign({ url: "https://example.com/6" }, bookmark)),
   ]);
 
-  PlacesUIUtils.maybeToggleBookmarkToolbarVisibility();
+  await PlacesUIUtils.maybeToggleBookmarkToolbarVisibility();
 
   const personalToolbar = document.getElementById("PersonalToolbar");
   ok(

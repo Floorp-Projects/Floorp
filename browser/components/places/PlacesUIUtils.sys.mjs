@@ -1490,7 +1490,7 @@ export var PlacesUIUtils = {
    * previously collapsed the toolbar manually.
    */
   NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE: 3,
-  maybeToggleBookmarkToolbarVisibility(aForceVisible = false) {
+  async maybeToggleBookmarkToolbarVisibility(aForceVisible = false) {
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
     let xulStore = Services.xulStore;
 
@@ -1498,26 +1498,33 @@ export var PlacesUIUtils = {
       aForceVisible ||
       !xulStore.hasValue(BROWSER_DOCURL, "PersonalToolbar", "collapsed")
     ) {
-      // We consider the toolbar customized if it has more than NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
-      // children, or if it has a persisted currentset value.
-      let toolbarIsCustomized = xulStore.hasValue(
-        BROWSER_DOCURL,
-        "PersonalToolbar",
-        "currentset"
-      );
-
-      if (
-        aForceVisible ||
-        toolbarIsCustomized ||
-        lazy.PlacesUtils.getChildCountForFolder(
-          lazy.PlacesUtils.bookmarks.toolbarGuid
-        ) > this.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
-      ) {
+      function uncollapseToolbar() {
         Services.obs.notifyObservers(
           null,
           "browser-set-toolbar-visibility",
           JSON.stringify([lazy.CustomizableUI.AREA_BOOKMARKS, "true"])
         );
+      }
+      // We consider the toolbar customized if it has more than
+      // NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE children, or if it has a persisted
+      // currentset value.
+      let toolbarIsCustomized = xulStore.hasValue(
+        BROWSER_DOCURL,
+        "PersonalToolbar",
+        "currentset"
+      );
+      if (aForceVisible || toolbarIsCustomized) {
+        uncollapseToolbar();
+        return;
+      }
+
+      let numBookmarksOnToolbar = (
+        await lazy.PlacesUtils.bookmarks.fetch(
+          lazy.PlacesUtils.bookmarks.toolbarGuid
+        )
+      ).childCount;
+      if (numBookmarksOnToolbar > this.NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE) {
+        uncollapseToolbar();
       }
     }
   },

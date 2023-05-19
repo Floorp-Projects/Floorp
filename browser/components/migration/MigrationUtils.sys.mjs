@@ -819,7 +819,7 @@ class MigrationUtils {
         if (parent == lazy.PlacesUtils.bookmarks.toolbarGuid) {
           lazy.PlacesUIUtils.maybeToggleBookmarkToolbarVisibility(
             true /* aForceVisible */
-          );
+          ).catch(console.error);
         }
       },
       ex => console.error(ex)
