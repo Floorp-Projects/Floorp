@@ -9,7 +9,6 @@
 #define gc_Nursery_h
 
 #include "mozilla/EnumeratedArray.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
 
 #include "gc/Heap.h"
@@ -22,7 +21,6 @@
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
-#include "util/Text.h"
 
 #define FOR_EACH_NURSERY_PROFILE_TIME(_)      \
   /* Key                       Header text */ \
@@ -64,7 +62,6 @@ class JSONPrinter;
 class MapObject;
 class SetObject;
 class JS_PUBLIC_API Sprinter;
-class TenuringTracer;
 
 namespace gc {
 class AutoGCSession;
@@ -75,6 +72,7 @@ class GCSchedulingTunables;
 class MinorCollectionTracer;
 class RelocationOverlay;
 class StringRelocationOverlay;
+class TenuringTracer;
 enum class AllocKind : uint8_t;
 }  // namespace gc
 
@@ -570,66 +568,6 @@ class alignas(TypicalCacheLineSize) Nursery {
   using CellsWithUniqueIdVector = Vector<gc::Cell*, 8, SystemAllocPolicy>;
   CellsWithUniqueIdVector cellsWithUid_;
 
-  template <typename Key>
-  struct DeduplicationStringHasher {
-    using Lookup = Key;
-
-    static inline HashNumber hash(const Lookup& lookup) {
-      JS::AutoCheckCannotGC nogc;
-      HashNumber strHash;
-
-      // Include flags in the hash. A string relocation overlay stores either
-      // the nursery root base chars or the dependent string nursery base, but
-      // does not indicate which one. If strings with different string types
-      // were deduplicated, for example, a dependent string gets deduplicated
-      // into an extensible string, the base chain would be broken and the root
-      // base would be unreachable.
-
-      if (lookup->asLinear().hasLatin1Chars()) {
-        strHash = mozilla::HashString(lookup->asLinear().latin1Chars(nogc),
-                                      lookup->length());
-      } else {
-        MOZ_ASSERT(lookup->asLinear().hasTwoByteChars());
-        strHash = mozilla::HashString(lookup->asLinear().twoByteChars(nogc),
-                                      lookup->length());
-      }
-
-      return mozilla::HashGeneric(strHash, lookup->zone(), lookup->flags());
-    }
-
-    static MOZ_ALWAYS_INLINE bool match(const Key& key, const Lookup& lookup) {
-      if (!key->sameLengthAndFlags(*lookup) ||
-          key->asTenured().zone() != lookup->zone() ||
-          key->asTenured().getAllocKind() != lookup->getAllocKind()) {
-        return false;
-      }
-
-      JS::AutoCheckCannotGC nogc;
-
-      if (key->asLinear().hasLatin1Chars()) {
-        MOZ_ASSERT(lookup->asLinear().hasLatin1Chars());
-        return EqualChars(key->asLinear().latin1Chars(nogc),
-                          lookup->asLinear().latin1Chars(nogc),
-                          lookup->length());
-      } else {
-        MOZ_ASSERT(key->asLinear().hasTwoByteChars());
-        MOZ_ASSERT(lookup->asLinear().hasTwoByteChars());
-        return EqualChars(key->asLinear().twoByteChars(nogc),
-                          lookup->asLinear().twoByteChars(nogc),
-                          lookup->length());
-      }
-    }
-  };
-
-  using StringDeDupSet =
-      HashSet<JSString*, DeduplicationStringHasher<JSString*>,
-              SystemAllocPolicy>;
-
-  // deDupSet is emplaced at the beginning of the nursery collection and reset
-  // at the end of the nursery collection. It can also be reset during nursery
-  // collection when out of memory to insert new entries.
-  mozilla::Maybe<StringDeDupSet> stringDeDupSet;
-
   // Lists of map and set objects allocated in the nursery or with iterators
   // allocated there. Such objects need to be swept after minor GC.
   Vector<MapObject*, 0, SystemAllocPolicy> mapsWithNurseryMemory_;
@@ -704,7 +642,7 @@ class alignas(TypicalCacheLineSize) Nursery {
   };
   CollectionResult doCollection(gc::AutoGCSession& session,
                                 JS::GCOptions options, JS::GCReason reason);
-  void traceRoots(gc::AutoGCSession& session, TenuringTracer& mover);
+  void traceRoots(gc::AutoGCSession& session, gc::TenuringTracer& mover);
 
   size_t doPretenuring(JSRuntime* rt, JS::GCReason reason,
                        bool validPromotionRate, double promotionRate);
@@ -765,7 +703,7 @@ class alignas(TypicalCacheLineSize) Nursery {
   mozilla::TimeStamp lastCollectionEndTime() const;
 
   friend class gc::GCRuntime;
-  friend class TenuringTracer;
+  friend class gc::TenuringTracer;
   friend class gc::MinorCollectionTracer;
   friend class jit::MacroAssembler;
   friend struct NurseryChunk;
