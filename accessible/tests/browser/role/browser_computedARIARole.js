@@ -84,5 +84,5 @@ addAccessibleTask(
     // Some roles can't be mapped to ARIA role tokens.
     testComputedARIARole("iframe", "");
   },
-  { chrome: true, topLevel: isCacheEnabled }
+  { chrome: true, topLevel: true }
 );

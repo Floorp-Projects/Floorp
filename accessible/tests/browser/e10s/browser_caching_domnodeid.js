@@ -16,25 +16,17 @@ addAccessibleTask(
     let contentPromise = invokeContentTask(browser, [], () => {
       content.document.getElementById("div").id = "foo";
     });
-    // When the cache is enabled, we don't await for content task to return
-    //  because we want to exercise the untilCacheIs function and
-    // demonstrate that it can await for a passing `is` test.
-    if (!isCacheEnabled) {
-      // However, when the cache is disabled, we must await it because there
-      // will never be a cache update.
-      await contentPromise;
-    }
-
+    // We don't await for content task to return because we want to exercise the
+    // untilCacheIs function and demonstrate that it can await for a passing
+    // `is` test.
     await untilCacheIs(
       () => div.id,
       "foo",
       "ID is correct and updated in cache"
     );
 
-    if (isCacheEnabled) {
-      // Don't leave test without the content task promise resolved.
-      await contentPromise;
-    }
+    // Don't leave test without the content task promise resolved.
+    await contentPromise;
   },
   { iframe: true, remoteIframe: true }
 );

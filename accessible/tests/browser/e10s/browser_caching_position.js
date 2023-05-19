@@ -188,7 +188,7 @@ addAccessibleTask(
   {
     // We can only access the `cache` attribute of an accessible when
     // the cache is enabled and we're in a remote browser.
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
   }
 );

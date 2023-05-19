@@ -76,9 +76,8 @@ async function runTest(browser, accDoc) {
     () => testVisibility(getAcc("frame"), true, false),
     "iframe outer doc should now be off screen"
   );
-  // See bug 1792256
   await untilCacheOk(
-    () => !isCacheEnabled || testVisibility(iframeDoc, true, false),
+    () => testVisibility(iframeDoc, true, false),
     "iframe inner doc should now be off screen"
   );
   await untilCacheOk(
@@ -98,9 +97,8 @@ async function runTest(browser, accDoc) {
     () => testVisibility(getAcc("frame"), true, false),
     "iframe outer doc should still be off screen"
   );
-  // See bug 1792256
   await untilCacheOk(
-    () => !isCacheEnabled || testVisibility(iframeDoc, true, false),
+    () => testVisibility(iframeDoc, true, false),
     "iframe inner doc should still be off screen"
   );
   await untilCacheOk(
@@ -122,7 +120,7 @@ addAccessibleTask(
   <iframe id="frame"></iframe>
   `,
   runTest,
-  { chrome: !isCacheEnabled, iframe: true, remoteIframe: true }
+  { iframe: true, remoteIframe: true }
 );
 
 /**

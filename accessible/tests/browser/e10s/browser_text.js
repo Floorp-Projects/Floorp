@@ -87,14 +87,7 @@ ef gh</pre>
         [7, 8, " cd", 2, 5],
         [9, 11, "\nef", 5, 8],
       ]);
-      if (id == "br" && !isCacheEnabled) {
-        todo(
-          false,
-          "Cache disabled, so TextBeforeOffset BOUNDARY_WORD_END returns incorrect result after br"
-        );
-      } else {
-        testTextBeforeOffset(acc, BOUNDARY_WORD_END, [[6, 6, " cd", 2, 5]]);
-      }
+      testTextBeforeOffset(acc, BOUNDARY_WORD_END, [[6, 6, " cd", 2, 5]]);
       testTextAfterOffset(acc, BOUNDARY_WORD_END, [
         [0, 2, " cd", 2, 5],
         [3, 5, "\nef", 5, 8],
@@ -119,18 +112,6 @@ ef gh</pre>
       [1, 1, `a${kEmbedChar}d`, 0, 3],
       [2, 3, `${kEmbedChar}d`, 1, 3],
     ]);
-    if (isCacheEnabled) {
-      testTextAtOffset(linksBreaking, BOUNDARY_WORD_START, [
-        [0, 0, `a${kEmbedChar}`, 0, 2],
-        [1, 1, `a${kEmbedChar}d`, 0, 3],
-        [2, 3, `${kEmbedChar}d`, 1, 3],
-      ]);
-    } else {
-      todo(
-        false,
-        "TextLeafPoint disabled, so word boundaries are incorrect for linksBreaking"
-      );
-    }
     const p = findAccessibleChildByID(docAcc, "p");
     testTextAtOffset(p, BOUNDARY_LINE_START, [
       [0, 0, "a", 0, 1],
@@ -213,10 +194,10 @@ addAccessibleTask(
     // different offsets. This doesn't matter because they're invalid either
     // way. Since the new HyperTextAccessibleBase implementation is all we will
     // have soon, just test that.
-    chrome: isCacheEnabled,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    chrome: true,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
@@ -341,8 +322,8 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );

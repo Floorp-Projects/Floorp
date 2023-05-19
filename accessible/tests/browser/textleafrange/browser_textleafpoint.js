@@ -172,7 +172,7 @@ the <strong>big</strong> rug.</p>
       "Backward BOUNDARY_LINE_END sequence is correct"
     );
   },
-  { chrome: true, topLevel: isCacheEnabled, iframe: false, remoteIframe: false }
+  { chrome: true, topLevel: true, iframe: false, remoteIframe: false }
 );
 
 addAccessibleTask(
@@ -241,7 +241,7 @@ addAccessibleTask(
       }
     );
   },
-  { chrome: true, topLevel: isCacheEnabled, iframe: false, remoteIframe: false }
+  { chrome: true, topLevel: true, iframe: false, remoteIframe: false }
 );
 
 addAccessibleTask(
@@ -292,7 +292,7 @@ on a <span style="display: block;">rug</span></p>
       "The word end from the previous block is the first point in this block"
     );
   },
-  { chrome: true, topLevel: isCacheEnabled, iframe: false, remoteIframe: false }
+  { chrome: true, topLevel: true, iframe: false, remoteIframe: false }
 );
 
 // Test for skipping list item bullets.
@@ -457,7 +457,7 @@ Four</li>
       { flags: BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER }
     );
   },
-  { chrome: true, topLevel: isCacheEnabled, iframe: false, remoteIframe: false }
+  { chrome: true, topLevel: true, iframe: false, remoteIframe: false }
 );
 
 /**
@@ -481,5 +481,5 @@ addAccessibleTask(
       "Forward BOUNDARY_PARAGRAPH sequence is correct"
     );
   },
-  { chrome: true, topLevel: isCacheEnabled, iframe: false, remoteIframe: false }
+  { chrome: true, topLevel: true, iframe: false, remoteIframe: false }
 );
