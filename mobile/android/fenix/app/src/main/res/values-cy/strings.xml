@@ -1360,6 +1360,8 @@
     <string name="delete_history_prompt_title">Ystod amser i’w ddileu</string>
     <!-- Body text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Yn dileu hanes (gan gynnwys hanes wedi’i gydweddu o ddyfeisiau eraill), cwcis a data pori arall.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Yn dileu hanes (gan gynnwys hanes wedi’i gydweddu o ddyfeisiau eraill)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Awr diwethaf</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

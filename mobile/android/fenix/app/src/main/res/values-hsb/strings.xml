@@ -125,6 +125,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nowy priwatny rajtark</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Skrótšenka hesłow</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Wróćo skočić</string>
@@ -1362,7 +1365,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Časowy wotrězk za zhašenje</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Wotstronja historiju (mjez njej historiju, kotraž je so z druhich gratow synchronizowała), placki a druhe přehladowanske daty.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Wotstronja historiju (mjez njej historiju, kotraž je so z druhich gratow synchronizowała), placki a druhe přehladowanske daty.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Wotstronja historiju (mjez njej historiju, kotraž je so z druhimi gratami synchronizowała)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Zańdźena hodźina</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

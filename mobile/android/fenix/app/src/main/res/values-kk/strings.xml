@@ -122,6 +122,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Жаңа жекелік беті</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Парольдерге жылдам қатынау</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Кері оралу</string>
@@ -1351,7 +1354,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Жойылатын деректер мерзімі</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Тарихты (басқа құрылғылардан синхрондалған тарихты қоса), cookie файлдарын және басқа шолу деректерін өшіреді.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Тарихты (басқа құрылғылардан синхрондалған тарихты қоса), cookie файлдарын және басқа шолу деректерін өшіреді.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Тарихты өшіреді (басқа құрылғылардан синхрондалған тарихты қоса)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Соңғы сағат</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

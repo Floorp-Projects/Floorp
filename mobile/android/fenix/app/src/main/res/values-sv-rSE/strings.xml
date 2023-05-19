@@ -127,6 +127,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Ny privat flik</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Lösenordsgenväg</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Gå tillbaka till</string>
@@ -1372,7 +1375,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Tidsintervall att radera</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Tar bort historik (inklusive historik som synkroniserats från andra enheter), kakor och annan webbinformation.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Tar bort historik (inklusive historik som synkroniserats från andra enheter), kakor och annan webbinformation.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Tar bort historik (inklusive historik synkroniserad från andra enheter)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Senaste timmen</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

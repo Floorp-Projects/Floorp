@@ -125,6 +125,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nova aba privativa</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Atalho para senhas</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Voltar direto para</string>
@@ -1361,7 +1364,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Intervalo de tempo a excluir</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Remove o histórico (inclusive o histórico sincronizado de outros dispositivos), cookies e outros dados de navegação.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Remove o histórico (inclusive o histórico sincronizado de outros dispositivos), cookies e outros dados de navegação.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Remove o histórico (inclusive o histórico sincronizado de outros dispositivos)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Última hora</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

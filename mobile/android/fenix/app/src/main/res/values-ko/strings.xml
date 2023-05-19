@@ -130,6 +130,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">새 사생활 보호 탭</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">비밀번호 바로 가기</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">최근 탭으로 이동</string>
@@ -1401,7 +1404,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">삭제할 시간 범위</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">기록 (다른 기기에서 동기화된 기록 포함), 쿠키 및 기타 탐색 데이터를 제거합니다.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">기록 (다른 기기에서 동기화된 기록 포함), 쿠키 및 기타 탐색 데이터를 제거합니다.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">기록 제거 (다른 기기에서 동기화된 기록 포함)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">지난 시간</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

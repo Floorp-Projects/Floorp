@@ -121,6 +121,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">ახალი პირადი ჩანართი</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">პაროლების მალსახმობი</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">წინაზე გადასვლა</string>
@@ -293,10 +296,16 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">გამოიყენეთ %s ძირითად ბრაუზერად</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">გამოიყენეთ Firefox ძირითად ბრაუზერად</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
     <string name="juno_onboarding_default_browser_description">%1$s ხალხს მოგებაზე წინ აყენებს და იცავს თქვენს პირად მონაცემებს საიტთაშორისი მეთვალყურეებისგან.\n\nვრცლად იხილეთ %2$s.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox ხალხს მოგებაზე წინ აყენებს და იცავს თქვენს პირად მონაცემებს საიტთაშორისი მეთვალყურეებისგან.\n\nვრცლად იხილეთ პირადულობის განაცხადი.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">პირადულობის განაცხადი</string>
@@ -315,9 +324,15 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">შეტყობინებებით შეძლებთ, უკეთ გამოიყენოთ %s</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">შეტყობინებები დაგეხმარებათ, სრულყოფილად გამოიყენოთ Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_description">გაგზავნეთ ჩანართები მოწყობილობებს შორის, მართეთ ჩამოტვირთვები და მიიღეთ რჩევები, რომ სრულყოფილად გამოიყენოთ %s.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">გაგზავნეთ ჩანართები მოწყობილობებს შორის, მართეთ ჩამოტვირთვები და მიიღეთ რჩევები, რომ სრულყოფილად გამოიყენოთ Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">შეტყობინებების ჩართვა</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -394,12 +409,18 @@
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">მხარდაჭერის მოთხოვნა</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">ფუნთუშის მოთხოვნების შემცირება</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">გსურთ, ამ საიტის მხარდაჭერილებში დამატება?</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">მხარდაჭერის მოთხოვნა საიტისთვის გადაგზავნილია.</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">მოთხოვნა გაგზავნილია</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">ჩართ. ამ საიტზე</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">მხარდაჭერის მოთხოვნა საიტისთვის გაგზავნილია</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">მხარდაჭერის მოთხოვნა გაიგზავნა</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">ეს საიტი ჯერ არაა მხარდაჭერილი</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -408,6 +429,8 @@
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">გამოირთოს ფუნთუშის მოთხოვნების შემცირება საიტზე %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">საიტზე ამჟამად არაა მხარდაჭერილი ფუნთუშების ნებართვების არიდება. გსურთ სთხოვოთ ჩვენს გუნდს, გადახედოს ამ ვებსაიტს და გახადოს მომავალში მხარდაჭერილი?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s ვერ ახერხებს ამ საიტზე ფუნთუშების ნებართვების არიდებას. შეგიძლიათ მოითხოვოთ, რომ მხარდაჭერილ საიტებში დაემატოს სამომავლოდ.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s გაასუფთავებს ამ საიტის ფუნთუშებს და განაახლებს გვერდს. ყველა ფუნთუშის წაშლით შეიძლება გამოხვიდეთ ანგარიშებიდან და დაცარიელდეს საყიდლების კალათა.</string>
 
@@ -1332,7 +1355,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">გასასუფთავებელი დროის შუალედი</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">წაიშლება ისტორია (მათ შორის, სხვა მოწყობილობიდან დასინქრონებული), ფუნთუშები და მონახულებული გვერდების მონაცემები.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">წაიშლება ისტორია (მათ შორის, სხვა მოწყობილობიდან დასინქრონებული), ფუნთუშები და მონახულებული გვერდების მონაცემები.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">შლის ისტორიას (სხვა მოწყობილობებიდან დასინქრონებულსაც)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">ბოლო საათი</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

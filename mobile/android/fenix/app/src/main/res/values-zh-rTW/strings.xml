@@ -126,6 +126,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">開新隱私分頁</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">密碼捷徑</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">回到先前開啟頁面</string>
@@ -1391,7 +1394,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">要清除的時間範圍</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">清除瀏覽紀錄（包含同步自其他裝置的紀錄）、Cookie 及其他瀏覽資料。</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">清除瀏覽紀錄（包含同步自其他裝置的紀錄）、Cookie 及其他瀏覽資料。</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">清除瀏覽紀錄（包含來自其他裝置的瀏覽紀錄）</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">一小時內</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

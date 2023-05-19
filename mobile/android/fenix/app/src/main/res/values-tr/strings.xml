@@ -125,6 +125,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Yeni gizli sekme</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Parolalar kısayolu</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Açık sekmeler</string>
@@ -1361,7 +1364,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Silinecek zaman aralığı</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Geçmişi (diğer cihazlarla eşitlenen geçmiş dahil), çerezleri ve diğer gezinti verilerini kaldırır.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Geçmişi (diğer cihazlarla eşitlenen geçmiş dahil), çerezleri ve diğer gezinti verilerini kaldırır.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Geçmişi temizler (diğer cihazlardan eşitlenen geçmiş dahil)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Son saat</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

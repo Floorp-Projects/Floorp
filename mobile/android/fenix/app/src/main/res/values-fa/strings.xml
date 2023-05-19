@@ -125,6 +125,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">زبانهٔ خصوصی جدید</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">میان‌بر گذرواژه‌ها</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">برگردید به داخل</string>
@@ -1080,7 +1083,7 @@
     <!-- Preference for altering the storage access setting for all websites -->
     <string name="preference_phone_feature_cross_origin_storage_access">کلوچک‌های میان‌پایگاهی</string>
     <!-- Preference for altering the EME access for all websites -->
-    <string name="preference_phone_feature_media_key_system_access">محتوای کنترل شده با DRM</string>
+    <string name="preference_phone_feature_media_key_system_access">محتوای واپایش شده با DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">درخواست برای اجازه دادن</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -1352,7 +1355,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">بازهٔ زمانی برای حذف</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">تاریخچه (از جمله سابقهٔ همگام‌سازی شده از افزاره‌های دیگر)، کلوچک‌ها و سایر داده‌های مرور را حذف می‌کند.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">تاریخچه (از جمله سابقهٔ همگام‌سازی شده از افزاره‌های دیگر)، کلوچک‌ها و سایر داده‌های مرور را حذف می‌کند.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">تاریخچه را حذف می‌کند (شامل تاریخچهٔ همگام‌سازی شده از افزاره‌های دیگر)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">ساعت گذشته</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
@@ -1414,9 +1419,9 @@
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description">پایین نگهش دارید، یا بالا بیاوریدش.</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">شما داده‌هایتان را کنترل می‌کنید</string>
+    <string name="onboarding_privacy_notice_header_1">خودتان داده‌های خود را واپایش می‌کنید</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">‏Firefox کنترل چیزهایی که برخط یا با ما هم‌رسانی می‌کنید را به شما می‌دهد.</string>
+    <string name="onboarding_privacy_notice_description">‏Firefox واپایش چیزهایی که برخط یا با ما هم‌رسانی می‌کنید را به شما می‌دهد.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">اعلامیه حریم خصوصی ما را بخوانید</string>
 

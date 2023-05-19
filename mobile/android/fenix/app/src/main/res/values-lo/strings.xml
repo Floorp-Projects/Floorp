@@ -121,6 +121,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">ແທັບສ່ວນຕົວໃຫມ່</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">ທາງລັດລະຫັດຜ່ານ</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">ກັບເຂົ້າໄປ</string>
@@ -1372,7 +1375,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">ຊ່ວງເວລາທີ່ຈະລຶບ</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">ລຶບປະຫວັດ (ລວມທັງປະຫວັດການຊິງຄ໌ຈາກອຸປະກອນອື່ນ), ຄຸກກີ້ ແລະຂໍ້ມູນການທ່ອງເວັບອື່ນໆ.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">ລຶບປະຫວັດ (ລວມທັງປະຫວັດການຊິງຄ໌ຈາກອຸປະກອນອື່ນ), ຄຸກກີ້ ແລະຂໍ້ມູນການທ່ອງເວັບອື່ນໆ.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">ລຶບປະຫວັດ (ລວມທັງປະຫວັດທີ່ຊິ້ງຈາກອຸປະກອນອື່ນ)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">ຊົ່ວໂມງທີ່ຜ່ານມາ</string>
 

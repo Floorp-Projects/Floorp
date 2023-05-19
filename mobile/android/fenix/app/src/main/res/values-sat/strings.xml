@@ -124,6 +124,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">ᱱᱟᱶᱟ ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱥᱚᱴᱠᱚᱴ</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">ᱦᱮᱡ ᱨᱩᱣᱟᱹᱲᱚᱜ ᱢᱮ</string>
@@ -1366,7 +1369,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">ᱢᱮᱴᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱚᱠᱛᱚ ᱨᱮᱭᱟᱜ ᱨᱮᱧᱡᱽ</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">ᱦᱤᱛᱟᱹᱞ (ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱠᱟᱱ ᱦᱤᱛᱟᱹᱞ ᱢᱮᱥᱟ ᱠᱟᱛᱮ), ᱠᱩᱠᱤᱡᱽ ᱟᱨ ᱮᱴᱟᱜ ᱯᱟᱱᱛᱮᱭᱟᱜ ᱰᱟᱴᱟ ᱠᱚ ᱚᱪᱚᱜᱽ ᱟᱭ ᱾</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">ᱦᱤᱛᱟᱹᱞ (ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱠᱟᱱ ᱦᱤᱛᱟᱹᱞ ᱢᱮᱥᱟ ᱠᱟᱛᱮ), ᱠᱩᱠᱤᱡᱽ ᱟᱨ ᱮᱴᱟᱜ ᱯᱟᱱᱛᱮᱭᱟᱜ ᱰᱟᱴᱟ ᱠᱚ ᱚᱪᱚᱜᱽ ᱟᱭ ᱾</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">ᱦᱤᱛᱟᱹᱞ ᱮ ᱚᱪᱚᱜᱽᱟᱭ (ᱥᱟᱶᱛᱮ ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱦᱤᱛᱟᱹᱞ ᱟᱹᱭᱩᱨ ᱢᱤᱫ)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">ᱢᱩᱪᱟᱹᱫ ᱴᱟᱲᱟᱝ</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
