@@ -34,9 +34,12 @@ add_setup(async () => {
     true
   );
 
-  sinon.spy(NimbusFeatures.search, "onUpdate");
-  sinon.stub(NimbusFeatures.search, "ready").resolves();
-  getVariableStub = sinon.stub(NimbusFeatures.search, "getVariable");
+  sinon.spy(NimbusFeatures.searchConfiguration, "onUpdate");
+  sinon.stub(NimbusFeatures.searchConfiguration, "ready").resolves();
+  getVariableStub = sinon.stub(
+    NimbusFeatures.searchConfiguration,
+    "getVariable"
+  );
   getVariableStub.callsFake(defaultGetVariable);
 
   do_get_profile();
@@ -64,7 +67,7 @@ async function switchExperiment(newExperiment) {
     }
     return defaultGetVariable(name);
   });
-  for (let call of NimbusFeatures.search.onUpdate.getCalls()) {
+  for (let call of NimbusFeatures.searchConfiguration.onUpdate.getCalls()) {
     call.args[0]();
   }
 

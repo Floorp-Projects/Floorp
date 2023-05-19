@@ -74,7 +74,7 @@ add_task(async function test_nimbus_experiment() {
   );
 
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "search",
+    featureId: "searchConfiguration",
     value: {
       seperatePrivateDefaultUIEnabled: true,
       seperatePrivateDefaultUrlbarResultEnabled: false,
@@ -112,7 +112,7 @@ add_task(async function test_nimbus_experiment_urlbar_result_enabled() {
   );
 
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "search",
+    featureId: "searchConfiguration",
     value: {
       seperatePrivateDefaultUIEnabled: true,
       seperatePrivateDefaultUrlbarResultEnabled: true,

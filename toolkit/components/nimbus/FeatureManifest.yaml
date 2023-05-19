@@ -55,17 +55,13 @@ nimbus-qa-2:
       setPref: nimbus.qa.pref-2
       description: The value to set for the pref.
 
+# `search` is for search engine experimentation features which do not require
+# isEarlyStartup to be set.
 search:
   description: Search engine experimentation support and testing features.
   owner: search-and-suggest-program@mozilla.com
   hasExposure: false
   variables:
-    experiment:
-      type: string
-      fallbackPref: browser.search.experiment
-      description: >-
-        Used to activate only matching configurations that contain the value in
-        `experiment`
     extraParams:
       type: json
       description: >-
@@ -95,12 +91,6 @@ search:
 
         If the key is not referenced in the search configuration, then no parameter
         will be added. Only the search team can update the configuration.
-    seperatePrivateDefaultUIEnabled:
-      type: boolean
-      description: Whether the UI for the separate private default feature is enabled.
-    seperatePrivateDefaultUrlbarResultEnabled:
-      type: boolean
-      description: Whether the urlbar result for the separate private default is shown.
     cbhStudyUs:
       type: string
       setPref: browser.search.param.google_channel_us
@@ -117,6 +107,29 @@ search:
       type: boolean
       setPref: browser.search.serpEventTelemetry.enabled
       description: Whether the Glean SERP event telemetry is enabled.
+
+# `searchConfiguration` is for search experiment features for items that require
+# isEarlyStartup to be true. These items may require a reload of the search
+# engine configuration, and an additional reload may happen during the startup
+# process.
+searchConfiguration:
+  description: Search experimentation support for the engine configuration
+  owner: search-and-suggest-program@mozilla.com
+  isEarlyStartup: true
+  hasExposure: false
+  variables:
+    experiment:
+      type: string
+      fallbackPref: browser.search.experiment
+      description: >-
+        Used to activate only matching configurations that contain the value in
+        `experiment`
+    seperatePrivateDefaultUIEnabled:
+      type: boolean
+      description: Whether the UI for the separate private default feature is enabled.
+    seperatePrivateDefaultUrlbarResultEnabled:
+      type: boolean
+      description: Whether the urlbar result for the separate private default is shown.
 
 urlbar:
   description: The Address Bar

@@ -1356,7 +1356,7 @@ export class SearchService {
     // It is possible that Nimbus could have called onUpdate before
     // we started listening, so do a check on startup.
     Services.tm.dispatchToMainThread(async () => {
-      await lazy.NimbusFeatures.search.ready();
+      await lazy.NimbusFeatures.searchConfiguration.ready();
       this.#checkNimbusPrefs(true);
     });
 
@@ -2247,7 +2247,8 @@ export class SearchService {
       channel: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
         ? "esr"
         : AppConstants.MOZ_UPDATE_CHANNEL,
-      experiment: lazy.NimbusFeatures.search.getVariable("experiment") ?? "",
+      experiment:
+        lazy.NimbusFeatures.searchConfiguration.getVariable("experiment") ?? "",
       distroID: lazy.SearchUtils.distroID ?? "",
     };
 
@@ -2882,7 +2883,7 @@ export class SearchService {
       : this.appDefaultEngine;
     if (
       newCurrentEngine == appDefaultEngine &&
-      !lazy.NimbusFeatures.search.getVariable("experiment")
+      !lazy.NimbusFeatures.searchConfiguration.getVariable("experiment")
     ) {
       newId = "";
     }
@@ -3216,13 +3217,16 @@ export class SearchService {
     // If we are in an experiment we may need to check the status on startup, otherwise
     // ignore the call to check on startup so we do not reset users prefs when they are
     // not an experiment.
-    if (isStartup && !lazy.NimbusFeatures.search.getVariable("experiment")) {
+    if (
+      isStartup &&
+      !lazy.NimbusFeatures.searchConfiguration.getVariable("experiment")
+    ) {
       return;
     }
-    let nimbusPrivateDefaultUIEnabled = lazy.NimbusFeatures.search.getVariable(
+    let nimbusPrivateDefaultUIEnabled = lazy.NimbusFeatures.searchConfiguration.getVariable(
       "seperatePrivateDefaultUIEnabled"
     );
-    let nimbusPrivateDefaultUrlbarResultEnabled = lazy.NimbusFeatures.search.getVariable(
+    let nimbusPrivateDefaultUrlbarResultEnabled = lazy.NimbusFeatures.searchConfiguration.getVariable(
       "seperatePrivateDefaultUrlbarResultEnabled"
     );
 
@@ -3275,7 +3279,9 @@ export class SearchService {
     this.#observersAdded = true;
 
     this.#nimbusSearchUpdatedFun = this.#nimbusSearchUpdated.bind(this);
-    lazy.NimbusFeatures.search.onUpdate(this.#nimbusSearchUpdatedFun);
+    lazy.NimbusFeatures.searchConfiguration.onUpdate(
+      this.#nimbusSearchUpdatedFun
+    );
 
     Services.obs.addObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC);
@@ -3338,7 +3344,9 @@ export class SearchService {
 
     this._settings.removeObservers();
 
-    lazy.NimbusFeatures.search.offUpdate(this.#nimbusSearchUpdatedFun);
+    lazy.NimbusFeatures.searchConfiguration.offUpdate(
+      this.#nimbusSearchUpdatedFun
+    );
 
     Services.obs.removeObserver(this, lazy.SearchUtils.TOPIC_ENGINE_MODIFIED);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
