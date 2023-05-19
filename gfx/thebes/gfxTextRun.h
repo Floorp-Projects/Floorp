@@ -384,6 +384,13 @@ class gfxTextRun : public gfxShapedText {
                                 nsTArray<HyphenType>& aHyphenBuffer,
                                 HyphenationState* aWordState);
 
+  // Struct used by BreakAndMeasureText to return the amount of trimmable
+  // trailing whitespace included in the run.
+  struct TrimmableWS {
+    mozilla::gfx::Float mAdvance = 0;
+    uint32_t mCount = 0;
+  };
+
   /**
    * Finds the longest substring that will fit into the given width.
    * Uses GetHyphenationBreaks and GetSpacing from aProvider.
@@ -455,7 +462,7 @@ class gfxTextRun : public gfxShapedText {
       SuppressBreak aSuppressBreak, gfxFont::BoundingBoxType aBoundingBoxType,
       DrawTarget* aRefDrawTarget, bool aCanWordWrap, bool aCanWhitespaceWrap,
       // Output parameters:
-      gfxFloat* aOutTrimmableWhitespace,  // may be null
+      TrimmableWS* aOutTrimmableWhitespace,  // may be null
       Metrics& aOutMetrics, bool& aOutUsedHyphenation, uint32_t& aOutLastBreak,
       // In/out:
       gfxBreakPriority& aBreakPriority);
