@@ -17,6 +17,7 @@
 #include "gc/AtomMarking.h"
 #include "gc/GCContext.h"
 #include "gc/GCMarker.h"
+#include "gc/GCParallelTask.h"
 #include "gc/IteratorUtils.h"
 #include "gc/Nursery.h"
 #include "gc/Scheduling.h"
