@@ -781,7 +781,7 @@ class MOZ_RAII DOMIterator {
    * XXX If we can make type of aNode templated without std::function,
    *     it'd be better, though.
    */
-  typedef bool (*BoolFunctor)(nsINode& aNode, void* aClosure);
+  using BoolFunctor = bool (*)(nsINode& aNode, void* aClosure);
   template <class NodeClass>
   void AppendNodesToArray(BoolFunctor aFunctor,
                           nsTArray<OwningNonNull<NodeClass>>& aArrayOfNodes,

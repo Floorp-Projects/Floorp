@@ -16,7 +16,7 @@ namespace mozilla {
 //
 // These need to be manually removed by the machinery that sets the NAC,
 // otherwise we'll leak.
-typedef AutoTArray<RefPtr<dom::Element>, 16> ManualNACArray;
+using ManualNACArray = AutoTArray<RefPtr<dom::Element>, 16>;
 
 /**
  * Smart pointer class to own "manual" Native Anonymous Content, and perform

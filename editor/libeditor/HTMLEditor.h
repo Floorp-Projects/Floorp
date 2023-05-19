@@ -4190,9 +4190,9 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   RefreshInlineTableEditingUIInternal();
 
-  typedef enum { eInserted, eAppended } InsertedOrAppended;
-  MOZ_CAN_RUN_SCRIPT void DoContentInserted(
-      nsIContent* aChild, InsertedOrAppended aInsertedOrAppended);
+  enum class ContentNodeIs { Inserted, Appended };
+  MOZ_CAN_RUN_SCRIPT void DoContentInserted(nsIContent* aChild,
+                                            ContentNodeIs aContentNodeIs);
 
   /**
    * Returns an anonymous Element of type aTag,
