@@ -14,7 +14,11 @@ add_task(async function test_translations_panel_display_beta_languages() {
 
   function assertBetaDisplay(selectElement) {
     const betaL10nId = "translations-panel-displayname-beta";
-    const options = selectElement.firstChild.getElementsByTagName("menuitem");
+    const options = selectElement.querySelectorAll("menuitem");
+    if (options.length === 0) {
+      throw new Error("Could not find the menuitems.");
+    }
+
     for (const option of options) {
       for (const languagePair of LANGUAGE_PAIRS) {
         if (
@@ -40,11 +44,23 @@ add_task(async function test_translations_panel_display_beta_languages() {
     }
   }
 
-  const fromSelect = document.getElementById("translations-panel-dual-from");
-  const toSelect = document.getElementById("translations-panel-dual-to");
+  const button = await assertTranslationsButton(
+    b => !b.hidden,
+    "The button is available."
+  );
 
-  assertBetaDisplay(fromSelect);
-  assertBetaDisplay(toSelect);
+  await waitForTranslationsPopupEvent("popupshown", () => {
+    click(button, "Opening the popup");
+  });
+
+  assertBetaDisplay(document.getElementById("translations-panel-default-to"));
+
+  await waitForTranslationsPopupEvent("popuphidden", () => {
+    click(
+      getByL10nId("translations-panel-default-translate-cancel"),
+      "Click the cancel button."
+    );
+  });
 
   await cleanup();
 });
