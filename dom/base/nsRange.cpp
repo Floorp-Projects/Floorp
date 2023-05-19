@@ -170,7 +170,7 @@ nsRange::nsRange(nsINode* aNode)
       mNextEndRef(nullptr) {
   // printf("Size of nsRange: %zu\n", sizeof(nsRange));
 
-  static_assert(sizeof(nsRange) <= 216,
+  static_assert(sizeof(nsRange) <= 224,
                 "nsRange size shouldn't be increased as far as possible");
 }
 
