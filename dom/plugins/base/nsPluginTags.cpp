@@ -17,7 +17,6 @@
 #include <cctype>
 #include "mozilla/Encoding.h"
 #include "mozilla/dom/FakePluginTagInitBinding.h"
-#include "mozilla/StaticPrefs_plugin.h"
 
 using mozilla::dom::FakePluginTagInit;
 using namespace mozilla;
