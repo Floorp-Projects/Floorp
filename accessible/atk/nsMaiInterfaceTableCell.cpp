@@ -8,7 +8,7 @@
 
 #include "mozilla/a11y/TableAccessibleBase.h"
 #include "mozilla/a11y/TableCellAccessibleBase.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "nsMai.h"
 #include "RemoteAccessible.h"
 #include "nsTArray.h"
@@ -24,7 +24,7 @@ static gint GetColumnSpanCB(AtkTableCell* aCell) {
   if (!acc) {
     return 0;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gint>(acc->AsTableCellBase()->ColExtent());
   }
 
@@ -40,7 +40,7 @@ static gint GetRowSpanCB(AtkTableCell* aCell) {
   if (!acc) {
     return 0;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gint>(acc->AsTableCellBase()->RowExtent());
   }
 
@@ -56,7 +56,7 @@ static gboolean GetPositionCB(AtkTableCell* aCell, gint* aRow, gint* aCol) {
   if (!acc) {
     return false;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     TableCellAccessibleBase* cell = acc->AsTableCellBase();
     if (!cell) {
       return false;
@@ -83,7 +83,7 @@ static gboolean GetColumnRowSpanCB(AtkTableCell* aCell, gint* aCol, gint* aRow,
   if (!acc) {
     return false;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     TableCellAccessibleBase* cellAcc = acc->AsTableCellBase();
     if (!cellAcc) {
       return false;
@@ -113,7 +113,7 @@ static AtkObject* GetTableCB(AtkTableCell* aTableCell) {
   if (!acc) {
     return nullptr;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     TableAccessibleBase* table = acc->AsTableCellBase()->Table();
     if (!table) {
       return nullptr;
@@ -136,7 +136,7 @@ static GPtrArray* GetColumnHeaderCellsCB(AtkTableCell* aCell) {
   if (!acc) {
     return nullptr;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     AutoTArray<Accessible*, 10> headers;
     acc->AsTableCellBase()->ColHeaderCells(&headers);
     if (headers.IsEmpty()) {
@@ -178,7 +178,7 @@ static GPtrArray* GetRowHeaderCellsCB(AtkTableCell* aCell) {
   if (!acc) {
     return nullptr;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     AutoTArray<Accessible*, 10> headers;
     acc->AsTableCellBase()->RowHeaderCells(&headers);
     if (headers.IsEmpty()) {

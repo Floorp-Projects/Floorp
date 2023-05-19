@@ -13,7 +13,7 @@
 #include "LocalAccessible.h"
 #include "mozilla/a11y/TableAccessibleBase.h"
 #include "mozilla/a11y/TableCellAccessibleBase.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "XULTreeAccessible.h"
 #include "Pivot.h"
 #include "nsAccUtils.h"
@@ -50,8 +50,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
   mChildren = [[NSMutableArray alloc] init];
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-      [mParent geckoAccessible]->IsLocal()) {
+  if (a11y::IsCacheActive() || [mParent geckoAccessible]->IsLocal()) {
     TableAccessibleBase* table = [mParent geckoAccessible]->AsTableBase();
     MOZ_ASSERT(table, "Got null table when fetching column children!");
     uint32_t numRows = table->RowCount();
@@ -134,7 +133,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {
   if (![self isKindOfClass:[mozTableAccessible class]] &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      !a11y::IsCacheActive()) {
     // If we are not a table, we are a cell or a row.
     // Check to see if the event we're handling should
     // invalidate the mIsLayoutTable cache on our parent
@@ -182,15 +181,14 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 @implementation mozTableAccessible
 
 - (void)invalidateLayoutTableCache {
-  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup(),
+  MOZ_ASSERT(!a11y::IsCacheActive(),
              "If the core cache is enabled we shouldn't be maintaining the "
              "platform table cache!");
   mIsLayoutTable = eCachedBoolMiss;
 }
 
 - (BOOL)isLayoutTablePart {
-  if (mIsLayoutTable != eCachedBoolMiss &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIsLayoutTable != eCachedBoolMiss && !a11y::IsCacheActive()) {
     // Only use the platform cache if the core cache is not on
     return mIsLayoutTable == eCachedTrue;
   }
@@ -224,7 +222,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   if (eventType == nsIAccessibleEvent::EVENT_REORDER ||
       eventType == nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED ||
       eventType == nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED) {
-    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    if (!a11y::IsCacheActive()) {
       [self invalidateLayoutTableCache];
     }
     [self invalidateColumns];
@@ -250,8 +248,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 - (NSNumber*)moxRowCount {
   MOZ_ASSERT(mGeckoAccessible);
 
-  return (StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-          mGeckoAccessible->IsLocal())
+  return (a11y::IsCacheActive() || mGeckoAccessible->IsLocal())
              ? @(mGeckoAccessible->AsTableBase()->RowCount())
              : @(mGeckoAccessible->AsRemote()->TableRowCount());
 }
@@ -259,8 +256,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 - (NSNumber*)moxColumnCount {
   MOZ_ASSERT(mGeckoAccessible);
 
-  return (StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-          mGeckoAccessible->IsLocal())
+  return (a11y::IsCacheActive() || mGeckoAccessible->IsLocal())
              ? @(mGeckoAccessible->AsTableBase()->ColCount())
              : @(mGeckoAccessible->AsRemote()->TableColumnCount());
 }
@@ -303,8 +299,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   mColContainers = [[NSMutableArray alloc] init];
   uint32_t numCols = 0;
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-      mGeckoAccessible->IsLocal()) {
+  if (a11y::IsCacheActive() || mGeckoAccessible->IsLocal()) {
     numCols = mGeckoAccessible->AsTableBase()->ColCount();
   } else {
     numCols = mGeckoAccessible->AsRemote()->TableColumnCount();
@@ -334,8 +329,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   uint32_t numCols = 0;
   TableAccessibleBase* table = nullptr;
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-      mGeckoAccessible->IsLocal()) {
+  if (a11y::IsCacheActive() || mGeckoAccessible->IsLocal()) {
     table = mGeckoAccessible->AsTableBase();
     numCols = table->ColCount();
   } else {
@@ -373,8 +367,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   MOZ_ASSERT(mGeckoAccessible);
 
   Accessible* cell;
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-      mGeckoAccessible->IsLocal()) {
+  if (a11y::IsCacheActive() || mGeckoAccessible->IsLocal()) {
     cell = mGeckoAccessible->AsTableBase()->CellAt(row, col);
   } else {
     cell = mGeckoAccessible->AsRemote()->TableCellAt(row, col);
@@ -445,8 +438,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 - (NSValue*)moxRowIndexRange {
   MOZ_ASSERT(mGeckoAccessible);
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-      mGeckoAccessible->IsLocal()) {
+  if (a11y::IsCacheActive() || mGeckoAccessible->IsLocal()) {
     TableCellAccessibleBase* cell = mGeckoAccessible->AsTableCellBase();
     return
         [NSValue valueWithRange:NSMakeRange(cell->RowIdx(), cell->RowExtent())];
@@ -460,8 +452,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 - (NSValue*)moxColumnIndexRange {
   MOZ_ASSERT(mGeckoAccessible);
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-      mGeckoAccessible->IsLocal()) {
+  if (a11y::IsCacheActive() || mGeckoAccessible->IsLocal()) {
     TableCellAccessibleBase* cell = mGeckoAccessible->AsTableCellBase();
     return
         [NSValue valueWithRange:NSMakeRange(cell->ColIdx(), cell->ColExtent())];
@@ -475,8 +466,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 - (NSArray*)moxRowHeaderUIElements {
   MOZ_ASSERT(mGeckoAccessible);
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-      mGeckoAccessible->IsLocal()) {
+  if (a11y::IsCacheActive() || mGeckoAccessible->IsLocal()) {
     TableCellAccessibleBase* cell = mGeckoAccessible->AsTableCellBase();
     AutoTArray<Accessible*, 10> headerCells;
     cell->RowHeaderCells(&headerCells);
@@ -492,8 +482,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 - (NSArray*)moxColumnHeaderUIElements {
   MOZ_ASSERT(mGeckoAccessible);
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() ||
-      mGeckoAccessible->IsLocal()) {
+  if (a11y::IsCacheActive() || mGeckoAccessible->IsLocal()) {
     TableCellAccessibleBase* cell = mGeckoAccessible->AsTableCellBase();
     AutoTArray<Accessible*, 10> headerCells;
     cell->ColHeaderCells(&headerCells);

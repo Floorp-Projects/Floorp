@@ -11,7 +11,6 @@
 #include "mozilla/a11y/PlatformChild.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "RootAccessible.h"
 
 namespace mozilla {
@@ -28,7 +27,7 @@ DocAccessibleChild::DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager)
   }
 
   SetManager(aManager);
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     // If the cache is enabled, we don't need to care whether this is
     // constructed in the parent process. We must still set this flag because we
     // defer sending any events unless it is set.

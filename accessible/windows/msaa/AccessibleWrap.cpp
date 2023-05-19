@@ -20,7 +20,7 @@
 #include "LocalAccessible-inl.h"
 
 #include "mozilla/mscom/AsyncInvoker.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -219,7 +219,7 @@ bool AccessibleWrap::DispatchTextChangeToHandler(Accessible* aAcc,
                                                  uint32_t aLen) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
+  MOZ_ASSERT(!a11y::IsCacheActive());
 
   if (!sHandlerControllers || sHandlerControllers->IsEmpty()) {
     return false;

@@ -19,7 +19,6 @@
 #include "mozilla/mscom/InterceptorLog.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/Utils.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
@@ -186,7 +185,7 @@ void a11y::ProxyTextChangeEvent(RemoteAccessible* aText, const nsAString& aStr,
   uint32_t eventType = aInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED
                                : nsIAccessibleEvent::EVENT_TEXT_REMOVED;
   static const bool useHandler =
-      !StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+      !a11y::IsCacheActive() &&
       Preferences::GetBool("accessibility.handler.enabled", false) &&
       IsHandlerRegistered();
   if (useHandler) {
@@ -195,7 +194,7 @@ void a11y::ProxyTextChangeEvent(RemoteAccessible* aText, const nsAString& aStr,
     return;
   }
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     MOZ_ASSERT(aText->IsHyperText());
     ia2AccessibleText::UpdateTextChangeData(aText->AsHyperTextBase(), aInsert,
                                             aStr, aStart, aLen);

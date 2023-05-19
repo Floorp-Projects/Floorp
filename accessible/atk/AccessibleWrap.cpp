@@ -30,7 +30,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "nsComponentManagerUtils.h"
 
 using namespace mozilla;
@@ -842,8 +842,7 @@ AtkRelationSet* refRelationSetCB(AtkObject* aAtkObj) {
     return relation_set;
   }
 
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-      acc->IsRemote()) {
+  if (!a11y::IsCacheActive() && acc->IsRemote()) {
     RemoteAccessible* proxy = acc->AsRemote();
     const AtkRelationType typeMap[] = {
 #define RELATIONTYPE(gecko, s, atk, m, i) atk,

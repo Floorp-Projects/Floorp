@@ -7,7 +7,7 @@
 #include "xpcAccessibleHyperLink.h"
 
 #include "LocalAccessible-inl.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "nsNetUtil.h"
 #include "xpcAccessibleDocument.h"
 
@@ -21,8 +21,7 @@ xpcAccessibleHyperLink::GetStartIndex(int32_t* aStartIndex) {
   if (!Intl()) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (Intl()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (Intl()->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -39,8 +38,7 @@ xpcAccessibleHyperLink::GetEndIndex(int32_t* aEndIndex) {
   if (!Intl()) return NS_ERROR_FAILURE;
 
 #if defined(XP_WIN)
-  if (Intl()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (Intl()->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif
@@ -70,8 +68,7 @@ xpcAccessibleHyperLink::GetURI(int32_t aIndex, nsIURI** aURI) {
   }
 
 #if defined(XP_WIN)
-  if (Intl()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (Intl()->IsRemote() && !a11y::IsCacheActive()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 #endif

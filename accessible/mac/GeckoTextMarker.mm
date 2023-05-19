@@ -12,7 +12,7 @@
 #include "nsAccUtils.h"
 #include "DocAccessible.h"
 #include "DocAccessibleParent.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 
 namespace mozilla {
 namespace a11y {
@@ -30,7 +30,7 @@ struct TextMarkerData {
 // LegacyTextMarker
 
 GeckoTextMarker::GeckoTextMarker() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     mLegacy = false;
     mCachedTextMarker = CachedTextMarker();
   } else {
@@ -40,7 +40,7 @@ GeckoTextMarker::GeckoTextMarker() {
 }
 
 GeckoTextMarker::GeckoTextMarker(Accessible* aContainer, int32_t aOffset) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     mLegacy = false;
     mCachedTextMarker = CachedTextMarker(aContainer, aOffset);
   } else {
@@ -72,8 +72,7 @@ GeckoTextMarker GeckoTextMarker::MarkerFromAXTextMarker(
   TextMarkerData markerData;
   memcpy(&markerData, AXTextMarkerGetBytePtr(aTextMarker),
          sizeof(TextMarkerData));
-  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup() ==
-             !markerData.mLegacy);
+  MOZ_ASSERT(a11y::IsCacheActive() == !markerData.mLegacy);
 
   if (!utils::DocumentExists(aDoc, markerData.mDoc)) {
     return GeckoTextMarker();
@@ -99,7 +98,7 @@ GeckoTextMarker GeckoTextMarker::MarkerFromAXTextMarker(
 
 GeckoTextMarker GeckoTextMarker::MarkerFromIndex(Accessible* aRoot,
                                                  int32_t aIndex) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return GeckoTextMarker(CachedTextMarker::MarkerFromIndex(aRoot, aIndex));
   }
 
@@ -188,7 +187,7 @@ GeckoTextMarkerRange GeckoTextMarker::StyleRange() const {
 }
 
 GeckoTextMarkerRange::GeckoTextMarkerRange() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     mLegacy = false;
     mCachedTextMarkerRange = CachedTextMarkerRange();
   } else {
@@ -198,7 +197,7 @@ GeckoTextMarkerRange::GeckoTextMarkerRange() {
 }
 
 GeckoTextMarkerRange::GeckoTextMarkerRange(Accessible* aAccessible) {
-  mLegacy = !StaticPrefs::accessibility_cache_enabled_AtStartup();
+  mLegacy = !a11y::IsCacheActive();
   if (mLegacy) {
     mLegacyTextMarkerRange = LegacyTextMarkerRange(aAccessible);
   } else {

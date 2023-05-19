@@ -9,7 +9,7 @@
 #include "MsaaDocAccessible.h"
 #include "DocAccessibleChild.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsWinUtils.h"
 #include "Statistics.h"
@@ -31,7 +31,7 @@ MsaaDocAccessible* MsaaDocAccessible::GetFrom(DocAccessible* aDoc) {
 
 /* static */
 MsaaDocAccessible* MsaaDocAccessible::GetFrom(DocAccessibleParent* aDoc) {
-  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  MOZ_ASSERT(a11y::IsCacheActive());
   return static_cast<MsaaDocAccessible*>(
       reinterpret_cast<MsaaAccessible*>(aDoc->GetWrapper()));
 }
@@ -70,7 +70,7 @@ MsaaDocAccessible::get_accParent(
   }
 
   if (mAcc->IsRemote()) {
-    MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+    MOZ_ASSERT(a11y::IsCacheActive());
     DocAccessibleParent* remoteDoc = mAcc->AsRemote()->AsDoc();
     if (nsWinUtils::IsWindowEmulationStarted() && remoteDoc->IsTopLevel()) {
       // Window emulation is enabled and this is a top level document. Return
@@ -93,7 +93,7 @@ MsaaDocAccessible::get_accParent(
   DocAccessibleChild* ipcDoc = docAcc->IPCDoc();
   if (ipcDoc && static_cast<dom::BrowserChild*>(ipcDoc->Manager())
                         ->GetTopLevelDocAccessibleChild() == ipcDoc) {
-    MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
+    MOZ_ASSERT(!a11y::IsCacheActive());
     // Emulated window proxy is only set for the top level content document when
     // emulation is enabled.
     RefPtr<IDispatch> dispParent = ipcDoc->GetEmulatedWindowIAccessible();

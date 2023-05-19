@@ -8,7 +8,7 @@
 
 #include "AccessibleWrap.h"
 #include "mozilla/a11y/TableAccessibleBase.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "nsMai.h"
 #include "RemoteAccessible.h"
 #include "nsTArray.h"
@@ -29,7 +29,7 @@ static AtkObject* refAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
   if (!acc) {
     return nullptr;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     Accessible* cell = acc->AsTableBase()->CellAt(aRowIdx, aColIdx);
     if (!cell) {
       return nullptr;
@@ -61,7 +61,7 @@ static gint getIndexAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
   if (!acc) {
     return -1;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gint>(acc->AsTableBase()->CellIndexAt(aRowIdx, aColIdx));
   }
 
@@ -81,7 +81,7 @@ static gint getColumnAtIndexCB(AtkTable* aTable, gint aIdx) {
   if (!acc) {
     return -1;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gint>(acc->AsTableBase()->ColIndexAt(aIdx));
   }
 
@@ -101,7 +101,7 @@ static gint getRowAtIndexCB(AtkTable* aTable, gint aIdx) {
   if (!acc) {
     return -1;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gint>(acc->AsTableBase()->RowIndexAt(aIdx));
   }
 
@@ -117,7 +117,7 @@ static gint getColumnCountCB(AtkTable* aTable) {
   if (!acc) {
     return -1;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gint>(acc->AsTableBase()->ColCount());
   }
 
@@ -133,7 +133,7 @@ static gint getRowCountCB(AtkTable* aTable) {
   if (!acc) {
     return -1;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gint>(acc->AsTableBase()->RowCount());
   }
 
@@ -153,7 +153,7 @@ static gint getColumnExtentAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
   if (!acc) {
     return -1;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gint>(acc->AsTableBase()->ColExtentAt(aRowIdx, aColIdx));
   }
 
@@ -169,7 +169,7 @@ static gint getRowExtentAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
   if (!acc) {
     return -1;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gint>(acc->AsTableBase()->RowExtentAt(aRowIdx, aColIdx));
   }
 
@@ -185,7 +185,7 @@ static AtkObject* getCaptionCB(AtkTable* aTable) {
   if (!acc) {
     return nullptr;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     Accessible* caption = acc->AsTableBase()->Caption();
     return caption ? GetWrapperFor(caption) : nullptr;
   }
@@ -204,7 +204,7 @@ static const gchar* getColumnDescriptionCB(AtkTable* aTable, gint aColumn) {
   if (!acc) {
     return nullptr;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     acc->AsTableBase()->ColDescription(aColumn, autoStr);
   } else if (RemoteAccessible* proxy = acc->AsRemote()) {
     proxy->TableColumnDescription(aColumn, autoStr);
@@ -218,7 +218,7 @@ static AtkObject* getColumnHeaderCB(AtkTable* aTable, gint aColIdx) {
   if (!acc) {
     return nullptr;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     Accessible* header =
         AccessibleWrap::GetColumnHeader(acc->AsTableBase(), aColIdx);
     return header ? GetWrapperFor(header) : nullptr;
@@ -238,7 +238,7 @@ static const gchar* getRowDescriptionCB(AtkTable* aTable, gint aRow) {
   if (!acc) {
     return nullptr;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     acc->AsTableBase()->RowDescription(aRow, autoStr);
   } else if (RemoteAccessible* proxy = acc->AsRemote()) {
     proxy->TableRowDescription(aRow, autoStr);
@@ -252,7 +252,7 @@ static AtkObject* getRowHeaderCB(AtkTable* aTable, gint aRowIdx) {
   if (!acc) {
     return nullptr;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     Accessible* header =
         AccessibleWrap::GetRowHeader(acc->AsTableBase(), aRowIdx);
     return header ? GetWrapperFor(header) : nullptr;
@@ -282,7 +282,7 @@ static gint getSelectedColumnsCB(AtkTable* aTable, gint** aSelected) {
   if (!acc) {
     return 0;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     acc->AsTableBase()->SelectedColIndices(&cols);
   } else if (RemoteAccessible* proxy = acc->AsRemote()) {
     proxy->TableSelectedColumnIndices(&cols);
@@ -307,7 +307,7 @@ static gint getSelectedRowsCB(AtkTable* aTable, gint** aSelected) {
   if (!acc) {
     return 0;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     acc->AsTableBase()->SelectedRowIndices(&rows);
   } else if (RemoteAccessible* proxy = acc->AsRemote()) {
     proxy->TableSelectedRowIndices(&rows);
@@ -329,7 +329,7 @@ static gboolean isColumnSelectedCB(AtkTable* aTable, gint aColIdx) {
   if (!acc) {
     return FALSE;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gboolean>(acc->AsTableBase()->IsColSelected(aColIdx));
   }
   if (RemoteAccessible* proxy = acc->AsRemote()) {
@@ -344,7 +344,7 @@ static gboolean isRowSelectedCB(AtkTable* aTable, gint aRowIdx) {
   if (!acc) {
     return FALSE;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gboolean>(acc->AsTableBase()->IsRowSelected(aRowIdx));
   }
   if (RemoteAccessible* proxy = acc->AsRemote()) {
@@ -359,7 +359,7 @@ static gboolean isCellSelectedCB(AtkTable* aTable, gint aRowIdx, gint aColIdx) {
   if (!acc) {
     return FALSE;
   }
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup() || acc->IsLocal()) {
+  if (a11y::IsCacheActive() || acc->IsLocal()) {
     return static_cast<gboolean>(
         acc->AsTableBase()->IsCellSelected(aRowIdx, aColIdx));
   }

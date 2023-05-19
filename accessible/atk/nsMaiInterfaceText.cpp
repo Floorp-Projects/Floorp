@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 #include "mozilla/a11y/PDocAccessible.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 #include "LocalAccessible-inl.h"
 #include "HyperTextAccessible-inl.h"
 #include "nsMai.h"
@@ -437,8 +437,7 @@ static gchar* getTextSelectionCB(AtkText* aText, gint aSelectionNum,
   }
 
   int32_t startOffset = 0, endOffset = 0;
-  if (acc->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (acc->IsRemote() && !a11y::IsCacheActive()) {
     RemoteAccessible* remote = acc->AsRemote();
     nsString data;
     remote->SelectionBoundsAt(aSelectionNum, data, &startOffset, &endOffset);

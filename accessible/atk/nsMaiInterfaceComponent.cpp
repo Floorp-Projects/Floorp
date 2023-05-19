@@ -14,7 +14,7 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -116,8 +116,7 @@ void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
     return;
   }
 
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
-      acc->IsRemote()) {
+  if (!a11y::IsCacheActive() && acc->IsRemote()) {
     acc->AsRemote()->Extents(aCoordType == ATK_XY_WINDOW, aX, aY, aWidth,
                              aHeight);
     return;

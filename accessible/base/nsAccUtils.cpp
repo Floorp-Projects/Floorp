@@ -28,7 +28,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInternals.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "nsAccessibilityService.h"
 
 using namespace mozilla;
@@ -397,7 +396,7 @@ uint32_t nsAccUtils::TextLength(Accessible* aAccessible) {
       return textLeaf->Text().Length();
     }
   } else if (aAccessible->IsText()) {
-    MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup(),
+    MOZ_ASSERT(a11y::IsCacheActive(),
                "Shouldn't be called on a RemoteAccessible unless the cache is "
                "enabled");
     RemoteAccessible* remoteAcc = aAccessible->AsRemote();

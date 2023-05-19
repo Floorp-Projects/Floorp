@@ -35,7 +35,6 @@
 #  include "mozilla/a11y/AccessibleWrap.h"
 #  include "mozilla/a11y/Compatibility.h"
 #  include "mozilla/mscom/ActCtxResource.h"
-#  include "mozilla/StaticPrefs_accessibility.h"
 #endif
 #include <map>
 #include <utility>
@@ -2660,7 +2659,7 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   // Determining the accessibility resource ID causes problems with the sandbox,
   // so we pass it on the command line as it is required very early in process
   // start up. It is not required when the caching mechanism is being used.
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (!a11y::IsCacheActive()) {
     // The accessibility resource ID may not be set in some cases, for example
     // in xpcshell tests.
     auto resourceId = mscom::ActCtxResource::GetAccessibilityResourceId();

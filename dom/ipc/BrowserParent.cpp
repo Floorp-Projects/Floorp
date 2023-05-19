@@ -55,7 +55,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
@@ -1190,7 +1189,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
 
 #  ifdef XP_WIN
     MOZ_ASSERT(aDocCOMProxy.IsNull());
-    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    if (!a11y::IsCacheActive()) {
       a11y::MsaaAccessible::GetFrom(doc)->SetID(aMsaaID);
     }
     if (a11y::nsWinUtils::IsWindowEmulationStarted()) {
@@ -1213,7 +1212,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     MOZ_ASSERT(!aParentDoc && !aParentID);
     doc->SetTopLevelInContentProcess();
 #  ifdef XP_WIN
-    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    if (!a11y::IsCacheActive()) {
       MOZ_ASSERT(!aDocCOMProxy.IsNull());
       RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
       doc->SetCOMInterface(proxy);
@@ -1221,7 +1220,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
 #  endif
     a11y::ProxyCreated(doc);
 #  ifdef XP_WIN
-    if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    if (!a11y::IsCacheActive()) {
       // This *must* be called after ProxyCreated because
       // MsaaAccessible::GetFrom will fail before that.
       a11y::MsaaAccessible* msaa = a11y::MsaaAccessible::GetFrom(doc);
@@ -1263,7 +1262,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     doc->SetTopLevel();
     a11y::DocManager::RemoteDocAdded(doc);
 #  ifdef XP_WIN
-    if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    if (a11y::IsCacheActive()) {
       doc->MaybeInitWindowEmulation();
     } else {
       a11y::MsaaAccessible::GetFrom(doc)->SetID(aMsaaID);

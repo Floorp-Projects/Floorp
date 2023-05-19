@@ -19,7 +19,7 @@
 #include "Relation.h"
 #include "RelationType.h"
 #include "mozilla/a11y/Role.h"
-#include "mozilla/StaticPrefs_accessibility.h"
+#include "nsAccessibilityService.h"
 
 #include <comutil.h>
 
@@ -37,7 +37,7 @@ bool RemoteAccessible::GetCOMInterface(void** aOutAccessible) const {
   // proxy from the content process in that case. Instead, the code below would
   // return an MsaaAccessible from our process which would end up calling
   // methods here in RemoteAccessible, causing infinite recursion.
-  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
+  MOZ_ASSERT(!a11y::IsCacheActive());
   if (!mCOMProxy && mSafeToRecurse) {
     WeakPtr<RemoteAccessible> thisPtr = const_cast<RemoteAccessible*>(this);
     // See if we can lazily obtain a COM proxy
@@ -139,7 +139,7 @@ static RemoteAccessible* GetProxyFor(DocAccessibleParent* aDoc,
 }
 
 ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::Name(aName);
   }
 
@@ -168,7 +168,7 @@ ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
 }
 
 void RemoteAccessible::Value(nsString& aValue) const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     RemoteAccessibleBase<RemoteAccessible>::Value(aValue);
     return;
   }
@@ -189,7 +189,7 @@ void RemoteAccessible::Value(nsString& aValue) const {
 }
 
 double RemoteAccessible::Step() const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::Step();
   }
 
@@ -208,7 +208,7 @@ double RemoteAccessible::Step() const {
 }
 
 void RemoteAccessible::Description(nsString& aDesc) const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::Description(aDesc);
   }
 
@@ -228,7 +228,7 @@ void RemoteAccessible::Description(nsString& aDesc) const {
 }
 
 uint64_t RemoteAccessible::State() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::State();
   }
 
@@ -246,7 +246,7 @@ uint64_t RemoteAccessible::State() {
 }
 
 LayoutDeviceIntRect RemoteAccessible::Bounds() const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::Bounds();
   }
 
@@ -270,7 +270,7 @@ LayoutDeviceIntRect RemoteAccessible::Bounds() const {
 }
 
 nsIntRect RemoteAccessible::BoundsInCSSPixels() const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::BoundsInCSSPixels();
   }
 
@@ -286,7 +286,7 @@ nsIntRect RemoteAccessible::BoundsInCSSPixels() const {
 }
 
 void RemoteAccessible::Language(nsAString& aLocale) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::Language(aLocale);
   }
   aLocale.Truncate();
@@ -383,7 +383,7 @@ static bool ConvertBSTRAttributesToAccAttributes(
 }
 
 already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::Attributes();
   }
   RefPtr<AccAttributes> attrsObj = new AccAttributes();
@@ -411,7 +411,7 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
 }
 
 Relation RemoteAccessible::RelationByType(RelationType aType) const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::RelationByType(aType);
   }
 
@@ -454,7 +454,7 @@ Relation RemoteAccessible::RelationByType(RelationType aType) const {
 }
 
 double RemoteAccessible::CurValue() const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::CurValue();
   }
 
@@ -473,7 +473,7 @@ double RemoteAccessible::CurValue() const {
 }
 
 double RemoteAccessible::MinValue() const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::MinValue();
   }
 
@@ -492,7 +492,7 @@ double RemoteAccessible::MinValue() const {
 }
 
 double RemoteAccessible::MaxValue() const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::MaxValue();
   }
 
@@ -528,7 +528,7 @@ static IA2TextBoundaryType GetIA2TextBoundary(
 
 int32_t RemoteAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
                                         uint32_t aCoordinateType) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::OffsetAtPoint(
         aX, aY, aCoordinateType);
   }
@@ -561,7 +561,7 @@ int32_t RemoteAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
 
 void RemoteAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOffset,
                                      nsAString& aText) const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::TextSubstring(
         aStartOffset, aEndOffset, aText);
   }
@@ -586,7 +586,7 @@ void RemoteAccessible::TextBeforeOffset(int32_t aOffset,
                                         AccessibleTextBoundary aBoundaryType,
                                         int32_t* aStartOffset,
                                         int32_t* aEndOffset, nsAString& aText) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::TextBeforeOffset(
         aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
   }
@@ -613,7 +613,7 @@ void RemoteAccessible::TextAfterOffset(int32_t aOffset,
                                        AccessibleTextBoundary aBoundaryType,
                                        int32_t* aStartOffset,
                                        int32_t* aEndOffset, nsAString& aText) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::TextAfterOffset(
         aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
   }
@@ -640,7 +640,7 @@ void RemoteAccessible::TextAtOffset(int32_t aOffset,
                                     AccessibleTextBoundary aBoundaryType,
                                     int32_t* aStartOffset, int32_t* aEndOffset,
                                     nsAString& aText) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::TextAtOffset(
         aOffset, aBoundaryType, aStartOffset, aEndOffset, aText);
   }
@@ -664,7 +664,7 @@ void RemoteAccessible::TextAtOffset(int32_t aOffset,
 }
 
 bool RemoteAccessible::RemoveFromSelection(int32_t aSelectionNum) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::RemoveFromSelection(
         aSelectionNum);
   }
@@ -677,7 +677,7 @@ bool RemoteAccessible::RemoveFromSelection(int32_t aSelectionNum) {
 }
 
 int32_t RemoteAccessible::CaretOffset() const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::CaretOffset();
   }
 
@@ -696,7 +696,7 @@ int32_t RemoteAccessible::CaretOffset() const {
 }
 
 void RemoteAccessible::SetCaretOffset(int32_t aOffset) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::SetCaretOffset(aOffset);
   }
 
@@ -714,7 +714,7 @@ void RemoteAccessible::SetCaretOffset(int32_t aOffset) {
 void RemoteAccessible::ScrollSubstringTo(int32_t aStartOffset,
                                          int32_t aEndOffset,
                                          uint32_t aScrollType) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     MOZ_ASSERT(IsHyperText(), "is not hypertext?");
     RemoteAccessibleBase<RemoteAccessible>::ScrollSubstringTo(
         aStartOffset, aEndOffset, aScrollType);
@@ -738,7 +738,7 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                                               int32_t aEndOffset,
                                               uint32_t aCoordinateType,
                                               int32_t aX, int32_t aY) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     // Not yet supported by the cache.
     return;
   }
@@ -764,7 +764,7 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
 }
 
 void RemoteAccessible::DOMNodeID(nsString& aID) const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::DOMNodeID(aID);
   }
 
@@ -784,7 +784,7 @@ void RemoteAccessible::DOMNodeID(nsString& aID) const {
 }
 
 void RemoteAccessible::TakeFocus() const {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::TakeFocus();
   }
   RefPtr<IAccessible> acc;
@@ -796,7 +796,7 @@ void RemoteAccessible::TakeFocus() const {
 
 Accessible* RemoteAccessible::ChildAtPoint(
     int32_t aX, int32_t aY, Accessible::EWhichChildAtPoint aWhichChild) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::ChildAtPoint(aX, aY,
                                                                 aWhichChild);
   }
@@ -844,7 +844,7 @@ Accessible* RemoteAccessible::ChildAtPoint(
 }
 
 GroupPos RemoteAccessible::GroupPosition() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (a11y::IsCacheActive()) {
     return RemoteAccessibleBase<RemoteAccessible>::GroupPosition();
   }
 
@@ -855,7 +855,7 @@ GroupPos RemoteAccessible::GroupPosition() {
 bool RemoteAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
                                             int32_t aStartOffset,
                                             int32_t aEndOffset) {
-  if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (!a11y::IsCacheActive()) {
     return false;
   }
 

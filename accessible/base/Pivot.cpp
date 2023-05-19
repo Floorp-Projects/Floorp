@@ -16,7 +16,6 @@
 #include "mozilla/a11y/HyperTextAccessibleBase.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -169,8 +168,7 @@ Accessible* Pivot::SearchForward(Accessible* aAnchor, PivotRule& aRule,
 }
 
 Accessible* Pivot::SearchForText(Accessible* aAnchor, bool aBackward) {
-  if (mRoot->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mRoot->IsRemote() && !a11y::IsCacheActive()) {
     // Not supported for RemoteAccessible when the cache is disabled.
     return nullptr;
   }
@@ -250,8 +248,7 @@ Accessible* Pivot::Last(PivotRule& aRule) {
 
 Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
                             int32_t* aEndOffset, int32_t aBoundaryType) {
-  if (mRoot->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mRoot->IsRemote() && !a11y::IsCacheActive()) {
     // Not supported for RemoteAccessible when the cache is disabled.
     return nullptr;
   }
@@ -391,8 +388,7 @@ Accessible* Pivot::NextText(Accessible* aAnchor, int32_t* aStartOffset,
 
 Accessible* Pivot::PrevText(Accessible* aAnchor, int32_t* aStartOffset,
                             int32_t* aEndOffset, int32_t aBoundaryType) {
-  if (mRoot->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mRoot->IsRemote() && !a11y::IsCacheActive()) {
     // Not supported for RemoteAccessible when the cache is disabled.
     return nullptr;
   }
@@ -653,7 +649,7 @@ PivotRadioNameRule::PivotRadioNameRule(const nsString& aName) : mName(aName) {}
 uint16_t PivotRadioNameRule::Match(Accessible* aAcc) {
   uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
   RemoteAccessible* remote = aAcc->AsRemote();
-  if (!remote || !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (!remote || !a11y::IsCacheActive()) {
     // We need the cache to be able to fetch the name attribute below.
     return result;
   }
