@@ -928,7 +928,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
     gfxFloat aWidth, const PropertyProvider& aProvider,
     SuppressBreak aSuppressBreak, gfxFont::BoundingBoxType aBoundingBoxType,
     DrawTarget* aRefDrawTarget, bool aCanWordWrap, bool aCanWhitespaceWrap,
-    TrimmableWS* aOutTrimmableWhitespace, Metrics& aOutMetrics,
+    gfxFloat* aOutTrimmableWhitespace, Metrics& aOutMetrics,
     bool& aOutUsedHyphenation, uint32_t& aOutLastBreak,
     gfxBreakPriority& aBreakPriority) {
   aMaxLength = std::min(aMaxLength, GetLength() - aStart);
@@ -1174,8 +1174,7 @@ uint32_t gfxTextRun::BreakAndMeasureText(
                             aRefDrawTarget, &aProvider);
 
   if (aOutTrimmableWhitespace) {
-    aOutTrimmableWhitespace->mAdvance = trimmableAdvance;
-    aOutTrimmableWhitespace->mCount = trimmableChars;
+    *aOutTrimmableWhitespace = trimmableAdvance;
   }
 
   if (charsFit == aMaxLength) {

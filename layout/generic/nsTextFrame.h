@@ -773,11 +773,6 @@ class nsTextFrame : public nsIFrame {
 
   void SetHangableISize(nscoord aISize);
   nscoord GetHangableISize() const;
-  void ClearHangableISize();
-
-  void SetTrimmableWS(gfxTextRun::TrimmableWS aTrimmableWS);
-  gfxTextRun::TrimmableWS GetTrimmableWS() const;
-  void ClearTrimmableWS();
 
  protected:
   virtual ~nsTextFrame();
@@ -813,20 +808,13 @@ class nsTextFrame : public nsIFrame {
   };
   mutable SelectionState mIsSelected;
 
-  // Flags used to track whether certain properties are present.
-  // (Public to keep MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS happy.)
- public:
-  enum class PropertyFlags : uint8_t {
-    // Whether a cached continuations array is present.
-    Continuations = 1 << 0,
-    // Whether a HangableWhitespace property is present.
-    HangableWS = 1 << 1,
-    // Whether a TrimmableWhitespace property is present.
-    TrimmableWS = 2 << 1,
-  };
+  // Whether a cached continuations array is present.
+  bool mHasContinuationsProperty = false;
 
- protected:
-  PropertyFlags mPropertyFlags = PropertyFlags(0);
+  // Whether a HangableWhitespace property is present. This could have been a
+  // frame state bit, but they are currently full. Because we have a uint8_t
+  // and a bool just above, there's a hole here that we can use.
+  bool mHasHangableWS = false;
 
   /**
    * Return true if the frame is part of a Selection.
@@ -1012,7 +1000,13 @@ class nsTextFrame : public nsIFrame {
 
   // Clear any cached continuations array; this should be called whenever the
   // chain is modified.
-  inline void ClearCachedContinuations();
+  void ClearCachedContinuations() {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mHasContinuationsProperty) {
+      RemoveProperty(ContinuationsProperty());
+      mHasContinuationsProperty = false;
+    }
+  }
 
   /**
    * UpdateIteratorFromOffset() updates the iterator from a given offset.
@@ -1028,14 +1022,5 @@ class nsTextFrame : public nsIFrame {
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsTextFrame::TrimmedOffsetFlags)
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsTextFrame::PropertyFlags)
-
-inline void nsTextFrame::ClearCachedContinuations() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mPropertyFlags & PropertyFlags::Continuations) {
-    RemoveProperty(ContinuationsProperty());
-    mPropertyFlags &= ~PropertyFlags::Continuations;
-  }
-}
 
 #endif
