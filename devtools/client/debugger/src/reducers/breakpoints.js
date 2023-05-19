@@ -13,7 +13,6 @@ export function initialBreakpointsState(xhrBreakpoints = []) {
   return {
     breakpoints: {},
     xhrBreakpoints,
-    breakpointsDisabled: false,
   };
 }
 

@@ -15,6 +15,7 @@ import {
   getBreakpointsList,
   getPendingBreakpointList,
   isMapScopesEnabled,
+  getBlackBoxRanges,
 } from "../../selectors";
 
 import { setBreakpointPositions } from "./breakpointPositions";
@@ -23,7 +24,7 @@ import { setSkipPausing } from "../pause/skipPausing";
 import { PROMISE } from "../utils/middleware/promise";
 import { recordEvent } from "../../utils/telemetry";
 import { comparePosition } from "../../utils/location";
-import { getTextAtPosition } from "../../utils/source";
+import { getTextAtPosition, isLineBlackboxed } from "../../utils/source";
 import { getMappedScopesForLocation } from "../pause/mapScopes";
 import { validateNavigateContext } from "../../utils/context";
 
@@ -81,7 +82,15 @@ export function enableBreakpoint(cx, initialBreakpoint) {
   return thunkArgs => {
     const { dispatch, getState, client } = thunkArgs;
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
-    if (!breakpoint || !breakpoint.disabled) {
+    const blackboxedRanges = getBlackBoxRanges(getState());
+    if (
+      !breakpoint ||
+      !breakpoint.disabled ||
+      isLineBlackboxed(
+        blackboxedRanges[breakpoint.location.source.url],
+        breakpoint.location.line
+      )
+    ) {
       return null;
     }
 

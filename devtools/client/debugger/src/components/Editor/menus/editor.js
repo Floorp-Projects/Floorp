@@ -211,9 +211,6 @@ const blackBoxLinesMenuItem = (
         },
       };
 
-      // removes the current selection
-      codeMirror.replaceSelection(codeMirror.getSelection(), "start");
-
       editorActions.toggleBlackBox(
         cx,
         selectedSource,

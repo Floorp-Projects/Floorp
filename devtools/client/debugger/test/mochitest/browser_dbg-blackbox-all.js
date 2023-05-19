@@ -61,6 +61,7 @@ add_task(async function testBlackBoxOnMultipleFiles() {
     "Ignore files outside this directory"
   );
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeBlackBoxAllInside);
+  await waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES");
   await waitForBlackboxCount(dbg, 1);
   await waitForRequestsToSettle(dbg);
 
@@ -86,8 +87,11 @@ add_task(async function testBlackBoxOnMultipleFiles() {
     "Unignore files outside this directory"
   );
   selectContextMenuItem(dbg, NODE_SELECTORS.nodeUnBlackBoxAllOutside);
+  await waitForDispatch(dbg.store, "UNBLACKBOX_WHOLE_SOURCES");
   await waitForBlackboxCount(dbg, 0);
   await waitForRequestsToSettle(dbg);
+  info("Wait for any breakpoints in the source to get enabled");
+  await waitForDispatch(dbg.store, "SET_BREAKPOINT");
 
   assertSourceNodeIsBlackBoxed(dbg, SOURCE_FILES.nestedSource, false);
   assertSourceNodeIsBlackBoxed(dbg, SOURCE_FILES.codeReload1, false);

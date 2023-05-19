@@ -25,6 +25,7 @@ class Breakpoint extends PureComponent {
       editor: PropTypes.object.isRequired,
       editorActions: PropTypes.object.isRequired,
       selectedSource: PropTypes.object,
+      blackboxedRangesForSelectedSource: PropTypes.array,
     };
   }
 
@@ -95,14 +96,26 @@ class Breakpoint extends PureComponent {
   };
 
   onContextMenu = event => {
-    const { cx, breakpoint, selectedSource, breakpointActions } = this.props;
+    const {
+      cx,
+      breakpoint,
+      selectedSource,
+      breakpointActions,
+      blackboxedRangesForSelectedSource,
+    } = this.props;
     event.stopPropagation();
     event.preventDefault();
     const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
 
     showMenu(
       event,
-      breakpointItems(cx, breakpoint, selectedLocation, breakpointActions)
+      breakpointItems(
+        cx,
+        breakpoint,
+        selectedLocation,
+        breakpointActions,
+        blackboxedRangesForSelectedSource
+      )
     );
   };
 

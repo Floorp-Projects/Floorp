@@ -19,6 +19,10 @@ function generateDefaults(overrides) {
         setGutterMarker: jest.fn(),
       },
     },
+    blackboxedRanges: {},
+    cx: {},
+    breakpointActions: {},
+    editorActions: {},
     breakpoints: matchingBreakpoints,
     ...overrides,
   };

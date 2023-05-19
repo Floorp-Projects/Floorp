@@ -6,6 +6,7 @@ import actions from "../../../actions";
 import { bindActionCreators } from "redux";
 import { features } from "../../../utils/prefs";
 import { formatKeyShortcut } from "../../../utils/text";
+import { isLineBlackboxed } from "../../../utils/source";
 
 export const addBreakpointItem = (cx, location, breakpointActions) => ({
   id: "node-menu-add-breakpoint",
@@ -86,11 +87,15 @@ export const logPointItem = (breakpoint, location, breakpointActions) => {
 export const toggleDisabledBreakpointItem = (
   cx,
   breakpoint,
-  breakpointActions
+  breakpointActions,
+  blackboxedRangesForSelectedSource
 ) => {
   return {
     accesskey: L10N.getStr("editor.disableBreakpoint.accesskey"),
-    disabled: false,
+    disabled: isLineBlackboxed(
+      blackboxedRangesForSelectedSource,
+      breakpoint.location.line
+    ),
     click: () => breakpointActions.toggleDisabledBreakpoint(cx, breakpoint),
     ...(breakpoint.disabled
       ? {
@@ -138,11 +143,17 @@ export function breakpointItems(
   cx,
   breakpoint,
   selectedLocation,
-  breakpointActions
+  breakpointActions,
+  blackboxedRangesForSelectedSource
 ) {
   const items = [
     removeBreakpointItem(cx, breakpoint, breakpointActions),
-    toggleDisabledBreakpointItem(cx, breakpoint, breakpointActions),
+    toggleDisabledBreakpointItem(
+      cx,
+      breakpoint,
+      breakpointActions,
+      blackboxedRangesForSelectedSource
+    ),
   ];
 
   if (breakpoint.originalText.startsWith("debugger")) {
@@ -161,7 +172,12 @@ export function breakpointItems(
     { type: "separator" },
     removeBreakpointsOnLineItem(cx, selectedLocation, breakpointActions),
     breakpoint.disabled
-      ? enableBreakpointsOnLineItem(cx, selectedLocation, breakpointActions)
+      ? enableBreakpointsOnLineItem(
+          cx,
+          selectedLocation,
+          breakpointActions,
+          blackboxedRangesForSelectedSource
+        )
       : disableBreakpointsOnLineItem(cx, selectedLocation, breakpointActions),
     { type: "separator" }
   );
@@ -216,12 +232,13 @@ export const removeBreakpointsOnLineItem = (
 export const enableBreakpointsOnLineItem = (
   cx,
   location,
-  breakpointActions
+  breakpointActions,
+  blackboxedRangesForSelectedSource
 ) => ({
   id: "node-menu-remove-breakpoints-on-line",
   label: L10N.getStr("breakpointMenuItem.enableAllAtLine.label"),
   accesskey: L10N.getStr("breakpointMenuItem.enableAllAtLine.accesskey"),
-  disabled: false,
+  disabled: isLineBlackboxed(blackboxedRangesForSelectedSource, location.line),
   click: () =>
     breakpointActions.enableBreakpointsAtLine(
       cx,
