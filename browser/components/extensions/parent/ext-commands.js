@@ -26,6 +26,18 @@ this.commands = class extends ExtensionAPIPersistent {
         },
       };
     },
+    onChanged({ fire }) {
+      let listener = (eventName, changeInfo) => {
+        fire.async(changeInfo);
+      };
+      this.on("shortcutChanged", listener);
+      return {
+        unregister: () => this.off("shortcutChanged", listener),
+        convert(_fire) {
+          fire = _fire;
+        },
+      };
+    },
   };
 
   static onUninstall(extensionId) {
@@ -36,6 +48,7 @@ this.commands = class extends ExtensionAPIPersistent {
     let shortcuts = new ExtensionShortcuts({
       extension: this.extension,
       onCommand: name => this.emit("command", name),
+      onShortcutChanged: changeInfo => this.emit("shortcutChanged", changeInfo),
     });
     this.extension.shortcuts = shortcuts;
     await shortcuts.loadCommands();
@@ -57,6 +70,12 @@ this.commands = class extends ExtensionAPIPersistent {
           module: "commands",
           event: "onCommand",
           inputHandling: true,
+          extensionApi: this,
+        }).api(),
+        onChanged: new EventManager({
+          context,
+          module: "commands",
+          event: "onChanged",
           extensionApi: this,
         }).api(),
       },
