@@ -355,7 +355,8 @@ add_task(async function test_update_discarded() {
   let waitForConsole = new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, [
       {
-        message: /Lazy browser prematurely inserted via 'loadURI' property access:/,
+        message:
+          /Lazy browser prematurely inserted via 'loadURI' property access:/,
         forbid: true,
       },
     ]);

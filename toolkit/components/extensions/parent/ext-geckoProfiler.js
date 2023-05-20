@@ -73,13 +73,8 @@ this.geckoProfiler = class extends ExtensionAPI {
     return {
       geckoProfiler: {
         async start(options) {
-          const {
-            bufferSize,
-            windowLength,
-            interval,
-            features,
-            threads,
-          } = options;
+          const { bufferSize, windowLength, interval, features, threads } =
+            options;
 
           Services.prefs.setBoolPref(PREF_ASYNC_STACK, false);
           if (threads) {

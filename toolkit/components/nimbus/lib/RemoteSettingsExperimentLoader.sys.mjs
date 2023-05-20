@@ -598,11 +598,12 @@ export class EnrollmentsContext {
             // We already know that we have a localization table for this locale
             // because we checked in `checkRecipe`.
             try {
-              substitutedValue = lazy._ExperimentFeature.substituteLocalizations(
-                value,
-                localizations[Services.locale.appLocaleAsBCP47],
-                missingL10nIds
-              );
+              substitutedValue =
+                lazy._ExperimentFeature.substituteLocalizations(
+                  value,
+                  localizations[Services.locale.appLocaleAsBCP47],
+                  missingL10nIds
+                );
             } catch (e) {
               if (e?.reason === "l10n-missing-entry") {
                 // Skip validation because it *will* fail.
@@ -623,9 +624,8 @@ export class EnrollmentsContext {
                   credentials: "omit",
                 }).then(rsp => rsp.json());
 
-                validator = this.validatorCache[
-                  featureId
-                ] = new lazy.JsonSchema.Validator(schema);
+                validator = this.validatorCache[featureId] =
+                  new lazy.JsonSchema.Validator(schema);
               } catch (e) {
                 throw new Error(
                   `Could not fetch schema for feature ${featureId} at "${uri}": ${e}`
@@ -635,9 +635,8 @@ export class EnrollmentsContext {
               const schema = this._generateVariablesOnlySchema(
                 lazy.NimbusFeatures[featureId]
               );
-              validator = this.validatorCache[
-                featureId
-              ] = new lazy.JsonSchema.Validator(schema);
+              validator = this.validatorCache[featureId] =
+                new lazy.JsonSchema.Validator(schema);
             }
 
             const result = validator.validate(substitutedValue);
@@ -713,4 +712,5 @@ export class EnrollmentsContext {
   }
 }
 
-export const RemoteSettingsExperimentLoader = new _RemoteSettingsExperimentLoader();
+export const RemoteSettingsExperimentLoader =
+  new _RemoteSettingsExperimentLoader();

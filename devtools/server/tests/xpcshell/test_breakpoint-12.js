@@ -37,12 +37,12 @@ add_task(
       /* eslint-disable no-multi-spaces */
       Cu.evalInSandbox(
         "var line0 = Error().lineNumber;\n" +
-        "function foo() {\n" + // line0 + 1
-        "  this.a = 1;\n" + // line0 + 2
-        "  // A comment.\n" + // line0 + 3
-        "  this.b = 2;\n" + // line0 + 4
-        "}\n" + // line0 + 5
-        "debugger;\n" + // line0 + 6
+          "function foo() {\n" + // line0 + 1
+          "  this.a = 1;\n" + // line0 + 2
+          "  // A comment.\n" + // line0 + 3
+          "  this.b = 2;\n" + // line0 + 4
+          "}\n" + // line0 + 5
+          "debugger;\n" + // line0 + 6
           "foo();\n", // line0 + 7
         debuggee
       );

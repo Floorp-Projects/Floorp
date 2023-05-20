@@ -13,8 +13,7 @@ const MESSAGES = () => [
       action: {
         id: "moments-wnp",
         data: {
-          url:
-            "https://www.mozilla.org/%LOCALE%/etc/firefox/retention/thank-you-a/",
+          url: "https://www.mozilla.org/%LOCALE%/etc/firefox/retention/thank-you-a/",
           expireDelta: TWO_DAYS,
         },
       },
@@ -51,8 +50,7 @@ const MESSAGES = () => [
       icon_url:
         "chrome://activity-stream/content/data/content/assets/whatsnew-send-icon.png",
       icon_alt: "Firefox Send Logo",
-      body:
-        "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
+      body: "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
       cta_url: "https://blog.mozilla.org/",
       cta_type: "OPEN_URL",
     },
@@ -67,8 +65,7 @@ const MESSAGES = () => [
       bucket_id: "WHATS_NEW_70_1",
       published_date: 1560969794394,
       title: "Another thing new in Firefox 70",
-      body:
-        "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
+      body: "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
       link_text: "Learn more on our blog",
       cta_url: "https://blog.mozilla.org/",
       cta_type: "OPEN_URL",
@@ -105,8 +102,7 @@ const MESSAGES = () => [
       bucket_id: "WHATS_NEW_PIONEER_82",
       published_date: 1603152000000,
       title: "Put your data to work for a better internet",
-      body:
-        "Contribute your data to Mozilla's Pioneer program to help researchers understand pressing technology issues like misinformation, data privacy, and ethical AI.",
+      body: "Contribute your data to Mozilla's Pioneer program to help researchers understand pressing technology issues like misinformation, data privacy, and ethical AI.",
       cta_url: "about:blank",
       cta_where: "tab",
       cta_type: "OPEN_ABOUT_PAGE",
@@ -144,8 +140,7 @@ const MESSAGES = () => [
       bucket_id: "WHATS_NEW_69_1",
       published_date: 1557346235089,
       title: "Something new in Firefox 69",
-      body:
-        "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
+      body: "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
       link_text: "Learn more on our blog",
       cta_url: "https://blog.mozilla.org/",
       cta_type: "OPEN_URL",
@@ -181,8 +176,7 @@ const MESSAGES = () => [
           action: {
             type: "OPEN_URL",
             data: {
-              args:
-                "https://send.firefox.com/login/?utm_source=activity-stream&entrypoint=activity-stream-cfr-pdf",
+              args: "https://send.firefox.com/login/?utm_source=activity-stream&entrypoint=activity-stream-cfr-pdf",
               where: "tabshifted",
             },
           },
@@ -404,8 +398,7 @@ const MESSAGES = () => [
             ios: {
               action: {
                 data: {
-                  args:
-                    "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fus%2Fapp%2Ffirefox-focus-privacy-browser%2Fid1055677337",
+                  args: "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fus%2Fapp%2Ffirefox-focus-privacy-browser%2Fid1055677337",
                   where: "tabshifted",
                 },
                 type: "OPEN_URL",
@@ -415,8 +408,7 @@ const MESSAGES = () => [
             android: {
               action: {
                 data: {
-                  args:
-                    "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.focus",
+                  args: "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.focus",
                   where: "tabshifted",
                 },
                 type: "OPEN_URL",

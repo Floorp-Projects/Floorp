@@ -183,17 +183,15 @@ export class AddonRolloutAction extends BaseAction {
       }
     };
 
-    const [
-      installedId,
-      installedVersion,
-    ] = await lazy.NormandyAddonManager.downloadAndInstall({
-      createError,
-      extensionDetails,
-      applyNormandyChanges,
-      undoNormandyChanges,
-      onInstallStarted,
-      reportError: error => this.reportError(error, `${eventName}Failed`),
-    });
+    const [installedId, installedVersion] =
+      await lazy.NormandyAddonManager.downloadAndInstall({
+        createError,
+        extensionDetails,
+        applyNormandyChanges,
+        undoNormandyChanges,
+        onInstallStarted,
+        reportError: error => this.reportError(error, `${eventName}Failed`),
+      });
 
     if (existingRollout) {
       this.log.debug(`Updated addon rollout ${slug}`);

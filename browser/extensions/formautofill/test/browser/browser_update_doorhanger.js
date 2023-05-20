@@ -157,29 +157,30 @@ add_task(async function test_submit_reduced_fields() {
   is(addresses.length, 2, "2 addresses in storage");
 
   let url = BASE_URL + "autocomplete_simple_basic.html";
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function (
-    browser
-  ) {
-    await openPopupOn(browser, "form#simple input[name=tel]");
-    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-    await waitForAutofill(browser, "form #simple_tel", "6172535702");
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url },
+    async function (browser) {
+      await openPopupOn(browser, "form#simple input[name=tel]");
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+      await waitForAutofill(browser, "form #simple_tel", "6172535702");
 
-    let onPopupShown = waitForPopupShown();
-    await focusUpdateSubmitForm(browser, {
-      formSelector: "form#simple",
-      focusSelector: "form #simple_tel",
-      newValues: {
-        "input[name=tel]": "123456789",
-      },
-    });
+      let onPopupShown = waitForPopupShown();
+      await focusUpdateSubmitForm(browser, {
+        formSelector: "form#simple",
+        focusSelector: "form #simple_tel",
+        newValues: {
+          "input[name=tel]": "123456789",
+        },
+      });
 
-    await onPopupShown;
+      await onPopupShown;
 
-    let onUpdated = waitForStorageChangedEvents("update");
-    await clickDoorhangerButton(MAIN_BUTTON);
-    await onUpdated;
-  });
+      let onUpdated = waitForStorageChangedEvents("update");
+      await clickDoorhangerButton(MAIN_BUTTON);
+      await onUpdated;
+    }
+  );
 
   addresses = await getAddresses();
   is(addresses.length, 2, "Still 2 addresses in storage");

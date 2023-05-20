@@ -205,8 +205,7 @@ add_task(async function basic() {
 add_task(async function redirection() {
   const redirectTo = "http://example.com/";
   const payload = {
-    url:
-      "http://example.com/browser/browser/components/urlbar/tests/browser/redirect_to.sjs?/",
+    url: "http://example.com/browser/browser/components/urlbar/tests/browser/redirect_to.sjs?/",
     isSponsored: true,
   };
   const input = "exa";

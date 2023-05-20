@@ -117,7 +117,8 @@ add_task(async function test_normandyAddonStudy_temporary_without_privilege() {
     {
       expected: [
         {
-          message: /Using the privileged permission 'normandyAddonStudy' requires a privileged add-on/,
+          message:
+            /Using the privileged permission 'normandyAddonStudy' requires a privileged add-on/,
         },
       ],
     },

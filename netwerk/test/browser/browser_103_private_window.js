@@ -40,8 +40,9 @@ async function test_early_hints_load_url(usePrivateWin) {
         let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
         if (channel.URI.spec === expectedUrl) {
           observed.actrualUrl = channel.URI.spec;
-          let isPrivate = channel.QueryInterface(Ci.nsIPrivateBrowsingChannel)
-            .isChannelPrivate;
+          let isPrivate = channel.QueryInterface(
+            Ci.nsIPrivateBrowsingChannel
+          ).isChannelPrivate;
           observed.isPrivate = isPrivate;
           Services.obs.removeObserver(observer, "http-on-opening-request");
         }

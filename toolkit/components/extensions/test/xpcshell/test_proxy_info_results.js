@@ -82,15 +82,8 @@ async function testProxyResolution(test) {
       proxyUsed;
       proxyUsed = proxyUsed.failoverProxy
     ) {
-      let {
-        type,
-        host,
-        port,
-        username,
-        password,
-        proxyDNS,
-        failoverTimeout,
-      } = expectedProxyInfo;
+      let { type, host, port, username, password, proxyDNS, failoverTimeout } =
+        expectedProxyInfo;
       equal(proxyUsed.host, host, `Expected proxy host to be ${host}`);
       equal(proxyUsed.port, port, `Expected proxy port to be ${port}`);
       equal(proxyUsed.type, type, `Expected proxy type to be ${type}`);

@@ -132,9 +132,8 @@ add_task(async function addremove_after_newtab_api() {
  * Add and remove items *before* the new tab button outside of customize mode.
  */
 add_task(async function addremove_before_newtab_api() {
-  let index = CustomizableUI.getWidgetIdsInArea("TabsToolbar").indexOf(
-    "new-tab-button"
-  );
+  let index =
+    CustomizableUI.getWidgetIdsInArea("TabsToolbar").indexOf("new-tab-button");
   CustomizableUI.addWidgetToArea("stop-reload-button", "TabsToolbar", index);
   ok(
     !gBrowser.tabContainer.hasAttribute("hasadjacentnewtabbutton"),

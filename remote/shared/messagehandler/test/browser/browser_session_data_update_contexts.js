@@ -5,11 +5,8 @@
 
 const TEST_PAGE = "https://example.com/document-builder.sjs?html=tab";
 
-const {
-  assertUpdate,
-  createSessionDataUpdate,
-  getUpdates,
-} = SessionDataUpdateHelpers;
+const { assertUpdate, createSessionDataUpdate, getUpdates } =
+  SessionDataUpdateHelpers;
 
 // Test session data update scenarios involving 2 browsing contexts, and using
 // the TopBrowsingContext ContextDescriptor type.

@@ -148,8 +148,9 @@ var objHandler = {
 
     var headEnum = metadata.headers;
     while (headEnum.hasMoreElements()) {
-      var fieldName = headEnum.getNext().QueryInterface(Ci.nsISupportsString)
-        .data;
+      var fieldName = headEnum
+        .getNext()
+        .QueryInterface(Ci.nsISupportsString).data;
       body += fieldName + ": " + metadata.getHeader(fieldName) + "\n";
     }
 

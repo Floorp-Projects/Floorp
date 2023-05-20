@@ -26,9 +26,8 @@ add_task(async function test() {
   is(gBrowser.multiSelectedTabsCount, 2, "Two multiselected tabs");
 
   // Use getElementsByClassName so the list is live and will update as items change.
-  let currentBookmarks = bookmarksToolbar.getElementsByClassName(
-    "bookmark-item"
-  );
+  let currentBookmarks =
+    bookmarksToolbar.getElementsByClassName("bookmark-item");
   let startBookmarksLength = currentBookmarks.length;
 
   // The destination element should be a non-folder bookmark

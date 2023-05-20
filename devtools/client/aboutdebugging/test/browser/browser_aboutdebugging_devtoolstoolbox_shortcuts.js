@@ -18,11 +18,8 @@ add_task(async function () {
 
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const {
-    devtoolsBrowser,
-    devtoolsTab,
-    devtoolsWindow,
-  } = await openAboutDevtoolsToolbox(document, tab, window);
+  const { devtoolsBrowser, devtoolsTab, devtoolsWindow } =
+    await openAboutDevtoolsToolbox(document, tab, window);
 
   info("Check whether the shortcut keys which opens devtools is disabled");
   await assertShortcutKeys(devtoolsBrowser, false);

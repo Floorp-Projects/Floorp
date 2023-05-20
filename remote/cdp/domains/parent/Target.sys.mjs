@@ -37,9 +37,10 @@ export class Target extends Domain {
   }
 
   getBrowserContexts() {
-    const browserContextIds = lazy.ContextualIdentityService.getPublicUserContextIds().filter(
-      id => this.#browserContextIds.has(id)
-    );
+    const browserContextIds =
+      lazy.ContextualIdentityService.getPublicUserContextIds().filter(id =>
+        this.#browserContextIds.has(id)
+      );
 
     return { browserContextIds };
   }

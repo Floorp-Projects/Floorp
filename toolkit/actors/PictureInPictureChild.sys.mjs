@@ -483,7 +483,8 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
           // For now we only update our cache if the site overrides change.
           // the user will need to refresh the page for changes to apply.
           try {
-            lazy.gSiteOverrides = PictureInPictureToggleChild.getSiteOverrides();
+            lazy.gSiteOverrides =
+              PictureInPictureToggleChild.getSiteOverrides();
           } catch (e) {
             // Ignore resulting TypeError if gSiteOverrides is still unloaded
             if (!(e instanceof TypeError)) {
@@ -681,13 +682,12 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
    * @param {Number} firstSeenStartSeconds the timestamp in seconds indicating when the PiP toggle was first seen
    */
   changeToIconIfDurationEnd(firstSeenStartSeconds) {
-    const {
-      displayDuration,
-    } = lazy.NimbusFeatures.pictureinpicture.getAllVariables({
-      defaultValues: {
-        displayDuration: TOGGLE_FIRST_TIME_DURATION_DAYS,
-      },
-    });
+    const { displayDuration } =
+      lazy.NimbusFeatures.pictureinpicture.getAllVariables({
+        defaultValues: {
+          displayDuration: TOGGLE_FIRST_TIME_DURATION_DAYS,
+        },
+      });
     if (!displayDuration || displayDuration < 0) {
       return;
     }
@@ -1292,8 +1292,8 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     }
 
     // nimbusExperimentVariables will be defaultValues when the experiment is disabled
-    const nimbusExperimentVariables = lazy.NimbusFeatures.pictureinpicture.getAllVariables(
-      {
+    const nimbusExperimentVariables =
+      lazy.NimbusFeatures.pictureinpicture.getAllVariables({
         defaultValues: {
           oldToggle: true,
           title: null,
@@ -1301,8 +1301,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
           showIconOnly: false,
           displayDuration: TOGGLE_FIRST_TIME_DURATION_DAYS,
         },
-      }
-    );
+      });
 
     /**
      * If a Nimbus variable exists for the first-time PiP toggle design,
@@ -1462,9 +1461,8 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
    * @return {Boolean}
    */
   isMouseOverToggle(toggle, event) {
-    let toggleRect = toggle.ownerGlobal.windowUtils.getBoundsWithoutFlushing(
-      toggle
-    );
+    let toggleRect =
+      toggle.ownerGlobal.windowUtils.getBoundsWithoutFlushing(toggle);
 
     // The way the toggle is currently implemented with
     // absolute positioning, the root toggle element bounds don't actually
@@ -2842,9 +2840,8 @@ class PictureInPictureChildVideoWrapper {
         "PictureInPicture:EnableSubtitlesButton"
       );
     }
-    let pipWindowTracksContainer = this.#PictureInPictureChild.document.getElementById(
-      "texttracks"
-    );
+    let pipWindowTracksContainer =
+      this.#PictureInPictureChild.document.getElementById("texttracks");
     pipWindowTracksContainer.textContent = text;
   }
 

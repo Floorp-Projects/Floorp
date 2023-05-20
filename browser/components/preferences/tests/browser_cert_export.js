@@ -52,9 +52,8 @@ async function setupTest() {
   certButton.click();
   dialogWin = await certDialogLoaded;
   let doc = dialogWin.document;
-  doc.getElementById("certmanagertabs").selectedTab = doc.getElementById(
-    "ca_tab"
-  );
+  doc.getElementById("certmanagertabs").selectedTab =
+    doc.getElementById("ca_tab");
   let treeView = doc.getElementById("ca-tree").view;
   // Select any which cert. Ignore parent rows (ie rows without certs):
   for (let i = 0; i < treeView.rowCount; i++) {

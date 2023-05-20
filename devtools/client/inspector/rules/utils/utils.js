@@ -105,10 +105,8 @@ function getNodeInfo(node, elementStyle) {
       textProperty: declaration,
     };
   } else if (declaration && classList.contains("ruleview-font-family")) {
-    const {
-      name: propertyName,
-      value: propertyValue,
-    } = getPropertyNameAndValue(node);
+    const { name: propertyName, value: propertyValue } =
+      getPropertyNameAndValue(node);
     type = VIEW_NODE_FONT_TYPE;
     value = {
       property: propertyName,

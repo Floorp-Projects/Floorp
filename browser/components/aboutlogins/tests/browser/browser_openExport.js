@@ -65,9 +65,8 @@ add_task(async function test_open_export() {
 
       function getExportMenuItem() {
         let menuButton = window.document.querySelector("menu-button");
-        let exportButton = menuButton.shadowRoot.querySelector(
-          ".menuitem-export"
-        );
+        let exportButton =
+          menuButton.shadowRoot.querySelector(".menuitem-export");
         return exportButton;
       }
 

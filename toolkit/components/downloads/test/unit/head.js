@@ -85,57 +85,12 @@ const TEST_REFERRER_URL = "https://www.example.com/referrer.html";
 const TEST_DATA_SHORT = "This test string is downloaded.";
 // Generate using gzipCompressString in TelemetryController.sys.mjs.
 const TEST_DATA_SHORT_GZIP_ENCODED_FIRST = [
-  31,
-  139,
-  8,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  3,
-  11,
-  201,
-  200,
-  44,
-  86,
-  40,
-  73,
-  45,
-  46,
-  81,
-  40,
-  46,
-  41,
-  202,
-  204,
+  31, 139, 8, 0, 0, 0, 0, 0, 0, 3, 11, 201, 200, 44, 86, 40, 73, 45, 46, 81, 40,
+  46, 41, 202, 204,
 ];
 const TEST_DATA_SHORT_GZIP_ENCODED_SECOND = [
-  75,
-  87,
-  0,
-  114,
-  83,
-  242,
-  203,
-  243,
-  114,
-  242,
-  19,
-  83,
-  82,
-  83,
-  244,
-  0,
-  151,
-  222,
-  109,
-  43,
-  31,
-  0,
-  0,
-  0,
+  75, 87, 0, 114, 83, 242, 203, 243, 114, 242, 19, 83, 82, 83, 244, 0, 151, 222,
+  109, 43, 31, 0, 0, 0,
 ];
 const TEST_DATA_SHORT_GZIP_ENCODED = TEST_DATA_SHORT_GZIP_ENCODED_FIRST.concat(
   TEST_DATA_SHORT_GZIP_ENCODED_SECOND
@@ -1137,34 +1092,34 @@ add_setup(function test_common_initialize() {
   });
 
   // This URL will emulate being blocked by Windows Parental controls
-  gHttpServer.registerPathHandler("/parentalblocked.zip", function (
-    aRequest,
-    aResponse
-  ) {
-    aResponse.setStatusLine(
-      aRequest.httpVersion,
-      450,
-      "Blocked by Windows Parental Controls"
-    );
-  });
+  gHttpServer.registerPathHandler(
+    "/parentalblocked.zip",
+    function (aRequest, aResponse) {
+      aResponse.setStatusLine(
+        aRequest.httpVersion,
+        450,
+        "Blocked by Windows Parental Controls"
+      );
+    }
+  );
 
   // This URL sends some data followed by an RST packet
-  gHttpServer.registerPathHandler("/netreset.txt", function (
-    aRequest,
-    aResponse
-  ) {
-    info("Starting response that will be aborted.");
-    aResponse.processAsync();
-    aResponse.setHeader("Content-Type", "text/plain", false);
-    aResponse.write(TEST_DATA_SHORT);
-    promiseExecuteSoon()
-      .then(() => {
-        aResponse.abort(null, true);
-        aResponse.finish();
-        info("Aborting response with network reset.");
-      })
-      .then(null, console.error);
-  });
+  gHttpServer.registerPathHandler(
+    "/netreset.txt",
+    function (aRequest, aResponse) {
+      info("Starting response that will be aborted.");
+      aResponse.processAsync();
+      aResponse.setHeader("Content-Type", "text/plain", false);
+      aResponse.write(TEST_DATA_SHORT);
+      promiseExecuteSoon()
+        .then(() => {
+          aResponse.abort(null, true);
+          aResponse.finish();
+          info("Aborting response with network reset.");
+        })
+        .then(null, console.error);
+    }
+  );
 
   // During unit tests, most of the functions that require profile access or
   // operating system features will be disabled. Individual tests may override

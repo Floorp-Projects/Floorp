@@ -57,9 +57,8 @@ add_task(async function () {
           const { issue, score } = audit || {};
           let expected = "";
           if (issue) {
-            const { ISSUE_TO_INFOBAR_LABEL_MAP } = infobar.audit.reports[
-              AUDIT_TYPE.TEXT_LABEL
-            ].constructor;
+            const { ISSUE_TO_INFOBAR_LABEL_MAP } =
+              infobar.audit.reports[AUDIT_TYPE.TEXT_LABEL].constructor;
             expected = L10N.getStr(ISSUE_TO_INFOBAR_LABEL_MAP[issue]);
           }
 
@@ -113,12 +112,10 @@ add_task(async function () {
 
         const tests = [
           {
-            desc:
-              "Infobar is shown with no text label audit content when no audit.",
+            desc: "Infobar is shown with no text label audit content when no audit.",
           },
           {
-            desc:
-              "Infobar is shown with no text label audit content when audit is null.",
+            desc: "Infobar is shown with no text label audit content when audit is null.",
             audit: null,
           },
           {
@@ -128,15 +125,13 @@ add_task(async function () {
             audit: { [AUDIT_TYPE.TEXT_LABEL]: null },
           },
           {
-            desc:
-              "Infobar is shown with text label audit content for an error.",
+            desc: "Infobar is shown with text label audit content for an error.",
             audit: {
               [AUDIT_TYPE.TEXT_LABEL]: { score: FAIL, issue: TOOLBAR_NO_NAME },
             },
           },
           {
-            desc:
-              "Infobar is shown with text label audit content for a warning.",
+            desc: "Infobar is shown with text label audit content for a warning.",
             audit: {
               [AUDIT_TYPE.TEXT_LABEL]: {
                 score: WARNING,
@@ -145,8 +140,7 @@ add_task(async function () {
             },
           },
           {
-            desc:
-              "Infobar is shown with text label audit content for best practices.",
+            desc: "Infobar is shown with text label audit content for best practices.",
             audit: {
               [AUDIT_TYPE.TEXT_LABEL]: {
                 score: BEST_PRACTICES,

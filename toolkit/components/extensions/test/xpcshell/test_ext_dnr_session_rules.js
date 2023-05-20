@@ -615,11 +615,8 @@ add_task(async function validate_regexFilter() {
 add_task(async function validate_actions() {
   await runAsDNRExtension({
     background: async dnrTestUtils => {
-      const {
-        testInvalidAction,
-        testValidAction,
-        testValidRule,
-      } = dnrTestUtils;
+      const { testInvalidAction, testValidAction, testValidRule } =
+        dnrTestUtils;
 
       await testValidAction({ type: "allow" });
       // Note: allowAllRequests is already covered in validate_resourceTypes
@@ -1035,9 +1032,8 @@ add_task(async function validate_action_redirect_transform() {
 add_task(async function session_rules_total_rule_limit() {
   await runAsDNRExtension({
     background: async dnrTestUtils => {
-      const {
-        MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
-      } = browser.declarativeNetRequest;
+      const { MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES } =
+        browser.declarativeNetRequest;
 
       let inputRules = [];
       let nextRuleId = 1;

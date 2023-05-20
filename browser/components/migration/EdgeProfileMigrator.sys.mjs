@@ -533,7 +533,8 @@ export class EdgeProfileMigrator extends MigratorBase {
       new EdgeTypedURLDBMigrator(),
       new EdgeReadingListMigrator(),
     ];
-    let windowsVaultFormPasswordsMigrator = MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
+    let windowsVaultFormPasswordsMigrator =
+      MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
     windowsVaultFormPasswordsMigrator.name = "EdgeVaultFormPasswords";
     resources.push(windowsVaultFormPasswordsMigrator);
     return resources.filter(r => r.exists);

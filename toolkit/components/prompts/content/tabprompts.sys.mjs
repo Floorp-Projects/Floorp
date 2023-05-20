@@ -7,9 +7,8 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 export var TabModalPrompt = class {
   constructor(win) {
     this.win = win;
-    let newPrompt = (this.element = win.document.createElement(
-      "tabmodalprompt"
-    ));
+    let newPrompt = (this.element =
+      win.document.createElement("tabmodalprompt"));
     win.MozXULElement.insertFTLIfNeeded("toolkit/global/tabprompts.ftl");
     newPrompt.setAttribute("role", "dialog");
     let randomIdSuffix = Math.random().toString(32).substring(2);

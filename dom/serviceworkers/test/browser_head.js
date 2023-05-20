@@ -60,9 +60,8 @@ async function qm_reset_storage() {
 
 async function get_qm_origin_usage(origin) {
   return new Promise(resolve => {
-    const principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      origin
-    );
+    const principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
     Services.qms.getUsageForPrincipal(principal, request =>
       resolve(request.result.usage)
     );
@@ -166,12 +165,13 @@ async function consume_storage(origin, storageDesc) {
       url: pageUrlStr,
     },
     async browser => {
-      await SpecialPowers.spawn(browser, [storageDesc], async function ({
-        cacheBytes,
-        idbBytes,
-      }) {
-        await content.wrappedJSObject.fillStorage(cacheBytes, idbBytes);
-      });
+      await SpecialPowers.spawn(
+        browser,
+        [storageDesc],
+        async function ({ cacheBytes, idbBytes }) {
+          await content.wrappedJSObject.fillStorage(cacheBytes, idbBytes);
+        }
+      );
     }
   );
 }

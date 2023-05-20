@@ -1784,10 +1784,8 @@ async function checkEnrollments(options) {
 
     // Set initial prefs.
     UrlbarPrefs._updatingFirefoxSuggestScenario = true;
-    let {
-      defaultBranch: initialDefaultBranch,
-      userBranch: initialUserBranch,
-    } = initialPrefsToSet;
+    let { defaultBranch: initialDefaultBranch, userBranch: initialUserBranch } =
+      initialPrefsToSet;
     initialDefaultBranch = initialDefaultBranch || {};
     initialUserBranch = initialUserBranch || {};
     for (let name of Object.keys(initialDefaultBranch)) {

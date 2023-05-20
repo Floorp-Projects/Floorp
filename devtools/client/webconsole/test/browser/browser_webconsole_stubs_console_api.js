@@ -99,17 +99,21 @@ async function generateConsoleApiStubs() {
       };
     });
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function (
-      subCode
-    ) {
-      const script = content.document.createElement("script");
-      script.append(
-        content.document.createTextNode(`function triggerPacket() {${subCode}}`)
-      );
-      content.document.body.append(script);
-      content.wrappedJSObject.triggerPacket();
-      script.remove();
-    });
+    await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [code],
+      function (subCode) {
+        const script = content.document.createElement("script");
+        script.append(
+          content.document.createTextNode(
+            `function triggerPacket() {${subCode}}`
+          )
+        );
+        content.document.body.append(script);
+        content.wrappedJSObject.triggerPacket();
+        script.remove();
+      }
+    );
 
     await received;
   }

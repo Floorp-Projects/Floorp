@@ -477,9 +477,8 @@ async function setup(cachedAddons) {
               console.error(
                 `Could not install default add-on ${cachedAddon.addon_id}`
               );
-              const availableStudies = document.getElementById(
-                "available-studies"
-              );
+              const availableStudies =
+                document.getElementById("available-studies");
               document.l10n.setAttributes(
                 availableStudies,
                 "ion-no-current-studies"

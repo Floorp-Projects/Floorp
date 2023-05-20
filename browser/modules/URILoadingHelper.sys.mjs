@@ -709,7 +709,8 @@ export const URILoadingHelper = {
    */
   openTrustedLinkIn(window, url, where, params = {}) {
     if (!params.triggeringPrincipal) {
-      params.triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+      params.triggeringPrincipal =
+        Services.scriptSecurityManager.getSystemPrincipal();
     }
 
     params.forceForeground ??= true;
@@ -724,9 +725,8 @@ export const URILoadingHelper = {
    */
   openWebLinkIn(window, url, where, params = {}) {
     if (!params.triggeringPrincipal) {
-      params.triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal(
-        {}
-      );
+      params.triggeringPrincipal =
+        Services.scriptSecurityManager.createNullPrincipal({});
     }
     if (params.triggeringPrincipal.isSystemPrincipal) {
       throw new Error(

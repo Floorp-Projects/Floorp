@@ -152,8 +152,7 @@ function run_test() {
     {
       input:
         "test http://www.map.com/map.php?t=Nova_Scotia&markers=//Not_a_survey||description=plm2 test",
-      url:
-        "http://www.map.com/map.php?t=Nova_Scotia&amp;markers=//Not_a_survey||description=plm2",
+      url: "http://www.map.com/map.php?t=Nova_Scotia&amp;markers=//Not_a_survey||description=plm2",
     },
     {
       input: "bug#1509493 (john@mozilla.org)john@mozilla.org test",

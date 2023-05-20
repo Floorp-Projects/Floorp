@@ -830,9 +830,8 @@ this.browserAction = class extends ExtensionAPIPersistent {
         { extensionTitle }
       );
 
-      button.querySelector(
-        ".unified-extensions-item-name"
-      ).textContent = this.extension?.name;
+      button.querySelector(".unified-extensions-item-name").textContent =
+        this.extension?.name;
 
       if (messages) {
         const messageDefaultElement = button.querySelector(

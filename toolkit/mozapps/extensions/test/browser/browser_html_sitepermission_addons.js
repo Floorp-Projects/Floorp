@@ -4,12 +4,10 @@
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
-const {
-  SITEPERMS_ADDON_PROVIDER_PREF,
-  SITEPERMS_ADDON_TYPE,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs"
-);
+const { SITEPERMS_ADDON_PROVIDER_PREF, SITEPERMS_ADDON_TYPE } =
+  ChromeUtils.importESModule(
+    "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs"
+  );
 
 const html = `<!DOCTYPE html><h1>Test midi permission with synthetic site permission addon</h1>`;
 const EXAMPLE_COM_URL = `https://example.com/document-builder.sjs?html=${html}`;

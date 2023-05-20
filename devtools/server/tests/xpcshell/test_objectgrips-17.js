@@ -52,11 +52,8 @@ async function test({ threadFront, debuggee }, testOptions) {
   const { global } = testOptions;
   const packet = await executeOnNextTickAndWaitForPause(eval_code, threadFront);
   // Get the grips.
-  const [
-    proxyGrip,
-    inheritsProxyGrip,
-    inheritsProxy2Grip,
-  ] = packet.frame.arguments;
+  const [proxyGrip, inheritsProxyGrip, inheritsProxy2Grip] =
+    packet.frame.arguments;
 
   // Check the grip of the proxy object.
   check_proxy_grip(debuggee, testOptions, proxyGrip);
@@ -73,7 +70,8 @@ async function test({ threadFront, debuggee }, testOptions) {
 
   // Check the prototype and properties of the object which inherits from the proxy.
   const inheritsProxyClient = threadFront.pauseGrip(inheritsProxyGrip);
-  const inheritsProxyResponse = await inheritsProxyClient.getPrototypeAndProperties();
+  const inheritsProxyResponse =
+    await inheritsProxyClient.getPrototypeAndProperties();
   check_properties(
     testOptions,
     inheritsProxyResponse.ownProperties,
@@ -91,7 +89,8 @@ async function test({ threadFront, debuggee }, testOptions) {
   // The prototype chain was not iterated if the object was inaccessible, so now check
   // another object which inherits from the proxy, but was created in the debuggee.
   const inheritsProxy2Client = threadFront.pauseGrip(inheritsProxy2Grip);
-  const inheritsProxy2Response = await inheritsProxy2Client.getPrototypeAndProperties();
+  const inheritsProxy2Response =
+    await inheritsProxy2Client.getPrototypeAndProperties();
   check_properties(
     testOptions,
     inheritsProxy2Response.ownProperties,

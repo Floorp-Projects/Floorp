@@ -84,12 +84,10 @@ add_task(async function testRequestMIDIAccess() {
 
   info("Deny site permission addon install in first popup");
   let addonInstallPanel = await onAddonInstallBlockedNotification;
-  const [
-    installPopupHeader,
-    installPopupMessage,
-  ] = addonInstallPanel.querySelectorAll(
-    "description.popup-notification-description"
-  );
+  const [installPopupHeader, installPopupMessage] =
+    addonInstallPanel.querySelectorAll(
+      "description.popup-notification-description"
+    );
   is(
     installPopupHeader.textContent,
     gNavigatorBundle.getString("sitePermissionInstallFirstPrompt.midi.header"),
@@ -267,7 +265,8 @@ add_task(async function testRequestMIDIAccess() {
     "addon-install-blocked"
   );
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.midiNoSysexAccessRequestPromise = content.navigator.requestMIDIAccess();
+    content.midiNoSysexAccessRequestPromise =
+      content.navigator.requestMIDIAccess();
   });
 
   info("Accept site permission addon install");

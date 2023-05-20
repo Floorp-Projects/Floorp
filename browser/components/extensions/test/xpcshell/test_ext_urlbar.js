@@ -137,7 +137,8 @@ add_task(async function test_urlbar_temporary_without_privilege() {
     {
       expected: [
         {
-          message: /Using the privileged permission 'urlbar' requires a privileged add-on/,
+          message:
+            /Using the privileged permission 'urlbar' requires a privileged add-on/,
         },
       ],
     },

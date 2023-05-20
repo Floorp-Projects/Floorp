@@ -559,8 +559,8 @@ class ResourceCommand {
     // and only become true when doing a bfcache navigation.
     // (only server side targets follow the WindowGlobal lifecycle)
     // When server side targets are enabled, this will always be true.
-    const isServerSideTarget = this.targetCommand.targetFront.targetForm
-      .followWindowGlobalLifeCycle;
+    const isServerSideTarget =
+      this.targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle;
     if (isServerSideTarget) {
       // For top-level targets created from the server, only restart legacy
       // listeners.
@@ -652,9 +652,8 @@ class ResourceCommand {
 
       // isAlreadyExistingResource indicates that the resources already existed before
       // the resource command started watching for this type of resource.
-      resource.isAlreadyExistingResource = this._processingExistingResources.has(
-        resourceType
-      );
+      resource.isAlreadyExistingResource =
+        this._processingExistingResources.has(resourceType);
 
       // Put the targetFront on the resource for easy retrieval.
       // (Resources from the legacy listeners may already have the attribute set)
@@ -856,12 +855,8 @@ class ResourceCommand {
    */
   _notifyWatchers() {
     for (const watcherEntry of this._watchers) {
-      const {
-        onAvailable,
-        onUpdated,
-        onDestroyed,
-        pendingEvents,
-      } = watcherEntry;
+      const { onAvailable, onUpdated, onDestroyed, pendingEvents } =
+        watcherEntry;
       // Immediately clear the buffer in order to avoid possible races, where an event listener
       // would end up somehow adding a new throttled resource
       watcherEntry.pendingEvents = [];
@@ -1141,9 +1136,8 @@ class ResourceCommand {
         this.watcherFront.unwatchResources([resourceType]);
       }
 
-      const shouldRunLegacyListeners = this._shouldRunLegacyListenerEvenWithWatcherSupport(
-        resourceType
-      );
+      const shouldRunLegacyListeners =
+        this._shouldRunLegacyListenerEvenWithWatcherSupport(resourceType);
       if (!shouldRunLegacyListeners) {
         return;
       }

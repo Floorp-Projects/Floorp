@@ -69,11 +69,13 @@ async function startTests(testFun, name) {
 }
 
 function RemoveElementFromRemoteDocument(aBrowsingContext, aElementId) {
-  return SpecialPowers.spawn(aBrowsingContext, [aElementId], async function (
-    id
-  ) {
-    content.document.getElementById(id).remove();
-  });
+  return SpecialPowers.spawn(
+    aBrowsingContext,
+    [aElementId],
+    async function (id) {
+      content.document.getElementById(id).remove();
+    }
+  );
 }
 
 startTests(async browser => {

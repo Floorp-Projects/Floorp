@@ -29,9 +29,8 @@ add_task(async function () {
     RUNTIME_DEVICE_NAME,
     document
   );
-  const connectButton = usbRuntimeSidebarItem.querySelector(
-    ".qa-connect-button"
-  );
+  const connectButton =
+    usbRuntimeSidebarItem.querySelector(".qa-connect-button");
   ok(connectButton, "Connect button is displayed for the USB runtime");
 
   info("Click on the connect button and wait until it disappears");

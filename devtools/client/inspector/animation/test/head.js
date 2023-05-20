@@ -1005,9 +1005,8 @@ async function testKeyframesGraphComputedValuePath(testData) {
       }
 
       info(`Checking linearGradient for ${testTarget}`);
-      const linearGradientEl = computedValuePathEl.querySelector(
-        "linearGradient"
-      );
+      const linearGradientEl =
+        computedValuePathEl.querySelector("linearGradient");
       ok(
         linearGradientEl,
         `The <linearGradientEl> element of ${testTarget} should be existence`

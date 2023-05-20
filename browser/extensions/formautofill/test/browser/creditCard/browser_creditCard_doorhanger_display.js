@@ -111,9 +111,8 @@ add_task(async function test_doorhanger_not_shown_when_autofill_untouched() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function (browser) {
-      let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
-        true
-      );
+      let osKeyStoreLoginShown =
+        OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -191,9 +190,8 @@ add_task(
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function (browser) {
-        let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
-          true
-        );
+        let osKeyStoreLoginShown =
+          OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
         await openPopupOn(browser, "form #cc-number");
         await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
         await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -248,9 +246,8 @@ add_task(
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function (browser) {
-        let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
-          true
-        );
+        let osKeyStoreLoginShown =
+          OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
         await openPopupOn(browser, "form #cc-number");
         await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
         await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);

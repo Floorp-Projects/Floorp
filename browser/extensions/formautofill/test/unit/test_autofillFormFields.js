@@ -879,9 +879,8 @@ function do_test(testcases, testFn) {
         info("Starting testcase: " + testcase.description);
         let ccNumber = testcase.profileData["cc-number"];
         if (ccNumber) {
-          testcase.profileData[
-            "cc-number-encrypted"
-          ] = await OSKeyStore.encrypt(ccNumber);
+          testcase.profileData["cc-number-encrypted"] =
+            await OSKeyStore.encrypt(ccNumber);
           delete testcase.profileData["cc-number"];
         }
 

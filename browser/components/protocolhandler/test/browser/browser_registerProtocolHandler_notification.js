@@ -15,9 +15,8 @@ add_task(async function () {
     function () {
       // Do not start until the notification is up
       let notificationBox = window.gBrowser.getNotificationBox();
-      let notification = notificationBox.getNotificationWithValue(
-        notificationValue
-      );
+      let notification =
+        notificationBox.getNotificationWithValue(notificationValue);
       return notification;
     },
     "Still can not get notification after retrying 100 times.",
@@ -26,9 +25,8 @@ add_task(async function () {
   );
 
   let notificationBox = window.gBrowser.getNotificationBox();
-  let notification = notificationBox.getNotificationWithValue(
-    notificationValue
-  );
+  let notification =
+    notificationBox.getNotificationWithValue(notificationValue);
   ok(notification, "Notification box should be displayed");
   if (notification == null) {
     finish();

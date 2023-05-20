@@ -71,10 +71,10 @@ add_task(async function addPermission() {
 });
 
 add_task(async function addPermissionPrivateBrowsing() {
-  let privateBrowsingPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    URI,
-    { privateBrowsingId: 1 }
-  );
+  let privateBrowsingPrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(URI, {
+      privateBrowsingId: 1,
+    });
   let doc = sitePermissionsDialog.document;
   let richlistbox = doc.getElementById("permissionsBox");
 
@@ -586,9 +586,8 @@ add_task(async function testTabBehaviour() {
 
 add_task(async function addSpeakerPermission() {
   let enabled = Services.prefs.getBoolPref("media.setsinkid.enabled", false);
-  let speakerRow = gBrowser.contentDocument.getElementById(
-    "speakerSettingsRow"
-  );
+  let speakerRow =
+    gBrowser.contentDocument.getElementById("speakerSettingsRow");
   Assert.equal(
     BrowserTestUtils.is_visible(speakerRow),
     enabled,

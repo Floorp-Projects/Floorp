@@ -420,10 +420,8 @@ export class MigratorBase {
 
         let stopwatchHistogramId = maybeStartTelemetryStopwatch(migrationType);
 
-        let {
-          responsivenessMonitor,
-          responsivenessHistogramId,
-        } = maybeStartResponsivenessMonitor(migrationType);
+        let { responsivenessMonitor, responsivenessHistogramId } =
+          maybeStartResponsivenessMonitor(migrationType);
 
         let itemSuccess = false;
         for (let res of itemResources) {

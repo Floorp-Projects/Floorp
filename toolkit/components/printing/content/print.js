@@ -2,11 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {
-  PrintUtils,
-  Services,
-  AppConstants,
-} = window.docShell.chromeEventHandler.ownerGlobal;
+const { PrintUtils, Services, AppConstants } =
+  window.docShell.chromeEventHandler.ownerGlobal;
 
 ChromeUtils.defineESModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
@@ -163,9 +160,8 @@ var PrintEventHandler = {
   async init() {
     Services.telemetry.scalarAdd("printing.preview_opened_tm", 1);
 
-    this.printPreviewEl = ourBrowser.parentElement.querySelector(
-      "print-preview"
-    );
+    this.printPreviewEl =
+      ourBrowser.parentElement.querySelector("print-preview");
 
     // Do not keep a reference to source browser, it may mutate after printing
     // is initiated and the print preview clone must be a snapshot from the
@@ -197,11 +193,10 @@ var PrintEventHandler = {
     if (!this.hasSelection && !canSimplify) {
       document.getElementById("source-version-section").hidden = true;
     } else {
-      document.getElementById("source-version-selection").hidden = !this
-        .hasSelection;
-      document.getElementById(
-        "source-version-simplified"
-      ).hidden = !canSimplify;
+      document.getElementById("source-version-selection").hidden =
+        !this.hasSelection;
+      document.getElementById("source-version-simplified").hidden =
+        !canSimplify;
     }
 
     // We don't need the sourceBrowsingContext anymore, get rid of it.
@@ -280,11 +275,10 @@ var PrintEventHandler = {
       // Hide the dialog box before opening system dialog
       // We cannot close the window yet because the browsing context for the
       // print preview browser is needed to print the page.
-      let sourceBrowser = this.printPreviewEl.getSourceBrowsingContext().top
-        .embedderElement;
-      let dialogBoxManager = PrintUtils.getTabDialogBox(
-        sourceBrowser
-      ).getTabDialogManager();
+      let sourceBrowser =
+        this.printPreviewEl.getSourceBrowsingContext().top.embedderElement;
+      let dialogBoxManager =
+        PrintUtils.getTabDialogBox(sourceBrowser).getTabDialogManager();
       dialogBoxManager.hideDialog(sourceBrowser);
 
       // Use our settings to prepopulate the system dialog.
@@ -735,8 +729,10 @@ var PrintEventHandler = {
             marginBottom = marginsNone.marginBottom;
             unwriteableMarginsInvalid = true;
           }
-          changedSettings.marginTop = changedSettings.customMarginTop = marginTop;
-          changedSettings.marginBottom = changedSettings.customMarginBottom = marginBottom;
+          changedSettings.marginTop = changedSettings.customMarginTop =
+            marginTop;
+          changedSettings.marginBottom = changedSettings.customMarginBottom =
+            marginBottom;
           delete this._userChangedSettings.customMargins;
         }
 
@@ -752,8 +748,10 @@ var PrintEventHandler = {
             marginRight = marginsNone.marginRight;
             unwriteableMarginsInvalid = true;
           }
-          changedSettings.marginLeft = changedSettings.customMarginLeft = marginLeft;
-          changedSettings.marginRight = changedSettings.customMarginRight = marginRight;
+          changedSettings.marginLeft = changedSettings.customMarginLeft =
+            marginLeft;
+          changedSettings.marginRight = changedSettings.customMarginRight =
+            marginRight;
           delete this._userChangedSettings.customMargins;
         }
 
@@ -788,9 +786,8 @@ var PrintEventHandler = {
         ) {
           flags |= this.settingFlags[setting];
         }
-        updatePreviewWithoutFlag |= this._nonFlaggedUpdatePreviewSettings.has(
-          setting
-        );
+        updatePreviewWithoutFlag |=
+          this._nonFlaggedUpdatePreviewSettings.has(setting);
       }
     }
 
@@ -1244,10 +1241,11 @@ var PrintSettingsViewProxy = {
         Ci.nsIPrintSettings.kOutputFormatPDF;
       printerInfo.defaultSettings.outputDestination =
         Ci.nsIPrintSettings.kOutputDestinationFile;
-      printerInfo.defaultSettings.usePageRuleSizeAsPaperSize = Services.prefs.getBoolPref(
-        "print.save_as_pdf.use_page_rule_size_as_paper_size.enabled",
-        false
-      );
+      printerInfo.defaultSettings.usePageRuleSizeAsPaperSize =
+        Services.prefs.getBoolPref(
+          "print.save_as_pdf.use_page_rule_size_as_paper_size.enabled",
+          false
+        );
       printerInfo.paperList = this.fallbackPaperList;
     }
     printerInfo.settings = printerInfo.defaultSettings.clone();
@@ -1332,12 +1330,8 @@ var PrintSettingsViewProxy = {
         let uniqueMargins = new Set();
         let marginsEnabled = {};
         for (let name of ["none", "default", "minimum", "custom"]) {
-          let {
-            marginTop,
-            marginLeft,
-            marginBottom,
-            marginRight,
-          } = allMarginPresets[name];
+          let { marginTop, marginLeft, marginBottom, marginRight } =
+            allMarginPresets[name];
           let key = [marginTop, marginLeft, marginBottom, marginRight].join(
             ","
           );

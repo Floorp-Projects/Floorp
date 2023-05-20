@@ -384,9 +384,8 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
 
   _generateLabels(focusedFieldName, allFieldNames, profiles) {
     if (!this._isSecure) {
-      let brandName = lazy.FormAutofillUtils.brandBundle.GetStringFromName(
-        "brandShortName"
-      );
+      let brandName =
+        lazy.FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
 
       return [
         lazy.FormAutofillUtils.stringBundle.formatStringFromName(

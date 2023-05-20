@@ -7,14 +7,10 @@ const { BookmarkHTMLUtils } = ChromeUtils.importESModule(
 const { BookmarkJSONUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/BookmarkJSONUtils.sys.mjs"
 );
-const {
-  Bookmark,
-  BookmarkFolder,
-  BookmarksEngine,
-  Livemark,
-} = ChromeUtils.importESModule(
-  "resource://services-sync/engines/bookmarks.sys.mjs"
-);
+const { Bookmark, BookmarkFolder, BookmarksEngine, Livemark } =
+  ChromeUtils.importESModule(
+    "resource://services-sync/engines/bookmarks.sys.mjs"
+  );
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
@@ -749,9 +745,8 @@ add_bookmark_test(async function test_misreconciled_root(engine) {
   Assert.notEqual(-1, toolbarIDBefore);
 
   let parentRecordIDBefore = toolbarBefore.parentid;
-  let parentGUIDBefore = PlacesSyncUtils.bookmarks.recordIdToGuid(
-    parentRecordIDBefore
-  );
+  let parentGUIDBefore =
+    PlacesSyncUtils.bookmarks.recordIdToGuid(parentRecordIDBefore);
   let parentIDBefore = await PlacesUtils.promiseItemId(parentGUIDBefore);
   Assert.equal("string", typeof parentGUIDBefore);
 
@@ -778,9 +773,8 @@ add_bookmark_test(async function test_misreconciled_root(engine) {
   // the real GUID, instead using a generated one. Sync does the translation.
   let toolbarAfter = await store.createRecord("toolbar", "bookmarks");
   let parentRecordIDAfter = toolbarAfter.parentid;
-  let parentGUIDAfter = PlacesSyncUtils.bookmarks.recordIdToGuid(
-    parentRecordIDAfter
-  );
+  let parentGUIDAfter =
+    PlacesSyncUtils.bookmarks.recordIdToGuid(parentRecordIDAfter);
   let parentIDAfter = await PlacesUtils.promiseItemId(parentGUIDAfter);
   Assert.equal(
     await PlacesUtils.promiseItemGuid(toolbarIDBefore),

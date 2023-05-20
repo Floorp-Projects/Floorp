@@ -155,13 +155,8 @@ define(function (require, exports, module) {
 
     parseStackString(preview.stack).forEach((frame, index, frames) => {
       let onLocationClick;
-      const {
-        filename,
-        lineNumber,
-        columnNumber,
-        functionName,
-        location,
-      } = frame;
+      const { filename, lineNumber, columnNumber, functionName, location } =
+        frame;
 
       if (
         props.onViewSourceInDebugger &&

@@ -100,9 +100,8 @@ function test() {
             );
 
             let chk;
-            [txt, chk] = newWin2.content.document.querySelectorAll(
-              "#txt, #chk"
-            );
+            [txt, chk] =
+              newWin2.content.document.querySelectorAll("#txt, #chk");
             ok(
               txt.value == uniqueText && chk.checked,
               "The window correctly restored the form"

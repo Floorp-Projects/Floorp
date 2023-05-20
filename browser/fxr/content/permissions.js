@@ -64,9 +64,10 @@ class FxrWebRTCPrompt extends FxrPermissionPromptPrototype {
   allow() {
     let { audioDevices, videoDevices } = this.request;
 
-    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      this.request.origin
-    );
+    let principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        this.request.origin
+      );
 
     // For now, collect the first audio and video device by default. User
     // selection will be enabled later:

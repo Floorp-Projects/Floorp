@@ -91,10 +91,8 @@ class BoxModelProperties extends PureComponent {
     ];
 
     const properties = layoutInfo.map(info => {
-      const {
-        referenceElement,
-        referenceElementType,
-      } = this.getReferenceElement(info);
+      const { referenceElement, referenceElementType } =
+        this.getReferenceElement(info);
 
       return ComputedProperty({
         dispatch,

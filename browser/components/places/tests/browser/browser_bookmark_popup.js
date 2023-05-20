@@ -99,7 +99,8 @@ async function test_bookmarks_popup({
           "Panel should be 'open' after shownPromise is resolved"
         );
 
-        editBookmarkPanelRemoveButtonRect = bookmarkRemoveButton.getBoundingClientRect();
+        editBookmarkPanelRemoveButtonRect =
+          bookmarkRemoveButton.getBoundingClientRect();
 
         if (popupEditFn) {
           await popupEditFn();

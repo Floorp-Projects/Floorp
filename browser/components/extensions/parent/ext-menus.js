@@ -159,11 +159,8 @@ var gMenuBuilder = {
         );
       }
     } else if (contextData.webExtContextData) {
-      let {
-        extensionId,
-        showDefaults,
-        overrideContext,
-      } = contextData.webExtContextData;
+      let { extensionId, showDefaults, overrideContext } =
+        contextData.webExtContextData;
       if (extensionId === root.extension.id) {
         rootElements = this.buildTopLevelElements(
           root,
@@ -1127,9 +1124,8 @@ const menuTracker = {
     if (window.SidebarUI.currentID === "viewBookmarksSidebar") {
       let sidebarBrowser = window.SidebarUI.browser;
       sidebarBrowser.removeEventListener("load", this.onSidebarShown);
-      const menu = sidebarBrowser.contentDocument.getElementById(
-        "placesContext"
-      );
+      const menu =
+        sidebarBrowser.contentDocument.getElementById("placesContext");
       menu.removeEventListener("popupshowing", this.onBookmarksContextMenu);
     }
   },
@@ -1149,9 +1145,8 @@ const menuTracker = {
         });
         return;
       }
-      const menu = sidebarBrowser.contentDocument.getElementById(
-        "placesContext"
-      );
+      const menu =
+        sidebarBrowser.contentDocument.getElementById("placesContext");
       menu.addEventListener("popupshowing", menuTracker.onBookmarksContextMenu);
     }
   },

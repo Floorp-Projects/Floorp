@@ -782,9 +782,8 @@ PopupNotifications.prototype = {
     });
 
     if (activeBrowser) {
-      let browserNotifications = this._getNotificationsForBrowser(
-        activeBrowser
-      );
+      let browserNotifications =
+        this._getNotificationsForBrowser(activeBrowser);
       this._update(browserNotifications);
     }
   },
@@ -1525,21 +1524,22 @@ PopupNotifications.prototype = {
     return notifications;
   },
 
-  _getAnchorsForNotifications: function PopupNotifications_getAnchorsForNotifications(
-    notifications,
-    defaultAnchor
-  ) {
-    let anchors = new Set();
-    for (let notification of notifications) {
-      if (notification.anchorElement) {
-        anchors.add(notification.anchorElement);
+  _getAnchorsForNotifications:
+    function PopupNotifications_getAnchorsForNotifications(
+      notifications,
+      defaultAnchor
+    ) {
+      let anchors = new Set();
+      for (let notification of notifications) {
+        if (notification.anchorElement) {
+          anchors.add(notification.anchorElement);
+        }
       }
-    }
-    if (defaultAnchor && !anchors.size) {
-      anchors.add(defaultAnchor);
-    }
-    return anchors;
-  },
+      if (defaultAnchor && !anchors.size) {
+        anchors.add(defaultAnchor);
+      }
+      return anchors;
+    },
 
   _isActiveBrowser(browser) {
     // We compare on frameLoader instead of just comparing the
@@ -1639,63 +1639,68 @@ PopupNotifications.prototype = {
     }
   },
 
-  _swapBrowserNotifications: function PopupNotifications_swapBrowserNoficications(
-    ourBrowser,
-    otherBrowser
-  ) {
-    // When swaping browser docshells (e.g. dragging tab to new window) we need
-    // to update our notification map.
+  _swapBrowserNotifications:
+    function PopupNotifications_swapBrowserNoficications(
+      ourBrowser,
+      otherBrowser
+    ) {
+      // When swaping browser docshells (e.g. dragging tab to new window) we need
+      // to update our notification map.
 
-    let ourNotifications = this._getNotificationsForBrowser(ourBrowser);
-    let other = otherBrowser.ownerGlobal.PopupNotifications;
-    if (!other) {
-      if (ourNotifications.length) {
-        console.error(
-          "unable to swap notifications: otherBrowser doesn't support notifications"
+      let ourNotifications = this._getNotificationsForBrowser(ourBrowser);
+      let other = otherBrowser.ownerGlobal.PopupNotifications;
+      if (!other) {
+        if (ourNotifications.length) {
+          console.error(
+            "unable to swap notifications: otherBrowser doesn't support notifications"
+          );
+        }
+        return;
+      }
+      let otherNotifications = other._getNotificationsForBrowser(otherBrowser);
+      if (ourNotifications.length < 1 && otherNotifications.length < 1) {
+        // No notification to swap.
+        return;
+      }
+
+      otherNotifications = otherNotifications.filter(n => {
+        if (this._fireCallback(n, NOTIFICATION_EVENT_SWAPPING, ourBrowser)) {
+          n.browser = ourBrowser;
+          n.owner = this;
+          return true;
+        }
+        other._fireCallback(
+          n,
+          NOTIFICATION_EVENT_REMOVED,
+          this.nextRemovalReason
         );
+        return false;
+      });
+
+      ourNotifications = ourNotifications.filter(n => {
+        if (this._fireCallback(n, NOTIFICATION_EVENT_SWAPPING, otherBrowser)) {
+          n.browser = otherBrowser;
+          n.owner = other;
+          return true;
+        }
+        this._fireCallback(
+          n,
+          NOTIFICATION_EVENT_REMOVED,
+          this.nextRemovalReason
+        );
+        return false;
+      });
+
+      this._setNotificationsForBrowser(otherBrowser, ourNotifications);
+      other._setNotificationsForBrowser(ourBrowser, otherNotifications);
+
+      if (otherNotifications.length) {
+        this._update(otherNotifications);
       }
-      return;
-    }
-    let otherNotifications = other._getNotificationsForBrowser(otherBrowser);
-    if (ourNotifications.length < 1 && otherNotifications.length < 1) {
-      // No notification to swap.
-      return;
-    }
-
-    otherNotifications = otherNotifications.filter(n => {
-      if (this._fireCallback(n, NOTIFICATION_EVENT_SWAPPING, ourBrowser)) {
-        n.browser = ourBrowser;
-        n.owner = this;
-        return true;
+      if (ourNotifications.length) {
+        other._update(ourNotifications);
       }
-      other._fireCallback(
-        n,
-        NOTIFICATION_EVENT_REMOVED,
-        this.nextRemovalReason
-      );
-      return false;
-    });
-
-    ourNotifications = ourNotifications.filter(n => {
-      if (this._fireCallback(n, NOTIFICATION_EVENT_SWAPPING, otherBrowser)) {
-        n.browser = otherBrowser;
-        n.owner = other;
-        return true;
-      }
-      this._fireCallback(n, NOTIFICATION_EVENT_REMOVED, this.nextRemovalReason);
-      return false;
-    });
-
-    this._setNotificationsForBrowser(otherBrowser, ourNotifications);
-    other._setNotificationsForBrowser(ourBrowser, otherNotifications);
-
-    if (otherNotifications.length) {
-      this._update(otherNotifications);
-    }
-    if (ourNotifications.length) {
-      other._update(ourNotifications);
-    }
-  },
+    },
 
   _fireCallback: function PopupNotifications_fireCallback(n, event, ...args) {
     try {

@@ -519,17 +519,14 @@ function openSwitchingDevicesPage() {
 }
 
 function buildHelpMenu() {
-  document.getElementById(
-    "feedbackPage"
-  ).disabled = !Services.policies.isAllowed("feedbackCommands");
+  document.getElementById("feedbackPage").disabled =
+    !Services.policies.isAllowed("feedbackCommands");
 
-  document.getElementById(
-    "helpSafeMode"
-  ).disabled = !Services.policies.isAllowed("safeMode");
+  document.getElementById("helpSafeMode").disabled =
+    !Services.policies.isAllowed("safeMode");
 
-  document.getElementById(
-    "troubleShooting"
-  ).disabled = !Services.policies.isAllowed("aboutSupport");
+  document.getElementById("troubleShooting").disabled =
+    !Services.policies.isAllowed("aboutSupport");
 
   let supportMenu = Services.policies.getSupportMenu();
   if (supportMenu) {

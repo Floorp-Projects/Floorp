@@ -53,32 +53,35 @@ add_setup(async function () {
  */
 add_task(async function test_tabdialog_content_prompts() {
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  await BrowserTestUtils.withNewTab("http://example.com", async function (
-    browser
-  ) {
-    info("Open a tab prompt.");
-    let dialogBox = gBrowser.getTabDialogBox(browser);
-    dialogBox.open(TEST_DIALOG_PATH);
+  await BrowserTestUtils.withNewTab(
+    "http://example.com",
+    async function (browser) {
+      info("Open a tab prompt.");
+      let dialogBox = gBrowser.getTabDialogBox(browser);
+      dialogBox.open(TEST_DIALOG_PATH);
 
-    info("Check the content prompt dialog is only created when needed.");
-    let contentPromptDialog = document.querySelector(".content-prompt-dialog");
-    ok(!contentPromptDialog, "Content prompt dialog should not be created.");
+      info("Check the content prompt dialog is only created when needed.");
+      let contentPromptDialog = document.querySelector(
+        ".content-prompt-dialog"
+      );
+      ok(!contentPromptDialog, "Content prompt dialog should not be created.");
 
-    info("Open a content prompt");
-    dialogBox.open(TEST_DIALOG_PATH, {
-      modalType: Ci.nsIPrompt.MODAL_TYPE_CONTENT,
-    });
+      info("Open a content prompt");
+      dialogBox.open(TEST_DIALOG_PATH, {
+        modalType: Ci.nsIPrompt.MODAL_TYPE_CONTENT,
+      });
 
-    contentPromptDialog = document.querySelector(".content-prompt-dialog");
-    ok(contentPromptDialog, "Content prompt dialog should be created.");
-    let contentPromptManager = dialogBox.getContentDialogManager();
+      contentPromptDialog = document.querySelector(".content-prompt-dialog");
+      ok(contentPromptDialog, "Content prompt dialog should be created.");
+      let contentPromptManager = dialogBox.getContentDialogManager();
 
-    is(
-      contentPromptManager._dialogs.length,
-      1,
-      "Content prompt manager should have 1 dialog box."
-    );
-  });
+      is(
+        contentPromptManager._dialogs.length,
+        1,
+        "Content prompt manager should have 1 dialog box."
+      );
+    }
+  );
 });
 
 /**

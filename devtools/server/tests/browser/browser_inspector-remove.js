@@ -27,8 +27,8 @@ add_task(async function testRemoveSubtree() {
       nextSibling = nextSibling.nextSibling;
     }
 
-    let previousSibling = content.document.querySelector("#longlist")
-      .previousSibling;
+    let previousSibling =
+      content.document.querySelector("#longlist").previousSibling;
     while (previousSibling && ignoreNode(previousSibling)) {
       previousSibling = previousSibling.previousSibling;
     }
@@ -71,9 +71,8 @@ add_task(async function testRemoveSubtree() {
       // searchAllConnectionsForActor is confused and won't find the actor.
       previousActorID = String(previousActorID);
       nextActorID = String(nextActorID);
-      const previous = DevToolsServer.searchAllConnectionsForActor(
-        previousActorID
-      );
+      const previous =
+        DevToolsServer.searchAllConnectionsForActor(previousActorID);
       const next = DevToolsServer.searchAllConnectionsForActor(nextActorID);
 
       is(

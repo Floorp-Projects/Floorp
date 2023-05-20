@@ -12,10 +12,8 @@ const OPT_OUT_STUDIES_ENABLED_PREF = "app.shield.optoutstudies.enabled";
 const { NormandyTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/NormandyTestUtils.sys.mjs"
 );
-const {
-  addonStudyFactory,
-  preferenceStudyFactory,
-} = NormandyTestUtils.factories;
+const { addonStudyFactory, preferenceStudyFactory } =
+  NormandyTestUtils.factories;
 
 ShieldPreferences.init();
 

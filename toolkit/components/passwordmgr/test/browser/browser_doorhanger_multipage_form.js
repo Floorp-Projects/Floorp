@@ -87,13 +87,8 @@ for (let testData of testCases) {
 }
 
 async function test_save_change(testData) {
-  let {
-    oldUsername,
-    username,
-    oldPassword,
-    password,
-    expectOutcome,
-  } = testData;
+  let { oldUsername, username, oldPassword, password, expectOutcome } =
+    testData;
   // Add a login for the origin of the form if testing a change notification.
   if (oldPassword) {
     await Services.logins.addLoginAsync(

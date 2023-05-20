@@ -44,7 +44,8 @@ add_task(async function () {
   // tab opening operation.
   gURLBar.focus();
 
-  let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
+  let tabStripRect =
+    gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
 
   let firstTabRect = gBrowser.selectedTab.getBoundingClientRect();
   let tabPaddingStart = parseFloat(
@@ -52,7 +53,8 @@ add_task(async function () {
   );
   let minTabWidth = firstTabRect.width - 2 * tabPaddingStart;
   let maxTabWidth = firstTabRect.width;
-  let firstTabLabelRect = gBrowser.selectedTab.textLabel.getBoundingClientRect();
+  let firstTabLabelRect =
+    gBrowser.selectedTab.textLabel.getBoundingClientRect();
   let newTabButtonRect = document
     .getElementById("tabs-newtab-button")
     .getBoundingClientRect();
@@ -180,8 +182,7 @@ add_task(async function () {
               r.y2 <= textBoxRect.bottom,
           },
           {
-            name:
-              "bug 1477966 - the name of a deselected tab should appear immediately",
+            name: "bug 1477966 - the name of a deselected tab should appear immediately",
             condition: r =>
               AppConstants.platform == "macosx" &&
               r.x1 >= firstTabLabelRect.x &&

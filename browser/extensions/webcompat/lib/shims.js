@@ -116,10 +116,8 @@ class Shim {
 
       this._disabledByReleaseBranch = false;
       for (const supportedBranchAndPlatform of this.branches || []) {
-        const [
-          supportedBranch,
-          supportedPlatform,
-        ] = supportedBranchAndPlatform.split(":");
+        const [supportedBranch, supportedPlatform] =
+          supportedBranchAndPlatform.split(":");
         if (
           (!supportedPlatform || supportedPlatform == platform) &&
           supportedBranch != branch

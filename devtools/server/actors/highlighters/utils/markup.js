@@ -278,9 +278,8 @@ CanvasFrameAnonymousContentHelper.prototype = {
             { once: true }
           );
         });
-        this._content = this.anonymousContentDocument.insertAnonymousContent(
-          node
-        );
+        this._content =
+          this.anonymousContentDocument.insertAnonymousContent(node);
       } else {
         throw e;
       }

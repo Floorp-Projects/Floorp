@@ -58,7 +58,8 @@ const isCrossOriginIsolated = window.crossOriginIsolated;
 let wasmGlobalEntry = {
   name: "WebAssembly",
   insecureContext: true,
-  disabled: !SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupportedByHardware(),
+  disabled:
+    !SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupportedByHardware(),
 };
 let wasmGlobalInterfaces = [
   { name: "Module", insecureContext: true },

@@ -856,7 +856,8 @@ add_task(async function test_glean_crash_ping() {
 add_task(async function test_generateSubmissionID() {
   let m = await getManager();
 
-  const SUBMISSION_ID_REGEX = /^(sub-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+  const SUBMISSION_ID_REGEX =
+    /^(sub-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
   let id = m.generateSubmissionID();
   Assert.ok(SUBMISSION_ID_REGEX.test(id));
 });

@@ -184,9 +184,8 @@ var pktUI = (function () {
    * Show the Pocket home panel state
    */
   function showPocketHome() {
-    const hideRecentSaves = NimbusFeatures.saveToPocket.getVariable(
-      "hideRecentSaves"
-    );
+    const hideRecentSaves =
+      NimbusFeatures.saveToPocket.getVariable("hideRecentSaves");
     const locale = getUILocale();
     let panel = `home_no_topics`;
     if (locale.startsWith("en-")) {
@@ -640,9 +639,8 @@ var pktUIMessaging = (function () {
       return;
     }
 
-    const aboutPocketActor = panelFrame?.browsingContext?.currentWindowGlobal?.getActor(
-      "AboutPocket"
-    );
+    const aboutPocketActor =
+      panelFrame?.browsingContext?.currentWindowGlobal?.getActor("AboutPocket");
 
     // Send message to panel
     aboutPocketActor?.sendAsyncMessage(messageId, payload);

@@ -276,7 +276,8 @@ class ProviderContextualSearch extends UrlbarProvider {
       );
       let window = lazy.BrowserWindowTracker.getTopWindow();
       window.gBrowser.fixupAndLoadURIString(url, {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
     }
   }

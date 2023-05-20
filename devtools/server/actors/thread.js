@@ -834,9 +834,8 @@ class ThreadActor extends Actor {
     if (notification.phase === "pre" && !this._activeEventPause) {
       this._activeEventPause = this._captureDebuggerHooks();
 
-      this.dbg.onEnterFrame = this._makeEventBreakpointEnterFrame(
-        eventBreakpoint
-      );
+      this.dbg.onEnterFrame =
+        this._makeEventBreakpointEnterFrame(eventBreakpoint);
     } else if (notification.phase === "post" && this._activeEventPause) {
       this._restoreDebuggerHooks(this._activeEventPause);
       this._activeEventPause = null;
@@ -920,11 +919,8 @@ class ThreadActor extends Actor {
         return undefined;
       }
 
-      const {
-        sourceActor,
-        line,
-        column,
-      } = this.sourcesManager.getFrameLocation(frame);
+      const { sourceActor, line, column } =
+        this.sourcesManager.getFrameLocation(frame);
 
       packet.why = reason;
 
@@ -2141,15 +2137,12 @@ class ThreadActor extends Actor {
    *                              url content type is text/html).
    */
   async _resurrectSource(url, existingInlineSources) {
-    let {
-      content,
-      contentType,
-      sourceMapURL,
-    } = await this.sourcesManager.urlContents(
-      url,
-      /* partial */ false,
-      /* canUseCache */ true
-    );
+    let { content, contentType, sourceMapURL } =
+      await this.sourcesManager.urlContents(
+        url,
+        /* partial */ false,
+        /* canUseCache */ true
+      );
 
     // Newlines in all sources should be normalized. Do this with HTML content
     // to simplify the comparisons below.

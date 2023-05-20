@@ -56,9 +56,8 @@ add_task(async function () {
           const { issue, score } = audit || {};
           let expected = "";
           if (issue) {
-            const { ISSUE_TO_INFOBAR_LABEL_MAP } = infobar.audit.reports[
-              AUDIT_TYPE.KEYBOARD
-            ].constructor;
+            const { ISSUE_TO_INFOBAR_LABEL_MAP } =
+              infobar.audit.reports[AUDIT_TYPE.KEYBOARD].constructor;
             expected = L10N.getStr(ISSUE_TO_INFOBAR_LABEL_MAP[issue]);
           }
 
@@ -112,12 +111,10 @@ add_task(async function () {
 
         const tests = [
           {
-            desc:
-              "Infobar is shown with no keyboard audit content when no audit.",
+            desc: "Infobar is shown with no keyboard audit content when no audit.",
           },
           {
-            desc:
-              "Infobar is shown with no keyboard audit content when audit is null.",
+            desc: "Infobar is shown with no keyboard audit content when audit is null.",
             audit: null,
           },
           {

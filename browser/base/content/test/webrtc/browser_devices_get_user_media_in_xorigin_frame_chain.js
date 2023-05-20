@@ -55,8 +55,8 @@ function promiseRequestDeviceAncestor(
     aBrowser,
     [{ aRequestAudio, aRequestVideo, aType, aBadDevice }],
     async function (args) {
-      let global = content.wrappedJSObject.document.getElementById("frame4")
-        .contentWindow;
+      let global =
+        content.wrappedJSObject.document.getElementById("frame4").contentWindow;
       global.requestDevice(
         args.aRequestAudio,
         args.aRequestVideo,
@@ -78,8 +78,8 @@ async function closeStreamAncestor(browser) {
 
   info("closing the stream");
   await SpecialPowers.spawn(browser, [], async () => {
-    let global = content.wrappedJSObject.document.getElementById("frame4")
-      .contentWindow;
+    let global =
+      content.wrappedJSObject.document.getElementById("frame4").contentWindow;
     global.closeStream();
   });
 
@@ -90,8 +90,7 @@ async function closeStreamAncestor(browser) {
 
 var gTests = [
   {
-    desc:
-      "getUserMedia use persistent permissions from first party if third party is explicitly trusted",
+    desc: "getUserMedia use persistent permissions from first party if third party is explicitly trusted",
     skipObserverVerification: true,
     run: async function checkPermissionsAncestorChain() {
       async function checkPermission(aPermission, aRequestType, aExpect) {

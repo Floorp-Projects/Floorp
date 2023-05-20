@@ -269,16 +269,7 @@ var gMainPane = {
       // Exponential backoff mechanism will delay the polling times if user doesn't
       // trigger SetDefaultBrowser for a long time.
       let backoffTimes = [
-        1000,
-        1000,
-        1000,
-        1000,
-        2000,
-        2000,
-        2000,
-        5000,
-        5000,
-        10000,
+        1000, 1000, 1000, 1000, 2000, 2000, 2000, 5000, 5000, 10000,
       ];
 
       let pollForDefaultBrowser = () => {
@@ -335,17 +326,19 @@ var gMainPane = {
       )
     ) {
       document.getElementById("pictureInPictureBox").hidden = false;
-      setEventListener("pictureInPictureToggleEnabled", "command", function (
-        event
-      ) {
-        if (!event.target.checked) {
-          Services.telemetry.recordEvent(
-            "pictureinpicture.settings",
-            "disable",
-            "settings"
-          );
+      setEventListener(
+        "pictureInPictureToggleEnabled",
+        "command",
+        function (event) {
+          if (!event.target.checked) {
+            Services.telemetry.recordEvent(
+              "pictureinpicture.settings",
+              "disable",
+              "settings"
+            );
+          }
         }
-      });
+      );
     }
 
     if (AppConstants.platform == "win") {
@@ -365,9 +358,10 @@ var gMainPane = {
     }
 
     if (AppConstants.platform != "win") {
-      let quitKeyElement = window.browsingContext.topChromeWindow.document.getElementById(
-        "key_quitApplication"
-      );
+      let quitKeyElement =
+        window.browsingContext.topChromeWindow.document.getElementById(
+          "key_quitApplication"
+        );
       if (quitKeyElement) {
         let quitKey = ShortcutUtils.prettifyShortcut(quitKeyElement);
         document.l10n.setAttributes(
@@ -416,9 +410,8 @@ var gMainPane = {
       "command",
       gMainPane.onBrowserRestoreSessionChange
     );
-    gMainPane.updateBrowserStartupUI = gMainPane.updateBrowserStartupUI.bind(
-      gMainPane
-    );
+    gMainPane.updateBrowserStartupUI =
+      gMainPane.updateBrowserStartupUI.bind(gMainPane);
     Preferences.get("browser.privatebrowsing.autostart").on(
       "change",
       gMainPane.updateBrowserStartupUI
@@ -1040,13 +1033,12 @@ var gMainPane = {
        * Handles all of the async initialization logic.
        */
       static async create() {
-        const translationsActor = window.windowGlobalChild.getActor(
-          "Translations"
-        );
-        const supportedLanguages = await translationsActor.getSupportedLanguages();
-        const languageList = TranslationsState.getLanguageList(
-          supportedLanguages
-        );
+        const translationsActor =
+          window.windowGlobalChild.getActor("Translations");
+        const supportedLanguages =
+          await translationsActor.getSupportedLanguages();
+        const languageList =
+          TranslationsState.getLanguageList(supportedLanguages);
         const downloadPhases = await TranslationsState.createDownloadPhases(
           translationsActor,
           languageList
@@ -1293,10 +1285,11 @@ var gMainPane = {
        * Recreates the download map when the state is invalidated.
        */
       async reloadDownloadPhases() {
-        this.state.downloadPhases = await TranslationsState.createDownloadPhases(
-          this.state.translationsActor,
-          this.state.languageList
-        );
+        this.state.downloadPhases =
+          await TranslationsState.createDownloadPhases(
+            this.state.translationsActor,
+            this.state.languageList
+          );
         this.updateAllButtons();
       }
 
@@ -1999,17 +1992,13 @@ var gMainPane = {
       return;
     }
 
-    let [
-      title,
-      message,
-      okButton,
-      cancelButton,
-    ] = await document.l10n.formatValues([
-      { id: "containers-disable-alert-title" },
-      { id: "containers-disable-alert-desc", args: { tabCount: count } },
-      { id: "containers-disable-alert-ok-button", args: { tabCount: count } },
-      { id: "containers-disable-alert-cancel-button" },
-    ]);
+    let [title, message, okButton, cancelButton] =
+      await document.l10n.formatValues([
+        { id: "containers-disable-alert-title" },
+        { id: "containers-disable-alert-desc", args: { tabCount: count } },
+        { id: "containers-disable-alert-ok-button", args: { tabCount: count } },
+        { id: "containers-disable-alert-cancel-button" },
+      ]);
 
     let buttonFlags =
       Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0 +
@@ -2323,7 +2312,8 @@ var gMainPane = {
       let processCountPref = Preferences.get("dom.ipc.processCount");
       let defaultProcessCount = processCountPref.defaultValue;
 
-      let contentProcessCount = document.querySelector(`#contentProcessCount > menupopup >
+      let contentProcessCount =
+        document.querySelector(`#contentProcessCount > menupopup >
                                 menuitem[value="${defaultProcessCount}"]`);
 
       document.l10n.setAttributes(
@@ -2519,17 +2509,13 @@ var gMainPane = {
       return;
     }
 
-    let [
-      title,
-      message,
-      okButton,
-      cancelButton,
-    ] = await document.l10n.formatValues([
-      { id: "update-in-progress-title" },
-      { id: "update-in-progress-message" },
-      { id: "update-in-progress-ok-button" },
-      { id: "update-in-progress-cancel-button" },
-    ]);
+    let [title, message, okButton, cancelButton] =
+      await document.l10n.formatValues([
+        { id: "update-in-progress-title" },
+        { id: "update-in-progress-message" },
+        { id: "update-in-progress-ok-button" },
+        { id: "update-in-progress-cancel-button" },
+      ]);
 
     // Continue is the cancel button which is BUTTON_POS_1 and is set as the
     // default so pressing escape or using a platform standard method of closing
@@ -3151,8 +3137,8 @@ var gMainPane = {
   _filterView(frag = this._list) {
     const filterValue = this._filter.value.toLowerCase();
     for (let elem of frag.children) {
-      const typeDescription = elem.querySelector(".typeDescription")
-        .textContent;
+      const typeDescription =
+        elem.querySelector(".typeDescription").textContent;
       const actionDescription = elem
         .querySelector(".actionDescription")
         .getAttribute("value");
@@ -3430,13 +3416,11 @@ var gMainPane = {
    * DefaultDownloadDirectory policies)
    */
   readUseDownloadDir() {
-    document.getElementById(
-      "downloadFolder"
-    ).disabled = document.getElementById(
-      "chooseFolder"
-    ).disabled = document.getElementById("saveTo").disabled =
-      Preferences.get("browser.download.dir").locked ||
-      Preferences.get("browser.download.folderList").locked;
+    document.getElementById("downloadFolder").disabled =
+      document.getElementById("chooseFolder").disabled =
+      document.getElementById("saveTo").disabled =
+        Preferences.get("browser.download.dir").locked ||
+        Preferences.get("browser.download.folderList").locked;
     // don't override the preference's value in UI
     return undefined;
   },
@@ -3522,10 +3506,8 @@ var gMainPane = {
     }
 
     // Display a 'pretty' label or the path in the UI.
-    let {
-      folderDisplayName,
-      file,
-    } = await this._getSystemDownloadFolderDetails(folderIndex);
+    let { folderDisplayName, file } =
+      await this._getSystemDownloadFolderDetails(folderIndex);
     // Figure out an icon url:
     let fph = Services.io
       .getProtocolHandler("file")

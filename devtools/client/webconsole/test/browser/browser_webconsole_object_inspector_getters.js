@@ -13,74 +13,76 @@ add_task(async function () {
 
   const LONGSTRING = "ab ".repeat(1e5);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [LONGSTRING], function (
-    longString
-  ) {
-    content.wrappedJSObject.console.log(
-      "oi-test",
-      Object.create(
-        null,
-        Object.getOwnPropertyDescriptors({
-          get myStringGetter() {
-            return "hello";
-          },
-          get myNumberGetter() {
-            return 123;
-          },
-          get myUndefinedGetter() {
-            return undefined;
-          },
-          get myNullGetter() {
-            return null;
-          },
-          get myZeroGetter() {
-            return 0;
-          },
-          get myEmptyStringGetter() {
-            return "";
-          },
-          get myFalseGetter() {
-            return false;
-          },
-          get myTrueGetter() {
-            return true;
-          },
-          get myObjectGetter() {
-            return { foo: "bar" };
-          },
-          get myArrayGetter() {
-            return Array.from({ length: 1000 }, (_, i) => i);
-          },
-          get myMapGetter() {
-            return new Map([["foo", { bar: "baz" }]]);
-          },
-          get myProxyGetter() {
-            const handler = {
-              get(target, name) {
-                return name in target ? target[name] : 37;
-              },
-            };
-            return new Proxy({ a: 1 }, handler);
-          },
-          get myThrowingGetter() {
-            throw new Error("myError");
-          },
-          get myLongStringGetter() {
-            return longString;
-          },
-          get ["hyphen-getter"]() {
-            return "---";
-          },
-          get [`"quoted-getter"`]() {
-            return "quoted";
-          },
-          get [`"'\``]() {
-            return "quoted2";
-          },
-        })
-      )
-    );
-  });
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [LONGSTRING],
+    function (longString) {
+      content.wrappedJSObject.console.log(
+        "oi-test",
+        Object.create(
+          null,
+          Object.getOwnPropertyDescriptors({
+            get myStringGetter() {
+              return "hello";
+            },
+            get myNumberGetter() {
+              return 123;
+            },
+            get myUndefinedGetter() {
+              return undefined;
+            },
+            get myNullGetter() {
+              return null;
+            },
+            get myZeroGetter() {
+              return 0;
+            },
+            get myEmptyStringGetter() {
+              return "";
+            },
+            get myFalseGetter() {
+              return false;
+            },
+            get myTrueGetter() {
+              return true;
+            },
+            get myObjectGetter() {
+              return { foo: "bar" };
+            },
+            get myArrayGetter() {
+              return Array.from({ length: 1000 }, (_, i) => i);
+            },
+            get myMapGetter() {
+              return new Map([["foo", { bar: "baz" }]]);
+            },
+            get myProxyGetter() {
+              const handler = {
+                get(target, name) {
+                  return name in target ? target[name] : 37;
+                },
+              };
+              return new Proxy({ a: 1 }, handler);
+            },
+            get myThrowingGetter() {
+              throw new Error("myError");
+            },
+            get myLongStringGetter() {
+              return longString;
+            },
+            get ["hyphen-getter"]() {
+              return "---";
+            },
+            get [`"quoted-getter"`]() {
+              return "quoted";
+            },
+            get [`"'\``]() {
+              return "quoted2";
+            },
+          })
+        )
+      );
+    }
+  );
 
   const node = await waitFor(() => findConsoleAPIMessage(hud, "oi-test"));
   const oi = node.querySelector(".tree");

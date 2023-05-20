@@ -48,9 +48,8 @@ function* testSteps() {
   let wasAbleToGrabIndexOutsideOfCallback = false;
   executeSoon(function () {
     ok(!requestComplete, "Ordering is correct.");
-    wasAbleToGrabObjectStoreOutsideOfCallback = !!transaction.objectStore(
-      "foo"
-    );
+    wasAbleToGrabObjectStoreOutsideOfCallback =
+      !!transaction.objectStore("foo");
     wasAbleToGrabIndexOutsideOfCallback = !!transaction
       .objectStore("foo")
       .index("bar");

@@ -66,16 +66,20 @@ async function test_decoder_doctor_notification(
               content.document.body.appendChild(frame);
             });
 
-            await content.SpecialPowers.spawn(frame, [data], async function (
-              /* eslint-disable-next-line no-shadow */
-              data
-            ) {
-              Services.obs.notifyObservers(
-                content.window,
-                "decoder-doctor-notification",
-                JSON.stringify(data)
-              );
-            });
+            await content.SpecialPowers.spawn(
+              frame,
+              [data],
+              async function (
+                /* eslint-disable-next-line no-shadow */
+                data
+              ) {
+                Services.obs.notifyObservers(
+                  content.window,
+                  "decoder-doctor-notification",
+                  JSON.stringify(data)
+                );
+              }
+            );
             // Done notifying in a different origin.
           }
         );

@@ -31,10 +31,11 @@ function run_test() {
                 null,
                 new OpenCallback(NORMAL, "f1m", "f1d", function (entry) {
                   var url = Services.io.newURI(URL);
-                  var principal = Services.scriptSecurityManager.createContentPrincipal(
-                    url,
-                    {}
-                  );
+                  var principal =
+                    Services.scriptSecurityManager.createContentPrincipal(
+                      url,
+                      {}
+                    );
 
                   Services.cache2.clearOrigin(principal);
 

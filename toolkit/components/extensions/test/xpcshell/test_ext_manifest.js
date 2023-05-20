@@ -71,7 +71,7 @@ add_task(async function test_manifest() {
       path,
       {
         icons: {
-          "16": path,
+          16: path,
         },
       },
       /Error processing icons/
@@ -97,7 +97,7 @@ add_task(async function test_manifest() {
 
     await testIconPaths(path, {
       icons: {
-        "16": path,
+        16: path,
       },
     });
   }

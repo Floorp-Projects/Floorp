@@ -520,15 +520,14 @@ ElementEditor.prototype = {
 
     if (this.node.causesOverflow) {
       try {
-        const scrollableAncestor = await this.node.walkerFront.getScrollableAncestorNode(
-          this.node
-        );
+        const scrollableAncestor =
+          await this.node.walkerFront.getScrollableAncestorNode(this.node);
         const markupContainer = scrollableAncestor
           ? this.markup.getContainer(scrollableAncestor)
           : null;
 
-        showOverflowHighlight = !!markupContainer?.editor
-          .highlightingOverflowCausingElements;
+        showOverflowHighlight =
+          !!markupContainer?.editor.highlightingOverflowCausingElements;
       } catch (e) {
         // This call might fail if called asynchrously after the toolbox is finished
         // closing.
@@ -1074,9 +1073,8 @@ ElementEditor.prototype = {
    * highlights their container if the scroll badge is active.
    */
   async onScrollableBadgeClick() {
-    this.highlightingOverflowCausingElements = this._scrollableBadge.classList.toggle(
-      "active"
-    );
+    this.highlightingOverflowCausingElements =
+      this._scrollableBadge.classList.toggle("active");
 
     const { nodes } = await this.node.walkerFront.getOverflowCausingElements(
       this.node

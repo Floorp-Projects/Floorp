@@ -89,9 +89,8 @@ add_task(async function testSystemStylesheet() {
     editor => editor.friendlyName === "aboutSupport.css"
   );
   ok(!!aboutSupportEditor, "Found the editor for aboutSupport.css");
-  const aboutSupportToggle = aboutSupportEditor.summary.querySelector(
-    ".stylesheet-toggle"
-  );
+  const aboutSupportToggle =
+    aboutSupportEditor.summary.querySelector(".stylesheet-toggle");
   ok(aboutSupportToggle, "enabled toggle button exists");
   ok(!aboutSupportToggle.disabled, "enabled toggle button is not disabled");
   is(

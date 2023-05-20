@@ -20,8 +20,8 @@ async function testLiveReloading(sidebarName) {
   await SidebarUI.show(sidebarName);
 
   function getTreeChildren() {
-    const sidebarDoc = document.querySelector("#sidebar").contentWindow
-      .document;
+    const sidebarDoc =
+      document.querySelector("#sidebar").contentWindow.document;
     return sidebarDoc.querySelector(".sidebar-placesTreechildren");
   }
 

@@ -112,12 +112,10 @@ this.ui = (function () {
               if (this.addClassName) {
                 this.document.body.className = this.addClassName;
               }
-              this.document.documentElement.dir = browser.i18n.getMessage(
-                "@@bidi_dir"
-              );
-              this.document.documentElement.lang = browser.i18n.getMessage(
-                "@@ui_locale"
-              );
+              this.document.documentElement.dir =
+                browser.i18n.getMessage("@@bidi_dir");
+              this.document.documentElement.lang =
+                browser.i18n.getMessage("@@ui_locale");
               resolve();
             }),
             { once: true }
@@ -176,7 +174,8 @@ this.ui = (function () {
         // document's body is not at (0, 0) of the viewport. That makes the
         // frame shifted relative to the viewport. These margins negates that.
         if (window.getComputedStyle(document.body).position === "relative") {
-          const docBoundingRect = document.documentElement.getBoundingClientRect();
+          const docBoundingRect =
+            document.documentElement.getBoundingClientRect();
           const bodyBoundingRect = document.body.getBoundingClientRect();
           this.element.style.marginLeft = `-${
             bodyBoundingRect.left - docBoundingRect.left
@@ -285,12 +284,10 @@ this.ui = (function () {
               if (this.addClassName) {
                 this.document.body.className = this.addClassName;
               }
-              this.document.documentElement.dir = browser.i18n.getMessage(
-                "@@bidi_dir"
-              );
-              this.document.documentElement.lang = browser.i18n.getMessage(
-                "@@ui_locale"
-              );
+              this.document.documentElement.dir =
+                browser.i18n.getMessage("@@bidi_dir");
+              this.document.documentElement.lang =
+                browser.i18n.getMessage("@@ui_locale");
               const overlay = this.document.querySelector(".preview-overlay");
               overlay
                 .querySelector(".visible")
@@ -432,12 +429,10 @@ this.ui = (function () {
               </body>`;
 
               installHandlerOnDocument(this.document);
-              this.document.documentElement.dir = browser.i18n.getMessage(
-                "@@bidi_dir"
-              );
-              this.document.documentElement.lang = browser.i18n.getMessage(
-                "@@ui_locale"
-              );
+              this.document.documentElement.dir =
+                browser.i18n.getMessage("@@bidi_dir");
+              this.document.documentElement.lang =
+                browser.i18n.getMessage("@@ui_locale");
 
               const overlay = this.document.querySelector(".preview-overlay");
               overlay
@@ -712,13 +707,8 @@ this.ui = (function () {
       if (boxEl) {
         return;
       }
-      let [
-        cancelTitle,
-        copyTitle,
-        downloadTitle,
-        copyText,
-        downloadText,
-      ] = await msgsPromise;
+      let [cancelTitle, copyTitle, downloadTitle, copyText, downloadText] =
+        await msgsPromise;
       boxEl = makeEl("div", "highlight");
       const buttons = makeEl("div", "highlight-buttons");
       const cancel = makeEl("button", "highlight-button-cancel");

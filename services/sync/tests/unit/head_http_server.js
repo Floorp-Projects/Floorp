@@ -941,7 +941,8 @@ SyncServer.prototype = {
    * Path: [all, version, username, first, rest]
    * Storage: [all, collection?, id?]
    */
-  pathRE: /^\/([0-9]+(?:\.[0-9]+)?)\/([-._a-zA-Z0-9]+)(?:\/([^\/]+)(?:\/(.+))?)?$/,
+  pathRE:
+    /^\/([0-9]+(?:\.[0-9]+)?)\/([-._a-zA-Z0-9]+)(?:\/([^\/]+)(?:\/(.+))?)?$/,
   storageRE: /^([-_a-zA-Z0-9]+)(?:\/([-_a-zA-Z0-9]+)\/?)?$/,
 
   defaultHeaders: {},

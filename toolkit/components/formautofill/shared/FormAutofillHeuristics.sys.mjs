@@ -306,28 +306,28 @@ export const FormAutofillHeuristics = {
     const addressLineRegexps = {
       "address-line1": new RegExp(
         "address[_-]?line(1|one)|address1|addr1" +
-        "|addrline1|address_1" + // Extra rules by Firefox
-        "|indirizzo1" + // it-IT
-        "|住所1" + // ja-JP
-        "|地址1" + // zh-CN
+          "|addrline1|address_1" + // Extra rules by Firefox
+          "|indirizzo1" + // it-IT
+          "|住所1" + // ja-JP
+          "|地址1" + // zh-CN
           "|주소.?1", // ko-KR
         "iu"
       ),
       "address-line2": new RegExp(
         "address[_-]?line(2|two)|address2|addr2" +
-        "|addrline2|address_2" + // Extra rules by Firefox
-        "|indirizzo2" + // it-IT
-        "|住所2" + // ja-JP
-        "|地址2" + // zh-CN
+          "|addrline2|address_2" + // Extra rules by Firefox
+          "|indirizzo2" + // it-IT
+          "|住所2" + // ja-JP
+          "|地址2" + // zh-CN
           "|주소.?2", // ko-KR
         "iu"
       ),
       "address-line3": new RegExp(
         "address[_-]?line(3|three)|address3|addr3" +
-        "|addrline3|address_3" + // Extra rules by Firefox
-        "|indirizzo3" + // it-IT
-        "|住所3" + // ja-JP
-        "|地址3" + // zh-CN
+          "|addrline3|address_3" + // Extra rules by Firefox
+          "|indirizzo3" + // it-IT
+          "|住所3" + // ja-JP
+          "|地址3" + // zh-CN
           "|주소.?3", // ko-KR
         "iu"
       ),
@@ -568,9 +568,8 @@ export const FormAutofillHeuristics = {
     while (!fieldScanner.parsingFinished) {
       let parsedPhoneFields = this._parsePhoneFields(fieldScanner);
       let parsedAddressFields = this._parseAddressFields(fieldScanner);
-      let parsedExpirationDateFields = this._parseCreditCardFields(
-        fieldScanner
-      );
+      let parsedExpirationDateFields =
+        this._parseCreditCardFields(fieldScanner);
 
       // If there is no field parsed, the parsing cursor can be moved
       // forward to the next one.

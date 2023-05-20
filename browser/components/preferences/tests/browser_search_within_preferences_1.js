@@ -319,9 +319,8 @@ add_task(async function changing_tabs_after_searching() {
     "Permissions search-header should be visible"
   );
 
-  let privacyCategory = gBrowser.contentDocument.getElementById(
-    "category-privacy"
-  );
+  let privacyCategory =
+    gBrowser.contentDocument.getElementById("category-privacy");
   privacyCategory.click();
   is(searchInput.value, "", "search input should be empty");
   let categoriesList = gBrowser.contentDocument.getElementById("categories");

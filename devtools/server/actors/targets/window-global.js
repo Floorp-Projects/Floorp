@@ -283,9 +283,8 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     this._extraActors = {};
     this._sourcesManager = null;
 
-    this._shouldAddNewGlobalAsDebuggee = this._shouldAddNewGlobalAsDebuggee.bind(
-      this
-    );
+    this._shouldAddNewGlobalAsDebuggee =
+      this._shouldAddNewGlobalAsDebuggee.bind(this);
 
     this.makeDebugger = makeDebugger.bind(null, {
       findDebuggees: () => {
@@ -317,13 +316,11 @@ class WindowGlobalTargetActor extends BaseTargetActor {
 
     this._workerDescriptorActorList = null;
     this._workerDescriptorActorPool = null;
-    this._onWorkerDescriptorActorListChanged = this._onWorkerDescriptorActorListChanged.bind(
-      this
-    );
+    this._onWorkerDescriptorActorListChanged =
+      this._onWorkerDescriptorActorListChanged.bind(this);
 
-    this._onConsoleApiProfilerEvent = this._onConsoleApiProfilerEvent.bind(
-      this
-    );
+    this._onConsoleApiProfilerEvent =
+      this._onConsoleApiProfilerEvent.bind(this);
     Services.obs.addObserver(
       this._onConsoleApiProfilerEvent,
       "console-api-profiler"
@@ -922,7 +919,8 @@ class WindowGlobalTargetActor extends BaseTargetActor {
         }
 
         this._workerDescriptorActorPool = pool;
-        this._workerDescriptorActorList.onListChanged = this._onWorkerDescriptorActorListChanged;
+        this._workerDescriptorActorList.onListChanged =
+          this._onWorkerDescriptorActorListChanged;
 
         return {
           workers: actors,

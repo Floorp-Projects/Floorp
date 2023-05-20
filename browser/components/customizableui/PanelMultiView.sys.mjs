@@ -394,9 +394,8 @@ export var PanelMultiView = class extends AssociatedToNode {
 
     PanelMultiView.ensureUnloadHandlerRegistered(this.window);
 
-    let viewContainer = (this._viewContainer = this.document.createXULElement(
-      "box"
-    ));
+    let viewContainer = (this._viewContainer =
+      this.document.createXULElement("box"));
     viewContainer.classList.add("panel-viewcontainer");
 
     let viewStack = (this._viewStack = this.document.createXULElement("box"));
@@ -406,9 +405,8 @@ export var PanelMultiView = class extends AssociatedToNode {
     let offscreenViewContainer = this.document.createXULElement("box");
     offscreenViewContainer.classList.add("panel-viewcontainer", "offscreen");
 
-    let offscreenViewStack = (this._offscreenViewStack = this.document.createXULElement(
-      "box"
-    ));
+    let offscreenViewStack = (this._offscreenViewStack =
+      this.document.createXULElement("box"));
     offscreenViewStack.classList.add("panel-viewstack");
     offscreenViewContainer.append(offscreenViewStack);
 
@@ -444,7 +442,13 @@ export var PanelMultiView = class extends AssociatedToNode {
     this._panel.removeEventListener("popupshown", this);
     this._panel.removeEventListener("popuphidden", this);
     this.document.documentElement.removeEventListener("keydown", this, true);
-    this.node = this._openPopupPromise = this._openPopupCancelCallback = this._viewContainer = this._viewStack = this._transitionDetails = null;
+    this.node =
+      this._openPopupPromise =
+      this._openPopupCancelCallback =
+      this._viewContainer =
+      this._viewStack =
+      this._transitionDetails =
+        null;
   }
 
   /**

@@ -26,19 +26,19 @@ add_task(async function () {
   const { inspector, view } = await openRuleView();
   const highlighters = view.highlighters;
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   await selectNode("#grid", inspector);
   const container = getRuleViewProperty(view, "#grid", "display").valueSpan;
   const gridToggle = container.querySelector(".js-toggle-grid-highlighter");
-  const overriddenContainer = getRuleViewProperty(view, "div, ul", "display")
-    .valueSpan;
-  const overriddenGridToggle = overriddenContainer.querySelector(
-    ".ruleview-grid"
-  );
+  const overriddenContainer = getRuleViewProperty(
+    view,
+    "div, ul",
+    "display"
+  ).valueSpan;
+  const overriddenGridToggle =
+    overriddenContainer.querySelector(".ruleview-grid");
 
   info("Checking the initial state of the CSS grid toggle in the rule-view.");
   ok(

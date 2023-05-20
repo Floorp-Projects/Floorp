@@ -120,9 +120,10 @@ WeaveCrypto.prototype = {
 
     let iv = this.byteCompressInts(ivStr);
     let symKey = await this.importSymKey(symKeyStr, operation);
-    let cryptMethod = (operation === OPERATIONS.ENCRYPT
-      ? crypto.subtle.encrypt
-      : crypto.subtle.decrypt
+    let cryptMethod = (
+      operation === OPERATIONS.ENCRYPT
+        ? crypto.subtle.encrypt
+        : crypto.subtle.decrypt
     ).bind(crypto.subtle);
     let algo = { name: CRYPT_ALGO, iv };
 

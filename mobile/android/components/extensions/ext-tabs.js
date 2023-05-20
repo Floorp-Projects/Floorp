@@ -272,10 +272,11 @@ this.tabs = class extends ExtensionAPIPersistent {
           !context.checkLoadURL(url, { dontReportErrors: true }))
       ) {
         // Falling back to content here as about: requires it, however is safe.
-        principal = Services.scriptSecurityManager.getLoadContextContentPrincipal(
-          Services.io.newURI(url),
-          browser.loadContext
-        );
+        principal =
+          Services.scriptSecurityManager.getLoadContextContentPrincipal(
+            Services.io.newURI(url),
+            browser.loadContext
+          );
       }
       if (isAboutUrl) {
         // Make sure things like about:blank and other about: URIs never

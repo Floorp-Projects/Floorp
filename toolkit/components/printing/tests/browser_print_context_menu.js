@@ -7,63 +7,64 @@ const source = `<html><h1>Top level text</h1><iframe srcdoc='${frameSource}' id=
 
 add_task(async function testPrintFrame() {
   let url = `data:text/html,${source}`;
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function (
-    browser
-  ) {
-    let contentAreaContextMenuPopup = document.getElementById(
-      "contentAreaContextMenu"
-    );
-    let popupShownPromise = BrowserTestUtils.waitForEvent(
-      contentAreaContextMenuPopup,
-      "popupshown"
-    );
-    await BrowserTestUtils.synthesizeMouseAtCenter(
-      "#f",
-      { type: "contextmenu", button: 2 },
-      gBrowser.selectedBrowser
-    );
-    await popupShownPromise;
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url },
+    async function (browser) {
+      let contentAreaContextMenuPopup = document.getElementById(
+        "contentAreaContextMenu"
+      );
+      let popupShownPromise = BrowserTestUtils.waitForEvent(
+        contentAreaContextMenuPopup,
+        "popupshown"
+      );
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "#f",
+        { type: "contextmenu", button: 2 },
+        gBrowser.selectedBrowser
+      );
+      await popupShownPromise;
 
-    let frameItem = document.getElementById("frame");
-    let frameContextMenu = frameItem.menupopup;
-    popupShownPromise = BrowserTestUtils.waitForEvent(
-      frameContextMenu,
-      "popupshown"
-    );
-    frameItem.openMenu(true);
-    await popupShownPromise;
+      let frameItem = document.getElementById("frame");
+      let frameContextMenu = frameItem.menupopup;
+      popupShownPromise = BrowserTestUtils.waitForEvent(
+        frameContextMenu,
+        "popupshown"
+      );
+      frameItem.openMenu(true);
+      await popupShownPromise;
 
-    let popupHiddenPromise = BrowserTestUtils.waitForEvent(
-      frameContextMenu,
-      "popuphidden"
-    );
-    let item = document.getElementById("context-printframe");
-    frameContextMenu.activateItem(item);
-    await popupHiddenPromise;
+      let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+        frameContextMenu,
+        "popuphidden"
+      );
+      let item = document.getElementById("context-printframe");
+      frameContextMenu.activateItem(item);
+      await popupHiddenPromise;
 
-    let helper = new PrintHelper(browser);
+      let helper = new PrintHelper(browser);
 
-    await helper.waitForDialog();
+      await helper.waitForDialog();
 
-    let previewBrowser = helper.currentPrintPreviewBrowser;
-    is(
-      previewBrowser.getAttribute("previewtype"),
-      "source",
-      "Source preview was rendered"
-    );
+      let previewBrowser = helper.currentPrintPreviewBrowser;
+      is(
+        previewBrowser.getAttribute("previewtype"),
+        "source",
+        "Source preview was rendered"
+      );
 
-    let textContent = await SpecialPowers.spawn(
-      previewBrowser,
-      [],
-      () => content.document.body.textContent
-    );
+      let textContent = await SpecialPowers.spawn(
+        previewBrowser,
+        [],
+        () => content.document.body.textContent
+      );
 
-    is(textContent, "Inner frame", "Correct content loaded");
-    is(
-      helper.win.PrintEventHandler.printFrameOnly,
-      true,
-      "Print frame only is true"
-    );
-    PrintHelper.resetPrintPrefs();
-  });
+      is(textContent, "Inner frame", "Correct content loaded");
+      is(
+        helper.win.PrintEventHandler.printFrameOnly,
+        true,
+        "Print frame only is true"
+      );
+      PrintHelper.resetPrintPrefs();
+    }
+  );
 });

@@ -37,8 +37,11 @@ add_task(async function () {
   const flexboxToggle = container.querySelector(
     ".js-toggle-flexbox-highlighter"
   );
-  const overriddenContainer = getRuleViewProperty(view, "div, ul", "display")
-    .valueSpan;
+  const overriddenContainer = getRuleViewProperty(
+    view,
+    "div, ul",
+    "display"
+  ).valueSpan;
   const overriddenFlexboxToggle = overriddenContainer.querySelector(
     ".js-toggle-flexbox-highlighter"
   );

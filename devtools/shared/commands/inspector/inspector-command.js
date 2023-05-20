@@ -258,20 +258,20 @@ class InspectorCommand {
       domLoadingPromises.push(nodeFront.waitForFrameLoad());
     }
 
-    const {
-      onResource: onDomInteractiveResource,
-    } = await this.commands.resourceCommand.waitForNextResource(
-      this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-      {
-        // We might be in a case where the children document is already loaded (i.e. we
-        // would already have received the dom-interactive resource), so it's important
-        // to _not_ ignore existing resource.
-        predicate: resource =>
-          resource.name == "dom-interactive" &&
-          resource.targetFront !== nodeFront.targetFront &&
-          resource.targetFront.browsingContextID == nodeFront.browsingContextID,
-      }
-    );
+    const { onResource: onDomInteractiveResource } =
+      await this.commands.resourceCommand.waitForNextResource(
+        this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+        {
+          // We might be in a case where the children document is already loaded (i.e. we
+          // would already have received the dom-interactive resource), so it's important
+          // to _not_ ignore existing resource.
+          predicate: resource =>
+            resource.name == "dom-interactive" &&
+            resource.targetFront !== nodeFront.targetFront &&
+            resource.targetFront.browsingContextID ==
+              nodeFront.browsingContextID,
+        }
+      );
     const newTargetResolveValue = Symbol();
     domLoadingPromises.push(
       onDomInteractiveResource.then(() => newTargetResolveValue)

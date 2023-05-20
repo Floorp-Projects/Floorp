@@ -294,9 +294,8 @@ class ScriptModule extends Module {
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
     const context = await this.#getContextFromTarget({ contextId, realmId });
-    const serializationOptionsWithDefaults = lazy.setDefaultAndAssertSerializationOptions(
-      serializationOptions
-    );
+    const serializationOptionsWithDefaults =
+      lazy.setDefaultAndAssertSerializationOptions(serializationOptions);
     const evaluationResult = await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "callFunctionDeclaration",
@@ -412,9 +411,8 @@ class ScriptModule extends Module {
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
     const context = await this.#getContextFromTarget({ contextId, realmId });
-    const serializationOptionsWithDefaults = lazy.setDefaultAndAssertSerializationOptions(
-      serializationOptions
-    );
+    const serializationOptionsWithDefaults =
+      lazy.setDefaultAndAssertSerializationOptions(serializationOptions);
     const evaluationResult = await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "evaluateExpression",

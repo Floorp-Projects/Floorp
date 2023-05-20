@@ -20,9 +20,8 @@ add_task(async function test_autocomplete_new_password_popup_item_visible() {
     },
     async function (browser) {
       info("Generate and cache a password for a non-private context");
-      let lmp = browser.browsingContext.currentWindowGlobal.getActor(
-        "LoginManager"
-      );
+      let lmp =
+        browser.browsingContext.currentWindowGlobal.getActor("LoginManager");
       await lmp.getGeneratedPassword();
       Assert.equal(
         LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().size,

@@ -1217,7 +1217,8 @@ const FORMATS = {
 
   date(string, context) {
     // A valid ISO 8601 timestamp.
-    const PATTERN = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|([-+]\d{2}:?\d{2})))?$/;
+    const PATTERN =
+      /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|([-+]\d{2}:?\d{2})))?$/;
     if (!PATTERN.test(string)) {
       throw new Error(`Invalid date string ${string}`);
     }
@@ -3906,9 +3907,10 @@ Schemas = {
     };
     const { requestType, apiNamespace, apiName } = apiRequest;
 
-    let [ns, ...rest] = (["addListener", "removeListener"].includes(requestType)
-      ? `${apiNamespace}.${apiName}.${requestType}`
-      : `${apiNamespace}.${apiName}`
+    let [ns, ...rest] = (
+      ["addListener", "removeListener"].includes(requestType)
+        ? `${apiNamespace}.${apiName}.${requestType}`
+        : `${apiNamespace}.${apiName}`
     ).split(".");
     let apiSchema = this.getNamespace(ns);
 

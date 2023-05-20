@@ -23,13 +23,8 @@ export const NormandyAddonManager = {
     onInstallStarted,
     reportError,
   }) {
-    const {
-      extension_id,
-      hash,
-      hash_algorithm,
-      version,
-      xpi,
-    } = extensionDetails;
+    const { extension_id, hash, hash_algorithm, version, xpi } =
+      extensionDetails;
 
     const downloadDeferred = lazy.PromiseUtils.defer();
     const installDeferred = lazy.PromiseUtils.defer();

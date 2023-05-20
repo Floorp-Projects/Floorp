@@ -52,9 +52,8 @@ async function highlightFromRuleView(config) {
   const container = getRuleViewProperty(view, selector, property).valueSpan;
   const shapesToggle = container.querySelector(".ruleview-shapeswatch");
 
-  const highlighterFront = inspector.inspectorFront.getKnownHighlighter(
-    HIGHLIGHTER_TYPE
-  );
+  const highlighterFront =
+    inspector.inspectorFront.getKnownHighlighter(HIGHLIGHTER_TYPE);
 
   let markerHidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "shapes-marker-hover",
@@ -109,21 +108,15 @@ async function highlightFromRuleView(config) {
  * corresponding points in the rule view.
  */
 async function highlightFromHighlighter(config) {
-  const {
-    view,
-    highlighters,
-    highlighterTestFront,
-    helper,
-    inspector,
-  } = config;
+  const { view, highlighters, highlighterTestFront, helper, inspector } =
+    config;
   const selector = "#polygon";
   const property = "clip-path";
 
   await setup({ selector, property, ...config });
 
-  const highlighterFront = inspector.inspectorFront.getKnownHighlighter(
-    HIGHLIGHTER_TYPE
-  );
+  const highlighterFront =
+    inspector.inspectorFront.getKnownHighlighter(HIGHLIGHTER_TYPE);
   const { mouse } = helper;
   const container = getRuleViewProperty(view, selector, property).valueSpan;
 

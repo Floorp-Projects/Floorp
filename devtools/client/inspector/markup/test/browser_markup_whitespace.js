@@ -95,10 +95,12 @@ add_task(async function () {
 });
 
 function getElementChildNodesCount(selector) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function (
-    innerSelector
-  ) {
-    const node = content.document.querySelector(innerSelector);
-    return node.childNodes.length;
-  });
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector],
+    function (innerSelector) {
+      const node = content.document.querySelector(innerSelector);
+      return node.childNodes.length;
+    }
+  );
 }

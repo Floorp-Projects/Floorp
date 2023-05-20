@@ -23,9 +23,8 @@ add_task(function test_ExtensionShortcutKeymap() {
   Assert.deepEqual(
     {
       shortcutWithTwoExtensions: shortcutsMap.getFirstAddonName("Ctrl+Shift+1"),
-      shortcutWithOnlyOneExtension: shortcutsMap.getFirstAddonName(
-        "Ctrl+Alt+2"
-      ),
+      shortcutWithOnlyOneExtension:
+        shortcutsMap.getFirstAddonName("Ctrl+Alt+2"),
       shortcutWithNoExtension: shortcutsMap.getFirstAddonName(""),
     },
     {

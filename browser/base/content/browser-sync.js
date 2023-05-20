@@ -924,9 +924,8 @@ var gSync = {
     }
     mainWindowEl.setAttribute("fxastatus", stateValue);
 
-    menuHeaderTitleEl.value = this.fluentStrings.formatValueSync(
-      headerTitleL10nId
-    );
+    menuHeaderTitleEl.value =
+      this.fluentStrings.formatValueSync(headerTitleL10nId);
     menuHeaderDescriptionEl.value = headerDescription;
     // We remove the data-l10n-id attribute here to prevent the node's value
     // attribute from being overwritten by Fluent when the panel is moved
@@ -1028,13 +1027,11 @@ var gSync = {
 
     // At this point we consider sync to be configured (but still can be in an error state).
     if (status == UIState.STATUS_LOGIN_FAILED) {
-      const [
-        tooltipDescription,
-        errorLabel,
-      ] = this.fluentStrings.formatValuesSync([
-        { id: "account-reconnect", args: { email } },
-        { id: "account-disconnected2" },
-      ]);
+      const [tooltipDescription, errorLabel] =
+        this.fluentStrings.formatValuesSync([
+          { id: "account-reconnect", args: { email } },
+          { id: "account-disconnected2" },
+        ]);
       appMenuStatus.setAttribute("fxastatus", "login-failed");
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       appMenuLabel.classList.add("subviewbutton-nav");
@@ -1049,13 +1046,11 @@ var gSync = {
       );
       return;
     } else if (status == UIState.STATUS_NOT_VERIFIED) {
-      const [
-        tooltipDescription,
-        unverifiedLabel,
-      ] = this.fluentStrings.formatValuesSync([
-        { id: "account-verify", args: { email } },
-        { id: "account-finish-account-setup" },
-      ]);
+      const [tooltipDescription, unverifiedLabel] =
+        this.fluentStrings.formatValuesSync([
+          { id: "account-verify", args: { email } },
+          { id: "account-finish-account-setup" },
+        ]);
       appMenuStatus.setAttribute("fxastatus", "unverified");
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
       appMenuLabel.classList.add("subviewbutton-nav");
@@ -1441,17 +1436,15 @@ var gSync = {
       const separator = createDeviceNodeFn();
       separator.classList.add("sync-menuitem");
       fragment.appendChild(separator);
-      const [
-        allDevicesLabel,
-        manageDevicesLabel,
-      ] = this.fluentStrings.formatValuesSync(
-        isFxaMenu
-          ? ["account-send-to-all-devices", "account-manage-devices"]
-          : [
-              "account-send-to-all-devices-titlecase",
-              "account-manage-devices-titlecase",
-            ]
-      );
+      const [allDevicesLabel, manageDevicesLabel] =
+        this.fluentStrings.formatValuesSync(
+          isFxaMenu
+            ? ["account-send-to-all-devices", "account-manage-devices"]
+            : [
+                "account-send-to-all-devices-titlecase",
+                "account-manage-devices-titlecase",
+              ]
+        );
       addTargetDevice("", allDevicesLabel, "");
 
       // "Manage devices" menu item
@@ -1475,15 +1468,12 @@ var gSync = {
   },
 
   _appendSendTabSingleDevice(fragment, createDeviceNodeFn) {
-    const [
-      noDevices,
-      learnMore,
-      connectDevice,
-    ] = this.fluentStrings.formatValuesSync([
-      "account-send-tab-to-device-singledevice-status",
-      "account-send-tab-to-device-singledevice-learnmore",
-      "account-send-tab-to-device-connectdevice",
-    ]);
+    const [noDevices, learnMore, connectDevice] =
+      this.fluentStrings.formatValuesSync([
+        "account-send-tab-to-device-singledevice-status",
+        "account-send-tab-to-device-singledevice-learnmore",
+        "account-send-tab-to-device-connectdevice",
+      ]);
     const actions = [
       {
         label: connectDevice,

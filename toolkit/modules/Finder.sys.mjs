@@ -82,7 +82,12 @@ Finder.prototype = {
       .getInterface(Ci.nsIWebProgress)
       .removeProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
     this._listeners = [];
-    this._currentFoundRange = this._fastFind = this._docShell = this._previousLink = this._highlighter = null;
+    this._currentFoundRange =
+      this._fastFind =
+      this._docShell =
+      this._previousLink =
+      this._highlighter =
+        null;
   },
 
   addResultListener(aListener) {

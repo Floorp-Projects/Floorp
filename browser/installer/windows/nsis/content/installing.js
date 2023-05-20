@@ -18,12 +18,10 @@ window.attachEvent("onload", function () {
   // Get this page's static strings.
   var label = document.getElementById("label");
   label.innerText = external.getUIString("installing_label");
-  document.getElementById("header").innerText = external.getUIString(
-    "installing_header"
-  );
-  document.getElementById("content").innerText = external.getUIString(
-    "installing_content"
-  );
+  document.getElementById("header").innerText =
+    external.getUIString("installing_header");
+  document.getElementById("content").innerText =
+    external.getUIString("installing_content");
 
   // Poll and update the progress bar percentage.
   setInterval(function () {

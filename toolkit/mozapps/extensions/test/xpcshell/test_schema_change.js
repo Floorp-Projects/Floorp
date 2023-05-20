@@ -55,8 +55,7 @@ add_task(async function run_tests() {
       },
     },
     {
-      what:
-        "Application update with no schema change does not reload metadata.",
+      what: "Application update with no schema change does not reload metadata.",
       expectedVersion: "1.0",
       action() {
         gAppInfo.version = "2";

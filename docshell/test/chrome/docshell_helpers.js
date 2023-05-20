@@ -340,9 +340,10 @@ function doPageNavigation_complete(
 ) {
   if (useActor) {
     if (preventBFCache) {
-      let actor = TestWindow.getBrowser().browsingContext.currentWindowGlobal.getActor(
-        "DocShellHelpers"
-      );
+      let actor =
+        TestWindow.getBrowser().browsingContext.currentWindowGlobal.getActor(
+          "DocShellHelpers"
+        );
       actor.sendAsyncMessage("docshell_helpers:preventBFCache");
     }
   } else {

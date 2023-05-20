@@ -71,12 +71,8 @@ class ColorPath extends ComputedStylePath {
    * Overide parent's method.
    */
   renderEasingHint() {
-    const {
-      easingHintStrokeWidth,
-      graphHeight,
-      keyframes,
-      totalDuration,
-    } = this.props;
+    const { easingHintStrokeWidth, graphHeight, keyframes, totalDuration } =
+      this.props;
 
     const hints = [];
 

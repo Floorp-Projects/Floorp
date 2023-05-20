@@ -109,9 +109,8 @@ export class GeckoViewContent extends GeckoViewModule {
       const parentPid = browsingContext.parent?.currentWindowGlobal.osPid;
 
       if (currentPid != parentPid) {
-        const actor = browsingContext.currentWindowGlobal.getActor(
-          "GeckoViewContent"
-        );
+        const actor =
+          browsingContext.currentWindowGlobal.getActor("GeckoViewContent");
         actor.sendAsyncMessage(aEvent, aData);
       }
 

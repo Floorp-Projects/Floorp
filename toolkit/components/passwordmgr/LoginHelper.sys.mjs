@@ -1365,7 +1365,8 @@ export const LoginHelper = {
    */
   isInferredLoginForm(formElement) {
     // This is copied from 'loginFormAttrRegex' in NewPasswordModel.jsm
-    const loginExpr = /login|log in|log on|log-on|sign in|sigin|sign\/in|sign-in|sign on|sign-on/i;
+    const loginExpr =
+      /login|log in|log on|log-on|sign in|sigin|sign\/in|sign-in|sign on|sign-on/i;
 
     if (Logic.elementAttrsMatchRegex(formElement, loginExpr)) {
       return true;

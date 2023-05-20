@@ -57,15 +57,17 @@ add_task(async function test_thirdParty_iframe() {
   );
 
   // Open the test page within a third-party context.
-  await SpecialPowers.spawn(tab.linkedBrowser, [TEST_PAGE], async function (
-    page
-  ) {
-    let ifr = content.document.createElement("iframe");
-    let loading = ContentTaskUtils.waitForEvent(ifr, "load");
-    ifr.src = page;
-    content.document.body.appendChild(ifr);
-    await loading;
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [TEST_PAGE],
+    async function (page) {
+      let ifr = content.document.createElement("iframe");
+      let loading = ContentTaskUtils.waitForEvent(ifr, "load");
+      ifr.src = page;
+      content.document.body.appendChild(ifr);
+      await loading;
+    }
+  );
 
   // Wait until the cookie appears.
   await TestUtils.waitForCondition(_ => Services.cookies.cookies.length);

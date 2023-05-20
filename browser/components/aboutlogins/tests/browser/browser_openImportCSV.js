@@ -134,9 +134,8 @@ class CsvImportHelper {
         errors,
       };
       if (dialog.shadowRoot.activeElement) {
-        dialogData.l10nFocused = dialog.shadowRoot.activeElement.getAttribute(
-          "data-l10n-id"
-        );
+        dialogData.l10nFocused =
+          dialog.shadowRoot.activeElement.getAttribute("data-l10n-id");
       }
       return dialogData;
     });
@@ -162,9 +161,8 @@ class CsvImportHelper {
         .getAttribute("data-l10n-id");
       return {
         hidden: dialog.hidden,
-        l10nFocused: dialog.shadowRoot.activeElement.getAttribute(
-          "data-l10n-id"
-        ),
+        l10nFocused:
+          dialog.shadowRoot.activeElement.getAttribute("data-l10n-id"),
         l10nTitle,
         l10nDescription,
       };

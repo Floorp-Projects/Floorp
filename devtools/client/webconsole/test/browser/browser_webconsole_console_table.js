@@ -103,8 +103,7 @@ add_task(async function () {
       },
     },
     {
-      info:
-        "Testing when data argument is an object whose properties are objects",
+      info: "Testing when data argument is an object whose properties are objects",
       input: {
         father: new Person("Darth", "Vader"),
         daughter: new Person("Leia", "Organa"),
@@ -407,9 +406,8 @@ add_task(async function () {
       tests.forEach(test => {
         let { input, headers } = test;
         if (input === "PERFORMANCE_ENTRIES") {
-          input = content.wrappedJSObject.performance.getEntriesByType(
-            "navigation"
-          );
+          input =
+            content.wrappedJSObject.performance.getEntriesByType("navigation");
         }
         content.wrappedJSObject.doConsoleTable(input, headers);
       });

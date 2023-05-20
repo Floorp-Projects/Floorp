@@ -21,11 +21,8 @@ ChromeUtils.defineESModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
-const {
-  createAppInfo,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { createAppInfo, promiseShutdownManager, promiseStartupManager } =
+  AddonTestUtils;
 
 AddonTestUtils.init(this);
 
@@ -97,9 +94,8 @@ add_task(async function test_disable() {
   async function background() {
     browser.test.onMessage.addListener(async (msg, data) => {
       await browser.privacy.network.networkPredictionEnabled.set(data);
-      let settingData = await browser.privacy.network.networkPredictionEnabled.get(
-        {}
-      );
+      let settingData =
+        await browser.privacy.network.networkPredictionEnabled.get({});
       browser.test.sendMessage("privacyData", settingData);
     });
   }

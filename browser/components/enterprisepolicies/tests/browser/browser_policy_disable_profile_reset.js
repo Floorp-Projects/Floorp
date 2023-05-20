@@ -46,19 +46,23 @@ async function test_reset_disabled({ disabled }) {
     gBrowser,
     "about:support"
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [{ disabled }], async function ({
-    // eslint-disable-next-line no-shadow
-    disabled,
-  }) {
-    let resetBox = content.document.getElementById("reset-box");
-    let elementStyle = content.window.getComputedStyle(resetBox);
-    let expectedDisplayValue = disabled ? "none" : "block";
-    is(
-      elementStyle.display,
-      expectedDisplayValue,
-      "about:support Reset button box should be hidden"
-    );
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [{ disabled }],
+    async function ({
+      // eslint-disable-next-line no-shadow
+      disabled,
+    }) {
+      let resetBox = content.document.getElementById("reset-box");
+      let elementStyle = content.window.getComputedStyle(resetBox);
+      let expectedDisplayValue = disabled ? "none" : "block";
+      is(
+        elementStyle.display,
+        expectedDisplayValue,
+        "about:support Reset button box should be hidden"
+      );
+    }
+  );
   await BrowserTestUtils.removeTab(tab);
 }
 

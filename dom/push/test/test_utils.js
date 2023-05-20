@@ -180,8 +180,8 @@ function setPushPermission(allow) {
     // We need to add permission for the xorigin tests. In xorigin tests, the
     // test page will be run under third-party context, so we need to use
     // partitioned principal to add the permission.
-    let partitionedPrincipal = SpecialPowers.wrap(document)
-      .partitionedPrincipal;
+    let partitionedPrincipal =
+      SpecialPowers.wrap(document).partitionedPrincipal;
 
     permissions.push({
       type: "desktop-notification",

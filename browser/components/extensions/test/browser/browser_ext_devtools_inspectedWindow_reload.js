@@ -208,7 +208,8 @@ add_task(
     }
 
     async function checkUserAgent(expectedUA) {
-      const contexts = gBrowser.selectedBrowser.browsingContext.getAllBrowsingContextsInSubtree();
+      const contexts =
+        gBrowser.selectedBrowser.browsingContext.getAllBrowsingContextsInSubtree();
 
       const uniqueRemoteTypes = new Set();
       for (const context of contexts) {

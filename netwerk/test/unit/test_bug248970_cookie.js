@@ -33,13 +33,15 @@ function set_private_cookie(value, callback) {
 }
 
 function check_cookie_presence(value, isPrivate, expected, callback) {
-  setup_chan("present?cookie=" + value.replace("=", "|"), isPrivate, function (
-    req
-  ) {
-    req.QueryInterface(Ci.nsIHttpChannel);
-    Assert.equal(req.responseStatus, expected ? 200 : 404);
-    callback(req);
-  });
+  setup_chan(
+    "present?cookie=" + value.replace("=", "|"),
+    isPrivate,
+    function (req) {
+      req.QueryInterface(Ci.nsIHttpChannel);
+      Assert.equal(req.responseStatus, expected ? 200 : 404);
+      callback(req);
+    }
+  );
 }
 
 function presentHandler(metadata, response) {

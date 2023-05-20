@@ -20,13 +20,14 @@ add_task(async function () {
       );
 
       await SpecialPowers.spawn(browser, [], () => {
-        content.wrappedJSObject.waitForIMEContentObserverSendingNotifications = () => {
-          return new content.window.Promise(resolve =>
-            content.window.requestAnimationFrame(() =>
-              content.window.requestAnimationFrame(resolve)
-            )
-          );
-        };
+        content.wrappedJSObject.waitForIMEContentObserverSendingNotifications =
+          () => {
+            return new content.window.Promise(resolve =>
+              content.window.requestAnimationFrame(() =>
+                content.window.requestAnimationFrame(resolve)
+              )
+            );
+          };
         content.wrappedJSObject.resetIMEStateWithFocusMove = () => {
           const input = content.document.createElement("input");
           content.document.body.appendChild(input);
@@ -165,9 +166,8 @@ add_task(async function () {
         await SpecialPowers.spawn(browser, [aMode], mode => {
           const div = content.document.querySelector("div");
           const shadow = div.attachShadow({ mode });
-          content.wrappedJSObject.divInShadow = content.document.createElement(
-            "div"
-          );
+          content.wrappedJSObject.divInShadow =
+            content.document.createElement("div");
           content.wrappedJSObject.divInShadow.setAttribute("tabindex", "0");
           shadow.appendChild(content.wrappedJSObject.divInShadow);
           content.wrappedJSObject.divInShadow.focus();
@@ -219,9 +219,8 @@ add_task(async function () {
         await SpecialPowers.spawn(browser, [aMode], mode => {
           const div = content.document.querySelector("div");
           const shadow = div.attachShadow({ mode });
-          content.wrappedJSObject.divInShadow = content.document.createElement(
-            "div"
-          );
+          content.wrappedJSObject.divInShadow =
+            content.document.createElement("div");
           content.wrappedJSObject.divInShadow.setAttribute("tabindex", "0");
           shadow.appendChild(content.wrappedJSObject.divInShadow);
           content.wrappedJSObject.divInShadow.focus();

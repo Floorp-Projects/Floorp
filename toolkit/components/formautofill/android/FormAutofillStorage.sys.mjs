@@ -31,10 +31,11 @@ class GeckoViewStorage extends JSONFile {
   }
 
   async updateCreditCards() {
-    const creditCards = await lazy.GeckoViewAutocomplete.fetchCreditCards().then(
-      results => results?.map(r => lazy.CreditCard.parse(r).toGecko()) ?? [],
-      _ => []
-    );
+    const creditCards =
+      await lazy.GeckoViewAutocomplete.fetchCreditCards().then(
+        results => results?.map(r => lazy.CreditCard.parse(r).toGecko()) ?? [],
+        _ => []
+      );
     super.data.creditCards = creditCards;
   }
 

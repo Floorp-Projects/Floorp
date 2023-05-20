@@ -13,12 +13,10 @@ const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
 const { TippyTopProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/TippyTopProvider.jsm"
 );
-const {
-  insertPinned,
-  TOP_SITES_MAX_SITES_PER_ROW,
-} = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Reducers.sys.mjs"
-);
+const { insertPinned, TOP_SITES_MAX_SITES_PER_ROW } =
+  ChromeUtils.importESModule(
+    "resource://activity-stream/common/Reducers.sys.mjs"
+  );
 const { Dedupe } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Dedupe.sys.mjs"
 );
@@ -686,9 +684,8 @@ class TopSitesFeed {
       };
 
       // Get positions from layout for now. This could be improved if we store position data in state.
-      const discoveryStreamSpocPositions = findSponsoredTopsitesPositions(
-        "sponsored-topsites"
-      );
+      const discoveryStreamSpocPositions =
+        findSponsoredTopsitesPositions("sponsored-topsites");
 
       if (discoveryStreamSpocPositions?.length) {
         function reformatImageURL(url, width, height) {
@@ -909,12 +906,8 @@ class TopSitesFeed {
     );
 
     // Remove any duplicates from frecent and default sites
-    const [
-      ,
-      dedupedSponsored,
-      dedupedFrecent,
-      dedupedDefaults,
-    ] = this.dedupe.group(pinned, sponsored, frecent, notBlockedDefaultSites);
+    const [, dedupedSponsored, dedupedFrecent, dedupedDefaults] =
+      this.dedupe.group(pinned, sponsored, frecent, notBlockedDefaultSites);
     const dedupedUnpinned = [...dedupedFrecent, ...dedupedDefaults];
 
     // Remove adult sites if we need to

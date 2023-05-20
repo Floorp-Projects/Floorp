@@ -132,8 +132,7 @@ add_task(async function () {
           ],
         },
         {
-          desc:
-            "Search with multiple matches in a single tag expecting a single result",
+          desc: "Search with multiple matches in a single tag expecting a single result",
           search: "💩",
           expected: [
             { node: inspectee.getElementById("💩"), type: "attributeValue" },

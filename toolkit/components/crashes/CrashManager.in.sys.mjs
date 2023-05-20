@@ -165,8 +165,10 @@ CrashManager.prototype = Object.freeze({
   SUBMISSION_RESULT_OK: "ok",
   SUBMISSION_RESULT_FAILED: "failed",
 
-  DUMP_REGEX: /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.dmp$/i,
-  SUBMITTED_REGEX: /^bp-(?:hr-)?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.txt$/i,
+  DUMP_REGEX:
+    /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.dmp$/i,
+  SUBMITTED_REGEX:
+    /^bp-(?:hr-)?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.txt$/i,
   ALL_REGEX: /^(.*)$/,
 
   // How long the store object should persist in memory before being

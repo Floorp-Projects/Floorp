@@ -114,9 +114,8 @@ add_task(async function test() {
   // Open bookmarks sidebar.
   await withSidebarTree("bookmarks", async () => {
     // Add observers.
-    bookmarksObserver.handlePlacesEvents = bookmarksObserver.handlePlacesEvents.bind(
-      bookmarksObserver
-    );
+    bookmarksObserver.handlePlacesEvents =
+      bookmarksObserver.handlePlacesEvents.bind(bookmarksObserver);
     PlacesUtils.observers.addListener(
       ["bookmark-added", "bookmark-removed"],
       bookmarksObserver.handlePlacesEvents

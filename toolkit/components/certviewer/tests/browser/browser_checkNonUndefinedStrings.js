@@ -13,9 +13,10 @@ add_task(async function test() {
         return content.document.querySelector("certificate-section");
       }, "Certificate section found");
 
-      let tabs = certificateSection.shadowRoot.querySelector(
-        ".certificate-tabs"
-      ).children;
+      let tabs =
+        certificateSection.shadowRoot.querySelector(
+          ".certificate-tabs"
+        ).children;
 
       Assert.ok(tabs, "Tabs were found");
 
@@ -25,9 +26,8 @@ add_task(async function test() {
         );
         tabButton.click();
 
-        let infoGroups = certificateSection.shadowRoot.querySelectorAll(
-          "info-group"
-        );
+        let infoGroups =
+          certificateSection.shadowRoot.querySelectorAll("info-group");
         Assert.ok(infoGroups, "infoGroups found");
 
         for (let infoGroup of infoGroups) {

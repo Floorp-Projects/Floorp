@@ -488,9 +488,8 @@ export var UITour = {
             }
             // We want to replace the current tab.
             browser.loadURI(url.URI, {
-              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-                {}
-              ),
+              triggeringPrincipal:
+                Services.scriptSecurityManager.createNullPrincipal({}),
             });
           });
         break;
@@ -511,9 +510,8 @@ export var UITour = {
 
             // We want to replace the current tab.
             browser.loadURI(url.URI, {
-              triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-                {}
-              ),
+              triggeringPrincipal:
+                Services.scriptSecurityManager.createNullPrincipal({}),
             });
           });
         break;
@@ -1499,10 +1497,11 @@ export var UITour = {
     let url = "about:newtab";
     aWindow.openLinkIn(url, "current", {
       targetBrowser: aBrowser,
-      triggeringPrincipal: Services.scriptSecurityManager.createContentPrincipal(
-        Services.io.newURI(url),
-        {}
-      ),
+      triggeringPrincipal:
+        Services.scriptSecurityManager.createContentPrincipal(
+          Services.io.newURI(url),
+          {}
+        ),
     });
   },
 
@@ -1510,10 +1509,11 @@ export var UITour = {
     let url = "about:protections";
     aWindow.openLinkIn(url, "current", {
       targetBrowser: aBrowser,
-      triggeringPrincipal: Services.scriptSecurityManager.createContentPrincipal(
-        Services.io.newURI(url),
-        {}
-      ),
+      triggeringPrincipal:
+        Services.scriptSecurityManager.createContentPrincipal(
+          Services.io.newURI(url),
+          {}
+        ),
     });
   },
 
@@ -1839,7 +1839,8 @@ export var UITour = {
         }
       }
 
-      appinfo.canSetDefaultBrowserInBackground = canSetDefaultBrowserInBackground;
+      appinfo.canSetDefaultBrowserInBackground =
+        canSetDefaultBrowserInBackground;
 
       // Expose Profile creation and last reset dates in weeks.
       const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;

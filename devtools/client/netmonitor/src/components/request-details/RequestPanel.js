@@ -79,9 +79,8 @@ class RequestPanel extends Component {
     };
 
     this.toggleRawRequestPayload = this.toggleRawRequestPayload.bind(this);
-    this.renderRawRequestPayloadBtn = this.renderRawRequestPayloadBtn.bind(
-      this
-    );
+    this.renderRawRequestPayloadBtn =
+      this.renderRawRequestPayloadBtn.bind(this);
   }
 
   componentDidMount() {

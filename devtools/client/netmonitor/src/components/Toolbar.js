@@ -181,17 +181,14 @@ class Toolbar extends Component {
     super(props);
 
     this.autocompleteProvider = this.autocompleteProvider.bind(this);
-    this.onSearchBoxFocusKeyboardShortcut = this.onSearchBoxFocusKeyboardShortcut.bind(
-      this
-    );
+    this.onSearchBoxFocusKeyboardShortcut =
+      this.onSearchBoxFocusKeyboardShortcut.bind(this);
     this.onSearchBoxFocus = this.onSearchBoxFocus.bind(this);
     this.toggleRequestFilterType = this.toggleRequestFilterType.bind(this);
-    this.updatePersistentLogsEnabled = this.updatePersistentLogsEnabled.bind(
-      this
-    );
-    this.updateBrowserCacheDisabled = this.updateBrowserCacheDisabled.bind(
-      this
-    );
+    this.updatePersistentLogsEnabled =
+      this.updatePersistentLogsEnabled.bind(this);
+    this.updateBrowserCacheDisabled =
+      this.updateBrowserCacheDisabled.bind(this);
   }
 
   componentDidMount() {

@@ -270,7 +270,8 @@ add_task(async function test_ensureLangPackInstalled() {
     appLocale: "en-US",
   });
 
-  const negotiatePromise = LangPackMatcher.negotiateLangPackForLanguageMismatch();
+  const negotiatePromise =
+    LangPackMatcher.negotiateLangPackForLanguageMismatch();
   resolveLangPacks(["es-ES"]);
   const { langPack } = await negotiatePromise;
 

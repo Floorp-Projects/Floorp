@@ -183,9 +183,10 @@ var SiteDataManager = {
               // An non-persistent-storage site with 0 byte quota usage is redundant for us so skip it.
               continue;
             }
-            let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-              item.origin
-            );
+            let principal =
+              Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+                item.origin
+              );
             if (principal.schemeIs("http") || principal.schemeIs("https")) {
               // Group dom storage by first party. If an entry is partitioned
               // the first party site will be in the partitionKey, instead of
@@ -315,9 +316,10 @@ var SiteDataManager = {
             continue;
           }
 
-          let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-            item.origin
-          );
+          let principal =
+            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              item.origin
+            );
           if (principal.asciiHost == asciiHost) {
             resolve(true);
             return;
@@ -439,9 +441,10 @@ var SiteDataManager = {
         new Promise(resolve => {
           // We are clearing *All* across OAs so need to ensure a principal without suffix here,
           // or the call of `clearStoragesForPrincipal` would fail.
-          principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-            originNoSuffix
-          );
+          principal =
+            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              originNoSuffix
+            );
           let request = this._qms.clearStoragesForPrincipal(
             principal,
             null,

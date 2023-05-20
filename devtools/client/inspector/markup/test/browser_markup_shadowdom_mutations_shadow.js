@@ -44,8 +44,8 @@ add_task(async function () {
   info("Delete a shadow dom element and check the updated markup view");
   let mutated = waitForMutation(inspector, "childList");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
-    const shadowRoot = content.document.querySelector("test-component")
-      .shadowRoot;
+    const shadowRoot =
+      content.document.querySelector("test-component").shadowRoot;
     const slotContainer = shadowRoot.getElementById("slot1-container");
     slotContainer.remove();
   });
@@ -61,8 +61,8 @@ add_task(async function () {
 
   mutated = inspector.once("markupmutation");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
-    const shadowRoot = content.document.querySelector("test-component")
-      .shadowRoot;
+    const shadowRoot =
+      content.document.querySelector("test-component").shadowRoot;
     const shadowDiv = shadowRoot.getElementById("another-div");
     shadowDiv.setAttribute("random-attribute", "1");
   });

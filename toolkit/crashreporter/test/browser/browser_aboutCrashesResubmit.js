@@ -131,27 +131,28 @@ function check_submit_pending(tab, crashes) {
     url => url !== "about:crashes"
   ).then(csp_onload);
   function csp_pageshow() {
-    SpecialPowers.spawn(browser, [{ CrashID, CrashURL }], function ({
-      CrashID,
-      CrashURL,
-    }) {
-      Assert.equal(
-        content.location.href,
-        "about:crashes",
-        "navigated back successfully"
-      );
-      const link = content.document
-        .getElementById(CrashID)
-        .getElementsByClassName("crash-link")[0];
-      Assert.notEqual(link, null, "crash report link changed correctly");
-      if (link) {
+    SpecialPowers.spawn(
+      browser,
+      [{ CrashID, CrashURL }],
+      function ({ CrashID, CrashURL }) {
         Assert.equal(
-          link.href,
-          CrashURL,
-          "crash report link points to correct href"
+          content.location.href,
+          "about:crashes",
+          "navigated back successfully"
         );
+        const link = content.document
+          .getElementById(CrashID)
+          .getElementsByClassName("crash-link")[0];
+        Assert.notEqual(link, null, "crash report link changed correctly");
+        if (link) {
+          Assert.equal(
+            link.href,
+            CrashURL,
+            "crash report link points to correct href"
+          );
+        }
       }
-    }).then(cleanup_and_finish);
+    ).then(cleanup_and_finish);
   }
 
   // try submitting the pending report
@@ -194,10 +195,8 @@ function test() {
   );
 
   BrowserTestUtils.openNewForegroundTab(gBrowser, "about:crashes").then(tab => {
-    SpecialPowers.spawn(
-      tab.linkedBrowser,
-      [crashes],
-      check_crash_list
-    ).then(() => check_submit_pending(tab, crashes));
+    SpecialPowers.spawn(tab.linkedBrowser, [crashes], check_crash_list).then(
+      () => check_submit_pending(tab, crashes)
+    );
   });
 }

@@ -37,9 +37,8 @@ add_task(async function eventsWhenNavigatingWithNoFrames({ client }) {
   const { frameId } = await Page.navigate({ url: PAGE_FRAME_URL });
   await assertEventOrder({ history });
 
-  const { executionContextId: destroyedId } = history.findEvent(
-    DESTROYED
-  ).payload;
+  const { executionContextId: destroyedId } =
+    history.findEvent(DESTROYED).payload;
   is(
     destroyedId,
     previousContext.id,
@@ -74,9 +73,8 @@ add_task(async function eventsWhenNavigatingFrameSet({ client }) {
     expectedEvents: [DESTROYED, CLEARED, CREATED, CREATED],
   });
 
-  const { executionContextId: destroyedId } = historyTo.findEvent(
-    DESTROYED
-  ).payload;
+  const { executionContextId: destroyedId } =
+    historyTo.findEvent(DESTROYED).payload;
   is(
     destroyedId,
     previousContext.id,
@@ -163,9 +161,8 @@ add_task(async function eventsWhenNavigatingBackWithNoFrames({ client }) {
   gBrowser.selectedBrowser.goBack();
   await assertEventOrder({ history });
 
-  const { executionContextId: destroyedId } = history.findEvent(
-    DESTROYED
-  ).payload;
+  const { executionContextId: destroyedId } =
+    history.findEvent(DESTROYED).payload;
   is(
     destroyedId,
     createdContext.id,
@@ -254,9 +251,8 @@ add_task(async function eventsWhenNavigatingByLocationWithNoFrames({ client }) {
   });
   await assertEventOrder({ history });
 
-  const { executionContextId: destroyedId } = history.findEvent(
-    DESTROYED
-  ).payload;
+  const { executionContextId: destroyedId } =
+    history.findEvent(DESTROYED).payload;
   is(
     destroyedId,
     previousContext.id,

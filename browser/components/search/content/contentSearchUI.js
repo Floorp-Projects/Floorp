@@ -674,9 +674,8 @@ this.ContentSearchUIController = (function () {
       this._strings = strings;
       this._updateDefaultEngineHeader();
       this._updateSearchWithHeader();
-      document.getElementById(
-        "contentSearchSettingsButton"
-      ).textContent = this._strings.searchSettings;
+      document.getElementById("contentSearchSettingsButton").textContent =
+        this._strings.searchSettings;
     },
 
     _updateDefaultEngineIcon() {

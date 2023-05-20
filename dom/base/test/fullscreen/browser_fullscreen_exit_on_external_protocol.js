@@ -101,27 +101,29 @@ add_task(async function OpenExternalProtocolOnPendingFullscreen() {
   for (const useClick of [true, false]) {
     await BrowserTestUtils.withNewTab(CONTENT, async browser => {
       const leavelFullscreen = waitForFullscreenState(document, false, true);
-      await SpecialPowers.spawn(browser, [useClick], async function (
-        shouldClick
-      ) {
-        const button = content.document.querySelector("button");
+      await SpecialPowers.spawn(
+        browser,
+        [useClick],
+        async function (shouldClick) {
+          const button = content.document.querySelector("button");
 
-        const clickDone = new Promise(r => {
-          button.addEventListener("click", function () {
-            content.document.documentElement.requestFullscreen();
-            // When anchor.click() is called, the fullscreen request
-            // is probably still pending.
-            if (shouldClick) {
-              content.document.querySelector("a").click();
-            } else {
-              content.document.location = "mailto:test@example.com";
-            }
-            r();
+          const clickDone = new Promise(r => {
+            button.addEventListener("click", function () {
+              content.document.documentElement.requestFullscreen();
+              // When anchor.click() is called, the fullscreen request
+              // is probably still pending.
+              if (shouldClick) {
+                content.document.querySelector("a").click();
+              } else {
+                content.document.location = "mailto:test@example.com";
+              }
+              r();
+            });
           });
-        });
-        button.click();
-        await clickDone;
-      });
+          button.click();
+          await clickDone;
+        }
+      );
 
       await leavelFullscreen;
       ok(true, "Fullscreen should be exited");
@@ -133,25 +135,27 @@ add_task(async function OpenExternalProtocolOnFullscreen() {
   for (const useClick of [true, false]) {
     await BrowserTestUtils.withNewTab(CONTENT, async browser => {
       const leavelFullscreen = waitForFullscreenState(document, false, true);
-      await SpecialPowers.spawn(browser, [useClick], async function (
-        shouldClick
-      ) {
-        let button = content.document.querySelector("button");
-        button.addEventListener("click", function () {
-          content.document.documentElement.requestFullscreen();
-        });
-        button.click();
+      await SpecialPowers.spawn(
+        browser,
+        [useClick],
+        async function (shouldClick) {
+          let button = content.document.querySelector("button");
+          button.addEventListener("click", function () {
+            content.document.documentElement.requestFullscreen();
+          });
+          button.click();
 
-        await new Promise(r => {
-          content.document.addEventListener("fullscreenchange", r);
-        });
+          await new Promise(r => {
+            content.document.addEventListener("fullscreenchange", r);
+          });
 
-        if (shouldClick) {
-          content.document.querySelector("a").click();
-        } else {
-          content.document.location = "mailto:test@example.com";
+          if (shouldClick) {
+            content.document.querySelector("a").click();
+          } else {
+            content.document.location = "mailto:test@example.com";
+          }
         }
-      });
+      );
 
       await leavelFullscreen;
       ok(true, "Fullscreen should be exited");

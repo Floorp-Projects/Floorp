@@ -90,14 +90,12 @@ class GridInspector {
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
     this.onToggleGridHighlighter = this.onToggleGridHighlighter.bind(this);
     this.onToggleShowGridAreas = this.onToggleShowGridAreas.bind(this);
-    this.onToggleShowGridLineNumbers = this.onToggleShowGridLineNumbers.bind(
-      this
-    );
+    this.onToggleShowGridLineNumbers =
+      this.onToggleShowGridLineNumbers.bind(this);
     this.onToggleShowInfiniteLines = this.onToggleShowInfiniteLines.bind(this);
     this.updateGridPanel = this.updateGridPanel.bind(this);
-    this.listenForGridHighlighterEvents = this.listenForGridHighlighterEvents.bind(
-      this
-    );
+    this.listenForGridHighlighterEvents =
+      this.listenForGridHighlighterEvents.bind(this);
 
     this.init();
   }

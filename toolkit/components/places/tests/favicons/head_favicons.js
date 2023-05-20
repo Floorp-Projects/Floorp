@@ -33,17 +33,15 @@ function checkFaviconDataForPage(
   aExpectedData,
   aCallback
 ) {
-  PlacesUtils.favicons.getFaviconDataForPage(aPageURI, async function (
-    aURI,
-    aDataLen,
-    aData,
-    aMimeType
-  ) {
-    Assert.equal(aExpectedMimeType, aMimeType);
-    Assert.ok(compareArrays(aExpectedData, aData));
-    await check_guid_for_uri(aPageURI);
-    aCallback();
-  });
+  PlacesUtils.favicons.getFaviconDataForPage(
+    aPageURI,
+    async function (aURI, aDataLen, aData, aMimeType) {
+      Assert.equal(aExpectedMimeType, aMimeType);
+      Assert.ok(compareArrays(aExpectedData, aData));
+      await check_guid_for_uri(aPageURI);
+      aCallback();
+    }
+  );
 }
 
 /**
@@ -55,15 +53,13 @@ function checkFaviconDataForPage(
  *        This function is called after the check finished.
  */
 function checkFaviconMissingForPage(aPageURI, aCallback) {
-  PlacesUtils.favicons.getFaviconURLForPage(aPageURI, function (
-    aURI,
-    aDataLen,
-    aData,
-    aMimeType
-  ) {
-    Assert.ok(aURI === null);
-    aCallback();
-  });
+  PlacesUtils.favicons.getFaviconURLForPage(
+    aPageURI,
+    function (aURI, aDataLen, aData, aMimeType) {
+      Assert.ok(aURI === null);
+      aCallback();
+    }
+  );
 }
 
 function promiseFaviconMissingForPage(aPageURI) {

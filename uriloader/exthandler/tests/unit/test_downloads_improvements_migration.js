@@ -113,7 +113,8 @@ add_task(async function test_migration_pref_enabled() {
     Services.prefs.clearUserPref(
       "browser.download.improvements_to_download_panel"
     );
-    DownloadIntegration.shouldViewDownloadInternally = oldShouldViewDownloadInternally;
+    DownloadIntegration.shouldViewDownloadInternally =
+      oldShouldViewDownloadInternally;
   });
 
   // For setup, set pref to false. Will be enabled later.

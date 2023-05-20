@@ -315,9 +315,8 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
 
     const watcherConnectionData = this._connections.get(watcherActorID);
     const { sessionData } = watcherConnectionData;
-    const workerThreadServerForwardingPrefix = connection.allocID(
-      "workerTarget"
-    );
+    const workerThreadServerForwardingPrefix =
+      connection.allocID("workerTarget");
 
     // Create the actual worker target actor, in the worker thread.
     const { connectToWorker } = lazy.Loader.require(

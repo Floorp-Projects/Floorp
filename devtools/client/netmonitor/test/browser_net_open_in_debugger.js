@@ -8,11 +8,10 @@
  */
 
 add_task(async function () {
-  const {
-    tab,
-    monitor,
-    toolbox,
-  } = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL, { requestCount: 1 });
+  const { tab, monitor, toolbox } = await initNetMonitor(
+    CONTENT_TYPE_WITHOUT_CACHE_URL,
+    { requestCount: 1 }
+  );
   info("Starting test... ");
 
   const { document, store, windowRequire } = monitor.panelWin;

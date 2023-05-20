@@ -185,13 +185,14 @@ class AboutWelcomeParent extends JSWindowActorParent {
         lazy.Telemetry.sendTelemetry(data);
         break;
       case "AWPage:GET_ATTRIBUTION_DATA":
-        let attributionData = await lazy.AboutWelcomeDefaults.getAttributionContent();
+        let attributionData =
+          await lazy.AboutWelcomeDefaults.getAttributionContent();
         return attributionData;
       case "AWPage:SELECT_THEME":
         await lazy.BuiltInThemes.ensureBuiltInThemes();
-        return lazy.AddonManager.getAddonByID(
-          LIGHT_WEIGHT_THEMES[data]
-        ).then(addon => addon.enable());
+        return lazy.AddonManager.getAddonByID(LIGHT_WEIGHT_THEMES[data]).then(
+          addon => addon.enable()
+        );
       case "AWPage:GET_SELECTED_THEME":
         let themes = await lazy.AddonManager.getAddonsByTypes(["theme"]);
         let activeTheme = themes.find(addon => addon.isActive);

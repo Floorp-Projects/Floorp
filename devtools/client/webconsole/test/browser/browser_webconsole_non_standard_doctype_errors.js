@@ -31,9 +31,8 @@ add_task(async function () {
   ok(!!quirkyDocTypeMessage, "Quirky doctype warning message is visible");
 
   info("Clicking on the Learn More link");
-  const quirkyDocTypeMessageLearnMoreLink = quirkyDocTypeMessage.querySelector(
-    ".learn-more-link"
-  );
+  const quirkyDocTypeMessageLearnMoreLink =
+    quirkyDocTypeMessage.querySelector(".learn-more-link");
   let linkSimulation = await simulateLinkClick(
     quirkyDocTypeMessageLearnMoreLink
   );
@@ -60,9 +59,8 @@ add_task(async function () {
   );
 
   info("Clicking on the Learn More link");
-  const almostStandardDocTypeMessageLearnMoreLink = almostStandardDocTypeMessage.querySelector(
-    ".learn-more-link"
-  );
+  const almostStandardDocTypeMessageLearnMoreLink =
+    almostStandardDocTypeMessage.querySelector(".learn-more-link");
   linkSimulation = await simulateLinkClick(
     almostStandardDocTypeMessageLearnMoreLink
   );
@@ -86,9 +84,8 @@ add_task(async function () {
   ok(!!noDocTypeMessage, "No doctype warning message is visible");
 
   info("Clicking on the Learn More link");
-  const noDocTypeMessageLearnMoreLink = noDocTypeMessage.querySelector(
-    ".learn-more-link"
-  );
+  const noDocTypeMessageLearnMoreLink =
+    noDocTypeMessage.querySelector(".learn-more-link");
   linkSimulation = await simulateLinkClick(noDocTypeMessageLearnMoreLink);
 
   is(

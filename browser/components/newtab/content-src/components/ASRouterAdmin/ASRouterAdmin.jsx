@@ -372,9 +372,8 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
       " "
     );
     const { config, lastUpdated, layout } = this.props.state.DiscoveryStream;
-    const personalized = this.props.otherPrefs[
-      "discoverystream.personalization.enabled"
-    ];
+    const personalized =
+      this.props.otherPrefs["discoverystream.personalization.enabled"];
     return (
       <div>
         <button className="button" onClick={this.restorePrefDefaults}>
@@ -481,20 +480,16 @@ export class ASRouterAdminInner extends React.PureComponent {
     this.handleEnabledToggle = this.handleEnabledToggle.bind(this);
     this.handleUserPrefToggle = this.handleUserPrefToggle.bind(this);
     this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
-    this.onChangeMessageGroupsFilter = this.onChangeMessageGroupsFilter.bind(
-      this
-    );
+    this.onChangeMessageGroupsFilter =
+      this.onChangeMessageGroupsFilter.bind(this);
     this.unblockAll = this.unblockAll.bind(this);
-    this.handleClearAllImpressionsByProvider = this.handleClearAllImpressionsByProvider.bind(
-      this
-    );
+    this.handleClearAllImpressionsByProvider =
+      this.handleClearAllImpressionsByProvider.bind(this);
     this.handleExpressionEval = this.handleExpressionEval.bind(this);
-    this.onChangeTargetingParameters = this.onChangeTargetingParameters.bind(
-      this
-    );
-    this.onChangeAttributionParameters = this.onChangeAttributionParameters.bind(
-      this
-    );
+    this.onChangeTargetingParameters =
+      this.onChangeTargetingParameters.bind(this);
+    this.onChangeAttributionParameters =
+      this.onChangeAttributionParameters.bind(this);
     this.setAttribution = this.setAttribution.bind(this);
     this.onCopyTargetingParams = this.onCopyTargetingParams.bind(this);
     this.onNewTargetingParams = this.onNewTargetingParams.bind(this);

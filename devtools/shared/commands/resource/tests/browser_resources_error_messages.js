@@ -165,14 +165,16 @@ async function triggerErrors(tab) {
       expectUncaughtException();
     }
 
-    await ContentTask.spawn(tab.linkedBrowser, expression, function frameScript(
-      expr
-    ) {
-      const document = content.document;
-      const scriptEl = document.createElement("script");
-      scriptEl.textContent = expr;
-      document.body.appendChild(scriptEl);
-    });
+    await ContentTask.spawn(
+      tab.linkedBrowser,
+      expression,
+      function frameScript(expr) {
+        const document = content.document;
+        const scriptEl = document.createElement("script");
+        scriptEl.textContent = expr;
+        document.body.appendChild(scriptEl);
+      }
+    );
 
     if (expected.isPromiseRejection) {
       // Wait a bit after an uncaught promise rejection error, as they are not emitted
@@ -192,10 +194,8 @@ function checkPageErrorResource(pageErrorResource, expected) {
       frame.filename.startsWith("resource://testing-common/content-task.js")
     );
     if (index > -1) {
-      clonedPageErrorResource.stacktrace = clonedPageErrorResource.stacktrace.slice(
-        0,
-        index
-      );
+      clonedPageErrorResource.stacktrace =
+        clonedPageErrorResource.stacktrace.slice(0, index);
     }
   }
   checkObject(clonedPageErrorResource, expected);

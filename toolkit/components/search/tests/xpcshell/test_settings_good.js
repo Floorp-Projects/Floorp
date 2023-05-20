@@ -61,12 +61,12 @@ add_task(async function setup() {
   enginesSettings.metaData.searchDefaultHash = SearchUtils.getVerificationHash(
     enginesSettings.metaData.searchDefault
   );
-  enginesSettings.metaData.defaultEngineIdHash = SearchUtils.getVerificationHash(
-    enginesSettings.metaData.defaultEngineId
-  );
-  enginesSettings.metaData.visibleDefaultEnginesHash = SearchUtils.getVerificationHash(
-    enginesSettings.metaData.visibleDefaultEngines
-  );
+  enginesSettings.metaData.defaultEngineIdHash =
+    SearchUtils.getVerificationHash(enginesSettings.metaData.defaultEngineId);
+  enginesSettings.metaData.visibleDefaultEnginesHash =
+    SearchUtils.getVerificationHash(
+      enginesSettings.metaData.visibleDefaultEngines
+    );
   const appInfo = getAppInfo();
   enginesSettings.buildID = appInfo.platformBuildID;
   enginesSettings.appVersion = appInfo.version;

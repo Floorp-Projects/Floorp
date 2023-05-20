@@ -9,41 +9,43 @@ const PERMISSIONS_PAGE =
   "permissions.html";
 
 function assertShown(task) {
-  return BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function (
-    browser
-  ) {
-    let popupshown = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
+  return BrowserTestUtils.withNewTab(
+    PERMISSIONS_PAGE,
+    async function (browser) {
+      let popupshown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
 
-    await SpecialPowers.spawn(browser, [], task);
+      await SpecialPowers.spawn(browser, [], task);
 
-    await popupshown;
+      await popupshown;
 
-    ok(true, "Notification permission prompt was shown");
-  });
+      ok(true, "Notification permission prompt was shown");
+    }
+  );
 }
 
 function assertNotShown(task) {
-  return BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function (
-    browser
-  ) {
-    let popupshown = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
+  return BrowserTestUtils.withNewTab(
+    PERMISSIONS_PAGE,
+    async function (browser) {
+      let popupshown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
 
-    await SpecialPowers.spawn(browser, [], task);
+      await SpecialPowers.spawn(browser, [], task);
 
-    let sawPrompt = await Promise.race([
-      popupshown.then(() => true),
-      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-      new Promise(c => setTimeout(() => c(false), 1000)),
-    ]);
+      let sawPrompt = await Promise.race([
+        popupshown.then(() => true),
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+        new Promise(c => setTimeout(() => c(false), 1000)),
+      ]);
 
-    is(sawPrompt, false, "Notification permission prompt was not shown");
-  });
+      is(sawPrompt, false, "Notification permission prompt was not shown");
+    }
+  );
 }
 
 // Tests that notification permissions are automatically denied without user interaction.

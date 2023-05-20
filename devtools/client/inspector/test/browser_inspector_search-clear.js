@@ -32,9 +32,8 @@ add_task(async function () {
   info("Type d and the clear button will be shown");
 
   const command = once(searchBox, "input");
-  let onSearchProcessingDone = inspector.searchSuggestions.once(
-    "processing-done"
-  );
+  let onSearchProcessingDone =
+    inspector.searchSuggestions.once("processing-done");
   EventUtils.synthesizeKey("c", {}, inspector.panelWin);
   await command;
 

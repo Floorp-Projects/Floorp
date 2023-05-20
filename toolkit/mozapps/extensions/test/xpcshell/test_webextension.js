@@ -19,8 +19,8 @@ const ADDONS = {
         },
       },
       icons: {
-        "48": "icon48.png",
-        "64": "icon64.png",
+        48: "icon48.png",
+        64: "icon64.png",
       },
     },
     "chrome.manifest": "content webex ./\n",
@@ -269,7 +269,8 @@ add_task(async function test_4() {
 
 // Test that the "options_ui" manifest section is processed correctly.
 add_task(async function test_options_ui() {
-  let OPTIONS_RE = /^moz-extension:\/\/[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}\/options\.html$/;
+  let OPTIONS_RE =
+    /^moz-extension:\/\/[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}\/options\.html$/;
 
   const extensionId = "webextension@tests.mozilla.org";
   let addon = await promiseInstallWebExtension({
@@ -629,7 +630,8 @@ add_task(async function test_invalid_homepage_and_developer_urls() {
     "/",
     "not-an-url",
   ];
-  const EXPECTED_ERROR_RE = /Access denied for URL|may not load or link to|is not a valid URL/;
+  const EXPECTED_ERROR_RE =
+    /Access denied for URL|may not load or link to|is not a valid URL/;
 
   for (let url of INVALID_URLS) {
     // First, we verify `homepage_url`, which has a `url` "format" defined

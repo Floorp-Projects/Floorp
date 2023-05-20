@@ -708,9 +708,8 @@ var AeroPeek = {
     }
 
     Services.prefs.addObserver(TOGGLE_PREF_NAME, this, true);
-    this.enabled = this._prefenabled = Services.prefs.getBoolPref(
-      TOGGLE_PREF_NAME
-    );
+    this.enabled = this._prefenabled =
+      Services.prefs.getBoolPref(TOGGLE_PREF_NAME);
     this.initialized = true;
   },
 

@@ -11,11 +11,8 @@ const TEST_URI =
   "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
 
 add_task(async function () {
-  const {
-    inspector,
-    toolbox,
-    highlighterTestFront,
-  } = await openInspectorForURL(TEST_URI);
+  const { inspector, toolbox, highlighterTestFront } =
+    await openInspectorForURL(TEST_URI);
 
   info("Starting element picker.");
   await startPicker(toolbox);

@@ -59,12 +59,8 @@ function getDummyServerAndClient() {
 add_task(async function test_valid() {
   let { server, client } = getDummyServerAndClient();
   let validator = new FormValidator();
-  let {
-    problemData,
-    clientRecords,
-    records,
-    deletedRecords,
-  } = await validator.compareClientWithServer(client, server);
+  let { problemData, clientRecords, records, deletedRecords } =
+    await validator.compareClientWithServer(client, server);
   equal(clientRecords.length, 3);
   equal(records.length, 3);
   equal(deletedRecords.length, 0);
@@ -78,12 +74,8 @@ add_task(async function test_formValidatorIgnoresMissingClients() {
   client.pop();
 
   let validator = new FormValidator();
-  let {
-    problemData,
-    clientRecords,
-    records,
-    deletedRecords,
-  } = await validator.compareClientWithServer(client, server);
+  let { problemData, clientRecords, records, deletedRecords } =
+    await validator.compareClientWithServer(client, server);
 
   equal(clientRecords.length, 2);
   equal(records.length, 3);

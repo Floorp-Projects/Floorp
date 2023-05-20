@@ -14,9 +14,8 @@ const addonID = "webcompat@mozilla.org";
 const addonPageRelativeURL = "/about-compat/aboutCompat.html";
 
 function AboutCompat() {
-  this.chromeURL = WebExtensionPolicy.getByID(addonID).getURL(
-    addonPageRelativeURL
-  );
+  this.chromeURL =
+    WebExtensionPolicy.getByID(addonID).getURL(addonPageRelativeURL);
 }
 AboutCompat.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIAboutModule"]),

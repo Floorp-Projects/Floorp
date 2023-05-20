@@ -5,9 +5,10 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
     let docShell = webNav.docShell;
     let listener = {
       observe(contentWindow, topic, data) {
-        let observedDocShell = contentWindow.docShell.sameTypeRootTreeItem.QueryInterface(
-          Ci.nsIDocShell
-        );
+        let observedDocShell =
+          contentWindow.docShell.sameTypeRootTreeItem.QueryInterface(
+            Ci.nsIDocShell
+          );
         if (docShell === observedDocShell) {
           Services.obs.removeObserver(
             listener,

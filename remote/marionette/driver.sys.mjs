@@ -430,7 +430,8 @@ GeckoDriver.prototype.newSession = async function (cmd) {
       lazy.logger.debug(`Waiting for initial application window`);
       await lazy.Marionette.browserStartupFinished;
 
-      const appWin = await lazy.windowManager.waitForInitialApplicationWindowLoaded();
+      const appWin =
+        await lazy.windowManager.waitForInitialApplicationWindowLoaded();
 
       if (lazy.MarionettePrefs.clickToStart) {
         Services.prompt.alert(
@@ -454,7 +455,8 @@ GeckoDriver.prototype.newSession = async function (cmd) {
       }
 
       if (this.mainFrame) {
-        this.currentSession.chromeBrowsingContext = this.mainFrame.browsingContext;
+        this.currentSession.chromeBrowsingContext =
+          this.mainFrame.browsingContext;
         this.mainFrame.focus();
       }
 
@@ -3093,15 +3095,8 @@ GeckoDriver.prototype.setupReftest = async function (cmd) {
 
 /** Run a reftest. */
 GeckoDriver.prototype.runReftest = function (cmd) {
-  let {
-    test,
-    references,
-    expected,
-    timeout,
-    width,
-    height,
-    pageRanges,
-  } = cmd.parameters;
+  let { test, references, expected, timeout, width, height, pageRanges } =
+    cmd.parameters;
 
   if (!this._reftest) {
     throw new lazy.error.UnsupportedOperationError(

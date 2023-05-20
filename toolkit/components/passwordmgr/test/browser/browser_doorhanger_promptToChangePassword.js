@@ -303,8 +303,7 @@ let tests = [
     },
   },
   {
-    name:
-      "Add username to autosaved login to match an existing usernamed login",
+    name: "Add username to autosaved login to match an existing usernamed login",
     initialSavedLogins: [availLogins.emptyXYZ, availLogins.bobABC],
     autoSavedLoginName: "emptyXYZ",
     promptArgs: {
@@ -338,8 +337,7 @@ let tests = [
     },
   },
   {
-    name:
-      "Add username to non-autosaved login to match an existing usernamed login",
+    name: "Add username to non-autosaved login to match an existing usernamed login",
     initialSavedLogins: [availLogins.emptyXYZ, availLogins.bobABC],
     autoSavedLoginName: "",
     promptArgs: {
@@ -400,8 +398,7 @@ let tests = [
     },
   },
   {
-    name:
-      "Username & password changes to an auto-saved login apply to matching usernamed-login",
+    name: "Username & password changes to an auto-saved login apply to matching usernamed-login",
     // when we update an auto-saved login - changing both username & password, is
     // the matching login updated and empty-username login removed?
     initialSavedLogins: [availLogins.emptyXYZ, availLogins.bobABC],
@@ -440,8 +437,7 @@ let tests = [
     },
   },
   {
-    name:
-      "Username & password changes to a non-auto-saved login matching usernamed-login",
+    name: "Username & password changes to a non-auto-saved login matching usernamed-login",
     // when we update a non-auto-saved login - changing both username & password, is
     // the matching login updated and empty-username login unchanged?
     initialSavedLogins: [availLogins.emptyXYZ, availLogins.bobABC],

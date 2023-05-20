@@ -495,45 +495,47 @@ add_task(
       }
     );
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [oldHeight], async function (
-      contentOldHeight
-    ) {
-      function fuzzyEqual(value, expectedValue, fuzz, msg) {
-        Assert.greaterOrEqual(expectedValue + fuzz, value, msg);
-        Assert.lessOrEqual(expectedValue - fuzz, value, msg);
-      }
-      let topDialog = content.gSubDialog._topDialog;
-      let frame = topDialog._frame;
-      let frameStyle = content.getComputedStyle(frame);
-      let docEl = frame.contentDocument.documentElement;
-      let dialogStyle = topDialog.frameContentWindow.getComputedStyle(docEl);
-      let fontSize = parseFloat(dialogStyle.fontSize);
-      let height = parseFloat(frameStyle.height);
-      let width = parseFloat(frameStyle.width);
+    await SpecialPowers.spawn(
+      tab.linkedBrowser,
+      [oldHeight],
+      async function (contentOldHeight) {
+        function fuzzyEqual(value, expectedValue, fuzz, msg) {
+          Assert.greaterOrEqual(expectedValue + fuzz, value, msg);
+          Assert.lessOrEqual(expectedValue - fuzz, value, msg);
+        }
+        let topDialog = content.gSubDialog._topDialog;
+        let frame = topDialog._frame;
+        let frameStyle = content.getComputedStyle(frame);
+        let docEl = frame.contentDocument.documentElement;
+        let dialogStyle = topDialog.frameContentWindow.getComputedStyle(docEl);
+        let fontSize = parseFloat(dialogStyle.fontSize);
+        let height = parseFloat(frameStyle.height);
+        let width = parseFloat(frameStyle.width);
 
-      fuzzyEqual(
-        width,
-        32 * fontSize,
-        2,
-        "Width should be set on the frame from the dialog"
-      );
-      Assert.ok(
-        docEl.scrollHeight > contentOldHeight,
-        "Content height increased (from " +
-          contentOldHeight +
-          " to " +
-          docEl.scrollHeight +
-          ")."
-      );
-      fuzzyEqual(
-        height,
-        docEl.scrollHeight,
-        2,
-        "Height on the frame should be higher now. " +
-          "This test may fail on certain screen resoluition. " +
-          "See bug 1420576 and bug 1205717."
-      );
-    });
+        fuzzyEqual(
+          width,
+          32 * fontSize,
+          2,
+          "Width should be set on the frame from the dialog"
+        );
+        Assert.ok(
+          docEl.scrollHeight > contentOldHeight,
+          "Content height increased (from " +
+            contentOldHeight +
+            " to " +
+            docEl.scrollHeight +
+            ")."
+        );
+        fuzzyEqual(
+          height,
+          docEl.scrollHeight,
+          2,
+          "Height on the frame should be higher now. " +
+            "This test may fail on certain screen resoluition. " +
+            "See bug 1420576 and bug 1205717."
+        );
+      }
+    );
 
     await close_subdialog_and_test_generic_end_state(
       tab.linkedBrowser,

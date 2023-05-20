@@ -7,12 +7,8 @@ const { SiteDataTestUtils } = ChromeUtils.import(
   "resource://testing-common/SiteDataTestUtils.jsm"
 );
 
-const {
-  MODE_DISABLED,
-  MODE_REJECT,
-  MODE_REJECT_OR_ACCEPT,
-  MODE_UNSET,
-} = Ci.nsICookieBannerService;
+const { MODE_DISABLED, MODE_REJECT, MODE_REJECT_OR_ACCEPT, MODE_UNSET } =
+  Ci.nsICookieBannerService;
 
 const TEST_MODES = [
   MODE_DISABLED,

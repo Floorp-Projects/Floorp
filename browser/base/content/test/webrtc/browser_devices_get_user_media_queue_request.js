@@ -91,8 +91,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "test 'Not now'/'Block' label queueing microphone behind screen behind allow camera",
+    desc: "test 'Not now'/'Block' label queueing microphone behind screen behind allow camera",
     run: async function testQueuingAudioAndScreenBehindAllowVideo() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");

@@ -14,9 +14,8 @@ export var WindowSize = {
     maximized: {
       selectors: [":root"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         await toggleFullScreen(browserWindow, false);
 
         // Wait for the Lion fullscreen transition to end as there doesn't seem to be an event
@@ -33,9 +32,8 @@ export var WindowSize = {
     normal: {
       selectors: [":root"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         await toggleFullScreen(browserWindow, false);
         browserWindow.restore();
         await new Promise((resolve, reject) => {
@@ -47,9 +45,8 @@ export var WindowSize = {
     fullScreen: {
       selectors: [":root"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         await toggleFullScreen(browserWindow, true);
         // OS X Lion fullscreen transition takes a while
         await new Promise((resolve, reject) => {

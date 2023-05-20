@@ -14,9 +14,10 @@ add_task(async function testTemporaryPermissionExpiry() {
     set: [["privacy.temporary_permission_expire_time_ms", EXPIRE_TIME_MS]],
   });
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "https://example.com"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "https://example.com"
+    );
   let id = "camera";
 
   await BrowserTestUtils.withNewTab(principal.spec, async function (browser) {

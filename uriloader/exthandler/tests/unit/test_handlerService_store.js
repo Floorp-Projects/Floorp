@@ -360,9 +360,8 @@ add_task(
 
     await unloadHandlerStore();
 
-    let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
-      "example/new"
-    );
+    let actualHandlerInfo =
+      HandlerServiceTestUtils.getHandlerInfo("example/new");
     HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
       type: "example/new",
       preferredAction: Ci.nsIHandlerInfo.saveToDisk,
@@ -392,9 +391,8 @@ add_task(
 
     await unloadHandlerStore();
 
-    let actualHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
-      "example/new"
-    );
+    let actualHandlerInfo =
+      HandlerServiceTestUtils.getHandlerInfo("example/new");
     HandlerServiceTestUtils.assertHandlerInfoMatches(actualHandlerInfo, {
       type: "example/new",
       preferredAction: Ci.nsIHandlerInfo.saveToDisk,

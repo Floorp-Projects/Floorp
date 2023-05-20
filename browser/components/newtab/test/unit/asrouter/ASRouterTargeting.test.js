@@ -142,11 +142,8 @@ describe("#CachedTargetingGetter", () => {
   });
   describe("sortMessagesByPriority", () => {
     it("should sort messages in descending priority order", async () => {
-      const [
-        m1,
-        m2,
-        m3 = { id: "m3" },
-      ] = await OnboardingMessageProvider.getUntranslatedMessages();
+      const [m1, m2, m3 = { id: "m3" }] =
+        await OnboardingMessageProvider.getUntranslatedMessages();
       const checkMessageTargetingStub = sandbox
         .stub(ASRouterTargeting, "checkMessageTargeting")
         .resolves(false);
@@ -173,11 +170,8 @@ describe("#CachedTargetingGetter", () => {
       assert.equal(arg_m3.id, m1.id);
     });
     it("should sort messages with no priority last", async () => {
-      const [
-        m1,
-        m2,
-        m3 = { id: "m3" },
-      ] = await OnboardingMessageProvider.getUntranslatedMessages();
+      const [m1, m2, m3 = { id: "m3" }] =
+        await OnboardingMessageProvider.getUntranslatedMessages();
       const checkMessageTargetingStub = sandbox
         .stub(ASRouterTargeting, "checkMessageTargeting")
         .resolves(false);
@@ -204,11 +198,8 @@ describe("#CachedTargetingGetter", () => {
       assert.equal(arg_m3.id, m2.id);
     });
     it("should keep the order of messages with same priority unchanged", async () => {
-      const [
-        m1,
-        m2,
-        m3 = { id: "m3" },
-      ] = await OnboardingMessageProvider.getUntranslatedMessages();
+      const [m1, m2, m3 = { id: "m3" }] =
+        await OnboardingMessageProvider.getUntranslatedMessages();
       const checkMessageTargetingStub = sandbox
         .stub(ASRouterTargeting, "checkMessageTargeting")
         .resolves(false);

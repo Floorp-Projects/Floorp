@@ -56,9 +56,8 @@ add_task(async function test_history_clear() {
   await PlacesTestUtils.promiseAsyncUpdates();
 
   // Clear history and wait for the history-cleared event notification.
-  let promiseClearHistory = PlacesTestUtils.waitForNotification(
-    "history-cleared"
-  );
+  let promiseClearHistory =
+    PlacesTestUtils.waitForNotification("history-cleared");
   await PlacesUtils.history.clear();
   await promiseClearHistory;
   await PlacesTestUtils.promiseAsyncUpdates();

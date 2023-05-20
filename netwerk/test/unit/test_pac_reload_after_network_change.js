@@ -16,14 +16,14 @@ const proxyPort = 4433;
 
 add_setup(async function () {
   pacServer = new HttpServer();
-  pacServer.registerPathHandler("/proxy.pac", function handler(
-    metadata,
-    response
-  ) {
-    let content = `function FindProxyForURL(url, host) { return "HTTPS localhost:${proxyPort}"; }`;
-    response.setHeader("Content-Length", `${content.length}`);
-    response.bodyOutputStream.write(content, content.length);
-  });
+  pacServer.registerPathHandler(
+    "/proxy.pac",
+    function handler(metadata, response) {
+      let content = `function FindProxyForURL(url, host) { return "HTTPS localhost:${proxyPort}"; }`;
+      response.setHeader("Content-Length", `${content.length}`);
+      response.bodyOutputStream.write(content, content.length);
+    }
+  );
   pacServer.start(-1);
 });
 

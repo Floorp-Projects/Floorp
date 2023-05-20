@@ -468,8 +468,7 @@ add_task(async function commandReceived() {
       json: () => ({
         command: "fxaccounts:command_received",
         data: {
-          url:
-            "https://api.accounts.firefox.com/auth/v1/account/device/commands?index=42&limit=1",
+          url: "https://api.accounts.firefox.com/auth/v1/account/device/commands?index=42&limit=1",
         },
       }),
     },

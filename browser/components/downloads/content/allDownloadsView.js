@@ -240,9 +240,8 @@ function DownloadsPlacesView(
   // Pause the download indicator as user is interacting with downloads. This is
   // skipped on about:downloads because it handles this by itself.
   if (aSuppressionFlag === DownloadsCommon.SUPPRESS_ALL_DOWNLOADS_OPEN) {
-    DownloadsCommon.getIndicatorData(
-      window
-    ).attentionSuppressed |= aSuppressionFlag;
+    DownloadsCommon.getIndicatorData(window).attentionSuppressed |=
+      aSuppressionFlag;
   }
 
   // Make sure to unregister the view if the window is closed.
@@ -251,9 +250,8 @@ function DownloadsPlacesView(
     () => {
       window.controllers.removeController(this);
       // Unpause the main window's download indicator.
-      DownloadsCommon.getIndicatorData(
-        window
-      ).attentionSuppressed &= ~aSuppressionFlag;
+      DownloadsCommon.getIndicatorData(window).attentionSuppressed &=
+        ~aSuppressionFlag;
       this._downloadsData.removeView(this);
       this.result = null;
     },
@@ -751,12 +749,11 @@ DownloadsPlacesView.prototype = {
     // this here instead of in DownloadsViewUI because DownloadsView doesn't
     // allow selecting multiple downloads, so in that view the menuitem will be
     // shown according to whether just the selected item has a source URL.
-    contextMenu.querySelector(
-      ".downloadCopyLocationMenuItem"
-    ).hidden = !Array.prototype.some.call(
-      this._richlistbox.selectedItems,
-      el => !!el._shell.download.source?.url
-    );
+    contextMenu.querySelector(".downloadCopyLocationMenuItem").hidden =
+      !Array.prototype.some.call(
+        this._richlistbox.selectedItems,
+        el => !!el._shell.download.source?.url
+      );
 
     let download = element._shell.download;
     if (!download.stopped) {

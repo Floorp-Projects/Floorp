@@ -46,12 +46,8 @@ export class _CollapsibleSection extends React.PureComponent {
   }
 
   render() {
-    const {
-      isAnimating,
-      maxHeight,
-      menuButtonHover,
-      showContextMenu,
-    } = this.state;
+    const { isAnimating, maxHeight, menuButtonHover, showContextMenu } =
+      this.state;
     const { id, collapsed, learnMore, title, subTitle } = this.props;
     const active = menuButtonHover || showContextMenu;
     let bodyStyle;

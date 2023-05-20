@@ -32,9 +32,10 @@ add_task(async function () {
   await waitFor(() => topLevelStylesheetEditor.highlighter);
 
   info("Check that highlighting works on the top-level document");
-  const topLevelHighlighterTestFront = await topLevelStylesheetEditor._resource.targetFront.getFront(
-    "highlighterTest"
-  );
+  const topLevelHighlighterTestFront =
+    await topLevelStylesheetEditor._resource.targetFront.getFront(
+      "highlighterTest"
+    );
   topLevelHighlighterTestFront.highlighter =
     topLevelStylesheetEditor.highlighter;
 
@@ -78,9 +79,10 @@ add_task(async function () {
   await ui.selectStyleSheet(iframeStylesheetEditor.styleSheet);
   await waitFor(() => iframeStylesheetEditor.highlighter);
 
-  const iframeHighlighterTestFront = await iframeStylesheetEditor._resource.targetFront.getFront(
-    "highlighterTest"
-  );
+  const iframeHighlighterTestFront =
+    await iframeStylesheetEditor._resource.targetFront.getFront(
+      "highlighterTest"
+    );
   iframeHighlighterTestFront.highlighter = iframeStylesheetEditor.highlighter;
 
   info("Expecting a node-highlighted event");
@@ -165,12 +167,9 @@ async function getElementNodeRectWithinTarget(selectors) {
     [inBCSelector],
     _selector => {
       const el = content.document.querySelector(_selector);
-      const {
-        left,
-        top,
-        width,
-        height,
-      } = el.getBoxQuadsFromWindowOrigin()[0].getBounds();
+      const { left, top, width, height } = el
+        .getBoxQuadsFromWindowOrigin()[0]
+        .getBounds();
       return { left, top, width, height };
     }
   );

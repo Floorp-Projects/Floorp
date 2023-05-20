@@ -502,11 +502,8 @@ async function resumeAndWaitForPauseCounter(dbg) {
  *                 and any blackboxed/nonBlackboxed sources
  */
 async function assertGutterBlackBoxBoxContextMenuItems(dbg, testFixtures) {
-  const {
-    blackboxedLine,
-    nonBlackBoxedLine,
-    blackboxedSourceState,
-  } = testFixtures;
+  const { blackboxedLine, nonBlackBoxedLine, blackboxedSourceState } =
+    testFixtures;
   if (blackboxedLine) {
     info(
       "Asserts that the gutter context menu items when clicking on the gutter of a blackboxed line"
@@ -550,10 +547,8 @@ async function assertGutterBlackBoxBoxContextMenuItems(dbg, testFixtures) {
  *                 Details needed for the assertion. Any blackboxed/nonBlackboxed sources
  */
 async function assertSourceTreeBlackBoxBoxContextMenuItems(dbg, testFixtures) {
-  const {
-    blackBoxedSourceTreeNode,
-    nonBlackBoxedSourceTreeNode,
-  } = testFixtures;
+  const { blackBoxedSourceTreeNode, nonBlackBoxedSourceTreeNode } =
+    testFixtures;
   if (blackBoxedSourceTreeNode) {
     info(
       "Asserts that the source tree blackbox context menu items when clicking on a blackboxed source tree node"

@@ -476,8 +476,10 @@ DevTools.prototype = {
    *                 A SessionStore state object that gets modified by reference
    */
   saveDevToolsSession(state) {
-    state.browserConsole = BrowserConsoleManager.getBrowserConsoleSessionState();
-    state.browserToolbox = lazy.BrowserToolboxLauncher.getBrowserToolboxSessionState();
+    state.browserConsole =
+      BrowserConsoleManager.getBrowserConsoleSessionState();
+    state.browserToolbox =
+      lazy.BrowserToolboxLauncher.getBrowserToolboxSessionState();
   },
 
   /**
@@ -868,9 +870,10 @@ DevTools.prototype = {
     });
     const inspector = toolbox.getCurrentPanel();
 
-    const nodeFront = await inspector.inspectorFront.getNodeActorFromContentDomReference(
-      domReference
-    );
+    const nodeFront =
+      await inspector.inspectorFront.getNodeActorFromContentDomReference(
+        domReference
+      );
     if (!nodeFront) {
       return;
     }

@@ -52,7 +52,8 @@ add_task(async function () {
   let lastTab = gBrowser.tabs[gBrowser.tabs.length - 1];
   await BrowserTestUtils.switchTab(gBrowser, lastTab);
 
-  let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
+  let tabStripRect =
+    gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
 
   function isInTabStrip(r) {
     return (

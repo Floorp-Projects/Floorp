@@ -87,8 +87,8 @@ async function runEditOuterHTMLTest(test, inspector) {
   // abruptly closing hanging requests when the test ends
   await onUpdated;
 
-  const closeTagLine = inspector.markup.getContainer(pageNodeFront)
-    .closeTagLine;
+  const closeTagLine =
+    inspector.markup.getContainer(pageNodeFront).closeTagLine;
   if (closeTagLine) {
     is(
       closeTagLine.querySelectorAll(".theme-fg-contrast").length,

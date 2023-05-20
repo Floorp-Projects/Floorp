@@ -6,11 +6,8 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/httpd.js"
 );
 
-const {
-  createAppInfo,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { createAppInfo, promiseShutdownManager, promiseStartupManager } =
+  AddonTestUtils;
 
 AddonTestUtils.init(this);
 

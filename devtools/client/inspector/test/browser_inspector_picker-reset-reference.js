@@ -11,11 +11,8 @@ const TEST_URL =
   "data:text/html;charset=utf8,<h1 id=target>Pick target</h1><h2>ignore me</h2>";
 
 add_task(async () => {
-  const {
-    inspector,
-    toolbox,
-    highlighterTestFront,
-  } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox, highlighterTestFront } =
+    await openInspectorForURL(TEST_URL);
 
   const { waitForHighlighterTypeHidden } = getHighlighterTestHelpers(inspector);
 

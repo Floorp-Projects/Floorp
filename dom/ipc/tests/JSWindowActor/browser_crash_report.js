@@ -16,9 +16,10 @@ declTest("crash actor", {
       let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
       let newTabBrowser = newTab.linkedBrowser;
 
-      let parent = newTabBrowser.browsingContext.currentWindowGlobal.getActor(
-        "TestWindow"
-      );
+      let parent =
+        newTabBrowser.browsingContext.currentWindowGlobal.getActor(
+          "TestWindow"
+        );
       ok(parent, "JSWindowActorParent should have value.");
 
       await SpecialPowers.spawn(newTabBrowser, [], async function () {
@@ -65,9 +66,10 @@ declTest("crash actor", {
       let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
       let newTabBrowser = newTab.linkedBrowser;
 
-      let parent = newTabBrowser.browsingContext.currentWindowGlobal.getActor(
-        "TestWindow"
-      );
+      let parent =
+        newTabBrowser.browsingContext.currentWindowGlobal.getActor(
+          "TestWindow"
+        );
       ok(parent, "JSWindowActorParent should have value.");
 
       await SpecialPowers.spawn(newTabBrowser, [], async function () {

@@ -27,10 +27,8 @@ add_task(async function test_ExtensionProcessCrashObserver() {
   await mv2Extension.startup();
   await mv2Extension.awaitMessage("background_running");
 
-  let {
-    currentProcessChildID,
-    lastCrashedProcessChildID,
-  } = ExtensionProcessCrashObserver;
+  let { currentProcessChildID, lastCrashedProcessChildID } =
+    ExtensionProcessCrashObserver;
 
   Assert.notEqual(
     currentProcessChildID,
@@ -81,7 +79,8 @@ add_task(async function test_ExtensionProcessCrashObserver() {
 
   const promiseBackgroundBrowser = waitForExtensionBrowserInserted();
 
-  const promiseExtensionProcessCrashNotified = waitForExtensionProcessCrashNotified();
+  const promiseExtensionProcessCrashNotified =
+    waitForExtensionProcessCrashNotified();
 
   await mv3Extension.startup();
   await mv3Extension.awaitMessage("background_running");

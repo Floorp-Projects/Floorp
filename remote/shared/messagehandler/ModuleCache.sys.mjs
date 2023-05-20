@@ -258,8 +258,8 @@ export class ModuleCache {
 
     // If the command is targeting another type, the module is expected to
     // be in a composed folder eg "windowglobal-in-root/${moduleName}.jsm".
-    const destinationPath = lazy.getMessageHandlerClass(destinationType)
-      .modulePath;
+    const destinationPath =
+      lazy.getMessageHandlerClass(destinationType).modulePath;
     return `${destinationPath}-in-${originPath}`;
   }
 }

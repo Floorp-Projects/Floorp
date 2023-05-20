@@ -12,9 +12,8 @@ export var CustomizeMode = {
       selectors: ["#navigator-toolbox"],
       applyConfig() {
         return new Promise(resolve => {
-          let browserWindow = Services.wm.getMostRecentWindow(
-            "navigator:browser"
-          );
+          let browserWindow =
+            Services.wm.getMostRecentWindow("navigator:browser");
           if (
             !browserWindow.document.documentElement.hasAttribute("customizing")
           ) {
@@ -45,9 +44,8 @@ export var CustomizeMode = {
       selectors: ["#navigator-toolbox", "#customization-container"],
       applyConfig() {
         return new Promise(resolve => {
-          let browserWindow = Services.wm.getMostRecentWindow(
-            "navigator:browser"
-          );
+          let browserWindow =
+            Services.wm.getMostRecentWindow("navigator:browser");
           if (
             browserWindow.document.documentElement.hasAttribute("customizing")
           ) {

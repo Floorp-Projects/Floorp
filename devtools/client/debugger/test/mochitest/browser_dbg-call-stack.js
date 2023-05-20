@@ -85,17 +85,17 @@ function createMockAngularPage() {
   httpServer.registerContentType("js", "application/javascript");
 
   const htmlFilename = "angular-mock.html";
-  httpServer.registerPathHandler(`/${htmlFilename}`, function (
-    request,
-    response
-  ) {
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.write(`
+  httpServer.registerPathHandler(
+    `/${htmlFilename}`,
+    function (request, response) {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.write(`
         <html>
             <button class="pause">Click me</button>
             <script type="text/javascript" src="angular.js"></script>
         </html>`);
-  });
+    }
+  );
 
   // Register an angular.js file in order to create a Group with anonymous functions in
   // the callstack panel.

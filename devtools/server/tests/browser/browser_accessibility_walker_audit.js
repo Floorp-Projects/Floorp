@@ -10,13 +10,10 @@ const {
 
 // Checks for the AccessibleWalkerActor audit.
 add_task(async function () {
-  const {
-    target,
-    a11yWalker,
-    parentAccessibility,
-  } = await initAccessibilityFrontsForUrl(
-    MAIN_DOMAIN + "doc_accessibility_audit.html"
-  );
+  const { target, a11yWalker, parentAccessibility } =
+    await initAccessibilityFrontsForUrl(
+      MAIN_DOMAIN + "doc_accessibility_audit.html"
+    );
 
   const accessibles = [
     {

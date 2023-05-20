@@ -91,9 +91,8 @@ add_task(async function test_timestamp_fixup() {
     "One fixup of lastAccessed"
   );
   {
-    let {
-      values,
-    } = await Glean.networking.cookieCreationFixupDiff.testGetValue();
+    let { values } =
+      await Glean.networking.cookieCreationFixupDiff.testGetValue();
     info(JSON.stringify(values));
     let keys = Object.keys(values).splice(-2, 2);
     Assert.equal(keys.length, 2, "There should be two entries in telemetry");
@@ -113,9 +112,8 @@ add_task(async function test_timestamp_fixup() {
   }
 
   {
-    let {
-      values,
-    } = await Glean.networking.cookieAccessFixupDiff.testGetValue();
+    let { values } =
+      await Glean.networking.cookieAccessFixupDiff.testGetValue();
     info(JSON.stringify(values));
     let keys = Object.keys(values).splice(-2, 2);
     Assert.equal(keys.length, 2, "There should be two entries in telemetry");

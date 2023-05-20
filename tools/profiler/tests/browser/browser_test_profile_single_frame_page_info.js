@@ -90,10 +90,8 @@ add_task(async function test_profile_private_browsing() {
     const activeTabID = contentBrowser.browsingContext.browserId;
 
     info("Capture the profile data.");
-    const {
-      contentProcess,
-      contentThread,
-    } = await stopProfilerNowAndGetThreads(contentPid);
+    const { contentProcess, contentThread } =
+      await stopProfilerNowAndGetThreads(contentPid);
 
     // This information is available with fission only.
     Assert.equal(

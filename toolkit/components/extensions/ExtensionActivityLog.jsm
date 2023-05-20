@@ -107,8 +107,8 @@ const ExtensionActivityLog = {
     if (name === MSG_LOG) {
       let { viewType, browsingContextId } = data;
       if (browsingContextId && (!viewType || viewType == "tab")) {
-        let browser = BrowsingContext.get(browsingContextId).top
-          .embedderElement;
+        let browser =
+          BrowsingContext.get(browsingContextId).top.embedderElement;
         let browserData = lazy.tabTracker.getBrowserData(browser);
         if (browserData && browserData.tabId !== undefined) {
           data.data.tabId = browserData.tabId;

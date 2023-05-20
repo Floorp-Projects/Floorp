@@ -517,9 +517,8 @@ const QuotaCleaner = {
       .map(
         principal =>
           new Promise((resolve, reject) => {
-            let clearRequest = Services.qms.clearStoragesForPrincipal(
-              principal
-            );
+            let clearRequest =
+              Services.qms.clearStoragesForPrincipal(principal);
             clearRequest.callback = () => {
               if (clearRequest.resultCode != Cr.NS_OK) {
                 reject({ message: "Deleting quota storages failed" });
@@ -1189,9 +1188,8 @@ const ClientAuthRememberCleaner = {
             // this case we won't match the partitionKey, but we can still match
             // the asciiHost.
             let originSuffix = decodeURIComponent(originSuffixEncoded);
-            originAttributes = ChromeUtils.CreateOriginAttributesFromOriginSuffix(
-              originSuffix
-            );
+            originAttributes =
+              ChromeUtils.CreateOriginAttributesFromOriginSuffix(originSuffix);
           } catch (e) {
             console.error(e);
           }
@@ -1466,10 +1464,11 @@ const IdentityCredentialStorageCleaner = {
         httpURI,
         aOriginAttributes
       );
-      let httpsPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-        httpsURI,
-        aOriginAttributes
-      );
+      let httpsPrincipal =
+        Services.scriptSecurityManager.createContentPrincipal(
+          httpsURI,
+          aOriginAttributes
+        );
       lazy.IdentityCredentialStorageService.deleteFromPrincipal(httpPrincipal);
       lazy.IdentityCredentialStorageService.deleteFromPrincipal(httpsPrincipal);
     }

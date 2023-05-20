@@ -84,8 +84,8 @@ class CookiesStorageActor extends BaseStorageActor {
     } else {
       // If we can't find the window by host, fallback to the top window
       // origin attributes.
-      originAttributes = this.storageActor.document?.effectiveStoragePrincipal
-        .originAttributes;
+      originAttributes =
+        this.storageActor.document?.effectiveStoragePrincipal.originAttributes;
     }
 
     return originAttributes;

@@ -116,59 +116,62 @@ decorate_task(
 );
 
 // Test that per-recipe uptake telemetry is recorded
-decorate_task(withStub(Uptake, "reportRecipe"), async function ({
-  reportRecipeStub,
-}) {
-  const action = new NoopAction();
-  const recipe = recipeFactory();
-  await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
-  Assert.deepEqual(
-    reportRecipeStub.args,
-    [[recipe, Uptake.RECIPE_SUCCESS]],
-    "per-recipe uptake telemetry should be reported"
-  );
-});
+decorate_task(
+  withStub(Uptake, "reportRecipe"),
+  async function ({ reportRecipeStub }) {
+    const action = new NoopAction();
+    const recipe = recipeFactory();
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MATCH);
+    Assert.deepEqual(
+      reportRecipeStub.args,
+      [[recipe, Uptake.RECIPE_SUCCESS]],
+      "per-recipe uptake telemetry should be reported"
+    );
+  }
+);
 
 // Finalize causes action telemetry to be recorded
-decorate_task(withStub(Uptake, "reportAction"), async function ({
-  reportActionStub,
-}) {
-  const action = new NoopAction();
-  await action.finalize();
-  ok(
-    action.state == NoopAction.STATE_FINALIZED,
-    "Action should be marked as finalized"
-  );
-  Assert.deepEqual(
-    reportActionStub.args,
-    [[action.name, Uptake.ACTION_SUCCESS]],
-    "action uptake telemetry should be reported"
-  );
-});
+decorate_task(
+  withStub(Uptake, "reportAction"),
+  async function ({ reportActionStub }) {
+    const action = new NoopAction();
+    await action.finalize();
+    ok(
+      action.state == NoopAction.STATE_FINALIZED,
+      "Action should be marked as finalized"
+    );
+    Assert.deepEqual(
+      reportActionStub.args,
+      [[action.name, Uptake.ACTION_SUCCESS]],
+      "action uptake telemetry should be reported"
+    );
+  }
+);
 
 // Recipes can't be run after finalize is called
-decorate_task(withStub(Uptake, "reportRecipe"), async function ({
-  reportRecipeStub,
-}) {
-  const action = new NoopAction();
-  const recipe1 = recipeFactory();
-  const recipe2 = recipeFactory();
+decorate_task(
+  withStub(Uptake, "reportRecipe"),
+  async function ({ reportRecipeStub }) {
+    const action = new NoopAction();
+    const recipe1 = recipeFactory();
+    const recipe2 = recipeFactory();
 
-  await action.processRecipe(recipe1, BaseAction.suitability.FILTER_MATCH);
-  await action.finalize();
+    await action.processRecipe(recipe1, BaseAction.suitability.FILTER_MATCH);
+    await action.finalize();
 
-  await Assert.rejects(
-    action.processRecipe(recipe2, BaseAction.suitability.FILTER_MATCH),
-    /^Error: Action has already been finalized$/,
-    "running recipes after finalization is an error"
-  );
+    await Assert.rejects(
+      action.processRecipe(recipe2, BaseAction.suitability.FILTER_MATCH),
+      /^Error: Action has already been finalized$/,
+      "running recipes after finalization is an error"
+    );
 
-  Assert.deepEqual(
-    reportRecipeStub.args,
-    [[recipe1, Uptake.RECIPE_SUCCESS]],
-    "Only recipes executed prior to finalizer should report uptake telemetry"
-  );
-});
+    Assert.deepEqual(
+      reportRecipeStub.args,
+      [[recipe1, Uptake.RECIPE_SUCCESS]],
+      "Only recipes executed prior to finalizer should report uptake telemetry"
+    );
+  }
+);
 
 // Test an action with a failing pre-execution step
 decorate_task(

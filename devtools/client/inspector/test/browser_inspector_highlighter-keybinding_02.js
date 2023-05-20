@@ -9,11 +9,8 @@
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(async function () {
-  const {
-    inspector,
-    toolbox,
-    highlighterTestFront,
-  } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox, highlighterTestFront } =
+    await openInspectorForURL(TEST_URL);
   const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 
   await startPicker(toolbox);

@@ -594,9 +594,8 @@ var tests = [
       gContentAPI.addNavBarWidget("forget", () => {
         info("addNavBarWidget callback successfully called");
 
-        let updatedPlacement = CustomizableUI.getPlacementOfWidget(
-          "panic-button"
-        );
+        let updatedPlacement =
+          CustomizableUI.getPlacementOfWidget("panic-button");
         is(updatedPlacement.area, CustomizableUI.AREA_NAVBAR);
 
         gContentAPI.getConfiguration("availableTargets", data2 => {

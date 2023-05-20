@@ -195,14 +195,16 @@ add_task(async function test_extension_page_sameprocess_navigation() {
           // We should not have tried to deserialize the event data for the extension page
           // that got moved into the BFCache (See Bug 1499129).
           {
-            message: /StructureCloneHolder.deserialize: Argument 1 is not an object/,
+            message:
+              /StructureCloneHolder.deserialize: Argument 1 is not an object/,
           },
         ],
         expected: [
           // If the extension page is expected to be in the BFCache, then we expect to see
           // a warning message logged for the ignored listener.
           {
-            message: /Ignored listener for inactive context .* path=webRequest.onBeforeRequest/,
+            message:
+              /Ignored listener for inactive context .* path=webRequest.onBeforeRequest/,
           },
         ],
       },

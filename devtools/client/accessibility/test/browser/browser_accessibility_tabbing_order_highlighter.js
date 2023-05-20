@@ -41,7 +41,8 @@ add_task(async () => {
     ? await netIframeTarget.getFront("highlighterTest")
     : null;
 
-  let tabbingOrderHighlighterData = await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData();
+  let tabbingOrderHighlighterData =
+    await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData();
   is(
     tabbingOrderHighlighterData.length,
     0,
@@ -57,7 +58,8 @@ add_task(async () => {
   await waitUntilState(store, state => state.ui.tabbingOrderDisplayed === true);
 
   is(tabbingOrderCheckbox.checked, true, "Checkbox is checked");
-  tabbingOrderHighlighterData = await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData();
+  tabbingOrderHighlighterData =
+    await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData();
   if (isFissionEnabled()) {
     // ⚠️ We don't get the highlighter for the <html> node of the iframe when Fission is enabled.
     // This should be fix as part of Bug 1740509.
@@ -67,7 +69,8 @@ add_task(async () => {
       "Tabbing order is visible for the top level target after clicking the checkbox"
     );
 
-    const orgIframeTabingOrderHighlighterData = await orgIframeHighlighterTestFront.getTabbingOrderHighlighterData();
+    const orgIframeTabingOrderHighlighterData =
+      await orgIframeHighlighterTestFront.getTabbingOrderHighlighterData();
     is(
       JSON.stringify(orgIframeTabingOrderHighlighterData),
       JSON.stringify([
@@ -77,7 +80,8 @@ add_task(async () => {
       "Tabbing order is visible for the org iframe after clicking the checkbox"
     );
 
-    const netIframeTabingOrderHighlighterData = await netIframeHighlighterTestFront.getTabbingOrderHighlighterData();
+    const netIframeTabingOrderHighlighterData =
+      await netIframeHighlighterTestFront.getTabbingOrderHighlighterData();
     is(
       JSON.stringify(netIframeTabingOrderHighlighterData),
       JSON.stringify([`button#iframe-net-btn-1 : 5`]),
@@ -107,7 +111,8 @@ add_task(async () => {
   );
 
   is(tabbingOrderCheckbox.checked, false, "Checkbox is unchecked");
-  tabbingOrderHighlighterData = await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData();
+  tabbingOrderHighlighterData =
+    await topLevelFrameHighlighterTestFront.getTabbingOrderHighlighterData();
   is(
     tabbingOrderHighlighterData.length,
     0,
@@ -115,13 +120,15 @@ add_task(async () => {
   );
 
   if (isFissionEnabled()) {
-    const orgIframeTabingOrderHighlighterData = await orgIframeHighlighterTestFront.getTabbingOrderHighlighterData();
+    const orgIframeTabingOrderHighlighterData =
+      await orgIframeHighlighterTestFront.getTabbingOrderHighlighterData();
     is(
       orgIframeTabingOrderHighlighterData.length,
       0,
       "Tabbing order is also hidden on the org iframe target"
     );
-    const netIframeTabingOrderHighlighterData = await netIframeHighlighterTestFront.getTabbingOrderHighlighterData();
+    const netIframeTabingOrderHighlighterData =
+      await netIframeHighlighterTestFront.getTabbingOrderHighlighterData();
     is(
       netIframeTabingOrderHighlighterData.length,
       0,

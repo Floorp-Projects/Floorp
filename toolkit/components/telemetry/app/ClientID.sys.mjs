@@ -46,7 +46,8 @@ const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
  * otherwise.
  */
 function isValidClientID(id) {
-  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const UUID_REGEX =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return UUID_REGEX.test(id);
 }
 

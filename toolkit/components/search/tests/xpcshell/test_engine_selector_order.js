@@ -115,13 +115,11 @@ add_task(async function () {
     delete engineSelector._configuration;
     getStub.returns(getConfigData(test.input));
 
-    const {
-      engines,
-      privateDefault,
-    } = await engineSelector.fetchEngineConfiguration({
-      locale: "en-US",
-      region: "us",
-    });
+    const { engines, privateDefault } =
+      await engineSelector.fetchEngineConfiguration({
+        locale: "en-US",
+        region: "us",
+      });
 
     let names = engines.map(obj => obj.engineName);
     Assert.deepEqual(

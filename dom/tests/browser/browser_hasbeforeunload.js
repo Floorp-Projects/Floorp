@@ -363,30 +363,32 @@ async function prepareSubframes(browser, options) {
   browser.reload();
   await BrowserTestUtils.browserLoaded(browser);
 
-  await SpecialPowers.spawn(browser, [{ options, PAGE_URL }], async function (
-    args
-  ) {
-    let { options: allSubframeOptions, PAGE_URL: contentPageURL } = args;
-    function loadBeforeUnloadHelper(doc, subframeOptions) {
-      let subframe = doc.getElementById("subframe");
-      subframe.remove();
-      if (subframeOptions.sandboxAttributes === null) {
-        subframe.removeAttribute("sandbox");
-      } else {
-        subframe.setAttribute("sandbox", subframeOptions.sandboxAttributes);
+  await SpecialPowers.spawn(
+    browser,
+    [{ options, PAGE_URL }],
+    async function (args) {
+      let { options: allSubframeOptions, PAGE_URL: contentPageURL } = args;
+      function loadBeforeUnloadHelper(doc, subframeOptions) {
+        let subframe = doc.getElementById("subframe");
+        subframe.remove();
+        if (subframeOptions.sandboxAttributes === null) {
+          subframe.removeAttribute("sandbox");
+        } else {
+          subframe.setAttribute("sandbox", subframeOptions.sandboxAttributes);
+        }
+        doc.body.appendChild(subframe);
+        subframe.contentWindow.location = contentPageURL;
+        return ContentTaskUtils.waitForEvent(subframe, "load").then(() => {
+          return subframe.contentDocument;
+        });
       }
-      doc.body.appendChild(subframe);
-      subframe.contentWindow.location = contentPageURL;
-      return ContentTaskUtils.waitForEvent(subframe, "load").then(() => {
-        return subframe.contentDocument;
-      });
-    }
 
-    let currentDoc = content.document;
-    for (let subframeOptions of allSubframeOptions) {
-      currentDoc = await loadBeforeUnloadHelper(currentDoc, subframeOptions);
+      let currentDoc = content.document;
+      for (let subframeOptions of allSubframeOptions) {
+        currentDoc = await loadBeforeUnloadHelper(currentDoc, subframeOptions);
+      }
     }
-  });
+  );
 }
 
 /**

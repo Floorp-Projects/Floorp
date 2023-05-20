@@ -36,15 +36,17 @@ const assertNumScriptsInStore = async (extension, expectedNum) => {
   // isn't a problem in practice but this becomes a problem in this test given
   // that we should make sure the startup cache is updated before checking it.
   await TestUtils.waitForCondition(async () => {
-    let scripts = await ExtensionScriptingStore._getStoreForTesting().getByExtensionId(
-      extension.id
-    );
+    let scripts =
+      await ExtensionScriptingStore._getStoreForTesting().getByExtensionId(
+        extension.id
+      );
     return scripts.length === expectedNum;
   }, "wait until the store is updated with the expected number of scripts");
 
-  let scripts = await ExtensionScriptingStore._getStoreForTesting().getByExtensionId(
-    extension.id
-  );
+  let scripts =
+    await ExtensionScriptingStore._getStoreForTesting().getByExtensionId(
+      extension.id
+    );
   Assert.equal(
     scripts.length,
     expectedNum,
@@ -740,9 +742,8 @@ add_task(async function test_persisted_scripts_cleared_on_addon_updates() {
     },
   ]);
   await assertNumScriptsInStore(extension1, 1);
-  const extension1Reinstalled = ExtensionTestUtils.loadExtension(
-    extension1Data
-  );
+  const extension1Reinstalled =
+    ExtensionTestUtils.loadExtension(extension1Data);
   await extension1Reinstalled.startup();
   equal(
     extension1Reinstalled.extension.startupReason,

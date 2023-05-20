@@ -45,14 +45,12 @@ add_task(async function test() {
       await SpecialPowers.spawn(browser, [true], () => {
         const pageNumberInput = content.document.querySelector("#pageNumber");
         const { style } = pageNumberInput;
-        const baseHeight = content.document.defaultView.getComputedStyle(
-          pageNumberInput
-        ).height;
+        const baseHeight =
+          content.document.defaultView.getComputedStyle(pageNumberInput).height;
 
         style.fontSize = "1px";
-        const height = content.document.defaultView.getComputedStyle(
-          pageNumberInput
-        ).height;
+        const height =
+          content.document.defaultView.getComputedStyle(pageNumberInput).height;
 
         // Changing the font size should change the height of the input
         // element. If the minimum font size is used, the height won't change.

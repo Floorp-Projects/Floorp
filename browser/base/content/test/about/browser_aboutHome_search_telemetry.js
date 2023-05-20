@@ -71,15 +71,17 @@ add_task(async function () {
       );
 
       // Perform a search to increase the SEARCH_COUNT histogram.
-      await SpecialPowers.spawn(browser, [{ searchStr }], async function (
-        args
-      ) {
-        let doc = content.document;
-        info("Perform a search.");
-        let el = doc.querySelector(["#searchText", "#newtab-search-text"]);
-        el.value = args.searchStr;
-        doc.getElementById("searchSubmit").click();
-      });
+      await SpecialPowers.spawn(
+        browser,
+        [{ searchStr }],
+        async function (args) {
+          let doc = content.document;
+          info("Perform a search.");
+          let el = doc.querySelector(["#searchText", "#newtab-search-text"]);
+          el.value = args.searchStr;
+          doc.getElementById("searchSubmit").click();
+        }
+      );
 
       await promise;
 

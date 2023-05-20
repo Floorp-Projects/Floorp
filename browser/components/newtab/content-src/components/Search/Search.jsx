@@ -22,9 +22,8 @@ export class _Search extends React.PureComponent {
     this.onSearchHandoffDrop = this.onSearchHandoffDrop.bind(this);
     this.onInputMount = this.onInputMount.bind(this);
     this.onInputMountHandoff = this.onInputMountHandoff.bind(this);
-    this.onSearchHandoffButtonMount = this.onSearchHandoffButtonMount.bind(
-      this
-    );
+    this.onSearchHandoffButtonMount =
+      this.onSearchHandoffButtonMount.bind(this);
   }
 
   handleEvent(event) {

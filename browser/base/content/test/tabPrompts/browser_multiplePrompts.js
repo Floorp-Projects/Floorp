@@ -21,8 +21,8 @@ const CONTENT_PROMPT_SUBDIALOG = Services.prefs.getBoolPref(
  */
 async function closeDialogs(tab, dialogCount) {
   let dialogElementsCount = dialogCount;
-  let dialogs = tab.linkedBrowser.tabDialogBox.getContentDialogManager()
-    .dialogs;
+  let dialogs =
+    tab.linkedBrowser.tabDialogBox.getContentDialogManager().dialogs;
 
   is(
     dialogs.length,
@@ -76,9 +76,8 @@ async function closeDialogs(tab, dialogCount) {
 async function closeTabModals(tab, promptCount) {
   let promptElementsCount = promptCount;
   while (promptElementsCount--) {
-    let promptElements = tab.linkedBrowser.parentNode.querySelectorAll(
-      "tabmodalprompt"
-    );
+    let promptElements =
+      tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
     is(
       promptElements.length,
       promptElementsCount + 1,
@@ -112,9 +111,8 @@ async function closeTabModals(tab, promptCount) {
     }
   }
 
-  let promptElements = tab.linkedBrowser.parentNode.querySelectorAll(
-    "tabmodalprompt"
-  );
+  let promptElements =
+    tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
   is(promptElements.length, 0, "Prompts should all be dismissed.");
 }
 

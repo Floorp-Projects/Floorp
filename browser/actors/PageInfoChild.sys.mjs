@@ -94,9 +94,8 @@ export class PageInfoChild extends JSWindowActorChild {
     documentURIObject.spec = document.documentURIObject.spec;
     docInfo.documentURIObject = documentURIObject;
 
-    docInfo.isContentWindowPrivate = lazy.PrivateBrowsingUtils.isContentWindowPrivate(
-      document.ownerGlobal
-    );
+    docInfo.isContentWindowPrivate =
+      lazy.PrivateBrowsingUtils.isContentWindowPrivate(document.ownerGlobal);
 
     return docInfo;
   }

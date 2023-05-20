@@ -16,14 +16,12 @@ const TEST_URI = URL_ROOT + "doc_inspector_infobar_04.html";
 const CLASS_GRID_TYPE = "box-model-infobar-grid-type";
 const CLASS_FLEX_TYPE = "box-model-infobar-flex-type";
 
-const FLEX_CONTAINER_TEXT = HighlightersBundle.formatValueSync(
-  "flextype-container"
-);
+const FLEX_CONTAINER_TEXT =
+  HighlightersBundle.formatValueSync("flextype-container");
 const FLEX_ITEM_TEXT = HighlightersBundle.formatValueSync("flextype-item");
 const FLEX_DUAL_TEXT = HighlightersBundle.formatValueSync("flextype-dual");
-const GRID_CONTAINER_TEXT = HighlightersBundle.formatValueSync(
-  "gridtype-container"
-);
+const GRID_CONTAINER_TEXT =
+  HighlightersBundle.formatValueSync("gridtype-container");
 const GRID_ITEM_TEXT = HighlightersBundle.formatValueSync("gridtype-item");
 const GRID_DUAL_TEXT = HighlightersBundle.formatValueSync("gridtype-dual");
 

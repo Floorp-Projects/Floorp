@@ -124,11 +124,8 @@ function updateNodes(selector) {
     dispatch({ type: COMPATIBILITY_UPDATE_NODES_START });
 
     try {
-      const {
-        selectedNode,
-        topLevelTarget,
-        targetBrowsers,
-      } = getState().compatibility;
+      const { selectedNode, topLevelTarget, targetBrowsers } =
+        getState().compatibility;
       const { walker } = await topLevelTarget.getFront("inspector");
       const nodeList = await walker.querySelectorAll(walker.rootNode, selector);
 

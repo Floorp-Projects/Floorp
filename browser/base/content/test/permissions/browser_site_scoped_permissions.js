@@ -15,9 +15,10 @@ const SUBDOMAIN_EMPTY_PAGE =
 
 add_task(async function testSiteScopedPermissionSubdomainAffectsBaseDomain() {
   let subdomainOrigin = "https://www.example.com";
-  let subdomainPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    subdomainOrigin
-  );
+  let subdomainPrincipal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      subdomainOrigin
+    );
   let id = "3rdPartyStorage^https://example.org";
 
   await BrowserTestUtils.withNewTab(EMPTY_PAGE, async function (browser) {
@@ -62,44 +63,44 @@ add_task(async function testSiteScopedPermissionSubdomainAffectsBaseDomain() {
 
 add_task(async function testSiteScopedPermissionBaseDomainAffectsSubdomain() {
   let origin = "https://example.com";
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    origin
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
   let id = "3rdPartyStorage^https://example.org";
 
-  await BrowserTestUtils.withNewTab(SUBDOMAIN_EMPTY_PAGE, async function (
-    browser
-  ) {
-    Services.perms.addFromPrincipal(principal, id, SitePermissions.ALLOW);
-    await openPermissionPopup();
+  await BrowserTestUtils.withNewTab(
+    SUBDOMAIN_EMPTY_PAGE,
+    async function (browser) {
+      Services.perms.addFromPrincipal(principal, id, SitePermissions.ALLOW);
+      await openPermissionPopup();
 
-    let permissionsList = document.getElementById(
-      "permission-popup-permission-list"
-    );
-    let listEntryCount = permissionsList.querySelectorAll(
-      ".permission-popup-permission-item"
-    ).length;
-    is(
-      listEntryCount,
-      1,
-      "Permission exists on base domain when set on subdomain"
-    );
+      let permissionsList = document.getElementById(
+        "permission-popup-permission-list"
+      );
+      let listEntryCount = permissionsList.querySelectorAll(
+        ".permission-popup-permission-item"
+      ).length;
+      is(
+        listEntryCount,
+        1,
+        "Permission exists on base domain when set on subdomain"
+      );
 
-    closePermissionPopup();
+      closePermissionPopup();
 
-    Services.perms.removeFromPrincipal(principal, id);
+      Services.perms.removeFromPrincipal(principal, id);
 
-    await openPermissionPopup();
+      await openPermissionPopup();
 
-    listEntryCount = permissionsList.querySelectorAll(
-      ".permission-popup-permission-item-3rdPartyStorage"
-    ).length;
-    is(
-      listEntryCount,
-      0,
-      "Permission removed on base domain when removed on subdomain"
-    );
+      listEntryCount = permissionsList.querySelectorAll(
+        ".permission-popup-permission-item-3rdPartyStorage"
+      ).length;
+      is(
+        listEntryCount,
+        0,
+        "Permission removed on base domain when removed on subdomain"
+      );
 
-    await closePermissionPopup();
-  });
+      await closePermissionPopup();
+    }
+  );
 });

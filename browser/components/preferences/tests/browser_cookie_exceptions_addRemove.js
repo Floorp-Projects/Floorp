@@ -76,9 +76,8 @@ function deletePermission(permission, dialog) {
   let elements = permissionsBox.getElementsByAttribute("origin", permission);
   is(elements.length, 1, "It should find only one entry");
   permissionsBox.selectItem(elements[0]);
-  let removePermissionButton = dialog.document.getElementById(
-    "removePermission"
-  );
+  let removePermissionButton =
+    dialog.document.getElementById("removePermission");
   is(
     removePermissionButton.hasAttribute("disabled"),
     false,

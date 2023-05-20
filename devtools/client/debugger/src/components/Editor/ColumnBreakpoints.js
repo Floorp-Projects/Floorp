@@ -31,13 +31,8 @@ class ColumnBreakpoints extends Component {
   }
 
   render() {
-    const {
-      cx,
-      editor,
-      columnBreakpoints,
-      selectedSource,
-      breakpointActions,
-    } = this.props;
+    const { cx, editor, columnBreakpoints, selectedSource, breakpointActions } =
+      this.props;
 
     if (!selectedSource || columnBreakpoints.length === 0) {
       return null;

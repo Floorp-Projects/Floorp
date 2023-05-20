@@ -301,8 +301,10 @@ function getSWTelemetrySums() {
   let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(
     Ci.nsITelemetry
   );
-  let keyedhistograms = telemetry.getSnapshotForKeyedHistograms("main", false)
-    .parent;
+  let keyedhistograms = telemetry.getSnapshotForKeyedHistograms(
+    "main",
+    false
+  ).parent;
   let keyedscalars = telemetry.getSnapshotForKeyedScalars("main", false).parent;
   // We're not looking at the distribution of the histograms, just that they changed
   return {

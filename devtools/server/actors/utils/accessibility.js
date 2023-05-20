@@ -99,4 +99,5 @@ function getAriaRoles(accessible) {
 exports.getAriaRoles = getAriaRoles;
 exports.isDefunct = isDefunct;
 exports.loadSheetForBackgroundCalculation = loadSheetForBackgroundCalculation;
-exports.removeSheetForBackgroundCalculation = removeSheetForBackgroundCalculation;
+exports.removeSheetForBackgroundCalculation =
+  removeSheetForBackgroundCalculation;

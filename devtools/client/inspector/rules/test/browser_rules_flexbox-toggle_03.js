@@ -76,9 +76,8 @@ add_task(async function () {
 
   info("Selecting the second flexbox container.");
   await selectNode("#flex2", inspector);
-  const firstFlexboxHighterShown = getNodeForActiveHighlighter(
-    HIGHLIGHTER_TYPE
-  );
+  const firstFlexboxHighterShown =
+    getNodeForActiveHighlighter(HIGHLIGHTER_TYPE);
   container = getRuleViewProperty(view, ".flex", "display").valueSpan;
   flexboxToggle = container.querySelector(".js-toggle-flexbox-highlighter");
 

@@ -159,5 +159,7 @@ exports.isString = isString;
 exports.jsmExtPattern = jsmExtPattern;
 exports.esmifyExtension = esmifyExtension;
 exports.isMemberExpressionWithIdentifiers = isMemberExpressionWithIdentifiers;
-exports.rewriteMemberExpressionWithIdentifiers = rewriteMemberExpressionWithIdentifiers;
-exports.createMemberExpressionWithIdentifiers = createMemberExpressionWithIdentifiers;
+exports.rewriteMemberExpressionWithIdentifiers =
+  rewriteMemberExpressionWithIdentifiers;
+exports.createMemberExpressionWithIdentifiers =
+  createMemberExpressionWithIdentifiers;

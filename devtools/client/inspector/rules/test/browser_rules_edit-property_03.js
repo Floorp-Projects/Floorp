@@ -27,8 +27,9 @@ add_task(async function () {
   await selectNode("#testid", inspector);
 
   const ruleEditor = getRuleViewRuleEditor(view, 1);
-  const propEditor = getTextProperty(view, 1, { "background-color": "blue" })
-    .editor;
+  const propEditor = getTextProperty(view, 1, {
+    "background-color": "blue",
+  }).editor;
 
   await focusEditableField(view, propEditor.valueSpan);
 

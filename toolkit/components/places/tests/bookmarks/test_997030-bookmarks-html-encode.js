@@ -26,8 +26,9 @@ add_task(async function () {
   await BookmarkHTMLUtils.importFromFile(file, { replace: true });
 
   info("Checking first level");
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
-    .root;
+  let root = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.unfiledGuid
+  ).root;
   let node = root.getChild(0);
   Assert.equal(node.uri, url);
 

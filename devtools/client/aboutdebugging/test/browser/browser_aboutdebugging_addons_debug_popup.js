@@ -100,9 +100,8 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   info(
     "Click on the extension popup frame and wait for a `dom-complete` resource"
   );
-  const {
-    onDomCompleteResource,
-  } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
+  const { onDomCompleteResource } =
+    await waitForNextTopLevelDomCompleteResource(toolbox.commands);
   popupFrameBtn.click();
   await onDomCompleteResource;
 

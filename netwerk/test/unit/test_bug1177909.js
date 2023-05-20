@@ -173,9 +173,10 @@ add_task(async function testProxyHttpsToHttpIsBlocked() {
     Ci.nsIProtocolProxyService.RESOLVE_PREFER_HTTPS_PROXY |
     Ci.nsIProtocolProxyService.RESOLVE_ALWAYS_TUNNEL;
 
-  const fakeContentPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "https://example.com"
-  );
+  const fakeContentPrincipal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "https://example.com"
+    );
 
   const chan = Services.io.newChannelFromURIWithProxyFlags(
     turnUri,
@@ -219,9 +220,10 @@ add_task(async function testProxyHttpsToTurnTcpWorks() {
     Ci.nsIProtocolProxyService.RESOLVE_PREFER_HTTPS_PROXY |
     Ci.nsIProtocolProxyService.RESOLVE_ALWAYS_TUNNEL;
 
-  const fakeContentPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "https://example.com"
-  );
+  const fakeContentPrincipal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "https://example.com"
+    );
 
   const chan = Services.io.newChannelFromURIWithProxyFlags(
     turnUri,

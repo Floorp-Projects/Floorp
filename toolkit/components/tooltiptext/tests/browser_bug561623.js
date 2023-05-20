@@ -2,8 +2,7 @@ add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "data:text/html,<!DOCTYPE html><html><body><input id='i'></body></html>",
+      url: "data:text/html,<!DOCTYPE html><html><body><input id='i'></body></html>",
     },
     async function (browser) {
       await SpecialPowers.spawn(browser, [""], function () {

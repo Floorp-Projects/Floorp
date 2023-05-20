@@ -33,12 +33,14 @@ let AVAILABLE_PIP_OVERRIDES;
 
     tests: {
       // FOR TESTS ONLY!
-      "https://mochitest.youtube.com/*browser/browser/extensions/pictureinpicture/tests/browser/test-mock-wrapper.html": {
-        videoWrapperScriptPath: "video-wrappers/mock-wrapper.js",
-      },
-      "https://mochitest.youtube.com/*browser/browser/extensions/pictureinpicture/tests/browser/test-toggle-visibility.html": {
-        videoWrapperScriptPath: "video-wrappers/mock-wrapper.js",
-      },
+      "https://mochitest.youtube.com/*browser/browser/extensions/pictureinpicture/tests/browser/test-mock-wrapper.html":
+        {
+          videoWrapperScriptPath: "video-wrappers/mock-wrapper.js",
+        },
+      "https://mochitest.youtube.com/*browser/browser/extensions/pictureinpicture/tests/browser/test-toggle-visibility.html":
+        {
+          videoWrapperScriptPath: "video-wrappers/mock-wrapper.js",
+        },
     },
 
     abcnews: {

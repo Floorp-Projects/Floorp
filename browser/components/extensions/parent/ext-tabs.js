@@ -602,15 +602,16 @@ this.tabs = class extends ExtensionAPIPersistent {
       // that it may not otherwise have access to, we set the triggering
       // principal to the url that is being opened.  This is used for newtab,
       // about: and moz-extension: protocols.
-      options.triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-        Services.io.newURI(url),
-        {
-          userContextId: options.userContextId,
-          privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(browser)
-            ? 1
-            : 0,
-        }
-      );
+      options.triggeringPrincipal =
+        Services.scriptSecurityManager.createContentPrincipal(
+          Services.io.newURI(url),
+          {
+            userContextId: options.userContextId,
+            privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(browser)
+              ? 1
+              : 0,
+          }
+        );
     }
 
     let tabsApi = {

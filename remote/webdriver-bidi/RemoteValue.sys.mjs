@@ -987,11 +987,8 @@ export function setDefaultAndAssertSerializationOptions(options = {}) {
 
   const serializationOptions = setDefaultSerializationOptions(options);
 
-  const {
-    includeShadowTree,
-    maxDomDepth,
-    maxObjectDepth,
-  } = serializationOptions;
+  const { includeShadowTree, maxDomDepth, maxObjectDepth } =
+    serializationOptions;
 
   if (maxDomDepth !== null) {
     lazy.assert.positiveNumber(maxDomDepth);

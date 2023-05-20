@@ -602,16 +602,11 @@ function startLogging() {
         supportedFeatures
       );
     }
-    let {
-      entries,
-      interval,
-      features,
-      threads,
-      duration,
-    } = ProfilerPopupBackground.getRecordingSettings(
-      pageContext,
-      Services.profiler.GetFeatures()
-    );
+    let { entries, interval, features, threads, duration } =
+      ProfilerPopupBackground.getRecordingSettings(
+        pageContext,
+        Services.profiler.GetFeatures()
+      );
 
     if (gLoggingSettings.profilerThreads) {
       threads.push(...gLoggingSettings.profilerThreads.split(","));

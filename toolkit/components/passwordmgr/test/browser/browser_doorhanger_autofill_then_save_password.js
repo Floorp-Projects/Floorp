@@ -22,8 +22,7 @@ const testCases = [
     expectedDoorhanger: "password-save",
   },
   {
-    name:
-      "autofill, then delete password, then fill new password should show 'update'",
+    name: "autofill, then delete password, then fill new password should show 'update'",
     oldUsername: "oldUsername",
     oldPassword: "oldPassword",
     actions: [

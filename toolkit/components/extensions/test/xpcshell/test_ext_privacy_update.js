@@ -51,17 +51,15 @@ add_task(async function test_privacy_update() {
       let settingData;
       switch (msg) {
         case "get":
-          settingData = await browser.privacy.network.networkPredictionEnabled.get(
-            {}
-          );
+          settingData =
+            await browser.privacy.network.networkPredictionEnabled.get({});
           browser.test.sendMessage("privacyData", settingData);
           break;
 
         case "set":
           await browser.privacy.network.networkPredictionEnabled.set(data);
-          settingData = await browser.privacy.network.networkPredictionEnabled.get(
-            {}
-          );
+          settingData =
+            await browser.privacy.network.networkPredictionEnabled.get({});
           browser.test.sendMessage("privacyData", settingData);
           break;
       }

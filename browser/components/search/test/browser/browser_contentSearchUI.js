@@ -529,9 +529,10 @@ add_task(async function cycleOneOffs() {
   await msg("key", { key: "x", waitForSuggestions: true });
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    let btn = Cu.waiveXrays(content).gController._oneOffButtons[
-      Cu.waiveXrays(content).gController._oneOffButtons.length - 1
-    ];
+    let btn =
+      Cu.waiveXrays(content).gController._oneOffButtons[
+        Cu.waiveXrays(content).gController._oneOffButtons.length - 1
+      ];
     let newBtn = btn.cloneNode(true);
     btn.parentNode.appendChild(newBtn);
     Cu.waiveXrays(content).gController._oneOffButtons.push(newBtn);

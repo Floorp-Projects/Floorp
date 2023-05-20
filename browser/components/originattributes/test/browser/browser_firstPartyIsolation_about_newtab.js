@@ -33,20 +33,22 @@ add_task(async function test_aboutNewTab() {
   let attrs = {
     firstPartyDomain: "about.ef2a7dd5-93bc-417f-a698-142c3116864f.mozilla",
   };
-  await SpecialPowers.spawn(tab.linkedBrowser, [{ attrs }], async function (
-    args
-  ) {
-    Assert.ok(true, "principal " + content.document.nodePrincipal.origin);
-    Assert.equal(
-      content.document.nodePrincipal.originAttributes.firstPartyDomain,
-      args.attrs.firstPartyDomain,
-      "about:newtab should have firstPartyDomain set"
-    );
-    Assert.ok(
-      content.document.nodePrincipal.isContentPrincipal,
-      "The principal should be a content principal."
-    );
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [{ attrs }],
+    async function (args) {
+      Assert.ok(true, "principal " + content.document.nodePrincipal.origin);
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        args.attrs.firstPartyDomain,
+        "about:newtab should have firstPartyDomain set"
+      );
+      Assert.ok(
+        content.document.nodePrincipal.isContentPrincipal,
+        "The principal should be a content principal."
+      );
+    }
+  );
 
   gbrowser.removeTab(tab);
   win.close();

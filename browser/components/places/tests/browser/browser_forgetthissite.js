@@ -152,9 +152,8 @@ async function testForgetAboutThisSite(
 
   let pageRemovedEventPromise;
   if (shouldForget) {
-    pageRemovedEventPromise = PlacesTestUtils.waitForNotification(
-      "page-removed"
-    );
+    pageRemovedEventPromise =
+      PlacesTestUtils.waitForNotification("page-removed");
   }
 
   // Execute the delete command.

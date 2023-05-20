@@ -54,9 +54,8 @@ add_task(async function () {
     ok(true, "Found simple.css tab stylesheet");
 
     info("Select the stylesheet and update its content");
-    const contentStylesheetSummaryEl = getStyleEditorItems().find(
-      isTabStyleSheet
-    );
+    const contentStylesheetSummaryEl =
+      getStyleEditorItems().find(isTabStyleSheet);
 
     let tabStyleSheetEditor;
     if (panel.UI.selectedEditor.friendlyName === "simple.css") {

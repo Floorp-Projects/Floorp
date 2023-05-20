@@ -897,10 +897,8 @@ add_task(async function test_featureIds_is_stored() {
 
   await manager.onStartup();
 
-  const {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(recipe, { manager });
+  const { enrollmentPromise, doExperimentCleanup } =
+    ExperimentFakes.enrollmentHelper(recipe, { manager });
 
   await enrollmentPromise;
 

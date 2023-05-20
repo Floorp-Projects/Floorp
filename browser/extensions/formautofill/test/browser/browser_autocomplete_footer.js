@@ -12,122 +12,126 @@ add_task(async function setup_storage() {
 });
 
 add_task(async function test_press_enter_on_footer() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
-    browser
-  ) {
-    const {
-      autoCompletePopup: { richlistbox: itemsBox },
-    } = browser;
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: URL },
+    async function (browser) {
+      const {
+        autoCompletePopup: { richlistbox: itemsBox },
+      } = browser;
 
-    await openPopupOn(browser, "#organization");
-    // Navigate to the footer and press enter.
-    const listItemElems = itemsBox.querySelectorAll(
-      ".autocomplete-richlistitem"
-    );
-    const prefTabPromise = BrowserTestUtils.waitForNewTab(
-      gBrowser,
-      PRIVACY_PREF_URL,
-      true
-    );
-    for (let i = 0; i < listItemElems.length; i++) {
-      if (!listItemElems[i].collapsed) {
-        await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await openPopupOn(browser, "#organization");
+      // Navigate to the footer and press enter.
+      const listItemElems = itemsBox.querySelectorAll(
+        ".autocomplete-richlistitem"
+      );
+      const prefTabPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        PRIVACY_PREF_URL,
+        true
+      );
+      for (let i = 0; i < listItemElems.length; i++) {
+        if (!listItemElems[i].collapsed) {
+          await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+        }
       }
-    }
-    await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-    info(`expecting tab: about:preferences#privacy opened`);
-    const prefTab = await prefTabPromise;
-    info(`expecting tab: about:preferences#privacy removed`);
-    BrowserTestUtils.removeTab(prefTab);
-    ok(
-      true,
-      "Tab: preferences#privacy was successfully opened by pressing enter on the footer"
-    );
+      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+      info(`expecting tab: about:preferences#privacy opened`);
+      const prefTab = await prefTabPromise;
+      info(`expecting tab: about:preferences#privacy removed`);
+      BrowserTestUtils.removeTab(prefTab);
+      ok(
+        true,
+        "Tab: preferences#privacy was successfully opened by pressing enter on the footer"
+      );
 
-    await closePopup(browser);
-  });
+      await closePopup(browser);
+    }
+  );
 });
 
 add_task(async function test_click_on_footer() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
-    browser
-  ) {
-    const {
-      autoCompletePopup: { richlistbox: itemsBox },
-    } = browser;
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: URL },
+    async function (browser) {
+      const {
+        autoCompletePopup: { richlistbox: itemsBox },
+      } = browser;
 
-    await openPopupOn(browser, "#organization");
-    // Click on the footer
-    let optionButton = itemsBox.querySelector(
-      ".autocomplete-richlistitem:last-child"
-    );
-    while (optionButton.collapsed) {
-      optionButton = optionButton.previousElementSibling;
+      await openPopupOn(browser, "#organization");
+      // Click on the footer
+      let optionButton = itemsBox.querySelector(
+        ".autocomplete-richlistitem:last-child"
+      );
+      while (optionButton.collapsed) {
+        optionButton = optionButton.previousElementSibling;
+      }
+      optionButton = optionButton._optionButton;
+
+      const prefTabPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        PRIVACY_PREF_URL,
+        true
+      );
+      // Make sure dropdown is visible before continuing mouse synthesizing.
+      await BrowserTestUtils.waitForCondition(() =>
+        BrowserTestUtils.is_visible(optionButton)
+      );
+      await EventUtils.synthesizeMouseAtCenter(optionButton, {});
+      info(`expecting tab: about:preferences#privacy opened`);
+      const prefTab = await prefTabPromise;
+      info(`expecting tab: about:preferences#privacy removed`);
+      BrowserTestUtils.removeTab(prefTab);
+      ok(
+        true,
+        "Tab: preferences#privacy was successfully opened by clicking on the footer"
+      );
+
+      await closePopup(browser);
     }
-    optionButton = optionButton._optionButton;
-
-    const prefTabPromise = BrowserTestUtils.waitForNewTab(
-      gBrowser,
-      PRIVACY_PREF_URL,
-      true
-    );
-    // Make sure dropdown is visible before continuing mouse synthesizing.
-    await BrowserTestUtils.waitForCondition(() =>
-      BrowserTestUtils.is_visible(optionButton)
-    );
-    await EventUtils.synthesizeMouseAtCenter(optionButton, {});
-    info(`expecting tab: about:preferences#privacy opened`);
-    const prefTab = await prefTabPromise;
-    info(`expecting tab: about:preferences#privacy removed`);
-    BrowserTestUtils.removeTab(prefTab);
-    ok(
-      true,
-      "Tab: preferences#privacy was successfully opened by clicking on the footer"
-    );
-
-    await closePopup(browser);
-  });
+  );
 });
 
 add_task(async function test_phishing_warning_single_category() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
-    browser
-  ) {
-    const {
-      autoCompletePopup: { richlistbox: itemsBox },
-    } = browser;
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: URL },
+    async function (browser) {
+      const {
+        autoCompletePopup: { richlistbox: itemsBox },
+      } = browser;
 
-    await openPopupOn(browser, "#tel");
-    const warningBox = itemsBox.querySelector(
-      ".autocomplete-richlistitem:last-child"
-    )._warningTextBox;
-    ok(warningBox, "Got phishing warning box");
-    await expectWarningText(browser, "Autofills phone");
-    is(
-      warningBox.ownerGlobal.getComputedStyle(warningBox).backgroundColor,
-      "rgba(248, 232, 28, 0.2)",
-      "Check warning text background color"
-    );
+      await openPopupOn(browser, "#tel");
+      const warningBox = itemsBox.querySelector(
+        ".autocomplete-richlistitem:last-child"
+      )._warningTextBox;
+      ok(warningBox, "Got phishing warning box");
+      await expectWarningText(browser, "Autofills phone");
+      is(
+        warningBox.ownerGlobal.getComputedStyle(warningBox).backgroundColor,
+        "rgba(248, 232, 28, 0.2)",
+        "Check warning text background color"
+      );
 
-    await closePopup(browser);
-  });
+      await closePopup(browser);
+    }
+  );
 });
 
 add_task(async function test_phishing_warning_complex_categories() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
-    browser
-  ) {
-    await openPopupOn(browser, "#street-address");
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: URL },
+    async function (browser) {
+      await openPopupOn(browser, "#street-address");
 
-    await expectWarningText(browser, "Also autofills organization, email");
-    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    await expectWarningText(browser, "Autofills address");
-    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    await expectWarningText(browser, "Also autofills organization, email");
-    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    await expectWarningText(browser, "Also autofills organization, email");
+      await expectWarningText(browser, "Also autofills organization, email");
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await expectWarningText(browser, "Autofills address");
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await expectWarningText(browser, "Also autofills organization, email");
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await expectWarningText(browser, "Also autofills organization, email");
 
-    await closePopup(browser);
-  });
+      await closePopup(browser);
+    }
+  );
 });

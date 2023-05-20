@@ -35,11 +35,13 @@ add_task(async function () {
   info("Log a message so the original one gets pruned");
   const messageText = "hello world";
   const onMessage = waitForMessageByType(hud, messageText, ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [messageText], async function (
-    str
-  ) {
-    content.console.log(str);
-  });
+  SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [messageText],
+    async function (str) {
+      content.console.log(str);
+    }
+  );
   await onMessage;
 
   ok(!findConsoleAPIMessage(hud, "Object"), "Message with object was pruned");

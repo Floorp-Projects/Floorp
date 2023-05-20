@@ -19,8 +19,9 @@ add_task(async function test_eraseEverything() {
     ],
   });
 
-  let unfiled = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
-    .root;
+  let unfiled = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.unfiledGuid
+  ).root;
   Assert.equal(unfiled.childCount, 1, "There should be 1 folder");
   let folder = unfiled.getChild(0);
   // Test dateAdded and lastModified properties.
@@ -41,8 +42,9 @@ add_task(async function test_eraseEverything() {
   await PlacesUtils.bookmarks.eraseEverything();
 
   // Refetch the guid to refresh the data.
-  unfiled = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
-    .root;
+  unfiled = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.unfiledGuid
+  ).root;
   Assert.equal(unfiled.childCount, 0);
   unfiled.containerOpen = false;
 });
@@ -83,8 +85,9 @@ add_task(async function test_long_title() {
     url: "http://mozilla.org/",
     title,
   });
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
-    .root;
+  let root = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.unfiledGuid
+  ).root;
   root.containerOpen = true;
   Assert.equal(root.childCount, 1);
   let node = root.getChild(0);

@@ -87,19 +87,26 @@ function getURL(cert) {
  *        The expected name of the tab in the certificate viewer
  */
 async function openCertViewerAndCheckTabName(url, expectedTabName) {
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function (
-    browser
-  ) {
-    await SpecialPowers.spawn(browser, [expectedTabName], async function (
-      expectedTabName
-    ) {
-      let certificateSection = await ContentTaskUtils.waitForCondition(() => {
-        return content.document.querySelector("certificate-section");
-      }, "Certificate section found");
-      let tabName = certificateSection.shadowRoot.querySelector(
-        ".tab[idnumber='0']"
-      ).textContent;
-      Assert.equal(tabName, expectedTabName);
-    });
-  });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url },
+    async function (browser) {
+      await SpecialPowers.spawn(
+        browser,
+        [expectedTabName],
+        async function (expectedTabName) {
+          let certificateSection = await ContentTaskUtils.waitForCondition(
+            () => {
+              return content.document.querySelector("certificate-section");
+            },
+            "Certificate section found"
+          );
+          let tabName =
+            certificateSection.shadowRoot.querySelector(
+              ".tab[idnumber='0']"
+            ).textContent;
+          Assert.equal(tabName, expectedTabName);
+        }
+      );
+    }
+  );
 }

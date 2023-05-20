@@ -28,8 +28,8 @@ add_task(async function open_test_iframe_in_tab() {
           outerPrincipal.isSystemPrincipal,
           "Sanity: Using SystemPrincipal for test file on chrome://"
         );
-        const iframeDoc = content.document.getElementById("testframe")
-          .contentDocument;
+        const iframeDoc =
+          content.document.getElementById("testframe").contentDocument;
         is(
           iframeDoc.body.innerHTML,
           "",

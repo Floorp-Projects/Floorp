@@ -494,11 +494,8 @@ add_task(async function checkQueueSemantics() {
 
 // Check that a queued promise being rejected works correctly.
 add_task(async function checkQueueSemanticsOnError() {
-  let {
-    sm,
-    blockedPromise,
-    rejectBlocked,
-  } = await setupStorageManagerForQueueTest();
+  let { sm, blockedPromise, rejectBlocked } =
+    await setupStorageManagerForQueueTest();
 
   let resolveSubsequent;
   let subsequentPromise = new Promise(resolve => {

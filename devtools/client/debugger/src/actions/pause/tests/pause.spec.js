@@ -190,7 +190,7 @@ describe("pause", () => {
 
       expect(selectors.getFrameScopes(getState(), "FakeThread")).toEqual({
         generated: {
-          "1": {
+          1: {
             pending: false,
             scope: {
               bindings: {
@@ -200,8 +200,8 @@ describe("pause", () => {
             },
           },
         },
-        mappings: { "1": undefined },
-        original: { "1": { pending: false, scope: undefined } },
+        mappings: { 1: undefined },
+        original: { 1: { pending: false, scope: undefined } },
       });
 
       expect(

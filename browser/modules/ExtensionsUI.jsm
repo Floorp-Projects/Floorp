@@ -271,13 +271,8 @@ var ExtensionsUI = {
         }
       });
     } else if (topic == "webextension-optional-permission-prompt") {
-      let {
-        browser,
-        name,
-        icon,
-        permissions,
-        resolve,
-      } = subject.wrappedJSObject;
+      let { browser, name, icon, permissions, resolve } =
+        subject.wrappedJSObject;
       let strings = this._buildStrings({
         type: "optional",
         addon: { name },
@@ -291,14 +286,8 @@ var ExtensionsUI = {
       }
       resolve(this.showPermissionsPrompt(browser, strings, icon));
     } else if (topic == "webextension-defaultsearch-prompt") {
-      let {
-        browser,
-        name,
-        icon,
-        respond,
-        currentEngine,
-        newEngine,
-      } = subject.wrappedJSObject;
+      let { browser, name, icon, respond, currentEngine, newEngine } =
+        subject.wrappedJSObject;
 
       let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
 

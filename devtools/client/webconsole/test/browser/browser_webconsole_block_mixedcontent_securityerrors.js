@@ -52,9 +52,8 @@ add_task(async function () {
   ok(true, "Blocked mixed active content error message is visible");
 
   info("Clicking on the Learn More link");
-  let learnMoreLink = blockedMixedActiveContentMessage.querySelector(
-    ".learn-more-link"
-  );
+  let learnMoreLink =
+    blockedMixedActiveContentMessage.querySelector(".learn-more-link");
   let response = await simulateLinkClick(learnMoreLink);
   is(
     response.link,

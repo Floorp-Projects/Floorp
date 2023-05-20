@@ -92,8 +92,9 @@ add_task(async function testTabOrder() {
     ok(previewBrowser, "Got the print preview browser");
 
     let focused;
-    let navigationShadowRoot = document.querySelector(".printPreviewNavigation")
-      .shadowRoot;
+    let navigationShadowRoot = document.querySelector(
+      ".printPreviewNavigation"
+    ).shadowRoot;
     for (let buttonId of [
       "navigateEnd",
       "navigateNext",

@@ -85,9 +85,8 @@ add_task(async function () {
     `https://example.com/document-builder.sjs?` +
     `html=<h2>example.com new bc</h2><style title=6>.frame-com-new-bc{}</style>`;
   await SpecialPowers.spawn(tab.linkedBrowser, [iframeNewUrl], url => {
-    const { browsingContext } = content.document.querySelector(
-      "#remote-origin-2"
-    );
+    const { browsingContext } =
+      content.document.querySelector("#remote-origin-2");
     return SpecialPowers.spawn(browsingContext, [url], innerUrl => {
       content.document.location = innerUrl;
     });

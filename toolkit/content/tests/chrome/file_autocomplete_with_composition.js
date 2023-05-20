@@ -35,7 +35,8 @@ function nsDoTestsForAutoCompleteWithComposition(
 
   this._target.focus();
 
-  this._DefaultCompleteDefaultIndex = this._controller.input.completeDefaultIndex;
+  this._DefaultCompleteDefaultIndex =
+    this._controller.input.completeDefaultIndex;
 
   this._doTests();
 }
@@ -55,7 +56,8 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
 
   _doTests() {
     if (++this._testingIndex == this._tests.length) {
-      this._controller.input.completeDefaultIndex = this._DefaultCompleteDefaultIndex;
+      this._controller.input.completeDefaultIndex =
+        this._DefaultCompleteDefaultIndex;
       this._onFinish();
       return;
     }

@@ -24,15 +24,17 @@ add_task(async function () {
 
   info("Performing a CORS request");
   const requestUrl = "https://test1.example.com" + CORS_SJS_PATH;
-  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function (
-    url
-  ) {
-    content.wrappedJSObject.performRequests(
-      url,
-      "triggering/preflight",
-      "post-data"
-    );
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [requestUrl],
+    async function (url) {
+      content.wrappedJSObject.performRequests(
+        url,
+        "triggering/preflight",
+        "post-data"
+      );
+    }
+  );
 
   info("Waiting until the requests appear in netmonitor");
   await wait;

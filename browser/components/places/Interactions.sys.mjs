@@ -398,23 +398,24 @@ class _Interactions {
     }
 
     // Collect the scrolling data and add the interaction to the store on completion
-    _Interactions.interactionUpdatePromise = _Interactions.interactionUpdatePromise
-      .then(async () => ChromeUtils.collectScrollingData())
-      .then(
-        result => {
-          interaction.scrollingTime += result.interactionTimeInMilliseconds;
-          interaction.scrollingDistance += result.scrollingDistanceInPixels;
-        },
-        reason => {
-          console.error(reason);
-        }
-      )
-      .then(() => {
-        interaction.updated_at = monotonicNow();
+    _Interactions.interactionUpdatePromise =
+      _Interactions.interactionUpdatePromise
+        .then(async () => ChromeUtils.collectScrollingData())
+        .then(
+          result => {
+            interaction.scrollingTime += result.interactionTimeInMilliseconds;
+            interaction.scrollingDistance += result.scrollingDistanceInPixels;
+          },
+          reason => {
+            console.error(reason);
+          }
+        )
+        .then(() => {
+          interaction.updated_at = monotonicNow();
 
-        lazy.logConsole.debug("Add to store: ", interaction);
-        store.add(interaction);
-      });
+          lazy.logConsole.debug("Add to store: ", interaction);
+          store.add(interaction);
+        });
   }
 
   /**

@@ -30,12 +30,13 @@ export class ControllersChild extends JSWindowActorChild {
             x = parseInt(data.params.x.value);
             y = parseInt(data.params.y.value);
 
-            let rect = this.contentWindow.windowUtils.convertFromParentProcessWidgetToLocal(
-              x,
-              y,
-              1,
-              1
-            );
+            let rect =
+              this.contentWindow.windowUtils.convertFromParentProcessWidgetToLocal(
+                x,
+                y,
+                1,
+                1
+              );
             x = Math.round(rect.x);
             y = Math.round(rect.y);
           }

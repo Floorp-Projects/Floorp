@@ -344,10 +344,11 @@ var gTests = [
         },
         async function (targetBrowser) {
           let mismatchURI = Services.io.newURI(HTTP_MISMATCH_PATH);
-          let mismatchPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-            mismatchURI,
-            {}
-          );
+          let mismatchPrincipal =
+            Services.scriptSecurityManager.createContentPrincipal(
+              mismatchURI,
+              {}
+            );
 
           // send a message to the wrong principal. It should not be delivered
           // to content, and should not be echoed back.
@@ -359,10 +360,11 @@ var gTests = [
             }
           );
 
-          let targetPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-            targetURI,
-            {}
-          );
+          let targetPrincipal =
+            Services.scriptSecurityManager.createContentPrincipal(
+              targetURI,
+              {}
+            );
 
           // send the `done` message to the correct principal. It
           // should be echoed back.
@@ -453,8 +455,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "WebChannel allows both string and non-string message from whitelisted origin",
+    desc: "WebChannel allows both string and non-string message from whitelisted origin",
     async run() {
       /**
        * Same process as above, but we whitelist the origin before loading the page,
@@ -499,8 +500,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "WebChannel errors handling the message are delivered back to content",
+    desc: "WebChannel errors handling the message are delivered back to content",
     async run() {
       const ERRNO_UNKNOWN_ERROR = 999; // WebChannel.sys.mjs doesn't export this.
 
@@ -539,8 +539,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "WebChannel errors due to an invalid channel are delivered back to content",
+    desc: "WebChannel errors due to an invalid channel are delivered back to content",
     async run() {
       const ERRNO_NO_SUCH_CHANNEL = 2; // WebChannel.sys.mjs doesn't export this.
       // The channel where we see the response when the content sees the error

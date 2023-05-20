@@ -819,11 +819,8 @@ if (IS_DIALOG_WINDOW) {
   // (vs. being an about:addons subframe).
   document.documentElement.className = "dialog-window";
 
-  const {
-    report,
-    deferredReport,
-    deferredReportPanel,
-  } = window.arguments[0].wrappedJSObject;
+  const { report, deferredReport, deferredReportPanel } =
+    window.arguments[0].wrappedJSObject;
 
   window.addEventListener(
     "unload",

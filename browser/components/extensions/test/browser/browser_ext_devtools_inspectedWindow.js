@@ -187,10 +187,8 @@ add_task(async function test_devtools_inspectedWindow_eval() {
       }
 
       try {
-        const [
-          evalResult,
-          errorResult,
-        ] = await browser.devtools.inspectedWindow.eval(...args);
+        const [evalResult, errorResult] =
+          await browser.devtools.inspectedWindow.eval(...args);
         browser.test.sendMessage("inspectedWindow-eval-result", {
           evalResult,
           errorResult,
@@ -328,10 +326,8 @@ add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
     browser.test.onMessage.addListener(async (msg, ...args) => {
       switch (msg) {
         case "inspectedWindow-page-eval-request": {
-          const [
-            evalResult,
-            errorResult,
-          ] = await browser.devtools.inspectedWindow.eval(...args);
+          const [evalResult, errorResult] =
+            await browser.devtools.inspectedWindow.eval(...args);
           browser.test.sendMessage("inspectedWindow-page-eval-result", {
             evalResult,
             errorResult,
@@ -353,10 +349,8 @@ add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
     browser.test.onMessage.addListener(async (msg, ...args) => {
       switch (msg) {
         case "inspectedWindow-panel-eval-request": {
-          const [
-            evalResult,
-            errorResult,
-          ] = await browser.devtools.inspectedWindow.eval(...args);
+          const [evalResult, errorResult] =
+            await browser.devtools.inspectedWindow.eval(...args);
           browser.test.sendMessage("inspectedWindow-panel-eval-result", {
             evalResult,
             errorResult,

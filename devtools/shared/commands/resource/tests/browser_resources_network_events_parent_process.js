@@ -162,18 +162,20 @@ add_task(async function testParentProcessRequests() {
   info(
     "Also spawn a privileged request from the content process, not bound to any WindowGlobal"
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function (
-    uri
-  ) {
-    const { NetUtil } = ChromeUtils.import(
-      "resource://gre/modules/NetUtil.jsm"
-    );
-    const channel = NetUtil.newChannel({
-      uri,
-      loadUsingSystemPrincipal: true,
-    });
-    channel.open();
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [requestUrl],
+    async function (uri) {
+      const { NetUtil } = ChromeUtils.import(
+        "resource://gre/modules/NetUtil.jsm"
+      );
+      const channel = NetUtil.newChannel({
+        uri,
+        loadUsingSystemPrincipal: true,
+      });
+      channel.open();
+    }
+  );
   await removeTab(tab);
 
   await waitFor(() => receivedNetworkEvents.length == 5);

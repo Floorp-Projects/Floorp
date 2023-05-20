@@ -60,10 +60,8 @@ add_task(async function test_paste_button_position_touch() {
 
   await BrowserTestUtils.withNewTab(kContentFileUrl, async function (browser) {
     const pasteButtonIsShown = promisePasteButtonIsShown();
-    const coordsOfClickInContentRelativeToScreenInDevicePixels = await promiseTouchTapContent(
-      browser,
-      "invokeReadTextOnceId"
-    );
+    const coordsOfClickInContentRelativeToScreenInDevicePixels =
+      await promiseTouchTapContent(browser, "invokeReadTextOnceId");
     info(
       "coordsOfClickInContentRelativeToScreenInDevicePixels: " +
         coordsOfClickInContentRelativeToScreenInDevicePixels.x +
@@ -71,7 +69,8 @@ add_task(async function test_paste_button_position_touch() {
         coordsOfClickInContentRelativeToScreenInDevicePixels.y
     );
 
-    const pasteButtonCoordsRelativeToScreenInDevicePixels = await pasteButtonIsShown;
+    const pasteButtonCoordsRelativeToScreenInDevicePixels =
+      await pasteButtonIsShown;
     info(
       "pasteButtonCoordsRelativeToScreenInDevicePixels: " +
         pasteButtonCoordsRelativeToScreenInDevicePixels.x +
@@ -79,7 +78,8 @@ add_task(async function test_paste_button_position_touch() {
         pasteButtonCoordsRelativeToScreenInDevicePixels.y
     );
 
-    const mouseCoordsRelativeToScreenInDevicePixels = getMouseCoordsRelativeToScreenInDevicePixels();
+    const mouseCoordsRelativeToScreenInDevicePixels =
+      getMouseCoordsRelativeToScreenInDevicePixels();
     info(
       "mouseCoordsRelativeToScreenInDevicePixels: " +
         mouseCoordsRelativeToScreenInDevicePixels.x +

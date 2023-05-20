@@ -176,9 +176,8 @@ export var Heartbeat = class {
 
       for (let i = 0; i < numStars; i++) {
         // create a star rating element
-        const ratingElement = this.chromeWindow.document.createXULElement(
-          "toolbarbutton"
-        );
+        const ratingElement =
+          this.chromeWindow.document.createXULElement("toolbarbutton");
 
         // style it
         const starIndex = numStars - i;
@@ -332,9 +331,8 @@ export var Heartbeat = class {
       gBrowser.selectedTab = gBrowser.addWebTab(
         this.options.postAnswerUrl.toString(),
         {
-          triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-            {}
-          ),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.createNullPrincipal({}),
         }
       );
     }

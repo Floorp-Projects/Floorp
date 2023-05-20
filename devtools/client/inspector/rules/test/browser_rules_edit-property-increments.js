@@ -58,8 +58,9 @@ add_task(async function () {
 async function testMarginIncrements(view) {
   info("Testing keyboard increments on the margin property");
 
-  const marginPropEditor = getTextProperty(view, 1, { "margin-top": "0px" })
-    .editor;
+  const marginPropEditor = getTextProperty(view, 1, {
+    "margin-top": "0px",
+  }).editor;
 
   await runIncrementTest(marginPropEditor, view, {
     1: {
@@ -101,8 +102,9 @@ async function testMarginIncrements(view) {
 async function testVariousUnitIncrements(view) {
   info("Testing keyboard increments on values with various units");
 
-  const paddingPropEditor = getTextProperty(view, 1, { "padding-top": "0px" })
-    .editor;
+  const paddingPropEditor = getTextProperty(view, 1, {
+    "padding-top": "0px",
+  }).editor;
 
   await runIncrementTest(paddingPropEditor, view, {
     1: { start: "0px", end: "1px", selectAll: true },
@@ -122,8 +124,9 @@ async function testVariousUnitIncrements(view) {
 async function testHexIncrements(view) {
   info("Testing keyboard increments with hex colors");
 
-  const hexColorPropEditor = getTextProperty(view, 1, { color: "#000000" })
-    .editor;
+  const hexColorPropEditor = getTextProperty(view, 1, {
+    color: "#000000",
+  }).editor;
 
   await runIncrementTest(hexColorPropEditor, view, {
     1: { start: "#CCCCCC", end: "#CDCDCD", selectAll: true },
@@ -144,8 +147,9 @@ async function testHexIncrements(view) {
 async function testAlphaHexIncrements(view) {
   info("Testing keyboard increments with alpha hex colors");
 
-  const hexColorPropEditor = getTextProperty(view, 1, { color: "#000000" })
-    .editor;
+  const hexColorPropEditor = getTextProperty(view, 1, {
+    color: "#000000",
+  }).editor;
 
   await runIncrementTest(hexColorPropEditor, view, {
     1: { start: "#CCCCCCAA", end: "#CDCDCDAB", selectAll: true },
@@ -441,8 +445,9 @@ async function testHwbIncrements(view) {
 async function testShorthandIncrements(view) {
   info("Testing keyboard increments within shorthand values");
 
-  const paddingPropEditor = getTextProperty(view, 1, { "padding-top": "0px" })
-    .editor;
+  const paddingPropEditor = getTextProperty(view, 1, {
+    "padding-top": "0px",
+  }).editor;
 
   await runIncrementTest(paddingPropEditor, view, {
     1: { start: "0px 0px 0px 0px", end: "0px 1px 0px 0px", selection: [4, 7] },
@@ -498,8 +503,9 @@ async function testShorthandIncrements(view) {
 async function testOddCases(view) {
   info("Testing some more odd cases");
 
-  const marginPropEditor = getTextProperty(view, 1, { "margin-top": "0px" })
-    .editor;
+  const marginPropEditor = getTextProperty(view, 1, {
+    "margin-top": "0px",
+  }).editor;
 
   await runIncrementTest(marginPropEditor, view, {
     1: { start: "98.7%", end: "99.7%", selection: [3, 3] },
@@ -560,8 +566,9 @@ async function testOddCases(view) {
 async function testZeroValueIncrements(view) {
   info("Testing a valid unit is added when incrementing from 0");
 
-  const backgroundPropEditor = getTextProperty(view, 1, { background: "none" })
-    .editor;
+  const backgroundPropEditor = getTextProperty(view, 1, {
+    background: "none",
+  }).editor;
   await runIncrementTest(backgroundPropEditor, view, {
     1: {
       start: "url(test-0.png) no-repeat 0 0",
@@ -651,8 +658,9 @@ async function testOpacityIncrements(view) {
 async function testLineHeightIncrements(view) {
   info("Testing keyboard increments on the line height property");
 
-  const opacityPropEditor = getTextProperty(view, 1, { "line-height": "1" })
-    .editor;
+  const opacityPropEditor = getTextProperty(view, 1, {
+    "line-height": "1",
+  }).editor;
 
   // line-height accepts both values with or without units, check that we don't
   // force using a unit if none was specified.
@@ -711,8 +719,9 @@ async function testLineHeightIncrements(view) {
 async function testCssVariableIncrements(view) {
   info("Testing keyboard increments on the css variable property");
 
-  const opacityPropEditor = getTextProperty(view, 1, { "--custom": "0" })
-    .editor;
+  const opacityPropEditor = getTextProperty(view, 1, {
+    "--custom": "0",
+  }).editor;
 
   await runIncrementTest(opacityPropEditor, view, {
     1: {

@@ -296,9 +296,8 @@ add_task(async function check_contentBlocking_listener() {
     observerEvent += 1;
     pageLoadSum = pageLoad;
   };
-  const contentBlockingListener = ASRouterTriggerListeners.get(
-    "contentBlocking"
-  );
+  const contentBlockingListener =
+    ASRouterTriggerListeners.get("contentBlocking");
 
   // Previously initialized by the Router
   contentBlockingListener.uninit();
@@ -417,9 +416,8 @@ add_task(async function check_contentBlockingMilestone_listener() {
     is(type, "ContentBlockingMilestone", "Should be the correct event type");
     observerEvent += 1;
   };
-  const contentBlockingListener = ASRouterTriggerListeners.get(
-    "contentBlocking"
-  );
+  const contentBlockingListener =
+    ASRouterTriggerListeners.get("contentBlocking");
 
   // Previously initialized by the Router
   contentBlockingListener.uninit();

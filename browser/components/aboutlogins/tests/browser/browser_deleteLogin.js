@@ -97,9 +97,8 @@ add_task(async function test_login_item() {
       let confirmDeleteDialog = Cu.waiveXrays(
         content.document.querySelector("confirmation-dialog")
       );
-      let confirmButton = confirmDeleteDialog.shadowRoot.querySelector(
-        ".confirm-button"
-      );
+      let confirmButton =
+        confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
       confirmButton.click();
     });
   }
@@ -127,9 +126,8 @@ add_task(async function test_login_item() {
       let confirmDeleteDialog = Cu.waiveXrays(
         content.document.querySelector("confirmation-dialog")
       );
-      let confirmButton = confirmDeleteDialog.shadowRoot.querySelector(
-        ".confirm-button"
-      );
+      let confirmButton =
+        confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
       confirmButton.click();
     });
   }

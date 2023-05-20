@@ -29,9 +29,10 @@ export class GeckoViewPermissionParent extends GeckoViewActorParent {
   }
 
   addCameraPermission() {
-    const principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      this.browsingContext.top.currentWindowGlobal.documentPrincipal.origin
-    );
+    const principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        this.browsingContext.top.currentWindowGlobal.documentPrincipal.origin
+      );
 
     // Although the lifetime is "session" it will be removed upon
     // use so it's more of a one-shot.

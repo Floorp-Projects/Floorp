@@ -20,9 +20,8 @@ add_task(async function () {
 add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("paneSync", { leaveOpen: true });
 
-  let weavePrefsDeck = gBrowser.contentDocument.getElementById(
-    "weavePrefsDeck"
-  );
+  let weavePrefsDeck =
+    gBrowser.contentDocument.getElementById("weavePrefsDeck");
   is(
     weavePrefsDeck.selectedIndex,
     0,

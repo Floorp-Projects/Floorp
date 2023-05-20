@@ -177,9 +177,8 @@ add_task(async function test_clickAfterSuggestion() {
   await withSuggestions(async (index, usingFormHistory) => {
     await selectSecondSuggestion(index, usingFormHistory);
 
-    let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(
-      window
-    ).getSelectableButtons(true);
+    let oneOffs =
+      UrlbarTestUtils.getOneOffSearchButtons(window).getSelectableButtons(true);
     let resultsPromise = UrlbarTestUtils.promiseSearchComplete(window);
     EventUtils.synthesizeMouseAtCenter(oneOffs[1], {});
     await resultsPromise;
@@ -196,9 +195,8 @@ add_task(async function test_clickAfterSuggestion_nonDefault() {
   await withSuggestions(async (index, usingFormHistory) => {
     await selectSecondSuggestion(index, usingFormHistory);
 
-    let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(
-      window
-    ).getSelectableButtons(true);
+    let oneOffs =
+      UrlbarTestUtils.getOneOffSearchButtons(window).getSelectableButtons(true);
     let resultsPromise = UrlbarTestUtils.promiseSearchComplete(window);
     EventUtils.synthesizeMouseAtCenter(oneOffs[1], {});
     await resultsPromise;

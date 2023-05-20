@@ -152,14 +152,8 @@ TimerManager.prototype = {
     for (let { value } of Services.catMan.enumerateCategory(
       CATEGORY_UPDATE_TIMER
     )) {
-      let [
-        cid,
-        method,
-        timerID,
-        prefInterval,
-        defaultInterval,
-        maxInterval,
-      ] = value.split(",");
+      let [cid, method, timerID, prefInterval, defaultInterval, maxInterval] =
+        value.split(",");
 
       defaultInterval = parseInt(defaultInterval);
       // cid and method are validated below when calling notify.

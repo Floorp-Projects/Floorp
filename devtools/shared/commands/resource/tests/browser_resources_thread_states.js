@@ -267,11 +267,8 @@ async function checkPauseOnException() {
     "data:text/html,<meta charset=utf8><script>a.b.c.d</script>"
   );
 
-  const {
-    commands,
-    resourceCommand,
-    targetCommand,
-  } = await initResourceCommand(tab);
+  const { commands, resourceCommand, targetCommand } =
+    await initResourceCommand(tab);
 
   info("Call watchResources");
   const availableResources = [];

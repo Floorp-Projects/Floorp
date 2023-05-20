@@ -161,12 +161,8 @@ class SummaryGraph extends PureComponent {
   }
 
   render() {
-    const {
-      animation,
-      getAnimatedPropertyMap,
-      simulateAnimation,
-      timeScale,
-    } = this.props;
+    const { animation, getAnimatedPropertyMap, simulateAnimation, timeScale } =
+      this.props;
 
     const { iterationCount } = animation.state;
     const { delay, endDelay } = animation.state.absoluteValues;

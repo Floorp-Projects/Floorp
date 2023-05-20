@@ -720,9 +720,8 @@ var ctrlTab = {
         break;
       case "popupshowing":
         if (event.target.id == "menu_viewPopup") {
-          document.getElementById(
-            "menu_showAllTabs"
-          ).hidden = !gTabsPanel.canOpen;
+          document.getElementById("menu_showAllTabs").hidden =
+            !gTabsPanel.canOpen;
         }
         break;
       case "mouseover":

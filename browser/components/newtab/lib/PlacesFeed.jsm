@@ -281,9 +281,8 @@ class PlacesFeed {
   }
 
   async saveToPocket(site, browser) {
-    const sendToPocket = lazy.NimbusFeatures.pocketNewtab.getVariable(
-      "sendToPocket"
-    );
+    const sendToPocket =
+      lazy.NimbusFeatures.pocketNewtab.getVariable("sendToPocket");
     // An experiment to send the user directly to Pocket's signup page.
     if (sendToPocket && !lazy.pktApi.isUserLoggedIn()) {
       const pocketNewtabExperiment = lazy.ExperimentAPI.getExperiment({

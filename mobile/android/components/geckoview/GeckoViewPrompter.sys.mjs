@@ -25,7 +25,8 @@ export class GeckoViewPrompter {
       this._domWin = Services.wm.getMostRecentWindow("navigator:geckoview");
     }
 
-    this._innerWindowId = this._domWin?.browsingContext.currentWindowContext.innerWindowId;
+    this._innerWindowId =
+      this._domWin?.browsingContext.currentWindowContext.innerWindowId;
   }
 
   get domWin() {

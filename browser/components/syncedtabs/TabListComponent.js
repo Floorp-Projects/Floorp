@@ -139,7 +139,8 @@ TabListComponent.prototype = {
       this._getChromeWindow(this._window).gBrowser.loadTabs(urls, {
         inBackground: loadInBackground,
         replace: false,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
     }
   },

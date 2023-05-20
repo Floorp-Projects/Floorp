@@ -46,9 +46,8 @@ class PrivatePropertiesIteratorFront extends FrontClassWithSpec(
       if (item?.descriptor) {
         for (const gripKey of gripKeys) {
           if (item.descriptor.hasOwnProperty(gripKey)) {
-            result.privateProperties[i].descriptor[
-              gripKey
-            ] = getAdHocFrontOrPrimitiveGrip(item.descriptor[gripKey], this);
+            result.privateProperties[i].descriptor[gripKey] =
+              getAdHocFrontOrPrimitiveGrip(item.descriptor[gripKey], this);
           }
         }
       }

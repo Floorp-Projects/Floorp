@@ -64,21 +64,23 @@ async function testSelectorClipboard(hud) {
   await executeScreenshotClipboardCommand(hud, command);
 
   const imgSize1 = await getImageSizeFromClipboard();
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [imgSize1], function (
-    imgSize
-  ) {
-    const img = content.document.querySelector("#testImage");
-    is(
-      imgSize.width,
-      img.clientWidth,
-      "Selector Clipboard: Image width matches element size"
-    );
-    is(
-      imgSize.height,
-      img.clientHeight,
-      "Selector Clipboard: Image height matches element size"
-    );
-  });
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [imgSize1],
+    function (imgSize) {
+      const img = content.document.querySelector("#testImage");
+      is(
+        imgSize.width,
+        img.clientWidth,
+        "Selector Clipboard: Image width matches element size"
+      );
+      is(
+        imgSize.height,
+        img.clientHeight,
+        "Selector Clipboard: Image height matches element size"
+      );
+    }
+  );
 }
 
 async function testFullpageClipboardScrollbar(hud) {

@@ -29,9 +29,8 @@ export class TopSiteForm extends React.PureComponent {
     this.onCancelButtonClick = this.onCancelButtonClick.bind(this);
     this.onClearUrlClick = this.onClearUrlClick.bind(this);
     this.onDoneButtonClick = this.onDoneButtonClick.bind(this);
-    this.onCustomScreenshotUrlChange = this.onCustomScreenshotUrlChange.bind(
-      this
-    );
+    this.onCustomScreenshotUrlChange =
+      this.onCustomScreenshotUrlChange.bind(this);
     this.onPreviewButtonClick = this.onPreviewButtonClick.bind(this);
     this.onEnableScreenshotUrlForm = this.onEnableScreenshotUrlForm.bind(this);
     this.validateUrl = this.validateUrl.bind(this);

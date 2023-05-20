@@ -10,12 +10,10 @@ describe("ASRouterTriggerListeners", () => {
   const triggerHandler = () => {};
   const openURLListener = ASRouterTriggerListeners.get("openURL");
   const frequentVisitsListener = ASRouterTriggerListeners.get("frequentVisits");
-  const captivePortalLoginListener = ASRouterTriggerListeners.get(
-    "captivePortalLogin"
-  );
-  const bookmarkedURLListener = ASRouterTriggerListeners.get(
-    "openBookmarkedURL"
-  );
+  const captivePortalLoginListener =
+    ASRouterTriggerListeners.get("captivePortalLogin");
+  const bookmarkedURLListener =
+    ASRouterTriggerListeners.get("openBookmarkedURL");
   const openArticleURLListener = ASRouterTriggerListeners.get("openArticleURL");
   const nthTabClosedListener = ASRouterTriggerListeners.get("nthTabClosed");
   const idleListener = ASRouterTriggerListeners.get("activityAfterIdle");
@@ -184,10 +182,8 @@ describe("ASRouterTriggerListeners", () => {
         const target = { currentURI: { host: hosts[0], spec: hosts[1] } };
         openArticleURLListener.init(stub, hosts, hosts);
 
-        const [
-          ,
-          { receiveMessage },
-        ] = global.AboutReaderParent.addMessageListener.firstCall.args;
+        const [, { receiveMessage }] =
+          global.AboutReaderParent.addMessageListener.firstCall.args;
         receiveMessage({ data: { isArticle: true }, target });
 
         assert.calledOnce(stub);
@@ -201,10 +197,8 @@ describe("ASRouterTriggerListeners", () => {
         const target = { currentURI: { host: null, spec: hosts[1] } };
         openArticleURLListener.init(stub, hosts, hosts);
 
-        const [
-          ,
-          { receiveMessage },
-        ] = global.AboutReaderParent.addMessageListener.firstCall.args;
+        const [, { receiveMessage }] =
+          global.AboutReaderParent.addMessageListener.firstCall.args;
         receiveMessage({ data: { isArticle: true }, target });
 
         assert.calledOnce(stub);

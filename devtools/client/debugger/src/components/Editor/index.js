@@ -534,12 +534,8 @@ class Editor extends PureComponent {
   };
 
   onClick(e) {
-    const {
-      cx,
-      selectedSource,
-      updateCursorPosition,
-      jumpToMappedLocation,
-    } = this.props;
+    const { cx, selectedSource, updateCursorPosition, jumpToMappedLocation } =
+      this.props;
 
     if (selectedSource) {
       const sourceLocation = getSourceLocationFromMouseEvent(
@@ -557,11 +553,8 @@ class Editor extends PureComponent {
   }
 
   shouldScrollToLocation(nextProps, editor) {
-    const {
-      selectedLocation,
-      selectedSource,
-      selectedSourceTextContent,
-    } = this.props;
+    const { selectedLocation, selectedSource, selectedSourceTextContent } =
+      this.props;
     if (
       !editor ||
       !nextProps.selectedSource ||

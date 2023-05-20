@@ -1129,7 +1129,8 @@ class JSTerm extends Component {
       // We need to show the popup at the "." or "[".
       const xOffset = -1 * matchProp.length * this._inputCharWidth;
       const yOffset = 5;
-      const popupAlignElement = this.props.serviceContainer.getJsTermTooltipAnchor();
+      const popupAlignElement =
+        this.props.serviceContainer.getJsTermTooltipAnchor();
       this._openPopupPendingPromise = popup.openPopup(
         popupAlignElement,
         xOffset,

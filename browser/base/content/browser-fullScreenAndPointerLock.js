@@ -297,9 +297,8 @@ var FullScreen = {
 
   get fullScreenToggler() {
     delete this.fullScreenToggler;
-    return (this.fullScreenToggler = document.getElementById(
-      "fullscr-toggler"
-    ));
+    return (this.fullScreenToggler =
+      document.getElementById("fullscr-toggler"));
   },
 
   toggle() {

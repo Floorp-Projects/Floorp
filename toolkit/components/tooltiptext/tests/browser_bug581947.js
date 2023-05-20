@@ -78,8 +78,7 @@ add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "data:text/html,<!DOCTYPE html><html><body><form id='content'></form></body></html>",
+      url: "data:text/html,<!DOCTYPE html><html><body><form id='content'></form></body></html>",
     },
     async function (browser) {
       let testData = [

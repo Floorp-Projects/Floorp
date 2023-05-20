@@ -25,7 +25,8 @@ let gCUITestUtils = new CustomizableUITestUtils(window);
 AddonTestUtils.initMochitest(this);
 SearchTestUtils.init(this);
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value
@@ -91,15 +92,16 @@ function getOneOffs() {
 }
 
 async function typeInSearchField(browser, text, fieldName) {
-  await SpecialPowers.spawn(browser, [[fieldName, text]], async function ([
-    contentFieldName,
-    contentText,
-  ]) {
-    // Put the focus on the search box.
-    let searchInput = content.document.getElementById(contentFieldName);
-    searchInput.focus();
-    searchInput.value = contentText;
-  });
+  await SpecialPowers.spawn(
+    browser,
+    [[fieldName, text]],
+    async function ([contentFieldName, contentText]) {
+      // Put the focus on the search box.
+      let searchInput = content.document.getElementById(contentFieldName);
+      searchInput.focus();
+      searchInput.value = contentText;
+    }
+  );
 }
 
 XPCOMUtils.defineLazyGetter(this, "searchCounts", () => {

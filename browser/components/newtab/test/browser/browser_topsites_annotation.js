@@ -558,8 +558,7 @@ add_task(async function redirection() {
     const redirectTo = "http://example.com/";
     const link = {
       label: "test_label",
-      url:
-        "http://example.com/browser/browser/components/newtab/test/browser/redirect_to.sjs?/",
+      url: "http://example.com/browser/browser/components/newtab/test/browser/redirect_to.sjs?/",
       sponsored_position: 1,
       sponsored_tile_id: 12345,
       sponsored_impression_url: "http://impression.example.com/",

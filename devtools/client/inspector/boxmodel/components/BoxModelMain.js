@@ -392,9 +392,8 @@ class BoxModelMain extends PureComponent {
       return;
     }
 
-    const nextLayout = this.layouts[target.getAttribute("data-box")].get(
-      "click"
-    );
+    const nextLayout =
+      this.layouts[target.getAttribute("data-box")].get("click");
     this.setActive(nextLayout);
 
     if (target?._editable) {

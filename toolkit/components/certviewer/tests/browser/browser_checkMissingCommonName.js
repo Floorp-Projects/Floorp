@@ -13,9 +13,10 @@ add_task(async function test_check_missing_common_name() {
         return content.document.querySelector("certificate-section");
       }, "Certificate section found");
 
-      let tabs = certificateSection.shadowRoot.querySelector(
-        ".certificate-tabs"
-      ).children;
+      let tabs =
+        certificateSection.shadowRoot.querySelector(
+          ".certificate-tabs"
+        ).children;
 
       Assert.ok(tabs, "Tabs were found");
       Assert.equal(tabs.length, 4, "There should be 4 tabs");

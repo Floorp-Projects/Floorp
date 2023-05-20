@@ -19,8 +19,7 @@ const FIXTURE = [
         type: "tab",
         title:
           "Firefox for Android — Mobile Web browser — More ways to customize and protect your privacy — Mozilla",
-        url:
-          "https://www.mozilla.org/en-US/firefox/android/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=synced-tabs-sidebar",
+        url: "https://www.mozilla.org/en-US/firefox/android/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=synced-tabs-sidebar",
         icon: "chrome://global/skin/icons/defaultFavicon.svg",
         client: "7cqCr77ptzX3",
         lastUsed: 1452124677,
@@ -38,20 +37,16 @@ const FIXTURE = [
         type: "tab",
         title:
           "Firefox for iOS — Mobile Web browser for your iPhone, iPad and iPod touch — Mozilla",
-        url:
-          "https://www.mozilla.org/en-US/firefox/ios/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=synced-tabs-sidebar",
-        icon:
-          "moz-anno:favicon:https://www.mozilla.org/media/img/firefox/favicon.dc6635050bf5.ico",
+        url: "https://www.mozilla.org/en-US/firefox/ios/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=synced-tabs-sidebar",
+        icon: "moz-anno:favicon:https://www.mozilla.org/media/img/firefox/favicon.dc6635050bf5.ico",
         client: "2xU5h-4bkWqA",
         lastUsed: 1451519425,
       },
       {
         type: "tab",
         title: "Firefox Nightly First Run Page",
-        url:
-          "https://www.mozilla.org/en-US/firefox/nightly/firstrun/?oldversion=45.0a1",
-        icon:
-          "moz-anno:favicon:https://www.mozilla.org/media/img/firefox/favicon-nightly.560395bbb2e1.png",
+        url: "https://www.mozilla.org/en-US/firefox/nightly/firstrun/?oldversion=45.0a1",
+        icon: "moz-anno:favicon:https://www.mozilla.org/media/img/firefox/favicon-nightly.560395bbb2e1.png",
         client: "2xU5h-4bkWqA",
         lastUsed: 1451519420,
       },
@@ -60,8 +55,7 @@ const FIXTURE = [
         type: "tab",
         title: "Mozilla Developer Network",
         url: "https://developer.mozilla.org/en-US/",
-        icon:
-          "moz-anno:favicon:https://developer.cdn.mozilla.net/static/img/favicon32.e02854fdcf73.png",
+        icon: "moz-anno:favicon:https://developer.cdn.mozilla.net/static/img/favicon32.e02854fdcf73.png",
         client: "2xU5h-4bkWqA",
         lastUsed: 1451519725,
       },
@@ -188,9 +182,8 @@ add_task(async function testSyncedTabsSidebarFilteredList() {
 
   await syncedTabsDeckComponent.updatePanel();
 
-  let filterInput = syncedTabsDeckComponent._window.document.querySelector(
-    ".tabsFilter"
-  );
+  let filterInput =
+    syncedTabsDeckComponent._window.document.querySelector(".tabsFilter");
   filterInput.value = "filter text";
   filterInput.blur();
 
@@ -543,9 +536,8 @@ async function testContextMenu(
   menuSelectors
 ) {
   let contextMenu = document.querySelector(contextSelector);
-  let triggerElement = syncedTabsDeckComponent._window.document.querySelector(
-    triggerSelector
-  );
+  let triggerElement =
+    syncedTabsDeckComponent._window.document.querySelector(triggerSelector);
   let isClosed = triggerElement.classList.contains("closed");
 
   let promisePopupShown = BrowserTestUtils.waitForEvent(

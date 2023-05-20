@@ -791,9 +791,10 @@ export var Bookmarks = Object.freeze({
             }
           }
 
-          let syncChangeDelta = lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
-            info.source
-          );
+          let syncChangeDelta =
+            lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+              info.source
+            );
 
           let updatedItem = await db.executeTransaction(async function () {
             let updatedItem = await updateBookmark(
@@ -1005,9 +1006,8 @@ export var Bookmarks = Object.freeze({
 
     return (async () => {
       let updateInfos = [];
-      let syncChangeDelta = lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
-        source
-      );
+      let syncChangeDelta =
+        lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source);
 
       await lazy.PlacesUtils.withConnectionWrapper(
         "Bookmarks.jsm: moveToFolder",
@@ -1351,9 +1351,10 @@ export var Bookmarks = Object.freeze({
             options
           );
           const time = lazy.PlacesUtils.toPRTime(new Date());
-          const syncChangeDelta = lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
-            options.source
-          );
+          const syncChangeDelta =
+            lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+              options.source
+            );
           for (let folderGuid of Bookmarks.userContentRoots) {
             await db.executeCached(
               `UPDATE moz_bookmarks SET lastModified = :time,
@@ -2079,12 +2080,12 @@ function insertBookmark(item, parent) {
           { parent: parent._id, index: item.index }
         );
 
-        let syncChangeDelta = lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
-          item.source
-        );
-        let syncStatus = lazy.PlacesSyncUtils.bookmarks.determineInitialSyncStatus(
-          item.source
-        );
+        let syncChangeDelta =
+          lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(item.source);
+        let syncStatus =
+          lazy.PlacesSyncUtils.bookmarks.determineInitialSyncStatus(
+            item.source
+          );
 
         // Insert the bookmark into the database.
         await db.executeCached(
@@ -2155,12 +2156,10 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
       await db.executeTransaction(async function transaction() {
         await lazy.PlacesUtils.maybeInsertManyPlaces(db, urls);
 
-        let syncChangeDelta = lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
-          source
-        );
-        let syncStatus = lazy.PlacesSyncUtils.bookmarks.determineInitialSyncStatus(
-          source
-        );
+        let syncChangeDelta =
+          lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source);
+        let syncStatus =
+          lazy.PlacesSyncUtils.bookmarks.determineInitialSyncStatus(source);
 
         let rootId = parent._id;
 
@@ -2619,9 +2618,10 @@ function removeBookmarks(items, options) {
       await db.executeTransaction(async function transaction() {
         // We use a map for its de-duplication properties.
         let parents = new Map();
-        let syncChangeDelta = lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
-          options.source
-        );
+        let syncChangeDelta =
+          lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+            options.source
+          );
 
         for (let item of items) {
           parents.set(item.parentGuid, item._parentId);
@@ -2786,9 +2786,10 @@ function reorderChildren(parent, orderedChildrenGuids, options) {
           }
         );
 
-        let syncChangeDelta = lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
-          options.source
-        );
+        let syncChangeDelta =
+          lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
+            options.source
+          );
         await setAncestorsLastModified(
           db,
           parent.guid,
@@ -3099,9 +3100,10 @@ var removeFoldersContents = async function (db, folderGuids, options) {
         parentGuid: item.parentGuid,
         source,
         isTagging: isUntagging,
-        isDescendantRemoval: !lazy.PlacesUtils.bookmarks.userContentRoots.includes(
-          item.parentGuid
-        ),
+        isDescendantRemoval:
+          !lazy.PlacesUtils.bookmarks.userContentRoots.includes(
+            item.parentGuid
+          ),
       })
     );
 

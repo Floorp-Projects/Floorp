@@ -3,12 +3,10 @@
 
 "use strict";
 
-const {
-  assertFirefoxViewTab,
-  closeFirefoxViewTab,
-} = ChromeUtils.importESModule(
-  "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
-);
+const { assertFirefoxViewTab, closeFirefoxViewTab } =
+  ChromeUtils.importESModule(
+    "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
+  );
 
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({

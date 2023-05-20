@@ -1444,8 +1444,8 @@ class Preferences {
           prefName => !this.get(prefName)
         );
       case "autoFillAdaptiveHistoryUseCountThreshold":
-        const nimbusValue = this._nimbus
-          .autoFillAdaptiveHistoryUseCountThreshold;
+        const nimbusValue =
+          this._nimbus.autoFillAdaptiveHistoryUseCountThreshold;
         return nimbusValue === undefined
           ? this.get("autoFill.adaptiveHistory.useCountThreshold")
           : parseFloat(nimbusValue);

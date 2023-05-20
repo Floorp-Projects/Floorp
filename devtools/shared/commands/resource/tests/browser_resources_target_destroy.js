@@ -28,37 +28,42 @@ add_task(async function () {
     /watcher\d+$/,
     ""
   );
-  await ContentTask.spawn(tab.linkedBrowser, [connectionPrefix], function (
-    _connectionPrefix
-  ) {
-    const { require } = ChromeUtils.importESModule(
-      "resource://devtools/shared/loader/Loader.sys.mjs"
-    );
-    const { TargetActorRegistry } = ChromeUtils.import(
-      "resource://devtools/server/actors/targets/target-actor-registry.jsm"
-    );
-    const {
-      getResourceWatcher,
-      TYPES,
-    } = require("resource://devtools/server/actors/resources/index.js");
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    [connectionPrefix],
+    function (_connectionPrefix) {
+      const { require } = ChromeUtils.importESModule(
+        "resource://devtools/shared/loader/Loader.sys.mjs"
+      );
+      const { TargetActorRegistry } = ChromeUtils.import(
+        "resource://devtools/server/actors/targets/target-actor-registry.jsm"
+      );
+      const {
+        getResourceWatcher,
+        TYPES,
+      } = require("resource://devtools/server/actors/resources/index.js");
 
-    // Retrieve the target actor instance and its watcher for console messages
-    const targetActor = TargetActorRegistry.getTargetActors(
-      {
-        type: "browser-element",
-        browserId: content.browsingContext.browserId,
-      },
-      _connectionPrefix
-    ).find(actor => actor.isTopLevelTarget);
-    ok(targetActor, "Got the top level target actor from the content process");
-    const watcher = getResourceWatcher(targetActor, TYPES.CONSOLE_MESSAGE);
+      // Retrieve the target actor instance and its watcher for console messages
+      const targetActor = TargetActorRegistry.getTargetActors(
+        {
+          type: "browser-element",
+          browserId: content.browsingContext.browserId,
+        },
+        _connectionPrefix
+      ).find(actor => actor.isTopLevelTarget);
+      ok(
+        targetActor,
+        "Got the top level target actor from the content process"
+      );
+      const watcher = getResourceWatcher(targetActor, TYPES.CONSOLE_MESSAGE);
 
-    // Storing the target actor in the global so we can retrieve it later, even if it
-    // was destroyed
-    content._testTargetActor = targetActor;
+      // Storing the target actor in the global so we can retrieve it later, even if it
+      // was destroyed
+      content._testTargetActor = targetActor;
 
-    is(!!watcher, true, "The console message resource watcher was created");
-  });
+      is(!!watcher, true, "The console message resource watcher was created");
+    }
+  );
 
   info("Close the client, which will destroy the target");
   targetCommand.destroy();

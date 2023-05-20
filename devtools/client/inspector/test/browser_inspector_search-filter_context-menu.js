@@ -54,9 +54,8 @@ add_task(async function () {
   await onContextMenuClose;
 
   info("Copy text in search field using the context menu");
-  const onSearchProcessingDone = inspector.searchSuggestions.once(
-    "processing-done"
-  );
+  const onSearchProcessingDone =
+    inspector.searchSuggestions.once("processing-done");
   searchBox.setUserInput(TEST_INPUT);
   searchBox.select();
   searchBox.focus();

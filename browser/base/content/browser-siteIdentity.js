@@ -194,9 +194,8 @@ var gIdentityHandler = {
   },
   get _identityIconBox() {
     delete this._identityIconBox;
-    return (this._identityIconBox = document.getElementById(
-      "identity-icon-box"
-    ));
+    return (this._identityIconBox =
+      document.getElementById("identity-icon-box"));
   },
   get _identityPopupMultiView() {
     delete this._identityPopupMultiView;
@@ -230,9 +229,8 @@ var gIdentityHandler = {
   },
   get _identityPopupHttpsOnlyModeMenuListTempItem() {
     delete this._identityPopupHttpsOnlyModeMenuListTempItem;
-    return (this._identityPopupHttpsOnlyModeMenuListTempItem = document.getElementById(
-      "identity-popup-security-menulist-tempitem"
-    ));
+    return (this._identityPopupHttpsOnlyModeMenuListTempItem =
+      document.getElementById("identity-popup-security-menulist-tempitem"));
   },
   get _identityPopupSecurityEVContentOwner() {
     delete this._identityPopupSecurityEVContentOwner;
@@ -552,7 +550,8 @@ var gIdentityHandler = {
     // from HTTPS to HTTP. Otherwise we can just reload the page.
     if (this._isAboutHttpsOnlyErrorPage) {
       gBrowser.loadURI(newURI, {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
         loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
       });
       if (this._popupInitialized) {
@@ -746,9 +745,10 @@ var gIdentityHandler = {
    */
   _hasCustomRoot() {
     let issuerCert = null;
-    issuerCert = this._secInfo.succeededCertChain[
-      this._secInfo.succeededCertChain.length - 1
-    ];
+    issuerCert =
+      this._secInfo.succeededCertChain[
+        this._secInfo.succeededCertChain.length - 1
+      ];
 
     return !issuerCert.isBuiltInRoot;
   },
@@ -1101,10 +1101,8 @@ var gIdentityHandler = {
       }
     );
 
-    this._identityPopupSecurityEVContentOwner.textContent = gNavigatorBundle.getFormattedString(
-      "identity.ev.contentOwner2",
-      [owner]
-    );
+    this._identityPopupSecurityEVContentOwner.textContent =
+      gNavigatorBundle.getFormattedString("identity.ev.contentOwner2", [owner]);
 
     this._identityPopupContentOwner.textContent = owner;
     this._identityPopupContentSupp.textContent = supplemental;

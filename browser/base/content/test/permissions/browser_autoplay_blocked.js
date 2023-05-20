@@ -138,8 +138,10 @@ add_task(async function testMainViewVisible() {
     await closePermissionPopup();
 
     let uri = Services.io.newURI(AUTOPLAY_PAGE);
-    let state = PermissionTestUtils.getPermissionObject(uri, AUTOPLAY_PERM)
-      .capability;
+    let state = PermissionTestUtils.getPermissionObject(
+      uri,
+      AUTOPLAY_PERM
+    ).capability;
     Assert.equal(state, Services.perms.ALLOW_ACTION);
   });
 
@@ -149,9 +151,10 @@ add_task(async function testMainViewVisible() {
 add_task(async function testGloballyBlockedOnNewWindow() {
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    AUTOPLAY_PAGE
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      AUTOPLAY_PAGE
+    );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

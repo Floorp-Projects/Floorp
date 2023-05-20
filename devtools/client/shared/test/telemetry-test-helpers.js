@@ -101,8 +101,10 @@ class TelemetryHelpers {
         }
         break;
       case "scalar":
-        const scalars = Services.telemetry.getSnapshotForScalars("main", false)
-          .parent;
+        const scalars = Services.telemetry.getSnapshotForScalars(
+          "main",
+          false
+        ).parent;
 
         is(scalars[histId], expected, `${histId} correct`);
         break;
@@ -129,14 +131,18 @@ class TelemetryHelpers {
    */
   generateTelemetryTests(prefix = "") {
     // Get all histograms and scalars
-    const histograms = Services.telemetry.getSnapshotForHistograms("main", true)
-      .parent;
+    const histograms = Services.telemetry.getSnapshotForHistograms(
+      "main",
+      true
+    ).parent;
     const keyedHistograms = Services.telemetry.getSnapshotForKeyedHistograms(
       "main",
       true
     ).parent;
-    const scalars = Services.telemetry.getSnapshotForScalars("main", false)
-      .parent;
+    const scalars = Services.telemetry.getSnapshotForScalars(
+      "main",
+      false
+    ).parent;
     const keyedScalars = Services.telemetry.getSnapshotForKeyedScalars(
       "main",
       false

@@ -30,8 +30,8 @@ add_task(async function () {
       });
     });
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .className;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").className;
     is(newIdentityMode, "verifiedDomain", "identity should be secure after");
   });
 });
@@ -51,8 +51,8 @@ add_task(async function () {
       });
     });
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .classList;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").classList;
     ok(
       newIdentityMode.contains("mixedActiveBlocked"),
       "identity should be blocked mixed active content after"
@@ -80,8 +80,8 @@ add_task(async function () {
       });
     });
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .className;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").className;
     is(newIdentityMode, "notSecure", "identity should be 'not secure' after");
   });
 });
@@ -101,8 +101,8 @@ add_task(async function () {
       });
     });
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .className;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").className;
     is(newIdentityMode, "notSecure", "identity should be 'not secure' after");
   });
 });

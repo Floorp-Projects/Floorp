@@ -140,7 +140,8 @@ class TextRecognitionModal {
       event.preventDefault();
       this.openLinkIn(this.linkEl.href, "tab", {
         forceForeground: true,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
     });
   }

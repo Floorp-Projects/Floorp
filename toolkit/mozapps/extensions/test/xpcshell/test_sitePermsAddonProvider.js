@@ -25,12 +25,10 @@ const PRINCIPAL_COM = ssm.createContentPrincipalFromOrigin(
 const PRINCIPAL_ORG = ssm.createContentPrincipalFromOrigin(
   "https://example.org"
 );
-const PRINCIPAL_GITHUB = ssm.createContentPrincipalFromOrigin(
-  "https://github.io"
-);
-const PRINCIPAL_UNSECURE = ssm.createContentPrincipalFromOrigin(
-  "http://example.net"
-);
+const PRINCIPAL_GITHUB =
+  ssm.createContentPrincipalFromOrigin("https://github.io");
+const PRINCIPAL_UNSECURE =
+  ssm.createContentPrincipalFromOrigin("http://example.net");
 const PRINCIPAL_IP = ssm.createContentPrincipalFromOrigin(
   "https://18.154.122.194"
 );

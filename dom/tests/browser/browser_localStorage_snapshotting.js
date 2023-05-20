@@ -8,9 +8,10 @@ let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "/helper_localStorage.js", this);
 
 function clearOrigin() {
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    HELPER_PAGE_ORIGIN
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      HELPER_PAGE_ORIGIN
+    );
   let request = Services.qms.clearStoragesForPrincipal(
     principal,
     "default",
@@ -25,13 +26,15 @@ function clearOrigin() {
 }
 
 async function applyMutations(knownTab, mutations) {
-  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [mutations], function (
-    mutations
-  ) {
-    return content.wrappedJSObject.applyMutations(
-      Cu.cloneInto(mutations, content)
-    );
-  });
+  await SpecialPowers.spawn(
+    knownTab.tab.linkedBrowser,
+    [mutations],
+    function (mutations) {
+      return content.wrappedJSObject.applyMutations(
+        Cu.cloneInto(mutations, content)
+      );
+    }
+  );
 }
 
 async function verifyState(knownTab, expectedState) {
@@ -106,9 +109,10 @@ async function verifySnapshotUsage(knownTab, expectedSnapshotUsage) {
 }
 
 async function verifyParentState(expectedState) {
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    HELPER_PAGE_ORIGIN
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      HELPER_PAGE_ORIGIN
+    );
 
   let actualState = await Services.domStorageManager.getState(principal);
 

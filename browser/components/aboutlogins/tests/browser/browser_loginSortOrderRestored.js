@@ -91,30 +91,32 @@ add_task(async function test_sort_order_persisted() {
       url: "about:logins",
     },
     async function (browser) {
-      await ContentTask.spawn(browser, TEST_LOGIN3.guid, async function (
-        testLogin3Guid
-      ) {
-        let loginList = Cu.waiveXrays(
-          content.document.querySelector("login-list")
-        );
-        await ContentTaskUtils.waitForCondition(
-          () => loginList._sortSelect.value == "alerts",
-          "Waiting for login-list sort to get changed to 'alerts'. Current value is: " +
-            loginList._sortSelect.value
-        );
-        Assert.equal(
-          loginList._sortSelect.value,
-          "alerts",
-          "selected sort should be restored to 'alerts' since 'breached' was in prefs"
-        );
-        Assert.equal(
-          loginList._list.querySelector(
-            ".login-list-item[data-guid]:not([hidden])"
-          ).dataset.guid,
-          testLogin3Guid,
-          "the first login should be TEST_LOGIN3 since they are sorted by alerts"
-        );
-      });
+      await ContentTask.spawn(
+        browser,
+        TEST_LOGIN3.guid,
+        async function (testLogin3Guid) {
+          let loginList = Cu.waiveXrays(
+            content.document.querySelector("login-list")
+          );
+          await ContentTaskUtils.waitForCondition(
+            () => loginList._sortSelect.value == "alerts",
+            "Waiting for login-list sort to get changed to 'alerts'. Current value is: " +
+              loginList._sortSelect.value
+          );
+          Assert.equal(
+            loginList._sortSelect.value,
+            "alerts",
+            "selected sort should be restored to 'alerts' since 'breached' was in prefs"
+          );
+          Assert.equal(
+            loginList._list.querySelector(
+              ".login-list-item[data-guid]:not([hidden])"
+            ).dataset.guid,
+            testLogin3Guid,
+            "the first login should be TEST_LOGIN3 since they are sorted by alerts"
+          );
+        }
+      );
     }
   );
 
@@ -137,32 +139,34 @@ add_task(async function test_sort_order_persisted() {
       url: "about:logins",
     },
     async function (browser) {
-      await ContentTask.spawn(browser, TEST_LOGIN2.guid, async function (
-        testLogin2Guid
-      ) {
-        let loginList = Cu.waiveXrays(
-          content.document.querySelector("login-list")
-        );
-        await ContentTaskUtils.waitForCondition(
-          () =>
+      await ContentTask.spawn(
+        browser,
+        TEST_LOGIN2.guid,
+        async function (testLogin2Guid) {
+          let loginList = Cu.waiveXrays(
+            content.document.querySelector("login-list")
+          );
+          await ContentTaskUtils.waitForCondition(
+            () =>
+              loginList._list.querySelector(
+                ".login-list-item[data-guid]:not([hidden])"
+              ),
+            "wait for a visible loging to get populated"
+          );
+          Assert.equal(
+            loginList._sortSelect.value,
+            "name",
+            "selected sort should be name since 'alerts' no longer applies with no breached or vulnerable logins"
+          );
+          Assert.equal(
             loginList._list.querySelector(
               ".login-list-item[data-guid]:not([hidden])"
-            ),
-          "wait for a visible loging to get populated"
-        );
-        Assert.equal(
-          loginList._sortSelect.value,
-          "name",
-          "selected sort should be name since 'alerts' no longer applies with no breached or vulnerable logins"
-        );
-        Assert.equal(
-          loginList._list.querySelector(
-            ".login-list-item[data-guid]:not([hidden])"
-          ).dataset.guid,
-          testLogin2Guid,
-          "the first login should be TEST_LOGIN2 since it is sorted first by 'name'"
-        );
-      });
+            ).dataset.guid,
+            testLogin2Guid,
+            "the first login should be TEST_LOGIN2 since it is sorted first by 'name'"
+          );
+        }
+      );
     }
   );
 });

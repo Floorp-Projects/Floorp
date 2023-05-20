@@ -475,9 +475,8 @@ add_task(async function test_graph_display() {
       "aria-describedby attribute is trackerContent"
     );
 
-    const fingerprinterTab = content.document.getElementById(
-      "tab-fingerprinter"
-    );
+    const fingerprinterTab =
+      content.document.getElementById("tab-fingerprinter");
     Assert.equal(
       fingerprinterTab.getAttribute("aria-labelledby"),
       "fingerprinterLabel fingerprinterTitle",
@@ -686,9 +685,8 @@ add_task(async function test_etp_custom_protections_off() {
       return etpCard.classList.contains("custom-not-blocking");
     }, "The custom protections warning card is showing");
 
-    let manageProtectionsButton = content.document.getElementById(
-      "manage-protections"
-    );
+    let manageProtectionsButton =
+      content.document.getElementById("manage-protections");
     Assert.ok(
       ContentTaskUtils.is_visible(manageProtectionsButton),
       "Button to manage protections is displayed"
@@ -710,9 +708,8 @@ add_task(async function test_etp_custom_protections_off() {
       return etpCard.classList.contains("custom-not-blocking");
     }, "The custom protections warning card is showing");
 
-    let manageProtectionsButton = content.document.getElementById(
-      "manage-protections"
-    );
+    let manageProtectionsButton =
+      content.document.getElementById("manage-protections");
     Assert.ok(
       ContentTaskUtils.is_visible(manageProtectionsButton),
       "Button to manage protections is displayed"

@@ -41,19 +41,21 @@ add_task(async function test_experiment_control() {
       let videoID = "with-controls";
       await hoverToggle(browser, videoID);
 
-      await SpecialPowers.spawn(browser, [pipExplainerMessage], async function (
-        pipExplainerMessage
-      ) {
-        let video = content.document.getElementById("with-controls");
-        let shadowRoot = video.openOrClosedShadowRoot;
-        let pipButton = shadowRoot.querySelector(".pip-explainer");
+      await SpecialPowers.spawn(
+        browser,
+        [pipExplainerMessage],
+        async function (pipExplainerMessage) {
+          let video = content.document.getElementById("with-controls");
+          let shadowRoot = video.openOrClosedShadowRoot;
+          let pipButton = shadowRoot.querySelector(".pip-explainer");
 
-        Assert.equal(
-          pipButton.textContent.trim(),
-          pipExplainerMessage,
-          "The PiP explainer is default"
-        );
-      });
+          Assert.equal(
+            pipButton.textContent.trim(),
+            pipExplainerMessage,
+            "The PiP explainer is default"
+          );
+        }
+      );
     }
   );
 });

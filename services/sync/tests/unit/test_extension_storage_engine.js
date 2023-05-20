@@ -11,12 +11,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
 });
 
-const {
-  ExtensionStorageEngineBridge,
-  ExtensionStorageEngineKinto,
-} = ChromeUtils.importESModule(
-  "resource://services-sync/engines/extension-storage.sys.mjs"
-);
+const { ExtensionStorageEngineBridge, ExtensionStorageEngineKinto } =
+  ChromeUtils.importESModule(
+    "resource://services-sync/engines/extension-storage.sys.mjs"
+  );
 
 const { BridgeWrapperXPCOM } = ChromeUtils.importESModule(
   "resource://services-sync/bridged_engine.sys.mjs"

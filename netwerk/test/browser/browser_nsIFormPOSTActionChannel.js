@@ -188,9 +188,8 @@ function frameScript() {
       if (content) {
         var frame = content.document.getElementById("frame");
         if (frame) {
-          var upload_stream = frame.contentDocument.getElementById(
-            "upload_stream"
-          );
+          var upload_stream =
+            frame.contentDocument.getElementById("upload_stream");
           var post_data = frame.contentDocument.getElementById("post_data");
           var headers = frame.contentDocument.getElementById("upload_headers");
           if (upload_stream && post_data && headers) {

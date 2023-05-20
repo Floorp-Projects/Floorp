@@ -19,9 +19,10 @@ function simulateNavigationInTheFrame(newOrigin) {
     .callsFake(() => {
       return {
         currentWindowGlobal: {
-          documentPrincipal: Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-            `https://${newOrigin}^userContextId=2`
-          ),
+          documentPrincipal:
+            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              `https://${newOrigin}^userContextId=2`
+            ),
           documentURI: Services.io.newURI("https://www.example.com"),
         },
       };
@@ -67,9 +68,10 @@ add_task(async function test_getGeneratedPassword() {
     .callsFake(() => {
       return {
         currentWindowGlobal: {
-          documentPrincipal: Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-            "https://www.example.com^userContextId=6"
-          ),
+          documentPrincipal:
+            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              "https://www.example.com^userContextId=6"
+            ),
           documentURI: Services.io.newURI("https://www.example.com"),
         },
       };

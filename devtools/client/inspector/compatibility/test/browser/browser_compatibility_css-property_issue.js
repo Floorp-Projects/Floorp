@@ -57,10 +57,8 @@ const TEST_DATA_ALL = [
 add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const {
-    allElementsPane,
-    selectedElementPane,
-  } = await openCompatibilityView();
+  const { allElementsPane, selectedElementPane } =
+    await openCompatibilityView();
 
   info("Check the content of the issue list on the selected element");
   await assertIssueList(selectedElementPane, TEST_DATA_SELECTED);

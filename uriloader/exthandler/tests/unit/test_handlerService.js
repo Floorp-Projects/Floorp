@@ -308,14 +308,16 @@ function run_test() {
   // Figure out which is the local and which is the web handler and the index
   // in the array of the local handler, which is the one we're going to remove
   // to test removal of a handler.
-  var handler1 = possibleHandlersInfo.possibleApplicationHandlers.queryElementAt(
-    0,
-    Ci.nsIHandlerApp
-  );
-  var handler2 = possibleHandlersInfo.possibleApplicationHandlers.queryElementAt(
-    1,
-    Ci.nsIHandlerApp
-  );
+  var handler1 =
+    possibleHandlersInfo.possibleApplicationHandlers.queryElementAt(
+      0,
+      Ci.nsIHandlerApp
+    );
+  var handler2 =
+    possibleHandlersInfo.possibleApplicationHandlers.queryElementAt(
+      1,
+      Ci.nsIHandlerApp
+    );
   var localPossibleHandler, webPossibleHandler, localIndex;
   if (handler1 instanceof Ci.nsILocalHandlerApp) {
     [localPossibleHandler, webPossibleHandler, localIndex] = [
@@ -350,10 +352,11 @@ function run_test() {
   Assert.equal(possibleHandlersInfo.possibleApplicationHandlers.length, 1);
 
   // Make sure the handler is the one we didn't remove.
-  webPossibleHandler = possibleHandlersInfo.possibleApplicationHandlers.queryElementAt(
-    0,
-    Ci.nsIWebHandlerApp
-  );
+  webPossibleHandler =
+    possibleHandlersInfo.possibleApplicationHandlers.queryElementAt(
+      0,
+      Ci.nsIWebHandlerApp
+    );
   Assert.equal(webPossibleHandler.name, webHandler.name);
   Assert.ok(webPossibleHandler.equals(webHandler));
 

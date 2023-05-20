@@ -18,9 +18,8 @@ add_task(async function test_about_translations_enabled() {
           selectors.translationResultBlank
         );
         const { visibility: trVisibility } = window.getComputedStyle(trElement);
-        const { visibility: trBlankVisibility } = window.getComputedStyle(
-          trBlankElement
-        );
+        const { visibility: trBlankVisibility } =
+          window.getComputedStyle(trBlankElement);
         return trVisibility === "hidden" && trBlankVisibility === "visible";
       }, `Waiting for placeholder text to be visible."`);
 

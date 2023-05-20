@@ -22,9 +22,8 @@ var ContentAreaDownloadsView = {
           .focus({ focusVisible: false });
         // Pause the indicator if the browser is active.
         if (document.visibilityState === "visible") {
-          DownloadsCommon.getIndicatorData(
-            window
-          ).attentionSuppressed |= suppressionFlag;
+          DownloadsCommon.getIndicatorData(window).attentionSuppressed |=
+            suppressionFlag;
         }
       },
       { once: true }

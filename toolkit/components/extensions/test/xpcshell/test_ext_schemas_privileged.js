@@ -104,7 +104,8 @@ add_task(
           {
             expected: [
               {
-                message: /Using the privileged permission 'mozillaAddons' requires a privileged add-on/,
+                message:
+                  /Using the privileged permission 'mozillaAddons' requires a privileged add-on/,
               },
             ],
           },

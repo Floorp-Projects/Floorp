@@ -277,12 +277,8 @@ async function testMemory(element, total, delta, assumptions) {
     null,
     `Can we parse ${element.title} with ${MEMORY_TOOLTIP_REGEXP}?`
   );
-  let [
-    ,
-    extractedDeltaSign,
-    extractedDeltaTotal,
-    extractedDeltaUnit,
-  ] = extracted;
+  let [, extractedDeltaSign, extractedDeltaTotal, extractedDeltaUnit] =
+    extracted;
   if (extractedDeltaSign == null) {
     Assert.equal(delta || 0, 0);
     return;
@@ -656,9 +652,11 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
     } else {
       Assert.ok(threads, "We have a thread summary row");
 
-      let { number, active = 0, list } = doc.l10n.getAttributes(
-        threads.children[0].children[1]
-      ).args;
+      let {
+        number,
+        active = 0,
+        list,
+      } = doc.l10n.getAttributes(threads.children[0].children[1]).args;
 
       info("Sanity checks: number of threads");
       Assert.greaterOrEqual(
@@ -848,9 +846,8 @@ async function testAboutProcessesWithConfig({ showAllFrames, showThreads }) {
   info("Double-clicking on the extensions process");
   let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:addons");
   await SpecialPowers.spawn(tabAboutProcesses.linkedBrowser, [], async () => {
-    let extensionsRow = content.document.getElementsByClassName(
-      "extensions"
-    )[0];
+    let extensionsRow =
+      content.document.getElementsByClassName("extensions")[0];
     Assert.ok(!!extensionsRow, "We should have found the extensions process");
     let evt = new content.window.MouseEvent("dblclick", {
       bubbles: true,

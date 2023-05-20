@@ -30,7 +30,8 @@ add_task(async function () {
           [],
           () => {
             content.document.body.innerHTML = "<div contenteditable><br></div>";
-            content.wrappedJSObject.runner = content.wrappedJSObject.createIMEStateInContentEditableOnReadonlyChangeTester();
+            content.wrappedJSObject.runner =
+              content.wrappedJSObject.createIMEStateInContentEditableOnReadonlyChangeTester();
             const editingHost = content.document.querySelector(
               "div[contenteditable]"
             );
@@ -83,7 +84,8 @@ add_task(async function () {
           () => {
             content.document.body.innerHTML =
               "<div contenteditable><br><button>button</button></div>";
-            content.wrappedJSObject.runner = content.wrappedJSObject.createIMEStateInContentEditableOnReadonlyChangeTester();
+            content.wrappedJSObject.runner =
+              content.wrappedJSObject.createIMEStateInContentEditableOnReadonlyChangeTester();
             const editingHost = content.document.querySelector(
               "div[contenteditable]"
             );
@@ -130,10 +132,12 @@ add_task(async function () {
       })();
 
       await (async function test_ime_state_of_text_controls_in_contenteditable_on_readonly_change() {
-        const tester = new IMEStateOfTextControlInContentEditableOnReadonlyChangeTester();
+        const tester =
+          new IMEStateOfTextControlInContentEditableOnReadonlyChangeTester();
         await SpecialPowers.spawn(browser, [], () => {
           content.document.body.innerHTML = "<div contenteditable></div>";
-          content.wrappedJSObject.runner = content.wrappedJSObject.createIMEStateOfTextControlInContentEditableOnReadonlyChangeTester();
+          content.wrappedJSObject.runner =
+            content.wrappedJSObject.createIMEStateOfTextControlInContentEditableOnReadonlyChangeTester();
         });
         for (
           let index = 0;
@@ -158,43 +162,31 @@ add_task(async function () {
             window,
             tipWrapper
           );
-          const expectedDataOfMakingParentEditingHost = await SpecialPowers.spawn(
-            browser,
-            [],
-            () => {
+          const expectedDataOfMakingParentEditingHost =
+            await SpecialPowers.spawn(browser, [], () => {
               return content.wrappedJSObject.runner.runToMakeParentEditingHost();
-            }
-          );
+            });
           tester.checkResultOfMakingParentEditingHost(
             expectedDataOfMakingParentEditingHost
           );
-          const expectedDataOfMakingHTMLEditorReadonly = await SpecialPowers.spawn(
-            browser,
-            [],
-            () => {
+          const expectedDataOfMakingHTMLEditorReadonly =
+            await SpecialPowers.spawn(browser, [], () => {
               return content.wrappedJSObject.runner.runToMakeHTMLEditorReadonly();
-            }
-          );
+            });
           tester.checkResultOfMakingHTMLEditorReadonly(
             expectedDataOfMakingHTMLEditorReadonly
           );
-          const expectedDataOfMakingHTMLEditorEditable = await SpecialPowers.spawn(
-            browser,
-            [],
-            () => {
+          const expectedDataOfMakingHTMLEditorEditable =
+            await SpecialPowers.spawn(browser, [], () => {
               return content.wrappedJSObject.runner.runToMakeHTMLEditorEditable();
-            }
-          );
+            });
           tester.checkResultOfMakingHTMLEditorEditable(
             expectedDataOfMakingHTMLEditorEditable
           );
-          const expectedDataOfMakingParentNonEditable = await SpecialPowers.spawn(
-            browser,
-            [],
-            () => {
+          const expectedDataOfMakingParentNonEditable =
+            await SpecialPowers.spawn(browser, [], () => {
               return content.wrappedJSObject.runner.runToMakeParentNonEditingHost();
-            }
-          );
+            });
           tester.checkResultOfMakingParentNonEditable(
             expectedDataOfMakingParentNonEditable
           );
@@ -203,10 +195,12 @@ add_task(async function () {
       })();
 
       await (async function test_ime_state_outside_contenteditable_on_readonly_change() {
-        const tester = new IMEStateOutsideContentEditableOnReadonlyChangeTester();
+        const tester =
+          new IMEStateOutsideContentEditableOnReadonlyChangeTester();
         await SpecialPowers.spawn(browser, [], () => {
           content.document.body.innerHTML = "<div contenteditable></div>";
-          content.wrappedJSObject.runner = content.wrappedJSObject.createIMEStateOutsideContentEditableOnReadonlyChangeTester();
+          content.wrappedJSObject.runner =
+            content.wrappedJSObject.createIMEStateOutsideContentEditableOnReadonlyChangeTester();
         });
         for (
           let index = 0;
@@ -231,43 +225,31 @@ add_task(async function () {
             window,
             tipWrapper
           );
-          const expectedDataOfMakingParentEditingHost = await SpecialPowers.spawn(
-            browser,
-            [],
-            () => {
+          const expectedDataOfMakingParentEditingHost =
+            await SpecialPowers.spawn(browser, [], () => {
               return content.wrappedJSObject.runner.runToMakeParentEditingHost();
-            }
-          );
+            });
           tester.checkResultOfMakingParentEditingHost(
             expectedDataOfMakingParentEditingHost
           );
-          const expectedDataOfMakingHTMLEditorReadonly = await SpecialPowers.spawn(
-            browser,
-            [],
-            () => {
+          const expectedDataOfMakingHTMLEditorReadonly =
+            await SpecialPowers.spawn(browser, [], () => {
               return content.wrappedJSObject.runner.runToMakeHTMLEditorReadonly();
-            }
-          );
+            });
           tester.checkResultOfMakingHTMLEditorReadonly(
             expectedDataOfMakingHTMLEditorReadonly
           );
-          const expectedDataOfMakingHTMLEditorEditable = await SpecialPowers.spawn(
-            browser,
-            [],
-            () => {
+          const expectedDataOfMakingHTMLEditorEditable =
+            await SpecialPowers.spawn(browser, [], () => {
               return content.wrappedJSObject.runner.runToMakeHTMLEditorEditable();
-            }
-          );
+            });
           tester.checkResultOfMakingHTMLEditorEditable(
             expectedDataOfMakingHTMLEditorEditable
           );
-          const expectedDataOfMakingParentNonEditable = await SpecialPowers.spawn(
-            browser,
-            [],
-            () => {
+          const expectedDataOfMakingParentNonEditable =
+            await SpecialPowers.spawn(browser, [], () => {
               return content.wrappedJSObject.runner.runToMakeParentNonEditingHost();
-            }
-          );
+            });
           tester.checkResultOfMakingParentNonEditable(
             expectedDataOfMakingParentNonEditable
           );

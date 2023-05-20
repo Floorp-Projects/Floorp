@@ -264,10 +264,9 @@ add_task(async function () {
 });
 
 function assertLastMessageIsNavigationMessage(hud, timeBeforeNavigation, url) {
-  const {
-    visibleMessages,
-    mutableMessagesById,
-  } = hud.ui.wrapper.getStore().getState().messages;
+  const { visibleMessages, mutableMessagesById } = hud.ui.wrapper
+    .getStore()
+    .getState().messages;
   const lastMessageId = visibleMessages.at(-1);
   const lastMessage = mutableMessagesById.get(lastMessageId);
 

@@ -123,9 +123,10 @@ var TranslationsPanel = new (class {
    * @returns {TranslationsParent}
    */
   #getTranslationsActor() {
-    const actor = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
-      "Translations"
-    );
+    const actor =
+      gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+        "Translations"
+      );
 
     if (!actor) {
       throw new Error("Unable to get the TranslationsParent");
@@ -164,11 +165,8 @@ var TranslationsPanel = new (class {
 
     try {
       /** @type {SupportedLanguages} */
-      const {
-        languagePairs,
-        fromLanguages,
-        toLanguages,
-      } = await this.#getTranslationsActor().getSupportedLanguages();
+      const { languagePairs, fromLanguages, toLanguages } =
+        await this.#getTranslationsActor().getSupportedLanguages();
 
       // Verify that we are in a proper state.
       if (languagePairs.length === 0) {
@@ -326,12 +324,8 @@ var TranslationsPanel = new (class {
    * @param {TranslationPair} translationPair
    */
   async #showRevisitView({ fromLanguage, toLanguage }) {
-    const {
-      multiview,
-      revisitHeader,
-      revisitMenuList,
-      revisitTranslate,
-    } = this.elements;
+    const { multiview, revisitHeader, revisitMenuList, revisitTranslate } =
+      this.elements;
 
     await this.#ensureLangListsBuilt();
 
@@ -387,9 +381,8 @@ var TranslationsPanel = new (class {
   async open(event) {
     const { panel, button } = this.elements;
 
-    const {
-      requestedTranslationPair,
-    } = this.#getTranslationsActor().languageState;
+    const { requestedTranslationPair } =
+      this.#getTranslationsActor().languageState;
 
     if (requestedTranslationPair) {
       await this.#showRevisitView(requestedTranslationPair).catch(error => {
@@ -486,12 +479,8 @@ var TranslationsPanel = new (class {
           error,
           isEngineReady,
         } = event.detail;
-        const {
-          panel,
-          button,
-          buttonLocale,
-          buttonCircleArrows,
-        } = this.elements;
+        const { panel, button, buttonLocale, buttonCircleArrows } =
+          this.elements;
 
         if (detectedLanguages) {
           button.hidden = false;

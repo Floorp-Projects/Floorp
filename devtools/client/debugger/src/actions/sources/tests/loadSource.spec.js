@@ -93,7 +93,7 @@ describe("loadGeneratedSourceText", () => {
       {
         ...mockCommandClient,
         sourceContents: async () => fooGenContent,
-        getSourceActorBreakpointPositions: async () => ({ "1": [0] }),
+        getSourceActorBreakpointPositions: async () => ({ 1: [0] }),
         getSourceActorBreakableLines: async () => [],
       },
       {},
@@ -155,10 +155,11 @@ describe("loadGeneratedSourceText", () => {
     expect(breakpoint1.text).toBe("");
     expect(breakpoint1.originalText).toBe("var fooOrig = 42;");
 
-    const fooGenSource1SourceActor = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      fooGenSource1.id
-    );
+    const fooGenSource1SourceActor =
+      selectors.getFirstSourceActorForGeneratedSource(
+        getState(),
+        fooGenSource1.id
+      );
 
     await dispatch(
       actions.loadGeneratedSourceText({
@@ -171,10 +172,11 @@ describe("loadGeneratedSourceText", () => {
     expect(breakpoint2.text).toBe("var fooGen = 42;");
     expect(breakpoint2.originalText).toBe("var fooOrig = 42;");
 
-    const fooGenSource2SourceActor = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      fooGenSource2.id
-    );
+    const fooGenSource2SourceActor =
+      selectors.getFirstSourceActorForGeneratedSource(
+        getState(),
+        fooGenSource2.id
+      );
 
     await dispatch(
       actions.loadGeneratedSourceText({
@@ -332,10 +334,11 @@ describe("loadGeneratedSourceText", () => {
     await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
 
     const prevSource = selectors.getSourceFromId(getState(), "foo1");
-    const prevSourceSourceActor = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      prevSource.id
-    );
+    const prevSourceSourceActor =
+      selectors.getFirstSourceActorForGeneratedSource(
+        getState(),
+        prevSource.id
+      );
     await dispatch(
       actions.loadGeneratedSourceText({
         cx,

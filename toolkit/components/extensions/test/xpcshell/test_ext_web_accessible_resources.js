@@ -7,8 +7,9 @@ let image = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
     "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII="
 );
-const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0))
-  .buffer;
+const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte =>
+  byte.charCodeAt(0)
+).buffer;
 
 async function testImageLoading(src, expectedAction) {
   let imageLoadingPromise = new Promise((resolve, reject) => {

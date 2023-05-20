@@ -1289,12 +1289,13 @@ function synthesizeAndWaitNativeMouseMove(
   );
 
   let eventRegisteredPromise = new Promise(resolve => {
-    mm.addMessageListener("Test:MouseMoveRegistered", function processed(
-      message
-    ) {
-      mm.removeMessageListener("Test:MouseMoveRegistered", processed);
-      resolve();
-    });
+    mm.addMessageListener(
+      "Test:MouseMoveRegistered",
+      function processed(message) {
+        mm.removeMessageListener("Test:MouseMoveRegistered", processed);
+        resolve();
+      }
+    );
   });
   let eventReceivedPromise = ContentTask.spawn(
     browser,
@@ -3212,9 +3213,8 @@ async function synthesizePlainDragAndDrop(aParams) {
     }
     let lastEditableElement = srcElement;
     for (
-      let inclusiveAncestor = _getInclusiveFlattenedTreeParentElement(
-        srcElement
-      );
+      let inclusiveAncestor =
+        _getInclusiveFlattenedTreeParentElement(srcElement);
       inclusiveAncestor;
       inclusiveAncestor = _getInclusiveFlattenedTreeParentElement(
         _getFlattenedTreeParentNode(inclusiveAncestor)

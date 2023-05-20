@@ -207,20 +207,18 @@ class DiscoveryStreamFeed {
     if (!this.showStories) {
       return false;
     }
-    const spocsPersonalized = this.store.getState().Prefs.values?.pocketConfig
-      ?.spocsPersonalized;
-    const recsPersonalized = this.store.getState().Prefs.values?.pocketConfig
-      ?.recsPersonalized;
-    const personalization = this.store.getState().Prefs.values[
-      PREF_PERSONALIZATION
-    ];
+    const spocsPersonalized =
+      this.store.getState().Prefs.values?.pocketConfig?.spocsPersonalized;
+    const recsPersonalized =
+      this.store.getState().Prefs.values?.pocketConfig?.recsPersonalized;
+    const personalization =
+      this.store.getState().Prefs.values[PREF_PERSONALIZATION];
 
     // There is a server sent flag to keep personalization on.
     // If the server stops sending this, we turn personalization off,
     // until the server starts returning the signal.
-    const overrideState = this.store.getState().Prefs.values[
-      PREF_PERSONALIZATION_OVERRIDE
-    ];
+    const overrideState =
+      this.store.getState().Prefs.values[PREF_PERSONALIZATION_OVERRIDE];
 
     return (
       personalization &&
@@ -334,9 +332,8 @@ class DiscoveryStreamFeed {
       ac.BroadcastToContent({
         type: at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE,
         data: {
-          value: this.store.getState().Prefs.values[
-            PREF_COLLECTION_DISMISSIBLE
-          ],
+          value:
+            this.store.getState().Prefs.values[PREF_COLLECTION_DISMISSIBLE],
         },
         meta: {
           isStartup,
@@ -662,9 +659,8 @@ class DiscoveryStreamFeed {
         this.store.getState().Prefs.values[PREF_HARDCODED_BASIC_LAYOUT] ||
         this.store.getState().Prefs.values[PREF_REGION_BASIC_LAYOUT];
 
-      const sponsoredCollectionsEnabled = this.store.getState().Prefs.values[
-        PREF_COLLECTIONS_ENABLED
-      ];
+      const sponsoredCollectionsEnabled =
+        this.store.getState().Prefs.values[PREF_COLLECTIONS_ENABLED];
 
       const pocketConfig =
         this.store.getState().Prefs.values?.pocketConfig || {};
@@ -769,9 +765,8 @@ class DiscoveryStreamFeed {
         this.config.spocs_endpoint ||
         layoutResp.spocs.url;
 
-      const spocsEndpointQuery = this.store.getState().Prefs.values[
-        PREF_SPOCS_ENDPOINT_QUERY
-      ];
+      const spocsEndpointQuery =
+        this.store.getState().Prefs.values[PREF_SPOCS_ENDPOINT_QUERY];
 
       // For QA, testing, or debugging purposes, there may be a query string to add.
       url = this.addEndpointQuery(url, spocsEndpointQuery);
@@ -979,14 +974,12 @@ class DiscoveryStreamFeed {
   personalizationOverride(overrideCommand) {
     // Are we currently in an override state.
     // This is useful to know if we want to do a cleanup.
-    const overrideState = this.store.getState().Prefs.values[
-      PREF_PERSONALIZATION_OVERRIDE
-    ];
+    const overrideState =
+      this.store.getState().Prefs.values[PREF_PERSONALIZATION_OVERRIDE];
 
     // Is this profile currently set to be personalized.
-    const personalization = this.store.getState().Prefs.values[
-      PREF_PERSONALIZATION
-    ];
+    const personalization =
+      this.store.getState().Prefs.values[PREF_PERSONALIZATION];
 
     // If we have an override command, profile is currently personalized,
     // and is not currently being overridden, we can set the override pref.
@@ -1006,9 +999,8 @@ class DiscoveryStreamFeed {
   }
 
   updateSponsoredCollectionsPref(collectionEnabled = false) {
-    const currentState = this.store.getState().Prefs.values[
-      PREF_COLLECTIONS_ENABLED
-    ];
+    const currentState =
+      this.store.getState().Prefs.values[PREF_COLLECTIONS_ENABLED];
 
     // If the current state does not match the new state, update the pref.
     if (currentState !== collectionEnabled) {
@@ -1027,8 +1019,8 @@ class DiscoveryStreamFeed {
     if (this.showSpocs && placements?.length) {
       spocsState = cachedData.spocs;
       if (this.isExpired({ cachedData, key: "spocs", isStartup })) {
-        const endpoint = this.store.getState().DiscoveryStream.spocs
-          .spocs_endpoint;
+        const endpoint =
+          this.store.getState().DiscoveryStream.spocs.spocs_endpoint;
 
         const headers = new Headers();
         headers.append("content-type", "application/json");
@@ -1103,9 +1095,8 @@ class DiscoveryStreamFeed {
               }
 
               // Migrate flight_id
-              const { data: migratedSpocs } = this.migrateFlightId(
-                normalizedSpocsItems
-              );
+              const { data: migratedSpocs } =
+                this.migrateFlightId(normalizedSpocsItems);
 
               const { data: capResult } = this.frequencyCapSpocs(migratedSpocs);
 
@@ -1166,9 +1157,8 @@ class DiscoveryStreamFeed {
   }
 
   async clearSpocs() {
-    const endpoint = this.store.getState().Prefs.values[
-      PREF_SPOCS_CLEAR_ENDPOINT
-    ];
+    const endpoint =
+      this.store.getState().Prefs.values[PREF_SPOCS_CLEAR_ENDPOINT];
     if (!endpoint) {
       return;
     }
@@ -1295,10 +1285,10 @@ class DiscoveryStreamFeed {
   }
 
   async scoreItems(items, type) {
-    const spocsPersonalized = this.store.getState().Prefs.values?.pocketConfig
-      ?.spocsPersonalized;
-    const recsPersonalized = this.store.getState().Prefs.values?.pocketConfig
-      ?.recsPersonalized;
+    const spocsPersonalized =
+      this.store.getState().Prefs.values?.pocketConfig?.spocsPersonalized;
+    const recsPersonalized =
+      this.store.getState().Prefs.values?.pocketConfig?.recsPersonalized;
     const personalizedByType =
       type === "feed" ? recsPersonalized : spocsPersonalized;
 
@@ -1548,10 +1538,10 @@ class DiscoveryStreamFeed {
       options.isStartup
     );
 
-    const spocsPersonalized = this.store.getState().Prefs.values?.pocketConfig
-      ?.spocsPersonalized;
-    const recsPersonalized = this.store.getState().Prefs.values?.pocketConfig
-      ?.recsPersonalized;
+    const spocsPersonalized =
+      this.store.getState().Prefs.values?.pocketConfig?.spocsPersonalized;
+    const recsPersonalized =
+      this.store.getState().Prefs.values?.pocketConfig?.recsPersonalized;
 
     let expirationPerComponent = {};
     if (this.personalized) {
@@ -1782,9 +1772,8 @@ class DiscoveryStreamFeed {
       ac.BroadcastToContent({
         type: at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE,
         data: {
-          value: this.store.getState().Prefs.values[
-            PREF_COLLECTION_DISMISSIBLE
-          ],
+          value:
+            this.store.getState().Prefs.values[PREF_COLLECTION_DISMISSIBLE],
         },
       })
     );
@@ -2372,28 +2361,23 @@ getHardcodedLayout = ({
             links: [
               {
                 name: "Self improvement",
-                url:
-                  "https://getpocket.com/explore/self-improvement?utm_source=pocket-newtab",
+                url: "https://getpocket.com/explore/self-improvement?utm_source=pocket-newtab",
               },
               {
                 name: "Food",
-                url:
-                  "https://getpocket.com/explore/food?utm_source=pocket-newtab",
+                url: "https://getpocket.com/explore/food?utm_source=pocket-newtab",
               },
               {
                 name: "Entertainment",
-                url:
-                  "https://getpocket.com/explore/entertainment?utm_source=pocket-newtab",
+                url: "https://getpocket.com/explore/entertainment?utm_source=pocket-newtab",
               },
               {
                 name: "Health & fitness",
-                url:
-                  "https://getpocket.com/explore/health?utm_source=pocket-newtab",
+                url: "https://getpocket.com/explore/health?utm_source=pocket-newtab",
               },
               {
                 name: "Science",
-                url:
-                  "https://getpocket.com/explore/science?utm_source=pocket-newtab",
+                url: "https://getpocket.com/explore/science?utm_source=pocket-newtab",
               },
               {
                 name: "More recommendations ›",
@@ -2403,18 +2387,15 @@ getHardcodedLayout = ({
             extraLinks: [
               {
                 name: "Career",
-                url:
-                  "https://getpocket.com/explore/career?utm_source=pocket-newtab",
+                url: "https://getpocket.com/explore/career?utm_source=pocket-newtab",
               },
               {
                 name: "Technology",
-                url:
-                  "https://getpocket.com/explore/technology?utm_source=pocket-newtab",
+                url: "https://getpocket.com/explore/technology?utm_source=pocket-newtab",
               },
             ],
             privacyNoticeURL: {
-              url:
-                "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
+              url: "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
               title: {
                 id: "newtab-section-menu-privacy-notice",
               },

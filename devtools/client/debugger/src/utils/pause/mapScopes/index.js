@@ -65,17 +65,15 @@ export async function buildMappedScopes(
     generatedAstBindings = buildFakeBindingList(generatedAstScopes);
   }
 
-  const {
-    mappedOriginalScopes,
-    expressionLookup,
-  } = await mapOriginalBindingsToGenerated(
-    source,
-    content,
-    originalRanges,
-    originalAstScopes,
-    generatedAstBindings,
-    thunkArgs
-  );
+  const { mappedOriginalScopes, expressionLookup } =
+    await mapOriginalBindingsToGenerated(
+      source,
+      content,
+      originalRanges,
+      originalAstScopes,
+      generatedAstBindings,
+      thunkArgs
+    );
 
   const globalLexicalScope = scopes
     ? getGlobalFromScope(scopes)

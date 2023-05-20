@@ -224,9 +224,8 @@ function findRcdNode(apzcTree) {
 // Assumes |elementId| will be present in the content description for the
 // element, and not in the content descriptions of other elements.
 function isLayerized(elementId) {
-  var contentTestData = SpecialPowers.getDOMWindowUtils(
-    window
-  ).getContentAPZTestData();
+  var contentTestData =
+    SpecialPowers.getDOMWindowUtils(window).getContentAPZTestData();
   var nonEmptyBucket = getLastNonemptyBucket(contentTestData.paints);
   ok(nonEmptyBucket != null, "expected at least one nonempty paint");
   var seqno = nonEmptyBucket.sequenceNumber;
@@ -246,9 +245,8 @@ function isLayerized(elementId) {
 // for a given element. (The element selection works the same way, and with
 // the same assumptions as the isLayerized function above).
 function getLastContentDisplayportFor(elementId, expectPainted = true) {
-  var contentTestData = SpecialPowers.getDOMWindowUtils(
-    window
-  ).getContentAPZTestData();
+  var contentTestData =
+    SpecialPowers.getDOMWindowUtils(window).getContentAPZTestData();
   if (contentTestData == undefined) {
     ok(!expectPainted, "expected to have apz test data (1)");
     return null;
@@ -628,9 +626,8 @@ async function waitUntilApzStable() {
 
     // This is the first time waitUntilApzStable is being called, do initialization
     if (typeof waitUntilApzStable.chromeHelper == "undefined") {
-      waitUntilApzStable.chromeHelper = SpecialPowers.loadChromeScript(
-        parentProcessFlush
-      );
+      waitUntilApzStable.chromeHelper =
+        SpecialPowers.loadChromeScript(parentProcessFlush);
       ApzCleanup.register(() => {
         waitUntilApzStable.chromeHelper.sendAsyncMessage("cleanup", null);
         waitUntilApzStable.chromeHelper.destroy();

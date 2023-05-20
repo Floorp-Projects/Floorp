@@ -143,7 +143,8 @@ var IdentityHandler = {
 
     const cert = aBrowser.securityUI.secInfo.serverCert;
 
-    result.certificate = aBrowser.securityUI.secInfo.serverCert.getBase64DERString();
+    result.certificate =
+      aBrowser.securityUI.secInfo.serverCert.getBase64DERString();
 
     try {
       result.securityException = lazy.OverrideService.hasMatchingOverride(

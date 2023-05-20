@@ -457,9 +457,8 @@ var CustomizableUIInternal = {
       );
 
       if (savedPanelPlacements.length) {
-        gSavedState.placements[
-          CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
-        ] = savedPanelPlacements;
+        gSavedState.placements[CustomizableUI.AREA_FIXED_OVERFLOW_PANEL] =
+          savedPanelPlacements;
       }
     }
 
@@ -605,9 +604,8 @@ var CustomizableUIInternal = {
         let persistedPageActionsData = JSON.parse(persistedPageActionsPref);
         // If Pocket was previously not in the url bar, let's not put it in the toolbar.
         // It'll still be an option to add from the customization page.
-        pocketPreviouslyInUrl = persistedPageActionsData.idsInUrlbar.includes(
-          "pocket"
-        );
+        pocketPreviouslyInUrl =
+          persistedPageActionsData.idsInUrlbar.includes("pocket");
       } catch (e) {}
       if (navbarPlacements && pocketPreviouslyInUrl) {
         // Pocket's new home is next to the downloads button, or the next best spot.
@@ -663,9 +661,8 @@ var CustomizableUIInternal = {
           builtInWidgets.push(widgetId);
         }
       }
-      gSavedState.placements[
-        CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
-      ] = builtInWidgets;
+      gSavedState.placements[CustomizableUI.AREA_FIXED_OVERFLOW_PANEL] =
+        builtInWidgets;
       gSavedState.placements[CustomizableUI.AREA_ADDONS] = [
         ...extWidgets,
         ...addonsPlacements,
@@ -824,9 +821,8 @@ var CustomizableUIInternal = {
     ) {
       let id = aElement.getAttribute("customizationtarget");
       if (id) {
-        aElement._customizationTarget = aElement.ownerDocument.getElementById(
-          id
-        );
+        aElement._customizationTarget =
+          aElement.ownerDocument.getElementById(id);
       }
 
       if (!aElement._customizationTarget) {
@@ -3246,16 +3242,14 @@ var CustomizableUIInternal = {
 
   _resetUIState() {
     try {
-      gUIStateBeforeReset.drawInTitlebar = Services.prefs.getIntPref(
-        kPrefDrawInTitlebar
-      );
+      gUIStateBeforeReset.drawInTitlebar =
+        Services.prefs.getIntPref(kPrefDrawInTitlebar);
       gUIStateBeforeReset.uiCustomizationState = Services.prefs.getCharPref(
         kPrefCustomizationState
       );
       gUIStateBeforeReset.uiDensity = Services.prefs.getIntPref(kPrefUIDensity);
-      gUIStateBeforeReset.autoTouchMode = Services.prefs.getBoolPref(
-        kPrefAutoTouchMode
-      );
+      gUIStateBeforeReset.autoTouchMode =
+        Services.prefs.getBoolPref(kPrefAutoTouchMode);
       gUIStateBeforeReset.currentTheme = gSelectedTheme;
       gUIStateBeforeReset.autoHideDownloadsButton = Services.prefs.getBoolPref(
         kPrefAutoHideDownloadsButton
@@ -3576,9 +3570,10 @@ var CustomizableUIInternal = {
         // Toolbars need to deal with overflown widgets (if any) - so
         // specialcase them:
         if (props.get("type") == CustomizableUI.TYPE_TOOLBAR) {
-          currentPlacements = this._getCurrentWidgetsInContainer(
-            container
-          ).filter(removableOrDefault);
+          currentPlacements =
+            this._getCurrentWidgetsInContainer(container).filter(
+              removableOrDefault
+            );
         } else {
           currentPlacements = currentPlacements.filter(item => {
             let itemNode = container.getElementsByAttribute("id", item)[0];
@@ -5676,9 +5671,8 @@ class OverflowableToolbar {
 
       if (child.getAttribute("overflows") != "false") {
         this.#overflowedInfo.set(child.id, targetContentWidth);
-        let { width: childWidth } = win.windowUtils.getBoundsWithoutFlushing(
-          child
-        );
+        let { width: childWidth } =
+          win.windowUtils.getBoundsWithoutFlushing(child);
         if (!childWidth) {
           this.#hiddenOverflowedNodes.add(child);
         }

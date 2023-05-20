@@ -23,9 +23,8 @@ add_task(async function () {
 
   const customFormattedElement = expressionsElements[0];
 
-  const headerJsonMlNode = customFormattedElement.querySelector(
-    ".objectBox-jsonml"
-  );
+  const headerJsonMlNode =
+    customFormattedElement.querySelector(".objectBox-jsonml");
   is(
     headerJsonMlNode.innerText,
     "CUSTOM",
@@ -37,9 +36,8 @@ add_task(async function () {
     null,
     "The expression is not expandable…"
   );
-  const customFormattedElementArrow = customFormattedElement.querySelector(
-    ".collapse-button"
-  );
+  const customFormattedElementArrow =
+    customFormattedElement.querySelector(".collapse-button");
   ok(customFormattedElementArrow, "… but the custom formatter is");
 
   info("Expanding the Object");

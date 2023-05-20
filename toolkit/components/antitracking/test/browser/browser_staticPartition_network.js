@@ -85,17 +85,19 @@ add_task(async function () {
   await BrowserTestUtils.browserLoaded(browser2);
 
   info("Loading something in the second tab");
-  await SpecialPowers.spawn(browser2, [{ thirdPartyURL }], async function (
-    obj
-  ) {
-    let src = content.document.createElement("script");
-    let p = new content.Promise(resolve => {
-      src.onload = resolve;
-    });
-    content.document.body.appendChild(src);
-    src.src = obj.thirdPartyURL;
-    await p;
-  });
+  await SpecialPowers.spawn(
+    browser2,
+    [{ thirdPartyURL }],
+    async function (obj) {
+      let src = content.document.createElement("script");
+      let p = new content.Promise(resolve => {
+        src.onload = resolve;
+      });
+      content.document.body.appendChild(src);
+      src.src = obj.thirdPartyURL;
+      await p;
+    }
+  );
 
   checkAltSvcCache([partitionKey1, partitionKey2]);
 

@@ -427,7 +427,8 @@ ExtensionTestCommon = class ExtensionTestCommon {
       // If we're force-testing service workers we will turn the background
       // script part of ExtensionTestUtils test extensions into a background
       // service worker.
-      data.useServiceWorker = ExtensionTestCommon.isInBackgroundServiceWorkerTests();
+      data.useServiceWorker =
+        ExtensionTestCommon.isInBackgroundServiceWorkerTests();
     }
 
     // allowInsecureRequests is a shortcut to removing upgrade-insecure-requests from default csp.

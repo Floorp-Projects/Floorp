@@ -69,10 +69,11 @@ add_task(async function test_notification_incomplete() {
     resolve => (notificationDone = after(2, resolve))
   );
   let prevHandler = PushServiceWebSocket._handleNotificationReply;
-  PushServiceWebSocket._handleNotificationReply = function _handleNotificationReply() {
-    notificationDone();
-    return prevHandler.apply(this, arguments);
-  };
+  PushServiceWebSocket._handleNotificationReply =
+    function _handleNotificationReply() {
+      notificationDone();
+      return prevHandler.apply(this, arguments);
+    };
   PushService.init({
     serverURI: "wss://push.example.org/",
     db,

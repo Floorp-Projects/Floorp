@@ -166,15 +166,12 @@ add_task(async function localOneOff_withVisit() {
   Assert.ok(UrlbarTestUtils.getResultCount(window) > 1, "Sanity check results");
   let oneOffButtons = UrlbarTestUtils.getOneOffSearchButtons(window);
 
-  let [
-    actionHistory,
-    actionTabs,
-    actionBookmarks,
-  ] = await document.l10n.formatValues([
-    { id: "urlbar-result-action-search-history" },
-    { id: "urlbar-result-action-search-tabs" },
-    { id: "urlbar-result-action-search-bookmarks" },
-  ]);
+  let [actionHistory, actionTabs, actionBookmarks] =
+    await document.l10n.formatValues([
+      { id: "urlbar-result-action-search-history" },
+      { id: "urlbar-result-action-search-tabs" },
+      { id: "urlbar-result-action-search-bookmarks" },
+    ]);
 
   info("Alt UP to select the history one-off.");
   EventUtils.synthesizeKey("KEY_ArrowUp", { altKey: true });

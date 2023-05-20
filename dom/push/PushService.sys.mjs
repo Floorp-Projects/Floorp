@@ -186,9 +186,8 @@ export var PushService = {
       return this._pendingRegisterRequest[key];
     }
 
-    return (this._pendingRegisterRequest[key] = this._registerWithServer(
-      aPageRecord
-    ));
+    return (this._pendingRegisterRequest[key] =
+      this._registerWithServer(aPageRecord));
   },
 
   _deletePendingRequest(aPageRecord) {
@@ -756,7 +755,8 @@ export var PushService = {
             record.p256dhPrivateKey = privKey;
           }
           if (!record.hasAuthenticationSecret()) {
-            record.authenticationSecret = lazy.PushCrypto.generateAuthenticationSecret();
+            record.authenticationSecret =
+              lazy.PushCrypto.generateAuthenticationSecret();
           }
           return record;
         });

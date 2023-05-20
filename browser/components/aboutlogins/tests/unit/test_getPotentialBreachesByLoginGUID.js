@@ -92,15 +92,14 @@ const BREACHED_SUBDOMAIN_LOGIN = LoginTestUtils.testData.formLogin({
   password: "password",
   timePasswordChanged: new Date("2018-12-15").getTime(),
 });
-const LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS = LoginTestUtils.testData.formLogin(
-  {
+const LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS =
+  LoginTestUtils.testData.formLogin({
     origin: "https://breached-site-without-passwords.com",
     formActionOrigin: "https://breached-site-without-passwords.com",
     username: "username",
     password: "password",
     timePasswordChanged: new Date("2018-12-15").getTime(),
-  }
-);
+  });
 const LOGIN_WITH_NON_STANDARD_URI = LoginTestUtils.testData.formLogin({
   origin: "someApp://random/path/to/login",
   formActionOrigin: "someApp://random/path/to/login",
@@ -111,10 +110,11 @@ const LOGIN_WITH_NON_STANDARD_URI = LoginTestUtils.testData.formLogin({
 
 add_task(async function test_notBreachedLogin() {
   await Services.logins.addLoginAsync(NOT_BREACHED_LOGIN);
-  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [NOT_BREACHED_LOGIN],
-    TEST_BREACHES
-  );
+  const breachesByLoginGUID =
+    await LoginBreaches.getPotentialBreachesByLoginGUID(
+      [NOT_BREACHED_LOGIN],
+      TEST_BREACHES
+    );
   Assert.strictEqual(
     breachesByLoginGUID.size,
     0,
@@ -124,10 +124,11 @@ add_task(async function test_notBreachedLogin() {
 
 add_task(async function test_breachedLogin() {
   await Services.logins.addLoginAsync(BREACHED_LOGIN);
-  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [NOT_BREACHED_LOGIN, BREACHED_LOGIN],
-    TEST_BREACHES
-  );
+  const breachesByLoginGUID =
+    await LoginBreaches.getPotentialBreachesByLoginGUID(
+      [NOT_BREACHED_LOGIN, BREACHED_LOGIN],
+      TEST_BREACHES
+    );
   Assert.strictEqual(
     breachesByLoginGUID.size,
     1,
@@ -143,10 +144,11 @@ add_task(async function test_breachedLogin() {
 add_task(async function test_breachedLoginAfterCrashingUriLogin() {
   await Services.logins.addLoginAsync(CRASHING_URI_LOGIN);
 
-  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [CRASHING_URI_LOGIN, BREACHED_LOGIN],
-    TEST_BREACHES
-  );
+  const breachesByLoginGUID =
+    await LoginBreaches.getPotentialBreachesByLoginGUID(
+      [CRASHING_URI_LOGIN, BREACHED_LOGIN],
+      TEST_BREACHES
+    );
   Assert.strictEqual(
     breachesByLoginGUID.size,
     1,
@@ -162,10 +164,11 @@ add_task(async function test_breachedLoginAfterCrashingUriLogin() {
 add_task(async function test_notBreachedSubdomain() {
   await Services.logins.addLoginAsync(NOT_BREACHED_SUBDOMAIN_LOGIN);
 
-  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [NOT_BREACHED_LOGIN, NOT_BREACHED_SUBDOMAIN_LOGIN],
-    TEST_BREACHES
-  );
+  const breachesByLoginGUID =
+    await LoginBreaches.getPotentialBreachesByLoginGUID(
+      [NOT_BREACHED_LOGIN, NOT_BREACHED_SUBDOMAIN_LOGIN],
+      TEST_BREACHES
+    );
   Assert.strictEqual(
     breachesByLoginGUID.size,
     0,
@@ -176,10 +179,11 @@ add_task(async function test_notBreachedSubdomain() {
 add_task(async function test_breachedSubdomain() {
   await Services.logins.addLoginAsync(BREACHED_SUBDOMAIN_LOGIN);
 
-  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [NOT_BREACHED_SUBDOMAIN_LOGIN, BREACHED_SUBDOMAIN_LOGIN],
-    TEST_BREACHES
-  );
+  const breachesByLoginGUID =
+    await LoginBreaches.getPotentialBreachesByLoginGUID(
+      [NOT_BREACHED_SUBDOMAIN_LOGIN, BREACHED_SUBDOMAIN_LOGIN],
+      TEST_BREACHES
+    );
   Assert.strictEqual(
     breachesByLoginGUID.size,
     1,
@@ -192,10 +196,11 @@ add_task(async function test_breachedSiteWithoutPasswords() {
     LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS
   );
 
-  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS],
-    TEST_BREACHES
-  );
+  const breachesByLoginGUID =
+    await LoginBreaches.getPotentialBreachesByLoginGUID(
+      [LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS],
+      TEST_BREACHES
+    );
   Assert.strictEqual(
     breachesByLoginGUID.size,
     0,
@@ -212,10 +217,11 @@ add_task(async function test_breachAlertHiddenAfterDismissal() {
 
   storageJSON.recordBreachAlertDismissal(BREACHED_LOGIN.guid);
 
-  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
-    TEST_BREACHES
-  );
+  const breachesByLoginGUID =
+    await LoginBreaches.getPotentialBreachesByLoginGUID(
+      [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
+      TEST_BREACHES
+    );
   Assert.strictEqual(
     breachesByLoginGUID.size,
     0,
@@ -225,10 +231,11 @@ add_task(async function test_breachAlertHiddenAfterDismissal() {
   info("Clear login storage");
   Services.logins.removeAllUserFacingLogins();
 
-  const breachesByLoginGUID2 = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
-    TEST_BREACHES
-  );
+  const breachesByLoginGUID2 =
+    await LoginBreaches.getPotentialBreachesByLoginGUID(
+      [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
+      TEST_BREACHES
+    );
   Assert.strictEqual(
     breachesByLoginGUID2.size,
     1,
@@ -240,10 +247,11 @@ add_task(async function test_breachAlertHiddenAfterDismissal() {
 add_task(async function test_newBreachAfterDismissal() {
   TEST_BREACHES[0].AddedDate = new Date().toISOString();
 
-  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
-    TEST_BREACHES
-  );
+  const breachesByLoginGUID =
+    await LoginBreaches.getPotentialBreachesByLoginGUID(
+      [BREACHED_LOGIN, NOT_BREACHED_LOGIN],
+      TEST_BREACHES
+    );
 
   Assert.strictEqual(
     breachesByLoginGUID.size,
@@ -256,10 +264,11 @@ add_task(async function test_newBreachAfterDismissal() {
 add_task(async function test_ExceptionsThrownByNonStandardURIsAreCaught() {
   await Services.logins.addLoginAsync(LOGIN_WITH_NON_STANDARD_URI);
 
-  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [LOGIN_WITH_NON_STANDARD_URI, BREACHED_LOGIN],
-    TEST_BREACHES
-  );
+  const breachesByLoginGUID =
+    await LoginBreaches.getPotentialBreachesByLoginGUID(
+      [LOGIN_WITH_NON_STANDARD_URI, BREACHED_LOGIN],
+      TEST_BREACHES
+    );
 
   Assert.strictEqual(
     breachesByLoginGUID.size,
@@ -296,9 +305,8 @@ add_task(async function test_setBreachesFromRemoteSettingsSync() {
     );
   }
 
-  const beforeSyncBreachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [login]
-  );
+  const beforeSyncBreachesByLoginGUID =
+    await LoginBreaches.getPotentialBreachesByLoginGUID([login]);
   Assert.strictEqual(
     beforeSyncBreachesByLoginGUID.size,
     0,
@@ -309,9 +317,8 @@ add_task(async function test_setBreachesFromRemoteSettingsSync() {
   await db.importChanges({}, Date.now(), [nowExampleIsInBreachedRecords[0]]);
   await emitSync();
 
-  const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
-    [login]
-  );
+  const breachesByLoginGUID =
+    await LoginBreaches.getPotentialBreachesByLoginGUID([login]);
   Assert.strictEqual(
     breachesByLoginGUID.size,
     1,

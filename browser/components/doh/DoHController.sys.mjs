@@ -555,9 +555,10 @@ export const DoHController = {
       // Check whether the existing dry-run-result is in the default
       // list of TRRs. If it is, all good. Else, run the dry run again.
       let dryRunResult = lazy.Preferences.get(TRR_SELECT_DRY_RUN_RESULT_PREF);
-      let dryRunResultIsValid = lazy.DoHConfigController.currentConfig.providerList.some(
-        trr => trr.uri == dryRunResult
-      );
+      let dryRunResultIsValid =
+        lazy.DoHConfigController.currentConfig.providerList.some(
+          trr => trr.uri == dryRunResult
+        );
       if (dryRunResultIsValid) {
         return;
       }
@@ -586,9 +587,10 @@ export const DoHController = {
       "resource:///modules/TRRPerformance.sys.mjs"
     );
     await new Promise(resolve => {
-      let trrList = lazy.DoHConfigController.currentConfig.trrSelection.providerList.map(
-        trr => trr.uri
-      );
+      let trrList =
+        lazy.DoHConfigController.currentConfig.trrSelection.providerList.map(
+          trr => trr.uri
+        );
       let racer = new TRRRacer(() => {
         setDryRunResultAndRecordTelemetry(racer.getFastestTRR(true));
         resolve();

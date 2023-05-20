@@ -17,8 +17,9 @@ add_task(async function test_monthyear_close_date() {
   await helper.openPicker(
     `data:text/html, <input type="date" value=${inputValue}>`
   );
-  let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
-    .contentDocument;
+  let pickerDoc = helper.panel.querySelector(
+    "#dateTimePopupFrame"
+  ).contentDocument;
 
   // Move focus from the selected date to the month-year toggle button:
   await EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
@@ -47,8 +48,9 @@ add_task(async function test_monthyear_close_datetime() {
   await helper.openPicker(
     `data:text/html, <input type="datetime-local" value=${inputValue}>`
   );
-  let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
-    .contentDocument;
+  let pickerDoc = helper.panel.querySelector(
+    "#dateTimePopupFrame"
+  ).contentDocument;
 
   // Move focus from the selected date to the month-year toggle button:
   await EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
@@ -75,8 +77,9 @@ add_task(async function test_monthyear_escape_date() {
   await helper.openPicker(
     `data:text/html, <input type="date" value=${inputValue}>`
   );
-  let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
-    .contentDocument;
+  let pickerDoc = helper.panel.querySelector(
+    "#dateTimePopupFrame"
+  ).contentDocument;
 
   // Move focus from the today's date to the month-year toggle button:
   EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
@@ -146,8 +149,9 @@ add_task(async function test_monthyear_escape_datetime() {
   await helper.openPicker(
     `data:text/html, <input type="datetime-local" value=${inputValue}>`
   );
-  let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
-    .contentDocument;
+  let pickerDoc = helper.panel.querySelector(
+    "#dateTimePopupFrame"
+  ).contentDocument;
 
   // Move focus from the today's date to the month-year toggle button:
   EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });

@@ -38,9 +38,8 @@
       aTag.classList.add("dropdown-link");
       aTag.innerHTML = "¶";
 
-      var summaryElement = dropdowns[i].getElementsByClassName(
-        "sd-summary-title"
-      )[0];
+      var summaryElement =
+        dropdowns[i].getElementsByClassName("sd-summary-title")[0];
       summaryElement.insertBefore(
         aTag,
         summaryElement.getElementsByClassName("docutils")[0]

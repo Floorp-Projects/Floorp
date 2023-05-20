@@ -19,10 +19,8 @@ const CP = Cc["@mozilla.org/content-pref/service;1"].getService(
 
 const EXAMPLE_PAGE_URL = "https://example.com";
 const EXAMPLE_PAGE_URI = Services.io.newURI(EXAMPLE_PAGE_URL);
-const EXAMPLE_PAGE_PRINCIPAL = Services.scriptSecurityManager.createContentPrincipal(
-  EXAMPLE_PAGE_URI,
-  {}
-);
+const EXAMPLE_PAGE_PRINCIPAL =
+  Services.scriptSecurityManager.createContentPrincipal(EXAMPLE_PAGE_URI, {});
 const GEO_CONTENT_PREF_KEY = "permissions.geoLocation.lastAccess";
 const POLL_INTERVAL_FALSE_STATE = 50;
 

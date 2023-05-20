@@ -74,9 +74,9 @@ add_task(async function () {
  */
 function waitForRequest(doc, url) {
   return waitUntil(() =>
-    [
-      ...doc.querySelectorAll(".request-list-item .requests-list-file"),
-    ].some(columns => columns.title.includes(url))
+    [...doc.querySelectorAll(".request-list-item .requests-list-file")].some(
+      columns => columns.title.includes(url)
+    )
   );
 }
 
@@ -116,11 +116,13 @@ function assertRequestCount(store, count) {
  */
 async function performRequestAndWait(tab, monitor, requestURL) {
   const wait = waitForRequest(monitor.panelWin.document, requestURL);
-  await SpecialPowers.spawn(tab.linkedBrowser, [requestURL], async function (
-    url
-  ) {
-    await content.wrappedJSObject.performRequests(url);
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [requestURL],
+    async function (url) {
+      await content.wrappedJSObject.performRequests(url);
+    }
+  );
   await wait;
 }
 
@@ -129,19 +131,20 @@ async function performRequestAndWait(tab, monitor, requestURL) {
  * know when the resource is available.
  */
 async function performPausedRequest(tab, monitor, toolbox) {
-  const {
-    onResource: waitForEventWhenPaused,
-  } = await toolbox.resourceCommand.waitForNextResource(
-    toolbox.resourceCommand.TYPES.NETWORK_EVENT,
-    {
-      ignoreExistingResources: true,
+  const { onResource: waitForEventWhenPaused } =
+    await toolbox.resourceCommand.waitForNextResource(
+      toolbox.resourceCommand.TYPES.NETWORK_EVENT,
+      {
+        ignoreExistingResources: true,
+      }
+    );
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [SIMPLE_URL],
+    async function (url) {
+      await content.wrappedJSObject.performRequests(url);
     }
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [SIMPLE_URL], async function (
-    url
-  ) {
-    await content.wrappedJSObject.performRequests(url);
-  });
   // Wait for NETWORK_EVENT resources to be fetched, in order to ensure
   // that there is no pending request related to their processing.
   await waitForEventWhenPaused;

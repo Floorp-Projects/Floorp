@@ -41,8 +41,9 @@ var gSyncPane = {
       .removeAttribute("data-hidden-from-search");
 
     // If the Service hasn't finished initializing, wait for it.
-    let xps = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
-      .wrappedJSObject;
+    let xps = Cc["@mozilla.org/weave/service;1"].getService(
+      Ci.nsISupports
+    ).wrappedJSObject;
 
     if (xps.ready) {
       this._init();
@@ -317,8 +318,9 @@ var gSyncPane = {
   },
 
   updateWeavePrefs() {
-    let service = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
-      .wrappedJSObject;
+    let service = Cc["@mozilla.org/weave/service;1"].getService(
+      Ci.nsISupports
+    ).wrappedJSObject;
 
     let displayNameLabel = document.getElementById("fxaDisplayName");
     let fxaEmailAddressLabels = document.querySelectorAll(
@@ -482,7 +484,8 @@ var gSyncPane = {
         .then(url => {
           this.openContentInBrowser(url, {
             replaceQueryString: true,
-            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal(),
           });
         });
       // Prevent page from scrolling on the space key.

@@ -182,13 +182,8 @@ class Message extends Component {
   }
 
   renderIcon() {
-    const {
-      level,
-      inWarningGroup,
-      isBlockedNetworkMessage,
-      type,
-      disabled,
-    } = this.props;
+    const { level, inWarningGroup, isBlockedNetworkMessage, type, disabled } =
+      this.props;
 
     if (inWarningGroup) {
       return undefined;

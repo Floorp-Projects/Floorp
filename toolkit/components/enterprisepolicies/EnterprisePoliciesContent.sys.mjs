@@ -18,6 +18,5 @@ export class EnterprisePoliciesManagerContent {
   }
 }
 
-EnterprisePoliciesManagerContent.prototype.QueryInterface = ChromeUtils.generateQI(
-  ["nsIEnterprisePolicies"]
-);
+EnterprisePoliciesManagerContent.prototype.QueryInterface =
+  ChromeUtils.generateQI(["nsIEnterprisePolicies"]);

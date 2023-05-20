@@ -36,8 +36,7 @@ function checkEagerModule(context, node, resourceURI) {
 module.exports = {
   meta: {
     docs: {
-      url:
-        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/tools/lint/eslint/eslint-plugin-mozilla/lib/rules/reject-eager-module-in-lazy-getter.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/tools/lint/eslint/eslint-plugin-mozilla/lib/rules/reject-eager-module-in-lazy-getter.html",
     },
     messages: {
       eagerModule:

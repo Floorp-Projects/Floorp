@@ -279,8 +279,11 @@ if (useMLBF) {
         throw new Error(`Unexpected mock addon ID: ${guid}`);
       }
 
-      const { minVersion = "1", maxVersion = "3", targetApplication } =
-        block.versionRange?.[0] || {};
+      const {
+        minVersion = "1",
+        maxVersion = "3",
+        targetApplication,
+      } = block.versionRange?.[0] || {};
 
       for (let v = minVersion; v <= maxVersion; ++v) {
         BLOCKLIST_DATA[key].push({

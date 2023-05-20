@@ -217,11 +217,8 @@ class XHRBreakpoints extends Component {
   }
 
   handleCheckbox = index => {
-    const {
-      xhrBreakpoints,
-      enableXHRBreakpoint,
-      disableXHRBreakpoint,
-    } = this.props;
+    const { xhrBreakpoints, enableXHRBreakpoint, disableXHRBreakpoint } =
+      this.props;
     const breakpoint = xhrBreakpoints[index];
     if (breakpoint.disabled) {
       enableXHRBreakpoint(index);

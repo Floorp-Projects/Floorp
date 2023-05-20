@@ -244,18 +244,18 @@ export class ErrorSanitizer {
   static E_NO_MEM = "OS error [No memory]";
 
   static WindowsErrorSubstitutions = {
-    "2": this.E_NO_FILE_OR_DIR, // ERROR_FILE_NOT_FOUND
-    "3": this.E_NO_FILE_OR_DIR, // ERROR_PATH_NOT_FOUND
-    "5": this.E_PERMISSION_DENIED, // ERROR_ACCESS_DENIED
-    "8": this.E_NO_MEM, // ERROR_NOT_ENOUGH_MEMORY
-    "112": this.E_NO_SPACE_ON_DEVICE, // ERROR_DISK_FULL
+    2: this.E_NO_FILE_OR_DIR, // ERROR_FILE_NOT_FOUND
+    3: this.E_NO_FILE_OR_DIR, // ERROR_PATH_NOT_FOUND
+    5: this.E_PERMISSION_DENIED, // ERROR_ACCESS_DENIED
+    8: this.E_NO_MEM, // ERROR_NOT_ENOUGH_MEMORY
+    112: this.E_NO_SPACE_ON_DEVICE, // ERROR_DISK_FULL
   };
 
   static UnixErrorSubstitutions = {
-    "2": this.E_NO_FILE_OR_DIR, // ENOENT
-    "12": this.E_NO_MEM, // ENOMEM
-    "13": this.E_PERMISSION_DENIED, // EACCESS
-    "28": this.E_NO_SPACE_ON_DEVICE, // ENOSPC
+    2: this.E_NO_FILE_OR_DIR, // ENOENT
+    12: this.E_NO_MEM, // ENOMEM
+    13: this.E_PERMISSION_DENIED, // EACCESS
+    28: this.E_NO_SPACE_ON_DEVICE, // ENOSPC
   };
 
   static DOMErrorSubstitutions = {
@@ -263,8 +263,10 @@ export class ErrorSanitizer {
     NotAllowedError: this.E_PERMISSION_DENIED,
   };
 
-  static reWinError = /^(?<head>Win error (?<errno>\d+))(?<detail>.*) \(.*\r?\n?\)$/m;
-  static reUnixError = /^(?<head>Unix error (?<errno>\d+))(?<detail>.*) \(.*\)$/;
+  static reWinError =
+    /^(?<head>Win error (?<errno>\d+))(?<detail>.*) \(.*\r?\n?\)$/m;
+  static reUnixError =
+    /^(?<head>Unix error (?<errno>\d+))(?<detail>.*) \(.*\)$/;
 
   static #cleanOSErrorMessage(message, error = undefined) {
     if (DOMException.isInstance(error)) {
@@ -948,9 +950,8 @@ class SyncTelemetryImpl {
     lazy.fxAccounts.device
       .getLocalId()
       .then(deviceId => {
-        let sanitizedDeviceId = lazy.fxAccounts.telemetry.sanitizeDeviceId(
-          deviceId
-        );
+        let sanitizedDeviceId =
+          lazy.fxAccounts.telemetry.sanitizeDeviceId(deviceId);
         // In the past we did not persist the FxA metrics identifiers to disk,
         // so this might be missing until we can fetch it from the server for the
         // first time. There will be a fresh notification tirggered when it's available.

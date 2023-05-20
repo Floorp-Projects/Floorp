@@ -90,9 +90,8 @@ add_task(async function checkDragging() {
 
   await startCustomizing();
   let existingSpecial = null;
-  existingSpecial = gCustomizeMode.visiblePalette.querySelector(
-    "toolbarspring"
-  );
+  existingSpecial =
+    gCustomizeMode.visiblePalette.querySelector("toolbarspring");
   ok(
     existingSpecial,
     "Should have a flexible space in the palette by default in photon"

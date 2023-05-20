@@ -101,10 +101,8 @@ export class TranslationsParent extends JSWindowActorParent {
 
     if (TranslationsParent.#translateOnPageReload) {
       // The actor was recreated after a page reload, start the translation.
-      const {
-        fromLanguage,
-        toLanguage,
-      } = TranslationsParent.#translateOnPageReload;
+      const { fromLanguage, toLanguage } =
+        TranslationsParent.#translateOnPageReload;
       TranslationsParent.#translateOnPageReload = null;
 
       lazy.console.log(
@@ -710,9 +708,8 @@ export class TranslationsParent extends JSWindowActorParent {
     lazy.console.log(`Getting remote language models.`);
 
     /** @type {TranslationModelRecord[]} */
-    const translationModelRecords = await TranslationsParent.getMaxVersionRecords(
-      client,
-      {
+    const translationModelRecords =
+      await TranslationsParent.getMaxVersionRecords(client, {
         // Names in this collection are not unique, so we are appending the languagePairKey
         // to guarantee uniqueness.
         lookupKey: record =>
@@ -720,8 +717,7 @@ export class TranslationsParent extends JSWindowActorParent {
             record.fromLang,
             record.toLang
           )}`,
-      }
-    );
+      });
 
     if (translationModelRecords.length === 0) {
       throw new Error("Unable to retrieve the translation models.");
@@ -1212,8 +1208,10 @@ export class TranslationsParent extends JSWindowActorParent {
     translationsWasmRemoteClient
   ) {
     lazy.console.log("Mocking RemoteSettings for the translations engine.");
-    TranslationsParent.#translationModelsRemoteClient = translationModelsRemoteClient;
-    TranslationsParent.#translationsWasmRemoteClient = translationsWasmRemoteClient;
+    TranslationsParent.#translationModelsRemoteClient =
+      translationModelsRemoteClient;
+    TranslationsParent.#translationsWasmRemoteClient =
+      translationsWasmRemoteClient;
     TranslationsParent.#isTranslationsEngineMocked = true;
   }
 

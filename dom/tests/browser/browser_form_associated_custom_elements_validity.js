@@ -41,9 +41,8 @@ add_task(async function report_validity() {
       });
       await promisePopupShown;
 
-      let invalidFormPopup = window.document.getElementById(
-        "invalid-form-popup"
-      );
+      let invalidFormPopup =
+        window.document.getElementById("invalid-form-popup");
       is(invalidFormPopup.state, "open", "invalid-form-popup should be opened");
       is(invalidFormPopup.firstChild.textContent, message, "check message");
 
@@ -96,9 +95,8 @@ add_task(async function form_report_validity() {
       });
       await promisePopupShown;
 
-      let invalidFormPopup = window.document.getElementById(
-        "invalid-form-popup"
-      );
+      let invalidFormPopup =
+        window.document.getElementById("invalid-form-popup");
       is(invalidFormPopup.state, "open", "invalid-form-popup should be opened");
       is(invalidFormPopup.firstChild.textContent, message, "check message");
 

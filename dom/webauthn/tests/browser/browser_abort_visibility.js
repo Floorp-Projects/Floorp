@@ -36,25 +36,27 @@ async function assertStatus(tab, expected) {
 
 async function waitForStatus(tab, expected) {
   /* eslint-disable no-shadow */
-  await SpecialPowers.spawn(tab.linkedBrowser, [[expected]], async function (
-    expected
-  ) {
-    return ContentTaskUtils.waitForCondition(() => {
-      info(
-        "expecting " +
-          expected +
-          ", visbility state: " +
-          content.document.visibilityState
-      );
-      info(
-        "expecting " +
-          expected +
-          ", active: " +
-          content.browsingContext.isActive
-      );
-      return content.document.getElementById("status").value == expected;
-    });
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [[expected]],
+    async function (expected) {
+      return ContentTaskUtils.waitForCondition(() => {
+        info(
+          "expecting " +
+            expected +
+            ", visbility state: " +
+            content.document.visibilityState
+        );
+        info(
+          "expecting " +
+            expected +
+            ", active: " +
+            content.browsingContext.isActive
+        );
+        return content.document.getElementById("status").value == expected;
+      });
+    }
+  );
   /* eslint-enable no-shadow */
 
   await assertStatus(tab, expected);

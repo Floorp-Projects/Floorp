@@ -219,10 +219,8 @@ class CompatibilityView {
   }
 
   _onPanelSelected() {
-    const {
-      selectedNode,
-      topLevelTarget,
-    } = this.inspector.store.getState().compatibility;
+    const { selectedNode, topLevelTarget } =
+      this.inspector.store.getState().compatibility;
 
     // Update if the selected node is changed or new change is added while the panel was hidden.
     if (

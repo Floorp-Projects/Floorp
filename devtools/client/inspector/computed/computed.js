@@ -5,8 +5,8 @@
 "use strict";
 
 const flags = require("resource://devtools/shared/flags.js");
-const ToolDefinitions = require("resource://devtools/client/definitions.js")
-  .Tools;
+const ToolDefinitions =
+  require("resource://devtools/client/definitions.js").Tools;
 const CssLogic = require("resource://devtools/shared/inspector/css-logic.js");
 const {
   style: { ELEMENT_STYLE },

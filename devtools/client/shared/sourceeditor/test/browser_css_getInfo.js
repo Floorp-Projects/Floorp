@@ -209,15 +209,16 @@ add_task(async function test() {
   for (const expected of tests) {
     ++i;
     const caret = expected.splice(0, 1)[0];
-    await SpecialPowers.spawn(browser, [[i, tests.length]], function ([
-      idx,
-      len,
-    ]) {
-      const progress = content.document.getElementById("progress");
-      const progressDiv = content.document.querySelector("#progress > div");
-      progress.dataset.progress = idx;
-      progressDiv.style.width = (100 * idx) / len + "%";
-    });
+    await SpecialPowers.spawn(
+      browser,
+      [[i, tests.length]],
+      function ([idx, len]) {
+        const progress = content.document.getElementById("progress");
+        const progressDiv = content.document.querySelector("#progress > div");
+        progress.dataset.progress = idx;
+        progressDiv.style.width = (100 * idx) / len + "%";
+      }
+    );
     const actual = completer.getInfoAt(source, caret);
     if (checkState(expected, actual)) {
       ok(true, "Test " + i + " passed. ");

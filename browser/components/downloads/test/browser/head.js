@@ -310,34 +310,34 @@ function startServer() {
     response.finish();
   });
 
-  gHttpServer.registerPathHandler("/interruptible.txt", function (
-    aRequest,
-    aResponse
-  ) {
-    info("Interruptible request started.");
+  gHttpServer.registerPathHandler(
+    "/interruptible.txt",
+    function (aRequest, aResponse) {
+      info("Interruptible request started.");
 
-    // Process the first part of the response.
-    aResponse.processAsync();
-    aResponse.setHeader("Content-Type", "text/plain", false);
-    if (gShouldServeInterruptibleFileAsDownload) {
-      aResponse.setHeader("Content-Disposition", "attachment");
+      // Process the first part of the response.
+      aResponse.processAsync();
+      aResponse.setHeader("Content-Type", "text/plain", false);
+      if (gShouldServeInterruptibleFileAsDownload) {
+        aResponse.setHeader("Content-Disposition", "attachment");
+      }
+      aResponse.setHeader(
+        "Content-Length",
+        "" + TEST_DATA_SHORT.length * 2,
+        false
+      );
+      aResponse.write(TEST_DATA_SHORT);
+
+      // Wait on the current deferred object, then finish the request.
+      _gDeferResponses.promise
+        .then(function RIH_onSuccess() {
+          aResponse.write(TEST_DATA_SHORT);
+          aResponse.finish();
+          info("Interruptible request finished.");
+        })
+        .catch(console.error);
     }
-    aResponse.setHeader(
-      "Content-Length",
-      "" + TEST_DATA_SHORT.length * 2,
-      false
-    );
-    aResponse.write(TEST_DATA_SHORT);
-
-    // Wait on the current deferred object, then finish the request.
-    _gDeferResponses.promise
-      .then(function RIH_onSuccess() {
-        aResponse.write(TEST_DATA_SHORT);
-        aResponse.finish();
-        info("Interruptible request finished.");
-      })
-      .catch(console.error);
-  });
+  );
 }
 
 function serveInterruptibleAsDownload() {

@@ -31,9 +31,8 @@ export var SiteDataTestUtils = {
    */
   persist(origin, value = Services.perms.ALLOW_ACTION) {
     return new Promise(resolve => {
-      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        origin
-      );
+      let principal =
+        Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
       Services.perms.addFromPrincipal(principal, "persistent-storage", value);
       Services.qms.persist(principal).callback = () => resolve();
     });
@@ -49,9 +48,8 @@ export var SiteDataTestUtils = {
    */
   addToIndexedDB(origin, size = 1024) {
     return new Promise(resolve => {
-      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        origin
-      );
+      let principal =
+        Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
       let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
       request.onupgradeneeded = function (e) {
         let db = e.target.result;
@@ -91,9 +89,8 @@ export var SiteDataTestUtils = {
     value = "bar",
   }) {
     if (origin) {
-      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        origin
-      );
+      let principal =
+        Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
       host = principal.host;
       path = principal.URI.pathQueryRef;
       originAttributes = Object.keys(originAttributes).length
@@ -124,9 +121,8 @@ export var SiteDataTestUtils = {
    * @param {String} [value] - the localStorage value
    */
   addToLocalStorage(origin, key = "foo", value = "bar") {
-    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      origin
-    );
+    let principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
     let storage = Services.domStorageManager.createStorage(
       null,
       principal,
@@ -146,9 +142,8 @@ export var SiteDataTestUtils = {
    * @returns {Boolean} whether the origin has localStorage data
    */
   hasLocalStorage(origin, testEntries) {
-    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      origin
-    );
+    let principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
     let storage = Services.domStorageManager.createStorage(
       null,
       principal,
@@ -203,9 +198,8 @@ export var SiteDataTestUtils = {
   },
 
   hasCookies(origin, testEntries = null, testPBMCookies = false) {
-    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      origin
-    );
+    let principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
 
     let cookies;
     if (testPBMCookies) {
@@ -247,9 +241,8 @@ export var SiteDataTestUtils = {
   },
 
   hasIndexedDB(origin) {
-    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      origin
-    );
+    let principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
     return new Promise(resolve => {
       let data = true;
       let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
@@ -387,9 +380,8 @@ export var SiteDataTestUtils = {
    */
   getQuotaUsage(origin) {
     return new Promise(resolve => {
-      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        origin
-      );
+      let principal =
+        Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
       Services.qms.getUsageForPrincipal(principal, request =>
         resolve(request.result.usage)
       );

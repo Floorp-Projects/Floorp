@@ -22,9 +22,8 @@ add_task(async function test() {
     let promiseFinished = PromiseUtils.defer();
     setTimeout(function () {
       let notificationBox = aWindow.gBrowser.getNotificationBox();
-      let notification = notificationBox.getNotificationWithValue(
-        notificationValue
-      );
+      let notification =
+        notificationBox.getNotificationWithValue(notificationValue);
 
       if (aIsPrivateMode) {
         // Make sure the notification is correctly displayed without a remember control

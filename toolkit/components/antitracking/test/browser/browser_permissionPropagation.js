@@ -82,51 +82,52 @@ async function createTrackerFrame(params, count, callback) {
 }
 
 async function testPermission(browser, block, params) {
-  await SpecialPowers.spawn(browser, [block, params], async function (
-    block,
-    params
-  ) {
-    for (let i = 0; ; i++) {
-      let ifr = content.document.getElementById("ifr" + i);
-      if (!ifr) {
-        break;
-      }
-
-      await new content.Promise(resolve => {
-        content.addEventListener("message", function msg(event) {
-          if (event.data.type == "finish") {
-            content.removeEventListener("message", msg);
-            resolve();
-            return;
-          }
-
-          if (event.data.type == "ok") {
-            ok(event.data.what, event.data.msg);
-            return;
-          }
-
-          if (event.data.type == "info") {
-            info(event.data.msg);
-            return;
-          }
-
-          ok(false, "Unknown message");
-        });
-
-        if (block) {
-          ifr.contentWindow.postMessage(
-            { callback: params.msg.blockingCallback },
-            "*"
-          );
-        } else {
-          ifr.contentWindow.postMessage(
-            { callback: params.msg.nonBlockingCallback },
-            "*"
-          );
+  await SpecialPowers.spawn(
+    browser,
+    [block, params],
+    async function (block, params) {
+      for (let i = 0; ; i++) {
+        let ifr = content.document.getElementById("ifr" + i);
+        if (!ifr) {
+          break;
         }
-      });
+
+        await new content.Promise(resolve => {
+          content.addEventListener("message", function msg(event) {
+            if (event.data.type == "finish") {
+              content.removeEventListener("message", msg);
+              resolve();
+              return;
+            }
+
+            if (event.data.type == "ok") {
+              ok(event.data.what, event.data.msg);
+              return;
+            }
+
+            if (event.data.type == "info") {
+              info(event.data.msg);
+              return;
+            }
+
+            ok(false, "Unknown message");
+          });
+
+          if (block) {
+            ifr.contentWindow.postMessage(
+              { callback: params.msg.blockingCallback },
+              "*"
+            );
+          } else {
+            ifr.contentWindow.postMessage(
+              { callback: params.msg.nonBlockingCallback },
+              "*"
+            );
+          }
+        });
+      }
     }
-  });
+  );
 }
 
 add_task(async function testPermissionGrantedOn3rdParty() {

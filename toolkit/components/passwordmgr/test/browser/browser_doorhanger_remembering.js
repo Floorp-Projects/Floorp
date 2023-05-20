@@ -123,28 +123,29 @@ add_task(async function test_clickNever() {
   );
 
   info("Make sure Never took effect");
-  await testSubmittingLoginFormHTTP("subtst_notifications_1.html", function (
-    fieldValues
-  ) {
-    Assert.equal(
-      fieldValues.username,
-      "notifyu1",
-      "Checking submitted username"
-    );
-    Assert.equal(
-      fieldValues.password,
-      "notifyp1",
-      "Checking submitted password"
-    );
-    let notif = getCaptureDoorhanger("password-save");
-    Assert.ok(!notif, "checking for no notification popup");
-    Assert.equal(
-      false,
-      Services.logins.getLoginSavingEnabled("http://example.com"),
-      "Checking for login saving disabled"
-    );
-    Services.logins.setLoginSavingEnabled("http://example.com", true);
-  });
+  await testSubmittingLoginFormHTTP(
+    "subtst_notifications_1.html",
+    function (fieldValues) {
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
+      let notif = getCaptureDoorhanger("password-save");
+      Assert.ok(!notif, "checking for no notification popup");
+      Assert.equal(
+        false,
+        Services.logins.getLoginSavingEnabled("http://example.com"),
+        "Checking for login saving disabled"
+      );
+      Services.logins.setLoginSavingEnabled("http://example.com", true);
+    }
+  );
 
   Assert.equal(
     Services.logins.getAllLogins().length,
@@ -205,23 +206,24 @@ add_task(async function test_clickRemember() {
   info(
     "Make sure Remember took effect and we don't prompt for an existing login"
   );
-  await testSubmittingLoginFormHTTP("subtst_notifications_1.html", function (
-    fieldValues
-  ) {
-    // form login matches a saved login, we don't expect a notification on change or submit
-    Assert.equal(
-      fieldValues.username,
-      "notifyu1",
-      "Checking submitted username"
-    );
-    Assert.equal(
-      fieldValues.password,
-      "notifyp1",
-      "Checking submitted password"
-    );
-    let notif = getCaptureDoorhanger("password-save");
-    Assert.ok(!notif, "checking for no notification popup");
-  });
+  await testSubmittingLoginFormHTTP(
+    "subtst_notifications_1.html",
+    function (fieldValues) {
+      // form login matches a saved login, we don't expect a notification on change or submit
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
+      let notif = getCaptureDoorhanger("password-save");
+      Assert.ok(!notif, "checking for no notification popup");
+    }
+  );
 
   logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
@@ -243,22 +245,23 @@ add_task(async function test_rememberSignonsFalse() {
   info("Make sure we don't prompt with rememberSignons=false");
   Services.prefs.setBoolPref("signon.rememberSignons", false);
 
-  await testSubmittingLoginFormHTTP("subtst_notifications_1.html", function (
-    fieldValues
-  ) {
-    Assert.equal(
-      fieldValues.username,
-      "notifyu1",
-      "Checking submitted username"
-    );
-    Assert.equal(
-      fieldValues.password,
-      "notifyp1",
-      "Checking submitted password"
-    );
-    let notif = getCaptureDoorhanger("password-save");
-    Assert.ok(!notif, "checking for no notification popup");
-  });
+  await testSubmittingLoginFormHTTP(
+    "subtst_notifications_1.html",
+    function (fieldValues) {
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
+      let notif = getCaptureDoorhanger("password-save");
+      Assert.ok(!notif, "checking for no notification popup");
+    }
+  );
 
   Assert.equal(
     Services.logins.getAllLogins().length,
@@ -397,18 +400,19 @@ add_task(async function test_autocompleteOffForm() {
 add_task(async function test_noPasswordField() {
   info("Check for no notification popup when no password field present");
 
-  await testSubmittingLoginFormHTTP("subtst_notifications_5.html", function (
-    fieldValues
-  ) {
-    Assert.equal(
-      fieldValues.username,
-      "notifyu1",
-      "Checking submitted username"
-    );
-    Assert.equal(fieldValues.password, "null", "Checking submitted password");
-    let notif = getCaptureDoorhanger("password-save");
-    Assert.ok(!notif, "checking for no notification popup");
-  });
+  await testSubmittingLoginFormHTTP(
+    "subtst_notifications_5.html",
+    function (fieldValues) {
+      Assert.equal(
+        fieldValues.username,
+        "notifyu1",
+        "Checking submitted username"
+      );
+      Assert.equal(fieldValues.password, "null", "Checking submitted password");
+      let notif = getCaptureDoorhanger("password-save");
+      Assert.ok(!notif, "checking for no notification popup");
+    }
+  );
 
   Assert.equal(
     Services.logins.getAllLogins().length,
@@ -544,18 +548,19 @@ add_task(async function test_pwOnlyFormMatchesLogin() {
   );
   await Services.logins.addLoginAsync(login1);
 
-  await testSubmittingLoginFormHTTP("subtst_notifications_6.html", function (
-    fieldValues
-  ) {
-    Assert.equal(fieldValues.username, "null", "Checking submitted username");
-    Assert.equal(
-      fieldValues.password,
-      "notifyp1",
-      "Checking submitted password"
-    );
-    let notif = getCaptureDoorhanger("password-save");
-    Assert.ok(!notif, "checking for no notification popup");
-  });
+  await testSubmittingLoginFormHTTP(
+    "subtst_notifications_6.html",
+    function (fieldValues) {
+      Assert.equal(fieldValues.username, "null", "Checking submitted username");
+      Assert.equal(
+        fieldValues.password,
+        "notifyp1",
+        "Checking submitted password"
+      );
+      let notif = getCaptureDoorhanger("password-save");
+      Assert.ok(!notif, "checking for no notification popup");
+    }
+  );
 
   let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");

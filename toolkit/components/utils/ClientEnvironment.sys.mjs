@@ -61,9 +61,8 @@ export class ClientEnvironmentBase {
       const telemetry = {};
       for (const key in mostRecentPings) {
         const ping = mostRecentPings[key];
-        telemetry[
-          ping.type
-        ] = await lazy.TelemetryArchive.promiseArchivedPingById(ping.id);
+        telemetry[ping.type] =
+          await lazy.TelemetryArchive.promiseArchivedPingById(ping.id);
       }
       return telemetry;
     })();

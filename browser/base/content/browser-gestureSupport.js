@@ -459,13 +459,11 @@ var gGestureSupport = {
    * @param aDir
    *        The direction for the swipe event
    */
-  _coordinateSwipeEventWithAnimation: function GS__coordinateSwipeEventWithAnimation(
-    aEvent,
-    aDir
-  ) {
-    gHistorySwipeAnimation.stopAnimation();
-    this.processSwipeEvent(aEvent, aDir);
-  },
+  _coordinateSwipeEventWithAnimation:
+    function GS__coordinateSwipeEventWithAnimation(aEvent, aDir) {
+      gHistorySwipeAnimation.stopAnimation();
+      this.processSwipeEvent(aEvent, aDir);
+    },
 
   /**
    * Get a gesture preference or use a default if it doesn't exist
@@ -612,8 +610,8 @@ var gGestureSupport = {
     }
 
     let contentElement = window.content.document.body.firstElementChild;
-    let transformValue = window.content.window.getComputedStyle(contentElement)
-      .transform;
+    let transformValue =
+      window.content.window.getComputedStyle(contentElement).transform;
 
     if (transformValue == "none") {
       this.rotation = 0;

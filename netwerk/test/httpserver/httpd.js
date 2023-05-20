@@ -2233,7 +2233,8 @@ function defaultIndexHandler(metadata, response) {
     }
   }
 
-  body += "    </ol>\
+  body +=
+    "    </ol>\
                 </body>\
               </html>";
 
@@ -3582,8 +3583,9 @@ ServerHandler.prototype = {
 
       var headEnum = metadata.headers;
       while (headEnum.hasMoreElements()) {
-        var fieldName = headEnum.getNext().QueryInterface(Ci.nsISupportsString)
-          .data;
+        var fieldName = headEnum
+          .getNext()
+          .QueryInterface(Ci.nsISupportsString).data;
         body += fieldName + ": " + metadata.getHeader(fieldName) + "\r\n";
       }
 
@@ -4368,11 +4370,11 @@ Response.prototype = {
       // headers
       let headEnum = this._informationalResponseHeaders.enumerator;
       while (headEnum.hasMoreElements()) {
-        let fieldName = headEnum.getNext().QueryInterface(Ci.nsISupportsString)
-          .data;
-        let values = this._informationalResponseHeaders.getHeaderValues(
-          fieldName
-        );
+        let fieldName = headEnum
+          .getNext()
+          .QueryInterface(Ci.nsISupportsString).data;
+        let values =
+          this._informationalResponseHeaders.getHeaderValues(fieldName);
         for (let i = 0, sz = values.length; i < sz; i++) {
           preambleData.push(fieldName + ": " + values[i] + "\r\n");
         }
@@ -4425,8 +4427,9 @@ Response.prototype = {
     // headers
     var headEnum = headers.enumerator;
     while (headEnum.hasMoreElements()) {
-      var fieldName = headEnum.getNext().QueryInterface(Ci.nsISupportsString)
-        .data;
+      var fieldName = headEnum
+        .getNext()
+        .QueryInterface(Ci.nsISupportsString).data;
       var values = headers.getHeaderValues(fieldName);
       for (var i = 0, sz = values.length; i < sz; i++) {
         preambleData.push(fieldName + ": " + values[i] + "\r\n");

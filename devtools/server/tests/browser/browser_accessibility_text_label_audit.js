@@ -36,14 +36,10 @@ const {
 } = require("resource://devtools/shared/constants.js");
 
 add_task(async function () {
-  const {
-    target,
-    walker,
-    a11yWalker,
-    parentAccessibility,
-  } = await initAccessibilityFrontsForUrl(
-    `${MAIN_DOMAIN}doc_accessibility_text_label_audit.html`
-  );
+  const { target, walker, a11yWalker, parentAccessibility } =
+    await initAccessibilityFrontsForUrl(
+      `${MAIN_DOMAIN}doc_accessibility_text_label_audit.html`
+    );
 
   const tests = [
     ["Button menu with inner content", "#buttonmenu-1", null],

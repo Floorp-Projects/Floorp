@@ -175,11 +175,8 @@ var StarUI = {
    * Handle popup hidden event.
    */
   async _handlePopupHiddenEvent() {
-    const {
-      bookmarkState,
-      didChangeFolder,
-      selectedFolderGuid,
-    } = gEditItemOverlay;
+    const { bookmarkState, didChangeFolder, selectedFolderGuid } =
+      gEditItemOverlay;
     gEditItemOverlay.uninitPanel(true);
 
     // Capture _removeBookmarksOnPopupHidden and _itemGuids values. Reset them
@@ -225,9 +222,8 @@ var StarUI = {
       titleL10nID
     );
 
-    this._element(
-      "editBookmarkPanel_showForNewBookmarks"
-    ).checked = this.showForNewBookmarks;
+    this._element("editBookmarkPanel_showForNewBookmarks").checked =
+      this.showForNewBookmarks;
 
     this._itemGuids = [];
     await PlacesUtils.bookmarks.fetch({ url: aUrl }, bookmark =>
@@ -683,11 +679,12 @@ class HistoryMenu extends PlacesMenu {
     this.undoWindowMenu.removeAttribute("disabled");
 
     // populate menu
-    let windowsFragment = RecentlyClosedTabsAndWindowsMenuUtils.getWindowsFragment(
-      window,
-      "menuitem",
-      /* aPrefixRestoreAll = */ false
-    );
+    let windowsFragment =
+      RecentlyClosedTabsAndWindowsMenuUtils.getWindowsFragment(
+        window,
+        "menuitem",
+        /* aPrefixRestoreAll = */ false
+      );
     undoPopup.appendChild(windowsFragment);
   }
 
@@ -729,7 +726,8 @@ class HistoryMenu extends PlacesMenu {
       }
       openUILink(placesNode.uri, aEvent, {
         ignoreAlt: true,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
     }
   }
@@ -1534,9 +1532,8 @@ var BookmarkingUI = {
         return false;
       }
       // Hmm, apparently not. Check for bookmarks or customize mode:
-      let bookmarksToolbarItemsPlacement = CustomizableUI.getPlacementOfWidget(
-        "personal-bookmarks"
-      );
+      let bookmarksToolbarItemsPlacement =
+        CustomizableUI.getPlacementOfWidget("personal-bookmarks");
       let bookmarksItemInToolbar =
         bookmarksToolbarItemsPlacement?.area == CustomizableUI.AREA_BOOKMARKS;
       if (!bookmarksItemInToolbar) {

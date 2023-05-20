@@ -101,22 +101,24 @@ async function checkThrowingWithStack(
   expectedMessage,
   additionalFrameLines = []
 ) {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [expression], function (
-    expr
-  ) {
-    const script = content.document.createElement("script");
-    script.append(
-      content.document.createTextNode(`
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [expression],
+    function (expr) {
+      const script = content.document.createElement("script");
+      script.append(
+        content.document.createTextNode(`
     a = () => {throw ${expr}};
     b =  () => a();
     c =  () => b();
     d =  () => c();
     d();
     `)
-    );
-    content.document.body.append(script);
-    script.remove();
-  });
+      );
+      content.document.body.append(script);
+      script.remove();
+    }
+  );
   return checkMessageStack(hud, expectedMessage, [
     ...additionalFrameLines,
     2,

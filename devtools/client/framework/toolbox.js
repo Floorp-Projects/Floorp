@@ -284,15 +284,12 @@ function Toolbox(commands, selectedTool, hostType, contentWindow, frameId) {
   this.closeToolbox = this.closeToolbox.bind(this);
   this.destroy = this.destroy.bind(this);
   this._applyCacheSettings = this._applyCacheSettings.bind(this);
-  this._applyCustomFormatterSetting = this._applyCustomFormatterSetting.bind(
-    this
-  );
-  this._applyServiceWorkersTestingSettings = this._applyServiceWorkersTestingSettings.bind(
-    this
-  );
-  this._applySimpleHighlightersSettings = this._applySimpleHighlightersSettings.bind(
-    this
-  );
+  this._applyCustomFormatterSetting =
+    this._applyCustomFormatterSetting.bind(this);
+  this._applyServiceWorkersTestingSettings =
+    this._applyServiceWorkersTestingSettings.bind(this);
+  this._applySimpleHighlightersSettings =
+    this._applySimpleHighlightersSettings.bind(this);
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._onBlur = this._onBlur.bind(this);
@@ -313,9 +310,8 @@ function Toolbox(commands, selectedTool, hostType, contentWindow, frameId) {
   this._onToolSelected = this._onToolSelected.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
   this._onMouseDown = this._onMouseDown.bind(this);
-  this.updateToolboxButtonsVisibility = this.updateToolboxButtonsVisibility.bind(
-    this
-  );
+  this.updateToolboxButtonsVisibility =
+    this.updateToolboxButtonsVisibility.bind(this);
   this.updateToolboxButtons = this.updateToolboxButtons.bind(this);
   this.selectTool = this.selectTool.bind(this);
   this._pingTelemetrySelectTool = this._pingTelemetrySelectTool.bind(this);
@@ -1332,9 +1328,8 @@ Toolbox.prototype = {
     const url = new URL(this.win.location);
     const remoteId = url.searchParams.get("remoteId");
     const runtimeInfo = remoteClientManager.getRuntimeInfoByRemoteId(remoteId);
-    const connectionType = remoteClientManager.getConnectionTypeByRemoteId(
-      remoteId
-    );
+    const connectionType =
+      remoteClientManager.getConnectionTypeByRemoteId(remoteId);
 
     return {
       connectionType,
@@ -3237,9 +3232,8 @@ Toolbox.prototype = {
     if (!this._preferenceFrontRequest) {
       // Set the _preferenceFrontRequest property to allow the resetPreference toolbox
       // method to cleanup the preference set when the toolbox is closed.
-      this._preferenceFrontRequest = this.commands.client.mainRoot.getFront(
-        "preference"
-      );
+      this._preferenceFrontRequest =
+        this.commands.client.mainRoot.getFront("preference");
     }
     return this._preferenceFrontRequest;
   },

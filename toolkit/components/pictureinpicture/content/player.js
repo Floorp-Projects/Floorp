@@ -217,9 +217,8 @@ let Player = {
     );
     holder.appendChild(browser);
 
-    this.actor = browser.browsingContext.currentWindowGlobal.getActor(
-      "PictureInPicture"
-    );
+    this.actor =
+      browser.browsingContext.currentWindowGlobal.getActor("PictureInPicture");
     this.actor.sendAsyncMessage("PictureInPicture:SetupPlayer", {
       videoRef,
     });
@@ -456,7 +455,8 @@ let Player = {
             isVideoControlsShowing:
               !!this.controls.getAttribute("showing") ||
               !!this.controls.getAttribute("keying"),
-            playerBottomControlsDOMRect: this.controlsBottom.getBoundingClientRect(),
+            playerBottomControlsDOMRect:
+              this.controlsBottom.getBoundingClientRect(),
           });
         }
         // The subtitles settings panel gets selected when entering/exiting fullscreen even though
@@ -1131,9 +1131,8 @@ let Player = {
 
   get closedCaptionButton() {
     delete this.closedCaptionButton;
-    return (this.closedCaptionButton = document.getElementById(
-      "closed-caption"
-    ));
+    return (this.closedCaptionButton =
+      document.getElementById("closed-caption"));
   },
 
   get settingsPanel() {

@@ -17,10 +17,8 @@ let gResponses = {
   F: "",
 
   // 4
-  G:
-    "@import 'generateCss.sjs?H'; @import 'http://example.org/tests/dom/tests/mochitest/general/generateCss.sjs?K';",
-  H:
-    "@import 'http://example.com/tests/dom/tests/mochitest/general/generateCss.sjs?I';",
+  G: "@import 'generateCss.sjs?H'; @import 'http://example.org/tests/dom/tests/mochitest/general/generateCss.sjs?K';",
+  H: "@import 'http://example.com/tests/dom/tests/mochitest/general/generateCss.sjs?I';",
   I: "@import 'generateCss.sjs?J",
   J: "",
   K: "@import 'generateCss.sjs?L';",
@@ -28,20 +26,17 @@ let gResponses = {
   M: "",
 
   // 5
-  N:
-    ".c1 { background-image: -moz-image-rect(url('/image/test/mochitest/blue.png'), 0, 0, 200, 200);}",
+  N: ".c1 { background-image: -moz-image-rect(url('/image/test/mochitest/blue.png'), 0, 0, 200, 200);}",
 
   // 6
   O: ".c2 { background-image: url('/image/test/mochitest/red.png');}",
 
   // 7
-  P:
-    "@font-face { font-family: Ahem; src: url('/tests/dom/base/test/Ahem.ttf'); } .c3 { font-family: Ahem; font-size: 20px; }",
+  P: "@font-face { font-family: Ahem; src: url('/tests/dom/base/test/Ahem.ttf'); } .c3 { font-family: Ahem; font-size: 20px; }",
 
   // 8
   Q: ".c4 { cursor:  url('/image/test/mochitest/over.png') 2 2, auto; } ",
 
   // 9
-  R:
-    "#image { mask: url('/tests/dom/base/test/file_use_counter_svg_fill_pattern_data.svg'); }",
+  R: "#image { mask: url('/tests/dom/base/test/file_use_counter_svg_fill_pattern_data.svg'); }",
 };

@@ -256,9 +256,10 @@ for (let localeTests of TESTCASES) {
             Assert.notEqual(expectedOption, null);
 
             let value = testcase.profileData[i][field];
-            let cache = handler.activeSection._cacheValue.matchingSelectOption.get(
-              select
-            );
+            let cache =
+              handler.activeSection._cacheValue.matchingSelectOption.get(
+                select
+              );
             let targetOption = cache[value] && cache[value].get();
             Assert.notEqual(targetOption, null);
 

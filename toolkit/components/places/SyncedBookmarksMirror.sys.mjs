@@ -1225,9 +1225,8 @@ export class SyncedBookmarksMirror {
         }
 
         let parentGuid = row.getResultByName("parentGuid");
-        let parentRecordId = lazy.PlacesSyncUtils.bookmarks.guidToRecordId(
-          parentGuid
-        );
+        let parentRecordId =
+          lazy.PlacesSyncUtils.bookmarks.guidToRecordId(parentGuid);
 
         let type = row.getResultByName("type");
         switch (type) {

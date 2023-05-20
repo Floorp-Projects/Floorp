@@ -26,14 +26,8 @@ export class ValueExtractor {
    *        trim: boolean, if the value should be trimmed (used by string type).
    */
   extractValue(options) {
-    const {
-      expectedType,
-      object,
-      objectName,
-      property,
-      throwTypeError,
-      trim,
-    } = options;
+    const { expectedType, object, objectName, property, throwTypeError, trim } =
+      options;
     const value = object[property];
     const isArray = Array.isArray(value);
 

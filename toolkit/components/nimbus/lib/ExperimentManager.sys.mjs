@@ -1095,9 +1095,8 @@ export class _ExperimentManager {
       // has set the same pref. If so, we do not need to set the pref because
       // experiments take priority.
       if (isRollout) {
-        const conflictingEnrollment = this.store.getExperimentForFeature(
-          featureId
-        );
+        const conflictingEnrollment =
+          this.store.getExperimentForFeature(featureId);
         const conflictingPref = conflictingEnrollment?.prefs?.find(
           p => p.name === name
         );
@@ -1128,9 +1127,10 @@ export class _ExperimentManager {
    * @returns {function} The cache, as a callable function.
    */
   _makeEnrollmentCache(isRollout) {
-    const getOtherEnrollment = (isRollout
-      ? this.store.getExperimentForFeature
-      : this.store.getRolloutForFeature
+    const getOtherEnrollment = (
+      isRollout
+        ? this.store.getExperimentForFeature
+        : this.store.getRolloutForFeature
     ).bind(this.store);
 
     const conflictingEnrollments = {};

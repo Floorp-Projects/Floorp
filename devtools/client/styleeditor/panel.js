@@ -75,9 +75,8 @@ StyleEditorPanel.prototype = {
     }
 
     const notificationBox = this._toolbox.getNotificationBox();
-    const notification = notificationBox.getNotificationWithValue(
-      "styleeditor-error"
-    );
+    const notification =
+      notificationBox.getNotificationWithValue("styleeditor-error");
 
     let level = notificationBox.PRIORITY_CRITICAL_LOW;
     if (data.level === "info") {

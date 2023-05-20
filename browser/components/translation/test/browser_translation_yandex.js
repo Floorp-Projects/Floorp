@@ -122,9 +122,8 @@ function promiseTestPageLoad(url) {
 
 function showTranslationUI(tab, aDetectedLanguage) {
   let browser = gBrowser.selectedBrowser;
-  let actor = browser.browsingContext.currentWindowGlobal.getActor(
-    "Translation"
-  );
+  let actor =
+    browser.browsingContext.currentWindowGlobal.getActor("Translation");
   actor.documentStateReceived({
     state: Translation.STATE_OFFER,
     originalShown: true,

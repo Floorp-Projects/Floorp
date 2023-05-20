@@ -507,9 +507,8 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     const { actions, capabilities } = options;
     if (this.actionState === null) {
       this.actionState = new lazy.action.State({
-        specCompatPointerOrigin: !capabilities[
-          "moz:useNonSpecCompliantPointerOrigin"
-        ],
+        specCompatPointerOrigin:
+          !capabilities["moz:useNonSpecCompliantPointerOrigin"],
       });
     }
     let actionChain = lazy.action.Chain.fromJSON(this.actionState, actions);

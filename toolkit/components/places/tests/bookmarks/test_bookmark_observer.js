@@ -67,12 +67,10 @@ add_task(async function setup() {
   gUnfiledFolderId = await PlacesUtils.promiseItemId(
     PlacesUtils.bookmarks.unfiledGuid
   );
-  gBookmarksObserver.handlePlacesEvents = gBookmarksObserver.handlePlacesEvents.bind(
-    gBookmarksObserver
-  );
-  gBookmarkSkipObserver.handlePlacesEvents = gBookmarkSkipObserver.handlePlacesEvents.bind(
-    gBookmarkSkipObserver
-  );
+  gBookmarksObserver.handlePlacesEvents =
+    gBookmarksObserver.handlePlacesEvents.bind(gBookmarksObserver);
+  gBookmarkSkipObserver.handlePlacesEvents =
+    gBookmarkSkipObserver.handlePlacesEvents.bind(gBookmarkSkipObserver);
   PlacesUtils.observers.addListener(
     [
       "bookmark-added",

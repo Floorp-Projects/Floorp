@@ -72,7 +72,8 @@ const edgecases = [
   { input: ":screenshot --", expectedError: /invalid flag/ },
   {
     input: ':screenshot "fo"o bar',
-    expectedError: /String has unescaped `"` in \["fo"o\.\.\.\], may miss a space between arguments/,
+    expectedError:
+      /String has unescaped `"` in \["fo"o\.\.\.\], may miss a space between arguments/,
   },
   {
     input: ':screenshot "foo b"ar',

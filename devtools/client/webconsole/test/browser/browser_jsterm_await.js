@@ -30,10 +30,9 @@ add_task(async function () {
   );
 
   // Check that the timestamp of the result is accurate
-  const {
-    visibleMessages,
-    mutableMessagesById,
-  } = hud.ui.wrapper.getStore().getState().messages;
+  const { visibleMessages, mutableMessagesById } = hud.ui.wrapper
+    .getStore()
+    .getState().messages;
   const [commandId, resultId] = visibleMessages;
   const delta =
     mutableMessagesById.get(resultId).timeStamp -

@@ -71,8 +71,9 @@ add_task(async function testODoHConfig() {
   Assert.equal(answer[0].priority, 1);
   Assert.equal(answer[0].name, "odoh_host.example.com");
   Assert.equal(answer[0].values.length, 1);
-  let odohconfig = answer[0].values[0].QueryInterface(Ci.nsISVCParamODoHConfig)
-    .ODoHConfig;
+  let odohconfig = answer[0].values[0].QueryInterface(
+    Ci.nsISVCParamODoHConfig
+  ).ODoHConfig;
   Assert.equal(odohconfig.length, 46);
 });
 

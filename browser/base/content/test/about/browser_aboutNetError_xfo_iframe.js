@@ -16,18 +16,24 @@ add_task(async function test_xfo_iframe() {
   let xfoBrowser = gBrowser.selectedTab.linkedBrowser;
 
   // The blocked page opened in a new window/tab
-  await SpecialPowers.spawn(xfoBrowser, [BLOCKED_PAGE], async function (
-    xfoBlockedPage
-  ) {
-    let cookieHeader = content.document.getElementById("strictCookie");
-    let location = content.document.location.href;
+  await SpecialPowers.spawn(
+    xfoBrowser,
+    [BLOCKED_PAGE],
+    async function (xfoBlockedPage) {
+      let cookieHeader = content.document.getElementById("strictCookie");
+      let location = content.document.location.href;
 
-    Assert.ok(
-      cookieHeader.textContent.includes("No same site strict cookie header"),
-      "Same site strict cookie has not been set"
-    );
-    Assert.equal(location, xfoBlockedPage, "Location of new page is correct!");
-  });
+      Assert.ok(
+        cookieHeader.textContent.includes("No same site strict cookie header"),
+        "Same site strict cookie has not been set"
+      );
+      Assert.equal(
+        location,
+        xfoBlockedPage,
+        "Location of new page is correct!"
+      );
+    }
+  );
 
   Services.cookies.removeAll();
   BrowserTestUtils.removeTab(iframePageTab);

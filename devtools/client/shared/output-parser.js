@@ -261,12 +261,8 @@ OutputParser.prototype = {
     const variableNode = this._createNode("span", {}, varText);
 
     // Parse the first variable name within the parens of var().
-    const {
-      tokens,
-      functionData,
-      sawComma,
-      sawVariable,
-    } = this._parseMatchingParens(text, tokenStream, options, true);
+    const { tokens, functionData, sawComma, sawVariable } =
+      this._parseMatchingParens(text, tokenStream, options, true);
 
     const result = sawVariable ? "" : functionData.join("");
 
@@ -1711,9 +1707,8 @@ OutputParser.prototype = {
       // whitespace, and the ")" into |trailer|.  We considered adding
       // functionality for this to CSSLexer, in some way, but this
       // seemed simpler on the whole.
-      const urlParts = /^(url\([ \t\r\n\f]*(["']?))(.*?)(\2[ \t\r\n\f]*\))$/i.exec(
-        match
-      );
+      const urlParts =
+        /^(url\([ \t\r\n\f]*(["']?))(.*?)(\2[ \t\r\n\f]*\))$/i.exec(match);
 
       // Bail out if that didn't match anything.
       if (!urlParts) {

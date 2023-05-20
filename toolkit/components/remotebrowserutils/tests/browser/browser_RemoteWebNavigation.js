@@ -37,31 +37,32 @@ add_task(async function test_referrer() {
   );
   await waitForLoad(DUMMY1);
 
-  await SpecialPowers.spawn(browser, [[DUMMY1, DUMMY2]], function ([
-    dummy1,
-    dummy2,
-  ]) {
-    function getExpectedReferrer(referrer) {
-      let defaultPolicy = Services.prefs.getIntPref(
-        "network.http.referer.defaultPolicy"
-      );
-      ok(
-        [2, 3].indexOf(defaultPolicy) > -1,
-        "default referrer policy should be either strict-origin-when-cross-origin(2) or no-referrer-when-downgrade(3)"
-      );
-      if (defaultPolicy == 2) {
-        return referrer.match(/https?:\/\/[^\/]+\/?/i)[0];
+  await SpecialPowers.spawn(
+    browser,
+    [[DUMMY1, DUMMY2]],
+    function ([dummy1, dummy2]) {
+      function getExpectedReferrer(referrer) {
+        let defaultPolicy = Services.prefs.getIntPref(
+          "network.http.referer.defaultPolicy"
+        );
+        ok(
+          [2, 3].indexOf(defaultPolicy) > -1,
+          "default referrer policy should be either strict-origin-when-cross-origin(2) or no-referrer-when-downgrade(3)"
+        );
+        if (defaultPolicy == 2) {
+          return referrer.match(/https?:\/\/[^\/]+\/?/i)[0];
+        }
+        return referrer;
       }
-      return referrer;
-    }
 
-    is(content.location.href, dummy1, "Should have loaded the right URL");
-    is(
-      content.document.referrer,
-      getExpectedReferrer(dummy2),
-      "Should have the right referrer"
-    );
-  });
+      is(content.location.href, dummy1, "Should have loaded the right URL");
+      is(
+        content.document.referrer,
+        getExpectedReferrer(dummy2),
+        "Should have the right referrer"
+      );
+    }
+  );
 
   gBrowser.removeCurrentTab();
 });
@@ -93,19 +94,21 @@ add_task(async function test_history() {
   await waitForLoad(DUMMY2);
 
   if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-    await SpecialPowers.spawn(browser, [[DUMMY1, DUMMY2]], function ([
-      dummy1,
-      dummy2,
-    ]) {
-      let history = docShell.browsingContext.childSessionHistory.legacySHistory;
+    await SpecialPowers.spawn(
+      browser,
+      [[DUMMY1, DUMMY2]],
+      function ([dummy1, dummy2]) {
+        let history =
+          docShell.browsingContext.childSessionHistory.legacySHistory;
 
-      is(history.count, 2, "Should be two history items");
-      is(history.index, 1, "Should be at the right place in history");
-      let entry = history.getEntryAtIndex(0);
-      is(entry.URI.spec, dummy1, "Should have the right history entry");
-      entry = history.getEntryAtIndex(1);
-      is(entry.URI.spec, dummy2, "Should have the right history entry");
-    });
+        is(history.count, 2, "Should be two history items");
+        is(history.index, 1, "Should be at the right place in history");
+        let entry = history.getEntryAtIndex(0);
+        is(entry.URI.spec, dummy1, "Should have the right history entry");
+        entry = history.getEntryAtIndex(1);
+        is(entry.URI.spec, dummy2, "Should have the right history entry");
+      }
+    );
   } else {
     let history = browser.browsingContext.sessionHistory;
 
@@ -139,18 +142,18 @@ add_task(async function test_history() {
 add_task(async function test_flags() {
   async function checkHistory(browser, { count, index }) {
     if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-      return SpecialPowers.spawn(browser, [[DUMMY2, count, index]], function ([
-        dummy2,
-        count,
-        index,
-      ]) {
-        let history =
-          docShell.browsingContext.childSessionHistory.legacySHistory;
-        is(history.count, count, "Should be one history item");
-        is(history.index, index, "Should be at the right place in history");
-        let entry = history.getEntryAtIndex(index);
-        is(entry.URI.spec, dummy2, "Should have the right history entry");
-      });
+      return SpecialPowers.spawn(
+        browser,
+        [[DUMMY2, count, index]],
+        function ([dummy2, count, index]) {
+          let history =
+            docShell.browsingContext.childSessionHistory.legacySHistory;
+          is(history.count, count, "Should be one history item");
+          is(history.index, index, "Should be at the right place in history");
+          let entry = history.getEntryAtIndex(index);
+          is(entry.URI.spec, dummy2, "Should have the right history entry");
+        }
+      );
     }
 
     let history = browser.browsingContext.sessionHistory;

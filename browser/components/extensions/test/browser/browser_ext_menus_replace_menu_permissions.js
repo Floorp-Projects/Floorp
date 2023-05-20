@@ -20,7 +20,8 @@ add_task(async function overrideContext_permissions() {
     const CONTEXT_OPTIONS_BOOKMARK = { context: "bookmark", bookmarkId: "x" };
 
     const E_PERM_TAB = /The "tab" context requires the "tabs" permission/;
-    const E_PERM_BOOKMARK = /The "bookmark" context requires the "bookmarks" permission/;
+    const E_PERM_BOOKMARK =
+      /The "bookmark" context requires the "bookmarks" permission/;
 
     function assertAllowed(contextOptions) {
       try {

@@ -385,9 +385,8 @@ add_task(async function test_sidebar_folder_contextmenu_contents() {
         });
         tree.selectItems([folder.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -430,9 +429,8 @@ add_task(async function test_sidebar_multiple_folders_contextmenu_contents() {
         });
         tree.selectItems([folder1.guid, folder2.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -474,9 +472,8 @@ add_task(async function test_sidebar_bookmark_contextmenu_contents() {
       async bookmark => {
         tree.selectItems([bookmark.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -515,16 +512,14 @@ add_task(async function test_sidebar_bookmark_search_contextmenu_contents() {
       async bookmark => {
         info("Checking bookmark sidebar menu contents in search context");
         // Perform a search first
-        let searchBox = SidebarUI.browser.contentDocument.getElementById(
-          "search-box"
-        );
+        let searchBox =
+          SidebarUI.browser.contentDocument.getElementById("search-box");
         searchBox.value = SECOND_BOOKMARK_TITLE;
         searchBox.doCommand();
         tree.selectItems([bookmark.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -645,9 +640,8 @@ add_task(async function test_sidebar_mixedselection_contextmenu_contents() {
         });
         tree.selectItems([bookmark.guid, folder.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -684,9 +678,8 @@ add_task(async function test_sidebar_multiple_bookmarks_contextmenu_contents() {
         });
         tree.selectItems([bookmark.guid, bookmark2.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -720,9 +713,8 @@ add_task(async function test_sidebar_multiple_links_contextmenu_contents() {
         tree.ownerDocument.getElementById("bylastvisited").doCommand();
         tree.selectAll();
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"
@@ -757,9 +749,8 @@ add_task(async function test_sidebar_mixed_bookmarks_contextmenu_contents() {
         });
         tree.selectItems([bookmark.guid, folder.guid]);
 
-        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
-          "placesContext"
-        );
+        let contextMenu =
+          SidebarUI.browser.contentDocument.getElementById("placesContext");
         let popupShownPromise = BrowserTestUtils.waitForEvent(
           contextMenu,
           "popupshown"

@@ -22,9 +22,8 @@ function createPanelReloadTest(recordName, toolId) {
       "http://example.com/browser/devtools/client/framework/test/allocations/reloaded-page.html";
 
     async function testScript(toolbox) {
-      const onTargetSwitched = toolbox.commands.targetCommand.once(
-        "switched-target"
-      );
+      const onTargetSwitched =
+        toolbox.commands.targetCommand.once("switched-target");
       const onReloaded = toolbox.getCurrentPanel().once("reloaded");
 
       gBrowser.reloadTab(gBrowser.selectedTab);

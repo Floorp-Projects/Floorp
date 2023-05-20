@@ -230,9 +230,8 @@ var testMouseInteraction = async function () {
   info("clicking on the third row cell content to select third row");
   event = table.once(TableWidget.EVENTS.ROW_SELECTED);
   const firstColumnThirdRowCell = table.tbody.firstChild.children[3];
-  const firstColumnThirdRowCellInnerNode = firstColumnThirdRowCell.querySelector(
-    "span"
-  );
+  const firstColumnThirdRowCellInnerNode =
+    firstColumnThirdRowCell.querySelector("span");
   // node should not have selected class
   ok(
     !firstColumnThirdRowCell.classList.contains("theme-selected"),

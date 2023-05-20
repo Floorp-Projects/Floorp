@@ -43,9 +43,12 @@ add_task(async function () {
         reject(e);
       }
     };
-    xhr.onabort = xhr.onerror = xhr.ontimeout = () => {
-      reject(new Error("xmlhttprequest failed"));
-    };
+    xhr.onabort =
+      xhr.onerror =
+      xhr.ontimeout =
+        () => {
+          reject(new Error("xmlhttprequest failed"));
+        };
     xhr.open("GET", PathUtils.toFileURI(HTMLFile));
     xhr.responseType = "document";
     xhr.overrideMimeType("text/html");

@@ -15,9 +15,8 @@ add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Reload the content window");
-  const {
-    onDomCompleteResource,
-  } = await waitForNextTopLevelDomCompleteResource(hud.toolbox.commands);
+  const { onDomCompleteResource } =
+    await waitForNextTopLevelDomCompleteResource(hud.toolbox.commands);
 
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.location.reload();

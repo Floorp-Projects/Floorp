@@ -51,19 +51,21 @@ async function testBackForwardMenu(useContextMenu) {
   for (let iter = 2; iter <= 4; iter++) {
     // Iterate three times. For the first two times through the loop, add a new history item.
     // But for the last iteration, go back in the history instead.
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [iter], async function (
-      iterChild
-    ) {
-      if (iterChild == 4) {
-        let popStatePromise = new Promise(function (resolve) {
-          content.onpopstate = resolve;
-        });
-        content.history.back();
-        await popStatePromise;
-      } else {
-        content.history.pushState({}, "" + iterChild, iterChild + ".html");
+    await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [iter],
+      async function (iterChild) {
+        if (iterChild == 4) {
+          let popStatePromise = new Promise(function (resolve) {
+            content.onpopstate = resolve;
+          });
+          content.history.back();
+          await popStatePromise;
+        } else {
+          content.history.pushState({}, "" + iterChild, iterChild + ".html");
+        }
       }
-    });
+    );
 
     // Wait for the session data to be flushed before continuing the test
     await new Promise(resolve =>

@@ -47,10 +47,8 @@ const {
   WEB_REMOTE_TYPE,
 } = E10SUtils;
 
-const {
-  REMOTE_WORKER_TYPE_SHARED,
-  REMOTE_WORKER_TYPE_SERVICE,
-} = Ci.nsIE10SUtils;
+const { REMOTE_WORKER_TYPE_SHARED, REMOTE_WORKER_TYPE_SERVICE } =
+  Ci.nsIE10SUtils;
 
 // Test ServiceWorker remoteType selection with multiprocess and/or site
 // isolation enabled.

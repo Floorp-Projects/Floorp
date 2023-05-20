@@ -38,9 +38,8 @@ export class PageStyleParent extends JSWindowActorParent {
     }
 
     // We always store information at the top of the frame tree.
-    let actor = this.browsingContext.top.currentWindowGlobal.getActor(
-      "PageStyle"
-    );
+    let actor =
+      this.browsingContext.top.currentWindowGlobal.getActor("PageStyle");
     switch (msg.name) {
       case "PageStyle:Add":
         actor.addSheetInfo(msg.data);

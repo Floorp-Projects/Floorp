@@ -47,7 +47,7 @@ const UNICODE_STRINGS = [
   "\u00BD + \u00BE == \u00BD\u00B2 + \u00BC + \u00BE",
 
   "AZaz09 \u007F " + // U+000000 to U+00007F
-  "\u0080 \u0398 \u03BB \u0725 " + // U+000080 to U+0007FF
+    "\u0080 \u0398 \u03BB \u0725 " + // U+000080 to U+0007FF
     "\u0964 \u0F5F \u20AC \uFFFB", // U+000800 to U+00FFFF
 
   // there would be strings containing non-BMP code points here, but

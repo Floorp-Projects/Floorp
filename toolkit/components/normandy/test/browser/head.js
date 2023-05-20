@@ -117,9 +117,8 @@ this.withInstalledWebExtension = function (
       withWebExtension(manifestOverrides, { as }),
       async function wrappedTestFunction(args) {
         const { addonId, addonFile } = args[as];
-        const startupPromise = AddonTestUtils.promiseWebExtensionStartup(
-          addonId
-        );
+        const startupPromise =
+          AddonTestUtils.promiseWebExtensionStartup(addonId);
         const addonInstall = await AddonManager.getInstallForFile(
           addonFile,
           "application/x-xpinstall"
@@ -455,8 +454,9 @@ FIXTURE_ADDONS.forEach(addon => {
   const dir = getChromeDir(getResolvedURI(gTestPath));
   dir.append("addons");
   dir.append(filename);
-  const xpiFile = Services.io.newFileURI(dir).QueryInterface(Ci.nsIFileURL)
-    .file;
+  const xpiFile = Services.io
+    .newFileURI(dir)
+    .QueryInterface(Ci.nsIFileURL).file;
 
   FIXTURE_ADDON_DETAILS[addon] = {
     url: `${FIXTURE_ADDON_BASE_URL}${filename}`,

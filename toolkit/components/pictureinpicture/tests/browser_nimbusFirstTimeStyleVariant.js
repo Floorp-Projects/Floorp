@@ -38,9 +38,8 @@ add_task(async function test_experiment_control_toggle_style() {
           let video = content.document.getElementById("with-controls");
           let shadowRoot = video.openOrClosedShadowRoot;
 
-          let controlsContainer = shadowRoot.querySelector(
-            ".controlsContainer"
-          );
+          let controlsContainer =
+            shadowRoot.querySelector(".controlsContainer");
           let pipWrapper = shadowRoot.querySelector(".pip-wrapper");
           let pipExplainer = shadowRoot.querySelector(".pip-explainer");
 
@@ -99,9 +98,8 @@ add_task(async function test_experiment_toggle_style() {
           let video = content.document.getElementById("with-controls");
           let shadowRoot = video.openOrClosedShadowRoot;
 
-          let controlsContainer = shadowRoot.querySelector(
-            ".controlsContainer"
-          );
+          let controlsContainer =
+            shadowRoot.querySelector(".controlsContainer");
           let pipWrapper = shadowRoot.querySelector(".pip-wrapper");
           let pipExplainer = shadowRoot.querySelector(".pip-explainer");
 

@@ -94,9 +94,8 @@ add_task(async function test_plainQuery() {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -162,9 +161,8 @@ add_task(async function test_oneOff_enter() {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -310,9 +308,8 @@ async function checkSuggestionClick(clickOptions, waitForActionFn) {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_SEARCHBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   let previousEngine = await Services.search.getDefault();
   await Services.search.setDefault(

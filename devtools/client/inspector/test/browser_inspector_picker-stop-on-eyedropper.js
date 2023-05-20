@@ -13,8 +13,8 @@ const TEST_URI =
 add_task(async function () {
   const { toolbox } = await openInspectorForURL(TEST_URI);
   const pickerStopped = toolbox.nodePicker.once("picker-stopped");
-  const eyeDropperButtonClasses = toolbox.getPanel("inspector").eyeDropperButton
-    .classList;
+  const eyeDropperButtonClasses =
+    toolbox.getPanel("inspector").eyeDropperButton.classList;
 
   const eyeDropperStopped = waitFor(
     () => !eyeDropperButtonClasses.contains("checked")

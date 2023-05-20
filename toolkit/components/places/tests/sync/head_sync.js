@@ -84,12 +84,12 @@ function run_test() {
 // A test helper to insert local roots directly into Places, since the public
 // bookmarks APIs no longer support custom roots.
 async function insertLocalRoot({ guid, title }) {
-  await PlacesUtils.withConnectionWrapper("insertLocalRoot", async function (
-    db
-  ) {
-    let dateAdded = PlacesUtils.toPRTime(new Date());
-    await db.execute(
-      `
+  await PlacesUtils.withConnectionWrapper(
+    "insertLocalRoot",
+    async function (db) {
+      let dateAdded = PlacesUtils.toPRTime(new Date());
+      await db.execute(
+        `
         INSERT INTO moz_bookmarks(guid, type, parent, position, title,
                                   dateAdded, lastModified)
         VALUES(:guid, :type, (SELECT id FROM moz_bookmarks
@@ -98,15 +98,16 @@ async function insertLocalRoot({ guid, title }) {
                 WHERE parent = (SELECT id FROM moz_bookmarks
                                 WHERE guid = :parentGuid)),
                :title, :dateAdded, :dateAdded)`,
-      {
-        guid,
-        type: PlacesUtils.bookmarks.TYPE_FOLDER,
-        parentGuid: PlacesUtils.bookmarks.rootGuid,
-        title,
-        dateAdded,
-      }
-    );
-  });
+        {
+          guid,
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          parentGuid: PlacesUtils.bookmarks.rootGuid,
+          title,
+          dateAdded,
+        }
+      );
+    }
+  );
 }
 
 // Returns a `CryptoWrapper`-like object that wraps the Sync record cleartext.

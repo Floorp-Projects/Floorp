@@ -107,13 +107,14 @@ async function runTest(count, urls, permissions, delayedAllow) {
 
   if (delayedAllow) {
     await delayedAllow();
-    await SpecialPowers.spawn(tab.linkedBrowser, contexts, async function (
-      bc1,
-      bc2
-    ) {
-      bc1.window.postMessage("allow", "*");
-      bc2.window.postMessage("allow", "*");
-    });
+    await SpecialPowers.spawn(
+      tab.linkedBrowser,
+      contexts,
+      async function (bc1, bc2) {
+        bc1.window.postMessage("allow", "*");
+        bc2.window.postMessage("allow", "*");
+      }
+    );
   }
 
   await TestUtils.waitForCondition(

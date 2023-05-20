@@ -106,8 +106,8 @@ export class DialogHandler {
   }
 
   _onCommonDialogLoaded(dialogWindow) {
-    const dialogs = this._browser.tabDialogBox.getContentDialogManager()
-      .dialogs;
+    const dialogs =
+      this._browser.tabDialogBox.getContentDialogManager().dialogs;
     const dialog = dialogs.find(d => d.frameContentWindow === dialogWindow);
 
     if (!dialog) {

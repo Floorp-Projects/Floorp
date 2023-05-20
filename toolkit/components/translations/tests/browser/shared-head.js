@@ -295,9 +295,10 @@ async function setupActorTest({
   });
 
   /** @type {import("../../actors/TranslationsParent.sys.mjs").TranslationsParent} */
-  const actor = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
-    "Translations"
-  );
+  const actor =
+    gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+      "Translations"
+    );
 
   return {
     actor,

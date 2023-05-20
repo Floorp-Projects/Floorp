@@ -15,8 +15,8 @@ define(function (require, exports, module) {
     wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
 
-  const String = require("devtools/client/shared/components/reps/reps/string")
-    .rep;
+  const String =
+    require("devtools/client/shared/components/reps/reps/string").rep;
 
   /**
    * Renders a grip object with textual data.

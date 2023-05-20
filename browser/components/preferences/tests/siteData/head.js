@@ -78,9 +78,8 @@ function promiseLoadSubDialog(aURL) {
         is_element_visible(aEvent.detail.dialog._overlay, "Overlay is visible");
 
         // Check that stylesheets were injected
-        let expectedStyleSheetURLs = aEvent.detail.dialog._injectedStyleSheets.slice(
-          0
-        );
+        let expectedStyleSheetURLs =
+          aEvent.detail.dialog._injectedStyleSheets.slice(0);
         for (let styleSheet of aEvent.detail.dialog._frame.contentDocument
           .styleSheets) {
           let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
@@ -221,9 +220,10 @@ async function addTestData(data) {
       });
     }
 
-    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      site.origin
-    );
+    let principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        site.origin
+      );
 
     hosts.add(principal.baseDomain || principal.host);
   }
@@ -266,9 +266,8 @@ function promiseServiceWorkersCleared() {
 function promiseServiceWorkerRegisteredFor(url) {
   return TestUtils.waitForCondition(() => {
     try {
-      let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-        url
-      );
+      let principal =
+        Services.scriptSecurityManager.createContentPrincipalFromOrigin(url);
       let sw = serviceWorkerManager.getRegistrationByPrincipal(
         principal,
         principal.spec

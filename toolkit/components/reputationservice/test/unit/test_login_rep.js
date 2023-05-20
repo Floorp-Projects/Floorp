@@ -57,41 +57,41 @@ add_test(function test_setup_local_whitelist() {
   // to SafeBrowsing database while update.
   gHttpServ = new HttpServer();
   gHttpServ.registerDirectory("/", do_get_cwd());
-  gHttpServ.registerPathHandler("/safebrowsing/update", function (
-    request,
-    response
-  ) {
-    response.setHeader(
-      "Content-Type",
-      "application/vnd.google.safebrowsing-update",
-      false
-    );
+  gHttpServ.registerPathHandler(
+    "/safebrowsing/update",
+    function (request, response) {
+      response.setHeader(
+        "Content-Type",
+        "application/vnd.google.safebrowsing-update",
+        false
+      );
 
-    response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setStatusLine(request.httpVersion, 200, "OK");
 
-    // The protobuf binary represention of response:
-    //
-    // [
-    //   {
-    //     'threat_type': 8, // CSD_WHITELIST
-    //     'response_type': 2, // FULL_UPDATE
-    //     'new_client_state': 'sta\x00te', // NEW_CLIENT_STATE
-    //     'checksum': { "sha256": CHECKSUM }, // CHECKSUM
-    //     'additions': { 'compression_type': RAW,
-    //                    'prefix_size': 32,
-    //                    'raw_hashes': "whitelisted.com/index.htm"}
-    //   }
-    // ]
-    //
-    let content =
-      "\x0A\x36\x08\x08\x20\x02\x2A\x28\x08\x01\x12\x24\x08" +
-      "\x20\x12\x20\x0F\xE4\x66\xBB\xDD\x34\xAB\x1E\xF7\x8F" +
-      "\xDD\x9D\x8C\xF8\x9F\x4E\x42\x97\x92\x86\x02\x03\xE0" +
-      "\xE9\x60\xBD\xD6\x3A\x85\xCD\x08\xD0\x3A\x06\x73\x74" +
-      "\x61\x00\x74\x65\x12\x04\x08\x0C\x10\x0A";
+      // The protobuf binary represention of response:
+      //
+      // [
+      //   {
+      //     'threat_type': 8, // CSD_WHITELIST
+      //     'response_type': 2, // FULL_UPDATE
+      //     'new_client_state': 'sta\x00te', // NEW_CLIENT_STATE
+      //     'checksum': { "sha256": CHECKSUM }, // CHECKSUM
+      //     'additions': { 'compression_type': RAW,
+      //                    'prefix_size': 32,
+      //                    'raw_hashes': "whitelisted.com/index.htm"}
+      //   }
+      // ]
+      //
+      let content =
+        "\x0A\x36\x08\x08\x20\x02\x2A\x28\x08\x01\x12\x24\x08" +
+        "\x20\x12\x20\x0F\xE4\x66\xBB\xDD\x34\xAB\x1E\xF7\x8F" +
+        "\xDD\x9D\x8C\xF8\x9F\x4E\x42\x97\x92\x86\x02\x03\xE0" +
+        "\xE9\x60\xBD\xD6\x3A\x85\xCD\x08\xD0\x3A\x06\x73\x74" +
+        "\x61\x00\x74\x65\x12\x04\x08\x0C\x10\x0A";
 
-    response.bodyOutputStream.write(content, content.length);
-  });
+      response.bodyOutputStream.write(content, content.length);
+    }
+  );
 
   gHttpServ.start(5555);
 

@@ -32,9 +32,8 @@ export class FormAutofillSection {
     this.filledRecordGUID = null;
 
     XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
-      const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
-        "brandShortName"
-      );
+      const brandShortName =
+        FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
       // The string name for Mac is changed because the value needed updating.
       const platform = AppConstants.platform.replace("macosx", "macos");
       return FormAutofillUtils.stringBundle.formatStringFromName(
@@ -725,9 +724,8 @@ export class FormAutofillAddressSection extends FormAutofillSection {
       this._cacheValue.oneLineStreetAddress = {};
     }
     if (!this._cacheValue.oneLineStreetAddress[address]) {
-      this._cacheValue.oneLineStreetAddress[
-        address
-      ] = FormAutofillUtils.toOneLineAddress(address);
+      this._cacheValue.oneLineStreetAddress[address] =
+        FormAutofillUtils.toOneLineAddress(address);
     }
     return this._cacheValue.oneLineStreetAddress[address];
   }
@@ -1100,8 +1098,8 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
 
       let yearFirstCheck = new RegExp(
         "(?:\\b|^)((?:[" +
-        yearChars +
-        "]{2}){1,2})\\s*([\\-/])\\s*((?:[" + // either one or two counts of 'yy' or 'aa' sequence
+          yearChars +
+          "]{2}){1,2})\\s*([\\-/])\\s*((?:[" + // either one or two counts of 'yy' or 'aa' sequence
           monthChars +
           "]){1,2})(?:\\b|$)",
         "i" // either one or two counts of a 'm' sequence

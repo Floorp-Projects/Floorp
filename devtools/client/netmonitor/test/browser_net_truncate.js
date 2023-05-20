@@ -33,8 +33,9 @@ add_task(async function () {
 
   const type = item.querySelector(".requests-list-type").textContent;
   const fullMimeType = item.querySelector(".requests-list-type").title;
-  const transferred = item.querySelector(".requests-list-transferred")
-    .textContent;
+  const transferred = item.querySelector(
+    ".requests-list-transferred"
+  ).textContent;
   const size = item.querySelector(".requests-list-size").textContent;
 
   is(type, "plain", "Type should be rendered correctly.");

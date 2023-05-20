@@ -347,37 +347,36 @@ TaggingService.prototype = {
    *          A URI (string) that may or may not be bookmarked
    * @returns an array of item ids
    */
-  _getTaggedItemIdsIfUnbookmarkedURI: function TS__getTaggedItemIdsIfUnbookmarkedURI(
-    url
-  ) {
-    var itemIds = [];
-    var isBookmarked = false;
+  _getTaggedItemIdsIfUnbookmarkedURI:
+    function TS__getTaggedItemIdsIfUnbookmarkedURI(url) {
+      var itemIds = [];
+      var isBookmarked = false;
 
-    // Using bookmarks service API for this would be a pain.
-    // Until tags implementation becomes sane, go the query way.
-    let db = PlacesUtils.history.DBConnection;
-    let stmt = db.createStatement(
-      `SELECT id, parent
+      // Using bookmarks service API for this would be a pain.
+      // Until tags implementation becomes sane, go the query way.
+      let db = PlacesUtils.history.DBConnection;
+      let stmt = db.createStatement(
+        `SELECT id, parent
        FROM moz_bookmarks
        WHERE fk = (SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url)`
-    );
-    stmt.params.page_url = url;
-    try {
-      while (stmt.executeStep() && !isBookmarked) {
-        if (this._tagFolders[stmt.row.parent]) {
-          // This is a tag entry.
-          itemIds.push(stmt.row.id);
-        } else {
-          // This is a real bookmark, so the bookmarked URI is not an orphan.
-          isBookmarked = true;
+      );
+      stmt.params.page_url = url;
+      try {
+        while (stmt.executeStep() && !isBookmarked) {
+          if (this._tagFolders[stmt.row.parent]) {
+            // This is a tag entry.
+            itemIds.push(stmt.row.id);
+          } else {
+            // This is a real bookmark, so the bookmarked URI is not an orphan.
+            isBookmarked = true;
+          }
         }
+      } finally {
+        stmt.finalize();
       }
-    } finally {
-      stmt.finalize();
-    }
 
-    return isBookmarked ? [] : itemIds;
-  },
+      return isBookmarked ? [] : itemIds;
+    },
 
   handlePlacesEvents(events) {
     for (let event of events) {

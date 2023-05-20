@@ -69,9 +69,8 @@ add_task(async function test_login_item() {
 
     Assert.ok(!dialog.hidden, "Confirm dialog should be visible");
 
-    let confirmDiscardButton = dialog.shadowRoot.querySelector(
-      ".confirm-button"
-    );
+    let confirmDiscardButton =
+      dialog.shadowRoot.querySelector(".confirm-button");
     await content.document.l10n.translateElements([
       dialog.shadowRoot.querySelector(".title"),
       dialog.shadowRoot.querySelector(".message"),
@@ -396,9 +395,8 @@ add_task(async function test_login_item() {
       let confirmDeleteDialog = Cu.waiveXrays(
         content.document.querySelector("confirmation-dialog")
       );
-      let confirmDeleteButton = confirmDeleteDialog.shadowRoot.querySelector(
-        ".confirm-button"
-      );
+      let confirmDeleteButton =
+        confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
       confirmDeleteButton.click();
 
       let loginList = Cu.waiveXrays(

@@ -457,9 +457,8 @@ add_task(async function test_attention_dot_when_pinning_extension() {
   const extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
     extension.id
   );
-  const extensionWidget = CustomizableUI.getWidget(extensionWidgetID).forWindow(
-    window
-  ).node;
+  const extensionWidget =
+    CustomizableUI.getWidget(extensionWidgetID).forWindow(window).node;
 
   await BrowserTestUtils.withNewTab("http://mochi.test:8888/", async () => {
     // The extensions should be placed in the navbar by default so we do not

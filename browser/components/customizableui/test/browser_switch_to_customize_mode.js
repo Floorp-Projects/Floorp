@@ -4,8 +4,9 @@ add_task(async function () {
   await startCustomizing();
   is(gBrowser.tabs.length, 2, "Should have 2 tabs");
 
-  let paletteKidCount = document.getElementById("customization-palette")
-    .childElementCount;
+  let paletteKidCount = document.getElementById(
+    "customization-palette"
+  ).childElementCount;
   let nonCustomizingTab = gBrowser.tabContainer.querySelector(
     "tab:not([customizemode=true])"
   );
@@ -29,8 +30,9 @@ add_task(async function () {
     );
   });
 
-  let newKidCount = document.getElementById("customization-palette")
-    .childElementCount;
+  let newKidCount = document.getElementById(
+    "customization-palette"
+  ).childElementCount;
   is(
     newKidCount,
     paletteKidCount,

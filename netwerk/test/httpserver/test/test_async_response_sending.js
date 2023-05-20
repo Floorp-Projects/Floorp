@@ -1216,28 +1216,26 @@ CopyTest.prototype = {
    * @param dataQuantums : [[uint]]
    *   array of byte arrays to expect to be written in sequence to the sink
    */
-  makeSinkWritableByIncrementsAndWaitFor: function makeSinkWritableByIncrementsAndWaitFor(
-    bytes,
-    dataQuantums
-  ) {
-    var self = this;
+  makeSinkWritableByIncrementsAndWaitFor:
+    function makeSinkWritableByIncrementsAndWaitFor(bytes, dataQuantums) {
+      var self = this;
 
-    var desiredAmounts = dataQuantums.map(function (v) {
-      return v.length;
-    });
-    Assert.equal(bytes, sum(desiredAmounts), "bytes/quantums mismatch");
+      var desiredAmounts = dataQuantums.map(function (v) {
+        return v.length;
+      });
+      Assert.equal(bytes, sum(desiredAmounts), "bytes/quantums mismatch");
 
-    function increaseSinkSpaceByIncrementsTask() {
-      /* Now do the actual work to trigger the interceptor incrementally. */
-      self._sink.makeWritableByIncrements(desiredAmounts);
-    }
+      function increaseSinkSpaceByIncrementsTask() {
+        /* Now do the actual work to trigger the interceptor incrementally. */
+        self._sink.makeWritableByIncrements(desiredAmounts);
+      }
 
-    this._waitForHelper(
-      "increaseSinkSpaceByIncrementsTask",
-      dataQuantums,
-      increaseSinkSpaceByIncrementsTask
-    );
-  },
+      this._waitForHelper(
+        "increaseSinkSpaceByIncrementsTask",
+        dataQuantums,
+        increaseSinkSpaceByIncrementsTask
+      );
+    },
 
   /**
    * Close the copier's source stream, then asynchronously continue to the next

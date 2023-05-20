@@ -93,8 +93,7 @@ const TEST_DATA = [
     column: 1,
     expected: {
       offset: 30,
-      text:
-        "\n    margin: 0;\n    padding: 15px 15px 2px 15px;\n    color: red;\n",
+      text: "\n    margin: 0;\n    padding: 15px 15px 2px 15px;\n    color: red;\n",
     },
   },
   {

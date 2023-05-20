@@ -62,12 +62,14 @@ add_task(async function () {
       let winPromise = waitForNewViewSourceWindow(
         "view-source:data:text/html;charset=utf-8,%3Cp%3E%EF%B7%90test%EF%B7%AF%3C%2Fp%3E"
       );
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function (
-        arg
-      ) {
-        let element = content.document.querySelector("p");
-        content.getSelection().selectAllChildren(element);
-      });
+      await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [],
+        async function (arg) {
+          let element = content.document.querySelector("p");
+          content.getSelection().selectAllChildren(element);
+        }
+      );
 
       let contentAreaContextMenuPopup = document.getElementById(
         "contentAreaContextMenu"

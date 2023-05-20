@@ -49,9 +49,8 @@ const TAB_PICKUP_OPEN_STATE_PREF =
   "browser.tabs.firefox-view.ui-state.tab-pickup.open";
 
 function openTabInWindow(window, url) {
-  const {
-    switchToTabHavingURI,
-  } = window.docShell.chromeEventHandler.ownerGlobal;
+  const { switchToTabHavingURI } =
+    window.docShell.chromeEventHandler.ownerGlobal;
   switchToTabHavingURI(url, true, {});
 }
 
@@ -611,9 +610,10 @@ export const TabsSetupFlowManager = new (class {
     if (!(await lazy.fxAccounts.constructor.canConnectAccount())) {
       return;
     }
-    const url = await lazy.fxAccounts.constructor.config.promiseConnectAccountURI(
-      "fx-view"
-    );
+    const url =
+      await lazy.fxAccounts.constructor.config.promiseConnectAccountURI(
+        "fx-view"
+      );
     this.didFxaTabOpen = true;
     openTabInWindow(window, url, true);
     Services.telemetry.recordEvent("firefoxview", "fxa_continue", "sync", null);

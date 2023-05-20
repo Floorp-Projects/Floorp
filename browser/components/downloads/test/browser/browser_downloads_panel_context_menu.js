@@ -66,8 +66,7 @@ const TestCasesDefaultMimetypes = [
     },
   },
   {
-    name:
-      "Completed PDF download with improvements pref disabled and referrer info missing",
+    name: "Completed PDF download with improvements pref disabled and referrer info missing",
     prefEnabled: false,
     downloads: [
       {
@@ -219,8 +218,7 @@ const TestCasesNewMimetypesPrefEnabled = [
     },
   },
   {
-    name:
-      "Completed unknown ext download with application/octet-stream and improvements pref enabled",
+    name: "Completed unknown ext download with application/octet-stream and improvements pref enabled",
     prefEnabled: true,
     overrideExtension: "unknownExtension",
     downloads: [
@@ -247,8 +245,7 @@ const TestCasesNewMimetypesPrefEnabled = [
     },
   },
   {
-    name:
-      "Completed txt download with application/octet-stream and improvements pref enabled",
+    name: "Completed txt download with application/octet-stream and improvements pref enabled",
     prefEnabled: true,
     overrideExtension: "txt",
     downloads: [

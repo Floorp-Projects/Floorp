@@ -71,8 +71,8 @@ class KeyframesProgressBar extends PureComponent {
     }
 
     this.simulatedAnimation.currentTime = time;
-    const position = this.simulatedAnimation.effect.getComputedTiming()
-      .progress;
+    const position =
+      this.simulatedAnimation.effect.getComputedTiming().progress;
 
     // onCurrentTimeUpdated is bound to requestAnimationFrame.
     // As to update the component too frequently has performance issue if React controlled,

@@ -117,9 +117,8 @@ add_task(async function test_no_handler() {
     },
   });
 
-  let handlerInfo = gExternalProtocolService.getProtocolHandlerInfo(
-    "no_handler"
-  );
+  let handlerInfo =
+    gExternalProtocolService.getProtocolHandlerInfo("no_handler");
   is(handlerInfo.preferredAction, handlerInfo.alwaysAsk);
   is(handlerInfo.alwaysAskBeforeHandling, true);
   is(handlerInfo.preferredApplicationHandler, null);
@@ -146,9 +145,8 @@ add_task(async function test_bad_web_handler1() {
     },
   });
 
-  let handlerInfo = gExternalProtocolService.getProtocolHandlerInfo(
-    "bad_web_handler1"
-  );
+  let handlerInfo =
+    gExternalProtocolService.getProtocolHandlerInfo("bad_web_handler1");
   is(handlerInfo.preferredAction, handlerInfo.alwaysAsk);
   is(handlerInfo.alwaysAskBeforeHandling, true);
   is(handlerInfo.preferredApplicationHandler, null);
@@ -175,9 +173,8 @@ add_task(async function test_bad_web_handler2() {
     },
   });
 
-  let handlerInfo = gExternalProtocolService.getProtocolHandlerInfo(
-    "bad_web_handler1"
-  );
+  let handlerInfo =
+    gExternalProtocolService.getProtocolHandlerInfo("bad_web_handler1");
   is(handlerInfo.preferredAction, handlerInfo.alwaysAsk);
   is(handlerInfo.alwaysAskBeforeHandling, true);
   is(handlerInfo.preferredApplicationHandler, null);

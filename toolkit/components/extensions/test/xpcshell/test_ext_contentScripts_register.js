@@ -328,8 +328,7 @@ add_task(async function test_contentscripts_register_js() {
         matches: ["http://*/*"],
         js: [
           {
-            code:
-              'browser.test.fail("content script with wrong matches should not run")',
+            code: 'browser.test.fail("content script with wrong matches should not run")',
           },
         ],
       }),

@@ -37,19 +37,21 @@ add_task(async function test() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let blob = await SpecialPowers.spawn(browser, [file.leafName], function (
-    fileName
-  ) {
-    return new content.window.Promise(resolve => {
-      let xhr = new content.window.XMLHttpRequest();
-      xhr.responseType = "blob";
-      xhr.open("GET", fileName);
-      xhr.send();
-      xhr.onload = function () {
-        resolve(xhr.response);
-      };
-    });
-  });
+  let blob = await SpecialPowers.spawn(
+    browser,
+    [file.leafName],
+    function (fileName) {
+      return new content.window.Promise(resolve => {
+        let xhr = new content.window.XMLHttpRequest();
+        xhr.responseType = "blob";
+        xhr.open("GET", fileName);
+        xhr.send();
+        xhr.onload = function () {
+          resolve(xhr.response);
+        };
+      });
+    }
+  );
 
   ok(File.isInstance(blob), "We have a file");
 

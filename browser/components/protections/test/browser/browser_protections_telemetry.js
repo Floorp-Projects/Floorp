@@ -576,14 +576,12 @@ add_task(async function checkTelemetryClickEvents() {
   is(events.length, 1, `recorded telemetry for monitor known breaches block`);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-    const monitorExposedPasswordsBlock = await ContentTaskUtils.waitForCondition(
-      () => {
+    const monitorExposedPasswordsBlock =
+      await ContentTaskUtils.waitForCondition(() => {
         return content.document.getElementById(
           "monitor-exposed-passwords-link"
         );
-      },
-      "Monitor card exposed passwords block exists"
-    );
+      }, "Monitor card exposed passwords block exists");
 
     monitorExposedPasswordsBlock.click();
   });
@@ -736,14 +734,12 @@ add_task(async function checkTelemetryClickEvents() {
   is(events.length, 1, `recorded telemetry for monitor known breaches block`);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-    const monitorExposedPasswordsBlock = await ContentTaskUtils.waitForCondition(
-      () => {
+    const monitorExposedPasswordsBlock =
+      await ContentTaskUtils.waitForCondition(() => {
         return content.document.getElementById(
           "monitor-exposed-passwords-link"
         );
-      },
-      "Monitor card exposed passwords block exists"
-    );
+      }, "Monitor card exposed passwords block exists");
 
     monitorExposedPasswordsBlock.click();
   });
@@ -774,8 +770,10 @@ add_task(async function test_save_telemetry() {
 
   await TrackingDBService.saveEvents(JSON.stringify(LOG));
 
-  const scalars = Services.telemetry.getSnapshotForScalars("main", false)
-    .parent;
+  const scalars = Services.telemetry.getSnapshotForScalars(
+    "main",
+    false
+  ).parent;
   is(scalars["contentblocking.trackers_blocked_count"], 6);
 
   // Use the TrackingDBService API to delete the data.

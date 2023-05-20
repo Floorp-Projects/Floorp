@@ -49,7 +49,8 @@ export let OsEnvironment = {
 
     let haveAppSourcesFeature;
     try {
-      haveAppSourcesFeature = OsEnvironment.Policy.windowsVersionHasAppSourcesFeature();
+      haveAppSourcesFeature =
+        OsEnvironment.Policy.windowsVersionHasAppSourcesFeature();
     } catch (ex) {
       console.error(ex);
       Services.telemetry.scalarSet(appSourceScalar, "Error");

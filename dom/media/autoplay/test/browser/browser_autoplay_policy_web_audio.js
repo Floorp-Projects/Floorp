@@ -210,8 +210,7 @@ add_task(async function start_tests() {
   ];
   for (let method of startMethods) {
     await testAutoplayUnknownPermission({
-      name:
-        "Unknown permission and start AudioContext after granting user activation",
+      name: "Unknown permission and start AudioContext after granting user activation",
       method,
     });
   }

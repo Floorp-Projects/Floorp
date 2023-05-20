@@ -164,9 +164,8 @@ add_task(async function test_telemetry_events() {
     let confirmDeleteDialog = content.document.querySelector(
       "confirmation-dialog"
     );
-    let confirmDeleteButton = confirmDeleteDialog.shadowRoot.querySelector(
-      ".confirm-button"
-    );
+    let confirmDeleteButton =
+      confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
     confirmDeleteButton.click();
   });
   await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
@@ -211,9 +210,8 @@ add_task(async function test_telemetry_events() {
     let confirmDeleteDialog = content.document.querySelector(
       "confirmation-dialog"
     );
-    let confirmDeleteButton = confirmDeleteDialog.shadowRoot.querySelector(
-      ".confirm-button"
-    );
+    let confirmDeleteButton =
+      confirmDeleteDialog.shadowRoot.querySelector(".confirm-button");
     confirmDeleteButton.click();
   });
   await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);

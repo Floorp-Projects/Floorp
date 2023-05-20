@@ -42,7 +42,7 @@ function mockClient(positionsResponse = {}) {
 
 describe("breakpoints", () => {
   it("should add a breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "2": [1] }));
+    const { dispatch, getState, cx } = createStore(mockClient({ 2: [1] }));
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     const loc1 = createLocation({
       source,
@@ -73,7 +73,7 @@ describe("breakpoints", () => {
   });
 
   it("should not show a breakpoint that does not have text", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     const loc1 = createLocation({
       source,
@@ -101,7 +101,7 @@ describe("breakpoints", () => {
   });
 
   it("should show a disabled breakpoint that does not have text", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     const loc1 = createLocation({
       source,
@@ -135,7 +135,7 @@ describe("breakpoints", () => {
   });
 
   it("should not re-add a breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     const loc1 = createLocation({
       source,
@@ -165,7 +165,7 @@ describe("breakpoints", () => {
 
   it("should remove a breakpoint", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockClient({ "5": [1], "6": [2] })
+      mockClient({ 5: [1], 6: [2] })
     );
 
     const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
@@ -222,7 +222,7 @@ describe("breakpoints", () => {
 
   it("should disable a breakpoint", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockClient({ "5": [1], "6": [2] })
+      mockClient({ 5: [1], 6: [2] })
     );
 
     const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
@@ -278,7 +278,7 @@ describe("breakpoints", () => {
 
   it("should enable breakpoint", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockClient({ "5": [1], "6": [2] })
+      mockClient({ 5: [1], 6: [2] })
     );
 
     const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
@@ -322,7 +322,7 @@ describe("breakpoints", () => {
 
   it("should toggle all the breakpoints", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockClient({ "5": [1], "6": [2] })
+      mockClient({ 5: [1], 6: [2] })
     );
 
     const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
@@ -392,7 +392,7 @@ describe("breakpoints", () => {
 
     asyncStore.pendingBreakpoints = pendingBreakpoints;
 
-    const store = createStore(mockClient({ "5": [1], "6": [2] }), {
+    const store = createStore(mockClient({ 5: [1], 6: [2] }), {
       pendingBreakpoints,
     });
 
@@ -473,7 +473,7 @@ describe("breakpoints", () => {
   });
 
   it("should toggle a breakpoint at a location", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
 
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foo1"))
@@ -491,7 +491,7 @@ describe("breakpoints", () => {
   });
 
   it("should disable/enable a breakpoint at a location", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
 
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("foo1"))
@@ -515,7 +515,7 @@ describe("breakpoints", () => {
   });
 
   it("should set the breakpoint condition", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
 
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     const loc = createLocation({
@@ -547,7 +547,7 @@ describe("breakpoints", () => {
   });
 
   it("should set the condition and enable a breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
+    const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
 
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     const loc = createLocation({
@@ -587,7 +587,7 @@ describe("breakpoints", () => {
   });
 
   it("should remove the pretty-printed breakpoint that was added", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "1": [0] }));
+    const { dispatch, getState, cx } = createStore(mockClient({ 1: [0] }));
 
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("a.js"))

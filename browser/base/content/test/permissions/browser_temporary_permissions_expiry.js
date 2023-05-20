@@ -34,9 +34,8 @@ add_task(async function testTempPermissionRequestAfterExpiry() {
     ],
   });
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    ORIGIN
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(ORIGIN);
   let ids = ["geo", "camera"];
 
   if (kVREnabled) {
@@ -44,71 +43,72 @@ add_task(async function testTempPermissionRequestAfterExpiry() {
   }
 
   for (let id of ids) {
-    await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function (
-      browser
-    ) {
-      let blockedIcon = gPermissionPanel._identityPermissionBox.querySelector(
-        `.blocked-permission-icon[data-permission-id='${id}']`
-      );
+    await BrowserTestUtils.withNewTab(
+      PERMISSIONS_PAGE,
+      async function (browser) {
+        let blockedIcon = gPermissionPanel._identityPermissionBox.querySelector(
+          `.blocked-permission-icon[data-permission-id='${id}']`
+        );
 
-      SitePermissions.setForPrincipal(
-        principal,
-        id,
-        SitePermissions.BLOCK,
-        SitePermissions.SCOPE_TEMPORARY,
-        browser
-      );
+        SitePermissions.setForPrincipal(
+          principal,
+          id,
+          SitePermissions.BLOCK,
+          SitePermissions.SCOPE_TEMPORARY,
+          browser
+        );
 
-      Assert.deepEqual(
-        SitePermissions.getForPrincipal(principal, id, browser),
-        {
-          state: SitePermissions.BLOCK,
-          scope: SitePermissions.SCOPE_TEMPORARY,
-        }
-      );
+        Assert.deepEqual(
+          SitePermissions.getForPrincipal(principal, id, browser),
+          {
+            state: SitePermissions.BLOCK,
+            scope: SitePermissions.SCOPE_TEMPORARY,
+          }
+        );
 
-      ok(
-        blockedIcon.hasAttribute("showing"),
-        "blocked permission icon is shown"
-      );
+        ok(
+          blockedIcon.hasAttribute("showing"),
+          "blocked permission icon is shown"
+        );
 
-      await new Promise(c => setTimeout(c, TIMEOUT_MS));
+        await new Promise(c => setTimeout(c, TIMEOUT_MS));
 
-      Assert.deepEqual(
-        SitePermissions.getForPrincipal(principal, id, browser),
-        {
-          state: SitePermissions.UNKNOWN,
-          scope: SitePermissions.SCOPE_PERSISTENT,
-        }
-      );
+        Assert.deepEqual(
+          SitePermissions.getForPrincipal(principal, id, browser),
+          {
+            state: SitePermissions.UNKNOWN,
+            scope: SitePermissions.SCOPE_PERSISTENT,
+          }
+        );
 
-      let popupshown = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popupshown"
-      );
+        let popupshown = BrowserTestUtils.waitForEvent(
+          PopupNotifications.panel,
+          "popupshown"
+        );
 
-      // Request a permission;
-      await BrowserTestUtils.synthesizeMouseAtCenter(`#${id}`, {}, browser);
+        // Request a permission;
+        await BrowserTestUtils.synthesizeMouseAtCenter(`#${id}`, {}, browser);
 
-      await popupshown;
+        await popupshown;
 
-      ok(
-        !blockedIcon.hasAttribute("showing"),
-        "blocked permission icon is not shown"
-      );
+        ok(
+          !blockedIcon.hasAttribute("showing"),
+          "blocked permission icon is not shown"
+        );
 
-      let popuphidden = BrowserTestUtils.waitForEvent(
-        PopupNotifications.panel,
-        "popuphidden"
-      );
+        let popuphidden = BrowserTestUtils.waitForEvent(
+          PopupNotifications.panel,
+          "popuphidden"
+        );
 
-      let notification = PopupNotifications.panel.firstElementChild;
-      EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
+        let notification = PopupNotifications.panel.firstElementChild;
+        EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
 
-      await popuphidden;
+        await popuphidden;
 
-      SitePermissions.removeFromPrincipal(principal, id, browser);
-    });
+        SitePermissions.removeFromPrincipal(principal, id, browser);
+      }
+    );
   }
 });
 
@@ -122,9 +122,8 @@ async function testIdentityPermissionGrantedState(state) {
     state ? "shows" : "does not show"
   } granted permissions.`;
   await TestUtils.waitForCondition(() => {
-    hasAttribute = gPermissionPanel._identityPermissionBox.hasAttribute(
-      "hasPermissions"
-    );
+    hasAttribute =
+      gPermissionPanel._identityPermissionBox.hasAttribute("hasPermissions");
     return hasAttribute == state;
   }, msg);
   is(hasAttribute, state, msg);

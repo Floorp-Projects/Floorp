@@ -37,10 +37,8 @@ add_task(async function () {
   const { document: doc } = gridInspector;
   const { highlighters, store } = inspector;
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
-  const {
-    waitForHighlighterTypeRestored,
-    waitForHighlighterTypeDiscarded,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeRestored, waitForHighlighterTypeDiscarded } =
+    getHighlighterTestHelpers(inspector);
 
   await selectNode("#grid", inspector);
   const gridList = doc.getElementById("grid-list");

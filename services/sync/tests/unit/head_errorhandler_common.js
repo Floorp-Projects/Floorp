@@ -10,14 +10,8 @@
 // is used (from service.js).
 /* global Service */
 
-var {
-  Changeset,
-  EngineManager,
-  Store,
-  SyncEngine,
-  Tracker,
-  LegacyTracker,
-} = ChromeUtils.importESModule("resource://services-sync/engines.sys.mjs");
+var { Changeset, EngineManager, Store, SyncEngine, Tracker, LegacyTracker } =
+  ChromeUtils.importESModule("resource://services-sync/engines.sys.mjs");
 var {
   ABORT_SYNC_COMMAND,
   CLIENT_NOT_CONFIGURED,

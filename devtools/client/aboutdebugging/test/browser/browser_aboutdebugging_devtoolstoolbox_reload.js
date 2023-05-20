@@ -41,11 +41,8 @@ async function testReloadAboutDevToolsToolbox(toolId) {
   // We set the options panel to be the default one because slower panels might lead to
   // race conditions which create leaks in debug mode.
   await pushPref("devtools.toolbox.selectedTool", "options");
-  const {
-    devtoolsBrowser,
-    devtoolsTab,
-    devtoolsWindow,
-  } = await openAboutDevtoolsToolbox(document, tab, window);
+  const { devtoolsBrowser, devtoolsTab, devtoolsWindow } =
+    await openAboutDevtoolsToolbox(document, tab, window);
 
   info(`Select tool: ${toolId}`);
   const toolbox = getToolbox(devtoolsWindow);

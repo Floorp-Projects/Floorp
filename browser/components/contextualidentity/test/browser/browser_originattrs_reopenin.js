@@ -50,9 +50,9 @@ add_setup(async function () {
 function setupRemoteTypes() {
   remoteTypes = {
     regular: { "about:preferences": null, "about:config": null },
-    "1": { "about:preferences": null, "about:config": null },
-    "2": { "about:preferences": null, "about:config": null },
-    "3": { "about:preferences": null, "about:config": null },
+    1: { "about:preferences": null, "about:config": null },
+    2: { "about:preferences": null, "about:config": null },
+    3: { "about:preferences": null, "about:config": null },
   };
   if (gFissionBrowser) {
     remoteTypes.regular[URI_EXAMPLECOM] = "webIsolated=https://example.com";

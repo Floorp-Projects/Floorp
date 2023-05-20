@@ -84,9 +84,10 @@ class SitePermsAddonWrapper {
    */
   constructor(siteOriginNoSuffix, permissions = []) {
     this.siteOrigin = siteOriginNoSuffix;
-    this.principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      this.siteOrigin
-    );
+    this.principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        this.siteOrigin
+      );
     // Use a template string for the concat in case `siteOrigin` isn't a string.
     const saltedValue = `${this.siteOrigin}${getSalt()}`;
     this.id = `${computeSha256HashAsString(

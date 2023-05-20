@@ -75,12 +75,13 @@ async function persist(name, uri) {
 
     info("load done, loading persisted document");
     let fileUri = Services.io.newFileURI(tmpFile).spec;
-    let test = await BrowserTestUtils.withNewTab(fileUri, async function (
-      persistedBrowser
-    ) {
-      info("snapshotting persisted document");
-      return snapshotWindow(persistedBrowser);
-    });
+    let test = await BrowserTestUtils.withNewTab(
+      fileUri,
+      async function (persistedBrowser) {
+        info("snapshotting persisted document");
+        return snapshotWindow(persistedBrowser);
+      }
+    );
     return { test, reference };
   });
 }

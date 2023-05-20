@@ -85,9 +85,8 @@ test_runner(
       name: "PKT_show_signup",
     });
 
-    const {
-      onShowSignup,
-    } = aboutPocketParent.browsingContext.topChromeWindow.pktUI;
+    const { onShowSignup } =
+      aboutPocketParent.browsingContext.topChromeWindow.pktUI;
 
     Assert.ok(
       onShowSignup.calledOnce,
@@ -104,9 +103,8 @@ test_runner(
       name: "PKT_show_saved",
     });
 
-    const {
-      onShowSaved,
-    } = aboutPocketParent.browsingContext.topChromeWindow.pktUI;
+    const { onShowSaved } =
+      aboutPocketParent.browsingContext.topChromeWindow.pktUI;
 
     Assert.ok(
       onShowSaved.calledOnce,
@@ -122,9 +120,8 @@ test_runner(async function test_AboutPocketParent_receiveMessage_PKT_close({
     name: "PKT_close",
   });
 
-  const {
-    closePanel,
-  } = aboutPocketParent.browsingContext.topChromeWindow.pktUI;
+  const { closePanel } =
+    aboutPocketParent.browsingContext.topChromeWindow.pktUI;
 
   Assert.ok(
     closePanel.calledOnce,
@@ -141,9 +138,8 @@ test_runner(
       data: { foo: 1 },
     });
 
-    const {
-      onOpenTabWithUrl,
-    } = aboutPocketParent.browsingContext.topChromeWindow.pktUI;
+    const { onOpenTabWithUrl } =
+      aboutPocketParent.browsingContext.topChromeWindow.pktUI;
     const { args } = onOpenTabWithUrl.firstCall;
 
     Assert.ok(
@@ -167,9 +163,8 @@ test_runner(
       data: { foo: 1 },
     });
 
-    const {
-      onOpenTabWithPocketUrl,
-    } = aboutPocketParent.browsingContext.topChromeWindow.pktUI;
+    const { onOpenTabWithPocketUrl } =
+      aboutPocketParent.browsingContext.topChromeWindow.pktUI;
     const { args } = onOpenTabWithPocketUrl.firstCall;
 
     Assert.ok(
@@ -197,9 +192,8 @@ test_runner(
       data: { foo: 1 },
     });
 
-    const {
-      resizePanel,
-    } = aboutPocketParent.browsingContext.topChromeWindow.pktUI;
+    const { resizePanel } =
+      aboutPocketParent.browsingContext.topChromeWindow.pktUI;
     const { args } = resizePanel.firstCall;
 
     Assert.ok(

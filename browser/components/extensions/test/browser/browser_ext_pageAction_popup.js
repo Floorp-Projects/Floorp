@@ -36,8 +36,9 @@ add_task(async function testPageActionPopup() {
       "popup-a.html": scriptPage("popup-a.js"),
       "popup-a.js": function () {
         window.onload = () => {
-          let background = window.getComputedStyle(document.body)
-            .backgroundColor;
+          let background = window.getComputedStyle(
+            document.body
+          ).backgroundColor;
           browser.test.assertEq("rgba(0, 0, 0, 0)", background);
           browser.runtime.sendMessage("from-popup-a");
         };

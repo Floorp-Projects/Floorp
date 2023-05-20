@@ -230,8 +230,7 @@ const InflightAssetsMessageProvider = {
               action: {
                 type: "OPEN_URL",
                 data: {
-                  args:
-                    "https://support.mozilla.org/kb/update-firefox-latest-release",
+                  args: "https://support.mozilla.org/kb/update-firefox-latest-release",
                   where: "tabshifted",
                 },
               },

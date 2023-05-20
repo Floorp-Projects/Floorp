@@ -205,11 +205,8 @@ function validatedWebRemoteType(
   if (aRemoteSubframes) {
     let originAttributes = {};
     // Only use specific properties of OriginAttributes in our remoteType
-    let {
-      userContextId,
-      privateBrowsingId,
-      geckoViewSessionContextId,
-    } = aOriginAttributes;
+    let { userContextId, privateBrowsingId, geckoViewSessionContextId } =
+      aOriginAttributes;
     originAttributes = {
       userContextId,
       privateBrowsingId,
@@ -724,9 +721,8 @@ export var E10SUtils = {
 
     try {
       if (principal) {
-        serializedPrincipal = Services.scriptSecurityManager.principalToJSON(
-          principal
-        );
+        serializedPrincipal =
+          Services.scriptSecurityManager.principalToJSON(principal);
       }
     } catch (e) {
       this.log().error(`Failed to serialize principal '${principal}' ${e}`);
@@ -759,9 +755,8 @@ export var E10SUtils = {
       // if the serialized data starts with '{' to determine if we're using the new JSON representation.
       // If it doesn't we try the two legacy formats, old JSON and nsISerializable.
       if (serializedPincipal.startsWith("{")) {
-        principal = Services.scriptSecurityManager.JSONToPrincipal(
-          serializedPincipal
-        );
+        principal =
+          Services.scriptSecurityManager.JSONToPrincipal(serializedPincipal);
       } else {
         // Both the legacy and legacy  JSON representation of principals are stored as base64
         // The legacy JSON kind are the only ones that will start with "{" when decoded.
@@ -771,9 +766,8 @@ export var E10SUtils = {
         if (tmpa.startsWith("{")) {
           principal = Services.scriptSecurityManager.JSONToPrincipal(tmpa);
         } else {
-          principal = lazy.serializationHelper.deserializeObject(
-            serializedPincipal
-          );
+          principal =
+            lazy.serializationHelper.deserializeObject(serializedPincipal);
         }
       }
       principal.QueryInterface(Ci.nsIPrincipal);
@@ -803,9 +797,8 @@ export var E10SUtils = {
     let serialized = null;
     if (cookieJarSettings) {
       try {
-        serialized = lazy.serializationHelper.serializeToString(
-          cookieJarSettings
-        );
+        serialized =
+          lazy.serializationHelper.serializeToString(cookieJarSettings);
       } catch (e) {
         this.log().error(
           `Failed to serialize cookieJarSettings '${cookieJarSettings}' ${e}`
@@ -877,9 +870,8 @@ export var E10SUtils = {
     let deserialized = null;
     if (referrerInfo_b64) {
       try {
-        deserialized = lazy.serializationHelper.deserializeObject(
-          referrerInfo_b64
-        );
+        deserialized =
+          lazy.serializationHelper.deserializeObject(referrerInfo_b64);
         deserialized.QueryInterface(Ci.nsIReferrerInfo);
       } catch (e) {
         this.log().error(

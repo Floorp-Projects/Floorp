@@ -9,8 +9,8 @@
  */
 
 add_task(async function () {
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
-    .wrappedJSObject;
+  let startupRecorder =
+    Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
   await startupRecorder.done;
 
   // Ensure all the frame data is in the test compartment to avoid traversing

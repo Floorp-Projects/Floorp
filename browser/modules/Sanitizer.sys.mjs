@@ -384,9 +384,8 @@ export var Sanitizer = {
         // On shutdown we clear by principal to be able to honor the users exceptions
         if (clearHonoringExceptions) {
           progress.step = "getAllPrincipals";
-          let principalsForShutdownClearing = await gPrincipalsCollector.getAllPrincipals(
-            progress
-          );
+          let principalsForShutdownClearing =
+            await gPrincipalsCollector.getAllPrincipals(progress);
           await maybeSanitizeSessionPrincipals(
             progress,
             principalsForShutdownClearing,
@@ -407,9 +406,8 @@ export var Sanitizer = {
         // On shutdown we clear by principal to be able to honor the users exceptions
         if (clearHonoringExceptions) {
           progress.step = "getAllPrincipals";
-          let principalsForShutdownClearing = await gPrincipalsCollector.getAllPrincipals(
-            progress
-          );
+          let principalsForShutdownClearing =
+            await gPrincipalsCollector.getAllPrincipals(progress);
           await maybeSanitizeSessionPrincipals(
             progress,
             principalsForShutdownClearing,

@@ -153,9 +153,8 @@ add_task(async function test_simpleQuery() {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -283,9 +282,8 @@ add_task(async function test_oneOff_enter() {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -299,8 +297,8 @@ add_task(async function test_oneOff_enter() {
   info("Pressing Alt+Down to take us to the first one-off engine.");
   let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
   EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-  let engine = UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton
-    .engine;
+  let engine =
+    UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton.engine;
   EventUtils.synthesizeKey("KEY_Enter");
   await searchPromise;
 
@@ -391,8 +389,8 @@ add_task(async function test_oneOff_enterSelection() {
     );
     let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    let engine = UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton
-      .engine;
+    let engine =
+      UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton.engine;
     EventUtils.synthesizeKey("KEY_Enter");
     await searchPromise;
 
@@ -438,9 +436,10 @@ add_task(async function test_oneOff_click() {
 
   info("Click the first one-off button.");
   let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
-  let oneOffButton = UrlbarTestUtils.getOneOffSearchButtons(
-    window
-  ).getSelectableButtons(false)[0];
+  let oneOffButton =
+    UrlbarTestUtils.getOneOffSearchButtons(window).getSelectableButtons(
+      false
+    )[0];
   oneOffButton.click();
   await searchPromise;
 
@@ -473,9 +472,8 @@ add_task(async function test_suggestion_click() {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   await withNewSearchEngine(async function (engine) {
     let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -642,9 +640,8 @@ add_task(async function test_searchmode_suggestion_click() {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   await withNewSearchEngine(async function (engine) {
     let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -828,9 +825,8 @@ add_task(async function test_formHistory_click() {
   let resultMethodHist = TelemetryTestUtils.getAndClearHistogram(
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   await withNewSearchEngine(async engine => {
     let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -1039,9 +1035,8 @@ add_task(async function test_privateWindow() {
     },
   ]);
 
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   // First, do a bunch of searches in a private window.
   let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });

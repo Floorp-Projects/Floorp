@@ -8,17 +8,12 @@
 // shows a highlighter which is automatically hidden after a delay.
 add_task(async function () {
   info("Loading the test document and opening the inspector");
-  const {
-    inspector,
-    toolbox,
-    highlighterTestFront,
-  } = await openInspectorForURL(
-    "data:text/html;charset=utf-8,<p id='one'>TEST 1</p><p id='two'>TEST 2</p>"
-  );
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { inspector, toolbox, highlighterTestFront } =
+    await openInspectorForURL(
+      "data:text/html;charset=utf-8,<p id='one'>TEST 1</p><p id='two'>TEST 2</p>"
+    );
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   // While in test mode, the configuration to automatically hide Box Model Highlighters
   // after a delay is ignored to prevent intermittent test failures from race conditions.

@@ -92,9 +92,8 @@ add_task(async function test_openURL_visit_counter_withPattern() {
 
 add_task(async function test_captivePortalLogin() {
   const stub = sinon.stub();
-  const captivePortalTrigger = ASRouterTriggerListeners.get(
-    "captivePortalLogin"
-  );
+  const captivePortalTrigger =
+    ASRouterTriggerListeners.get("captivePortalLogin");
 
   captivePortalTrigger.init(stub);
 

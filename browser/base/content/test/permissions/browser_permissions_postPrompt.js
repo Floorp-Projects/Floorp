@@ -10,46 +10,47 @@ const PERMISSIONS_PAGE =
 
 function testPostPrompt(task) {
   let uri = Services.io.newURI(PERMISSIONS_PAGE);
-  return BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function (
-    browser
-  ) {
-    let icon = document.getElementById("web-notifications-notification-icon");
-    ok(
-      !BrowserTestUtils.is_visible(icon),
-      "notifications icon is not visible at first"
-    );
+  return BrowserTestUtils.withNewTab(
+    PERMISSIONS_PAGE,
+    async function (browser) {
+      let icon = document.getElementById("web-notifications-notification-icon");
+      ok(
+        !BrowserTestUtils.is_visible(icon),
+        "notifications icon is not visible at first"
+      );
 
-    await SpecialPowers.spawn(browser, [], task);
+      await SpecialPowers.spawn(browser, [], task);
 
-    await TestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(icon),
-      "notifications icon is visible"
-    );
-    ok(
-      !PopupNotifications.panel.hasAttribute("panelopen"),
-      "only the icon is showing, the panel is not open"
-    );
+      await TestUtils.waitForCondition(
+        () => BrowserTestUtils.is_visible(icon),
+        "notifications icon is visible"
+      );
+      ok(
+        !PopupNotifications.panel.hasAttribute("panelopen"),
+        "only the icon is showing, the panel is not open"
+      );
 
-    let popupshown = BrowserTestUtils.waitForEvent(
-      PopupNotifications.panel,
-      "popupshown"
-    );
-    icon.click();
-    await popupshown;
+      let popupshown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      icon.click();
+      await popupshown;
 
-    ok(true, "Notification permission prompt was shown");
+      ok(true, "Notification permission prompt was shown");
 
-    let notification = PopupNotifications.panel.firstElementChild;
-    EventUtils.synthesizeMouseAtCenter(notification.button, {});
+      let notification = PopupNotifications.panel.firstElementChild;
+      EventUtils.synthesizeMouseAtCenter(notification.button, {});
 
-    is(
-      PermissionTestUtils.testPermission(uri, "desktop-notification"),
-      Ci.nsIPermissionManager.ALLOW_ACTION,
-      "User can override the default deny by using the prompt"
-    );
+      is(
+        PermissionTestUtils.testPermission(uri, "desktop-notification"),
+        Ci.nsIPermissionManager.ALLOW_ACTION,
+        "User can override the default deny by using the prompt"
+      );
 
-    PermissionTestUtils.remove(uri, "desktop-notification");
-  });
+      PermissionTestUtils.remove(uri, "desktop-notification");
+    }
+  );
 }
 
 add_task(async function testNotificationPermission() {

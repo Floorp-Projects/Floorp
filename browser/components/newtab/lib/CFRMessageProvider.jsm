@@ -101,8 +101,7 @@ const CFR_MESSAGES = [
         author: "Mozilla",
         amo_url: "https://addons.mozilla.org/firefox/addon/facebook-container/",
       },
-      text:
-        "Stop Facebook from tracking your activity across the web. Use Facebook the way you normally do without annoying ads following you around.",
+      text: "Stop Facebook from tracking your activity across the web. Use Facebook the way you normally do without annoying ads following you around.",
       buttons: {
         primary: {
           label: { string_id: "cfr-doorhanger-extension-ok-button" },
@@ -173,8 +172,7 @@ const CFR_MESSAGES = [
         amo_url:
           "https://addons.mozilla.org/firefox/addon/to-google-translate/",
       },
-      text:
-        "Instantly translate any webpage text. Simply highlight the text, right-click to open the context menu, and choose a text or aural translation.",
+      text: "Instantly translate any webpage text. Simply highlight the text, right-click to open the context menu, and choose a text or aural translation.",
       buttons: {
         primary: {
           label: { string_id: "cfr-doorhanger-extension-ok-button" },
@@ -245,8 +243,7 @@ const CFR_MESSAGES = [
         amo_url:
           "https://addons.mozilla.org/firefox/addon/enhancer-for-youtube/",
       },
-      text:
-        "Take control of your YouTube experience. Automatically block annoying ads, set playback speed and volume, remove annotations, and more.",
+      text: "Take control of your YouTube experience. Automatically block annoying ads, set playback speed and volume, remove annotations, and more.",
       buttons: {
         primary: {
           label: { string_id: "cfr-doorhanger-extension-ok-button" },
@@ -318,8 +315,7 @@ const CFR_MESSAGES = [
         amo_url:
           "https://addons.mozilla.org/firefox/addon/wikipedia-context-menu-search/",
       },
-      text:
-        "Get to a Wikipedia page fast, from anywhere on the web. Just highlight any webpage text and right-click to open the context menu to start a Wikipedia search.",
+      text: "Get to a Wikipedia page fast, from anywhere on the web. Just highlight any webpage text and right-click to open the context menu to start a Wikipedia search.",
       buttons: {
         primary: {
           label: { string_id: "cfr-doorhanger-extension-ok-button" },
@@ -394,8 +390,7 @@ const CFR_MESSAGES = [
         amo_url:
           "https://addons.mozilla.org/firefox/addon/reddit-enhancement-suite/",
       },
-      text:
-        "New features include Inline Image Viewer, Never Ending Reddit (never click 'next page' again), Keyboard Navigation, Account Switcher, and User Tagger.",
+      text: "New features include Inline Image Viewer, Never Ending Reddit (never click 'next page' again), Keyboard Navigation, Account Switcher, and User Tagger.",
       buttons: {
         primary: {
           label: { string_id: "cfr-doorhanger-extension-ok-button" },
@@ -705,8 +700,7 @@ const CFR_MESSAGES = [
     template: "cfr_doorhanger",
     content: {
       layout: "icon_and_message",
-      text:
-        "Update your homepage to search Google while also being able to search your Firefox history and bookmarks.",
+      text: "Update your homepage to search Google while also being able to search your Firefox history and bookmarks.",
       icon: "chrome://global/skin/icons/search-glass.svg",
       buttons: {
         secondary: [

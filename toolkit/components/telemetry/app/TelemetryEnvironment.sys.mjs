@@ -1077,7 +1077,8 @@ EnvironmentCache.prototype = {
 
       // Windows only values stored in processData
       this._currentEnvironment.system.isWow64 = this._getProcessData().isWow64;
-      this._currentEnvironment.system.isWowARM64 = this._getProcessData().isWowARM64;
+      this._currentEnvironment.system.isWowARM64 =
+        this._getProcessData().isWowARM64;
     }
 
     if (!this._initTask) {
@@ -1654,18 +1655,15 @@ EnvironmentCache.prototype = {
     let resetDate = await profileAccessor.reset;
     let firstUseDate = await profileAccessor.firstUse;
 
-    this._currentEnvironment.profile.creationDate = Utils.millisecondsToDays(
-      creationDate
-    );
+    this._currentEnvironment.profile.creationDate =
+      Utils.millisecondsToDays(creationDate);
     if (resetDate) {
-      this._currentEnvironment.profile.resetDate = Utils.millisecondsToDays(
-        resetDate
-      );
+      this._currentEnvironment.profile.resetDate =
+        Utils.millisecondsToDays(resetDate);
     }
     if (firstUseDate) {
-      this._currentEnvironment.profile.firstUseDate = Utils.millisecondsToDays(
-        firstUseDate
-      );
+      this._currentEnvironment.profile.firstUseDate =
+        Utils.millisecondsToDays(firstUseDate);
     }
   },
 
@@ -1718,7 +1716,8 @@ EnvironmentCache.prototype = {
    */
   async _loadAsyncUpdateSettings() {
     if (AppConstants.MOZ_UPDATER) {
-      this._updateAutoDownloadCache = await UpdateUtils.getAppUpdateAutoEnabled();
+      this._updateAutoDownloadCache =
+        await UpdateUtils.getAppUpdateAutoEnabled();
       this._updateBackgroundCache = await UpdateUtils.readUpdateConfigSetting(
         "app.update.background.enabled"
       );
@@ -1735,10 +1734,12 @@ EnvironmentCache.prototype = {
    */
   _loadAsyncUpdateSettingsFromCache() {
     if (this._updateAutoDownloadCache !== undefined) {
-      this._currentEnvironment.settings.update.autoDownload = this._updateAutoDownloadCache;
+      this._currentEnvironment.settings.update.autoDownload =
+        this._updateAutoDownloadCache;
     }
     if (this._updateBackgroundCache !== undefined) {
-      this._currentEnvironment.settings.update.background = this._updateBackgroundCache;
+      this._currentEnvironment.settings.update.background =
+        this._updateBackgroundCache;
     }
   },
 
@@ -1760,8 +1761,8 @@ EnvironmentCache.prototype = {
   async _updateServicesInfo() {
     let syncEnabled = false;
     let accountEnabled = false;
-    let weaveService = Cc["@mozilla.org/weave/service;1"].getService()
-      .wrappedJSObject;
+    let weaveService =
+      Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject;
     syncEnabled = weaveService && weaveService.enabled;
     if (syncEnabled) {
       // All sync users are account users, definitely.

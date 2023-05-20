@@ -19,10 +19,8 @@ add_task(async function () {
   const { document: doc } = flexboxInspector;
   const { store } = inspector;
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
   const cPicker = layoutView.swatchColorPickerTooltip;
   const spectrum = cPicker.spectrum;
 

@@ -100,15 +100,16 @@ add_task(async function test() {
   let i = 0;
   for (const testcase of tests) {
     ++i;
-    await SpecialPowers.spawn(browser, [[i, tests.length]], function ([
-      idx,
-      len,
-    ]) {
-      const progress = content.document.getElementById("progress");
-      const progressDiv = content.document.querySelector("#progress > div");
-      progress.dataset.progress = idx;
-      progressDiv.style.width = (100 * idx) / len + "%";
-    });
+    await SpecialPowers.spawn(
+      browser,
+      [[i, tests.length]],
+      function ([idx, len]) {
+        const progress = content.document.getElementById("progress");
+        const progressDiv = content.document.querySelector("#progress > div");
+        progress.dataset.progress = idx;
+        progressDiv.style.width = (100 * idx) / len + "%";
+      }
+    );
     completer.resolveState(limit(source, testcase[0]), {
       line: testcase[0][0],
       ch: testcase[0][1],

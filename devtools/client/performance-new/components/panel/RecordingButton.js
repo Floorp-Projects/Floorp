@@ -73,11 +73,8 @@ class RecordingButton extends PureComponent {
   };
 
   _onCaptureButtonClick = async () => {
-    const {
-      getProfileAndStopProfiler,
-      onProfileReceived,
-      perfFront,
-    } = this.props;
+    const { getProfileAndStopProfiler, onProfileReceived, perfFront } =
+      this.props;
     const profile = await getProfileAndStopProfiler(perfFront);
     onProfileReceived(profile);
   };
@@ -252,9 +249,8 @@ function mapStateToProps(state) {
   return {
     recordingState: selectors.getRecordingState(state),
     isSupportedPlatform: selectors.getIsSupportedPlatform(state),
-    recordingUnexpectedlyStopped: selectors.getRecordingUnexpectedlyStopped(
-      state
-    ),
+    recordingUnexpectedlyStopped:
+      selectors.getRecordingUnexpectedlyStopped(state),
     pageContext: selectors.getPageContext(state),
   };
 }

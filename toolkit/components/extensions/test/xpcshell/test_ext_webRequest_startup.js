@@ -19,11 +19,8 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-let {
-  promiseShutdownManager,
-  promiseStartupManager,
-  promiseRestartManager,
-} = AddonTestUtils;
+let { promiseShutdownManager, promiseStartupManager, promiseRestartManager } =
+  AddonTestUtils;
 
 const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/data/", do_get_file("data"));

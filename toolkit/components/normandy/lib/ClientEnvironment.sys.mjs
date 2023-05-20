@@ -65,9 +65,8 @@ export class ClientEnvironment extends ClientEnvironmentBase {
 
   static get request_time() {
     return (async () => {
-      const {
-        request_time,
-      } = await ClientEnvironment.getClientClassification();
+      const { request_time } =
+        await ClientEnvironment.getClientClassification();
       return request_time;
     })();
   }

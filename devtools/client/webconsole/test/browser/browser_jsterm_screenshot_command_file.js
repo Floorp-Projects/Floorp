@@ -106,12 +106,10 @@ add_task(async function () {
     screenshotDir = await Downloads.getPreferredDownloadsDirectory();
   }
 
-  const {
-    renderedDate,
-    filePath,
-  } = /Saved to (?<filePath>.*Screen Shot (?<renderedDate>\d{4}-\d{2}-\d{2}) at \d{2}.\d{2}.\d{2}\.png)/.exec(
-    message.node.textContent
-  ).groups;
+  const { renderedDate, filePath } =
+    /Saved to (?<filePath>.*Screen Shot (?<renderedDate>\d{4}-\d{2}-\d{2}) at \d{2}.\d{2}.\d{2}\.png)/.exec(
+      message.node.textContent
+    ).groups;
   is(
     renderedDate,
     expectedDateString,

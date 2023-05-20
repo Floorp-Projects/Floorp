@@ -2111,11 +2111,12 @@ tests.push({
       }),
       0
     );
-    await PlacesUtils.withConnectionWrapper("change url hash", async function (
-      db
-    ) {
-      await db.execute(`UPDATE moz_places SET url_hash = 0`);
-    });
+    await PlacesUtils.withConnectionWrapper(
+      "change url hash",
+      async function (db) {
+        await db.execute(`UPDATE moz_places SET url_hash = 0`);
+      }
+    );
     Assert.equal(
       await PlacesTestUtils.getDatabaseValue("moz_places", "url_hash", {
         guid: this._pageGuid,

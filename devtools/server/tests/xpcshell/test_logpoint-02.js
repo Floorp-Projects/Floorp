@@ -72,9 +72,9 @@ function evalCode(debuggee) {
   /* eslint-disable */
   Cu.evalInSandbox(
     "debugger;\n" + // 1
-    "var a = 1;\n" + // 2
-    "while (a < 10) {\n" + // 3
-    "  a++;\n" + // 4
+      "var a = 1;\n" + // 2
+      "while (a < 10) {\n" + // 3
+      "  a++;\n" + // 4
       "}",
     debuggee,
     "1.8",

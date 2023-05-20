@@ -72,13 +72,8 @@ class KeyframesGraphPath extends PureComponent {
   }
 
   render() {
-    const {
-      getComputedStyle,
-      keyframes,
-      name,
-      simulateAnimation,
-      type,
-    } = this.props;
+    const { getComputedStyle, keyframes, name, simulateAnimation, type } =
+      this.props;
     const { componentHeight, componentWidth } = this.state;
 
     if (!componentWidth) {

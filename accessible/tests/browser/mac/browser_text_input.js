@@ -78,9 +78,8 @@ function matchWebArea(expectedId, expectedInfo) {
       return false;
     }
 
-    let textChangeElemID = data.AXTextChangeElement.getAttributeValue(
-      "AXDOMIdentifier"
-    );
+    let textChangeElemID =
+      data.AXTextChangeElement.getAttributeValue("AXDOMIdentifier");
 
     return (
       iface.getAttributeValue("AXRole") == "AXWebArea" &&

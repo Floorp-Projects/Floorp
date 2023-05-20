@@ -265,15 +265,16 @@ async function waitForStorageChangedEvents(...eventTypes) {
  *        The expected autofilling value for the element
  */
 async function waitForAutofill(target, selector, value) {
-  await SpecialPowers.spawn(target, [selector, value], async function (
-    selector,
-    val
-  ) {
-    await ContentTaskUtils.waitForCondition(() => {
-      let element = content.document.querySelector(selector);
-      return element.value == val;
-    }, "Autofill never fills");
-  });
+  await SpecialPowers.spawn(
+    target,
+    [selector, value],
+    async function (selector, val) {
+      await ContentTaskUtils.waitForCondition(() => {
+        let element = content.document.querySelector(selector);
+        return element.value == val;
+      }, "Autofill never fills");
+    }
+  );
 }
 
 /**
@@ -630,9 +631,10 @@ async function closePopupForSubframe(browser, frameBrowsingContext) {
 }
 
 function emulateMessageToBrowser(name, data) {
-  let actor = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
-    "FormAutofill"
-  );
+  let actor =
+    gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+      "FormAutofill"
+    );
   return actor.receiveMessage({ name, data });
 }
 

@@ -15,12 +15,8 @@ async function run_test() {
   }
   const STATE_AFTER_STAGE = STATE_FAILED;
   gTestFiles = gTestFilesCompleteSuccess;
-  gTestFiles[
-    gTestFiles.length - 2
-  ].originalContents = UPDATE_SETTINGS_CONTENTS.replace(
-    "xpcshell-test",
-    "wrong-channel"
-  );
+  gTestFiles[gTestFiles.length - 2].originalContents =
+    UPDATE_SETTINGS_CONTENTS.replace("xpcshell-test", "wrong-channel");
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);

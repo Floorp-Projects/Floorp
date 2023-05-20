@@ -172,12 +172,10 @@ add_task(async function test_network_markers_service_worker_use() {
       info(
         `Checking if "${expectedFile}" if present in the network markers in both processes.`
       );
-      const [
-        parentRedirectMarkerIntercept,
-        parentRedirectMarkerReset,
-      ] = parentRedirectMarkers.filter(
-        marker => marker.data.URI === expectedFile
-      );
+      const [parentRedirectMarkerIntercept, parentRedirectMarkerReset] =
+        parentRedirectMarkers.filter(
+          marker => marker.data.URI === expectedFile
+        );
       const parentStopMarker = parentStopMarkers.find(
         marker => marker.data.URI === expectedFile
       );

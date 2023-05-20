@@ -189,9 +189,8 @@
 
       this.docShell
         .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(
-          Ci.nsIURIContentListener
-        ).parentContentListener = this._editorContentListener;
+        .getInterface(Ci.nsIURIContentListener).parentContentListener =
+        this._editorContentListener;
     }
 
     getEditor(containingWindow) {

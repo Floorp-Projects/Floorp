@@ -17,11 +17,13 @@ add_task(async function test_create_error() {
       },
       // No callback, lastError not checked. Should be logged.
       {
-        message: /Unchecked lastError value: Error: Could not find any MenuItem with id: noCb/,
+        message:
+          /Unchecked lastError value: Error: Could not find any MenuItem with id: noCb/,
       },
       // Callback exists, lastError not checked. Should be logged.
       {
-        message: /Unchecked lastError value: Error: Could not find any MenuItem with id: cbIgnoreError/,
+        message:
+          /Unchecked lastError value: Error: Could not find any MenuItem with id: cbIgnoreError/,
       },
     ]);
   });

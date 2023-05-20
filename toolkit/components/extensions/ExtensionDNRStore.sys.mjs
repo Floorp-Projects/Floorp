@@ -267,12 +267,8 @@ class StoreData {
   // NOTE: this method should be kept in sync with toJSON and make sure that
   // we do deserialize the same property we are serializing into the JSON file.
   static fromJSON(paramsFromJSON, extension) {
-    let {
-      schemaVersion,
-      extVersion,
-      staticRulesets,
-      dynamicRuleset,
-    } = paramsFromJSON;
+    let { schemaVersion, extVersion, staticRulesets, dynamicRuleset } =
+      paramsFromJSON;
     return new StoreData(extension, {
       schemaVersion,
       extVersion,
@@ -934,7 +930,8 @@ class RulesetsStore {
     { logRuleValidationError = err => Cu.reportError(err) } = {}
   ) {
     const startTime = Cu.now();
-    const validatedRulesTimerId = Glean.extensionsApisDnr.validateRulesTime.start();
+    const validatedRulesTimerId =
+      Glean.extensionsApisDnr.validateRulesTime.start();
     try {
       const ruleValidator = new lazy.ExtensionDNR.RuleValidator([]);
       // Normalize rules read from JSON.

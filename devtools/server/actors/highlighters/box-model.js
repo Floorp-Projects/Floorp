@@ -131,9 +131,8 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
   }
 
   _buildMarkup() {
-    const highlighterContainer = this.markup.anonymousContentDocument.createElement(
-      "div"
-    );
+    const highlighterContainer =
+      this.markup.anonymousContentDocument.createElement("div");
     highlighterContainer.className = "highlighter-container box-model";
 
     this.highlighterContainer = highlighterContainer;

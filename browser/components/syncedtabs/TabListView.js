@@ -493,9 +493,8 @@ TabListView.prototype = {
         continue;
       }
       let command = item.getAttribute("cmd");
-      let controller = document.commandDispatcher.getControllerForCommand(
-        command
-      );
+      let controller =
+        document.commandDispatcher.getControllerForCommand(command);
       if (controller.isCommandEnabled(command)) {
         item.removeAttribute("disabled");
       } else {
@@ -532,9 +531,8 @@ TabListView.prototype = {
   handleTabsFilterContextMenuCommand(event) {
     let command = event.target.getAttribute("cmd");
     let dispatcher = getChromeWindow(this._window).document.commandDispatcher;
-    let controller = dispatcher.focusedElement.controllers.getControllerForCommand(
-      command
-    );
+    let controller =
+      dispatcher.focusedElement.controllers.getControllerForCommand(command);
     controller.doCommand(command);
   },
 

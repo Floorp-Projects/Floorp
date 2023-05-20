@@ -241,22 +241,23 @@ async function openAndVerifyDoorhanger(browser, type, expected) {
 }
 
 async function appendContentInputvalue(browser, selector, str) {
-  await ContentTask.spawn(browser, { selector, str }, async function ({
-    selector,
-    str,
-  }) {
-    const EventUtils = ContentTaskUtils.getEventUtils(content);
-    let input = content.document.querySelector(selector);
-    input.focus();
-    input.select();
-    await EventUtils.synthesizeKey("KEY_ArrowRight", {}, content);
-    let changedPromise = ContentTaskUtils.waitForEvent(input, "change");
-    if (str) {
-      await EventUtils.sendString(str, content);
+  await ContentTask.spawn(
+    browser,
+    { selector, str },
+    async function ({ selector, str }) {
+      const EventUtils = ContentTaskUtils.getEventUtils(content);
+      let input = content.document.querySelector(selector);
+      input.focus();
+      input.select();
+      await EventUtils.synthesizeKey("KEY_ArrowRight", {}, content);
+      let changedPromise = ContentTaskUtils.waitForEvent(input, "change");
+      if (str) {
+        await EventUtils.sendString(str, content);
+      }
+      input.blur();
+      await changedPromise;
     }
-    input.blur();
-    await changedPromise;
-  });
+  );
   info("Input value changed");
   await TestUtils.waitForTick();
 }
@@ -1155,9 +1156,10 @@ add_task(
         info("autoSavedLogin, guid: " + autoSavedLogin.guid);
 
         info("verifyLogins ok");
-        let passwordCacheEntry = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
-          "https://example.com"
-        );
+        let passwordCacheEntry =
+          LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
+            "https://example.com"
+          );
 
         Assert.ok(
           passwordCacheEntry,
@@ -1330,9 +1332,10 @@ add_task(async function autosaved_login_updated_to_existing_login_onsubmit() {
       info("autoSavedLogin, guid: " + autoSavedLogin.guid);
 
       info("verifyLogins ok");
-      let passwordCacheEntry = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
-        "https://example.com"
-      );
+      let passwordCacheEntry =
+        LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
+          "https://example.com"
+        );
 
       Assert.ok(
         passwordCacheEntry,
@@ -1521,9 +1524,10 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
       info("autoSavedLogin, guid: " + autoSavedLogin.guid);
 
       info("verifyLogins ok");
-      let passwordCacheEntry = LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
-        "https://example.com"
-      );
+      let passwordCacheEntry =
+        LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
+          "https://example.com"
+        );
 
       Assert.ok(
         passwordCacheEntry,

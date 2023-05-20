@@ -1321,9 +1321,8 @@ export var Policies = {
       if ("schemes" in param) {
         for (let scheme in param.schemes) {
           let handlerInfo = param.schemes[scheme];
-          let realHandlerInfo = lazy.gExternalProtocolService.getProtocolHandlerInfo(
-            scheme
-          );
+          let realHandlerInfo =
+            lazy.gExternalProtocolService.getProtocolHandlerInfo(scheme);
           processMIMEInfo(handlerInfo, realHandlerInfo);
         }
       }
@@ -2184,13 +2183,11 @@ export var Policies = {
     },
     onAllWindowsRestored(manager, param) {
       if (param) {
-        let homeButtonPlacement = lazy.CustomizableUI.getPlacementOfWidget(
-          "home-button"
-        );
+        let homeButtonPlacement =
+          lazy.CustomizableUI.getPlacementOfWidget("home-button");
         if (!homeButtonPlacement) {
-          let placement = lazy.CustomizableUI.getPlacementOfWidget(
-            "forward-button"
-          );
+          let placement =
+            lazy.CustomizableUI.getPlacementOfWidget("forward-button");
           lazy.CustomizableUI.addWidgetToArea(
             "home-button",
             lazy.CustomizableUI.AREA_NAVBAR,

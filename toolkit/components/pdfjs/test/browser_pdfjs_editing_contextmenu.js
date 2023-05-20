@@ -71,13 +71,15 @@ async function getContextMenuItems(browser, box) {
  * @returns {Map<string,HTMLElement>} the pdfjs menu entries.
  */
 async function getContextMenuItemsOn(browser, selector) {
-  const box = await SpecialPowers.spawn(browser, [selector], async function (
-    selector
-  ) {
-    const element = content.document.querySelector(selector);
-    const { x, y, width, height } = element.getBoundingClientRect();
-    return { x, y, width, height };
-  });
+  const box = await SpecialPowers.spawn(
+    browser,
+    [selector],
+    async function (selector) {
+      const element = content.document.querySelector(selector);
+      const { x, y, width, height } = element.getBoundingClientRect();
+      return { x, y, width, height };
+    }
+  );
   return getContextMenuItems(browser, box);
 }
 

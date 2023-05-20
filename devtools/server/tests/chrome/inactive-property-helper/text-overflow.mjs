@@ -40,8 +40,7 @@ export default [
     isActive: false,
   },
   {
-    info:
-      "text-overflow is active when overflow-x is set to hidden on horizontal writing mode",
+    info: "text-overflow is active when overflow-x is set to hidden on horizontal writing mode",
     property: "text-overflow",
     tagName: "div",
     rules: [
@@ -50,8 +49,7 @@ export default [
     isActive: true,
   },
   {
-    info:
-      "text-overflow is inactive when overflow-x is set to visible on horizontal writing mode",
+    info: "text-overflow is inactive when overflow-x is set to visible on horizontal writing mode",
     property: "text-overflow",
     tagName: "div",
     rules: [
@@ -60,8 +58,7 @@ export default [
     isActive: false,
   },
   {
-    info:
-      "text-overflow is active when overflow-y is set to hidden on vertical writing mode",
+    info: "text-overflow is active when overflow-y is set to hidden on vertical writing mode",
     property: "text-overflow",
     tagName: "div",
     rules: [
@@ -70,8 +67,7 @@ export default [
     isActive: true,
   },
   {
-    info:
-      "text-overflow is inactive when overflow-y is set to visible on vertical writing mode",
+    info: "text-overflow is inactive when overflow-y is set to visible on vertical writing mode",
     property: "text-overflow",
     tagName: "div",
     rules: [
@@ -80,16 +76,14 @@ export default [
     isActive: false,
   },
   {
-    info:
-      "as soon as overflow:hidden is set, text-overflow is active whatever the box type",
+    info: "as soon as overflow:hidden is set, text-overflow is active whatever the box type",
     property: "text-overflow",
     tagName: "span",
     rules: ["span { text-overflow: ellipsis; overflow: hidden; }"],
     isActive: true,
   },
   {
-    info:
-      "as soon as overflow:hidden is set, text-overflow is active whatever the box type",
+    info: "as soon as overflow:hidden is set, text-overflow is active whatever the box type",
     property: "text-overflow",
     tagName: "legend",
     rules: ["legend { text-overflow: ellipsis; overflow: hidden; }"],

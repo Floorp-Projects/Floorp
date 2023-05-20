@@ -67,7 +67,8 @@ add_task(
       {
         expected: [
           {
-            message: /Using the privileged permission 'activityLog' requires a privileged add-on/,
+            message:
+              /Using the privileged permission 'activityLog' requires a privileged add-on/,
           },
         ],
       },

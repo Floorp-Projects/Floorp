@@ -7,9 +7,8 @@
 
 var gPageStyleMenu = {
   _getStyleSheetInfo(browser) {
-    let actor = browser.browsingContext.currentWindowGlobal?.getActor(
-      "PageStyle"
-    );
+    let actor =
+      browser.browsingContext.currentWindowGlobal?.getActor("PageStyle");
     let styleSheetInfo;
     if (actor) {
       styleSheetInfo = actor.getSheetInfo();

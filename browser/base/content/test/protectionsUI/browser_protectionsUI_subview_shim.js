@@ -227,11 +227,13 @@ async function runTestForCategoryAndState(category, action) {
     );
   }
   // Load the test tracker matching the category.
-  await SpecialPowers.spawn(tab.linkedBrowser, [{ apiMessage }], function (
-    args
-  ) {
-    content.postMessage(args.apiMessage, "*");
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [{ apiMessage }],
+    function (args) {
+      content.postMessage(args.apiMessage, "*");
+    }
+  );
   await beforeBlockChannelPromise;
 
   // Next, test if the UI state is correct for the given category and action.

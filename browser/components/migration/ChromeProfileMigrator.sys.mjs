@@ -473,9 +473,11 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
       console.error(ex);
     }
 
-    let alternativeBookmarks = await lazy.Qihoo360seMigrationUtils.getAlternativeBookmarks(
-      { bookmarksPath, localState }
-    );
+    let alternativeBookmarks =
+      await lazy.Qihoo360seMigrationUtils.getAlternativeBookmarks({
+        bookmarksPath,
+        localState,
+      });
     if (alternativeBookmarks.resource) {
       return alternativeBookmarks.resource;
     }

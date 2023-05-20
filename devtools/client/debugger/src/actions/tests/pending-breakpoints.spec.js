@@ -72,7 +72,7 @@ function mockSourceMaps() {
 describe("when adding breakpoints", () => {
   it("a corresponding pending breakpoint should be added", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockClient({ "5": [1] }),
+      mockClient({ 5: [1] }),
       loadInitialState(),
       mockSourceMaps()
     );
@@ -112,7 +112,7 @@ describe("when adding breakpoints", () => {
 
     it("add a corresponding pendingBreakpoint for each addition", async () => {
       const { dispatch, getState, cx } = createStore(
-        mockClient({ "5": [0] }),
+        mockClient({ 5: [0] }),
         loadInitialState(),
         mockSourceMaps()
       );
@@ -156,7 +156,7 @@ describe("when adding breakpoints", () => {
 
     it("hidden breakponts do not create pending bps", async () => {
       const { dispatch, getState, cx } = createStore(
-        mockClient({ "5": [0] }),
+        mockClient({ 5: [0] }),
         loadInitialState(),
         mockSourceMaps()
       );
@@ -182,7 +182,7 @@ describe("when adding breakpoints", () => {
 
     it("remove a corresponding pending breakpoint when deleting", async () => {
       const { dispatch, getState, cx } = createStore(
-        mockClient({ "5": [0] }),
+        mockClient({ 5: [0] }),
         loadInitialState(),
         mockSourceMaps()
       );
@@ -224,7 +224,7 @@ describe("when adding breakpoints", () => {
 describe("when changing an existing breakpoint", () => {
   it("updates corresponding pendingBreakpoint", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockClient({ "5": [0] }),
+      mockClient({ 5: [0] }),
       loadInitialState(),
       mockSourceMaps()
     );
@@ -252,7 +252,7 @@ describe("when changing an existing breakpoint", () => {
 
   it("if disabled, updates corresponding pendingBreakpoint", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockClient({ "5": [0] }),
+      mockClient({ 5: [0] }),
       loadInitialState(),
       mockSourceMaps()
     );
@@ -278,7 +278,7 @@ describe("when changing an existing breakpoint", () => {
 
   it("does not delete the pre-existing pendingBreakpoint", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockClient({ "5": [0] }),
+      mockClient({ 5: [0] }),
       loadInitialState(),
       mockSourceMaps()
     );
@@ -309,7 +309,7 @@ describe("when changing an existing breakpoint", () => {
 describe("initializing when pending breakpoints exist in prefs", () => {
   it("syncs pending breakpoints", async () => {
     const { getState } = createStore(
-      mockClient({ "5": [0] }),
+      mockClient({ 5: [0] }),
       loadInitialState(),
       mockSourceMaps()
     );
@@ -319,7 +319,7 @@ describe("initializing when pending breakpoints exist in prefs", () => {
 
   it("re-adding breakpoints update existing pending breakpoints", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockClient({ "5": [1, 2] }),
+      mockClient({ 5: [1, 2] }),
       loadInitialState(),
       mockSourceMaps()
     );
@@ -342,7 +342,7 @@ describe("initializing when pending breakpoints exist in prefs", () => {
 
   it("adding bps doesn't remove existing pending breakpoints", async () => {
     const { dispatch, getState, cx } = createStore(
-      mockClient({ "5": [0] }),
+      mockClient({ 5: [0] }),
       loadInitialState(),
       mockSourceMaps()
     );
@@ -368,7 +368,7 @@ describe("initializing when pending breakpoints exist in prefs", () => {
 describe("initializing with disabled pending breakpoints in prefs", () => {
   it("syncs breakpoints with pending breakpoints", async () => {
     const store = createStore(
-      mockClient({ "5": [2] }),
+      mockClient({ 5: [2] }),
       loadInitialState({ disabled: true }),
       mockSourceMaps()
     );
@@ -409,7 +409,7 @@ describe("initializing with disabled pending breakpoints in prefs", () => {
 describe("adding sources", () => {
   it("corresponding breakpoints are added for a single source", async () => {
     const store = createStore(
-      mockClient({ "5": [2] }),
+      mockClient({ 5: [2] }),
       loadInitialState({ disabled: true }),
       mockSourceMaps()
     );
@@ -434,7 +434,7 @@ describe("adding sources", () => {
 
   it("corresponding breakpoints are added to the original source", async () => {
     const sourceURL = makeSourceURL("bar.js");
-    const store = createStore(mockClient({ "5": [2] }), loadInitialState(), {
+    const store = createStore(mockClient({ 5: [2] }), loadInitialState(), {
       getOriginalURLs: async source => [
         {
           id: sourceMapLoader.generatedToOriginalId(source.id, sourceURL),
@@ -472,7 +472,7 @@ describe("adding sources", () => {
 
   it("add corresponding breakpoints for multiple sources", async () => {
     const store = createStore(
-      mockClient({ "5": [2] }),
+      mockClient({ 5: [2] }),
       loadInitialState({ disabled: true }),
       mockSourceMaps()
     );

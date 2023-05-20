@@ -29,12 +29,11 @@ async function testClearing(
   let { scheme, host } = Services.io.newURI(originA);
   let partitionKey = `(${scheme},${host})`;
 
-  let {
-    origin: originBPartitioned,
-  } = Services.scriptSecurityManager.createContentPrincipal(
-    Services.io.newURI(originB),
-    { partitionKey }
-  );
+  let { origin: originBPartitioned } =
+    Services.scriptSecurityManager.createContentPrincipal(
+      Services.io.newURI(originB),
+      { partitionKey }
+    );
 
   // Add some test quota storage.
   if (testQuota) {

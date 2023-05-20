@@ -12,12 +12,8 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
-const {
-  handleInternally,
-  useHelperApp,
-  useSystemDefault,
-  saveToDisk,
-} = Ci.nsIHandlerInfo;
+const { handleInternally, useHelperApp, useSystemDefault, saveToDisk } =
+  Ci.nsIHandlerInfo;
 
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);

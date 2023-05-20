@@ -11,7 +11,8 @@ add_task(async function () {
 
   // Sanity check
   const highlighterTestFront = await getHighlighterTestFront(dbg.toolbox);
-  let isPausedOverlayVisible = await highlighterTestFront.isPausedDebuggerOverlayVisible();
+  let isPausedOverlayVisible =
+    await highlighterTestFront.isPausedDebuggerOverlayVisible();
   is(
     isPausedOverlayVisible,
     false,
@@ -36,7 +37,8 @@ add_task(async function () {
   await waitFor(() => isPaused(dbg) && getVisibleSelectedFrameLine(dbg) === 4);
   ok(true, "We're paused at the expected location after stepping");
 
-  isPausedOverlayVisible = await highlighterTestFront.isPausedDebuggerOverlayVisible();
+  isPausedOverlayVisible =
+    await highlighterTestFront.isPausedDebuggerOverlayVisible();
   is(isPausedOverlayVisible, true, "The pause overlay is still visible");
 
   info("Test clicking the highlighter resume button");

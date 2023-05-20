@@ -123,8 +123,7 @@ add_task(async _ => {
 });
 
 AntiTracking._createTask({
-  name:
-    "Test that we do not downgrade document.referrer when it does not contain a tracking identifier",
+  name: "Test that we do not downgrade document.referrer when it does not contain a tracking identifier",
   cookieBehavior: BEHAVIOR_REJECT_TRACKER,
   blockingByContentBlockingRTUI: true,
   allowList: false,
@@ -155,8 +154,7 @@ AntiTracking._createTask({
 });
 
 AntiTracking._createTask({
-  name:
-    "Test that we do not downgrade document.referrer when it does not contain a tracking identifier even though it gets downgraded to origin only due to the default referrer policy",
+  name: "Test that we do not downgrade document.referrer when it does not contain a tracking identifier even though it gets downgraded to origin only due to the default referrer policy",
   cookieBehavior: BEHAVIOR_REJECT_TRACKER,
   blockingByContentBlockingRTUI: true,
   allowList: false,
@@ -186,8 +184,7 @@ AntiTracking._createTask({
 });
 
 AntiTracking._createTask({
-  name:
-    "Test that we downgrade document.referrer when it contains a tracking identifier",
+  name: "Test that we downgrade document.referrer when it contains a tracking identifier",
   cookieBehavior: BEHAVIOR_REJECT_TRACKER,
   blockingByContentBlockingRTUI: true,
   allowList: false,
@@ -218,8 +215,7 @@ AntiTracking._createTask({
 });
 
 AntiTracking._createTask({
-  name:
-    "Test that we don't downgrade document.referrer when it contains a tracking identifier if it gets downgraded to origin only due to the default referrer policy because the tracking identifier wouldn't be present in the referrer any more",
+  name: "Test that we don't downgrade document.referrer when it contains a tracking identifier if it gets downgraded to origin only due to the default referrer policy because the tracking identifier wouldn't be present in the referrer any more",
   cookieBehavior: BEHAVIOR_REJECT_TRACKER,
   blockingByContentBlockingRTUI: true,
   allowList: false,

@@ -37,14 +37,15 @@
         content.window.performance.now() +
         Math.random();
 
-      addMessageListener(TART_PREFIX + "chrome-exec-reply", function done(
-        reply
-      ) {
-        if (reply.data.id == uniqueMessageId) {
-          removeMessageListener(TART_PREFIX + "chrome-exec-reply", done);
-          dispatchReply(reply.data.result);
+      addMessageListener(
+        TART_PREFIX + "chrome-exec-reply",
+        function done(reply) {
+          if (reply.data.id == uniqueMessageId) {
+            removeMessageListener(TART_PREFIX + "chrome-exec-reply", done);
+            dispatchReply(reply.data.result);
+          }
         }
-      });
+      );
 
       sendAsyncMessage(TART_PREFIX + "chrome-exec-message", {
         command: e.detail.command,

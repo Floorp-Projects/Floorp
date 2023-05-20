@@ -14,8 +14,9 @@ module.exports = async function ({ targetCommand, targetFront, onAvailable }) {
   const listenForFrames = targetCommand.descriptorFront.isTabDescriptor;
 
   // Allow workers when messages aren't dispatched to the main thread.
-  const listenForWorkers = !targetCommand.rootFront.traits
-    .workerConsoleApiMessagesDispatchedToMainThread;
+  const listenForWorkers =
+    !targetCommand.rootFront.traits
+      .workerConsoleApiMessagesDispatchedToMainThread;
 
   const acceptTarget =
     targetFront.isTopLevel ||

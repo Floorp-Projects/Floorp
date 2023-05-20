@@ -26,36 +26,37 @@ async function getBrowsingContextId(browser, id) {
 }
 
 async function addFrame(browser, id, parentId) {
-  return SpecialPowers.spawn(browser, [{ parentId, id }], async function ({
-    parentId,
-    id,
-  }) {
-    let parent = null;
-    if (parentId) {
-      let frames = [content.window];
-      while (frames.length) {
-        let frame = frames.pop();
-        let target = frame.document.getElementById(parentId);
-        if (target) {
-          parent = target.contentWindow.document.body;
-          break;
+  return SpecialPowers.spawn(
+    browser,
+    [{ parentId, id }],
+    async function ({ parentId, id }) {
+      let parent = null;
+      if (parentId) {
+        let frames = [content.window];
+        while (frames.length) {
+          let frame = frames.pop();
+          let target = frame.document.getElementById(parentId);
+          if (target) {
+            parent = target.contentWindow.document.body;
+            break;
+          }
+          frames = frames.concat(Array.from(frame.frames));
         }
-        frames = frames.concat(Array.from(frame.frames));
+      } else {
+        parent = content.document.body;
       }
-    } else {
-      parent = content.document.body;
+
+      let frame = await new Promise(resolve => {
+        let frame = content.document.createElement("iframe");
+        frame.id = id || "";
+        frame.url = "about:blank";
+        frame.onload = () => resolve(frame);
+        parent.appendChild(frame);
+      });
+
+      return frame.contentWindow.docShell.browsingContext.id;
     }
-
-    let frame = await new Promise(resolve => {
-      let frame = content.document.createElement("iframe");
-      frame.id = id || "";
-      frame.url = "about:blank";
-      frame.onload = () => resolve(frame);
-      parent.appendChild(frame);
-    });
-
-    return frame.contentWindow.docShell.browsingContext.id;
-  });
+  );
 }
 
 async function removeFrame(browser, id) {
@@ -79,36 +80,37 @@ function getBrowsingContextById(id) {
 }
 
 add_task(async function () {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
-    browser
-  ) {
-    let topId = await getBrowsingContextId(browser, "");
-    let topContext = getBrowsingContextById(topId);
-    isnot(topContext, null);
-    is(topContext.parent, null);
-    is(
-      topId,
-      browser.browsingContext.id,
-      "<browser> has the correct browsingContext"
-    );
-    is(
-      browser.browserId,
-      topContext.browserId,
-      "browsing context should have a correct <browser> id"
-    );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: URL },
+    async function (browser) {
+      let topId = await getBrowsingContextId(browser, "");
+      let topContext = getBrowsingContextById(topId);
+      isnot(topContext, null);
+      is(topContext.parent, null);
+      is(
+        topId,
+        browser.browsingContext.id,
+        "<browser> has the correct browsingContext"
+      );
+      is(
+        browser.browserId,
+        topContext.browserId,
+        "browsing context should have a correct <browser> id"
+      );
 
-    let id0 = await addFrame(browser, "frame0");
-    let browsingContext0 = getBrowsingContextById(id0);
-    isnot(browsingContext0, null);
-    is(browsingContext0.parent, topContext);
+      let id0 = await addFrame(browser, "frame0");
+      let browsingContext0 = getBrowsingContextById(id0);
+      isnot(browsingContext0, null);
+      is(browsingContext0.parent, topContext);
 
-    await removeFrame(browser, "frame0");
+      await removeFrame(browser, "frame0");
 
-    is(topContext.children.indexOf(browsingContext0), -1);
+      is(topContext.children.indexOf(browsingContext0), -1);
 
-    // TODO(farre): Handle browsingContext removal [see Bug 1486719].
-    todo_isnot(browsingContext0.parent, topContext);
-  });
+      // TODO(farre): Handle browsingContext removal [see Bug 1486719].
+      todo_isnot(browsingContext0.parent, topContext);
+    }
+  );
 });
 
 add_task(async function () {

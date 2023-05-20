@@ -33,8 +33,9 @@ add_task(async function test_check_file_prompt() {
 
     await testHelper("https://example.com/1", "example.com");
     await testHelper("about:robots", "about:");
-    let file = Services.io.newFileURI(Services.dirsvc.get("Desk", Ci.nsIFile))
-      .spec;
+    let file = Services.io.newFileURI(
+      Services.dirsvc.get("Desk", Ci.nsIFile)
+    ).spec;
     await testHelper(file, "file://");
   });
 });

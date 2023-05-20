@@ -128,8 +128,7 @@ add_task(async function test_tmpdir_download() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "https://example.com/browser/browser/components/downloads/test/browser/foo.txt",
+      url: "https://example.com/browser/browser/components/downloads/test/browser/foo.txt",
       waitForLoad: false,
       waitForStop: true,
     },

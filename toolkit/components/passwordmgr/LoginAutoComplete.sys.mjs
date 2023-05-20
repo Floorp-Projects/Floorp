@@ -656,9 +656,8 @@ export class LoginAutoComplete {
     let forcePasswordGeneration = false;
     let isProbablyANewPasswordField = false;
     if (hasBeenTypePassword) {
-      forcePasswordGeneration = loginManagerActor.isPasswordGenerationForcedOn(
-        inputElement
-      );
+      forcePasswordGeneration =
+        loginManagerActor.isPasswordGenerationForcedOn(inputElement);
       // Run the Fathom model only if the password field does not have the
       // autocomplete="new-password" attribute.
       isProbablyANewPasswordField =

@@ -43,11 +43,12 @@ this.topSites = class extends ExtensionAPI {
           if (options.includePinned && !getNewtabSites) {
             let pinnedLinks = NewTabUtils.pinnedLinks.links;
             if (options.includeFavicon) {
-              pinnedLinks = NewTabUtils.activityStreamProvider._faviconBytesToDataURI(
-                await NewTabUtils.activityStreamProvider._addFavicons(
-                  pinnedLinks
-                )
-              );
+              pinnedLinks =
+                NewTabUtils.activityStreamProvider._faviconBytesToDataURI(
+                  await NewTabUtils.activityStreamProvider._addFavicons(
+                    pinnedLinks
+                  )
+                );
             }
             pinnedLinks.forEach((pinnedLink, index) => {
               if (

@@ -4618,7 +4618,7 @@ var gCSSProperties = {
       "calc(3*25px + 5em)",
     ],
     invalid_values: ["5%"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "border-collapse": {
     domProp: "borderCollapse",
@@ -4749,7 +4749,7 @@ var gCSSProperties = {
       "calc(3*25px + 5em)",
     ],
     invalid_values: ["5%"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "border-right": {
     domProp: "borderRight",
@@ -4830,7 +4830,7 @@ var gCSSProperties = {
       "calc(3*25px + 5em)",
     ],
     invalid_values: ["5%"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "border-spacing": {
     domProp: "borderSpacing",
@@ -4873,7 +4873,7 @@ var gCSSProperties = {
     ],
     quirks_values: {
       "2px 5": "2px 5px",
-      "7": "7px",
+      7: "7px",
       "3 4px": "3px 4px",
     },
   },
@@ -4988,7 +4988,7 @@ var gCSSProperties = {
       "calc(3*25px + 5em)",
     ],
     invalid_values: ["5%"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "border-width": {
     domProp: "borderWidth",
@@ -5012,7 +5012,7 @@ var gCSSProperties = {
     other_values: ["thin", "thick", "1px", "2em", "2px 0 0px 1em", "calc(2em)"],
     invalid_values: ["5%", "1px calc(nonsense)", "1px red"],
     unbalanced_values: ["1px calc("],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   bottom: {
     domProp: "bottom",
@@ -5034,7 +5034,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "box-shadow": {
     domProp: "boxShadow",
@@ -5721,7 +5721,7 @@ var gCSSProperties = {
       "calc(-1px)",
     ],
     invalid_values: ["-2em", "-50%", "-1px"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "font-size-adjust": {
     domProp: "fontSizeAdjust",
@@ -6138,7 +6138,7 @@ var gCSSProperties = {
       "fit-content(calc(3*25px + 50%))",
     ],
     invalid_values: ["none"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "ime-mode": {
     domProp: "imeMode",
@@ -6168,7 +6168,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "letter-spacing": {
     domProp: "letterSpacing",
@@ -6189,7 +6189,7 @@ var gCSSProperties = {
       "calc(-3px)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "line-break": {
     domProp: "lineBreak",
@@ -6446,7 +6446,7 @@ var gCSSProperties = {
     ],
     invalid_values: ["1px calc(nonsense)", "1px red"],
     unbalanced_values: ["1px calc("],
-    quirks_values: { "5": "5px", "3px 6px 2 5px": "3px 6px 2px 5px" },
+    quirks_values: { 5: "5px", "3px 6px 2 5px": "3px 6px 2px 5px" },
   },
   "margin-bottom": {
     domProp: "marginBottom",
@@ -6467,7 +6467,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "margin-left": {
     domProp: "marginLeft",
@@ -6512,7 +6512,7 @@ var gCSSProperties = {
       "++.7px",
       "--.4px",
     ],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "margin-right": {
     domProp: "marginRight",
@@ -6533,7 +6533,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "margin-top": {
     domProp: "marginTop",
@@ -6554,7 +6554,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "max-height": {
     domProp: "maxHeight",
@@ -6586,7 +6586,7 @@ var gCSSProperties = {
       "fit-content(calc(3*25px + 50%))",
     ],
     invalid_values: ["auto"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "max-width": {
     domProp: "maxWidth",
@@ -6621,7 +6621,7 @@ var gCSSProperties = {
       "fit-content(calc(3*25px + 50%))",
     ],
     invalid_values: ["auto"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "min-height": {
     domProp: "minHeight",
@@ -6651,7 +6651,7 @@ var gCSSProperties = {
       "fit-content(calc(3*25px + 50%))",
     ],
     invalid_values: ["none"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "min-width": {
     domProp: "minWidth",
@@ -6684,7 +6684,7 @@ var gCSSProperties = {
       "fit-content(calc(3*25px + 50%))",
     ],
     invalid_values: ["none"],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "object-fit": {
     domProp: "objectFit",
@@ -6991,7 +6991,7 @@ var gCSSProperties = {
     other_values: ["3px 0", "2em 4px 2pt", "1em 2em 3px 4px"],
     invalid_values: ["1px calc(nonsense)", "1px red", "-1px"],
     unbalanced_values: ["1px calc("],
-    quirks_values: { "5": "5px", "3px 6px 2 5px": "3px 6px 2px 5px" },
+    quirks_values: { 5: "5px", "3px 6px 2 5px": "3px 6px 2px 5px" },
   },
   "padding-block": {
     domProp: "paddingBlock",
@@ -7039,7 +7039,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "padding-left": {
     domProp: "paddingLeft",
@@ -7067,7 +7067,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "padding-right": {
     domProp: "paddingRight",
@@ -7095,7 +7095,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "padding-top": {
     domProp: "paddingTop",
@@ -7123,7 +7123,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "page-break-after": {
     domProp: "pageBreakAfter",
@@ -7259,7 +7259,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "ruby-align": {
     domProp: "rubyAlign",
@@ -8043,7 +8043,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "text-overflow": {
     domProp: "textOverflow",
@@ -8180,7 +8180,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   transition: {
     domProp: "transition",
@@ -8414,7 +8414,7 @@ var gCSSProperties = {
       "calc(3*25px + 50%)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "baseline-source": {
     domProp: "baselineSource",
@@ -8574,7 +8574,7 @@ var gCSSProperties = {
       "calc(3em * (3em / 100%))",
       "calc(3em * 3em / 100%)",
     ],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "will-change": {
     domProp: "willChange",
@@ -8636,7 +8636,7 @@ var gCSSProperties = {
       "calc(-10%/2 - 1em)",
     ],
     invalid_values: [],
-    quirks_values: { "5": "5px" },
+    quirks_values: { 5: "5px" },
   },
   "overflow-wrap": {
     domProp: "overflowWrap",

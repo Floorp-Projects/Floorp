@@ -6,10 +6,12 @@ var gArgs;
 var gBrowser;
 var gURLBar;
 var gDebugger;
-var gMultiProcessBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
-  .useRemoteTabs;
-var gFissionBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
-  .useRemoteSubframes;
+var gMultiProcessBrowser = window.docShell.QueryInterface(
+  Ci.nsILoadContext
+).useRemoteTabs;
+var gFissionBrowser = window.docShell.QueryInterface(
+  Ci.nsILoadContext
+).useRemoteSubframes;
 var gWritingProfile = false;
 var gWrittenProfile = false;
 
@@ -164,7 +166,8 @@ function autoCloseIfNeeded(aCrash) {
       // Doesn't seem worth for this particular case.
       document.documentElement.appendChild(browser);
       browser.loadURI(Services.io.newURI("about:crashparent"), {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
       return;
     }

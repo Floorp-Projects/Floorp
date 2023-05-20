@@ -19,21 +19,23 @@ add_task(async function testMultiFrameRestore() {
     async function (browser) {
       // Navigate 2 subframes and load about:blank.
       let browserLoaded = BrowserTestUtils.browserLoaded(browser);
-      await SpecialPowers.spawn(browser, [FRAME_URL], async function (
-        FRAME_URL
-      ) {
-        function frameLoaded(frame) {
-          frame.contentWindow.location = FRAME_URL;
-          return new Promise(r => (frame.onload = r));
+      await SpecialPowers.spawn(
+        browser,
+        [FRAME_URL],
+        async function (FRAME_URL) {
+          function frameLoaded(frame) {
+            frame.contentWindow.location = FRAME_URL;
+            return new Promise(r => (frame.onload = r));
+          }
+          let frame1 = content.document.querySelector("#testFrame1");
+          let frame2 = content.document.querySelector("#testFrame2");
+          ok(frame1, "check found testFrame1");
+          ok(frame2, "check found testFrame2");
+          await frameLoaded(frame1);
+          await frameLoaded(frame2);
+          content.location = "dummy_page.html";
         }
-        let frame1 = content.document.querySelector("#testFrame1");
-        let frame2 = content.document.querySelector("#testFrame2");
-        ok(frame1, "check found testFrame1");
-        ok(frame2, "check found testFrame2");
-        await frameLoaded(frame1);
-        await frameLoaded(frame2);
-        content.location = "dummy_page.html";
-      });
+      );
       await browserLoaded;
 
       // Load a frame script to query nsIDOMWindow on "http-on-opening-request",

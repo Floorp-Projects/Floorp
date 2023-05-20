@@ -184,7 +184,8 @@ class PrintHelper {
   }
 
   resetSettings() {
-    this.win.PrintEventHandler.settings = this.win.PrintEventHandler.defaultSettings;
+    this.win.PrintEventHandler.settings =
+      this.win.PrintEventHandler.defaultSettings;
     this.win.PrintEventHandler.saveSettingsToPrefs(
       this.win.PrintEventHandler.kInitSaveAll
     );

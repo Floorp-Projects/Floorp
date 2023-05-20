@@ -56,8 +56,7 @@ add_task(async function test_derive_legacy_sync_key_test_vector() {
   Assert.deepEqual(scopedKey, {
     kty: "oct",
     kid: "1510726317123-IqQv4onc7VcVE1kTQkyyOw",
-    k:
-      "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+    k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
   });
 });
 
@@ -95,8 +94,7 @@ add_task(async function test_derive_multiple_keys_at_once() {
     "https://identity.mozilla.com/apps/oldsync": {
       kty: "oct",
       kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
-      k:
-        "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+      k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
     },
   });
 });

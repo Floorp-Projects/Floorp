@@ -572,9 +572,8 @@ add_task(async function test_detect_and_reschedule_save_cache_on_new_changes() {
   let promiseSaveCacheRescheduled = new Promise(resolve => {
     resolvePromiseSaveCacheRescheduled = resolve;
   });
-  const realDetectStartupCacheDataChanged = dnrStore.detectStartupCacheDataChanged.bind(
-    dnrStore
-  );
+  const realDetectStartupCacheDataChanged =
+    dnrStore.detectStartupCacheDataChanged.bind(dnrStore);
   const stubDetectCacheDataChanges = sandboxStore.stub(
     dnrStore,
     "detectStartupCacheDataChanged"

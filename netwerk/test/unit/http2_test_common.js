@@ -1320,17 +1320,13 @@ var PulledDiskCacheListener = function () {};
 PulledDiskCacheListener.prototype = new Http2CheckListener();
 PulledDiskCacheListener.prototype.EXPECTED_DATA = "this was pulled via h2";
 PulledDiskCacheListener.prototype.readData = "";
-PulledDiskCacheListener.prototype.onDataAvailable = function testOnDataAvailable(
-  request,
-  stream,
-  off,
-  cnt
-) {
-  this.onDataAvailableFired = true;
-  this.isHttp2Connection = checkIsHttp2(request);
-  this.accum += cnt;
-  this.readData += read_stream(stream, cnt);
-};
+PulledDiskCacheListener.prototype.onDataAvailable =
+  function testOnDataAvailable(request, stream, off, cnt) {
+    this.onDataAvailableFired = true;
+    this.isHttp2Connection = checkIsHttp2(request);
+    this.accum += cnt;
+    this.readData += read_stream(stream, cnt);
+  };
 PulledDiskCacheListener.prototype.onStopRequest = function testOnStopRequest(
   request,
   status

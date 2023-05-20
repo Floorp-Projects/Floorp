@@ -36,9 +36,8 @@ add_task(async function () {
 
 async function getComputedPropertyValue(selector, property, inspector) {
   const highlightedNode = await getNodeFront(selector, inspector);
-  const computedStyle = await highlightedNode.inspectorFront.pageStyle.getComputed(
-    highlightedNode
-  );
+  const computedStyle =
+    await highlightedNode.inspectorFront.pageStyle.getComputed(highlightedNode);
   return computedStyle[property].value;
 }
 
@@ -310,9 +309,8 @@ async function testEllipseMoveRadius(config) {
   const quads = await getAllAdjustedQuadsForContentPageElement("#ellipse");
   const { width, height } = quads.content[0].bounds;
   const highlightedNode = await getNodeFront(selector, inspector);
-  const computedStyle = await highlightedNode.inspectorFront.pageStyle.getComputed(
-    highlightedNode
-  );
+  const computedStyle =
+    await highlightedNode.inspectorFront.pageStyle.getComputed(highlightedNode);
   const paddingTop = parseFloat(computedStyle["padding-top"].value);
   const paddingLeft = parseFloat(computedStyle["padding-left"].value);
   const cxPixel = paddingLeft + (width * cx) / 100;

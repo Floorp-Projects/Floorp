@@ -54,8 +54,7 @@ function preventBFCache(aBrowsingContext, aPrevent) {
         await BrowserTestUtils.withNewTab(
           {
             gBrowser,
-            url:
-              "http://mochi.test:8888/browser/dom/base/test/fullscreen/dummy_page.html",
+            url: "http://mochi.test:8888/browser/dom/base/test/fullscreen/dummy_page.html",
           },
           async function (browser) {
             // Maybe prevent BFCache on initial page.

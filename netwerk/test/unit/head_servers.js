@@ -302,9 +302,8 @@ class BaseProxyCode {
 
 class BaseHTTPProxy extends BaseNodeServer {
   registerFilter() {
-    const pps = Cc[
-      "@mozilla.org/network/protocol-proxy-service;1"
-    ].getService();
+    const pps =
+      Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
     this.filter = new NodeProxyFilter(
       this.protocol(),
       "localhost",
@@ -318,9 +317,8 @@ class BaseHTTPProxy extends BaseNodeServer {
   }
 
   unregisterFilter() {
-    const pps = Cc[
-      "@mozilla.org/network/protocol-proxy-service;1"
-    ].getService();
+    const pps =
+      Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
     if (this.filter) {
       pps.unregisterFilter(this.filter);
       this.filter = undefined;
@@ -358,9 +356,8 @@ class NodeProxyFilter {
       cb.onProxyFilterResult(pi);
       return;
     }
-    const pps = Cc[
-      "@mozilla.org/network/protocol-proxy-service;1"
-    ].getService();
+    const pps =
+      Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
     cb.onProxyFilterResult(
       pps.newProxyInfo(
         this._type,

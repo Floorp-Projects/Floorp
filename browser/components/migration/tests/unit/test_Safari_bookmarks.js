@@ -6,8 +6,9 @@ const { CustomizableUI } = ChromeUtils.import(
 
 add_task(async function () {
   registerFakePath("ULibDir", do_get_file("Library/"));
-  const faviconPath = do_get_file("Library/Safari/Favicon Cache/favicons.db")
-    .path;
+  const faviconPath = do_get_file(
+    "Library/Safari/Favicon Cache/favicons.db"
+  ).path;
 
   let migrator = await MigrationUtils.getMigrator("safari");
   // Sanity check for the source.

@@ -413,9 +413,8 @@ describe("Top Sites Feed", () => {
       it("should migrate pinned favicon data without getting favicons again", async () => {
         fakeNewTabUtils.pinnedLinks.links = [{ url: "https://foo.com/" }];
         await feed.getLinksWithDefaults();
-        const {
-          callCount,
-        } = fakeNewTabUtils.activityStreamProvider._addFavicons;
+        const { callCount } =
+          fakeNewTabUtils.activityStreamProvider._addFavicons;
         feed.pinnedCache.expire();
 
         const result = await feed.getLinksWithDefaults();

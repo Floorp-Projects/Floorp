@@ -373,9 +373,8 @@ add_task(
     );
     const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
-    const expectedUrl = await fxAccounts.constructor.config.promiseConnectAccountURI(
-      "fx-view"
-    );
+    const expectedUrl =
+      await fxAccounts.constructor.config.promiseConnectAccountURI("fx-view");
     info(`Expected FxA URL: ${expectedUrl}`);
 
     await BrowserTestUtils.withNewTab(

@@ -70,10 +70,11 @@ class Delegate {
     });
 
     const { browser } = tab;
-    const triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      Services.io.newURI(url),
-      {}
-    );
+    const triggeringPrincipal =
+      Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(url),
+        {}
+      );
 
     browser.fixupAndLoadURIString(url, {
       flags: Ci.nsIWebNavigation.LOAD_FLAGS_NONE,

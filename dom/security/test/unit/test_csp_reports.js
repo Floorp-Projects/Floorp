@@ -183,20 +183,23 @@ function run_test() {
     }
   );
 
-  makeTest(2, { "blocked-uri": "http://blocked.test/foo.js" }, false, function (
-    csp
-  ) {
-    // shouldLoad creates and sends out the report here.
-    csp.shouldLoad(
-      Ci.nsIContentPolicy.TYPE_SCRIPT,
-      null, // nsICSPEventListener
-      NetUtil.newURI("http://blocked.test/foo.js"),
-      null,
-      true,
-      null,
-      false
-    );
-  });
+  makeTest(
+    2,
+    { "blocked-uri": "http://blocked.test/foo.js" },
+    false,
+    function (csp) {
+      // shouldLoad creates and sends out the report here.
+      csp.shouldLoad(
+        Ci.nsIContentPolicy.TYPE_SCRIPT,
+        null, // nsICSPEventListener
+        NetUtil.newURI("http://blocked.test/foo.js"),
+        null,
+        true,
+        null,
+        false
+      );
+    }
+  );
 
   // test that inline script violations cause a report in report-only policy
   makeTest(

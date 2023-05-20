@@ -111,10 +111,8 @@ var waitForNotifierObservers = async function (
   );
   strictEqual(message.data.text(), text, "Should include data");
 
-  let {
-    data: subChangeScope,
-    subject: subChangePrincipal,
-  } = await subChangePromise;
+  let { data: subChangeScope, subject: subChangePrincipal } =
+    await subChangePromise;
   equal(
     subChangeScope,
     scope,
@@ -126,10 +124,8 @@ var waitForNotifierObservers = async function (
     "Should pass the principal as the subject of a change notification"
   );
 
-  let {
-    data: subModifiedScope,
-    subject: subModifiedPrincipal,
-  } = await subModifiedPromise;
+  let { data: subModifiedScope, subject: subModifiedPrincipal } =
+    await subModifiedPromise;
   equal(
     subModifiedScope,
     scope,

@@ -4,8 +4,7 @@ add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "http://mochi.test:8888/browser/toolkit/components/tooltiptext/tests/title_test.svg",
+      url: "http://mochi.test:8888/browser/toolkit/components/tooltiptext/tests/title_test.svg",
     },
     async function (browser) {
       await SpecialPowers.spawn(browser, [""], function () {

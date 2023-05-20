@@ -189,7 +189,8 @@ add_task(async function test_targeting_exists() {
       Glean.backgroundUpdate.targetingEnvFirefoxVersion.testGetValue()
     );
 
-    let profileAge = Glean.backgroundUpdate.targetingEnvProfileAge.testGetValue();
+    let profileAge =
+      Glean.backgroundUpdate.targetingEnvProfileAge.testGetValue();
 
     Assert.ok(profileAge instanceof Date);
     Assert.ok(0 < profileAge.getTime());
@@ -206,7 +207,8 @@ add_task(async function test_targeting_exists() {
 
     Assert.equal(targetProfileAge.toISOString(), profileAge.toISOString());
 
-    let currentDate = Glean.backgroundUpdate.targetingEnvCurrentDate.testGetValue();
+    let currentDate =
+      Glean.backgroundUpdate.targetingEnvCurrentDate.testGetValue();
 
     Assert.ok(0 < currentDate.getTime());
     Assert.ok(currentDate.getTime() < Date.now());

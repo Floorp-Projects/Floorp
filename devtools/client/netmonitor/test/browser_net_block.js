@@ -47,8 +47,9 @@ add_task(async function () {
       "#headers-panel .accordion-item"
     );
     normalRequestState = getSelectedRequest(store.getState());
-    normalRequestSize = firstRequest.querySelector(".requests-list-transferred")
-      .textContent;
+    normalRequestSize = firstRequest.querySelector(
+      ".requests-list-transferred"
+    ).textContent;
     normalHeadersSectionSize = headerSections.length;
     normalFirstHeaderSectionTitle = headerSections[0].querySelector(
       ".accordion-header-label"

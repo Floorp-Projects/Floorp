@@ -98,15 +98,17 @@ add_task(async function test_blob_uri_inherit_oa_from_content() {
     [{ firstPartyDomain: BASE_DOMAIN }],
     async function (attrs) {
       let iframe = content.document.getElementById("iframe1");
-      await SpecialPowers.spawn(iframe, [attrs.firstPartyDomain], function (
-        firstPartyDomain
-      ) {
-        Assert.equal(
-          content.document.nodePrincipal.originAttributes.firstPartyDomain,
-          firstPartyDomain,
-          "iframe should inherit firstPartyDomain from blob: URI"
-        );
-      });
+      await SpecialPowers.spawn(
+        iframe,
+        [attrs.firstPartyDomain],
+        function (firstPartyDomain) {
+          Assert.equal(
+            content.document.nodePrincipal.originAttributes.firstPartyDomain,
+            firstPartyDomain,
+            "iframe should inherit firstPartyDomain from blob: URI"
+          );
+        }
+      );
     }
   );
 

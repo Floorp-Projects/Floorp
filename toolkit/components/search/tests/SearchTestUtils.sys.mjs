@@ -497,9 +497,8 @@ export var SearchTestUtils = {
       let settings = lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY);
       config = await settings.get();
     }
-    const reloadObserved = SearchTestUtils.promiseSearchNotification(
-      "engines-reloaded"
-    );
+    const reloadObserved =
+      SearchTestUtils.promiseSearchNotification("engines-reloaded");
     await lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY).emit("sync", {
       data: { current: config },
     });

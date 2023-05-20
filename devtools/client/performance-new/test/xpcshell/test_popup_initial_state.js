@@ -70,11 +70,8 @@ add_task(function test() {
       "we add and remove features, the stored preferences do not cause the Gecko " +
       "Profiler interface to crash with invalid values."
   );
-  const {
-    getRecordingSettings,
-    setRecordingSettings,
-    changePreset,
-  } = setupBackgroundJsm();
+  const { getRecordingSettings, setRecordingSettings, changePreset } =
+    setupBackgroundJsm();
 
   const supportedFeatures = Services.profiler.GetFeatures();
 

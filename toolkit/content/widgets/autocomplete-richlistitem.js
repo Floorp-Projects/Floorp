@@ -7,7 +7,9 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-  MozElements.MozAutocompleteRichlistitem = class MozAutocompleteRichlistitem extends MozElements.MozRichlistitem {
+  MozElements.MozAutocompleteRichlistitem = class MozAutocompleteRichlistitem extends (
+    MozElements.MozRichlistitem
+  ) {
     constructor() {
       super();
 

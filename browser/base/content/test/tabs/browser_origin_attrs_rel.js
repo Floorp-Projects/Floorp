@@ -77,9 +77,9 @@ function setupRemoteTypes() {
         "webIsolated=https://example.org^privateBrowsingId=1",
       ],
       regular: {},
-      "1": {},
-      "2": {},
-      "3": {},
+      1: {},
+      2: {},
+      3: {},
       private: {},
     };
     remoteTypes.regular[URI_EXAMPLECOM] = "webIsolated=https://example.com";
@@ -105,9 +105,9 @@ function setupRemoteTypes() {
     remoteTypes = {
       initial: [...web, ...web],
       regular: {},
-      "1": {},
-      "2": {},
-      "3": {},
+      1: {},
+      2: {},
+      3: {},
       private: {},
     };
     remoteTypes.regular[URI_EXAMPLECOM] = "web";

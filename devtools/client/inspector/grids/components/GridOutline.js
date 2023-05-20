@@ -91,9 +91,8 @@ class GridOutline extends PureComponent {
     this.getGridAreaName = this.getGridAreaName.bind(this);
     this.getHeight = this.getHeight.bind(this);
     this.onHighlightCell = this.onHighlightCell.bind(this);
-    this.renderCannotShowOutlineText = this.renderCannotShowOutlineText.bind(
-      this
-    );
+    this.renderCannotShowOutlineText =
+      this.renderCannotShowOutlineText.bind(this);
     this.renderGrid = this.renderGrid.bind(this);
     this.renderGridCell = this.renderGridCell.bind(this);
     this.renderGridOutline = this.renderGridOutline.bind(this);

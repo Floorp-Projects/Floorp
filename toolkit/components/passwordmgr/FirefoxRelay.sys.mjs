@@ -464,15 +464,12 @@ class RelayOffered {
     const fillUsernamePromise = new Promise(
       resolve => (fillUsername = resolve)
     );
-    const [
-      enableStrings,
-      disableStrings,
-      postponeStrings,
-    ] = await formatMessages(
-      "firefox-relay-opt-in-confirmation-enable-button",
-      "firefox-relay-opt-in-confirmation-disable",
-      "firefox-relay-opt-in-confirmation-postpone"
-    );
+    const [enableStrings, disableStrings, postponeStrings] =
+      await formatMessages(
+        "firefox-relay-opt-in-confirmation-enable-button",
+        "firefox-relay-opt-in-confirmation-disable",
+        "firefox-relay-opt-in-confirmation-postpone"
+      );
     const enableIntegration = {
       label: enableStrings.label,
       accessKey: enableStrings.accesskey,

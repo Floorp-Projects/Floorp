@@ -123,9 +123,8 @@ add_task(async function test_apply_update() {
       installEvents: [{ event: "onNewInstall" }],
     },
     async () => {
-      ({
-        updateAvailable: install,
-      } = await AddonTestUtils.promiseFindAddonUpdates(a1));
+      ({ updateAvailable: install } =
+        await AddonTestUtils.promiseFindAddonUpdates(a1));
     }
   );
 
@@ -140,9 +139,8 @@ add_task(async function test_apply_update() {
   equal(install.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
 
   // Verify that another update check returns the same AddonInstall
-  let {
-    updateAvailable: install2,
-  } = await AddonTestUtils.promiseFindAddonUpdates(a1);
+  let { updateAvailable: install2 } =
+    await AddonTestUtils.promiseFindAddonUpdates(a1);
 
   installs = await AddonManager.getAllInstalls();
   equal(installs.length, 1);
@@ -597,25 +595,25 @@ add_task(async function test_params() {
   let resultsPromise = new Promise(resolve => {
     let results = new Map();
 
-    testserver.registerPathHandler("/data/param_test.json", function (
-      request,
-      response
-    ) {
-      let params = new URLSearchParams(request.queryString);
-      let itemId = params.get("item_id");
-      ok(
-        !results.has(itemId),
-        `Should not see a duplicate request for item ${itemId}`
-      );
+    testserver.registerPathHandler(
+      "/data/param_test.json",
+      function (request, response) {
+        let params = new URLSearchParams(request.queryString);
+        let itemId = params.get("item_id");
+        ok(
+          !results.has(itemId),
+          `Should not see a duplicate request for item ${itemId}`
+        );
 
-      results.set(itemId, params);
+        results.set(itemId, params);
 
-      if (results.size === PARAM_IDS.length) {
-        resolve(results);
+        if (results.size === PARAM_IDS.length) {
+          resolve(results);
+        }
+
+        request.setStatusLine(null, 500, "Server Error");
       }
-
-      request.setStatusLine(null, 500, "Server Error");
-    });
+    );
   });
 
   let addons = await getAddons(PARAM_IDS);

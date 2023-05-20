@@ -84,9 +84,8 @@ add_task(async function test_multiple_extensions_overriding_home_page() {
           browser.test.sendMessage("homepageSet");
           break;
         case "tryClear":
-          let clearResult = await browser.browserSettings.homepageOverride.clear(
-            {}
-          );
+          let clearResult =
+            await browser.browserSettings.homepageOverride.clear({});
           browser.test.assertFalse(
             clearResult,
             "Calling homepageOverride.clear returns false."

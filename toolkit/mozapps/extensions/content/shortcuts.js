@@ -508,8 +508,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
       }
 
       if (extension.shortcuts) {
-        let card = document.importNode(templates.card.content, true)
-          .firstElementChild;
+        let card = document.importNode(
+          templates.card.content,
+          true
+        ).firstElementChild;
         let icon = AddonManager.getPreferredIconURL(addon, 24, window);
         card.setAttribute("addon-id", addon.id);
         card.setAttribute("addon-name", addon.name);
@@ -546,8 +548,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
         for (let i = 0; i < commands.length; i++) {
           let command = commands[i];
 
-          let row = document.importNode(templates.row.content, true)
-            .firstElementChild;
+          let row = document.importNode(
+            templates.row.content,
+            true
+          ).firstElementChild;
 
           if (willHideCommands && i >= limit) {
             row.setAttribute("hide-before-expand", "true");

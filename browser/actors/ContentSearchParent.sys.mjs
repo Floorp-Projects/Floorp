@@ -125,9 +125,8 @@ export let ContentSearch = {
     ];
 
     for (let name of stringNames) {
-      this._searchSuggestionUIStrings[name] = searchBundle.GetStringFromName(
-        name
-      );
+      this._searchSuggestionUIStrings[name] =
+        searchBundle.GetStringFromName(name);
     }
     return this._searchSuggestionUIStrings;
   },
@@ -242,9 +241,8 @@ export let ContentSearch = {
         postData: submission.postData,
         triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
           {
-            userContextId: win.gBrowser.selectedBrowser.getAttribute(
-              "userContextId"
-            ),
+            userContextId:
+              win.gBrowser.selectedBrowser.getAttribute("userContextId"),
           }
         ),
       });
@@ -363,9 +361,8 @@ export let ContentSearch = {
     }
 
     if (window) {
-      state.isInPrivateBrowsingMode = lazy.PrivateBrowsingUtils.isContentWindowPrivate(
-        window
-      );
+      state.isInPrivateBrowsingMode =
+        lazy.PrivateBrowsingUtils.isContentWindowPrivate(window);
       state.isAboutPrivateBrowsing =
         window.gBrowser.currentURI.spec == "about:privatebrowsing";
     }
@@ -595,9 +592,12 @@ export let ContentSearch = {
       xhr.onload = () => {
         resolve(xhr.response);
       };
-      xhr.onerror = xhr.onabort = xhr.ontimeout = () => {
-        resolve(SEARCH_ENGINE_PLACEHOLDER_ICON);
-      };
+      xhr.onerror =
+        xhr.onabort =
+        xhr.ontimeout =
+          () => {
+            resolve(SEARCH_ENGINE_PLACEHOLDER_ICON);
+          };
       try {
         // This throws if the URI is erroneously encoded.
         xhr.send();

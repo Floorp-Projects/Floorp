@@ -4,11 +4,8 @@
 
 import { ContentProcessDomain } from "chrome://remote/content/cdp/domains/ContentProcessDomain.sys.mjs";
 
-const {
-  LOAD_FLAGS_BYPASS_CACHE,
-  LOAD_FLAGS_BYPASS_PROXY,
-  LOAD_FLAGS_NONE,
-} = Ci.nsIWebNavigation;
+const { LOAD_FLAGS_BYPASS_CACHE, LOAD_FLAGS_BYPASS_PROXY, LOAD_FLAGS_NONE } =
+  Ci.nsIWebNavigation;
 
 export class Page extends ContentProcessDomain {
   constructor(session) {

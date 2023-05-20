@@ -209,13 +209,11 @@ export class MigrationWizardParent extends JSWindowActorParent {
       };
     }
 
-    let [
-      progressHeaderString,
-      successHeaderString,
-    ] = await lazy.gFluentStrings.formatValues([
-      fileMigrator.progressHeaderL10nID,
-      fileMigrator.successHeaderL10nID,
-    ]);
+    let [progressHeaderString, successHeaderString] =
+      await lazy.gFluentStrings.formatValues([
+        fileMigrator.progressHeaderL10nID,
+        fileMigrator.successHeaderL10nID,
+      ]);
 
     this.sendAsyncMessage("UpdateFileImportProgress", {
       title: progressHeaderString,

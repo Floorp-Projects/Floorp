@@ -69,9 +69,8 @@ add_task(async function test_open_folder_in_tabs() {
     URIs.map(uri => BrowserTestUtils.waitForNewTab(gBrowser, uri, false, true))
   );
 
-  let bookmarkedNode = gLibrary.PlacesOrganizer._places.selectedNode.getChild(
-    0
-  );
+  let bookmarkedNode =
+    gLibrary.PlacesOrganizer._places.selectedNode.getChild(0);
   mouseEventOnCell(
     gLibrary.PlacesOrganizer._places,
     gLibrary.PlacesOrganizer._places.view.treeIndexForNode(bookmarkedNode),

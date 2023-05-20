@@ -17,14 +17,8 @@ function test() {
 var tests = {
   testFlagsForInputs() {
     const HTML_NS = "http://www.w3.org/1999/xhtml";
-    const {
-      INPUT,
-      EDITABLE,
-      TEXTINPUT,
-      NUMERIC,
-      PASSWORD,
-      SPELLCHECKABLE,
-    } = SpellCheckHelper;
+    const { INPUT, EDITABLE, TEXTINPUT, NUMERIC, PASSWORD, SPELLCHECKABLE } =
+      SpellCheckHelper;
     const kExpectedResults = {
       text: INPUT | EDITABLE | TEXTINPUT | SPELLCHECKABLE,
       password: INPUT | EDITABLE | TEXTINPUT | PASSWORD,

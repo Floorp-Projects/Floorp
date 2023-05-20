@@ -24,13 +24,15 @@ async function clearConsole() {
  *     the content page.
  */
 function createScriptNode(script) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [script], function (
-    _script
-  ) {
-    var script = content.document.createElement("script");
-    script.append(content.document.createTextNode(_script));
-    content.document.body.append(script);
-  });
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [script],
+    function (_script) {
+      var script = content.document.createElement("script");
+      script.append(content.document.createTextNode(_script));
+      content.document.body.append(script);
+    }
+  );
 }
 
 registerCleanupFunction(async () => {

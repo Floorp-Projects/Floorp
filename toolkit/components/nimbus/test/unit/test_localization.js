@@ -1,10 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {
-  ExperimentAPI,
-  _ExperimentFeature: ExperimentFeature,
-} = ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
+const { ExperimentAPI, _ExperimentFeature: ExperimentFeature } =
+  ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
 const { ExperimentFakes, ExperimentTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/NimbusTestUtils.sys.mjs"
 );
@@ -232,10 +230,8 @@ add_task(async function test_getLocalizedValue() {
     localizations: LOCALIZATIONS,
   });
 
-  const {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(experiment);
+  const { enrollmentPromise, doExperimentCleanup } =
+    ExperimentFakes.enrollmentHelper(experiment);
   await enrollmentPromise;
 
   const enrollment = manager.store.getExperimentForFeature(FEATURE_ID);
@@ -454,10 +450,8 @@ add_task(async function test_getVariables() {
     localizations: LOCALIZATIONS,
   });
 
-  const {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(experiment);
+  const { enrollmentPromise, doExperimentCleanup } =
+    ExperimentFakes.enrollmentHelper(experiment);
   await enrollmentPromise;
 
   Assert.deepEqual(
@@ -591,10 +585,8 @@ add_task(async function test_getVariables_fallback() {
 
   // Enroll in the rollout.
   {
-    const {
-      enrollmentPromise,
-      doExperimentCleanup,
-    } = ExperimentFakes.enrollmentHelper(recipes.rollout);
+    const { enrollmentPromise, doExperimentCleanup } =
+      ExperimentFakes.enrollmentHelper(recipes.rollout);
     await enrollmentPromise;
 
     cleanup.rollout = doExperimentCleanup;
@@ -629,10 +621,8 @@ add_task(async function test_getVariables_fallback() {
 
   // Enroll in the experiment.
   {
-    const {
-      enrollmentPromise,
-      doExperimentCleanup,
-    } = ExperimentFakes.enrollmentHelper(recipes.experiment);
+    const { enrollmentPromise, doExperimentCleanup } =
+      ExperimentFakes.enrollmentHelper(recipes.experiment);
     await enrollmentPromise;
 
     cleanup.experiment = doExperimentCleanup;
@@ -1195,7 +1185,8 @@ add_task(async function test_updateRecipes_unenroll_missingEntry() {
     "Reason should match"
   );
 
-  const validationFailedEvents = Glean.nimbusEvents.validationFailed.testGetValue();
+  const validationFailedEvents =
+    Glean.nimbusEvents.validationFailed.testGetValue();
   Assert.equal(
     validationFailedEvents.length,
     1,
@@ -1348,7 +1339,8 @@ add_task(async function test_updateRecipes_unenroll_missingLocale() {
     "Reason should match"
   );
 
-  const validationFailedEvents = Glean.nimbusEvents.validationFailed.testGetValue();
+  const validationFailedEvents =
+    Glean.nimbusEvents.validationFailed.testGetValue();
   Assert.equal(
     validationFailedEvents.length,
     1,

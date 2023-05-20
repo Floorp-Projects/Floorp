@@ -65,12 +65,11 @@ add_task(async function testPrivateFields() {
       </html>`);
   });
 
-  httpServer.registerPathHandler("/class-with-private-fields.js", function (
-    request,
-    response
-  ) {
-    response.setHeader("Content-Type", "application/javascript");
-    response.write(`
+  httpServer.registerPathHandler(
+    "/class-with-private-fields.js",
+    function (request, response) {
+      response.setHeader("Content-Type", "application/javascript");
+      response.write(`
       class MyClass {
         constructor(a) {
           this.#a = a;this.#b = Math.random();this.ab = this.#getAB();
@@ -87,7 +86,8 @@ add_task(async function testPrivateFields() {
         }
       }
   `);
-  });
+    }
+  );
   const port = httpServer.identity.primaryPort;
   const TEST_URL = `http://localhost:${port}/`;
 

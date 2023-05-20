@@ -12,19 +12,25 @@ const {
   FILTERS,
 } = require("resource://devtools/client/accessibility/constants.js");
 
-exports.filterToggle = filter => ({ dispatch }) =>
-  dispatch({ filter, type: FILTER_TOGGLE });
+exports.filterToggle =
+  filter =>
+  ({ dispatch }) =>
+    dispatch({ filter, type: FILTER_TOGGLE });
 
-exports.auditing = filter => ({ dispatch }) => {
-  const auditing = filter === FILTERS.ALL ? Object.values(FILTERS) : [filter];
-  return dispatch({ auditing, type: AUDITING });
-};
+exports.auditing =
+  filter =>
+  ({ dispatch }) => {
+    const auditing = filter === FILTERS.ALL ? Object.values(FILTERS) : [filter];
+    return dispatch({ auditing, type: AUDITING });
+  };
 
-exports.audit = (auditFunc, filter) => ({ dispatch }) =>
-  auditFunc(filter, progress =>
-    dispatch({ type: AUDIT_PROGRESS, progress })
-  ).then(({ error, ancestries }) => {
-    return error
-      ? dispatch({ type: AUDIT, error: true })
-      : dispatch({ type: AUDIT, response: ancestries });
-  });
+exports.audit =
+  (auditFunc, filter) =>
+  ({ dispatch }) =>
+    auditFunc(filter, progress =>
+      dispatch({ type: AUDIT_PROGRESS, progress })
+    ).then(({ error, ancestries }) => {
+      return error
+        ? dispatch({ type: AUDIT, error: true })
+        : dispatch({ type: AUDIT, response: ancestries });
+    });

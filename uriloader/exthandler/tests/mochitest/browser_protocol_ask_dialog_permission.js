@@ -38,15 +38,12 @@ let testDir = getChromeDir(getResolvedURI(gTestPath));
 const ORIGIN1 = "https://example.com";
 const ORIGIN2 = "https://example.org";
 const ORIGIN3 = Services.io.newFileURI(testDir).spec;
-const PRINCIPAL1 = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-  ORIGIN1
-);
-const PRINCIPAL2 = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-  ORIGIN2
-);
-const PRINCIPAL3 = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-  ORIGIN3
-);
+const PRINCIPAL1 =
+  Services.scriptSecurityManager.createContentPrincipalFromOrigin(ORIGIN1);
+const PRINCIPAL2 =
+  Services.scriptSecurityManager.createContentPrincipalFromOrigin(ORIGIN2);
+const PRINCIPAL3 =
+  Services.scriptSecurityManager.createContentPrincipalFromOrigin(ORIGIN3);
 
 const NULL_PRINCIPAL_SCHEME = Services.scriptSecurityManager
   .createNullPrincipal({})
@@ -829,9 +826,8 @@ add_task(async function test_extension_content_script_permission() {
         actionConfirm: true,
         checkContents: dialogEl => {
           let description = dialogEl.querySelector("#description");
-          let { id, args } = description.ownerDocument.l10n.getAttributes(
-            description
-          );
+          let { id, args } =
+            description.ownerDocument.l10n.getAttributes(description);
           is(
             id,
             "permission-dialog-description-extension",
@@ -850,14 +846,16 @@ add_task(async function test_extension_content_script_permission() {
       },
     });
 
-    let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
-      {}
-    );
-    let extensionPrivatePrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
-      { privateBrowsingId: 1 }
-    );
+    let extensionPrincipal =
+      Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+        {}
+      );
+    let extensionPrivatePrincipal =
+      Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+        { privateBrowsingId: 1 }
+      );
 
     let key = getSkipProtoDialogPermissionKey(scheme);
     is(
@@ -949,9 +947,8 @@ add_task(async function test_extension_private_content_script_permission() {
           actionConfirm: true,
           checkContents: dialogEl => {
             let description = dialogEl.querySelector("#description");
-            let { id, args } = description.ownerDocument.l10n.getAttributes(
-              description
-            );
+            let { id, args } =
+              description.ownerDocument.l10n.getAttributes(description);
             is(
               id,
               "permission-dialog-description-extension",
@@ -970,14 +967,16 @@ add_task(async function test_extension_private_content_script_permission() {
         },
       });
 
-      let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-        Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
-        {}
-      );
-      let extensionPrivatePrincipal = Services.scriptSecurityManager.createContentPrincipal(
-        Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
-        { privateBrowsingId: 1 }
-      );
+      let extensionPrincipal =
+        Services.scriptSecurityManager.createContentPrincipal(
+          Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+          {}
+        );
+      let extensionPrivatePrincipal =
+        Services.scriptSecurityManager.createContentPrincipal(
+          Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+          { privateBrowsingId: 1 }
+        );
 
       let key = getSkipProtoDialogPermissionKey(scheme);
       is(
@@ -1064,10 +1063,11 @@ add_task(async function test_extension_allowed_content() {
       },
     });
 
-    let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
-      {}
-    );
+    let extensionPrincipal =
+      Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+        {}
+      );
 
     is(
       Services.perms.testPermissionFromPrincipal(extensionPrincipal, key),
@@ -1115,10 +1115,11 @@ add_task(async function test_extension_allowed_extension() {
         testExtension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
         await testExtension.startup();
 
-        let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-          Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
-          {}
-        );
+        let extensionPrincipal =
+          Services.scriptSecurityManager.createContentPrincipal(
+            Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+            {}
+          );
         Services.perms.addFromPrincipal(
           extensionPrincipal,
           key,
@@ -1178,9 +1179,8 @@ add_task(async function test_extension_principal() {
         actionConfirm: true,
         checkContents: dialogEl => {
           let description = dialogEl.querySelector("#description");
-          let { id, args } = description.ownerDocument.l10n.getAttributes(
-            description
-          );
+          let { id, args } =
+            description.ownerDocument.l10n.getAttributes(description);
           is(
             id,
             "permission-dialog-description-extension",
@@ -1199,10 +1199,11 @@ add_task(async function test_extension_principal() {
       },
     });
 
-    let extensionPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
-      {}
-    );
+    let extensionPrincipal =
+      Services.scriptSecurityManager.createContentPrincipal(
+        Services.io.newURI(`moz-extension://${testExtension.uuid}/`),
+        {}
+      );
 
     let key = getSkipProtoDialogPermissionKey(scheme);
     is(

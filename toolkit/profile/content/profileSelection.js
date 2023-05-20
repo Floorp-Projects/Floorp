@@ -146,9 +146,8 @@ function acceptDialog(event) {
   var profilesElement = document.getElementById("profiles");
   var selectedProfile = profilesElement.selectedItem;
   if (!selectedProfile) {
-    var pleaseSelectTitle = gProfileManagerBundle.getString(
-      "pleaseSelectTitle"
-    );
+    var pleaseSelectTitle =
+      gProfileManagerBundle.getString("pleaseSelectTitle");
     var pleaseSelect = gProfileManagerBundle.getFormattedString(
       "pleaseSelect",
       [appName]

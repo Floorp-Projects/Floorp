@@ -91,12 +91,13 @@ exported_symbols.testValuesIteratorNextIsCallable = async function () {
   Assert.ok(!!item, "Should return an item");
 };
 
-exported_symbols.testDirectoryHandleSupportsEntriesIterator = async function () {
-  const root = await navigator.storage.getDirectory();
+exported_symbols.testDirectoryHandleSupportsEntriesIterator =
+  async function () {
+    const root = await navigator.storage.getDirectory();
 
-  const it = await root.entries();
-  Assert.ok(!!it, "Does root support entries iterator?");
-};
+    const it = await root.entries();
+    Assert.ok(!!it, "Does root support entries iterator?");
+  };
 
 exported_symbols.testEntriesIteratorNextIsCallable = async function () {
   const root = await navigator.storage.getDirectory();

@@ -92,16 +92,17 @@ add_task(async function test_safari_permissions() {
     node.control.checked = true;
 
     let deck = shadow.querySelector("#wizard-deck");
-    let switchedToSafariPermissionPage = BrowserTestUtils.waitForMutationCondition(
-      deck,
-      { attributeFilter: ["selected-view"] },
-      () => {
-        return (
-          deck.getAttribute("selected-view") ==
-          "page-" + MigrationWizardConstants.PAGES.SAFARI_PERMISSION
-        );
-      }
-    );
+    let switchedToSafariPermissionPage =
+      BrowserTestUtils.waitForMutationCondition(
+        deck,
+        { attributeFilter: ["selected-view"] },
+        () => {
+          return (
+            deck.getAttribute("selected-view") ==
+            "page-" + MigrationWizardConstants.PAGES.SAFARI_PERMISSION
+          );
+        }
+      );
 
     let importButton = shadow.querySelector("#import");
     importButton.click();

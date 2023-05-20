@@ -32,10 +32,8 @@ add_task(async function test_enrollmentHelper() {
 
   await manager.onStartup();
 
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(recipe, { manager });
+  let { enrollmentPromise, doExperimentCleanup } =
+    ExperimentFakes.enrollmentHelper(recipe, { manager });
 
   await enrollmentPromise;
 

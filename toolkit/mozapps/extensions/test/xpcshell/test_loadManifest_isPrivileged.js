@@ -110,7 +110,8 @@ async function testLoadManifest({ location, expectPrivileged }) {
     AddonTestUtils.checkMessages(messages, {
       expected: [
         {
-          message: /Using the privileged permission 'mozillaAddons' requires a privileged add-on/,
+          message:
+            /Using the privileged permission 'mozillaAddons' requires a privileged add-on/,
         },
       ],
       forbidden: [],
@@ -119,7 +120,8 @@ async function testLoadManifest({ location, expectPrivileged }) {
     AddonTestUtils.checkMessages(messages, {
       expected: [
         {
-          message: /Reading manifest: Invalid extension permission: mozillaAddons/,
+          message:
+            /Reading manifest: Invalid extension permission: mozillaAddons/,
         },
       ],
       forbidden: [],

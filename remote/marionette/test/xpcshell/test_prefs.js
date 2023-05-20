@@ -4,13 +4,10 @@
 
 "use strict";
 
-const {
-  Branch,
-  EnvironmentPrefs,
-  MarionettePrefs,
-} = ChromeUtils.importESModule(
-  "chrome://remote/content/marionette/prefs.sys.mjs"
-);
+const { Branch, EnvironmentPrefs, MarionettePrefs } =
+  ChromeUtils.importESModule(
+    "chrome://remote/content/marionette/prefs.sys.mjs"
+  );
 
 function reset() {
   Services.prefs.setBoolPref("test.bool", false);

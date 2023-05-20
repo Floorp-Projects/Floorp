@@ -17,24 +17,18 @@ class WorkersListener {
     this.registrationsOnly = registrationsOnly;
 
     // bind handlers
-    this._onContentProcessTargetAvailable = this._onContentProcessTargetAvailable.bind(
-      this
-    );
-    this._onServiceWorkerRegistrationAvailable = this._onServiceWorkerRegistrationAvailable.bind(
-      this
-    );
-    this._onProcessDescriptorAvailable = this._onProcessDescriptorAvailable.bind(
-      this
-    );
-    this._onContentProcessTargetDestroyed = this._onContentProcessTargetDestroyed.bind(
-      this
-    );
-    this._onServiceWorkerRegistrationDestroyed = this._onServiceWorkerRegistrationDestroyed.bind(
-      this
-    );
-    this._onProcessDescriptorDestroyed = this._onProcessDescriptorDestroyed.bind(
-      this
-    );
+    this._onContentProcessTargetAvailable =
+      this._onContentProcessTargetAvailable.bind(this);
+    this._onServiceWorkerRegistrationAvailable =
+      this._onServiceWorkerRegistrationAvailable.bind(this);
+    this._onProcessDescriptorAvailable =
+      this._onProcessDescriptorAvailable.bind(this);
+    this._onContentProcessTargetDestroyed =
+      this._onContentProcessTargetDestroyed.bind(this);
+    this._onServiceWorkerRegistrationDestroyed =
+      this._onServiceWorkerRegistrationDestroyed.bind(this);
+    this._onProcessDescriptorDestroyed =
+      this._onProcessDescriptorDestroyed.bind(this);
 
     // Array of contentProcessTarget fronts on which we will listen for worker events.
     this._contentProcessFronts = [];
@@ -128,9 +122,8 @@ class WorkersListener {
   }
 
   _onServiceWorkerRegistrationDestroyed(front) {
-    this._serviceWorkerRegistrationFronts = this._serviceWorkerRegistrationFronts.filter(
-      f => f !== front
-    );
+    this._serviceWorkerRegistrationFronts =
+      this._serviceWorkerRegistrationFronts.filter(f => f !== front);
   }
 
   _onProcessDescriptorAvailable(processFront) {

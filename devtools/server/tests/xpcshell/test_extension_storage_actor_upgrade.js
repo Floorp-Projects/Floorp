@@ -97,16 +97,17 @@ add_task(async function test_panel_live_reload() {
   // Wait for the storage front to receive an event for the storage panel refresh
   // when the extension has been reloaded.
   const promiseStoragePanelUpdated = new Promise(resolve => {
-    extensionStorage.on("single-store-update", function updateListener(
-      updates
-    ) {
-      info(`Got stores-update event: ${JSON.stringify(updates)}`);
-      const extStorageAdded = updates.added?.extensionStorage;
-      if (host in extStorageAdded && extStorageAdded[host].length) {
-        extensionStorage.off("single-store-update", updateListener);
-        resolve();
+    extensionStorage.on(
+      "single-store-update",
+      function updateListener(updates) {
+        info(`Got stores-update event: ${JSON.stringify(updates)}`);
+        const extStorageAdded = updates.added?.extensionStorage;
+        if (host in extStorageAdded && extStorageAdded[host].length) {
+          extensionStorage.off("single-store-update", updateListener);
+          resolve();
+        }
       }
-    });
+    );
   });
 
   await extension.upgrade(

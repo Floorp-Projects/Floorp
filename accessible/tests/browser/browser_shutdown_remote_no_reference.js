@@ -32,17 +32,12 @@ add_task(async function () {
       // Create a11y service in the main process. This will trigger creating of
       // the a11y service in parent as well.
       const [parentA11yInitObserver, parentA11yInit] = initAccService();
-      const [contentA11yInitObserver, contentA11yInit] = initAccService(
-        browser
-      );
-      let [
-        parentConsumersChangedObserver,
-        parentConsumersChanged,
-      ] = accConsumersChanged();
-      let [
-        contentConsumersChangedObserver,
-        contentConsumersChanged,
-      ] = accConsumersChanged(browser);
+      const [contentA11yInitObserver, contentA11yInit] =
+        initAccService(browser);
+      let [parentConsumersChangedObserver, parentConsumersChanged] =
+        accConsumersChanged();
+      let [contentConsumersChangedObserver, contentConsumersChanged] =
+        accConsumersChanged(browser);
 
       await Promise.all([
         parentA11yInitObserver,
@@ -94,22 +89,14 @@ add_task(async function () {
           "down in content"
       );
       // Remove a11y service reference in the main process.
-      const [
-        parentA11yShutdownObserver,
-        parentA11yShutdown,
-      ] = shutdownAccService();
-      const [
-        contentA11yShutdownObserver,
-        contentA11yShutdown,
-      ] = shutdownAccService(browser);
-      [
-        parentConsumersChangedObserver,
-        parentConsumersChanged,
-      ] = accConsumersChanged();
-      [
-        contentConsumersChangedObserver,
-        contentConsumersChanged,
-      ] = accConsumersChanged(browser);
+      const [parentA11yShutdownObserver, parentA11yShutdown] =
+        shutdownAccService();
+      const [contentA11yShutdownObserver, contentA11yShutdown] =
+        shutdownAccService(browser);
+      [parentConsumersChangedObserver, parentConsumersChanged] =
+        accConsumersChanged();
+      [contentConsumersChangedObserver, contentConsumersChanged] =
+        accConsumersChanged(browser);
 
       await Promise.all([
         parentA11yShutdownObserver,

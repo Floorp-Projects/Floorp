@@ -7,11 +7,8 @@
 
 add_task(async function () {
   await addTab(URL_ROOT + "doc_custom_playback_rate.html");
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
 
   info(
     "Pause the all animation and set current time to middle time in order to " +

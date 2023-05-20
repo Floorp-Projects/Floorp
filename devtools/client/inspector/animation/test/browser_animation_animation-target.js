@@ -35,9 +35,8 @@ add_task(async function () {
     animationItemEl.scrollIntoView(false);
     await waitUntil(() => animationItemEl.querySelector(".animation-target"));
 
-    const animationTargetEl = animationItemEl.querySelector(
-      ".animation-target"
-    );
+    const animationTargetEl =
+      animationItemEl.querySelector(".animation-target");
     ok(
       animationTargetEl,
       "The animation target element should be in each animation item element"

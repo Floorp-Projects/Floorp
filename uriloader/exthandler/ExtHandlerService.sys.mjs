@@ -195,10 +195,10 @@ HandlerService.prototype = {
   _migrateProtocolHandlersIfNeeded() {
     const kMigrations = {
       "30boxes": () => {
-        const k30BoxesRegex = /^https?:\/\/(?:www\.)?30boxes.com\/external\/widget/i;
-        let webcalHandler = lazy.externalProtocolService.getProtocolHandlerInfo(
-          "webcal"
-        );
+        const k30BoxesRegex =
+          /^https?:\/\/(?:www\.)?30boxes.com\/external\/widget/i;
+        let webcalHandler =
+          lazy.externalProtocolService.getProtocolHandlerInfo("webcal");
         if (this.exists(webcalHandler)) {
           this.fillHandlerInfo(webcalHandler, "");
           let shouldStore = false;
@@ -263,9 +263,8 @@ HandlerService.prototype = {
           }
           return false;
         }
-        let mailHandler = lazy.externalProtocolService.getProtocolHandlerInfo(
-          "mailto"
-        );
+        let mailHandler =
+          lazy.externalProtocolService.getProtocolHandlerInfo("mailto");
         if (this.exists(mailHandler)) {
           this.fillHandlerInfo(mailHandler, "");
           let handlers = mailHandler.possibleApplicationHandlers;
@@ -454,9 +453,8 @@ HandlerService.prototype = {
           type,
           get _handlerInfo() {
             delete this._handlerInfo;
-            return (this._handlerInfo = lazy.externalProtocolService.getProtocolHandlerInfo(
-              type
-            ));
+            return (this._handlerInfo =
+              lazy.externalProtocolService.getProtocolHandlerInfo(type));
           },
         },
         {
@@ -569,9 +567,8 @@ HandlerService.prototype = {
   // nsIHandlerService
   fillHandlerInfo(handlerInfo, overrideType) {
     let type = overrideType || handlerInfo.type;
-    let storedHandlerInfo = this._getHandlerListByHandlerInfoType(handlerInfo)[
-      type
-    ];
+    let storedHandlerInfo =
+      this._getHandlerListByHandlerInfoType(handlerInfo)[type];
     if (!storedHandlerInfo) {
       throw new Components.Exception(
         "handlerSvc fillHandlerInfo: don't know this type",

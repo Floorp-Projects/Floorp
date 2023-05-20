@@ -51,9 +51,8 @@ add_task(async function test_eventpage_idle() {
         }
       );
       browser.runtime.onSuspend.addListener(async () => {
-        let setting = await browser.browserSettings.allowPopupsForUserEvents.get(
-          {}
-        );
+        let setting =
+          await browser.browserSettings.allowPopupsForUserEvents.get({});
         browser.test.sendMessage("suspended", setting);
       });
     },

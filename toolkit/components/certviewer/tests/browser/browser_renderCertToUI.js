@@ -18,166 +18,175 @@ add_task(async function test() {
   let certItems = adjustedCerts[0].certItems;
 
   await BrowserTestUtils.withNewTab(url, async function (browser) {
-    await SpecialPowers.spawn(browser, [[certItems, tabName]], async function ([
-      adjustedCerts,
-      expectedTabName,
-    ]) {
-      let certificateSection = await ContentTaskUtils.waitForCondition(() => {
-        return content.document.querySelector("certificate-section");
-      }, "Certificate section found");
+    await SpecialPowers.spawn(
+      browser,
+      [[certItems, tabName]],
+      async function ([adjustedCerts, expectedTabName]) {
+        let certificateSection = await ContentTaskUtils.waitForCondition(() => {
+          return content.document.querySelector("certificate-section");
+        }, "Certificate section found");
 
-      let infoGroups = certificateSection.shadowRoot.querySelectorAll(
-        "info-group"
-      );
-      Assert.ok(infoGroups, "infoGroups found");
-      Assert.equal(
-        infoGroups.length,
-        adjustedCerts.length,
-        "infoGroups must have the same length of adjustedCerts"
-      );
-
-      let tabName = certificateSection.shadowRoot.querySelector(
-        ".tab[idnumber='0']"
-      ).textContent;
-      Assert.equal(tabName, expectedTabName, "Tab name should be the same");
-
-      function getElementByAttribute(source, property, target) {
-        for (let elem of source) {
-          if (elem.hasOwnProperty(property) && elem[property] === target) {
-            return elem;
-          }
-        }
-        return null;
-      }
-
-      function checkBooleans(got, expected) {
-        info(
-          "If adjustedCertElments returned true, this value should be Yes, otherwise it should be No"
-        );
-        let gotBool;
-        if (got === "Yes") {
-          gotBool = true;
-        } else if (got === "No") {
-          gotBool = false;
-        } else {
-          gotBool = null;
-        }
-        Assert.equal(gotBool, expected, `Expected ${expected}, got ${gotBool}`);
-      }
-
-      for (let infoGroup of infoGroups) {
-        let sectionId = infoGroup.shadowRoot
-          .querySelector(".info-group-title")
-          .getAttribute("data-l10n-id")
-          .replace("certificate-viewer-", "");
-
-        let adjustedCertsElem = getElementByAttribute(
-          adjustedCerts,
-          "sectionId",
-          sectionId
-        );
-        Assert.ok(adjustedCertsElem, "The element exists in adjustedCerts");
-
-        let infoItems = infoGroup.shadowRoot.querySelectorAll("info-item");
+        let infoGroups =
+          certificateSection.shadowRoot.querySelectorAll("info-group");
+        Assert.ok(infoGroups, "infoGroups found");
         Assert.equal(
-          infoItems.length,
-          adjustedCertsElem.sectionItems.length,
-          "sectionItems must be the same length"
+          infoGroups.length,
+          adjustedCerts.length,
+          "infoGroups must have the same length of adjustedCerts"
         );
 
-        let i = 0;
-        // Message ID mappings
-        let stringMapping = {
-          signaturealgorithm: "signature-algorithm",
-        };
-        for (let infoItem of infoItems) {
-          let infoItemLabel = infoItem.shadowRoot
-            .querySelector("label")
-            .getAttribute("data-l10n-id");
-          let infoElem = infoItem.shadowRoot.querySelector(".info");
-          let infoItemInfo = infoElem.textContent;
-          let adjustedCertsElemLabel =
-            adjustedCertsElem.sectionItems[i].labelId;
-          let adjustedCertsElemInfo = adjustedCertsElem.sectionItems[i].info;
+        let tabName =
+          certificateSection.shadowRoot.querySelector(
+            ".tab[idnumber='0']"
+          ).textContent;
+        Assert.equal(tabName, expectedTabName, "Tab name should be the same");
 
-          if (adjustedCertsElemLabel == null) {
-            adjustedCertsElemLabel = "";
-          }
-          adjustedCertsElemLabel = adjustedCertsElemLabel
-            .replace(/\s+/g, "-")
-            .replace(/\./g, "")
-            .replace(/\//g, "")
-            .replace(/--/g, "-")
-            .toLowerCase();
-          adjustedCertsElemLabel =
-            stringMapping[adjustedCertsElemLabel] || adjustedCertsElemLabel;
-
-          if (adjustedCertsElemInfo == null) {
-            adjustedCertsElemInfo = "";
-          }
-          if (typeof adjustedCertsElemInfo === "boolean") {
-            checkBooleans(infoItemInfo, adjustedCertsElemInfo);
-            continue;
-          }
-
-          if (
-            adjustedCertsElemLabel === "timestamp" ||
-            adjustedCertsElemLabel === "not-after" ||
-            adjustedCertsElemLabel === "not-before"
-          ) {
-            Assert.equal(
-              infoElem.textContent,
-              adjustedCertsElemInfo.utc,
-              "Timestamps must be equal"
-            );
-            i++;
-            continue;
-          }
-          if (adjustedCertsElemLabel === "download") {
-            Assert.equal(infoElem.children.length, 2, "Should have 2 links.");
-            for (let kid of infoElem.children) {
-              Assert.equal(kid.localName, "a", "Should get a cert/chain link.");
-              Assert.ok(
-                kid.download.endsWith("pem"),
-                "Link `download` attribute should point to pem file."
-              );
-              Assert.ok(
-                kid.dataset.l10nId.includes("pem"),
-                "Link should be labeled"
-              );
-              Assert.equal(
-                kid.dataset.l10nId.includes("chain"),
-                kid.download.includes("chain"),
-                "Download label and filename should match"
-              );
+        function getElementByAttribute(source, property, target) {
+          for (let elem of source) {
+            if (elem.hasOwnProperty(property) && elem[property] === target) {
+              return elem;
             }
-            // Remaining tests in browser_downloadLink.js
+          }
+          return null;
+        }
+
+        function checkBooleans(got, expected) {
+          info(
+            "If adjustedCertElments returned true, this value should be Yes, otherwise it should be No"
+          );
+          let gotBool;
+          if (got === "Yes") {
+            gotBool = true;
+          } else if (got === "No") {
+            gotBool = false;
+          } else {
+            gotBool = null;
+          }
+          Assert.equal(
+            gotBool,
+            expected,
+            `Expected ${expected}, got ${gotBool}`
+          );
+        }
+
+        for (let infoGroup of infoGroups) {
+          let sectionId = infoGroup.shadowRoot
+            .querySelector(".info-group-title")
+            .getAttribute("data-l10n-id")
+            .replace("certificate-viewer-", "");
+
+          let adjustedCertsElem = getElementByAttribute(
+            adjustedCerts,
+            "sectionId",
+            sectionId
+          );
+          Assert.ok(adjustedCertsElem, "The element exists in adjustedCerts");
+
+          let infoItems = infoGroup.shadowRoot.querySelectorAll("info-item");
+          Assert.equal(
+            infoItems.length,
+            adjustedCertsElem.sectionItems.length,
+            "sectionItems must be the same length"
+          );
+
+          let i = 0;
+          // Message ID mappings
+          let stringMapping = {
+            signaturealgorithm: "signature-algorithm",
+          };
+          for (let infoItem of infoItems) {
+            let infoItemLabel = infoItem.shadowRoot
+              .querySelector("label")
+              .getAttribute("data-l10n-id");
+            let infoElem = infoItem.shadowRoot.querySelector(".info");
+            let infoItemInfo = infoElem.textContent;
+            let adjustedCertsElemLabel =
+              adjustedCertsElem.sectionItems[i].labelId;
+            let adjustedCertsElemInfo = adjustedCertsElem.sectionItems[i].info;
+
+            if (adjustedCertsElemLabel == null) {
+              adjustedCertsElemLabel = "";
+            }
+            adjustedCertsElemLabel = adjustedCertsElemLabel
+              .replace(/\s+/g, "-")
+              .replace(/\./g, "")
+              .replace(/\//g, "")
+              .replace(/--/g, "-")
+              .toLowerCase();
+            adjustedCertsElemLabel =
+              stringMapping[adjustedCertsElemLabel] || adjustedCertsElemLabel;
+
+            if (adjustedCertsElemInfo == null) {
+              adjustedCertsElemInfo = "";
+            }
+            if (typeof adjustedCertsElemInfo === "boolean") {
+              checkBooleans(infoItemInfo, adjustedCertsElemInfo);
+              continue;
+            }
+
+            if (
+              adjustedCertsElemLabel === "timestamp" ||
+              adjustedCertsElemLabel === "not-after" ||
+              adjustedCertsElemLabel === "not-before"
+            ) {
+              Assert.equal(
+                infoElem.textContent,
+                adjustedCertsElemInfo.utc,
+                "Timestamps must be equal"
+              );
+              i++;
+              continue;
+            }
+            if (adjustedCertsElemLabel === "download") {
+              Assert.equal(infoElem.children.length, 2, "Should have 2 links.");
+              for (let kid of infoElem.children) {
+                Assert.equal(
+                  kid.localName,
+                  "a",
+                  "Should get a cert/chain link."
+                );
+                Assert.ok(
+                  kid.download.endsWith("pem"),
+                  "Link `download` attribute should point to pem file."
+                );
+                Assert.ok(
+                  kid.dataset.l10nId.includes("pem"),
+                  "Link should be labeled"
+                );
+                Assert.equal(
+                  kid.dataset.l10nId.includes("chain"),
+                  kid.download.includes("chain"),
+                  "Download label and filename should match"
+                );
+              }
+              // Remaining tests in browser_downloadLink.js
+
+              i++;
+              continue;
+            }
+
+            if (Array.isArray(adjustedCertsElemInfo)) {
+              // there is a case where we have a boolean
+              adjustedCertsElemInfo = adjustedCertsElemInfo
+                .toString()
+                .replace(/,/g, ", ");
+            }
+
+            Assert.ok(
+              infoItemLabel.includes(adjustedCertsElemLabel),
+              "data-l10n-id must contain the original label"
+            );
+
+            Assert.equal(
+              infoItemInfo,
+              adjustedCertsElemInfo,
+              "Info must be equal"
+            );
 
             i++;
-            continue;
           }
-
-          if (Array.isArray(adjustedCertsElemInfo)) {
-            // there is a case where we have a boolean
-            adjustedCertsElemInfo = adjustedCertsElemInfo
-              .toString()
-              .replace(/,/g, ", ");
-          }
-
-          Assert.ok(
-            infoItemLabel.includes(adjustedCertsElemLabel),
-            "data-l10n-id must contain the original label"
-          );
-
-          Assert.equal(
-            infoItemInfo,
-            adjustedCertsElemInfo,
-            "Info must be equal"
-          );
-
-          i++;
         }
       }
-    });
+    );
   });
 });

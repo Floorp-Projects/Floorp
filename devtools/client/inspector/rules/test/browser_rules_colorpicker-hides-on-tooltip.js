@@ -27,8 +27,11 @@ add_task(async function () {
     "color"
   ).valueSpan.querySelector(".ruleview-colorswatch");
 
-  const bgImageSpan = getRuleViewProperty(view, "body", "background-image")
-    .valueSpan;
+  const bgImageSpan = getRuleViewProperty(
+    view,
+    "body",
+    "background-image"
+  ).valueSpan;
   const uriSpan = bgImageSpan.querySelector(".theme-link");
 
   const colorPicker = view.tooltips.getTooltip("colorPicker");

@@ -775,9 +775,10 @@ export var BackgroundUpdate = {
     Glean.backgroundUpdate.targetingExists.set(false);
     Glean.backgroundUpdate.targetingException.set(true);
     try {
-      defaultProfileTargetingSnapshot = await lazy.BackgroundTasksUtils.readFirefoxMessagingSystemTargetingSnapshot(
-        lock
-      );
+      defaultProfileTargetingSnapshot =
+        await lazy.BackgroundTasksUtils.readFirefoxMessagingSystemTargetingSnapshot(
+          lock
+        );
       Glean.backgroundUpdate.targetingExists.set(true);
       Glean.backgroundUpdate.targetingException.set(false);
 

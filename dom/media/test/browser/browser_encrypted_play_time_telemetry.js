@@ -151,8 +151,10 @@ async function getTelemetrySums() {
   // until is arrived in the parent to check it. At time of writing there's
   // not a more elegant way of doing this than polling.
   return TestUtils.waitForCondition(() => {
-    let histograms = Services.telemetry.getSnapshotForHistograms("main", true)
-      .content;
+    let histograms = Services.telemetry.getSnapshotForHistograms(
+      "main",
+      true
+    ).content;
     // All the histogram data should come at the same time, so we just check
     // for playtime here as we always expect it in these tests, but we'll
     // grab other values if present.

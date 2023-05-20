@@ -31,18 +31,23 @@ async function enableServiceWorkerDebugging() {
  */
 function onServiceWorkerMessage(tab, message) {
   info("Make the test page notify us when the service worker sends a message.");
-  return SpecialPowers.spawn(tab.linkedBrowser, [message], function (
-    messageChild
-  ) {
-    return new Promise(resolve => {
-      const win = content.wrappedJSObject;
-      win.navigator.serviceWorker.addEventListener("message", function (event) {
-        if (event.data == messageChild) {
-          resolve();
-        }
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [message],
+    function (messageChild) {
+      return new Promise(resolve => {
+        const win = content.wrappedJSObject;
+        win.navigator.serviceWorker.addEventListener(
+          "message",
+          function (event) {
+            if (event.data == messageChild) {
+              resolve();
+            }
+          }
+        );
       });
-    });
-  });
+    }
+  );
 }
 /* exported onServiceWorkerMessage */
 

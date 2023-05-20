@@ -52,7 +52,8 @@ add_task(async function () {
   let otherTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await firstSwitchDone;
 
-  let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
+  let tabStripRect =
+    gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let firstTabRect = origTab.getBoundingClientRect();
   let tabPaddingStart = parseFloat(
     getComputedStyle(gBrowser.selectedTab).paddingInlineStart

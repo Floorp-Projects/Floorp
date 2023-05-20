@@ -69,13 +69,8 @@ const DUMMY_PAGE_URI = Services.io.newURI(
   "chrome://extensions/content/dummy.xhtml"
 );
 
-var {
-  BaseContext,
-  CanOfAPIs,
-  SchemaAPIManager,
-  SpreadArgs,
-  defineLazyGetter,
-} = ExtensionCommon;
+var { BaseContext, CanOfAPIs, SchemaAPIManager, SpreadArgs, defineLazyGetter } =
+  ExtensionCommon;
 
 var {
   DefaultMap,
@@ -846,9 +841,10 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     }
 
     this._devToolsCommandsPromise = (async () => {
-      const commands = await lazy.DevToolsShim.createCommandsForTabForWebExtension(
-        this.devToolsToolbox.commands.descriptorFront.localTab
-      );
+      const commands =
+        await lazy.DevToolsShim.createCommandsForTabForWebExtension(
+          this.devToolsToolbox.commands.descriptorFront.localTab
+        );
       await commands.targetCommand.startListening();
       this._devToolsCommands = commands;
       this._devToolsCommandsPromise = null;
@@ -1967,7 +1963,7 @@ let IconDetails = {
 
       if (imageData) {
         if (typeof imageData == "string") {
-          imageData = { "19": imageData };
+          imageData = { 19: imageData };
         }
 
         for (let size of Object.keys(imageData)) {
@@ -1979,7 +1975,7 @@ let IconDetails = {
 
       if (path != null) {
         if (typeof path != "object") {
-          path = { "19": path };
+          path = { 19: path };
         }
 
         for (let size of Object.keys(path)) {

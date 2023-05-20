@@ -479,10 +479,10 @@ function internalPersist(persistArgs) {
       filesFolder = persistArgs.targetFile.clone();
 
       var nameWithoutExtension = getFileBaseName(filesFolder.leafName);
-      var filesFolderLeafName = ContentAreaUtils.stringBundle.formatStringFromName(
-        "filesFolder",
-        [nameWithoutExtension]
-      );
+      var filesFolderLeafName =
+        ContentAreaUtils.stringBundle.formatStringFromName("filesFolder", [
+          nameWithoutExtension,
+        ]);
 
       filesFolder.leafName = filesFolderLeafName;
     }

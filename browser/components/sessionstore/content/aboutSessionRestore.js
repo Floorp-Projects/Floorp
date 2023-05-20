@@ -132,9 +132,8 @@ async function initTreeView() {
 
 // User actions
 function updateTabListVisibility() {
-  document.getElementById("tabList").hidden = !document.getElementById(
-    "radioRestoreChoose"
-  ).checked;
+  document.getElementById("tabList").hidden =
+    !document.getElementById("radioRestoreChoose").checked;
   initTreeView();
 }
 
@@ -291,9 +290,8 @@ function toggleRowChecked(aIx) {
 
   // we only disable the button when there's no cancel button.
   if (document.getElementById("errorCancel")) {
-    document.getElementById("errorTryAgain").disabled = !gTreeData.some(
-      isChecked
-    );
+    document.getElementById("errorTryAgain").disabled =
+      !gTreeData.some(isChecked);
   }
 }
 

@@ -1147,9 +1147,8 @@ add_task(async function test_omit_frecency_notifications() {
     },
   ];
 
-  const promiseRankingChanged = PlacesTestUtils.waitForNotification(
-    "pages-rank-changed"
-  );
+  const promiseRankingChanged =
+    PlacesTestUtils.waitForNotification("pages-rank-changed");
 
   await promiseUpdatePlaces(places);
   await promiseRankingChanged;

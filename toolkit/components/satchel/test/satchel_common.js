@@ -118,21 +118,22 @@ function countEntries(name, value, then = null) {
 function updateFormHistory(changes, then = null) {
   return new Promise(resolve => {
     gChromeScript.sendAsyncMessage("updateFormHistory", { changes });
-    gChromeScript.addMessageListener("formHistoryUpdated", function updated({
-      ok,
-    }) {
-      gChromeScript.removeMessageListener("formHistoryUpdated", updated);
-      if (!ok) {
-        ok(false, "Error occurred updating form history");
-        SimpleTest.finish();
-        return;
-      }
+    gChromeScript.addMessageListener(
+      "formHistoryUpdated",
+      function updated({ ok }) {
+        gChromeScript.removeMessageListener("formHistoryUpdated", updated);
+        if (!ok) {
+          ok(false, "Error occurred updating form history");
+          SimpleTest.finish();
+          return;
+        }
 
-      if (then) {
-        then();
+        if (then) {
+          then();
+        }
+        resolve();
       }
-      resolve();
-    });
+    );
   });
 }
 

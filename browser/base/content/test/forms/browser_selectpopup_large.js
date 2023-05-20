@@ -262,13 +262,15 @@ async function performLargePopupTests(win) {
       browser,
       "MozAfterPaint"
     );
-    await SpecialPowers.spawn(browser, [position], async function (
-      contentPosition
-    ) {
-      let select = content.document.getElementById("one");
-      select.setAttribute("style", contentPosition || "");
-      select.getBoundingClientRect();
-    });
+    await SpecialPowers.spawn(
+      browser,
+      [position],
+      async function (contentPosition) {
+        let select = content.document.getElementById("one");
+        select.setAttribute("style", contentPosition || "");
+        select.getBoundingClientRect();
+      }
+    );
     await contentPainted;
   }
 

@@ -55,9 +55,8 @@ export default class LoginItem extends HTMLElement {
     );
     this._form = this.shadowRoot.querySelector("form");
     this._originInput = this.shadowRoot.querySelector("input[name='origin']");
-    this._originDisplayInput = this.shadowRoot.querySelector(
-      "a[name='origin']"
-    );
+    this._originDisplayInput =
+      this.shadowRoot.querySelector("a[name='origin']");
     this._usernameInput = this.shadowRoot.querySelector(
       "input[name='username']"
     );
@@ -82,9 +81,8 @@ export default class LoginItem extends HTMLElement {
     this._breachAlertLink = this._breachAlert.querySelector(".alert-link");
     this._breachAlertDate = this._breachAlert.querySelector(".alert-date");
     this._vulnerableAlert = this.shadowRoot.querySelector(".vulnerable-alert");
-    this._vulnerableAlertLink = this._vulnerableAlert.querySelector(
-      ".alert-link"
-    );
+    this._vulnerableAlertLink =
+      this._vulnerableAlert.querySelector(".alert-link");
     this._vulnerableAlertLearnMoreLink = this._vulnerableAlert.querySelector(
       ".alert-learn-more-link"
     );
@@ -139,7 +137,8 @@ export default class LoginItem extends HTMLElement {
             loginTitle: this._error.login.title,
           }
         );
-        this._errorMessageLink.dataset.errorGuid = this._error.existingLoginGuid;
+        this._errorMessageLink.dataset.errorGuid =
+          this._error.existingLoginGuid;
         this._errorMessageText.hidden = true;
         this._errorMessageLink.hidden = false;
       } else {
@@ -434,9 +433,8 @@ export default class LoginItem extends HTMLElement {
 
           copyButton.disabled = true;
           copyButton.dataset.copied = true;
-          let propertyToCopy = this._login[
-            copyButton.dataset.copyLoginProperty
-          ];
+          let propertyToCopy =
+            this._login[copyButton.dataset.copyLoginProperty];
           document.dispatchEvent(
             new CustomEvent("AboutLoginsCopyLoginDetail", {
               bubbles: true,

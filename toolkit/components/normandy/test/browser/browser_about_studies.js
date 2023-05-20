@@ -19,10 +19,8 @@ const { RemoteSettingsExperimentLoader } = ChromeUtils.importESModule(
 const { NormandyTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/NormandyTestUtils.sys.mjs"
 );
-const {
-  addonStudyFactory,
-  preferenceStudyFactory,
-} = NormandyTestUtils.factories;
+const { addonStudyFactory, preferenceStudyFactory } =
+  NormandyTestUtils.factories;
 
 function withAboutStudies() {
   return function (testFunc) {
@@ -34,16 +32,17 @@ function withAboutStudies() {
 }
 
 // Test that the code renders at all
-decorate_task(withAboutStudies(), async function testAboutStudiesWorks({
-  browser,
-}) {
-  const appFound = await SpecialPowers.spawn(
-    browser,
-    [],
-    () => !!content.document.getElementById("app")
-  );
-  ok(appFound, "App element was found");
-});
+decorate_task(
+  withAboutStudies(),
+  async function testAboutStudiesWorks({ browser }) {
+    const appFound = await SpecialPowers.spawn(
+      browser,
+      [],
+      () => !!content.document.getElementById("app")
+    );
+    ok(appFound, "App element was found");
+  }
+);
 
 // Test that the learn more element is displayed correctly
 decorate_task(
@@ -72,36 +71,37 @@ decorate_task(
 );
 
 // Test that jumping to preferences worked as expected
-decorate_task(withAboutStudies(), async function testUpdatePreferences({
-  browser,
-}) {
-  let loadPromise = BrowserTestUtils.firstBrowserLoaded(window);
+decorate_task(
+  withAboutStudies(),
+  async function testUpdatePreferences({ browser }) {
+    let loadPromise = BrowserTestUtils.firstBrowserLoaded(window);
 
-  // We have to use gBrowser instead of browser in most spots since we're
-  // dealing with a new tab outside of the about:studies tab.
-  const tab = await BrowserTestUtils.switchTab(gBrowser, () => {
-    SpecialPowers.spawn(browser, [], async () => {
-      const doc = content.document;
-      await ContentTaskUtils.waitForCondition(() =>
-        doc.getElementById("shield-studies-update-preferences")
-      );
-      content.document
-        .getElementById("shield-studies-update-preferences")
-        .click();
+    // We have to use gBrowser instead of browser in most spots since we're
+    // dealing with a new tab outside of the about:studies tab.
+    const tab = await BrowserTestUtils.switchTab(gBrowser, () => {
+      SpecialPowers.spawn(browser, [], async () => {
+        const doc = content.document;
+        await ContentTaskUtils.waitForCondition(() =>
+          doc.getElementById("shield-studies-update-preferences")
+        );
+        content.document
+          .getElementById("shield-studies-update-preferences")
+          .click();
+      });
     });
-  });
 
-  await loadPromise;
+    await loadPromise;
 
-  const location = gBrowser.currentURI.spec;
-  is(
-    location,
-    "about:preferences#privacy",
-    "Clicking Update Preferences opens the privacy section of the new about:preferences."
-  );
+    const location = gBrowser.currentURI.spec;
+    is(
+      location,
+      "about:preferences#privacy",
+      "Clicking Update Preferences opens the privacy section of the new about:preferences."
+    );
 
-  BrowserTestUtils.removeTab(tab);
-});
+    BrowserTestUtils.removeTab(tab);
+  }
+);
 
 // Test that the study listing shows studies in the proper order and grouping
 decorate_task(
@@ -767,8 +767,7 @@ add_task(async function test_forceEnroll() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "about:studies?optin_collection=collection123&optin_branch=branch123&optin_slug=slug123",
+      url: "about:studies?optin_collection=collection123&optin_branch=branch123&optin_slug=slug123",
     },
     async browser => {
       await SpecialPowers.spawn(browser, [], async () => {
@@ -795,8 +794,7 @@ add_task(async function test_forceEnroll() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "about:studies?optin_collection=collection123&optin_branch=branch123&optin_slug=slug123",
+      url: "about:studies?optin_collection=collection123&optin_branch=branch123&optin_slug=slug123",
     },
     async browser => {
       await SpecialPowers.spawn(browser, [], async () => {

@@ -221,8 +221,10 @@ export var ShortcutUtils = {
    */
   validate(string) {
     // A valid shortcut key for a webextension manifest
-    const MEDIA_KEYS = /^(MediaNextTrack|MediaPlayPause|MediaPrevTrack|MediaStop)$/;
-    const BASIC_KEYS = /^([A-Z0-9]|Comma|Period|Home|End|PageUp|PageDown|Space|Insert|Delete|Up|Down|Left|Right)$/;
+    const MEDIA_KEYS =
+      /^(MediaNextTrack|MediaPlayPause|MediaPrevTrack|MediaStop)$/;
+    const BASIC_KEYS =
+      /^([A-Z0-9]|Comma|Period|Home|End|PageUp|PageDown|Space|Insert|Delete|Up|Down|Left|Right)$/;
     const FUNCTION_KEYS = /^(F[1-9]|F1[0-2])$/;
 
     if (MEDIA_KEYS.test(string.trim())) {

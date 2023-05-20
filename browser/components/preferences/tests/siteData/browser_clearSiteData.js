@@ -73,9 +73,8 @@ async function testClearData(clearSiteData, clearCache) {
   // since we've had cache intermittently changing under our feet.
   let [, convertedCacheUnit] = DownloadUtils.convertByteUnits(cacheUsage);
 
-  let clearSiteDataCheckbox = dialogWin.document.getElementById(
-    "clearSiteData"
-  );
+  let clearSiteDataCheckbox =
+    dialogWin.document.getElementById("clearSiteData");
   let clearCacheCheckbox = dialogWin.document.getElementById("clearCache");
   // The usage details are filled asynchronously, so we assert that they're present by
   // waiting for them to be filled in.

@@ -546,18 +546,15 @@ var View = {
         let origin = fluentArgs.origin;
         let privateBrowsingId, userContextId;
         try {
-          ({
-            privateBrowsingId,
-            userContextId,
-          } = ChromeUtils.createOriginAttributesFromOrigin(origin));
+          ({ privateBrowsingId, userContextId } =
+            ChromeUtils.createOriginAttributesFromOrigin(origin));
           fluentArgs.origin = origin.slice(0, origin.indexOf("^"));
         } catch (e) {
           // createOriginAttributesFromOrigin can throw NS_ERROR_FAILURE for incorrect origin strings.
         }
         if (userContextId) {
-          let identityLabel = ContextualIdentityService.getUserContextLabel(
-            userContextId
-          );
+          let identityLabel =
+            ContextualIdentityService.getUserContextLabel(userContextId);
           if (identityLabel) {
             fluentArgs.origin += ` — ${identityLabel}`;
           }
@@ -1037,37 +1034,23 @@ var Control = {
 
     // Start prefetching units.
     this._promisePrefetchedUnits = (async function () {
-      let [
-        ns,
-        us,
-        ms,
-        s,
-        m,
-        h,
-        d,
-        B,
-        KB,
-        MB,
-        GB,
-        TB,
-        PB,
-        EB,
-      ] = await document.l10n.formatValues([
-        { id: "duration-unit-ns" },
-        { id: "duration-unit-us" },
-        { id: "duration-unit-ms" },
-        { id: "duration-unit-s" },
-        { id: "duration-unit-m" },
-        { id: "duration-unit-h" },
-        { id: "duration-unit-d" },
-        { id: "memory-unit-B" },
-        { id: "memory-unit-KB" },
-        { id: "memory-unit-MB" },
-        { id: "memory-unit-GB" },
-        { id: "memory-unit-TB" },
-        { id: "memory-unit-PB" },
-        { id: "memory-unit-EB" },
-      ]);
+      let [ns, us, ms, s, m, h, d, B, KB, MB, GB, TB, PB, EB] =
+        await document.l10n.formatValues([
+          { id: "duration-unit-ns" },
+          { id: "duration-unit-us" },
+          { id: "duration-unit-ms" },
+          { id: "duration-unit-s" },
+          { id: "duration-unit-m" },
+          { id: "duration-unit-h" },
+          { id: "duration-unit-d" },
+          { id: "memory-unit-B" },
+          { id: "memory-unit-KB" },
+          { id: "memory-unit-MB" },
+          { id: "memory-unit-GB" },
+          { id: "memory-unit-TB" },
+          { id: "memory-unit-PB" },
+          { id: "memory-unit-EB" },
+        ]);
       return {
         duration: { ns, us, ms, s, m, h, d },
         memory: { B, KB, MB, GB, TB, PB, EB },

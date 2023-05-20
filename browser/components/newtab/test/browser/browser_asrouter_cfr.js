@@ -38,8 +38,7 @@ const createDummyRecommendation = ({
         label: { attributes: { tooltiptext: "Why am I seeing this" } },
         sumo_path: "extensionrecommendations",
       },
-      icon:
-        "chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg",
+      icon: "chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg",
       icon_dark_theme:
         "chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg",
       learn_more: "extensionrecommendations",

@@ -684,8 +684,9 @@ add_task(
 
     await testSelectColors("SELECT_LONG_WITH_TRANSITION", 76, options);
 
-    let selectPopup = document.getElementById("ContentSelectDropdown")
-      .menupopup;
+    let selectPopup = document.getElementById(
+      "ContentSelectDropdown"
+    ).menupopup;
     let scrollBox = selectPopup.scrollBox;
     is(
       scrollBox.scrollTop,

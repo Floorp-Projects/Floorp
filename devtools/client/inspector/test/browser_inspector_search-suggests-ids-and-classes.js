@@ -128,9 +128,8 @@ add_task(async function () {
     );
 
     const onCommand = once(searchBox, "input", true);
-    const onSearchProcessingDone = inspector.searchSuggestions.once(
-      "processing-done"
-    );
+    const onSearchProcessingDone =
+      inspector.searchSuggestions.once("processing-done");
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
     await onCommand;
 

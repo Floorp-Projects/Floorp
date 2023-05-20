@@ -103,7 +103,8 @@ window.Application = {
   },
 
   async updateWorkers() {
-    const registrationsWithWorkers = await this.client.mainRoot.listAllServiceWorkers();
+    const registrationsWithWorkers =
+      await this.client.mainRoot.listAllServiceWorkers();
     this.actions.updateWorkers(registrationsWithWorkers);
   },
 

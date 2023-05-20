@@ -493,8 +493,9 @@ add_task(function test_deduplicate_keeps_most_recent() {
   Assert.equal(deduped.length, 1, "Deduplicated the logins array.");
 
   // Verify that the remaining login have the most recent date.
-  let loginTimeLastUsed = deduped[0].QueryInterface(Ci.nsILoginMetaInfo)
-    .timeLastUsed;
+  let loginTimeLastUsed = deduped[0].QueryInterface(
+    Ci.nsILoginMetaInfo
+  ).timeLastUsed;
   Assert.equal(
     loginTimeLastUsed,
     Date.UTC(2015, 11, 4, 0, 0, 0),
@@ -506,8 +507,9 @@ add_task(function test_deduplicate_keeps_most_recent() {
   Assert.equal(deduped.length, 1, "Deduplicated the reversed logins array.");
 
   // Verify that the remaining login have the most recent date.
-  loginTimeLastUsed = deduped[0].QueryInterface(Ci.nsILoginMetaInfo)
-    .timeLastUsed;
+  loginTimeLastUsed = deduped[0].QueryInterface(
+    Ci.nsILoginMetaInfo
+  ).timeLastUsed;
   Assert.equal(
     loginTimeLastUsed,
     Date.UTC(2015, 11, 4, 0, 0, 0),

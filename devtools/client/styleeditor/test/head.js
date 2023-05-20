@@ -114,15 +114,15 @@ var openStyleEditorForURL = async function (url, win) {
  *        name of the property.
  */
 var getComputedStyleProperty = async function (args) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [args], function ({
-    selector,
-    pseudo,
-    name,
-  }) {
-    const element = content.document.querySelector(selector);
-    const style = content.getComputedStyle(element, pseudo);
-    return style.getPropertyValue(name);
-  });
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [args],
+    function ({ selector, pseudo, name }) {
+      const element = content.document.querySelector(selector);
+      const style = content.getComputedStyle(element, pseudo);
+      return style.getPropertyValue(name);
+    }
+  );
 };
 
 /**

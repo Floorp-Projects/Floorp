@@ -97,9 +97,8 @@ export var GeckoViewRemoteDebugger = {
 class USBRemoteDebugger {
   start(aPortOrPath) {
     try {
-      const AuthenticatorType = lazy.DevToolsServer.Authenticators.get(
-        "PROMPT"
-      );
+      const AuthenticatorType =
+        lazy.DevToolsServer.Authenticators.get("PROMPT");
       const authenticator = new AuthenticatorType.Server();
       authenticator.allowConnection = this.allowConnection.bind(this);
       const socketOptions = {

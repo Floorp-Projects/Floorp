@@ -111,9 +111,8 @@ class FontInspector {
     this.onToggleFontHighlight = this.onToggleFontHighlight.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
     this.update = this.update.bind(this);
-    this.updateFontVariationSettings = this.updateFontVariationSettings.bind(
-      this
-    );
+    this.updateFontVariationSettings =
+      this.updateFontVariationSettings.bind(this);
     this.onResourceAvailable = this.onResourceAvailable.bind(this);
 
     this.init();
@@ -894,9 +893,10 @@ class FontInspector {
   async onToggleFontHighlight(font, show, isForCurrentElement = true) {
     if (!this.fontsHighlighter) {
       try {
-        this.fontsHighlighter = await this.inspector.inspectorFront.getHighlighterByType(
-          "FontsHighlighter"
-        );
+        this.fontsHighlighter =
+          await this.inspector.inspectorFront.getHighlighterByType(
+            "FontsHighlighter"
+          );
       } catch (e) {
         // the FontsHighlighter won't be available when debugging a XUL document.
         // Silently fail here and prevent any future calls to the function.

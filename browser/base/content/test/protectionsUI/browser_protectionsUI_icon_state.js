@@ -160,9 +160,8 @@ add_task(async function testNormalBrowsing() {
     "gProtectionsHandler is attached to the browser window"
   );
 
-  let {
-    TrackingProtection,
-  } = gBrowser.ownerGlobal.gProtectionsHandler.blockers;
+  let { TrackingProtection } =
+    gBrowser.ownerGlobal.gProtectionsHandler.blockers;
   ok(TrackingProtection, "TP is attached to the browser window");
 
   let { ThirdPartyCookies } = gBrowser.ownerGlobal.gProtectionsHandler.blockers;
@@ -200,13 +199,11 @@ add_task(async function testPrivateBrowsing() {
     gProtectionsHandler,
     "gProtectionsHandler is attached to the private window"
   );
-  let {
-    TrackingProtection,
-  } = tabbrowser.ownerGlobal.gProtectionsHandler.blockers;
+  let { TrackingProtection } =
+    tabbrowser.ownerGlobal.gProtectionsHandler.blockers;
   ok(TrackingProtection, "TP is attached to the private window");
-  let {
-    ThirdPartyCookies,
-  } = tabbrowser.ownerGlobal.gProtectionsHandler.blockers;
+  let { ThirdPartyCookies } =
+    tabbrowser.ownerGlobal.gProtectionsHandler.blockers;
   ok(ThirdPartyCookies, "TPC is attached to the browser window");
 
   Services.prefs.setBoolPref(TP_PB_PREF, true);

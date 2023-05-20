@@ -170,8 +170,8 @@ add_task(async function test_file_migration() {
       let expectedSuccessText =
         SUCCESS_STATE[progressGroup.dataset.resourceType];
       if (expectedSuccessText) {
-        let successText = progressGroup.querySelector(".success-text")
-          .textContent;
+        let successText =
+          progressGroup.querySelector(".success-text").textContent;
         Assert.equal(successText, expectedSuccessText);
       } else {
         Assert.ok(

@@ -8942,13 +8942,7 @@
     "products": ["firefox"],
     "alert_emails": ["mconley@mozilla.com"],
     "bug_numbers": [
-      1622263,
-      1683101,
-      1714258,
-      1730042,
-      1754641,
-      1781978,
-      1811151
+      1622263, 1683101, 1714258, 1730042, 1754641, 1781978, 1811151
     ],
     "expires_in_version": "118",
     "kind": "exponential",
@@ -9422,14 +9416,7 @@
     "products": ["firefox"],
     "alert_emails": ["hsivonen@mozilla.com"],
     "bug_numbers": [
-      840476,
-      977573,
-      1513473,
-      1554592,
-      1603047,
-      1648464,
-      1686463,
-      1706838,
+      840476, 977573, 1513473, 1554592, 1603047, 1648464, 1686463, 1706838,
       1712928
     ],
     "expires_in_version": "106",
@@ -9451,14 +9438,7 @@
     "products": ["firefox"],
     "alert_emails": ["hsivonen@mozilla.com"],
     "bug_numbers": [
-      840476,
-      977573,
-      1513473,
-      1554592,
-      1603047,
-      1648464,
-      1686463,
-      1706838,
+      840476, 977573, 1513473, 1554592, 1603047, 1648464, 1686463, 1706838,
       1712928
     ],
     "expires_in_version": "106",
@@ -10843,13 +10823,7 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["fx-search-telemetry@mozilla.com", "rev-data@mozilla.com"],
     "bug_numbers": [
-      1089670,
-      1475571,
-      1482158,
-      1499193,
-      1545172,
-      1572500,
-      1654680
+      1089670, 1475571, 1482158, 1499193, 1545172, 1572500, 1654680
     ],
     "description": "Records search counts for search access points. The format is: <engine-name>.<search-access-point>. For the urlbar when in search mode, the format is <engine name>.urlbar-searchmode. For the urlbar when an internal @engine shortcut is used, the format is: <engine-name>.alias.",
     "record_into_store": ["main", "account-ecosystem"]
@@ -16428,14 +16402,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1483002,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16451,14 +16418,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1297167,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1297167, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16473,14 +16433,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1483002,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16496,14 +16449,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1297167,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1297167, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16517,14 +16463,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1483002,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16683,14 +16622,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1483002,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16718,14 +16650,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1483002,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16741,14 +16666,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1297167,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1297167, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16763,14 +16681,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1483002,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16786,14 +16697,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1371398,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1371398, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16808,14 +16712,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1483002,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16831,14 +16728,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1371398,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1371398, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16853,14 +16743,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1483002,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16876,14 +16759,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1465120,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1465120, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16898,14 +16774,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1483002,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16921,14 +16790,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1465120,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1465120, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16943,14 +16805,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
     "bug_numbers": [
-      1483002,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1483002, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "expires_in_version": "122",
@@ -16965,14 +16820,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "bug_numbers": [
-      1465129,
-      1513556,
-      1578225,
-      1623315,
-      1666980,
-      1706839,
-      1745271,
-      1777402,
+      1465129, 1513556, 1578225, 1623315, 1666980, 1706839, 1745271, 1777402,
       1811155
     ],
     "alert_emails": ["addons-dev-internal@mozilla.com", "lgreco@mozilla.com"],
@@ -17556,14 +17404,7 @@
       "tihuang@mozilla.com"
     ],
     "bug_numbers": [
-      1533363,
-      1546796,
-      1546906,
-      1550756,
-      1572666,
-      1590124,
-      1621800,
-      1668604,
+      1533363, 1546796, 1546906, 1550756, 1572666, 1590124, 1621800, 1668604,
       1706842
     ],
     "expires_in_version": "never",

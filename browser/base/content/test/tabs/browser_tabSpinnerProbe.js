@@ -54,8 +54,9 @@ async function testProbe(aProbe) {
 
   // The tab spinner does not show up instantly. We need to hang for a little
   // bit of extra time to account for the tab spinner delay.
-  delayTime += gBrowser.selectedTab.linkedBrowser.getTabBrowser()._getSwitcher()
-    .TAB_SWITCH_TIMEOUT;
+  delayTime += gBrowser.selectedTab.linkedBrowser
+    .getTabBrowser()
+    ._getSwitcher().TAB_SWITCH_TIMEOUT;
 
   // In order for a spinner to be shown, the tab must have presented before.
   let origTab = gBrowser.selectedTab;

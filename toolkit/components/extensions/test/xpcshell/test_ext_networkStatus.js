@@ -198,7 +198,8 @@ add_task(
       {
         expected: [
           {
-            message: /Using the privileged permission 'networkStatus' requires a privileged add-on/,
+            message:
+              /Using the privileged permission 'networkStatus' requires a privileged add-on/,
           },
         ],
       },

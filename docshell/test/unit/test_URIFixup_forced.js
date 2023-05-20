@@ -141,11 +141,8 @@ add_task(function test_default_https_pref() {
         item.comment
       );
     } else {
-      let {
-        fixupChangedProtocol,
-        fixupCreatedAlternateURI,
-        fixedURI,
-      } = Services.uriFixup.forceHttpFixup(item.wrong);
+      let { fixupChangedProtocol, fixupCreatedAlternateURI, fixedURI } =
+        Services.uriFixup.forceHttpFixup(item.wrong);
       Assert.equal(fixedURI.spec, item.fixed, "Specs should be the same");
       Assert.equal(
         fixupChangedProtocol,

@@ -76,9 +76,8 @@ nsDefaultCLH.prototype = {
       return;
     }
 
-    var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-      nsIPrefBranch
-    );
+    var prefs =
+      Cc["@mozilla.org/preferences-service;1"].getService(nsIPrefBranch);
 
     try {
       var singletonWindowType = prefs.getCharPref(
@@ -102,9 +101,10 @@ nsDefaultCLH.prototype = {
         "chrome,dialog=no,all"
       );
 
-      var wwatch = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(
-        nsIWindowWatcher
-      );
+      var wwatch =
+        Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(
+          nsIWindowWatcher
+        );
       wwatch.openWindow(null, chromeURI, "_blank", flags, cmdLine);
     } catch (e) {}
   },

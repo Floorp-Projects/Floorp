@@ -13,9 +13,8 @@ add_task(async function () {
 
   await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 
-  const contextMenu = gPanelWindow.document.getElementById(
-    "storage-tree-popup"
-  );
+  const contextMenu =
+    gPanelWindow.document.getElementById("storage-tree-popup");
   const menuDeleteAllItem = contextMenu.querySelector(
     "#storage-tree-popup-delete-all"
   );

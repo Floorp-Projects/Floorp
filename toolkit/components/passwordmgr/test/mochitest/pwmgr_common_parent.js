@@ -20,7 +20,8 @@ const { LoginTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/LoginTestUtils.sys.mjs"
 );
 if (LoginHelper.relatedRealmsEnabled) {
-  let rsPromise = LoginTestUtils.remoteSettings.setupWebsitesWithSharedCredentials();
+  let rsPromise =
+    LoginTestUtils.remoteSettings.setupWebsitesWithSharedCredentials();
   async () => {
     await rsPromise;
   };

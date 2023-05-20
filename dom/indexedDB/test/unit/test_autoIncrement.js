@@ -105,9 +105,8 @@ function* testSteps() {
   yield undefined;
   yield undefined;
 
-  store2.get(
-    IDBKeyRange.lowerBound(c2)
-  ).onsuccess = grabEventAndContinueHandler;
+  store2.get(IDBKeyRange.lowerBound(c2)).onsuccess =
+    grabEventAndContinueHandler;
   event = yield undefined;
   is(event.target.result, undefined, "no such value" + test);
 
@@ -180,13 +179,8 @@ function* testSteps() {
   yield undefined;
 
   trans = db.transaction("store1", RW);
-  trans
-    .objectStore("store1")
-    .add({ explicit: 7 }, [100000]).onsuccess = genCheck(
-    [100000],
-    { explicit: 7 },
-    "seventh" + test
-  );
+  trans.objectStore("store1").add({ explicit: 7 }, [100000]).onsuccess =
+    genCheck([100000], { explicit: 7 }, "seventh" + test);
   yield undefined;
   trans.objectStore("store1").add({ explicit: 8 }).onsuccess = genCheck(
     c1++,
@@ -196,13 +190,8 @@ function* testSteps() {
   yield undefined;
 
   trans = db.transaction("store1", RW);
-  trans
-    .objectStore("store1")
-    .add({ explicit: 9 }, -100000).onsuccess = genCheck(
-    -100000,
-    { explicit: 9 },
-    "ninth" + test
-  );
+  trans.objectStore("store1").add({ explicit: 9 }, -100000).onsuccess =
+    genCheck(-100000, { explicit: 9 }, "ninth" + test);
   yield undefined;
   trans.objectStore("store1").add({ explicit: 10 }).onsuccess = genCheck(
     c1++,
@@ -212,13 +201,8 @@ function* testSteps() {
   yield undefined;
 
   trans = db.transaction("store2", RW);
-  trans
-    .objectStore("store2")
-    .add({ explicit2: 1, id: 300 }).onsuccess = genCheck(
-    300,
-    { explicit2: 1, id: 300 },
-    "first store2" + test
-  );
+  trans.objectStore("store2").add({ explicit2: 1, id: 300 }).onsuccess =
+    genCheck(300, { explicit2: 1, id: 300 }, "first store2" + test);
   c2 = 301;
   trans = db.transaction("store2", RW);
   trans.objectStore("store2").add({ explicit2: 2 }).onsuccess = genCheck(
@@ -231,13 +215,8 @@ function* testSteps() {
   yield undefined;
 
   trans = db.transaction("store2", RW);
-  trans
-    .objectStore("store2")
-    .add({ explicit2: 3, id: 400 }).onsuccess = genCheck(
-    400,
-    { explicit2: 3, id: 400 },
-    "third store2" + test
-  );
+  trans.objectStore("store2").add({ explicit2: 3, id: 400 }).onsuccess =
+    genCheck(400, { explicit2: 3, id: 400 }, "third store2" + test);
   c2 = 401;
   trans.objectStore("store2").add({ explicit2: 4 }).onsuccess = genCheck(
     c2,
@@ -249,13 +228,8 @@ function* testSteps() {
   yield undefined;
 
   trans = db.transaction("store2", RW);
-  trans
-    .objectStore("store2")
-    .add({ explicit: 5, id: 150 }).onsuccess = genCheck(
-    150,
-    { explicit: 5, id: 150 },
-    "fifth store2" + test
-  );
+  trans.objectStore("store2").add({ explicit: 5, id: 150 }).onsuccess =
+    genCheck(150, { explicit: 5, id: 150 }, "fifth store2" + test);
   yield undefined;
   trans.objectStore("store2").add({ explicit: 6 }).onsuccess = genCheck(
     c2,
@@ -266,13 +240,8 @@ function* testSteps() {
   yield undefined;
 
   trans = db.transaction("store2", RW);
-  trans
-    .objectStore("store2")
-    .add({ explicit: 7, id: "key" }).onsuccess = genCheck(
-    "key",
-    { explicit: 7, id: "key" },
-    "seventh store2" + test
-  );
+  trans.objectStore("store2").add({ explicit: 7, id: "key" }).onsuccess =
+    genCheck("key", { explicit: 7, id: "key" }, "seventh store2" + test);
   yield undefined;
   trans.objectStore("store2").add({ explicit: 8 }).onsuccess = genCheck(
     c2,
@@ -283,13 +252,8 @@ function* testSteps() {
   yield undefined;
 
   trans = db.transaction("store2", RW);
-  trans
-    .objectStore("store2")
-    .add({ explicit: 7, id: [100000] }).onsuccess = genCheck(
-    [100000],
-    { explicit: 7, id: [100000] },
-    "seventh store2" + test
-  );
+  trans.objectStore("store2").add({ explicit: 7, id: [100000] }).onsuccess =
+    genCheck([100000], { explicit: 7, id: [100000] }, "seventh store2" + test);
   yield undefined;
   trans.objectStore("store2").add({ explicit: 8 }).onsuccess = genCheck(
     c2,
@@ -300,13 +264,8 @@ function* testSteps() {
   yield undefined;
 
   trans = db.transaction("store2", RW);
-  trans
-    .objectStore("store2")
-    .add({ explicit: 9, id: -100000 }).onsuccess = genCheck(
-    -100000,
-    { explicit: 9, id: -100000 },
-    "ninth store2" + test
-  );
+  trans.objectStore("store2").add({ explicit: 9, id: -100000 }).onsuccess =
+    genCheck(-100000, { explicit: 9, id: -100000 }, "ninth store2" + test);
   yield undefined;
   trans.objectStore("store2").add({ explicit: 10 }).onsuccess = genCheck(
     c2,
@@ -490,12 +449,10 @@ function* testSteps() {
   yield undefined;
   yield undefined;
 
-  trans
-    .objectStore("store1")
-    .delete(c1 - 1).onsuccess = grabEventAndContinueHandler;
-  trans
-    .objectStore("store2")
-    .delete(c2 - 1).onsuccess = grabEventAndContinueHandler;
+  trans.objectStore("store1").delete(c1 - 1).onsuccess =
+    grabEventAndContinueHandler;
+  trans.objectStore("store2").delete(c2 - 1).onsuccess =
+    grabEventAndContinueHandler;
   yield undefined;
   yield undefined;
 
@@ -513,12 +470,10 @@ function* testSteps() {
   yield undefined;
   yield undefined;
 
-  trans
-    .objectStore("store1")
-    .delete(c1 - 1).onsuccess = grabEventAndContinueHandler;
-  trans
-    .objectStore("store2")
-    .delete(c2 - 1).onsuccess = grabEventAndContinueHandler;
+  trans.objectStore("store1").delete(c1 - 1).onsuccess =
+    grabEventAndContinueHandler;
+  trans.objectStore("store2").delete(c2 - 1).onsuccess =
+    grabEventAndContinueHandler;
   yield undefined;
   yield undefined;
 

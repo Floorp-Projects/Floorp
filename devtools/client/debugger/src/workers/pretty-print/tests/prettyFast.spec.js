@@ -319,8 +319,7 @@ const cases = [
     input: "x = '\\u00001';",
   },
   {
-    name:
-      "Bug pretty-sure-5 - empty multiline comment shouldn't throw exception",
+    name: "Bug pretty-sure-5 - empty multiline comment shouldn't throw exception",
     input: `{
            /*
            */
@@ -328,19 +327,16 @@ const cases = [
            }`,
   },
   {
-    name:
-      "Bug pretty-sure-6 - inline comment shouldn't move parenthesis to next line",
+    name: "Bug pretty-sure-6 - inline comment shouldn't move parenthesis to next line",
     input: `return /* inline comment */ (
              1+1);`,
   },
   {
-    name:
-      "Bug pretty-sure-7 - accessing a literal number property requires a space",
+    name: "Bug pretty-sure-7 - accessing a literal number property requires a space",
     input: "0..toString()+x.toString();",
   },
   {
-    name:
-      "Bug pretty-sure-8 - return and yield only accept arguments when on the same line",
+    name: "Bug pretty-sure-8 - return and yield only accept arguments when on the same line",
     input: `{
              return
              (x)

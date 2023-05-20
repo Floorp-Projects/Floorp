@@ -435,16 +435,12 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
   selection.toggleSelect(1);
   if (multiple) {
     selection.selectAll();
-    testtag_tree_TreeSelection_State(tree, testid + "selectAll 2", 1, [
-      0,
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "selectAll 2",
       1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-    ]);
+      [0, 1, 2, 3, 4, 5, 6, 7]
+    );
   }
   selection.currentIndex = 2;
   selection.clearSelection();
@@ -474,11 +470,12 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
   if (multiple) {
     selection.select(1);
     selection.rangedSelect(0, 2, true);
-    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect augment", 2, [
-      0,
-      1,
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "rangedSelect augment",
       2,
-    ]);
+      [0, 1, 2]
+    );
     is(
       selection.shiftSelectPivot,
       0,
@@ -492,11 +489,12 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
 
     // check that rangedSelect can take a start value higher than end
     selection.rangedSelect(3, 1, false);
-    testtag_tree_TreeSelection_State(tree, testid + "rangedSelect reverse", 1, [
+    testtag_tree_TreeSelection_State(
+      tree,
+      testid + "rangedSelect reverse",
       1,
-      2,
-      3,
-    ]);
+      [1, 2, 3]
+    );
     is(
       selection.shiftSelectPivot,
       3,

@@ -75,20 +75,17 @@ add_task(async function test_showLoginItemErrors() {
         new content.CustomEvent("AboutLoginsCreateLogin", event)
       );
 
-      const loginItemErrorMessageVisible = await ContentTaskUtils.waitForCondition(
-        () => {
+      const loginItemErrorMessageVisible =
+        await ContentTaskUtils.waitForCondition(() => {
           return !loginItemErrorMessage.hidden;
-        },
-        "Waiting for error message to be shown after attempting to create a duplicate login."
-      );
+        }, "Waiting for error message to be shown after attempting to create a duplicate login.");
       Assert.ok(
         loginItemErrorMessageVisible,
         "An error message should be shown after user attempts to add a login that already exists."
       );
 
-      const loginItemErrorMessageText = loginItemErrorMessage.querySelector(
-        "span:not([hidden])"
-      );
+      const loginItemErrorMessageText =
+        loginItemErrorMessage.querySelector("span:not([hidden])");
       Assert.equal(
         loginItemErrorMessageText.dataset.l10nId,
         "about-logins-error-message-duplicate-login-with-link",
@@ -139,12 +136,10 @@ add_task(async function test_showLoginItemErrors() {
       const loginItemErrorMessage = Cu.waiveXrays(
         loginItem.shadowRoot.querySelector(".error-message")
       );
-      const loginAlreadyExistsErrorShownAfterUpdate = await ContentTaskUtils.waitForCondition(
-        () => {
+      const loginAlreadyExistsErrorShownAfterUpdate =
+        await ContentTaskUtils.waitForCondition(() => {
           return !loginItemErrorMessage.hidden;
-        },
-        "Waiting for error message to show after updating login to existing login."
-      );
+        }, "Waiting for error message to show after updating login to existing login.");
       Assert.ok(
         loginAlreadyExistsErrorShownAfterUpdate,
         "An error message should be shown after updating a login to a username/origin combination that already exists."

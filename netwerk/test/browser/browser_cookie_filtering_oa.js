@@ -103,10 +103,11 @@ async function test_private() {
   let privateBrowserWindow = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  let privateTab = (privateBrowserWindow.gBrowser.selectedTab = BrowserTestUtils.addTab(
-    privateBrowserWindow.gBrowser,
-    browserTestPath(HTTPS_EXAMPLE_COM)
-  ));
+  let privateTab = (privateBrowserWindow.gBrowser.selectedTab =
+    BrowserTestUtils.addTab(
+      privateBrowserWindow.gBrowser,
+      browserTestPath(HTTPS_EXAMPLE_COM)
+    ));
   let testStruct5 = {
     name: "private example.com",
     browser: privateBrowserWindow.gBrowser.getBrowserForTab(privateTab),

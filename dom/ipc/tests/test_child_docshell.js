@@ -55,23 +55,24 @@ add_task(async function test() {
         Ensure that this chromeEventHandler actually works,
         by creating a new window and listening for its DOMWindowCreated event
       */
-      chromeEventHandler.addEventListener("DOMWindowCreated", function listener(
-        evt
-      ) {
-        if (evt.target == content.document) {
-          return;
+      chromeEventHandler.addEventListener(
+        "DOMWindowCreated",
+        function listener(evt) {
+          if (evt.target == content.document) {
+            return;
+          }
+          chromeEventHandler.removeEventListener("DOMWindowCreated", listener);
+          let new_win = evt.target.defaultView;
+          let new_docShell = new_win.docShell;
+          sendAsyncMessage("DOMWindowCreatedReceived", {
+            stableChromeEventHandler:
+              chromeEventHandler === docShell.chromeEventHandler,
+            iframeHasNewDocShell: new_docShell !== docShell,
+            iframeHasSameChromeEventHandler:
+              new_docShell.chromeEventHandler === chromeEventHandler,
+          });
         }
-        chromeEventHandler.removeEventListener("DOMWindowCreated", listener);
-        let new_win = evt.target.defaultView;
-        let new_docShell = new_win.docShell;
-        sendAsyncMessage("DOMWindowCreatedReceived", {
-          stableChromeEventHandler:
-            chromeEventHandler === docShell.chromeEventHandler,
-          iframeHasNewDocShell: new_docShell !== docShell,
-          iframeHasSameChromeEventHandler:
-            new_docShell.chromeEventHandler === chromeEventHandler,
-        });
-      });
+      );
 
       if (content.document.readyState != "complete") {
         await new Promise(res =>

@@ -8,11 +8,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
 
-const {
-  createAppInfo,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { createAppInfo, promiseShutdownManager, promiseStartupManager } =
+  AddonTestUtils;
 
 AddonTestUtils.init(this);
 

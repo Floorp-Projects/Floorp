@@ -53,9 +53,8 @@ add_task(async function () {
   };
 
   info("Clicking on the Learn More link");
-  const learnMoreLink = mixedActiveContentMessage.querySelector(
-    ".learn-more-link"
-  );
+  const learnMoreLink =
+    mixedActiveContentMessage.querySelector(".learn-more-link");
   const linkSimulation = await simulateLinkClick(learnMoreLink);
   checkLink({
     ...linkSimulation,

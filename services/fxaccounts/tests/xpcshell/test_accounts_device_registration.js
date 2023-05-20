@@ -660,10 +660,8 @@ add_task(async function test_verification_updates_registration() {
 
   await updatePromise;
 
-  const {
-    device: newDevice,
-    encryptedSendTabKeys,
-  } = await state.getUserAccountData();
+  const { device: newDevice, encryptedSendTabKeys } =
+    await state.getUserAccountData();
   Assert.equal(newDevice.registeredCommandsKeys.length, 1);
   Assert.notEqual(encryptedSendTabKeys, null);
   await fxa.signOut(true);

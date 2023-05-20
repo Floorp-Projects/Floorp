@@ -30,15 +30,14 @@ var gTests = [
         channel_id: TEST_CHANNEL_ID,
       });
       let promiseObserver = new Promise((resolve, reject) => {
-        makeObserver(FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION, function (
-          subject,
-          topic,
-          data
-        ) {
-          Assert.equal(data, "abc123");
-          client.tearDown();
-          resolve();
-        });
+        makeObserver(
+          FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION,
+          function (subject, topic, data) {
+            Assert.equal(data, "abc123");
+            client.tearDown();
+            resolve();
+          }
+        );
       });
 
       await BrowserTestUtils.withNewTab(
@@ -53,8 +52,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "fxa web channel - login messages should notify the fxAccounts object",
+    desc: "fxa web channel - login messages should notify the fxAccounts object",
     async run() {
       let promiseLogin = new Promise((resolve, reject) => {
         let login = accountData => {
@@ -138,8 +136,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "fxa web channel - logout messages should notify the fxAccounts object",
+    desc: "fxa web channel - logout messages should notify the fxAccounts object",
     async run() {
       let promiseLogout = new Promise((resolve, reject) => {
         let logout = uid => {
@@ -170,8 +167,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "fxa web channel - delete messages should notify the fxAccounts object",
+    desc: "fxa web channel - delete messages should notify the fxAccounts object",
     async run() {
       let promiseDelete = new Promise((resolve, reject) => {
         let logout = uid => {
@@ -202,8 +198,7 @@ var gTests = [
     },
   },
   {
-    desc:
-      "fxa web channel - firefox_view messages should call the openFirefoxView helper",
+    desc: "fxa web channel - firefox_view messages should call the openFirefoxView helper",
     async run() {
       let wasCalled = false;
       let promiseMessageHandled = new Promise((resolve, reject) => {

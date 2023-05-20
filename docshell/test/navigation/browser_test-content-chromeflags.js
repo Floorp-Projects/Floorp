@@ -1,9 +1,6 @@
 const TEST_PAGE = `data:text/html,<html><body><a href="about:blank" target="_blank">Test</a></body></html>`;
-const {
-  CHROME_ALL,
-  CHROME_REMOTE_WINDOW,
-  CHROME_FISSION_WINDOW,
-} = Ci.nsIWebBrowserChrome;
+const { CHROME_ALL, CHROME_REMOTE_WINDOW, CHROME_FISSION_WINDOW } =
+  Ci.nsIWebBrowserChrome;
 
 /**
  * Tests that when we open new browser windows from content they

@@ -72,21 +72,17 @@ class DebuggerPanel {
     const fluentL10n = new FluentL10n();
     await fluentL10n.init(["devtools/shared/debugger-paused-reasons.ftl"]);
 
-    const {
-      actions,
-      store,
-      selectors,
-      client,
-    } = await this.panelWin.Debugger.bootstrap({
-      commands: this.commands,
-      fluentBundles: fluentL10n.getBundles(),
-      resourceCommand: this.toolbox.resourceCommand,
-      workers: {
-        sourceMapLoader: this.toolbox.sourceMapLoader,
-        parserWorker: this.toolbox.parserWorker,
-      },
-      panel: this,
-    });
+    const { actions, store, selectors, client } =
+      await this.panelWin.Debugger.bootstrap({
+        commands: this.commands,
+        fluentBundles: fluentL10n.getBundles(),
+        resourceCommand: this.toolbox.resourceCommand,
+        workers: {
+          sourceMapLoader: this.toolbox.sourceMapLoader,
+          parserWorker: this.toolbox.parserWorker,
+        },
+        panel: this,
+      });
 
     this._actions = actions;
     this._store = store;
@@ -106,9 +102,8 @@ class DebuggerPanel {
       currentThreadActorID &&
       currentThreadActorID !== getCurrentThread(oldState)
     ) {
-      const threadFront = this.commands.client.getFrontByID(
-        currentThreadActorID
-      );
+      const threadFront =
+        this.commands.client.getFrontByID(currentThreadActorID);
       this.toolbox.selectTarget(threadFront?.targetFront.actorID);
     }
   }

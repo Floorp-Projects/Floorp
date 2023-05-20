@@ -14,8 +14,7 @@ add_task(async function test_empty_password() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        "https://example.com/browser/toolkit/components/passwordmgr/test/browser/form_basic.html",
+      url: "https://example.com/browser/toolkit/components/passwordmgr/test/browser/form_basic.html",
     },
     async function (browser) {
       // Submit the form in the content page with the credentials from the test

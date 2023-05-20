@@ -524,8 +524,9 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags) {
         }
 
         if (prevOffset != -1) {
-          var charCount = getAccessible(acc, [nsIAccessibleText])
-            .characterCount;
+          var charCount = getAccessible(acc, [
+            nsIAccessibleText,
+          ]).characterCount;
           let attrs = accTree[prop][prevOffset];
           testTextAttrs(
             acc,

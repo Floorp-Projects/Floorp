@@ -581,12 +581,13 @@ function waitForPDFPaint() {
 function forceContentGC() {
   return new Promise(resolve => {
     let mm = browserWindow.gBrowser.selectedBrowser.messageManager;
-    mm.addMessageListener("Talos:ForceGC:OK", function onTalosContentForceGC(
-      msg
-    ) {
-      mm.removeMessageListener("Talos:ForceGC:OK", onTalosContentForceGC);
-      resolve();
-    });
+    mm.addMessageListener(
+      "Talos:ForceGC:OK",
+      function onTalosContentForceGC(msg) {
+        mm.removeMessageListener("Talos:ForceGC:OK", onTalosContentForceGC);
+        resolve();
+      }
+    );
     mm.sendAsyncMessage("Talos:ForceGC");
   });
 }

@@ -50,11 +50,8 @@ class EagerEvaluation extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const {
-      highlightDomElement,
-      unHighlightDomElement,
-      terminalEagerResult,
-    } = this.props;
+    const { highlightDomElement, unHighlightDomElement, terminalEagerResult } =
+      this.props;
 
     if (canHighlightObject(prevProps.terminalEagerResult)) {
       unHighlightDomElement(prevProps.terminalEagerResult.getGrip());

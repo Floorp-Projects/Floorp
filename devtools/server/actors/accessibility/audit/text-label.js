@@ -321,9 +321,8 @@ const headingRule = function (accessible) {
  *          toolbar in the document and has no or empty title, null otherwise.
  */
 const toolbarRule = function (accessible) {
-  const toolbars = accessible.DOMNode.ownerDocument.querySelectorAll(
-    `[role="toolbar"]`
-  );
+  const toolbars =
+    accessible.DOMNode.ownerDocument.querySelectorAll(`[role="toolbar"]`);
 
   return toolbars.length > 1
     ? mustHaveNonEmptyNameRule(TOOLBAR_NO_NAME, accessible)

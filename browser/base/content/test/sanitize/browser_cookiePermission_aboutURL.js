@@ -45,9 +45,10 @@ add_task(async function deleteStorageInAboutURL() {
   // Clean up.
   await Sanitizer.sanitize(["cookies", "offlineApps"]);
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "about:newtab"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "about:newtab"
+    );
   await new Promise(aResolve => {
     let req = Services.qms.clearStoragesForPrincipal(principal);
     req.callback = () => {
@@ -85,9 +86,10 @@ add_task(async function deleteStorageOnlyCustomPermissionInAboutURL() {
   // Clean up.
   await Sanitizer.sanitize(["cookies", "offlineApps"]);
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "about:newtab"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "about:newtab"
+    );
   await new Promise(aResolve => {
     let req = Services.qms.clearStoragesForPrincipal(principal);
     req.callback = () => {

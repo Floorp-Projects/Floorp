@@ -120,8 +120,7 @@ function stopClonedTracks(audio, video) {
 
 var gTests = [
   {
-    desc:
-      "getUserMedia audio+video: disabling the stream shows the paused indicator",
+    desc: "getUserMedia audio+video: disabling the stream shows the paused indicator",
     run: async function checkDisabled() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -213,8 +212,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "getUserMedia audio+video: disabling the original tracks and stopping enabled clones shows the paused indicator",
+    desc: "getUserMedia audio+video: disabling the original tracks and stopping enabled clones shows the paused indicator",
     run: async function checkDisabledAfterCloneStop() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -315,8 +313,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "getUserMedia screen: disabling the stream shows the paused indicator",
+    desc: "getUserMedia screen: disabling the stream shows the paused indicator",
     run: async function checkScreenDisabled() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -381,8 +378,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "getUserMedia audio+video: muting the camera shows the muted indicator",
+    desc: "getUserMedia audio+video: muting the camera shows the muted indicator",
     run: async function checkCameraMuted() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -469,8 +465,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "getUserMedia audio+video: muting the microphone shows the muted indicator",
+    desc: "getUserMedia audio+video: muting the microphone shows the muted indicator",
     run: async function checkMicrophoneMuted() {
       let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -774,8 +769,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "getUserMedia audio+video: disabling & muting microphone in combination",
+    desc: "getUserMedia audio+video: disabling & muting microphone in combination",
     // Test the following combinations of disabling and muting microphone:
     // 1. Disable audio track only.
     // 2. Mute microphone & disable video (to have a condition to wait for)

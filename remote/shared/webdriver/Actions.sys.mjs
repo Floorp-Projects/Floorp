@@ -1351,10 +1351,9 @@ class PointerUpTouchActionGroup extends TouchActionGroup {
       }
 
       // Only include pointers that are not already depressed
-      const actions = Array.from(
-        this.actions.values()
-      ).filter(([actionInputSource, action]) =>
-        actionInputSource.isPressed(action.button)
+      const actions = Array.from(this.actions.values()).filter(
+        ([actionInputSource, action]) =>
+          actionInputSource.isPressed(action.button)
       );
       if (actions.length) {
         const eventData = new MultiTouchEventData("touchend");

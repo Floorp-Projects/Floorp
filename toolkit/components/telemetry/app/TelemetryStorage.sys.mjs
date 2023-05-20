@@ -55,7 +55,8 @@ const ARCHIVE_SIZE_PROBE_SPECIAL_VALUE = 300;
 // we don't know the size of the pings above the quota.
 const PENDING_PINGS_SIZE_PROBE_SPECIAL_VALUE = 17;
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * This is thrown by |TelemetryStorage.loadPingFile| when reading the ping

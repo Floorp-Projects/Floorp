@@ -11,11 +11,8 @@
 
 add_task(async function () {
   await addTab(URL_ROOT + "doc_custom_playback_rate.html");
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
 
   info("Checking playback rate selector existence");
   const selectEl = panel.querySelector(".playback-rate-selector");

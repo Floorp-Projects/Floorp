@@ -41,9 +41,8 @@ registerCleanupFunction(function () {
   mailHandlerInfo.preferredApplicationHandler = gOriginalPreferredMailHandler;
   gHandlerService.store(mailHandlerInfo);
 
-  let pdfHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
-    "application/pdf"
-  );
+  let pdfHandlerInfo =
+    HandlerServiceTestUtils.getHandlerInfo("application/pdf");
   removeDummyHandlers(pdfHandlerInfo.possibleApplicationHandlers);
   pdfHandlerInfo.preferredApplicationHandler = gOriginalPreferredPDFHandler;
   gHandlerService.store(pdfHandlerInfo);
@@ -94,9 +93,8 @@ add_setup(async function () {
   substituteWebHandlers(mailtoHandlerInfo);
 
   // Now do the same for pdf handler:
-  let pdfHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
-    "application/pdf"
-  );
+  let pdfHandlerInfo =
+    HandlerServiceTestUtils.getHandlerInfo("application/pdf");
   // PDF doesn't have built-in web handlers, so no need to scrub.
   gOriginalPreferredPDFHandler = pdfHandlerInfo.preferredApplicationHandler;
   substituteWebHandlers(pdfHandlerInfo);
@@ -140,10 +138,8 @@ async function selectStandardOptions(itemToUse) {
   // select one of our test cases:
   let handlerItem = list.querySelector("menuitem[data-l10n-args*='Handler 1']");
   await selectItemInPopup(handlerItem);
-  let {
-    preferredAction,
-    alwaysAskBeforeHandling,
-  } = HandlerServiceTestUtils.getHandlerInfo(itemType);
+  let { preferredAction, alwaysAskBeforeHandling } =
+    HandlerServiceTestUtils.getHandlerInfo(itemType);
   Assert.notEqual(
     preferredAction,
     Ci.nsIHandlerInfo.alwaysAsk,
@@ -165,8 +161,8 @@ async function selectStandardOptions(itemToUse) {
     alwaysAskItem,
     "Should have selected always ask item (" + itemType + ")"
   );
-  alwaysAskBeforeHandling = HandlerServiceTestUtils.getHandlerInfo(itemType)
-    .alwaysAskBeforeHandling;
+  alwaysAskBeforeHandling =
+    HandlerServiceTestUtils.getHandlerInfo(itemType).alwaysAskBeforeHandling;
   Assert.ok(
     alwaysAskBeforeHandling,
     "Should have turned on asking before handling (" + itemType + ")"
@@ -184,8 +180,8 @@ async function selectStandardOptions(itemToUse) {
       useDefaultItem,
       "Should have selected 'use default' item (" + itemType + ")"
     );
-    preferredAction = HandlerServiceTestUtils.getHandlerInfo(itemType)
-      .preferredAction;
+    preferredAction =
+      HandlerServiceTestUtils.getHandlerInfo(itemType).preferredAction;
     Assert.equal(
       preferredAction,
       Ci.nsIHandlerInfo.useSystemDefault,
@@ -226,9 +222,8 @@ async function selectStandardOptions(itemToUse) {
     itemToUse.querySelector(".actionContainer label").value,
     "Should have selected correct item (" + itemType + ")"
   );
-  let { preferredApplicationHandler } = HandlerServiceTestUtils.getHandlerInfo(
-    itemType
-  );
+  let { preferredApplicationHandler } =
+    HandlerServiceTestUtils.getHandlerInfo(itemType);
   preferredApplicationHandler.QueryInterface(Ci.nsIWebHandlerApp);
   Assert.equal(
     selectedItem.handlerApp.uriTemplate,
@@ -248,8 +243,10 @@ async function selectStandardOptions(itemToUse) {
     itemToUse.querySelector(".actionContainer label").value,
     "Should have selected correct item (" + itemType + ")"
   );
-  preferredApplicationHandler = HandlerServiceTestUtils.getHandlerInfo(itemType)
-    .preferredApplicationHandler;
+  preferredApplicationHandler =
+    HandlerServiceTestUtils.getHandlerInfo(
+      itemType
+    ).preferredApplicationHandler;
   preferredApplicationHandler.QueryInterface(Ci.nsIWebHandlerApp);
   Assert.equal(
     selectedItem.handlerApp.uriTemplate,
@@ -280,8 +277,8 @@ add_task(async function sortingCheck() {
   const typeColumn = win.document.getElementById("typeColumn");
   Assert.ok(typeColumn, "typeColumn is present in handlersView.");
 
-  let expectedNumberOfItems = handlerView.querySelectorAll("richlistitem")
-    .length;
+  let expectedNumberOfItems =
+    handlerView.querySelectorAll("richlistitem").length;
 
   // Test default sorting
   assertSortByType("ascending");

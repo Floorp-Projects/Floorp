@@ -44,23 +44,27 @@ add_setup(async function () {
 });
 
 async function ensureIcon(tab, expectedIcon) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [expectedIcon], async function (
-    icon
-  ) {
-    await ContentTaskUtils.waitForCondition(() => !content.document.hidden);
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [expectedIcon],
+    async function (icon) {
+      await ContentTaskUtils.waitForCondition(() => !content.document.hidden);
 
-    let computedStyle = content.window.getComputedStyle(content.document.body);
-    await ContentTaskUtils.waitForCondition(
-      () => computedStyle.getPropertyValue("--newtab-search-icon") != "null",
-      "Search Icon not set."
-    );
+      let computedStyle = content.window.getComputedStyle(
+        content.document.body
+      );
+      await ContentTaskUtils.waitForCondition(
+        () => computedStyle.getPropertyValue("--newtab-search-icon") != "null",
+        "Search Icon not set."
+      );
 
-    Assert.equal(
-      computedStyle.getPropertyValue("--newtab-search-icon"),
-      `url(${icon})`,
-      "Should have the expected icon"
-    );
-  });
+      Assert.equal(
+        computedStyle.getPropertyValue("--newtab-search-icon"),
+        `url(${icon})`,
+        "Should have the expected icon"
+      );
+    }
+  );
 }
 
 async function ensurePlaceholder(tab, expectedId, expectedEngine) {

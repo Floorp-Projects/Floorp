@@ -57,9 +57,8 @@ export class _TopSites extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onEditFormClose = this.onEditFormClose.bind(this);
-    this.onSearchShortcutsFormClose = this.onSearchShortcutsFormClose.bind(
-      this
-    );
+    this.onSearchShortcutsFormClose =
+      this.onSearchShortcutsFormClose.bind(this);
   }
 
   /**
@@ -71,8 +70,9 @@ export class _TopSites extends React.PureComponent {
     );
     const topSitesIconsStats = countTopSitesIconsTypes(topSites);
     const topSitesPinned = topSites.filter(site => !!site.isPinned).length;
-    const searchShortcuts = topSites.filter(site => !!site.searchTopSite)
-      .length;
+    const searchShortcuts = topSites.filter(
+      site => !!site.searchTopSite
+    ).length;
     // Dispatch telemetry event with the count of TopSites images types.
     this.props.dispatch(
       ac.AlsoToMain({

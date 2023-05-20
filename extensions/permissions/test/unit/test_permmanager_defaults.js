@@ -95,15 +95,11 @@ add_task(async function do_test() {
   );
 
   attrs = { userContextId: 1 };
-  let principal1UserContext = Services.scriptSecurityManager.createContentPrincipal(
-    TEST_ORIGIN,
-    attrs
-  );
+  let principal1UserContext =
+    Services.scriptSecurityManager.createContentPrincipal(TEST_ORIGIN, attrs);
   attrs = { privateBrowsingId: 1 };
-  let principal1PrivateBrowsing = Services.scriptSecurityManager.createContentPrincipal(
-    TEST_ORIGIN,
-    attrs
-  );
+  let principal1PrivateBrowsing =
+    Services.scriptSecurityManager.createContentPrincipal(TEST_ORIGIN, attrs);
   attrs = { firstPartyDomain: "cnn.com" };
   let principal7 = Services.scriptSecurityManager.createContentPrincipal(
     TEST_ORIGIN,

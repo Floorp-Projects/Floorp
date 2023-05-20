@@ -1860,11 +1860,10 @@ try {
   // We only want to run this for local developer builds (which should have a "default" update channel).
   if (runningInParent && _AppConstants.MOZ_UPDATE_CHANNEL == "default") {
     let startTime = Cu.now();
-    let {
-      TelemetryController: _TelemetryController,
-    } = ChromeUtils.importESModule(
-      "resource://gre/modules/TelemetryController.sys.mjs"
-    );
+    let { TelemetryController: _TelemetryController } =
+      ChromeUtils.importESModule(
+        "resource://gre/modules/TelemetryController.sys.mjs"
+      );
 
     let complete = false;
     _TelemetryController.testRegisterJsProbes().finally(() => {

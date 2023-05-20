@@ -841,16 +841,16 @@ async function watchForCommandsReload(
     ? "dom-complete"
     : "dom-loading";
 
-  const {
-    onResource: onTopLevelDomEvent,
-  } = await commands.resourceCommand.waitForNextResource(
-    commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate: resource =>
-        resource.targetFront.isTopLevel && resource.name === documentEventName,
-    }
-  );
+  const { onResource: onTopLevelDomEvent } =
+    await commands.resourceCommand.waitForNextResource(
+      commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        ignoreExistingResources: true,
+        predicate: resource =>
+          resource.targetFront.isTopLevel &&
+          resource.name === documentEventName,
+      }
+    );
 
   return async function (isTargetSwitching) {
     if (typeof isTargetSwitching === "undefined") {
@@ -1841,12 +1841,15 @@ async function safeSynthesizeMouseEventAtCenterInContentPage(
  * @returns {Promise}
  */
 function scrollContentPageNodeIntoView(browsingContext, selector) {
-  return SpecialPowers.spawn(browsingContext, [selector], function (
-    innerSelector
-  ) {
-    const node = content.wrappedJSObject.document.querySelector(innerSelector);
-    node.scrollIntoView();
-  });
+  return SpecialPowers.spawn(
+    browsingContext,
+    [selector],
+    function (innerSelector) {
+      const node =
+        content.wrappedJSObject.document.querySelector(innerSelector);
+      node.scrollIntoView();
+    }
+  );
 }
 
 /**
@@ -1871,16 +1874,15 @@ function setContentPageZoomLevel(zoomLevel) {
  *         is received.
  */
 async function waitForNextTopLevelDomCompleteResource(commands) {
-  const {
-    onResource: onDomCompleteResource,
-  } = await commands.resourceCommand.waitForNextResource(
-    commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate: resource =>
-        resource.name === "dom-complete" && resource.targetFront.isTopLevel,
-    }
-  );
+  const { onResource: onDomCompleteResource } =
+    await commands.resourceCommand.waitForNextResource(
+      commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        ignoreExistingResources: true,
+        predicate: resource =>
+          resource.name === "dom-complete" && resource.targetFront.isTopLevel,
+      }
+    );
   return { onDomCompleteResource };
 }
 

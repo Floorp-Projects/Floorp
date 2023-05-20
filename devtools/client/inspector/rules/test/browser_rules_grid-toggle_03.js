@@ -72,8 +72,9 @@ add_task(async function () {
 
   info("Selecting the second grid container.");
   await selectNode("#grid2", inspector);
-  const firstGridHighterShown = highlighters.gridHighlighters.keys().next()
-    .value;
+  const firstGridHighterShown = highlighters.gridHighlighters
+    .keys()
+    .next().value;
   container = getRuleViewProperty(view, ".grid", "display").valueSpan;
   gridToggle = container.querySelector(".js-toggle-grid-highlighter");
 

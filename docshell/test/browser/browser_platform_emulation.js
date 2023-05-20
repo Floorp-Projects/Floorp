@@ -56,14 +56,15 @@ async function contentTaskOverride() {
 }
 
 add_task(async function () {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
-    browser
-  ) {
-    await SpecialPowers.spawn(browser, [], contentTaskNoOverride);
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: URL },
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [], contentTaskNoOverride);
 
-    let browsingContext = BrowserTestUtils.getBrowsingContextFrom(browser);
-    browsingContext.customPlatform = "foo";
+      let browsingContext = BrowserTestUtils.getBrowsingContextFrom(browser);
+      browsingContext.customPlatform = "foo";
 
-    await SpecialPowers.spawn(browser, [], contentTaskOverride);
-  });
+      await SpecialPowers.spawn(browser, [], contentTaskOverride);
+    }
+  );
 });

@@ -113,18 +113,20 @@ add_task(async function checkBadStsCert() {
     let tab = await openErrorPage(BAD_STS_CERT, useFrame);
     let browser = tab.linkedBrowser;
 
-    await SpecialPowers.spawn(browser, [{ frame: useFrame }], async function ({
-      frame,
-    }) {
-      let doc = frame
-        ? content.document.querySelector("iframe").contentDocument
-        : content.document;
-      let exceptionButton = doc.getElementById("exceptionDialogButton");
-      ok(
-        ContentTaskUtils.is_hidden(exceptionButton),
-        "Exception button is hidden."
-      );
-    });
+    await SpecialPowers.spawn(
+      browser,
+      [{ frame: useFrame }],
+      async function ({ frame }) {
+        let doc = frame
+          ? content.document.querySelector("iframe").contentDocument
+          : content.document;
+        let exceptionButton = doc.getElementById("exceptionDialogButton");
+        ok(
+          ContentTaskUtils.is_hidden(exceptionButton),
+          "Exception button is hidden."
+        );
+      }
+    );
 
     let message = await SpecialPowers.spawn(
       browser,
@@ -179,19 +181,21 @@ add_task(async function checkhideAddExceptionButtonViaPref() {
     let tab = await openErrorPage(BAD_CERT, useFrame);
     let browser = tab.linkedBrowser;
 
-    await SpecialPowers.spawn(browser, [{ frame: useFrame }], async function ({
-      frame,
-    }) {
-      let doc = frame
-        ? content.document.querySelector("iframe").contentDocument
-        : content.document;
+    await SpecialPowers.spawn(
+      browser,
+      [{ frame: useFrame }],
+      async function ({ frame }) {
+        let doc = frame
+          ? content.document.querySelector("iframe").contentDocument
+          : content.document;
 
-      let exceptionButton = doc.getElementById("exceptionDialogButton");
-      ok(
-        ContentTaskUtils.is_hidden(exceptionButton),
-        "Exception button is hidden."
-      );
-    });
+        let exceptionButton = doc.getElementById("exceptionDialogButton");
+        ok(
+          ContentTaskUtils.is_hidden(exceptionButton),
+          "Exception button is hidden."
+        );
+      }
+    );
 
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }

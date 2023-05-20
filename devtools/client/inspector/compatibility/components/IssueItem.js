@@ -192,12 +192,8 @@ class IssueItem extends PureComponent {
   }
 
   render() {
-    const {
-      deprecated,
-      experimental,
-      property,
-      unsupportedBrowsers,
-    } = this.props;
+    const { deprecated, experimental, property, unsupportedBrowsers } =
+      this.props;
 
     const classes = ["compatibility-issue-item"];
 

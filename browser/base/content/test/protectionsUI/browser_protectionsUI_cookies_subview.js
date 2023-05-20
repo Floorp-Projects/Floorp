@@ -287,10 +287,11 @@ add_task(async function testCookiesSubViewAllowed() {
     TPC_PREF,
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    "http://trackertest.org/"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      "http://trackertest.org/"
+    );
   Services.perms.addFromPrincipal(
     principal,
     "cookie",
@@ -371,16 +372,18 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
     TPC_PREF,
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
   );
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    "http://not-tracking.example.com/"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      "http://not-tracking.example.com/"
+    );
 
   // Pretend that the tracker has already been interacted with
-  let trackerPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    "http://trackertest.org/"
-  );
+  let trackerPrincipal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      "http://trackertest.org/"
+    );
   Services.perms.addFromPrincipal(
     trackerPrincipal,
     "storageAccessAPI",

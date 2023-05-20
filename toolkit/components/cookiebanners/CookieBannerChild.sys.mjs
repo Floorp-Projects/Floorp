@@ -213,16 +213,15 @@ export class CookieBannerChild extends JSWindowActorChild {
     if (!this.#isDetectOnly) {
       // Start a timer to measure how long it takes for the banner to appear and
       // be handled.
-      this.#gleanBannerHandlingTimer = Glean.cookieBannersClick.handleDuration.start();
+      this.#gleanBannerHandlingTimer =
+        Glean.cookieBannersClick.handleDuration.start();
     }
 
-    let {
-      bannerHandled,
-      bannerDetected,
-      matchedRule,
-    } = await this.handleCookieBanner();
+    let { bannerHandled, bannerDetected, matchedRule } =
+      await this.handleCookieBanner();
 
-    let dispatchedEventsForCookieInjection = this.#dispatchEventsForBannerHandledByInjection();
+    let dispatchedEventsForCookieInjection =
+      this.#dispatchEventsForBannerHandledByInjection();
     // A cookie injection followed by not detecting the banner via querySelector
     // is a success state. Record that in telemetry.
     // Note: The success state reported may be invalid in edge cases where both
@@ -339,12 +338,8 @@ export class CookieBannerChild extends JSWindowActorChild {
       return;
     }
 
-    let {
-      success,
-      successStage,
-      currentStage,
-      failReason,
-    } = this.#telemetryStatus;
+    let { success, successStage, currentStage, failReason } =
+      this.#telemetryStatus;
 
     // Check if we got interrupted during an observe.
     if (this.#observerCleanUp && !success) {

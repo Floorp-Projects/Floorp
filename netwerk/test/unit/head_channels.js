@@ -382,18 +382,18 @@ async function asyncStartTLSTestServer(
 
   let httpServer = new HttpServer();
   let serverReady = new Promise(resolve => {
-    httpServer.registerPathHandler("/", function handleServerCallback(
-      aRequest,
-      aResponse
-    ) {
-      aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
-      aResponse.setHeader("Content-Type", "text/plain");
-      let responseBody = "OK!";
-      aResponse.bodyOutputStream.write(responseBody, responseBody.length);
-      executeSoon(function () {
-        httpServer.stop(resolve);
-      });
-    });
+    httpServer.registerPathHandler(
+      "/",
+      function handleServerCallback(aRequest, aResponse) {
+        aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
+        aResponse.setHeader("Content-Type", "text/plain");
+        let responseBody = "OK!";
+        aResponse.bodyOutputStream.write(responseBody, responseBody.length);
+        executeSoon(function () {
+          httpServer.stop(resolve);
+        });
+      }
+    );
     httpServer.start(CALLBACK_PORT);
   });
 

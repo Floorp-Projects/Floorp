@@ -311,7 +311,8 @@ async function watchServiceWorkerTargets({
     "Set targetCommand.destroyServiceWorkersOnNavigation to " +
       destroyServiceWorkersOnNavigation
   );
-  targetCommand.destroyServiceWorkersOnNavigation = destroyServiceWorkersOnNavigation;
+  targetCommand.destroyServiceWorkersOnNavigation =
+    destroyServiceWorkersOnNavigation;
   await targetCommand.startListening();
 
   // Setup onAvailable & onDestroyed callbacks so that we can check how many

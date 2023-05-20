@@ -97,15 +97,16 @@ add_task(async function () {
         constructor(aBrowser, aEventTypes) {
           this.eventData = new Map();
           for (let eventType of aEventTypes) {
-            const removeEventListener = BrowserTestUtils.addContentEventListener(
-              aBrowser,
-              eventType,
-              () => {
-                let eventData = this.eventData.get(eventType);
-                eventData.count++;
-              },
-              { capture: true }
-            );
+            const removeEventListener =
+              BrowserTestUtils.addContentEventListener(
+                aBrowser,
+                eventType,
+                () => {
+                  let eventData = this.eventData.get(eventType);
+                  eventData.count++;
+                },
+                { capture: true }
+              );
             this.eventData.set(eventType, {
               count: 0, // how many times the event fired.
               removeEventListener, // function to remove the event listener.

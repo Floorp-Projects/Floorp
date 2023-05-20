@@ -245,8 +245,7 @@ add_task(async () => {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url:
-        'data:text/html,<a id="exampleLink" href="https://example.com">link</a>',
+      url: 'data:text/html,<a id="exampleLink" href="https://example.com">link</a>',
     },
     async browser => {
       if (!Services.search.isInitialized) {

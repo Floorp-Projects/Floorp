@@ -227,8 +227,7 @@ let testCases = [
     },
   },
   {
-    name:
-      "Ensure a dismissed password-save doorhanger appears on an input event when editing an unsaved password",
+    name: "Ensure a dismissed password-save doorhanger appears on an input event when editing an unsaved password",
     prefEnabled: true,
     isLoggedIn: true,
     logins: [],
@@ -253,8 +252,7 @@ let testCases = [
     },
   },
   {
-    name:
-      "Ensure a dismissed password-save doorhanger appears with the latest input value upon editing an unsaved password",
+    name: "Ensure a dismissed password-save doorhanger appears with the latest input value upon editing an unsaved password",
     prefEnabled: true,
     isLoggedIn: true,
     logins: [],
@@ -281,8 +279,7 @@ let testCases = [
     },
   },
   {
-    name:
-      "Ensure a dismissed password-change doorhanger appears on an input event when editing a saved password",
+    name: "Ensure a dismissed password-change doorhanger appears on an input event when editing a saved password",
     prefEnabled: true,
     isLoggedIn: true,
     logins: [{ username: "", password: "pass1" }],
@@ -307,8 +304,7 @@ let testCases = [
     },
   },
   {
-    name:
-      "Ensure no dismissed doorhanger is shown on 'input' when Primary Password is locked",
+    name: "Ensure no dismissed doorhanger is shown on 'input' when Primary Password is locked",
     prefEnabled: true,
     isLoggedIn: false,
     logins: [],
@@ -326,8 +322,7 @@ let testCases = [
     },
   },
   {
-    name:
-      "Ensure no dismissed doorhanger is shown on 'change' when Primary Password is locked",
+    name: "Ensure no dismissed doorhanger is shown on 'change' when Primary Password is locked",
     prefEnabled: true,
     isLoggedIn: false,
     logins: [],
@@ -421,9 +416,8 @@ async function testPasswordChange(
         expected.doorhanger || !isLoggedIn
           ? "PasswordEditedOrGenerated"
           : "PasswordIgnoreEdit";
-      let passwordTestNotification = listenForTestNotification(
-        notificationMessage
-      );
+      let passwordTestNotification =
+        listenForTestNotification(notificationMessage);
 
       await changeContentFormValues(browser, formChanges, shouldBlur);
 
@@ -488,18 +482,19 @@ async function initForm(browser, formDefaults, passwordFieldType) {
     browser,
     { passwordInputSelector, passwordFieldType },
     async function ({ passwordInputSelector, passwordFieldType }) {
-      content.document.querySelector(
-        passwordInputSelector
-      ).type = passwordFieldType;
+      content.document.querySelector(passwordInputSelector).type =
+        passwordFieldType;
     }
   );
-  await ContentTask.spawn(browser, formDefaults, async function (
-    selectorValues
-  ) {
-    for (let [sel, value] of Object.entries(selectorValues)) {
-      content.document.querySelector(sel).value = value;
+  await ContentTask.spawn(
+    browser,
+    formDefaults,
+    async function (selectorValues) {
+      for (let [sel, value] of Object.entries(selectorValues)) {
+        content.document.querySelector(sel).value = value;
+      }
     }
-  });
+  );
 }
 
 async function checkForm(browser, expected) {

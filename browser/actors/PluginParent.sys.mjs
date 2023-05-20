@@ -131,9 +131,8 @@ export class PluginParent extends JSWindowActorParent {
   showPluginCrashedNotification(browser, pluginCrashID) {
     // If there's already an existing notification bar, don't do anything.
     let notificationBox = browser.getTabBrowser().getNotificationBox(browser);
-    let notification = notificationBox.getNotificationWithValue(
-      "plugin-crashed"
-    );
+    let notification =
+      notificationBox.getNotificationWithValue("plugin-crashed");
 
     let report = PluginManager.getCrashReport(pluginCrashID);
     if (notification || !report) {

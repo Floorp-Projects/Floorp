@@ -56,9 +56,10 @@ add_task(async function () {
 
   // Always remember to clean up
   await new Promise(resolve => {
-    let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      TEST_QUOTA_USAGE_ORIGIN
-    );
+    let principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        TEST_QUOTA_USAGE_ORIGIN
+      );
     let request = Services.qms.clearStoragesForPrincipal(
       principal,
       null,

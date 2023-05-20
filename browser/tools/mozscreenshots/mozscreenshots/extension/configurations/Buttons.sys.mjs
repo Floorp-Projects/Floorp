@@ -42,9 +42,8 @@ export var Buttons = {
       },
 
       async verifyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         if (browserWindow.PanelUI.panel.state == "closed") {
           return "The button isn't shown when the panel isn't open.";
         }
@@ -59,9 +58,8 @@ export var Buttons = {
       },
 
       async verifyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         if (
           browserWindow.document.documentElement.getAttribute("customizing") !=
           "true"

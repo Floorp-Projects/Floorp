@@ -252,12 +252,8 @@ export class Page extends Domain {
       // If no specific clipping region has been specified,
       // fallback to the layout (fixed) viewport, and the
       // default pixel ratio.
-      const {
-        pageX,
-        pageY,
-        clientWidth,
-        clientHeight,
-      } = await this.executeInChild("_layoutViewport");
+      const { pageX, pageY, clientWidth, clientHeight } =
+        await this.executeInChild("_layoutViewport");
 
       rect = new DOMRect(pageX, pageY, clientWidth, clientHeight);
     }

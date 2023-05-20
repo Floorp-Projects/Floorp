@@ -343,13 +343,11 @@ export var ScreenshotsUtils = {
     rect.height = Math.floor(height / rect.devicePixelRatio);
 
     if (cropped) {
-      let [
-        errorTitle,
-        errorMessage,
-      ] = lazy.screenshotsLocalization.formatMessagesSync([
-        { id: "screenshots-too-large-error-title" },
-        { id: "screenshots-too-large-error-details" },
-      ]);
+      let [errorTitle, errorMessage] =
+        lazy.screenshotsLocalization.formatMessagesSync([
+          { id: "screenshots-too-large-error-title" },
+          { id: "screenshots-too-large-error-details" },
+        ]);
       this.showAlertMessage(errorTitle.value, errorMessage.value);
       this.recordTelemetryEvent("failed", "screenshot_too_large", null);
     }
@@ -362,9 +360,8 @@ export var ScreenshotsUtils = {
    */
   async doScreenshot(browser, dialog, type) {
     await dialog._dialogReady;
-    let screenshotsUI = dialog._frame.contentDocument.createElement(
-      "screenshots-ui"
-    );
+    let screenshotsUI =
+      dialog._frame.contentDocument.createElement("screenshots-ui");
     dialog._frame.contentDocument.body.appendChild(screenshotsUI);
 
     let rect;

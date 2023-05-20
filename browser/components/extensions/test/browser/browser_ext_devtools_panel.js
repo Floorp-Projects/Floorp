@@ -583,10 +583,8 @@ add_task(async function test_devtools_page_panels_switch_toolbox_host() {
   info("Wait for the panel to show and load for the first time");
   const panelShownURL = await extension.awaitMessage("devtools_panel_shown");
 
-  const {
-    panelLoadedURL,
-    hasDevToolsAPINamespace,
-  } = await extension.awaitMessage("devtools_panel_loaded");
+  const { panelLoadedURL, hasDevToolsAPINamespace } =
+    await extension.awaitMessage("devtools_panel_loaded");
 
   is(
     panelShownURL,
@@ -656,7 +654,8 @@ add_task(async function test_devtools_page_invalid_panel_urls() {
 
   async function devtools_page() {
     const matchInvalidPanelURL = /must be a relative URL/;
-    const matchInvalidIconURL = /be one of \[""\], or match the format "strictRelativeUrl"/;
+    const matchInvalidIconURL =
+      /be one of \[""\], or match the format "strictRelativeUrl"/;
 
     // Invalid panel urls (validated by the schema wrappers, throws on invalid urls).
     const invalid_panels = [
@@ -768,7 +767,7 @@ add_task(async function test_devtools_page_invalid_panel_urls() {
     manifest: {
       devtools_page: "devtools_page.html",
       icons: {
-        "32": "icon.png",
+        32: "icon.png",
       },
     },
     files: {

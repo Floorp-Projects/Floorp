@@ -16,18 +16,24 @@ add_task(async function test_csp() {
   let cspBrowser = gBrowser.selectedTab.linkedBrowser;
 
   // The blocked page opened in a new window/tab
-  await SpecialPowers.spawn(cspBrowser, [BLOCKED_PAGE], async function (
-    cspBlockedPage
-  ) {
-    let cookieHeader = content.document.getElementById("strictCookie");
-    let location = content.document.location.href;
+  await SpecialPowers.spawn(
+    cspBrowser,
+    [BLOCKED_PAGE],
+    async function (cspBlockedPage) {
+      let cookieHeader = content.document.getElementById("strictCookie");
+      let location = content.document.location.href;
 
-    Assert.ok(
-      cookieHeader.textContent.includes("No same site strict cookie header"),
-      "Same site strict cookie has not been set"
-    );
-    Assert.equal(location, cspBlockedPage, "Location of new page is correct!");
-  });
+      Assert.ok(
+        cookieHeader.textContent.includes("No same site strict cookie header"),
+        "Same site strict cookie has not been set"
+      );
+      Assert.equal(
+        location,
+        cspBlockedPage,
+        "Location of new page is correct!"
+      );
+    }
+  );
 
   Services.cookies.removeAll();
   BrowserTestUtils.removeTab(iframePageTab);

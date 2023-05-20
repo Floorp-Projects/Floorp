@@ -81,11 +81,8 @@ export class ClickHandlerChild extends JSWindowActorChild {
       return;
     }
 
-    let [
-      href,
-      node,
-      principal,
-    ] = lazy.BrowserUtils.hrefAndLinkNodeForClickEvent(event);
+    let [href, node, principal] =
+      lazy.BrowserUtils.hrefAndLinkNodeForClickEvent(event);
 
     let csp = ownerDoc.csp;
     if (csp) {

@@ -146,9 +146,8 @@ function assertTelemetryEvents() {
 // A user making a search after making a search should result
 // in the telemetry being recorded.
 add_task(async function search_after_search() {
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await searchForString(SEARCH_STRING, tab);
@@ -178,9 +177,8 @@ add_task(async function search_after_search() {
 // A user going to a tab that contains a SERP should
 // trigger the telemetry when conducting a search.
 add_task(async function switch_to_tab_and_search() {
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await searchForString(SEARCH_STRING, tab1);
@@ -210,9 +208,8 @@ add_task(async function switch_to_tab_and_search() {
 // conducting another search should still be registered as a
 // urlbar-persisted SAP.
 add_task(async function handle_revert() {
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await searchForString(SEARCH_STRING, tab);
@@ -239,9 +236,8 @@ add_task(async function handle_revert() {
 // urlbar-persisted telemetry when returning to a SERP
 // and conducting a search.
 add_task(async function back_and_forth() {
-  let search_hist = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  let search_hist =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 

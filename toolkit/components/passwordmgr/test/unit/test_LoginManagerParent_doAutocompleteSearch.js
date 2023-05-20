@@ -34,9 +34,10 @@ add_setup(async () => {
     .callsFake(() => {
       return {
         currentWindowGlobal: {
-          documentPrincipal: Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-            "https://www.example.com^userContextId=1"
-          ),
+          documentPrincipal:
+            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              "https://www.example.com^userContextId=1"
+            ),
           documentURI: Services.io.newURI("https://www.example.com"),
         },
       };

@@ -396,8 +396,9 @@ Sync11Service.prototype = {
 
       // UI code uses the flag on the XPCOM service so it doesn't have
       // to load a bunch of modules.
-      let xps = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
-        .wrappedJSObject;
+      let xps = Cc["@mozilla.org/weave/service;1"].getService(
+        Ci.nsISupports
+      ).wrappedJSObject;
       xps.ready = true;
 
       Svc.Obs.notify("weave:service:ready");
@@ -1331,9 +1332,8 @@ Sync11Service.prototype = {
     return this._lock(
       "service.js: sync",
       this._notify("sync", JSON.stringify({ why }), async function onNotify() {
-        let histogram = Services.telemetry.getHistogramById(
-          "WEAVE_START_COUNT"
-        );
+        let histogram =
+          Services.telemetry.getHistogramById("WEAVE_START_COUNT");
         histogram.add(1);
 
         let synchronizer = new EngineSynchronizer(this);

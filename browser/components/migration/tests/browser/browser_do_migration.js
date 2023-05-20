@@ -45,8 +45,8 @@ function assertQuantitiesShown(wizard, expectedResourceTypes) {
   for (let progressGroup of progressGroups) {
     if (expectedResourceTypes.includes(progressGroup.dataset.resourceType)) {
       let progressIcon = progressGroup.querySelector(".progress-icon");
-      let successText = progressGroup.querySelector(".success-text")
-        .textContent;
+      let successText =
+        progressGroup.querySelector(".success-text").textContent;
 
       Assert.ok(
         progressIcon.classList.contains("completed"),

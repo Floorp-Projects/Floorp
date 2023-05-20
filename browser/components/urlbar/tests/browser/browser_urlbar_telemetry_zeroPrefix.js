@@ -27,9 +27,8 @@ add_setup(async function () {
 
 // zero prefix engagement
 add_task(async function engagement() {
-  let dwellHistogram = TelemetryTestUtils.getAndClearHistogram(
-    HISTOGRAM_DWELL_TIME
-  );
+  let dwellHistogram =
+    TelemetryTestUtils.getAndClearHistogram(HISTOGRAM_DWELL_TIME);
 
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await showZeroPrefix();
@@ -66,9 +65,8 @@ add_task(async function engagement() {
 
 // zero prefix abandonment
 add_task(async function abandonment() {
-  let dwellHistogram = TelemetryTestUtils.getAndClearHistogram(
-    HISTOGRAM_DWELL_TIME
-  );
+  let dwellHistogram =
+    TelemetryTestUtils.getAndClearHistogram(HISTOGRAM_DWELL_TIME);
 
   // Open and close the view twice. The second time the view will used a cached
   // query context and that shouldn't interfere with telemetry.
@@ -90,9 +88,8 @@ add_task(async function abandonment() {
 // Shows the zero-prefix view, does some searches, then shows it again by doing
 // a search for an empty string.
 add_task(async function searches() {
-  let dwellHistogram = TelemetryTestUtils.getAndClearHistogram(
-    HISTOGRAM_DWELL_TIME
-  );
+  let dwellHistogram =
+    TelemetryTestUtils.getAndClearHistogram(HISTOGRAM_DWELL_TIME);
 
   info("Show zero prefix");
   await showZeroPrefix();
@@ -146,9 +143,8 @@ add_task(async function searches() {
 // A zero prefix engagement should not be recorded when the view isn't showing
 // zero prefix.
 add_task(async function notZeroPrefix_engagement() {
-  let dwellHistogram = TelemetryTestUtils.getAndClearHistogram(
-    HISTOGRAM_DWELL_TIME
-  );
+  let dwellHistogram =
+    TelemetryTestUtils.getAndClearHistogram(HISTOGRAM_DWELL_TIME);
 
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -167,9 +163,8 @@ add_task(async function notZeroPrefix_engagement() {
 // A zero prefix abandonment should not be recorded when the view isn't showing
 // zero prefix.
 add_task(async function notZeroPrefix_abandonment() {
-  let dwellHistogram = TelemetryTestUtils.getAndClearHistogram(
-    HISTOGRAM_DWELL_TIME
-  );
+  let dwellHistogram =
+    TelemetryTestUtils.getAndClearHistogram(HISTOGRAM_DWELL_TIME);
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -263,9 +258,9 @@ async function updateTopSitesAndAwaitChanged() {
   }
 
   info("Updating top sites and awaiting newtab-top-sites-changed");
-  let changedPromise = TestUtils.topicObserved(
-    "newtab-top-sites-changed"
-  ).then(() => info("Observed newtab-top-sites-changed"));
+  let changedPromise = TestUtils.topicObserved("newtab-top-sites-changed").then(
+    () => info("Observed newtab-top-sites-changed")
+  );
   await updateTopSites(sites => sites?.length);
   await changedPromise;
 }

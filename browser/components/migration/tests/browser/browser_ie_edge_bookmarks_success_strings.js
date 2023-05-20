@@ -54,9 +54,8 @@ add_task(async function test_ie_edge_bookmarks_success_strings() {
       let bookmarksProgressGroup = shadow.querySelector(
         `.resource-progress-group[data-resource-type="${MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS}"`
       );
-      let successTextElement = bookmarksProgressGroup.querySelector(
-        ".success-text"
-      );
+      let successTextElement =
+        bookmarksProgressGroup.querySelector(".success-text");
 
       await BrowserTestUtils.waitForCondition(() => {
         return successTextElement.textContent.trim();

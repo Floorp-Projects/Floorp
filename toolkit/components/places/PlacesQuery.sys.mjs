@@ -87,17 +87,10 @@ export class PlacesQuery {
       let lastUrl; // Avoid listing consecutive visits to the same URL.
       let lastRedirectFromVisitId; // Avoid listing redirecting visits.
       for (const row of rows) {
-        const [
-          id,
-          visitDate,
-          title,
-          url,
-          visitType,
-          fromVisit,
-          hidden,
-        ] = Array.from({ length: row.numEntries }, (_, i) =>
-          row.getResultByIndex(i)
-        );
+        const [id, visitDate, title, url, visitType, fromVisit, hidden] =
+          Array.from({ length: row.numEntries }, (_, i) =>
+            row.getResultByIndex(i)
+          );
         if (isRedirectType(visitType) && fromVisit > 0) {
           lastRedirectFromVisitId = fromVisit;
         }

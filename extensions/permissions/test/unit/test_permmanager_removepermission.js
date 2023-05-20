@@ -8,12 +8,14 @@ function run_test() {
   Assert.equal(pm.all.length, 0);
 
   // add some permissions
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "http://amazon.com:8080"
-  );
-  let principal2 = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "http://google.com:2048"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "http://amazon.com:8080"
+    );
+  let principal2 =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "http://google.com:2048"
+    );
 
   pm.addFromPrincipal(principal, "apple", 0);
   pm.addFromPrincipal(principal, "apple", 3);

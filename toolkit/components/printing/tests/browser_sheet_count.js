@@ -53,9 +53,8 @@ add_task(async function testSheetCount() {
       Ci.nsIPrintSettings.kOutputFormatNative;
     mockPrinterInfo.settings.printerName = realPrinterName;
 
-    helper.win.PrintSettingsViewProxy.availablePrinters[
-      realPrinterName
-    ] = mockPrinterInfo;
+    helper.win.PrintSettingsViewProxy.availablePrinters[realPrinterName] =
+      mockPrinterInfo;
     await helper.dispatchSettingsChange({
       printerName: realPrinterName,
     });

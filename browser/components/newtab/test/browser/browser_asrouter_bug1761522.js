@@ -59,8 +59,7 @@ async function serveRemoteSettings() {
           permissions: {},
           data: {
             attachment: {
-              hash:
-                "f9aead2693c4ff95c2764df72b43fdf5b3490ed06414588843848f991136040b",
+              hash: "f9aead2693c4ff95c2764df72b43fdf5b3490ed06414588843848f991136040b",
               size: attachment.buffer.byteLength,
               filename: "asrouter.ftl",
               location: `main-workspace/ms-language-packs/${attachmentUuid}`,
