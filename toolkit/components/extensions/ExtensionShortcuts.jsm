@@ -193,11 +193,12 @@ class ExtensionShortcuts {
     });
   }
 
-  constructor({ extension, onCommand }) {
+  constructor({ extension, onCommand, onShortcutChanged }) {
     this.keysetsMap = new WeakMap();
     this.windowOpenListener = null;
     this.extension = extension;
     this.onCommand = onCommand;
+    this.onShortcutChanged = onShortcutChanged;
     this.id = makeWidgetId(extension.id);
   }
 
@@ -235,6 +236,8 @@ class ExtensionShortcuts {
       command.description = description;
     }
 
+    let oldShortcut = command.shortcut;
+
     if (shortcut != null && shortcut != command.shortcut) {
       shortcut = normalizeShortcut(shortcut);
       commandUpdates.shortcut = shortcut;
@@ -249,6 +252,14 @@ class ExtensionShortcuts {
     );
 
     this.registerKeys(commands);
+
+    if (command.shortcut !== oldShortcut) {
+      this.onShortcutChanged({
+        name,
+        newShortcut: command.shortcut,
+        oldShortcut,
+      });
+    }
   }
 
   async resetCommand(name) {
