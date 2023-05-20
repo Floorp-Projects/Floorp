@@ -3024,6 +3024,14 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
   }
   // Nudge the bounds to account for the quantization rounding.
   Rect quantBounds = Rect(intBounds) + (realOrigin - quantizedOrigin);
+  // If a stroke path covers too much screen area, it is likely that most is
+  // empty space in the interior. This usually imposes too high a cost versus
+  // just rasterizing without acceleration.
+  if (aStrokeOptions &&
+      intBounds.width * intBounds.height >
+          (mViewportSize.width / 2) * (mViewportSize.height / 2)) {
+    return false;
+  }
   // If the pattern is a solid color, then this will be used along with a path
   // mask to render the path, as opposed to baking the pattern into the cached
   // path texture.
@@ -3211,17 +3219,6 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
       // If we failed to draw the vertex data for some reason, then fall through
       // to the texture rasterization path.
     }
-  }
-
-  // If a stroke path covers too much screen area, it is likely that most is
-  // empty space in the interior. This usually imposes too high a cost versus
-  // just rasterizing without acceleration. Note that AA-Stroke generally
-  // produces more acceptable amounts of geometry for larger paths, so we do
-  // this heuristic after we attempt AA-Stroke.
-  if (aStrokeOptions &&
-      intBounds.width * intBounds.height >
-          (mViewportSize.width / 2) * (mViewportSize.height / 2)) {
-    return false;
   }
 
   // If there isn't a valid texture handle, then we need to rasterize the
