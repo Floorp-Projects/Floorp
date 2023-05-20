@@ -7,47 +7,74 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
 
-<window id="BlocklistsDialog"
-        data-l10n-id="blocklist-window2"
-        data-l10n-attrs="title, style"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        onload="gBlocklistManager.onLoad();"
-        onunload="gBlocklistManager.uninit();"
-        persist="width height">
-
+<window
+  id="BlocklistsDialog"
+  data-l10n-id="blocklist-window2"
+  data-l10n-attrs="title, style"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  onload="gBlocklistManager.onLoad();"
+  onunload="gBlocklistManager.uninit();"
+  persist="width height"
+>
   <dialog
     buttons="accept,cancel"
     data-l10n-id="blocklist-dialog"
-    data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept">
+    data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept"
+  >
+    <linkset>
+      <html:link rel="localization" href="branding/brand.ftl" />
+      <html:link rel="localization" href="browser/preferences/blocklists.ftl" />
+    </linkset>
 
-  <linkset>
-    <html:link rel="localization" href="branding/brand.ftl"/>
-    <html:link rel="localization" href="browser/preferences/blocklists.ftl"/>
-  </linkset>
+    <script src="chrome://browser/content/preferences/dialogs/blocklists.js" />
 
-  <script src="chrome://browser/content/preferences/dialogs/blocklists.js"/>
+    <keyset>
+      <key
+        data-l10n-id="blocklist-close-key"
+        modifiers="accel"
+        oncommand="window.close();"
+      />
+    </keyset>
 
-  <keyset>
-    <key data-l10n-id="blocklist-close-key" modifiers="accel" oncommand="window.close();"/>
-  </keyset>
-
-  <vbox class="contentPane">
-    <description id="blocklistsText" data-l10n-id="blocklist-description" control="url">
-      <html:a target="_blank" class="text-link" data-l10n-name="disconnect-link" href="https://disconnect.me/"/>
-    </description>
-    <separator class="thin"/>
-    <tree id="blocklistsTree" flex="1" style="height: 18em;"
-          hidecolumnpicker="true"
-          onselect="gBlocklistManager.onListSelected();">
-      <treecols>
-        <treecol id="selectionCol" label="" style="flex: 1 auto" sortable="false"
-                 type="checkbox"/>
-        <treecol id="listCol" data-l10n-id="blocklist-treehead-list" style="flex: 80 80 auto"
-                 sortable="false"/>
-      </treecols>
-      <treechildren/>
-    </tree>
-  </vbox>
+    <vbox class="contentPane">
+      <description
+        id="blocklistsText"
+        data-l10n-id="blocklist-description"
+        control="url"
+      >
+        <html:a
+          target="_blank"
+          class="text-link"
+          data-l10n-name="disconnect-link"
+          href="https://disconnect.me/"
+        />
+      </description>
+      <separator class="thin" />
+      <tree
+        id="blocklistsTree"
+        flex="1"
+        style="height: 18em"
+        hidecolumnpicker="true"
+        onselect="gBlocklistManager.onListSelected();"
+      >
+        <treecols>
+          <treecol
+            id="selectionCol"
+            label=""
+            style="flex: 1 auto"
+            sortable="false"
+            type="checkbox"
+          />
+          <treecol
+            id="listCol"
+            data-l10n-id="blocklist-treehead-list"
+            style="flex: 80 80 auto"
+            sortable="false"
+          />
+        </treecols>
+        <treechildren />
+      </tree>
+    </vbox>
   </dialog>
 </window>

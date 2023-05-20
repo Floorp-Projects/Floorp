@@ -10,67 +10,97 @@
 
 <!DOCTYPE window>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml">
+<window
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+>
+  <script src="chrome://devtools/content/shared/theme-switching.js" />
+  <script src="chrome://global/content/globalOverlay.js" />
 
-  <script src="chrome://devtools/content/shared/theme-switching.js"/>
-  <script src="chrome://global/content/globalOverlay.js"/>
-
-  <html:link rel="localization" href="devtools/client/storage.ftl"/>
+  <html:link rel="localization" href="devtools/client/storage.ftl" />
 
   <popupset id="storagePopupSet">
     <menupopup id="storage-tree-popup">
-      <menuitem id="storage-tree-popup-delete-all"
-                data-l10n-id="storage-context-menu-delete-all"/>
-      <menuitem id="storage-tree-popup-delete-all-session-cookies"
-                data-l10n-id="storage-context-menu-delete-all-session-cookies"/>
-      <menuitem id="storage-tree-popup-delete"
-                data-l10n-id="storage-context-menu-delete"
-                data-l10n-args='{"itemName": ""}'/>
+      <menuitem
+        id="storage-tree-popup-delete-all"
+        data-l10n-id="storage-context-menu-delete-all"
+      />
+      <menuitem
+        id="storage-tree-popup-delete-all-session-cookies"
+        data-l10n-id="storage-context-menu-delete-all-session-cookies"
+      />
+      <menuitem
+        id="storage-tree-popup-delete"
+        data-l10n-id="storage-context-menu-delete"
+        data-l10n-args='{"itemName": ""}'
+      />
     </menupopup>
     <menupopup id="variable-view-popup">
-      <menuitem id="variable-view-popup-copy"
-                data-l10n-id="storage-context-menu-copy"/>
+      <menuitem
+        id="variable-view-popup-copy"
+        data-l10n-id="storage-context-menu-copy"
+      />
     </menupopup>
     <menupopup id="storage-table-popup">
-      <menuitem id="storage-table-popup-add"
-                data-l10n-id="storage-context-menu-add-item"/>
-      <menuitem id="storage-table-popup-delete"
-                data-l10n-id="storage-context-menu-delete"
-                data-l10n-args='{"itemName": ""}'/>
-      <menuitem id="storage-table-popup-delete-all-from"
-                data-l10n-id="storage-context-menu-delete-all-from"
-                data-l10n-args='{"host": ""}'/>
-      <menuitem id="storage-table-popup-delete-all"
-                data-l10n-id="storage-context-menu-delete-all"/>
-      <menuitem id="storage-table-popup-delete-all-session-cookies"
-                data-l10n-id="storage-context-menu-delete-all-session-cookies"/>
+      <menuitem
+        id="storage-table-popup-add"
+        data-l10n-id="storage-context-menu-add-item"
+      />
+      <menuitem
+        id="storage-table-popup-delete"
+        data-l10n-id="storage-context-menu-delete"
+        data-l10n-args='{"itemName": ""}'
+      />
+      <menuitem
+        id="storage-table-popup-delete-all-from"
+        data-l10n-id="storage-context-menu-delete-all-from"
+        data-l10n-args='{"host": ""}'
+      />
+      <menuitem
+        id="storage-table-popup-delete-all"
+        data-l10n-id="storage-context-menu-delete-all"
+      />
+      <menuitem
+        id="storage-table-popup-delete-all-session-cookies"
+        data-l10n-id="storage-context-menu-delete-all-session-cookies"
+      />
     </menupopup>
   </popupset>
 
   <box flex="1" class="devtools-responsive-container theme-body">
-    <vbox id="storage-tree"/>
-    <splitter class="devtools-side-splitter"/>
+    <vbox id="storage-tree" />
+    <splitter class="devtools-side-splitter" />
     <vbox flex="1">
-      <hbox id="storage-toolbar" class="devtools-toolbar devtools-input-toolbar">
-        <html:input id="storage-searchbox"
-                    class="devtools-filterinput"
-                    data-l10n-id="storage-search-box"/>
-        <hbox class="devtools-separator"/>
-        <html:button id="add-button"
-                class="devtools-button add-button"
-                data-l10n-id="storage-add-button"></html:button>
-        <html:button id="refresh-button"
-                class="devtools-button refresh-button"
-                data-l10n-id="storage-refresh-button"></html:button>
-        <html:button class="devtools-button sidebar-toggle" hidden=""></html:button>
+      <hbox
+        id="storage-toolbar"
+        class="devtools-toolbar devtools-input-toolbar"
+      >
+        <html:input
+          id="storage-searchbox"
+          class="devtools-filterinput"
+          data-l10n-id="storage-search-box"
+        />
+        <hbox class="devtools-separator" />
+        <html:button
+          id="add-button"
+          class="devtools-button add-button"
+          data-l10n-id="storage-add-button"
+        ></html:button>
+        <html:button
+          id="refresh-button"
+          class="devtools-button refresh-button"
+          data-l10n-id="storage-refresh-button"
+        ></html:button>
+        <html:button
+          class="devtools-button sidebar-toggle"
+          hidden=""
+        ></html:button>
       </hbox>
-      <vbox id="storage-table" class="theme-sidebar" flex="1"/>
+      <vbox id="storage-table" class="theme-sidebar" flex="1" />
     </vbox>
-    <splitter class="devtools-side-splitter"/>
+    <splitter class="devtools-side-splitter" />
     <vbox id="storage-sidebar" class="devtools-sidebar-tabs" hidden="true">
-      <vbox flex="1"/>
+      <vbox flex="1" />
     </vbox>
   </box>
-
 </window>

@@ -1,47 +1,48 @@
 <!DOCTYPE html>
 <html>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, user-scalable=no">
-<style>
-html {
-  height: 100%;
-  width: 100%;
-  /* background contains one extra transparent.gif because we want trick the
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, user-scalable=no" />
+  <style>
+    html {
+      height: 100%;
+      width: 100%;
+      /* background contains one extra transparent.gif because we want trick the
      contentful paint detection; We want to make sure the background is loaded
      before the test starts so we always wait for the contentful paint timestamp
      to exist, however, gradient isn't considered as contentful per spec, so Gecko
      wouldn't generate a timestamp for it. Hence, we added a transparent gif
      to the image list to trick the detection. */
-  background: url('/assets/www/transparent.gif'), linear-gradient(135deg, red, white);
-}
-body {
-  width: 100%;
-  margin: 0px;
-  padding: 0px;
-}
-</style>
-<body>
-<div style="width: 100%; height: 50vh; touch-action: auto;"></div>
-<script>
-  const searchParams = new URLSearchParams(location.search);
-  let div = document.querySelector('div');
-  if (searchParams.has("subframe")) {
-    const scrolledContents = document.createElement("div");
-    scrolledContents.style.height = "100%";
+      background: url("/assets/www/transparent.gif"),
+        linear-gradient(135deg, red, white);
+    }
+    body {
+      width: 100%;
+      margin: 0px;
+      padding: 0px;
+    }
+  </style>
+  <body>
+    <div style="width: 100%; height: 50vh; touch-action: auto"></div>
+    <script>
+      const searchParams = new URLSearchParams(location.search);
+      let div = document.querySelector("div");
+      if (searchParams.has("subframe")) {
+        const scrolledContents = document.createElement("div");
+        scrolledContents.style.height = "100%";
 
-    div.appendChild(scrolledContents);
-    div.style.overflow = "auto";
+        div.appendChild(scrolledContents);
+        div.style.overflow = "auto";
 
-    div = scrolledContents;
-  }
-  if (searchParams.has("scrollable")) {
-    // Scrollable for dynamic toolbar purposes.
-    div.style.height = "100vh";
-  }
-  div.style.touchAction = searchParams.get("touch-action");
-  if (searchParams.has("event")) {
-    div.addEventListener("touchstart", e => {});
-  }
-</script>
-</body>
+        div = scrolledContents;
+      }
+      if (searchParams.has("scrollable")) {
+        // Scrollable for dynamic toolbar purposes.
+        div.style.height = "100vh";
+      }
+      div.style.touchAction = searchParams.get("touch-action");
+      if (searchParams.has("event")) {
+        div.addEventListener("touchstart", e => {});
+      }
+    </script>
+  </body>
 </html>

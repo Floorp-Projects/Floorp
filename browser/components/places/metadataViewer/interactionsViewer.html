@@ -8,14 +8,28 @@
 <html>
   <head>
     <title>Interactions Debug Viewer</title>
-    <script type="module" src="chrome://browser/content/places/interactionsViewer.js"></script>
-    <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
-    <link rel="stylesheet" type="text/css" href="chrome://browser/content/places/interactionsViewer.css">
+    <script
+      type="module"
+      src="chrome://browser/content/places/interactionsViewer.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://global/skin/in-content/common.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="chrome://browser/content/places/interactionsViewer.css"
+    />
     <style id="tableStyle" type="text/css"></style>
   </head>
   <body>
     <div id="enabledWarning" class="message-bar message-bar-warning" hidden>
-      <img class="message-bar-icon" src="chrome://global/skin/icons/warning.svg">
+      <img
+        class="message-bar-icon"
+        src="chrome://global/skin/icons/warning.svg"
+      />
       <descripton class="message-bar-description">
         You need to have <code>browser.places.interactions.enabled</code>
         set to true (and restart) for metadata recording to be enabled.

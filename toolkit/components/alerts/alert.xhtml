@@ -8,52 +8,64 @@
 <?xml-stylesheet href="chrome://global/content/alerts/alert.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/alert.css" type="text/css"?>
 
-<window id="alertNotification"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        windowtype="alert:alert"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        role="alert"
-        pack="start"
-        onload="onAlertLoad();"
-        onclick="onAlertClick();"
-        onbeforeunload="onAlertBeforeUnload();">
-
+<window
+  id="alertNotification"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  windowtype="alert:alert"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+  role="alert"
+  pack="start"
+  onload="onAlertLoad();"
+  onclick="onAlertClick();"
+  onbeforeunload="onAlertBeforeUnload();"
+>
   <linkset>
-    <xhtml:link rel="localization" href="toolkit/global/alert.ftl"/>
+    <xhtml:link rel="localization" href="toolkit/global/alert.ftl" />
   </linkset>
 
-  <script src="chrome://global/content/alerts/alert.js"/>
+  <script src="chrome://global/content/alerts/alert.js" />
 
   <vbox id="alertBox">
     <box id="alertTitleBox">
-      <image id="alertIcon"/>
-      <label id="alertTitleLabel" class="alertTitle plain" crop="end"/>
+      <image id="alertIcon" />
+      <label id="alertTitleLabel" class="alertTitle plain" crop="end" />
       <vbox>
-        <toolbarbutton class="close-icon"
-                       data-l10n-id="alert-close"
-                       onclick="event.stopPropagation();"
-                       oncommand="onAlertClose();"/>
+        <toolbarbutton
+          class="close-icon"
+          data-l10n-id="alert-close"
+          onclick="event.stopPropagation();"
+          oncommand="onAlertClose();"
+        />
       </vbox>
     </box>
     <box>
-      <hbox id="alertImageBox" class="alertImageBox" align="center" pack="center">
-        <image id="alertImage"/>
+      <hbox
+        id="alertImageBox"
+        class="alertImageBox"
+        align="center"
+        pack="center"
+      >
+        <image id="alertImage" />
       </hbox>
 
       <vbox id="alertTextBox" class="alertTextBox">
-        <label id="alertTextLabel" class="alertText plain"/>
-        <spacer flex="1"/>
+        <label id="alertTextLabel" class="alertText plain" />
+        <spacer flex="1" />
         <box id="alertFooter">
-          <label id="alertSourceLabel" class="alertSource plain"/>
-          <button type="menu" id="alertSettings" data-l10n-id="alert-settings-title">
+          <label id="alertSourceLabel" class="alertSource plain" />
+          <button
+            type="menu"
+            id="alertSettings"
+            data-l10n-id="alert-settings-title"
+          >
             <menupopup position="after_end">
-              <menuitem id="doNotDisturbMenuItem"
-                        oncommand="doNotDisturb();"/>
-              <menuseparator/>
-              <menuitem id="disableForOriginMenuItem"
-                        oncommand="disableForOrigin();"/>
-              <menuitem id="openSettingsMenuItem"
-                        oncommand="openSettings();"/>
+              <menuitem id="doNotDisturbMenuItem" oncommand="doNotDisturb();" />
+              <menuseparator />
+              <menuitem
+                id="disableForOriginMenuItem"
+                oncommand="disableForOrigin();"
+              />
+              <menuitem id="openSettingsMenuItem" oncommand="openSettings();" />
             </menupopup>
           </button>
         </box>
