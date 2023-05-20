@@ -428,9 +428,6 @@ static const uint32_t NurseryTimeoutForIdleCollectionMS = 5000;
 /* JSGC_PRETENURE_THRESHOLD */
 static const double PretenureThreshold = 0.6;
 
-/* JSGC_PRETENURE_GROUP_THRESHOLD */
-static const double PretenureGroupThreshold = 3000;
-
 /* JSGC_PRETENURE_STRING_THRESHOLD */
 static const double PretenureStringThreshold = 0.55;
 
@@ -574,14 +571,6 @@ class GCSchedulingTunables {
   MainThreadData<double> pretenureThreshold_;
 
   /*
-   * JSGC_PRETENURE_GROUP_THRESHOLD
-   *
-   * During a single nursery collection, if this many objects from the same
-   * object group are tenured, then that group will be pretenured.
-   */
-  MainThreadData<uint32_t> pretenureGroupThreshold_;
-
-  /*
    * JSGC_PRETENURE_STRING_THRESHOLD
    *
    * If the percentage of the tenured strings exceeds this threshold, string
@@ -665,7 +654,6 @@ class GCSchedulingTunables {
 
   bool attemptPretenuring() const { return pretenureThreshold_ < 1.0; }
   double pretenureThreshold() const { return pretenureThreshold_; }
-  uint32_t pretenureGroupThreshold() const { return pretenureGroupThreshold_; }
   double pretenureStringThreshold() const { return pretenureStringThreshold_; }
   double stopPretenureStringThreshold() const {
     return stopPretenureStringThreshold_;
