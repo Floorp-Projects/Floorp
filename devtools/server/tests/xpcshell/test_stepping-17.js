@@ -23,7 +23,7 @@ add_task(
     );
     blackBox(blackboxedSourceFront);
 
-    const testStepping = async function(wrapperName, stepHandler, message) {
+    const testStepping = async function (wrapperName, stepHandler, message) {
       commands.scriptCommand.execute(`(function () {
           const p = Promise.resolve();
           p.then(${wrapperName}(() => { debugger; }))
@@ -36,7 +36,7 @@ add_task(
       await resume(threadFront);
     };
 
-    const stepTwice = async function() {
+    const stepTwice = async function () {
       await stepOver(threadFront);
       return stepOver(threadFront);
     };

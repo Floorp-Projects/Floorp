@@ -32,7 +32,7 @@ function waitForAcceptButtonToGetEnabled(doc) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Remove the security delay for the dialog during the test.
@@ -44,7 +44,7 @@ add_setup(async function() {
   });
 
   // Restore handlers after the whole test has run
-  const registerRestoreHandler = function(type, ext) {
+  const registerRestoreHandler = function (type, ext) {
     const mimeInfo = gMimeSvc.getFromTypeAndExtension(type, ext);
     const existed = gHandlerSvc.exists(mimeInfo);
     registerCleanupFunction(() => {

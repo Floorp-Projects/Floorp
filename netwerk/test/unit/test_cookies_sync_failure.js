@@ -38,7 +38,7 @@ function run_test() {
 }
 
 function finish_test() {
-  executeSoon(function() {
+  executeSoon(function () {
     test_generator.return();
     do_test_finished();
   });

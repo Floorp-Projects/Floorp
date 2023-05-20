@@ -162,7 +162,7 @@ if (isMochitest) {
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   if (
     DevToolsUtils.assertionFailureCount !== EXPECTED_DTU_ASSERT_FAILURE_COUNT
   ) {
@@ -631,7 +631,7 @@ async function watchForDevToolsReload(
     waitForLoad,
   });
 
-  return async function() {
+  return async function () {
     info("Wait for the toolbox to reload");
     await waitForToolboxReload();
 
@@ -655,7 +655,7 @@ async function _watchForToolboxReload(
 
   if (!toolbox) {
     // No toolbox to wait for
-    return function() {};
+    return function () {};
   }
 
   const waitForCurrentPanelReload = watchForCurrentPanelReload(toolbox);
@@ -668,7 +668,7 @@ async function _watchForToolboxReload(
     browser
   );
 
-  return async function() {
+  return async function () {
     const isTargetSwitching = checkTargetSwitching();
 
     info(`Waiting for toolbox commands to be reloaded…`);
@@ -698,7 +698,7 @@ async function _watchForResponsiveReload(
 
   if (!ui) {
     // No responsive UI to wait for
-    return function() {};
+    return function () {};
   }
 
   const onResponsiveTargetSwitch = ui.once("responsive-ui-target-switch-done");
@@ -711,7 +711,7 @@ async function _watchForResponsiveReload(
     browser
   );
 
-  return async function() {
+  return async function () {
     const isTargetSwitching = checkTargetSwitching();
 
     info(`Waiting for responsive ui commands to be reloaded…`);
@@ -762,7 +762,7 @@ function watchForLoadedPanelsReload(toolbox) {
     waitForPanels.push(_watchForPanelReload(toolbox, id));
   }
 
-  return function() {
+  return function () {
     return Promise.all(
       waitForPanels.map(async watchPanel => {
         // Wait for all panels to be reloaded.
@@ -783,7 +783,7 @@ function _watchForPanelReload(toolbox, toolId) {
     const onUpdated = panel.once("inspector-updated");
     const onReloaded = panel.once("reloaded");
 
-    return async function() {
+    return async function () {
       info("Waiting for markup view to load after navigation.");
       await markuploaded;
 
@@ -800,7 +800,7 @@ function _watchForPanelReload(toolbox, toolId) {
     ["netmonitor", "accessibility", "webconsole", "jsdebugger"].includes(toolId)
   ) {
     const onReloaded = panel.once("reloaded");
-    return async function() {
+    return async function () {
       info(`Waiting for ${toolId} updates after page reload`);
       await onReloaded;
     };
@@ -852,7 +852,7 @@ async function watchForCommandsReload(
     }
   );
 
-  return async function(isTargetSwitching) {
+  return async function (isTargetSwitching) {
     if (typeof isTargetSwitching === "undefined") {
       throw new Error("isTargetSwitching was not provided to the wait method");
     }
@@ -889,7 +889,7 @@ async function watchForTargetSwitching(commands, browser) {
   const targetFollowsWindowLifecycle =
     commands.targetCommand.targetFront.targetForm.followWindowGlobalLifeCycle;
 
-  return function() {
+  return function () {
     // Compare the PIDs (and not the toolbox's targets) as PIDs are updated also immediately,
     // while target may be updated slightly later.
     const switchedProcess =
@@ -1247,7 +1247,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve => {
-    setTimeout(function() {
+    setTimeout(function () {
       waitUntil(predicate, interval).then(() => resolve(true));
     }, interval);
   });
@@ -1468,7 +1468,7 @@ function getCurrentTestFilePath() {
 async function unregisterAllServiceWorkers(client) {
   info("Wait until all workers have a valid registrationFront");
   let workers;
-  await asyncWaitUntil(async function() {
+  await asyncWaitUntil(async function () {
     workers = await client.mainRoot.listAllWorkers();
     const allWorkersRegistered = workers.service.every(
       worker => !!worker.registrationFront
@@ -1531,7 +1531,7 @@ async function waitUntilScreenshot({ isWindowPrivate = false } = {}) {
   );
   const list = await Downloads.getList(Downloads.ALL);
 
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     const view = {
       onDownloadAdded: async download => {
         await download.whenSucceeded();
@@ -1841,7 +1841,7 @@ async function safeSynthesizeMouseEventAtCenterInContentPage(
  * @returns {Promise}
  */
 function scrollContentPageNodeIntoView(browsingContext, selector) {
-  return SpecialPowers.spawn(browsingContext, [selector], function(
+  return SpecialPowers.spawn(browsingContext, [selector], function (
     innerSelector
   ) {
     const node = content.wrappedJSObject.document.querySelector(innerSelector);

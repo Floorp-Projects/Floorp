@@ -106,22 +106,22 @@ function commonDialogOnLoad() {
   };
 
   Dialog = new CommonDialog(args, ui);
-  window.addEventListener("dialogclosing", function(aEvent) {
+  window.addEventListener("dialogclosing", function (aEvent) {
     if (aEvent.detail?.abort) {
       Dialog.abortPrompt();
     }
   });
-  document.addEventListener("dialogaccept", function() {
+  document.addEventListener("dialogaccept", function () {
     Dialog.onButton0();
   });
-  document.addEventListener("dialogcancel", function() {
+  document.addEventListener("dialogcancel", function () {
     Dialog.onButton1();
   });
-  document.addEventListener("dialogextra1", function() {
+  document.addEventListener("dialogextra1", function () {
     Dialog.onButton2();
     window.close();
   });
-  document.addEventListener("dialogextra2", function() {
+  document.addEventListener("dialogextra2", function () {
     Dialog.onButton3();
     window.close();
   });

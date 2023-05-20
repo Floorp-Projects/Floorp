@@ -26,7 +26,7 @@ let extensions = [];
 let oldDefaultEngine;
 let oldDefaultPrivateEngine;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault", true],
@@ -90,11 +90,11 @@ async function checkContextMenu(
     "https://example.com/browser/browser/components/search/test/browser/test_search.html"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [""], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [""], async function () {
     return new Promise(resolve => {
       content.document.addEventListener(
         "selectionchange",
-        function() {
+        function () {
           resolve();
         },
         { once: true }
@@ -138,7 +138,7 @@ async function checkContextMenu(
   contextMenu.activateItem(searchItem);
   let searchTab = await loaded;
   let browser = win.gBrowser.selectedBrowser;
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     Assert.ok(
       !/error/.test(content.document.body.innerHTML),
       "Ensure there were no errors loading the search page"

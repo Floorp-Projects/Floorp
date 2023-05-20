@@ -8,7 +8,7 @@ addAccessibleTask(
   `
   <p id="p1">abc</p>
   <input id="input1" value="input" />`,
-  async function(browser) {
+  async function (browser) {
     let onVCChanged = waitForEvent(
       EVENT_VIRTUALCURSOR_CHANGED,
       matchContentDoc

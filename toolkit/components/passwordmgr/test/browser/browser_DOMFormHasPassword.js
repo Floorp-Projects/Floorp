@@ -89,7 +89,7 @@ function task(contentIds) {
   return promise;
 }
 
-add_task(async function() {
+add_task(async function () {
   let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
 
   let promise = ContentTask.spawn(tab.linkedBrowser, ids, task);

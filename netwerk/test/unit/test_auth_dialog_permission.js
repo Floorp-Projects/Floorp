@@ -47,7 +47,7 @@ var httpserv = new HttpServer();
 httpserv.registerPathHandler("/auth", authHandler);
 httpserv.start(-1);
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserv.identity.primaryPort;
 });
 

@@ -399,7 +399,7 @@ async function addDummyHistoryEntries(searchStr = "") {
 
   await PlacesTestUtils.addVisits(visits);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 }
@@ -544,7 +544,7 @@ function compareFrames(frame, previousFrame) {
   // The following code block merges rects that are close to each other
   // (less than kMaxEmptyPixels away).
   // This is needed to avoid having a rect for each letter when a label moves.
-  let areRectsContiguous = function(r1, r2) {
+  let areRectsContiguous = function (r1, r2) {
     return (
       r1.y2 >= r2.y1 - 1 - kMaxEmptyPixels &&
       r2.x1 - 1 - kMaxEmptyPixels <= r1.x2 &&
@@ -734,7 +734,7 @@ async function runUrlbarTest(
 
   URLBar.focus();
   URLBar.value = SEARCH_TERM;
-  let testFn = async function() {
+  let testFn = async function () {
     let popup = URLBar.view;
     let oldOnQueryResults = popup.onQueryResults.bind(popup);
     let oldOnQueryFinished = popup.onQueryFinished.bind(popup);

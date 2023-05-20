@@ -26,7 +26,7 @@ async function openTabInUserContext(uri, userContextId) {
   return { tab, browser };
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // make sure userContext is enabled.
   await new Promise(resolve => {
     SpecialPowers.pushPrefEnv(
@@ -46,7 +46,7 @@ add_task(async function test() {
     await SpecialPowers.spawn(
       browser,
       [{ names: COOKIE_NAMES, value: USER_CONTEXTS[userContextId] }],
-      function(opts) {
+      function (opts) {
         for (let name of opts.names) {
           content.document.cookie = name + "=" + opts.value;
         }
@@ -105,7 +105,7 @@ async function getCookiesFromJS(userContextId) {
   let { tab, browser } = await openTabInUserContext(TEST_URL, userContextId);
 
   // get the cookies
-  let cookieString = await SpecialPowers.spawn(browser, [], function() {
+  let cookieString = await SpecialPowers.spawn(browser, [], function () {
     return content.document.cookie;
   });
 

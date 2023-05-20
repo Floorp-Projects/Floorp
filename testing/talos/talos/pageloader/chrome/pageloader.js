@@ -72,7 +72,7 @@ var pageUrls;
  * SingleTimeout class. Allow to register one and only one callback using
  * setTimeout at a time.
  */
-var SingleTimeout = function() {
+var SingleTimeout = function () {
   this.timeoutEvent = undefined;
 };
 
@@ -84,13 +84,13 @@ var SingleTimeout = function() {
  * If a callback was previously registered and has not been called yet, it is
  * first cleared with clear().
  */
-SingleTimeout.prototype.register = function(callback, timeout) {
+SingleTimeout.prototype.register = function (callback, timeout) {
   if (timeout >= 0) {
     if (this.timeoutEvent !== undefined) {
       this.clear();
     }
     var that = this;
-    this.timeoutEvent = setTimeout(function() {
+    this.timeoutEvent = setTimeout(function () {
       that.timeoutEvent = undefined;
       callback();
     }, timeout);
@@ -100,7 +100,7 @@ SingleTimeout.prototype.register = function(callback, timeout) {
 /**
  * Clear a registered callback.
  */
-SingleTimeout.prototype.clear = function() {
+SingleTimeout.prototype.clear = function () {
   if (this.timeoutEvent !== undefined) {
     clearTimeout(this.timeoutEvent);
     this.timeoutEvent = undefined;
@@ -174,7 +174,7 @@ async function plInit() {
       plStop(true);
     }
 
-    pageUrls = pages.map(function(p) {
+    pageUrls = pages.map(function (p) {
       return p.url.spec.toString();
     });
     report = new Report();
@@ -241,7 +241,7 @@ async function plInit() {
     // pages should be able to load in the same mode as the initial page - due
     // to this reinitialization on the switch.
     let tab = gBrowser.selectedTab;
-    tab.addEventListener("TabRemotenessChange", function(evt) {
+    tab.addEventListener("TabRemotenessChange", function (evt) {
       loadFrameScripts(tab.linkedBrowser);
     });
     loadFrameScripts(tab.linkedBrowser);
@@ -329,7 +329,7 @@ function addMsgListeners(browser) {
   mm.addMessageListener("PageLoader:IdleCallbackReceived", ContentListener);
   mm.addMessageListener("PageLoader:Error", ContentListener);
 
-  removeLastAddedMsgListener = function() {
+  removeLastAddedMsgListener = function () {
     mm.removeMessageListener("PageLoader:LoadEvent", ContentListener);
     mm.removeMessageListener("PageLoader:RecordTime", ContentListener);
     mm.removeMessageListener("PageLoader:IdleCallbackSet", ContentListener);
@@ -473,7 +473,7 @@ function loadFail() {
   }
 }
 
-var plNextPage = async function() {
+var plNextPage = async function () {
   var doNextPage = false;
 
   // ensure we've receive idle-callback before proceeding
@@ -644,7 +644,7 @@ function plLoadHandlerCapturing(evt) {
   }
 
   // set the tpRecordTime function (called from test pages we load) to store a global time.
-  gBrowser.contentWindow.wrappedJSObject.tpRecordTime = function(
+  gBrowser.contentWindow.wrappedJSObject.tpRecordTime = function (
     time,
     startTime,
     testName
@@ -655,7 +655,7 @@ function plLoadHandlerCapturing(evt) {
     setTimeout(plWaitForPaintingCapturing, 0);
   };
 
-  gBrowser.contentWindow.wrappedJSObject.plGarbageCollect = function() {
+  gBrowser.contentWindow.wrappedJSObject.plGarbageCollect = function () {
     window.windowUtils.garbageCollect();
   };
 

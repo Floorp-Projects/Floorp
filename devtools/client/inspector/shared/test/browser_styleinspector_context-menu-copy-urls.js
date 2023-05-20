@@ -16,7 +16,7 @@ const ERROR_MESSAGE = STYLE_INSPECTOR_L10N.getStr(
   "styleinspector.copyImageDataUrlError"
 );
 
-add_task(async function() {
+add_task(async function () {
   const TEST_URI = `<style type="text/css">
       .valid-background {
         background-image: url(${TEST_DATA_URI});

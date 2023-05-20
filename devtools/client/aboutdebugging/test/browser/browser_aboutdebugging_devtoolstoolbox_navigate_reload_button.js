@@ -8,7 +8,7 @@ function clickReload(devtoolsDocument) {
 }
 
 // Test that ensures the remote page is reloaded when the button is clicked
-add_task(async function() {
+add_task(async function () {
   const debug_tab = await addTab("about:home");
 
   const { document, tab, window } = await openAboutDebugging();

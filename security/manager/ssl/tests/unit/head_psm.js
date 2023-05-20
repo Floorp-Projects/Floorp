@@ -173,7 +173,7 @@ function pemToBase64(pem) {
 
 function build_cert_chain(certNames, testDirectory = "bad_certs") {
   let certList = [];
-  certNames.forEach(function(certName) {
+  certNames.forEach(function (certName) {
     let cert = constructCertFromFile(`${testDirectory}/${certName}.pem`);
     certList.push(cert);
   });
@@ -469,7 +469,7 @@ function run_test() {
 */
 
 function add_tls_server_setup(serverBinName, certsPath, addDefaultRoot = true) {
-  add_test(function() {
+  add_test(function () {
     _setupTLSServerTest(serverBinName, certsPath, addDefaultRoot);
   });
 }
@@ -511,7 +511,7 @@ function add_connection_test(
   /* optional */ aOriginAttributes,
   /* optional */ aEchConfig
 ) {
-  add_test(function() {
+  add_test(function () {
     if (aBeforeConnect) {
       aBeforeConnect();
     }
@@ -621,7 +621,7 @@ async function asyncConnectTo(
     return connection.go();
   }
 
-  return connectTo(aHost).then(async function(conn) {
+  return connectTo(aHost).then(async function (conn) {
     info("handling " + aHost);
     let expectedNSResult =
       aExpectedResult == PRErrorCodeSuccess
@@ -708,7 +708,7 @@ async function asyncStartTLSTestServer(
       aResponse.setHeader("Content-Type", "text/plain");
       let responseBody = "OK!";
       aResponse.bodyOutputStream.write(responseBody, responseBody.length);
-      executeSoon(function() {
+      executeSoon(function () {
         httpServer.stop(resolve);
       });
     });
@@ -724,7 +724,7 @@ async function asyncStartTLSTestServer(
   // Using "sql:" causes the SQL DB to be used so we can run tests on Android.
   process.run(false, ["sql:" + certDir.path, Services.appinfo.processID], 2);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     process.kill();
   });
 
@@ -771,11 +771,11 @@ function generateOCSPResponses(ocspRespArray, nssDBlocation) {
 // serverIdentities.
 function getFailingHttpServer(serverPort, serverIdentities) {
   let httpServer = new HttpServer();
-  httpServer.registerPrefixHandler("/", function(request, response) {
+  httpServer.registerPrefixHandler("/", function (request, response) {
     Assert.ok(false, "HTTP responder should not have been queried");
   });
   httpServer.identity.setPrimary("http", serverIdentities.shift(), serverPort);
-  serverIdentities.forEach(function(identity) {
+  serverIdentities.forEach(function (identity) {
     httpServer.identity.add("http", identity, serverPort);
   });
   httpServer.start(serverPort);
@@ -815,7 +815,7 @@ function startOCSPResponder(
   expectedResponseTypes,
   responseHeaderPairs = []
 ) {
-  let ocspResponseGenerationArgs = expectedCertNames.map(function(
+  let ocspResponseGenerationArgs = expectedCertNames.map(function (
     expectedNick
   ) {
     let responseType = "good";

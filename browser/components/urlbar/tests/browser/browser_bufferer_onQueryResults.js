@@ -9,7 +9,7 @@
 // otherwise the view cannot yet contain the updated query string and we may
 // end up searching for a partial string.
 
-add_setup(async function() {
+add_setup(async function () {
   sandbox = sinon.createSandbox();
   await SearchTestUtils.promiseNewSearchEngine({
     url: getRootDirectory(gTestPath) + "searchSuggestionEngine.xml",

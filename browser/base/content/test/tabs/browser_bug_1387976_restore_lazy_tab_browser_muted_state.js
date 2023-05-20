@@ -15,7 +15,7 @@ const { TabState } = ChromeUtils.importESModule(
  *        The tab to restart.
  * @return {Object} the restored lazy tab
  */
-const restartTab = async function(tab) {
+const restartTab = async function (tab) {
   let tabData = TabState.clone(tab);
   BrowserTestUtils.removeTab(tab);
 
@@ -30,7 +30,7 @@ function get_tab_state(tab) {
   return JSON.parse(SessionStore.getTabState(tab));
 }
 
-add_task(async function() {
+add_task(async function () {
   const tab = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/");
   const browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);

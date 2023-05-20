@@ -94,7 +94,7 @@ var tests = [
     run() {
       this.notifyObj = new BasicNotification(this.id);
       let normalCallback = this.notifyObj.options.eventCallback;
-      this.notifyObj.options.eventCallback = function(eventName) {
+      this.notifyObj.options.eventCallback = function (eventName) {
         if (eventName == "showing") {
           this.mainAction.label = "Alternate Label";
         }
@@ -163,7 +163,7 @@ var tests = [
       );
       let notifyObj = new BasicNotification(this.id);
       let originalCallback = notifyObj.options.eventCallback;
-      notifyObj.options.eventCallback = function(eventName) {
+      notifyObj.options.eventCallback = function (eventName) {
         originalCallback(eventName);
         return eventName == "swapping";
       };
@@ -179,7 +179,7 @@ var tests = [
 
       await new Promise(resolve => {
         let callback = notification.options.eventCallback;
-        notification.options.eventCallback = function(eventName) {
+        notification.options.eventCallback = function (eventName) {
           callback(eventName);
           if (eventName == "shown") {
             resolve();
@@ -255,7 +255,7 @@ var tests = [
     run() {
       let notifyObj = new BasicNotification(this.id);
       let originalCallback = notifyObj.options.eventCallback;
-      notifyObj.options.eventCallback = function(eventName) {
+      notifyObj.options.eventCallback = function (eventName) {
         originalCallback(eventName);
         return eventName == "showing";
       };

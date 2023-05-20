@@ -166,13 +166,13 @@ add_setup(async () => {
     "resource://autofill/FormAutofillContent.sys.mjs"
   ));
 
-  FormAutofillContent._markAsAutofillField = function(field) {
+  FormAutofillContent._markAsAutofillField = function (field) {
     markedFieldId.push(field.id);
   };
 });
 
 TESTCASES.forEach(testcase => {
-  add_task(async function() {
+  add_task(async function () {
     info("Starting testcase: " + testcase.description);
 
     if (testcase.prefs) {

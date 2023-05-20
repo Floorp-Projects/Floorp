@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("apz.scrollend-event.content.enabled", true);
 
   const dbg = await initDebugger(

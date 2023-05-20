@@ -7,7 +7,7 @@
  * Tests that the slow request indicator is visible for slow requests.
  */
 
-add_task(async function() {
+add_task(async function () {
   // The script sjs_slow-script-server.sjs takes about 2s which is
   // definately above the slow threshold set here.
   const SLOW_THRESHOLD = 450;

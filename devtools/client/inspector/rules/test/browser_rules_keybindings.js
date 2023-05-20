@@ -6,7 +6,7 @@
 // Test that focus doesn't leave the style editor when adding a property
 // (bug 719916)
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8,<h1>Some header text</h1>");
   const { inspector, view } = await openRuleView();
   await selectNode("h1", inspector);

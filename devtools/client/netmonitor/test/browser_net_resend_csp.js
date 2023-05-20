@@ -8,7 +8,7 @@
  * and hence is not blocked by the CSP of the page.
  */
 
-add_task(async function() {
+add_task(async function () {
   if (
     Services.prefs.getBoolPref(
       "devtools.netmonitor.features.newEditAndResend",
@@ -75,7 +75,7 @@ add_task(async function() {
  * and hence is not blocked by the CSP of the page.
  */
 
-add_task(async function() {
+add_task(async function () {
   if (
     Services.prefs.getBoolPref(
       "devtools.netmonitor.features.newEditAndResend",

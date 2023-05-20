@@ -15,7 +15,7 @@ const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
 
-add_task(async function() {
+add_task(async function () {
   info("Create a test tab and open the toolbox");
   const tab = await addTab(URL);
   const toolbox = await gDevTools.showToolboxForTab(tab, "webconsole");

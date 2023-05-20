@@ -23,7 +23,7 @@ const DEFAULT_WIDGET_IDS = [
 ];
 const OVERFLOWED_EXTENSIONS_LIST_ID = "overflowed-extensions-list";
 
-add_setup(async function() {
+add_setup(async function () {
   // To make it easier to control things that will overflow, we'll start by
   // removing that's removable out of the nav-bar and adding just a fixed
   // set of items (DEFAULT_WIDGET_IDS) at the end of the nav-bar.

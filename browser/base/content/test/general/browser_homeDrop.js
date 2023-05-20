@@ -14,7 +14,7 @@ add_task(async function setupHomeButton() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   let HOMEPAGE_PREF = "browser.startup.homepage";
 
   await pushPrefs([HOMEPAGE_PREF, "about:mozilla"]);
@@ -73,11 +73,11 @@ add_task(async function() {
         },
       };
       Services.console.registerListener(consoleListener);
-      registerCleanupFunction(function() {
+      registerCleanupFunction(function () {
         Services.console.unregisterListener(consoleListener);
       });
 
-      executeSoon(function() {
+      executeSoon(function () {
         info("Attempting second drop, of a javascript: URI");
         // The drop handler throws an exception when dragging URIs that inherit
         // principal, e.g. javascript:

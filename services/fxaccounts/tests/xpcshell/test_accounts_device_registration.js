@@ -78,7 +78,7 @@ function MockFxAccountsClient(device) {
 
   // mock calls up to the auth server to determine whether the
   // user account has been verified
-  this.recoveryEmailStatus = function(sessionToken) {
+  this.recoveryEmailStatus = function (sessionToken) {
     // simulate a call to /recovery_email/status
     return Promise.resolve({
       email: this._email,
@@ -86,7 +86,7 @@ function MockFxAccountsClient(device) {
     });
   };
 
-  this.accountKeys = function(keyFetchToken) {
+  this.accountKeys = function (keyFetchToken) {
     Assert.ok(keyFetchToken, "must be called with a key-fetch-token");
     // ideally we'd check the verification status here to more closely simulate
     // the server, but `this._verified` is a test-only construct and doesn't
@@ -98,7 +98,7 @@ function MockFxAccountsClient(device) {
     };
   };
 
-  this.accountStatus = function(uid) {
+  this.accountStatus = function (uid) {
     return Promise.resolve(!!uid && !this._deletedOnServer);
   };
 
@@ -192,7 +192,7 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
     getDeviceList: { count: 0, args: [] },
   };
   const client = fxa._internal.fxAccountsClient;
-  client.registerDevice = function() {
+  client.registerDevice = function () {
     spy.registerDevice.count += 1;
     spy.registerDevice.args.push(arguments);
     return Promise.resolve({
@@ -202,12 +202,12 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
       type: deviceType,
     });
   };
-  client.updateDevice = function() {
+  client.updateDevice = function () {
     spy.updateDevice.count += 1;
     spy.updateDevice.args.push(arguments);
     return Promise.resolve({});
   };
-  client.getDeviceList = function() {
+  client.getDeviceList = function () {
     spy.getDeviceList.count += 1;
     spy.getDeviceList.args.push(arguments);
     return Promise.resolve([]);
@@ -258,12 +258,12 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
     getDeviceList: { count: 0, args: [] },
   };
   const client = fxa._internal.fxAccountsClient;
-  client.registerDevice = function() {
+  client.registerDevice = function () {
     spy.registerDevice.count += 1;
     spy.registerDevice.args.push(arguments);
     return Promise.resolve({});
   };
-  client.updateDevice = function() {
+  client.updateDevice = function () {
     spy.updateDevice.count += 1;
     spy.updateDevice.args.push(arguments);
     return Promise.resolve({
@@ -271,7 +271,7 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
       name: deviceName,
     });
   };
-  client.getDeviceList = function() {
+  client.getDeviceList = function () {
     spy.getDeviceList.count += 1;
     spy.getDeviceList.args.push(arguments);
     return Promise.resolve([]);
@@ -323,7 +323,7 @@ add_task(
       getDeviceList: { count: 0, args: [] },
     };
     const client = fxa._internal.fxAccountsClient;
-    client.registerDevice = function() {
+    client.registerDevice = function () {
       spy.registerDevice.count += 1;
       spy.registerDevice.args.push(arguments);
       return Promise.resolve({
@@ -333,7 +333,7 @@ add_task(
         type: deviceType,
       });
     };
-    client.updateDevice = function() {
+    client.updateDevice = function () {
       spy.updateDevice.count += 1;
       spy.updateDevice.args.push(arguments);
       return Promise.reject({
@@ -341,7 +341,7 @@ add_task(
         errno: ERRNO_UNKNOWN_DEVICE,
       });
     };
-    client.getDeviceList = function() {
+    client.getDeviceList = function () {
       spy.getDeviceList.count += 1;
       spy.getDeviceList.args.push(arguments);
       return Promise.resolve([]);
@@ -395,12 +395,12 @@ add_task(
       getDeviceList: { count: 0, args: [] },
     };
     const client = fxa._internal.fxAccountsClient;
-    client.registerDevice = function() {
+    client.registerDevice = function () {
       spy.registerDevice.count += 1;
       spy.registerDevice.args.push(arguments);
       return Promise.resolve({});
     };
-    client.updateDevice = function() {
+    client.updateDevice = function () {
       spy.updateDevice.count += 1;
       spy.updateDevice.args.push(arguments);
       spy.updateDevice.time = Date.now();
@@ -415,7 +415,7 @@ add_task(
         name: deviceName,
       });
     };
-    client.getDeviceList = function() {
+    client.getDeviceList = function () {
       spy.getDeviceList.count += 1;
       spy.getDeviceList.args.push(arguments);
       spy.getDeviceList.time = Date.now();
@@ -477,7 +477,7 @@ add_task(
       getDeviceList: { count: 0, args: [] },
     };
     const client = fxa._internal.fxAccountsClient;
-    client.registerDevice = function() {
+    client.registerDevice = function () {
       spy.registerDevice.count += 1;
       spy.registerDevice.args.push(arguments);
       return Promise.reject({
@@ -485,12 +485,12 @@ add_task(
         errno: ERRNO_TOO_MANY_CLIENT_REQUESTS,
       });
     };
-    client.updateDevice = function() {
+    client.updateDevice = function () {
       spy.updateDevice.count += 1;
       spy.updateDevice.args.push(arguments);
       return Promise.resolve({});
     };
-    client.getDeviceList = function() {
+    client.getDeviceList = function () {
       spy.getDeviceList.count += 1;
       spy.getDeviceList.args.push(arguments);
       return Promise.resolve([]);
@@ -524,7 +524,7 @@ add_task(
         email: credentials.email,
         registrationVersion: DEVICE_REGISTRATION_VERSION,
       });
-    fxa._internal.device._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function () {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("bar");
@@ -556,7 +556,7 @@ add_task(
           registeredCommandsKeys: [],
         },
       });
-    fxa._internal.device._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function () {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("wibble");
@@ -586,7 +586,7 @@ add_task(
         registeredCommandsKeys: [],
       },
     });
-    fxa._internal.device._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function () {
       spy.count += 1;
       return Promise.resolve("bar");
     };
@@ -608,7 +608,7 @@ add_task(
     const spy = { count: 0, args: [] };
     fxa._internal.currentAccountState.getUserAccountData = () =>
       Promise.resolve({ device: { id: "wibble" } });
-    fxa._internal.device._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function () {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("wibble");
@@ -643,7 +643,7 @@ add_task(async function test_verification_updates_registration() {
     const old_registerOrUpdateDevice = fxa.device._registerOrUpdateDevice.bind(
       fxa.device
     );
-    fxa.device._registerOrUpdateDevice = async function(
+    fxa.device._registerOrUpdateDevice = async function (
       currentState,
       signedInUser
     ) {
@@ -653,7 +653,7 @@ add_task(async function test_verification_updates_registration() {
     };
   });
 
-  fxa._internal.checkEmailStatus = async function(sessionToken) {
+  fxa._internal.checkEmailStatus = async function (sessionToken) {
     credentials.verified = true;
     return credentials;
   };
@@ -688,12 +688,12 @@ add_task(async function test_devicelist_pushendpointexpired() {
     getDeviceList: { count: 0, args: [] },
   };
   const client = fxa._internal.fxAccountsClient;
-  client.updateDevice = function() {
+  client.updateDevice = function () {
     spy.updateDevice.count += 1;
     spy.updateDevice.args.push(arguments);
     return Promise.resolve({});
   };
-  client.getDeviceList = function() {
+  client.getDeviceList = function () {
     spy.getDeviceList.count += 1;
     spy.getDeviceList.args.push(arguments);
     return Promise.resolve([
@@ -739,12 +739,12 @@ add_task(async function test_devicelist_nopushcallback() {
     getDeviceList: { count: 0, args: [] },
   };
   const client = fxa._internal.fxAccountsClient;
-  client.updateDevice = function() {
+  client.updateDevice = function () {
     spy.updateDevice.count += 1;
     spy.updateDevice.args.push(arguments);
     return Promise.resolve({});
   };
-  client.getDeviceList = function() {
+  client.getDeviceList = function () {
     spy.getDeviceList.count += 1;
     spy.getDeviceList.args.push(arguments);
     return Promise.resolve([
@@ -798,7 +798,7 @@ add_task(async function test_refreshDeviceList() {
   };
   Services.obs.addObserver(deviceListUpdateObserver, ON_DEVICELIST_UPDATED);
 
-  fxAccountsClient.getDeviceList = (function(old) {
+  fxAccountsClient.getDeviceList = (function (old) {
     return function getDeviceList() {
       spy.getDeviceList.count += 1;
       return old.apply(this, arguments);

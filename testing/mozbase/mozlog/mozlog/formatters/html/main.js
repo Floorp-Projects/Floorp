@@ -23,13 +23,13 @@ function find_all(selector, elem) {
   return toArray(elem.querySelectorAll(selector));
 }
 
-addEventListener("DOMContentLoaded", function() {
+addEventListener("DOMContentLoaded", function () {
   reset_sort_headers();
 
   split_debug_onto_two_rows();
 
-  find_all(".col-links a.screenshot").forEach(function(elem) {
-    elem.addEventListener("click", function(event) {
+  find_all(".col-links a.screenshot").forEach(function (elem) {
+    elem.addEventListener("click", function (event) {
       var node = elem;
       while (node && !node.classList.contains("results-table-row")) {
         node = node.parentNode;
@@ -44,15 +44,15 @@ addEventListener("DOMContentLoaded", function() {
     });
   });
 
-  find_all(".screenshot a").forEach(function(elem) {
-    elem.addEventListener("click", function(event) {
+  find_all(".screenshot a").forEach(function (elem) {
+    elem.addEventListener("click", function (event) {
       window.open(find("img", elem).getAttribute("src"));
       event.preventDefault();
     });
   });
 
-  find_all(".sortable").forEach(function(elem) {
-    elem.addEventListener("click", function(event) {
+  find_all(".sortable").forEach(function (elem) {
+    elem.addEventListener("click", function (event) {
       toggle_sort_states(elem);
       var colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
       var key = elem.classList.contains("numeric") ? key_num : key_alpha;
@@ -69,7 +69,7 @@ function sort_table(clicked, key_func) {
   var sorted_rows = sort(rows, key_func, reversed);
 
   var parent = document.getElementById("results-table-body");
-  sorted_rows.forEach(function(elem) {
+  sorted_rows.forEach(function (elem) {
     parent.appendChild(elem);
   });
 
@@ -77,40 +77,40 @@ function sort_table(clicked, key_func) {
 }
 
 function sort(items, key_func, reversed) {
-  var sort_array = items.map(function(item, i) {
+  var sort_array = items.map(function (item, i) {
     return [key_func(item), i];
   });
   var multiplier = reversed ? -1 : 1;
 
-  sort_array.sort(function(a, b) {
+  sort_array.sort(function (a, b) {
     var key_a = a[0];
     var key_b = b[0];
     return multiplier * (key_a >= key_b ? 1 : -1);
   });
 
-  return sort_array.map(function(item) {
+  return sort_array.map(function (item) {
     var index = item[1];
     return items[index];
   });
 }
 
 function key_alpha(col_index) {
-  return function(elem) {
+  return function (elem) {
     return elem.childNodes[col_index].firstChild.data.toLowerCase();
   };
 }
 
 function key_num(col_index) {
-  return function(elem) {
+  return function (elem) {
     return parseFloat(elem.childNodes[col_index].firstChild.data);
   };
 }
 
 function reset_sort_headers() {
-  find_all(".sort-icon").forEach(function(elem) {
+  find_all(".sort-icon").forEach(function (elem) {
     elem.remove();
   });
-  find_all(".sortable").forEach(function(elem) {
+  find_all(".sortable").forEach(function (elem) {
     var icon = document.createElement("div");
     icon.className = "sort-icon";
     icon.textContent = "vvv";
@@ -136,11 +136,11 @@ function toggle_sort_states(elem) {
 }
 
 function split_debug_onto_two_rows() {
-  find_all("tr.results-table-row").forEach(function(elem) {
+  find_all("tr.results-table-row").forEach(function (elem) {
     var new_row = document.createElement("tr");
     new_row.className = "debug";
     elem.parentNode.insertBefore(new_row, elem.nextSibling);
-    find_all(".debug", elem).forEach(function(td_elem) {
+    find_all(".debug", elem).forEach(function (td_elem) {
       if (find(".log", td_elem)) {
         new_row.appendChild(td_elem);
         td_elem.colSpan = 5;
@@ -152,9 +152,9 @@ function split_debug_onto_two_rows() {
 }
 
 function one_row_for_data() {
-  find_all("tr.results-table-row").forEach(function(elem) {
+  find_all("tr.results-table-row").forEach(function (elem) {
     if (elem.nextSibling.classList.contains("debug")) {
-      toArray(elem.nextSibling.childNodes).forEach(function(td_elem) {
+      toArray(elem.nextSibling.childNodes).forEach(function (td_elem) {
         elem.appendChild(td_elem);
       });
     } else {

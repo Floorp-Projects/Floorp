@@ -7,7 +7,7 @@ const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 add_task(async function test_notification_is_removed_upon_navigation() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       await waitForPdfJSAnnotationLayer(
         browser,
         TESTROOT + "file_pdfjs_form.pdf"

@@ -213,7 +213,7 @@ export var UITour = {
     // Lazy getter is initialized here so it can be replicated any time
     // in a test.
     delete this.url;
-    XPCOMUtils.defineLazyGetter(this, "url", function() {
+    XPCOMUtils.defineLazyGetter(this, "url", function () {
       return Services.urlFormatter.formatURLPref("browser.uitour.url");
     });
 
@@ -1051,8 +1051,9 @@ export var UITour = {
       !this.isElementVisible(aTarget.node)
     ) {
       return Promise.reject(
-        `_ensureTarget: Reject the ${aTarget.name ||
-          aTarget.targetName} target since it isn't visible.`
+        `_ensureTarget: Reject the ${
+          aTarget.name || aTarget.targetName
+        } target since it isn't visible.`
       );
     }
 
@@ -1303,7 +1304,7 @@ export var UITour = {
 
       tooltip.addEventListener(
         "popuphiding",
-        function(event) {
+        function (event) {
           tooltipClose.removeEventListener("command", closeButtonCallback);
           if (aOptions.targetCallback && aAnchor.removeTargetListener) {
             aAnchor.removeTargetListener(document, targetCallback);
@@ -1326,7 +1327,7 @@ export var UITour = {
       if (tooltip.state == "closed") {
         document.defaultView.addEventListener(
           "endmodalstate",
-          function() {
+          function () {
             tooltip.openPopup(aAnchorEl, alignment);
           },
           { once: true }

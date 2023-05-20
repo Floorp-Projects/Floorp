@@ -836,10 +836,7 @@ function checkAndFixPublicSuffix(info) {
     if (suffix == typo) {
       let host = uri.host.substring(0, uri.host.length - typo.length) + fixed;
       let updatePreferredURI = info.preferredURI == info.fixedURI;
-      info.fixedURI = uri
-        .mutate()
-        .setHost(host)
-        .finalize();
+      info.fixedURI = uri.mutate().setHost(host).finalize();
       if (updatePreferredURI) {
         info.preferredURI = info.fixedURI;
       }

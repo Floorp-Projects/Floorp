@@ -21,7 +21,7 @@ const SW_URL = URL_ROOT_SSL + "resources/service-workers/controlled-sw.js";
 /**
  * Test various simple debugging operation against service workers debugged through about:debugging.
  */
-add_task(async function() {
+add_task(async function () {
   await enableServiceWorkerDebugging();
 
   const { document, tab, window } = await openAboutDebugging({
@@ -88,7 +88,7 @@ add_task(async function() {
   await waitForState(dbg, state => getIsWaitingOnBreak(getCurrentThread()));
 
   info("Trigger some code in the worker and wait for pause");
-  await SpecialPowers.spawn(swTab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(swTab.linkedBrowser, [], async function () {
     content.wrappedJSObject.installServiceWorker();
   });
   await waitForPaused(dbg);

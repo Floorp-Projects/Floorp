@@ -22,21 +22,21 @@ const {
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
 if (!DevToolsServer.initialized) {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
-  SimpleTest.registerCleanupFunction(function() {
+  SimpleTest.registerCleanupFunction(function () {
     DevToolsServer.destroy();
   });
 }
 
 var gAttachCleanups = [];
 
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   for (const cleanup of gAttachCleanups) {
     cleanup();
   }
@@ -68,7 +68,7 @@ async function attachURL(url) {
   const commands = await CommandsFactory.forTab(gBrowser.selectedTab);
   await commands.targetCommand.startListening();
 
-  const cleanup = async function() {
+  const cleanup = async function () {
     await commands.destroy();
     if (win) {
       win.close();

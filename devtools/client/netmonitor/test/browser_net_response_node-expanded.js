@@ -8,7 +8,7 @@
  * in the Response Panel.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(JSON_LONG_URL, {
     requestCount: 1,
   });

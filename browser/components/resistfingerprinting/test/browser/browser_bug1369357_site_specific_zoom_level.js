@@ -3,7 +3,7 @@
 const PATH_NET = TEST_PATH + "file_dummy.html";
 const PATH_ORG = PATH_NET.replace("example.net", "example.org");
 
-add_task(async function() {
+add_task(async function () {
   let tab1, tab1Zoom, tab2, tab2Zoom, tab3, tab3Zoom;
 
   tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PATH_NET);

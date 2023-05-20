@@ -18,7 +18,7 @@ var gFakeAppDirectoryProvider;
  * This returns a promise that will be resolved once the new directory
  * is created and installed.
  */
-export var makeFakeAppDir = function() {
+export var makeFakeAppDir = function () {
   let dirMode = 0o700;
   let baseFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
   let appD = baseFile.clone();

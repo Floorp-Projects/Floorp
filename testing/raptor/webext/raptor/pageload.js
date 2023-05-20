@@ -160,7 +160,7 @@ function measureHero() {
     const options = { root: null, rootMargin: "0px", threshold: [1] };
     try {
       obs = new window.IntersectionObserver(callbackHero, options);
-      heroElementsFound.forEach(function(el) {
+      heroElementsFound.forEach(function (el) {
         // if hero element is one we want to measure, add it to the observer
         if (heroesToCapture.indexOf(el.getAttribute("elementtiming")) > -1) {
           obs.observe(el);

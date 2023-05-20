@@ -31,7 +31,7 @@ add_tls_server_setup(
 // Server DC support enabled
 // Client DC support disabled
 // Result: Successful connection without DC
-add_test(function() {
+add_test(function () {
   clearSessionCache();
   Services.prefs.setBoolPref(
     "security.tls.enable_delegated_credentials",
@@ -52,7 +52,7 @@ add_connection_test(
 // Client DC support enabled
 // Result: SSL_ERROR_DC_INVALID_KEY_USAGE from client when
 //         checking DC against EE cert, no DC in aTransportSecurityInfo.
-add_test(function() {
+add_test(function () {
   clearSessionCache();
   Services.prefs.setBoolPref("security.tls.enable_delegated_credentials", true);
   run_next_test();

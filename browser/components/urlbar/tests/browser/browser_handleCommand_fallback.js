@@ -21,7 +21,7 @@ const TEST_STRINGS = [
   "test /test/",
 ];
 
-add_task(async function() {
+add_task(async function () {
   // Disable autofill so mozilla.org isn't autofilled below.
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.autoFill", false]],
@@ -48,7 +48,7 @@ add_task(async function() {
 
   async function promiseLoadURL() {
     return new Promise(resolve => {
-      sandbox.stub(gURLBar, "_loadURL").callsFake(function() {
+      sandbox.stub(gURLBar, "_loadURL").callsFake(function () {
         sandbox.restore();
         // The last arguments are optional and apply only to some cases, so we
         // could not use deepEqual with them.
@@ -102,7 +102,7 @@ add_task(async function no_heuristic_test() {
 
   let stub = sandbox
     .stub(UrlbarUtils, "getHeuristicResultFor")
-    .callsFake(async function() {
+    .callsFake(async function () {
       throw new Error("I failed!");
     });
 
@@ -113,7 +113,7 @@ add_task(async function no_heuristic_test() {
 
   async function promiseLoadURL() {
     return new Promise(resolve => {
-      sandbox.stub(gURLBar, "_loadURL").callsFake(function() {
+      sandbox.stub(gURLBar, "_loadURL").callsFake(function () {
         sandbox.restore();
         // The last arguments are optional and apply only to some cases, so we
         // could not use deepEqual with them.

@@ -57,14 +57,14 @@ async function testZoomButtonAppearsAndDisappearsBasedOnZoomChanges(
   BrowserTestUtils.removeTab(tab);
 }
 
-add_task(async function() {
+add_task(async function () {
   await testZoomButtonAppearsAndDisappearsBasedOnZoomChanges("FullZoomChange");
   await SpecialPowers.pushPrefEnv({ set: [["browser.zoom.full", false]] });
   await testZoomButtonAppearsAndDisappearsBasedOnZoomChanges("TextZoomChange");
   await SpecialPowers.pushPrefEnv({ set: [["browser.zoom.full", true]] });
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Confirm that URL bar zoom button doesn't appear when customizable zoom widget is added to toolbar"
   );

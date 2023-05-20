@@ -9,7 +9,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 );
 
 add_task(async function test() {
-  let tab = await BrowserTestUtils.switchTab(gBrowser, function() {
+  let tab = await BrowserTestUtils.switchTab(gBrowser, function () {
     gBrowser.selectedTab = BrowserTestUtils.addTab(
       gBrowser,
       `${TEST_PATH}simplifyArticleSample.html`,

@@ -418,7 +418,7 @@ HashCompleterRequest.prototype = {
       return false;
     }
 
-    return this._requests.find(function(r) {
+    return this._requests.find(function (r) {
       return r.partialHash === aPartialHash;
     });
   },

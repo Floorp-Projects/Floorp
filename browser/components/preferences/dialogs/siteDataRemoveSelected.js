@@ -11,10 +11,10 @@
  **/
 let gSiteDataRemoveSelected = {
   init() {
-    document.addEventListener("dialogaccept", function() {
+    document.addEventListener("dialogaccept", function () {
       window.arguments[0].allowed = true;
     });
-    document.addEventListener("dialogcancel", function() {
+    document.addEventListener("dialogcancel", function () {
       window.arguments[0].allowed = false;
     });
 

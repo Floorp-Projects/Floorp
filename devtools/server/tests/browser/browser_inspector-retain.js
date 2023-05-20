@@ -75,7 +75,7 @@ add_task(async function testRetain() {
 
   // Change the source of the iframe, which should kill the retained orphan.
   const onMutations = waitForMutation(walker, isUnretained);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.querySelector("#childFrame").src =
       "data:text/html,<html>new child</html>";
   });
@@ -95,7 +95,7 @@ add_task(async function testWinRace() {
 
   const front = await walker.querySelector(walker.rootNode, "#a");
   const onMutation = waitForMutation(walker, isChildList);
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const contentNode = content.document.querySelector("#a");
     contentNode.remove();
   });
@@ -125,7 +125,7 @@ add_task(async function testLoseRace() {
 
   const front = await walker.querySelector(walker.rootNode, "#z");
   const onMutation = walker.once("new-mutations");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const contentNode = content.document.querySelector("#z");
     contentNode.remove();
   });

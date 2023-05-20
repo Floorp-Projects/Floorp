@@ -82,7 +82,7 @@ function assertSearchModeScalars(entry, engineOrSource, resultIndex = -1) {
   Services.telemetry.clearEvents();
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Disable tab-to-search onboarding results for general tests. They are
@@ -125,7 +125,7 @@ add_setup(async function() {
   UrlbarTestUtils.init(this);
 
   // Make sure to restore the engine once we're done.
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.telemetry.canRecordExtended = oldCanRecord;
     await PlacesUtils.history.clear();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
@@ -420,7 +420,7 @@ add_task(async function test_handoff_pbm() {
   });
   let tab = win.gBrowser.selectedBrowser;
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     let btn = content.document.getElementById("search-handoff-button");
     btn.click();
   });

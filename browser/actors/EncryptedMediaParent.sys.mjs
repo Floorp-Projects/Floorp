@@ -6,19 +6,19 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function () {
   return Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gNavigatorBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gNavigatorBundle", function () {
   return Services.strings.createBundle(
     "chrome://browser/locale/browser.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function () {
   return new Localization(["branding/brand.ftl", "browser/browser.ftl"], true);
 });
 
@@ -177,7 +177,7 @@ export class EncryptedMediaParent extends JSWindowActorParent {
   async showPopupNotificationForSuccess(aBrowser) {
     // We're playing EME content! Remove any "we can't play because..." messages.
     let notificationBox = aBrowser.getTabBrowser().getNotificationBox(aBrowser);
-    ["drmContentDisabled", "drmContentCDMInstalling"].forEach(function(value) {
+    ["drmContentDisabled", "drmContentCDMInstalling"].forEach(function (value) {
       let notification = notificationBox.getNotificationWithValue(value);
       if (notification) {
         notificationBox.removeNotification(notification);

@@ -137,8 +137,8 @@ var concat = [
 ];
 
 var testingFunctions = Cu.getJSTestingFunctions();
-concat.forEach(function(t) {
-  test(function() {
+concat.forEach(function (t) {
+  test(function () {
     assert_true(
       testingFunctions.isSameCompartment(testingFunctions.newRope, this),
       "Must be in the same compartment"
@@ -150,7 +150,7 @@ concat.forEach(function(t) {
   }, t.name);
 });
 
-test(function() {
+test(function () {
   assert_true(
     testingFunctions.isSameCompartment(testingFunctions.newRope, this),
     "Must be in the same compartment"

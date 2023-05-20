@@ -25,7 +25,7 @@ function handleRequest(request, response) {
   // (2) handle the csp-report and return the JSON back to
   // the testfile using the afore stored xml request in (1).
   if (queryString === "report") {
-    getObjectState("queryResult", function(queryResponse) {
+    getObjectState("queryResult", function (queryResponse) {
       if (!queryResponse) {
         return;
       }

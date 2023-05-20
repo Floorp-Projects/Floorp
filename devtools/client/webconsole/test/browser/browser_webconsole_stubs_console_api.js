@@ -16,7 +16,7 @@ const TEST_URI =
   "https://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html";
 const STUB_FILE = "consoleApi.js";
 
-add_task(async function() {
+add_task(async function () {
   const isStubsUpdate = Services.env.get(STUBS_UPDATE_ENV) == "true";
   info(`${isStubsUpdate ? "Update" : "Check"} ${STUB_FILE}`);
 
@@ -71,7 +71,7 @@ async function generateConsoleApiStubs() {
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
   // resource to `handleConsoleMessage`, dynamically updated for each command.
-  let handleConsoleMessage = function() {};
+  let handleConsoleMessage = function () {};
 
   const onConsoleMessage = resources => {
     for (const resource of resources) {
@@ -99,7 +99,7 @@ async function generateConsoleApiStubs() {
       };
     });
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function(
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [code], function (
       subCode
     ) {
       const script = content.document.createElement("script");

@@ -115,7 +115,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("privacy.reduceTimerPrecision", false);
 
   const { inspector } = await openInspectorForURL(TEST_URL);

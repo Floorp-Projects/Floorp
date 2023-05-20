@@ -27,7 +27,7 @@ function get_test_collection_info({
   coll.full = true;
   let requests = [];
   let responses = [];
-  coll.get = async function() {
+  coll.get = async function () {
     let limit = +this.limit;
     let offset = 0;
     if (this.offset) {

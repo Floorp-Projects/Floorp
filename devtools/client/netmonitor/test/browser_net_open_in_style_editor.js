@@ -7,7 +7,7 @@
  * Test the 'Open in debugger' feature
  */
 
-add_task(async function() {
+add_task(async function () {
   const {
     tab,
     monitor,

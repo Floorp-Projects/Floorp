@@ -31,12 +31,12 @@ function decode(data, tagger, simpleValue) {
   let offset = 0;
 
   if (typeof tagger !== "function") {
-    tagger = function(value) {
+    tagger = function (value) {
       return value;
     };
   }
   if (typeof simpleValue !== "function") {
-    simpleValue = function() {
+    simpleValue = function () {
       return undefined;
     };
   }

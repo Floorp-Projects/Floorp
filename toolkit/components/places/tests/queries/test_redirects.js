@@ -41,7 +41,7 @@ function check_results_callback(aSequence) {
   }
 
   // Build expectedData array.
-  let expectedData = visits.filter(function(aVisit, aIndex, aArray) {
+  let expectedData = visits.filter(function (aVisit, aIndex, aArray) {
     // Embed visits never appear in results.
     if (aVisit.transType == Ci.nsINavHistoryService.TRANSITION_EMBED) {
       return false;
@@ -50,7 +50,7 @@ function check_results_callback(aSequence) {
     if (!includeHidden && isHidden(aVisit)) {
       // If the page has any non-hidden visit, then it's visible.
       if (
-        !visits.filter(function(refVisit) {
+        !visits.filter(function (refVisit) {
           return refVisit.uri == aVisit.uri && !isHidden(refVisit);
         }).length
       ) {
@@ -63,7 +63,7 @@ function check_results_callback(aSequence) {
 
   // Remove duplicates, since queries are RESULTS_AS_URI (unique pages).
   let seen = [];
-  expectedData = expectedData.filter(function(aData) {
+  expectedData = expectedData.filter(function (aData) {
     if (seen.includes(aData.uri)) {
       return false;
     }

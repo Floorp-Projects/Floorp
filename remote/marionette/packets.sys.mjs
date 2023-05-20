@@ -39,7 +39,7 @@ XPCOMUtils.defineLazyGetter(lazy, "unicodeConverter", () => {
  *     Called to clean up at the end of use
  */
 
-const defer = function() {
+const defer = function () {
   let deferred = {
     promise: new Promise((resolve, reject) => {
       deferred.resolve = resolve;
@@ -77,7 +77,7 @@ export function Packet(transport) {
  * @returns {Packet}
  *     Parsed packet of the matching type, or null if no types matched.
  */
-Packet.fromHeader = function(header, transport) {
+Packet.fromHeader = function (header, transport) {
   return (
     JSONPacket.fromHeader(header, transport) ||
     BulkPacket.fromHeader(header, transport)
@@ -134,7 +134,7 @@ export function JSONPacket(transport) {
  * @returns {JSONPacket}
  *     Parsed packet, or null if it's not a match.
  */
-JSONPacket.fromHeader = function(header, transport) {
+JSONPacket.fromHeader = function (header, transport) {
   let match = this.HEADER_PATTERN.exec(header);
 
   if (!match) {
@@ -169,7 +169,7 @@ Object.defineProperty(JSONPacket.prototype, "object", {
   },
 });
 
-JSONPacket.prototype.read = function(stream, scriptableStream) {
+JSONPacket.prototype.read = function (stream, scriptableStream) {
   // Read in more packet data.
   this._readData(stream, scriptableStream);
 
@@ -199,7 +199,7 @@ JSONPacket.prototype.read = function(stream, scriptableStream) {
   this._transport._onJSONObjectReady(this._object);
 };
 
-JSONPacket.prototype._readData = function(stream, scriptableStream) {
+JSONPacket.prototype._readData = function (stream, scriptableStream) {
   let bytesToRead = Math.min(
     this.length - this._data.length,
     stream.available()
@@ -208,7 +208,7 @@ JSONPacket.prototype._readData = function(stream, scriptableStream) {
   this._done = this._data.length === this.length;
 };
 
-JSONPacket.prototype.write = function(stream) {
+JSONPacket.prototype.write = function (stream) {
   if (this._outgoing === undefined) {
     // Format the serialized packet to a buffer
     this._outgoing = this.length + ":" + this._data;
@@ -225,7 +225,7 @@ Object.defineProperty(JSONPacket.prototype, "done", {
   },
 });
 
-JSONPacket.prototype.toString = function() {
+JSONPacket.prototype.toString = function () {
   return JSON.stringify(this._object, null, 2);
 };
 
@@ -263,7 +263,7 @@ export function BulkPacket(transport) {
  * @returns {BulkPacket}
  *     Parsed packet, or null if it's not a match.
  */
-BulkPacket.fromHeader = function(header, transport) {
+BulkPacket.fromHeader = function (header, transport) {
   let match = this.HEADER_PATTERN.exec(header);
 
   if (!match) {
@@ -283,7 +283,7 @@ BulkPacket.HEADER_PATTERN = /^bulk ([^: ]+) ([^: ]+) (\d+):$/;
 
 BulkPacket.prototype = Object.create(Packet.prototype);
 
-BulkPacket.prototype.read = function(stream) {
+BulkPacket.prototype.read = function (stream) {
   // Temporarily pause monitoring of the input stream
   this._transport.pauseIncoming();
 
@@ -314,7 +314,7 @@ BulkPacket.prototype.read = function(stream) {
   };
 };
 
-BulkPacket.prototype.write = function(stream) {
+BulkPacket.prototype.write = function (stream) {
   if (this._outgoingHeader === undefined) {
     // Format the serialized packet header to a buffer
     this._outgoingHeader =
@@ -386,7 +386,7 @@ Object.defineProperty(BulkPacket.prototype, "done", {
   },
 });
 
-BulkPacket.prototype.toString = function() {
+BulkPacket.prototype.toString = function () {
   return "Bulk: " + JSON.stringify(this.header, null, 2);
 };
 
@@ -408,12 +408,12 @@ export function RawPacket(transport, data) {
 
 RawPacket.prototype = Object.create(Packet.prototype);
 
-RawPacket.prototype.read = function() {
+RawPacket.prototype.read = function () {
   // this has not yet been needed for testing
   throw new Error("Not implemented");
 };
 
-RawPacket.prototype.write = function(stream) {
+RawPacket.prototype.write = function (stream) {
   let written = stream.write(this._data, this._data.length);
   this._data = this._data.slice(written);
   this._done = !this._data.length;

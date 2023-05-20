@@ -474,9 +474,9 @@ export class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
       throw new Error("The storage adapter is not open");
     }
 
-    return this._connection.executeTransaction(async function(conn) {
+    return this._connection.executeTransaction(async function (conn) {
       const promises = [];
-      await conn.execute(statements.scanAllRecords, null, function(row) {
+      await conn.execute(statements.scanAllRecords, null, function (row) {
         const record = JSON.parse(row.getResultByName("record"));
         const record_id = row.getResultByName("record_id");
         const collection_name = row.getResultByName("collection_name");

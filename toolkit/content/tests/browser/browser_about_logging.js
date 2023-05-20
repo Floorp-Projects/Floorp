@@ -114,10 +114,7 @@ add_task(async function testURLParameters() {
           .innerText.split(",")
           .sort()
           .join(",");
-        var inURLSorted = modulesInURL
-          .split(",")
-          .sort()
-          .join(",");
+        var inURLSorted = modulesInURL.split(",").sort().join(",");
         Assert.equal(
           inPageSorted,
           inURLSorted,

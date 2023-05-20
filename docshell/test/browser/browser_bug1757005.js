@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // (1) Load one page with bfcache disabled and another one with bfcache enabled.
   // (2) Check that BrowsingContext.getCurrentTopByBrowserId(browserId) returns
   //     the expected browsing context both in the parent process and in the child process.
@@ -17,7 +17,7 @@ add_task(async function() {
       gBrowser,
       url: url1,
     },
-    async function(browser) {
+    async function (browser) {
       info("Initial load");
 
       let loaded = BrowserTestUtils.browserLoaded(browser);
@@ -33,7 +33,7 @@ add_task(async function() {
         "Should get the correct browsingContext(1)"
       );
 
-      await ContentTask.spawn(browser, browserId, async function(browserId) {
+      await ContentTask.spawn(browser, browserId, async function (browserId) {
         Assert.ok(
           BrowsingContext.getCurrentTopByBrowserId(browserId) ==
             docShell.browsingContext
@@ -61,7 +61,7 @@ add_task(async function() {
         "Should get the correct BrowsingContext. (2)"
       );
 
-      await ContentTask.spawn(browser, browserId, async function(browserId) {
+      await ContentTask.spawn(browser, browserId, async function (browserId) {
         Assert.ok(
           BrowsingContext.getCurrentTopByBrowserId(browserId) ==
             docShell.browsingContext

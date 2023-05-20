@@ -59,13 +59,13 @@ function* testHarnessSteps() {
 
     let worker = new Worker(workerScriptURL);
 
-    worker.onerror = function(event) {
+    worker.onerror = function (event) {
       ok(false, "Worker had an error: " + event.message);
       worker.terminate();
       nextTestHarnessStep();
     };
 
-    worker.onmessage = function(event) {
+    worker.onmessage = function (event) {
       let message = event.data;
       switch (message.op) {
         case "ok":
@@ -94,7 +94,7 @@ function* testHarnessSteps() {
           break;
 
         case "clearAllDatabases":
-          clearAllDatabases(function() {
+          clearAllDatabases(function () {
             worker.postMessage({ op: "clearAllDatabasesDone" });
           });
           break;
@@ -123,7 +123,7 @@ function* testHarnessSteps() {
 
   // Now run the test script in the main thread.
   if (testSteps.constructor.name === "AsyncFunction") {
-    SimpleTest.registerCleanupFunction(async function() {
+    SimpleTest.registerCleanupFunction(async function () {
       await requestFinished(clearAllDatabases());
     });
 
@@ -137,7 +137,7 @@ function* testHarnessSteps() {
 }
 
 if (!window.runTest) {
-  window.runTest = function() {
+  window.runTest = function () {
     SimpleTest.waitForExplicitFinish();
     testHarnessGenerator = testHarnessSteps();
     testHarnessGenerator.next();
@@ -145,8 +145,8 @@ if (!window.runTest) {
 }
 
 function finishTest() {
-  SimpleTest.executeSoon(function() {
-    clearAllDatabases(function() {
+  SimpleTest.executeSoon(function () {
+    clearAllDatabases(function () {
       SimpleTest.finish();
     });
   });
@@ -157,7 +157,7 @@ function grabArgAndContinueHandler(arg) {
 }
 
 function continueToNextStep() {
-  SimpleTest.executeSoon(function() {
+  SimpleTest.executeSoon(function () {
     testGenerator.next();
   });
 }
@@ -171,7 +171,7 @@ function workerScript() {
 
   self.testGenerator = null;
 
-  self.repr = function(_thing_) {
+  self.repr = function (_thing_) {
     if (typeof _thing_ == "undefined") {
       return "undefined";
     }
@@ -195,7 +195,7 @@ function workerScript() {
     return str;
   };
 
-  self.ok = function(_condition_, _name_, _diag_) {
+  self.ok = function (_condition_, _name_, _diag_) {
     self.postMessage({
       op: "ok",
       condition: !!_condition_,
@@ -204,19 +204,19 @@ function workerScript() {
     });
   };
 
-  self.is = function(_a_, _b_, _name_) {
+  self.is = function (_a_, _b_, _name_) {
     let pass = _a_ == _b_;
     let diag = pass ? "" : "got " + repr(_a_) + ", expected " + repr(_b_);
     ok(pass, _name_, diag);
   };
 
-  self.isnot = function(_a_, _b_, _name_) {
+  self.isnot = function (_a_, _b_, _name_) {
     let pass = _a_ != _b_;
     let diag = pass ? "" : "didn't expect " + repr(_a_) + ", but got it";
     ok(pass, _name_, diag);
   };
 
-  self.todo = function(_condition_, _name_, _diag_) {
+  self.todo = function (_condition_, _name_, _diag_) {
     self.postMessage({
       op: "todo",
       condition: !!_condition_,
@@ -225,43 +225,43 @@ function workerScript() {
     });
   };
 
-  self.info = function(_msg_) {
+  self.info = function (_msg_) {
     self.postMessage({ op: "info", msg: _msg_ });
   };
 
-  self.executeSoon = function(_fun_) {
+  self.executeSoon = function (_fun_) {
     var channel = new MessageChannel();
     channel.port1.postMessage("");
-    channel.port2.onmessage = function(event) {
+    channel.port2.onmessage = function (event) {
       _fun_();
     };
   };
 
-  self.finishTest = function() {
+  self.finishTest = function () {
     self.postMessage({ op: "done" });
   };
 
-  self.grabArgAndContinueHandler = function(_arg_) {
+  self.grabArgAndContinueHandler = function (_arg_) {
     testGenerator.next(_arg_);
   };
 
-  self.continueToNextStep = function() {
-    executeSoon(function() {
+  self.continueToNextStep = function () {
+    executeSoon(function () {
       testGenerator.next();
     });
   };
 
-  self.continueToNextStepSync = function() {
+  self.continueToNextStepSync = function () {
     testGenerator.next();
   };
 
   self._clearAllDatabasesCallback = undefined;
-  self.clearAllDatabases = function(_callback_) {
+  self.clearAllDatabases = function (_callback_) {
     self._clearAllDatabasesCallback = _callback_;
     self.postMessage({ op: "clearAllDatabases" });
   };
 
-  self.onerror = function(_message_, _file_, _line_) {
+  self.onerror = function (_message_, _file_, _line_) {
     ok(
       false,
       "Worker: uncaught exception [" +
@@ -277,7 +277,7 @@ function workerScript() {
     return true;
   };
 
-  self.onmessage = function(_event_) {
+  self.onmessage = function (_event_) {
     let message = _event_.data;
     switch (message.op) {
       case "load":
@@ -287,7 +287,7 @@ function workerScript() {
         break;
 
       case "start":
-        executeSoon(function() {
+        executeSoon(function () {
           info("Worker: starting tests");
           testGenerator = testSteps();
           testGenerator.next();

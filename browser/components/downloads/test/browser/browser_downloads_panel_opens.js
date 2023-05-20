@@ -136,7 +136,7 @@ async function testDownloadsPanelAfterDialog({
   // service and tells it to start saving the file to the default path.
   if (askWhereToSave) {
     MockFilePicker.returnValue = MockFilePicker.returnOK;
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       // Get the default location from the helper app service.
       let testFile = MockFilePicker.displayDirectory.clone();
       testFile.append(fp.defaultString);

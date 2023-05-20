@@ -1,6 +1,6 @@
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
-add_task(async function() {
+add_task(async function () {
   let triggered = {};
   const { Management } = ChromeUtils.import(
     "resource://gre/modules/Extension.jsm"

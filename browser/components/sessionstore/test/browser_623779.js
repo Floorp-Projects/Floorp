@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   gBrowser.pinTab(gBrowser.selectedTab);
 
   let newTab = gBrowser.duplicateTab(gBrowser.selectedTab);

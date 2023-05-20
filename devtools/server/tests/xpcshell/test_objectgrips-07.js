@@ -53,7 +53,7 @@ function evalCode(debuggee) {
   /* eslint-disable no-undef */
   debuggee.eval(
     "(" +
-      function() {
+      function () {
         const f = {};
         Object.freeze(f);
         const s = {};

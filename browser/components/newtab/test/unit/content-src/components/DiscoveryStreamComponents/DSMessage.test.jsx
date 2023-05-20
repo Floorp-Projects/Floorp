@@ -37,14 +37,7 @@ describe("<DSMessage>", () => {
   it("should render a SafeAnchor", () => {
     wrapper.setProps({ link_text: "foo", link_url: "https://foo.com" });
 
-    assert.equal(
-      wrapper
-        .find(".title")
-        .children()
-        .at(0)
-        .type(),
-      SafeAnchor
-    );
+    assert.equal(wrapper.find(".title").children().at(0).type(), SafeAnchor);
   });
 
   it("should render a FluentOrText", () => {
@@ -55,21 +48,10 @@ describe("<DSMessage>", () => {
     });
 
     assert.equal(
-      wrapper
-        .find(".title-text")
-        .children()
-        .at(0)
-        .type(),
+      wrapper.find(".title-text").children().at(0).type(),
       FluentOrText
     );
 
-    assert.equal(
-      wrapper
-        .find(".link a")
-        .children()
-        .at(0)
-        .type(),
-      FluentOrText
-    );
+    assert.equal(wrapper.find(".link a").children().at(0).type(), FluentOrText);
   });
 });

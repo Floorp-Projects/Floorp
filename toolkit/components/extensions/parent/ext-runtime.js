@@ -184,17 +184,17 @@ this.runtime = class extends ExtensionAPIPersistent {
           return context.lastError;
         },
 
-        getBrowserInfo: function() {
+        getBrowserInfo: function () {
           const { name, vendor, version, appBuildID } = Services.appinfo;
           const info = { name, vendor, version, buildID: appBuildID };
           return Promise.resolve(info);
         },
 
-        getPlatformInfo: function() {
+        getPlatformInfo: function () {
           return Promise.resolve(ExtensionParent.PlatformInfo);
         },
 
-        openOptionsPage: function() {
+        openOptionsPage: function () {
           if (!extension.manifest.options_ui) {
             return Promise.reject({ message: "No `options_ui` declared" });
           }
@@ -205,7 +205,7 @@ this.runtime = class extends ExtensionAPIPersistent {
           return openOptionsPage(extension).then(() => {});
         },
 
-        setUninstallURL: function(url) {
+        setUninstallURL: function (url) {
           if (url === null || url.length === 0) {
             extension.uninstallURL = null;
             return Promise.resolve();

@@ -1,4 +1,4 @@
-DriverInfo = (function() {
+DriverInfo = (function () {
   // ---------------------------------------------------------------------------
   // Debug info handling
 

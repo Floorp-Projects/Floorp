@@ -15,29 +15,29 @@ const {
 } = require("resource://devtools/client/shared/redux/visibility-handler-connect.js");
 
 // Components
-loader.lazyGetter(this, "AppErrorBoundary", function() {
+loader.lazyGetter(this, "AppErrorBoundary", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/AppErrorBoundary.js")
   );
 });
-loader.lazyGetter(this, "MonitorPanel", function() {
+loader.lazyGetter(this, "MonitorPanel", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/MonitorPanel.js")
   );
 });
-loader.lazyGetter(this, "StatisticsPanel", function() {
+loader.lazyGetter(this, "StatisticsPanel", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/StatisticsPanel.js")
   );
 });
-loader.lazyGetter(this, "DropHarHandler", function() {
+loader.lazyGetter(this, "DropHarHandler", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/DropHarHandler.js")
   );
 });
 
 // Localized strings for (devtools/client/locales/en-US/startup.properties)
-loader.lazyGetter(this, "L10N", function() {
+loader.lazyGetter(this, "L10N", function () {
   const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
   return new LocalizationHelper("devtools/client/locales/startup.properties");
 });

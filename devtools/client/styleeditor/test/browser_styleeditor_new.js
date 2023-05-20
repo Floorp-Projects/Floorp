@@ -8,7 +8,7 @@ const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
 
 const TESTCASE_CSS_SOURCE = "body{background-color:red;";
 
-add_task(async function() {
+add_task(async function () {
   const { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   const editor = await createNewStyleSheet(ui, panel.panelWindow);
@@ -68,7 +68,7 @@ async function testInitialState(editor) {
 
 function typeInEditor(editor, panelWindow) {
   return new Promise(resolve => {
-    waitForFocus(function() {
+    waitForFocus(function () {
       for (const c of TESTCASE_CSS_SOURCE) {
         EventUtils.synthesizeKey(c, {}, panelWindow);
       }

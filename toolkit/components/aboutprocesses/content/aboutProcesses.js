@@ -39,7 +39,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function() {
+XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function () {
   return ChromeUtils.import(
     "resource://devtools/client/performance-new/shared/background.jsm.js"
   );
@@ -1036,7 +1036,7 @@ var Control = {
     this._initHangReports();
 
     // Start prefetching units.
-    this._promisePrefetchedUnits = (async function() {
+    this._promisePrefetchedUnits = (async function () {
       let [
         ns,
         us,
@@ -1565,7 +1565,7 @@ var Control = {
   },
 };
 
-window.onload = async function() {
+window.onload = async function () {
   Control.init();
 
   // Display immediately the list of processes. CPU values will be missing.

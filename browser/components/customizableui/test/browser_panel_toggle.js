@@ -9,7 +9,7 @@
  */
 
 // Show and hide the menu panel programmatically without an event (like UITour.sys.mjs would)
-add_task(async function() {
+add_task(async function () {
   await gCUITestUtils.openMainMenu();
 
   is(
@@ -29,7 +29,7 @@ add_task(async function() {
 });
 
 // Toggle the menu panel open and closed
-add_task(async function() {
+add_task(async function () {
   await gCUITestUtils.openPanelMultiView(PanelUI.panel, PanelUI.mainView, () =>
     PanelUI.toggle({ type: "command" })
   );

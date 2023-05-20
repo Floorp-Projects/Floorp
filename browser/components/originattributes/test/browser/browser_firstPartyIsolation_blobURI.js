@@ -1,7 +1,7 @@
-add_setup(async function() {
+add_setup(async function () {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("privacy.firstparty.isolate");
     Services.cookies.removeAll();
   });
@@ -30,7 +30,7 @@ add_task(async function test_blob_uri_inherit_oa_from_content() {
   await SpecialPowers.spawn(
     browser,
     [{ firstPartyDomain: BASE_DOMAIN }],
-    async function(attrs) {
+    async function (attrs) {
       Assert.ok(true, "origin " + content.document.nodePrincipal.origin);
       Assert.equal(
         content.document.nodePrincipal.originAttributes.firstPartyDomain,
@@ -52,7 +52,7 @@ add_task(async function test_blob_uri_inherit_oa_from_content() {
   );
 
   // Wait for the Blob: URI to be loaded.
-  await BrowserTestUtils.browserLoaded(browser, false, function(url) {
+  await BrowserTestUtils.browserLoaded(browser, false, function (url) {
     info("BrowserTestUtils.browserLoaded url=" + url);
     return url.startsWith("blob:http://mochi.test:8888/");
   });
@@ -62,7 +62,7 @@ add_task(async function test_blob_uri_inherit_oa_from_content() {
   await SpecialPowers.spawn(
     browser,
     [{ firstPartyDomain: BASE_DOMAIN }],
-    async function(attrs) {
+    async function (attrs) {
       Assert.ok(
         content.document.documentURI.startsWith("blob:http://mochi.test:8888/"),
         "the document URI should be a blob URI."
@@ -83,7 +83,7 @@ add_task(async function test_blob_uri_inherit_oa_from_content() {
       await new content.Promise(done => {
         iframe.addEventListener(
           "load",
-          function() {
+          function () {
             done();
           },
           { capture: true, once: true }
@@ -96,9 +96,9 @@ add_task(async function test_blob_uri_inherit_oa_from_content() {
   await SpecialPowers.spawn(
     browser,
     [{ firstPartyDomain: BASE_DOMAIN }],
-    async function(attrs) {
+    async function (attrs) {
       let iframe = content.document.getElementById("iframe1");
-      await SpecialPowers.spawn(iframe, [attrs.firstPartyDomain], function(
+      await SpecialPowers.spawn(iframe, [attrs.firstPartyDomain], function (
         firstPartyDomain
       ) {
         Assert.equal(

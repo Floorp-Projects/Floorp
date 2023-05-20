@@ -38,7 +38,7 @@ function reportException(who, exception) {
  * don't have a way to get at them from JavaScript at the moment.)
  */
 function makeInfallible(handler, name = handler.name) {
-  return function() {
+  return function () {
     try {
       return handler.apply(this, arguments);
     } catch (ex) {

@@ -6,7 +6,7 @@ var jslibDate = Cu.getGlobalForObject(jslib).Date;
 
 var _Datenow = jslibDate.now;
 function setNow(time) {
-  jslibDate.now = function() {
+  jslibDate.now = function () {
     return time;
   };
 }

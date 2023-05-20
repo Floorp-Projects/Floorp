@@ -104,7 +104,7 @@ describe("Top Sites Feed", () => {
       .callsFake(site =>
         site.url.replace(/(.com|.ca)/, "").replace("https://", "")
       );
-    const fakeDedupe = function() {};
+    const fakeDedupe = function () {};
     fakePageThumbs = {
       addExpirationFilter: sinon.stub(),
       removeExpirationFilter: sinon.stub(),

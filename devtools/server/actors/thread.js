@@ -91,7 +91,7 @@ function cacheReactionsForFrame(frame) {
 }
 
 function createStepForReactionTracking(onStep) {
-  return function() {
+  return function () {
     cacheReactionsForFrame(this);
     return onStep ? onStep.apply(this, arguments) : undefined;
   };
@@ -992,7 +992,7 @@ class ThreadActor extends Actor {
 
   _makeOnPop({ pauseAndRespond, steppingType }) {
     const thread = this;
-    return function(completion) {
+    return function (completion) {
       if (thread._requestedFrameRestart === this) {
         return thread.restartFrame(this);
       }
@@ -1075,7 +1075,7 @@ class ThreadActor extends Actor {
 
   _makeOnStep({ pauseAndRespond, startFrame, steppingType, completion }) {
     const thread = this;
-    return function() {
+    return function () {
       if (thread._validFrameStepOffset(this, startFrame, this.offset)) {
         return pauseAndRespond(this, packet =>
           thread.createCompletionGrip(packet, completion)

@@ -20,7 +20,7 @@ function* testSteps() {
 
   SpecialPowers.createFiles(
     [{ data: fileData, options: { type: fileType } }],
-    function(files) {
+    function (files) {
       testGenerator.next(files[0]);
     }
   );

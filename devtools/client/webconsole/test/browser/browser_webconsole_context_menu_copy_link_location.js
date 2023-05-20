@@ -12,7 +12,7 @@ const TEST_URI =
   Date.now();
 const CONTEXT_MENU_ID = "#console-menu-copy-url";
 
-add_task(async function() {
+add_task(async function () {
   // Enable net messages in the console for this test.
   await pushPref("devtools.webconsole.filter.net", true);
 

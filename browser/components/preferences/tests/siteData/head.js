@@ -115,10 +115,10 @@ function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
 
     newTabBrowser.addEventListener(
       "Initialized",
-      function() {
+      function () {
         newTabBrowser.contentWindow.addEventListener(
           "load",
-          async function() {
+          async function () {
             let win = gBrowser.contentWindow;
             let selectedPane = win.history.state;
             await finalPrefPaneLoaded;

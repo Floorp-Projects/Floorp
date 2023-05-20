@@ -13,11 +13,11 @@ add_task(async function test_bookmark_properties_dialog_on_folder() {
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.remove(bm);
   });
 
-  await withSidebarTree("bookmarks", async function(tree) {
+  await withSidebarTree("bookmarks", async function (tree) {
     // Select the new bookmark in the sidebar.
     tree.selectItems([bm.guid]);
     let folder = tree.selectedNode;

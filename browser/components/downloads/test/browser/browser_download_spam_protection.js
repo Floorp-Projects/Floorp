@@ -20,7 +20,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   TEST_URI
 );
 
-add_setup(async function() {
+add_setup(async function () {
   // Create temp directory
   let time = new Date().getTime();
   let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);

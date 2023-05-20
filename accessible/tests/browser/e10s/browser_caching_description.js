@@ -195,7 +195,7 @@ addAccessibleTask(
   <p id="description">aria description</p>
   <p id="description2">another description</p>
   <img id="image" src="http://example.com/a11y/accessible/tests/mochitest/moz.png" />`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let imgAcc = findAccessibleChildByID(accDoc, "image");
 
     for (let { desc, waitFor, attrs, expected } of tests) {
@@ -230,7 +230,7 @@ addAccessibleTask(
 <button id="button" aria-describedby="desc">
 <div id="desc" hidden>a</div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const button = findAccessibleChildByID(docAcc, "button");
     testDescr(button, "a");
     info("Changing desc textContent");

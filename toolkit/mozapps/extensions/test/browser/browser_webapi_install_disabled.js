@@ -17,7 +17,7 @@ function waitForClear() {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.webapi.testing", true],
@@ -29,7 +29,7 @@ add_setup(async function() {
 });
 
 async function testInstall(browser, args) {
-  let success = await SpecialPowers.spawn(browser, [{ args }], async function(
+  let success = await SpecialPowers.spawn(browser, [{ args }], async function (
     opts
   ) {
     let { args } = opts;
@@ -42,7 +42,7 @@ async function testInstall(browser, args) {
   is(success, false, "Install was blocked");
 }
 
-add_task(async function() {
+add_task(async function () {
   // withNewTab() will close the test tab before returning, at which point
   // the cleanup event will come from the content process.  We need to see
   // that event but don't want to race to install a listener for it after
@@ -50,7 +50,7 @@ add_task(async function() {
   // listening promise until below.
   let clearPromise = waitForClear();
 
-  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function (browser) {
     await testInstall(browser, { url: XPI_URL });
   });
 

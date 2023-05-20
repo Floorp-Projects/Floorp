@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-add_task(async function() {
+add_task(async function () {
   let hierarchy = ["AllBookmarks", "BookmarksMenu"];
 
   let items = await PlacesUtils.bookmarks.insertTree({
@@ -31,7 +31,7 @@ add_task(async function() {
 
   let library = await promiseLibrary();
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.remove(items[0]);
     await promiseLibraryClosed(library);
   });

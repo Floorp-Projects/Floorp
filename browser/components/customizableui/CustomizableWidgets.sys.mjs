@@ -332,7 +332,7 @@ export const CustomizableWidgets = [
       node.classList.add("chromeclass-toolbar-additional");
       node.classList.add("toolbaritem-combined-buttons");
 
-      buttons.forEach(function(aButton, aIndex) {
+      buttons.forEach(function (aButton, aIndex) {
         if (aIndex != 0) {
           node.appendChild(aDocument.createXULElement("separator"));
         }
@@ -390,7 +390,7 @@ export const CustomizableWidgets = [
       node.classList.add("chromeclass-toolbar-additional");
       node.classList.add("toolbaritem-combined-buttons");
 
-      buttons.forEach(function(aButton, aIndex) {
+      buttons.forEach(function (aButton, aIndex) {
         if (aIndex != 0) {
           node.appendChild(aDocument.createXULElement("separator"));
         }
@@ -564,7 +564,7 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
         range: lazy.Sanitizer.getClearRange(+group.value),
         privateStateForNewWindow: newWindowPrivateState,
       });
-      promise.then(function() {
+      promise.then(function () {
         let otherWindow = Services.wm.getMostRecentWindow("navigator:browser");
         if (otherWindow.closed) {
           console.error("Got a closed window!");

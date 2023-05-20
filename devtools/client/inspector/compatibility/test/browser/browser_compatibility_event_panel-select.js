@@ -13,7 +13,7 @@ const {
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_START,
 } = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Check that the panel does not update when no changes occur while hidden"
   );
@@ -53,7 +53,7 @@ add_task(async function() {
   await removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Check that the panel only updates for the selected node when the node is changed while the panel is hidden"
   );
@@ -90,7 +90,7 @@ add_task(async function() {
   await removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Check that both panes update when the top-level target changed while the panel is hidden"
   );
@@ -126,7 +126,7 @@ add_task(async function() {
   await removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Check that both panes update when a rule is changed changed while the panel is hidden"
   );

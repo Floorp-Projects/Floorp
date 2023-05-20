@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", function () {
   return console.createInstance({
     prefix: "InteractionsManager",
     maxLogLevel: Services.prefs.getBoolPref(
@@ -668,9 +668,7 @@ class InteractionsStore {
       let promise = new Promise(resolve => {
         this.#timerResolve = resolve;
         this.#timer = lazy.setTimeout(() => {
-          this.#updateDatabase()
-            .catch(console.error)
-            .then(resolve);
+          this.#updateDatabase().catch(console.error).then(resolve);
         }, lazy.saveInterval);
       });
       this.pendingPromise = this.pendingPromise.then(() => promise);

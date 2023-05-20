@@ -142,27 +142,27 @@ function prepareImageBitmaps() {
   gImage1.src = "image_rgrg-256x256.png";
   gImage2.src = "image_yellow.png";
 
-  var p1 = new Promise(function(resolve, reject) {
-    gImage1.onload = function() {
+  var p1 = new Promise(function (resolve, reject) {
+    gImage1.onload = function () {
       var promise = createImageBitmap(gImage1);
-      promise.then(function(bitmap) {
+      promise.then(function (bitmap) {
         gImageBitmap1 = bitmap;
         resolve(true);
       });
     };
   });
 
-  var p2 = new Promise(function(resolve, reject) {
-    gImage2.onload = function() {
+  var p2 = new Promise(function (resolve, reject) {
+    gImage2.onload = function () {
       var promise = createImageBitmap(gImage2);
-      promise.then(function(bitmap) {
+      promise.then(function (bitmap) {
         gImageBitmap2 = bitmap;
         resolve(true);
       });
     };
   });
 
-  var p3 = new Promise(function(resolve, reject) {
+  var p3 = new Promise(function (resolve, reject) {
     // Create an ImageData with random colors.
     var width = 5;
     var height = 10;

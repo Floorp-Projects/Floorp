@@ -300,7 +300,7 @@ function generateDocumentation() {
   for (let policyName in schema.properties) {
     let main_tbody = document.createElement("tbody");
     main_tbody.classList.add("collapsible");
-    main_tbody.addEventListener("click", function() {
+    main_tbody.addEventListener("click", function () {
       let content = this.nextElementSibling;
       content.classList.toggle("content");
     });
@@ -354,7 +354,7 @@ function generateDocumentation() {
 }
 
 let gInited = false;
-window.onload = function() {
+window.onload = function () {
   if (gInited) {
     return;
   }
@@ -369,7 +369,7 @@ window.onload = function() {
   let menu = document.getElementById("categories");
   for (let category of menu.children) {
     category.addEventListener("click", () => show(category));
-    category.addEventListener("keypress", function(event) {
+    category.addEventListener("keypress", function (event) {
       if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
         show(category);
       }
@@ -385,7 +385,7 @@ window.onload = function() {
     }
   }
 
-  window.addEventListener("hashchange", function() {
+  window.addEventListener("hashchange", function () {
     if (location.hash) {
       let sectionButton = document.getElementById(
         "category-" + location.hash.substring(1)

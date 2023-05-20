@@ -12,7 +12,7 @@ const REMOTE_IFRAME_URL =
   "https://example.org/document-builder.sjs?html=" +
   encodeURIComponent("<script>debugger;</script>");
 
-add_task(async function() {
+add_task(async function () {
   // Check hitting the "debugger;" statement before and after calling
   // watchResource(THREAD_TYPES). Both should break. First will
   // be a cached resource and second will be a live one.
@@ -447,7 +447,7 @@ async function checkDebuggerStatementInIframes() {
   SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [REMOTE_IFRAME_URL],
-    async function(url) {
+    async function (url) {
       const iframe = content.document.createElement("iframe");
       iframe.src = url;
       content.document.body.appendChild(iframe);

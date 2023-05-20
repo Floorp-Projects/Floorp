@@ -16,7 +16,7 @@
  * @param  {...string|object} argss
  * @returns String
  */
-module.exports = function(...args) {
+module.exports = function (...args) {
   let className = "";
 
   for (const arg of args) {

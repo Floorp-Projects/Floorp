@@ -57,7 +57,7 @@ function test() {
   ].getService(Ci.nsIHttpActivityDistributor);
   observerService.addObserver(HTTPObserver);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     observerService.removeObserver(HTTPObserver);
   });
 

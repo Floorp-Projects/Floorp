@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   info("Add a bookmark.");
   let bm = await PlacesUtils.bookmarks.insert({
     url: "http://example.com/",
@@ -12,7 +12,7 @@ add_task(async function() {
   PlacesUtils.invalidateCachedGuidFor(9999);
 
   info("Change the GUID.");
-  await PlacesUtils.withConnectionWrapper("test", async function(db) {
+  await PlacesUtils.withConnectionWrapper("test", async function (db) {
     await db.execute("UPDATE moz_bookmarks SET guid = :guid WHERE id = :id", {
       guid: "123456789012",
       id,

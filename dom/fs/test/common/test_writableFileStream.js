@@ -3,7 +3,7 @@
 
 const allowCreate = { create: true };
 
-exported_symbols.test0 = async function() {
+exported_symbols.test0 = async function () {
   let root = await navigator.storage.getDirectory();
   Assert.ok(!!root, "Can we access the root directory?");
 
@@ -35,7 +35,7 @@ exported_symbols.test0 = async function() {
   Assert.ok(fileSize == writeBuffer.byteLength);
 };
 
-exported_symbols.quotaTest = async function() {
+exported_symbols.quotaTest = async function () {
   const shrinkedStorageSizeKB = 5 * 1024;
   const defaultDatabaseSize = 294912;
 

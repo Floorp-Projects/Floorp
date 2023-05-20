@@ -19,7 +19,7 @@ add_task(async function test_animate() {
     },
 
     files: {
-      "content-script.js": function() {
+      "content-script.js": function () {
         let elem = document.getElementsByTagName("body")[0];
         elem.style.border = "2px solid red";
 
@@ -80,7 +80,7 @@ add_task(async function test_KeyframeEffect() {
     },
 
     files: {
-      "content-script.js": function() {
+      "content-script.js": function () {
         let elem = document.getElementsByTagName("body")[0];
         elem.style.border = "2px solid red";
 

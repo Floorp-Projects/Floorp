@@ -12,7 +12,7 @@
  * 3) Empty user message visibility
  * 4) Number of requests displayed
  */
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });

@@ -7,7 +7,7 @@
  * Test that WS connection is established successfully and the truncated payload is correct.
  */
 
-add_task(async function() {
+add_task(async function () {
   // Set WS message payload limit to a lower value for testing
   await pushPref("devtools.netmonitor.msg.messageDataLimit", 100);
 

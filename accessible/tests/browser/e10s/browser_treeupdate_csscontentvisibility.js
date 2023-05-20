@@ -38,7 +38,7 @@ const snippet = `
   </div>
   `;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["layout.css.content-visibility.enabled", true]],
   });
@@ -55,7 +55,7 @@ async function setContentVisibility(browser, id, value) {
 
 addAccessibleTask(
   snippet,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const targetId = "target";
     const target = findAccessibleChildByID(accDoc, targetId);
 

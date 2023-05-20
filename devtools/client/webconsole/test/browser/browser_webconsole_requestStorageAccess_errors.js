@@ -14,7 +14,7 @@ const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
 );
 
 UrlClassifierTestUtils.addTestTrackers();
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
@@ -76,7 +76,7 @@ async function runRequestStorageAccess({
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI_FIRST_PARTY);
 
   async function checkErrorMessage(text) {

@@ -281,7 +281,7 @@ function getNotificationButton(win, notificationId, button) {
  * called to continue the setup of the test updater.
  */
 function setupTestUpdater() {
-  return (async function() {
+  return (async function () {
     if (Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED)) {
       try {
         restoreUpdaterBackup();
@@ -306,7 +306,7 @@ function setupTestUpdater() {
  * copyTestUpdater to continue the setup of the test updater.
  */
 function moveRealUpdater() {
-  return (async function() {
+  return (async function () {
     try {
       // Move away the real updater
       let greBinDir = getGREBinDir();
@@ -346,7 +346,7 @@ function moveRealUpdater() {
  * at times leave the file in use.
  */
 function copyTestUpdater(attempt = 0) {
-  return (async function() {
+  return (async function () {
     try {
       // Copy the test updater
       let greBinDir = getGREBinDir();
@@ -436,7 +436,7 @@ function restoreUpdaterBackup() {
  * and the other files for the updater if a backup of the file exists.
  */
 function finishTestRestoreUpdaterBackup() {
-  return (async function() {
+  return (async function () {
     try {
       // Windows debug builds keep the updater file in use for a short period of
       // time after the updater process exits.
@@ -534,7 +534,7 @@ function runDoorhangerUpdateTest(params, steps) {
       pageURLs,
       expectedStateOverride,
     } = step;
-    return (async function() {
+    return (async function () {
       if (!params.popupShown && !PanelUI.isNotificationPanelOpen) {
         await BrowserTestUtils.waitForEvent(
           PanelUI.notificationPanel,
@@ -597,7 +597,7 @@ function runDoorhangerUpdateTest(params, steps) {
     })();
   }
 
-  return (async function() {
+  return (async function () {
     if (params.slowStaging) {
       Services.env.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
     } else {
@@ -628,7 +628,7 @@ function runDoorhangerUpdateTest(params, steps) {
     if (params.checkAttempts) {
       // Perform a background check doorhanger test.
       executeSoon(() => {
-        (async function() {
+        (async function () {
           gAUS.checkForBackgroundUpdates();
           for (var i = 0; i < params.checkAttempts - 1; i++) {
             await waitForEvent("update-error", "check-attempt-failed");
@@ -677,7 +677,7 @@ function runAboutDialogUpdateTest(params, steps) {
       noContinue,
       expectedStateOverride,
     } = step;
-    return (async function() {
+    return (async function () {
       await TestUtils.waitForCondition(
         () =>
           aboutDialog.gAppUpdater &&
@@ -846,7 +846,7 @@ function runAboutDialogUpdateTest(params, steps) {
     })();
   }
 
-  return (async function() {
+  return (async function () {
     Services.env.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({
       set: [
@@ -940,7 +940,7 @@ function runAboutPrefsUpdateTest(params, steps) {
       forceApply,
       expectedStateOverride,
     } = step;
-    return (async function() {
+    return (async function () {
       await SpecialPowers.spawn(
         tab.linkedBrowser,
         [{ panelId }],
@@ -1148,7 +1148,7 @@ function runAboutPrefsUpdateTest(params, steps) {
     })();
   }
 
-  return (async function() {
+  return (async function () {
     Services.env.set("MOZ_TEST_SLOW_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({
       set: [
@@ -1257,7 +1257,7 @@ function removeUpdateSettingsIni() {
  * @return A promise which will resolve after the .
  */
 function runTelemetryUpdateTest(updateParams, event, stageFailure = false) {
-  return (async function() {
+  return (async function () {
     Services.telemetry.clearScalars();
     Services.env.set("MOZ_TEST_SKIP_UPDATE_STAGE", "1");
     await SpecialPowers.pushPrefEnv({

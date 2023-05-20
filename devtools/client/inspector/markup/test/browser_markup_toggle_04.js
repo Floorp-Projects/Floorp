@@ -7,7 +7,7 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_toggle.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Getting the container for the UL parent element");

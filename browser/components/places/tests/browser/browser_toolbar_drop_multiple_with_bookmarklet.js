@@ -10,7 +10,7 @@ add_task(async function test() {
 
   if (toolbar.collapsed) {
     await promiseSetToolbarVisibility(toolbar, true);
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       return promiseSetToolbarVisibility(toolbar, false);
     });
   }
@@ -18,7 +18,7 @@ add_task(async function test() {
   // matter because we will set its data, effect, and mimeType manually.
   let placesItems = document.getElementById("PlacesToolbarItems");
   Assert.ok(placesItems, "PlacesToolbarItems should not be null");
-  let simulateDragDrop = async function(aEffect, aMimeType) {
+  let simulateDragDrop = async function (aEffect, aMimeType) {
     let urls = [
       "https://example.com/1/",
       `javascript: (() => {alert('Hello, World!');})();`,

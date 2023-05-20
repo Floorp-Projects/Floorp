@@ -445,7 +445,7 @@ add_task(async function test_switch_before_closing() {
 
   const INITIAL_URL = "https://example.org/iwilldisappear";
   const FINAL_URL = "https://example.com/ishouldappear";
-  await withFirefoxView({}, async function(browser) {
+  await withFirefoxView({}, async function (browser) {
     let gBrowser = browser.getTabBrowser();
     let newTab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,

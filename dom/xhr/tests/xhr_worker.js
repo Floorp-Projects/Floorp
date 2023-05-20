@@ -26,7 +26,7 @@ if (!xhr.onload) {
   postMessage(message);
 }
 
-xhr.onerror = function(event) {
+xhr.onerror = function (event) {
   if (event.target != xhr) {
     throw new Error("onerror event.target != xhr");
   }
@@ -53,26 +53,26 @@ function onprogress(event) {
 }
 xhr.addEventListener("progress", onprogress);
 
-xhr.addEventListener("foopety", function(event) {});
-xhr.removeEventListener("doopety", function(event) {});
+xhr.addEventListener("foopety", function (event) {});
+xhr.removeEventListener("doopety", function (event) {});
 
-xhr.onloadend = function(event) {
+xhr.onloadend = function (event) {
   const message = { type: "loadend" };
   postMessage(message);
 };
 
 var upload = xhr.upload;
-upload.onprogress = function(event) {};
-upload.addEventListener("foo", function(event) {});
-upload.removeEventListener("foo", function(event) {});
-upload.addEventListener("load", function(event) {});
-upload.removeEventListener("foo", function(event) {});
-upload.onload = function(event) {
+upload.onprogress = function (event) {};
+upload.addEventListener("foo", function (event) {});
+upload.removeEventListener("foo", function (event) {});
+upload.addEventListener("load", function (event) {});
+upload.removeEventListener("foo", function (event) {});
+upload.onload = function (event) {
   const message = { type: "upload.load" };
   postMessage(message);
 };
 
-onmessage = function(event) {
+onmessage = function (event) {
   if (xhr.DONE != 4 || XMLHttpRequest.DONE != 4) {
     throw new Error("xhr constants not correct!");
   }

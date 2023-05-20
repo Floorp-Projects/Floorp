@@ -6,13 +6,13 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
 );
-add_task(async function() {
+add_task(async function () {
   let notificationValue = "Protocol Registration: web+testprotocol";
   let testURI = TEST_PATH + "browser_registerProtocolHandler_notification.html";
 
   BrowserTestUtils.loadURIString(window.gBrowser.selectedBrowser, testURI);
   await TestUtils.waitForCondition(
-    function() {
+    function () {
       // Do not start until the notification is up
       let notificationBox = window.gBrowser.getNotificationBox();
       let notification = notificationBox.getNotificationWithValue(

@@ -13,7 +13,7 @@
 add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     getRootDirectory(gTestPath) + "browser_elementindtd.xml",
-    async function(newBrowser) {
+    async function (newBrowser) {
       // NB: We load the chrome:// page in the parent process.
       testNoElementFromEntity(newBrowser);
     }

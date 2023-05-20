@@ -4,7 +4,7 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyGetter(this, "isXpcshell", function() {
+XPCOMUtils.defineLazyGetter(this, "isXpcshell", function () {
   return Services.env.exists("XPCSHELL_TEST_PROFILE_DIR");
 });
 
@@ -167,7 +167,7 @@ this.test = class extends ExtensionAPI {
       }
 
       addListener(callback, ...args) {
-        const listenerWrapper = function(...args) {
+        const listenerWrapper = function (...args) {
           try {
             callback.call(this, ...args);
           } catch (e) {

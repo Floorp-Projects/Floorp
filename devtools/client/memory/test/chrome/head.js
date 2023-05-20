@@ -16,7 +16,7 @@ var { Assert } = ChromeUtils.importESModule(
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   if (
     DevToolsUtils.assertionFailureCount !== EXPECTED_DTU_ASSERT_FAILURE_COUNT
   ) {

@@ -6,7 +6,7 @@
 
 // Checks for the AccessibleActor events
 
-add_task(async function() {
+add_task(async function () {
   const {
     target,
     walker,

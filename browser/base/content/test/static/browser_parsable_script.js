@@ -72,7 +72,7 @@ function parsePromise(uri, parseTarget) {
   let promise = new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", uri, true);
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
       if (this.readyState == this.DONE) {
         let scriptText = this.responseText;
         try {

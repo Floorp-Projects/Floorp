@@ -187,7 +187,7 @@ add_task(async function testTabSwitchContext() {
       "2.png": imageBuffer,
     },
 
-    getTests: function(tabs) {
+    getTests: function (tabs) {
       let details = [
         {
           icon: browser.runtime.getURL("default.png"),
@@ -345,7 +345,7 @@ add_task(async function testDefaultTitle() {
       "icon.png": imageBuffer,
     },
 
-    getTests: function(tabs) {
+    getTests: function (tabs) {
       let details = [
         {
           title: "Foo Extension",
@@ -430,7 +430,7 @@ add_task(async function testPropertyRemoval() {
       "tab.png": imageBuffer,
     },
 
-    getTests: function(tabs, windows) {
+    getTests: function (tabs, windows) {
       let defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
       let details = [
         {
@@ -555,7 +555,7 @@ add_task(async function testMultipleWindows() {
       "window2.png": imageBuffer,
     },
 
-    getTests: function(tabs, windows) {
+    getTests: function (tabs, windows) {
       let details = [
         {
           icon: browser.runtime.getURL("default.png"),

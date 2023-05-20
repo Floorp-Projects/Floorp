@@ -18,7 +18,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
     </div>`)}">
   </iframe>`;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Select the absolute positioned node in the iframe");

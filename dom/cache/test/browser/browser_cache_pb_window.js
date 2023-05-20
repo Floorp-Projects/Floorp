@@ -2,15 +2,15 @@
 var name = "pb-window-cache";
 
 function testMatch(browser) {
-  return SpecialPowers.spawn(browser, [name], function(name) {
+  return SpecialPowers.spawn(browser, [name], function (name) {
     return new Promise((resolve, reject) => {
       content.caches
         .match("http://foo.com")
-        .then(function(response) {
+        .then(function (response) {
           ok(false, "caches.match() should not return success");
           reject();
         })
-        .catch(function(err) {
+        .catch(function (err) {
           is(
             "SecurityError",
             err.name,
@@ -23,15 +23,15 @@ function testMatch(browser) {
 }
 
 function testHas(browser) {
-  return SpecialPowers.spawn(browser, [name], function(name) {
-    return new Promise(function(resolve, reject) {
+  return SpecialPowers.spawn(browser, [name], function (name) {
+    return new Promise(function (resolve, reject) {
       content.caches
         .has(name)
-        .then(function(result) {
+        .then(function (result) {
           ok(false, "caches.has() should not return success");
           reject();
         })
-        .catch(function(err) {
+        .catch(function (err) {
           is(
             "SecurityError",
             err.name,
@@ -44,15 +44,15 @@ function testHas(browser) {
 }
 
 function testOpen(browser) {
-  return SpecialPowers.spawn(browser, [name], function(name) {
-    return new Promise(function(resolve, reject) {
+  return SpecialPowers.spawn(browser, [name], function (name) {
+    return new Promise(function (resolve, reject) {
       content.caches
         .open(name)
-        .then(function(c) {
+        .then(function (c) {
           ok(false, "caches.open() should not return success");
           reject();
         })
-        .catch(function(err) {
+        .catch(function (err) {
           is(
             "SecurityError",
             err.name,
@@ -65,15 +65,15 @@ function testOpen(browser) {
 }
 
 function testDelete(browser) {
-  return SpecialPowers.spawn(browser, [name], function(name) {
-    return new Promise(function(resolve, reject) {
+  return SpecialPowers.spawn(browser, [name], function (name) {
+    return new Promise(function (resolve, reject) {
       content.caches
         .delete(name)
-        .then(function(result) {
+        .then(function (result) {
           ok(false, "caches.delete() should not return success");
           reject();
         })
-        .catch(function(err) {
+        .catch(function (err) {
           is(
             "SecurityError",
             err.name,
@@ -86,15 +86,15 @@ function testDelete(browser) {
 }
 
 function testKeys(browser) {
-  return SpecialPowers.spawn(browser, [name], function(name) {
-    return new Promise(function(resolve, reject) {
+  return SpecialPowers.spawn(browser, [name], function (name) {
+    return new Promise(function (resolve, reject) {
       content.caches
         .keys()
-        .then(function(names) {
+        .then(function (names) {
           ok(false, "caches.keys() should not return success");
           reject();
         })
-        .catch(function(err) {
+        .catch(function (err) {
           is(
             "SecurityError",
             err.name,
@@ -107,13 +107,13 @@ function testKeys(browser) {
 }
 
 function testOpen_worker(browser) {
-  return SpecialPowers.spawn(browser, [], function() {
-    let workerFunctionString = function() {
+  return SpecialPowers.spawn(browser, [], function () {
+    let workerFunctionString = function () {
       caches.open("pb-worker-cache").then(
-        function(cacheObject) {
+        function (cacheObject) {
           postMessage(cacheObject.toString());
         },
-        function(reason) {
+        function (reason) {
           postMessage(reason.name);
         }
       );
@@ -125,8 +125,8 @@ function testOpen_worker(browser) {
     );
     let worker = new content.Worker(workerBlobURL);
     content.URL.revokeObjectURL(workerBlobURL);
-    return new Promise(function(resolve, reject) {
-      worker.addEventListener("message", function(e) {
+    return new Promise(function (resolve, reject) {
+      worker.addEventListener("message", function (e) {
         let isGood = e.data === "SecurityError";
         ok(isGood, "caches.open() should throw SecurityError from worker");
         isGood ? resolve() : reject();

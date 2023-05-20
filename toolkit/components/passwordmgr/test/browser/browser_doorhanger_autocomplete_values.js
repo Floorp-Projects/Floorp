@@ -194,7 +194,7 @@ add_task(async function test_edit_password() {
           "https://example.com/browser/toolkit/components/" +
           "passwordmgr/test/browser/form_expanded.html",
       },
-      async function(browser) {
+      async function (browser) {
         info("Editing the form");
         for (const change of testCase.modifiedFields) {
           for (const selector in change) {

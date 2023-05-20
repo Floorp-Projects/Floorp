@@ -28,7 +28,7 @@ const suggestion_type = "sponsored";
 const index = 1;
 const position = index + 1;
 
-add_setup(async function() {
+add_setup(async function () {
   await setUpTelemetryTest({
     remoteSettingsResults: [REMOTE_SETTINGS_RESULT],
   });

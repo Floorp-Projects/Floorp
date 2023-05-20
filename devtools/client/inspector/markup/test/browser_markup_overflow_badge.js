@@ -32,7 +32,7 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );
@@ -77,7 +77,7 @@ async function expandChildContainers(inspector) {
 async function toggleClass(inspector) {
   const onStateChanged = inspector.walker.once("overflow-change");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.document.querySelector("#child1").classList.toggle("fixed");
     content.document.querySelector("#child3").classList.toggle("fixed");
   });

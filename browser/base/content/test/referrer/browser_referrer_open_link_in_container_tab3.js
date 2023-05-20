@@ -11,8 +11,8 @@ function startNewTabTestCase(aTestNumber) {
     "browser_referrer_open_link_in_container_tab: " +
       getReferrerTestDescription(aTestNumber)
   );
-  contextMenuOpened(gTestWindow, "testlink").then(function(aContextMenu) {
-    someTabLoaded(gTestWindow).then(function(aNewTab) {
+  contextMenuOpened(gTestWindow, "testlink").then(function (aContextMenu) {
+    someTabLoaded(gTestWindow).then(function (aNewTab) {
       gTestWindow.gBrowser.selectedTab = aNewTab;
 
       checkReferrerAndStartNextTest(
@@ -31,7 +31,7 @@ function startNewTabTestCase(aTestNumber) {
     let menupopup = menu.menupopup;
     menu.addEventListener(
       "popupshown",
-      function() {
+      function () {
         is(menupopup.nodeType, Node.ELEMENT_NODE, "We have a menupopup.");
         ok(menupopup.firstElementChild, "We have a first container entry.");
 
@@ -53,7 +53,7 @@ function startNewTabTestCase(aTestNumber) {
 
         aContextMenu.addEventListener(
           "popuphidden",
-          function() {
+          function () {
             firstContext.doCommand();
           },
           { once: true }
@@ -73,7 +73,7 @@ function test() {
 
   SpecialPowers.pushPrefEnv(
     { set: [["privacy.userContext.enabled", true]] },
-    function() {
+    function () {
       requestLongerTimeout(10); // slowwww shutdown on e10s
       startReferrerTest(startNewTabTestCase, { userContextId: 2 });
     }

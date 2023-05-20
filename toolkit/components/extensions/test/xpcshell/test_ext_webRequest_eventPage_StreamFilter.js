@@ -49,7 +49,7 @@ async function test_idletimeout_on_streamfilter({
   requestUrlPath,
 }) {
   const extension = ExtensionTestUtils.loadExtension({
-    background: `(${async function(urlPath) {
+    background: `(${async function (urlPath) {
       browser.webRequest.onBeforeRequest.addListener(
         request => {
           browser.test.log(`webRequest request intercepted: ${request.url}`);

@@ -17,7 +17,7 @@ const TEST_URL =
 //
 // Those prefs are set in the browser ini to run before DevToolsStartup.jsm init
 // logic. We expect devtools.selfxss.count to force shortcut_disabled to false.
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URL);
   await new Promise(done => waitForFocus(done));
 

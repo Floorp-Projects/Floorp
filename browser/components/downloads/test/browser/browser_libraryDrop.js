@@ -3,7 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await task_resetState();
   await PlacesUtils.history.clear();
 });
@@ -23,7 +23,7 @@ add_task(async function test_indicatorDrop() {
   startServer();
 
   let win = await openLibrary("Downloads");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     win.close();
   });
 

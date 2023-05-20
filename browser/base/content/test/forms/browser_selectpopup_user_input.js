@@ -7,7 +7,7 @@ const PAGE = `
 `;
 
 function promiseChangeHandlingUserInput(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     content.document.clearUserGestureActivation();
     let element = content.document.querySelector("select");
     let reply = {};
@@ -36,7 +36,7 @@ async function testHandlingUserInputOnChange(aTriggerFn) {
       gBrowser,
       url,
     },
-    async function(browser) {
+    async function (browser) {
       let popup = await openSelectPopup("click");
       let userInputOnChange = promiseChangeHandlingUserInput(browser);
       await aTriggerFn(popup);
@@ -71,20 +71,20 @@ async function testHandlingUserInputOnChange(aTriggerFn) {
 
 // This test checks if the change/click event is considered as user input event.
 add_task(async function test_handling_user_input_key() {
-  return testHandlingUserInputOnChange(async function(popup) {
+  return testHandlingUserInputOnChange(async function (popup) {
     EventUtils.synthesizeKey("KEY_ArrowDown");
     await hideSelectPopup();
   });
 });
 
 add_task(async function test_handling_user_input_click() {
-  return testHandlingUserInputOnChange(async function(popup) {
+  return testHandlingUserInputOnChange(async function (popup) {
     EventUtils.synthesizeMouseAtCenter(popup.lastElementChild, {});
   });
 });
 
 add_task(async function test_handling_user_input_click() {
-  return testHandlingUserInputOnChange(async function(popup) {
+  return testHandlingUserInputOnChange(async function (popup) {
     EventUtils.synthesizeMouseAtCenter(popup.lastElementChild, {});
   });
 });

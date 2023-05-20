@@ -1,16 +1,16 @@
 var VRServiceTest;
 var vrMockDisplay;
 
-var VRSimulationDriver = (function() {
+var VRSimulationDriver = (function () {
   "use strict";
 
-  var AttachWebVRDisplay = function() {
+  var AttachWebVRDisplay = function () {
     if (vrMockDisplay) {
       // Avoid creating multiple displays
       return Promise.resolve(vrMockDisplay);
     }
     var promise = VRServiceTest.attachVRDisplay("VRDisplayTest");
-    promise.then(function(display) {
+    promise.then(function (display) {
       assert_true(display != null, "AttachWebVRDisplay should success.");
       vrMockDisplay = display;
     });
@@ -18,7 +18,7 @@ var VRSimulationDriver = (function() {
     return promise;
   };
 
-  var SetVRDisplayPose = function(
+  var SetVRDisplayPose = function (
     position,
     linearVelocity,
     linearAcceleration,
@@ -36,11 +36,11 @@ var VRSimulationDriver = (function() {
     );
   };
 
-  var SetEyeResolution = function(width, height) {
+  var SetEyeResolution = function (width, height) {
     vrMockDisplay.setEyeResolution(width, height);
   };
 
-  var SetEyeParameter = function(
+  var SetEyeParameter = function (
     eye,
     offsetX,
     offsetY,
@@ -62,17 +62,17 @@ var VRSimulationDriver = (function() {
     );
   };
 
-  var SetMountState = function(isMounted) {
+  var SetMountState = function (isMounted) {
     vrMockDisplay.setMountState(isMounted);
   };
 
-  var UpdateVRDisplay = function() {
+  var UpdateVRDisplay = function () {
     vrMockDisplay.update();
   };
 
-  var AttachVRController = function() {
+  var AttachVRController = function () {
     var promise = VRServiceTest.attachVRController("VRControllerTest");
-    promise.then(function(controller) {
+    promise.then(function (controller) {
       assert_true(controller != null, "AttachVRController should success.");
     });
 

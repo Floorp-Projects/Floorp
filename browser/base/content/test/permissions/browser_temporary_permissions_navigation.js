@@ -11,7 +11,7 @@ add_task(async function testTempPermissionOnReload() {
   );
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(origin, async function(browser) {
+  await BrowserTestUtils.withNewTab(origin, async function (browser) {
     SitePermissions.setForPrincipal(
       principal,
       id,
@@ -125,7 +125,7 @@ add_task(async function testTempPermissionOnReloadAllTabs() {
   );
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(origin, async function(browser) {
+  await BrowserTestUtils.withNewTab(origin, async function (browser) {
     SitePermissions.setForPrincipal(
       principal,
       id,
@@ -179,7 +179,7 @@ add_task(async function testTempPermissionOnNavigation() {
   );
   let id = "geo";
 
-  await BrowserTestUtils.withNewTab(origin, async function(browser) {
+  await BrowserTestUtils.withNewTab(origin, async function (browser) {
     SitePermissions.setForPrincipal(
       principal,
       id,

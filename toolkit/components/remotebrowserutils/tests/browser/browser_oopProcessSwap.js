@@ -39,7 +39,7 @@ add_task(async function oopProcessSwap() {
           let data = await new Promise(resolve => {
             content.window.addEventListener(
               "message",
-              function(evt) {
+              function (evt) {
                 info("oop iframe loaded");
                 is(evt.source, iframe.contentWindow);
                 resolve(evt.data);
@@ -122,7 +122,7 @@ add_task(async function oopOriginProcessSwap() {
           let data = await new Promise(resolve => {
             content.window.addEventListener(
               "message",
-              function(evt) {
+              function (evt) {
                 info("oop iframe loaded");
                 is(evt.source, iframe.contentWindow);
                 resolve(evt.data);

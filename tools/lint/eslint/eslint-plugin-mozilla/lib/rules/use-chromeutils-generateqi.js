@@ -73,7 +73,7 @@ module.exports = {
         }
       },
 
-      "AssignmentExpression > MemberExpression[property.name='QueryInterface']": function(
+      "AssignmentExpression > MemberExpression[property.name='QueryInterface']": function (
         node
       ) {
         const { right } = node.parent;
@@ -88,7 +88,7 @@ module.exports = {
         }
       },
 
-      "Property[key.name='QueryInterface'][value.type='FunctionExpression']": function(
+      "Property[key.name='QueryInterface'][value.type='FunctionExpression']": function (
         node
       ) {
         context.report({

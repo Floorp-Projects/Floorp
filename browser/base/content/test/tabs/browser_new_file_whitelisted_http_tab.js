@@ -5,13 +5,13 @@
 const TEST_HTTP = "http://example.org/";
 
 // Test for bug 1378377.
-add_task(async function() {
+add_task(async function () {
   // Set prefs to ensure file content process.
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.remote.separateFileUriProcess", true]],
   });
 
-  await BrowserTestUtils.withNewTab(TEST_HTTP, async function(fileBrowser) {
+  await BrowserTestUtils.withNewTab(TEST_HTTP, async function (fileBrowser) {
     ok(
       E10SUtils.isWebRemoteType(fileBrowser.remoteType),
       "Check that tab normally has web remote type."
@@ -27,7 +27,7 @@ add_task(async function() {
     ],
   });
 
-  await BrowserTestUtils.withNewTab(TEST_HTTP, async function(fileBrowser) {
+  await BrowserTestUtils.withNewTab(TEST_HTTP, async function (fileBrowser) {
     is(
       fileBrowser.remoteType,
       E10SUtils.FILE_REMOTE_TYPE,

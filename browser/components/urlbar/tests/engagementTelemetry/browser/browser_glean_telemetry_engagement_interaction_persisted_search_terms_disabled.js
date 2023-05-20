@@ -15,7 +15,7 @@ if (AppConstants.platform == "macosx") {
   requestLongerTimeout(3);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await initInteractionTest();
 
   await SpecialPowers.pushPrefEnv({

@@ -14,7 +14,7 @@ addAccessibleTask(
   <p id="p2">b</p>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const scroller = findAccessibleChildByID(docAcc, "scroller");
     // scroller can only fit one of p1 or p2, not both.
     // p1 is on screen already.

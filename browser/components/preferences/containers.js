@@ -13,13 +13,13 @@ let gContainersPane = {
 
     document
       .getElementById("backContainersButton")
-      .addEventListener("command", function() {
+      .addEventListener("command", function () {
         gotoPref("general");
       });
 
     document
       .getElementById("containersAdd")
-      .addEventListener("command", function() {
+      .addEventListener("command", function () {
         gContainersPane.onAddButtonCommand();
       });
 
@@ -61,7 +61,7 @@ let gContainersPane = {
       item.appendChild(containerButtons);
 
       let prefsButton = document.createXULElement("button");
-      prefsButton.addEventListener("command", function(event) {
+      prefsButton.addEventListener("command", function (event) {
         gContainersPane.onPreferenceCommand(event.originalTarget);
       });
       prefsButton.setAttribute("value", container.userContextId);
@@ -69,7 +69,7 @@ let gContainersPane = {
       containerButtons.appendChild(prefsButton);
 
       let removeButton = document.createXULElement("button");
-      removeButton.addEventListener("command", function(event) {
+      removeButton.addEventListener("command", function (event) {
         gContainersPane.onRemoveCommand(event.originalTarget);
       });
       removeButton.setAttribute("value", container.userContextId);

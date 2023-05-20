@@ -187,17 +187,17 @@ var gCurrentTest = null;
 function test() {
   waitForExplicitFinish();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     sinon.restore();
   });
 
   gTestWin = openDialog(location, "", "chrome,all,dialog=no", "about:blank");
-  whenDelayedStartupFinished(gTestWin, function() {
+  whenDelayedStartupFinished(gTestWin, function () {
     info("Browser window opened");
-    waitForFocus(function() {
+    waitForFocus(function () {
       info("Browser window focused");
       waitForFocus(
-        function() {
+        function () {
           info("Setting up browser...");
           setupTestBrowserWindow();
           info("Running tests...");
@@ -266,7 +266,7 @@ function setupTestBrowserWindow() {
   gTestWin.addEventListener("auxclick", gClickHandler, true);
 
   // Replace methods.
-  gReplacedMethods.forEach(function(methodName) {
+  gReplacedMethods.forEach(function (methodName) {
     let targetObj =
       methodName == "getShortcutOrURIAndPostData" ? UrlbarUtils : gTestWin;
     sinon.stub(targetObj, methodName).returnsArg(0);

@@ -383,7 +383,7 @@ function testSingleString(test) {
 
 function stringFromArray(a) {
   return Array.map
-    .call(a, function(v) {
+    .call(a, function (v) {
       return String.fromCharCode(v);
     })
     .join("");
@@ -702,7 +702,7 @@ function testStreamingOptions() {
 }
 
 function arrayFromString(s) {
-  return s.split("").map(function(c) {
+  return s.split("").map(function (c) {
     return c.charCodeAt(0);
   });
 }

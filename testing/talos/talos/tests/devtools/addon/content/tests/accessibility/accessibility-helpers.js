@@ -8,7 +8,7 @@ const { openToolboxAndLog, reloadPageAndLog } = require("damp-test/tests/head");
 
 const PREF_ACCESSIBILITY_FORCE_DISABLED = "accessibility.force_disabled";
 
-exports.shutdownAccessibilityService = function() {
+exports.shutdownAccessibilityService = function () {
   // Set PREF_ACCESSIBILITY_FORCE_DISABLED to 1 to force disable
   // accessibility service. This is the only way to guarantee an immediate
   // accessibility service shutdown in all processes. This also prevents
@@ -21,12 +21,12 @@ exports.shutdownAccessibilityService = function() {
   Services.prefs.clearUserPref(PREF_ACCESSIBILITY_FORCE_DISABLED);
 };
 
-exports.openAccessibilityAndLog = function(label) {
+exports.openAccessibilityAndLog = function (label) {
   return openToolboxAndLog(`${label}.accessibility`, "accessibility");
 };
 
-exports.reloadAccessibilityAndLog = async function(label, toolbox) {
-  const onReload = async function() {
+exports.reloadAccessibilityAndLog = async function (label, toolbox) {
+  const onReload = async function () {
     let accessibility = await toolbox.getPanelWhenReady("accessibility");
     await accessibility.once("reloaded");
   };

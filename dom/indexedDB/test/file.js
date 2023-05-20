@@ -109,7 +109,7 @@ function verifyBlob(blob1, blob2, fileId, blobReadHandler) {
   if (!buffer2) {
     let reader = new FileReader();
     reader.readAsArrayBuffer(blob2);
-    reader.onload = function(event) {
+    reader.onload = function (event) {
       buffer2 = event.target.result;
       bufferCache.push({ blob: blob2, buffer: buffer2 });
       if (buffer1) {
@@ -125,7 +125,7 @@ function verifyBlob(blob1, blob2, fileId, blobReadHandler) {
 
   let reader = new FileReader();
   reader.readAsArrayBuffer(blob1);
-  reader.onload = function(event) {
+  reader.onload = function (event) {
     buffer1 = event.target.result;
     if (buffer2) {
       verifyBuffers(buffer1, buffer2);

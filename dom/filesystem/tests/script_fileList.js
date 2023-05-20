@@ -84,7 +84,7 @@ function createTestFile() {
   return tmpFile;
 }
 
-addMessageListener("dir.open", function(e) {
+addMessageListener("dir.open", function (e) {
   var testFile;
 
   switch (e.path) {
@@ -113,13 +113,13 @@ addMessageListener("dir.open", function(e) {
   });
 });
 
-addMessageListener("file.open", function(e) {
+addMessageListener("file.open", function (e) {
   var testFile = Services.dirsvc
     .QueryInterface(Ci.nsIProperties)
     .get("ProfD", Ci.nsIFile);
   testFile.append("prefs.js");
 
-  File.createFromNsIFile(testFile).then(function(file) {
+  File.createFromNsIFile(testFile).then(function (file) {
     sendAsyncMessage("file.opened", { file });
   });
 });

@@ -115,8 +115,8 @@ async function testPlacesPanel(testInfo) {
   let promise = new Promise(resolve => {
     sidebar.addEventListener(
       "load",
-      function() {
-        executeSoon(async function() {
+      function () {
+        executeSoon(async function () {
           testInfo.prepare();
 
           let tree = sidebar.contentDocument.getElementById(testInfo.treeName);
@@ -136,7 +136,7 @@ async function testPlacesPanel(testInfo) {
 
           await promiseAlert;
 
-          executeSoon(async function() {
+          executeSoon(async function () {
             SidebarUI.hide();
             await testInfo.cleanup();
             resolve();

@@ -28,7 +28,7 @@ function symmetricEquality(expect, a, b) {
       "fileName",
       "fileBaseName",
       "fileExtension",
-    ].map(function(prop) {
+    ].map(function (prop) {
       dump("Testing '" + prop + "'\n");
       Assert.equal(a[prop], b[prop]);
     });
@@ -65,14 +65,8 @@ add_test(function test_setEmptyPath() {
   for (var [provided, target] of pairs) {
     symmetricEquality(false, target, provided);
 
-    provided = provided
-      .mutate()
-      .setPathQueryRef("")
-      .finalize();
-    target = target
-      .mutate()
-      .setPathQueryRef("")
-      .finalize();
+    provided = provided.mutate().setPathQueryRef("").finalize();
+    target = target.mutate().setPathQueryRef("").finalize();
 
     Assert.equal(provided.spec, target.spec);
     symmetricEquality(true, target, provided);
@@ -185,11 +179,7 @@ add_test(function test_setRef() {
   for (var [before, ref, result] of tests) {
     /* Test1: starting with empty ref */
     var a = stringToURL(before);
-    a = a
-      .mutate()
-      .setRef(ref)
-      .finalize()
-      .QueryInterface(Ci.nsIURL);
+    a = a.mutate().setRef(ref).finalize().QueryInterface(Ci.nsIURL);
     var b = stringToURL(result);
 
     Assert.equal(a.spec, b.spec);
@@ -197,33 +187,17 @@ add_test(function test_setRef() {
     symmetricEquality(true, a, b);
 
     /* Test2: starting with non-empty */
-    a = a
-      .mutate()
-      .setRef("yyyy")
-      .finalize()
-      .QueryInterface(Ci.nsIURL);
+    a = a.mutate().setRef("yyyy").finalize().QueryInterface(Ci.nsIURL);
     var c = stringToURL(before);
-    c = c
-      .mutate()
-      .setRef("yyyy")
-      .finalize()
-      .QueryInterface(Ci.nsIURL);
+    c = c.mutate().setRef("yyyy").finalize().QueryInterface(Ci.nsIURL);
     symmetricEquality(true, a, c);
 
     /* Test3: reset the ref */
-    a = a
-      .mutate()
-      .setRef("")
-      .finalize()
-      .QueryInterface(Ci.nsIURL);
+    a = a.mutate().setRef("").finalize().QueryInterface(Ci.nsIURL);
     symmetricEquality(true, a, stringToURL(before));
 
     /* Test4: verify again after reset */
-    a = a
-      .mutate()
-      .setRef(ref)
-      .finalize()
-      .QueryInterface(Ci.nsIURL);
+    a = a.mutate().setRef(ref).finalize().QueryInterface(Ci.nsIURL);
     symmetricEquality(true, a, b);
   }
   run_next_test();
@@ -232,26 +206,17 @@ add_test(function test_setRef() {
 // Bug 960014 - Make nsStandardURL::SetHost less magical around IPv6
 add_test(function test_ipv6() {
   var url = stringToURL("http://example.com");
-  url = url
-    .mutate()
-    .setHost("[2001::1]")
-    .finalize();
+  url = url.mutate().setHost("[2001::1]").finalize();
   Assert.equal(url.host, "2001::1");
 
   url = stringToURL("http://example.com");
-  url = url
-    .mutate()
-    .setHostPort("[2001::1]:30")
-    .finalize();
+  url = url.mutate().setHostPort("[2001::1]:30").finalize();
   Assert.equal(url.host, "2001::1");
   Assert.equal(url.port, 30);
   Assert.equal(url.hostPort, "[2001::1]:30");
 
   url = stringToURL("http://example.com");
-  url = url
-    .mutate()
-    .setHostPort("2001:1")
-    .finalize();
+  url = url.mutate().setHostPort("2001:1").finalize();
   Assert.equal(url.host, "0.0.7.209");
   Assert.equal(url.port, 1);
   Assert.equal(url.hostPort, "0.0.7.209:1");
@@ -263,195 +228,135 @@ add_test(function test_ipv6_fail() {
 
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHost("2001::1")
-        .finalize();
+      url = url.mutate().setHost("2001::1").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "missing brackets"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHost("[2001::1]:20")
-        .finalize();
+      url = url.mutate().setHost("[2001::1]:20").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "url.host with port"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHost("[2001::1")
-        .finalize();
+      url = url.mutate().setHost("[2001::1").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "missing last bracket"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHost("2001::1]")
-        .finalize();
+      url = url.mutate().setHost("2001::1]").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "missing first bracket"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHost("2001[::1]")
-        .finalize();
+      url = url.mutate().setHost("2001[::1]").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "bad bracket position"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHost("[]")
-        .finalize();
+      url = url.mutate().setHost("[]").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "empty IPv6 address"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHost("[hello]")
-        .finalize();
+      url = url.mutate().setHost("[hello]").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "bad IPv6 address"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHost("[192.168.1.1]")
-        .finalize();
+      url = url.mutate().setHost("[192.168.1.1]").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "bad IPv6 address"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHostPort("2001::1")
-        .finalize();
+      url = url.mutate().setHostPort("2001::1").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "missing brackets"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHostPort("[2001::1]30")
-        .finalize();
+      url = url.mutate().setHostPort("[2001::1]30").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "missing : after IP"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHostPort("[2001:1]")
-        .finalize();
+      url = url.mutate().setHostPort("[2001:1]").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "bad IPv6 address"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHostPort("[2001:1]10")
-        .finalize();
+      url = url.mutate().setHostPort("[2001:1]10").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "bad IPv6 address"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHostPort("[2001:1]10:20")
-        .finalize();
+      url = url.mutate().setHostPort("[2001:1]10:20").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "bad IPv6 address"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHostPort("[2001:1]:10:20")
-        .finalize();
+      url = url.mutate().setHostPort("[2001:1]:10:20").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "bad IPv6 address"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHostPort("[2001:1")
-        .finalize();
+      url = url.mutate().setHostPort("[2001:1").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "bad IPv6 address"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHostPort("2001]:1")
-        .finalize();
+      url = url.mutate().setHostPort("2001]:1").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "bad IPv6 address"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHostPort("2001:1]")
-        .finalize();
+      url = url.mutate().setHostPort("2001:1]").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "bad IPv6 address"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setHostPort("")
-        .finalize();
+      url = url.mutate().setHostPort("").finalize();
     },
     /NS_ERROR_UNEXPECTED/,
     "Empty hostPort should fail"
   );
 
   // These checks used to fail, but now don't (see bug 1433958 comment 57)
-  url = url
-    .mutate()
-    .setHostPort("[2001::1]:")
-    .finalize();
+  url = url.mutate().setHostPort("[2001::1]:").finalize();
   Assert.equal(url.spec, "http://[2001::1]/");
-  url = url
-    .mutate()
-    .setHostPort("[2002::1]:bad")
-    .finalize();
+  url = url.mutate().setHostPort("[2002::1]:bad").finalize();
   Assert.equal(url.spec, "http://[2002::1]/");
 
   run_next_test();
@@ -461,20 +366,14 @@ add_test(function test_clearedSpec() {
   var url = stringToURL("http://example.com/path");
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setSpec("http: example")
-        .finalize();
+      url = url.mutate().setSpec("http: example").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "set bad spec"
   );
   Assert.throws(
     () => {
-      url = url
-        .mutate()
-        .setSpec("")
-        .finalize();
+      url = url.mutate().setSpec("").finalize();
     },
     /NS_ERROR_MALFORMED_URI/,
     "set empty spec"
@@ -518,10 +417,7 @@ add_test(function test_escapeQuote() {
   var url = stringToURL("http://example.com/#'");
   Assert.equal(url.spec, "http://example.com/#'");
   Assert.equal(url.ref, "'");
-  url = url
-    .mutate()
-    .setRef("test'test")
-    .finalize();
+  url = url.mutate().setRef("test'test").finalize();
   Assert.equal(url.spec, "http://example.com/#test'test");
   Assert.equal(url.ref, "test'test");
   run_next_test();
@@ -614,20 +510,11 @@ add_test(function test_filterWhitespace() {
 
   // These setters should escape \r\n\t, not filter them.
   url = stringToURL("http://test.com/path?query#hash");
-  url = url
-    .mutate()
-    .setFilePath("pa\r\n\tth")
-    .finalize();
+  url = url.mutate().setFilePath("pa\r\n\tth").finalize();
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
-  url = url
-    .mutate()
-    .setQuery("que\r\n\try")
-    .finalize();
+  url = url.mutate().setQuery("que\r\n\try").finalize();
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
-  url = url
-    .mutate()
-    .setRef("ha\r\n\tsh")
-    .finalize();
+  url = url.mutate().setRef("ha\r\n\tsh").finalize();
   Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
   url = url
     .mutate()
@@ -745,20 +632,11 @@ add_test(function test_encode_C0_and_space() {
 
   // Additionally, we need to check the setters.
   let url = stringToURL("http://example.com/path?query#hash");
-  url = url
-    .mutate()
-    .setFilePath("pa\0th")
-    .finalize();
+  url = url.mutate().setFilePath("pa\0th").finalize();
   Assert.equal(url.spec, "http://example.com/pa%00th?query#hash");
-  url = url
-    .mutate()
-    .setQuery("qu\0ery")
-    .finalize();
+  url = url.mutate().setQuery("qu\0ery").finalize();
   Assert.equal(url.spec, "http://example.com/pa%00th?qu%00ery#hash");
-  url = url
-    .mutate()
-    .setRef("ha\0sh")
-    .finalize();
+  url = url.mutate().setRef("ha\0sh").finalize();
   Assert.equal(url.spec, "http://example.com/pa%00th?qu%00ery#ha%00sh");
   url = url
     .mutate()
@@ -822,10 +700,7 @@ add_test(function test_ipv4Normalize() {
   }
 
   url = stringToURL("resource://path/to/resource/");
-  url = url
-    .mutate()
-    .setHost("123")
-    .finalize();
+  url = url.mutate().setHost("123").finalize();
   Assert.equal(url.host, "123");
 
   run_next_test();
@@ -865,10 +740,7 @@ add_test(function test_invalidHostChars() {
 
 add_test(function test_normalize_ipv6() {
   var url = stringToURL("http://example.com");
-  url = url
-    .mutate()
-    .setHost("[::192.9.5.5]")
-    .finalize();
+  url = url.mutate().setHost("[::192.9.5.5]").finalize();
   Assert.equal(url.spec, "http://[::c009:505]/");
 
   run_next_test();
@@ -877,47 +749,23 @@ add_test(function test_normalize_ipv6() {
 add_test(function test_emptyPassword() {
   var url = stringToURL("http://a:@example.com");
   Assert.equal(url.spec, "http://a@example.com/");
-  url = url
-    .mutate()
-    .setPassword("pp")
-    .finalize();
+  url = url.mutate().setPassword("pp").finalize();
   Assert.equal(url.spec, "http://a:pp@example.com/");
-  url = url
-    .mutate()
-    .setPassword("")
-    .finalize();
+  url = url.mutate().setPassword("").finalize();
   Assert.equal(url.spec, "http://a@example.com/");
-  url = url
-    .mutate()
-    .setUserPass("xxx:")
-    .finalize();
+  url = url.mutate().setUserPass("xxx:").finalize();
   Assert.equal(url.spec, "http://xxx@example.com/");
-  url = url
-    .mutate()
-    .setPassword("zzzz")
-    .finalize();
+  url = url.mutate().setPassword("zzzz").finalize();
   Assert.equal(url.spec, "http://xxx:zzzz@example.com/");
-  url = url
-    .mutate()
-    .setUserPass("xxxxx:yyyyyy")
-    .finalize();
+  url = url.mutate().setUserPass("xxxxx:yyyyyy").finalize();
   Assert.equal(url.spec, "http://xxxxx:yyyyyy@example.com/");
-  url = url
-    .mutate()
-    .setUserPass("z:")
-    .finalize();
+  url = url.mutate().setUserPass("z:").finalize();
   Assert.equal(url.spec, "http://z@example.com/");
-  url = url
-    .mutate()
-    .setPassword("ppppppppppp")
-    .finalize();
+  url = url.mutate().setPassword("ppppppppppp").finalize();
   Assert.equal(url.spec, "http://z:ppppppppppp@example.com/");
 
   url = stringToURL("http://example.com");
-  url = url
-    .mutate()
-    .setPassword("")
-    .finalize(); // Still empty. Should work.
+  url = url.mutate().setPassword("").finalize(); // Still empty. Should work.
   Assert.equal(url.spec, "http://example.com/");
 
   run_next_test();
@@ -932,10 +780,7 @@ add_test(function test_emptyUser() {
   const kurl = stringToURL(
     "http://user:pass@example.com:8888/path/to/something?query#hash"
   );
-  url = kurl
-    .mutate()
-    .setUsername("")
-    .finalize();
+  url = kurl.mutate().setUsername("").finalize();
   Assert.equal(
     url.spec,
     "http://:pass@example.com:8888/path/to/something?query#hash"
@@ -945,10 +790,7 @@ add_test(function test_emptyUser() {
   Assert.equal(url.filePath, "/path/to/something");
   Assert.equal(url.query, "query");
   Assert.equal(url.ref, "hash");
-  url = kurl
-    .mutate()
-    .setUserPass(":pass1")
-    .finalize();
+  url = kurl.mutate().setUserPass(":pass1").finalize();
   Assert.equal(
     url.spec,
     "http://:pass1@example.com:8888/path/to/something?query#hash"
@@ -958,132 +800,81 @@ add_test(function test_emptyUser() {
   Assert.equal(url.filePath, "/path/to/something");
   Assert.equal(url.query, "query");
   Assert.equal(url.ref, "hash");
-  url = url
-    .mutate()
-    .setUsername("user2")
-    .finalize();
+  url = url.mutate().setUsername("user2").finalize();
   Assert.equal(
     url.spec,
     "http://user2:pass1@example.com:8888/path/to/something?query#hash"
   );
   Assert.equal(url.host, "example.com");
-  url = url
-    .mutate()
-    .setUserPass(":pass234")
-    .finalize();
+  url = url.mutate().setUserPass(":pass234").finalize();
   Assert.equal(
     url.spec,
     "http://:pass234@example.com:8888/path/to/something?query#hash"
   );
   Assert.equal(url.host, "example.com");
-  url = url
-    .mutate()
-    .setUserPass("")
-    .finalize();
+  url = url.mutate().setUserPass("").finalize();
   Assert.equal(
     url.spec,
     "http://example.com:8888/path/to/something?query#hash"
   );
   Assert.equal(url.host, "example.com");
-  url = url
-    .mutate()
-    .setPassword("pa")
-    .finalize();
+  url = url.mutate().setPassword("pa").finalize();
   Assert.equal(
     url.spec,
     "http://:pa@example.com:8888/path/to/something?query#hash"
   );
   Assert.equal(url.host, "example.com");
-  url = url
-    .mutate()
-    .setUserPass("user:pass")
-    .finalize();
+  url = url.mutate().setUserPass("user:pass").finalize();
   symmetricEquality(true, url.QueryInterface(Ci.nsIURL), kurl);
 
   url = stringToURL("http://example.com:8888/path/to/something?query#hash");
-  url = url
-    .mutate()
-    .setPassword("pass")
-    .finalize();
+  url = url.mutate().setPassword("pass").finalize();
   Assert.equal(
     url.spec,
     "http://:pass@example.com:8888/path/to/something?query#hash"
   );
-  url = url
-    .mutate()
-    .setUsername("")
-    .finalize();
+  url = url.mutate().setUsername("").finalize();
   Assert.equal(
     url.spec,
     "http://:pass@example.com:8888/path/to/something?query#hash"
   );
 
   url = stringToURL("http://example.com:8888");
-  url = url
-    .mutate()
-    .setUsername("user")
-    .finalize();
-  url = url
-    .mutate()
-    .setUsername("")
-    .finalize();
+  url = url.mutate().setUsername("user").finalize();
+  url = url.mutate().setUsername("").finalize();
   Assert.equal(url.spec, "http://example.com:8888/");
 
   url = stringToURL("http://:pass@example.com");
   Assert.equal(url.spec, "http://:pass@example.com/");
-  url = url
-    .mutate()
-    .setPassword("")
-    .finalize();
+  url = url.mutate().setPassword("").finalize();
   Assert.equal(url.spec, "http://example.com/");
-  url = url
-    .mutate()
-    .setUserPass("user:pass")
-    .finalize();
+  url = url.mutate().setUserPass("user:pass").finalize();
   Assert.equal(url.spec, "http://user:pass@example.com/");
   Assert.equal(url.host, "example.com");
-  url = url
-    .mutate()
-    .setUserPass("u:p")
-    .finalize();
+  url = url.mutate().setUserPass("u:p").finalize();
   Assert.equal(url.spec, "http://u:p@example.com/");
   Assert.equal(url.host, "example.com");
-  url = url
-    .mutate()
-    .setUserPass("u1:p23")
-    .finalize();
+  url = url.mutate().setUserPass("u1:p23").finalize();
   Assert.equal(url.spec, "http://u1:p23@example.com/");
   Assert.equal(url.host, "example.com");
-  url = url
-    .mutate()
-    .setUsername("u")
-    .finalize();
+  url = url.mutate().setUsername("u").finalize();
   Assert.equal(url.spec, "http://u:p23@example.com/");
   Assert.equal(url.host, "example.com");
-  url = url
-    .mutate()
-    .setPassword("p")
-    .finalize();
+  url = url.mutate().setPassword("p").finalize();
   Assert.equal(url.spec, "http://u:p@example.com/");
   Assert.equal(url.host, "example.com");
 
-  url = url
-    .mutate()
-    .setUserPass("u2:p2")
-    .finalize();
+  url = url.mutate().setUserPass("u2:p2").finalize();
   Assert.equal(url.spec, "http://u2:p2@example.com/");
   Assert.equal(url.host, "example.com");
-  url = url
-    .mutate()
-    .setUserPass("u23:p23")
-    .finalize();
+  url = url.mutate().setUserPass("u23:p23").finalize();
   Assert.equal(url.spec, "http://u23:p23@example.com/");
   Assert.equal(url.host, "example.com");
 
   run_next_test();
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gPrefs.clearUserPref("network.standard-url.punycode-host");
 });
 
@@ -1124,10 +915,7 @@ add_test(function test_idna_host() {
     "http://user:password@xn--lt-uia.example.org:8080/path?query#etc"
   );
 
-  url = url
-    .mutate()
-    .setRef("")
-    .finalize(); // SetRef calls InvalidateCache()
+  url = url.mutate().setRef("").finalize(); // SetRef calls InvalidateCache()
   equal(
     url.spec,
     "http://user:password@xn--lt-uia.example.org:8080/path?query"
@@ -1142,10 +930,7 @@ add_test(function test_idna_host() {
   );
 
   url = stringToURL("http://user:password@www.ält.com:8080/path?query#etc");
-  url = url
-    .mutate()
-    .setRef("")
-    .finalize();
+  url = url.mutate().setRef("").finalize();
   equal(url.spec, "http://user:password@www.xn--lt-uia.com:8080/path?query");
 
   run_next_test();
@@ -1196,22 +981,14 @@ add_task(async function test_emptyHostWithURLType() {
 
   let url = makeURL("http://foo.com/bar/", Ci.nsIStandardURL.URLTYPE_AUTHORITY);
   Assert.throws(
-    () =>
-      url
-        .mutate()
-        .setHost("")
-        .finalize().spec,
+    () => url.mutate().setHost("").finalize().spec,
     /NS_ERROR_UNEXPECTED/,
     "Empty host is not allowed for URLTYPE_AUTHORITY"
   );
 
   url = makeURL("http://foo.com/bar/", Ci.nsIStandardURL.URLTYPE_STANDARD);
   Assert.throws(
-    () =>
-      url
-        .mutate()
-        .setHost("")
-        .finalize().spec,
+    () => url.mutate().setHost("").finalize().spec,
     /NS_ERROR_UNEXPECTED/,
     "Empty host is not allowed for URLTYPE_STANDARD"
   );
@@ -1223,27 +1000,17 @@ add_task(async function test_emptyHostWithURLType() {
     "Host is removed when parsing URLTYPE_NO_AUTHORITY"
   );
   equal(
-    url
-      .mutate()
-      .setHost("")
-      .finalize().spec,
+    url.mutate().setHost("").finalize().spec,
     "http:///bar/",
     "Setting an empty host does nothing for URLTYPE_NO_AUTHORITY"
   );
   Assert.throws(
-    () =>
-      url
-        .mutate()
-        .setHost("something")
-        .finalize().spec,
+    () => url.mutate().setHost("something").finalize().spec,
     /NS_ERROR_UNEXPECTED/,
     "Setting a non-empty host is not allowed for URLTYPE_NO_AUTHORITY"
   );
   equal(
-    url
-      .mutate()
-      .setHost("#j")
-      .finalize().spec,
+    url.mutate().setHost("#j").finalize().spec,
     "http:///bar/",
     "Setting a pseudo-empty host does nothing for URLTYPE_NO_AUTHORITY"
   );
@@ -1253,11 +1020,7 @@ add_task(async function test_emptyHostWithURLType() {
     Ci.nsIStandardURL.URLTYPE_AUTHORITY
   );
   Assert.throws(
-    () =>
-      url
-        .mutate()
-        .setHost("#j")
-        .finalize().spec,
+    () => url.mutate().setHost("#j").finalize().spec,
     /NS_ERROR_UNEXPECTED/,
     "A pseudo-empty host is not allowed for URLTYPE_AUTHORITY"
   );
@@ -1278,35 +1041,17 @@ add_task(async function test_fuzz() {
 
   Assert.throws(() => {
     let url = makeURL("/");
-    url
-      .mutate()
-      .setHost("(")
-      .finalize();
+    url.mutate().setHost("(").finalize();
   }, /NS_ERROR_MALFORMED_URI/);
 });
 
 add_task(async function test_bug1648493() {
   let url = stringToURL("https://example.com/");
-  url = url
-    .mutate()
-    .setScheme("file")
-    .finalize();
-  url = url
-    .mutate()
-    .setScheme("resource")
-    .finalize();
-  url = url
-    .mutate()
-    .setPassword("Ãª")
-    .finalize();
-  url = url
-    .mutate()
-    .setUsername("Ã§")
-    .finalize();
-  url = url
-    .mutate()
-    .setScheme("t")
-    .finalize();
+  url = url.mutate().setScheme("file").finalize();
+  url = url.mutate().setScheme("resource").finalize();
+  url = url.mutate().setPassword("Ãª").finalize();
+  url = url.mutate().setUsername("Ã§").finalize();
+  url = url.mutate().setScheme("t").finalize();
   equal(url.spec, "t://%C3%83%C2%A7:%C3%83%C2%AA@example.com/");
   equal(url.username, "%C3%83%C2%A7");
 });

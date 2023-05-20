@@ -95,7 +95,7 @@ var DebuggerSocket = {};
  * @return promise
  *         Resolved to a DebuggerTransport instance.
  */
-DebuggerSocket.connect = async function(settings) {
+DebuggerSocket.connect = async function (settings) {
   // Default to PROMPT |Authenticator| instance if not supplied
   if (!settings.authenticator) {
     settings.authenticator = new (Authenticators.get().Client)();
@@ -139,7 +139,7 @@ function _validateSettings(settings) {
  *         A possible DevTools transport (if connection succeeded and streams
  *         are actually alive and working)
  */
-var _getTransport = async function(settings) {
+var _getTransport = async function (settings) {
   const { host, port, webSocket } = settings;
 
   if (webSocket) {
@@ -178,7 +178,7 @@ var _getTransport = async function(settings) {
  * @return s nsISocketTransport
  *         Underlying socket transport, in case more details are needed.
  */
-var _attemptTransport = async function(settings) {
+var _attemptTransport = async function (settings) {
   const { authenticator } = settings;
   // _attemptConnect only opens the streams.  Any failures at that stage
   // aborts the connection process immedidately.
@@ -233,7 +233,7 @@ var _attemptTransport = async function(settings) {
  * @return output nsIAsyncOutputStream
  *         The socket's output stream.
  */
-var _attemptConnect = async function({ host, port }) {
+var _attemptConnect = async function ({ host, port }) {
   const s = socketTransportService.createTransport([], host, port, null, null);
 
   // Force disabling IPV6 if we aren't explicitely connecting to an IPv6 address
@@ -404,7 +404,7 @@ SocketListener.prototype = {
     }
 
     const self = this;
-    return (async function() {
+    return (async function () {
       const backlog = 4;
       self._socket = self._createSocketInstance();
       if (self.isPortBased) {
@@ -514,7 +514,7 @@ SocketListener.prototype = {
 
   // nsIServerSocketListener implementation
 
-  onSocketAccepted: DevToolsUtils.makeInfallible(function(
+  onSocketAccepted: DevToolsUtils.makeInfallible(function (
     socket,
     socketTransport
   ) {

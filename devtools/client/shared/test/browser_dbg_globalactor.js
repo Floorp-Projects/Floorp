@@ -19,7 +19,7 @@ var {
 
 const ACTORS_URL = EXAMPLE_URL + "testactors.js";
 
-add_task(async function() {
+add_task(async function () {
   DevToolsServer.init();
   DevToolsServer.registerAllActors();
 

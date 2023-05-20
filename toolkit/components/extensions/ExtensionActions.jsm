@@ -597,7 +597,7 @@ class BrowserActionBase extends PanelActionBase {
     // according to https://www.w3.org/TR/WCAG20-TECHS/G18.html#G18-procedure
     let [r, g, b] = values.badgeBackgroundColor
       .slice(0, 3)
-      .map(function(channel) {
+      .map(function (channel) {
         channel /= 255;
         if (channel <= 0.03928) {
           return channel / 12.92;

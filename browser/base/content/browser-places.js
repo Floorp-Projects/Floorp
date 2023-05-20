@@ -257,7 +257,7 @@ var StarUI = {
       }
       target.addEventListener(
         "popupshown",
-        function(event) {
+        function (event) {
           fn();
         },
         { capture: true, once: true }
@@ -983,7 +983,7 @@ var PlacesMenuDNDHandler = {
     this._closeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this._closingTimerNode = event.currentTarget;
     this._closeTimer.initWithCallback(
-      function() {
+      function () {
         this._closeTimer = null;
         this._closingTimerNode = null;
         let node = PlacesControllerDragHelper.currentDropTarget;
@@ -1224,10 +1224,10 @@ var PlacesToolbarHelper = {
       return;
     }
     // Show item's uri in the status bar when hovering, and clear on exit
-    popup.addEventListener("DOMMenuItemActive", function(event) {
+    popup.addEventListener("DOMMenuItemActive", function (event) {
       XULBrowserWindow.setOverLink(event.target.link);
     });
-    popup.addEventListener("DOMMenuItemInactive", function() {
+    popup.addEventListener("DOMMenuItemInactive", function () {
       XULBrowserWindow.setOverLink("");
     });
     let fragment = document.createDocumentFragment();

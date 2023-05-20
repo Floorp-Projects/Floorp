@@ -13,8 +13,8 @@ function test() {
 
       whenDelayedStartupFinished(
         aSubject,
-        function() {
-          executeSoon(function() {
+        function () {
+          executeSoon(function () {
             aSubject.close();
             finish();
           });

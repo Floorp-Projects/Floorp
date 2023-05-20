@@ -7,7 +7,7 @@
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
 
 // Test that extension warnings are displayed in about:debugging.
-add_task(async function() {
+add_task(async function () {
   const EXTENSION_NAME = "Temporary web extension";
   const EXTENSION_ID = "test-devtools@mozilla.org";
 

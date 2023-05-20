@@ -6,7 +6,7 @@ function headMethod() {
 
 ok(true, "I'm a test in head file");
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   ok(true, "I'm a cleanup function in head file");
   is(
     this.headVar,

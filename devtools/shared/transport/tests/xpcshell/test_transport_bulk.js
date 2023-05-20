@@ -10,7 +10,7 @@ var { FileUtils } = ChromeUtils.importESModule(
 function run_test() {
   initTestDevToolsServer();
 
-  add_task(async function() {
+  add_task(async function () {
     await test_bulk_transfer_transport(socket_transport);
     await test_bulk_transfer_transport(local_transport);
     DevToolsServer.destroy();
@@ -24,7 +24,7 @@ function run_test() {
 /**
  * This tests a one-way bulk transfer at the transport layer.
  */
-var test_bulk_transfer_transport = async function(transportFactory) {
+var test_bulk_transfer_transport = async function (transportFactory) {
   info("Starting bulk transfer test at " + new Date().toTimeString());
 
   let clientResolve;
@@ -53,7 +53,7 @@ var test_bulk_transfer_transport = async function(transportFactory) {
         uri: NetUtil.newURI(getTestTempFile("bulk-input")),
         loadUsingSystemPrincipal: true,
       },
-      function(input, status) {
+      function (input, status) {
         copyFrom(input).then(() => {
           input.close();
         });

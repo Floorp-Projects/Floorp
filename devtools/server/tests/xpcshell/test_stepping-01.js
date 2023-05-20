@@ -82,7 +82,7 @@ async function testStep(dbg, func, expectedValue) {
 }
 
 function run_test() {
-  return (async function() {
+  return (async function () {
     const dbg = await setupTestFromUrl("stepping.js");
 
     await testStep(dbg, "arithmetic", { line: 16, column: 8 });

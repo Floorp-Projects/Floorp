@@ -28,7 +28,7 @@ const SW_REL_SW_SCRIPT = "empty.js";
  * tracking protection (but is not yet).  Once the SW is installed, activate TP
  * and create a tab that embeds that tracking-site in an iframe.
  */
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.serviceWorkers.enabled", true],
@@ -50,7 +50,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     topTab.linkedBrowser,
     [{ sw: SW_REL_SW_SCRIPT }],
-    async function({ sw }) {
+    async function ({ sw }) {
       // Waive the xray to use the content utils.js script functions.
       await content.wrappedJSObject.registerAndWaitForActive(sw);
     }
@@ -79,7 +79,7 @@ add_task(async function() {
   let { controlled } = await SpecialPowers.spawn(
     topTab.linkedBrowser,
     [{ url: SW_IFRAME_PAGE }],
-    async function({ url }) {
+    async function ({ url }) {
       const payload = await content.wrappedJSObject.createIframeAndWaitForMessage(
         url
       );
@@ -95,7 +95,7 @@ add_task(async function() {
   BrowserTestUtils.loadURIString(topTab.linkedBrowser, SW_REGISTER_PAGE);
   await browserLoadedPromise;
 
-  await SpecialPowers.spawn(topTab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(topTab.linkedBrowser, [], async function () {
     await content.wrappedJSObject.unregisterAll();
   });
 

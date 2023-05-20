@@ -11,8 +11,8 @@
 
 const code =
   "(" +
-  function(global) {
-    global.foo = function() {
+  function (global) {
+    global.foo = function () {
       Math.abs(-1);
       Math.log(0.5);
       debugger;
@@ -53,13 +53,13 @@ async function set_breakpoints(packet, threadFront) {
 
     source
       .setBreakpoint(firstLocation)
-      .then(function([{ actualLocation }, breakpointClient]) {
+      .then(function ([{ actualLocation }, breakpointClient]) {
         Assert.ok(!actualLocation, "Should not get an actualLocation");
         first = breakpointClient;
 
         source
           .setBreakpoint(secondLocation)
-          .then(function([{ actualLocation }, breakpointClient]) {
+          .then(function ([{ actualLocation }, breakpointClient]) {
             Assert.ok(!actualLocation, "Should not get an actualLocation");
             second = breakpointClient;
 
@@ -79,7 +79,7 @@ function test_different_actors(first, second) {
 
 function test_remove_one(first, second, threadFront, debuggee) {
   return new Promise(resolve => {
-    first.remove(function({ error }) {
+    first.remove(function ({ error }) {
       Assert.ok(!error, "Should not get an error removing a breakpoint");
 
       let hitSecond;

@@ -25,7 +25,7 @@ function handleRequest(request, response) {
   response.processAsync();
   if (request.queryString == "save") {
     // Get the context structure and finish the old request
-    getObjectState("context", function(obj) {
+    getObjectState("context", function (obj) {
       savedCtx = obj.wrappedJSObject;
       request = savedCtx.request;
 

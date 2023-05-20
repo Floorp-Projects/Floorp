@@ -24,11 +24,11 @@ const PropertiesView = createFactory(
   require("resource://devtools/client/netmonitor/src/components/request-details/PropertiesView.js")
 );
 
-loader.lazyGetter(this, "Rep", function() {
+loader.lazyGetter(this, "Rep", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .REPS.Rep;
 });
-loader.lazyGetter(this, "MODE", function() {
+loader.lazyGetter(this, "MODE", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .MODE;
 });

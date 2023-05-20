@@ -13,7 +13,7 @@ Services.scriptloader.loadSubScript(
  * Test that collapsibilities of DebugTargetPane on RuntimePage by mouse clicking.
  */
 
-add_task(async function() {
+add_task(async function () {
   prepareCollapsibilitiesTest();
 
   const { document, tab, window } = await openAboutDebugging();

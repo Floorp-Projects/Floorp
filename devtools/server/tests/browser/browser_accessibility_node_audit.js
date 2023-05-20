@@ -56,7 +56,7 @@ async function checkAudit(a11yWalker, node, expected, options) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   const {
     target,
     walker,

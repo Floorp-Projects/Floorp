@@ -57,10 +57,11 @@ async function testAboutWelcomeLogoFor(logo = {}) {
   let browser = await openAboutWelcome(JSON.stringify(screens));
 
   let expected = [
-    `.brand-logo[src="${logo.imageURL ??
-      "chrome://branding/content/about-logo.svg"}"][alt="${logo.alt ?? ""}"]${
-      logo.height ? `[style*="height"]` : ""
-    }${logo.alt ? "" : `[role="presentation"]`}`,
+    `.brand-logo[src="${
+      logo.imageURL ?? "chrome://branding/content/about-logo.svg"
+    }"][alt="${logo.alt ?? ""}"]${logo.height ? `[style*="height"]` : ""}${
+      logo.alt ? "" : `[role="presentation"]`
+    }`,
   ];
   let unexpected = [];
   if (!logo.height) {
@@ -639,8 +640,9 @@ add_task(async function test_aboutwelcome_start_screen_configured() {
 
   let expectedTelemetry = sinon.match({
     event: "IMPRESSION",
-    message_id: `MR_WELCOME_DEFAULT_${startScreen}_TEST_START_STEP_${startScreen +
-      1}_${screens.map(({ id }) => id?.split("_")[1]?.[0]).join("")}`,
+    message_id: `MR_WELCOME_DEFAULT_${startScreen}_TEST_START_STEP_${
+      startScreen + 1
+    }_${screens.map(({ id }) => id?.split("_")[1]?.[0]).join("")}`,
   });
   if (spy.calledWith(expectedTelemetry)) {
     ok(

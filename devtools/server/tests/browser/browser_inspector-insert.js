@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const { walker } = await initInspectorFront(
     MAIN_DOMAIN + "inspector-traversal-data.html"
   );
@@ -21,7 +21,7 @@ async function testRearrange(walker) {
   // Move nodeA to the end of the list.
   await walker.insertBefore(nodeA, longlist, null);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     ok(
       !content.document.querySelector("#a").nextSibling,
       "a should now be at the end of the list."
@@ -42,7 +42,7 @@ async function testRearrange(walker) {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [[nextNode.actorID]],
-    async function(actorID) {
+    async function (actorID) {
       const { require } = ChromeUtils.importESModule(
         "resource://devtools/shared/loader/Loader.sys.mjs"
       );
@@ -83,7 +83,7 @@ async function testInsertInvalidInput(walker) {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [[longlist.actorID]],
-    async function(actorID) {
+    async function (actorID) {
       const { require } = ChromeUtils.importESModule(
         "resource://devtools/shared/loader/Loader.sys.mjs"
       );
@@ -108,7 +108,7 @@ async function testInsertInvalidInput(walker) {
   let hasMutated = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;
@@ -120,7 +120,7 @@ async function testInsertInvalidInput(walker) {
   hasMutated = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;
@@ -132,7 +132,7 @@ async function testInsertInvalidInput(walker) {
   hasMutated = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;
@@ -144,7 +144,7 @@ async function testInsertInvalidInput(walker) {
   hasMutated = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       const state = content.hasMutated;
       content.hasMutated = false;
       return state;
@@ -152,7 +152,7 @@ async function testInsertInvalidInput(walker) {
   );
   ok(!hasMutated, "hasn't mutated after inserting with null sibling again");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.observer.disconnect();
   });
 }

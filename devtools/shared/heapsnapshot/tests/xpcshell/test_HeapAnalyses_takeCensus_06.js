@@ -15,7 +15,7 @@ const BREAKDOWN = {
   other: { by: "count", count: true, bytes: true },
 };
 
-add_task(async function() {
+add_task(async function () {
   const g = newGlobal();
   const dbg = new Debugger(g);
 

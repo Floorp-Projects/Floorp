@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const URL_IFRAME = buildURLWithContent(
     "example.net",
     `<h1>iframe</h1>` +
@@ -30,7 +30,7 @@ add_task(async function() {
   await waitForStorageData("lorem", "ipsum");
 
   // add more storage data to the main wrapper
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.window.localStorage.setItem("foo2", "bar2");
     const iframe = content.document.querySelector("iframe");
     return SpecialPowers.spawn(iframe, [], () => {

@@ -15,7 +15,7 @@ const SJS_URI = URL_ROOT_SSL + "sjs_imported_stylesheet_edit.sjs";
  * fetching the same URL, which closely matches what a developer would experience
  * when manually editing a stylesheet in an IDE before reloading a page.
  */
-add_task(async function() {
+add_task(async function () {
   info("Call `?setup` on the test sjs");
   await fetch(SJS_URI + "?setup");
 

@@ -25,7 +25,7 @@
  *          - nodes: An array of unique node IDs. Every `from` and `to` id is
  *            guaranteed to be in this array exactly once.
  */
-exports.deduplicatePaths = function(target, paths) {
+exports.deduplicatePaths = function (target, paths) {
   // Use this structure to de-duplicate edges among many retaining paths from
   // start to target.
   //

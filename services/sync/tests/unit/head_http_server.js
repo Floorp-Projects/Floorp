@@ -138,7 +138,7 @@ ServerWBO.prototype = {
   handler() {
     let self = this;
 
-    return function(request, response) {
+    return function (request, response) {
       var statusCode = 200;
       var status = "OK";
       var body;
@@ -503,7 +503,7 @@ ServerCollection.prototype = {
   handler() {
     let self = this;
 
-    return function(request, response) {
+    return function (request, response) {
       var statusCode = 200;
       var status = "OK";
       var body;
@@ -635,7 +635,7 @@ function track_collections_helper() {
    * it's a GET request.
    */
   function with_updated_collection(coll, f) {
-    return function(request, response) {
+    return function (request, response) {
       f.call(this, request, response);
 
       // Update the collection timestamp to the appropriate modified time.
@@ -909,7 +909,7 @@ SyncServer.prototype = {
     let collection = this.getCollection.bind(this, username);
     let createCollection = this.createCollection.bind(this, username);
     let createContents = this.createContents.bind(this, username);
-    let modified = function(collectionName) {
+    let modified = function (collectionName) {
       return collection(collectionName).timestamp;
     };
     let deleteCollections = this.deleteCollections.bind(this, username);

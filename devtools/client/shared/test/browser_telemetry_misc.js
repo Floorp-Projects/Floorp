@@ -7,7 +7,7 @@ const TEST_URI =
   "data:text/html;charset=utf-8,<p>browser_telemetry_misc.js</p>";
 const TOOL_DELAY = 0;
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
 
   startTelemetry();

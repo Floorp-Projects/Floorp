@@ -118,7 +118,7 @@ this.notifications = class extends ExtensionAPI {
           return Promise.resolve(notificationId);
         },
 
-        clear: function(notificationId) {
+        clear: function (notificationId) {
           if (notificationsMap.has(notificationId)) {
             notificationsMap.get(notificationId).clear();
             return Promise.resolve(true);
@@ -126,7 +126,7 @@ this.notifications = class extends ExtensionAPI {
           return Promise.resolve(false);
         },
 
-        getAll: function() {
+        getAll: function () {
           let result = {};
           notificationsMap.forEach((value, key) => {
             result[key] = value.options;

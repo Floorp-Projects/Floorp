@@ -50,7 +50,7 @@ add_task(async function test_observe_uncaught() {
   let names = new Map();
 
   // The results for UncaughtPromiseObserver callbacks.
-  let CallbackResults = function(name) {
+  let CallbackResults = function (name) {
     this.name = name;
     this.expected = new Set();
     this.observed = new Set();
@@ -119,15 +119,15 @@ add_task(async function test_observe_uncaught() {
     },
   };
 
-  let resolveLater = function(delay = 20) {
+  let resolveLater = function (delay = 20) {
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     return new Promise((resolve, reject) => setTimeout(resolve, delay));
   };
-  let rejectLater = function(delay = 20) {
+  let rejectLater = function (delay = 20) {
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     return new Promise((resolve, reject) => setTimeout(reject, delay));
   };
-  let makeSamples = function*() {
+  let makeSamples = function* () {
     yield {
       promise: Promise.resolve(0),
       name: "Promise.resolve",
@@ -277,7 +277,7 @@ add_task(async function test_observe_uncaught() {
 });
 
 add_task(async function test_uninstall_observer() {
-  let Observer = function() {
+  let Observer = function () {
     this.blocker = new Promise(resolve => (this.resolve = resolve));
     this.active = true;
   };

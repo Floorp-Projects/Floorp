@@ -6,7 +6,7 @@ requestLongerTimeout(10);
 
 async function waitForLoad() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       if (content.document.readyState !== "complete") {
         content.document.addEventListener("readystatechange", () => {
           if (content.document.readyState === "complete") {

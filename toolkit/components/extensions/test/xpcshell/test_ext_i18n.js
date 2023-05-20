@@ -163,7 +163,7 @@ add_task(async function test_i18n() {
 
       "content.js":
         "new " +
-        function(runTestsFn) {
+        function (runTestsFn) {
           runTestsFn((...args) => {
             browser.runtime.sendMessage(["assertEq", ...args]);
           });
@@ -175,7 +175,7 @@ add_task(async function test_i18n() {
 
     background:
       "new " +
-      function(runTestsFn) {
+      function (runTestsFn) {
         browser.runtime.onMessage.addListener(([msg, ...args]) => {
           if (msg == "assertEq") {
             browser.test.assertEq(...args);
@@ -233,7 +233,7 @@ add_task(async function test_i18n_negotiation() {
 
       "content.js":
         "new " +
-        function(runTestsFn) {
+        function (runTestsFn) {
           browser.test.onMessage.addListener(expected => {
             runTestsFn(expected);
 
@@ -246,7 +246,7 @@ add_task(async function test_i18n_negotiation() {
 
     background:
       "new " +
-      function(runTestsFn) {
+      function (runTestsFn) {
         browser.test.onMessage.addListener(expected => {
           runTestsFn(expected);
 

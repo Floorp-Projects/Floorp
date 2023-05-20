@@ -24,7 +24,7 @@ const CONTENTS =
   "// Note that this file must be utf-16 with a " +
   "BOM for the test to make sense.\n";
 
-add_task(async function() {
+add_task(async function () {
   const { ui } = await openStyleEditorForURL(DOCUMENT);
 
   is(ui.editors.length, 1, "correct number of editors");

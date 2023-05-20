@@ -1145,7 +1145,7 @@ export class SearchService {
 
   #getEnginesByExtensionID(extensionID) {
     lazy.logConsole.debug("getEngines: getting all engines for", extensionID);
-    var engines = this.#sortedEngines.filter(function(engine) {
+    var engines = this.#sortedEngines.filter(function (engine) {
       return engine._extensionID == extensionID;
     });
     return engines;
@@ -2335,7 +2335,7 @@ export class SearchService {
       }
 
       // Filter out any nulls for engines that may have been removed
-      var filteredEngines = this._cachedSortedEngines.filter(function(a) {
+      var filteredEngines = this._cachedSortedEngines.filter(function (a) {
         return !!a;
       });
       if (this._cachedSortedEngines.length != filteredEngines.length) {

@@ -21,7 +21,7 @@ add_task(
 const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
-const testBlackBox = async function() {
+const testBlackBox = async function () {
   const packet = await executeOnNextTickAndWaitForPause(evalCode, gThreadFront);
 
   const bpSource = await getSourceById(gThreadFront, packet.frame.where.actor);
@@ -128,7 +128,7 @@ function evalCode() {
   );
 }
 
-const runTest = async function(onSteppedLocation, onDebuggerStatementFrames) {
+const runTest = async function (onSteppedLocation, onDebuggerStatementFrames) {
   let packet = await executeOnNextTickAndWaitForPause(
     gDebuggee.runTest,
     gThreadFront
@@ -149,7 +149,7 @@ const runTest = async function(onSteppedLocation, onDebuggerStatementFrames) {
   return resume(gThreadFront);
 };
 
-const getCurrentLocation = async function() {
+const getCurrentLocation = async function () {
   const response = await getFrames(gThreadFront, 0, 1);
   return response.frames[0].where;
 };

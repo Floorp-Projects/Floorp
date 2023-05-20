@@ -40,7 +40,7 @@ function check_cert_err(cert_name, expected_error) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   addCertFromFile(certdb, "test_ocsp_url/ca.pem", "CTu,CTu,CTu");
   addCertFromFile(certdb, "test_ocsp_url/int.pem", ",,");
 

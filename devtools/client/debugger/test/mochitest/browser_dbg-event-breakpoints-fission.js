@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger(
     "doc-event-breakpoints-fission.html",
     "event-breakpoints.js"
@@ -67,7 +67,7 @@ async function invokeAndAssertBreakpoints(dbg) {
 
 async function invokeInTabRemoteFrame(fnc, ...args) {
   info(`Invoking in tab remote frame: ${fnc}(${args.map(uneval).join(",")})`);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [fnc, args], function(
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [fnc, args], function (
     _fnc,
     _args
   ) {

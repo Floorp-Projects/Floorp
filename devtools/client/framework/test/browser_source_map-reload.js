@@ -17,7 +17,7 @@ const testServer = createVersionizedHttpTestServer("reload");
 const PAGE_URL = testServer.urlFor("doc_reload.html");
 const JS_URL = testServer.urlFor("code_bundle_reload.js");
 
-add_task(async function() {
+add_task(async function () {
   // Start with the empty page, then navigate, so that we can properly
   // listen for new sources arriving.
   const toolbox = await openNewTabAndToolbox(INITIAL_URL, "webconsole");

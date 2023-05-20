@@ -61,7 +61,7 @@ add_task(async function test_history_change_during_sync() {
   // Override `uploadOutgoing` to insert a record while we're applying
   // changes. The tracker should ignore this change.
   let uploadOutgoing = engine._uploadOutgoing;
-  engine._uploadOutgoing = async function() {
+  engine._uploadOutgoing = async function () {
     engine._uploadOutgoing = uploadOutgoing;
     try {
       await uploadOutgoing.call(this);
@@ -128,7 +128,7 @@ add_task(async function test_passwords_change_during_sync() {
   let collection = server.user("foo").collection("passwords");
 
   let uploadOutgoing = engine._uploadOutgoing;
-  engine._uploadOutgoing = async function() {
+  engine._uploadOutgoing = async function () {
     engine._uploadOutgoing = uploadOutgoing;
     try {
       await uploadOutgoing.call(this);
@@ -210,7 +210,7 @@ add_task(async function test_prefs_change_during_sync() {
   let collection = server.user("foo").collection("prefs");
 
   let uploadOutgoing = engine._uploadOutgoing;
-  engine._uploadOutgoing = async function() {
+  engine._uploadOutgoing = async function () {
     engine._uploadOutgoing = uploadOutgoing;
     try {
       await uploadOutgoing.call(this);
@@ -288,7 +288,7 @@ add_task(async function test_forms_change_during_sync() {
   let collection = server.user("foo").collection("forms");
 
   let uploadOutgoing = engine._uploadOutgoing;
-  engine._uploadOutgoing = async function() {
+  engine._uploadOutgoing = async function () {
     engine._uploadOutgoing = uploadOutgoing;
     try {
       await uploadOutgoing.call(this);
@@ -384,7 +384,7 @@ add_task(async function test_bookmark_change_during_sync() {
   let bmk3; // New child of Folder 1, created locally during sync.
 
   let uploadOutgoing = engine._uploadOutgoing;
-  engine._uploadOutgoing = async function() {
+  engine._uploadOutgoing = async function () {
     engine._uploadOutgoing = uploadOutgoing;
     try {
       await uploadOutgoing.call(this);

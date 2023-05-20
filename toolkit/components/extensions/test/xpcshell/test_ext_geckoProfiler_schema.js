@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // The startupCache is removed whenever the buildid changes by code that runs
   // during Firefox startup but not during xpcshell startup, remove it by hand
   // before running this test to avoid failures with --conditioned-profile

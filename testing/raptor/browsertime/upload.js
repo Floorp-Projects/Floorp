@@ -35,7 +35,7 @@ async function waitForUpload(timeout, commands, context) {
   };
 }
 
-module.exports = async function(context, commands) {
+module.exports = async function (context, commands) {
   let uploadSiteUrl = "https://uploadtest-381620.uc.r.appspot.com";
   let iterations = `${context.options.browsertime.upload_iterations}`;
 

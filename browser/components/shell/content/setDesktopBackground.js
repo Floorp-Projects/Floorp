@@ -55,12 +55,12 @@ var gSetBackground = {
       }
     }
 
-    document.addEventListener("dialogaccept", function() {
+    document.addEventListener("dialogaccept", function () {
       gSetBackground.setDesktopBackground();
     });
     // make sure that the correct dimensions will be used
     setTimeout(
-      function(self) {
+      function (self) {
         self.init(window.arguments[0], window.arguments[1]);
       },
       0,
@@ -198,7 +198,7 @@ var gSetBackground = {
 };
 
 if (AppConstants.platform != "macosx") {
-  gSetBackground._initColor = function() {
+  gSetBackground._initColor = function () {
     var color = this._shell.desktopBackgroundColor;
 
     const rMask = 4294901760;
@@ -213,13 +213,13 @@ if (AppConstants.platform != "macosx") {
     colorpicker.value = this._backgroundColor;
   };
 
-  gSetBackground.updateColor = function(aColor) {
+  gSetBackground.updateColor = function (aColor) {
     this._backgroundColor = aColor;
     this._canvas.style.backgroundColor = aColor;
   };
 
   // Converts a color string in the format "#RRGGBB" to an integer.
-  gSetBackground._hexStringToLong = function(aString) {
+  gSetBackground._hexStringToLong = function (aString) {
     return (
       (parseInt(aString.substring(1, 3), 16) << 16) |
       (parseInt(aString.substring(3, 5), 16) << 8) |
@@ -227,7 +227,7 @@ if (AppConstants.platform != "macosx") {
     );
   };
 
-  gSetBackground._rgbToHex = function(aR, aG, aB) {
+  gSetBackground._rgbToHex = function (aR, aG, aB) {
     return (
       "#" +
       [aR, aG, aB]
@@ -237,7 +237,7 @@ if (AppConstants.platform != "macosx") {
     );
   };
 } else {
-  gSetBackground.observe = function(aSubject, aTopic, aData) {
+  gSetBackground.observe = function (aSubject, aTopic, aData) {
     if (aTopic == "shell:desktop-background-changed") {
       document.getElementById("setDesktopBackground").hidden = true;
       document.getElementById("showDesktopPreferences").hidden = false;
@@ -246,7 +246,7 @@ if (AppConstants.platform != "macosx") {
     }
   };
 
-  gSetBackground.showDesktopPrefs = function() {
+  gSetBackground.showDesktopPrefs = function () {
     this._shell.QueryInterface(Ci.nsIMacShellService).showDesktopPreferences();
   };
 }

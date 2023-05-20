@@ -444,11 +444,11 @@ var libc = new Library("libc", LIBC_CHOICES, {
 
 let nextNamedPipeId = 0;
 
-win32.Handle = function(handle) {
+win32.Handle = function (handle) {
   return ctypes.CDataFinalizer(win32.HANDLE(handle), libc.CloseHandle);
 };
 
-win32.createPipe = function(secAttr, readFlags = 0, writeFlags = 0, size = 0) {
+win32.createPipe = function (secAttr, readFlags = 0, writeFlags = 0, size = 0) {
   readFlags |= win32.PIPE_ACCESS_INBOUND;
   writeFlags |= Win.FILE_ATTRIBUTE_NORMAL;
 
@@ -495,7 +495,7 @@ win32.createPipe = function(secAttr, readFlags = 0, writeFlags = 0, size = 0) {
   return [win32.Handle(readHandle), win32.Handle(writeHandle)];
 };
 
-win32.createThreadAttributeList = function(handles) {
+win32.createThreadAttributeList = function (handles) {
   try {
     void libc.InitializeProcThreadAttributeList;
     void libc.DeleteProcThreadAttributeList;

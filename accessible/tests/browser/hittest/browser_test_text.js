@@ -21,7 +21,7 @@ a
   </div>
 </button>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const dpr = await getContentDPR(browser);
     // Test getOffsetAtPoint on a container containing no characters. The inner
     // container does not include the requested point, but the outer one does.

@@ -49,7 +49,7 @@ async function get_remote_history(browser) {
   });
 }
 
-var check_history = async function() {
+var check_history = async function () {
   let sessionHistory = await get_remote_history(gBrowser.selectedBrowser);
 
   let count = sessionHistory.entries.length;
@@ -82,7 +82,7 @@ function clear_history() {
 }
 
 // Waits for a load and updates the known history
-var waitForLoad = async function(uriString) {
+var waitForLoad = async function (uriString) {
   info("Loading " + uriString);
   // Longwinded but this ensures we don't just shortcut to LoadInNewProcess
   let loadURIOptions = {
@@ -113,7 +113,7 @@ var waitForLoad = async function(uriString) {
 };
 
 // Waits for a load and updates the known history
-var waitForLoadWithFlags = async function(
+var waitForLoadWithFlags = async function (
   uriString,
   flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE
 ) {
@@ -138,14 +138,14 @@ var waitForLoadWithFlags = async function(
   }
 };
 
-var back = async function() {
+var back = async function () {
   info("Going back");
   gBrowser.goBack();
   await BrowserTestUtils.browserStopped(gBrowser);
   gExpectedHistory.index--;
 };
 
-var forward = async function() {
+var forward = async function () {
   info("Going forward");
   gBrowser.goForward();
   await BrowserTestUtils.browserStopped(gBrowser);

@@ -5,7 +5,7 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserv.identity.primaryPort;
 });
 
@@ -29,10 +29,10 @@ var listener = {
     // works correctly
     request.suspend();
     request.suspend();
-    do_timeout(RESUME_DELAY, function() {
+    do_timeout(RESUME_DELAY, function () {
       request.resume();
     });
-    do_timeout(RESUME_DELAY + 1000, function() {
+    do_timeout(RESUME_DELAY + 1000, function () {
       request.resume();
     });
   },

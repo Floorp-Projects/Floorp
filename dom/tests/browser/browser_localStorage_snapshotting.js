@@ -25,7 +25,7 @@ function clearOrigin() {
 }
 
 async function applyMutations(knownTab, mutations) {
-  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [mutations], function(
+  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [mutations], function (
     mutations
   ) {
     return content.wrappedJSObject.applyMutations(
@@ -38,7 +38,7 @@ async function verifyState(knownTab, expectedState) {
   let actualState = await SpecialPowers.spawn(
     knownTab.tab.linkedBrowser,
     [],
-    function() {
+    function () {
       return content.wrappedJSObject.getState();
     }
   );
@@ -58,7 +58,7 @@ async function getKeys(knownTab) {
   let keys = await SpecialPowers.spawn(
     knownTab.tab.linkedBrowser,
     [],
-    function() {
+    function () {
       return content.wrappedJSObject.getKeys();
     }
   );
@@ -66,19 +66,19 @@ async function getKeys(knownTab) {
 }
 
 async function beginExplicitSnapshot(knownTab) {
-  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [], function () {
     return content.wrappedJSObject.beginExplicitSnapshot();
   });
 }
 
 async function checkpointExplicitSnapshot(knownTab) {
-  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [], function () {
     return content.wrappedJSObject.checkpointExplicitSnapshot();
   });
 }
 
 async function endExplicitSnapshot(knownTab) {
-  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(knownTab.tab.linkedBrowser, [], function () {
     return content.wrappedJSObject.endExplicitSnapshot();
   });
 }
@@ -87,7 +87,7 @@ async function verifyHasSnapshot(knownTab, expectedHasSnapshot) {
   let hasSnapshot = await SpecialPowers.spawn(
     knownTab.tab.linkedBrowser,
     [],
-    function() {
+    function () {
       return content.wrappedJSObject.getHasSnapshot();
     }
   );
@@ -98,7 +98,7 @@ async function verifySnapshotUsage(knownTab, expectedSnapshotUsage) {
   let snapshotUsage = await SpecialPowers.spawn(
     knownTab.tab.linkedBrowser,
     [],
-    function() {
+    function () {
       return content.wrappedJSObject.getSnapshotUsage();
     }
   );
@@ -129,7 +129,7 @@ requestLongerTimeout(4);
 /**
  * Verify snapshotting of our localStorage implementation in multi-e10s setup.
  */
-add_task(async function() {
+add_task(async function () {
   if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
     ok(true, "Test ignored when the next gen local storage is not enabled.");
     return;
@@ -520,7 +520,7 @@ add_task(async function() {
  * snaphots (created at the same time) mutate the item. The first one replases
  * it with something bigger and the other one removes it.
  */
-add_task(async function() {
+add_task(async function () {
   if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
     ok(true, "Test ignored when the next gen local storage is not enabled.");
     return;
@@ -597,7 +597,7 @@ add_task(async function() {
 /**
  * Verify that snapshot usage is correctly updated after each operation.
  */
-add_task(async function() {
+add_task(async function () {
   if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
     ok(true, "Test ignored when the next gen local storage is not enabled.");
     return;
@@ -686,7 +686,7 @@ add_task(async function() {
 /**
  * Verify that datastore in the parent is correctly updated after a checkpoint.
  */
-add_task(async function() {
+add_task(async function () {
   if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
     ok(true, "Test ignored when the next gen local storage is not enabled.");
     return;

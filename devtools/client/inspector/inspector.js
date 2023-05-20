@@ -1645,7 +1645,7 @@ Inspector.prototype = {
     }
 
     const progress = this._updateProgress;
-    const done = function() {
+    const done = function () {
       progress.outstanding.delete(done);
       progress.checkDone();
     };

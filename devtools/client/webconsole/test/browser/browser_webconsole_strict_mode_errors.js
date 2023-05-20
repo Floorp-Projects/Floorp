@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(
     "data:text/html;charset=utf8,<!DOCTYPE html>empty page"
   );

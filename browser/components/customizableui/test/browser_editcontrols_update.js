@@ -89,7 +89,7 @@ add_task(async function test_init() {
   await new Promise(resolve => {
     SimpleTest.waitForClipboard(
       "Sample",
-      function() {
+      function () {
         clipboardHelper.copyString("Sample");
       },
       resolve
@@ -178,7 +178,7 @@ add_task(async function test_panelui_customize_to_toolbar() {
   const kOverflowPanel = document.getElementById("widget-overflow");
 
   let originalWidth = window.outerWidth;
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     kOverflowPanel.removeAttribute("animate");
     window.resizeTo(originalWidth, window.outerHeight);
     await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));

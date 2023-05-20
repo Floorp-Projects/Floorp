@@ -11,8 +11,8 @@ function send(message) {
   self.postMessage(message);
 }
 
-self.onmessage = function(msg) {
-  self.onmessage = function(msgInner) {
+self.onmessage = function (msg) {
+  self.onmessage = function (msgInner) {
     log("ignored message " + JSON.stringify(msgInner.data));
   };
   let { umask } = msg.data;

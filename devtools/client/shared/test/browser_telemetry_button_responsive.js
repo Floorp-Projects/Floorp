@@ -31,7 +31,7 @@ loader.lazyRequireGetter(
   "resource://devtools/client/responsive/manager.js"
 );
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   startTelemetry();
 
@@ -71,7 +71,7 @@ function waitForToggle() {
   });
 }
 
-var delayedClicks = async function(tab, node, clicks) {
+var delayedClicks = async function (tab, node, clicks) {
   for (let i = 0; i < clicks; i++) {
     info("Clicking button " + node.id);
     const toggled = waitForToggle();

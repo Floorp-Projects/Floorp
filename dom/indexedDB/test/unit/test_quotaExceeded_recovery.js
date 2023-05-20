@@ -78,18 +78,18 @@ function* testSteps() {
 
       let trans = db.transaction(objectStoreName, "readwrite");
       request = trans.objectStore(objectStoreName).add(obj);
-      request.onerror = function(event) {
+      request.onerror = function (event) {
         event.stopPropagation();
       };
 
-      trans.oncomplete = function(event) {
+      trans.oncomplete = function (event) {
         if (iter == 1) {
           i++;
         }
         j++;
         testGenerator.next(true);
       };
-      trans.onabort = function(event) {
+      trans.onabort = function (event) {
         is(trans.error.name, "QuotaExceededError", "Reached quota limit");
         testGenerator.next(false);
       };
@@ -120,7 +120,7 @@ function* testSteps() {
         request = trans.objectStore(objectStoreName).clear();
       } else {
         request = trans.objectStore(objectStoreName).openCursor();
-        request.onsuccess = function(event) {
+        request.onsuccess = function (event) {
           let cursor = event.target.result;
           if (cursor) {
             cursor.delete();

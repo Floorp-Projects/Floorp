@@ -754,7 +754,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
       crashDumpFilesToIgnore: this._unexpectedCrashDumpFiles,
     };
     var crashDumpFiles = await this.sendQuery("SPProcessCrashService", message);
-    crashDumpFiles.forEach(function(aFilename) {
+    crashDumpFiles.forEach(function (aFilename) {
       self._unexpectedCrashDumpFiles[aFilename] = true;
     });
     return crashDumpFiles;
@@ -1362,7 +1362,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
     let count = 0;
 
     function genGCCallback(cb) {
-      return function() {
+      return function () {
         Cu.forceCC();
         if (++count < 3) {
           Cu.schedulePreciseGC(genGCCallback(cb));
@@ -1475,7 +1475,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
     ];
     for (var i in props) {
       let prop = props[i];
-      res[prop] = function() {
+      res[prop] = function () {
         return serv[prop].apply(serv, arguments);
       };
     }
@@ -2066,7 +2066,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
       "setInputStream"
     );
 
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       let listener = {
         httpStatus: 0,
 
@@ -2270,7 +2270,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
 }
 
 SpecialPowersChild.prototype._proxiedObservers = {
-  "specialpowers-http-notify-request": function(aMessage) {
+  "specialpowers-http-notify-request": function (aMessage) {
     let uri = aMessage.json.uri;
     Services.obs.notifyObservers(
       null,
@@ -2279,11 +2279,11 @@ SpecialPowersChild.prototype._proxiedObservers = {
     );
   },
 
-  "specialpowers-service-worker-shutdown": function(aMessage) {
+  "specialpowers-service-worker-shutdown": function (aMessage) {
     Services.obs.notifyObservers(null, "specialpowers-service-worker-shutdown");
   },
 
-  "specialpowers-csp-on-violate-policy": function(aMessage) {
+  "specialpowers-csp-on-violate-policy": function (aMessage) {
     let subject = null;
 
     try {
@@ -2302,7 +2302,7 @@ SpecialPowersChild.prototype._proxiedObservers = {
     );
   },
 
-  "specialpowers-xfo-on-violate-policy": function(aMessage) {
+  "specialpowers-xfo-on-violate-policy": function (aMessage) {
     let subject = Services.io.newURI(aMessage.data.subject);
     Services.obs.notifyObservers(
       subject,

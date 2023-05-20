@@ -46,7 +46,7 @@ function clickSearchbarSuggestion(entryName, clickOptions = {}) {
   EventUtils.synthesizeMouseAtCenter(richlistitem, clickOptions);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await gCUITestUtils.addSearchBar();
   const url = getRootDirectory(gTestPath) + "telemetrySearchSuggestions.xml";
   suggestionEngine = await SearchTestUtils.promiseNewSearchEngine({ url });
@@ -81,7 +81,7 @@ add_setup(async function() {
   // Enable event recording for the events tested here.
   Services.telemetry.setEventRecordingEnabled("navigation", true);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.telemetry.setEventRecordingEnabled("navigation", false);
   });

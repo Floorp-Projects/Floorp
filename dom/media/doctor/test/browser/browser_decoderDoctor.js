@@ -29,7 +29,7 @@ async function test_decoder_doctor_notification(
   async function create_tab_and_test(test_cross_origin) {
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: TEST_URL },
-      async function(browser) {
+      async function (browser) {
         let awaitNotificationBar;
         if (notificationMessage) {
           awaitNotificationBar = BrowserTestUtils.waitForNotificationBar(
@@ -43,7 +43,7 @@ async function test_decoder_doctor_notification(
           browser,
           [data, test_cross_origin],
           /* eslint-disable-next-line no-shadow */
-          async function(data, test_cross_origin) {
+          async function (data, test_cross_origin) {
             if (!test_cross_origin) {
               // Notify in the same origin.
               Services.obs.notifyObservers(
@@ -66,7 +66,7 @@ async function test_decoder_doctor_notification(
               content.document.body.appendChild(frame);
             });
 
-            await content.SpecialPowers.spawn(frame, [data], async function(
+            await content.SpecialPowers.spawn(frame, [data], async function (
               /* eslint-disable-next-line no-shadow */
               data
             ) {
@@ -189,7 +189,7 @@ async function test_decoder_doctor_notification(
 }
 
 function tab_checker_for_sumo(expectedPath) {
-  return function(openedTab) {
+  return function (openedTab) {
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     let url = baseURL + expectedPath;
     is(
@@ -201,7 +201,7 @@ function tab_checker_for_sumo(expectedPath) {
 }
 
 function tab_checker_for_webcompat(expectedParams) {
-  return function(openedTab) {
+  return function (openedTab) {
     let urlString = openedTab.linkedBrowser.currentURI.spec;
     let endpoint = Services.prefs.getStringPref(
       "media.decoder-doctor.new-issue-endpoint",

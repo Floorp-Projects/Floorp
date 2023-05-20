@@ -80,7 +80,7 @@ function isFilenameWithSameDate(aSourceName, aTargetName) {
  * @return path string or null.
  */
 function getBackupFileForSameDate(aFilename) {
-  return (async function() {
+  return (async function () {
     let backupFiles = await PlacesBackups.getBackupFiles();
     for (let backupFile of backupFiles) {
       if (isFilenameWithSameDate(PathUtils.filename(backupFile), aFilename)) {

@@ -35,14 +35,14 @@ function Menu({ id = null } = {}) {
  *
  * @param {MenuItem} menuItem
  */
-Menu.prototype.append = function(menuItem) {
+Menu.prototype.append = function (menuItem) {
   this.menuitems.push(menuItem);
 };
 
 /**
  * Remove all items from the Menu
  */
-Menu.prototype.clear = function() {
+Menu.prototype.clear = function () {
   this.menuitems = [];
 };
 
@@ -52,7 +52,7 @@ Menu.prototype.clear = function() {
  * @param {int} pos
  * @param {MenuItem} menuItem
  */
-Menu.prototype.insert = function(pos, menuItem) {
+Menu.prototype.insert = function (pos, menuItem) {
   throw Error("Not implemented");
 };
 
@@ -62,7 +62,7 @@ Menu.prototype.insert = function(pos, menuItem) {
  * @param {Element} target
  *        The element to use as anchor.
  */
-Menu.prototype.popupAtTarget = function(target) {
+Menu.prototype.popupAtTarget = function (target) {
   const rect = target.getBoundingClientRect();
   const doc = target.ownerDocument;
   const defaultView = doc.defaultView;
@@ -78,7 +78,7 @@ Menu.prototype.popupAtTarget = function(target) {
  * @param {Document} doc
  *        The document that should own the context menu.
  */
-Menu.prototype.hide = function(doc) {
+Menu.prototype.hide = function (doc) {
   const win = doc.defaultView;
   doc = DevToolsUtils.getTopWindow(win).document;
   const popup = doc.querySelector('popupset menupopup[menu-api="true"]');
@@ -100,7 +100,7 @@ Menu.prototype.hide = function(doc) {
  * @param {Document} doc
  *        The document that should own the context menu.
  */
-Menu.prototype.popup = function(screenX, screenY, doc) {
+Menu.prototype.popup = function (screenX, screenY, doc) {
   // See bug 1285229, on Windows, opening the same popup multiple times in a
   // row ends up duplicating the popup. The newly inserted popup doesn't
   // dismiss the old one. So remove any previously displayed popup before
@@ -160,7 +160,7 @@ Menu.prototype.popup = function(screenX, screenY, doc) {
   popup.openPopupAtScreen(screenX, screenY, true);
 };
 
-Menu.prototype._createMenuItems = function(parent) {
+Menu.prototype._createMenuItems = function (parent) {
   const doc = parent.ownerDocument;
   this.menuitems.forEach(item => {
     if (!item.visible) {
@@ -196,7 +196,7 @@ Menu.prototype._createMenuItems = function(parent) {
   });
 };
 
-Menu.getMenuElementById = function(id, doc) {
+Menu.getMenuElementById = function (id, doc) {
   const menuDoc = DevToolsUtils.getTopWindow(doc.defaultView).document;
   return menuDoc.getElementById(id);
 };

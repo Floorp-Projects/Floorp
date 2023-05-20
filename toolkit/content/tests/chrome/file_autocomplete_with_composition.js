@@ -3,13 +3,13 @@
 
 function waitForCondition(condition, nextTest) {
   var tries = 0;
-  var interval = setInterval(function() {
+  var interval = setInterval(function () {
     if (condition() || tries >= 30) {
       moveOn();
     }
     tries++;
   }, 100);
-  var moveOn = function() {
+  var moveOn = function () {
     clearInterval(interval);
     nextTest();
   };

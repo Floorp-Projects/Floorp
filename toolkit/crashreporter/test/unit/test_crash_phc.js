@@ -25,10 +25,10 @@ add_task(async function run_test() {
   }
 
   await do_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_PHC_USE_AFTER_FREE;
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       // CRASH_PHC_USE_AFTER_FREE uses 32 for the size.
       check(extra, "FreedPage", 32, /* hasFreeStack */ true);
     },
@@ -36,10 +36,10 @@ add_task(async function run_test() {
   );
 
   await do_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_PHC_DOUBLE_FREE;
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       // CRASH_PHC_DOUBLE_FREE uses 64 for the size.
       check(extra, "FreedPage", 64, /* hasFreeStack */ true);
     },
@@ -47,10 +47,10 @@ add_task(async function run_test() {
   );
 
   do_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_PHC_BOUNDS_VIOLATION;
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       // CRASH_PHC_BOUNDS_VIOLATION uses 96 for the size.
       check(extra, "GuardPage", 96, /* hasFreeStack */ false);
     },

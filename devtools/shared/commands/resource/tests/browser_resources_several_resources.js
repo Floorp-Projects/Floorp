@@ -7,7 +7,7 @@
  * Check that the resource command is still properly watching for new targets
  * after unwatching one resource, if there is still another watched resource.
  */
-add_task(async function() {
+add_task(async function () {
   // We will create a main process target list here in order to monitor
   // resources from new tabs as they get created.
   await pushPref("devtools.browsertoolbox.scope", "everything");
@@ -108,7 +108,7 @@ add_task(async function() {
 });
 
 function logInTab(tab, message) {
-  return ContentTask.spawn(tab.linkedBrowser, message, function(_message) {
+  return ContentTask.spawn(tab.linkedBrowser, message, function (_message) {
     content.console.log(_message);
   });
 }

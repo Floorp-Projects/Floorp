@@ -125,7 +125,7 @@ function makeSourceURL(filename) {
 function createMakeSource() {
   const indicies = {};
 
-  return function(name, props = {}) {
+  return function (name, props = {}) {
     const index = (indicies[name] | 0) + 1;
     indicies[name] = index;
 
@@ -230,7 +230,7 @@ function waitForState(store, predicate) {
 
 function watchForState(store, predicate) {
   let sawState = false;
-  const checkState = function() {
+  const checkState = function () {
     if (!sawState && predicate(store.getState())) {
       sawState = true;
     }

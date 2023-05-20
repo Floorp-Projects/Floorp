@@ -16,7 +16,7 @@
   Services.els.addSystemEventListener(
     document,
     "popupshowing",
-    function(e) {
+    function (e) {
       if (e.target.nodeName == "menupopup") {
         let haveCheckableChild = e.target.querySelector(
           ":scope > menuitem:not([hidden]):is([type=checkbox],[type=radio])"

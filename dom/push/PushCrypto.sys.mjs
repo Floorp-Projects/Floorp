@@ -239,7 +239,7 @@ function hmac(key) {
   ]);
 }
 
-hmac.prototype.hash = function(input) {
+hmac.prototype.hash = function (input) {
   return this.keyPromise.then(k => crypto.subtle.sign("HMAC", k, input));
 };
 
@@ -247,7 +247,7 @@ function hkdf(salt, ikm) {
   this.prkhPromise = new hmac(salt).hash(ikm).then(prk => new hmac(prk));
 }
 
-hkdf.prototype.extract = function(info, len) {
+hkdf.prototype.extract = function (info, len) {
   var input = concatArray([info, new Uint8Array([1])]);
   return this.prkhPromise
     .then(prkh => prkh.hash(input))
@@ -808,7 +808,7 @@ class aes128gcmEncoder {
       // overhead.
       let inChunks = chunkArray(this.plaintext, this.rs - 1 - 16);
       chunks = await Promise.all(
-        inChunks.map(async function(slice, index) {
+        inChunks.map(async function (slice, index) {
           let isLast = index == inChunks.length - 1;
           let padding = new Uint8Array([isLast ? 2 : 1]);
           let input = concatArray([slice, padding]);

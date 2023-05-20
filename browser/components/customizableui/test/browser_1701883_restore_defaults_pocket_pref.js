@@ -5,7 +5,7 @@
 "use strict";
 
 // Turning off Pocket pref should still be considered default state.
-add_task(async function() {
+add_task(async function () {
   ok(CustomizableUI.inDefaultState, "Default state to begin");
 
   Assert.ok(

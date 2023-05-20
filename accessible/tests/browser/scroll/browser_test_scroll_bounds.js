@@ -58,7 +58,7 @@ addAccessibleTask(
   <div id='rect' style='height:40px; width:200px; background:blue; margin-bottom:3400px'>
   </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     ok(docAcc, "iframe document acc is present");
     await testBoundsWithContent(docAcc, "square", browser);
     await testBoundsWithContent(docAcc, "rect", browser);
@@ -101,7 +101,7 @@ addAccessibleTask(
   <div id='rect' style='height:40px; width:200px; background:blue; margin-bottom:3400px'>
   </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     ok(docAcc, "iframe document acc is present");
     await untilCacheOk(
       () => testCachedScrollPosition(docAcc, 0, 0),
@@ -161,7 +161,7 @@ addAccessibleTask(
     </div>
   </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const origTopBounds = await testBoundsWithContent(docAcc, "top", browser);
     const origDBounds = await testBoundsWithContent(docAcc, "d", browser);
     const e = waitForEvent(EVENT_REORDER, docAcc);
@@ -330,7 +330,7 @@ addAccessibleTask(
 <hr style="height: 200vh;">
 <p>bottom</p>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const fixed = findAccessibleChildByID(docAcc, "fixed");
     ok(fixed, "fixed is accessible");
     isnot(fixed.role, ROLE_TABLE, "fixed doesn't have ROLE_TABLE");
@@ -389,7 +389,7 @@ addAccessibleTask(
     <button id="top">top</button>
   </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const containerBounds = await testBoundsWithContent(docAcc, "d", browser);
     const e = waitForEvent(EVENT_REORDER, docAcc);
     await invokeContentTask(browser, [], () => {
@@ -551,7 +551,7 @@ addAccessibleTask(
   <p id="mutateEnd">mutateEnd</p>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     ok(findAccessibleChildByID(docAcc, "sticky"), "sticky is accessible");
     info("Scrolling to sticky");
     await invokeContentTask(browser, [], () => {
@@ -619,7 +619,7 @@ addAccessibleTask(
   <div id='square' style='height:100px; width: 100px; background:green;'>hello world
   </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const square = findAccessibleChildByID(docAcc, "square");
     await untilCacheOk(
       () => testCachedScrollPosition(square, 0, 0, true),

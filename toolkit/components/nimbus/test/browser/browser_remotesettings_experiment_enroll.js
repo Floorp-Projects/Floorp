@@ -18,7 +18,7 @@ const { ExperimentFakes } = ChromeUtils.importESModule(
 
 let rsClient;
 
-add_setup(async function() {
+add_setup(async function () {
   rsClient = RemoteSettings("nimbus-desktop-experiments");
   await rsClient.db.importChanges({}, Date.now(), [], { clear: true });
 

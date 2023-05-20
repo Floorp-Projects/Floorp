@@ -88,7 +88,7 @@ async function test_restore_text_data_subframes(aURL) {
   );
 
   // Query a few values from the top and its child frames.
-  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function () {
     // Bug 588077
     // XXX(farre): disabling this, because it started passing more heavily on Windows.
     /*

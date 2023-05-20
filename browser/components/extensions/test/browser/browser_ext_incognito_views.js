@@ -30,7 +30,7 @@ add_task(async function testIncognitoViews() {
       },
     },
 
-    background: async function() {
+    background: async function () {
       window.isBackgroundPage = true;
       const { headless, debug } = JSON.parse(
         browser.runtime.getManifest().description
@@ -188,7 +188,7 @@ add_task(async function testIncognitoViews() {
       "popup.html":
         '<html><head><meta charset="utf-8"><script src="popup.js"></script></head></html>',
 
-      "popup.js": async function() {
+      "popup.js": async function () {
         let views = browser.extension.getViews();
 
         if (browser.extension.inIncognitoContext) {

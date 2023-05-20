@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.input.context", true);
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.every-frame-target.enabled", true);

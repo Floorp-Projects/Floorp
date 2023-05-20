@@ -240,7 +240,7 @@ add_task(async function test_removePartialSites() {
 });
 
 // Test searching and then removing only visible sites
-add_task(async function() {
+add_task(async function () {
   let hosts = await addTestData([
     {
       usage: 1024,
@@ -307,7 +307,7 @@ add_task(async function() {
 });
 
 // Test dynamically clearing all site data
-add_task(async function() {
+add_task(async function () {
   let hosts = await addTestData([
     {
       usage: 1024,
@@ -364,7 +364,7 @@ add_task(async function() {
 });
 
 // Tests clearing search box content via backspace does not delete site data
-add_task(async function() {
+add_task(async function () {
   let hosts = await addTestData([
     {
       usage: 1024,
@@ -419,7 +419,7 @@ add_task(async function() {
 });
 
 // Tests remove site data via backspace
-add_task(async function() {
+add_task(async function () {
   let hosts = await addTestData([
     {
       usage: 1024,

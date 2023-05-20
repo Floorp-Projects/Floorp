@@ -72,7 +72,7 @@ async function breakpointScopes(
   ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
 }
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-sourcemapped.html");
   dbg.actions.toggleMapScopes();
 

@@ -18,7 +18,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   waitForExplicitFinish();
   await pushPref("devtools.chrome.enabled", false);
 

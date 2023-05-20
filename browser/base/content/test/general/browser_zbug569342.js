@@ -28,7 +28,7 @@ add_task(async function findBarDisabledOnSomePages() {
 });
 
 function testFindDisabled(url) {
-  return BrowserTestUtils.withNewTab(url, async function(browser) {
+  return BrowserTestUtils.withNewTab(url, async function (browser) {
     let waitForFindBar = async () => {
       await new Promise(r => requestAnimationFrame(r));
       await new Promise(r => Services.tm.dispatchToMainThread(r));
@@ -57,7 +57,7 @@ function testFindDisabled(url) {
 }
 
 async function testFindEnabled(url) {
-  return BrowserTestUtils.withNewTab(url, async function(browser) {
+  return BrowserTestUtils.withNewTab(url, async function (browser) {
     ok(
       !document.getElementById("cmd_find").getAttribute("disabled"),
       "Find command should not be disabled"

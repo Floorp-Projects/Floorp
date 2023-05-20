@@ -6,7 +6,7 @@
 // Test for the following data of abandonment telemetry.
 // - interaction
 
-add_setup(async function() {
+add_setup(async function () {
   await initInteractionTest();
 });
 

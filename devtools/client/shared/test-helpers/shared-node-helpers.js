@@ -70,7 +70,7 @@ function setMocksInGlobal() {
     lazyServiceGetter: () => {},
   };
 
-  global.define = function() {};
+  global.define = function () {};
 
   // Used for the HTMLTooltip component.
   // And set "isSystemPrincipal: false" because can't support XUL element in node.
@@ -78,16 +78,16 @@ function setMocksInGlobal() {
     isSystemPrincipal: false,
   };
 
-  global.requestIdleCallback = function() {};
+  global.requestIdleCallback = function () {};
 
-  global.requestAnimationFrame = function(cb) {
+  global.requestAnimationFrame = function (cb) {
     cb();
     return null;
   };
 
   // Mock getSelection
   let selection;
-  global.getSelection = function() {
+  global.getSelection = function () {
     return {
       toString: () => selection,
       get type() {
@@ -108,7 +108,7 @@ function setMocksInGlobal() {
   // Array#flatMap is only supported in Node 11+
   if (!Array.prototype.flatMap) {
     // eslint-disable-next-line no-extend-native
-    Array.prototype.flatMap = function(cb) {
+    Array.prototype.flatMap = function (cb) {
       return this.reduce((acc, x, i, arr) => {
         return acc.concat(cb(x, i, arr));
       }, []);

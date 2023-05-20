@@ -25,9 +25,9 @@
 /* globals exportFunction */
 
 Object.defineProperty(window.wrappedJSObject, "ajaxRequestProcessing", {
-  get: exportFunction(function() {
+  get: exportFunction(function () {
     return false;
   }, window),
 
-  set: exportFunction(function() {}, window),
+  set: exportFunction(function () {}, window),
 });

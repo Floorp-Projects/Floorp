@@ -9,7 +9,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
   <p>Web Console test for navigation marker filtering.</p>
   <script>console.log("hello " + "world");</script>`;
 
-add_task(async function() {
+add_task(async function () {
   // Enable persist log
   await pushPref("devtools.webconsole.persistlog", true);
 

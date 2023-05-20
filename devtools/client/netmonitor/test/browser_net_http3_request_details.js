@@ -7,7 +7,7 @@
  * Tests request details with HTTP/3
  */
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(HTTPS_SIMPLE_SJS, {
     requestCount: 1,
   });

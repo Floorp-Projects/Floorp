@@ -4,7 +4,7 @@
 // Test that the browser starts even when PATH would expand to a detrimentally
 // long value.
 add_task(async function test() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function (
     browser
   ) {
     ok(

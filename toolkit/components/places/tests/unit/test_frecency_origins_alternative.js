@@ -30,7 +30,7 @@ async function getAllOrigins() {
   }));
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesTestUtils.addVisits([
     "https://testdomain1.moz.org",
     "https://testdomain2.moz.org",

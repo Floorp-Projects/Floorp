@@ -1,6 +1,6 @@
 /* eslint-env worker */
 
-onmessage = function() {
+onmessage = function () {
   try {
     importScripts("evilWorker.js");
   } catch (ex) {

@@ -22,7 +22,7 @@ const TEST_URI2 = `
   </div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI1));
 
   startTelemetry();

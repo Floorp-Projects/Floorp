@@ -583,7 +583,7 @@ function do_check_addons(aActualAddons, aExpectedAddons, aProperties) {
 function do_check_addon(aActualAddon, aExpectedAddon, aProperties) {
   Assert.notEqual(aActualAddon, null);
 
-  aProperties.forEach(function(aProperty) {
+  aProperties.forEach(function (aProperty) {
     let actualValue = aActualAddon[aProperty];
     let expectedValue = aExpectedAddon[aProperty];
 
@@ -1187,9 +1187,7 @@ async function mockGfxBlocklistItems(items) {
       return item;
     }
     return {
-      id: generateUUID()
-        .toString()
-        .replace(/[{}]/g, ""),
+      id: generateUUID().toString().replace(/[{}]/g, ""),
       last_modified: Date.now(),
       ...item,
     };

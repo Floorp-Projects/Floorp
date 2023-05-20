@@ -9,7 +9,7 @@
 const TEST_URL =
   "http://example.com/browser/devtools/client/webconsole/test/browser/test-network-request.html";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.filter.netxhr", true);
 
   const toolbox = await openNewTabAndToolbox(TEST_URL, "webconsole");

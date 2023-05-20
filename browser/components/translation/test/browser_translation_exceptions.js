@@ -19,13 +19,13 @@ function test() {
   Services.prefs.setBoolPref(kEnableTranslationPref, true);
   let tab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = tab;
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gBrowser.removeTab(tab);
     Services.prefs.clearUserPref(kShowUIPref);
     Services.prefs.clearUserPref(kEnableTranslationPref);
   });
   BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
-    (async function() {
+    (async function () {
       for (let testCase of gTests) {
         info(testCase.desc);
         await testCase.run();
@@ -65,7 +65,7 @@ function openPopup(aPopup) {
   return new Promise(resolve => {
     aPopup.addEventListener(
       "popupshown",
-      function() {
+      function () {
         TestUtils.executeSoon(resolve);
       },
       { once: true }
@@ -83,7 +83,7 @@ function waitForWindowLoad(aWin) {
   return new Promise(resolve => {
     aWin.addEventListener(
       "load",
-      function() {
+      function () {
         TestUtils.executeSoon(resolve);
       },
       { capture: true, once: true }

@@ -49,7 +49,7 @@ add_task(async function test_memory_distribution() {
   );
 
   let finishedGathering = new Promise(resolve => {
-    let obs = function() {
+    let obs = function () {
       Services.obs.removeObserver(obs, "gather-memory-telemetry-finished");
       resolve();
     };

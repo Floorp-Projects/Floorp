@@ -1,4 +1,4 @@
-onmessage = function(e) {
+onmessage = function (e) {
   let xhr = new XMLHttpRequest();
   let already_sent = false;
   xhr.addEventListener("readystatechange", event => {

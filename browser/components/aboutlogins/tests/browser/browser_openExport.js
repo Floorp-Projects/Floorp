@@ -17,7 +17,7 @@ let { TelemetryTestUtils } = ChromeUtils.importESModule(
 
 let { MockFilePicker } = SpecialPowers;
 
-add_setup(async function() {
+add_setup(async function () {
   await TestUtils.waitForCondition(() => {
     Services.telemetry.clearEvents();
     let events = Services.telemetry.snapshotEvents(
@@ -49,7 +49,7 @@ function waitForFilePicker() {
 add_task(async function test_open_export() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:logins" },
-    async function(browser) {
+    async function (browser) {
       await BrowserTestUtils.synthesizeMouseAtCenter(
         "menu-button",
         {},

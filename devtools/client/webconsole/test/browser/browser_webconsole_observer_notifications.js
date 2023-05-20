@@ -10,7 +10,7 @@ const TEST_URI =
 let created = false;
 let destroyed = false;
 
-add_task(async function() {
+add_task(async function () {
   setupObserver();
   await openNewTabAndConsole(TEST_URI);
   await waitFor(() => created);

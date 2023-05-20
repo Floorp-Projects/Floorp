@@ -20,7 +20,7 @@ function checkQuotedFolder() {
   toolbar.containerOpen = false;
 }
 
-add_task(async function() {
+add_task(async function () {
   // make json file
   let jsonFile = PathUtils.join(PathUtils.profileDir, "bookmarks.json");
 

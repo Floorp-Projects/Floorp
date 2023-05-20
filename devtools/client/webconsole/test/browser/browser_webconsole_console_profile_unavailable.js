@@ -14,7 +14,7 @@ add_task(async function consoleProfileWarningWithNewPerfPanel() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Use console.profile in the content page");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.profile();
   });
 

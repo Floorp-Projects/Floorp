@@ -7,7 +7,7 @@
 const URL_1 = URL_ROOT_SSL + "doc_markup_update-on-navigtion_1.html";
 const URL_2 = URL_ROOT_SSL + "doc_markup_update-on-navigtion_2.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(URL_1);
 
   assertMarkupViewIsLoaded();

@@ -27,7 +27,7 @@ function openSelectPopup(x, y, win) {
   return popupShownPromise;
 }
 
-add_task(async function() {
+add_task(async function () {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_TRANSLATED);
 
   const newWin = await BrowserTestUtils.openNewBrowserWindow({ fission: true });
@@ -54,7 +54,7 @@ add_task(async function() {
     iframeBorderTop,
     iframeX,
     iframeY,
-  ] = await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  ] = await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await SpecialPowers.contentTransformsReceived(content);
     const iframe = content.document.querySelector("iframe");
     const rect = iframe.getBoundingClientRect();
@@ -64,7 +64,7 @@ add_task(async function() {
     return [parseInt(cs.borderLeftWidth), parseInt(cs.borderTopWidth), x, y];
   });
 
-  const selectRect = await SpecialPowers.spawn(iframeBC, [], async function() {
+  const selectRect = await SpecialPowers.spawn(iframeBC, [], async function () {
     await SpecialPowers.contentTransformsReceived(content);
     const input = content.document.getElementById("select");
     const focusPromise = new Promise(resolve => {

@@ -54,8 +54,8 @@ function postMessageToWorkerInTab(tab, url, message) {
     (urlChild, messageChild) => {
       let worker = content._workers[urlChild];
       worker.postMessage(messageChild);
-      return new Promise(function(resolve) {
-        worker.onmessage = function(event) {
+      return new Promise(function (resolve) {
+        worker.onmessage = function (event) {
           worker.onmessage = null;
           resolve(event.data);
         };

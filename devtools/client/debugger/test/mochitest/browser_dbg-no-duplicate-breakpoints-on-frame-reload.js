@@ -7,7 +7,7 @@
 // issue in Bug 1728587
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // With fission and EFT disabled all the sources are going to be under the Main Thread
   // and this sceanrio becomes irrelevant
   if (!isFissionEnabled() && !isEveryFrameTargetEnabled()) {
@@ -45,7 +45,7 @@ add_task(async function() {
   const iframeBrowsingContext = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       const iframe = content.document.querySelector("iframe");
       return iframe.browsingContext;
     }

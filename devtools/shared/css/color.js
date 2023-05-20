@@ -272,9 +272,7 @@ CssColor.prototype = {
       ((1 << 24) + (tuple.r << 16) + (tuple.g << 8) + (tuple.b << 0))
         .toString(16)
         .substr(-6) +
-      Math.round(tuple.a)
-        .toString(16)
-        .padStart(2, "0")
+      Math.round(tuple.a).toString(16).padStart(2, "0")
     );
   },
 

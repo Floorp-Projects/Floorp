@@ -6,13 +6,13 @@
 
 var initialPageZoom = ZoomManager.zoom;
 
-add_task(async function() {
+add_task(async function () {
   info("Check zoom reset button existence and functionality");
   is(initialPageZoom, 1, "Page zoom reset correctly");
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "http://example.com", waitForLoad: true },
-    async function(browser) {
+    async function (browser) {
       CustomizableUI.addWidgetToArea(
         "zoom-controls",
         CustomizableUI.AREA_FIXED_OVERFLOW_PANEL

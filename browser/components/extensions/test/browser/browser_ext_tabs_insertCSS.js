@@ -272,7 +272,7 @@ add_task(async function test_csscode_cleanup_on_closed_windows() {
       // destroyed and any removeSheet error already collected (if it has been
       // raised during the content scripts cleanup).
       await browser.tabs.executeScript({
-        code: `(${function() {
+        code: `(${function () {
           const { maxWidth, minWidth } = window.getComputedStyle(document.body);
           browser.test.sendMessage("body-styles", { maxWidth, minWidth });
           browser.runtime.connect();

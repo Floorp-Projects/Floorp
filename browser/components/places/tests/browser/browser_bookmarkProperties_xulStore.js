@@ -2,18 +2,18 @@
  * https://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let mainFolder = await PlacesUtils.bookmarks.insert({
     title: "mainFolder",
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
   });
 
-  await withSidebarTree("bookmarks", async function(tree) {
+  await withSidebarTree("bookmarks", async function (tree) {
     await PlacesUtils.bookmarks.insertTree({
       guid: mainFolder.guid,
       children: [

@@ -9,10 +9,10 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/widget/tests/browser/file_ime_state_test_helper.js",
   this
 );
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
-    async function(browser) {
+    async function (browser) {
       const tipWrapper = new TIPWrapper(window);
       ok(
         tipWrapper.isAvailable(),

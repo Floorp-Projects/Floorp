@@ -48,7 +48,7 @@ function makeChan() {
 
 var handlers = [
   // Test 1
-  function(metadata, response) {
+  function (metadata, response) {
     Assert.equal(metadata.hasHeader("Authorization"), false);
     response.setStatusLine(metadata.httpVersion, 200, "OK");
     response.setHeader("ETag", '"one"', false);
@@ -59,14 +59,14 @@ var handlers = [
   },
 
   // Test 2
-  function(metadata, response) {
+  function (metadata, response) {
     Assert.equal(metadata.hasHeader("Authorization"), false);
     Assert.equal(metadata.getHeader("If-None-Match"), '"one"');
     response.setStatusLine(metadata.httpVersion, 401, "Authenticate");
     response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
     addCreds("http", "localhost");
   },
-  function(metadata, response) {
+  function (metadata, response) {
     Assert.equal(metadata.hasHeader("Authorization"), true);
     response.setStatusLine(metadata.httpVersion, 200, "OK");
     response.setHeader("ETag", '"two"', false);
@@ -78,14 +78,14 @@ var handlers = [
   },
 
   // Test 3
-  function(metadata, response) {
+  function (metadata, response) {
     Assert.equal(metadata.hasHeader("Authorization"), false);
     Assert.equal(metadata.getHeader("If-None-Match"), '"two"');
     response.setStatusLine(metadata.httpVersion, 401, "Authenticate");
     response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
     addCreds("http", "localhost");
   },
-  function(metadata, response) {
+  function (metadata, response) {
     Assert.equal(metadata.hasHeader("Authorization"), true);
     Assert.equal(metadata.getHeader("If-None-Match"), '"two"');
     response.setStatusLine(metadata.httpVersion, 304, "OK");
@@ -94,14 +94,14 @@ var handlers = [
   },
 
   // Test 4
-  function(metadata, response) {
+  function (metadata, response) {
     Assert.equal(metadata.hasHeader("Authorization"), false);
     Assert.equal(metadata.getHeader("If-None-Match"), '"two"');
     response.setStatusLine(metadata.httpVersion, 407, "Proxy Authenticate");
     response.setHeader("Proxy-Authenticate", 'Basic realm="secret"', false);
     addCreds("http", "localhost");
   },
-  function(metadata, response) {
+  function (metadata, response) {
     Assert.equal(metadata.hasHeader("Proxy-Authorization"), true);
     Assert.equal(metadata.getHeader("If-None-Match"), '"two"');
     response.setStatusLine(metadata.httpVersion, 200, "OK");
@@ -114,14 +114,14 @@ var handlers = [
   },
 
   // Test 5
-  function(metadata, response) {
+  function (metadata, response) {
     Assert.equal(metadata.hasHeader("Proxy-Authorization"), false);
     Assert.equal(metadata.getHeader("If-None-Match"), '"three"');
     response.setStatusLine(metadata.httpVersion, 407, "Proxy Authenticate");
     response.setHeader("Proxy-Authenticate", 'Basic realm="secret"', false);
     addCreds("http", "localhost");
   },
-  function(metadata, response) {
+  function (metadata, response) {
     Assert.equal(metadata.hasHeader("Proxy-Authorization"), true);
     Assert.equal(metadata.getHeader("If-None-Match"), '"three"');
     response.setStatusLine(metadata.httpVersion, 304, "OK");
@@ -138,18 +138,18 @@ function handler(metadata, response) {
 // Array of tests to run, self-driven
 
 function sync_and_run_next_test() {
-  syncWithCacheIOThread(function() {
+  syncWithCacheIOThread(function () {
     tests.shift()();
   });
 }
 
 var tests = [
   // Test 1: 200 (cacheable)
-  function() {
+  function () {
     var ch = makeChan();
     ch.asyncOpen(
       new ChannelListener(
-        function(req, body) {
+        function (req, body) {
           Assert.equal(body, "Response body 1");
           sync_and_run_next_test();
         },
@@ -160,11 +160,11 @@ var tests = [
   },
 
   // Test 2: 401 and 200 + new content
-  function() {
+  function () {
     var ch = makeChan();
     ch.asyncOpen(
       new ChannelListener(
-        function(req, body) {
+        function (req, body) {
           Assert.equal(body, "Response body 2");
           sync_and_run_next_test();
         },
@@ -175,11 +175,11 @@ var tests = [
   },
 
   // Test 3: 401 and 304
-  function() {
+  function () {
     var ch = makeChan();
     ch.asyncOpen(
       new ChannelListener(
-        function(req, body) {
+        function (req, body) {
           Assert.equal(body, "Response body 2");
           sync_and_run_next_test();
         },
@@ -190,11 +190,11 @@ var tests = [
   },
 
   // Test 4: 407 and 200 + new content
-  function() {
+  function () {
     var ch = makeChan();
     ch.asyncOpen(
       new ChannelListener(
-        function(req, body) {
+        function (req, body) {
           Assert.equal(body, "Response body 3");
           sync_and_run_next_test();
         },
@@ -205,11 +205,11 @@ var tests = [
   },
 
   // Test 5: 407 and 304
-  function() {
+  function () {
     var ch = makeChan();
     ch.asyncOpen(
       new ChannelListener(
-        function(req, body) {
+        function (req, body) {
           Assert.equal(body, "Response body 3");
           sync_and_run_next_test();
         },
@@ -220,7 +220,7 @@ var tests = [
   },
 
   // End of test run
-  function() {
+  function () {
     httpserv.stop(do_test_finished);
   },
 ];

@@ -16,7 +16,7 @@ async function testSteps() {
 
     info("Sorting elements");
 
-    result.sort(function(a, b) {
+    result.sort(function (a, b) {
       if (a < b) {
         return -1;
       }

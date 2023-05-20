@@ -381,7 +381,7 @@ export var History = Object.freeze({
       throw new TypeError("Invalid function: " + onResult);
     }
 
-    return (async function() {
+    return (async function () {
       let removedPages = false;
       let count = 0;
       while (guids.length || urls.length) {
@@ -839,8 +839,8 @@ function convertForUpdatePlaces(pageInfo) {
 }
 
 // Inner implementation of History.clear().
-var clear = async function(db) {
-  await db.executeTransaction(async function() {
+var clear = async function (db) {
+  await db.executeTransaction(async function () {
     // Remove all non-bookmarked places entries first, this will speed up the
     // triggers work.
     await db.execute(`DELETE FROM moz_places WHERE foreign_count = 0`);
@@ -893,7 +893,7 @@ var clear = async function(db) {
  *              be kept and its frecency updated.
  * @return (Promise)
  */
-var cleanupPages = async function(db, pages) {
+var cleanupPages = async function (db, pages) {
   let pagesToRemove = pages.filter(p => !p.hasForeign && !p.hasVisits);
   if (!pagesToRemove.length) {
     return;
@@ -985,7 +985,7 @@ function removeOrphanIcons(db) {
  *      certain type have been removed, otherwise defaults to 0 (unknown value).
  * @return (Promise)
  */
-var notifyCleanup = async function(db, pages, transitionType = 0) {
+var notifyCleanup = async function (db, pages, transitionType = 0) {
   const notifications = [];
 
   for (let page of pages) {
@@ -1015,7 +1015,7 @@ var notifyCleanup = async function(db, pages, transitionType = 0) {
  *      If provided, call `onResult` with `data[0]`, `data[1]`, etc.
  *      Otherwise, do nothing.
  */
-var notifyOnResult = async function(data, onResult) {
+var notifyOnResult = async function (data, onResult) {
   if (!onResult) {
     return;
   }
@@ -1036,7 +1036,7 @@ var notifyOnResult = async function(data, onResult) {
 };
 
 // Inner implementation of History.fetch.
-var fetch = async function(db, guidOrURL, options) {
+var fetch = async function (db, guidOrURL, options) {
   let whereClauseFragment = "";
   let params = {};
   if (URL.isInstance(guidOrURL)) {
@@ -1122,7 +1122,7 @@ var fetch = async function(db, guidOrURL, options) {
 };
 
 // Inner implementation of History.fetchAnnotatedPages.
-var fetchAnnotatedPages = async function(db, annotations) {
+var fetchAnnotatedPages = async function (db, annotations) {
   let result = new Map();
   let rows = await db.execute(
     `
@@ -1160,7 +1160,7 @@ var fetchAnnotatedPages = async function(db, annotations) {
 };
 
 // Inner implementation of History.fetchMany.
-var fetchMany = async function(db, guidOrURLs) {
+var fetchMany = async function (db, guidOrURLs) {
   let resultsMap = new Map();
   for (let chunk of lazy.PlacesUtils.chunkArray(guidOrURLs, db.variableLimit)) {
     let urls = [];
@@ -1218,7 +1218,7 @@ var fetchMany = async function(db, guidOrURLs) {
 };
 
 // Inner implementation of History.removeVisitsByFilter.
-var removeVisitsByFilter = async function(db, filter, onResult = null) {
+var removeVisitsByFilter = async function (db, filter, onResult = null) {
   // 1. Determine visits that took place during the interval.  Note
   // that the database uses microseconds, while JS uses milliseconds,
   // so we need to *1000 one way and /1000 the other way.
@@ -1287,7 +1287,7 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
   }
 
   let pages = [];
-  await db.executeTransaction(async function() {
+  await db.executeTransaction(async function () {
     // 2. Remove all offending visits.
     for (let chunk of lazy.PlacesUtils.chunkArray(
       visitsToRemove,
@@ -1337,7 +1337,7 @@ var removeVisitsByFilter = async function(db, filter, onResult = null) {
 };
 
 // Inner implementation of History.removeByFilter
-var removeByFilter = async function(db, filter, onResult = null) {
+var removeByFilter = async function (db, filter, onResult = null) {
   // 1. Create fragment for date filtration
   let dateFilterSQLFragment = "";
   let conditions = [];
@@ -1363,10 +1363,7 @@ var removeByFilter = async function(db, filter, onResult = null) {
   if (filter.host) {
     // There are four cases that we need to consider:
     // mozilla.org, .mozilla.org, localhost, and local files
-    let revHost = filter.host
-      .split("")
-      .reverse()
-      .join("");
+    let revHost = filter.host.split("").reverse().join("");
     if (filter.host == ".") {
       // Local files.
       hostFilterSQLFragment = `h.rev_host = :revHost`;
@@ -1422,7 +1419,7 @@ var removeByFilter = async function(db, filter, onResult = null) {
     return false;
   }
 
-  await db.executeTransaction(async function() {
+  await db.executeTransaction(async function () {
     // 4. Actually remove visits
     let pageIds = pages.map(p => p.id);
     for (let chunk of lazy.PlacesUtils.chunkArray(pageIds, db.variableLimit)) {
@@ -1443,7 +1440,7 @@ var removeByFilter = async function(db, filter, onResult = null) {
 };
 
 // Inner implementation of History.remove.
-var remove = async function(db, { guids, urls }, onResult = null) {
+var remove = async function (db, { guids, urls }, onResult = null) {
   // 1. Find out what needs to be removed
   let onResultData = onResult ? [] : null;
   let pages = [];
@@ -1503,7 +1500,7 @@ var remove = async function(db, { guids, urls }, onResult = null) {
     return false;
   }
 
-  await db.executeTransaction(async function() {
+  await db.executeTransaction(async function () {
     // 2. Remove all visits to these pages.
     let pageIds = pages.map(p => p.id);
     for (let chunk of lazy.PlacesUtils.chunkArray(pageIds, db.variableLimit)) {
@@ -1557,7 +1554,7 @@ function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo = {}) {
 }
 
 // Inner implementation of History.insert.
-var insert = function(db, pageInfo) {
+var insert = function (db, pageInfo) {
   let info = convertForUpdatePlaces(pageInfo);
 
   return new Promise((resolve, reject) => {
@@ -1576,7 +1573,7 @@ var insert = function(db, pageInfo) {
 };
 
 // Inner implementation of History.insertMany.
-var insertMany = function(db, pageInfos, onResult, onError) {
+var insertMany = function (db, pageInfos, onResult, onError) {
   let infos = [];
   let onResultData = [];
   let onErrorData = [];
@@ -1612,7 +1609,7 @@ var insertMany = function(db, pageInfos, onResult, onError) {
 };
 
 // Inner implementation of History.update.
-var update = async function(db, pageInfo) {
+var update = async function (db, pageInfo) {
   // Check for page existence first; we can skip most of the work if it doesn't
   // exist and anyway we'll need the place id multiple times later.
   // Prefer GUID over url if it's present.
@@ -1674,7 +1671,7 @@ var update = async function(db, pageInfo) {
       anno[1] ? annosToUpdate.push(anno[0]) : annosToRemove.push(anno[0]);
     }
 
-    await db.executeTransaction(async function() {
+    await db.executeTransaction(async function () {
       if (annosToUpdate.length) {
         await db.execute(
           `

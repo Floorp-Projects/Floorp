@@ -32,7 +32,7 @@ const TEST_URI = `
   <h1>Hello @layer!</h1>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await addTab(
     "https://example.com/document-builder.sjs?html=" +
       encodeURIComponent(TEST_URI)

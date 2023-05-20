@@ -17,7 +17,7 @@ const PAGE_URL = `${URL_ROOT_SSL}doc_empty-tab-01.html`;
 const JS_URL = `${URL_ROOT_SSL}code_binary_search_absolute.js`;
 const ORIGINAL_URL = `${URL_ROOT_SSL}code_binary_search.coffee`;
 
-add_task(async function() {
+add_task(async function () {
   const toolbox = await openNewTabAndToolbox(PAGE_URL, "jsdebugger");
   const service = toolbox.sourceMapURLService;
 

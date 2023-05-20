@@ -1309,7 +1309,7 @@ Sync11Service.prototype = {
     this._log.info(
       `Starting sync at ${dateStr} in browser session ${lazy.browserSessionID}`
     );
-    return this._catch(async function() {
+    return this._catch(async function () {
       // Make sure we're logged in.
       if (this._shouldLogin()) {
         this._log.debug("In sync: should login.");

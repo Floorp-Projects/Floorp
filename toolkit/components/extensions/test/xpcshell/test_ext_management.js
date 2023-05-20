@@ -296,7 +296,7 @@ add_task(
       },
       files: {
         "extpage.html": `<!DOCTYPE html><script src="extpage.js"></script>`,
-        "extpage.js": function() {
+        "extpage.js": function () {
           browser.management.onInstalled.addListener(() => {});
         },
       },

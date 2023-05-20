@@ -90,12 +90,7 @@ class SearchUtils {
     function matchPrefix(engine, engineHost) {
       let parts = engineHost.split(".");
       for (let i = 1; i < parts.length - 1; ++i) {
-        if (
-          parts
-            .slice(i)
-            .join(".")
-            .startsWith(prefix)
-        ) {
+        if (parts.slice(i).join(".").startsWith(prefix)) {
           partialMatchEngines.push(engine);
         }
       }

@@ -75,7 +75,7 @@ let iconDiscoveryTests = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   let url = ROOTURI + "discovery.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 

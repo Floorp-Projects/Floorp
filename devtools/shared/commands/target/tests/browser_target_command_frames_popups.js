@@ -10,7 +10,7 @@ const POPUP_URL = "https://example.com/document-builder.sjs?html=popup";
 const POPUP_SECOND_URL =
   "https://example.com/document-builder.sjs?html=popup-navigated";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.popups.debug", true);
   // We expect to create a target for a same-process iframe
   // in the test against window.open to load a document in an iframe.

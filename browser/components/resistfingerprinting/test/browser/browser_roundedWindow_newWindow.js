@@ -8,7 +8,7 @@ const CC = Components.Constructor;
 let gMaxAvailWidth;
 let gMaxAvailHeight;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting", true]],
   });
@@ -33,7 +33,7 @@ add_task(async function test_new_window() {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ gMaxAvailWidth, gMaxAvailHeight }],
-    async function(input) {
+    async function (input) {
       is(
         content.screen.width,
         input.gMaxAvailWidth,

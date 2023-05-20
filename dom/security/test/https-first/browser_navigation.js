@@ -5,7 +5,7 @@ const REQUEST_URL =
 
 async function promiseGetHistoryIndex(browser) {
   if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-    return SpecialPowers.spawn(browser, [], function() {
+    return SpecialPowers.spawn(browser, [], function () {
       let shistory =
         docShell.browsingContext.childSessionHistory.legacySHistory;
       return shistory.index;
@@ -74,7 +74,7 @@ async function testNavigations() {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   waitForExplicitFinish();
 
   await SpecialPowers.pushPrefEnv({

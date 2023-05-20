@@ -473,7 +473,7 @@
         // On Windows and Mac we can update the drag image during a drag
         // using updateDragImage. On Linux, we can use a panel.
         if (platform == "win" || platform == "macosx") {
-          captureListener = function() {
+          captureListener = function () {
             dt.updateDragImage(canvas, dragImageOffset, dragImageOffset);
           };
         } else {
@@ -633,9 +633,7 @@
         let newIndex = this._getDropIndex(event);
         let children = this.allTabs;
         if (newIndex == children.length) {
-          let tabRect = this._getVisibleTabs()
-            .at(-1)
-            .getBoundingClientRect();
+          let tabRect = this._getVisibleTabs().at(-1).getBoundingClientRect();
           if (RTL_UI) {
             newMargin = rect.right - tabRect.left;
           } else {
@@ -1909,7 +1907,7 @@
             if (!this._animateElement.hasAttribute("highlight")) {
               this._animateElement.setAttribute("highlight", "true");
               setTimeout(
-                function(ele) {
+                function (ele) {
                   ele.removeAttribute("highlight");
                 },
                 150,

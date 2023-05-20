@@ -36,7 +36,7 @@ function isVisitDateOK(timestampMS) {
 
 // a set up function to prep the activity stream provider
 function setUpActivityStreamTest() {
-  return (async function() {
+  return (async function () {
     await PlacesUtils.history.clear();
     await PlacesUtils.bookmarks.eraseEverything();
     let faviconExpiredPromise = new Promise(resolve => {

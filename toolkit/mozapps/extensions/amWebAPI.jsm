@@ -138,7 +138,7 @@ class APIObject {
     let win = this.window;
     let broker = this.broker;
     return new win.Promise((resolve, reject) => {
-      (async function() {
+      (async function () {
         let result = await broker.sendRequest(apiRequest, ...apiArgs);
         if ("reject" in result) {
           let err = new win.Error(result.reject.message);

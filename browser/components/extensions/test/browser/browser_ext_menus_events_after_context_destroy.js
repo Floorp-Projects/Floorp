@@ -17,7 +17,7 @@ add_task(async function test_subscribed_events_fired_after_context_destroy() {
         <meta charset="utf-8"><script src="page.js"></script>
         Extension Page
       `,
-      "page.js": async function() {
+      "page.js": async function () {
         browser.menus.onShown.addListener(() => {
           browser.test.sendMessage("menu-onShown");
         });

@@ -6,7 +6,7 @@
 
 const TEST_COM_URI = `${URL_ROOT_COM_SSL}examples/doc_dbg-fission-frame-sources.html`;
 
-add_task(async function() {
+add_task(async function () {
   // Simply load a test page with a remote frame and wait for both sources to
   // be visible.
   // simple1.js is imported by the main page. simple2.js comes from the frame.

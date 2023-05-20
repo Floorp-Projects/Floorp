@@ -3,9 +3,9 @@ function ok(v, msg) {
 }
 
 var client;
-onmessage = function(e) {
+onmessage = function (e) {
   if (e.data.message == "start") {
-    self.clients.matchAll().then(function(clients) {
+    self.clients.matchAll().then(function (clients) {
       client = clients[0];
       try {
         close();

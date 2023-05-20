@@ -38,7 +38,7 @@ const {
  * - includeResponseBodies {Boolean}: Set to true to include HTTP response
  *   bodies in the result data structure.
  */
-var HarBuilder = function(options) {
+var HarBuilder = function (options) {
   this._options = options;
   this._pageMap = [];
 };

@@ -45,8 +45,9 @@ function initDB(conn, now) {
   conn.executeSimpleSQL(
     `INSERT INTO moz_cookies(baseDomain, host, name, value, path, expiry, lastAccessed, creationTime, isSecure, isHttpOnly) 
     VALUES ('foo.com', '.foo.com', 'foo', 'bar=baz', '/',
-    ${now + ONE_DAY}, ${now + LAST_ACCESSED_DIFF} , ${now +
-      CREATION_DIFF} , 1, 1)`
+    ${now + ONE_DAY}, ${now + LAST_ACCESSED_DIFF} , ${
+      now + CREATION_DIFF
+    } , 1, 1)`
   );
 }
 

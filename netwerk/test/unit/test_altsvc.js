@@ -154,7 +154,7 @@ var expectPass = true;
 var waitFor = 0;
 var originAttributes = {};
 
-var Listener = function() {};
+var Listener = function () {};
 Listener.prototype = {
   onStartRequest: function testOnStartRequest(request) {
     Assert.ok(request instanceof Ci.nsIHttpChannel);

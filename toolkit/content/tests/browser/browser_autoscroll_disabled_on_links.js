@@ -68,7 +68,7 @@ add_task(async function test_autoscroll_links() {
   async function testMarkup(markup) {
     return BrowserTestUtils.withNewTab(
       "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
-      async function(browser) {
+      async function (browser) {
         await SpecialPowers.spawn(browser, [markup], html => {
           // eslint-disable-next-line no-unsanitized/property
           content.document.body.innerHTML = html;

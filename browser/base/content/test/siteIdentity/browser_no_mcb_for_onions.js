@@ -19,7 +19,7 @@ const PREF_BLOCK_ACTIVE = "security.mixed_content.block_active_content";
 const PREF_ONION_ALLOWLIST = "dom.securecontext.allowlist_onions";
 
 add_task(async function allowOnionMixedContent() {
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gBrowser.removeCurrentTab();
   });
 

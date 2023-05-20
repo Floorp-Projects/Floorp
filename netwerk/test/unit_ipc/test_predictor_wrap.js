@@ -32,10 +32,10 @@ function run_test() {
   load(test_path);
   do_load_child_test_harness();
   do_test_pending();
-  sendCommand('load("' + test_path + '");', function() {
+  sendCommand('load("' + test_path + '");', function () {
     sendCommand(
       'predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);',
-      function() {
+      function () {
         run_test_real();
         do_test_finished();
       }

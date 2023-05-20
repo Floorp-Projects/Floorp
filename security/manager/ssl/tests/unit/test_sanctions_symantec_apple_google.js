@@ -20,7 +20,7 @@ addCertFromFile(certDB, "test_sanctions/symantec-test-ca.pem", "CTu,u,u");
 // Add the necessary intermediates. This is important because the test server,
 // though it will attempt to send along an intermediate, isn't able to reliably
 // pick between the intermediate-other-crossigned and intermediate-other.
-add_test(function() {
+add_test(function () {
   addCertFromFile(
     certDB,
     "test_sanctions/symantec-intermediate-allowlisted.pem",
@@ -50,7 +50,7 @@ add_connection_test(
 
 // Add a cross-signed intermediate into the database, and ensure we still get
 // the expected error.
-add_test(function() {
+add_test(function () {
   addCertFromFile(
     certDB,
     "test_sanctions/symantec-intermediate-other-crossigned.pem",
@@ -68,7 +68,7 @@ add_connection_test(
 
 // Load the Apple EE cert and its intermediate, then verify
 // it at a reasonable time and make sure the allowlists work
-add_task(async function() {
+add_task(async function () {
   addCertFromFile(
     certDB,
     "test_sanctions/apple-ist-ca-8-g1-intermediate.pem",

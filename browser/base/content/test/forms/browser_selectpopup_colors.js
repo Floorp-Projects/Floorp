@@ -163,7 +163,7 @@ const gSelects = {
     "  select { transition: all .2s linear; }" +
     "  select:focus { color: purple; }" +
     "</style></head><body><select id='one'>" +
-    (function() {
+    (function () {
       let rv = "";
       for (let i = 0; i < 75; i++) {
         rv +=
@@ -295,7 +295,7 @@ function testOptionColors(test, index, item, menulist) {
 }
 
 function computeLabels(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     function _rgbaToString(parsedColor) {
       let { r, g, b, a } = parsedColor;
       if (a == 1) {
@@ -460,14 +460,14 @@ async function testSelectColors(selectID, itemCount, options) {
 // System colors may be different in content pages and chrome pages.
 let kDefaultSelectStyles = {};
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.forms.select.customstyling", true]],
   });
   kDefaultSelectStyles = await BrowserTestUtils.withNewTab(
     `data:text/html,<select>`,
-    function(browser) {
-      return SpecialPowers.spawn(browser, [], function() {
+    function (browser) {
+      return SpecialPowers.spawn(browser, [], function () {
         let cs = content.getComputedStyle(
           content.document.querySelector("select")
         );

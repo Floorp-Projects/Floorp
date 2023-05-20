@@ -165,7 +165,7 @@ function onloadPromiseFor(id) {
   return new Promise(resolve => {
     iframe.addEventListener(
       "load",
-      function(e) {
+      function (e) {
         resolve(true);
       },
       { once: true }

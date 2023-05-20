@@ -30,7 +30,7 @@ let VULNERABLE_TEST_LOGIN2 = new nsLoginInfo(
   "password"
 );
 
-add_setup(async function() {
+add_setup(async function () {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   VULNERABLE_TEST_LOGIN2 = await addLogin(VULNERABLE_TEST_LOGIN2);
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
@@ -55,7 +55,7 @@ add_setup(async function() {
 });
 
 add_task(async function test_telemetry_events() {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginList = content.document.querySelector("login-list");
     let loginListItem = loginList.shadowRoot.querySelector(
       ".login-list-item.breached"
@@ -64,7 +64,7 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(2);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(
       ".copy-username-button"
@@ -75,7 +75,7 @@ add_task(async function test_telemetry_events() {
 
   if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
     let reauthObserved = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
       let loginItem = content.document.querySelector("login-item");
       let copyButton = loginItem.shadowRoot.querySelector(
         ".copy-password-button"
@@ -96,7 +96,7 @@ add_task(async function test_telemetry_events() {
     gBrowser,
     TEST_LOGIN3.origin + "/"
   );
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let originInput = loginItem.shadowRoot.querySelector(".origin-input");
     originInput.click();
@@ -112,7 +112,7 @@ add_task(async function test_telemetry_events() {
       loginResult: true,
     });
     nextTelemetryEventCount++; // An extra event is observed for the reauth event.
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
       let loginItem = content.document.querySelector("login-item");
       let revealCheckbox = loginItem.shadowRoot.querySelector(
         ".reveal-password-checkbox"
@@ -123,7 +123,7 @@ add_task(async function test_telemetry_events() {
     await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 
     // Hide the password
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
       let loginItem = content.document.querySelector("login-item");
       let revealCheckbox = loginItem.shadowRoot.querySelector(
         ".reveal-password-checkbox"
@@ -135,14 +135,14 @@ add_task(async function test_telemetry_events() {
     // Don't force the auth timeout here to check that `auth_skipped: true` is set as
     // in `extra`.
     nextTelemetryEventCount++; // An extra event is observed for the reauth event.
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
       let loginItem = content.document.querySelector("login-item");
       let editButton = loginItem.shadowRoot.querySelector(".edit-button");
       editButton.click();
     });
     await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
       let loginItem = content.document.querySelector("login-item");
       let usernameField = loginItem.shadowRoot.querySelector(
         'input[name="username"]'
@@ -157,7 +157,7 @@ add_task(async function test_telemetry_events() {
     await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
   }
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
     deleteButton.click();
@@ -171,7 +171,7 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let newLoginButton = content.document
       .querySelector("login-list")
       .shadowRoot.querySelector(".create-login-button");
@@ -179,14 +179,14 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
     cancelButton.click();
   });
   await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginList = content.document.querySelector("login-list");
     let loginListItem = loginList.shadowRoot.querySelector(
       ".login-list-item.vulnerable"
@@ -195,7 +195,7 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let copyButton = loginItem.shadowRoot.querySelector(
       ".copy-username-button"
@@ -204,7 +204,7 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginItem = content.document.querySelector("login-item");
     let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
     deleteButton.click();
@@ -218,7 +218,7 @@ add_task(async function test_telemetry_events() {
   });
   await LoginTestUtils.telemetry.waitForEventCount(nextTelemetryEventCount++);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginSort = content.document
       .querySelector("login-list")
       .shadowRoot.querySelector("#login-sort");
@@ -230,7 +230,7 @@ add_task(async function test_telemetry_events() {
     Services.prefs.clearUserPref("signon.management.page.sort");
   });
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     const loginList = content.document.querySelector("login-list");
     const loginFilter = loginList.shadowRoot.querySelector("login-filter");
     const input = loginFilter.shadowRoot.querySelector("input");

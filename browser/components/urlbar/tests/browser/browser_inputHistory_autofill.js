@@ -7,7 +7,7 @@
 
 let addToInputHistorySpy;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.autoFill.adaptiveHistory.enabled", true]],
   });

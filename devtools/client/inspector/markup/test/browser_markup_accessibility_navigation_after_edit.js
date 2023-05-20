@@ -102,7 +102,7 @@ const TESTS = [
 
 let elms = {};
 
-add_task(async function() {
+add_task(async function () {
   const url = `data:text/html;charset=utf-8,${TEST_URI}`;
   const { inspector } = await openInspectorForURL(url);
 

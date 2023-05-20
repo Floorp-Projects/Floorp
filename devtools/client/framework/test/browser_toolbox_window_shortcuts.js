@@ -15,7 +15,7 @@ var toolbox,
   modifiedPrefs = [];
 
 async function test() {
-  addTab("about:blank").then(async function() {
+  addTab("about:blank").then(async function () {
     toolIDs = [];
     for (const [id, definition] of gDevTools._tools) {
       const shortcut = Startup.KeyShortcuts.filter(s => s.toolId == id)[0];
@@ -92,7 +92,7 @@ function selectCB(id) {
 }
 
 function tidyUp() {
-  toolbox.destroy().then(function() {
+  toolbox.destroy().then(function () {
     gBrowser.removeCurrentTab();
 
     for (const pref of modifiedPrefs) {

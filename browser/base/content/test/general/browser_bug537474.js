@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     false,

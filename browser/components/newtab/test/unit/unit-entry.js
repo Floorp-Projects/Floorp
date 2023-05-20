@@ -16,7 +16,7 @@ enzyme.configure({ adapter: new Adapter() });
 
 // Cause React warnings to make tests that trigger them fail
 const origConsoleError = console.error;
-console.error = function(msg, ...args) {
+console.error = function (msg, ...args) {
   origConsoleError.apply(console, [msg, ...args]);
 
   if (
@@ -173,22 +173,22 @@ const TEST_GLOBAL = {
     Constructor(classId) {
       switch (classId) {
         case "@mozilla.org/referrer-info;1":
-          return function(referrerPolicy, sendReferrer, originalReferrer) {
+          return function (referrerPolicy, sendReferrer, originalReferrer) {
             this.referrerPolicy = referrerPolicy;
             this.sendReferrer = sendReferrer;
             this.originalReferrer = originalReferrer;
           };
       }
-      return function() {};
+      return function () {};
     },
     isSuccessCode: () => true,
   },
   ConsoleAPI: FakeConsoleAPI,
   // NB: These are functions/constructors
   // eslint-disable-next-line object-shorthand
-  ContentSearchUIController: function() {},
+  ContentSearchUIController: function () {},
   // eslint-disable-next-line object-shorthand
-  ContentSearchHandoffUIController: function() {},
+  ContentSearchHandoffUIController: function () {},
   Cc: {
     "@mozilla.org/browser/nav-bookmarks-service;1": {
       addObserver() {},
@@ -286,7 +286,7 @@ const TEST_GLOBAL = {
   clearTimeout: window.clearTimeout.bind(window),
   fetch() {},
   // eslint-disable-next-line object-shorthand
-  Image: function() {}, // NB: This is a function/constructor
+  Image: function () {}, // NB: This is a function/constructor
   IOUtils: {
     writeJSON() {
       return Promise.resolve(0);
@@ -380,7 +380,7 @@ const TEST_GLOBAL = {
   },
   FileUtils: {
     // eslint-disable-next-line object-shorthand
-    File: function() {}, // NB: This is a function/constructor
+    File: function () {}, // NB: This is a function/constructor
   },
   Region: {
     home: "US",

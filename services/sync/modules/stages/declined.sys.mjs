@@ -12,7 +12,7 @@ import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 import { Observers } from "resource://services-common/observers.sys.mjs";
 
-export var DeclinedEngines = function(service) {
+export var DeclinedEngines = function (service) {
   this._log = Log.repository.getLogger("Sync.Declined");
   this._log.manageLevelFromPref("services.sync.log.logger.declined");
 

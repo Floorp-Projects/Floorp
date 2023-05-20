@@ -15,7 +15,7 @@ function run_test() {
 
     // Verify that the GUID only contains base64url characters
     Assert.ok(
-      Array.prototype.every.call(newGuid, function(chr) {
+      Array.prototype.every.call(newGuid, function (chr) {
         return base64url.includes(chr);
       })
     );
@@ -27,7 +27,7 @@ function run_test() {
     // failures, but they should be extremely rare. Otherwise we'd have a
     // problem with GUID collisions.
     Assert.ok(
-      guids.every(function(g) {
+      guids.every(function (g) {
         return g != newGuid;
       })
     );

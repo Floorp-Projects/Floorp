@@ -45,7 +45,7 @@ add_task(async function test_no_scrolling() {
 add_task(async function test_arrow_key_down_scroll() {
   await Interactions.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
-    await SpecialPowers.spawn(browser, [], function() {
+    await SpecialPowers.spawn(browser, [], function () {
       const heading = content.document.getElementById("heading");
       heading.focus();
     });
@@ -71,7 +71,7 @@ add_task(async function test_scrollIntoView() {
   await Interactions.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await waitForScrollEvent(browser, () =>
-      SpecialPowers.spawn(browser, [], function() {
+      SpecialPowers.spawn(browser, [], function () {
         const heading = content.document.getElementById("middleHeading");
         heading.scrollIntoView();
       })
@@ -95,7 +95,7 @@ add_task(async function test_anchor_click() {
   await Interactions.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await waitForScrollEvent(browser, () =>
-      SpecialPowers.spawn(browser, [], function() {
+      SpecialPowers.spawn(browser, [], function () {
         const anchor = content.document.getElementById("to_bottom_anchor");
         anchor.click();
       })
@@ -119,7 +119,7 @@ add_task(async function test_window_scrollBy() {
   await Interactions.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await waitForScrollEvent(browser, () =>
-      SpecialPowers.spawn(browser, [], function() {
+      SpecialPowers.spawn(browser, [], function () {
         content.scrollBy(0, 100);
       })
     );
@@ -142,7 +142,7 @@ add_task(async function test_window_scrollTo() {
   await Interactions.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     await waitForScrollEvent(browser, () =>
-      SpecialPowers.spawn(browser, [], function() {
+      SpecialPowers.spawn(browser, [], function () {
         content.scrollTo(0, 200);
       })
     );

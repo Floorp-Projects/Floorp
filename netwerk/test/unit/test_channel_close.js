@@ -6,7 +6,7 @@ var httpProtocolHandler = Cc[
   "@mozilla.org/network/protocol;1?name=http"
 ].getService(Ci.nsIHttpProtocolHandler);
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserver.identity.primaryPort;
 });
 
@@ -20,7 +20,7 @@ function run_test() {
   httpserver.registerPathHandler(testpath, serverHandler);
   httpserver.start(-1);
 
-  httpProtocolHandler.EnsureHSTSDataReady().then(function() {
+  httpProtocolHandler.EnsureHSTSDataReady().then(function () {
     var local_channel;
 
     // Opened channel that has no remaining references on shutdown
@@ -28,7 +28,7 @@ function run_test() {
     local_channel.asyncOpen(new ChannelListener(checkRequest, local_channel));
 
     // Opened channel that has no remaining references after being opened
-    setupChannel(testpath).asyncOpen(new ChannelListener(function() {}, null));
+    setupChannel(testpath).asyncOpen(new ChannelListener(function () {}, null));
 
     // Unopened channel that has remaining references on shutdown
     live_channels.push(setupChannel(testpath));

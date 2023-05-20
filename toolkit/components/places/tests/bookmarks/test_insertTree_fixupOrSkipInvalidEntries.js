@@ -4,7 +4,7 @@ function insertTree(tree) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   let guid = PlacesUtils.bookmarks.unfiledGuid;
   await Assert.throws(
     () => insertTree({ guid, children: [] }),

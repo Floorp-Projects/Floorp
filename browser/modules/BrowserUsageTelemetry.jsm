@@ -997,8 +997,9 @@ let BrowserUsageTelemetry = {
       action = "remove";
     }
 
-    let key = `${telemetryId(widgetId, false)}_${action}_${oldPos ??
-      "na"}_${newPos ?? "na"}_${reason}`;
+    let key = `${telemetryId(widgetId, false)}_${action}_${oldPos ?? "na"}_${
+      newPos ?? "na"
+    }_${reason}`;
     Services.telemetry.keyedScalarAdd("browser.ui.customized_widgets", key, 1);
 
     if (newPos) {

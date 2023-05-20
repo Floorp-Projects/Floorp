@@ -16,7 +16,7 @@ registerCleanupFunction(async () => {
   dump("cleanup done\n");
 });
 
-let Http3FailedListener = function() {};
+let Http3FailedListener = function () {};
 
 Http3FailedListener.prototype = {
   onStartRequest: function testOnStartRequest(request) {},
@@ -100,7 +100,7 @@ add_task(async function test_fatal_stream_error() {
   } while (result === false);
 });
 
-let CheckOnlyHttp2Listener = function() {};
+let CheckOnlyHttp2Listener = function () {};
 
 CheckOnlyHttp2Listener.prototype = {
   onStartRequest: function testOnStartRequest(request) {},

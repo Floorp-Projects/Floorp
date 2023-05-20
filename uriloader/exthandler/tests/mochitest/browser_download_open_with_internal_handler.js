@@ -72,7 +72,7 @@ function alwaysAskForHandlingTypes(typeExtensions, ask = true) {
   return mimeInfos;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Remove the security delay for the dialog during the test.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -83,7 +83,7 @@ add_setup(async function() {
   });
 
   // Restore handlers after the whole test has run
-  const registerRestoreHandler = function(type, ext) {
+  const registerRestoreHandler = function (type, ext) {
     const mimeInfo = MimeSvc.getFromTypeAndExtension(type, ext);
     const existed = HandlerSvc.exists(mimeInfo);
 
@@ -195,7 +195,7 @@ add_task(async function test_check_open_with_internal_handler() {
     subDoc.querySelector("#unknownContentType").cancelDialog();
 
     let filepickerPromise = new Promise(resolve => {
-      MockFilePicker.showCallback = function(fp) {
+      MockFilePicker.showCallback = function (fp) {
         setTimeout(() => {
           resolve(fp.defaultString);
         }, 0);

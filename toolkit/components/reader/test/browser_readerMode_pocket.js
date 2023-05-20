@@ -16,7 +16,7 @@ async function getPocketButtonsCount(browser) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   // set the pocket preference before beginning.
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.pocket.enabled", true]],
@@ -92,10 +92,10 @@ add_task(async function() {
 /**
  * Test that the pocket button toggles the pocket popup successfully
  */
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     TEST_PATH + "readerModeArticleShort.html",
-    async function(browser) {
+    async function (browser) {
       let pageShownPromise = BrowserTestUtils.waitForContentEvent(
         browser,
         "AboutReaderContentReady"
@@ -104,7 +104,7 @@ add_task(async function() {
       readerButton.click();
       await pageShownPromise;
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         content.document.querySelector(".pocket-button").click();
       });
       let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
@@ -119,7 +119,7 @@ add_task(async function() {
       );
       ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         content.document.querySelector(".pocket-button").click();
       });
       await BrowserTestUtils.waitForMutationCondition(

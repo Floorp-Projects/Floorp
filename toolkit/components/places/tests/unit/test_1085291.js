@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   // test that nodes inserted by incremental update for bookmarks of all types
   // have the extra bookmark properties (bookmarkGuid, dateAdded, lastModified).
 

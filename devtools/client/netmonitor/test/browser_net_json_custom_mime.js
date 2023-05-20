@@ -7,7 +7,7 @@
  * Tests if JSON responses with unusal/custom MIME types are handled correctly.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(JSON_CUSTOM_MIME_URL, {
     requestCount: 1,
   });

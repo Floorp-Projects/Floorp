@@ -19,11 +19,7 @@ export var OSKeyStoreTestUtils = {
 
   setup() {
     this.ORIGINAL_STORE_LABEL = OSKeyStore.STORE_LABEL;
-    OSKeyStore.STORE_LABEL =
-      "test-" +
-      Math.random()
-        .toString(36)
-        .substr(2);
+    OSKeyStore.STORE_LABEL = "test-" + Math.random().toString(36).substr(2);
   },
 
   async cleanup() {

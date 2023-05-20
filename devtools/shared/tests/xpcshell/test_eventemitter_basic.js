@@ -318,7 +318,7 @@ function onConsoleWarningLogged(warningMessage) {
  *  The tests descriptor object, contains the tests to run.
  */
 const runnable = tests =>
-  async function() {
+  async function () {
     for (const name of Object.keys(tests)) {
       info(name);
       if (tests[name].length === 1) {

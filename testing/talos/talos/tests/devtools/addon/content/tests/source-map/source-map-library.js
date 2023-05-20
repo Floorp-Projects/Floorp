@@ -8,7 +8,7 @@ const { testSetup, testTeardown, runTest } = require("damp-test/tests/head");
 
 const sourceMap = require("devtools/client/shared/vendor/source-map/source-map");
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup("data:text/html,source-map");
 
   sourceMap.SourceMapConsumer.initialize({

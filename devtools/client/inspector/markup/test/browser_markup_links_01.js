@@ -145,7 +145,7 @@ const TEST_DATA = [
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   for (const { selector, attributes } of TEST_DATA) {

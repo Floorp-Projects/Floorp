@@ -48,7 +48,7 @@ function* testSteps() {
 
     let keyRange = IDBKeyRange.only(5);
 
-    objectStore.index("").openCursor(keyRange).onsuccess = function(event) {
+    objectStore.index("").openCursor(keyRange).onsuccess = function (event) {
       let cursor = event.target.result;
       ok(cursor, "Must have a cursor here");
 

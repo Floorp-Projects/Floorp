@@ -7,7 +7,7 @@
  * Bug 1360457 - Mis-alignment between headers and columns on overflow
  */
 
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(4);
 
   const { tab, monitor } = await initNetMonitor(INFINITE_GET_URL, {
@@ -35,7 +35,7 @@ add_task(async function() {
   testColumnsAlignment(headers, requestsContainer);
 
   // Stop doing requests.
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.wrappedJSObject.stopRequests();
   });
 

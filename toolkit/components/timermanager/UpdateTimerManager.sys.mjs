@@ -198,7 +198,7 @@ TimerManager.prototype = {
 
       tryFire(
         timerID,
-        function() {
+        function () {
           ChromeUtils.idleDispatch(() => {
             try {
               let startTime = Cu.now();
@@ -241,7 +241,7 @@ TimerManager.prototype = {
       }
       tryFire(
         timerID,
-        function() {
+        function () {
           if (timerData.callback && timerData.callback.notify) {
             ChromeUtils.idleDispatch(() => {
               try {

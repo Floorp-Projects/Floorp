@@ -43,7 +43,7 @@ add_task(async function test_removeFolderTransaction_reinsert() {
     ["bookmark-added", "bookmark-removed"],
     listener
   );
-  PlacesUtils.registerShutdownFunction(function() {
+  PlacesUtils.registerShutdownFunction(function () {
     PlacesUtils.observers.removeListener(
       ["bookmark-added", "bookmark-removed"],
       listener

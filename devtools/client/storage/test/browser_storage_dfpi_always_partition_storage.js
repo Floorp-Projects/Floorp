@@ -28,7 +28,7 @@ function listOrigins() {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   await pushPref(
     "network.cookie.cookieBehavior",
     Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN

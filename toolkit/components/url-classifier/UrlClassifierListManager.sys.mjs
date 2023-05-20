@@ -92,7 +92,7 @@ function PROT_ListManager() {
  * @param gethashUrl - the url for fetching hash completions
  * @returns true if the table could be created; false otherwise
  */
-PROT_ListManager.prototype.registerTable = function(
+PROT_ListManager.prototype.registerTable = function (
   tableName,
   providerName,
   updateUrl,
@@ -129,7 +129,7 @@ PROT_ListManager.prototype.registerTable = function(
 /**
  * Unregister a table table from list
  */
-PROT_ListManager.prototype.unregisterTable = function(tableName) {
+PROT_ListManager.prototype.unregisterTable = function (tableName) {
   log("unregistering " + tableName);
   var table = this.tablesData[tableName];
   if (table) {
@@ -149,7 +149,7 @@ PROT_ListManager.prototype.unregisterTable = function(tableName) {
  * Delete all of our data tables which seem to leak otherwise.
  * Remove observers
  */
-PROT_ListManager.prototype.shutdown_ = function() {
+PROT_ListManager.prototype.shutdown_ = function () {
   this.stopUpdateCheckers();
   for (var name in this.tablesData) {
     delete this.tablesData[name];
@@ -161,7 +161,7 @@ PROT_ListManager.prototype.shutdown_ = function() {
 /**
  * xpcom-shutdown callback
  */
-PROT_ListManager.prototype.observe = function(aSubject, aTopic, aData) {
+PROT_ListManager.prototype.observe = function (aSubject, aTopic, aData) {
   switch (aTopic) {
     case "quit-application":
       this.shutdown_();
@@ -174,14 +174,14 @@ PROT_ListManager.prototype.observe = function(aSubject, aTopic, aData) {
   }
 };
 
-PROT_ListManager.prototype.getGethashUrl = function(tableName) {
+PROT_ListManager.prototype.getGethashUrl = function (tableName) {
   if (this.tablesData[tableName] && this.tablesData[tableName].gethashUrl) {
     return this.tablesData[tableName].gethashUrl;
   }
   return "";
 };
 
-PROT_ListManager.prototype.getUpdateUrl = function(tableName) {
+PROT_ListManager.prototype.getUpdateUrl = function (tableName) {
   if (this.tablesData[tableName] && this.tablesData[tableName].updateUrl) {
     return this.tablesData[tableName].updateUrl;
   }
@@ -191,7 +191,7 @@ PROT_ListManager.prototype.getUpdateUrl = function(tableName) {
 /**
  * Enable updates for a single table.
  */
-PROT_ListManager.prototype.enableUpdate = function(tableName) {
+PROT_ListManager.prototype.enableUpdate = function (tableName) {
   var table = this.tablesData[tableName];
   if (table) {
     log("Enabling table updates for " + tableName);
@@ -199,7 +199,7 @@ PROT_ListManager.prototype.enableUpdate = function(tableName) {
   }
 };
 
-PROT_ListManager.prototype.isRegistered = function() {
+PROT_ListManager.prototype.isRegistered = function () {
   return this.registered;
 };
 
@@ -207,7 +207,7 @@ PROT_ListManager.prototype.isRegistered = function() {
  * Returns true if any table associated with the updateUrl requires updates.
  * @param updateUrl - the updateUrl
  */
-PROT_ListManager.prototype.updatesNeeded_ = function(updateUrl) {
+PROT_ListManager.prototype.updatesNeeded_ = function (updateUrl) {
   let updatesNeeded = false;
   for (var tableName in this.needsUpdate_[updateUrl]) {
     if (this.needsUpdate_[updateUrl][tableName]) {
@@ -220,7 +220,7 @@ PROT_ListManager.prototype.updatesNeeded_ = function(updateUrl) {
 /**
  * Disable updates for all tables.
  */
-PROT_ListManager.prototype.disableAllUpdates = function() {
+PROT_ListManager.prototype.disableAllUpdates = function () {
   for (const tableName of Object.keys(this.tablesData)) {
     this.disableUpdate(tableName);
   }
@@ -230,7 +230,7 @@ PROT_ListManager.prototype.disableAllUpdates = function() {
  * Disables updates for a single table. Avoid this internal function
  * and use disableAllUpdates() instead.
  */
-PROT_ListManager.prototype.disableUpdate = function(tableName) {
+PROT_ListManager.prototype.disableUpdate = function (tableName) {
   var table = this.tablesData[tableName];
   if (table) {
     log("Disabling table updates for " + tableName);
@@ -248,7 +248,7 @@ PROT_ListManager.prototype.disableUpdate = function(tableName) {
 /**
  * Determine if we have some tables that need updating.
  */
-PROT_ListManager.prototype.requireTableUpdates = function() {
+PROT_ListManager.prototype.requireTableUpdates = function () {
   for (var name in this.tablesData) {
     // Tables that need updating even if other tables don't require it
     if (this.needsUpdate_[this.tablesData[name].updateUrl][name]) {
@@ -262,13 +262,13 @@ PROT_ListManager.prototype.requireTableUpdates = function() {
 /**
  *  Set timer to check update after delay
  */
-PROT_ListManager.prototype.setUpdateCheckTimer = function(updateUrl, delay) {
+PROT_ListManager.prototype.setUpdateCheckTimer = function (updateUrl, delay) {
   this.updateCheckers_[updateUrl] = Cc["@mozilla.org/timer;1"].createInstance(
     Ci.nsITimer
   );
 
   // A helper function to trigger the table update.
-  let update = function() {
+  let update = function () {
     if (!this.checkForUpdates(updateUrl)) {
       // Make another attempt later.
       this.setUpdateCheckTimer(updateUrl, defaultUpdateIntervalMs);
@@ -282,7 +282,7 @@ PROT_ListManager.prototype.setUpdateCheckTimer = function(updateUrl, delay) {
       // defer it to the next user interaction active if the browser is
       // considered in idle mode.
       if (this.idleService_.idleTime > browserIdleThresholdMs) {
-        let observer = function() {
+        let observer = function () {
           Services.obs.removeObserver(observer, "user-interaction-active");
           update();
         };
@@ -300,7 +300,7 @@ PROT_ListManager.prototype.setUpdateCheckTimer = function(updateUrl, delay) {
 /**
  * Acts as a nsIUrlClassifierCallback for getTables.
  */
-PROT_ListManager.prototype.kickoffUpdate_ = function() {
+PROT_ListManager.prototype.kickoffUpdate_ = function () {
   this.startingUpdate_ = false;
   var initialUpdateDelay = 3000;
   // Add a fuzz of 0-1 minutes for both v2 and v4 according to Bug 1305478.
@@ -316,7 +316,7 @@ PROT_ListManager.prototype.kickoffUpdate_ = function() {
     // updates enabled.
     if (this.updatesNeeded_(updateUrl) && !this.updateCheckers_[updateUrl]) {
       let provider = null;
-      Object.keys(this.tablesData).forEach(function(table) {
+      Object.keys(this.tablesData).forEach(function (table) {
         if (this.tablesData[table].updateUrl === updateUrl) {
           let newProvider = this.tablesData[table].provider;
           if (provider) {
@@ -360,7 +360,7 @@ PROT_ListManager.prototype.kickoffUpdate_ = function() {
   }
 };
 
-PROT_ListManager.prototype.stopUpdateCheckers = function() {
+PROT_ListManager.prototype.stopUpdateCheckers = function () {
   log("Stopping updates");
   for (var updateUrl in this.updateCheckers_) {
     if (this.updateCheckers_[updateUrl]) {
@@ -374,7 +374,7 @@ PROT_ListManager.prototype.stopUpdateCheckers = function() {
  * Determine if we have any tables that require updating.  Different
  * Wardens may call us with new tables that need to be updated.
  */
-PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
+PROT_ListManager.prototype.maybeToggleUpdateChecking = function () {
   // We update tables if we have some tables that want updates.  If there
   // are no tables that want to be updated - we dont need to check anything.
   if (this.requireTableUpdates()) {
@@ -398,7 +398,7 @@ PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
  * if the table lists provided belong to multiple updateurl (multiple provider).
  * Return false when any update is fail due to back-off algorithm.
  */
-PROT_ListManager.prototype.forceUpdates = function(tables) {
+PROT_ListManager.prototype.forceUpdates = function (tables) {
   log("forceUpdates with " + tables);
   if (!tables) {
     return false;
@@ -436,7 +436,7 @@ PROT_ListManager.prototype.forceUpdates = function(tables) {
  * for all tables if the url is empty.
  * @param manual: the update is triggered manually
  */
-PROT_ListManager.prototype.checkForUpdates = function(
+PROT_ListManager.prototype.checkForUpdates = function (
   updateUrl,
   manual = false
 ) {
@@ -481,7 +481,10 @@ PROT_ListManager.prototype.checkForUpdates = function(
  * @param tableData List of table data already in the database, in the form
  *        tablename;<chunk ranges>\n
  */
-PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
+PROT_ListManager.prototype.makeUpdateRequest_ = function (
+  updateUrl,
+  tableData
+) {
   log("this.tablesData: " + JSON.stringify(this.tablesData, undefined, 2));
   log("existing chunks: " + tableData + "\n");
   // Disallow blank updateUrls
@@ -614,7 +617,7 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
   }
 };
 
-PROT_ListManager.prototype.makeUpdateRequestForEntry_ = function(
+PROT_ListManager.prototype.makeUpdateRequestForEntry_ = function (
   updateUrl,
   tableList,
   requestPayload,
@@ -662,7 +665,7 @@ PROT_ListManager.prototype.makeUpdateRequestForEntry_ = function(
  * @param waitForUpdate String The number of seconds that the client should
  *        wait before requesting again.
  */
-PROT_ListManager.prototype.updateSuccess_ = function(
+PROT_ListManager.prototype.updateSuccess_ = function (
   tableList,
   updateUrl,
   waitForUpdateSec
@@ -755,7 +758,7 @@ PROT_ListManager.prototype.updateSuccess_ = function(
  * Callback function if the update request succeeded.
  * @param result String The error code of the failure
  */
-PROT_ListManager.prototype.updateError_ = function(table, updateUrl, result) {
+PROT_ListManager.prototype.updateError_ = function (table, updateUrl, result) {
   log(
     "update error for " + table + " from " + updateUrl + ": " + result + "\n"
   );
@@ -774,7 +777,11 @@ PROT_ListManager.prototype.updateError_ = function(table, updateUrl, result) {
  * Callback function when the download failed
  * @param status String http status or an empty string if connection refused.
  */
-PROT_ListManager.prototype.downloadError_ = function(table, updateUrl, status) {
+PROT_ListManager.prototype.downloadError_ = function (
+  table,
+  updateUrl,
+  status
+) {
   log("download error for " + table + ": " + status + "\n");
   // If status is empty, then we assume that we got an NS_CONNECTION_REFUSED
   // error.  In this case, we treat this is a http 500 error.
@@ -804,7 +811,7 @@ PROT_ListManager.prototype.downloadError_ = function(table, updateUrl, status) {
  * Get back-off time for the given provider.
  * Return 0 if we are not in back-off mode.
  */
-PROT_ListManager.prototype.getBackOffTime = function(provider) {
+PROT_ListManager.prototype.getBackOffTime = function (provider) {
   let updateUrl = "";
   for (var table in this.tablesData) {
     if (this.tablesData[table].provider == provider) {

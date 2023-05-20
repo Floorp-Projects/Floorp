@@ -38,7 +38,7 @@ add_task(async function test_103_cancel_parent_connect() {
       url: "https://example.com/browser/netwerk/test/browser/103_preload.html",
       waitForLoad: true,
     },
-    async function() {}
+    async function () {}
   );
   await promise;
   Assert.equal(observed_cancel_reason, "parent-connect-timeout");

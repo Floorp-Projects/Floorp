@@ -8,7 +8,7 @@ let listService;
 let url =
   "https://example.com/browser/browser/base/content/test/general/dummy_page.html";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.query_stripping.strip_list", "stripParam"]],
   });
@@ -31,9 +31,9 @@ add_task(async function testStrip() {
     set: [["privacy.query_stripping.strip_on_share.enabled", true]],
   });
   let strippedURI = "https://www.example.com/?otherParam=1234";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     // Prepare a link
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let link = content.document.createElement("a");
       link.href = "https://www.example.com/?stripParam=1234&otherParam=1234";
       link.textContent = "link with query param";
@@ -75,9 +75,9 @@ add_task(async function testPrefDisabled() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.query_stripping.strip_on_share.enabled", false]],
   });
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     // Prepare a link
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let link = content.document.createElement("a");
       link.href = "https://www.example.com/?stripParam=1234&otherParam=1234";
       link.textContent = "link with query param";
@@ -115,9 +115,9 @@ add_task(async function testUnknownQueryParam() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.query_stripping.strip_on_share.enabled", true]],
   });
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     // Prepare a link
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let link = content.document.createElement("a");
       link.href = "https://www.example.com/?otherParam=1234";
       link.textContent = "link with unknown query param";

@@ -27,13 +27,13 @@ const PREF_LOG_SENSITIVE_DETAILS = "identity.fxaccounts.log.sensitive";
 
 var exports = Object.create(null);
 
-XPCOMUtils.defineLazyGetter(exports, "log", function() {
+XPCOMUtils.defineLazyGetter(exports, "log", function () {
   let log = Log.repository.getLogger("FirefoxAccounts");
   log.manageLevelFromPref(PREF_LOG_LEVEL);
   return log;
 });
 
-XPCOMUtils.defineLazyGetter(exports, "logManager", function() {
+XPCOMUtils.defineLazyGetter(exports, "logManager", function () {
   let logs = [
     "Sync",
     "Services.Common",
@@ -50,7 +50,7 @@ XPCOMUtils.defineLazyGetter(exports, "logManager", function() {
 
 // A boolean to indicate if personally identifiable information (or anything
 // else sensitive, such as credentials) should be logged.
-XPCOMUtils.defineLazyGetter(exports, "logPII", function() {
+XPCOMUtils.defineLazyGetter(exports, "logPII", function () {
   try {
     return Services.prefs.getBoolPref(PREF_LOG_SENSITIVE_DETAILS);
   } catch (_) {

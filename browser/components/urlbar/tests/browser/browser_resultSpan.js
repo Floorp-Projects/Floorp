@@ -20,7 +20,7 @@ const TIP_SPAN = UrlbarUtils.getSpanForResult({
   type: UrlbarUtils.RESULT_TYPE.TIP,
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   await SpecialPowers.pushPrefEnv({

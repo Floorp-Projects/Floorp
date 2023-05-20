@@ -38,11 +38,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", function () {
   return new TextDecoder();
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gTextEncoder", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gTextEncoder", function () {
   return new TextEncoder();
 });
 
@@ -55,7 +55,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gTextEncoder", function() {
  * @param aPath
  *        String containing the file path where data should be saved.
  */
-export var DownloadStore = function(aList, aPath) {
+export var DownloadStore = function (aList, aPath) {
   this.list = aList;
   this.path = aPath;
 };

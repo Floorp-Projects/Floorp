@@ -14,7 +14,7 @@ const ENGINE_NAME = "mozSearch";
 const ENGINE_URL =
   "https://example.com/browser/browser/components/search/test/browser/mozsearch.sjs";
 
-add_setup(async function() {
+add_setup(async function () {
   await Services.search.init();
 
   await SearchTestUtils.installSearchExtension(
@@ -79,11 +79,11 @@ add_task(async function test_whereToOpenLink() {
     "https://example.com/browser/browser/components/search/test/browser/test_search.html"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [""], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [""], async function () {
     return new Promise(resolve => {
       content.document.addEventListener(
         "selectionchange",
-        function() {
+        function () {
           resolve();
         },
         { once: true }

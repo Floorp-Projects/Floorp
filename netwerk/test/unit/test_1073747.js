@@ -2,9 +2,9 @@
 
 "use strict";
 
-var test = function(s, funcName) {
+var test = function (s, funcName) {
   function Arg() {}
-  Arg.prototype.toString = function() {
+  Arg.prototype.toString = function () {
     info("Testing " + funcName + " with null args");
     return this.value;
   };
@@ -36,7 +36,7 @@ var funcs = [
 ];
 
 function run_test() {
-  funcs.forEach(function(f) {
+  funcs.forEach(function (f) {
     test(s, f);
   });
 }

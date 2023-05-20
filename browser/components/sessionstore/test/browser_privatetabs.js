@@ -6,7 +6,7 @@ add_task(function cleanup() {
   forgetClosedTabs(window);
 });
 
-add_task(async function() {
+add_task(async function () {
   // Clear the list of closed windows.
   forgetClosedWindows();
 

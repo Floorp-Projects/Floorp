@@ -5,7 +5,7 @@
 
 // Checks that html entities are escaped in bookmarks.html files.
 
-add_task(async function() {
+add_task(async function () {
   // Removes bookmarks.html if the file already exists.
   let HTMLFile = PathUtils.join(PathUtils.profileDir, "bookmarks.html");
   await IOUtils.remove(HTMLFile, { ignoreAbsent: true });

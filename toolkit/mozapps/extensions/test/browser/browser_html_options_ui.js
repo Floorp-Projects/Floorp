@@ -298,9 +298,7 @@ add_task(async function testRemovedOnDisable() {
 
   // Opens the prefs page.
   let loaded = waitForViewLoad(win);
-  getAddonCard(win, id)
-    .querySelector("[action=preferences]")
-    .click();
+  getAddonCard(win, id).querySelector("[action=preferences]").click();
   await loaded;
 
   let inlineOptions = doc.querySelector("inline-options-browser");
@@ -512,7 +510,7 @@ async function testOptionsZoom(type = "full") {
         </body>
       `,
       "options.js": () => {
-        window.addEventListener("load", function() {
+        window.addEventListener("load", function () {
           browser.test.sendMessage("options-loaded");
         });
       },

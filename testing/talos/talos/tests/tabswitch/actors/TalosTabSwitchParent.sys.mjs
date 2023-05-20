@@ -322,7 +322,7 @@ function handleFile(win, file) {
   if (maxurls && maxurls > 0) {
     lines.splice(maxurls, lines.length);
   }
-  lines.forEach(function(a) {
+  lines.forEach(function (a) {
     let url = a.split('"')[0];
     if (url != "") {
       let domain = url.split("/")[0];

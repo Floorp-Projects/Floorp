@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(async function() {
+add_task(async function () {
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.history.pushState({}, "2", "2.html");
   });
 

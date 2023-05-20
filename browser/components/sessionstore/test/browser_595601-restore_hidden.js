@@ -58,13 +58,13 @@ function test() {
   waitForExplicitFinish();
   requestLongerTimeout(2);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.sessionstore.restore_hidden_tabs");
   });
 
   // First stage: restoreHiddenTabs = true
   // Second stage: restoreHiddenTabs = false
-  test_loadTabs(true, function() {
+  test_loadTabs(true, function () {
     test_loadTabs(false, finish);
   });
 }
@@ -78,7 +78,7 @@ function test_loadTabs(restoreHiddenTabs, callback) {
   let expectedTabs = restoreHiddenTabs ? 8 : 4;
   let firstProgress = true;
 
-  newWindowWithState(windowState, function(win, needsRestore, isRestoring) {
+  newWindowWithState(windowState, function (win, needsRestore, isRestoring) {
     if (firstProgress) {
       firstProgress = false;
       is(isRestoring, 3, "restoring 3 tabs concurrently");

@@ -38,7 +38,7 @@ CookiePolicyHelper.runTest("BroadcastChannel in workers", {
     ok(worker, "Worker has been created");
 
     await new w.Promise((resolve, reject) => {
-      worker.onmessage = function(e) {
+      worker.onmessage = function (e) {
         if (e) {
           resolve();
         } else {
@@ -68,7 +68,7 @@ CookiePolicyHelper.runTest("BroadcastChannel in workers", {
     ok(worker, "Worker has been created");
 
     await new w.Promise((resolve, reject) => {
-      worker.onmessage = function(e) {
+      worker.onmessage = function (e) {
         if (e) {
           resolve();
         } else {

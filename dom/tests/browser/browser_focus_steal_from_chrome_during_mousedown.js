@@ -35,7 +35,7 @@ add_task(async function test() {
       "Failed to move focus away from search bar: button=" + button
     );
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [button], async function(
+    await SpecialPowers.spawn(tab.linkedBrowser, [button], async function (
       button
     ) {
       let fm = Services.focus;

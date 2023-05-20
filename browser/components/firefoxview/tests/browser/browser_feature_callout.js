@@ -13,7 +13,7 @@ const { BuiltInThemes } = ChromeUtils.importESModule(
 const featureTourPref = "browser.firefox-view.feature-tour";
 const defaultPrefValue = getPrefValueByScreen(1);
 
-add_setup(async function() {
+add_setup(async function () {
   requestLongerTimeout(2);
   registerCleanupFunction(() => ASRouter.resetMessageState());
 });

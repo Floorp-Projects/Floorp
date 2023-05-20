@@ -337,7 +337,7 @@ add_task(async function test_type_detection() {
   ];
 
   for (let [i, test] of tests.entries()) {
-    let { messages } = await promiseConsoleOutput(async function() {
+    let { messages } = await promiseConsoleOutput(async function () {
       let id = `updatecheck-typedetection-${i}@tests.mozilla.org`;
       let updates;
       try {

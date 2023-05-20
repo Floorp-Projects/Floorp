@@ -10,7 +10,7 @@ async function cleanup() {
   await FormHistoryTestUtils.clear(usernameFieldName);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await cleanup();
 });
 

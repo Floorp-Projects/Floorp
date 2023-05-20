@@ -21,7 +21,7 @@ const EXPECTED_REFLOWS = [
  * This test ensures that there are no unexpected
  * uninterruptible reflows when opening new tabs.
  */
-add_task(async function() {
+add_task(async function () {
   // Force-enable tab animations
   gReduceMotionOverride = false;
 
@@ -69,7 +69,7 @@ add_task(async function() {
   info(`newTabButtonRect=${JSON.stringify(newTabButtonRect)}`);
   info(`textBoxRect=${JSON.stringify(textBoxRect)}`);
 
-  let inTabStrip = function(r) {
+  let inTabStrip = function (r) {
     return (
       r.y1 >= tabStripRect.top &&
       r.y2 <= tabStripRect.bottom &&
@@ -80,7 +80,7 @@ add_task(async function() {
 
   const kTabCloseIconWidth = 13;
 
-  let isExpectedChange = function(r) {
+  let isExpectedChange = function (r) {
     // We expect all changes to be within the tab strip.
     if (!inTabStrip(r)) {
       return false;
@@ -140,7 +140,7 @@ add_task(async function() {
 
   // Add a reflow observer and open a new tab.
   await withPerfObserver(
-    async function() {
+    async function () {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
       BrowserOpenTab();
       await BrowserTestUtils.waitForEvent(

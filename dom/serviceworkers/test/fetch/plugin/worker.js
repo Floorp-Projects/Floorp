@@ -1,4 +1,4 @@
-self.addEventListener("fetch", function(event) {
+self.addEventListener("fetch", function (event) {
   var resource = event.request.url.split("/").pop();
   event.waitUntil(
     clients.matchAll().then(clients => {

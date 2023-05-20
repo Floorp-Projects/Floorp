@@ -5,7 +5,7 @@
  */
 add_task(async function open_customize_mode_from_popup() {
   let promiseWindow = BrowserTestUtils.waitForNewWindow();
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.window.open("about:blank", "_blank", "height=300,toolbar=no");
   });
   let win = await promiseWindow;

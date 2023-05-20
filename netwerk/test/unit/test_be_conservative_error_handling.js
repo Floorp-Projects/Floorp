@@ -172,7 +172,7 @@ function startClient(port, beConservative, expectSuccess) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   // Restrict to only TLS 1.3.
   Services.prefs.setIntPref("security.tls.version.min", 4);
   Services.prefs.setIntPref("security.tls.version.max", 4);
@@ -209,7 +209,7 @@ add_task(async function() {
   server.close();
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("security.tls.version.min");
   Services.prefs.clearUserPref("security.tls.version.max");
   Services.prefs.clearUserPref("network.dns.localDomains");

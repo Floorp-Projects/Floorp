@@ -35,7 +35,7 @@ const action = legacyaction;
 /**
  * Functionality for (single finger) action chains.
  */
-action.Chain = function() {
+action.Chain = function () {
   // for assigning unique ids to all touches
   this.nextTouchId = 1000;
   // keep track of active Touches
@@ -64,7 +64,7 @@ action.Chain = function() {
  * @param {number} touchId
  *        Touch event id used by legacyactions.
  */
-action.Chain.prototype.createATouch = function(elem, x, y, touchId) {
+action.Chain.prototype.createATouch = function (elem, x, y, touchId) {
   const doc = elem.ownerDocument;
   const win = doc.defaultView;
   const [
@@ -89,7 +89,7 @@ action.Chain.prototype.createATouch = function(elem, x, y, touchId) {
   return atouch;
 };
 
-action.Chain.prototype.dispatchActions = function(
+action.Chain.prototype.dispatchActions = function (
   args,
   touchId,
   container,
@@ -137,7 +137,7 @@ action.Chain.prototype.dispatchActions = function(
  * @param {object} modifiers
  *     An object of modifier keys present.
  */
-action.Chain.prototype.emitMouseEvent = function(
+action.Chain.prototype.emitMouseEvent = function (
   doc,
   type,
   elClientX,
@@ -177,7 +177,7 @@ action.Chain.prototype.emitMouseEvent = function(
   );
 };
 
-action.Chain.prototype.emitTouchEvent = function(doc, type, touch) {
+action.Chain.prototype.emitTouchEvent = function (doc, type, touch) {
   lazy.logger.info(
     `Emitting Touch event of type ${type} ` +
       `to element with id: ${touch.target.id} ` +
@@ -215,7 +215,7 @@ action.Chain.prototype.emitTouchEvent = function(doc, type, touch) {
 /**
  * Reset any persisted values after a command completes.
  */
-action.Chain.prototype.resetValues = function() {
+action.Chain.prototype.resetValues = function () {
   this.container = null;
   this.seenEls = null;
   this.mouseEventsOnly = false;
@@ -224,7 +224,7 @@ action.Chain.prototype.resetValues = function() {
 /**
  * Function that performs a single tap.
  */
-action.Chain.prototype.singleTap = async function(
+action.Chain.prototype.singleTap = async function (
   el,
   corx,
   cory,
@@ -276,7 +276,13 @@ action.Chain.prototype.singleTap = async function(
  * @returns {Object<string, number>}
  *     Last finger ID, or an empty object.
  */
-action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
+action.Chain.prototype.actions = function (
+  chain,
+  touchId,
+  i,
+  keyModifiers,
+  cb
+) {
   if (i == chain.length) {
     cb(touchId || null);
     this.resetValues();
@@ -453,7 +459,7 @@ action.Chain.prototype.actions = function(chain, touchId, i, keyModifiers, cb) {
  * Given an element and a pair of coordinates, returns an array of the
  * form [clientX, clientY, pageX, pageY, screenX, screenY].
  */
-action.Chain.prototype.getCoordinateInfo = function(el, corx, cory) {
+action.Chain.prototype.getCoordinateInfo = function (el, corx, cory) {
   let win = el.ownerGlobal;
   return [
     corx, // clientX
@@ -479,7 +485,7 @@ action.Chain.prototype.getCoordinateInfo = function(el, corx, cory) {
  * @param {Element} target
  *     The Element on which the events should be created.
  */
-action.Chain.prototype.generateEvents = function(
+action.Chain.prototype.generateEvents = function (
   type,
   x,
   y,
@@ -633,7 +639,7 @@ action.Chain.prototype.generateEvents = function(
   return null;
 };
 
-action.Chain.prototype.mouseTap = function(doc, x, y, button, count, mod) {
+action.Chain.prototype.mouseTap = function (doc, x, y, button, count, mod) {
   this.emitMouseEvent(doc, "mousemove", x, y, button, count, mod);
   this.emitMouseEvent(doc, "mousedown", x, y, button, count, mod);
   this.emitMouseEvent(doc, "mouseup", x, y, button, count, mod);

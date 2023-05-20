@@ -286,7 +286,7 @@ function openAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
     } else {
       win.addEventListener(
         "load",
-        function() {
+        function () {
           resolve(win);
         },
         { once: true }
@@ -299,7 +299,7 @@ function promiseWindowClosed(win) {
   return new Promise(resolve => {
     win.addEventListener(
       "unload",
-      function() {
+      function () {
         resolve();
       },
       { once: true }

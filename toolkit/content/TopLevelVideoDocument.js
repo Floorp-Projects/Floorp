@@ -10,7 +10,7 @@
   // <video> is used for top-level audio documents as well
   let videoElement = document.getElementsByTagName("video")[0];
 
-  let setFocusToVideoElement = function(e) {
+  let setFocusToVideoElement = function (e) {
     // We don't want to retarget focus if it goes to the controls in
     // the video element. Because they're anonymous content, the target
     // will be the video element in that case. Avoid calling .focus()

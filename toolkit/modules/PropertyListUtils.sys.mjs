@@ -86,7 +86,7 @@ export var PropertyListUtils = Object.freeze({
       let self = this;
       function readDOMFile(aFile) {
         let fileReader = new FileReader();
-        let onLoadEnd = function() {
+        let onLoadEnd = function () {
           let root = null;
           try {
             fileReader.removeEventListener("loadend", onLoadEnd);
@@ -111,7 +111,7 @@ export var PropertyListUtils = Object.freeze({
             throw new Error("The file pointed by aFile does not exist");
           }
 
-          File.createFromNsIFile(aFile).then(function(aFile) {
+          File.createFromNsIFile(aFile).then(function (aFile) {
             readDOMFile(aFile);
           });
           return;
@@ -524,7 +524,7 @@ BinaryPropertyListReader.prototype = {
     // Each index in the returned array is a lazy getter for its object.
     Array.prototype.forEach.call(
       refs,
-      function(ref, objIndex) {
+      function (ref, objIndex) {
         Object.defineProperty(array, objIndex, {
           get() {
             delete array[objIndex];
@@ -806,7 +806,7 @@ XMLPropertyListReader.prototype = {
     // Each element in the array is a lazy getter for its property list object.
     let array = [];
     let readObjectBound = this._readObject.bind(this);
-    Array.prototype.forEach.call(aDOMElt.children, function(elem, elemIndex) {
+    Array.prototype.forEach.call(aDOMElt.children, function (elem, elemIndex) {
       Object.defineProperty(array, elemIndex, {
         get() {
           delete array[elemIndex];

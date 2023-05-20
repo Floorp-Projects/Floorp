@@ -9,7 +9,7 @@ function handleRequest(request, response) {
   // Figure out whether the client wants to load the image, or just
   // to tell us to finish the previous load
   var query = {};
-  request.queryString.split("&").forEach(function(val) {
+  request.queryString.split("&").forEach(function (val) {
     var [name, value] = val.split("=");
     query[name] = unescape(value);
   });
@@ -18,7 +18,7 @@ function handleRequest(request, response) {
     dump("file_IconTestServer.js DEBUG - Got continue command\n");
 
     // Get the context structure and finish the old request
-    getObjectState("context", function(obj) {
+    getObjectState("context", function (obj) {
       // magic or goop, depending on how you look at it
       savedCtx = obj.wrappedJSObject;
 
@@ -46,7 +46,7 @@ function handleRequest(request, response) {
 
   // Context structure - we need to set this up properly to pass to setObjectState
   var ctx = {
-    QueryInterface: function(iid) {
+    QueryInterface: function (iid) {
       if (iid.equals(Ci.nsISupports)) {
         return this;
       }

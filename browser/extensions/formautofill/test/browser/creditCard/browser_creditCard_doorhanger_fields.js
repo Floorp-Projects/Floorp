@@ -16,7 +16,7 @@ add_task(async function test_update_autofill_name_field() {
   let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
         true
       );
@@ -67,7 +67,7 @@ add_task(async function test_update_autofill_exp_date_field() {
   let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
         true
       );
@@ -109,17 +109,14 @@ add_task(async function test_submit_unnormailzed_field() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
         newValues: {
           "#cc-name": "John Doe",
           "#cc-number": "4111111111111111",
           "#cc-exp-month": "4",
-          "#cc-exp-year": new Date()
-            .getFullYear()
-            .toString()
-            .substr(2, 2),
+          "#cc-exp-year": new Date().getFullYear().toString().substr(2, 2),
           "#cc-type": "visa",
         },
       });
@@ -143,7 +140,7 @@ add_task(async function test_submit_invalid_network_field() {
   let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -178,7 +175,7 @@ add_task(async function test_submit_combined_expiry_field() {
   let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_COMBINED_EXPIRY_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",

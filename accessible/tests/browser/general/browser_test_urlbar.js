@@ -35,6 +35,6 @@ add_task(async function testAutocompleteRichResult() {
   BrowserTestUtils.removeTab(tab);
 });
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await shutdownAccessibilityService();
 });

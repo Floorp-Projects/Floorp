@@ -517,6 +517,6 @@ if (isRemote) {
 }
 
 // This is used by the XPCOM codepath which expects a constructor
-export var RemoteAgentFactory = function() {
+export var RemoteAgentFactory = function () {
   return RemoteAgent;
 };

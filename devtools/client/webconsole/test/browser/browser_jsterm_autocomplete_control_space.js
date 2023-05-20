@@ -19,7 +19,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
 </head>
 <body>bug 585991 - autocomplete popup ctrl+space usage test</body>`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   info("web console opened");
 

@@ -47,7 +47,7 @@ function createTestExtPage({ script }) {
 }
 
 function createTestExtPageScript(name) {
-  return `(${function(pageName) {
+  return `(${function (pageName) {
     browser.webRequest.onBeforeRequest.addListener(
       details => {
         browser.test.log(

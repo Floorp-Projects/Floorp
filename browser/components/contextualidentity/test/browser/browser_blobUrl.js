@@ -6,7 +6,7 @@ const BASE_URI =
   "http://mochi.test:8888/browser/browser/components/" +
   "contextualidentity/test/browser/empty_file.html";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.userContext.enabled", true]],
   });
@@ -23,7 +23,7 @@ add_task(async function test() {
   let blobURL;
 
   info("Creating a blob URL...");
-  await SpecialPowers.spawn(browser1, [], function() {
+  await SpecialPowers.spawn(browser1, [], function () {
     return Promise.resolve(
       content.window.URL.createObjectURL(new content.window.Blob([123]))
     );
@@ -40,13 +40,13 @@ add_task(async function test() {
   let browser2 = gBrowser.getBrowserForTab(tab2);
   await BrowserTestUtils.browserLoaded(browser2);
 
-  await SpecialPowers.spawn(browser2, [blobURL], function(url) {
+  await SpecialPowers.spawn(browser2, [blobURL], function (url) {
     return new Promise(resolve => {
       var xhr = new content.window.XMLHttpRequest();
-      xhr.onerror = function() {
+      xhr.onerror = function () {
         resolve("SendErrored");
       };
-      xhr.onload = function() {
+      xhr.onload = function () {
         resolve("SendLoaded");
       };
       xhr.open("GET", url);
@@ -67,7 +67,7 @@ add_task(async function test() {
   let browser3 = gBrowser.getBrowserForTab(tab3);
   await BrowserTestUtils.browserLoaded(browser3);
 
-  await SpecialPowers.spawn(browser3, [blobURL], function(url) {
+  await SpecialPowers.spawn(browser3, [blobURL], function (url) {
     return new Promise(resolve => {
       var xhr = new content.window.XMLHttpRequest();
       xhr.open("GET", url);

@@ -88,7 +88,7 @@ add_task(async function populatePromise() {
   let count = 0;
   let expectedLinks = makeLinks(0, 10, 2);
 
-  let getLinksFcn = async function(callback) {
+  let getLinksFcn = async function (callback) {
     // Should not be calling getLinksFcn twice
     count++;
     Assert.equal(count, 1);
@@ -848,7 +848,7 @@ add_task(async function getHighlightsWithPocketCached() {
 add_task(async function getHighlightsWithPocketFailure() {
   await setUpActivityStreamTest();
 
-  NewTabUtils.activityStreamProvider.fetchSavedPocketItems = function() {
+  NewTabUtils.activityStreamProvider.fetchSavedPocketItems = function () {
     throw new Error();
   };
   let provider = NewTabUtils.activityStreamLinks;

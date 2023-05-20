@@ -37,9 +37,7 @@ class ExtensionStorageActor extends BaseStorageActor {
 
     // Retrieve the base moz-extension url for the extension
     // (and also remove the final '/' from it).
-    this.extensionHostURL = this.getExtensionPolicy()
-      .getURL()
-      .slice(0, -1);
+    this.extensionHostURL = this.getExtensionPolicy().getURL().slice(0, -1);
 
     // Map<host, ExtensionStorageIDB db connection>
     // Bug 1542038, 1542039: Each storage area will need its own

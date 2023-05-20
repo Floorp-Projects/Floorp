@@ -11,7 +11,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   info("Running the cleanup code");
   MockFilePicker.cleanup();
   if (gTestDir && gTestDir.exists()) {
@@ -48,7 +48,7 @@ add_task(async function test_image_download() {
     TEST_PATH + "test_mixed_content_image.html",
     async browser => {
       // Add the image, and wait for it to load.
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let loc = content.document.location.href;
         let httpRoot = loc.replace("https", "http");
         let imgloc = new content.URL("dummy.png", httpRoot);
@@ -65,7 +65,7 @@ add_task(async function test_image_download() {
 
       MockFilePicker.displayDirectory = gTestDir;
       let fileName;
-      MockFilePicker.showCallback = function(fp) {
+      MockFilePicker.showCallback = function (fp) {
         info("showCallback");
         fileName = fp.defaultString;
         info("fileName: " + fileName);

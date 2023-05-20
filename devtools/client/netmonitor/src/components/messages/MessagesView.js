@@ -38,7 +38,7 @@ const StatusBar = createFactory(
   require("resource://devtools/client/netmonitor/src/components/messages/StatusBar.js")
 );
 
-loader.lazyGetter(this, "MessagePayload", function() {
+loader.lazyGetter(this, "MessagePayload", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/messages/MessagePayload.js")
   );

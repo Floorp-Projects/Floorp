@@ -5,7 +5,7 @@
 
 // Simple checks for the LayoutActor and GridActor
 
-add_task(async function() {
+add_task(async function () {
   const { target, walker, layout } = await initLayoutFrontForUrl(
     "data:text/html;charset=utf-8,<title>test</title><div></div>"
   );

@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["general.autoScroll", true],
@@ -37,7 +37,7 @@ async function doTest() {
 
   const pageUrl = httpURL("helper_test_autoscrolling_in_oop_frame.html");
 
-  await BrowserTestUtils.withNewTab(pageUrl, async function(browser) {
+  await BrowserTestUtils.withNewTab(pageUrl, async function (browser) {
     await promiseApzFlushedRepaintsInPopup(browser);
 
     const iframeContext = browser.browsingContext.children[0];

@@ -33,7 +33,7 @@ export const modal = {
  *     Returns instance of the Dialog class, or `null` if no modal dialog
  *     is present.
  */
-modal.findModalDialogs = function(context) {
+modal.findModalDialogs = function (context) {
   // First check if there is a modal dialog already present for the
   // current browser window.
   for (let win of Services.wm.getEnumerator(null)) {

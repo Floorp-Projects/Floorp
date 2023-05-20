@@ -5,7 +5,7 @@
 async function check(contentTask, options = {}) {
   await BrowserTestUtils.withNewTab(
     "https://test1.example.com/",
-    async function(browser) {
+    async function (browser) {
       let popupShownPromise = waitForNotificationPanel();
       await SpecialPowers.spawn(browser, [], contentTask);
       let panel = await popupShownPromise;
@@ -24,7 +24,9 @@ async function check(contentTask, options = {}) {
   });
   channel = channel.QueryInterface(Ci.nsIFileChannel);
 
-  await BrowserTestUtils.withNewTab(channel.file.path, async function(browser) {
+  await BrowserTestUtils.withNewTab(channel.file.path, async function (
+    browser
+  ) {
     let popupShownPromise = waitForNotificationPanel();
     await SpecialPowers.spawn(browser, [], contentTask);
     let panel = await popupShownPromise;
@@ -68,7 +70,7 @@ async function check(contentTask, options = {}) {
     await extension.startup();
     let extensionURI = await extension.awaitMessage("extension-tab-url");
 
-    await BrowserTestUtils.withNewTab(extensionURI, async function(browser) {
+    await BrowserTestUtils.withNewTab(extensionURI, async function (browser) {
       let popupShownPromise = waitForNotificationPanel();
       await SpecialPowers.spawn(browser, [], contentTask);
       let panel = await popupShownPromise;
@@ -84,7 +86,7 @@ async function check(contentTask, options = {}) {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["media.navigator.permission.fake", true],
@@ -95,7 +97,7 @@ add_setup(async function() {
 });
 
 add_task(async function test_displayURI_geo() {
-  await check(async function() {
+  await check(async function () {
     content.navigator.geolocation.getCurrentPosition(() => {});
   });
 });
@@ -103,21 +105,21 @@ add_task(async function test_displayURI_geo() {
 const kVREnabled = SpecialPowers.getBoolPref("dom.vr.enabled");
 if (kVREnabled) {
   add_task(async function test_displayURI_xr() {
-    await check(async function() {
+    await check(async function () {
       content.navigator.getVRDisplays();
     });
   });
 }
 
 add_task(async function test_displayURI_camera() {
-  await check(async function() {
+  await check(async function () {
     content.navigator.mediaDevices.getUserMedia({ video: true, fake: true });
   });
 });
 
 add_task(async function test_displayURI_geo_blob() {
   await check(
-    async function() {
+    async function () {
       let text =
         "<script>navigator.geolocation.getCurrentPosition(() => {})</script>";
       let blob = new Blob([text], { type: "text/html" });
@@ -131,7 +133,7 @@ add_task(async function test_displayURI_geo_blob() {
 if (kVREnabled) {
   add_task(async function test_displayURI_xr_blob() {
     await check(
-      async function() {
+      async function () {
         let text = "<script>navigator.getVRDisplays()</script>";
         let blob = new Blob([text], { type: "text/html" });
         let url = content.URL.createObjectURL(blob);
@@ -144,7 +146,7 @@ if (kVREnabled) {
 
 add_task(async function test_displayURI_camera_blob() {
   await check(
-    async function() {
+    async function () {
       let text =
         "<script>navigator.mediaDevices.getUserMedia({video: true, fake: true})</script>";
       let blob = new Blob([text], { type: "text/html" });

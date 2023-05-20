@@ -519,10 +519,7 @@ var gIdentityHandler = {
     // be almost identical to the one in AboutHttpsOnlyErrorParent.sys.mjs)
     let newURI;
     if (this._isAboutHttpsOnlyErrorPage) {
-      newURI = gBrowser.currentURI
-        .mutate()
-        .setScheme("http")
-        .finalize();
+      newURI = gBrowser.currentURI.mutate().setScheme("http").finalize();
       principal = Services.scriptSecurityManager.createContentPrincipal(
         newURI,
         gBrowser.contentPrincipal.originAttributes
@@ -591,7 +588,7 @@ var gIdentityHandler = {
     // SubjectName fields, broken up for individual access
     if (cert.subjectName) {
       result.subjectNameFields = {};
-      cert.subjectName.split(",").forEach(function(v) {
+      cert.subjectName.split(",").forEach(function (v) {
         var field = v.split("=");
         this[field[0]] = field[1];
       }, result.subjectNameFields);

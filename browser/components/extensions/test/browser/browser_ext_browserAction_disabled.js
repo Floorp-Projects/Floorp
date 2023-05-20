@@ -10,7 +10,7 @@ add_task(async function testDisabled() {
       },
     },
 
-    background: function() {
+    background: function () {
       let clicked = false;
 
       browser.browserAction.onClicked.addListener(() => {

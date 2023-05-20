@@ -6,7 +6,7 @@
 /**
  * Test what happens when other tools control the profiler.
  */
-add_task(async function() {
+add_task(async function () {
   const { front, client } = await initPerfFront();
 
   // Simulate other tools by getting an independent handle on the Gecko Profiler.

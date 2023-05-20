@@ -7,7 +7,7 @@
 
 const TEST_COM_URL = URL_ROOT_SSL + "simple_document.html";
 
-add_task(async function() {
+add_task(async function () {
   // Disable the preloaded process as it gets created lazily and may interfere
   // with process count assertions
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
@@ -445,12 +445,14 @@ async function testIframeNavigations() {
   // Navigate to the same page with query params
   info("Load the second page");
   const secondPageUrl = TEST_COM_URL + "?second-load";
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [secondPageUrl], function(
-    url
-  ) {
-    const iframe = content.document.querySelector("iframe");
-    iframe.src = url;
-  });
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [secondPageUrl],
+    function (url) {
+      const iframe = content.document.querySelector("iframe");
+      iframe.src = url;
+    }
+  );
 
   await waitFor(() => targets.length == 3, "wait for the next target");
   is(targets[2].url, secondPageUrl, "the second target is for the second url");
@@ -462,12 +464,12 @@ async function testIframeNavigations() {
   const iframeBrowsingContext = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       const iframe = content.document.querySelector("iframe");
       return iframe.browsingContext;
     }
   );
-  await SpecialPowers.spawn(iframeBrowsingContext, [], function() {
+  await SpecialPowers.spawn(iframeBrowsingContext, [], function () {
     content.history.back();
   });
 
@@ -478,7 +480,7 @@ async function testIframeNavigations() {
   // Go forward and resurect the second page, this should also be a bfcache navigation, and,
   // get a new target.
   info("Go forward to the second page");
-  await SpecialPowers.spawn(iframeBrowsingContext, [], function() {
+  await SpecialPowers.spawn(iframeBrowsingContext, [], function () {
     content.history.forward();
   });
 

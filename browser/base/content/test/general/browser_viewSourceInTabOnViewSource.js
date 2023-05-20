@@ -14,7 +14,7 @@ function wait_while_tab_is_busy() {
 
 // This function waits for the tab to stop being busy instead of waiting for it
 // to load, since the _elementsForViewSource change happens at that time.
-var with_new_tab_opened = async function(options, taskFn) {
+var with_new_tab_opened = async function (options, taskFn) {
   let busyPromise = wait_while_tab_is_busy();
   let tab = await BrowserTestUtils.openNewForegroundTab(
     options.gBrowser,

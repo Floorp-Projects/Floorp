@@ -34,13 +34,13 @@ const HTTPS_TEST_ROOT_2 = getRootDirectory(gTestPath).replace(
   "https://test2.example.com"
 );
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({ set: [[PREF_ACTIVE, true]] });
 });
 
 add_task(async function test1() {
   let url = HTTPS_TEST_ROOT_1 + "file_bug902156_1.html";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     await assertMixedContentBlockingState(browser, {
       activeLoaded: false,
       activeBlocked: true,
@@ -53,7 +53,7 @@ add_task(async function test1() {
     gIdentityHandler.disableMixedContentProtection();
     await browserLoaded;
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let expected = "Mixed Content Blocker disabled";
       await ContentTaskUtils.waitForCondition(
         () =>
@@ -83,7 +83,7 @@ add_task(async function test1() {
       activeBlocked: false,
       passiveLoaded: false,
     });
-    await SpecialPowers.spawn(browser, [], function() {
+    await SpecialPowers.spawn(browser, [], function () {
       let actual = content.document.getElementById("mctestdiv").innerHTML;
       is(
         actual,
@@ -99,7 +99,7 @@ add_task(async function test1() {
 
 add_task(async function test2() {
   let url = HTTPS_TEST_ROOT_2 + "file_bug902156_2.html";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     await assertMixedContentBlockingState(browser, {
       activeLoaded: false,
       activeBlocked: true,
@@ -112,7 +112,7 @@ add_task(async function test2() {
     gIdentityHandler.disableMixedContentProtection();
     await browserLoaded;
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let expected = "Mixed Content Blocker disabled";
       await ContentTaskUtils.waitForCondition(
         () =>
@@ -133,7 +133,7 @@ add_task(async function test2() {
     url = HTTPS_TEST_ROOT_2 + "file_bug902156_1.html";
     browserLoaded = BrowserTestUtils.browserLoaded(browser, false, url);
     // reload the page using the provided link in the html file
-    await SpecialPowers.spawn(browser, [], function() {
+    await SpecialPowers.spawn(browser, [], function () {
       let mctestlink = content.document.getElementById("mctestlink");
       mctestlink.click();
     });
@@ -147,7 +147,7 @@ add_task(async function test2() {
       passiveLoaded: false,
     });
 
-    await SpecialPowers.spawn(browser, [], function() {
+    await SpecialPowers.spawn(browser, [], function () {
       let actual = content.document.getElementById("mctestdiv").innerHTML;
       is(
         actual,
@@ -161,7 +161,7 @@ add_task(async function test2() {
 
 add_task(async function test3() {
   let url = HTTPS_TEST_ROOT_1 + "file_bug902156_3.html";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     await assertMixedContentBlockingState(browser, {
       activeLoaded: false,
       activeBlocked: true,

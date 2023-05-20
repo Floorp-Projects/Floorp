@@ -8,12 +8,12 @@ const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html><h1>Object Inspector on Getters</h1>";
 const { ELLIPSIS } = require("resource://devtools/shared/l10n.js");
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const LONGSTRING = "ab ".repeat(1e5);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [LONGSTRING], function(
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [LONGSTRING], function (
     longString
   ) {
     content.wrappedJSObject.console.log(

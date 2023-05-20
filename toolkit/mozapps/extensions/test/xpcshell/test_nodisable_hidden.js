@@ -14,7 +14,7 @@ const SYSTEM_ID = "system@tests.mozilla.org";
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 // normal add-ons can be user disabled.
-add_task(async function() {
+add_task(async function () {
   await promiseStartupManager();
 
   await promiseInstallWebExtension({
@@ -59,7 +59,7 @@ add_task(async function() {
 });
 
 // system add-ons can never be user disabled.
-add_task(async function() {
+add_task(async function () {
   let xpi = createTempWebExtensionFile({
     manifest: {
       name: "Test disabling hidden add-ons, hidden system add-on case.",

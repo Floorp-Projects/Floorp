@@ -17,8 +17,8 @@ add_task(async function test_normal() {
       FAVICON_URI,
       true,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      function() {
-        PlacesUtils.favicons.getFaviconDataForPage(pageURI, function(
+      function () {
+        PlacesUtils.favicons.getFaviconDataForPage(pageURI, function (
           aURI,
           aDataLen,
           aData,
@@ -40,7 +40,7 @@ add_task(async function test_missing() {
   let pageURI = NetUtil.newURI("http://example.com/missing");
 
   await new Promise(resolve => {
-    PlacesUtils.favicons.getFaviconDataForPage(pageURI, function(
+    PlacesUtils.favicons.getFaviconDataForPage(pageURI, function (
       aURI,
       aDataLen,
       aData,

@@ -10,7 +10,7 @@ const TEST_URI =
   "test/browser/" +
   "test-external-script-errors.html";
 
-add_task(async function() {
+add_task(async function () {
   // On e10s, the exception is triggered in child process
   // and is ignored by test harness
   if (!Services.appinfo.browserTabsRemoteAutostart) {

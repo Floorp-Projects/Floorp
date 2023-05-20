@@ -33,7 +33,7 @@ function checkFaviconDataForPage(
   aExpectedData,
   aCallback
 ) {
-  PlacesUtils.favicons.getFaviconDataForPage(aPageURI, async function(
+  PlacesUtils.favicons.getFaviconDataForPage(aPageURI, async function (
     aURI,
     aDataLen,
     aData,
@@ -55,7 +55,7 @@ function checkFaviconDataForPage(
  *        This function is called after the check finished.
  */
 function checkFaviconMissingForPage(aPageURI, aCallback) {
-  PlacesUtils.favicons.getFaviconURLForPage(aPageURI, function(
+  PlacesUtils.favicons.getFaviconURLForPage(aPageURI, function (
     aURI,
     aDataLen,
     aData,

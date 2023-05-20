@@ -15,7 +15,7 @@ loadScript("dom/quota/test/common/file.js");
 function awaitStoragePressure() {
   let promise_resolve;
 
-  let promise = new Promise(function(resolve) {
+  let promise = new Promise(function (resolve) {
     promise_resolve = resolve;
   });
 

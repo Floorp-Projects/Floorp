@@ -67,10 +67,10 @@ async function runNextTest() {
   let nextTest = tests.shift();
   if (nextTest.onShown) {
     let shownState = false;
-    onPopupEvent("popupshowing", function() {
+    onPopupEvent("popupshowing", function () {
       info("[" + nextTest.id + "] popup showing");
     });
-    onPopupEvent("popupshown", function() {
+    onPopupEvent("popupshown", function () {
       shownState = true;
       info("[" + nextTest.id + "] popup shown");
       (nextTest.onShown(this) || Promise.resolve()).then(undefined, ex =>
@@ -79,7 +79,7 @@ async function runNextTest() {
     });
     onPopupEvent(
       "popuphidden",
-      function() {
+      function () {
         info("[" + nextTest.id + "] popup hidden");
         (nextTest.onHidden(this) || Promise.resolve()).then(
           () => goNext(),
@@ -166,7 +166,7 @@ function BasicNotification(testId) {
   };
 }
 
-BasicNotification.prototype.addOptions = function(options) {
+BasicNotification.prototype.addOptions = function (options) {
   for (let [name, value] of Object.entries(options)) {
     this.options[name] = value;
   }
@@ -263,7 +263,7 @@ function checkPopup(popup, notifyObj) {
     extraSecondaryActions.length,
     "number of extra secondary actions matches"
   );
-  extraSecondaryActions.forEach(function(a, i) {
+  extraSecondaryActions.forEach(function (a, i) {
     is(
       actualExtraSecondaryActions[i].getAttribute("label"),
       a.label,
@@ -305,7 +305,7 @@ function onPopupEvent(eventName, callback, condition) {
 
 function waitForNotificationPanel() {
   return new Promise(resolve => {
-    onPopupEvent("popupshown", function() {
+    onPopupEvent("popupshown", function () {
       resolve(this);
     });
   });
@@ -313,7 +313,7 @@ function waitForNotificationPanel() {
 
 function waitForNotificationPanelHidden() {
   return new Promise(resolve => {
-    onPopupEvent("popuphidden", function() {
+    onPopupEvent("popuphidden", function () {
       resolve(this);
     });
   });
@@ -343,7 +343,7 @@ function triggerSecondaryCommand(popup, index) {
 
   popup.addEventListener(
     "popupshown",
-    function() {
+    function () {
       info("Command popup open for notification " + notification.id);
       // Press down until the desired command is selected. Decrease index by one
       // since the secondary action was handled above.

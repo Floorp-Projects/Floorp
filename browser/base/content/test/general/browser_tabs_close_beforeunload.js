@@ -10,7 +10,7 @@ const FIRST_TAB =
   getRootDirectory(gTestPath) + "close_beforeunload_opens_second_tab.html";
 const SECOND_TAB = getRootDirectory(gTestPath) + "close_beforeunload.html";
 
-add_task(async function() {
+add_task(async function () {
   info("Opening first tab");
   let firstTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -43,7 +43,7 @@ add_task(async function() {
     );
   });
   info("Opening second tab using a click");
-  await SpecialPowers.spawn(firstTab.linkedBrowser, [""], async function() {
+  await SpecialPowers.spawn(firstTab.linkedBrowser, [""], async function () {
     content.document.getElementsByTagName("a")[0].click();
   });
   info("Waiting for the second tab to be opened");

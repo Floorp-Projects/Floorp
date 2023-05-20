@@ -20,7 +20,7 @@ add_task(async function setup() {
 });
 
 // Verify that an update check returns the correct errors.
-add_task(async function() {
+add_task(async function () {
   await promiseInstallWebExtension({
     manifest: {
       name: "Test Addon 1",

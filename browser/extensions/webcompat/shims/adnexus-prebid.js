@@ -50,7 +50,7 @@ if (!window.pbjs?.requestBids) {
     setTargetingForGPTAsync() {},
   };
 
-  const push = function(fn) {
+  const push = function (fn) {
     if (typeof fn === "function") {
       try {
         fn();

@@ -10,7 +10,7 @@
 requestLongerTimeout(2);
 
 // Tests that pretty-printing updates console messages.
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-minified.html");
   invokeInTab("arithmetic");
 

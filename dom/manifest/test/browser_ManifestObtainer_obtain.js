@@ -132,7 +132,7 @@ function makeTestURL({ body }) {
   return url.href;
 }
 
-add_task(async function() {
+add_task(async function () {
   const promises = tests
     .map(test => ({
       gBrowser,
@@ -148,7 +148,7 @@ add_task(async function() {
   await Promise.all(promises);
 
   function testObtainingManifest(aTest) {
-    return async function(aBrowser) {
+    return async function (aBrowser) {
       try {
         const manifest = await ManifestObtainer.browserObtainManifest(aBrowser);
         aTest.run(manifest);
@@ -197,7 +197,7 @@ add_task(async () => {
  * Open a bunch of tabs and load manifests
  * in each tab. They should all return pass.
  */
-add_task(async function() {
+add_task(async function () {
   const defaultPath = "/browser/dom/manifest/test/manifestLoader.html";
   const tabURLs = [
     `http://example.com:80${defaultPath}`,
@@ -236,7 +236,7 @@ add_task(async function() {
 
   // Once all the pages have loaded, run a bunch of tests in "parallel".
   await Promise.all(
-    (function*() {
+    (function* () {
       for (let browser of browsers) {
         yield BrowserTestUtils.browserLoaded(browser);
       }
@@ -245,7 +245,7 @@ add_task(async function() {
   // Flood random browsers with requests. Once promises settle, check that
   // responses all pass.
   const results = await Promise.all(
-    (function*() {
+    (function* () {
       for (let browser of randBrowsers(browsers, 50)) {
         yield ManifestObtainer.browserObtainManifest(browser);
       }

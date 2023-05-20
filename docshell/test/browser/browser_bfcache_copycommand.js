@@ -50,7 +50,7 @@ async function testWithDomain(domain) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, dummy);
   let browser = tab.linkedBrowser;
 
-  let sel = await SpecialPowers.spawn(browser, [], function() {
+  let sel = await SpecialPowers.spawn(browser, [], function () {
     let sel = content.getSelection();
     sel.removeAllRanges();
     sel.selectAllChildren(content.document.body);
@@ -71,7 +71,7 @@ async function testWithDomain(domain) {
   browser.goBack();
   await loaded;
 
-  let sel2 = await SpecialPowers.spawn(browser, [], function() {
+  let sel2 = await SpecialPowers.spawn(browser, [], function () {
     return content.getSelection().toString();
   });
   is(sel, sel2, "Selection should remain when coming out of BFCache.");

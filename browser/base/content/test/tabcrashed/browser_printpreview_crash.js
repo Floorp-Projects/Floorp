@@ -20,7 +20,7 @@ add_task(async function test() {
   let browser = newTab.linkedBrowser;
 
   // 2. Navigate the iframe within the doc and wait for the load to complete
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     const iframe = content.document.querySelector("iframe");
     const loaded = new Promise(resolve => {
       iframe.addEventListener(
@@ -38,7 +38,7 @@ add_task(async function test() {
   });
 
   // 3. Change the top level document's domain
-  await SpecialPowers.spawn(browser, [DOMAIN], async function(domain) {
+  await SpecialPowers.spawn(browser, [DOMAIN], async function (domain) {
     content.document.domain = domain;
   });
 

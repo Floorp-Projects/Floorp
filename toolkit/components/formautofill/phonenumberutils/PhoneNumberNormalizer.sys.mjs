@@ -5,7 +5,7 @@
 // This library came from https://github.com/andreasgal/PhoneNumber.js but will
 // be further maintained by our own in Form Autofill codebase.
 
-export var PhoneNumberNormalizer = (function() {
+export var PhoneNumberNormalizer = (function () {
   const UNICODE_DIGITS = /[\uFF10-\uFF19\u0660-\u0669\u06F0-\u06F9]/g;
   const VALID_ALPHA_PATTERN = /[a-zA-Z]/g;
   const LEADING_PLUS_CHARS_PATTERN = /^[+\uFF0B]+/g;
@@ -48,11 +48,11 @@ export var PhoneNumberNormalizer = (function() {
       return "";
     }
 
-    number = number.replace(UNICODE_DIGITS, function(ch) {
+    number = number.replace(UNICODE_DIGITS, function (ch) {
       return String.fromCharCode(48 + (ch.charCodeAt(0) & 0xf));
     });
     if (!numbersOnly) {
-      number = number.replace(VALID_ALPHA_PATTERN, function(ch) {
+      number = number.replace(VALID_ALPHA_PATTERN, function (ch) {
         return String(E161[ch.toLowerCase()] || 0);
       });
     }

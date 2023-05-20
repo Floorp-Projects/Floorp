@@ -20,7 +20,7 @@ add_task(
       const actualLocation = packet.actualLocation;
       Assert.equal(actualLocation.line, 6);
 
-      packet = await executeOnNextTickAndWaitForPause(function() {
+      packet = await executeOnNextTickAndWaitForPause(function () {
         Cu.evalInSandbox("f()", debuggee);
       }, threadFront);
       const environment = await packet.frame.getEnvironment();

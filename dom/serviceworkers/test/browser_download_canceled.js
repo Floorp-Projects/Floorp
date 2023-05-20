@@ -90,7 +90,7 @@ async function performCanceledDownload(tab, path) {
   // Trigger the download.
   info(`triggering download of "${path}"`);
   /* eslint-disable no-shadow */
-  await SpecialPowers.spawn(tab.linkedBrowser, [path], function(path) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [path], function (path) {
     // Put a Promise in place that we can wait on for stream closure.
     content.wrappedJSObject.trackStreamClosure(path);
     // Create the link and trigger the download.
@@ -109,7 +109,7 @@ async function performCanceledDownload(tab, path) {
   // Wait for confirmation that the stream stopped.
   info(`wait for the ${path} stream to close.`);
   /* eslint-disable no-shadow */
-  const why = await SpecialPowers.spawn(tab.linkedBrowser, [path], function(
+  const why = await SpecialPowers.spawn(tab.linkedBrowser, [path], function (
     path
   ) {
     return content.wrappedJSObject.streamClosed[path].promise;
@@ -150,7 +150,7 @@ add_task(async function interruptedDownloads() {
   const controlled = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    function() {
+    function () {
       // This is a promise set up by the page during load, and we are post-load.
       return content.wrappedJSObject.controlled;
     }
@@ -164,7 +164,7 @@ add_task(async function interruptedDownloads() {
   await performCanceledDownload(tab, "sw-stream-download");
 
   // Cleanup
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     return content.wrappedJSObject.registration.unregister();
   });
   BrowserTestUtils.removeTab(tab);

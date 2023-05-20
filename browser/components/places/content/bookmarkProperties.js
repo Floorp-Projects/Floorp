@@ -224,10 +224,10 @@ var BookmarkPropertiesPanel = {
    * dialog to initialize the state of the panel.
    */
   async onDialogLoad() {
-    document.addEventListener("dialogaccept", function() {
+    document.addEventListener("dialogaccept", function () {
       BookmarkPropertiesPanel.onDialogAccept();
     });
-    document.addEventListener("dialogcancel", function() {
+    document.addEventListener("dialogcancel", function () {
       BookmarkPropertiesPanel.onDialogCancel();
     });
 
@@ -510,7 +510,7 @@ var BookmarkPropertiesPanel = {
   },
 };
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   // Content initialization is asynchronous, thus set mozSubdialogReady
   // immediately to properly wait for it.
   document.mozSubdialogReady = BookmarkPropertiesPanel.onDialogLoad()

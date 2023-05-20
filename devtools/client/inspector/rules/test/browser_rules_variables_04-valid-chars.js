@@ -7,7 +7,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URI = URL_ROOT + "doc_variables_4.html";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, view } = await openRuleView();
 

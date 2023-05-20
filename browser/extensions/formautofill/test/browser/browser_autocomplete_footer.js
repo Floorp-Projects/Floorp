@@ -12,7 +12,7 @@ add_task(async function setup_storage() {
 });
 
 add_task(async function test_press_enter_on_footer() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     browser
   ) {
     const {
@@ -49,7 +49,7 @@ add_task(async function test_press_enter_on_footer() {
 });
 
 add_task(async function test_click_on_footer() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     browser
   ) {
     const {
@@ -90,7 +90,7 @@ add_task(async function test_click_on_footer() {
 });
 
 add_task(async function test_phishing_warning_single_category() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     browser
   ) {
     const {
@@ -114,7 +114,7 @@ add_task(async function test_phishing_warning_single_category() {
 });
 
 add_task(async function test_phishing_warning_complex_categories() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     browser
   ) {
     await openPopupOn(browser, "#street-address");

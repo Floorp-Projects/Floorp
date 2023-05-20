@@ -34,7 +34,7 @@ function test_longstring_grip() {
 
   DevToolsServer.LONG_STRING_LENGTH = 200;
 
-  gThreadFront.once("paused", function(packet) {
+  gThreadFront.once("paused", function (packet) {
     const args = packet.frame.arguments;
     Assert.equal(args.length, 1);
     const grip = args[0];
@@ -48,17 +48,17 @@ function test_longstring_grip() {
       );
 
       const longStringFront = createLongStringFront(gClient, grip);
-      longStringFront.substring(22, 28).then(function(response) {
+      longStringFront.substring(22, 28).then(function (response) {
         try {
           Assert.equal(response, "monkey");
         } finally {
-          gThreadFront.resume().then(function() {
+          gThreadFront.resume().then(function () {
             finishClient(gClient);
           });
         }
       });
     } catch (error) {
-      gThreadFront.resume().then(function() {
+      gThreadFront.resume().then(function () {
         finishClient(gClient);
         do_throw(error);
       });

@@ -207,7 +207,7 @@ class TabPriorityWatcher {
 
 let gTabPriorityWatcher;
 
-add_setup(async function() {
+add_setup(async function () {
   // We need to turn on testMode for the process priority manager in
   // order to receive the observer notifications that this test relies on.
   await SpecialPowers.pushPrefEnv({
@@ -503,7 +503,7 @@ add_task(async function test_iframe_navigate() {
       // Do a cross-origin navigation in the iframe in the foreground tab.
       let iframe2URI = iframe2Host + "/browser/dom/ipc/tests/file_dummy.html";
       let loaded = BrowserTestUtils.browserLoaded(browser, true, iframe2URI);
-      await SpecialPowers.spawn(iframe, [iframe2URI], async function(
+      await SpecialPowers.spawn(iframe, [iframe2URI], async function (
         _iframe2URI
       ) {
         content.location = _iframe2URI;

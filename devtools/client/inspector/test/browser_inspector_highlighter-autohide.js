@@ -6,7 +6,7 @@
 
 // Test that clicking on a node in the markup view or picking a node with the node picker
 // shows a highlighter which is automatically hidden after a delay.
-add_task(async function() {
+add_task(async function () {
   info("Loading the test document and opening the inspector");
   const {
     inspector,

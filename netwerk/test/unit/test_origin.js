@@ -55,7 +55,7 @@ var currentPort = 0;
 var forceReload = false;
 var forceFailListener = false;
 
-var Listener = function() {};
+var Listener = function () {};
 Listener.prototype.clientPort = 0;
 Listener.prototype = {
   onStartRequest: function testOnStartRequest(request) {
@@ -85,7 +85,7 @@ Listener.prototype = {
   },
 };
 
-var FailListener = function() {};
+var FailListener = function () {};
 FailListener.prototype = {
   onStartRequest: function testOnStartRequest(request) {
     Assert.ok(request instanceof Ci.nsIHttpChannel);
@@ -231,7 +231,7 @@ function doTest10() {
   doTest();
 }
 
-var Http2PushApiListener = function() {};
+var Http2PushApiListener = function () {};
 
 Http2PushApiListener.prototype = {
   fooOK: false,

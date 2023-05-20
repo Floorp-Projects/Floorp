@@ -11,7 +11,7 @@ function run_test() {
   add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
 
   let fakeOCSPResponder = new HttpServer();
-  fakeOCSPResponder.registerPrefixHandler("/", function(request, response) {
+  fakeOCSPResponder.registerPrefixHandler("/", function (request, response) {
     response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
   });
   fakeOCSPResponder.start(8888);

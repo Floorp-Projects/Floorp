@@ -331,11 +331,11 @@ function downloadAndParseChromePins(
   let chromeImportedPinsets = {};
   let chromeImportedEntries = [];
 
-  chromePins.forEach(function(pin) {
+  chromePins.forEach(function (pin) {
     let valid = true;
     let pinset = { name: pin.name, sha256_hashes: [] };
     // Translate the Chrome pinset format to ours
-    pin.static_spki_hashes.forEach(function(name) {
+    pin.static_spki_hashes.forEach(function (name) {
       if (name in chromeNameToHash) {
         let hash = chromeNameToHash[name];
         pinset.sha256_hashes.push(certSKDToName[hash]);
@@ -368,7 +368,7 @@ function downloadAndParseChromePins(
   // ours, except theirs includes a HSTS mode.
   const cData = gStaticPins.chromium_data;
   let entries = chromePreloads.entries;
-  entries.forEach(function(entry) {
+  entries.forEach(function (entry) {
     // HSTS entry only
     if (!entry.pins) {
       return;
@@ -554,7 +554,7 @@ function writeDomainList(chromeImportedEntries) {
   );
   let count = 0;
   let mozillaDomains = {};
-  gStaticPins.entries.forEach(function(entry) {
+  gStaticPins.entries.forEach(function (entry) {
     mozillaDomains[entry.name] = true;
   });
   // For any domain for which we have set pins, exclude them from
@@ -591,15 +591,15 @@ function writeFile(
   // them later.
   let usedFingerprints = {};
   let mozillaPins = {};
-  gStaticPins.pinsets.forEach(function(pinset) {
+  gStaticPins.pinsets.forEach(function (pinset) {
     mozillaPins[pinset.name] = true;
-    pinset.sha256_hashes.forEach(function(name) {
+    pinset.sha256_hashes.forEach(function (name) {
       usedFingerprints[name] = true;
     });
   });
   for (let key in chromeImportedPinsets) {
     let pinset = chromeImportedPinsets[key];
-    pinset.sha256_hashes.forEach(function(name) {
+    pinset.sha256_hashes.forEach(function (name) {
       usedFingerprints[name] = true;
     });
   }
@@ -609,7 +609,7 @@ function writeFile(
   // Write actual fingerprints.
   Object.keys(usedFingerprints)
     .sort()
-    .forEach(function(certName) {
+    .forEach(function (certName) {
       if (certName) {
         writeString("/* " + certName + " */\n");
         writeString("static const char " + nameToAlias(certName) + "[] =\n");
@@ -621,7 +621,7 @@ function writeFile(
   // Write the pinsets
   writeString(PINSETDEF);
   writeString("/* PreloadedHPKPins.json pinsets */\n");
-  gStaticPins.pinsets.sort(compareByName).forEach(function(pinset) {
+  gStaticPins.pinsets.sort(compareByName).forEach(function (pinset) {
     writeFullPinset(certNameToSKD, certSKDToName, pinset);
   });
   writeString("/* Chrome static pinsets */\n");

@@ -13,7 +13,7 @@ const SCOPE = PAGE_URI + "?storage_recovery";
 const SW_SCRIPT = BASE_URI + "storage_recovery_worker.sjs";
 
 async function checkForUpdate(browser) {
-  return SpecialPowers.spawn(browser, [SCOPE], async function(uri) {
+  return SpecialPowers.spawn(browser, [SCOPE], async function (uri) {
     let reg = await content.navigator.serviceWorker.getRegistration(uri);
     await reg.update();
     return !!reg.installing;
@@ -37,7 +37,7 @@ async function wipeStorage(u) {
   return Promise.all(list.map(c => caches.delete(c)));
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.serviceWorkers.enabled", true],
@@ -56,7 +56,7 @@ add_setup(async function() {
   await SpecialPowers.spawn(
     browser,
     [{ script: SW_SCRIPT, scope: SCOPE }],
-    async function(opts) {
+    async function (opts) {
       let reg = await content.navigator.serviceWorker.register(opts.script, {
         scope: opts.scope,
       });
@@ -136,7 +136,9 @@ add_task(async function wiped_and_failed_update_check() {
   // Also, since the existing service worker's scripts are broken
   // we should also remove the registration completely when the
   // update fails.
-  let exists = await SpecialPowers.spawn(browser, [SCOPE], async function(uri) {
+  let exists = await SpecialPowers.spawn(browser, [SCOPE], async function (
+    uri
+  ) {
     let reg = await content.navigator.serviceWorker.getRegistration(uri);
     return !!reg;
   });

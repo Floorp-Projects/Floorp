@@ -81,9 +81,7 @@ class WithCommonStyles extends MozLitElement {
     if (this.story) {
       return this.story();
     }
-    return html`
-      <slot></slot>
-    `;
+    return html` <slot></slot> `;
   }
 
   render() {

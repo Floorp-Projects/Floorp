@@ -51,11 +51,11 @@ function downloadJSON(uri) {
   return new Promise((resolve, reject) => {
     let xmlHttp = new lazy.ServiceRequest({ mozAnon: true });
 
-    xmlHttp.onload = function(aResponse) {
+    xmlHttp.onload = function (aResponse) {
       resolve(JSON.parse(this.responseText));
     };
 
-    xmlHttp.onerror = function(e) {
+    xmlHttp.onerror = function (e) {
       reject("Fetching " + uri + " results in error code: " + e.target.status);
     };
 
@@ -459,7 +459,7 @@ GMPInstallManager.prototype = {
       let { usedFallback, addons } = await this.checkForAddons();
       this._updateLastCheck();
       log.info("Found " + addons.length + " addons advertised.");
-      let addonsToInstall = addons.filter(function(gmpAddon) {
+      let addonsToInstall = addons.filter(function (gmpAddon) {
         log.info("Found addon: " + gmpAddon.toString());
 
         if (!gmpAddon.isValid) {
@@ -678,7 +678,7 @@ GMPExtractor.prototype = {
     let worker = new ChromeWorker(
       "resource://gre/modules/GMPExtractorWorker.js"
     );
-    worker.onmessage = function(msg) {
+    worker.onmessage = function (msg) {
       let log = getScopedLogger("GMPExtractor");
       worker.terminate();
       if (msg.data.result != "success") {

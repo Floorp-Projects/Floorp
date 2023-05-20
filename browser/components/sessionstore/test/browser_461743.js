@@ -28,7 +28,7 @@ function test() {
           tab2.linkedBrowser.removeEventListener("461743", listener, true);
           is(aEvent.data, "done", "XSS injection was attempted");
 
-          executeSoon(function() {
+          executeSoon(function () {
             let iframes = tab2.linkedBrowser.contentWindow.frames;
             let innerHTML = iframes[1].document.body.innerHTML;
             isnot(

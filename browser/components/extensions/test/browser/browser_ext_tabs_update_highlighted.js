@@ -8,7 +8,7 @@ add_task(async function test_update_highlighted() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       const trackedEvents = ["onActivated", "onHighlighted"];
       async function expectResults(fn, action) {
         let resolve;

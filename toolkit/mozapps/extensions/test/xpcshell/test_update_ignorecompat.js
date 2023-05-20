@@ -30,7 +30,7 @@ const appId = "toolkit@mozilla.org";
 
 // Test that the update check correctly observes the
 // extensions.strictCompatibility pref.
-add_test(async function() {
+add_test(async function () {
   await promiseWriteInstallRDFForExtension(
     {
       id: "addon9@tests.mozilla.org",
@@ -74,7 +74,7 @@ add_test(async function() {
 
 // Test that the update check correctly observes when an addon opts-in to
 // strict compatibility checking.
-add_test(async function() {
+add_test(async function () {
   await promiseWriteInstallRDFForExtension(
     {
       id: "addon11@tests.mozilla.org",

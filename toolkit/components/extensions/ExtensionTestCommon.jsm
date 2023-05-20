@@ -265,12 +265,7 @@ const ExtensionTestAssertions = {
       return [];
     }
 
-    return Array.from(
-      persistentListeners
-        .get(apiNs)
-        .get(apiEvent)
-        .values()
-    );
+    return Array.from(persistentListeners.get(apiNs).get(apiEvent).values());
   },
 
   assertPersistentListeners(

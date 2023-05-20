@@ -6,7 +6,7 @@
 
 const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
 
-module.exports = async function({ targetCommand, targetFront, onAvailable }) {
+module.exports = async function ({ targetCommand, targetFront, onAvailable }) {
   const isBrowserToolbox =
     targetCommand.descriptorFront.isBrowserProcessDescriptor;
   const isNonTopLevelFrameTarget =

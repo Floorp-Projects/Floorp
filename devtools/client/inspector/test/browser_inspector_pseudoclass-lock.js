@@ -18,7 +18,7 @@ const TEST_URL =
   "  </div>" +
   "</body>";
 
-add_task(async function() {
+add_task(async function () {
   info("Creating the test tab and opening the rule-view");
   let {
     tab,

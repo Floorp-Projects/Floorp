@@ -106,7 +106,7 @@ class WorkerDispatcher {
 }
 
 function workerHandler(publicInterface) {
-  return function(msg) {
+  return function (msg) {
     const { id, method, calls } = msg.data;
 
     Promise.all(

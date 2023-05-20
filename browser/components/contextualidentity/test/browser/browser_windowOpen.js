@@ -7,7 +7,7 @@ const BASE_URI =
   "http://mochi.test:8888/browser/browser/components/" +
   "contextualidentity/test/browser/empty_file.html";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.userContext.enabled", true],
@@ -26,7 +26,7 @@ add_task(async function test() {
 
   info("Opening a new window from this tab...");
   let newWinPromise = BrowserTestUtils.waitForNewWindow({ url: BASE_URI });
-  SpecialPowers.spawn(browser, [BASE_URI], function(url) {
+  SpecialPowers.spawn(browser, [BASE_URI], function (url) {
     content.window.newWindow = content.window.open(url, "_blank");
   });
 

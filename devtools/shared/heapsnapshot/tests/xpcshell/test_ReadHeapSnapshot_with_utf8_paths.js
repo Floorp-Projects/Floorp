@@ -3,7 +3,7 @@
 
 // Test that we can read core dumps with a UTF8 path into HeapSnapshot instances.
 /* eslint-disable strict */
-add_task(async function() {
+add_task(async function () {
   const fileNameWithRussianCharacters =
     "Снимок памяти Click.ru 08.06.2020 (Firefox dump).fxsnapshot";
   const filePathWithRussianCharacters = PathUtils.join(

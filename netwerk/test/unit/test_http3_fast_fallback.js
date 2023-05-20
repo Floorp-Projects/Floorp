@@ -99,7 +99,7 @@ function channelOpenPromise(chan, flags, delay) {
   });
 }
 
-let CheckOnlyHttp2Listener = function() {};
+let CheckOnlyHttp2Listener = function () {};
 
 CheckOnlyHttp2Listener.prototype = {
   onStartRequest: function testOnStartRequest(request) {},
@@ -680,7 +680,7 @@ add_task(async function testH3FallbackWithMultipleTransactions() {
   }
 
   let res = await Promise.all(promises);
-  res.forEach(function(e) {
+  res.forEach(function (e) {
     let [req] = e;
     Assert.equal(req.protocolVersion, "h2");
     let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);
@@ -836,7 +836,7 @@ add_task(async function testH3FastFallbackWithMultipleTransactions() {
   }
 
   let res = await Promise.all(promises);
-  res.forEach(function(e) {
+  res.forEach(function (e) {
     let [req] = e;
     Assert.equal(req.protocolVersion, "h2");
     let internal = req.QueryInterface(Ci.nsIHttpChannelInternal);

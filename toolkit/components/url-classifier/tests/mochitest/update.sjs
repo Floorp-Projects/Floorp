@@ -7,7 +7,7 @@ const BinaryInputStream = CC(
 
 function handleRequest(request, response) {
   var query = {};
-  request.queryString.split("&").forEach(function(val) {
+  request.queryString.split("&").forEach(function (val) {
     var idx = val.indexOf("=");
     query[val.slice(0, idx)] = unescape(val.slice(idx + 1));
   });
@@ -54,7 +54,7 @@ function parseV2Request(bytes) {
   var ret = "";
   getState("lists")
     .split("\n")
-    .forEach(function(list) {
+    .forEach(function (list) {
       if (list == table) {
         var completions = getState(list).split("\n");
         ret += "n:1000\n";

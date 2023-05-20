@@ -6,7 +6,7 @@ const gTestRoot = getRootDirectory(gTestPath).replace(
 add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: gTestRoot + "file_bug839103.html" },
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [gTestRoot], testBody);
     }
   );

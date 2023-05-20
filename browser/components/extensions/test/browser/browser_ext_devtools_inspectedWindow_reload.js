@@ -162,7 +162,7 @@ add_task(async function test_devtools_inspectedWindow_reload_ignore_cache() {
     urlParams: "test=cache",
     background,
     devtoolsPage,
-    testCase: async function(extension) {
+    testCase: async function (extension) {
       for (const testMessage of ["no-ignore-cache", "ignore-cache"]) {
         extension.sendMessage(testMessage);
         await extension.awaitMessage(
@@ -264,7 +264,7 @@ add_task(
       background,
       devtoolsPage,
       closeToolbox: false,
-      testCase: async function(extension, tab, toolbox) {
+      testCase: async function (extension, tab, toolbox) {
         info("Get the initial user agent");
         const initialUserAgent = await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
@@ -458,7 +458,7 @@ add_task(async function test_devtools_inspectedWindow_reload_injected_script() {
     urlParams: "test=injected-script&frames=3",
     background,
     devtoolsPage,
-    testCase: async function(extension) {
+    testCase: async function (extension) {
       extension.sendMessage("no-injected-script");
 
       await extension.awaitMessage(

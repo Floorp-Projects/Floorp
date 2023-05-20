@@ -22,7 +22,7 @@ let gResponse = 1;
   });
 })();
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
 
   // Visited pages listed by descending visit date.

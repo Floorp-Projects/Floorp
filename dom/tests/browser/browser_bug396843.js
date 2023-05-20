@@ -312,19 +312,20 @@ add_task(async function test1() {
 });
 
 async function newTabTest(location) {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: location }, async function(
-    browser
-  ) {
-    await SpecialPowers.spawn(
-      browser,
-      [{ location, testInDocument_: testInDocument.toSource() }],
-      async function({ location, testInDocument_ }) {
-        // eslint-disable-next-line no-eval
-        let testInDocument = eval(`(() => (${testInDocument_}))()`);
-        testInDocument(content.document, location);
-      }
-    );
-  });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: location },
+    async function (browser) {
+      await SpecialPowers.spawn(
+        browser,
+        [{ location, testInDocument_: testInDocument.toSource() }],
+        async function ({ location, testInDocument_ }) {
+          // eslint-disable-next-line no-eval
+          let testInDocument = eval(`(() => (${testInDocument_}))()`);
+          testInDocument(content.document, location);
+        }
+      );
+    }
+  );
 }
 
 add_task(async function test2() {

@@ -8,7 +8,7 @@
 
 const TEST_URL = 'data:text/html,<body class="abcd"></body>';
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   await selectNode(".abcd", inspector);

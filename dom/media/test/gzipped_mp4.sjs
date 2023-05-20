@@ -1,6 +1,6 @@
 function getGzippedFileBytes() {
   var file;
-  getObjectState("SERVER_ROOT", function(serverRoot) {
+  getObjectState("SERVER_ROOT", function (serverRoot) {
     file = serverRoot.getFile("tests/dom/media/test/short.mp4.gz");
   });
   var fileInputStream = Cc[

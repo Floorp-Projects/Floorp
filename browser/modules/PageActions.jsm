@@ -1162,7 +1162,7 @@ PageActions.PREF_PERSISTED_ACTIONS = PREF_PERSISTED_ACTIONS;
 // new actions.
 var gBuiltInActions;
 
-PageActions._initBuiltInActions = function() {
+PageActions._initBuiltInActions = function () {
   gBuiltInActions = [
     // bookmark
     {

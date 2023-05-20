@@ -7,7 +7,7 @@
  * Tests if original request's header panel is visible when custom request is cancelled.
  */
 
-add_task(async function() {
+add_task(async function () {
   if (
     Services.prefs.getBoolPref(
       "devtools.netmonitor.features.newEditAndResend",

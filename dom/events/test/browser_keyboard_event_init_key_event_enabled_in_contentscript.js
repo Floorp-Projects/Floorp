@@ -37,7 +37,7 @@ async function installAndStartExtension() {
   return extension;
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.keyboardevent.init_key_event.enabled", false],

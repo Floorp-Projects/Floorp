@@ -18,7 +18,7 @@ const TEST_URL = "http://example.com/";
 
 addRDMTask(
   null,
-  async function() {
+  async function () {
     const tab = await addTab(TEST_URL);
 
     const { ui } = await openRDM(tab);

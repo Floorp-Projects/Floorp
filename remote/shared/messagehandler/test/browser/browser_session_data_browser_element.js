@@ -34,7 +34,7 @@ add_task(async function test_session_data_broadcast() {
   // Collect the events to detect which MessageHandlers have been started.
   info("Watch events emitted when session data is applied");
   const sessionDataEvents = [];
-  const onRootEvent = function(evtName, wrappedEvt) {
+  const onRootEvent = function (evtName, wrappedEvt) {
     if (wrappedEvt.name === "received-session-data") {
       sessionDataEvents.push(wrappedEvt.data.contextId);
     }

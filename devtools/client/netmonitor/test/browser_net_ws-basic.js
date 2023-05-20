@@ -7,7 +7,7 @@
  * Test that WS connection is established successfully and sent/received messages are correct.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(WS_PAGE_URL, {
     requestCount: 1,
   });

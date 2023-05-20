@@ -398,16 +398,16 @@ class PageStyleActor extends Actor {
     }
 
     // @font-face fonts at the top, then alphabetically, then by weight
-    fontsArray.sort(function(a, b) {
+    fontsArray.sort(function (a, b) {
       return a.weight > b.weight ? 1 : -1;
     });
-    fontsArray.sort(function(a, b) {
+    fontsArray.sort(function (a, b) {
       if (a.CSSFamilyName == b.CSSFamilyName) {
         return 0;
       }
       return a.CSSFamilyName > b.CSSFamilyName ? 1 : -1;
     });
-    fontsArray.sort(function(a, b) {
+    fontsArray.sort(function (a, b) {
       if ((a.rule && b.rule) || (!a.rule && !b.rule)) {
         return 0;
       }

@@ -37,7 +37,7 @@ export function httpRequest(aUrl, aOptions) {
     Ci.nsIChannel.LOAD_ANONYMOUS | // don't send cookies
     Ci.nsIChannel.LOAD_BYPASS_CACHE |
     Ci.nsIChannel.INHIBIT_CACHING;
-  xhr.onerror = function(aProgressEvent) {
+  xhr.onerror = function (aProgressEvent) {
     if (aOptions.onError) {
       // adapted from toolkit/mozapps/extensions/nsBlocklistService.js
       let request = aProgressEvent.target;
@@ -54,7 +54,7 @@ export function httpRequest(aUrl, aOptions) {
       aOptions.onError(statusText, null, this);
     }
   };
-  xhr.onload = function(aRequest) {
+  xhr.onload = function (aRequest) {
     try {
       let target = aRequest.target;
       if (aOptions.logger) {
@@ -78,7 +78,7 @@ export function httpRequest(aUrl, aOptions) {
   };
 
   if (aOptions.headers) {
-    aOptions.headers.forEach(function(header) {
+    aOptions.headers.forEach(function (header) {
       xhr.setRequestHeader(header[0], header[1]);
     });
   }

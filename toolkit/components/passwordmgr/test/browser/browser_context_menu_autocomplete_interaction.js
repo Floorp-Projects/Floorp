@@ -37,7 +37,7 @@ add_task(async function test_context_menu_username() {
       gBrowser,
       url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await formFilled;
       await openContextMenu(browser, "#form-basic-username");
 
@@ -56,7 +56,7 @@ add_task(async function test_context_menu_password() {
       gBrowser,
       url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await formFilled;
       await openContextMenu(browser, "#form-basic-password");
 

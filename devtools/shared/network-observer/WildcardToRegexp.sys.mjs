@@ -17,13 +17,7 @@
  *     provided url "template".
  */
 export function wildcardToRegExp(url) {
-  return new RegExp(
-    url
-      .split("*")
-      .map(regExpEscape)
-      .join(".*"),
-    "i"
-  );
+  return new RegExp(url.split("*").map(regExpEscape).join(".*"), "i");
 }
 
 /**

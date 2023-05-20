@@ -12,7 +12,7 @@ var expected_values = [
 ];
 
 // Create a line containing a CSS media query and a rule to set the bg color.
-var mediaQueryCSSLine = function(key, val, color) {
+var mediaQueryCSSLine = function (key, val, color) {
   return (
     "@media (" +
     key +
@@ -31,13 +31,13 @@ var blue = "rgb(0, 0, 255)";
 
 // Set a pref value asynchronously, returning a promise that resolves
 // when it succeeds.
-var pushPref = function(key, value) {
+var pushPref = function (key, value) {
   return SpecialPowers.pushPrefEnv({ set: [[key, value]] });
 };
 
 // Set the resistFingerprinting pref to the given value, and then check that the background
 // color has been updated properly as a result of re-evaluating the media queries.
-var checkColorForPref = async function(setting, testDivs, expectedColor) {
+var checkColorForPref = async function (setting, testDivs, expectedColor) {
   await pushPref("privacy.resistFingerprinting", setting);
   for (let div of testDivs) {
     let color = window.getComputedStyle(div).backgroundColor;
@@ -45,7 +45,7 @@ var checkColorForPref = async function(setting, testDivs, expectedColor) {
   }
 };
 
-var test = async function() {
+var test = async function () {
   // If the "off" and "on" expected values are the same, we can't actually
   // test anything here. (Might this be the case on mobile?)
   let skipTest = false;

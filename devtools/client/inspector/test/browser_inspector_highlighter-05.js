@@ -48,7 +48,7 @@ const TEST_URL =
   </html>
 `);
 
-add_task(async function() {
+add_task(async function () {
   info("Open the inspector to a blank page.");
   const { inspector } = await openInspectorForURL("about:blank");
 

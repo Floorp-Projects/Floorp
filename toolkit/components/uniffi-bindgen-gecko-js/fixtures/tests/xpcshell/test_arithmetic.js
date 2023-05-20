@@ -5,7 +5,7 @@ const Arithmetic = ChromeUtils.importESModule(
   "resource://gre/modules/RustArithmetic.sys.mjs"
 );
 
-add_task(async function() {
+add_task(async function () {
   Assert.ok(Arithmetic.IntegerOverflow);
   Assert.equal(await Arithmetic.add(2, 4), 6);
   Assert.equal(await Arithmetic.add(4, 8), 12);

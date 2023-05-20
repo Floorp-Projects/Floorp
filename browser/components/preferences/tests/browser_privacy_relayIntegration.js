@@ -73,7 +73,7 @@ add_task(async function initialState() {
         gBrowser,
         url: "about:preferences#privacy",
       },
-      async function(browser) {
+      async function (browser) {
         const doc = browser.contentDocument;
         const relayGroup = doc.getElementById("relayIntegrationBox");
         const checkbox = doc.getElementById("relayIntegration");
@@ -200,7 +200,7 @@ add_task(async function toggleRememberSignon() {
       gBrowser,
       url: "about:preferences#privacy",
     },
-    async function(browser) {
+    async function (browser) {
       const doc = browser.contentDocument;
       const checkbox = doc.getElementById("savePasswords");
       const relayCheckbox = doc.getElementById("relayIntegration");

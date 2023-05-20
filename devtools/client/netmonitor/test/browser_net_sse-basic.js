@@ -7,7 +7,7 @@
  * Test basic SSE connection.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(
     "http://mochi.test:8888/browser/devtools/client/netmonitor/test/html_sse-test-page.html",
     {

@@ -94,7 +94,7 @@ AuthPrompt2.prototype = {
   ) {
     var me = this;
     var allOverAndDead = false;
-    executeSoon(function() {
+    executeSoon(function () {
       try {
         if (allOverAndDead) {
           throw new Error("already canceled");
@@ -110,7 +110,7 @@ AuthPrompt2.prototype = {
         do_throw(e);
       }
     });
-    return new Cancelable(function() {
+    return new Cancelable(function () {
       if (allOverAndDead) {
         throw new Error("can't cancel, already ran");
       }

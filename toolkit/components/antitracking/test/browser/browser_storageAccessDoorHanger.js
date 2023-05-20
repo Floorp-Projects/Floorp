@@ -180,10 +180,10 @@ async function testDoorHanger(
   let ct = SpecialPowers.spawn(
     browser,
     [{ page: url, callback: runChecks.toString(), choice, useEscape }],
-    async function(obj) {
+    async function (obj) {
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
-        ifr.onload = function() {
+        ifr.onload = function () {
           info("Sending code to the 3rd party content");
           ifr.contentWindow.postMessage(obj.callback, "*");
         };

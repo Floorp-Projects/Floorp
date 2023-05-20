@@ -15,7 +15,7 @@ info("Loader imported");
 var PATH =
   "chrome://mochitests/content/chrome/toolkit/components/workerloader/tests/";
 var tests = [];
-var add_test = function(test) {
+var add_test = function (test) {
   tests.push(test);
 };
 
@@ -59,7 +59,7 @@ add_test(function test_circular() {
 
 // Testing error cases
 add_test(function test_exceptions() {
-  let should_throw = function(f) {
+  let should_throw = function (f) {
     try {
       f();
       return null;
@@ -152,7 +152,7 @@ add_test(function test_load() {
   is(J.foo, "foo", "Module J exported value foo");
 });
 
-self.onmessage = function(message) {
+self.onmessage = function (message) {
   for (let test of tests) {
     info("Entering " + test.name);
     try {

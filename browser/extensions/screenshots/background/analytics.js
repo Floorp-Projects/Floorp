@@ -6,12 +6,12 @@
 
 "use strict";
 
-this.analytics = (function() {
+this.analytics = (function () {
   const exports = {};
 
   let telemetryEnabled;
 
-  exports.incrementCount = function(scalar) {
+  exports.incrementCount = function (scalar) {
     const allowedScalars = [
       "download",
       "upload",
@@ -33,7 +33,7 @@ this.analytics = (function() {
       });
   };
 
-  exports.refreshTelemetryPref = function() {
+  exports.refreshTelemetryPref = function () {
     return browser.telemetry.canUpload().then(
       result => {
         telemetryEnabled = result;
@@ -46,7 +46,7 @@ this.analytics = (function() {
     );
   };
 
-  exports.isTelemetryEnabled = function() {
+  exports.isTelemetryEnabled = function () {
     catcher.watchPromise(exports.refreshTelemetryPref());
     return telemetryEnabled;
   };

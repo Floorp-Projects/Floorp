@@ -24,7 +24,7 @@ const colors = [
   { name: "hex", id: "test3", color: "#F06", result: "#0F0" },
 ];
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setCharPref("devtools.defaultColorUnit", "authored");
 
   let html = "";

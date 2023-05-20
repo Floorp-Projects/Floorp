@@ -9,7 +9,7 @@
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger(
     "doc-sourcemaps.html",
@@ -57,9 +57,7 @@ add_task(async function() {
 
   await selectSource(dbg, entrySrc);
   ok(
-    getCM(dbg)
-      .getValue()
-      .includes("window.keepMeAlive"),
+    getCM(dbg).getValue().includes("window.keepMeAlive"),
     "Original source text loaded correctly"
   );
 

@@ -16,7 +16,7 @@ addAccessibleTask(
   test
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testBoundsWithContent(docAcc, "div", browser);
     info("Changing left");
     await invokeContentTask(browser, [], () => {
@@ -47,7 +47,7 @@ addAccessibleTask(
 </div>
 <p id="noReflow">noReflow</p>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     for (const id of ["reflowContainer", "reflow3", "noReflow"]) {
       await testBoundsWithContent(docAcc, id, browser);
     }
@@ -79,7 +79,7 @@ addAccessibleTask(
   </div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const paraTree = { PARAGRAPH: [{ TEXT_LEAF: [] }] };
     const container = findAccessibleChildByID(docAcc, "container");
     testAccessibleTree(container, { SECTION: [paraTree, paraTree] });
@@ -91,7 +91,7 @@ addAccessibleTask(
     await invokeContentTask(browser, [], () => {
       content.document
         .querySelector(".pParent")
-        .addEventListener("click", function() {});
+        .addEventListener("click", function () {});
     });
     await reordered;
     testAccessibleTree(container, {

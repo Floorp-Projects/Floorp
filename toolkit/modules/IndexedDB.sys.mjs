@@ -92,7 +92,7 @@ function forwardProps(cls, target, props) {
  */
 function wrapMethods(cls, target, methods) {
   for (let method of methods) {
-    cls.prototype[method] = function(...args) {
+    cls.prototype[method] = function (...args) {
       return wrapRequest(this[target][method](...args));
     };
   }
@@ -111,7 +111,7 @@ function wrapMethods(cls, target, methods) {
  */
 function forwardMethods(cls, target, methods) {
   for (let method of methods) {
-    cls.prototype[method] = function(...args) {
+    cls.prototype[method] = function (...args) {
       return this[target][method](...args);
     };
   }
@@ -150,7 +150,7 @@ class Cursor {
  */
 function defineCursorUpdateMethods(cls, methods) {
   for (let method of methods) {
-    cls.prototype[method] = async function(...args) {
+    cls.prototype[method] = async function (...args) {
       const promise = this.awaitRequest();
       this.cursor[method](...args);
       await promise;
@@ -409,7 +409,7 @@ export class IndexedDB {
 }
 
 for (let method of ["cmp", "deleteDatabase"]) {
-  IndexedDB[method] = function(...args) {
+  IndexedDB[method] = function (...args) {
     return indexedDB[method](...args);
   };
 }

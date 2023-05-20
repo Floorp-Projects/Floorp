@@ -10,13 +10,13 @@ const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html><p>bug 660806 - history " +
   "navigation must not show the autocomplete popup";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const popup = jsterm.autocompletePopup;
 
   // The autocomplete popup should never be displayed during the test.
-  const onShown = function() {
+  const onShown = function () {
     ok(false, "popup shown");
   };
   popup.on("popup-opened", onShown);

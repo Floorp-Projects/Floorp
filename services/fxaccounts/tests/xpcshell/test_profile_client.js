@@ -28,8 +28,8 @@ const STATUS_SUCCESS = 200;
  *        Mocked raw response from the server
  * @returns {Function}
  */
-let mockResponse = function(response) {
-  let Request = function(requestUri) {
+let mockResponse = function (response) {
+  let Request = function (requestUri) {
     // Store the request uri so tests can inspect it
     Request._requestUri = requestUri;
     Request.ifNoneMatchSet = false;
@@ -70,8 +70,8 @@ const PROFILE_OPTIONS = {
  *        Error object
  * @returns {Function}
  */
-let mockResponseError = function(error) {
-  return function() {
+let mockResponseError = function (error) {
+  return function () {
     return {
       setHeader() {},
       async dispatch(method, payload) {
@@ -92,7 +92,7 @@ add_test(function successfulResponse() {
   };
 
   client._Request = new mockResponse(response);
-  client.fetchProfile().then(function(result) {
+  client.fetchProfile().then(function (result) {
     Assert.equal(
       client._Request._requestUri,
       "http://127.0.0.1:1111/v1/profile"
@@ -116,7 +116,7 @@ add_test(function setsIfNoneMatchETagHeader() {
 
   let req = new mockResponse(response);
   client._Request = req;
-  client.fetchProfile("bogusETag").then(function(result) {
+  client.fetchProfile("bogusETag").then(function (result) {
     Assert.equal(
       client._Request._requestUri,
       "http://127.0.0.1:1111/v1/profile"
@@ -137,7 +137,7 @@ add_test(function successful304Response() {
   };
 
   client._Request = new mockResponse(response);
-  client.fetchProfile().then(function(result) {
+  client.fetchProfile().then(function (result) {
     Assert.equal(result, null);
     run_next_test();
   });
@@ -152,7 +152,7 @@ add_test(function parseErrorResponse() {
   };
 
   client._Request = new mockResponse(response);
-  client.fetchProfile().catch(function(e) {
+  client.fetchProfile().catch(function (e) {
     Assert.equal(e.name, "FxAccountsProfileClientError");
     Assert.equal(e.code, STATUS_SUCCESS);
     Assert.equal(e.errno, ERRNO_PARSE);
@@ -171,7 +171,7 @@ add_test(function serverErrorResponse() {
   };
 
   client._Request = new mockResponse(response);
-  client.fetchProfile().catch(function(e) {
+  client.fetchProfile().catch(function (e) {
     Assert.equal(e.name, "FxAccountsProfileClientError");
     Assert.equal(e.code, 500);
     Assert.equal(e.errno, 100);
@@ -226,7 +226,7 @@ add_test(function server401ResponseThenSuccess() {
   let numRequests = 0;
   let numAuthHeaders = 0;
   // Like mockResponse but we want access to headers etc.
-  client._Request = function(requestUri) {
+  client._Request = function (requestUri) {
     return {
       setHeader(name, value) {
         if (name == "Authorization") {
@@ -289,7 +289,7 @@ add_test(function server401ResponsePersists() {
 
   let numRequests = 0;
   let numAuthHeaders = 0;
-  client._Request = function(requestUri) {
+  client._Request = function (requestUri) {
     return {
       setHeader(name, value) {
         if (name == "Authorization") {
@@ -305,7 +305,7 @@ add_test(function server401ResponsePersists() {
     };
   };
 
-  client.fetchProfile().catch(function(e) {
+  client.fetchProfile().catch(function (e) {
     Assert.equal(e.name, "FxAccountsProfileClientError");
     Assert.equal(e.code, 401);
     Assert.equal(e.errno, 100);
@@ -324,7 +324,7 @@ add_test(function networkErrorResponse() {
     serverURL: "http://domain.dummy",
     fxai: mockFxaInternal,
   });
-  client.fetchProfile().catch(function(e) {
+  client.fetchProfile().catch(function (e) {
     Assert.equal(e.name, "FxAccountsProfileClientError");
     Assert.equal(e.code, null);
     Assert.equal(e.errno, ERRNO_NETWORK);
@@ -336,7 +336,7 @@ add_test(function networkErrorResponse() {
 add_test(function unsupportedMethod() {
   let client = new FxAccountsProfileClient(PROFILE_OPTIONS);
 
-  return client._createRequest("/profile", "PUT").catch(function(e) {
+  return client._createRequest("/profile", "PUT").catch(function (e) {
     Assert.equal(e.name, "FxAccountsProfileClientError");
     Assert.equal(e.code, ERROR_CODE_METHOD_NOT_ALLOWED);
     Assert.equal(e.errno, ERRNO_NETWORK);
@@ -349,7 +349,7 @@ add_test(function unsupportedMethod() {
 add_test(function onCompleteRequestError() {
   let client = new FxAccountsProfileClient(PROFILE_OPTIONS);
   client._Request = new mockResponseError(new Error("onComplete error"));
-  client.fetchProfile().catch(function(e) {
+  client.fetchProfile().catch(function (e) {
     Assert.equal(e.name, "FxAccountsProfileClientError");
     Assert.equal(e.code, null);
     Assert.equal(e.errno, ERRNO_NETWORK);

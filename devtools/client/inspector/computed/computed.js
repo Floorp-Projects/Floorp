@@ -77,10 +77,10 @@ function UpdateProcess(win, array, options) {
   this.index = 0;
   this.array = array;
 
-  this.onItem = options.onItem || function() {};
-  this.onBatch = options.onBatch || function() {};
-  this.onDone = options.onDone || function() {};
-  this.onCancel = options.onCancel || function() {};
+  this.onItem = options.onItem || function () {};
+  this.onBatch = options.onBatch || function () {};
+  this.onDone = options.onDone || function () {};
+  this.onCancel = options.onCancel || function () {};
   this.threshold = options.threshold || 45;
 
   this.canceled = false;
@@ -267,7 +267,7 @@ function CssComputedView(inspector, document) {
  *        The key to lookup.
  * @returns {String} localized version of the given key.
  */
-CssComputedView.l10n = function(name) {
+CssComputedView.l10n = function (name) {
   try {
     return STYLE_INSPECTOR_L10N.getStr(name);
   } catch (ex) {
@@ -811,10 +811,7 @@ CssComputedView.prototype = {
    */
   _onCopy(event) {
     const win = this.styleWindow;
-    const text = win
-      .getSelection()
-      .toString()
-      .trim();
+    const text = win.getSelection().toString().trim();
     if (text !== "") {
       this.copySelection();
       event.preventDefault();
@@ -827,10 +824,7 @@ CssComputedView.prototype = {
   copySelection() {
     try {
       const win = this.styleWindow;
-      const text = win
-        .getSelection()
-        .toString()
-        .trim();
+      const text = win.getSelection().toString().trim();
 
       clipboardHelper.copyString(text);
     } catch (e) {

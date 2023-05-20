@@ -13,7 +13,7 @@ const {
   MAX_STRING_LENGTH,
 } = require("resource://devtools/server/actors/highlighters/utils/accessibility.js");
 
-add_task(async function() {
+add_task(async function () {
   const {
     target,
     walker,

@@ -14,7 +14,7 @@ const TEST_DATA = [
   { expectedTextContent: "div.ball.long" },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([".animated", ".long"]);
   const { animationInspector, panel } = await openAnimationInspector();

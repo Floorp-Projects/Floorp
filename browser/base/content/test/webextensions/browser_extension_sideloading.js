@@ -96,7 +96,7 @@ add_task(async function test_sideloading() {
     permissions: ["<all_urls>"],
   });
 
-  testCleanup = async function() {
+  testCleanup = async function () {
     // clear out ExtensionsUI state about sideloaded extensions so
     // subsequent tests don't get confused.
     ExtensionsUI.sideloaded.clear();
@@ -108,7 +108,7 @@ add_task(async function test_sideloading() {
   BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     // Return to about:blank when we're done
     BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, "about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -238,7 +238,7 @@ add_task(async function test_sideloading() {
     let promiseNotificationShown = promiseAppMenuNotificationShown(
       "addon-installed"
     );
-    return async function(addon) {
+    return async function (addon) {
       info(`Expect post install notification for "${addon.name}"`);
       let postInstallPanel = await promiseNotificationShown;
       let incognitoCheckbox = postInstallPanel.querySelector(

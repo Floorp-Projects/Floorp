@@ -265,7 +265,7 @@ class QueryPreferenceParameter extends QueryParameter {
  */
 function ParamSubstitution(paramValue, searchTerms, engine) {
   const PARAM_REGEXP = /\{((?:\w+:)?\w+)(\??)\}/g;
-  return paramValue.replace(PARAM_REGEXP, function(match, name, optional) {
+  return paramValue.replace(PARAM_REGEXP, function (match, name, optional) {
     // {searchTerms} is by far the most common param so handle it first.
     if (name == USER_DEFINED) {
       return searchTerms;
@@ -753,7 +753,7 @@ export class SearchEngine {
       case "http":
       case "https":
       case "ftp":
-        let iconLoadCallback = function(byteArray, contentType) {
+        let iconLoadCallback = function (byteArray, contentType) {
           // This callback may run after we've already set a preferred icon,
           // so check again.
           if (this._hasPreferredIcon && !isPreferred) {

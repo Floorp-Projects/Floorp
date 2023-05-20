@@ -13,7 +13,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html><p>Test keyboard a
   </script>
   `;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   info("Web Console opened");
   const outputScroller = hud.ui.outputScroller;
@@ -73,7 +73,7 @@ add_task(async function() {
       "another simple text message",
       ".console-api"
     );
-    SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
       content.console.log("another simple text message");
     });
     await onMessage;

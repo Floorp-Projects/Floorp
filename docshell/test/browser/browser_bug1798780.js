@@ -19,7 +19,7 @@ add_task(async function testBFCacheEviction() {
       "https://example.com"
     ) + "dummy_page.html";
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: uri }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: uri }, async function (
     browser
   ) {
     BrowserTestUtils.loadURIString(browser, uri2);
@@ -29,7 +29,7 @@ add_task(async function testBFCacheEviction() {
       browser,
       "pageshow"
     );
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       content.location.hash = "1";
       content.location.hash = "2";
       content.location.hash = "3";
@@ -42,7 +42,7 @@ add_task(async function testBFCacheEviction() {
       browser,
       "pageshow"
     );
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       content.history.go(4);
     });
     await awaitPageShow2;

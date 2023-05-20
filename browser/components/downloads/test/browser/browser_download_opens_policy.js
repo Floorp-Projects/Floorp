@@ -47,7 +47,7 @@ add_task(async function test_download_opens_on_click() {
     };
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     DownloadIntegration.launchFile = oldLaunchFile;
     await task_resetState();
     Services.telemetry.clearScalars();

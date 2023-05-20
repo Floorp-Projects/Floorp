@@ -132,7 +132,7 @@ const EXPECTED_REQUESTS = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   // the initNetMonitor function clears the network request list after the
   // page is loaded. That's why we first load a bogus page from SIMPLE_URL,
   // and only then load the real thing from INITIATOR_URL - we want to catch

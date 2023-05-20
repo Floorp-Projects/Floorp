@@ -41,7 +41,7 @@ function createTestBar() {
  *    toolbar, and resets the toolbars to default.
  */
 function checkRestoredPresence(aWidgetID) {
-  return (async function() {
+  return (async function () {
     let testBar = createTestBar();
     CustomizableUI.addWidgetToArea(aWidgetID, kTestBarID);
     let placement = CustomizableUI.getPlacementOfWidget(aWidgetID);
@@ -75,7 +75,7 @@ function checkRestoredPresence(aWidgetID) {
   })();
 }
 
-add_task(async function() {
+add_task(async function () {
   await checkRestoredPresence("downloads-button");
   await checkRestoredPresence("characterencoding-button");
 });

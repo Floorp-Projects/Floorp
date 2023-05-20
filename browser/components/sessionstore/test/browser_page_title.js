@@ -2,7 +2,7 @@
 
 const URL = "data:text/html,<title>initial title</title>";
 
-add_task(async function() {
+add_task(async function () {
   // Create a new tab.
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
   await promiseBrowserLoaded(tab.linkedBrowser);
@@ -19,7 +19,7 @@ add_task(async function() {
   is(entries[0].title, "initial title", "correct title");
 });
 
-add_task(async function() {
+add_task(async function () {
   // Create a new tab.
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
@@ -29,7 +29,7 @@ add_task(async function() {
   await TabStateFlusher.flush(browser);
 
   // Set a new title.
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     return new Promise(resolve => {
       docShell.chromeEventHandler.addEventListener(
         "DOMTitleChanged",

@@ -1257,8 +1257,9 @@ PostQueue.prototype = {
 
     let numQueued = this.postLimits.curRecords;
     this.log.info(
-      `Posting ${numQueued} records of ${this.queued.length +
-        1} bytes with batch=${batch}`
+      `Posting ${numQueued} records of ${
+        this.queued.length + 1
+      } bytes with batch=${batch}`
     );
     let queued = this.queued + "]";
     if (finalBatchPost) {

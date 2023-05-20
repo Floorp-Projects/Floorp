@@ -10,7 +10,7 @@ const PAGE_ON_MAIN = "about:robots";
 
 const TEST_DPPX = 2;
 
-add_task(async function() {
+add_task(async function () {
   // Set a pref for DPPX in order to assert whether the RDM is working correctly or not.
   await pushPref("devtools.responsive.viewport.pixelRatio", TEST_DPPX);
 

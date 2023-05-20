@@ -9,24 +9,25 @@ const TIMEOUT_PAGE_URI_HTTP =
   TEST_PATH_HTTP + "file_httpsfirst_timeout_server.sjs";
 
 async function runPrefTest(aURI, aDesc, aAssertURLStartsWith) {
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     const loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
     BrowserTestUtils.loadURIString(browser, aURI);
     await loaded;
 
-    await ContentTask.spawn(browser, { aDesc, aAssertURLStartsWith }, function({
-      aDesc,
-      aAssertURLStartsWith,
-    }) {
-      ok(
-        content.document.location.href.startsWith(aAssertURLStartsWith),
-        aDesc
-      );
-    });
+    await ContentTask.spawn(
+      browser,
+      { aDesc, aAssertURLStartsWith },
+      function ({ aDesc, aAssertURLStartsWith }) {
+        ok(
+          content.document.location.href.startsWith(aAssertURLStartsWith),
+          aDesc
+        );
+      }
+    );
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_first", false]],
   });

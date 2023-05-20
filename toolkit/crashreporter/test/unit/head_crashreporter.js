@@ -139,7 +139,7 @@ async function handleMinidump(callback) {
   let memoryfile = minidump.clone();
   memoryfile.leafName = memoryfile.leafName.slice(0, -4) + ".memory.json.gz";
 
-  let cleanup = async function() {
+  let cleanup = async function () {
     for (let file of [minidump, extrafile, memoryfile]) {
       if (file.exists()) {
         let file_removed = false;

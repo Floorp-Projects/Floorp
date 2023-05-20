@@ -351,7 +351,7 @@ function Toolbox(commands, selectedTool, hostType, contentWindow, frameId) {
   this._hostType = hostType;
 
   this.isOpen = new Promise(
-    function(resolve) {
+    function (resolve) {
       this._resolveIsOpen = resolve;
     }.bind(this)
   );
@@ -825,7 +825,7 @@ Toolbox.prototype = {
    * Open the toolbox
    */
   open() {
-    return async function() {
+    return async function () {
       // Kick off async loading the Fluent bundles.
       const fluentL10n = new FluentL10n();
       const fluentInitPromise = fluentL10n.init([

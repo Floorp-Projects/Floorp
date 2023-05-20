@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Test when the requested URL redirects
   await testFileCreationPositive(
     [

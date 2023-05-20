@@ -24,7 +24,7 @@ function afterOpen() {
     afterChangeCharset
   );
 
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [TEXT], function(TEXT) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [TEXT], function (TEXT) {
     content.document.getElementById("testtextarea").value = TEXT.enteredText1;
     content.document.getElementById("testinput").value = TEXT.enteredText2;
   }).then(() => {
@@ -34,7 +34,7 @@ function afterOpen() {
 }
 
 function afterChangeCharset() {
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [TEXT], function(TEXT) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [TEXT], function (TEXT) {
     is(
       content.document.getElementById("testpar").innerHTML,
       TEXT.rightText,

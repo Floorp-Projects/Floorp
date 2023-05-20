@@ -68,7 +68,7 @@ function clearCachedWASMModule() {
 
 function getWASMProfilerGetSymbolsModule() {
   if (!gCachedWASMModulePromise) {
-    gCachedWASMModulePromise = (async function() {
+    gCachedWASMModulePromise = (async function () {
       const request = new Request(WASM_MODULE_URL, {
         integrity: WASM_MODULE_INTEGRITY,
         credentials: "omit",

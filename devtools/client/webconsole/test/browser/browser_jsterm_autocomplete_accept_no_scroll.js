@@ -16,7 +16,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
     }));
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm, ui } = hud;
   const { autocompletePopup: popup } = jsterm;

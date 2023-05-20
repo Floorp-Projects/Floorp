@@ -23,7 +23,7 @@ const TEST_URI = `
 
 const PSEUDO_PREF = "devtools.inspector.show_pseudo_elements";
 
-add_task(async function() {
+add_task(async function () {
   // Expand the pseudo-elements section by default.
   Services.prefs.setBoolPref(PSEUDO_PREF, true);
 

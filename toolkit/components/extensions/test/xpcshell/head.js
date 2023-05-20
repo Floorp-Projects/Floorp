@@ -96,7 +96,7 @@ function clearCache() {
   imageCache.clearCache(false);
 }
 
-var promiseConsoleOutput = async function(task) {
+var promiseConsoleOutput = async function (task) {
   const DONE = `=== console listener ${Math.random()} done ===`;
 
   let listener;

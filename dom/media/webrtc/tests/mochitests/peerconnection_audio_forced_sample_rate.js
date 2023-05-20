@@ -7,7 +7,7 @@
 async function test_peerconnection_audio_forced_sample_rate(forcedSampleRate) {
   await scriptsReady;
   await pushPrefs(["media.cubeb.force_sample_rate", forcedSampleRate]);
-  await runNetworkTest(function(options) {
+  await runNetworkTest(function (options) {
     const test = new PeerConnectionTest(options);
     const ac = new AudioContext();
     test.setMediaConstraints([{ audio: true }], []);

@@ -9,7 +9,7 @@ function makeTest(
   endProcessIsRemote,
   transitionTask
 ) {
-  return async function() {
+  return async function () {
     info("Running test " + name + ", " + transitionTask.name);
     let browser = gBrowser.selectedBrowser;
 
@@ -56,7 +56,7 @@ const CHROME = "chrome://mochitests" + PATH;
 const CANREMOTE = "chrome://mochitests-any" + PATH;
 const MUSTREMOTE = "chrome://mochitests-content" + PATH;
 
-add_setup(async function() {
+add_setup(async function () {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
     forceNotRemote: true,
   });

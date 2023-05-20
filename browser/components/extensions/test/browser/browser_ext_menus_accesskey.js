@@ -185,7 +185,7 @@ add_task(async function accesskeys_selection() {
   await extension.startup();
 
   // Select all
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function(arg) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function (arg) {
     let doc = content.document;
     let range = doc.createRange();
     let selection = content.getSelection();

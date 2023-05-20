@@ -24,7 +24,7 @@ function assertTarget(target, url) {
   is(target.isBrowsingContext, true);
 }
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URI);
   const browser = tab.linkedBrowser;
   let commands, target;

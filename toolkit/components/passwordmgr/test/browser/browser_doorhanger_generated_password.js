@@ -108,7 +108,7 @@ async function openFormInNewTab(url, formValues, taskFn) {
       gBrowser,
       url,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       await formFilled;
 
@@ -241,7 +241,7 @@ async function openAndVerifyDoorhanger(browser, type, expected) {
 }
 
 async function appendContentInputvalue(browser, selector, str) {
-  await ContentTask.spawn(browser, { selector, str }, async function({
+  await ContentTask.spawn(browser, { selector, str }, async function ({
     selector,
     str,
   }) {
@@ -265,7 +265,7 @@ async function submitForm(browser) {
   // Submit the form
   info("Now submit the form");
   let correctPathNamePromise = BrowserTestUtils.browserLoaded(browser);
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     content.document.querySelector("form").submit();
   });
   await correctPathNamePromise;
@@ -279,7 +279,7 @@ async function submitForm(browser) {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.generation.available", true],

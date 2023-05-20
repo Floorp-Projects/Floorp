@@ -10,7 +10,7 @@
 const TEST_PAGE =
   "data:text/html;charset=utf-8," + '<p id="one">one</p><p id="two">two</p>';
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_PAGE);
   const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 

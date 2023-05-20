@@ -26,7 +26,7 @@ const TEST_URI_NEW_BROWSING_CONTEXT =
   `&html=<h1>top-level example.org</div>` +
   `<style>.top-level-org-new-bc{}</style>`;
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Open a new tab and check that styleSheetChangeEventsEnabled is false by default"
   );

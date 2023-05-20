@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const TESTPAGE = "storage-file-url.html";
 
   // We need to load TESTPAGE using a file:// path so we need to get that from

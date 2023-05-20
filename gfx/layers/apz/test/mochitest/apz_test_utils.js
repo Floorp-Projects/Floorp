@@ -311,8 +311,8 @@ function promiseAfterPaint() {
 // occurred by the the returned promise resolves. If you want to wait
 // for those repaints, consider using promiseApzFlushedRepaints instead.
 function promiseOnlyApzControllerFlushedWithoutSetTimeout(aWindow = window) {
-  return new Promise(function(resolve, reject) {
-    var repaintDone = function() {
+  return new Promise(function (resolve, reject) {
+    var repaintDone = function () {
       dump("PromiseApzRepaintsFlushed: APZ flush done\n");
       SpecialPowers.Services.obs.removeObserver(
         repaintDone,
@@ -387,7 +387,7 @@ async function promiseApzFlushedRepaints() {
 // For other things from the parent, the subtest can use window.opener.<whatever>
 // to access objects.
 function runSubtestsSeriallyInFreshWindows(aSubtests) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     var testIndex = -1;
     var w = null;
 
@@ -421,7 +421,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         if (test.prefs) {
           // We pushed some prefs for this test, pop them, and re-invoke
           // advanceSubtestExecution() after that's been processed
-          SpecialPowers.popPrefEnv(function() {
+          SpecialPowers.popPrefEnv(function () {
             w.close();
             w = null;
             advanceSubtestExecution();
@@ -449,7 +449,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
             false,
             "Subtest " + test.file + " has unrecognized property '" + prop + "'"
           );
-          setTimeout(function() {
+          setTimeout(function () {
             advanceSubtestExecution();
           }, 0);
           return;
@@ -465,7 +465,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
             onlyOneSubtest +
             " is being run"
         );
-        setTimeout(function() {
+        setTimeout(function () {
           advanceSubtestExecution();
         }, 0);
         return;
@@ -490,37 +490,37 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w.subtestFailed = advanceSubtestExecutionWithFailure;
         w.isApzSubtest = true;
         w.SimpleTest = SimpleTest;
-        w.dump = function(msg) {
+        w.dump = function (msg) {
           return dump(aFile + " | " + msg);
         };
-        w.info = function(msg) {
+        w.info = function (msg) {
           return info(aFile + " | " + msg);
         };
-        w.is = function(a, b, msg) {
+        w.is = function (a, b, msg) {
           return is(a, b, aFile + " | " + msg);
         };
-        w.isnot = function(a, b, msg) {
+        w.isnot = function (a, b, msg) {
           return isnot(a, b, aFile + " | " + msg);
         };
-        w.isfuzzy = function(a, b, eps, msg) {
+        w.isfuzzy = function (a, b, eps, msg) {
           return isfuzzy(a, b, eps, aFile + " | " + msg);
         };
-        w.ok = function(cond, msg) {
+        w.ok = function (cond, msg) {
           arguments[1] = aFile + " | " + msg;
           // Forward all arguments to SimpleTest.ok where we will check that ok() was
           // called with at most 2 arguments.
           return SimpleTest.ok.apply(SimpleTest, arguments);
         };
-        w.todo_is = function(a, b, msg) {
+        w.todo_is = function (a, b, msg) {
           return todo_is(a, b, aFile + " | " + msg);
         };
-        w.todo = function(cond, msg) {
+        w.todo = function (cond, msg) {
           return todo(cond, aFile + " | " + msg);
         };
         if (test.onload) {
           w.addEventListener(
             "load",
-            function(e) {
+            function (e) {
               test.onload(w);
             },
             { once: true }
@@ -558,7 +558,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
     }
 
     advanceSubtestExecution();
-  }).catch(function(e) {
+  }).catch(function (e) {
     SimpleTest.ok(false, "Error occurred while running subtests: " + e);
   });
 }
@@ -587,13 +587,13 @@ async function waitUntilApzStable() {
         }
         var topUtils = topWin.windowUtils;
 
-        var repaintDone = function() {
+        var repaintDone = function () {
           dump("WaitUntilApzStable: APZ flush done in parent proc\n");
           Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
           // send message back to content process
           sendAsyncMessage("apz-flush-done", null);
         };
-        var flushRepaint = function() {
+        var flushRepaint = function () {
           if (topUtils.isMozAfterPaintPending) {
             topWin.addEventListener("MozAfterPaint", flushRepaint, {
               once: true,
@@ -710,7 +710,7 @@ function isKeyApzEnabled() {
 function getSnapshot(rect) {
   function parentProcessSnapshot() {
     /* eslint-env mozilla/chrome-script */
-    addMessageListener("snapshot", function(parentRect) {
+    addMessageListener("snapshot", function (parentRect) {
       var topWin = Services.wm.getMostRecentWindow("navigator:browser");
       if (!topWin) {
         topWin = Services.wm.getMostRecentWindow("navigator:geckoview");
@@ -749,7 +749,7 @@ function getSnapshot(rect) {
     getSnapshot.chromeHelper = SpecialPowers.loadChromeScript(
       parentProcessSnapshot
     );
-    ApzCleanup.register(function() {
+    ApzCleanup.register(function () {
       getSnapshot.chromeHelper.destroy();
     });
   }
@@ -785,10 +785,10 @@ async function injectScript(aScript, aWindow = window) {
   var e = aWindow.document.createElement("script");
   e.type = "text/javascript";
   let loadPromise = new Promise((resolve, reject) => {
-    e.onload = function() {
+    e.onload = function () {
       resolve();
     };
-    e.onerror = function() {
+    e.onerror = function () {
       dump("Script [" + aScript + "] errored out\n");
       reject();
     };
@@ -885,7 +885,7 @@ function hitInfoToString(hitInfo) {
   if (!strs.length) {
     return "INVISIBLE";
   }
-  strs.sort(function(a, b) {
+  strs.sort(function (a, b) {
     return APZHitResultFlags[a] - APZHitResultFlags[b];
   });
   return strs.join(" | ");
@@ -1236,7 +1236,7 @@ async function promiseApzFlushedRepaintsInPopup(popup) {
     await promiseAllPaintsDone();
 
     await new Promise(resolve => {
-      var repaintDone = function() {
+      var repaintDone = function () {
         dump("APZ flush done\n");
         SpecialPowers.Services.obs.removeObserver(
           repaintDone,

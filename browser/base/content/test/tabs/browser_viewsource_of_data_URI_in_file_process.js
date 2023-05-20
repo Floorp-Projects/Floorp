@@ -6,13 +6,13 @@ const DATA_URI = "data:text/html,Hi";
 const DATA_URI_SOURCE = "view-source:" + DATA_URI;
 
 // Test for bug 1345807.
-add_task(async function() {
+add_task(async function () {
   // Open file:// page.
   let dir = getChromeDir(getResolvedURI(gTestPath));
   dir.append(DUMMY_FILE);
   const uriString = Services.io.newFileURI(dir).spec;
 
-  await BrowserTestUtils.withNewTab(uriString, async function(fileBrowser) {
+  await BrowserTestUtils.withNewTab(uriString, async function (fileBrowser) {
     let filePid = await SpecialPowers.spawn(fileBrowser, [], () => {
       return Services.appinfo.processID;
     });
@@ -35,7 +35,7 @@ add_task(async function() {
     let promiseTab = BrowserTestUtils.waitForNewTab(gBrowser, DATA_URI_SOURCE);
     BrowserViewSource(fileBrowser);
     let viewSourceTab = await promiseTab;
-    registerCleanupFunction(async function() {
+    registerCleanupFunction(async function () {
       BrowserTestUtils.removeTab(viewSourceTab);
     });
     await SpecialPowers.spawn(

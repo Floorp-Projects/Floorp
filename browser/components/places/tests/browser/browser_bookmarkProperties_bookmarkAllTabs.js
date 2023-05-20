@@ -7,7 +7,7 @@ add_task(async function bookmark_all_tabs() {
   for (let url of TEST_URLS) {
     tabs.push(await BrowserTestUtils.openNewForegroundTab(gBrowser, url));
   }
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     for (let tab of tabs) {
       BrowserTestUtils.removeTab(tab);
     }

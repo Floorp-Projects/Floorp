@@ -19,7 +19,7 @@ const REPORT_SERVER_URI = "http://localhost";
  * or fails a test based on what it gets.
  */
 function makeReportHandler(testpath, message, expectedJSON) {
-  return function(request, response) {
+  return function (request, response) {
     // we only like "POST" submissions for reports!
     if (request.method !== "POST") {
       do_throw("violation report should be a POST request");
@@ -125,7 +125,7 @@ function run_test() {
       disposition: "enforce",
     },
     false,
-    function(csp) {
+    function (csp) {
       let inlineOK = true;
       inlineOK = csp.getAllowsInline(
         Ci.nsIContentSecurityPolicy.SCRIPT_SRC_ELEM_DIRECTIVE,
@@ -155,7 +155,7 @@ function run_test() {
       "column-number": 2,
     },
     false,
-    function(csp) {
+    function (csp) {
       let evalOK = true,
         oReportViolation = { value: false };
       evalOK = csp.getAllowsEval(oReportViolation);
@@ -183,7 +183,7 @@ function run_test() {
     }
   );
 
-  makeTest(2, { "blocked-uri": "http://blocked.test/foo.js" }, false, function(
+  makeTest(2, { "blocked-uri": "http://blocked.test/foo.js" }, false, function (
     csp
   ) {
     // shouldLoad creates and sends out the report here.
@@ -203,7 +203,7 @@ function run_test() {
     3,
     { "blocked-uri": "inline", disposition: "report" },
     true,
-    function(csp) {
+    function (csp) {
       let inlineOK = true;
       inlineOK = csp.getAllowsInline(
         Ci.nsIContentSecurityPolicy.SCRIPT_SRC_ELEM_DIRECTIVE,
@@ -223,7 +223,7 @@ function run_test() {
   );
 
   // test that eval violations cause a report in report-only policy
-  makeTest(4, { "blocked-uri": "eval" }, true, function(csp) {
+  makeTest(4, { "blocked-uri": "eval" }, true, function (csp) {
     let evalOK = true,
       oReportViolation = { value: false };
     evalOK = csp.getAllowsEval(oReportViolation);
@@ -248,7 +248,7 @@ function run_test() {
   });
 
   // test that only the uri's scheme is reported for globally unique identifiers
-  makeTest(5, { "blocked-uri": "data" }, false, function(csp) {
+  makeTest(5, { "blocked-uri": "data" }, false, function (csp) {
     var base64data =
       "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
       "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
@@ -265,7 +265,7 @@ function run_test() {
   });
 
   // test that only the uri's scheme is reported for globally unique identifiers
-  makeTest(6, { "blocked-uri": "intent" }, false, function(csp) {
+  makeTest(6, { "blocked-uri": "intent" }, false, function (csp) {
     // shouldLoad creates and sends out the report here.
     csp.shouldLoad(
       Ci.nsIContentPolicy.TYPE_SUBDOCUMENT,
@@ -281,7 +281,7 @@ function run_test() {
   // test fragment removal
   var selfSpec =
     REPORT_SERVER_URI + ":" + REPORT_SERVER_PORT + "/foo/self/foo.js";
-  makeTest(7, { "blocked-uri": selfSpec }, false, function(csp) {
+  makeTest(7, { "blocked-uri": selfSpec }, false, function (csp) {
     // shouldLoad creates and sends out the report here.
     csp.shouldLoad(
       Ci.nsIContentPolicy.TYPE_SCRIPT,

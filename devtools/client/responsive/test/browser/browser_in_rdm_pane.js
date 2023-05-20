@@ -8,7 +8,7 @@
 
 const TEST_URL = "http://example.com/";
 
-addRDMTask(TEST_URL, async function({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   const viewportBrowser = ui.getViewportBrowser();
 
   const contentURL = await SpecialPowers.spawn(

@@ -101,7 +101,7 @@ export class PrintingChild extends JSWindowActorChild {
             // Here we tell the parent that we have parsed the document successfully
             // using ReaderMode primitives and we are able to enter on preview mode.
             if (domUtils.isMozAfterPaintPending) {
-              let onPaint = function() {
+              let onPaint = function () {
                 contentWindow.removeEventListener("MozAfterPaint", onPaint);
                 actor.sendAsyncMessage("Printing:Preview:ReaderModeReady");
                 resolve();

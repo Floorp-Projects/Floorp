@@ -9,7 +9,7 @@
 const TEST_VALUE = "example.com";
 const START_VALUE = "example.org";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.altClickSave", true],
@@ -263,7 +263,7 @@ function promiseNewTabSwitched() {
   return new Promise(resolve => {
     gBrowser.addEventListener(
       "TabSwitchDone",
-      function() {
+      function () {
         executeSoon(resolve);
       },
       { once: true }
@@ -281,7 +281,7 @@ function promiseCheckChildNoFocusedElement(browser) {
     return null;
   }
 
-  return ContentTask.spawn(browser, null, async function() {
+  return ContentTask.spawn(browser, null, async function () {
     Assert.equal(
       Services.focus.focusedElement,
       null,

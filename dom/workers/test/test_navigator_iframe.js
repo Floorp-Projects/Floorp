@@ -4,7 +4,7 @@ var is = window.parent.is;
 var ok = window.parent.ok;
 var SimpleTest = window.parent.SimpleTest;
 
-worker.onmessage = function(event) {
+worker.onmessage = function (event) {
   var args = JSON.parse(event.data);
 
   if (args.name == "testFinished") {
@@ -50,7 +50,7 @@ worker.onmessage = function(event) {
   );
 };
 
-worker.onerror = function(event) {
+worker.onerror = function (event) {
   ok(false, "Worker had an error: " + event.message);
   SimpleTest.finish();
 };

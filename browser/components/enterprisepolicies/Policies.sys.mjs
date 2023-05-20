@@ -114,7 +114,7 @@ export var Policies = {
 
   AllowedDomainsForApps: {
     onBeforeAddons(manager, param) {
-      Services.obs.addObserver(function(subject, topic, data) {
+      Services.obs.addObserver(function (subject, topic, data) {
         let channel = subject.QueryInterface(Ci.nsIHttpChannel);
         if (channel.URI.host.endsWith(".google.com")) {
           channel.setRequestHeader("X-GoogApps-Allowed-Domains", param, true);
@@ -425,7 +425,7 @@ export var Policies = {
               continue;
             }
             let reader = new FileReader();
-            reader.onloadend = function() {
+            reader.onloadend = function () {
               if (reader.readyState != reader.DONE) {
                 lazy.log.error(`Unable to read certificate - ${certfile.path}`);
                 return;
@@ -2034,7 +2034,7 @@ export var Policies = {
           await runOncePerModification(
             "removeSearchEngines",
             JSON.stringify(param.Remove),
-            async function() {
+            async function () {
               for (let engineName of param.Remove) {
                 let engine = Services.search.getEngineByName(engineName);
                 if (engine) {
@@ -2457,8 +2457,9 @@ function addAllowDenyPermissions(permissionName, allowList, blockList) {
     } catch (ex) {
       // It's possible if the origin was invalid, we'll have a string instead of an origin.
       lazy.log.error(
-        `Unable to add ${permissionName} permission for ${origin.href ||
-          origin}`
+        `Unable to add ${permissionName} permission for ${
+          origin.href || origin
+        }`
       );
     }
   }
@@ -2680,7 +2681,7 @@ let ChromeURLBlockPolicy = {
     }
     let contentLocationSpec = contentLocation.spec.toLowerCase();
     if (
-      gBlockedAboutPages.some(function(aboutPage) {
+      gBlockedAboutPages.some(function (aboutPage) {
         return contentLocationSpec.startsWith(aboutPage.toLowerCase());
       })
     ) {

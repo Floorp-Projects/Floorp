@@ -71,12 +71,12 @@ function emitTestFail(message) {
   sendAsyncMessage("test-fail", message);
 }
 
-addMessageListener("set-ui-service", function() {
+addMessageListener("set-ui-service", function () {
   paymentSrv.setTestingUIService(
     UIService.QueryInterface(Ci.nsIPaymentUIService)
   );
 });
 
-addMessageListener("teardown", function() {
+addMessageListener("teardown", function () {
   sendAsyncMessage("teardown-complete");
 });

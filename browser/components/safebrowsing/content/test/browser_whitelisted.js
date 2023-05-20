@@ -4,7 +4,7 @@ const PREF_WHITELISTED_HOSTNAMES = "urlclassifier.skipHostnames";
 const TEST_PAGE = "http://www.itisatrap.org/firefox/its-an-attack.html";
 var tabbrowser = null;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   tabbrowser = null;
   Services.prefs.clearUserPref(PREF_WHITELISTED_HOSTNAMES);
   while (gBrowser.tabs.length > 1) {

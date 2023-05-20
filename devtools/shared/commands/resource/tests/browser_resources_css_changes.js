@@ -5,7 +5,7 @@
 
 // Test the ResourceCommand API around CSS_CHANGE.
 
-add_task(async function() {
+add_task(async function () {
   // Open a test tab
   const tab = await addTab(
     "data:text/html,<body style='color: lime;'>CSS Changes</body>"

@@ -252,7 +252,7 @@ exports.WebConsoleCommandsManager = WebConsoleCommandsManager;
  * @return Node or null
  *         The result of calling document.querySelector(selector).
  */
-WebConsoleCommandsManager.register("$", function(owner, selector) {
+WebConsoleCommandsManager.register("$", function (owner, selector) {
   try {
     return owner.window.document.querySelector(selector);
   } catch (err) {
@@ -269,7 +269,7 @@ WebConsoleCommandsManager.register("$", function(owner, selector) {
  * @return NodeList
  *         Returns the result of document.querySelectorAll(selector).
  */
-WebConsoleCommandsManager.register("$$", function(owner, selector) {
+WebConsoleCommandsManager.register("$$", function (owner, selector) {
   let nodes;
   try {
     nodes = owner.window.document.querySelectorAll(selector);
@@ -310,7 +310,7 @@ WebConsoleCommandsManager.register("$_", {
           Specify the result type. Default value XPathResult.ANY_TYPE
  * @return array of Node
  */
-WebConsoleCommandsManager.register("$x", function(
+WebConsoleCommandsManager.register("$x", function (
   owner,
   xPath,
   context,
@@ -392,7 +392,7 @@ WebConsoleCommandsManager.register("$0", {
 /**
  * Clears the output of the WebConsole.
  */
-WebConsoleCommandsManager.register("clear", function(owner) {
+WebConsoleCommandsManager.register("clear", function (owner) {
   owner.helperResult = {
     type: "clearOutput",
   };
@@ -401,7 +401,7 @@ WebConsoleCommandsManager.register("clear", function(owner) {
 /**
  * Clears the input history of the WebConsole.
  */
-WebConsoleCommandsManager.register("clearHistory", function(owner) {
+WebConsoleCommandsManager.register("clearHistory", function (owner) {
   owner.helperResult = {
     type: "clearHistory",
   };
@@ -414,7 +414,7 @@ WebConsoleCommandsManager.register("clearHistory", function(owner) {
  *        Object to return the property names from.
  * @return array of strings
  */
-WebConsoleCommandsManager.register("keys", function(owner, object) {
+WebConsoleCommandsManager.register("keys", function (owner, object) {
   // Need to waive Xrays so we can iterate functions and accessor properties
   return Cu.cloneInto(Object.keys(Cu.waiveXrays(object)), owner.window);
 });
@@ -426,7 +426,7 @@ WebConsoleCommandsManager.register("keys", function(owner, object) {
  *        Object to display the values from.
  * @return array of string
  */
-WebConsoleCommandsManager.register("values", function(owner, object) {
+WebConsoleCommandsManager.register("values", function (owner, object) {
   const values = [];
   // Need to waive Xrays so we can iterate functions and accessor properties
   const waived = Cu.waiveXrays(object);
@@ -442,7 +442,7 @@ WebConsoleCommandsManager.register("values", function(owner, object) {
 /**
  * Opens a help window in MDN.
  */
-WebConsoleCommandsManager.register("help", function(owner) {
+WebConsoleCommandsManager.register("help", function (owner) {
   owner.helperResult = { type: "help" };
 });
 
@@ -452,7 +452,7 @@ WebConsoleCommandsManager.register("help", function(owner) {
  * @param object object
  *        Object to inspect.
  */
-WebConsoleCommandsManager.register("inspect", function(
+WebConsoleCommandsManager.register("inspect", function (
   owner,
   object,
   forceExpandInConsole = false
@@ -477,7 +477,7 @@ WebConsoleCommandsManager.register("inspect", function(
  *        A value you want to copy as a string.
  * @return void
  */
-WebConsoleCommandsManager.register("copy", function(owner, value) {
+WebConsoleCommandsManager.register("copy", function (owner, value) {
   let payload;
   try {
     if (Element.isInstance(value)) {
@@ -508,7 +508,7 @@ WebConsoleCommandsManager.register("copy", function(owner, value) {
  *               The arguments to be passed to the screenshot
  * @return void
  */
-WebConsoleCommandsManager.register("screenshot", function(owner, args = {}) {
+WebConsoleCommandsManager.register("screenshot", function (owner, args = {}) {
   owner.helperResult = {
     type: "screenshotOutput",
     args,
@@ -522,7 +522,7 @@ WebConsoleCommandsManager.register("screenshot", function(owner, args = {}) {
  *               The arguments to be passed to the history
  * @return void
  */
-WebConsoleCommandsManager.register("history", function(owner, args = {}) {
+WebConsoleCommandsManager.register("history", function (owner, args = {}) {
   owner.helperResult = {
     type: "historyOutput",
     args,
@@ -537,7 +537,7 @@ WebConsoleCommandsManager.register("history", function(owner, args = {}) {
  *
  * @return void
  */
-WebConsoleCommandsManager.register("block", function(owner, args = {}) {
+WebConsoleCommandsManager.register("block", function (owner, args = {}) {
   if (!args.url) {
     owner.helperResult = {
       type: "error",
@@ -560,7 +560,7 @@ WebConsoleCommandsManager.register("block", function(owner, args = {}) {
  *
  * @return void
  */
-WebConsoleCommandsManager.register("unblock", function(owner, args = {}) {
+WebConsoleCommandsManager.register("unblock", function (owner, args = {}) {
   if (!args.url) {
     owner.helperResult = {
       type: "error",

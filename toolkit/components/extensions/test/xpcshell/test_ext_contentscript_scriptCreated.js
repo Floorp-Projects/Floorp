@@ -26,7 +26,7 @@ add_task(async function test_contentscript_scriptCreated() {
     },
 
     files: {
-      "content_script.js": function() {
+      "content_script.js": function () {
         if (window === top) {
           addEventListener(
             "message",

@@ -30,7 +30,7 @@ preprocessors[PATHS.testFilesPattern] = [
   "sourcemap", // require("karma-sourcemap-loader")
 ];
 
-module.exports = function(config) {
+module.exports = function (config) {
   const isTDD = config.tdd;
   const browsers = isTDD ? ["Firefox"] : ["FirefoxHeadless"]; // require("karma-firefox-launcher")
   config.set({

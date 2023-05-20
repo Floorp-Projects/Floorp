@@ -45,7 +45,7 @@ var SelectBookmarkDialog = {
 
     // Initial update of the OK button.
     this.selectionChanged();
-    document.addEventListener("dialogaccept", function() {
+    document.addEventListener("dialogaccept", function () {
       SelectBookmarkDialog.accept();
     });
   },

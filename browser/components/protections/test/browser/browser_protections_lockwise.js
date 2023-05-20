@@ -24,7 +24,7 @@ add_task(async function testNoLoginsLockwiseCardUI() {
   info(
     "Check that the correct lockwise card content is displayed for non-logged in users."
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const lockwiseCard = content.document.querySelector(".lockwise-card");
       return ContentTaskUtils.is_visible(lockwiseCard);
@@ -98,7 +98,7 @@ add_task(async function testLockwiseCardUIWithLogins() {
   await Services.logins.addLoginAsync(TEST_LOGIN1);
   await BrowserTestUtils.reloadTab(tab);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const hasLogins = content.document.querySelector(".lockwise-card");
       return ContentTaskUtils.is_visible(hasLogins);
@@ -182,7 +182,7 @@ add_task(async function testLockwiseCardUIWithLogins() {
   await Services.logins.addLoginAsync(TEST_LOGIN2);
   await BrowserTestUtils.reloadTab(tab);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const lockwiseScannedText = content.document.querySelector(
       "#lockwise-scanned-text"
     ).textContent;
@@ -216,7 +216,7 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
   );
   await BrowserTestUtils.reloadTab(tab);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const lockwiseScannedText = content.document.querySelector(
       "#lockwise-scanned-text"
     );
@@ -239,7 +239,7 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
     mockGetLoginDataWithSyncedDevices(false, 2)
   );
   await BrowserTestUtils.reloadTab(tab);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const lockwiseScannedText = content.document.querySelector(
       "#lockwise-scanned-text"
     );
@@ -272,7 +272,7 @@ add_task(async function testLockwiseCardPref() {
     false
   );
   await BrowserTestUtils.reloadTab(tab);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const lockwiseCard = content.document.querySelector(".lockwise-card");
     await ContentTaskUtils.waitForCondition(() => {
       return !lockwiseCard["data-enabled"];

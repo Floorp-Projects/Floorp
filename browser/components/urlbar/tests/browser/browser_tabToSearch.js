@@ -18,7 +18,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderTabToSearch.sys.mjs",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -297,7 +297,7 @@ add_task(async function tab_key_race() {
     }
     let provider = new ListeningTestProvider();
     UrlbarProvidersManager.registerProvider(provider);
-    registerCleanupFunction(async function() {
+    registerCleanupFunction(async function () {
       UrlbarProvidersManager.unregisterProvider(provider);
     });
   });

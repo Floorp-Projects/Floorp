@@ -13,7 +13,7 @@ const ORIGINAL_URL = "webpack:///code_late_script.js";
 const GENERATED_LINE = 107;
 const ORIGINAL_LINE = 11;
 
-add_task(async function() {
+add_task(async function () {
   // Start with the empty page, then navigate, so that we can properly
   // listen for new sources arriving.
   const toolbox = await openNewTabAndToolbox(PAGE_URL, "webconsole");

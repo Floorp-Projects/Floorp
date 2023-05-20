@@ -230,7 +230,7 @@ add_task(async function setup() {
   await http3_setup_tests("h3-29");
 });
 
-let Http3Listener = function() {};
+let Http3Listener = function () {};
 
 Http3Listener.prototype = {
   onStartRequest: function testOnStartRequest(request) {

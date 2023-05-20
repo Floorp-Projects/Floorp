@@ -184,10 +184,7 @@ export class Target extends Domain {
     const tabSession = new lazy.TabSession(
       this.session.connection,
       target,
-      Services.uuid
-        .generateUUID()
-        .toString()
-        .slice(1, -1)
+      Services.uuid.generateUUID().toString().slice(1, -1)
     );
     this.session.connection.registerSession(tabSession);
 

@@ -107,14 +107,14 @@ add_task(async function test_refuses_to_decrypt_tampered() {
   const tamperedHMAC = Object.assign({}, encryptedRecord, {
     hmac: "0000000000000000000000000000000000000000000000000000000000000001",
   });
-  await throwsGen(Utils.isHMACMismatch, async function() {
+  await throwsGen(Utils.isHMACMismatch, async function () {
     await transformer.decode(tamperedHMAC);
   });
 
   const tamperedIV = Object.assign({}, encryptedRecord, {
     IV: "aaaaaaaaaaaaaaaaaaaaaa==",
   });
-  await throwsGen(Utils.isHMACMismatch, async function() {
+  await throwsGen(Utils.isHMACMismatch, async function () {
     await transformer.decode(tamperedIV);
   });
 });

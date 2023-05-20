@@ -26,7 +26,7 @@ function enableRuntimeClientFactoryMock(mock) {
 }
 /* exported enableRuntimeClientFactoryMock */
 
-const mockRuntimeDefaultPreferences = function() {
+const mockRuntimeDefaultPreferences = function () {
   const {
     removeMockedModule,
     setMockedModule,
@@ -67,7 +67,7 @@ function disableRuntimeClientFactoryMock() {
  */
 function createRuntimeClientFactoryMock() {
   const RuntimeClientFactoryMock = {};
-  RuntimeClientFactoryMock.createClientForRuntime = function(runtime) {
+  RuntimeClientFactoryMock.createClientForRuntime = function (runtime) {
     console.log("MOCKED METHOD createClientForRuntime");
   };
 

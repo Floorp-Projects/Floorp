@@ -39,7 +39,7 @@ function setupChannel(uri, topUri = TOP_LEVEL_DOMAIN) {
 }
 
 function waitForBeforeBlockEvent(expected, callback) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let observer = function observe(aSubject, aTopic, aData) {
       switch (aTopic) {
         case "urlclassifier-before-block-channel":

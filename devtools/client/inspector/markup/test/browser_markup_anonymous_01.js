@@ -6,7 +6,7 @@
 // Test native anonymous content in the markupview.
 const TEST_URL = URL_ROOT + "doc_markup_anonymous.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   const pseudo = await getNodeFront("#pseudo", inspector);

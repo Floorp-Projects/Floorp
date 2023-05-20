@@ -4,7 +4,7 @@ const kBlue = "rgb(0, 0, 255)";
 const prefix =
   "http://example.com/tests/toolkit/components/places/tests/browser/461710_";
 
-add_task(async function() {
+add_task(async function () {
   registerCleanupFunction(PlacesUtils.history.clear);
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow();
   let privateWindow = await BrowserTestUtils.openNewBrowserWindow({
@@ -50,7 +50,7 @@ add_task(async function() {
         gBrowser: test.private ? privateWindow.gBrowser : normalWindow.gBrowser,
         url: prefix + test.subtest,
       },
-      async function(browser) {
+      async function (browser) {
         if (promise) {
           await promise;
         }
@@ -59,11 +59,11 @@ add_task(async function() {
           // In e10s waiting for visited-status-resolution is not enough to ensure links
           // have been updated, because it only tells us that messages to update links
           // have been dispatched. We must still wait for the actual links to update.
-          await TestUtils.waitForCondition(async function() {
+          await TestUtils.waitForCondition(async function () {
             let color = await SpecialPowers.spawn(
               browser,
               [],
-              async function() {
+              async function () {
                 let elem = content.document.getElementById("link");
                 return content.windowUtils.getVisitedDependentComputedStyle(
                   elem,

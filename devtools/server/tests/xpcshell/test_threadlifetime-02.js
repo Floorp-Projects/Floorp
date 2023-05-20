@@ -46,7 +46,7 @@ add_task(
     try {
       await objFront2
         .request({ to: pauseGrip.actor, type: "bogusRequest" })
-        .catch(function(error) {
+        .catch(function (error) {
           Assert.ok(!!error.message.match(/noSuchActor/));
           threadFront.resume();
           throw new Error();
@@ -61,7 +61,7 @@ add_task(
 function evaluateTestCode(debuggee) {
   debuggee.eval(
     "(" +
-      function() {
+      function () {
         function stopMe(arg1) {
           debugger;
           debugger;

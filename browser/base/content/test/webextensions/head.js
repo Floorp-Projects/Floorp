@@ -635,7 +635,7 @@ add_setup(async function head_setup() {
   let addons = await AddonManager.getAllAddons();
   let existingAddons = new Set(addons.map(a => a.id));
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     if (testCleanup) {
       await testCleanup();
       testCleanup = null;

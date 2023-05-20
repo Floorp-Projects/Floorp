@@ -11,7 +11,7 @@ const TEST_URI =
   "test/browser/test-console.html";
 const TEST_URI2 = "http://example.com/";
 
-add_task(async function() {
+add_task(async function () {
   // Enable net messages in the console for this test.
   await pushPref("devtools.webconsole.filter.net", true);
 
@@ -98,7 +98,7 @@ function listenToTabLoad() {
   return new Promise(resolve => {
     gBrowser.tabContainer.addEventListener(
       "TabOpen",
-      function(evt) {
+      function (evt) {
         const newTab = evt.target;
         BrowserTestUtils.browserLoaded(newTab.linkedBrowser).then(() =>
           resolve(newTab)

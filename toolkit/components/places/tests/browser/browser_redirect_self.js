@@ -9,7 +9,7 @@
  * second visit.
  */
 
-add_task(async function() {
+add_task(async function () {
   await PlacesUtils.history.clear();
   Cc["@mozilla.org/browser/history;1"]
     .getService(Ci.mozIAsyncHistory)
@@ -28,7 +28,7 @@ add_task(async function() {
     }
   }
   PlacesObservers.addListener(["page-visited"], onVisitsListener);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     PlacesObservers.removeListener(["page-visited"], onVisitsListener);
     await PlacesUtils.history.clear();
   });

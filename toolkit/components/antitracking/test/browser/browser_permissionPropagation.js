@@ -14,7 +14,7 @@ async function createTab(topUrl, iframeCount, opener, params) {
   let browser;
   if (opener) {
     let promise = BrowserTestUtils.waitForNewTab(gBrowser, topUrl);
-    await SpecialPowers.spawn(opener, [topUrl], function(url) {
+    await SpecialPowers.spawn(opener, [topUrl], function (url) {
       content.window.open(url, "_blank");
     });
     newTab = await promise;
@@ -29,7 +29,7 @@ async function createTab(topUrl, iframeCount, opener, params) {
   await SpecialPowers.spawn(
     browser,
     [params, iframeCount, createTrackerFrame.toString()],
-    async function(params, count, fn) {
+    async function (params, count, fn) {
       // eslint-disable-next-line no-eval
       let fnCreateTrackerFrame = eval(`(() => (${fn}))()`);
       await fnCreateTrackerFrame(params, count, ifr => {
@@ -82,7 +82,7 @@ async function createTrackerFrame(params, count, callback) {
 }
 
 async function testPermission(browser, block, params) {
-  await SpecialPowers.spawn(browser, [block, params], async function(
+  await SpecialPowers.spawn(browser, [block, params], async function (
     block,
     params
   ) {
@@ -228,7 +228,7 @@ add_task(async function testPermissionGrantedOn3rdParty() {
   let browser4 = gBrowser.getBrowserForTab(tab4);
 
   info("Grant storage permission to the first iframe in the first tab");
-  await SpecialPowers.spawn(browser1, [page, msg], async function(page, msg) {
+  await SpecialPowers.spawn(browser1, [page, msg], async function (page, msg) {
     await new content.Promise(resolve => {
       content.addEventListener("message", function msg(event) {
         if (event.data.type == "finish") {
@@ -284,7 +284,7 @@ add_task(async function testPermissionGrantedOn3rdParty() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
@@ -387,7 +387,7 @@ add_task(async function testPermissionGrantedOnFirstParty() {
 
   info("Grant storage permission to the first iframe in the first tab");
   let promise = BrowserTestUtils.waitForNewTab(gBrowser, page);
-  await SpecialPowers.spawn(browser1, [page], async function(page) {
+  await SpecialPowers.spawn(browser1, [page], async function (page) {
     content.window.open(page, "_blank");
   });
   let tab = await promise;
@@ -414,7 +414,7 @@ add_task(async function testPermissionGrantedOnFirstParty() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>

@@ -33,7 +33,7 @@ if (AppConstants.platform === "macosx") {
 // Whether the tab key can move the focus. On macOS with full keyboard access
 // disabled (which is default), this will be false. See `canTabMoveFocus`.
 let gCanTabMoveFocus;
-add_setup(async function() {
+add_setup(async function () {
   gCanTabMoveFocus = await canTabMoveFocus();
 });
 

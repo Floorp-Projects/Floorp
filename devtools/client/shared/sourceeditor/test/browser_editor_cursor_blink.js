@@ -7,7 +7,7 @@
 
 const CARET_BLINK_TIME = "ui.caretBlinkTime";
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.clearUserPref(CARET_BLINK_TIME);
 
   info(`Test when "${CARET_BLINK_TIME}" isn't set`);

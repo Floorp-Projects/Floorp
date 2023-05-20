@@ -11,7 +11,7 @@ const TEST_URL =
   "<div id='attr' a='1' b='2' c='3'></div>" +
   "<div id='delattr' tobeinvalid='1' last='2'></div>";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   await testAttributeEditing(inspector);

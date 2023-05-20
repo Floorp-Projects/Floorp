@@ -9,7 +9,7 @@ const {
   addViewport,
 } = require("resource://devtools/client/responsive/actions/viewports.js");
 
-add_task(async function() {
+add_task(async function () {
   const store = Store();
   const { getState, dispatch } = store;
 

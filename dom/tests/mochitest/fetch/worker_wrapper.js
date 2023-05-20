@@ -32,7 +32,7 @@ addEventListener("message", function workerWrapperOnMessage(e) {
   var data = e.data;
 
   function runTestAndReportToClient(event) {
-    var done = function(res) {
+    var done = function (res) {
       client.postMessage({ type: "finish", context });
       return res;
     };
@@ -61,7 +61,7 @@ addEventListener("message", function workerWrapperOnMessage(e) {
     e.waitUntil(
       self.clients
         .matchAll({ includeUncontrolled: true })
-        .then(function(clients) {
+        .then(function (clients) {
           for (var i = 0; i < clients.length; ++i) {
             if (clients[i].url.indexOf("message_receiver.html") > -1) {
               client = clients[i];

@@ -4,7 +4,7 @@
 
 /* import-globals-from preferences.js */
 
-XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
+XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function () {
   return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 });
 
@@ -53,7 +53,7 @@ var gSyncPane = {
     // pre-load what we can from synchronous sources.
     this._showLoadPage(xps);
 
-    let onUnload = function() {
+    let onUnload = function () {
       window.removeEventListener("unload", onUnload);
       try {
         Services.obs.removeObserver(onReady, "weave:service:ready");
@@ -178,17 +178,17 @@ var gSyncPane = {
         .addEventListener(aEventType, aCallback.bind(gSyncPane));
     }
 
-    setEventListener("openChangeProfileImage", "click", function(event) {
+    setEventListener("openChangeProfileImage", "click", function (event) {
       gSyncPane.openChangeProfileImage(event);
     });
-    setEventListener("openChangeProfileImage", "keypress", function(event) {
+    setEventListener("openChangeProfileImage", "keypress", function (event) {
       gSyncPane.openChangeProfileImage(event);
     });
-    setEventListener("fxaChangeDeviceName", "command", function() {
+    setEventListener("fxaChangeDeviceName", "command", function () {
       this._toggleComputerNameControls(true);
       this._focusComputerNameTextbox();
     });
-    setEventListener("fxaCancelChangeDeviceName", "command", function() {
+    setEventListener("fxaCancelChangeDeviceName", "command", function () {
       // We explicitly blur the textbox because of bug 75324, then after
       // changing the state of the buttons, force focus to whatever the focus
       // manager thinks should be next (which on the mac, depends on an OSX
@@ -198,18 +198,18 @@ var gSyncPane = {
       this._updateComputerNameValue(false);
       this._focusAfterComputerNameTextbox();
     });
-    setEventListener("fxaSaveChangeDeviceName", "command", function() {
+    setEventListener("fxaSaveChangeDeviceName", "command", function () {
       // Work around bug 75324 - see above.
       this._blurComputerNameTextbox();
       this._toggleComputerNameControls(false);
       this._updateComputerNameValue(true);
       this._focusAfterComputerNameTextbox();
     });
-    setEventListener("noFxaSignIn", "command", function() {
+    setEventListener("noFxaSignIn", "command", function () {
       gSyncPane.signIn();
       return false;
     });
-    setEventListener("fxaUnlinkButton", "command", function() {
+    setEventListener("fxaUnlinkButton", "command", function () {
       gSyncPane.unlinkFirefoxAccount(true);
     });
     setEventListener(
@@ -217,34 +217,34 @@ var gSyncPane = {
       "command",
       gSyncPane.verifyFirefoxAccount
     );
-    setEventListener("unverifiedUnlinkFxaAccount", "command", function() {
+    setEventListener("unverifiedUnlinkFxaAccount", "command", function () {
       /* no warning as account can't have previously synced */
       gSyncPane.unlinkFirefoxAccount(false);
     });
     setEventListener("rejectReSignIn", "command", gSyncPane.reSignIn);
-    setEventListener("rejectUnlinkFxaAccount", "command", function() {
+    setEventListener("rejectUnlinkFxaAccount", "command", function () {
       gSyncPane.unlinkFirefoxAccount(true);
     });
-    setEventListener("fxaSyncComputerName", "keypress", function(e) {
+    setEventListener("fxaSyncComputerName", "keypress", function (e) {
       if (e.keyCode == KeyEvent.DOM_VK_RETURN) {
         document.getElementById("fxaSaveChangeDeviceName").click();
       } else if (e.keyCode == KeyEvent.DOM_VK_ESCAPE) {
         document.getElementById("fxaCancelChangeDeviceName").click();
       }
     });
-    setEventListener("syncSetup", "command", function() {
+    setEventListener("syncSetup", "command", function () {
       this._chooseWhatToSync(false);
     });
-    setEventListener("syncChangeOptions", "command", function() {
+    setEventListener("syncChangeOptions", "command", function () {
       this._chooseWhatToSync(true);
     });
-    setEventListener("syncNow", "command", function() {
+    setEventListener("syncNow", "command", function () {
       // syncing can take a little time to send the "started" notification, so
       // pretend we already got it.
       this._updateSyncNow(true);
       Weave.Service.sync({ why: "aboutprefs" });
     });
-    setEventListener("syncNow", "mouseover", function() {
+    setEventListener("syncNow", "mouseover", function () {
       const state = UIState.get();
       // If we are currently syncing, just set the tooltip to the same as the
       // button label (ie, "Syncing...")

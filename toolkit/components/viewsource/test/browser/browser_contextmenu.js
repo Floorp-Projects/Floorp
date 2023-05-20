@@ -8,7 +8,7 @@ var gViewSourceWindow, gContextMenu, gCopyLinkMenuItem, gCopyEmailMenuItem;
 
 var expectedData = [];
 
-add_task(async function() {
+add_task(async function () {
   // Full source in view source tab
   let newTab = await openDocument(source);
   await onViewSourceWindowOpen(window);
@@ -42,7 +42,7 @@ async function onViewSourceWindowOpen(aWindow) {
   gCopyEmailMenuItem = aWindow.document.getElementById("context-copyemail");
 
   let browser = gBrowser.selectedBrowser;
-  await SpecialPowers.spawn(browser, [], async function(arg) {
+  await SpecialPowers.spawn(browser, [], async function (arg) {
     let tags = content.document.querySelectorAll("a[href]");
     Assert.equal(
       tags[0].href,
@@ -65,7 +65,7 @@ async function checkMenuItems(
   expectedClipboardContent
 ) {
   let browser = gBrowser.selectedBrowser;
-  await SpecialPowers.spawn(browser, [{ selector }], async function(arg) {
+  await SpecialPowers.spawn(browser, [{ selector }], async function (arg) {
     content.document.querySelector(arg.selector).scrollIntoView();
   });
 
@@ -95,7 +95,7 @@ async function checkMenuItems(
     await new Promise((resolve, reject) => {
       waitForClipboard(
         expectedClipboardContent,
-        function() {
+        function () {
           contextMenu.activateItem(
             copyLinkExpected ? gCopyLinkMenuItem : gCopyEmailMenuItem
           );

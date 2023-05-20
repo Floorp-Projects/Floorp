@@ -6,7 +6,7 @@
 const TEST_URI = "data:text/html;charset=utf8,<!DOCTYPE html>Bidi strings";
 const rtlOverride = "\u202e";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const browser = gBrowser.selectedBrowser;
 

@@ -9,7 +9,7 @@ async function changeAndVerifyPref(tab, newConfigValue) {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ newConfigValue }],
-    async function({ newConfigValue }) {
+    async function ({ newConfigValue }) {
       let radioId = newConfigValue ? "autoDesktop" : "manualDesktop";
       let radioElement = content.document.getElementById(radioId);
       let updateRadioGroup = radioElement.radioGroup;

@@ -56,7 +56,7 @@ const expectedUsagesMap = {
   "ee-keyCertSign-and-keyEncipherment-ca-all-usages": serverEEUsages,
 };
 
-add_task(async function() {
+add_task(async function () {
   for (let ca of caList) {
     addCertFromFile(certdb, "test_cert_keyUsage/" + ca + ".pem", "CTu,CTu,CTu");
     let caCert = constructCertFromFile("test_cert_keyUsage/" + ca + ".pem");

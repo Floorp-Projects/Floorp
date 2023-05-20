@@ -41,7 +41,7 @@ function checkIsHttp2(request) {
   return false;
 }
 
-var Http2CheckListener = function() {};
+var Http2CheckListener = function () {};
 
 Http2CheckListener.prototype = {
   onStartRequestFired: false,
@@ -103,14 +103,14 @@ Http2CheckListener.prototype = {
 var multiplexContent = generateContent(30 * 1024);
 
 /* Listener class to control the testing of multiplexing */
-var Http2MultiplexListener = function() {};
+var Http2MultiplexListener = function () {};
 
 Http2MultiplexListener.prototype = new Http2CheckListener();
 
 Http2MultiplexListener.prototype.streamID = 0;
 Http2MultiplexListener.prototype.buffer = "";
 
-Http2MultiplexListener.prototype.onDataAvailable = function(
+Http2MultiplexListener.prototype.onDataAvailable = function (
   request,
   stream,
   off,
@@ -123,7 +123,7 @@ Http2MultiplexListener.prototype.onDataAvailable = function(
   this.buffer = this.buffer.concat(data);
 };
 
-Http2MultiplexListener.prototype.onStopRequest = function(request, status) {
+Http2MultiplexListener.prototype.onStopRequest = function (request, status) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(this.onDataAvailableFired);
   Assert.ok(this.isHttp2Connection);
@@ -137,7 +137,7 @@ Http2MultiplexListener.prototype.onStopRequest = function(request, status) {
 };
 
 // Does the appropriate checks for header gatewaying
-var Http2HeaderListener = function(name, callback) {
+var Http2HeaderListener = function (name, callback) {
   this.name = name;
   this.callback = callback;
 };
@@ -145,7 +145,7 @@ var Http2HeaderListener = function(name, callback) {
 Http2HeaderListener.prototype = new Http2CheckListener();
 Http2HeaderListener.prototype.value = "";
 
-Http2HeaderListener.prototype.onDataAvailable = function(
+Http2HeaderListener.prototype.onDataAvailable = function (
   request,
   stream,
   off,
@@ -159,13 +159,13 @@ Http2HeaderListener.prototype.onDataAvailable = function(
   read_stream(stream, cnt);
 };
 
-var Http2PushListener = function(shouldBePushed) {
+var Http2PushListener = function (shouldBePushed) {
   this.shouldBePushed = shouldBePushed;
 };
 
 Http2PushListener.prototype = new Http2CheckListener();
 
-Http2PushListener.prototype.onDataAvailable = function(
+Http2PushListener.prototype.onDataAvailable = function (
   request,
   stream,
   off,
@@ -190,10 +190,7 @@ Http2PushListener.prototype.onDataAvailable = function(
 
 const pushHdrTxt =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const pullHdrTxt = pushHdrTxt
-  .split("")
-  .reverse()
-  .join("");
+const pullHdrTxt = pushHdrTxt.split("").reverse().join("");
 
 function checkContinuedHeaders(getHeader, headerPrefix, headerText) {
   for (var i = 0; i < 265; i++) {
@@ -201,7 +198,7 @@ function checkContinuedHeaders(getHeader, headerPrefix, headerText) {
   }
 }
 
-var Http2ContinuedHeaderListener = function() {};
+var Http2ContinuedHeaderListener = function () {};
 
 Http2ContinuedHeaderListener.prototype = new Http2CheckListener();
 
@@ -212,11 +209,11 @@ Http2ContinuedHeaderListener.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsIStreamListener",
 ]);
 
-Http2ContinuedHeaderListener.prototype.getInterface = function(aIID) {
+Http2ContinuedHeaderListener.prototype.getInterface = function (aIID) {
   return this.QueryInterface(aIID);
 };
 
-Http2ContinuedHeaderListener.prototype.onDataAvailable = function(
+Http2ContinuedHeaderListener.prototype.onDataAvailable = function (
   request,
   stream,
   off,
@@ -238,7 +235,7 @@ Http2ContinuedHeaderListener.prototype.onDataAvailable = function(
   read_stream(stream, cnt);
 };
 
-Http2ContinuedHeaderListener.prototype.onStopRequest = function(
+Http2ContinuedHeaderListener.prototype.onStopRequest = function (
   request,
   status
 ) {
@@ -255,7 +252,7 @@ Http2ContinuedHeaderListener.prototype.onStopRequest = function(
   }
 };
 
-Http2ContinuedHeaderListener.prototype.onPush = function(
+Http2ContinuedHeaderListener.prototype.onPush = function (
   associatedChannel,
   pushChannel
 ) {
@@ -274,12 +271,12 @@ Http2ContinuedHeaderListener.prototype.onPush = function(
 };
 
 // Does the appropriate checks for a large GET response
-var Http2BigListener = function() {};
+var Http2BigListener = function () {};
 
 Http2BigListener.prototype = new Http2CheckListener();
 Http2BigListener.prototype.buffer = "";
 
-Http2BigListener.prototype.onDataAvailable = function(
+Http2BigListener.prototype.onDataAvailable = function (
   request,
   stream,
   off,
@@ -293,7 +290,7 @@ Http2BigListener.prototype.onDataAvailable = function(
   Assert.equal(bigListenerMD5, request.getResponseHeader("X-Expected-MD5"));
 };
 
-Http2BigListener.prototype.onStopRequest = function(request, status) {
+Http2BigListener.prototype.onStopRequest = function (request, status) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(this.onDataAvailableFired);
   Assert.ok(this.isHttp2Connection);
@@ -306,12 +303,12 @@ Http2BigListener.prototype.onStopRequest = function(request, status) {
   this.finish({ httpProxyConnectResponseCode });
 };
 
-var Http2HugeSuspendedListener = function() {};
+var Http2HugeSuspendedListener = function () {};
 
 Http2HugeSuspendedListener.prototype = new Http2CheckListener();
 Http2HugeSuspendedListener.prototype.count = 0;
 
-Http2HugeSuspendedListener.prototype.onDataAvailable = function(
+Http2HugeSuspendedListener.prototype.onDataAvailable = function (
   request,
   stream,
   off,
@@ -323,7 +320,10 @@ Http2HugeSuspendedListener.prototype.onDataAvailable = function(
   read_stream(stream, cnt);
 };
 
-Http2HugeSuspendedListener.prototype.onStopRequest = function(request, status) {
+Http2HugeSuspendedListener.prototype.onStopRequest = function (
+  request,
+  status
+) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(this.onDataAvailableFired);
   Assert.ok(this.isHttp2Connection);
@@ -334,14 +334,14 @@ Http2HugeSuspendedListener.prototype.onStopRequest = function(request, status) {
 };
 
 // Does the appropriate checks for POSTs
-var Http2PostListener = function(expected_md5) {
+var Http2PostListener = function (expected_md5) {
   this.expected_md5 = expected_md5;
 };
 
 Http2PostListener.prototype = new Http2CheckListener();
 Http2PostListener.prototype.expected_md5 = "";
 
-Http2PostListener.prototype.onDataAvailable = function(
+Http2PostListener.prototype.onDataAvailable = function (
   request,
   stream,
   off,
@@ -356,7 +356,7 @@ Http2PostListener.prototype.onDataAvailable = function(
   );
 };
 
-var ResumeStalledChannelListener = function() {};
+var ResumeStalledChannelListener = function () {};
 
 ResumeStalledChannelListener.prototype = {
   onStartRequestFired: false,
@@ -408,7 +408,7 @@ async function test_http2_blocking_download(serverPort) {
   // wait 5 seconds so that stream flow control kicks in and then see if we
   // can do a basic transaction (i.e. session not blocked). afterwards resume
   // channel
-  do_timeout(5000, function() {
+  do_timeout(5000, function () {
     var simpleChannel = makeHTTPChannel(`https://localhost:${serverPort}/`);
     var sl = new ResumeStalledChannelListener();
     sl.resumable = chan;
@@ -470,14 +470,14 @@ async function test_http2_xhr(serverPort) {
   return new Promise(resolve => {
     var req = new XMLHttpRequest();
     req.open("GET", `https://localhost:${serverPort}/`, true);
-    req.addEventListener("readystatechange", function(evt) {
+    req.addEventListener("readystatechange", function (evt) {
       checkXhr(req, resolve);
     });
     req.send(null);
   });
 }
 
-var Http2ConcurrentListener = function() {};
+var Http2ConcurrentListener = function () {};
 
 Http2ConcurrentListener.prototype = new Http2CheckListener();
 Http2ConcurrentListener.prototype.count = 0;
@@ -485,7 +485,7 @@ Http2ConcurrentListener.prototype.target = 0;
 Http2ConcurrentListener.prototype.reset = 0;
 Http2ConcurrentListener.prototype.recvdHdr = 0;
 
-Http2ConcurrentListener.prototype.onStopRequest = function(request, status) {
+Http2ConcurrentListener.prototype.onStopRequest = function (request, status) {
   this.count++;
   Assert.ok(this.isHttp2Connection);
   if (this.recvdHdr > 0) {
@@ -582,7 +582,7 @@ async function test_http2_header(serverPort) {
   let hvalue = "Headers are fun";
   chan.setRequestHeader("X-Test-Header", hvalue, false);
   return new Promise(resolve => {
-    let listener = new Http2HeaderListener("X-Received-Test-Header", function(
+    let listener = new Http2HeaderListener("X-Received-Test-Header", function (
       received_hvalue
     ) {
       Assert.equal(received_hvalue, hvalue);
@@ -613,19 +613,19 @@ async function test_http2_cookie_crumbling(serverPort) {
   var cookiesSent = ["a=b", "c=d01234567890123456789", "e=f"].sort();
   chan.setRequestHeader("Cookie", cookiesSent.join("; "), false);
   return new Promise(resolve => {
-    var listener = new Http2HeaderListener("X-Received-Header-Pairs", function(
+    var listener = new Http2HeaderListener("X-Received-Header-Pairs", function (
       pairsReceived
     ) {
       var cookiesReceived = JSON.parse(pairsReceived)
-        .filter(function(pair) {
+        .filter(function (pair) {
           return pair[0] == "cookie";
         })
-        .map(function(pair) {
+        .map(function (pair) {
           return pair[1];
         })
         .sort();
       Assert.equal(cookiesReceived.length, cookiesSent.length);
-      cookiesReceived.forEach(function(cookieReceived, index) {
+      cookiesReceived.forEach(function (cookieReceived, index) {
         Assert.equal(cookiesSent[index], cookieReceived);
       });
     });
@@ -791,7 +791,7 @@ async function test_http2_post_big(serverPort) {
 // When a http proxy is used alt-svc is disable. Therefore if withProxy is true,
 // try numberOfTries times to connect and make sure that alt-svc is not use and we never
 // connect to the HTTP/2 server.
-var altsvcClientListener = function(
+var altsvcClientListener = function (
   finish,
   httpserv,
   httpserv2,
@@ -860,7 +860,7 @@ altsvcClientListener.prototype = {
   },
 };
 
-var altsvcClientListener2 = function(finish, httpserv, httpserv2) {
+var altsvcClientListener2 = function (finish, httpserv, httpserv2) {
   this.finish = finish;
   this.httpserv = httpserv;
   this.httpserv2 = httpserv2;
@@ -919,7 +919,7 @@ async function test_http2_altsvc(httpserv, httpserv2, withProxy) {
   });
 }
 
-var Http2PushApiListener = function(finish, serverPort) {
+var Http2PushApiListener = function (finish, serverPort) {
   this.finish = finish;
   this.serverPort = serverPort;
 };
@@ -1033,11 +1033,11 @@ async function test_http2_pushapi_1(loadGroup, serverPort) {
   });
 }
 
-var WrongSuiteListener = function() {};
+var WrongSuiteListener = function () {};
 
 WrongSuiteListener.prototype = new Http2CheckListener();
 WrongSuiteListener.prototype.shouldBeHttp2 = false;
-WrongSuiteListener.prototype.onStopRequest = function(request, status) {
+WrongSuiteListener.prototype.onStopRequest = function (request, status) {
   Services.prefs.setBoolPref(
     "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256",
     true
@@ -1100,7 +1100,10 @@ function H11RequiredSessionListener() {}
 
 H11RequiredSessionListener.prototype = new Http2CheckListener();
 
-H11RequiredSessionListener.prototype.onStopRequest = function(request, status) {
+H11RequiredSessionListener.prototype.onStopRequest = function (
+  request,
+  status
+) {
   var streamReused = request.getResponseHeader("X-H11Required-Stream-Ok");
   Assert.equal(streamReused, "yes");
 
@@ -1153,7 +1156,7 @@ function Http2IllegalHpackValidationListener() {}
 Http2IllegalHpackValidationListener.prototype = new Http2CheckListener();
 Http2IllegalHpackValidationListener.prototype.shouldGoAway = false;
 
-Http2IllegalHpackValidationListener.prototype.onStopRequest = function(
+Http2IllegalHpackValidationListener.prototype.onStopRequest = function (
   request,
   status
 ) {
@@ -1173,7 +1176,7 @@ function Http2IllegalHpackListener() {}
 Http2IllegalHpackListener.prototype = new Http2CheckListener();
 Http2IllegalHpackListener.prototype.shouldGoAway = false;
 
-Http2IllegalHpackListener.prototype.onStopRequest = function(request, status) {
+Http2IllegalHpackListener.prototype.onStopRequest = function (request, status) {
   var chan = makeHTTPChannel(
     `https://localhost:${this.serverPort}/illegalhpack_validate`
   );
@@ -1313,7 +1316,7 @@ async function test_http2_status_phrase(serverPort) {
   });
 }
 
-var PulledDiskCacheListener = function() {};
+var PulledDiskCacheListener = function () {};
 PulledDiskCacheListener.prototype = new Http2CheckListener();
 PulledDiskCacheListener.prototype.EXPECTED_DATA = "this was pulled via h2";
 PulledDiskCacheListener.prototype.readData = "";
@@ -1338,7 +1341,7 @@ PulledDiskCacheListener.prototype.onStopRequest = function testOnStopRequest(
 
 const DISK_CACHE_DATA = "this is from disk cache";
 
-var FromDiskCacheListener = function(finish, loadGroup, serverPort) {
+var FromDiskCacheListener = function (finish, loadGroup, serverPort) {
   this.finish = finish;
   this.loadGroup = loadGroup;
   this.serverPort = serverPort;
@@ -1386,10 +1389,10 @@ FromDiskCacheListener.prototype = {
   },
 };
 
-var Http2DiskCachePushListener = function() {};
+var Http2DiskCachePushListener = function () {};
 Http2DiskCachePushListener.prototype = new Http2CheckListener();
 
-Http2DiskCachePushListener.onStopRequest = function(request, status) {
+Http2DiskCachePushListener.onStopRequest = function (request, status) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(Components.isSuccessCode(status));
   Assert.ok(this.onDataAvailableFired);
@@ -1437,7 +1440,7 @@ async function test_http2_disk_cache_push(loadGroup, serverPort) {
       "disk",
       Ci.nsICacheStorage.OPEN_NORMALLY,
       null,
-      function(status, entry) {
+      function (status, entry) {
         continue_test_http2_disk_cache_push(
           status,
           entry,
@@ -1451,9 +1454,9 @@ async function test_http2_disk_cache_push(loadGroup, serverPort) {
   });
 }
 
-var Http2DoublepushListener = function() {};
+var Http2DoublepushListener = function () {};
 Http2DoublepushListener.prototype = new Http2CheckListener();
-Http2DoublepushListener.prototype.onStopRequest = function(request, status) {
+Http2DoublepushListener.prototype.onStopRequest = function (request, status) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(Components.isSuccessCode(status));
   Assert.ok(this.onDataAvailableFired);
@@ -1468,10 +1471,10 @@ Http2DoublepushListener.prototype.onStopRequest = function(request, status) {
   chan.asyncOpen(listener);
 };
 
-var Http2DoublypushedListener = function() {};
+var Http2DoublypushedListener = function () {};
 Http2DoublypushedListener.prototype = new Http2CheckListener();
 Http2DoublypushedListener.prototype.readData = "";
-Http2DoublypushedListener.prototype.onDataAvailable = function(
+Http2DoublypushedListener.prototype.onDataAvailable = function (
   request,
   stream,
   off,
@@ -1481,7 +1484,7 @@ Http2DoublypushedListener.prototype.onDataAvailable = function(
   this.accum += cnt;
   this.readData += read_stream(stream, cnt);
 };
-Http2DoublypushedListener.prototype.onStopRequest = function(request, status) {
+Http2DoublypushedListener.prototype.onStopRequest = function (request, status) {
   Assert.ok(this.onStartRequestFired);
   Assert.ok(Components.isSuccessCode(status));
   Assert.ok(this.onDataAvailableFired);

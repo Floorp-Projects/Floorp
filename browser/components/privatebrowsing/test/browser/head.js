@@ -54,7 +54,7 @@ async function openAboutPrivateBrowsing() {
  */
 async function openTabAndWaitForRender() {
   let { win, tab } = await openAboutPrivateBrowsing();
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     // Wait for render to complete
     await ContentTaskUtils.waitForCondition(() =>
       content.document.documentElement.hasAttribute(

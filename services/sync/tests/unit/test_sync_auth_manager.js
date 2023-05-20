@@ -59,7 +59,7 @@ configureFxAccountIdentity(globalSyncAuthManager, globalIdentityConfig);
  * headers.  We will use this to test clock skew compensation in these headers
  * below.
  */
-var MockFxAccountsClient = function() {
+var MockFxAccountsClient = function () {
   FxAccountsClient.apply(this);
 };
 MockFxAccountsClient.prototype = {
@@ -163,7 +163,7 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
   let accountStatusCalled = false;
   let sessionStatusCalled = false;
 
-  let AuthErrorMockFxAClient = function() {
+  let AuthErrorMockFxAClient = function () {
     FxAccountsClient.apply(this);
   };
   AuthErrorMockFxAClient.prototype = {
@@ -240,7 +240,7 @@ add_task(async function test_resourceAuthenticatorSkew() {
   let hawkClient = new HawkClient("https://example.net/v1", "/foo");
 
   // mock fxa hawk client skew
-  hawkClient.now = function() {
+  hawkClient.now = function () {
     dump("mocked client now: " + now + "\n");
     return now;
   };
@@ -309,7 +309,7 @@ add_task(async function test_RESTResourceAuthenticatorSkew() {
   let hawkClient = new HawkClient("https://example.net/v1", "/foo");
 
   // mock fxa hawk client skew
-  hawkClient.now = function() {
+  hawkClient.now = function () {
     return now;
   };
   // Imagine there's already been one fxa request and the hawk client has
@@ -494,7 +494,7 @@ add_task(async function test_refreshAccessTokenOn401() {
 
   let getTokenCount = 0;
 
-  let CheckSignMockFxAClient = function() {
+  let CheckSignMockFxAClient = function () {
     FxAccountsClient.apply(this);
   };
   CheckSignMockFxAClient.prototype = {
@@ -609,7 +609,7 @@ add_task(async function test_getKeysErrorWithBackoff() {
   delete config.fxaccount.user.kExtSync;
   delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
-  await initializeIdentityWithHAWKResponseFactory(config, function(
+  await initializeIdentityWithHAWKResponseFactory(config, function (
     method,
     data,
     uri
@@ -652,7 +652,7 @@ add_task(async function test_getKeysErrorWithRetry() {
   delete config.fxaccount.user.kExtSync;
   delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
-  await initializeIdentityWithHAWKResponseFactory(config, function(
+  await initializeIdentityWithHAWKResponseFactory(config, function (
     method,
     data,
     uri
@@ -684,7 +684,7 @@ add_task(async function test_getHAWKErrors() {
 
   _("Arrange for a 401 - Sync should reflect an auth error.");
   let config = makeIdentityConfig();
-  await initializeIdentityWithHAWKResponseFactory(config, function(
+  await initializeIdentityWithHAWKResponseFactory(config, function (
     method,
     data,
     uri
@@ -713,7 +713,7 @@ add_task(async function test_getHAWKErrors() {
   _(
     "Arrange for an empty body with a 200 response - should reflect a network error."
   );
-  await initializeIdentityWithHAWKResponseFactory(config, function(
+  await initializeIdentityWithHAWKResponseFactory(config, function (
     method,
     data,
     uri
@@ -745,7 +745,7 @@ add_task(async function test_getGetKeysFailing401() {
   delete config.fxaccount.user.kExtSync;
   delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
-  await initializeIdentityWithHAWKResponseFactory(config, function(
+  await initializeIdentityWithHAWKResponseFactory(config, function (
     method,
     data,
     uri
@@ -773,7 +773,7 @@ add_task(async function test_getGetKeysFailing503() {
   delete config.fxaccount.user.kExtSync;
   delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
-  await initializeIdentityWithHAWKResponseFactory(config, function(
+  await initializeIdentityWithHAWKResponseFactory(config, function (
     method,
     data,
     uri
@@ -984,7 +984,7 @@ async function initializeIdentityWithHAWKResponseFactory(
   function MockedHawkClient() {}
   MockedHawkClient.prototype = new HawkClient("http://mockedserver:9999");
   MockedHawkClient.prototype.constructor = MockedHawkClient;
-  MockedHawkClient.prototype.newHAWKAuthenticatedRESTRequest = function(
+  MockedHawkClient.prototype.newHAWKAuthenticatedRESTRequest = function (
     uri,
     credentials,
     extra
@@ -1049,7 +1049,7 @@ function mockTokenServer(func) {
   function MockTSC() {}
   MockTSC.prototype = new TokenServerClient();
   MockTSC.prototype.constructor = MockTSC;
-  MockTSC.prototype.newRESTRequest = function(url) {
+  MockTSC.prototype.newRESTRequest = function (url) {
     return new MockRESTRequest(url);
   };
   // Arrange for the same observerPrefix as sync_auth uses.

@@ -6,7 +6,7 @@
 const URL = "about:blank";
 
 async function getBrowsingContextId(browser, id) {
-  return SpecialPowers.spawn(browser, [id], async function(id) {
+  return SpecialPowers.spawn(browser, [id], async function (id) {
     let contextId = content.window.docShell.browsingContext.id;
 
     let frames = [content.window];
@@ -26,7 +26,7 @@ async function getBrowsingContextId(browser, id) {
 }
 
 async function addFrame(browser, id, parentId) {
-  return SpecialPowers.spawn(browser, [{ parentId, id }], async function({
+  return SpecialPowers.spawn(browser, [{ parentId, id }], async function ({
     parentId,
     id,
   }) {
@@ -59,7 +59,7 @@ async function addFrame(browser, id, parentId) {
 }
 
 async function removeFrame(browser, id) {
-  return SpecialPowers.spawn(browser, [id], async function(id) {
+  return SpecialPowers.spawn(browser, [id], async function (id) {
     let frames = [content.window];
     while (frames.length) {
       let frame = frames.pop();
@@ -78,8 +78,8 @@ function getBrowsingContextById(id) {
   return BrowsingContext.get(id);
 }
 
-add_task(async function() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+add_task(async function () {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     browser
   ) {
     let topId = await getBrowsingContextId(browser, "");
@@ -111,7 +111,7 @@ add_task(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   // If Fission is disabled, the pref is no-op.
   await SpecialPowers.pushPrefEnv({ set: [["fission.bfcacheInParent", true]] });
 
@@ -125,13 +125,13 @@ add_task(async function() {
           "http://example.com"
         ) + "dummy_page.html",
     },
-    async function(browser) {
+    async function (browser) {
       let path = getRootDirectory(gTestPath).replace(
         "chrome://mochitests/content",
         // eslint-disable-next-line @microsoft/sdl/no-insecure-url
         "http://example.com"
       );
-      await SpecialPowers.spawn(browser, [path], async function(path) {
+      await SpecialPowers.spawn(browser, [path], async function (path) {
         var bc = new content.BroadcastChannel("browser_browsingContext");
         function waitForMessage(command) {
           let p = new Promise(resolve => {

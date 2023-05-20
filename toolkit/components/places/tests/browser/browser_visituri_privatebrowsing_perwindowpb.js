@@ -10,7 +10,7 @@ const finalURL =
 var observer;
 var visitSavedPromise;
 
-add_setup(async function() {
+add_setup(async function () {
   visitSavedPromise = new Promise(resolve => {
     observer = {
       observe(subject, topic, data) {
@@ -29,7 +29,7 @@ add_setup(async function() {
 
   Services.obs.addObserver(observer, "uri-visit-saved");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 });
@@ -51,7 +51,7 @@ add_task(async function test_normal_window() {
 async function testLoadInWindow(options, url) {
   let win = await BrowserTestUtils.openNewBrowserWindow(options);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await BrowserTestUtils.closeWindow(win);
   });
 

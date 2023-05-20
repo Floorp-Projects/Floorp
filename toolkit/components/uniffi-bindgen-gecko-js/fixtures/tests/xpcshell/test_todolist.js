@@ -8,7 +8,7 @@ const {
   setDefaultList,
 } = ChromeUtils.importESModule("resource://gre/modules/RustTodolist.sys.mjs");
 
-add_task(async function() {
+add_task(async function () {
   const todo = await TodoList.init();
   const entry = new TodoEntry("Write bindings for strings in records");
 

@@ -19,7 +19,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("ui.prefersReducedMotion");
 });
 
-add_task(async function() {
+add_task(async function () {
   const { host, doc } = await createHost("bottom", TEST_URI);
   // Unset "prefers reduced motion", otherwise the dot animation preview won't be created.
   // See Bug 1637842

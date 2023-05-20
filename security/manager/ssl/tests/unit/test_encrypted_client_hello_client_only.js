@@ -14,7 +14,7 @@ add_tls_server_setup(
   "test_delegated_credentials"
 );
 
-add_test(function() {
+add_test(function () {
   clearSessionCache();
   run_next_test();
 });

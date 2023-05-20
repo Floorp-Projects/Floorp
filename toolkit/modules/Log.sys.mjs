@@ -295,7 +295,7 @@ class Logger {
 
   updateAppenders() {
     if (this._parent) {
-      let notOwnAppenders = this._parent.appenders.filter(function(appender) {
+      let notOwnAppenders = this._parent.appenders.filter(function (appender) {
         return !this.ownAppenders.includes(appender);
       }, this);
       this.appenders = notOwnAppenders.concat(this.ownAppenders);

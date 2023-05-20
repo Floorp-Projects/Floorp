@@ -11,7 +11,7 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(/File closed/);
 // On debug test machine, it takes about 50s to run the test.
 requestLongerTimeout(4);
 
-add_task(async function() {
+add_task(async function () {
   const ToolboxTask = await initBrowserToolboxTask();
   await ToolboxTask.importFunctions({});
 

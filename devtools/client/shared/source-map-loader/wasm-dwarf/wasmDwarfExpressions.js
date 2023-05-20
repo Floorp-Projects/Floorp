@@ -66,30 +66,30 @@ function createPieceFormatter(bytes) {
 
 // eslint-disable-next-line complexity
 function toJS(buf, typeFormatter, frame_base = "fp()") {
-  const readU8 = function() {
+  const readU8 = function () {
     return buf[i++];
   };
-  const readS8 = function() {
+  const readS8 = function () {
     return (readU8() << 24) >> 24;
   };
-  const readU16 = function() {
+  const readU16 = function () {
     const w = buf[i] | (buf[i + 1] << 8);
     i += 2;
     return w;
   };
-  const readS16 = function() {
+  const readS16 = function () {
     return (readU16() << 16) >> 16;
   };
-  const readS32 = function() {
+  const readS32 = function () {
     const w =
       buf[i] | (buf[i + 1] << 8) | (buf[i + 2] << 16) | (buf[i + 3] << 24);
     i += 4;
     return w;
   };
-  const readU32 = function() {
+  const readU32 = function () {
     return readS32() >>> 0;
   };
-  const readU = function() {
+  const readU = function () {
     let n = 0,
       shift = 0,
       b;
@@ -99,7 +99,7 @@ function toJS(buf, typeFormatter, frame_base = "fp()") {
     }
     return n | (b << shift);
   };
-  const readS = function() {
+  const readS = function () {
     let n = 0,
       shift = 0,
       b;
@@ -111,7 +111,7 @@ function toJS(buf, typeFormatter, frame_base = "fp()") {
     shift += 7;
     return shift > 32 ? (n << (32 - shift)) >> (32 - shift) : n;
   };
-  const popValue = function(formatter) {
+  const popValue = function (formatter) {
     const loc = stack.pop();
     if (loc instanceof Value) {
       return formatter.fromValue(loc);

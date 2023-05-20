@@ -86,7 +86,7 @@ add_task(async function test_execute() {
   );
 
   try {
-    URIS.forEach(function(aUrl) {
+    URIS.forEach(function (aUrl) {
       stmt.params.page_url = aUrl;
       Assert.ok(!stmt.executeStep());
       stmt.reset();

@@ -247,7 +247,7 @@ function showMenuPromise(name) {
 }
 
 function waitForCallbackResultPromise() {
-  return SpecialPowers.spawn(gTestTab.linkedBrowser, [], async function() {
+  return SpecialPowers.spawn(gTestTab.linkedBrowser, [], async function () {
     let contentWin = Cu.waiveXrays(content);
     await ContentTaskUtils.waitForCondition(() => {
       return contentWin.callbackResult;
@@ -344,7 +344,7 @@ async function loadUITourTestPage(callback, host = "https://example.org/") {
           args,
           fnIndices,
         };
-        return SpecialPowers.spawn(browser, [taskArgs], async function(
+        return SpecialPowers.spawn(browser, [taskArgs], async function (
           contentArgs
         ) {
           let contentWin = Cu.waiveXrays(content);
@@ -356,7 +356,7 @@ async function loadUITourTestPage(callback, host = "https://example.org/") {
           let argumentsWithFunctions = Cu.cloneInto(
             contentArgs.args.map((arg, index) => {
               if (arg === "" && contentArgs.fnIndices.includes(index)) {
-                return function() {
+                return function () {
                   callbacksCalled++;
                   SpecialPowers.spawnChrome(
                     [index, Array.from(arguments)],
@@ -428,7 +428,7 @@ function UITourTest(usingAddTask = false) {
     waitForExplicitFinish();
   }
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     delete window.gContentAPI;
     if (gTestTab) {
       gBrowser.removeTab(gTestTab);
@@ -501,8 +501,8 @@ function nextTest() {
   }
   let test = tests.shift();
   info("Starting " + test.name);
-  waitForFocus(function() {
-    loadUITourTestPage(function() {
+  waitForFocus(function () {
+    loadUITourTestPage(function () {
       test(done);
     });
   });
@@ -513,10 +513,10 @@ function nextTest() {
  * wrapper around their test's generator function to reduce boilerplate.
  */
 function add_UITour_task(func) {
-  let genFun = async function() {
+  let genFun = async function () {
     await new Promise(resolve => {
-      waitForFocus(function() {
-        loadUITourTestPage(function() {
+      waitForFocus(function () {
+        loadUITourTestPage(function () {
           let funcPromise = (func() || Promise.resolve()).then(
             () => done(true),
             reason => {

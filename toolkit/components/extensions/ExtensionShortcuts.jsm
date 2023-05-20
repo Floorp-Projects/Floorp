@@ -110,9 +110,7 @@ class ExtensionShortcutKeyMap extends DefaultMap {
 
   getFirstAddonName(shortcutString) {
     if (this.has(shortcutString)) {
-      return this.get(shortcutString)
-        .values()
-        .next().value.addonName;
+      return this.get(shortcutString).values().next().value.addonName;
     }
     return null;
   }

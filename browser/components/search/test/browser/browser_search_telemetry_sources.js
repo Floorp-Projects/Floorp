@@ -74,7 +74,7 @@ async function waitForIdle() {
 SearchTestUtils.init(this);
 UrlbarTestUtils.init(this);
 
-add_setup(async function() {
+add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
   await SpecialPowers.pushPrefEnv({
@@ -244,7 +244,7 @@ add_task(async function test_source_urlbar_handoff() {
       await BrowserTestUtils.browserStopped(tab.linkedBrowser, "about:newtab");
 
       info("Focus on search input in newtab content");
-      await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+      await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
         const searchInput = content.document.querySelector(".fake-editable");
         searchInput.click();
       });
@@ -376,7 +376,7 @@ async function checkAboutPage(
           ],
         ],
       });
-      await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+      await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
         await ContentTaskUtils.waitForCondition(
           () => content.wrappedJSObject.gContentSearchController.defaultEngine
         );

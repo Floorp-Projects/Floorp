@@ -15,7 +15,7 @@ var { FileUtils } = ChromeUtils.importESModule(
 function run_test() {
   initTestDevToolsServer();
 
-  add_task(async function() {
+  add_task(async function () {
     await test_transport(socket_transport);
     await test_transport(local_transport);
     DevToolsServer.destroy();
@@ -26,7 +26,7 @@ function run_test() {
 
 /** * Tests ***/
 
-var test_transport = async function(transportFactory) {
+var test_transport = async function (transportFactory) {
   let clientResolve;
   const clientDeferred = new Promise(resolve => {
     clientResolve = resolve;
@@ -53,7 +53,7 @@ var test_transport = async function(transportFactory) {
         uri: NetUtil.newURI(getTestTempFile("bulk-input")),
         loadUsingSystemPrincipal: true,
       },
-      function(input, status) {
+      function (input, status) {
         copyFrom(input).then(() => {
           input.close();
         });

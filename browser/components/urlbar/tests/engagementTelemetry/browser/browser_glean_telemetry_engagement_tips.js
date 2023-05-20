@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   makeProfileResettable();
 
   Services.fog.setMetricsFeatureConfig(
@@ -24,7 +24,7 @@ add_setup(async function() {
     set: [["browser.urlbar.quickactions.enabled", false]],
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.fog.setMetricsFeatureConfig("{}");
     await SpecialPowers.popPrefEnv();
   });

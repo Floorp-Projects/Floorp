@@ -23,10 +23,7 @@ function encode(ap) {
 
 export class LocationHelper {
   static formatWifiAccessPoints(accessPoints) {
-    return accessPoints
-      .filter(isPublic)
-      .sort(sort)
-      .map(encode);
+    return accessPoints.filter(isPublic).sort(sort).map(encode);
   }
 
   /**

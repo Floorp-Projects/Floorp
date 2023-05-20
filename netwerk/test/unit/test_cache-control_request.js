@@ -104,7 +104,7 @@ add_test(() => {
   // Must not create a cache entry
   var ch = make_channel(resource_age_100_url, "no-store");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(!cache.exists(make_uri(resource_age_100_url), ""));
 
@@ -117,7 +117,7 @@ add_test(() => {
   // Prepare state only, cache the entry
   var ch = make_channel(resource_age_100_url);
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(cache.exists(make_uri(resource_age_100_url), ""));
 
@@ -130,7 +130,7 @@ add_test(() => {
   // Check the prepared cache entry is used when no special directives are added
   var ch = make_channel(resource_age_100_url);
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(!hit_server);
       Assert.ok(cache.exists(make_uri(resource_age_100_url), ""));
 
@@ -144,7 +144,7 @@ add_test(() => {
   // the channel must not use it, entry should stay in the cache
   var ch = make_channel(resource_age_100_url, "no-store");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(cache.exists(make_uri(resource_age_100_url), ""));
 
@@ -160,7 +160,7 @@ add_test(() => {
   // Check the prepared cache entry is used when no special directives are added
   var ch = make_channel(resource_age_100_url);
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(!hit_server);
       Assert.ok(cache.exists(make_uri(resource_age_100_url), ""));
 
@@ -173,7 +173,7 @@ add_test(() => {
   // The existing entry should be revalidated (we expect a server hit)
   var ch = make_channel(resource_age_100_url, "no-cache");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(cache.exists(make_uri(resource_age_100_url), ""));
 
@@ -189,7 +189,7 @@ add_test(() => {
   // Check the prepared cache entry is used when no special directives are added
   var ch = make_channel(resource_age_100_url);
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(!hit_server);
       Assert.ok(cache.exists(make_uri(resource_age_100_url), ""));
 
@@ -203,7 +203,7 @@ add_test(() => {
   // should hit server
   var ch = make_channel(resource_age_100_url, "max-age=10");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(cache.exists(make_uri(resource_age_100_url), ""));
 
@@ -217,7 +217,7 @@ add_test(() => {
   // but the max-stale directive says to use it when it's fresh enough
   var ch = make_channel(resource_age_100_url, "max-age=10, max-stale=99999");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(!hit_server);
       Assert.ok(cache.exists(make_uri(resource_age_100_url), ""));
 
@@ -231,7 +231,7 @@ add_test(() => {
   // should go from cache
   var ch = make_channel(resource_age_100_url, "max-age=1000");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(!hit_server);
       Assert.ok(cache.exists(make_uri(resource_age_100_url), ""));
 
@@ -247,7 +247,7 @@ add_test(() => {
   // Preprate the entry first
   var ch = make_channel(resource_stale_100_url);
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(cache.exists(make_uri(resource_stale_100_url), ""));
 
@@ -262,7 +262,7 @@ add_test(() => {
   // are provided
   var ch = make_channel(resource_stale_100_url);
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(cache.exists(make_uri(resource_stale_100_url), ""));
 
@@ -275,7 +275,7 @@ add_test(() => {
   // Accept cached responses of any stale time
   var ch = make_channel(resource_stale_100_url, "max-stale");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(!hit_server);
       Assert.ok(cache.exists(make_uri(resource_stale_100_url), ""));
 
@@ -288,7 +288,7 @@ add_test(() => {
   // The entry is stale only by 100 seconds, accept it
   var ch = make_channel(resource_stale_100_url, "max-stale=1000");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(!hit_server);
       Assert.ok(cache.exists(make_uri(resource_stale_100_url), ""));
 
@@ -302,7 +302,7 @@ add_test(() => {
   // entry, go from server
   var ch = make_channel(resource_stale_100_url, "max-stale=10");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(cache.exists(make_uri(resource_stale_100_url), ""));
 
@@ -318,7 +318,7 @@ add_test(() => {
   // Preprate the entry first
   var ch = make_channel(resource_fresh_100_url);
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(cache.exists(make_uri(resource_fresh_100_url), ""));
 
@@ -331,7 +331,7 @@ add_test(() => {
   // Check it's reused when no special directives are provided
   var ch = make_channel(resource_fresh_100_url);
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(!hit_server);
       Assert.ok(cache.exists(make_uri(resource_fresh_100_url), ""));
 
@@ -344,7 +344,7 @@ add_test(() => {
   // Entry fresh enough to be served from the cache
   var ch = make_channel(resource_fresh_100_url, "min-fresh=10");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(!hit_server);
       Assert.ok(cache.exists(make_uri(resource_fresh_100_url), ""));
 
@@ -357,7 +357,7 @@ add_test(() => {
   // The entry is not fresh enough
   var ch = make_channel(resource_fresh_100_url, "min-fresh=1000");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(cache.exists(make_uri(resource_fresh_100_url), ""));
 
@@ -376,7 +376,7 @@ add_test(() => {
     'unknown1,unknown2 = "a,b",  min-fresh = 1000 '
   );
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(cache.exists(make_uri(resource_fresh_100_url), ""));
 
@@ -388,7 +388,7 @@ add_test(() => {
 add_test(() => {
   var ch = make_channel(resource_fresh_100_url, "no-cache = , min-fresh = 10");
   ch.asyncOpen(
-    new ChannelListener(function(request, data) {
+    new ChannelListener(function (request, data) {
       Assert.ok(hit_server);
       Assert.ok(cache.exists(make_uri(resource_fresh_100_url), ""));
 

@@ -9,7 +9,7 @@ function doRegister(browser) {
   return SpecialPowers.spawn(
     browser,
     [{ script: SW_SCRIPT, scope: SCOPE }],
-    async function(opts) {
+    async function (opts) {
       let reg = await content.navigator.serviceWorker.register(opts.script, {
         scope: opts.scope,
       });
@@ -31,7 +31,7 @@ function doRegister(browser) {
 }
 
 function doUnregister(browser) {
-  return SpecialPowers.spawn(browser, [SCOPE], async function(uri) {
+  return SpecialPowers.spawn(browser, [SCOPE], async function (uri) {
     let reg = await content.navigator.serviceWorker.getRegistration(uri);
     let worker = reg.active;
     await reg.unregister();
@@ -51,7 +51,7 @@ function doUnregister(browser) {
 }
 
 function isControlled(browser) {
-  return SpecialPowers.spawn(browser, [], function() {
+  return SpecialPowers.spawn(browser, [], function () {
     return !!content.navigator.serviceWorker.controller;
   });
 }

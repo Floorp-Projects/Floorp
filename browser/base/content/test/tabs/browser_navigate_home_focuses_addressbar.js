@@ -4,8 +4,8 @@
 const TEST_HTTP = httpURL("dummy_page.html");
 
 // Test for Bug 1634272
-add_task(async function() {
-  await BrowserTestUtils.withNewTab(TEST_HTTP, async function(browser) {
+add_task(async function () {
+  await BrowserTestUtils.withNewTab(TEST_HTTP, async function (browser) {
     info("Tab ready");
 
     CustomizableUI.addWidgetToArea("home-button", "nav-bar");

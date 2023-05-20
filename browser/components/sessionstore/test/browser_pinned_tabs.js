@@ -10,7 +10,7 @@ const NO_TITLE_URL = "data:text/plain,foo";
 const BACKUP_STATE = SessionStore.getBrowserState();
 registerCleanupFunction(() => promiseBrowserState(BACKUP_STATE));
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.sessionstore.restore_on_demand", true],

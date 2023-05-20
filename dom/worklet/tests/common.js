@@ -1,4 +1,4 @@
-window.onload = function() {
+window.onload = function () {
   // We are the parent. Let's load the test.
   if (parent == this || !location.search.includes("worklet_iframe")) {
     SimpleTest.waitForExplicitFinish();

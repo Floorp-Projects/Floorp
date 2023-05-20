@@ -7,9 +7,9 @@
 async function test(context, commands) {
   await context.selenium.driver.setContext("chrome");
   let elementData = await context.selenium.driver.executeAsyncScript(
-    function() {
+    function () {
       let callback = arguments[arguments.length - 1];
-      (async function() {
+      (async function () {
         let lightDOM = document.querySelectorAll("*");
         let elementsWithoutIDs = {};
         let idElements = [];

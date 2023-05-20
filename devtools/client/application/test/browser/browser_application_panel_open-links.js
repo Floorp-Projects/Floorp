@@ -11,7 +11,7 @@ const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 const TAB_URL = URL_ROOT + "resources/service-workers/empty.html";
 
-add_task(async function() {
+add_task(async function () {
   await enableApplicationPanel();
 
   const { panel, toolbox } = await openNewTabAndApplicationPanel(TAB_URL);

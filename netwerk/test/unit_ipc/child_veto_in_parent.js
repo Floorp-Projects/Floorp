@@ -4,7 +4,7 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpServer.identity.primaryPort;
 });
 
@@ -12,7 +12,7 @@ var httpServer = null;
 // Need to randomize, because apparently no one clears our cache
 var randomPath = "/redirect/" + Math.random();
 
-XPCOMUtils.defineLazyGetter(this, "randomURI", function() {
+XPCOMUtils.defineLazyGetter(this, "randomURI", function () {
   return URL + randomPath;
 });
 

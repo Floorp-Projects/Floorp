@@ -74,7 +74,7 @@ add_task(function test_number() {
 });
 
 add_task(function test_callable() {
-  assert.callable(function() {});
+  assert.callable(function () {});
   assert.callable(() => {});
 
   for (let typ of [undefined, "", true, {}, []]) {

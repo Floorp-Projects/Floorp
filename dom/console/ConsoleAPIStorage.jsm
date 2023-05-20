@@ -93,7 +93,7 @@ ConsoleAPIStorageService.prototype = {
       result.push.apply(result, events);
     }
 
-    return result.sort(function(a, b) {
+    return result.sort(function (a, b) {
       return a.timeStamp - b.timeStamp;
     });
   },

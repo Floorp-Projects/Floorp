@@ -197,7 +197,7 @@ const COPYCOL_IMAGE = COL_IMAGE_ADDRESS;
 var gMetaView = new pageInfoTreeView("metatree", COPYCOL_META_CONTENT);
 var gImageView = new pageInfoTreeView("imagetree", COPYCOL_IMAGE);
 
-gImageView.getCellProperties = function(row, col) {
+gImageView.getCellProperties = function (row, col) {
   var data = gImageView.data[row];
   var item = gImageView.data[row][COL_IMAGE_NODE];
   var props = "";
@@ -216,7 +216,7 @@ gImageView.getCellProperties = function(row, col) {
   return props;
 };
 
-gImageView.onPageMediaSort = function(columnname) {
+gImageView.onPageMediaSort = function (columnname) {
   var tree = document.getElementById(this.treeid);
   var treecol = tree.columns.getNamedColumn(columnname);
 
@@ -551,7 +551,7 @@ async function makeGeneralTab(metaViewRows, docInfo) {
 
   // get cache info
   var cacheKey = url.replace(/#.*$/, "");
-  openCacheEntry(cacheKey, function(cacheEntry) {
+  openCacheEntry(cacheKey, function (cacheEntry) {
     if (cacheEntry) {
       var pageSize = cacheEntry.dataSize;
       var kbSize = formatNumber(Math.round((pageSize / 1024) * 100) / 100);
@@ -587,7 +587,7 @@ async function addImage({ url, type, alt, altNotProvided, element, isBg }) {
     gImageView.addRow(row);
 
     // Fill in cache data asynchronously
-    openCacheEntry(url, function(cacheEntry) {
+    openCacheEntry(url, function (cacheEntry) {
       // The data at row[2] corresponds to the data size.
       if (cacheEntry) {
         let value = cacheEntry.dataSize;
@@ -596,7 +596,7 @@ async function addImage({ url, type, alt, altNotProvided, element, isBg }) {
           let kbSize = Number(Math.round((value / 1024) * 100) / 100);
           document.l10n
             .formatValue("media-file-size", { size: kbSize })
-            .then(function(response) {
+            .then(function (response) {
               row[2] = response;
               // Invalidate the row to trigger a repaint.
               gImageView.tree.invalidateRow(gImageView.data.indexOf(row));
@@ -750,9 +750,9 @@ function saveMedia() {
       );
     }
   } else {
-    selectSaveFolder(function(aDirectory) {
+    selectSaveFolder(function (aDirectory) {
       if (aDirectory) {
-        var saveAnImage = function(aURIString, aChosenData, aBaseURI) {
+        var saveAnImage = function (aURIString, aChosenData, aBaseURI) {
           uniqueFile(aChosenData.file);
 
           let referrerInfo = new ReferrerInfo(
@@ -861,7 +861,7 @@ function makePreview(row) {
 
   // get cache info
   var cacheKey = url.replace(/#.*$/, "");
-  openCacheEntry(cacheKey, function(cacheEntry) {
+  openCacheEntry(cacheKey, function (cacheEntry) {
     // find out the file size
     if (cacheEntry) {
       let imageSize = cacheEntry.dataSize;

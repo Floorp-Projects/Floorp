@@ -7,7 +7,7 @@
  * Test that security details tab is visible only when it should.
  */
 
-add_task(async function() {
+add_task(async function () {
   // This test explicitly asserts some insecure domains.
   await pushPref("dom.security.https_first", false);
 
@@ -58,11 +58,13 @@ add_task(async function() {
       : waitForNetworkEvents(monitor, 1);
 
     info("Performing a request to " + testcase.uri);
-    await SpecialPowers.spawn(tab.linkedBrowser, [testcase.uri], async function(
-      url
-    ) {
-      content.wrappedJSObject.performRequests(1, url);
-    });
+    await SpecialPowers.spawn(
+      tab.linkedBrowser,
+      [testcase.uri],
+      async function (url) {
+        content.wrappedJSObject.performRequests(1, url);
+      }
+    );
 
     info("Waiting for new network event.");
     await onNewItem;

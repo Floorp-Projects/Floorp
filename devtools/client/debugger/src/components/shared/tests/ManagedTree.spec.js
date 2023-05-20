@@ -82,10 +82,7 @@ describe("ManagedTree", () => {
     const wrapper = mount(<ManagedTree {...props} />);
     expect(wrapper).toMatchSnapshot();
     // We auto-expanded the first layer, so unexpand first node.
-    wrapper
-      .find("TreeNode")
-      .first()
-      .simulate("click");
+    wrapper.find("TreeNode").first().simulate("click");
     expect(wrapper).toMatchSnapshot();
     expect(props.onExpand).toHaveBeenCalledWith(
       "c",
@@ -95,10 +92,7 @@ describe("ManagedTree", () => {
           .map(k => `${k}-$`)
       )
     );
-    wrapper
-      .find("TreeNode")
-      .first()
-      .simulate("click");
+    wrapper.find("TreeNode").first().simulate("click");
     expect(props.onExpand).toHaveBeenCalledWith(
       "c",
       new Set(Object.keys(testTree).map(k => `${k}-$`))

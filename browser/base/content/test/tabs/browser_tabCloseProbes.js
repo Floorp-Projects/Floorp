@@ -58,7 +58,7 @@ function waitForSnapshotCount(histogram, expectedCount) {
   }, `Collected value should become ${expectedCount}.`);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Force-enable tab animations
   gReduceMotionOverride = false;
 

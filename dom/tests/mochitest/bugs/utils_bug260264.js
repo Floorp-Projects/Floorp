@@ -22,15 +22,15 @@ function send(element, event, handler) {
  * Because it's not nice to leave popup windows open after the tests are
  * finished, we need a foolproof way to close some/all window.opened windows.
  */
-(function(originalOpen) {
+(function (originalOpen) {
   var wins = [];
-  (window.open = function() {
+  (window.open = function () {
     var win = originalOpen.apply(window, arguments);
     if (win) {
       wins[wins.length] = win;
     }
     return win;
-  }).close = function(n) {
+  }).close = function (n) {
     var promises = [];
     if (arguments.length < 1) {
       n = wins.length;
@@ -40,8 +40,8 @@ function send(element, event, handler) {
       if (win) {
         let openedBrowsingContextID = SpecialPowers.getBrowsingContextID(win);
         promises.push(
-          (function(openedWindow) {
-            return new Promise(function(resolve) {
+          (function (openedWindow) {
+            return new Promise(function (resolve) {
               let observer = {
                 observe(subject) {
                   if (subject.id == openedBrowsingContextID) {

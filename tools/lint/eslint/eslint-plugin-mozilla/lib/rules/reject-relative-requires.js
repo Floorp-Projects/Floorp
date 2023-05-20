@@ -10,7 +10,7 @@
 
 var helpers = require("../helpers");
 
-const isRelativePath = function(path) {
+const isRelativePath = function (path) {
   return path.startsWith("./") || path.startsWith("../");
 };
 

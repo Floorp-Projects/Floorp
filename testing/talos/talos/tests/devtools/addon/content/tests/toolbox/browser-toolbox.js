@@ -14,7 +14,7 @@ const {
 const TEST_URL =
   "data:text/html,browser-toolbox-test<script>console.log('test page message');</script>";
 
-module.exports = async function() {
+module.exports = async function () {
   Services.prefs.setBoolPref("devtools.chrome.enabled", true);
   Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
   Services.prefs.setBoolPref("devtools.debugger.prompt-connection", false);
@@ -46,14 +46,14 @@ module.exports = async function() {
   test = runTest(`browser-toolbox.connect.DAMP`, true);
   const consoleFront = await connectToBrowserToolbox();
   // Wait for the options panel to be fully initialized
-  await evaluateInBrowserToolbox(consoleFront, [], async function() {
+  await evaluateInBrowserToolbox(consoleFront, [], async function () {
     /* global gToolbox */
     await gToolbox.selectTool("options");
   });
   test.done();
 
   test = runTest(`browser-toolbox.debugger-ready.DAMP`, true);
-  await evaluateInBrowserToolbox(consoleFront, [], function() {
+  await evaluateInBrowserToolbox(consoleFront, [], function () {
     /* global waitFor, findSource */
     this.findSource = (dbg, url) => {
       const sources = dbg.selectors.getSourceList(dbg.store.getState());
@@ -83,7 +83,7 @@ module.exports = async function() {
     };
   });
 
-  await evaluateInBrowserToolbox(consoleFront, [TEST_URL], async function(
+  await evaluateInBrowserToolbox(consoleFront, [TEST_URL], async function (
     testUrl
   ) {
     const {
@@ -115,13 +115,13 @@ module.exports = async function() {
   test.done();
 
   test = runTest(`browser-toolbox.inspector-ready.DAMP`, true);
-  await evaluateInBrowserToolbox(consoleFront, [], async function() {
+  await evaluateInBrowserToolbox(consoleFront, [], async function () {
     await gToolbox.selectTool("inspector");
   });
   test.done();
 
   test = runTest(`browser-toolbox.webconsole-ready.DAMP`, true);
-  await evaluateInBrowserToolbox(consoleFront, [], async function() {
+  await evaluateInBrowserToolbox(consoleFront, [], async function () {
     const { hud } = await gToolbox.selectTool("webconsole");
     dump("Wait for test page console message to appear\n");
     await waitFor(() =>
@@ -133,7 +133,7 @@ module.exports = async function() {
   test.done();
 
   test = runTest(`browser-toolbox.styleeditor-ready.DAMP`, true);
-  await evaluateInBrowserToolbox(consoleFront, [], async function() {
+  await evaluateInBrowserToolbox(consoleFront, [], async function () {
     await gToolbox.selectTool("styleeditor");
   });
   test.done();

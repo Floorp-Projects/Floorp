@@ -79,7 +79,7 @@ add_task(async function testSimpleSourcesWithManualClickExpand() {
   await assertNodeIsFocused(dbg, 5);
 
   // Make sure new sources appear in the list.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const script = content.document.createElement("script");
     script.src = "math.min.js";
     content.document.body.appendChild(script);
@@ -487,7 +487,7 @@ add_task(async function testSourceTreeWithEncodedPaths() {
   httpServer.registerContentType("html", "text/html");
   httpServer.registerContentType("js", "application/javascript");
 
-  httpServer.registerPathHandler("/index.html", function(request, response) {
+  httpServer.registerPathHandler("/index.html", function (request, response) {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.write(`<!DOCTYPE html>
     <html>
@@ -499,7 +499,7 @@ add_task(async function testSourceTreeWithEncodedPaths() {
       </body>
     `);
   });
-  httpServer.registerPathHandler(encodeURI("/my folder/my file.js"), function(
+  httpServer.registerPathHandler(encodeURI("/my folder/my file.js"), function (
     request,
     response
   ) {

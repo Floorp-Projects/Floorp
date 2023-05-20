@@ -5,7 +5,7 @@
 
 // Test for Bug 1247243
 
-add_task(async function() {
+add_task(async function () {
   info("Setting up inspector and animation actors.");
   const { animations, walker } = await initAnimationsFrontForUrl(
     MAIN_DOMAIN + "animation-data.html"
@@ -57,7 +57,7 @@ add_task(async function() {
     const actors = await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [[animations.actorID]],
-      function(actorID) {
+      function (actorID) {
         const { require } = ChromeUtils.importESModule(
           "resource://devtools/shared/loader/Loader.sys.mjs"
         );

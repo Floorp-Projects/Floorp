@@ -23,7 +23,7 @@
 // Needed for slow platforms (See https://bugzilla.mozilla.org/show_bug.cgi?id=1506970)
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   let browserConsole, webConsole, objInspector;
 
   // Setting editor mode for both webconsole and browser console as there are more

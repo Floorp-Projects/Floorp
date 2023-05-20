@@ -16,7 +16,7 @@ const { OSKeyStoreTestUtils } = ChromeUtils.importESModule(
 let oldGetters = {};
 let gFakeLoggedIn = true;
 
-add_setup(function() {
+add_setup(function () {
   OSKeyStoreTestUtils.setup();
   oldGetters.isLoggedIn = Object.getOwnPropertyDescriptor(
     OSKeyStore,

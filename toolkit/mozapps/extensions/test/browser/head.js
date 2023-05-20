@@ -35,7 +35,7 @@ const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 const PREF_STRICT_COMPAT = "extensions.strictCompatibility";
 
 var PREF_CHECK_COMPATIBILITY;
-(function() {
+(function () {
   var channel = Services.prefs.getCharPref("app.update.channel", "default");
   if (
     channel != "aurora" &&
@@ -123,7 +123,7 @@ function enableBackgroundUpdateTimer() {
   );
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   // Restore prefs
   for (let pref of gRestorePrefs) {
     if (pref.type == "clear") {
@@ -204,7 +204,7 @@ function run_next_test() {
   executeSoon(() => log_exceptions(test));
 }
 
-var get_tooltip_info = async function(addonEl, managerWindow) {
+var get_tooltip_info = async function (addonEl, managerWindow) {
   // Extract from title attribute.
   const { addon } = addonEl;
   const name = addon.name;
@@ -299,7 +299,7 @@ async function wait_for_view_load(
 
     aManagerWindow.document.addEventListener(
       "view-loaded",
-      function() {
+      function () {
         resolve(aManagerWindow);
       },
       { once: true }
@@ -420,8 +420,8 @@ function wait_for_window_open(aCallback) {
         let domwindow = aXulWin.docShell.domWindow;
         domwindow.addEventListener(
           "load",
-          function() {
-            executeSoon(function() {
+          function () {
+            executeSoon(function () {
               resolve(domwindow);
             });
           },
@@ -634,7 +634,7 @@ function MockProvider(addonTypes) {
   this.addonTypes = addonTypes ?? ["extension"];
 
   var self = this;
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     if (self.started) {
       self.unregister();
     }
@@ -896,7 +896,7 @@ MockProvider.prototype = {
   async getAddonsByTypes(aTypes) {
     await this.queryDelayPromise;
 
-    var addons = this.addons.filter(function(aAddon) {
+    var addons = this.addons.filter(function (aAddon) {
       if (aTypes && !!aTypes.length && !aTypes.includes(aAddon.type)) {
         return false;
       }
@@ -914,7 +914,7 @@ MockProvider.prototype = {
   async getInstallsByTypes(aTypes) {
     await this.queryDelayPromise;
 
-    var installs = this.installs.filter(function(aInstall) {
+    var installs = this.installs.filter(function (aInstall) {
       // Appear to have actually removed cancelled installs from the provider
       if (aInstall.state == AddonManager.STATE_CANCELLED) {
         return false;
@@ -1389,7 +1389,7 @@ MockInstall.prototype = {
 
 function waitForCondition(condition, nextTest, errorMsg) {
   let tries = 0;
-  let interval = setInterval(function() {
+  let interval = setInterval(function () {
     if (tries >= 30) {
       ok(false, errorMsg);
       moveOn();
@@ -1406,7 +1406,7 @@ function waitForCondition(condition, nextTest, errorMsg) {
     }
     tries++;
   }, 100);
-  let moveOn = function() {
+  let moveOn = function () {
     clearInterval(interval);
     nextTest();
   };

@@ -25,7 +25,7 @@ add_task(async function test_cross_docGroup_adoption() {
 
     files: {
       "current.html": "<html>data</html>",
-      "content-script.js": function() {
+      "content-script.js": function () {
         let iframe = document.createElement("iframe");
         iframe.src = browser.runtime.getURL("current.html");
         document.body.appendChild(iframe);

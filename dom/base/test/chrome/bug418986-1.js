@@ -1,6 +1,6 @@
 /* globals chromeWindow */
 // The main test function.
-var test = function(isContent) {
+var test = function (isContent) {
   SimpleTest.waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv({
@@ -36,19 +36,19 @@ var test = function(isContent) {
   ];
 
   // checkPair: tests if members of pair [a, b] are equal when evaluated.
-  let checkPair = function(a, b) {
+  let checkPair = function (a, b) {
     // eslint-disable-next-line no-eval
     is(eval(a), eval(b), a + " should be equal to " + b);
   };
 
   // Returns generator object that iterates through pref values.
-  let prefVals = (function*() {
+  let prefVals = (function* () {
     yield false;
     yield true;
   })();
 
   // The main test function, runs until all pref values are exhausted.
-  let nextTest = function() {
+  let nextTest = function () {
     let { value: prefValue, done } = prefVals.next();
     if (done) {
       SimpleTest.finish();
@@ -56,12 +56,12 @@ var test = function(isContent) {
     }
     SpecialPowers.pushPrefEnv(
       { set: [["privacy.resistFingerprinting", prefValue]] },
-      function() {
+      function () {
         // We will be resisting fingerprinting if the pref is enabled,
         // and we are in a content script (not chrome).
         let resisting = prefValue && isContent;
         // Check each of the pairs.
-        pairs.map(function([item, onVal]) {
+        pairs.map(function ([item, onVal]) {
           if (resisting) {
             checkPair("window." + item, onVal);
           } else if (!isContent && !item.startsWith("moz")) {

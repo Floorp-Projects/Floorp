@@ -33,10 +33,7 @@ function run_test() {
   Assert.equal(def100Url.spec, origUrlStr);
 
   // Changing port directly should update .port and .spec, though:
-  let port200Url = stdUrl
-    .mutate()
-    .setPort("200")
-    .finalize();
+  let port200Url = stdUrl.mutate().setPort("200").finalize();
   Assert.equal(200, port200Url.port);
   Assert.equal(port200Url.spec, "http://foo.com:200/");
 

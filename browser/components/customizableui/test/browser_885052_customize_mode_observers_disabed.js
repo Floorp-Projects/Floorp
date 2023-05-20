@@ -10,7 +10,7 @@ function isFullscreenSizeMode() {
 }
 
 // Observers should be disabled when in customization mode.
-add_task(async function() {
+add_task(async function () {
   CustomizableUI.addWidgetToArea(
     "fullscreen-button",
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL

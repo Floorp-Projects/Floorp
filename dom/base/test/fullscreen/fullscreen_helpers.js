@@ -145,7 +145,7 @@ function waitForFullscreenState(
 async function waitForFullscreenExit(aDocument) {
   info(`waitForFullscreenExit`);
   let promiseFsObserver = null;
-  let observer = function() {
+  let observer = function () {
     if (aDocument.documentElement.hasAttribute("inDOMFullscreen")) {
       info(`waitForFullscreenExit, fullscreen-painted, inDOMFullscreen`);
       Services.obs.removeObserver(observer, "fullscreen-painted");

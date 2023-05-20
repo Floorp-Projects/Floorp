@@ -1,6 +1,6 @@
 // Test that importing bookmark data where a bookmark has a tag longer than 100
 // chars imports everything except the tags for that bookmark.
-add_task(async function() {
+add_task(async function () {
   let bookmarksFile = PathUtils.join(
     do_get_cwd().path,
     "bookmarks_long_tag.json"

@@ -6,7 +6,7 @@ var HasFindClipboard = Services.clipboard.isClipboardTypeSupported(
   Services.clipboard.kFindClipboard
 );
 
-add_task(async function() {
+add_task(async function () {
   let newwindow = await BrowserTestUtils.openNewBrowserWindow();
 
   let selectedBrowser = newwindow.gBrowser.selectedBrowser;
@@ -38,7 +38,7 @@ add_task(async function() {
   ok(!newwindow.gFindBarInitialized, "find bar is not yet initialized");
   let findBar = await newwindow.gFindBarPromise;
 
-  await SpecialPowers.spawn(selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(selectedBrowser, [], async function () {
     let elt = content.document.getElementById("h1");
     let selection = content.getSelection();
     let range = content.document.createRange();

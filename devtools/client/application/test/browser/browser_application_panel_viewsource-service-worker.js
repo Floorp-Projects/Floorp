@@ -6,7 +6,7 @@
 const TAB_URL = URL_ROOT + "resources/service-workers/debug.html";
 const SW_URL = URL_ROOT + "resources/service-workers/debug-sw.js";
 
-add_task(async function() {
+add_task(async function () {
   await enableApplicationPanel();
 
   // disable service worker debugging

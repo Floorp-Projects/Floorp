@@ -160,7 +160,7 @@ function test_close_client_while_sending_requests() {
   });
 
   const expectReply = new Promise(resolve => {
-    gClient.expectReply("root", function(response) {
+    gClient.expectReply("root", function (response) {
       Assert.equal(response.error, "connectionClosed");
       Assert.equal(
         response.message,

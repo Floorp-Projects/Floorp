@@ -3,11 +3,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-onmessage = function(event) {
+onmessage = function (event) {
   throw "No messages should reach me!";
 };
 
-setInterval(function() {
+setInterval(function () {
   postMessage("Still alive!");
 }, 20);
 setInterval(";", 20);

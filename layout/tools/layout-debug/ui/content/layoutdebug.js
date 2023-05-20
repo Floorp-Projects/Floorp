@@ -130,10 +130,10 @@ class Debugger {
 
 for (let [name, pref] of Object.entries(FEATURES)) {
   Object.defineProperty(Debugger.prototype, name, {
-    get: function() {
+    get: function () {
       return this._flags.get(name);
     },
-    set: function(v) {
+    set: function (v) {
       v = !!v;
       Preferences.set(pref, v);
       this._flags.set(name, v);
@@ -147,7 +147,7 @@ for (let [name, pref] of Object.entries(FEATURES)) {
 }
 
 for (let name of COMMANDS) {
-  Debugger.prototype[name] = function() {
+  Debugger.prototype[name] = function () {
     this._sendMessage(name);
   };
 }
@@ -156,7 +156,7 @@ function autoCloseIfNeeded(aCrash) {
   if (!gArgs.autoclose) {
     return;
   }
-  setTimeout(function() {
+  setTimeout(function () {
     if (aCrash) {
       let browser = document.createXULElement("browser");
       // FIXME(emilio): we could use gBrowser if we bothered get the process switches right.
@@ -181,7 +181,7 @@ function nsLDBBrowserContentListener() {
 }
 
 nsLDBBrowserContentListener.prototype = {
-  init: function() {
+  init: function () {
     this.mStatusText = document.getElementById("status-text");
     this.mForwardButton = document.getElementById("forward-button");
     this.mBackButton = document.getElementById("back-button");
@@ -194,7 +194,7 @@ nsLDBBrowserContentListener.prototype = {
   ]),
 
   // nsIWebProgressListener implementation
-  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange: function (aWebProgress, aRequest, aStateFlags, aStatus) {
     if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {
       return;
     }
@@ -226,7 +226,7 @@ nsLDBBrowserContentListener.prototype = {
     }
   },
 
-  onProgressChange: function(
+  onProgressChange: function (
     aWebProgress,
     aRequest,
     aCurSelfProgress,
@@ -235,22 +235,22 @@ nsLDBBrowserContentListener.prototype = {
     aMaxTotalProgress
   ) {},
 
-  onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+  onLocationChange: function (aWebProgress, aRequest, aLocation, aFlags) {
     gURLBar.value = aLocation.spec;
     this.setButtonEnabled(this.mForwardButton, gBrowser.canGoForward);
     this.setButtonEnabled(this.mBackButton, gBrowser.canGoBack);
   },
 
-  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
+  onStatusChange: function (aWebProgress, aRequest, aStatus, aMessage) {
     this.mStatusText.value = aMessage;
   },
 
-  onSecurityChange: function(aWebProgress, aRequest, aState) {},
+  onSecurityChange: function (aWebProgress, aRequest, aState) {},
 
-  onContentBlockingEvent: function(aWebProgress, aRequest, aEvent) {},
+  onContentBlockingEvent: function (aWebProgress, aRequest, aEvent) {},
 
   // non-interface methods
-  setButtonEnabled: function(aButtonElement, aEnabled) {
+  setButtonEnabled: function (aButtonElement, aEnabled) {
     if (aEnabled) {
       aButtonElement.removeAttribute("disabled");
     } else {
@@ -333,7 +333,7 @@ function OnLDBLoad() {
   // doesn't get too confused.  The effect is that we'll never switch process
   // type when navigating, and for layout debugging purposes we don't bother
   // about getting that right.
-  gBrowser.getTabForBrowser = function() {
+  gBrowser.getTabForBrowser = function () {
     return null;
   };
 
@@ -400,7 +400,7 @@ function dumpProfile() {
 
   dump(`Writing profile to ${filename}...\n`);
 
-  Services.profiler.dumpProfileToFileAsync(filename).then(function() {
+  Services.profiler.dumpProfileToFileAsync(filename).then(function () {
     gWritingProfile = false;
     gWrittenProfile = true;
     dump(`done\n`);

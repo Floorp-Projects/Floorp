@@ -25,7 +25,7 @@ addAccessibleTask(
   `
 <div id="root" role="group"><div id="scrollable" role="presentation" style="height: 1px;"><button id="button">test</button></div></div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let button = findAccessibleChildByID(docAcc, "button");
     assertBoundsNonZero(button);
 

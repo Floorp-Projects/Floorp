@@ -8,7 +8,7 @@ const { sinon } = ChromeUtils.importESModule(
 
 const sandbox = sinon.createSandbox();
 
-add_setup(async function() {
+add_setup(async function () {
   ASRouter.resetMessageState();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.promo.pin.enabled", true]],
@@ -16,10 +16,7 @@ add_setup(async function() {
   await ASRouter.onPrefChange();
   // Stub out the doesAppNeedPin to true so that Pin Promo targeting evaluates true
 
-  sandbox
-    .stub(ShellService, "doesAppNeedPin")
-    .withArgs(true)
-    .returns(true);
+  sandbox.stub(ShellService, "doesAppNeedPin").withArgs(true).returns(true);
   registerCleanupFunction(async () => {
     sandbox.restore();
   });
@@ -28,7 +25,7 @@ add_setup(async function() {
 add_task(async function test_pin_promo() {
   let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab1, [], async function() {
+  await SpecialPowers.spawn(tab1, [], async function () {
     const promoContainer = content.document.querySelector(".promo");
     const promoHeader = content.document.getElementById("promo-header");
 
@@ -44,7 +41,7 @@ add_task(async function test_pin_promo() {
   let { win: win3 } = await openTabAndWaitForRender();
   let { win: win4, tab: tab4 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab4, [], async function() {
+  await SpecialPowers.spawn(tab4, [], async function () {
     is(
       content.document.getElementById(".private-browsing-promo-link"),
       null,
@@ -68,7 +65,7 @@ add_task(async function test_pin_promo_mr2022_holdback() {
   await ASRouter.onPrefChange();
   let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab1, [], async function() {
+  await SpecialPowers.spawn(tab1, [], async function () {
     const promoContainer = content.document.querySelector(".promo");
     const promoButtonText = content.document.querySelector(
       "#private-browsing-promo-link"
@@ -96,7 +93,7 @@ add_task(async function test_pin_promo_mr2022_not_holdback() {
   await ASRouter.onPrefChange();
   let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab1, [], async function() {
+  await SpecialPowers.spawn(tab1, [], async function () {
     const promoContainer = content.document.querySelector(".promo");
     const promoHeader = content.document.getElementById("promo-header");
 

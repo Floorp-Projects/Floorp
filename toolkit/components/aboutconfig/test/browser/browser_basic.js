@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       [
@@ -13,13 +13,13 @@ add_setup(async function() {
 });
 
 add_task(async function test_load_title() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     Assert.equal(this.document.title, "Advanced Preferences");
   });
 });
 
 add_task(async function test_load_settings() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     // Test if page contains elements.
     Assert.equal(this.getRow(PREF_NUMBER_DEFAULT_ZERO).value, 0);
     Assert.equal(this.getRow(PREF_STRING_DEFAULT_EMPTY).value, "");

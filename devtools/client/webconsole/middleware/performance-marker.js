@@ -12,7 +12,7 @@ const {
   createPerformanceMarkerMiddleware,
 } = require("resource://devtools/client/shared/redux/middleware/performance-marker.js");
 
-module.exports = function(sessionId) {
+module.exports = function (sessionId) {
   return createPerformanceMarkerMiddleware({
     [MESSAGES_ADD]: {
       label: "WebconsoleAddMessages",

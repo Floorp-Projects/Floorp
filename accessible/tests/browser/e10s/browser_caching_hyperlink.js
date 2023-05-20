@@ -85,7 +85,7 @@ addAccessibleTask(
   ><a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
   </p>
   `,
-  function(browser, accDoc) {
+  function (browser, accDoc) {
     const paragraph = findAccessibleChildByID(accDoc, "testParagraph", [
       nsIAccessibleHyperText,
     ]);
@@ -172,7 +172,7 @@ addAccessibleTask(
   `
   <p id="p"><a href="http://mozilla.org">mozilla.org</a></p>
   `,
-  function(browser, accDoc) {
+  function (browser, accDoc) {
     // Paragraph with link
     const p = findAccessibleChildByID(accDoc, "p", [nsIAccessibleHyperText]);
     const link = p.getLinkAt(0);
@@ -194,7 +194,7 @@ addAccessibleTask(
   `
   <p id="p"><a href="www">mozilla</a><a href="www">mozilla</a><span> te</span><span>xt </span><a href="www">mozilla</a></p>
   `,
-  function(browser, accDoc) {
+  function (browser, accDoc) {
     // Paragraph with link
     const p = findAccessibleChildByID(accDoc, "p", [nsIAccessibleHyperText]);
 

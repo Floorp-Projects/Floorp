@@ -65,7 +65,7 @@ function warning(msg, exception) {
   Services.console.logMessage(consoleMsg);
 }
 
-var gOnceInitializedDeferred = (function() {
+var gOnceInitializedDeferred = (function () {
   let deferred = {};
 
   deferred.promise = new Promise((resolve, reject) => {

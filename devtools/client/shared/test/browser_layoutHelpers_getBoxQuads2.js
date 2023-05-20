@@ -53,7 +53,7 @@
 
 const TEST_URI = TEST_URI_ROOT_SSL + "doc_layoutHelpers_getBoxQuads2-a.html";
 
-add_task(async function() {
+add_task(async function () {
   info("Opening a fission window.");
   const fissionWin = await BrowserTestUtils.openNewBrowserWindow({
     remote: true,
@@ -78,7 +78,7 @@ add_task(async function() {
   ok(waitUntilApzStable, "waitUntilApzStable is defined.");
   await waitUntilApzStable();
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function () {
     const win = content.window;
     const doc = content.document;
     const refNode = doc.documentElement;

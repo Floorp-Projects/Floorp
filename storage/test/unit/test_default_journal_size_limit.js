@@ -27,7 +27,7 @@ async function getDbPath(name) {
   return path;
 }
 
-add_task(async function() {
+add_task(async function () {
   await check_journal_size(
     Services.storage.openDatabase(
       new FileUtils.File(await getDbPath("journal"))

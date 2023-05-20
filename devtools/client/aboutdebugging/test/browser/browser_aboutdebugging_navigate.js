@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
 const TAB_URL_1 = "data:text/html,<title>TAB1</title>";
 const TAB_URL_2 = "data:text/html,<title>TAB2</title>";
 
-add_task(async function() {
+add_task(async function () {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 

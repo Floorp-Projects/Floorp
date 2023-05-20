@@ -9,7 +9,7 @@ const URL = "data:text/html;charset=utf8,<div>test content context menu</div>";
  * Check that the DevTools context menu opens without triggering the content
  * context menu. See Bug 1591140.
  */
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(URL);
 
   info("Test context menu conflict with dom.event.contextmenu.enabled=true");

@@ -5,7 +5,7 @@
 
 // Test whether keyframes progress bar moves correctly after resuming the animation.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([".animated"]);
   const { animationInspector, panel } = await openAnimationInspector();

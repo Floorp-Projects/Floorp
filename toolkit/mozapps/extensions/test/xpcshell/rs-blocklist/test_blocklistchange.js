@@ -310,7 +310,7 @@ var WindowWatcher = {
 
     // Simulate auto-disabling any softblocks
     var list = openArgs.wrappedJSObject.list;
-    list.forEach(function(aItem) {
+    list.forEach(function (aItem) {
       if (!aItem.blocked) {
         aItem.disable = true;
       }
@@ -330,7 +330,7 @@ MockRegistrar.register(
 
 var InstallConfirm = {
   confirm(aWindow, aUrl, aInstalls) {
-    aInstalls.forEach(function(aInstall) {
+    aInstalls.forEach(function (aInstall) {
       aInstall.install();
     });
   },

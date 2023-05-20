@@ -68,7 +68,7 @@ async function testClearing(
     });
   }
 
-  await BrowserTestUtils.withNewTab(testURI, async function(browser) {
+  await BrowserTestUtils.withNewTab(testURI, async function (browser) {
     // Verify we have added quota storage.
     if (testQuota) {
       let usage = await SiteDataTestUtils.getQuotaUsage(originA);

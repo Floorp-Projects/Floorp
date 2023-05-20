@@ -7,7 +7,7 @@ const URL_2 =
   encodeURIComponent('<div id="remote-page">foo</div>');
 
 // Testing navigation between processes
-add_task(async function() {
+add_task(async function () {
   info(`Testing navigation between processes`);
 
   info("Open a tab on a URL supporting only running in parent process");

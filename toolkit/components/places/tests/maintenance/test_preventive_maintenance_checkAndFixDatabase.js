@@ -8,7 +8,7 @@
  * Test preventive maintenance checkAndFixDatabase.
  */
 
-add_task(async function() {
+add_task(async function () {
   // We must initialize places first, or we won't have a db to check.
   Assert.equal(
     PlacesUtils.history.databaseStatus,

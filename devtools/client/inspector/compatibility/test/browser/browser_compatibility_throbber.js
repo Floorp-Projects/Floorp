@@ -25,7 +25,7 @@ const {
   COMPATIBILITY_UPDATE_TOP_LEVEL_TARGET_START,
 } = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );

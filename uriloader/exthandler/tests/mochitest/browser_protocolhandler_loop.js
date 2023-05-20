@@ -46,7 +46,7 @@ add_task(async function test_helperapp() {
     let oldAddTab = gBrowser.addTab;
     registerCleanupFunction(() => (gBrowser.addTab = oldAddTab));
     let wrongThingHappenedPromise = new Promise(resolve => {
-      gBrowser.addTab = function(aURI) {
+      gBrowser.addTab = function (aURI) {
         ok(false, "Tried to open unexpected URL in a tab: " + aURI);
         resolve(null);
         // Pass a dummy object to avoid upsetting BrowserContentHandler -

@@ -153,7 +153,7 @@ add_task(async function root_icon_stored() {
       gBrowser,
       url: "http://www.nostore.com/page",
     },
-    async function(browser) {
+    async function (browser) {
       await TestUtils.waitForCondition(async () => {
         let uri = await new Promise(resolve =>
           PlacesUtils.favicons.getFaviconURLForPage(

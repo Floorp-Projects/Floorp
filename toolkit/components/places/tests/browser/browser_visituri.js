@@ -33,7 +33,7 @@ function getColumn(table, column, fromColumnName, fromColumnValue) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   // Make sure places visit chains are saved correctly with a redirect
   // transitions.
 

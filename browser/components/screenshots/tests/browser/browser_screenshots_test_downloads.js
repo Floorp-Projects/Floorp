@@ -13,7 +13,7 @@ const SCREENSHOTS_EVENTS = [
 
 const MockFilePicker = SpecialPowers.MockFilePicker;
 
-add_setup(async function() {
+add_setup(async function () {
   let tmpDir = PathUtils.join(
     PathUtils.tempDir,
     "testsavedir" + Math.floor(Math.random() * 2 ** 32)

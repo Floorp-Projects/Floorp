@@ -10,7 +10,7 @@ const TESTROOT = "https://example.com/browser/" + RELATIVE_DIR;
  * @returns {Object}
  */
 async function getRedPixels(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     const { document } = content;
     const canvas = document.querySelector("canvas");
 
@@ -64,7 +64,7 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       // check that PDF is opened with internal viewer
       await waitForPdfJSCanvas(
         browser,

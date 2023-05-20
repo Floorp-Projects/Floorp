@@ -25,7 +25,7 @@ function loadXULTreeAndDoTest(aDoTestFunc, aTreeID, aTreeView) {
       return "Load XUL tree " + prettyName(treeID);
     },
   });
-  gXULTreeLoadContext.queue.onFinish = function() {
+  gXULTreeLoadContext.queue.onFinish = function () {
     SimpleTest.executeSoon(doTestFunc);
     return DO_NOT_FINISH_TEST;
   };

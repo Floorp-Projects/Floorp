@@ -11,11 +11,11 @@ add_task(async function test_first() {
     Services.prefs.clearUserPref("network.trr.uri");
   });
 
-  await BrowserTestUtils.withNewTab("about:networking#dns", async function(
+  await BrowserTestUtils.withNewTab("about:networking#dns", async function (
     browser
   ) {
     ok(!browser.isRemoteBrowser, "Browser should not be remote.");
-    await ContentTask.spawn(browser, null, async function() {
+    await ContentTask.spawn(browser, null, async function () {
       let url_tbody = content.document.getElementById("dns_trr_url");
       info(url_tbody);
       is(
@@ -28,11 +28,11 @@ add_task(async function test_first() {
 
   Services.prefs.setCharPref("network.trr.uri", "https://localhost/testytest");
   Services.prefs.setIntPref("network.trr.mode", 2);
-  await BrowserTestUtils.withNewTab("about:networking#dns", async function(
+  await BrowserTestUtils.withNewTab("about:networking#dns", async function (
     browser
   ) {
     ok(!browser.isRemoteBrowser, "Browser should not be remote.");
-    await ContentTask.spawn(browser, null, async function() {
+    await ContentTask.spawn(browser, null, async function () {
       let url_tbody = content.document.getElementById("dns_trr_url");
       info(url_tbody);
       is(

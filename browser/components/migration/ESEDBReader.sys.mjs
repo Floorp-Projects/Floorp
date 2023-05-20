@@ -141,7 +141,7 @@ function handleESEError(
   shouldThrow = true,
   errorLog = true
 ) {
-  return function() {
+  return function () {
     let rv;
     try {
       rv = method.apply(null, arguments);

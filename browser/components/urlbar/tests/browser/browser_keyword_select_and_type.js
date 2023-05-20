@@ -8,7 +8,7 @@
  * operates correctly.
  */
 
-add_task(async function() {
+add_task(async function () {
   let bookmarks = [];
   bookmarks.push(
     await PlacesUtils.bookmarks.insert({
@@ -32,7 +32,7 @@ add_task(async function() {
     })
   );
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     for (let bm of bookmarks) {
       await PlacesUtils.bookmarks.remove(bm);
     }

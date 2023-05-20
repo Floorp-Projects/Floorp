@@ -602,11 +602,7 @@ class ProviderAutofill extends UrlbarProvider {
     }
 
     let host = hostMatch[0].toLowerCase();
-    let revHost =
-      host
-        .split("")
-        .reverse()
-        .join("") + ".";
+    let revHost = host.split("").reverse().join("") + ".";
 
     // Build a string that's the URL stripped of its prefix, i.e., the host plus
     // everything after.  Use queryContext.trimmedSearchString instead of

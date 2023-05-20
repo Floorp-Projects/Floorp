@@ -20,7 +20,7 @@ const TEST_URI = `
 // rendered in the expected order. This is specifically done to check the fix
 // for Bug 1664511, where some elements were rendered out of order due to
 // unexpected async processing.
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
 

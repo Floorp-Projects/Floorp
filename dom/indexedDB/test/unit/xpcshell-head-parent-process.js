@@ -37,7 +37,7 @@ function run_test() {
 }
 
 if (!this.runTest) {
-  this.runTest = function() {
+  this.runTest = function () {
     if (SpecialPowers.isMainProcess()) {
       // XPCShell does not get a profile by default.
       do_get_profile();
@@ -85,7 +85,7 @@ function finishTest() {
 
   SpecialPowers.removeFiles();
 
-  executeSoon(function() {
+  executeSoon(function () {
     do_test_finished();
   });
 }
@@ -95,7 +95,7 @@ function grabEventAndContinueHandler(event) {
 }
 
 function continueToNextStep() {
-  executeSoon(function() {
+  executeSoon(function () {
     testGenerator.next();
   });
 }
@@ -116,7 +116,7 @@ function unexpectedSuccessHandler() {
 }
 
 function expectedErrorHandler(name) {
-  return function(event) {
+  return function (event) {
     Assert.equal(event.type, "error");
     Assert.equal(event.target.error.name, name);
     event.preventDefault();
@@ -451,7 +451,7 @@ function verifyBlob(blob1, blob2) {
   if (!buffer2) {
     let reader = new FileReader();
     reader.readAsArrayBuffer(blob2);
-    reader.onload = function(event) {
+    reader.onload = function (event) {
       buffer2 = event.target.result;
       bufferCache.push({ blob: blob2, buffer: buffer2 });
       if (buffer1) {
@@ -463,7 +463,7 @@ function verifyBlob(blob1, blob2) {
 
   let reader = new FileReader();
   reader.readAsArrayBuffer(blob1);
-  reader.onload = function(event) {
+  reader.onload = function (event) {
     buffer1 = event.target.result;
     if (buffer2) {
       verifyBuffers(buffer1, buffer2);
@@ -544,8 +544,8 @@ class RequestError extends Error {
 }
 
 async function requestFinished(request) {
-  await new Promise(function(resolve) {
-    request.callback = function() {
+  await new Promise(function (resolve) {
+    request.callback = function () {
       resolve();
     };
   });
@@ -559,15 +559,15 @@ async function requestFinished(request) {
 
 // TODO: Rename to openDBRequestSucceeded ?
 function expectingSuccess(request) {
-  return new Promise(function(resolve, reject) {
-    request.onerror = function(event) {
+  return new Promise(function (resolve, reject) {
+    request.onerror = function (event) {
       ok(false, "indexedDB error, '" + event.target.error.name + "'");
       reject(event);
     };
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       resolve(event);
     };
-    request.onupgradeneeded = function(event) {
+    request.onupgradeneeded = function (event) {
       ok(false, "Got upgrade, but did not expect it!");
       reject(event);
     };
@@ -576,15 +576,15 @@ function expectingSuccess(request) {
 
 // TODO: Rename to openDBRequestUpgradeNeeded ?
 function expectingUpgrade(request) {
-  return new Promise(function(resolve, reject) {
-    request.onerror = function(event) {
+  return new Promise(function (resolve, reject) {
+    request.onerror = function (event) {
       ok(false, "indexedDB error, '" + event.target.error.name + "'");
       reject(event);
     };
-    request.onupgradeneeded = function(event) {
+    request.onupgradeneeded = function (event) {
       resolve(event);
     };
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       ok(false, "Got success, but did not expect it!");
       reject(event);
     };
@@ -592,12 +592,12 @@ function expectingUpgrade(request) {
 }
 
 function requestSucceeded(request) {
-  return new Promise(function(resolve, reject) {
-    request.onerror = function(event) {
+  return new Promise(function (resolve, reject) {
+    request.onerror = function (event) {
       ok(false, "indexedDB error, '" + event.target.error.name + "'");
       reject(event);
     };
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       resolve(event);
     };
   });
@@ -612,7 +612,7 @@ function getRelativeFile(relativePath) {
   let profileDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
 
   let file = profileDir.clone();
-  relativePath.split("/").forEach(function(component) {
+  relativePath.split("/").forEach(function (component) {
     file.append(component);
   });
 
@@ -687,7 +687,7 @@ var SpecialPowers = {
     }
     let createdFiles = this._createdFiles;
     let promises = [];
-    requests.forEach(function(request) {
+    requests.forEach(function (request) {
       const filePerms = 0o666;
       let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
       if (request.name) {
@@ -709,7 +709,7 @@ var SpecialPowers = {
         outStream.close();
       }
       promises.push(
-        File.createFromFileName(testFile.path, request.options).then(function(
+        File.createFromFileName(testFile.path, request.options).then(function (
           file
         ) {
           filePaths.push(file);
@@ -718,8 +718,8 @@ var SpecialPowers = {
       createdFiles.push(testFile);
     });
 
-    Promise.all(promises).then(function() {
-      setTimeout(function() {
+    Promise.all(promises).then(function () {
+      setTimeout(function () {
         callback(filePaths);
       }, 0);
     });
@@ -727,7 +727,7 @@ var SpecialPowers = {
 
   removeFiles() {
     if (this._createdFiles) {
-      this._createdFiles.forEach(function(testFile) {
+      this._createdFiles.forEach(function (testFile) {
         try {
           testFile.remove(false);
         } catch (e) {}

@@ -33,23 +33,17 @@ function* testSteps() {
   for (let i = 0; i < 50; i++) {
     let stepNumber = 0;
 
-    request = db
-      .transaction(["foo"], "readwrite")
-      .objectStore("foo")
-      .add({});
+    request = db.transaction(["foo"], "readwrite").objectStore("foo").add({});
     request.onerror = errorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       is(stepNumber, 1, "This callback came first");
       stepNumber++;
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
     };
 
-    request = db
-      .transaction(["foo"], "readwrite")
-      .objectStore("foo")
-      .add({});
+    request = db.transaction(["foo"], "readwrite").objectStore("foo").add({});
     request.onerror = errorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       is(stepNumber, 2, "This callback came second");
       stepNumber++;
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
@@ -60,7 +54,7 @@ function* testSteps() {
       .objectStore("bar")
       .add({});
     request.onerror = errorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       is(stepNumber, 3, "This callback came third");
       stepNumber++;
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
@@ -71,18 +65,15 @@ function* testSteps() {
       .objectStore("bar")
       .add({});
     request.onerror = errorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       is(stepNumber, 4, "This callback came fourth");
       stepNumber++;
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
     };
 
-    request = db
-      .transaction(["bar"], "readwrite")
-      .objectStore("bar")
-      .add({});
+    request = db.transaction(["bar"], "readwrite").objectStore("bar").add({});
     request.onerror = errorHandler;
-    request.onsuccess = function(event) {
+    request.onsuccess = function (event) {
       is(stepNumber, 5, "This callback came fifth");
       stepNumber++;
       event.target.transaction.oncomplete = grabEventAndContinueHandler;

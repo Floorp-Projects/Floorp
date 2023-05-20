@@ -54,7 +54,7 @@ add_task(async () => {
   await BrowserTestUtils.withNewTab(
     "about:test-about-l10n-child",
     async browser => {
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let document = content.document;
         let window = document.defaultView;
 

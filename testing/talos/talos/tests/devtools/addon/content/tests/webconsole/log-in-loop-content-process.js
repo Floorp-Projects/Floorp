@@ -18,7 +18,7 @@ const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");
 
-module.exports = async function() {
+module.exports = async function () {
   let TOTAL_MESSAGES = 1000;
   let tab = await testSetup(PAGES_BASE_URL + "custom/console/bulklog.html");
   let messageManager = tab.linkedBrowser.messageManager;

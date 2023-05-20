@@ -12,7 +12,7 @@ ChromeUtils.defineESModuleGetters(this, {
   SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.suggest.searches", false],
@@ -92,7 +92,7 @@ add_setup(async function() {
   // Reset internal cache in UrlbarProviderRemoteTabs.
   Services.obs.notifyObservers(null, "weave:engine:sync:finish", "tabs");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     sandbox.restore();
     weaveXPCService.ready = oldWeaveServiceReady;
     SyncedTabs._internal = originalSyncedTabsInternal;

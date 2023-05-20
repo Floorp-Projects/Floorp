@@ -5,7 +5,7 @@
 
 /* global gToolbox */
 
-add_task(async function() {
+add_task(async function () {
   // Disable several prefs to avoid network requests.
   await pushPref("browser.safebrowsing.blockedURIs.enabled", false);
   await pushPref("browser.safebrowsing.downloads.enabled", false);

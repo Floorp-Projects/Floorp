@@ -7,7 +7,7 @@
  * Tests if copying a request's request/response headers works.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });

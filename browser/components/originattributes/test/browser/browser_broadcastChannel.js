@@ -16,7 +16,7 @@ async function prefOffHttpsFirstMode() {
 }
 
 async function doTest(aBrowser) {
-  let response = await SpecialPowers.spawn(aBrowser, [], async function() {
+  let response = await SpecialPowers.spawn(aBrowser, [], async function () {
     let displayItem = content.document.getElementById("display");
 
     // If there is nothing in the 'display', we will try to send a message to

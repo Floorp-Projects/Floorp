@@ -13,7 +13,7 @@ function handleRequest(request, response) {
     Components.interfaces.nsITimer
   );
   timer.initWithCallback(
-    function() {
+    function () {
       response.finish();
     },
     200,

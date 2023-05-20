@@ -5,7 +5,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // Dependencies
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const { span } = require("devtools/client/shared/vendor/react-dom-factories");
@@ -164,7 +164,7 @@ define(function(require, exports, module) {
     const { onDOMNodeMouseOver, onDOMNodeMouseOut, onInspectIconClick } = props;
 
     // Make indexes ordered by ascending.
-    indexes.sort(function(a, b) {
+    indexes.sort(function (a, b) {
       return a - b;
     });
 

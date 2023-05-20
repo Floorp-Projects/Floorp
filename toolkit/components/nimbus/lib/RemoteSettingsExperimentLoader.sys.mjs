@@ -267,8 +267,9 @@ export class _RemoteSettingsExperimentLoader {
 
     if (!recipe) {
       throw new Error(
-        `Could not find experiment slug ${slug} in collection ${collection ||
-          lazy.COLLECTION_ID}.`
+        `Could not find experiment slug ${slug} in collection ${
+          collection || lazy.COLLECTION_ID
+        }.`
       );
     }
 

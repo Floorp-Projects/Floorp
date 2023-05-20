@@ -6,7 +6,7 @@ const { sinon } = ChromeUtils.importESModule(
 
 const sandbox = sinon.createSandbox();
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   sandbox.restore();
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
@@ -14,7 +14,7 @@ registerCleanupFunction(async function() {
 
 let bookmarks; // Bookmarks added via insertTree.
 
-add_setup(async function() {
+add_setup(async function () {
   bookmarks = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
     children: [

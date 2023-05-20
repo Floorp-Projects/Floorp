@@ -8,7 +8,7 @@ do_load_manifest("data/chrome.manifest");
 
 function talk_with_worker(worker) {
   return new Promise((resolve, reject) => {
-    worker.onmessage = function(event) {
+    worker.onmessage = function (event) {
       let success = true;
       if (event.data == "OK") {
         resolve();
@@ -19,7 +19,7 @@ function talk_with_worker(worker) {
       Assert.ok(success);
       worker.terminate();
     };
-    worker.onerror = function(event) {
+    worker.onerror = function (event) {
       let error = new Error(event.message, event.filename, event.lineno);
       worker.terminate();
       reject(error);

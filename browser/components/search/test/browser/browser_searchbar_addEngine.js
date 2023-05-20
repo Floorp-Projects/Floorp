@@ -14,10 +14,10 @@ const { PromptTestUtils } = ChromeUtils.importESModule(
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 let searchbar;
 
-add_setup(async function() {
+add_setup(async function () {
   searchbar = await gCUITestUtils.addSearchBar();
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     gCUITestUtils.removeSearchBar();
     Services.search.restoreDefaultEngines();
   });

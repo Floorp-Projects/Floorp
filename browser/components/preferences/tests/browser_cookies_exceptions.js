@@ -521,7 +521,7 @@ function assertListContents(params, expected) {
 }
 
 async function runTest(test, getObservances) {
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("privacy.history.custom");
   });
 

@@ -42,7 +42,7 @@ var commonDialogsBundle = Services.strings.createBundle(
 );
 
 // Setup.
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [[CONTENT_PROMPT_PREF, true]],
   });
@@ -53,7 +53,7 @@ add_setup(async function() {
  */
 add_task(async function test_tabdialog_content_prompts() {
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  await BrowserTestUtils.withNewTab("http://example.com", async function(
+  await BrowserTestUtils.withNewTab("http://example.com", async function (
     browser
   ) {
     info("Open a tab prompt.");
@@ -90,7 +90,7 @@ add_task(async function test_tabdialog_null_principal_title() {
     "DOMWillOpenModalDialog"
   );
 
-  await BrowserTestUtils.withNewTab(TEST_DATA_URI, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_DATA_URI, async function (browser) {
     info("Waiting for dialog to open.");
     await dialogShown;
     await checkOriginText(browser);
@@ -110,7 +110,7 @@ add_task(async function test_tabdialog_extension_title() {
     "DOMWillOpenModalDialog"
   );
 
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     info("Waiting for dialog to open.");
     await dialogShown;
     await checkOriginText(browser, "Test Extension");
@@ -128,7 +128,7 @@ add_task(async function test_tabdialog_page_title() {
     "DOMWillOpenModalDialog"
   );
 
-  await BrowserTestUtils.withNewTab(TEST_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_PAGE, async function (browser) {
     info("Waiting for dialog to open.");
     await dialogShown;
     await checkOriginText(browser, TEST_ORIGIN);

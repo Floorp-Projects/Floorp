@@ -6,7 +6,7 @@
 /**
  * Tests if Request-Cookies and Response-Cookies are sorted in Cookies tab.
  */
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(SIMPLE_UNSORTED_COOKIES_SJS, {
     requestCount: 1,
   });
@@ -55,7 +55,7 @@ add_task(async function() {
   ];
 
   const labelCells = document.querySelectorAll(".treeLabelCell");
-  labelCells.forEach(function(val, index) {
+  labelCells.forEach(function (val, index) {
     is(
       val.innerText,
       expectedLabelValues[index],

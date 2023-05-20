@@ -5,13 +5,13 @@ function test() {
 
   tab.addEventListener(
     "TabClose",
-    function() {
+    function () {
       ok(
         tab.linkedBrowser,
         "linkedBrowser should still exist during the TabClose event"
       );
 
-      executeSoon(function() {
+      executeSoon(function () {
         ok(
           !tab.linkedBrowser,
           "linkedBrowser should be gone after the TabClose event"

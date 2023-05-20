@@ -22,7 +22,7 @@ add_task(async function prepare() {
     setAsDefault: true,
   });
   await UrlbarTestUtils.formHistory.clear();
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
 
     // Clicking suggestions causes visits to search results pages, so clear that

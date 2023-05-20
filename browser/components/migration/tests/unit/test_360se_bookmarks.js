@@ -4,7 +4,7 @@ const { CustomizableUI } = ChromeUtils.import(
   "resource:///modules/CustomizableUI.jsm"
 );
 
-add_task(async function() {
+add_task(async function () {
   registerFakePath("AppData", do_get_file("AppData/Roaming/"));
 
   let migrator = await MigrationUtils.getMigrator("chromium-360se");

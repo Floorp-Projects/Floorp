@@ -6,7 +6,7 @@ var expected_window_count = 9;
 var isolated_window_count = 0;
 var expected_isolated_window_count = 2;
 var resolve_got_all_windows = null;
-var got_all_windows = new Promise(function(res, rej) {
+var got_all_windows = new Promise(function (res, rej) {
   resolve_got_all_windows = res;
 });
 
@@ -16,7 +16,7 @@ var got_all_windows = new Promise(function(res, rej) {
 function testForUrl(url, throwType, clientProperties, resultsArray) {
   return clients
     .openWindow(url)
-    .then(function(e) {
+    .then(function (e) {
       if (throwType != null) {
         resultsArray.push({
           result: false,
@@ -39,7 +39,7 @@ function testForUrl(url, throwType, clientProperties, resultsArray) {
         });
       }
     })
-    .catch(function(err) {
+    .catch(function (err) {
       if (throwType == null) {
         resultsArray.push({
           result: false,
@@ -54,7 +54,7 @@ function testForUrl(url, throwType, clientProperties, resultsArray) {
     });
 }
 
-onmessage = function(event) {
+onmessage = function (event) {
   if (event.data == "testNoPopup") {
     client = event.source;
 
@@ -68,7 +68,7 @@ onmessage = function(event) {
       testForUrl("_._*`InvalidURL", "InvalidAccessError", null, results)
     );
     event.waitUntil(
-      Promise.all(promises).then(function(e) {
+      Promise.all(promises).then(function (e) {
         client.postMessage(results);
       })
     );
@@ -87,10 +87,10 @@ onmessage = function(event) {
   if (event.data == "CHECK_NUMBER_OF_WINDOWS") {
     event.waitUntil(
       got_all_windows
-        .then(function() {
+        .then(function () {
           return clients.matchAll();
         })
-        .then(function(cl) {
+        .then(function (cl) {
           event.source.postMessage([
             {
               result: cl.length == expected_window_count,
@@ -109,7 +109,7 @@ onmessage = function(event) {
   }
 };
 
-onnotificationclick = function(e) {
+onnotificationclick = function (e) {
   var results = [];
   var promises = [];
 
@@ -171,7 +171,7 @@ onnotificationclick = function(e) {
   );
 
   e.waitUntil(
-    Promise.all(promises).then(function() {
+    Promise.all(promises).then(function () {
       client.postMessage(results);
     })
   );

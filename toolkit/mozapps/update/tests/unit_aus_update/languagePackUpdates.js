@@ -64,7 +64,7 @@ function mockLangpackUpdate() {
   return stagingCall.promise;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Thunderbird doesn't have one or more of the probes used in this test.
   // Ensure the data is collected anyway.
   Services.prefs.setBoolPref(

@@ -23,7 +23,7 @@ async function testAction(manifest_version) {
       </body></html>
       `,
 
-      "popup.js": function() {
+      "popup.js": function () {
         window.onload = () => {
           browser.runtime.sendMessage("from-popup");
         };
@@ -31,7 +31,7 @@ async function testAction(manifest_version) {
       "icon.png": imageBuffer,
     },
 
-    background: function() {
+    background: function () {
       browser.runtime.onMessage.addListener(msg => {
         browser.test.assertEq(msg, "from-popup", "correct message received");
         browser.test.sendMessage("popup");
@@ -90,7 +90,7 @@ async function testAction(manifest_version) {
   await waitForConsole;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.manifestV3.enabled", true]],
   });

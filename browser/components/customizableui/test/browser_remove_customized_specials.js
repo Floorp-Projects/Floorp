@@ -6,7 +6,7 @@
 /**
  * Check that after a reset, we can still drag special nodes in customize mode
  */
-add_task(async function() {
+add_task(async function () {
   await startCustomizing();
   CustomizableUI.addWidgetToArea("spring", "nav-bar", 5);
   await gCustomizeMode.reset();

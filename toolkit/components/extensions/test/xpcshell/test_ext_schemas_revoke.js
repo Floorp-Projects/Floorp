@@ -185,7 +185,7 @@ function ignoreError(fn) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   let url = "data:," + JSON.stringify(json);
   await Schemas.load(url);
 

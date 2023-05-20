@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html"
@@ -14,7 +14,7 @@ add_task(async function() {
       permissions: ["contextMenus"],
     },
 
-    background: function() {
+    background: function () {
       browser.contextMenus.create({ title: "a" });
       browser.contextMenus.create({ title: "b" });
       browser.test.notifyPass("contextmenus-icons");
@@ -64,7 +64,7 @@ add_task(async function() {
     manifest: {
       permissions: ["contextMenus"],
     },
-    background: function() {
+    background: function () {
       browser.contextMenus.create({ title: "c" });
       browser.contextMenus.create({ title: "d" });
       browser.test.notifyPass("contextmenus-uninstall-second-extension");

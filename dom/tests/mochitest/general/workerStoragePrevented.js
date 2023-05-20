@@ -35,11 +35,11 @@ try {
   ok(true, "WORKER getting caches didn't throw");
 
   promise.then(
-    function() {
+    function () {
       ok(false, "WORKER The promise should have rejected");
       workerTest();
     },
-    function() {
+    function () {
       ok(true, "WORKER The promise was rejected");
       workerTest();
     }
@@ -61,7 +61,7 @@ function workerTest() {
   }
   // Create the inner worker, and listen for test messages from it
   var worker = new Worker("workerStoragePrevented.js#inner");
-  worker.addEventListener("message", function(e) {
+  worker.addEventListener("message", function (e) {
     if (e.data == "done") {
       finishTest();
       return;

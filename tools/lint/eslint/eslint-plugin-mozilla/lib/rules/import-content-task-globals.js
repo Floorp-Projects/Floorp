@@ -29,7 +29,7 @@ module.exports = {
 
   create(context) {
     return {
-      "CallExpression[callee.object.name='ContentTask'][callee.property.name='spawn']": function(
+      "CallExpression[callee.object.name='ContentTask'][callee.property.name='spawn']": function (
         node
       ) {
         // testing/mochitest/BrowserTestUtils/content/content-task.js
@@ -38,7 +38,7 @@ module.exports = {
           helpers.addVarToScope(name, context.getScope(), value);
         }
       },
-      "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawn']": function(
+      "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawn']": function (
         node
       ) {
         for (let [name, value] of Object.entries(sandboxEnv.globals)) {
@@ -56,7 +56,7 @@ module.exports = {
           helpers.addVarToScope(global, context.getScope(), false);
         }
       },
-      "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawnChrome']": function(
+      "CallExpression[callee.object.name='SpecialPowers'][callee.property.name='spawnChrome']": function (
         node
       ) {
         for (let [name, value] of Object.entries(sandboxEnv.globals)) {

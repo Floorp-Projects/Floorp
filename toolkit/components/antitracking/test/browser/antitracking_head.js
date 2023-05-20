@@ -473,10 +473,10 @@ this.AntiTracking = {
     let win = await BrowserTestUtils.openNewBrowserWindow();
     await BrowserTestUtils.withNewTab(
       { gBrowser: win.gBrowser, url: TEST_3RD_PARTY_PAGE },
-      async function(browser) {
+      async function (browser) {
         info("Let's interact with the tracker");
 
-        await SpecialPowers.spawn(browser, [], async function() {
+        await SpecialPowers.spawn(browser, [], async function () {
           SpecialPowers.wrap(content.document).userInteractionForTesting();
         });
       }
@@ -555,7 +555,7 @@ this.AntiTracking = {
   },
 
   _createTask(options) {
-    add_task(async function() {
+    add_task(async function () {
       info(
         "Starting " +
           (options.cookieBehavior != BEHAVIOR_ACCEPT
@@ -731,12 +731,12 @@ this.AntiTracking = {
             doAccessRemovalChecks,
           },
         ],
-        async function(obj) {
+        async function (obj) {
           let id = "id" + Math.random();
           await new content.Promise(resolve => {
             let ifr = content.document.createElement("iframe");
             ifr.id = id;
-            ifr.onload = function() {
+            ifr.onload = function () {
               info("Sending code to the 3rd party content");
               let callback = obj.allowList + "!!!" + obj.callback;
               ifr.contentWindow.postMessage(callback, "*");
@@ -776,7 +776,7 @@ this.AntiTracking = {
                 await new content.Promise(resolve => {
                   let ifr = content.document.getElementById(id);
                   let oldWindow = ifr.contentWindow;
-                  ifr.onload = function() {
+                  ifr.onload = function () {
                     info("Sending code to the old 3rd party content");
                     oldWindow.postMessage(obj.callbackAfterRemoval, "*");
                   };
@@ -846,9 +846,9 @@ this.AntiTracking = {
               iframeSandbox: options.iframeSandbox,
             },
           ],
-          async function(obj) {
+          async function (obj) {
             let ifr = content.document.createElement("iframe");
-            ifr.onload = function() {
+            ifr.onload = function () {
               info(
                 "Sending code to the 3rd party content to verify accessRemoval"
               );
@@ -982,7 +982,7 @@ this.AntiTracking = {
   },
 
   _createCleanupTask(cleanupFunction) {
-    add_task(async function() {
+    add_task(async function () {
       info("Cleaning up.");
       if (cleanupFunction) {
         await cleanupFunction();
@@ -1004,7 +1004,7 @@ this.AntiTracking = {
     testInSubIFrame,
     extraPrefs
   ) {
-    add_task(async function() {
+    add_task(async function () {
       info(
         `Starting window-open${
           testInSubIFrame ? " sub iframe" : ""
@@ -1036,7 +1036,7 @@ this.AntiTracking = {
         let iframeBrowsingContext = await SpecialPowers.spawn(
           browser,
           [{ page: TEST_IFRAME_PAGE }],
-          async function(obj) {
+          async function (obj) {
             // Add an iframe.
             let ifr = content.document.createElement("iframe");
             let loading = new content.Promise(resolve => {
@@ -1069,10 +1069,10 @@ this.AntiTracking = {
             iframeSandbox,
           },
         ],
-        async function(obj) {
+        async function (obj) {
           await new content.Promise(resolve => {
             let ifr = content.document.createElement("iframe");
-            ifr.onload = function() {
+            ifr.onload = function () {
               info("Sending code to the 3rd party content");
               ifr.contentWindow.postMessage(obj, "*");
             };
@@ -1125,7 +1125,7 @@ this.AntiTracking = {
     testInSubIFrame,
     extraPrefs
   ) {
-    add_task(async function() {
+    add_task(async function () {
       info(
         `Starting user-interaction${
           testInSubIFrame ? " sub iframe" : ""
@@ -1157,7 +1157,7 @@ this.AntiTracking = {
         let iframeBrowsingContext = await SpecialPowers.spawn(
           browser,
           [{ page: TEST_IFRAME_PAGE }],
-          async function(obj) {
+          async function (obj) {
             // Add an iframe.
             let ifr = content.document.createElement("iframe");
             let loading = new content.Promise(resolve => {
@@ -1190,7 +1190,7 @@ this.AntiTracking = {
             iframeSandbox,
           },
         ],
-        async function(obj) {
+        async function (obj) {
           let ifr = content.document.createElement("iframe");
           let loading = new content.Promise(resolve => {
             ifr.onload = resolve;
@@ -1245,7 +1245,9 @@ this.AntiTracking = {
           });
 
           info("Opening a window from the iframe.");
-          SpecialPowers.spawn(ifr, [{ popup: obj.popup }], async function(obj) {
+          SpecialPowers.spawn(ifr, [{ popup: obj.popup }], async function (
+            obj
+          ) {
             content.open(obj.popup);
           });
 
@@ -1316,7 +1318,7 @@ this.AntiTracking = {
             iframeSandbox,
           },
         ],
-        async function(obj) {
+        async function (obj) {
           let ifr = content.document.createElement("iframe");
           let loading = new content.Promise(resolve => {
             ifr.onload = resolve;
@@ -1342,7 +1344,9 @@ this.AntiTracking = {
           });
 
           info("Opening a window from the iframe.");
-          SpecialPowers.spawn(ifr, [{ popup: obj.popup }], async function(obj) {
+          SpecialPowers.spawn(ifr, [{ popup: obj.popup }], async function (
+            obj
+          ) {
             content.open(obj.popup);
           });
 

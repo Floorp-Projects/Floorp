@@ -7,11 +7,11 @@ var kEmptyURI = "data:text/html,";
 // This pref is false by default in OSX; ensure the test still works there.
 Services.prefs.setBoolPref(kPrefName, true);
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref(kPrefName);
 });
 
-add_task(async function() {
+add_task(async function () {
   let aTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, kEmptyURI);
   ok(!gFindBarInitialized, "findbar isn't initialized yet");
 

@@ -78,7 +78,7 @@ const TEST_TEXT_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     TEST_URI
   );

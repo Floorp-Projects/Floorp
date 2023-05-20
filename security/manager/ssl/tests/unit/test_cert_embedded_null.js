@@ -44,7 +44,7 @@ async function do_testcase(certname, checkCommonName) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   addCertFromFile(certdb, "test_cert_embedded_null/ca.pem", "CTu,,");
 
   await do_testcase("embeddedNull", true);

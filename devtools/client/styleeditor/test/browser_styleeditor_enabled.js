@@ -8,7 +8,7 @@
 const SIMPLE_URI = TEST_BASE_HTTPS + "simple.html";
 const LONGNAME_URI = TEST_BASE_HTTPS + "longname.html";
 
-add_task(async function() {
+add_task(async function () {
   const { panel, ui } = await openStyleEditorForURL(SIMPLE_URI);
   const editor = await ui.editors[0].getSourceEditor();
 

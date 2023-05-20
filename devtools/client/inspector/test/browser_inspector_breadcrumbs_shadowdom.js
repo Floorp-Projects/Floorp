@@ -21,7 +21,7 @@ const TEST_URL = `data:text/html;charset=utf-8,
     });
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   const { markup } = inspector;
   const breadcrumbs = inspector.panelDoc.getElementById(
@@ -76,7 +76,7 @@ add_task(async function() {
     "Update the classname of the real element and wait for the breadcrumbs update"
   );
   onBreadcrumbsUpdated = inspector.once("breadcrumbs-updated");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.getElementById("el1").setAttribute("class", "test");
   });
   await onBreadcrumbsUpdated;

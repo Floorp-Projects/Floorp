@@ -14,7 +14,7 @@ const {
   waitForDOMPredicate,
 } = require("damp-test/tests/head");
 
-module.exports = async function() {
+module.exports = async function () {
   let tab = await testSetup(SIMPLE_URL);
 
   let messageManager = tab.linkedBrowser.messageManager;

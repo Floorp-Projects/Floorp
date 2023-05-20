@@ -8,7 +8,7 @@
 const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Test console select all";
 
-add_task(async function() {
+add_task(async function () {
   // The TabContextMenu initializes its strings only on a focus or mouseover event.
   // Calls focus event on the TabContextMenu early in the test.
   gBrowser.selectedTab.focus();

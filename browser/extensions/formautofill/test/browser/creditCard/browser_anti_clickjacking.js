@@ -31,7 +31,7 @@ add_task(async function test_active_delay() {
       ["extensions.formautofill.reauth.enabled", false],
     ],
   });
-  await BrowserTestUtils.withNewTab({ gBrowser, url: CC_URL }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: CC_URL }, async function (
     browser
   ) {
     const focusInput = "#cc-number";
@@ -88,7 +88,7 @@ add_task(async function test_no_delay() {
   });
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_URL },
-    async function(browser) {
+    async function (browser) {
       const focusInput = "#organization";
 
       // Open the popup -- we don't use openPopupOn() because there

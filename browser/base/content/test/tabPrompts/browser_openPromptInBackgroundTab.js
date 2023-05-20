@@ -11,7 +11,7 @@ const ROOT = getRootDirectory(gTestPath).replace(
 );
 let pageWithAlert = ROOT + "openPromptOffTimeout.html";
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.perms.removeAll();
 });
 
@@ -71,7 +71,7 @@ add_task(async function test_old_modal_ui() {
   );
   ourPrompt.onButtonClick(0);
   // Wait for that click to actually be handled completely.
-  await new Promise(function(resolve) {
+  await new Promise(function (resolve) {
     Services.tm.dispatchToMainThread(resolve);
   });
   // check permission is set
@@ -195,7 +195,7 @@ add_task(async function test_new_modal_ui() {
   checkbox.checked = true;
   button.click();
   // Wait for that click to actually be handled completely.
-  await new Promise(function(resolve) {
+  await new Promise(function (resolve) {
     Services.tm.dispatchToMainThread(resolve);
   });
 

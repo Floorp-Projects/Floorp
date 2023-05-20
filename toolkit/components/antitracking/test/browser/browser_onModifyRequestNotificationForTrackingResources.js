@@ -44,7 +44,7 @@ async function onModifyRequest() {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();
@@ -80,7 +80,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     browser,
     [{ expected: gExpectedResourcesSeen }],
-    async function(obj) {
+    async function (obj) {
       is(
         content.document.blockedNodeByClassifierCount,
         obj.expected,

@@ -65,7 +65,7 @@ add_task(async function check_default_bookmark_title() {
   BrowserOffline.toggleOfflineStatus();
   let proxy = Services.prefs.getIntPref("network.proxy.type");
   Services.prefs.setIntPref("network.proxy.type", 0);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     BrowserOffline.toggleOfflineStatus();
     Services.prefs.setIntPref("network.proxy.type", proxy);
   });
@@ -85,7 +85,7 @@ add_task(async function check_default_bookmark_title() {
   await promiseLoaded;
 
   // The offline mode test is only good if the page failed to load.
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     Assert.equal(
       content.document.documentURI.substring(0, 14),
       "about:neterror",

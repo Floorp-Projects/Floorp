@@ -75,7 +75,7 @@ var sdputils = {
   verify_unique_extmap_ids(sdp) {
     const sdpExtmapIds = sdputils.findExtmapIdsUrnsDirections(sdp);
 
-    return sdpExtmapIds.reduce(function(result, item, index) {
+    return sdpExtmapIds.reduce(function (result, item, index) {
       const [id, urn, dir] = item;
       ok(
         !(id in result) || (result[id][0] === urn && result[id][1] === dir),

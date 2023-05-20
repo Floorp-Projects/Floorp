@@ -50,7 +50,7 @@ function remoteResolveURI(uri) {
 }
 
 // Restarts the child process by crashing it then reloading the tab
-var restart = async function() {
+var restart = async function () {
   let browser = gBrowser.selectedBrowser;
   // If the tab isn't remote this would crash the main process so skip it
   if (browser.getAttribute("remote") != "true") {
@@ -71,7 +71,7 @@ var restart = async function() {
 };
 
 // Sanity check that this test is going to be useful
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   // This must be loaded in the remote process for this test to be useful
@@ -91,7 +91,7 @@ add_task(async function() {
 });
 
 // Add a mapping, update it then remove it
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   info("Set");
@@ -133,7 +133,7 @@ add_task(async function() {
 });
 
 // Add a mapping, restart the child process then check it is still there
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   info("Set");
@@ -196,7 +196,7 @@ add_task(async function() {
 });
 
 // Adding a mapping to a resource URI should work
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   info("Set");

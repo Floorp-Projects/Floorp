@@ -10,7 +10,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_setup(async function() {
+add_setup(async function () {
   Services.fog.setMetricsFeatureConfig(
     JSON.stringify({ "urlbar.abandonment": false })
   );
@@ -32,7 +32,7 @@ add_setup(async function() {
   );
   await Services.search.moveEngine(engine, 0);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.fog.setMetricsFeatureConfig("{}");
     await SpecialPowers.popPrefEnv();
     await Services.search.setDefault(

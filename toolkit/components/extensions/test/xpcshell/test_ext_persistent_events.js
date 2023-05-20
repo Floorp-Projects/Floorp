@@ -1051,7 +1051,7 @@ add_task(async function test_non_background_context_listener_not_persisted() {
     },
     files: {
       "extpage.html": `<script src="extpage.js"></script>`,
-      "extpage.js": function() {
+      "extpage.js": function () {
         let listener = arg =>
           browser.test.sendMessage("extpage-triggered", arg);
         browser.startupBlocking.onEvent2.addListener(
@@ -1095,7 +1095,7 @@ add_task(async function test_non_background_context_listener_not_persisted() {
 });
 
 // Test support for event page tests
-const background = async function() {
+const background = async function () {
   let listener2 = () =>
     browser.test.sendMessage("triggered:non-startupblocking");
   browser.startupBlocking.onEvent1.addListener(() => {});
@@ -1104,7 +1104,7 @@ const background = async function() {
   browser.test.sendMessage("bg_started");
 };
 
-const background_update = async function() {
+const background_update = async function () {
   browser.startupBlocking.onEvent1.addListener(() => {});
   browser.nonStartupBlocking.onEvent2.addListener(() => {});
   browser.test.sendMessage("updated_bg_started");
@@ -1277,7 +1277,7 @@ add_task(
 
     // Prepare the extension that will be updated.
     extensionData.manifest.version = "1.0";
-    extensionData.background = async function() {
+    extensionData.background = async function () {
       // we're testing persistence, not operation, so no action in listeners.
       browser.startupBlocking.onEvent1.addListener(() => {});
       // nonBlockingEvent will be removed on upgrade
@@ -1610,10 +1610,7 @@ add_task(async function test_migrate_startupData_to_new_format() {
     for (let [event, paramlists] of Object.entries(entry)) {
       for (let paramlist of paramlists) {
         let key = uneval(paramlist);
-        loadedListeners
-          .get(module)
-          .get(event)
-          .set(key, { params: paramlist });
+        loadedListeners.get(module).get(event).set(key, { params: paramlist });
         found = true;
       }
     }

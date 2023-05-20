@@ -121,7 +121,7 @@ add_task(async function test_URIAndDomainCounts() {
   await SpecialPowers.spawn(
     newWin.gBrowser.selectedBrowser,
     [XHR_URL],
-    function(url) {
+    function (url) {
       return new Promise(resolve => {
         var xhr = new content.window.XMLHttpRequest();
         xhr.open("GET", url);
@@ -162,7 +162,7 @@ add_task(async function test_URIAndDomainCounts() {
   await SpecialPowers.spawn(
     newWin.gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       let doc = content.document;
       let iframe = doc.createElement("iframe");
       let promiseIframeLoaded = ContentTaskUtils.waitForEvent(

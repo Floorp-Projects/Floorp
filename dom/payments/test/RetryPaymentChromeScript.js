@@ -217,22 +217,22 @@ paymentSrv.setTestingUIService(
   DummyUIService.QueryInterface(Ci.nsIPaymentUIService)
 );
 
-addMessageListener("start-test", function(testName) {
+addMessageListener("start-test", function (testName) {
   DummyUIService.testName = testName;
   sendAsyncMessage("start-test-complete");
 });
 
-addMessageListener("finish-test", function() {
+addMessageListener("finish-test", function () {
   DummyUIService.testName = "";
   sendAsyncMessage("finish-test-complete");
 });
 
-addMessageListener("reject-retry", function() {
+addMessageListener("reject-retry", function () {
   DummyUIService.rejectRetry = true;
   sendAsyncMessage("reject-retry-complete");
 });
 
-addMessageListener("teardown", function() {
+addMessageListener("teardown", function () {
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage("teardown-complete");
 });

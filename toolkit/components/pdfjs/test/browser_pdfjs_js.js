@@ -8,7 +8,7 @@ const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 add_task(async function test_js_sandbox() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.pushPrefEnv({
         set: [["pdfjs.enableScripting", true]],
       });
@@ -25,7 +25,7 @@ add_task(async function test_js_sandbox() {
 
         let sandboxDestroyCount = 0;
         const originalDestroy = PdfSandbox.prototype.destroy;
-        PdfSandbox.prototype.destroy = function() {
+        PdfSandbox.prototype.destroy = function () {
           const obj = this.sandbox.eval("({})");
           originalDestroy.apply(this, arguments);
           sandboxDestroyCount++;

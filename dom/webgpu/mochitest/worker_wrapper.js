@@ -8,7 +8,7 @@ ok(
 );
 SimpleTest.waitForExplicitFinish();
 
-const workerWrapperFunc = async function(worker_path, data, transfer) {
+const workerWrapperFunc = async function (worker_path, data, transfer) {
   const worker = new Worker(worker_path);
 
   const results = new Promise((resolve, reject) => {

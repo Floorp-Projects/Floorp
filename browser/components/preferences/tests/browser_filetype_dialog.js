@@ -15,7 +15,7 @@ let gDummyHandlers = [];
 let gOriginalPreferredMailHandler;
 let gOriginalPreferredPDFHandler;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   function removeDummyHandlers(handlers) {
     // Remove any of the dummy handlers we created.
     for (let i = handlers.Count() - 1; i >= 0; i--) {
@@ -77,7 +77,7 @@ function scrubMailtoHandlers(handlerInfo) {
 
 ("use strict");
 
-add_setup(async function() {
+add_setup(async function () {
   // Create our dummy handlers
   let handler1 = Cc["@mozilla.org/uriloader/web-handler-app;1"].createInstance(
     Ci.nsIWebHandlerApp

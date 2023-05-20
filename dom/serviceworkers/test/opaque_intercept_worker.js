@@ -13,10 +13,10 @@ var testReady = new Promise(resolve => {
   );
 });
 
-self.addEventListener("install", function(event) {
+self.addEventListener("install", function (event) {
   var request = new Request(prefix + "notify_loaded.js", { mode: "no-cors" });
   event.waitUntil(
-    Promise.all([caches.open(name), fetch(request), testReady]).then(function(
+    Promise.all([caches.open(name), fetch(request), testReady]).then(function (
       results
     ) {
       var cache = results[0];
@@ -26,14 +26,14 @@ self.addEventListener("install", function(event) {
   );
 });
 
-self.addEventListener("fetch", function(event) {
+self.addEventListener("fetch", function (event) {
   event.respondWith(
     caches
       .open(name)
-      .then(function(cache) {
+      .then(function (cache) {
         return cache.match(event.request);
       })
-      .then(function(response) {
+      .then(function (response) {
         return response || fetch(event.request);
       })
   );

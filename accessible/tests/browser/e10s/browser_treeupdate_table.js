@@ -15,7 +15,7 @@ addAccessibleTask(
       <td>cell2</td>
     </tr>
   </table>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let table = findAccessibleChildByID(accDoc, "table");
 
     let tree = {

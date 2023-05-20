@@ -25,7 +25,7 @@ const {
 } = NormandyTestUtils.factories;
 
 function withAboutStudies() {
-  return function(testFunc) {
+  return function (testFunc) {
     return async args =>
       BrowserTestUtils.withNewTab("about:studies", async browser =>
         testFunc({ ...args, browser })

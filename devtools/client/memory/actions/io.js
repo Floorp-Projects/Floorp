@@ -24,8 +24,8 @@ const {
 } = require("resource://devtools/client/memory/actions/snapshot.js");
 const VALID_EXPORT_STATES = [states.SAVED, states.READ];
 
-exports.pickFileAndExportSnapshot = function(snapshot) {
-  return async function({ dispatch, getState }) {
+exports.pickFileAndExportSnapshot = function (snapshot) {
+  return async function ({ dispatch, getState }) {
     const outputFile = await openFilePicker({
       title: L10N.getFormatStr("snapshot.io.save.window"),
       defaultName: PathUtils.filename(snapshot.path),
@@ -41,8 +41,8 @@ exports.pickFileAndExportSnapshot = function(snapshot) {
   };
 };
 
-const exportSnapshot = (exports.exportSnapshot = function(snapshot, dest) {
-  return async function({ dispatch, getState }) {
+const exportSnapshot = (exports.exportSnapshot = function (snapshot, dest) {
+  return async function ({ dispatch, getState }) {
     dispatch({ type: actions.EXPORT_SNAPSHOT_START, snapshot });
 
     assert(
@@ -61,8 +61,8 @@ const exportSnapshot = (exports.exportSnapshot = function(snapshot, dest) {
   };
 });
 
-exports.pickFileAndImportSnapshotAndCensus = function(heapWorker) {
-  return async function({ dispatch, getState }) {
+exports.pickFileAndImportSnapshotAndCensus = function (heapWorker) {
+  return async function ({ dispatch, getState }) {
     const input = await openFilePicker({
       title: L10N.getFormatStr("snapshot.io.import.window"),
       filters: [[L10N.getFormatStr("snapshot.io.filter"), "*.fxsnapshot"]],
@@ -77,8 +77,8 @@ exports.pickFileAndImportSnapshotAndCensus = function(heapWorker) {
   };
 };
 
-const importSnapshotAndCensus = function(heapWorker, path) {
-  return async function({ dispatch, getState }) {
+const importSnapshotAndCensus = function (heapWorker, path) {
+  return async function ({ dispatch, getState }) {
     const snapshot = immutableUpdate(createSnapshot(getState()), {
       path,
       state: states.IMPORTING,

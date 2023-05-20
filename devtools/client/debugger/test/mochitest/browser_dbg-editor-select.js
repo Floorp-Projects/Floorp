@@ -9,7 +9,7 @@
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   // This test runs too slowly on linux debug. I'd like to figure out
   // which is the slowest part of this and make it run faster, but to
   // fix a frequent failure allow a longer timeout.

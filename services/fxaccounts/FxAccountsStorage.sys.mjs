@@ -22,7 +22,7 @@ export function FxAccountsStorageManagerCanStoreField(fieldName) {
 }
 
 // The storage manager object.
-export var FxAccountsStorageManager = function(options = {}) {
+export var FxAccountsStorageManager = function (options = {}) {
   this.options = {
     filename: options.filename || DEFAULT_STORAGE_FILENAME,
     baseDir: options.baseDir || Services.dirsvc.get("ProfD", Ci.nsIFile).path,

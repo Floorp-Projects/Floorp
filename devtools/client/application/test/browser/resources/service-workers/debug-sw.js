@@ -7,7 +7,7 @@ self.addEventListener("activate", event => {
   event.waitUntil(self.clients.claim());
 });
 
-self.onfetch = function(event) {
+self.onfetch = function (event) {
   const url = event.request.url;
 
   const response = url.endsWith("test")

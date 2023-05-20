@@ -54,7 +54,7 @@ add_task(async function test_file_opening() {
     "Shouldn't open an unknownContentType window for PDFs from file: links!"
   );
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     if (listenerCleanup) {
       listenerCleanup();
     }
@@ -72,7 +72,7 @@ function addWindowListener(aURL, aCallback) {
       listenerCleanup = null;
 
       var domwindow = aXULWindow.docShell.domWindow;
-      waitForFocus(function() {
+      waitForFocus(function () {
         is(
           domwindow.document.location.href,
           aURL,

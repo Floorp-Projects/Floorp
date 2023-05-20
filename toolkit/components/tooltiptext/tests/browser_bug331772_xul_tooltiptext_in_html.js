@@ -1,7 +1,7 @@
 /**
  * Tests that the tooltiptext attribute is used for XUL elements in an HTML doc.
  */
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPermissions([
     { type: "allowXULXBL", allow: true, context: "http://mochi.test:8888" },
   ]);
@@ -12,8 +12,8 @@ add_task(async function() {
       url:
         "http://mochi.test:8888/browser/toolkit/components/tooltiptext/tests/xul_tooltiptext.xhtml",
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [""], function() {
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [""], function () {
         let textObj = {};
         let tttp = Cc[
           "@mozilla.org/embedcomp/default-tooltiptextprovider;1"

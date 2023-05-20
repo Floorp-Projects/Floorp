@@ -73,10 +73,7 @@ class TextNode extends PureComponent {
           title: isWhiteSpace
             ? getFormatStr(
                 "markupView.whitespaceOnly",
-                value
-                  .replace(/\n/g, "⏎")
-                  .replace(/\t/g, "⇥")
-                  .replace(/ /g, "◦")
+                value.replace(/\n/g, "⏎").replace(/\t/g, "⇥").replace(/ /g, "◦")
               )
             : "",
           "data-label": getStr("markupView.whitespaceOnly.label"),

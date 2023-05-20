@@ -13,7 +13,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_task(async function() {
+add_task(async function () {
   const { toolbox, inspector } = await openInspectorForURL(TEST_URL);
 
   info("Select a node with a cssresource attribute");

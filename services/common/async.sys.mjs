@@ -45,7 +45,7 @@ export var Async = {
     // Watch for app-quit notification to stop any sync calls
     Services.obs.addObserver(function onQuitApplication() {
       Services.obs.removeObserver(onQuitApplication, "quit-application");
-      Async.checkAppReady = Async.promiseYield = function() {
+      Async.checkAppReady = Async.promiseYield = function () {
         let exception = Components.Exception(
           "App. Quitting",
           Cr.NS_ERROR_ABORT
@@ -55,7 +55,7 @@ export var Async = {
       };
     }, "quit-application");
     // In the common case, checkAppReady just returns true
-    return (Async.checkAppReady = function() {
+    return (Async.checkAppReady = function () {
       return true;
     })();
   },

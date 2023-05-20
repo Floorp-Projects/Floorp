@@ -13,7 +13,7 @@ const { PromptTestUtils } = ChromeUtils.importESModule(
 const BASE_URL =
   "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.searches", false]],
   });

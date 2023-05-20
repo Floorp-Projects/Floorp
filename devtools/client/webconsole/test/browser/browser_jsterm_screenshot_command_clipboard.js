@@ -13,7 +13,7 @@ const TEST_URI =
 // to keep tests consistant across OSs we are setting the dpr to 1
 const dpr = "--dpr 1";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   ok(hud, "web console opened");
 
@@ -64,7 +64,7 @@ async function testSelectorClipboard(hud) {
   await executeScreenshotClipboardCommand(hud, command);
 
   const imgSize1 = await getImageSizeFromClipboard();
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [imgSize1], function(
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [imgSize1], function (
     imgSize
   ) {
     const img = content.document.querySelector("#testImage");
@@ -131,7 +131,7 @@ async function createScrollbarOverflow() {
   // (non-floating scrollbars).  With default OS settings, this means Windows
   // and Linux are affected, but Mac is not.  For Mac to exhibit this behavior,
   // change System Preferences -> General -> Show scroll bars to Always.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.body.classList.add("overflow");
     return content.windowUtils.flushLayoutWithoutThrottledAnimations();
   });
@@ -144,7 +144,7 @@ async function getScrollbarSize() {
   const scrollbarSize = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       const winUtils = content.windowUtils;
       const scrollbarHeight = {};
       const scrollbarWidth = {};
@@ -163,7 +163,7 @@ async function getContentSize() {
   const contentSize = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       return {
         scrollMaxY: content.scrollMaxY,
         scrollMaxX: content.scrollMaxX,

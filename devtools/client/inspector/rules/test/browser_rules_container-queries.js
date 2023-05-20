@@ -51,7 +51,7 @@ const TEST_URI = `
   </body>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("layout.css.container-queries.enabled", true);
 
   await addTab(

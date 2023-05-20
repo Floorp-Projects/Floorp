@@ -309,7 +309,7 @@ const oaFromDetails = (details, context, allowPattern) => {
  *                               origin attributes instead of falling back to
  *                               default values. See the oaFromDetails method.
  */
-const query = function*(detailsIn, props, context, allowPattern) {
+const query = function* (detailsIn, props, context, allowPattern) {
   let details = {};
   props.forEach(property => {
     if (detailsIn[property] !== null) {
@@ -518,7 +518,7 @@ this.cookies = class extends ExtensionAPIPersistent {
     let { extension } = context;
     let self = {
       cookies: {
-        get: function(details) {
+        get: function (details) {
           validateFirstPartyDomain(details);
 
           // TODO bug 1818968: We don't sort by length of path and creation time.
@@ -531,7 +531,7 @@ this.cookies = class extends ExtensionAPIPersistent {
           return Promise.resolve(null);
         },
 
-        getAll: function(details) {
+        getAll: function (details) {
           if (!("firstPartyDomain" in details)) {
             // Check and throw an error if firstPartyDomain is required.
             validateFirstPartyDomain(details);
@@ -546,7 +546,7 @@ this.cookies = class extends ExtensionAPIPersistent {
           return Promise.resolve(result);
         },
 
-        set: function(details) {
+        set: function (details) {
           validateFirstPartyDomain(details);
           if (details.firstPartyDomain && details.partitionKey) {
             // FPI and dFPI are mutually exclusive, so it does not make sense
@@ -623,7 +623,7 @@ this.cookies = class extends ExtensionAPIPersistent {
           return self.cookies.get(details);
         },
 
-        remove: function(details) {
+        remove: function (details) {
           validateFirstPartyDomain(details);
 
           let allowed = ["url", "name"];
@@ -650,7 +650,7 @@ this.cookies = class extends ExtensionAPIPersistent {
           return Promise.resolve(null);
         },
 
-        getAllCookieStores: function() {
+        getAllCookieStores: function () {
           let data = {};
           for (let tab of extension.tabManager.query()) {
             if (!(tab.cookieStoreId in data)) {

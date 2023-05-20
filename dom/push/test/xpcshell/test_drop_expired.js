@@ -18,7 +18,7 @@ function visitURI(uri, timestamp) {
   });
 }
 
-var putRecord = async function({ scope, perm, quota, lastPush, lastVisit }) {
+var putRecord = async function ({ scope, perm, quota, lastPush, lastVisit }) {
   let uri = Services.io.newURI(scope);
 
   PermissionTestUtils.add(

@@ -2,12 +2,12 @@
 "use strict";
 
 async function runTest(desc, url, expectedURI) {
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
     BrowserTestUtils.loadURIString(browser, url);
     await loaded;
 
-    await SpecialPowers.spawn(browser, [desc, expectedURI], async function(
+    await SpecialPowers.spawn(browser, [desc, expectedURI], async function (
       desc,
       expectedURI
     ) {
@@ -24,7 +24,7 @@ async function runTest(desc, url, expectedURI) {
 }
 
 // by default local addresses and .onion should *not* get upgraded
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(2);
 
   await SpecialPowers.pushPrefEnv({

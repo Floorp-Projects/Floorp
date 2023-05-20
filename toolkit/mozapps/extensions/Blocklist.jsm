@@ -1296,7 +1296,7 @@ var gBlocklistLevel = DEFAULT_LEVEL;
 // It is not possible to use the one in Services since it will not successfully
 // QueryInterface nsIXULAppInfo in xpcshell tests due to other code calling
 // Services.appinfo before the nsIXULAppInfo is created by the tests.
-XPCOMUtils.defineLazyGetter(lazy, "gApp", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gApp", function () {
   // eslint-disable-next-line mozilla/use-services
   let appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
   try {
@@ -1313,10 +1313,10 @@ XPCOMUtils.defineLazyGetter(lazy, "gApp", function() {
   return appinfo;
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gAppID", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gAppID", function () {
   return lazy.gApp.ID;
 });
-XPCOMUtils.defineLazyGetter(lazy, "gAppOS", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gAppOS", function () {
   return lazy.gApp.OS;
 });
 

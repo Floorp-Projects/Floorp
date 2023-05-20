@@ -5,7 +5,7 @@
 
 // Test that class states are preserved when switching to other nodes
 
-add_task(async function() {
+add_task(async function () {
   await addTab(
     "data:text/html;charset=utf-8,<body class='class1 class2 class3'><div>"
   );

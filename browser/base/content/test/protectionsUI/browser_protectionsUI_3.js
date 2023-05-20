@@ -13,7 +13,7 @@ const PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const EMAIL_PREF = "privacy.trackingprotection.emailtracking.enabled";
 const EMAIL_PB_PREF = "privacy.trackingprotection.emailtracking.pbmode.enabled";
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref(PREF);
   Services.prefs.clearUserPref(PB_PREF);
   Services.prefs.clearUserPref(EMAIL_PREF);

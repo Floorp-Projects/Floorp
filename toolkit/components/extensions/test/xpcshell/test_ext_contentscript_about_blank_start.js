@@ -22,7 +22,7 @@ add_task(async function content_script_at_document_start() {
     },
 
     files: {
-      "start.js": function() {
+      "start.js": function () {
         browser.test.sendMessage("content-script-done");
       },
     },
@@ -57,7 +57,7 @@ add_task(async function content_style_at_document_start() {
 
     files: {
       "start.css": "body { background: red; }",
-      "end.js": function() {
+      "end.js": function () {
         let style = window.getComputedStyle(document.body);
         browser.test.assertEq(
           "rgb(255, 0, 0)",

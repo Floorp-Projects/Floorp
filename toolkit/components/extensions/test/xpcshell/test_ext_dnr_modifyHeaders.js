@@ -851,11 +851,7 @@ add_task(async function requestHeaders_and_responseHeaders_cookies() {
     let contentPage = await ExtensionTestUtils.loadContentPage(url);
     let res = await contentPage.spawn(null, () => {
       const { document } = content;
-      const sortCookies = s =>
-        s
-          .split("; ")
-          .sort()
-          .join("; ");
+      const sortCookies = s => s.split("; ").sort().join("; ");
       return {
         // Server at /setcookie echos value of Cookie request header.
         serverSeenCookies: sortCookies(document.body.textContent),

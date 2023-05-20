@@ -90,9 +90,7 @@ export var CommonUtils = {
    *        to true for historical reasons.
    */
   encodeBase64URL: function encodeBase64URL(bytes, pad = true) {
-    let s = btoa(bytes)
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_");
+    let s = btoa(bytes).replace(/\+/g, "-").replace(/\//g, "_");
 
     if (!pad) {
       return s.replace(/=+$/, "");
@@ -156,7 +154,7 @@ export var CommonUtils = {
     );
 
     // Provide an easy way to clear out the timer
-    timer.clear = function() {
+    timer.clear = function () {
       thisObj[name] = null;
       timer.cancel();
     };
@@ -682,7 +680,7 @@ export var CommonUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(CommonUtils, "_utf8Converter", function() {
+XPCOMUtils.defineLazyGetter(CommonUtils, "_utf8Converter", function () {
   let converter = Cc[
     "@mozilla.org/intl/scriptableunicodeconverter"
   ].createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -690,7 +688,7 @@ XPCOMUtils.defineLazyGetter(CommonUtils, "_utf8Converter", function() {
   return converter;
 });
 
-XPCOMUtils.defineLazyGetter(CommonUtils, "_converterService", function() {
+XPCOMUtils.defineLazyGetter(CommonUtils, "_converterService", function () {
   return Cc["@mozilla.org/streamConverters;1"].getService(
     Ci.nsIStreamConverterService
   );

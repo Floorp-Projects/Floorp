@@ -36,7 +36,7 @@ add_test(function test_getFile() {
 });
 
 add_test(function test_getFile_nonexistentDir() {
-  do_check_throws(function() {
+  do_check_throws(function () {
     FileUtils.getFile("NonexistentD", ["foobar"]);
   }, Cr.NS_ERROR_FAILURE);
 
@@ -72,7 +72,7 @@ add_test(function test_getDir() {
 });
 
 add_test(function test_getDir_nonexistentDir() {
-  do_check_throws(function() {
+  do_check_throws(function () {
     FileUtils.getDir("NonexistentD", ["foodir"]);
   }, Cr.NS_ERROR_FAILURE);
 
@@ -95,7 +95,7 @@ add_test(function test_getDir_shouldCreate() {
   run_next_test();
 });
 
-var openFileOutputStream_defaultFlags = function(aKind, aFileName) {
+var openFileOutputStream_defaultFlags = function (aKind, aFileName) {
   let file = FileUtils.getFile("ProfD", [aFileName]);
   let fos;
   Assert.ok(aKind == "atomic" || aKind == "safe" || aKind == "");
@@ -131,7 +131,7 @@ var openFileOutputStream_defaultFlags = function(aKind, aFileName) {
   run_next_test();
 };
 
-var openFileOutputStream_modeFlags = function(aKind, aFileName) {
+var openFileOutputStream_modeFlags = function (aKind, aFileName) {
   let file = FileUtils.getFile("ProfD", [aFileName]);
   let fos;
   Assert.ok(aKind == "atomic" || aKind == "safe" || aKind == "");
@@ -143,7 +143,7 @@ var openFileOutputStream_modeFlags = function(aKind, aFileName) {
     fos = FileUtils.openFileOutputStream(file, FileUtils.MODE_WRONLY);
   }
   let data = "test_modeFlags";
-  do_check_throws(function() {
+  do_check_throws(function () {
     fos.write(data, data.length);
   }, Cr.NS_ERROR_FILE_NOT_FOUND);
   Assert.ok(!file.exists());
@@ -151,7 +151,7 @@ var openFileOutputStream_modeFlags = function(aKind, aFileName) {
   run_next_test();
 };
 
-var closeFileOutputStream = function(aKind, aFileName) {
+var closeFileOutputStream = function (aKind, aFileName) {
   let file = FileUtils.getFile("ProfD", [aFileName]);
   let fos;
   Assert.ok(aKind == "atomic" || aKind == "safe");
@@ -171,7 +171,7 @@ var closeFileOutputStream = function(aKind, aFileName) {
   } else if (aKind == "safe") {
     FileUtils.closeSafeFileOutputStream(fos);
   }
-  do_check_throws(function() {
+  do_check_throws(function () {
     fos.write(data, data.length);
   }, Cr.NS_BASE_STREAM_CLOSED);
   run_next_test();

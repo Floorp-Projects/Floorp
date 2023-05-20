@@ -158,7 +158,7 @@ function wrapPrivileged(obj, win) {
 
   let dummy;
   if (typeof obj === "function") {
-    dummy = Cu.exportFunction(function() {}, win);
+    dummy = Cu.exportFunction(function () {}, win);
   } else {
     dummy = new win.Object();
   }

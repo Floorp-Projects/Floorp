@@ -9,7 +9,7 @@ function getExtension(page_action) {
     manifest: {
       page_action,
     },
-    background: function() {
+    background: function () {
       browser.test.onMessage.addListener(
         async ({ method, param, expect, msg }) => {
           let result = await browser.pageAction[method](param);
@@ -267,7 +267,7 @@ add_task(async function test_pageAction_restrictScheme_false() {
         hide_matches: ["*://*/*"],
       },
     },
-    background: function() {
+    background: function () {
       browser.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
         if (changeInfo.url && changeInfo.url.startsWith("about:reader")) {
           browser.test.sendMessage("readerModeEntered");

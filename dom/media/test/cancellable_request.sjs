@@ -74,7 +74,7 @@ function poll(f) {
     return;
   }
   new Timer(
-    function() {
+    function () {
       poll(f);
     },
     100,
@@ -152,7 +152,7 @@ function handleRequest(request, response) {
 
   response.processAsync();
   // Now wait for the message to cancel this response
-  poll(function() {
+  poll(function () {
     if (getState(key[1]) != "cancelled") {
       return false;
     }

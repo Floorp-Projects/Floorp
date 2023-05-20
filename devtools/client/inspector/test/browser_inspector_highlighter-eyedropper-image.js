@@ -8,7 +8,7 @@
 const TEST_URL =
   URL_ROOT + "img_browser_inspector_highlighter-eyedropper-image.png";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   info("Check the inspector toolbar when viewing an image");
   const button = inspector.panelDoc.querySelector(

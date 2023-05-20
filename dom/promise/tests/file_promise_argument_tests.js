@@ -30,7 +30,7 @@ function passBasicPromise() {
 function passPrimitive(global) {
   var p = getPromise(global, 5);
   verifyPromiseGlobal(p, global, "Promise wrapping primitive");
-  return p.then(function(arg) {
+  return p.then(function (arg) {
     is(arg, 5, "Should have the arg we passed in");
   });
 }
@@ -45,7 +45,7 @@ function passThenable(global) {
   };
   var p = getPromise(global, thenable);
   verifyPromiseGlobal(p, global, "Promise wrapping thenable");
-  return p.then(function(arg) {
+  return p.then(function (arg) {
     ok(called, "Thenable should have been called");
     is(arg, 7, "Should have the arg our thenable passed in");
   });
@@ -95,7 +95,7 @@ function passCorrectPromiseWithMismatchedConstructor() {
     window,
     "Promise wrapping passed-in promise with mismatched constructor"
   );
-  return p2.then(function(arg) {
+  return p2.then(function (arg) {
     is(arg, 9, "Should have propagated along our resolution value");
   });
 }
@@ -144,7 +144,7 @@ function passPromiseSubclass() {
     window,
     "Promise wrapping passed-in promise subclass"
   );
-  return p2.then(function(arg) {
+  return p2.then(function (arg) {
     is(
       arg,
       11,
@@ -165,7 +165,7 @@ function runPromiseArgumentTests(finishFunc) {
     .then(passPromiseToOtherGlobal)
     .then(passPromiseSubclass)
     .then(finishFunc)
-    .catch(function(e) {
+    .catch(function (e) {
       ok(
         false,
         `Exception thrown: ${e}@${location.pathname}:${e.lineNumber}:${e.columnNumber}`

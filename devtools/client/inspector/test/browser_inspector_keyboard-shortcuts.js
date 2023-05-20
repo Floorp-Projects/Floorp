@@ -20,7 +20,7 @@ const TEST_DATA = [
   { key: "KEY_ArrowRight", selectedNode: "strong" },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
 
   info("Selecting the deepest element to start with");

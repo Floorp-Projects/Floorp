@@ -103,7 +103,7 @@ add_task(async function test_text_editor_in_content() {
     await promiseResettingSearchBarAndFocus();
 
     await BrowserTestUtils.withNewTab(test.page, async browser => {
-      await SpecialPowers.spawn(browser, [test], async function(aTest) {
+      await SpecialPowers.spawn(browser, [test], async function (aTest) {
         content.window.focus();
         await ContentTaskUtils.waitForCondition(() =>
           content.document.hasFocus()
@@ -118,7 +118,7 @@ add_task(async function test_text_editor_in_content() {
       const waitForBeforeInputEvent = SpecialPowers.spawn(
         browser,
         [test],
-        async function(aTest) {
+        async function (aTest) {
           await new Promise(resolve => {
             content.document.querySelector(aTest.target).addEventListener(
               "beforeinput",
@@ -154,7 +154,7 @@ add_task(async function test_text_editor_in_content() {
       await waitForBeforeInputEvent;
       await waitForInputEvent;
 
-      await SpecialPowers.spawn(browser, [test], async function(aTest) {
+      await SpecialPowers.spawn(browser, [test], async function (aTest) {
         is(
           content.document.querySelector(aTest.target).value,
           "abXYZc",
@@ -193,7 +193,7 @@ add_task(async function test_html_editor_in_content() {
     await promiseResettingSearchBarAndFocus();
 
     await BrowserTestUtils.withNewTab(test.page, async browser => {
-      await SpecialPowers.spawn(browser, [test], async function(aTest) {
+      await SpecialPowers.spawn(browser, [test], async function (aTest) {
         content.window.focus();
         await ContentTaskUtils.waitForCondition(() =>
           content.document.hasFocus()
@@ -213,7 +213,7 @@ add_task(async function test_html_editor_in_content() {
       const waitForBeforeInputEvent = SpecialPowers.spawn(
         browser,
         [test],
-        async function(aTest) {
+        async function (aTest) {
           await new Promise(resolve => {
             const eventTarget =
               aTest.mode === "designMode"
@@ -253,7 +253,7 @@ add_task(async function test_html_editor_in_content() {
       await waitForBeforeInputEvent;
       await waitForInputEvent;
 
-      await SpecialPowers.spawn(browser, [test], async function(aTest) {
+      await SpecialPowers.spawn(browser, [test], async function (aTest) {
         is(
           content.document.querySelector(aTest.target).innerHTML,
           "abXYZc",

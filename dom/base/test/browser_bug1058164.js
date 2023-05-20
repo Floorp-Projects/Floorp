@@ -92,7 +92,7 @@ function addContentEventListenerWithMessageManager(
 
   let needCleanup = true;
 
-  let unregisterFunction = function() {
+  let unregisterFunction = function () {
     if (!needCleanup) {
       return;
     }

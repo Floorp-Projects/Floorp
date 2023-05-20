@@ -2,7 +2,7 @@ function remote(task) {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], task);
 }
 
-add_task(async function() {
+add_task(async function () {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   let promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);

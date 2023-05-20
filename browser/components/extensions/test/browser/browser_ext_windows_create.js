@@ -177,11 +177,7 @@ add_task(async function testWindowCreate() {
         "chromehidden"
       );
       is(
-        chromeHidden
-          .trim()
-          .split(/\s+/)
-          .sort()
-          .join(" "),
+        chromeHidden.trim().split(/\s+/).sort().join(" "),
         expected.hiddenChrome.sort().join(" "),
         "Got expected hidden chrome"
       );

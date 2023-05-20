@@ -44,7 +44,7 @@ const TEST_URL =
   </html>
 `);
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   const { markup } = inspector;
   const ruleview = inspector.getPanel("ruleview").view;

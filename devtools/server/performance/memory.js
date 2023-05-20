@@ -106,7 +106,7 @@ Memory.prototype = {
    */
   detach: expectState(
     "attached",
-    function() {
+    function () {
       this._clearDebuggees();
       this.dbg.disable();
       this._dbg = null;
@@ -170,7 +170,7 @@ Memory.prototype = {
    */
   saveHeapSnapshot: expectState(
     "attached",
-    function(boundaries = null) {
+    function (boundaries = null) {
       // If we are observing the whole process, then scope the snapshot
       // accordingly. Otherwise, use the debugger's debuggees.
       if (!boundaries) {
@@ -194,7 +194,7 @@ Memory.prototype = {
    */
   takeCensus: expectState(
     "attached",
-    function() {
+    function () {
       return this.dbg.memory.takeCensus();
     },
     "taking census"
@@ -217,7 +217,7 @@ Memory.prototype = {
    */
   startRecordingAllocations: expectState(
     "attached",
-    function(options = {}) {
+    function (options = {}) {
       if (this.isRecordingAllocations()) {
         return this._getCurrentTime();
       }
@@ -256,7 +256,7 @@ Memory.prototype = {
    */
   stopRecordingAllocations: expectState(
     "attached",
-    function() {
+    function () {
       if (!this.isRecordingAllocations()) {
         return this._getCurrentTime();
       }
@@ -279,7 +279,7 @@ Memory.prototype = {
    */
   getAllocationsSettings: expectState(
     "attached",
-    function() {
+    function () {
       return {
         maxLogLength: this.dbg.memory.maxAllocationsLogLength,
         probability: this.dbg.memory.allocationSamplingProbability,
@@ -346,7 +346,7 @@ Memory.prototype = {
    */
   getAllocations: expectState(
     "attached",
-    function() {
+    function () {
       if (this.dbg.memory.allocationsLogOverflowed) {
         // Since the last time we drained the allocations log, there have been
         // more allocations than the log's capacity, and we lost some data. There

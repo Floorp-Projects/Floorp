@@ -1,6 +1,6 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({ set: [["ui.tooltipDelay", 0]] });
 });
 
@@ -15,7 +15,7 @@ add_task(async function test_title_in_shadow_dom() {
   );
 
   info("creating host");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let doc = content.document;
     let host = doc.createElement("div");
     doc.body.appendChild(host);
@@ -32,7 +32,7 @@ add_task(async function test_title_in_shadow_dom() {
     let tooltip = document.getElementById(tooltipId);
     tooltip.addEventListener(
       "popupshown",
-      function(event) {
+      function (event) {
         resolve(event.target);
       },
       { once: true }
@@ -68,7 +68,7 @@ add_task(async function test_title_in_light_dom() {
   );
 
   info("creating host");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let doc = content.document;
     let host = doc.createElement("div");
     host.title = "light";
@@ -85,7 +85,7 @@ add_task(async function test_title_in_light_dom() {
     let tooltip = document.getElementById(tooltipId);
     tooltip.addEventListener(
       "popupshown",
-      function(event) {
+      function (event) {
         resolve(event.target);
       },
       { once: true }
@@ -121,7 +121,7 @@ add_task(async function test_title_through_slot() {
   );
 
   info("creating host");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let doc = content.document;
     let host = doc.createElement("div");
     host.title = "light";
@@ -140,7 +140,7 @@ add_task(async function test_title_through_slot() {
     let tooltip = document.getElementById(tooltipId);
     tooltip.addEventListener(
       "popupshown",
-      function(event) {
+      function (event) {
         resolve(event.target);
       },
       { once: true }

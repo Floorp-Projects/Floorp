@@ -72,7 +72,7 @@ export class FeatureCallout {
       "cfrFeaturesUserPref",
       "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
       true,
-      function(pref, previous, latest) {
+      function (pref, previous, latest) {
         if (latest) {
           this.showFeatureCallout();
         } else {
@@ -278,8 +278,9 @@ export class FeatureCallout {
           "messaging_experiments",
           "feature_callout",
           "create_failed",
-          `${this.message.id || "no_message"}-${this.currentScreen
-            ?.parent_selector || "no_current_screen"}`
+          `${this.message.id || "no_message"}-${
+            this.currentScreen?.parent_selector || "no_current_screen"
+          }`
         );
       }
 

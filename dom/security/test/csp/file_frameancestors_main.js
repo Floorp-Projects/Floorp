@@ -1,7 +1,7 @@
 // Script to populate the test frames in the frame ancestors mochitest.
 //
 function setupFrames() {
-  var $ = function(v) {
+  var $ = function (v) {
     return document.getElementById(v);
   };
   var base = {

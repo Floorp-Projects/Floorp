@@ -2,13 +2,13 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-add_task(async function() {
+add_task(async function () {
   let firstLocation =
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, firstLocation);
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function () {
     // Push the state before maximizing the window and clicking below.
     content.history.pushState("page2", "page2", "page2");
   });

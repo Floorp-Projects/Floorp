@@ -57,7 +57,7 @@ const YANDEX_PERMANENT_ERRORS = [
  * @returns {Promise}          A promise that will resolve when the translation
  *                             task is finished.
  */
-var YandexTranslator = function(
+var YandexTranslator = function (
   translationDocument,
   sourceLanguage,
   targetLanguage

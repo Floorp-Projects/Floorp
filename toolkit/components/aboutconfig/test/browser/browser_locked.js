@@ -3,7 +3,7 @@
 
 const PREF_STRING_NO_DEFAULT = "test.aboutconfig.a";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [[PREF_STRING_NO_DEFAULT, "some value"]],
   });
@@ -20,7 +20,7 @@ add_task(async function test_locked() {
   Services.prefs.lockPref(PREF_BOOLEAN_DEFAULT_TRUE);
   Services.prefs.lockPref(PREF_STRING_NO_DEFAULT);
 
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     // Test locked default string pref.
     let lockedPref = this.getRow(PREF_STRING_DEFAULT_NOTEMPTY);
     Assert.ok(lockedPref.hasClass("locked"));

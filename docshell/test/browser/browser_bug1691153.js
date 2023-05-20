@@ -27,7 +27,7 @@ add_task(async () => {
   let first_message_promise = SpecialPowers.spawn(
     browser,
     [],
-    async function() {
+    async function () {
       let blobPromise = new Promise((resolve, reject) => {
         content.addEventListener("message", event => {
           if (event.data.bloburl) {

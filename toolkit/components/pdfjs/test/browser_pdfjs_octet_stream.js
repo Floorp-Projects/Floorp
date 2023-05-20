@@ -38,7 +38,7 @@ add_task(async function test_octet_stream_opens_pdfjs() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(newTabBrowser) {
+    async function (newTabBrowser) {
       await waitForPdfJS(newTabBrowser, PDF_URL);
       is(newTabBrowser.currentURI.spec, PDF_URL, "Should load pdfjs");
     }
@@ -77,7 +77,7 @@ add_task(async function test_octet_stream_in_frame_downloads() {
   let dialogPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: `data:text/html,<iframe src='${PDF_URL}'>` },
-    async function(newTabBrowser) {
+    async function (newTabBrowser) {
       let dialogWin = await dialogPromise;
       ok(dialogWin, "Should have a dialog asking what to do.");
       dialogWin.close(); // This is going to cancel the dialog.
@@ -133,7 +133,7 @@ add_task(
 
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: `data:text/html,<iframe src='${PDF_URL}'>` },
-      async function(newTabBrowser) {
+      async function (newTabBrowser) {
         // wait until downloadsPanel opens before continuing with test
         info("Waiting for download panel to open");
         await downloadsPanelPromise;

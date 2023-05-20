@@ -121,7 +121,7 @@ const kProgressUpdateIntervalMs = 400;
  * is transient, though it can be included in a DownloadList so that it can be
  * managed by the user interface and persisted across sessions.
  */
-export var Download = function() {
+export var Download = function () {
   this._deferSucceeded = lazy.PromiseUtils.defer();
 };
 
@@ -1365,7 +1365,7 @@ const kPlainSerializableDownloadProperties = [
  *
  * @return The newly created Download object.
  */
-Download.fromSerializable = function(aSerializable) {
+Download.fromSerializable = function (aSerializable) {
   let download = new Download();
   if (aSerializable.source instanceof DownloadSource) {
     download.source = aSerializable.source;
@@ -1427,7 +1427,7 @@ Download.fromSerializable = function(aSerializable) {
 /**
  * Represents the source of a download, for example a document or an URI.
  */
-export var DownloadSource = function() {};
+export var DownloadSource = function () {};
 
 DownloadSource.prototype = {
   /**
@@ -1586,7 +1586,7 @@ DownloadSource.prototype = {
  *
  * @return The newly created DownloadSource object.
  */
-DownloadSource.fromSerializable = function(aSerializable) {
+DownloadSource.fromSerializable = function (aSerializable) {
   let source = new DownloadSource();
   if (isString(aSerializable)) {
     // Convert String objects to primitive strings at this point.
@@ -1668,7 +1668,7 @@ DownloadSource.fromSerializable = function(aSerializable) {
  * Represents the target of a download, for example a file in the global
  * downloads directory, or a file in the system temporary directory.
  */
-export var DownloadTarget = function() {};
+export var DownloadTarget = function () {};
 
 DownloadTarget.prototype = {
   /**
@@ -1788,7 +1788,7 @@ DownloadTarget.prototype = {
  *
  * @return The newly created DownloadTarget object.
  */
-DownloadTarget.fromSerializable = function(aSerializable) {
+DownloadTarget.fromSerializable = function (aSerializable) {
   let target = new DownloadTarget();
   if (isString(aSerializable)) {
     // Convert String objects to primitive strings at this point.
@@ -1831,7 +1831,7 @@ DownloadTarget.fromSerializable = function(aSerializable) {
  *        The properties object may also contain any of the DownloadError's
  *        because properties, which will be set accordingly in the error object.
  */
-export var DownloadError = function(aProperties) {
+export var DownloadError = function (aProperties) {
   const NS_ERROR_MODULE_BASE_OFFSET = 0x45;
   const NS_ERROR_MODULE_NETWORK = 6;
   const NS_ERROR_MODULE_FILES = 13;
@@ -1976,7 +1976,7 @@ Object.setPrototypeOf(DownloadError.prototype, Error.prototype);
  *
  * @return The newly created DownloadError object.
  */
-DownloadError.fromSerializable = function(aSerializable) {
+DownloadError.fromSerializable = function (aSerializable) {
   let e = new DownloadError(aSerializable);
   deserializeUnknownProperties(
     e,
@@ -1998,7 +1998,7 @@ DownloadError.fromSerializable = function(aSerializable) {
 /**
  * Template for an object that actually transfers the data for the download.
  */
-export var DownloadSaver = function() {};
+export var DownloadSaver = function () {};
 
 DownloadSaver.prototype = {
   /**
@@ -2102,7 +2102,7 @@ DownloadSaver.prototype = {
  *
  * @return The newly created DownloadSaver object.
  */
-DownloadSaver.fromSerializable = function(aSerializable) {
+DownloadSaver.fromSerializable = function (aSerializable) {
   let serializable = isString(aSerializable)
     ? { type: aSerializable }
     : aSerializable;
@@ -2123,7 +2123,7 @@ DownloadSaver.fromSerializable = function(aSerializable) {
 /**
  * Saver object that simply copies the entire source file to the target.
  */
-export var DownloadCopySaver = function() {};
+export var DownloadCopySaver = function () {};
 
 DownloadCopySaver.prototype = {
   /**
@@ -2272,7 +2272,7 @@ DownloadCopySaver.prototype = {
       };
 
       const streamListener = {
-        onStartRequest: function(aRequest) {
+        onStartRequest: function (aRequest) {
           backgroundFileSaver.onStartRequest(aRequest);
 
           if (aRequest instanceof Ci.nsIHttpChannel) {
@@ -2704,7 +2704,7 @@ Object.setPrototypeOf(DownloadCopySaver.prototype, DownloadSaver.prototype);
  *
  * @return The newly created DownloadCopySaver object.
  */
-DownloadCopySaver.fromSerializable = function(aSerializable) {
+DownloadCopySaver.fromSerializable = function (aSerializable) {
   let saver = new DownloadCopySaver();
   if ("entityID" in aSerializable) {
     saver.entityID = aSerializable.entityID;
@@ -2724,7 +2724,7 @@ DownloadCopySaver.fromSerializable = function(aSerializable) {
  *
  * For more background on the process, see the DownloadLegacyTransfer object.
  */
-export var DownloadLegacySaver = function() {
+export var DownloadLegacySaver = function () {
   this.deferExecuted = lazy.PromiseUtils.defer();
   this.deferCanceled = lazy.PromiseUtils.defer();
 };
@@ -3081,6 +3081,6 @@ Object.setPrototypeOf(DownloadLegacySaver.prototype, DownloadSaver.prototype);
  * deserializable form only when creating a new object in memory, because it
  * cannot be serialized to disk.
  */
-DownloadLegacySaver.fromSerializable = function() {
+DownloadLegacySaver.fromSerializable = function () {
   return new DownloadLegacySaver();
 };

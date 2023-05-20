@@ -139,7 +139,7 @@ function checkNoTelemetryProbe(key) {
   ok(!histogram, `No Telemetry has been recorded for ${key}`);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       [
@@ -174,7 +174,7 @@ add_setup(async function() {
 
   await UrlClassifierTestUtils.addTestTrackers();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     UrlClassifierTestUtils.cleanupTestTrackers();
   });
 

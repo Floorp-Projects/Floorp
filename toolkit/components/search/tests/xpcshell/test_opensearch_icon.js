@@ -29,7 +29,7 @@ const tests = [
 ];
 
 for (const test of tests) {
-  add_task(async function() {
+  add_task(async function () {
     info(`Testing ${test.name}`);
 
     let promiseEngineAdded = SearchTestUtils.promiseSearchNotification(

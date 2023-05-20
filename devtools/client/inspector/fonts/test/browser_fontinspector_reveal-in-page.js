@@ -6,7 +6,7 @@
 
 const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 
-add_task(async function() {
+add_task(async function () {
   // Make sure the toolbox is tall enough to accomodate all fonts, otherwise mouseover
   // events simulation will fail.
   await pushPref("devtools.toolbox.footer.height", 500);
@@ -81,7 +81,7 @@ async function waitForNSelectionEvents(numberOfTimes) {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [numberOfTimes],
-    async function(n) {
+    async function (n) {
       const win = content.wrappedJSObject;
 
       await new Promise(resolve => {

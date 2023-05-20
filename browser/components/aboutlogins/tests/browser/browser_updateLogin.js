@@ -5,7 +5,7 @@ const { CONCEALED_PASSWORD_TEXT } = ChromeUtils.importESModule(
   "chrome://browser/content/aboutlogins/aboutLoginsUtils.mjs"
 );
 
-add_setup(async function() {
+add_setup(async function () {
   TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,

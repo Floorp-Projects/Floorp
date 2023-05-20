@@ -8,7 +8,7 @@
 
 const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>Focus test`;
 
-add_task(async function() {
+add_task(async function () {
   info("Testing that messages disappear on a refresh if logs aren't persisted");
   const hud = await openNewTabAndConsole(TEST_URI);
   is(isInputFocused(hud), true, "JsTerm is focused when opening the console");

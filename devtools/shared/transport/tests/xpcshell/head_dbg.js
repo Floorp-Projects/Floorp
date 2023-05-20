@@ -138,7 +138,7 @@ function writeTestTempFile(fileName, content) {
 
 /** * Transport Factories ***/
 
-var socket_transport = async function() {
+var socket_transport = async function () {
   if (!DevToolsServer.listeningSockets) {
     const AuthenticatorType = DevToolsServer.Authenticators.get("PROMPT");
     const authenticator = new AuthenticatorType.Server();

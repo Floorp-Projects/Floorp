@@ -19,7 +19,7 @@ import { evaluateExpressions } from "../actions/expressions";
  * @static
  */
 export function willNavigate(event) {
-  return async function({
+  return async function ({
     dispatch,
     getState,
     client,
@@ -45,7 +45,7 @@ export function willNavigate(event) {
  * @static
  */
 export function navigated() {
-  return async function({ getState, dispatch, panel }) {
+  return async function ({ getState, dispatch, panel }) {
     try {
       // Update the watched expressions once the page is fully loaded
       const threadcx = getThreadContext(getState());

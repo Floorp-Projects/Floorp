@@ -37,7 +37,7 @@ add_task(async function test_save_image_webp_with_jpeg_extension() {
       await popupShown;
 
       await new Promise(resolve => {
-        MockFilePicker.showCallback = function(fp) {
+        MockFilePicker.showCallback = function (fp) {
           ok(
             fp.defaultString.endsWith("webp"),
             `filepicker for image has "${fp.defaultString}", should end in webp`
@@ -78,7 +78,7 @@ add_task(async function test_save_link_webp_with_jpeg_extension() {
       await popupShown;
 
       await new Promise(resolve => {
-        MockFilePicker.showCallback = function(fp) {
+        MockFilePicker.showCallback = function (fp) {
           ok(
             fp.defaultString.endsWith("webp"),
             `filepicker for link has "${fp.defaultString}", should end in webp`
@@ -101,7 +101,7 @@ add_task(async function test_save_page_on_image_document() {
     `${TEST_ROOT}/not-really-a-jpeg.jpeg?convert=webp`,
     async browser => {
       await new Promise(resolve => {
-        MockFilePicker.showCallback = function(fp) {
+        MockFilePicker.showCallback = function (fp) {
           ok(
             fp.defaultString.endsWith("webp"),
             `filepicker for "save page" has "${fp.defaultString}", should end in webp`
@@ -122,7 +122,7 @@ add_task(async function test_save_page_on_image_document() {
 add_task(async function test_save_page_on_JPEG_image_document() {
   await BrowserTestUtils.withNewTab(`${TEST_ROOT}/blank.JPG`, async browser => {
     await new Promise(resolve => {
-      MockFilePicker.showCallback = function(fp) {
+      MockFilePicker.showCallback = function (fp) {
         ok(
           fp.defaultString.endsWith("JPG"),
           `filepicker for "save page" has "${fp.defaultString}", should end in JPG`

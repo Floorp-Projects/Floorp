@@ -20,7 +20,7 @@ function ensurePersistLogsCheckedState(monitor, isChecked) {
   return !!persistNode?.getAttribute("aria-checked") === isChecked;
 }
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(SINGLE_GET_URL, { requestCount: 1 });
   info("Starting test... ");
 

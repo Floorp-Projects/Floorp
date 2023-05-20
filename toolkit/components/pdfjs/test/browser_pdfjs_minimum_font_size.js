@@ -34,7 +34,7 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       // check that PDF is opened with internal viewer
       await waitForPdfJSAllLayers(
         browser,
@@ -63,7 +63,7 @@ add_task(async function test() {
         );
       });
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         var viewer = content.wrappedJSObject.PDFViewerApplication;
         await viewer.close();
       });

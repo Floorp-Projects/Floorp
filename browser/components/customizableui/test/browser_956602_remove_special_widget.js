@@ -5,7 +5,7 @@
 "use strict";
 
 // Adding a separator and then dragging it out of the navbar shouldn't throw
-add_task(async function() {
+add_task(async function () {
   try {
     let navbar = document.getElementById("nav-bar");
     let separatorSelector =

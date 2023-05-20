@@ -228,9 +228,7 @@ add_task(async function test_basic_lifecycle() {
 
   // Make sure that `und` locale is not installed.
   equal(
-    L10nRegistry.getInstance()
-      .getAvailableLocales()
-      .includes("und"),
+    L10nRegistry.getInstance().getAvailableLocales().includes("und"),
     false,
     "und not installed"
   );
@@ -247,9 +245,7 @@ add_task(async function test_basic_lifecycle() {
 
   // Now make sure that `und` locale is available.
   equal(
-    L10nRegistry.getInstance()
-      .getAvailableLocales()
-      .includes("und"),
+    L10nRegistry.getInstance().getAvailableLocales().includes("und"),
     true,
     "und is installed"
   );
@@ -263,9 +259,7 @@ add_task(async function test_basic_lifecycle() {
 
   // It is not available after the langpack has been disabled.
   equal(
-    L10nRegistry.getInstance()
-      .getAvailableLocales()
-      .includes("und"),
+    L10nRegistry.getInstance().getAvailableLocales().includes("und"),
     false,
     "und not installed"
   );
@@ -281,9 +275,7 @@ add_task(async function test_basic_lifecycle() {
 
   // After re-enabling it, the `und` locale is available again.
   equal(
-    L10nRegistry.getInstance()
-      .getAvailableLocales()
-      .includes("und"),
+    L10nRegistry.getInstance().getAvailableLocales().includes("und"),
     true,
     "und is installed"
   );
@@ -297,9 +289,7 @@ add_task(async function test_basic_lifecycle() {
 
   // After the langpack has been uninstalled, no more `und` in locales.
   equal(
-    L10nRegistry.getInstance()
-      .getAvailableLocales()
-      .includes("und"),
+    L10nRegistry.getInstance().getAvailableLocales().includes("und"),
     false,
     "und not installed"
   );
@@ -430,9 +420,7 @@ add_task(async function test_langpack_app_shutdown() {
 add_task(async function test_amazing_disappearing_langpacks() {
   let check = yes => {
     equal(
-      L10nRegistry.getInstance()
-        .getAvailableLocales()
-        .includes("und"),
+      L10nRegistry.getInstance().getAvailableLocales().includes("und"),
       yes,
       "check L10nRegistry"
     );

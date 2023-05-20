@@ -22,7 +22,7 @@ const TEST_URI =
   '        fill="red" stroke="blue" stroke-width="3" />' +
   "</svg>";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
 
   const markupLoaded = inspector.once("markuploaded");

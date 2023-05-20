@@ -22,7 +22,7 @@ let counter = 0;
 let previousVal = 0;
 
 Object.defineProperty(window.performance.wrappedJSObject, "now", {
-  value: exportFunction(function() {
+  value: exportFunction(function () {
     let originalVal = origNow.call(origPerf);
     if (originalVal === previousVal) {
       originalVal += 0.00000003 * ++counter;

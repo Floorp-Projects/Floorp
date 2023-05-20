@@ -982,7 +982,7 @@ const successEnrollBranchedTest = decorate(
   withSendEventSpy(),
   withStub(TelemetryEnvironment, "setExperimentActive"),
   AddonStudies.withStudies(),
-  async function({
+  async function ({
     branch,
     mockNormandyApi,
     sendEventSpy,

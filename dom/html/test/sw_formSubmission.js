@@ -14,7 +14,7 @@ const mode = location.search.slice(1);
 
 // Fetch handling.
 if (mode !== "no-fetch") {
-  addEventListener("fetch", function(event) {
+  addEventListener("fetch", function (event) {
     if (mode === "reset-fetch") {
       // Don't invoke respondWith, resetting the interception.
       return;
@@ -27,10 +27,10 @@ if (mode !== "no-fetch") {
 }
 
 // Go straight to activation, bypassing waiting.
-addEventListener("install", function(event) {
+addEventListener("install", function (event) {
   event.waitUntil(skipWaiting());
 });
 // Control the test document ASAP.
-addEventListener("activate", function(event) {
+addEventListener("activate", function (event) {
   event.waitUntil(clients.claim());
 });

@@ -25,7 +25,7 @@ updateAppInfo({
   platformVersion: "",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   let source = do_get_file("data/sessionstore_valid.js");
   source.copyTo(profd, "sessionstore.js");
   await writeCompressedFile(Paths.clean.replace("jsonlz4", "js"), Paths.clean);
@@ -35,7 +35,7 @@ add_setup(async function() {
 });
 
 function promise_check_exist(path, shouldExist) {
-  return (async function() {
+  return (async function () {
     info(
       "Ensuring that " + path + (shouldExist ? " exists" : " does not exist")
     );
@@ -48,7 +48,7 @@ function promise_check_exist(path, shouldExist) {
 }
 
 function promise_check_contents(path, expect) {
-  return (async function() {
+  return (async function () {
     info("Checking whether " + path + " has the right contents");
     let actual = await IOUtils.readJSON(path, {
       decompress: true,

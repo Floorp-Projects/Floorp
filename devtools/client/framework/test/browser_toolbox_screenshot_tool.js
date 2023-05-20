@@ -23,7 +23,7 @@ const TEST_URL = `${exampleOrgDocument}?html=
     src="${exampleComDocument}?html=<body style='margin:0;height:30px;background:rgb(0,255,0)'></body>"
     id="remote"></iframe>`;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.command-button-screenshot.enabled", true);
 
   await addTab(TEST_URL);

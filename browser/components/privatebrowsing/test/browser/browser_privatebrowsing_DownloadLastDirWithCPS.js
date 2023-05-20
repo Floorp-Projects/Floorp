@@ -59,7 +59,7 @@ async function runTest() {
   let uri4 = Services.io.newURI("http://test4.com/");
 
   // cleanup functions registration
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.download.lastDir.savePerSite");
     Services.prefs.clearUserPref("browser.download.lastDir");
     [dir1, dir2, dir3].forEach(dir => dir.remove(true));

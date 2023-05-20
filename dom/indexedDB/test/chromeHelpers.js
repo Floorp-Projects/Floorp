@@ -11,7 +11,7 @@ var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 var testGenerator = testSteps();
 
 if (!window.runTest) {
-  window.runTest = function() {
+  window.runTest = function () {
     SimpleTest.waitForExplicitFinish();
 
     testGenerator.next();
@@ -19,7 +19,7 @@ if (!window.runTest) {
 }
 
 function finishTest() {
-  SimpleTest.executeSoon(function() {
+  SimpleTest.executeSoon(function () {
     testGenerator.return();
     SimpleTest.finish();
   });
@@ -30,7 +30,7 @@ function grabEventAndContinueHandler(event) {
 }
 
 function continueToNextStep() {
-  SimpleTest.executeSoon(function() {
+  SimpleTest.executeSoon(function () {
     testGenerator.next();
   });
 }

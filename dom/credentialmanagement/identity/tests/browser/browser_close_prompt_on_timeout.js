@@ -18,7 +18,7 @@ add_task(async function test_close_prompt_on_timeout() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
-  let requestCredential = async function() {
+  let requestCredential = async function () {
     let promise = content.navigator.credentials.get({
       identity: {
         providers: [

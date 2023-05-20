@@ -108,7 +108,7 @@ function isObject(value) {
  *         - global: the Debugger.Object for the global where the string was evaluated in.
  *         - result: the result of the evaluation.
  */
-exports.evalWithDebugger = function(string, options = {}, webConsole) {
+exports.evalWithDebugger = function (string, options = {}, webConsole) {
   if (isCommand(string.trim()) && options.eager) {
     return {
       result: null,

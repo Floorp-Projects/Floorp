@@ -2,7 +2,7 @@
 
 var stateBackup = ss.getBrowserState();
 
-add_task(async function() {
+add_task(async function () {
   /** Bug 607016 - If a tab is never restored, attributes (eg. hidden) aren't updated correctly **/
   ignoreAllUncaughtExceptions();
 

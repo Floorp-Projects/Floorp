@@ -27,7 +27,7 @@ function test() {
       removeFunc();
 
       // executeSoon to allow the JS to execute on the page
-      executeSoon(function() {
+      executeSoon(function () {
         let tab2;
         let caughtError = false;
         try {

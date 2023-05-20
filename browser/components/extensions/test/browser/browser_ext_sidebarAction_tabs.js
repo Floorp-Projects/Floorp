@@ -22,7 +22,7 @@ add_task(async function sidebar_tab_query_bug_1340739() {
         A Test Sidebar
         </body></html>
       `,
-      "sidebar.js": function() {
+      "sidebar.js": function () {
         Promise.all([
           browser.tabs.query({}).then(tabs => {
             browser.test.assertEq(

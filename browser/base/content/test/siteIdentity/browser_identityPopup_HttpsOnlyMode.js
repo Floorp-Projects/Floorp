@@ -5,7 +5,7 @@
 const HTTPS_ONLY_PERMISSION = "https-only-load-insecure";
 const WEBSITE = scheme => `${scheme}://example.com`;
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_only_mode", true]],
   });
@@ -68,7 +68,7 @@ async function runTest(options) {
 
   await BrowserTestUtils.withNewTab(
     WEBSITE(options.initialScheme),
-    async function(browser) {
+    async function (browser) {
       const name = options.name + " | ";
 
       // Check if the site has the expected scheme

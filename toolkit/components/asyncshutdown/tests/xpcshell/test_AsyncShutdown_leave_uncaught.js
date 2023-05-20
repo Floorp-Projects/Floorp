@@ -28,12 +28,12 @@ add_task(async function test_phase_simple_async() {
             [],
             [() => "some state"],
             [
-              function() {
+              function () {
                 throw new Error("State BOOM");
               },
             ],
             [
-              function() {
+              function () {
                 return {
                   toJSON() {
                     throw new Error("State.toJSON BOOM");
@@ -50,7 +50,7 @@ add_task(async function test_phase_simple_async() {
             let outParam = { isFinished: false };
             lock.addBlocker(
               "Async test",
-              function() {
+              function () {
                 if (success) {
                   return longRunningAsyncTask(resolution, outParam);
                 }
@@ -100,6 +100,6 @@ add_task(async function test_phase_many() {
   }
 });
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
 });

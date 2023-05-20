@@ -58,7 +58,7 @@ const reducers = {
   },
 };
 
-module.exports = function(sidebar = INITIAL_SIDEBAR, action) {
+module.exports = function (sidebar = INITIAL_SIDEBAR, action) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return sidebar;

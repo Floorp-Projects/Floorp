@@ -16,7 +16,7 @@ const L10N = new LocalizationHelper(
 );
 const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
 
-add_task(async function() {
+add_task(async function () {
   const URL =
     "data:text/html;charset=utf8,test for dynamically registering " +
     "and unregistering tools";
@@ -221,7 +221,7 @@ async function testMouseClick(node, prefValue) {
 
   // We use executeSoon here to ensure that the element is in view and
   // clickable.
-  executeSoon(function() {
+  executeSoon(function () {
     info("Click event synthesized for pref " + pref);
     EventUtils.synthesizeMouseAtCenter(node, {}, panelWin);
   });

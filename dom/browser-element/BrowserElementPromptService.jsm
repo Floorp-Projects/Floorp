@@ -323,7 +323,7 @@ BrowserElementAuthPrompt.prototype = {
     prompt.inProgress = true;
 
     let self = this;
-    let callback = function(ok, username, password) {
+    let callback = function (ok, username, password) {
       debug(
         "Async auth callback is called, ok = " + ok + ", username = " + username
       );

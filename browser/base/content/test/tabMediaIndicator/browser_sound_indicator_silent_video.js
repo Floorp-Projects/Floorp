@@ -21,7 +21,7 @@ function check_audio_playing_state(isPlaying) {
   ok(PLAYING_TIME_SEC < autoPlay.duration, "The playing time is valid.");
 
   return new Promise(resolve => {
-    autoPlay.ontimeupdate = function() {
+    autoPlay.ontimeupdate = function () {
       if (autoPlay.currentTime > PLAYING_TIME_SEC) {
         resolve();
       }

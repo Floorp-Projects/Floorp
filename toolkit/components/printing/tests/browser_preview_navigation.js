@@ -131,7 +131,7 @@ add_task(async function testPreviewScroll() {
 
     // scroll down the document
     // and verify the indicator is updated correctly
-    await SpecialPowers.spawn(previewBrowser, [], async function() {
+    await SpecialPowers.spawn(previewBrowser, [], async function () {
       const { ContentTaskUtils } = ChromeUtils.importESModule(
         "resource://testing-common/ContentTaskUtils.sys.mjs"
       );
@@ -311,7 +311,7 @@ add_task(async function testMultiplePreviewNavigation() {
 
 add_task(async function testPreviewNavigationSelection() {
   await PrintHelper.withTestPage(async helper => {
-    await SpecialPowers.spawn(helper.sourceBrowser, [], async function() {
+    await SpecialPowers.spawn(helper.sourceBrowser, [], async function () {
       let element = content.document.querySelector("#page-2");
       content.window.getSelection().selectAllChildren(element);
     });
@@ -434,7 +434,7 @@ add_task(async function testTooltips() {
     let awaitTooltipOpen = new Promise(resolve => {
       window.addEventListener(
         "popupshown",
-        function(event) {
+        function (event) {
           resolve(event.originalTarget);
         },
         { once: true }
@@ -449,7 +449,7 @@ add_task(async function testTooltips() {
     awaitTooltipOpen = new Promise(resolve => {
       window.addEventListener(
         "popupshown",
-        function(event) {
+        function (event) {
           resolve(event.originalTarget);
         },
         { once: true }

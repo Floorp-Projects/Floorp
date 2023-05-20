@@ -61,7 +61,7 @@ async function testPdfFilePicker(mimeInfo) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.always_ask_before_handling_new_types", false],

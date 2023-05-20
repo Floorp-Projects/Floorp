@@ -32,7 +32,7 @@ add_task(
         gBrowser,
         url: TEST_URL_PATH,
       },
-      async function(browser) {
+      async function (browser) {
         let popup = document.getElementById("PopupAutoComplete");
 
         Assert.ok(popup, "Got Popup");
@@ -87,7 +87,7 @@ add_task(
         gBrowser,
         url: TEST_URL_PATH,
       },
-      async function(browser) {
+      async function (browser) {
         let popup = document.getElementById("PopupAutoComplete");
 
         Assert.ok(popup, "Got Popup");

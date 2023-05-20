@@ -33,7 +33,7 @@ addAccessibleTask(
   </tbody>
 </table>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const table = findAccessibleChildByID(docAcc, "table", [
       nsIAccessibleTable,
     ]);
@@ -91,7 +91,7 @@ addAccessibleTask(
   <tr><td id="e" headers="c f">e</td><td id="f">f</td></tr>
 </table>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const cells = {};
     for (const id of ["a", "b", "c", "d", "e", "f"]) {
       cells[id] = findAccessibleChildByID(docAcc, id, [nsIAccessibleTableCell]);
@@ -128,7 +128,7 @@ addAccessibleTask(
   </table></th></tr>
 </table>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const outerTable = findAccessibleChildByID(docAcc, "outerTable", [
       nsIAccessibleTable,
     ]);
@@ -177,7 +177,7 @@ addAccessibleTask(
   <tr><th>a</th></tr>
 </table>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const t1 = findAccessibleChildByID(docAcc, "t1", [nsIAccessibleTable]);
     const c1 = findAccessibleChildByID(docAcc, "c1");
     is(t1.caption, c1, "t1 caption correct");
@@ -208,7 +208,7 @@ addAccessibleTask(
 <table id="mutate"><tr><td>a</td><td>b</td></tr></table>
 <div id="newTableContainer"></div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const layout = findAccessibleChildByID(docAcc, "layout");
     testAttrs(layout, { "layout-guess": "true" }, true);
     const data = findAccessibleChildByID(docAcc, "data");
@@ -275,7 +275,7 @@ addAccessibleTask(
   <table id="layout"><tr><td id="cell">a</td><td>b</td></tr>
   <tr><td>c</td><td>d</td></tr><tr><td>c</td><td>d</td></tr></table>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const layout = findAccessibleChildByID(docAcc, "layout");
     testAttrs(layout, { "layout-guess": "true" }, true);
     info("changing border style on table cell");
@@ -316,7 +316,7 @@ addAccessibleTask(
   </div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const grid = findAccessibleChildByID(docAcc, "grid", [nsIAccessibleTable]);
     is(grid.rowCount, 2, "grid rowCount correct");
     is(grid.columnCount, 2, "grid columnCount correct");
@@ -368,7 +368,7 @@ addAccessibleTask(
 </table>
 <div id="owner"></div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const table = findAccessibleChildByID(docAcc, "table", [
       nsIAccessibleTable,
     ]);
@@ -426,7 +426,7 @@ addAccessibleTask(
   <div role="row"><div role="cell">a</div></div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     // XXX We don't create a TableAccessible in this case (bug 1494196). For
     // now, just ensure we don't crash (bug 1793073).
     const table = findAccessibleChildByID(docAcc, "table");
@@ -458,7 +458,7 @@ addAccessibleTask(
   </div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const table = findAccessibleChildByID(docAcc, "table", [
       nsIAccessibleTable,
     ]);
@@ -486,7 +486,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<table><tr id="tr"></tr></table>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let reordered = waitForEvent(EVENT_REORDER, "tr");
     await invokeContentTask(browser, [], () => {
       const iframe = content.document.createElement("iframe");

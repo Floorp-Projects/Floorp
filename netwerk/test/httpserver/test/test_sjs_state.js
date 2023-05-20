@@ -6,7 +6,7 @@
 
 // exercises the server's state-preservation API
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
@@ -29,7 +29,7 @@ function run_test() {
     Assert.equal(srv.getState("/state1.sjs", "private-value"), "");
     Assert.equal(srv.getState("/state2.sjs", "private-value"), "newPrivate5");
     do_test_pending();
-    srv.stop(function() {
+    srv.stop(function () {
       do_test_finished();
     });
   }
@@ -78,7 +78,7 @@ function pathHandler(request, response) {
  * BEGIN TESTS *
  ***************/
 
-XPCOMUtils.defineLazyGetter(this, "tests", function() {
+XPCOMUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(
       // eslint-disable-next-line no-useless-concat

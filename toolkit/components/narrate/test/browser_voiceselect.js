@@ -9,7 +9,7 @@ registerCleanupFunction(teardown);
 add_task(async function testVoiceselectDropdownAutoclose() {
   setup();
 
-  await spawnInNewReaderTab(TEST_ARTICLE, async function() {
+  await spawnInNewReaderTab(TEST_ARTICLE, async function () {
     let $ = content.document.querySelector.bind(content.document);
 
     await NarrateTestUtils.waitForNarrateToggle(content);
@@ -56,7 +56,7 @@ add_task(async function testVoiceselectDropdownAutoclose() {
 add_task(async function testVoiceselectLabelChange() {
   setup();
 
-  await spawnInNewReaderTab(TEST_ARTICLE, async function() {
+  await spawnInNewReaderTab(TEST_ARTICLE, async function () {
     let $ = content.document.querySelector.bind(content.document);
 
     await NarrateTestUtils.waitForNarrateToggle(content);
@@ -86,7 +86,7 @@ add_task(async function testVoiceselectLabelChange() {
 add_task(async function testVoiceselectKeyboard() {
   setup();
 
-  await spawnInNewReaderTab(TEST_ARTICLE, async function() {
+  await spawnInNewReaderTab(TEST_ARTICLE, async function () {
     let $ = content.document.querySelector.bind(content.document);
 
     await NarrateTestUtils.waitForNarrateToggle(content);

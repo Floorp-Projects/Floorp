@@ -18,7 +18,7 @@ const TEST_SPACES = [" ", "\u3000", " \u3000", "\u3000 "];
 
 let defaultEngine, aliasEngine;
 
-add_setup(async function() {
+add_setup(async function () {
   defaultEngine = await SearchTestUtils.promiseNewSearchEngine({
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
     setAsDefault: true,
@@ -167,7 +167,7 @@ add_task(async function trailingSpace_query() {
   }
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test search mode when typing an alias after selecting one-off button");
 
   info("Open the result popup");
@@ -217,7 +217,7 @@ add_task(async function() {
   await UrlbarTestUtils.promisePopupClose(window);
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test search mode after removing current search mode when multiple aliases are written"
   );

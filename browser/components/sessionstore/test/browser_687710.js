@@ -48,7 +48,7 @@ var state = {
 };
 
 add_task(async function test() {
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     ss.setBrowserState(stateBackup);
   });
 

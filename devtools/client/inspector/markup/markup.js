@@ -1110,7 +1110,7 @@ MarkupView.prototype = {
     const walker = this.doc.createTreeWalker(
       start || this._elt,
       nodeFilterConstants.SHOW_ELEMENT,
-      function(element) {
+      function (element) {
         if (
           element.container &&
           element.container.elt === element &&

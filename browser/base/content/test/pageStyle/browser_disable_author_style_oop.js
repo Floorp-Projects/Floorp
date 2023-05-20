@@ -4,7 +4,7 @@
 "use strict";
 
 async function getColor(aSpawnTarget) {
-  return SpecialPowers.spawn(aSpawnTarget, [], function() {
+  return SpecialPowers.spawn(aSpawnTarget, [], function () {
     return content.document.defaultView.getComputedStyle(
       content.document.querySelector("p")
     ).color;
@@ -17,8 +17,8 @@ async function insertIFrame() {
 
   const kURL =
     WEB_ROOT.replace("example.com", "example.net") + "page_style.html";
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [kURL], function(url) {
-    return new Promise(function(resolve) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [kURL], function (url) {
+    return new Promise(function (resolve) {
       let e = content.document.createElement("iframe");
       e.src = url;
       e.onload = () => resolve();
@@ -27,7 +27,7 @@ async function insertIFrame() {
   });
 
   // Wait for the new frame to get a pres shell and be styled.
-  await BrowserTestUtils.waitForCondition(async function() {
+  await BrowserTestUtils.waitForCondition(async function () {
     return (
       bc.children.length == len + 1 && (await getColor(bc.children[len])) != ""
     );

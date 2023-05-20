@@ -28,7 +28,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   // Load some other URL before opening the toolbox, then navigate to
   // the test URL.  This ensures that source map service will see the
   // sources as they are loaded, avoiding any races.

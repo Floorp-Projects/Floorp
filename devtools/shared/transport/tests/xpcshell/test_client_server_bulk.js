@@ -12,7 +12,7 @@ function run_test() {
   initTestDevToolsServer();
   add_test_bulk_actor();
 
-  add_task(async function() {
+  add_task(async function () {
     await test_bulk_request_cs(socket_transport, "jsonReply", "json");
     await test_bulk_request_cs(local_transport, "jsonReply", "json");
     await test_bulk_request_cs(socket_transport, "bulkEcho", "bulk");
@@ -144,7 +144,7 @@ var replyHandlers = {
 
 /** * Tests ***/
 
-var test_bulk_request_cs = async function(
+var test_bulk_request_cs = async function (
   transportFactory,
   actorType,
   replyType
@@ -218,7 +218,7 @@ var test_bulk_request_cs = async function(
   return Promise.all([clientDeferred, bulkCopyDeferred, serverDeferred]);
 };
 
-var test_json_request_cs = async function(
+var test_json_request_cs = async function (
   transportFactory,
   actorType,
   replyType

@@ -104,7 +104,7 @@ function parseAndRemoveField(obj, field) {
  *   telemetryStoreSizeKey (string)
  *     Telemetry histogram to report store size under.
  */
-export var CrashManager = function(options) {
+export var CrashManager = function (options) {
   for (let k in options) {
     let value = options[k];
 
@@ -550,13 +550,7 @@ CrashManager.prototype = Object.freeze({
    * Generate a submission ID for use with addSubmission{Attempt,Result}.
    */
   generateSubmissionID() {
-    return (
-      "sub-" +
-      Services.uuid
-        .generateUUID()
-        .toString()
-        .slice(1, -1)
-    );
+    return "sub-" + Services.uuid.generateUUID().toString().slice(1, -1);
   },
 
   /**
@@ -851,7 +845,7 @@ CrashManager.prototype = Object.freeze({
    *   date -- Date mtime of the file
    */
   _getDirectoryEntries(path, re) {
-    return (async function() {
+    return (async function () {
       let children = await IOUtils.getChildren(path);
       let entries = [];
 
@@ -1585,7 +1579,7 @@ XPCOMUtils.defineLazyGetter(CrashManager, "_log", () =>
  * CrashManager is likely only ever instantiated once per application lifetime.
  * The main reason it's implemented as a reusable type is to facilitate testing.
  */
-XPCOMUtils.defineLazyGetter(CrashManager, "Singleton", function() {
+XPCOMUtils.defineLazyGetter(CrashManager, "Singleton", function () {
   if (gCrashManager) {
     return gCrashManager;
   }

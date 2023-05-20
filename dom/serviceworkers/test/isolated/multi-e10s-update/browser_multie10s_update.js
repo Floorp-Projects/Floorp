@@ -31,15 +31,19 @@ add_task(async function test_update() {
   let sw = BASE_URI + "server_multie10s_update.sjs";
 
   info("Let's make sure there are no existing registrations...");
-  let existingCount = await SpecialPowers.spawn(browser1, [], async function() {
-    const regs = await content.navigator.serviceWorker.getRegistrations();
-    return regs.length;
-  });
+  let existingCount = await SpecialPowers.spawn(
+    browser1,
+    [],
+    async function () {
+      const regs = await content.navigator.serviceWorker.getRegistrations();
+      return regs.length;
+    }
+  );
   is(existingCount, 0, "Previous tests should have cleaned up!");
 
   info("Let's start the test...");
   /* eslint-disable no-shadow */
-  let status = await SpecialPowers.spawn(browser1, [sw], function(url) {
+  let status = await SpecialPowers.spawn(browser1, [sw], function (url) {
     // Let the SW be served immediately once by triggering a relase immediately.
     // We don't need to await this.  We do this from a frame script because
     // it has fetch.
@@ -51,7 +55,7 @@ add_task(async function test_update() {
         .register(url)
 
         // Activation
-        .then(function(r) {
+        .then(function (r) {
           content.registration = r;
           return new content.window.Promise(resolve => {
             let worker = r.installing;
@@ -72,7 +76,7 @@ add_task(async function test_update() {
             const uc = new content.window.BroadcastChannel("update");
             // This promise tracks the updates tally.
             const updatesIssued = new Promise(resolveUpdatesIssued => {
-              uc.onmessage = function(e) {
+              uc.onmessage = function (e) {
                 updateCount++;
                 console.log("got update() number", updateCount);
                 if (updateCount === 2) {
@@ -85,7 +89,7 @@ add_task(async function test_update() {
             const rc = new content.window.BroadcastChannel("result");
             // This promise resolves when an update has failed.
             const oneFailed = new Promise(resolveOneFailed => {
-              rc.onmessage = function(e) {
+              rc.onmessage = function (e) {
                 console.log("got result", e.data);
                 results.push(e.data);
                 if (e.data === 1) {
@@ -126,7 +130,7 @@ add_task(async function test_update() {
   // let's clean up the registration and get the fetch count.  The count
   // should be 1 for the initial fetch and 1 for the update.
   /* eslint-disable no-shadow */
-  const count = await SpecialPowers.spawn(browser1, [sw], async function(url) {
+  const count = await SpecialPowers.spawn(browser1, [sw], async function (url) {
     // We stored the registration on the frame script's wrapper, hence directly
     // accesss content without using wrappedJSObject.
     await content.registration.unregister();

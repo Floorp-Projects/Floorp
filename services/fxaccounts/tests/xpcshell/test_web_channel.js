@@ -26,7 +26,7 @@ const mockSendingContext = {
   eventTarget: {},
 };
 
-add_test(function() {
+add_test(function () {
   validationHelper(undefined, "Error: Missing configuration options");
 
   validationHelper(
@@ -223,7 +223,7 @@ add_test(function test_profile_image_change_message() {
     data: { uid: "foo" },
   };
 
-  makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
+  makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function (subject, topic, data) {
     Assert.equal(data, "foo");
     run_next_test();
   });
@@ -1328,7 +1328,7 @@ add_task(async function test_helpers_change_password_with_error() {
 });
 
 function makeObserver(aObserveTopic, aObserveFunc) {
-  let callback = function(aSubject, aTopic, aData) {
+  let callback = function (aSubject, aTopic, aData) {
     log.debug("observed " + aTopic + " " + aData);
     if (aTopic == aObserveTopic) {
       removeMe();

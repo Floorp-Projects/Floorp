@@ -50,7 +50,7 @@ function updateTabContextMenu(tab = gBrowser.selectedTab) {
   menu.hidePopup();
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await promiseSyncReady();
   await Services.search.init();
   // gSync.init() is called in a requestIdleCallback. Force its initialization.

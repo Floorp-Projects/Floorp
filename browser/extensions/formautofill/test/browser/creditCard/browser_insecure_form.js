@@ -29,7 +29,7 @@ add_task(async function test_insecure_form() {
   }) {
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: protocol + urlPath },
-      async function(browser) {
+      async function (browser) {
         await openPopupOn(browser, focusInput);
 
         const items = getDisplayedPopupItems(browser);
@@ -89,7 +89,7 @@ add_task(async function test_insecure_form() {
 add_task(async function test_click_on_insecure_warning() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "http" + TEST_URL_PATH_CC },
-    async function(browser) {
+    async function (browser) {
       await openPopupOn(browser, "#cc-name");
       const insecureItem = getDisplayedPopupItems(browser)[0];
       let popupClosePromise = BrowserTestUtils.waitForPopupEvent(
@@ -103,7 +103,7 @@ add_task(async function test_click_on_insecure_warning() {
       const inputValue = await SpecialPowers.spawn(
         browser,
         [],
-        async function() {
+        async function () {
           return content.document.querySelector("#cc-name").value;
         }
       );
@@ -117,7 +117,7 @@ add_task(async function test_click_on_insecure_warning() {
 add_task(async function test_press_enter_on_insecure_warning() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "http" + TEST_URL_PATH_CC },
-    async function(browser) {
+    async function (browser) {
       await openPopupOn(browser, "#cc-name");
 
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -133,7 +133,7 @@ add_task(async function test_press_enter_on_insecure_warning() {
       const inputValue = await SpecialPowers.spawn(
         browser,
         [],
-        async function() {
+        async function () {
           return content.document.querySelector("#cc-name").value;
         }
       );

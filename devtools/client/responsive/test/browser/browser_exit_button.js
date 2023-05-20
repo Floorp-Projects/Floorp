@@ -6,7 +6,7 @@
 const TEST_URL = "data:text/html;charset=utf-8,";
 
 // Test global exit button
-addRDMTask(TEST_URL, async function(...args) {
+addRDMTask(TEST_URL, async function (...args) {
   await testExitButton(...args);
 });
 
@@ -14,7 +14,7 @@ addRDMTask(TEST_URL, async function(...args) {
 // See Bug 1262806
 addRDMTask(
   null,
-  async function() {
+  async function () {
     let tab = await addTab(TEST_URL);
     const { ui, manager } = await openRDM(tab);
 

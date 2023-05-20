@@ -138,7 +138,7 @@ const TELEMETRY_EVENT_CATEGORY = "downloads";
  * Represents a collection of Download objects that can be viewed and managed by
  * the user interface, and persisted across sessions.
  */
-export var DownloadList = function() {
+export var DownloadList = function () {
   this._downloads = [];
   this._views = new Set();
 };
@@ -376,7 +376,7 @@ DownloadList.prototype = {
  * @param aPrivateList
  *        Underlying DownloadList containing private downloads.
  */
-export var DownloadCombinedList = function(aPublicList, aPrivateList) {
+export var DownloadCombinedList = function (aPublicList, aPrivateList) {
   DownloadList.call(this);
   this._publicList = aPublicList;
   this._privateList = aPrivateList;
@@ -486,7 +486,7 @@ Object.setPrototypeOf(DownloadCombinedList.prototype, DownloadList.prototype);
 /**
  * Provides an aggregated view on the contents of a DownloadList.
  */
-export var DownloadSummary = function() {
+export var DownloadSummary = function () {
   this._downloads = [];
   this._views = new Set();
 };

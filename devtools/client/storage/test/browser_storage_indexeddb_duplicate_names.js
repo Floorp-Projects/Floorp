@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const TESTPAGE =
     MAIN_DOMAIN_SECURED + "storage-indexeddb-duplicate-names.html";
 

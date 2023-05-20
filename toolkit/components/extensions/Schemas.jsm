@@ -187,7 +187,7 @@ function exportLazyGetter(object, prop, getter) {
     enumerable: true,
     configurable: true,
 
-    get: Cu.exportFunction(function() {
+    get: Cu.exportFunction(function () {
       return redefine(getter.call(this));
     }, object),
 
@@ -243,12 +243,12 @@ function exportLazyProperty(object, prop, getter) {
     enumerable: true,
     configurable: true,
 
-    get: Cu.exportFunction(function() {
+    get: Cu.exportFunction(function () {
       redefine(this);
       return object[prop];
     }, object),
 
-    set: Cu.exportFunction(function(value) {
+    set: Cu.exportFunction(function (value) {
       redefine(this);
       object[prop] = value;
     }, object),

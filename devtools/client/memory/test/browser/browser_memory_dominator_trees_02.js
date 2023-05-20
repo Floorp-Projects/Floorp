@@ -24,7 +24,7 @@ function clickOnNodeArrow(node, panel) {
   );
 }
 
-this.test = makeMemoryTest(TEST_URL, async function({ panel }) {
+this.test = makeMemoryTest(TEST_URL, async function ({ panel }) {
   // Taking snapshots and computing dominator trees is slow :-/
   requestLongerTimeout(4);
 

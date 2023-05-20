@@ -8,7 +8,7 @@
 requestLongerTimeout(5);
 
 // Test pausing with mapScopes enabled and disabled
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-sourcemapped.html");
   dbg.actions.toggleMapScopes();
 

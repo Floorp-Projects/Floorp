@@ -58,7 +58,7 @@ function allowDirectoriesInTest() {
   return cleanup;
 }
 
-XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
+XPCOMUtils.defineLazyGetter(this, "gStringBundle", function () {
   return Services.strings.createBundle(
     "chrome://mozapps/locale/downloads/downloads.properties"
   );
@@ -225,7 +225,7 @@ add_task(async function test_getTemporaryDownloadsDirectory() {
  */
 add_task(async function test_observers_setup() {
   DownloadIntegration.allowObservers = true;
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     DownloadIntegration.allowObservers = false;
   });
 });
@@ -333,8 +333,8 @@ add_task(async function test_suspend_resume() {
   // faster for these tests.
   Services.prefs.setIntPref("browser.download.manager.resumeOnWakeDelay", 5);
 
-  let addDownload = function(list) {
-    return (async function() {
+  let addDownload = function (list) {
+    return (async function () {
       let download = await promiseNewDownload(httpUrl("interruptible.txt"));
       download.start().catch(() => {});
       list.add(download);

@@ -11,7 +11,7 @@ function promiseNewTabSwitched() {
   return new Promise(resolve => {
     gBrowser.addEventListener(
       "TabSwitchDone",
-      function() {
+      function () {
         executeSoon(resolve);
       },
       { once: true }
@@ -45,7 +45,7 @@ function waitForMs(aMs) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   let url = kTestPage;
   let originalTab = gBrowser.selectedTab; // test tab
   let newTab = BrowserTestUtils.addTab(gBrowser, url, { skipAnimation: true });
@@ -143,7 +143,7 @@ add_task(async function() {
   gBrowser.removeTab(newTab);
 });
 
-add_task(async function() {
+add_task(async function () {
   let url = "about:about";
   let originalTab = gBrowser.selectedTab; // test tab
   let newTab = BrowserTestUtils.addTab(gBrowser, url, { skipAnimation: true });

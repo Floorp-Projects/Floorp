@@ -20,7 +20,7 @@ const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 UrlClassifierTestUtils.addTestTrackers();
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
@@ -266,7 +266,7 @@ let cpt = 0;
  */
 function emitContentBlockedMessage() {
   const url = `${BLOCKED_URL}?${++cpt}`;
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(innerURL) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function (innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }
@@ -279,7 +279,7 @@ function emitContentBlockedMessage() {
  */
 function logString(hud, str) {
   const onMessage = waitForMessageByType(hud, str, ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function(arg) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function (arg) {
     content.console.log(arg);
   });
   return onMessage;

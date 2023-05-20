@@ -38,7 +38,7 @@ function run_test() {
 
   var mc = new MultipleCallbacks(
     1,
-    function() {
+    function () {
       // (2)
 
       mc = new MultipleCallbacks(1, finish_cache2_test);
@@ -74,7 +74,7 @@ function run_test() {
       "pin",
       Ci.nsICacheStorage.OPEN_TRUNCATE,
       lci,
-      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "p" + i, function(entry) {
+      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "p" + i, function (entry) {
         mc.fired();
       })
     );
@@ -85,7 +85,7 @@ function run_test() {
       "disk",
       Ci.nsICacheStorage.OPEN_TRUNCATE,
       lci,
-      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "d" + i, function(entry) {
+      new OpenCallback(NEW | WAITFORWRITE, "m" + i, "d" + i, function (entry) {
         mc.fired();
       })
     );
@@ -112,7 +112,7 @@ function run_test() {
             "disk",
             Ci.nsICacheStorage.OPEN_NORMALLY,
             lci,
-            new OpenCallback(NORMAL, "m" + i, "p" + i, function(entry) {
+            new OpenCallback(NORMAL, "m" + i, "p" + i, function (entry) {
               mc.fired();
             })
           );
@@ -131,7 +131,7 @@ function run_test() {
             "disk",
             Ci.nsICacheStorage.OPEN_NORMALLY,
             lci,
-            new OpenCallback(MAYBE_NEW | DOOMED, "m" + i, "d" + i, function(
+            new OpenCallback(MAYBE_NEW | DOOMED, "m" + i, "d" + i, function (
               entry
             ) {
               mc.fired();
@@ -158,7 +158,7 @@ function run_test() {
             "disk",
             Ci.nsICacheStorage.OPEN_NORMALLY,
             lci,
-            new OpenCallback(NORMAL, "m" + i, "p" + i, function(entry) {
+            new OpenCallback(NORMAL, "m" + i, "p" + i, function (entry) {
               mc.fired();
             })
           );
@@ -169,7 +169,7 @@ function run_test() {
             "disk",
             Ci.nsICacheStorage.OPEN_NORMALLY,
             lci,
-            new OpenCallback(NEW, "m2" + i, "d2" + i, function(entry) {
+            new OpenCallback(NEW, "m2" + i, "d2" + i, function (entry) {
               mc.fired();
             })
           );

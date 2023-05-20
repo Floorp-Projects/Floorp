@@ -16,7 +16,7 @@ async function testAppliedFilters(ext, expectedFilter, expectedFilterCount) {
   MockFilePicker.init(window);
   MockFilePicker.displayDirectory = tempDir;
   MockFilePicker.returnValue = MockFilePicker.returnCancel;
-  MockFilePicker.appendFiltersCallback = function(fp, val) {
+  MockFilePicker.appendFiltersCallback = function (fp, val) {
     const hexstr = "0x" + ("000" + val.toString(16)).substr(-3);
     filterCount++;
     if (filterCount < expectedFilterCount) {
@@ -27,7 +27,7 @@ async function testAppliedFilters(ext, expectedFilter, expectedFilterCount) {
       is(val, null, "Got unexpected filter: " + hexstr);
     }
   };
-  MockFilePicker.showCallback = function(fp) {
+  MockFilePicker.showCallback = function (fp) {
     const filename = fp.defaultString;
     info("MockFilePicker - save as: " + filename);
   };
@@ -40,7 +40,7 @@ async function testAppliedFilters(ext, expectedFilter, expectedFilterCount) {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: manifest,
 
-    background: async function() {
+    background: async function () {
       let ext = chrome.runtime.getManifest().description;
       await browser.test.assertRejects(
         browser.downloads.download({

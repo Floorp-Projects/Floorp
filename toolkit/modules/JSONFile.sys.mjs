@@ -42,7 +42,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/NetUtil.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", function () {
   return new TextDecoder();
 });
 

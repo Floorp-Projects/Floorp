@@ -39,7 +39,7 @@ const closeCustomizationUI = async () => {
   );
 };
 
-add_setup(async function() {
+add_setup(async function () {
   // Make sure extension buttons added to the navbar will not overflow in the
   // panel, which could happen when a previous test file resizes the current
   // window.

@@ -13,7 +13,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 // If not, we should only surface the host, in this case, the <video>.
 //
 // For this test we use a <video controls> tag, which is using shadow dom.
-add_task(async function() {
+add_task(async function () {
   // Run the test for both values for devtools.inspector.showAllAnonymousContent
   await runUserAgentWidgetPickerTest({ enableAnonymousContent: false });
   await runUserAgentWidgetPickerTest({ enableAnonymousContent: true });

@@ -34,7 +34,7 @@ function test_sockets(serverSocket) {
   }
 
   do_test_pending();
-  gDashboard.requestSockets(function(data) {
+  gDashboard.requestSockets(function (data) {
     let index = -1;
     info("requestSockets: " + JSON.stringify(data.sockets));
     for (let i = 0; i < data.sockets.length; i++) {
@@ -59,7 +59,7 @@ function run_test() {
   // Localhost is hardcoded to loopback and isn't cached, disable that with this pref
   ps.setBoolPref("network.proxy.allow_hijacking_localhost", true);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     ps.clearUserPref("network.notify.changed");
     ps.clearUserPref("network.proxy.allow_hijacking_localhost");
   });
@@ -75,10 +75,10 @@ function run_test() {
     serverSocket.port,
     "tcp",
     15,
-    function(connInfo) {
+    function (connInfo) {
       if (connInfo.status == "NS_NET_STATUS_CONNECTED_TO") {
         do_test_pending();
-        gDashboard.requestDNSInfo(function(data) {
+        gDashboard.requestDNSInfo(function (data) {
           let found = false;
           info("requestDNSInfo: " + JSON.stringify(data.entries));
           for (let i = 0; i < data.entries.length; i++) {

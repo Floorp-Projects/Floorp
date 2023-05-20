@@ -54,7 +54,7 @@ function loadRedirectCatcherExtension() {
             filter.disconnect();
             browser.test.fail("Unexpected filter.onstart");
           };
-          filter.onerror = function() {
+          filter.onerror = function () {
             closeCounts[details.requestId]++;
             browser.test.assertEq(expectedError, filter.error, "filter.error");
           };

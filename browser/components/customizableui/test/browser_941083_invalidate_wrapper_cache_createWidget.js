@@ -9,7 +9,7 @@
 const kWidgetId = "test-invalidate-wrapper-cache";
 
 // Check createWidget invalidates the widget cache
-add_task(function() {
+add_task(function () {
   let groupWrapper = CustomizableUI.getWidget(kWidgetId);
   ok(groupWrapper, "Should get group wrapper.");
   let singleWrapper = groupWrapper.forWindow(window);

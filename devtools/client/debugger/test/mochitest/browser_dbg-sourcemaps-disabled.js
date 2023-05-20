@@ -8,7 +8,7 @@
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.source-map.client-service.enabled", false);
   const dbg = await initDebugger("doc-sourcemaps.html");
 

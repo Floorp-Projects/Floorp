@@ -27,7 +27,7 @@ function test_binary_streams() {
   const LargeNum = Math.pow(2, 18) + Math.pow(2, 12) + 1;
   const HugeNum = Math.pow(2, 62);
   const HelloStr = "Hello World";
-  const HelloArray = Array.from(HelloStr, function(c) {
+  const HelloArray = Array.from(HelloStr, function (c) {
     return c.charCodeAt(0);
   });
   var countObj = {};

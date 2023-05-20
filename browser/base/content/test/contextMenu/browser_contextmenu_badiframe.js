@@ -46,7 +46,7 @@ async function openTestPage() {
     ...browser.browsingContext.children,
     browser.browsingContext,
   ]) {
-    await SpecialPowers.spawn(bc, [], async function() {
+    await SpecialPowers.spawn(bc, [], async function () {
       await new Promise(resolve => {
         content.requestAnimationFrame(resolve);
       });

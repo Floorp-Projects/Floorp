@@ -25,7 +25,7 @@ add_task(async function test_policy_admin() {
   // Fake the subdialog
   let dialogURL = "";
   let originalOpenDialog = window.openDialog;
-  window.openDialog = function(aDialogURL, unused, unused2, aCallback) {
+  window.openDialog = function (aDialogURL, unused, unused2, aCallback) {
     dialogURL = aDialogURL;
     if (aCallback) {
       aCallback();

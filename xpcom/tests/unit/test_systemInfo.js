@@ -14,7 +14,7 @@ function run_test() {
   ];
   let sysInfo = Services.sysinfo;
 
-  PROPERTIES.forEach(function(aPropertyName) {
+  PROPERTIES.forEach(function (aPropertyName) {
     print("Testing property: " + aPropertyName);
     let value = sysInfo.getProperty(aPropertyName);
     Assert.ok(!!value);

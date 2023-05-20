@@ -28,7 +28,7 @@ add_task(
     Assert.ok(!!response);
     Assert.ok(!!response.sources);
 
-    const source = response.sources.filter(function(s) {
+    const source = response.sources.filter(function (s) {
       return s.url === SOURCE_URL;
     })[0];
 

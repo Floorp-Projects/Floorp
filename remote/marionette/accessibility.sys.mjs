@@ -88,7 +88,7 @@ accessibility.ActionableRoles = new Set([
  * Factory function that constructs a new {@code accessibility.Checks}
  * object with enforced strictness or not.
  */
-accessibility.get = function(strict = false) {
+accessibility.get = function (strict = false) {
   return new accessibility.Checks(!!strict);
 };
 
@@ -134,7 +134,7 @@ function waitForDocumentAccessibility(doc) {
  *     The Accessible object corresponding to the provided element or null if
  *     the accessibility service is not available.
  */
-accessibility.getAccessible = async function(element) {
+accessibility.getAccessible = async function (element) {
   if (!accessibility.service) {
     return null;
   }

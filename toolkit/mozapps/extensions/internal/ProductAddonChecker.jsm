@@ -80,7 +80,7 @@ function getRequestStatus(request) {
  * @returns a Response object
  */
 async function conservativeFetch(input) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     const request = new lazy.ServiceRequest({ mozAnon: true });
     request.timeout = TIMEOUT_DELAY_MS;
 
@@ -430,13 +430,13 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
   return new Promise((resolve, reject) => {
     let sr = new lazy.ServiceRequest();
 
-    sr.onload = function(response) {
+    sr.onload = function (response) {
       logger.info("downloadFile File download. status=" + sr.status);
       if (sr.status != 200 && sr.status != 206) {
         reject(Components.Exception("File download failed", sr.status));
         return;
       }
-      (async function() {
+      (async function () {
         const path = await IOUtils.createUniqueFile(
           PathUtils.tempDir,
           "tmpaddon"
@@ -494,7 +494,7 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
  * @return a promise that resolves if the file matched or rejects with a JS
  *         exception in case of error.
  */
-var verifyFile = async function(properties, path) {
+var verifyFile = async function (properties, path) {
   if (properties.size !== undefined) {
     let stat = await IOUtils.stat(path);
     if (stat.size != properties.size) {
@@ -597,7 +597,7 @@ const ProductAddonCheckerTestUtils = {
    */
   async overrideServiceRequest(mockRequest, callback) {
     let originalServiceRequest = lazy.ServiceRequest;
-    lazy.ServiceRequest = function() {
+    lazy.ServiceRequest = function () {
       return mockRequest;
     };
     try {

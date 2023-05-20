@@ -15,7 +15,7 @@ import { setBreakpointPositions } from "../breakpoints/breakpointPositions";
 import { resume } from "./commands";
 
 export function continueToHere(cx, location) {
-  return async function({ dispatch, getState }) {
+  return async function ({ dispatch, getState }) {
     const { line, column, sourceId } = location;
     const selectedSource = getSelectedSource(getState());
     const selectedFrame = getSelectedFrame(getState(), cx.thread);

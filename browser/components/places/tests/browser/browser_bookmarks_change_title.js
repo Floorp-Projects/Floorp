@@ -17,7 +17,7 @@ function getToolbarNodeForItemGuid(aItemGuid) {
 }
 
 // Setup.
-add_setup(async function() {
+add_setup(async function () {
   let toolbar = document.getElementById("PersonalToolbar");
   let wasCollapsed = toolbar.collapsed;
 
@@ -184,7 +184,7 @@ add_task(async function test_change_title_from_Sidebar() {
     bookmarks.push(bm)
   );
 
-  await withSidebarTree("bookmarks", async function(tree) {
+  await withSidebarTree("bookmarks", async function (tree) {
     tree.selectItems([bookmarks[0].guid]);
 
     await withBookmarksDialog(
@@ -238,7 +238,7 @@ add_task(async function test_change_title_from_Sidebar() {
 add_task(async function test_change_title_from_Library() {
   info("Open library and select the bookmark.");
   const library = await promiseLibrary("BookmarksToolbar");
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await promiseLibraryClosed(library);
   });
   library.ContentTree.view.selectNode(

@@ -21,11 +21,11 @@ async function testAutoplayInBackgroundScript(enableScript) {
       audio.src =
         "https://example.com/browser/browser/components/extensions/test/browser/silence.ogg";
       audio.play().then(
-        function() {
+        function () {
           browser.test.log("play succeed!");
           browser.test.sendMessage("play-succeed");
         },
-        function() {
+        function () {
           browser.test.log("play promise was rejected!");
           browser.test.sendMessage("play-failed");
         }

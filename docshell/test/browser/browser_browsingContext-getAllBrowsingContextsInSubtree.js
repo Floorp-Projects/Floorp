@@ -13,7 +13,7 @@ async function addFrame(url) {
   return iframe.browsingContext;
 }
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
     async browser => {

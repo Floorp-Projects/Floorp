@@ -29,7 +29,7 @@ const TEST_URI =
     `
   );
 
-add_task(async function() {
+add_task(async function () {
   const { panel, ui } = await openStyleEditorForURL(TEST_URI);
   const { panelWindow } = panel;
   is(

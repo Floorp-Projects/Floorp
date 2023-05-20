@@ -65,7 +65,7 @@ add_task(async function test_changeUPLoginOnPUpdateForm_accept() {
 
   await testSubmittingLoginForm(
     "subtst_notifications_change_p.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(fieldValues.username, "null", "Checking submitted username");
       Assert.equal(
         fieldValues.password,
@@ -127,7 +127,7 @@ add_task(async function test_changeUPLoginOnPUpdateForm_cancel() {
 
   await testSubmittingLoginForm(
     "subtst_notifications_change_p.html",
-    async function(fieldValues) {
+    async function (fieldValues) {
       Assert.equal(fieldValues.username, "null", "Checking submitted username");
       Assert.equal(
         fieldValues.password,

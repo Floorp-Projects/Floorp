@@ -147,7 +147,7 @@ var testCases = [
   },
 ];
 
-(function() {
+(function () {
   settings.forEach(setting => {
     if (setting.setup) {
       add_task(async _ => {

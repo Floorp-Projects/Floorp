@@ -3,7 +3,7 @@
 /**
  * Open a dummy page, then open about:cache and verify the opened page shows up in the cache.
  */
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.partition.network_state", false]],
   });
@@ -26,7 +26,7 @@ add_task(async function() {
     "about:cache",
     true
   );
-  let expectedPageCheck = function(uri) {
+  let expectedPageCheck = function (uri) {
     info("Saw load for " + uri);
     // Can't easily use searchParms and new URL() because it's an about: URI...
     return uri.startsWith("about:cache?") && uri.includes("storage=disk");
@@ -36,7 +36,7 @@ add_task(async function() {
     false,
     expectedPageCheck
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     ok(
       !content.document.nodePrincipal.isSystemPrincipal,
       "about:cache should not have system principal"
@@ -56,7 +56,7 @@ add_task(async function() {
   await diskPageLoaded;
   info("about:cache disk subpage loaded");
 
-  expectedPageCheck = function(uri) {
+  expectedPageCheck = function (uri) {
     info("Saw load for " + uri);
     return uri.startsWith("about:cache-entry") && uri.includes("dummy.html");
   };
@@ -66,7 +66,7 @@ add_task(async function() {
     false,
     expectedPageCheck
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [kTestPage], function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [kTestPage], function (
     kTestPage
   ) {
     ok(
@@ -96,7 +96,7 @@ add_task(async function() {
   await entryLoaded;
   info("about:cache entry loaded");
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [triggeringURISpec], function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [triggeringURISpec], function (
     triggeringURISpec
   ) {
     ok(

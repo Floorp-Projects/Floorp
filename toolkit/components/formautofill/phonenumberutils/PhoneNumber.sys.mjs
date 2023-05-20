@@ -14,7 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://autofill/phonenumberutils/PhoneNumberNormalizer.sys.mjs",
 });
 
-export var PhoneNumber = (function(dataBase) {
+export var PhoneNumber = (function (dataBase) {
   const MAX_PHONE_NUMBER_LENGTH = 50;
   const NON_ALPHA_CHARS = /[^a-zA-Z]/g;
   const NON_DIALABLE_CHARS = /[^,#+\*\d]/g;

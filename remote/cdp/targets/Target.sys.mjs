@@ -31,10 +31,7 @@ export class Target {
 
     // There can be more than one connection if multiple clients connect to the remote agent.
     this.connections = new Set();
-    this.id = Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1);
+    this.id = Services.uuid.generateUUID().toString().slice(1, -1);
   }
 
   /**

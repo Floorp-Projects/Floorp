@@ -19,7 +19,7 @@ function loadSelectors(walker, selectors) {
 }
 
 function doMoves(movesArg) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [movesArg], function(
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [movesArg], function (
     moves
   ) {
     function setParent(nodeSelector, newParentSelector) {
@@ -44,7 +44,7 @@ function doMoves(movesArg) {
 var gDummySerial = 0;
 
 function mutationTest(testSpec) {
-  return async function() {
+  return async function () {
     const { walker } = await initInspectorFront(
       MAIN_DOMAIN + "inspector-traversal-data.html"
     );
@@ -63,7 +63,7 @@ function mutationTest(testSpec) {
     await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [[gDummySerial++]],
-      function(serial) {
+      function (serial) {
         content.document.documentElement.setAttribute("data-dummy", serial);
       }
     );

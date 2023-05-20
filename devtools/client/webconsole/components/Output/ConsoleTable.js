@@ -15,7 +15,7 @@ const {
   l10n,
   getDescriptorValue,
 } = require("resource://devtools/client/webconsole/utils/messages.js");
-loader.lazyGetter(this, "MODE", function() {
+loader.lazyGetter(this, "MODE", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .MODE;
 });
@@ -162,9 +162,7 @@ const VALUE_NAME = "_value";
 
 function getNamedIndexes(type) {
   return {
-    [INDEX_NAME]: getArrayTypeNames()
-      .concat("Object")
-      .includes(type)
+    [INDEX_NAME]: getArrayTypeNames().concat("Object").includes(type)
       ? l10n.getStr("table.index")
       : l10n.getStr("table.iterationIndex"),
     [VALUE_NAME]: l10n.getStr("table.value"),
@@ -187,14 +185,14 @@ function getTableItems(data = {}, type, headers = null) {
   let columns = new Map();
   const items = [];
 
-  const addItem = function(item) {
+  const addItem = function (item) {
     items.push(item);
     Object.keys(item).forEach(key => addColumn(key));
   };
 
   const validCustomHeaders = hasValidCustomHeaders(headers);
 
-  const addColumn = function(columnIndex) {
+  const addColumn = function (columnIndex) {
     const columnExists = columns.has(columnIndex);
     const hasMaxColumns = columns.size == TABLE_COLUMN_MAX_ITEMS;
 

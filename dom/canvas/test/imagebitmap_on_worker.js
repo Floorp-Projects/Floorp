@@ -12,19 +12,19 @@ function promiseThrows(p, name) {
   var didThrow;
   return p
     .then(
-      function() {
+      function () {
         didThrow = false;
       },
-      function() {
+      function () {
         didThrow = true;
       }
     )
-    .then(function() {
+    .then(function () {
       ok(didThrow, "[TestException] " + name);
     });
 }
 
-onmessage = function(event) {
+onmessage = function (event) {
   if (event.data.type == "testImageData") {
     var width = event.data.width;
     var height = event.data.height;
@@ -40,7 +40,7 @@ onmessage = function(event) {
     );
 
     var promise = createImageBitmap(imageData);
-    promise.then(function(bitmap) {
+    promise.then(function (bitmap) {
       ok(bitmap, "[CreateFromImageData] ImageBitmap is created successfully.");
       ok(
         bitmap.width == width,
@@ -66,7 +66,7 @@ onmessage = function(event) {
     ok(blob, "[CreateFromBlob] A Blob object is passed into worker.");
 
     var promise = createImageBitmap(blob);
-    promise.then(function(bitmap) {
+    promise.then(function (bitmap) {
       ok(bitmap, "[CreateFromBlob] ImageBitmap is created successfully.");
       ok(
         bitmap.width == width,
@@ -95,7 +95,7 @@ onmessage = function(event) {
     );
 
     var promise = createImageBitmap(source);
-    promise.then(function(bitmap) {
+    promise.then(function (bitmap) {
       ok(
         bitmap,
         "[CreateFromImageBitmap] ImageBitmap is created successfully."
@@ -116,7 +116,7 @@ onmessage = function(event) {
       );
 
       var promise2 = createImageBitmap(bitmap);
-      promise2.then(function(bitmap2) {
+      promise2.then(function (bitmap2) {
         ok(
           bitmap2,
           "[CreateFromImageBitmap] 2nd ImageBitmap is created successfully."

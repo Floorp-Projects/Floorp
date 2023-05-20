@@ -10,7 +10,7 @@ const asyncStorage = require("resource://devtools/shared/async-storage.js");
  * when opened from an existing request
  */
 
-add_task(async function() {
+add_task(async function () {
   // Turn true the pref
   await pushPref("devtools.netmonitor.features.newEditAndResend", true);
   // Reset the storage for the persisted custom request

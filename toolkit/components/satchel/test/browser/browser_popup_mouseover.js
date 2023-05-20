@@ -8,7 +8,9 @@ const { FormHistory } = ChromeUtils.importESModule(
 
 add_task(async function test() {
   const url = `data:text/html,<input type="text" name="field1">`;
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function (
+    browser
+  ) {
     const {
       autoCompletePopup,
       autoCompletePopup: { richlistbox: itemsBox },
@@ -21,7 +23,7 @@ add_task(async function test() {
     ];
 
     await FormHistory.update([{ op: "remove" }, ...mockHistory]);
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       const input = content.document.querySelector("input");
 
       input.focus();
@@ -67,7 +69,7 @@ add_task(async function test() {
     );
 
     // close popup
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       const input = content.document.querySelector("input");
 
       input.blur();

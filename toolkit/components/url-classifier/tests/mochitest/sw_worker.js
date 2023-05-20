@@ -1,4 +1,4 @@
-self.addEventListener("fetch", function(event) {
+self.addEventListener("fetch", function (event) {
   let sep = "synth.html?";
   let idx = event.request.url.indexOf(sep);
   if (idx > 0) {

@@ -89,15 +89,17 @@ class TimingsPanel extends Component {
             span({
               className: "requests-list-timings-offset",
               style: {
-                width: `calc(${(totalTime - duration) /
-                  totalTime} * (100% - ${TIMINGS_END_PADDING})`,
+                width: `calc(${
+                  (totalTime - duration) / totalTime
+                } * (100% - ${TIMINGS_END_PADDING})`,
               },
             }),
             span({
               className: `requests-list-timings-box server-timings-color-${color}`,
               style: {
-                width: `calc(${duration /
-                  totalTime} * (100% - ${TIMINGS_END_PADDING}))`,
+                width: `calc(${
+                  duration / totalTime
+                } * (100% - ${TIMINGS_END_PADDING}))`,
               },
             }),
             span(

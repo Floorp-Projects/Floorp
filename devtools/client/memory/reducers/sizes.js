@@ -10,11 +10,11 @@ const {
 
 const handlers = Object.create(null);
 
-handlers[actions.RESIZE_SHORTEST_PATHS] = function(sizes, { size }) {
+handlers[actions.RESIZE_SHORTEST_PATHS] = function (sizes, { size }) {
   return immutableUpdate(sizes, { shortestPathsSize: size });
 };
 
-module.exports = function(sizes = { shortestPathsSize: 0.5 }, action) {
+module.exports = function (sizes = { shortestPathsSize: 0.5 }, action) {
   const handler = handlers[action.type];
   return handler ? handler(sizes, action) : sizes;
 };

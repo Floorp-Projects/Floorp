@@ -3,7 +3,7 @@
  */
 
 // Enabling Searching functionatily. Will display search bar form this testcase forward.
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.preferences.search", true]],
   });
@@ -12,7 +12,7 @@ add_task(async function() {
 /**
  * Test for searching for the "Update History" subdialog.
  */
-add_task(async function() {
+add_task(async function () {
   // The updates panel is disabled in MSIX builds.
   if (
     AppConstants.platform === "win" &&
@@ -30,7 +30,7 @@ add_task(async function() {
 /**
  * Test for searching for the "Location Permissions" subdialog.
  */
-add_task(async function() {
+add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });

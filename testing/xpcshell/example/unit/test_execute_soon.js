@@ -8,7 +8,7 @@ var complete = false;
 
 function run_test() {
   dump("Starting test\n");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     dump("Checking test completed\n");
     Assert.ok(complete);
   });

@@ -223,7 +223,7 @@ var ctrlTab = {
   },
   get keys() {
     var keys = {};
-    ["close", "find", "selectAll"].forEach(function(key) {
+    ["close", "find", "selectAll"].forEach(function (key) {
       keys[key] = document
         .getElementById("key_" + key)
         .getAttribute("key")
@@ -546,7 +546,7 @@ var ctrlTab = {
     // to be under the mouse pointer initially won't be selected unintentionally.
     this._trackMouseOver = false;
     setTimeout(
-      function(self) {
+      function (self) {
         if (self.isOpen) {
           self._trackMouseOver = true;
         }
@@ -636,7 +636,7 @@ var ctrlTab = {
     // If the current tab is removed, another tab can steal our focus.
     if (aTab.selected && this.panel.state == "open") {
       setTimeout(
-        function(selected) {
+        function (selected) {
           selected.focus();
         },
         0,

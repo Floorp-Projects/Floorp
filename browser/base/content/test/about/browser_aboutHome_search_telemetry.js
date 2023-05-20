@@ -4,7 +4,7 @@
 
 ignoreAllUncaughtExceptions();
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Check that performing a search fires a search event and records to Telemetry."
   );
@@ -20,7 +20,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:home" },
-    async function(browser) {
+    async function (browser) {
       let engine;
       await promiseContentSearchChange(browser, async () => {
         engine = await SearchTestUtils.promiseNewSearchEngine({
@@ -33,7 +33,7 @@ add_task(async function() {
       await SpecialPowers.spawn(
         browser,
         [{ expectedName: engine.name }],
-        async function(args) {
+        async function (args) {
           let engineName =
             content.wrappedJSObject.gContentSearchController.defaultEngine.name;
           is(
@@ -71,7 +71,9 @@ add_task(async function() {
       );
 
       // Perform a search to increase the SEARCH_COUNT histogram.
-      await SpecialPowers.spawn(browser, [{ searchStr }], async function(args) {
+      await SpecialPowers.spawn(browser, [{ searchStr }], async function (
+        args
+      ) {
         let doc = content.document;
         info("Perform a search.");
         let el = doc.querySelector(["#searchText", "#newtab-search-text"]);

@@ -9,7 +9,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "textEncoder", function() {
+XPCOMUtils.defineLazyGetter(lazy, "textEncoder", function () {
   return new TextEncoder();
 });
 
@@ -529,7 +529,7 @@ export var CryptoUtils = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(CryptoUtils, "_utf8Converter", function() {
+XPCOMUtils.defineLazyGetter(CryptoUtils, "_utf8Converter", function () {
   let converter = Cc[
     "@mozilla.org/intl/scriptableunicodeconverter"
   ].createInstance(Ci.nsIScriptableUnicodeConverter);

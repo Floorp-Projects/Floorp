@@ -21,7 +21,7 @@
 
 "use strict";
 
-(function() {
+(function () {
   // Make sure we don't run more than once
   if (MouseEventShim) {
     return;

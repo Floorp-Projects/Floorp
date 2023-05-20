@@ -42,7 +42,7 @@ httpServer.registerPathHandler("/test.js", (request, response) => {
   response.write(testSourceContent);
 });
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebuggerWithAbsoluteURL(
     BASE_URL + "index.html",
     "test.js"

@@ -17,7 +17,7 @@ add_task(async function tab_manager_visibility_preference_on() {
       gBrowser: newWindow.gBrowser,
       url: TEST_HOSTNAME + DUMMY_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await Assert.ok(
         BrowserTestUtils.is_visible(
           newWindow.document.getElementById("alltabs-button")
@@ -39,7 +39,7 @@ add_task(async function tab_manager_visibility_preference_off() {
       gBrowser: newWindow.gBrowser,
       url: TEST_HOSTNAME + DUMMY_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await Assert.ok(
         BrowserTestUtils.is_hidden(
           newWindow.document.getElementById("alltabs-button")

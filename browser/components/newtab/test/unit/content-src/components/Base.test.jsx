@@ -42,10 +42,7 @@ describe("<Base>", () => {
     const wrapper = shallow(<Base {...DEFAULT_PROPS} />);
 
     assert.equal(
-      wrapper
-        .find(ErrorBoundary)
-        .first()
-        .prop("className"),
+      wrapper.find(ErrorBoundary).first().prop("className"),
       "base-content-fallback"
     );
   });
@@ -88,12 +85,7 @@ describe("<BaseContent>", () => {
 
     const wrapper = shallow(<BaseContent {...searchEnabledProps} />);
 
-    assert.isTrue(
-      wrapper
-        .find(Search)
-        .parent()
-        .is(ErrorBoundary)
-    );
+    assert.isTrue(wrapper.find(Search).parent().is(ErrorBoundary));
   });
 
   it("should dispatch a user event when the customize menu is opened or closed", () => {

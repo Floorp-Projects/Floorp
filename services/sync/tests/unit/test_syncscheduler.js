@@ -283,13 +283,13 @@ add_task(async function test_masterpassword_locked_retry_interval() {
   let rescheduleInterval = false;
 
   let oldScheduleAtInterval = SyncScheduler.prototype.scheduleAtInterval;
-  SyncScheduler.prototype.scheduleAtInterval = function(interval) {
+  SyncScheduler.prototype.scheduleAtInterval = function (interval) {
     rescheduleInterval = true;
     Assert.equal(interval, MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
   };
 
   let oldVerifyLogin = Service.verifyLogin;
-  Service.verifyLogin = async function() {
+  Service.verifyLogin = async function () {
     Status.login = MASTER_PASSWORD_LOCKED;
     return false;
   };

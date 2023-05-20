@@ -7,7 +7,7 @@
  * Test blocking and unblocking a request.
  */
 
-add_task(async function() {
+add_task(async function () {
   class DataTransfer {
     constructor() {
       this.BLOCKING_URL =

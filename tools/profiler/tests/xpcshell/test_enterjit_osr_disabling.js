@@ -3,7 +3,7 @@ function run_test() {
 
   Services.profiler.StartProfiler(100, 10, ["js"]);
   // The function is entered with the profiler enabled
-  (function() {
+  (function () {
     Services.profiler.StopProfiler();
     let n = 10000;
     // eslint-disable-next-line no-empty

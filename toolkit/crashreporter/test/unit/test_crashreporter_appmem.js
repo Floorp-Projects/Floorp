@@ -1,10 +1,10 @@
 add_task(async function run_test() {
   await do_crash(
-    function() {
+    function () {
       let appAddr = CrashTestUtils.saveAppMemory();
       crashReporter.registerAppMemory(appAddr, 32);
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       Assert.ok(mdump.exists());
       Assert.ok(mdump.fileSize > 0);
       Assert.ok(CrashTestUtils.dumpCheckMemory(mdump.path));

@@ -41,7 +41,7 @@ const zoomOnMeta =
   Services.prefs.getIntPref("mousewheel.with_meta.action", 1) == 3;
 const isAppLocaleRTL = Services.locale.isAppLocaleRTL;
 
-export var AboutReader = function(
+export var AboutReader = function (
   actor,
   articlePromise,
   docContentType = "document",
@@ -883,7 +883,7 @@ AboutReader.prototype = {
     let windowWidth = this._win.innerWidth;
     let bodyWidth = this._doc.body.clientWidth;
 
-    let setImageMargins = function(img) {
+    let setImageMargins = function (img) {
       img.classList.add("moz-reader-block-img");
 
       // If the image is at least as wide as the window, make it fill edge-to-edge on mobile.
@@ -908,7 +908,7 @@ AboutReader.prototype = {
       if (img.naturalWidth > 0) {
         setImageMargins(img);
       } else {
-        img.onload = function() {
+        img.onload = function () {
           setImageMargins(img);
         };
       }
@@ -1130,7 +1130,7 @@ AboutReader.prototype = {
 
       radioButton.addEventListener(
         "input",
-        function(aEvent) {
+        function (aEvent) {
           if (!aEvent.isTrusted) {
             return;
           }
@@ -1158,7 +1158,7 @@ AboutReader.prototype = {
     button.removeAttribute("hidden");
     button.addEventListener(
       "click",
-      function(aEvent) {
+      function (aEvent) {
         if (!aEvent.isTrusted) {
           return;
         }

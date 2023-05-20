@@ -84,7 +84,7 @@ var originalNewWindowRestrictionPref = Services.prefs.getIntPref(
   kNewWindowRestrictionPrefKey
 );
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.setIntPref(kNewWindowPrefKey, originalNewWindowPref);
   Services.prefs.setIntPref(
     kNewWindowRestrictionPrefKey,
@@ -112,7 +112,7 @@ function prepareForResult(aBrowser, aExpectation) {
   let expectedSpec = kContentDoc.replace(/[^\/]*$/, "dummy.html");
   switch (aExpectation) {
     case kSameTab:
-      return (async function() {
+      return (async function () {
         await BrowserTestUtils.browserLoaded(aBrowser);
         is(aBrowser.currentURI.spec, expectedSpec, "Should be at dummy.html");
         // Now put the browser back where it came from
@@ -120,7 +120,7 @@ function prepareForResult(aBrowser, aExpectation) {
         await BrowserTestUtils.browserLoaded(aBrowser);
       })();
     case kNewWin:
-      return (async function() {
+      return (async function () {
         let newWin = await BrowserTestUtils.waitForNewWindow({
           url: expectedSpec,
         });
@@ -129,7 +129,7 @@ function prepareForResult(aBrowser, aExpectation) {
         await BrowserTestUtils.closeWindow(newWin);
       })();
     case kNewTab:
-      return (async function() {
+      return (async function () {
         let newTab = await BrowserTestUtils.waitForNewTab(gBrowser);
         is(
           newTab.linkedBrowser.currentURI.spec,
@@ -163,7 +163,7 @@ function testLinkWithMatrix(aLinkSelector, aMatrix) {
       gBrowser,
       url: kContentDoc,
     },
-    async function(browser) {
+    async function (browser) {
       // This nested for-loop is unravelling the matrix const
       // we set up, and gives us three things through each tick
       // of the inner loop:

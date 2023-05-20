@@ -6,7 +6,7 @@
 const FORMULA = "8 * 8";
 const RESULT = "64";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.calculator", true]],
   });

@@ -42,7 +42,7 @@ export function BindToObject(fn, self, opt_args) {
     fn = fn.boundFn_;
   }
 
-  var newfn = function() {
+  var newfn = function () {
     // Combine the static args and the new args into one big array
     var args = boundargs.concat(Array.prototype.slice.call(arguments));
     return fn.apply(self, args);
@@ -108,7 +108,7 @@ function RequestBackoff(
   // For test provider, we will disable backoff if preference is set to false.
   if (provider === "test") {
     this.canMakeRequestDefault = this.canMakeRequest;
-    this.canMakeRequest = function() {
+    this.canMakeRequest = function () {
       if (Services.prefs.getBoolPref(PREF_DISABLE_TEST_BACKOFF, true)) {
         return true;
       }
@@ -120,7 +120,7 @@ function RequestBackoff(
 /**
  * Reset the object for reuse. This deliberately doesn't clear requestTimes_.
  */
-RequestBackoff.prototype.reset = function() {
+RequestBackoff.prototype.reset = function () {
   this.numErrors_ = 0;
   this.errorTimeout_ = 0;
   this.nextRequestTime_ = 0;
@@ -129,7 +129,7 @@ RequestBackoff.prototype.reset = function() {
 /**
  * Check to see if we can make a request.
  */
-RequestBackoff.prototype.canMakeRequest = function() {
+RequestBackoff.prototype.canMakeRequest = function () {
   var now = Date.now();
   // Note that nsITimer delay is approximate: the timer can be fired before the
   // requested time has elapsed. So, give it a tolerance
@@ -143,7 +143,7 @@ RequestBackoff.prototype.canMakeRequest = function() {
   );
 };
 
-RequestBackoff.prototype.noteRequest = function() {
+RequestBackoff.prototype.noteRequest = function () {
   var now = Date.now();
   this.requestTimes_.push(now);
 
@@ -153,14 +153,14 @@ RequestBackoff.prototype.noteRequest = function() {
   }
 };
 
-RequestBackoff.prototype.nextRequestDelay = function() {
+RequestBackoff.prototype.nextRequestDelay = function () {
   return Math.max(0, this.nextRequestTime_ - Date.now());
 };
 
 /**
  * Notify this object of the last server response.  If it's an error,
  */
-RequestBackoff.prototype.noteServerResponse = function(status) {
+RequestBackoff.prototype.noteServerResponse = function (status) {
   if (this.isErrorStatus(status)) {
     this.numErrors_++;
 
@@ -185,7 +185,7 @@ RequestBackoff.prototype.noteServerResponse = function(status) {
  * @param status Number http status
  * @return Boolean true if we consider this http status an error
  */
-RequestBackoff.prototype.isErrorStatus = function(status) {
+RequestBackoff.prototype.isErrorStatus = function (status) {
   return (
     (400 <= status && status <= 599) ||
     HTTP_FOUND == status ||

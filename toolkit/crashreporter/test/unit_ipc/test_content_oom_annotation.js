@@ -11,10 +11,10 @@ add_task(async function run_test() {
 
   // Try crashing with an OOM
   await do_content_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_OOM;
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       Assert.ok("TotalPhysicalMemory" in extra);
       Assert.ok("AvailablePhysicalMemory" in extra);
 

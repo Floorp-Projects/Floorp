@@ -12,7 +12,7 @@ const {
   snapshotState: states,
 } = require("resource://devtools/client/memory/constants.js");
 
-add_task(async function() {
+add_task(async function () {
   const front = new StubbedMemoryFront();
   await front.attach();
   const store = Store();

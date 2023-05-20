@@ -48,10 +48,9 @@ function* testSteps() {
   let sawAdded = false;
   let sawRemoved = false;
 
-  db
-    .transaction("foo")
-    .objectStore("foo")
-    .openCursor().onsuccess = function(event) {
+  db.transaction("foo").objectStore("foo").openCursor().onsuccess = function (
+    event
+  ) {
     event.target.transaction.oncomplete = continueToNextStep;
     let cursor = event.target.result;
     if (cursor) {
@@ -81,7 +80,7 @@ function* testSteps() {
     .transaction("foo", "readwrite")
     .objectStore("foo")
     .index("name")
-    .openCursor().onsuccess = function(event) {
+    .openCursor().onsuccess = function (event) {
     event.target.transaction.oncomplete = continueToNextStep;
     let cursor = event.target.result;
     if (cursor) {
@@ -102,10 +101,10 @@ function* testSteps() {
 
       if (count == 1) {
         let objectStore = event.target.transaction.objectStore("foo");
-        objectStore.delete(objectStoreData[0].ss).onsuccess = function(event) {
+        objectStore.delete(objectStoreData[0].ss).onsuccess = function (event) {
           objectStore.add(
             objectStoreData[objectStoreData.length - 1]
-          ).onsuccess = function(event) {
+          ).onsuccess = function (event) {
             cursor.continue();
           };
         };

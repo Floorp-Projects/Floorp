@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test removing the breakpoint from the minified file (generated source) works"
   );
@@ -40,7 +40,7 @@ add_task(async function() {
   await reloadAndCheckNoBreakpointExists(dbg);
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test removing the breakpoint from the pretty printed (original source) works"
   );

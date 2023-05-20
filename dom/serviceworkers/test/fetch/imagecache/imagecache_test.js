@@ -8,7 +8,7 @@ function synthesizeImage() {
   });
 }
 
-self.addEventListener("fetch", function(event) {
+self.addEventListener("fetch", function (event) {
   if (event.request.url.includes("image-20px.png")) {
     event.respondWith(synthesizeImage());
   }

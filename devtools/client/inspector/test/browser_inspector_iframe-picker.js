@@ -13,7 +13,7 @@ const URL =
   "data:text/html;charset=UTF-8," +
   encodeURI('<iframe src="' + FrameURL + '"></iframe><div id="top">top</div>');
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(URL);
 
   // Verify we are on the top level document
@@ -43,7 +43,7 @@ add_task(async function() {
   const frames = Array.from(menuList.querySelectorAll(".command"));
   is(frames.length, 2, "We have both frames in the menu");
 
-  frames.sort(function(a, b) {
+  frames.sort(function (a, b) {
     return a.children[0].innerHTML.localeCompare(b.children[0].innerHTML);
   });
 
@@ -102,7 +102,7 @@ add_task(async function() {
     "Remove the iframe and check that the inspector gets updated to show the top level frame markup"
   );
   newRoot = inspector.once("new-root");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.document.querySelector("iframe").remove();
   });
   await newRoot;

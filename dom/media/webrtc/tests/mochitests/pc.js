@@ -140,7 +140,7 @@ function timerGuard(p, time, message) {
 /**
  * Closes the peer connection if it is active
  */
-PeerConnectionTest.prototype.closePC = function() {
+PeerConnectionTest.prototype.closePC = function () {
   info("Closing peer connections");
 
   var closeIt = pc => {
@@ -195,7 +195,7 @@ PeerConnectionTest.prototype.closePC = function() {
 /**
  * Close the open data channels, followed by the underlying peer connection
  */
-PeerConnectionTest.prototype.close = function() {
+PeerConnectionTest.prototype.close = function () {
   var allChannels = (this.pcLocal || this.pcRemote).dataChannels;
   return timerGuard(
     Promise.all(allChannels.map((channel, i) => this.closeDataChannels(i))),
@@ -210,7 +210,7 @@ PeerConnectionTest.prototype.close = function() {
  * @param {Number} index
  *        Index of the data channels to close on both sides
  */
-PeerConnectionTest.prototype.closeDataChannels = function(index) {
+PeerConnectionTest.prototype.closeDataChannels = function (index) {
   info("closeDataChannels called with index: " + index);
   var localChannel = null;
   if (this.pcLocal) {
@@ -271,7 +271,7 @@ PeerConnectionTest.prototype.closeDataChannels = function(index) {
  * @param {DataChannelWrapper} [options.targetChannel=pcRemote.dataChannels[length - 1]]
  *        Data channel to use for receiving the message
  */
-PeerConnectionTest.prototype.send = async function(data, options) {
+PeerConnectionTest.prototype.send = async function (data, options) {
   options = options || {};
   const source =
     options.sourceChannel ||
@@ -324,7 +324,7 @@ PeerConnectionTest.prototype.send = async function(data, options) {
  * @param {Dict} options
  *        Options for the data channel (see nsIPeerConnection)
  */
-PeerConnectionTest.prototype.createDataChannel = function(options) {
+PeerConnectionTest.prototype.createDataChannel = function (options) {
   var remotePromise;
   if (!options.negotiated) {
     this.pcRemote.expectDataChannel("pcRemote expected data channel");
@@ -363,7 +363,7 @@ PeerConnectionTest.prototype.createDataChannel = function(options) {
  * @param {PeerConnectionWrapper} peer
  *        The peer connection wrapper to run the command on
  */
-PeerConnectionTest.prototype.createAnswer = function(peer) {
+PeerConnectionTest.prototype.createAnswer = function (peer) {
   return peer.createAnswer().then(answer => {
     // make a copy so this does not get updated with ICE candidates
     this.originalAnswer = new RTCSessionDescription(
@@ -380,7 +380,7 @@ PeerConnectionTest.prototype.createAnswer = function(peer) {
  * @param {PeerConnectionWrapper} peer
  *        The peer connection wrapper to run the command on
  */
-PeerConnectionTest.prototype.createOffer = function(peer) {
+PeerConnectionTest.prototype.createOffer = function (peer) {
   return peer.createOffer().then(offer => {
     // make a copy so this does not get updated with ICE candidates
     this.originalOffer = new RTCSessionDescription(
@@ -399,7 +399,7 @@ PeerConnectionTest.prototype.createOffer = function(peer) {
  * @param {RTCSessionDescriptionInit} desc
  *        Session description for the local description request
  */
-PeerConnectionTest.prototype.setLocalDescription = function(
+PeerConnectionTest.prototype.setLocalDescription = function (
   peer,
   desc,
   stateExpected
@@ -444,7 +444,7 @@ PeerConnectionTest.prototype.setLocalDescription = function(
  *        Media constrains for the local peer connection instance
  * @param constraintsRemote
  */
-PeerConnectionTest.prototype.setMediaConstraints = function(
+PeerConnectionTest.prototype.setMediaConstraints = function (
   constraintsLocal,
   constraintsRemote
 ) {
@@ -461,7 +461,7 @@ PeerConnectionTest.prototype.setMediaConstraints = function(
  *
  * @param {object} options the media constraints to use on createOffer
  */
-PeerConnectionTest.prototype.setOfferOptions = function(options) {
+PeerConnectionTest.prototype.setOfferOptions = function (options) {
   if (this.pcLocal) {
     this.pcLocal.offerOptions = options;
   }
@@ -476,7 +476,7 @@ PeerConnectionTest.prototype.setOfferOptions = function(options) {
  * @param {RTCSessionDescriptionInit} desc
  *        Session description for the remote description request
  */
-PeerConnectionTest.prototype.setRemoteDescription = function(
+PeerConnectionTest.prototype.setRemoteDescription = function (
   peer,
   desc,
   stateExpected
@@ -513,7 +513,7 @@ PeerConnectionTest.prototype.setRemoteDescription = function(
  * Adds and removes steps to/from the execution chain based on the configured
  * testOptions.
  */
-PeerConnectionTest.prototype.updateChainSteps = function() {
+PeerConnectionTest.prototype.updateChainSteps = function () {
   if (this.testOptions.h264) {
     this.chain.insertAfterEach("PC_LOCAL_CREATE_OFFER", [
       PC_LOCAL_REMOVE_ALL_BUT_H264_FROM_OFFER,
@@ -548,7 +548,7 @@ PeerConnectionTest.prototype.updateChainSteps = function() {
 /**
  * Start running the tests as assigned to the command chain.
  */
-PeerConnectionTest.prototype.run = async function() {
+PeerConnectionTest.prototype.run = async function () {
   /* We have to modify the chain here to allow tests which modify the default
    * test chain instantiating a PeerConnectionTest() */
   this.updateChainSteps();
@@ -567,7 +567,10 @@ PeerConnectionTest.prototype.run = async function() {
 /**
  * Routes ice candidates from one PCW to the other PCW
  */
-PeerConnectionTest.prototype.iceCandidateHandler = function(caller, candidate) {
+PeerConnectionTest.prototype.iceCandidateHandler = function (
+  caller,
+  candidate
+) {
   info("Received: " + JSON.stringify(candidate) + " from " + caller);
 
   var target = null;
@@ -596,7 +599,7 @@ PeerConnectionTest.prototype.iceCandidateHandler = function(caller, candidate) {
  * Installs a polling function for the socket.io client to read
  * all messages from the chat room into a message queue.
  */
-PeerConnectionTest.prototype.setupSignalingClient = function() {
+PeerConnectionTest.prototype.setupSignalingClient = function () {
   this.signalingMessageQueue = [];
   this.signalingCallbacks = {};
   this.signalingLoopRun = true;
@@ -629,7 +632,7 @@ PeerConnectionTest.prototype.setupSignalingClient = function() {
 /**
  * Sets a flag to stop reading further messages from the chat room.
  */
-PeerConnectionTest.prototype.signalingMessagesFinished = function() {
+PeerConnectionTest.prototype.signalingMessagesFinished = function () {
   this.signalingLoopRun = false;
 };
 
@@ -644,7 +647,7 @@ PeerConnectionTest.prototype.signalingMessagesFinished = function() {
  *        The function which gets invoked if a message of the messageType
  *        has been received from the chat room.
  */
-PeerConnectionTest.prototype.registerSignalingCallback = function(
+PeerConnectionTest.prototype.registerSignalingCallback = function (
   messageType,
   onMessage
 ) {
@@ -659,7 +662,7 @@ PeerConnectionTest.prototype.registerSignalingCallback = function(
  * @param {string} messageType
  *        The type of message to search and register for.
  */
-PeerConnectionTest.prototype.getSignalingMessage = function(messageType) {
+PeerConnectionTest.prototype.getSignalingMessage = function (messageType) {
   var i = this.signalingMessageQueue.findIndex(m => m.type === messageType);
   if (i >= 0) {
     info(

@@ -55,7 +55,7 @@ function searchOverlay(query, modifiers) {
   });
 
   return {
-    token: function(stream, state) {
+    token: function (stream, state) {
       // set the last index to be the current stream position
       // this acts as an offset
       regexQuery.lastIndex = stream.pos;
@@ -139,7 +139,7 @@ function doSearch(
   }
   const defaultIndex = { line: -1, ch: -1 };
 
-  return cm.operation(function() {
+  return cm.operation(function () {
     if (!query || isWhitespace(query)) {
       clearSearch(cm, query);
       return null;
@@ -178,7 +178,7 @@ export function searchSourceForHighlight(
     return;
   }
 
-  cm.operation(function() {
+  cm.operation(function () {
     const state = getSearchState(cm, query);
     const isNewQuery = state.query !== query;
     state.query = query;
@@ -206,7 +206,7 @@ function getCursorPos(newQuery, rev, state) {
 function searchNext(ctx, rev, query, newQuery, modifiers) {
   const { cm } = ctx;
   let nextMatch;
-  cm.operation(function() {
+  cm.operation(function () {
     const state = getSearchState(cm, query);
     const pos = getCursorPos(newQuery, rev, state);
 
@@ -235,7 +235,7 @@ function searchNext(ctx, rev, query, newQuery, modifiers) {
 
 function findNextOnLine(ctx, rev, query, newQuery, modifiers, line, ch) {
   const { cm, ed } = ctx;
-  cm.operation(function() {
+  cm.operation(function () {
     const pos = { line: line - 1, ch };
     let cursor = getSearchCursor(cm, query, pos, modifiers);
 

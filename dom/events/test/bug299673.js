@@ -18,16 +18,16 @@ function OpenWindow() {
   popup.document.write(output);
   popup.document.close();
 
-  popup.document.onclick = function(event) {
+  popup.document.onclick = function (event) {
     log(event, "popup-doc");
   };
-  popup.document.onfocus = function(event) {
+  popup.document.onfocus = function (event) {
     log(event, "popup-doc");
   };
-  popup.document.onblur = function(event) {
+  popup.document.onblur = function (event) {
     log(event, "popup-doc");
   };
-  popup.document.onchange = function(event) {
+  popup.document.onchange = function (event) {
     log(event, "popup-doc");
   };
 
@@ -63,16 +63,16 @@ function log(event, message) {
     "\n";
 }
 
-document.onclick = function(event) {
+document.onclick = function (event) {
   log(event, "top-doc");
 };
-document.onfocus = function(event) {
+document.onfocus = function (event) {
   log(event, "top-doc");
 };
-document.onblur = function(event) {
+document.onblur = function (event) {
   log(event, "top-doc");
 };
-document.onchange = function(event) {
+document.onchange = function (event) {
   log(event, "top-doc");
 };
 
@@ -107,7 +107,7 @@ function doTest1_rest1(expectedEventLog, focusAfterCloseId) {
     popup = null;
     p.close();
 
-    SimpleTest.waitForFocus(function() {
+    SimpleTest.waitForFocus(function () {
       doTest1_rest2(expectedEventLog, focusAfterCloseId);
     }, window);
   } catch (e) {
@@ -125,7 +125,7 @@ function doTest1(expectedEventLog, focusAfterCloseId) {
     is(document.activeElement, select1, "select element should be focused");
     synthesizeKey("KEY_ArrowDown");
     synthesizeKey("KEY_Tab");
-    SimpleTest.waitForFocus(function() {
+    SimpleTest.waitForFocus(function () {
       doTest1_rest1(expectedEventLog, focusAfterCloseId);
     }, popup);
   } catch (e) {
@@ -143,7 +143,7 @@ function setPrefAndDoTest(expectedEventLog, focusAfterCloseId, prefValue) {
   log({}, "Test with browser.link.open_newwindow = " + prefValue);
   SpecialPowers.pushPrefEnv(
     { set: [["browser.link.open_newwindow", prefValue]] },
-    function() {
+    function () {
       doTest1(expectedEventLog, focusAfterCloseId);
     }
   );

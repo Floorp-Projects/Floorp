@@ -17,8 +17,8 @@ add_task(async function test() {
   let tabName = adjustedCerts[0].tabName;
   let certItems = adjustedCerts[0].certItems;
 
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
-    await SpecialPowers.spawn(browser, [[certItems, tabName]], async function([
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
+    await SpecialPowers.spawn(browser, [[certItems, tabName]], async function ([
       adjustedCerts,
       expectedTabName,
     ]) {

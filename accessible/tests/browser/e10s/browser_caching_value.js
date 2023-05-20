@@ -219,7 +219,7 @@ addAccessibleTask(
   <progress id="progress" value="22" max="100"></progress>
   <input type="range" id="range" min="0" max="10" value="6">
   <div contenteditable="yes" role="textbox" id="textbox">Some <a href="#">rich</a> text</div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     for (let { desc, id, action, attrs, expected, waitFor } of valueTests) {
       info(desc);
       let acc = findAccessibleChildByID(accDoc, id);
@@ -254,7 +254,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<a id="link" href="https://example.com/">Test</a>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const link = findAccessibleChildByID(docAcc, "link");
     is(link.value, "https://example.com/", "link initial value correct");
     const textLeaf = link.firstChild;
@@ -292,7 +292,7 @@ addAccessibleTask(
     <option id="first_option">First</option>
     <option id="second_option">Second</option>
   </select>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const select = findAccessibleChildByID(docAcc, "select");
     is(select.value, "First", "Select initial value correct");
 
@@ -380,7 +380,7 @@ addAccessibleTask(
     </div>
   </div>
 `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const comboDiv1 = findAccessibleChildByID(docAcc, "combo-div-1");
     const comboDiv2 = findAccessibleChildByID(docAcc, "combo-div-2");
     const comboDiv3 = findAccessibleChildByID(docAcc, "combo-div-3");

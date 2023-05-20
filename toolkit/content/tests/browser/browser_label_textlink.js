@@ -1,9 +1,9 @@
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences" },
-    async function(browser) {
+    async function (browser) {
       let newTabURL = "http://www.example.com/";
-      await SpecialPowers.spawn(browser, [newTabURL], async function(
+      await SpecialPowers.spawn(browser, [newTabURL], async function (
         newTabURL
       ) {
         let doc = content.document;

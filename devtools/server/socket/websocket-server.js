@@ -95,7 +95,7 @@ function writeString(output, data) {
  * Read HTTP request from async input stream.
  * @return Request line (string) and Map of header names and values.
  */
-const readHttpRequest = async function(input) {
+const readHttpRequest = async function (input) {
   let requestLine = "";
   const headers = new Map();
 
@@ -190,7 +190,7 @@ function computeKey(key) {
 /**
  * Perform the server part of a WebSocket opening handshake on an incoming connection.
  */
-const serverHandshake = async function(input, output) {
+const serverHandshake = async function (input, output) {
   // Read the request
   const request = await readHttpRequest(input);
 
@@ -218,7 +218,7 @@ const serverHandshake = async function(input, output) {
  * Performs the WebSocket handshake and waits for the WebSocket to open.
  * Returns Promise with a WebSocket ready to send and receive messages.
  */
-const accept = async function(transport, input, output) {
+const accept = async function (transport, input, output) {
   await serverHandshake(input, output);
 
   const transportProvider = {

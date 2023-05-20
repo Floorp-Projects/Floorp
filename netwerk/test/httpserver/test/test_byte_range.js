@@ -8,11 +8,11 @@
 // correct data.
 
 var srv;
-XPCOMUtils.defineLazyGetter(this, "PREFIX", function() {
+XPCOMUtils.defineLazyGetter(this, "PREFIX", function () {
   return "http://localhost:" + srv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, "tests", function() {
+XPCOMUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(
       PREFIX + "/range.txt",

@@ -52,7 +52,7 @@ add_task(async function initialState() {
         gBrowser,
         url: "about:preferences#privacy",
       },
-      async function(browser) {
+      async function (browser) {
         let doc = browser.contentDocument;
         let generatePasswordsCheckbox = doc.getElementById("generatePasswords");
         let autofillFormsCheckbox = doc.getElementById(
@@ -126,7 +126,7 @@ add_task(async function toggleGenerationEnabled() {
       gBrowser,
       url: "about:preferences#privacy",
     },
-    async function(browser) {
+    async function (browser) {
       let doc = browser.contentDocument;
       let checkbox = doc.getElementById("generatePasswords");
 
@@ -169,7 +169,7 @@ add_task(async function toggleRememberSignon() {
       gBrowser,
       url: "about:preferences#privacy",
     },
-    async function(browser) {
+    async function (browser) {
       let doc = browser.contentDocument;
       let checkbox = doc.getElementById("savePasswords");
       let generationCheckbox = doc.getElementById("generatePasswords");

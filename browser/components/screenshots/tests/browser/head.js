@@ -35,7 +35,7 @@ const MouseEvents = {
     {},
     {
       get: (target, name) =>
-        async function(x, y, selector = ":root") {
+        async function (x, y, selector = ":root") {
           if (name === "click") {
             this.down(x, y);
             this.up(x, y);
@@ -383,7 +383,7 @@ class ScreenshotsHelper {
    *   scrollWidth The scrollable width
    */
   getContentDimensions() {
-    return SpecialPowers.spawn(this.browser, [], async function() {
+    return SpecialPowers.spawn(this.browser, [], async function () {
       let { innerWidth, innerHeight, scrollMaxX, scrollMaxY } = content.window;
       let width = innerWidth + scrollMaxX;
       let height = innerHeight + scrollMaxY;
@@ -459,7 +459,7 @@ class ScreenshotsHelper {
    * @param eleSel The selector for the element to click
    */
   async clickUIElement(eleSel) {
-    await SpecialPowers.spawn(this.browser, [eleSel], async function(
+    await SpecialPowers.spawn(this.browser, [eleSel], async function (
       eleSelector
     ) {
       info(
@@ -516,7 +516,9 @@ class ScreenshotsHelper {
     // We are going to load the image in the content page to measure its size.
     // We don't want to insert the image directly in the browser's document
     // which could mess all sorts of things up
-    return SpecialPowers.spawn(this.browser, [buffer], async function(_buffer) {
+    return SpecialPowers.spawn(this.browser, [buffer], async function (
+      _buffer
+    ) {
       const img = content.document.createElement("img");
       const loaded = new Promise(r => {
         img.addEventListener("load", r, { once: true });
@@ -620,7 +622,7 @@ add_setup(async () => {
 });
 
 function getContentDevicePixelRatio(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     return content.window.devicePixelRatio;
   });
 }

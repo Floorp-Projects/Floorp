@@ -18,7 +18,7 @@ function load_cert(cert, trust) {
   return addCertFromFile(certDB, file, trust);
 }
 
-add_task(async function() {
+add_task(async function () {
   load_cert("ca", "CTu,CTu,CTu");
   let int_cert = load_cert("int-limited-depth", "CTu,CTu,CTu");
   let file =

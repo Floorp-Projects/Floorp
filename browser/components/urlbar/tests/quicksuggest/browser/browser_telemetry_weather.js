@@ -19,7 +19,7 @@ const position = index + 1;
 const { TELEMETRY_SCALARS: WEATHER_SCALARS } = UrlbarProviderWeather;
 const { WEATHER_SUGGESTION: suggestion } = MerinoTestUtils;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Make sure quick actions are disabled because showing them in the top
@@ -35,7 +35,7 @@ add_setup(async function() {
   await updateTopSitesAndAwaitChanged();
 });
 
-add_task(async function() {
+add_task(async function () {
   await doTelemetryTest({
     index,
     suggestion,

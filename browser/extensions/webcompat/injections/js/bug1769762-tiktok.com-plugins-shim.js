@@ -24,8 +24,8 @@ const pluginsArray = new window.wrappedJSObject.Array();
 Object.setPrototypeOf(pluginsArray, PluginArray.prototype);
 
 Object.defineProperty(navigator.wrappedJSObject, "plugins", {
-  get: exportFunction(function() {
+  get: exportFunction(function () {
     return pluginsArray;
   }, window),
-  set: exportFunction(function(val) {}, window),
+  set: exportFunction(function (val) {}, window),
 });

@@ -18,11 +18,11 @@ const {
 
 const actions = require("resource://devtools/client/webconsole/actions/index.js");
 
-loader.lazyGetter(this, "REPS", function() {
+loader.lazyGetter(this, "REPS", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .REPS;
 });
-loader.lazyGetter(this, "MODE", function() {
+loader.lazyGetter(this, "MODE", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .MODE;
 });

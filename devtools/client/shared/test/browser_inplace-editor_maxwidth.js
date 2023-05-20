@@ -15,7 +15,7 @@ const LONG_TEXT =
 // Test the inplace-editor behavior with a maxWidth configuration option
 // defined.
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8,inplace editor max width tests");
   const { host, doc } = await createHost();
 
@@ -37,7 +37,7 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
 });
 
-const testMaxWidth = async function(editor) {
+const testMaxWidth = async function (editor) {
   is(editor.input.value, START_TEXT, "Span text content should be used");
   ok(
     editor.input.offsetWidth < MAX_WIDTH,

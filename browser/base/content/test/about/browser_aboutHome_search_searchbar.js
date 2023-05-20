@@ -16,12 +16,12 @@ add_task(async function test_setup() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Cmd+k should focus the search box in the toolbar when it's present");
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:home" },
-    async function(browser) {
+    async function (browser) {
       await BrowserTestUtils.synthesizeMouseAtCenter("#brandLogo", {}, browser);
 
       let doc = window.document;

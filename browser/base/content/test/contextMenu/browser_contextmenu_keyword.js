@@ -63,7 +63,7 @@ add_task(async function test_text_input_spellcheck_noform() {
         await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
           [],
-          async function() {
+          async function () {
             let doc = content.document;
             let input = doc.getElementById("input_text_no_form");
             input.setAttribute("spellcheck", "true");
@@ -122,7 +122,7 @@ add_task(async function test_text_input_spellcheck_loginform() {
         await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
           [],
-          async function() {
+          async function () {
             let doc = content.document;
             let input = doc.getElementById("login_text");
             input.setAttribute("spellcheck", "true");
@@ -181,7 +181,7 @@ add_task(async function test_text_input_spellcheck_searchform() {
         await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
           [],
-          async function() {
+          async function () {
             let doc = content.document;
             let input = doc.getElementById("search_text");
             input.setAttribute("spellcheck", "true");

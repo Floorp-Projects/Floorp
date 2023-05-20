@@ -10,7 +10,7 @@ const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-console-table.html";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   function Person(firstName, lastName) {
@@ -403,7 +403,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [testCases.map(({ input, headers }) => ({ input, headers }))],
-    function(tests) {
+    function (tests) {
       tests.forEach(test => {
         let { input, headers } = test;
         if (input === "PERFORMANCE_ENTRIES") {

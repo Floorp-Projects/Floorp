@@ -10,7 +10,7 @@
 
 const TEST_URL = "about:mozilla";
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
 
   let toolbar = document.getElementById("PersonalToolbar");
@@ -94,7 +94,7 @@ add_task(async function test_remove_bookmark_from_library() {
   // Open the Library and select the "UnfiledBookmarks".
   let library = await promiseLibrary("UnfiledBookmarks");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await promiseLibraryClosed(library);
   });
 

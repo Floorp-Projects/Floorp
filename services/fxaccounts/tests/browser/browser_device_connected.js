@@ -10,13 +10,13 @@ const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
 );
 const DEVICES_URL = "https://example.com/devices";
 
-add_setup(async function() {
+add_setup(async function () {
   const origManageDevicesURI = FxAccounts.config.promiseManageDevicesURI;
   FxAccounts.config.promiseManageDevicesURI = () =>
     Promise.resolve(DEVICES_URL);
   setupMockAlertsService();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     FxAccounts.config.promiseManageDevicesURI = origManageDevicesURI;
     delete window.FxAccounts;
   });
@@ -39,10 +39,10 @@ async function testDeviceConnected(deviceName) {
   BrowserTestUtils.removeTab(tab);
 }
 
-add_task(async function() {
+add_task(async function () {
   await testDeviceConnected("My phone");
 });
 
-add_task(async function() {
+add_task(async function () {
   await testDeviceConnected(null);
 });

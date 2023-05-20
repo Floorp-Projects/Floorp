@@ -111,9 +111,7 @@ add_task(async function test_management_get_self_complete() {
     extInfo.optionsUrl.endsWith(manifest.options_ui.page),
     "getSelf returned the expected optionsUrl"
   );
-  for (let [index, size] of Object.keys(manifest.icons)
-    .sort()
-    .entries()) {
+  for (let [index, size] of Object.keys(manifest.icons).sort().entries()) {
     let iconUrl = `${extInfo.url}${manifest.icons[size]}`;
     equal(
       extInfo.icons[index].size,

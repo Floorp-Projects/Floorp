@@ -227,7 +227,7 @@ var NativeApp = class extends EventEmitter {
   _startStderrRead() {
     let proc = this.proc;
     let app = this.name;
-    (async function() {
+    (async function () {
       let partial = "";
       while (true) {
         let data = await proc.stderr.readString();

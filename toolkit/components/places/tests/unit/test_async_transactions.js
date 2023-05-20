@@ -116,7 +116,7 @@ function run_test() {
     ],
     observer.handlePlacesEvents
   );
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     obsvc.removeListener(
       [
         "bookmark-added",
@@ -493,7 +493,7 @@ add_task(async function test_recycled_transactions() {
   ensureTransactThrowsFor(txn_a);
 
   let txn_b = PT.NewFolder(createTestFolderInfo());
-  await PT.batch(async function() {
+  await PT.batch(async function () {
     try {
       await txn_a.transact();
       do_throw("Shouldn't be able to use the same transaction twice");
@@ -528,7 +528,7 @@ add_task(async function test_new_folder_with_children() {
   let txn = PT.NewFolder(folder_info);
   folder_info.guid = await txn.transact();
   let originalInfo = await PlacesUtils.promiseBookmarksTree(folder_info.guid);
-  let ensureDo = async function(aRedo = false) {
+  let ensureDo = async function (aRedo = false) {
     ensureUndoState([[txn]], 0);
     ensureItemsAdded(folder_info);
     if (aRedo) {
@@ -579,7 +579,7 @@ add_task(async function test_new_bookmark() {
   bm_info.guid = await txn.transact();
 
   let originalInfo = await PlacesUtils.promiseBookmarksTree(bm_info.guid);
-  let ensureDo = async function(aRedo = false) {
+  let ensureDo = async function (aRedo = false) {
     ensureUndoState([[txn]], 0);
     await ensureItemsAdded(bm_info);
     if (aRedo) {
@@ -617,7 +617,7 @@ add_task(async function test_merge_create_folder_and_item() {
     index: bmStartIndex,
   };
 
-  let [folderTxnResult, bkmTxnResult] = await PT.batch(async function() {
+  let [folderTxnResult, bkmTxnResult] = await PT.batch(async function () {
     let folderTxn = PT.NewFolder(folder_info);
     folder_info.guid = bm_info.parentGuid = await folderTxn.transact();
     let bkmTxn = PT.NewBookmark(bm_info);
@@ -625,7 +625,7 @@ add_task(async function test_merge_create_folder_and_item() {
     return [folderTxn, bkmTxn];
   });
 
-  let ensureDo = async function() {
+  let ensureDo = async function () {
     ensureUndoState([[bkmTxnResult, folderTxnResult]], 0);
     await ensureItemsAdded(folder_info, bm_info);
     observer.reset();
@@ -659,7 +659,7 @@ add_task(async function test_move_items_to_folder() {
     folder_a_txn_result,
     bkm_a_txn_result,
     bkm_b_txn_result,
-  ] = await PT.batch(async function() {
+  ] = await PT.batch(async function () {
     let folder_a_txn = PT.NewFolder(folder_a_info);
 
     folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid = await folder_a_txn.transact();
@@ -813,7 +813,7 @@ add_task(async function test_move_multiple_items_to_folder() {
     bkm_a_txn_result,
     bkm_b_txn_result,
     bkm_c_txn_result,
-  ] = await PT.batch(async function() {
+  ] = await PT.batch(async function () {
     let folder_a_txn = PT.NewFolder(folder_a_info);
 
     folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid = bkm_c_info.parentGuid = await folder_a_txn.transact();
@@ -1032,7 +1032,7 @@ add_task(async function test_remove_folder() {
   let folder_level_1_info = createTestFolderInfo("Folder Level 1");
   let folder_level_2_info = { title: "Folder Level 2" };
   let [folder_level_1_txn_result, folder_level_2_txn_result] = await PT.batch(
-    async function() {
+    async function () {
       let folder_level_1_txn = PT.NewFolder(folder_level_1_info);
       folder_level_1_info.guid = await folder_level_1_txn.transact();
       folder_level_2_info.parentGuid = folder_level_1_info.guid;
@@ -1298,7 +1298,7 @@ add_task(async function test_creating_and_removing_a_separator() {
   let undoEntries = [];
 
   observer.reset();
-  let create_txns = await PT.batch(async function() {
+  let create_txns = await PT.batch(async function () {
     let folder_txn = PT.NewFolder(folder_info);
     folder_info.guid = separator_info.parentGuid = await folder_txn.transact();
     let separator_txn = PT.NewSeparator(separator_info);
@@ -1662,7 +1662,7 @@ add_task(async function test_tag_uri() {
   };
   let unbookmarked_uri = "http://un.bookmarked.uri";
 
-  await PT.batch(async function() {
+  await PT.batch(async function () {
     bm_info_a.guid = await PT.NewBookmark(bm_info_a).transact();
     bm_info_b.guid = await PT.NewBookmark(bm_info_b).transact();
   });
@@ -1736,7 +1736,7 @@ add_task(async function test_untag_uri() {
     tag: "B",
   };
 
-  await PT.batch(async function() {
+  await PT.batch(async function () {
     bm_info_a.guid = await PT.NewBookmark(bm_info_a).transact();
     ensureTagsForURI(bm_info_a.url, bm_info_a.tags);
     bm_info_b.guid = await PT.NewBookmark(bm_info_b).transact();
@@ -1817,7 +1817,7 @@ add_task(async function test_sort_folder_by_name() {
     sep,
     ...postSep.slice(0).reverse(),
   ];
-  await PT.batch(async function() {
+  await PT.batch(async function () {
     folder_info.guid = await PT.NewFolder(folder_info).transact();
     for (let info of originalOrder) {
       info.parentGuid = folder_info.guid;
@@ -1888,7 +1888,7 @@ add_task(async function test_copy() {
   let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
   Preferences.set("privacy.reduceTimerPrecision", false);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 
@@ -1910,7 +1910,7 @@ add_task(async function test_copy() {
   }
 
   // Test duplicating a folder having some contents.
-  let filledFolderGuid = await PT.batch(async function() {
+  let filledFolderGuid = await PT.batch(async function () {
     let folderGuid = await PT.NewFolder(createTestFolderInfo()).transact();
     let nestedFolderGuid = await PT.NewFolder({
       parentGuid: folderGuid,
@@ -1946,7 +1946,7 @@ add_task(async function test_array_input_for_batch() {
   await PT.batch([sep1_txn, sep2_txn]);
   ensureUndoState([[sep2_txn, sep1_txn], [folderTxn]], 0);
 
-  let ensureChildCount = async function(count) {
+  let ensureChildCount = async function (count) {
     let tree = await PlacesUtils.promiseBookmarksTree(folderGuid);
     if (count == 0) {
       Assert.ok(!("children" in tree));
@@ -1992,7 +1992,7 @@ add_task(async function test_invalid_uri_spec_throws() {
 
 add_task(async function test_remove_multiple() {
   let guids = [];
-  await PT.batch(async function() {
+  await PT.batch(async function () {
     let folderGuid = await PT.NewFolder({
       title: "Test Folder",
       parentGuid: menuGuid,

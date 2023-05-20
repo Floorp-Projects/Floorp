@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   const childContent =
     "<div style='position: absolute; left: 2200px; background: green; width: 200px; height: 200px;'>" +
     "div</div><div  style='position: absolute; left: 0px; background: red; width: 200px; height: 200px;'>" +
@@ -31,7 +31,7 @@ add_task(async function() {
   await scrollPromise;
 
   // Wait for one paint to ensure we've processed the previous key events and scrolling.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     return new Promise(resolve => {
       content.requestAnimationFrame(() => {
         content.setTimeout(resolve, 0);
@@ -46,7 +46,7 @@ add_task(async function() {
   EventUtils.synthesizeKey("g", { accelKey: true });
   await scrollPromise;
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     Assert.ok(
       content.document.getElementById("s").getBoundingClientRect().left >= 0,
       "scroll should include find result"

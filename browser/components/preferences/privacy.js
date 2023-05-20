@@ -49,7 +49,7 @@ const { BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN } = Ci.nsICookieService;
 
 const PASSWORD_MANAGER_PREF_ID = "services.passwordSavingEnabled";
 
-XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
+XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function () {
   try {
     let alertsService = Cc["@mozilla.org/alerts-service;1"]
       .getService(Ci.nsIAlertsService)
@@ -899,19 +899,19 @@ var gPrivacyPane = {
       "change",
       gPrivacyPane.updatePrivacyMicroControls.bind(gPrivacyPane)
     );
-    setEventListener("historyMode", "command", function() {
+    setEventListener("historyMode", "command", function () {
       gPrivacyPane.updateHistoryModePane();
       gPrivacyPane.updateHistoryModePrefs();
       gPrivacyPane.updatePrivacyMicroControls();
       gPrivacyPane.updateAutostart();
     });
-    setEventListener("clearHistoryButton", "command", function() {
+    setEventListener("clearHistoryButton", "command", function () {
       let historyMode = document.getElementById("historyMode");
       // Select "everything" in the clear history dialog if the
       // user has set their history mode to never remember history.
       gPrivacyPane.clearPrivateDataNow(historyMode.value == "dontremember");
     });
-    setEventListener("openSearchEnginePreferences", "click", function(event) {
+    setEventListener("openSearchEnginePreferences", "click", function (event) {
       if (event.button == 0) {
         gotoPref("search");
       }
@@ -2304,7 +2304,7 @@ var gPrivacyPane = {
   },
 
   updateTotalDataSizeLabel(siteDataUsage) {
-    SiteDataManager.getCacheSize().then(function(cacheUsage) {
+    SiteDataManager.getCacheSize().then(function (cacheUsage) {
       let totalSiteDataSizeLabel = document.getElementById("totalSiteDataSize");
       let totalUsage = siteDataUsage + cacheUsage;
       let [value, unit] = DownloadUtils.convertByteUnits(totalUsage);
@@ -3011,7 +3011,7 @@ var gPrivacyPane = {
       "browser.safebrowsing.downloads.remote.block_uncommon"
     );
 
-    enableSafeBrowsing.addEventListener("command", function() {
+    enableSafeBrowsing.addEventListener("command", function () {
       safeBrowsingPhishingPref.value = enableSafeBrowsing.checked;
       safeBrowsingMalwarePref.value = enableSafeBrowsing.checked;
 
@@ -3024,7 +3024,7 @@ var gPrivacyPane = {
         blockUncommonPref.locked;
     });
 
-    blockDownloads.addEventListener("command", function() {
+    blockDownloads.addEventListener("command", function () {
       blockDownloadsPref.value = blockDownloads.checked;
       blockUncommonUnwanted.disabled =
         !blockDownloads.checked ||
@@ -3032,7 +3032,7 @@ var gPrivacyPane = {
         blockUncommonPref.locked;
     });
 
-    blockUncommonUnwanted.addEventListener("command", function() {
+    blockUncommonUnwanted.addEventListener("command", function () {
       blockUnwantedPref.value = blockUncommonUnwanted.checked;
       blockUncommonPref.value = blockUncommonUnwanted.checked;
 
@@ -3206,7 +3206,7 @@ var gPrivacyPane = {
       "toolkit.crashreporter.infoURL",
       "crashReporterLearnMore"
     );
-    setEventListener("crashReporterLabel", "click", function(event) {
+    setEventListener("crashReporterLabel", "click", function (event) {
       if (event.target.localName == "a") {
         return;
       }

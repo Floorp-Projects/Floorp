@@ -8,11 +8,11 @@ add_task(async function run_test() {
 
   // Try crashing by overflowing a thread's stack
   await do_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_STACK_OVERFLOW;
       crashReporter.annotateCrashReport("TestKey", "TestValue");
     },
-    async function(mdump, extra, extraFile) {
+    async function (mdump, extra, extraFile) {
       Assert.equal(extra.TestKey, "TestValue");
     },
     // process will exit with a zero exit status

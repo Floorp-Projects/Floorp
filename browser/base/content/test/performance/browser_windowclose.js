@@ -20,7 +20,7 @@ const EXPECTED_REFLOWS = [
  * window is closed, the test waits until the original window
  * has activated.
  */
-add_task(async function() {
+add_task(async function () {
   // Ensure that this browser window starts focused. This seems to be
   // necessary to avoid intermittent failures when running this test
   // on repeat.
@@ -43,7 +43,7 @@ add_task(async function() {
   );
 
   await withPerfObserver(
-    async function() {
+    async function () {
       let promiseOrigBrowserFocused = TestUtils.waitForCondition(() => {
         return Services.focus.activeWindow == window;
       });

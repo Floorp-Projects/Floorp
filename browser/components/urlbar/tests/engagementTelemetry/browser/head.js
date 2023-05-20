@@ -417,7 +417,7 @@ async function setup() {
   );
   await Services.search.moveEngine(engine, 0);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await SpecialPowers.popPrefEnv();
     await Services.search.setDefault(
       originalDefaultEngine,

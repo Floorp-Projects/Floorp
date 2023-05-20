@@ -14,7 +14,7 @@ const INNER_HTML_FRAME_URI =
  * Check that focusing an input in a frame with type=content embedded in a xul
  * document does not leak.
  */
-add_task(async function() {
+add_task(async function () {
   const doc = gBrowser.ownerDocument;
   const linkedBrowser = gBrowser.selectedTab.linkedBrowser;
   const browserContainer = gBrowser.getBrowserContainer(linkedBrowser);

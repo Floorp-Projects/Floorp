@@ -82,7 +82,7 @@ addAccessibleTask(
   <p id="pWithLink">d<a id="link" href="https://example.com/">e</a><span id="textAfterLink">f</span></p>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     queryInterfaces(docAcc, [nsIAccessibleText]);
 
     const textarea = findAccessibleChildByID(docAcc, "textarea", [
@@ -256,7 +256,7 @@ addAccessibleTask(
 <button id="before">Before</button>
 <input id="input" value="test">
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     // The tab order is different when there's an iframe, so focus a control
     // before the input to make tab consistent.
     info("Focusing before");
@@ -307,7 +307,7 @@ addAccessibleTask(
     <li id="li">Number one</li>
   </ol>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const paragraph = findAccessibleChildByID(docAcc, "paragraph", [
       nsIAccessibleText,
     ]);

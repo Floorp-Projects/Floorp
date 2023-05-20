@@ -37,7 +37,7 @@ add_task(async function test_mock_mute_button() {
     await toggleMute(browser, pipWin);
     ok(await isVideoMuted(browser, videoID), "The audio is muted.");
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let muteButton = content.document.querySelector(".mute-button");
       ok(
         muteButton.getAttribute("isMuted"),
@@ -49,7 +49,7 @@ add_task(async function test_mock_mute_button() {
     await toggleMute(browser, pipWin);
     ok(!(await isVideoMuted(browser, videoID)), "The audio is playing.");
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let muteButton = content.document.querySelector(".mute-button");
       ok(
         !muteButton.getAttribute("isMuted"),
@@ -128,7 +128,7 @@ add_task(async function test_volume_change_with_keyboard() {
     EventUtils.synthesizeKey("KEY_ArrowUp", {}, pipWin);
     ok(!(await isVideoMuted(browser, videoID)), "The audio is still playing.");
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let video = content.document.querySelector("video");
       ok(!video.muted, "Video should be unmuted.");
     });
@@ -153,7 +153,7 @@ async function toggleMute(browser, pipWin) {
 }
 
 async function setupVideoListeners(browser) {
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let video = content.document.querySelector("video");
 
     // Set a listener for "playing" event

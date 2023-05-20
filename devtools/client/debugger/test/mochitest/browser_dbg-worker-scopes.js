@@ -8,7 +8,7 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(/Current state is running/);
 PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
 
 // Test that unusual objects have their contents shown in worker thread scopes.
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-worker-scopes.html", "scopes-worker.js");
 
   await selectSource(dbg, "scopes-worker.js");

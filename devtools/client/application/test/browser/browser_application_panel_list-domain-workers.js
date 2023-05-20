@@ -15,7 +15,7 @@ const EMPTY_URL = (URL_ROOT + "resources/service-workers/empty.html").replace(
   "test2.example.com"
 );
 
-add_task(async function() {
+add_task(async function () {
   await enableApplicationPanel();
 
   const { panel, commands, tab } = await openNewTabAndApplicationPanel(

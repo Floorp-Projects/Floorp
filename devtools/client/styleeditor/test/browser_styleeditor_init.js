@@ -20,7 +20,7 @@ const EXPECTED_SHEETS = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "The UI contains two style sheets.");

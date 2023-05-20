@@ -112,7 +112,7 @@ export class StructuredLogger {
     deviceinfo = null,
     extra = null
   ) {
-    Object.keys(ids).map(function(manifest) {
+    Object.keys(ids).map(function (manifest) {
       ids[manifest] = ids[manifest].map(x => this.#testId(x));
     }, this);
     var data = { tests: ids };

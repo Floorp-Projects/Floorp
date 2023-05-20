@@ -13,12 +13,12 @@ const URL =
   "<script>document.body.firstElementChild.focus()</script></body>";
 
 function getFocusedLocalName(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     return content.document.activeElement.localName;
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   let testTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
 
   let browser = testTab.linkedBrowser;

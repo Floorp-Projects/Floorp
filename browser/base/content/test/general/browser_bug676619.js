@@ -36,7 +36,7 @@ function waitForNewWindow() {
 
 async function waitForFilePickerTest(link, name) {
   let filePickerShownPromise = new Promise(resolve => {
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       ok(true, "Filepicker shown.");
       is(name, fp.defaultString, " filename matches download name");
       setTimeout(resolve, 0);
@@ -168,7 +168,7 @@ async function setDownloadDir() {
   );
   // Create this dir if it doesn't exist (ignores existing dirs)
   await IOUtils.makeDirectory(tmpDir);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     try {
       await IOUtils.remove(tmpDir, { recursive: true });
     } catch (e) {
@@ -181,7 +181,7 @@ async function setDownloadDir() {
   Services.prefs.setCharPref("browser.download.dir", tmpDir);
 }
 
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(3);
   waitForExplicitFinish();
 

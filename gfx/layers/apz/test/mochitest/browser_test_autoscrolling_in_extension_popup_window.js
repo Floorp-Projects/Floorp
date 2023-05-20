@@ -74,7 +74,7 @@ add_task(async () => {
             </ul>
           </body>
         </html>`,
-      "popup.js": function() {
+      "popup.js": function () {
         window.addEventListener(
           "mousemove",
           () => {

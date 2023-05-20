@@ -13,7 +13,7 @@ Services.scriptloader.loadSubScript(
  * Test for preference of DebugTargetPane collapsibilities.
  */
 
-add_task(async function() {
+add_task(async function () {
   prepareCollapsibilitiesTest();
 
   const { document, tab, window } = await openAboutDebugging();

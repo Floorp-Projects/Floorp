@@ -28,7 +28,7 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.pushPrefEnv({
         set: [["pdfjs.annotationEditorMode", 0]],
       });
@@ -87,7 +87,7 @@ add_task(async function test() {
 
       Assert.equal(Glean.pdfjs.editing.print.testGetValue(), 1);
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         var viewer = content.wrappedJSObject.PDFViewerApplication;
         await viewer.close();
       });

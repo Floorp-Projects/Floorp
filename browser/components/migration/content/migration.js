@@ -104,58 +104,58 @@ var MigrationWizard = {
 
     this._setSourceForDataLocalization();
 
-    document.addEventListener("wizardcancel", function() {
+    document.addEventListener("wizardcancel", function () {
       MigrationWizard.onWizardCancel();
     });
 
     document
       .getElementById("selectProfile")
-      .addEventListener("pageshow", function() {
+      .addEventListener("pageshow", function () {
         MigrationWizard.onSelectProfilePageShow();
       });
     document
       .getElementById("importItems")
-      .addEventListener("pageshow", function() {
+      .addEventListener("pageshow", function () {
         MigrationWizard.onImportItemsPageShow();
       });
     document
       .getElementById("migrating")
-      .addEventListener("pageshow", function() {
+      .addEventListener("pageshow", function () {
         MigrationWizard.onMigratingPageShow();
       });
-    document.getElementById("done").addEventListener("pageshow", function() {
+    document.getElementById("done").addEventListener("pageshow", function () {
       MigrationWizard.onDonePageShow();
     });
 
     document
       .getElementById("selectProfile")
-      .addEventListener("pagerewound", function() {
+      .addEventListener("pagerewound", function () {
         MigrationWizard.onSelectProfilePageRewound();
       });
     document
       .getElementById("importItems")
-      .addEventListener("pagerewound", function() {
+      .addEventListener("pagerewound", function () {
         MigrationWizard.onImportItemsPageRewound();
       });
 
     document
       .getElementById("selectProfile")
-      .addEventListener("pageadvanced", function() {
+      .addEventListener("pageadvanced", function () {
         MigrationWizard.onSelectProfilePageAdvanced();
       });
     document
       .getElementById("importItems")
-      .addEventListener("pageadvanced", function() {
+      .addEventListener("pageadvanced", function () {
         MigrationWizard.onImportItemsPageAdvanced();
       });
     document
       .getElementById("importPermissions")
-      .addEventListener("pageadvanced", function(e) {
+      .addEventListener("pageadvanced", function (e) {
         MigrationWizard.onImportPermissionsPageAdvanced(e);
       });
     document
       .getElementById("importSource")
-      .addEventListener("pageadvanced", function(e) {
+      .addEventListener("pageadvanced", function (e) {
         MigrationWizard.onImportSourcePageAdvanced(e);
       });
 

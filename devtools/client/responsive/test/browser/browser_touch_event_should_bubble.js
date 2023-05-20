@@ -7,13 +7,13 @@
 
 const TEST_URL = `${URL_ROOT}touch_event_bubbles.html`;
 
-addRDMTask(TEST_URL, async function({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   info("Toggling on touch simulation.");
   reloadOnTouchChange(true);
   await toggleTouchSimulation(ui);
 
   info("Test that touch event bubbles.");
-  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function () {
     const outerDiv = content.document.getElementById("outer");
     const span = content.document.querySelector("span");
 

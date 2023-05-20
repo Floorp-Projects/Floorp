@@ -169,7 +169,7 @@ function getContextChildManagerGetter(
   { envType },
   ChildAPIManagerClass = ChildAPIManager
 ) {
-  return function() {
+  return function () {
     let apiManager =
       envType === "devtools_parent"
         ? devtoolsAPIManager
@@ -302,7 +302,7 @@ class ExtensionBaseContextChild extends BaseContext {
   }
 }
 
-defineLazyGetter(ExtensionBaseContextChild.prototype, "messenger", function() {
+defineLazyGetter(ExtensionBaseContextChild.prototype, "messenger", function () {
   return new Messenger(this);
 });
 

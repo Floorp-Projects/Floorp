@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.debugger.features.command-click", true);
   info(
     "Checking to see if command click will jump the debugger to another highlighted call."

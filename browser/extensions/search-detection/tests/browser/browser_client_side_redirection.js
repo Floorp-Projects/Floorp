@@ -78,7 +78,7 @@ async function testClientSideRedirect({
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   const searchEngineName = "test search engine";
 
   let searchEngine;

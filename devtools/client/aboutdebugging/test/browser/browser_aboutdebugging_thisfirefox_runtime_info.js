@@ -8,7 +8,7 @@
  * Also acts as basic sanity check for the default mock of the this-firefox client.
  */
 
-add_task(async function() {
+add_task(async function () {
   // Setup a mock for our runtime client factory to return the default THIS_FIREFOX client
   // when the client for the this-firefox runtime is requested.
   const runtimeClientFactoryMock = createRuntimeClientFactoryMock();

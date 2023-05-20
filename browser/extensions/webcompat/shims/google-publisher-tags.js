@@ -15,7 +15,7 @@
 if (window.googletag?.apiReady === undefined) {
   const version = "2021050601";
 
-  const noopthisfn = function() {
+  const noopthisfn = function () {
     return this;
   };
 
@@ -134,7 +134,7 @@ if (window.googletag?.apiReady === undefined) {
     await fireSlotEvent("impressionViewable", slot);
   };
 
-  const addEventListener = function(name, listener) {
+  const addEventListener = function (name, listener) {
     if (!eventCallbacks.has(name)) {
       eventCallbacks.set(name, new Set());
     }
@@ -142,7 +142,7 @@ if (window.googletag?.apiReady === undefined) {
     return this;
   };
 
-  const removeEventListener = function(name, listener) {
+  const removeEventListener = function (name, listener) {
     if (eventCallbacks.has(name)) {
       return eventCallbacks.get(name).delete(listener);
     }
@@ -488,7 +488,7 @@ if (window.googletag?.apiReady === undefined) {
     sizeMapping: () => new SizeMappingBuilder(),
   });
 
-  const run = function(fn) {
+  const run = function (fn) {
     if (typeof fn === "function") {
       try {
         fn.call(window);

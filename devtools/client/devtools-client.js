@@ -80,7 +80,7 @@ function DevToolsClient(transport) {
 }
 
 // Expose these to save callers the trouble of importing DebuggerSocket
-DevToolsClient.socketConnect = function(options) {
+DevToolsClient.socketConnect = function (options) {
   // Defined here instead of just copying the function to allow lazy-load
   return DebuggerSocket.connect(options);
 };
@@ -634,7 +634,7 @@ DevToolsClient.prototype = {
    *        is cancelled on the server.
    */
   purgeRequests(prefix = "") {
-    const reject = function(type, request) {
+    const reject = function (type, request) {
       // Server can send packets on its own and client only pass a callback
       // to expectReply, so that there is no request object.
       let msg;

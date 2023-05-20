@@ -69,7 +69,7 @@ async function verifyQueryString(browser, expected) {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.query_stripping.strip_list", "paramToStrip1 paramToStrip2"],
@@ -312,7 +312,7 @@ add_task(async function doTestsForLinkClickInIframe() {
             await new Promise(done => {
               frame.addEventListener(
                 "load",
-                function() {
+                function () {
                   done();
                 },
                 { capture: true, once: true }
@@ -502,7 +502,7 @@ add_task(async function doTestsForNoStrippingForIframeNavigation() {
             await new Promise(done => {
               frame.addEventListener(
                 "load",
-                function() {
+                function () {
                   done();
                 },
                 { capture: true, once: true }
@@ -754,7 +754,7 @@ add_task(async function doTestForAllowList() {
           await new Promise(done => {
             frame.addEventListener(
               "load",
-              function() {
+              function () {
                 done();
               },
               { capture: true, once: true }

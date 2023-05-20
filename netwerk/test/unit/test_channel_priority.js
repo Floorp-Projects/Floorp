@@ -73,7 +73,7 @@ function run_test() {
   if (!runningInParent) {
     // add a task to report test finished to parent process at the end of test queue,
     // since do_register_cleanup is not available in child xpcshell test script.
-    add_test(function() {
+    add_test(function () {
       do_send_remote_message("finished");
       run_next_test();
     });

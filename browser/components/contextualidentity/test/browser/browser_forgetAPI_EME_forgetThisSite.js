@@ -100,7 +100,7 @@ async function setupEMEKey(browser) {
   let keyInfo = generateKeyInfo(TEST_EME_KEY);
 
   // Setup the EME key.
-  let result = await SpecialPowers.spawn(browser, [keyInfo], async function(
+  let result = await SpecialPowers.spawn(browser, [keyInfo], async function (
     aKeyInfo
   ) {
     let access = await content.navigator.requestMediaKeySystemAccess(
@@ -120,7 +120,7 @@ async function setupEMEKey(browser) {
 
     // Insert the EME key.
     await new Promise(resolve => {
-      session.addEventListener("message", function(event) {
+      session.addEventListener("message", function (event) {
         session
           .update(aKeyInfo.keyObj)
           .then(() => {
@@ -166,7 +166,7 @@ async function checkEMEKey(browser, emeSessionId) {
   let keyInfo = generateKeyInfo(TEST_EME_KEY);
   keyInfo.sessionId = emeSessionId;
 
-  await SpecialPowers.spawn(browser, [keyInfo], async function(aKeyInfo) {
+  await SpecialPowers.spawn(browser, [keyInfo], async function (aKeyInfo) {
     let access = await content.navigator.requestMediaKeySystemAccess(
       "org.w3.clearkey",
       [
@@ -199,7 +199,7 @@ async function checkEMEKey(browser, emeSessionId) {
 // Test functions.
 //
 
-add_setup(async function() {
+add_setup(async function () {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [

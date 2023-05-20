@@ -16,7 +16,7 @@ const STYLE =
 const HTML = "<style>" + STYLE + "</style><div></div>";
 const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URL);
   const { inspector, boxmodel } = await openLayoutView();
   await selectNode("div", inspector);

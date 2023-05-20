@@ -55,8 +55,8 @@ async function contentTaskOverride() {
   );
 }
 
-add_task(async function() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+add_task(async function () {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     browser
   ) {
     await SpecialPowers.spawn(browser, [], contentTaskNoOverride);

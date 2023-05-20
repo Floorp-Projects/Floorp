@@ -114,14 +114,12 @@ function addTestTabs() {
 }
 
 function cleanup() {
-  Object.values(originToTabs)
-    .flat()
-    .forEach(BrowserTestUtils.removeTab);
+  Object.values(originToTabs).flat().forEach(BrowserTestUtils.removeTab);
   originToTabs = {};
   Services.obs.notifyObservers(null, "browser:purge-sessionStorage");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["network.cookie.cookieBehavior", 5]],
   });

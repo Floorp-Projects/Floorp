@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await addTab("about:blank");
 
   info(`Open browser console`);

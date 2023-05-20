@@ -380,7 +380,7 @@ add_task(async function test_sync_partialUpload() {
         ],
       },
     ]);
-    collection.post = function() {
+    collection.post = function () {
       throw new Error("Failure");
     };
 
@@ -901,7 +901,7 @@ add_task(async function test_submit_interval() {
   let telem = get_sync_test_telemetry();
   let oldSubmit = telem.submit;
   let numSubmissions = 0;
-  telem.submit = function() {
+  telem.submit = function () {
     numSubmissions += 1;
   };
 
@@ -1129,7 +1129,7 @@ add_task(async function test_no_ping_for_self_hosters() {
   await SyncTestingInfrastructure(server);
   try {
     let submitPromise = new Promise(resolve => {
-      telem.submit = function() {
+      telem.submit = function () {
         let result = oldSubmit.apply(this, arguments);
         resolve(result);
       };

@@ -10,7 +10,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
  * Verify adding `overflow:hidden;` styling to a div causes it to
  * get an accessible.
  */
-addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
+addAccessibleTask(`<p>hello world</p>`, async function (browser, docAcc) {
   const originalTree = { DOCUMENT: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }] };
 
   testAccessibleTree(docAcc, originalTree);
@@ -18,7 +18,7 @@ addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
   await contentSpawnMutation(
     browser,
     { unexpected: [[EVENT_REORDER, docAcc]] },
-    function() {
+    function () {
       const d = content.document.createElement("div");
       content.document.body.appendChild(d);
     }
@@ -29,7 +29,7 @@ addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
   await contentSpawnMutation(
     browser,
     { expected: [[EVENT_REORDER, docAcc]] },
-    function() {
+    function () {
       content.document.body.lastElementChild.setAttribute(
         "style",
         "overflow:hidden;"
@@ -46,7 +46,7 @@ addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
  * Verify adding `overflow:scroll;` styling to a div causes
  * it to  get an accessible.
  */
-addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
+addAccessibleTask(`<p>hello world</p>`, async function (browser, docAcc) {
   const originalTree = { DOCUMENT: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }] };
 
   testAccessibleTree(docAcc, originalTree);
@@ -54,7 +54,7 @@ addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
   await contentSpawnMutation(
     browser,
     { unexpected: [[EVENT_REORDER, docAcc]] },
-    function() {
+    function () {
       const d = content.document.createElement("div");
       content.document.body.appendChild(d);
     }
@@ -65,7 +65,7 @@ addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
   await contentSpawnMutation(
     browser,
     { expected: [[EVENT_REORDER, docAcc]] },
-    function() {
+    function () {
       content.document.body.lastElementChild.setAttribute(
         "style",
         "overflow:scroll;"
@@ -82,7 +82,7 @@ addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
  * Verify adding `overflow:auto;` styling to a div causes
  * it to get an accessible, but `overflow:visible` does not.
  */
-addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
+addAccessibleTask(`<p>hello world</p>`, async function (browser, docAcc) {
   const originalTree = { DOCUMENT: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }] };
 
   testAccessibleTree(docAcc, originalTree);
@@ -90,7 +90,7 @@ addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
   await contentSpawnMutation(
     browser,
     { unexpected: [[EVENT_REORDER, docAcc]] },
-    function() {
+    function () {
       const d = content.document.createElement("div");
       content.document.body.appendChild(d);
     }
@@ -101,7 +101,7 @@ addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
   await contentSpawnMutation(
     browser,
     { unexpected: [[EVENT_REORDER, docAcc]] },
-    function() {
+    function () {
       content.document.body.lastElementChild.setAttribute(
         "style",
         "overflow:visible;"
@@ -114,7 +114,7 @@ addAccessibleTask(`<p>hello world</p>`, async function(browser, docAcc) {
   await contentSpawnMutation(
     browser,
     { expected: [[EVENT_REORDER, docAcc]] },
-    function() {
+    function () {
       content.document.body.lastElementChild.setAttribute(
         "style",
         "overflow:auto;"

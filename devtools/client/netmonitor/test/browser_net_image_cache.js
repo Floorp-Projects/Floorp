@@ -7,7 +7,7 @@
  * Tests image caches can be displayed in the network monitor
  */
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(IMAGE_CACHE_URL, {
     enableCache: true,
     requestCount: 1,

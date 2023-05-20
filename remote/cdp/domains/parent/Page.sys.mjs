@@ -136,7 +136,7 @@ export class Page extends Domain {
         return;
       }
       let navigationRequestId, redirectedRequestId;
-      const _onNavigationRequest = function(_type, _ch, data) {
+      const _onNavigationRequest = function (_type, _ch, data) {
         const {
           url: requestURL,
           requestId,
@@ -153,7 +153,7 @@ export class Page extends Domain {
         }
       };
 
-      const _onRequestFinished = function(_type, _ch, data) {
+      const _onRequestFinished = function (_type, _ch, data) {
         const { requestId, errorCode } = data;
         if (
           redirectedRequestId !== requestId ||

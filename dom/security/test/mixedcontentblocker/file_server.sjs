@@ -39,7 +39,7 @@ function handleRequest(request, response) {
   var contentType = null;
   var uniqueID = null;
   var showLastRequest = false;
-  request.queryString.split("&").forEach(function(val) {
+  request.queryString.split("&").forEach(function (val) {
     var [name, value] = val.split("=");
     if (name == "type") {
       contentType = unescape(value);

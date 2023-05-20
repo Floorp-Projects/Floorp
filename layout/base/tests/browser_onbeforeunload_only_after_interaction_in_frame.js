@@ -5,7 +5,7 @@ const { PromptTestUtils } = ChromeUtils.importESModule(
 function pageScript() {
   window.addEventListener(
     "beforeunload",
-    function(event) {
+    function (event) {
       var str = "Some text that causes the beforeunload dialog to be shown";
       event.returnValue = str;
       return str;
@@ -59,7 +59,7 @@ async function openPage(shouldClick) {
   // Open about:blank in a new tab.
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       // Load the page.
       BrowserTestUtils.loadURIString(browser, PAGE_URL);
       await BrowserTestUtils.browserLoaded(browser);
@@ -71,7 +71,7 @@ async function openPage(shouldClick) {
       let hasInteractedWith = await SpecialPowers.spawn(
         frameBC,
         [],
-        function() {
+        function () {
           return [
             content.document.userHasInteracted,
             content.document.userHasInteracted,

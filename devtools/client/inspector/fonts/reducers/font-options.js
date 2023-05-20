@@ -18,7 +18,7 @@ const reducers = {
   },
 };
 
-module.exports = function(fontOptions = INITIAL_FONT_OPTIONS, action) {
+module.exports = function (fontOptions = INITIAL_FONT_OPTIONS, action) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return fontOptions;

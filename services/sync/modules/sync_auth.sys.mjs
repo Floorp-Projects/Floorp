@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "log", function() {
+XPCOMUtils.defineLazyGetter(lazy, "log", function () {
   let log = Log.repository.getLogger("Sync.SyncAuthManager");
   log.manageLevelFromPref("services.sync.log.logger.identity");
   return log;

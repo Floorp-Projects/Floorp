@@ -72,7 +72,7 @@ function cacheDataForContext(loadContextInfo) {
   });
 }
 
-let countMatchingCacheEntries = function(cacheEntries, domain, fileSuffix) {
+let countMatchingCacheEntries = function (cacheEntries, domain, fileSuffix) {
   return cacheEntries
     .map(entry => entry.uri.asciiSpec)
     .filter(spec => spec.includes(domain))
@@ -96,7 +96,7 @@ function observeChannels(onChannel) {
 }
 
 function startObservingChannels(aMode) {
-  let stopObservingChannels = observeChannels(function(channel) {
+  let stopObservingChannels = observeChannels(function (channel) {
     let originalURISpec = channel.originalURI.spec;
     if (originalURISpec.includes("example.net")) {
       let loadInfo = channel.loadInfo;
@@ -173,7 +173,7 @@ async function doTest(aBrowser) {
     urlPrefix: TEST_DOMAIN + TEST_PATH,
   };
 
-  await SpecialPowers.spawn(aBrowser, [argObj], async function(arg) {
+  await SpecialPowers.spawn(aBrowser, [argObj], async function (arg) {
     content.windowUtils.clearSharedStyleSheetCache();
 
     let videoURL = arg.urlPrefix + "file_thirdPartyChild.video.ogv";

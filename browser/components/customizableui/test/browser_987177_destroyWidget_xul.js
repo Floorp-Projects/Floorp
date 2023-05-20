@@ -6,7 +6,7 @@
 
 const BUTTONID = "test-XUL-wrapper-destroyWidget";
 
-add_task(function() {
+add_task(function () {
   let btn = createDummyXULButton(BUTTONID, "XUL btn");
   gNavToolbox.palette.appendChild(btn);
   let firstWrapper = CustomizableUI.getWidget(BUTTONID).forWindow(window);

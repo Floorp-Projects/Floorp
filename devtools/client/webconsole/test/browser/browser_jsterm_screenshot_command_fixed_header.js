@@ -12,7 +12,7 @@ const TEST_URI =
 // to keep tests consistant across OSs we are setting the dpr to 1
 const dpr = "--dpr 1";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Scroll in the content page");

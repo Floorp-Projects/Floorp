@@ -23,13 +23,13 @@ const SESSION_STATE_FILE_NAME = "session-state.json";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "gDataReportingDir", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gDataReportingDir", function () {
   return PathUtils.join(PathUtils.profileDir, DATAREPORTING_DIR);
 });
-XPCOMUtils.defineLazyGetter(lazy, "gPingsArchivePath", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gPingsArchivePath", function () {
   return PathUtils.join(lazy.gDataReportingDir, PINGS_ARCHIVE_DIR);
 });
-XPCOMUtils.defineLazyGetter(lazy, "gAbortedSessionFilePath", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gAbortedSessionFilePath", function () {
   return PathUtils.join(lazy.gDataReportingDir, ABORTED_SESSION_FILE_NAME);
 });
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -746,7 +746,7 @@ var TelemetryStorageImpl = {
     const pathCompressed = path + "lz4";
 
     // Purge pings which are too big.
-    let checkSize = async function(path) {
+    let checkSize = async function (path) {
       const fileSize = await IOUtils.stat(path).then(info => info.size);
       if (fileSize > PING_FILE_MAXIMUM_SIZE_BYTES) {
         Telemetry.getHistogramById(
@@ -2136,7 +2136,7 @@ function pingFilePath(ping) {
 }
 
 function getPingDirectory() {
-  return (async function() {
+  return (async function () {
     let directory = TelemetryStorage.pingDirectoryPath;
 
     if (!(await IOUtils.exists(directory))) {
@@ -2171,7 +2171,7 @@ function getArchivedPingPath(aPingId, aDate, aType) {
  * Get the size of the ping file on the disk.
  * @return {Integer} The file size, in bytes, of the ping file or 0 on errors.
  */
-var getArchivedPingSize = async function(aPingId, aDate, aType) {
+var getArchivedPingSize = async function (aPingId, aDate, aType) {
   const path = getArchivedPingPath(aPingId, aDate, aType);
   let filePaths = [path + "lz4", path];
 
@@ -2189,7 +2189,7 @@ var getArchivedPingSize = async function(aPingId, aDate, aType) {
  * Get the size of the pending ping file on the disk.
  * @return {Integer} The file size, in bytes, of the ping file or 0 on errors.
  */
-var getPendingPingSize = async function(aPingId) {
+var getPendingPingSize = async function (aPingId) {
   const path = PathUtils.join(TelemetryStorage.pingDirectoryPath, aPingId);
   try {
     return (await IOUtils.stat(path)).size;

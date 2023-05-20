@@ -87,8 +87,10 @@ function getURL(cert) {
  *        The expected name of the tab in the certificate viewer
  */
 async function openCertViewerAndCheckTabName(url, expectedTabName) {
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
-    await SpecialPowers.spawn(browser, [expectedTabName], async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function (
+    browser
+  ) {
+    await SpecialPowers.spawn(browser, [expectedTabName], async function (
       expectedTabName
     ) {
       let certificateSection = await ContentTaskUtils.waitForCondition(() => {

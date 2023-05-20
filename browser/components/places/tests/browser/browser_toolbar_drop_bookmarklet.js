@@ -11,7 +11,7 @@ const URL2 = "https://example.com/2/";
 const BOOKMARKLET_URL = `javascript: (() => {alert('Hello, World!');})();`;
 let bookmarks;
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   sandbox.restore();
 });
 
@@ -24,7 +24,7 @@ add_task(async function test() {
 
   if (toolbar.collapsed) {
     await promiseSetToolbarVisibility(toolbar, true);
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       return promiseSetToolbarVisibility(toolbar, false);
     });
   }
@@ -39,7 +39,7 @@ add_task(async function test() {
    * @param {string} aEffect
    *        The effect to use for the drop operation: move, copy, or link.
    */
-  let simulateDragDrop = async function(aEffect) {
+  let simulateDragDrop = async function (aEffect) {
     info("Simulates drag/drop of a new javascript:URL to the bookmarks");
     await withBookmarksDialog(
       true,

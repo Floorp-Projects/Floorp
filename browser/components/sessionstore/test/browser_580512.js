@@ -82,7 +82,7 @@ function openWinWithCb(cb, argURIs, expectedURIs) {
 
   win.addEventListener(
     "load",
-    function() {
+    function () {
       info("the window loaded");
 
       var expectedLoads = expectedURIs.length;
@@ -105,7 +105,7 @@ function openWinWithCb(cb, argURIs, expectedURIs) {
               expectedURIs.length,
               "didn't load any unexpected tabs"
             );
-            executeSoon(function() {
+            executeSoon(function () {
               cb(win);
             });
           }

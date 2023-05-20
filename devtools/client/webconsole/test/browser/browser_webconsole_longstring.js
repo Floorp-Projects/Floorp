@@ -12,7 +12,7 @@ const LONGSTRING = `foobar${"a".repeat(
   9000
 )}foobaz${"abbababazomglolztest".repeat(100)}boom!`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Log a longString");

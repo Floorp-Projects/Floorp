@@ -64,7 +64,7 @@ function waitForCondition(condition, nextTest, errorMsg, aTries, aWait) {
   let tries = 0;
   let maxTries = aTries || 100; // 100 tries
   let maxWait = aWait || 100; // 100 msec x 100 tries = ten seconds
-  let interval = setInterval(function() {
+  let interval = setInterval(function () {
     if (tries >= maxTries) {
       ok(false, errorMsg);
       moveOn();
@@ -81,7 +81,7 @@ function waitForCondition(condition, nextTest, errorMsg, aTries, aWait) {
     }
     tries++;
   }, maxWait);
-  let moveOn = function() {
+  let moveOn = function () {
     clearInterval(interval);
     nextTest();
   };
@@ -103,7 +103,7 @@ function promiseForCondition(aConditionFn, aMessage, aTries, aWait) {
 // Returns a promise for nsIObjectLoadingContent props data.
 function promiseForPluginInfo(aId, aBrowser) {
   let browser = aBrowser || gTestBrowser;
-  return SpecialPowers.spawn(browser, [aId], async function(contentId) {
+  return SpecialPowers.spawn(browser, [aId], async function (contentId) {
     let plugin = content.document.getElementById(contentId);
     if (!(plugin instanceof Ci.nsIObjectLoadingContent)) {
       throw new Error("no plugin found");
@@ -191,7 +191,7 @@ function waitForNotificationShown(notification, callback) {
   }
   PopupNotifications.panel.addEventListener(
     "popupshown",
-    function(e) {
+    function (e) {
       callback();
     },
     { once: true }

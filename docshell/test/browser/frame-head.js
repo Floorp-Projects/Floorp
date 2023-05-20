@@ -16,22 +16,22 @@ const { setTimeout } = ChromeUtils.importESModule(
 // Functions that look like mochitest functions but forward to the
 // browser process.
 
-this.ok = function(value, message) {
+this.ok = function (value, message) {
   sendAsyncMessage("browser:test:ok", {
     value: !!value,
     message,
   });
 };
 
-this.is = function(v1, v2, message) {
+this.is = function (v1, v2, message) {
   ok(v1 == v2, message);
 };
 
-this.info = function(message) {
+this.info = function (message) {
   sendAsyncMessage("browser:test:info", { message });
 };
 
-this.finish = function() {
+this.finish = function () {
   sendAsyncMessage("browser:test:finish");
 };
 
@@ -53,8 +53,8 @@ this.finish = function() {
  *        check is a function that takes an array of markers
  *             as an argument and checks the results of the test.
  */
-this.timelineContentTest = function(tests) {
-  (async function() {
+this.timelineContentTest = function (tests) {
+  (async function () {
     let docShell = content.docShell;
 
     info("Start recording");
@@ -89,13 +89,13 @@ this.timelineContentTest = function(tests) {
 function timelineWaitForMarkers(docshell, searchFor) {
   if (typeof searchFor == "string") {
     let searchForString = searchFor;
-    let f = function(markers) {
+    let f = function (markers) {
       return markers.some(m => m.name == searchForString);
     };
     searchFor = f;
   }
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     let waitIterationCount = 0;
     let maxWaitIterationCount = 10; // Wait for 2sec maximum
     let markers = [];

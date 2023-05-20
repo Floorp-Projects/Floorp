@@ -28,7 +28,7 @@ async function verifyLoad(url, testName) {
     true
   );
 
-  await SpecialPowers.spawn(browser, [{ url, testName }], function(args) {
+  await SpecialPowers.spawn(browser, [{ url, testName }], function (args) {
     const doc = content.document;
     ok(
       doc.documentURI == args.url,
@@ -69,7 +69,7 @@ async function verifyError(url, fallbackWarning, testName) {
   await SpecialPowers.spawn(
     browser,
     [{ url, fallbackWarning, testName }],
-    function(args) {
+    function (args) {
       const doc = content.document;
 
       ok(doc.documentURI.startsWith("about:neterror"));

@@ -164,7 +164,7 @@ async function expandNetworkRequestAndWaitForHtmlView({
   await SpecialPowers.spawn(
     iframe.browsingContext,
     [expectedHtml],
-    async function(_expectedHtml) {
+    async function (_expectedHtml) {
       is(
         content.document.documentElement.outerHTML,
         _expectedHtml,

@@ -112,7 +112,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TransientPrefs: "resource:///modules/TransientPrefs.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "gSubDialog", function() {
+XPCOMUtils.defineLazyGetter(this, "gSubDialog", function () {
   const { SubDialogManager } = ChromeUtils.importESModule(
     "resource://gre/modules/SubDialog.sys.mjs"
   );
@@ -249,12 +249,12 @@ function init_all() {
   let categories = document.getElementById("categories");
   categories.addEventListener("select", event => gotoPref(event.target.value));
 
-  document.documentElement.addEventListener("keydown", function(event) {
+  document.documentElement.addEventListener("keydown", function (event) {
     if (event.keyCode == KeyEvent.DOM_VK_TAB) {
       categories.setAttribute("keyboard-navigation", "true");
     }
   });
-  categories.addEventListener("mousedown", function() {
+  categories.addEventListener("mousedown", function () {
     this.removeAttribute("keyboard-navigation");
   });
 
@@ -529,7 +529,7 @@ function friendlyPrefCategoryNameToInternalName(aName) {
 
 // This function is duplicated inside of utilityOverlay.js's openPreferences.
 function internalPrefCategoryNameToFriendlyName(aName) {
-  return (aName || "").replace(/^pane./, function(toReplace) {
+  return (aName || "").replace(/^pane./, function (toReplace) {
     return toReplace[4].toLowerCase();
   });
 }

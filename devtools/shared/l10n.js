@@ -10,7 +10,7 @@ const propertiesMap = {};
 
 // Map used to memoize Number formatters.
 const numberFormatters = new Map();
-const getNumberFormatter = function(decimals) {
+const getNumberFormatter = function (decimals) {
   let formatter = numberFormatters.get(decimals);
   if (!formatter) {
     // Create and memoize a formatter for the provided decimals

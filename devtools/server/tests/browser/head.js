@@ -195,7 +195,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve => {
-    setTimeout(function() {
+    setTimeout(function () {
       waitUntil(predicate).then(() => resolve(true));
     }, interval);
   });
@@ -211,7 +211,7 @@ function waitForMarkerType(
   types = [].concat(types);
   predicate =
     predicate ||
-    function() {
+    function () {
       return true;
     };
   let filteredMarkers = [];

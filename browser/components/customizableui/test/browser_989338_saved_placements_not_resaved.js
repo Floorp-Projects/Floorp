@@ -53,7 +53,7 @@ function test() {
   }
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   if (!hadSavedState) {
     CustomizableUI.setTestOnlyInternalProp("gSavedState", null);
   } else {

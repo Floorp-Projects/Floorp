@@ -8,18 +8,19 @@ const TEST_URI =
   "http://example.com/browser/dom/tests/browser/browser_frame_elements.html";
 
 add_task(async function test() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URI }, async function(
-    browser
-  ) {
-    // Confirm its embedder is the browser:
-    is(
-      browser.browsingContext.embedderElement,
-      browser,
-      "Embedder element for main window is xul:browser"
-    );
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: TEST_URI },
+    async function (browser) {
+      // Confirm its embedder is the browser:
+      is(
+        browser.browsingContext.embedderElement,
+        browser,
+        "Embedder element for main window is xul:browser"
+      );
 
-    await SpecialPowers.spawn(browser, [], startTests);
-  });
+      await SpecialPowers.spawn(browser, [], startTests);
+    }
+  );
 });
 
 function startTests() {

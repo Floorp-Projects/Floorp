@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["test.aboutconfig.modify.boolean", true],
@@ -27,7 +27,7 @@ add_task(async function test_observe_add_user_pref_before_search() {
   );
 
   await AboutConfigTest.withNewTab(
-    async function() {
+    async function () {
       this.bypassWarningButton.click();
 
       // No results are shown after the warning page is dismissed or bypassed,
@@ -46,7 +46,7 @@ add_task(async function test_observe_add_user_pref() {
     Ci.nsIPrefBranch.PREF_INVALID
   );
 
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     for (let value of [false, true, "", "value", 0, -10]) {
       // A row should be added when a new preference is added.
       Assert.ok(!this.getRow(PREF_NEW));
@@ -102,7 +102,7 @@ add_task(async function test_observe_add_user_pref() {
 add_task(async function test_observe_delete_user_pref() {
   for (let value of [true, "value", -10]) {
     Preferences.set(PREF_NEW, value);
-    await AboutConfigTest.withNewTab(async function() {
+    await AboutConfigTest.withNewTab(async function () {
       // Deleting the preference should keep the row.
       let row = this.getRow(PREF_NEW);
       Preferences.reset(PREF_NEW);
@@ -120,7 +120,7 @@ add_task(async function test_observe_reset_user_pref() {
     set: [[PREF_BOOLEAN_DEFAULT_TRUE, false]],
   });
 
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     let row = this.getRow(PREF_BOOLEAN_DEFAULT_TRUE);
     Preferences.reset(PREF_BOOLEAN_DEFAULT_TRUE);
     Assert.ok(!row.hasClass("has-user-value"));
@@ -129,7 +129,7 @@ add_task(async function test_observe_reset_user_pref() {
 });
 
 add_task(async function test_observe_modify() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     for (let [name, value] of [
       ["test.aboutconfig.modify.boolean", false],
       ["test.aboutconfig.modify.number", -10],

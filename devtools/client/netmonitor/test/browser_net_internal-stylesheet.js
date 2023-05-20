@@ -8,7 +8,7 @@ const TEST_URL = EXAMPLE_URL + "html_internal-stylesheet.html";
 /**
  * Test for the stylesheet which is loaded as internal.
  */
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(TEST_URL, {
     requestCount: 2,
   });

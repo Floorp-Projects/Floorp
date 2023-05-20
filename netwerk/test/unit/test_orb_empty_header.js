@@ -75,7 +75,7 @@ async function test_empty_header(server, doSniff) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   let server = await setup();
   await test_empty_header(server, true);
   await test_empty_header(server, false);

@@ -3,12 +3,12 @@
 
 // ================================================================================================
 // ================================================================================================
-let runWorkerTest = async function(data) {
+let runWorkerTest = async function (data) {
   let expectedPrecision = data.precision;
   let workerCall = data.workerCall;
   await new Promise(resolve => {
     let worker = new content.Worker("file_workerPerformance.js");
-    worker.onmessage = function(e) {
+    worker.onmessage = function (e) {
       if (e.data.type == "status") {
         ok(e.data.status, e.data.msg);
       } else if (e.data.type == "finish") {

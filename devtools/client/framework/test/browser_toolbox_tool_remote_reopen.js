@@ -37,7 +37,7 @@ requestLongerTimeout(2);
  */
 
 function runTools(tab) {
-  return (async function() {
+  return (async function () {
     let toolbox;
     const toolIds = await getSupportedToolIds(tab);
     for (const toolId of toolIds) {
@@ -62,7 +62,7 @@ function runTools(tab) {
 }
 
 function test() {
-  (async function() {
+  (async function () {
     toggleAllTools(true);
     const tab = await addTab("about:blank");
 

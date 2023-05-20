@@ -11,7 +11,7 @@ const XPI_URL = `${SECURE_TESTROOT}../xpinstall/amosigned.xpi`;
 
 AddonTestUtils.initMochitest(this);
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.install.requireBuiltInCerts", false]],
   });
@@ -153,7 +153,7 @@ add_task(async function testInstallTriggerBlockedFromCrossOriginFrame() {
       ],
     },
     files: {
-      "createFrame.js": function() {
+      "createFrame.js": function () {
         const frame = document.createElement("iframe");
         frame.src = "https://test1.example.com/installTrigger/";
         document.body.appendChild(frame);

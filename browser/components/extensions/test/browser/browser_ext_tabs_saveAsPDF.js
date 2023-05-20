@@ -57,7 +57,7 @@ async function testReturnStatus(expectedStatus) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: manifest,
 
-    background: async function() {
+    background: async function () {
       let pageSettings = {};
 
       let expected = chrome.runtime.getManifest().description;
@@ -159,7 +159,7 @@ async function testFileName(expectedFileName) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: manifest,
 
-    background: async function() {
+    background: async function () {
       let pageSettings = {};
 
       let expected = chrome.runtime.getManifest().description;

@@ -17,7 +17,7 @@ const asyncStore = asyncStoreHelper("debugger", {
 });
 exports.asyncStore = asyncStore;
 
-exports.getThreadOptions = async function() {
+exports.getThreadOptions = async function () {
   return {
     pauseOnExceptions: Services.prefs.getBoolPref(
       "devtools.debugger.pause-on-exceptions"

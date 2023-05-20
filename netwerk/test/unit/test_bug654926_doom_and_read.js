@@ -55,7 +55,7 @@ function test_read_after_doom(status, entry) {
   os.close();
 
   var is = entry.openInputStream(0);
-  pumpReadStream(is, function(read) {
+  pumpReadStream(is, function (read) {
     Assert.equal(read.length, 2 * 1024 * 1024);
     is.close();
 

@@ -1281,7 +1281,7 @@ export class StyleEditorUI extends EventEmitter {
    *         Editor to update sidebar of
    */
   #updateAtRulesList = editor => {
-    (async function() {
+    (async function () {
       const details = await this.getEditorDetails(editor);
       const list = details.querySelector(".stylesheet-at-rules-list");
 

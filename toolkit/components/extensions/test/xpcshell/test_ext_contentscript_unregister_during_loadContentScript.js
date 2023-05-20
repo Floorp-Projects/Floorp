@@ -24,7 +24,7 @@ add_task(async function content_script_unregistered_during_loadContentScript() {
       content_scripts,
     },
     files: {
-      "dummy.js": function() {
+      "dummy.js": function () {
         browser.test.sendMessage("content-script-executed");
       },
     },

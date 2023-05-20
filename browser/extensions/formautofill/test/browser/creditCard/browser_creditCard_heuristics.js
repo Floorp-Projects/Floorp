@@ -117,7 +117,7 @@ const TESTCASES = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.formautofill.creditCards.supported", "on"],
@@ -135,7 +135,7 @@ add_task(async function test_heuristics() {
       await SpecialPowers.pushPrefEnv({ set: TEST.prefs });
     }
 
-    await BrowserTestUtils.withNewTab(EMPTY_URL, async function(browser) {
+    await BrowserTestUtils.withNewTab(EMPTY_URL, async function (browser) {
       await SpecialPowers.spawn(browser, [TEST.document], doc => {
         // eslint-disable-next-line no-unsanitized/property
         content.document.body.innerHTML = doc;

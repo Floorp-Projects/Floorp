@@ -395,7 +395,7 @@ add_task(async function updateSidebarCommand() {
         </body></html>
       `,
 
-      "sidebar.js": function() {
+      "sidebar.js": function () {
         window.onload = () => {
           browser.test.sendMessage("sidebar");
         };

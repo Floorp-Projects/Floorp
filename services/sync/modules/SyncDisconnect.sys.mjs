@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "FxAccountsCommon", function() {
+XPCOMUtils.defineLazyGetter(lazy, "FxAccountsCommon", function () {
   return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 });
 

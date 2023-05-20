@@ -21,7 +21,7 @@ function test() {
 
   waitForExplicitFinish();
 
-  newWindowWithState(state, function(win) {
+  newWindowWithState(state, function (win) {
     registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));
 
     is(win.gBrowser.tabs.length, 2, "two tabs were restored");
@@ -44,11 +44,11 @@ function newWindowWithState(state, callback) {
 
   win.addEventListener(
     "load",
-    function() {
-      executeSoon(function() {
+    function () {
+      executeSoon(function () {
         win.addEventListener(
           "SSWindowStateReady",
-          function() {
+          function () {
             promiseTabRestored(win.gBrowser.tabs[0]).then(() => callback(win));
           },
           { once: true }

@@ -233,13 +233,13 @@ function add_origin_attributes_test(
   add_connection_test(
     GOOD_DOMAIN,
     PRErrorCodeSuccess,
-    function() {
+    function () {
       // Add the hits and misses before connection.
       let stats = statsPtr.contents;
       hitsBeforeConnect = toInt32(stats.sch_sid_cache_hits);
       missesBeforeConnect = toInt32(stats.sch_sid_cache_misses);
     },
-    function() {
+    function () {
       let stats = statsPtr.contents;
       equal(
         toInt32(stats.sch_sid_cache_hits),
@@ -280,7 +280,7 @@ function run_test() {
   add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
   add_resumption_tests();
   // Enable external session cache and reset the status.
-  add_test(function() {
+  add_test(function () {
     Services.prefs.setBoolPref("network.ssl_tokens_cache_enabled", true);
     certdb.clearOCSPCache();
     run_next_test();

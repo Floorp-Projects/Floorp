@@ -15,7 +15,7 @@ const {
   SIMPLE_URL,
 } = require("damp-test/tests/head");
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(SIMPLE_URL);
 
   let toolbox = await openToolboxAndLog("simple.inspector", "inspector");

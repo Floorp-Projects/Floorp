@@ -10,7 +10,7 @@ const TEST_URL = "http://example.com/";
 
 addRDMTask(
   null,
-  async function() {
+  async function () {
     info("Open two tabs");
     const tab1 = await addTab(TEST_URL);
     const tab2 = await addTab(TEST_URL);

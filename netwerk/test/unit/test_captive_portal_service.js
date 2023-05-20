@@ -3,7 +3,7 @@
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 let httpserver = null;
-XPCOMUtils.defineLazyGetter(this, "cpURI", function() {
+XPCOMUtils.defineLazyGetter(this, "cpURI", function () {
   return (
     "http://localhost:" + httpserver.identity.primaryPort + "/captive.html"
   );

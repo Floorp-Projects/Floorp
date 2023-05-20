@@ -54,18 +54,9 @@ describe("<DSCard>", () => {
   it("should render a SafeAnchor", () => {
     wrapper.setProps({ url: "https://foo.com" });
 
-    assert.equal(
-      wrapper
-        .children()
-        .at(0)
-        .type(),
-      SafeAnchor
-    );
+    assert.equal(wrapper.children().at(0).type(), SafeAnchor);
     assert.propertyVal(
-      wrapper
-        .children()
-        .at(0)
-        .props(),
+      wrapper.children().at(0).props(),
       "url",
       "https://foo.com"
     );
@@ -73,23 +64,14 @@ describe("<DSCard>", () => {
 
   it("should pass onLinkClick prop", () => {
     assert.propertyVal(
-      wrapper
-        .children()
-        .at(0)
-        .props(),
+      wrapper.children().at(0).props(),
       "onLinkClick",
       wrapper.instance().onLinkClick
     );
   });
 
   it("should render DSLinkMenu", () => {
-    assert.equal(
-      wrapper
-        .children()
-        .at(1)
-        .type(),
-      DSLinkMenu
-    );
+    assert.equal(wrapper.children().at(1).type(), DSLinkMenu);
   });
 
   it("should start with no .active class", () => {

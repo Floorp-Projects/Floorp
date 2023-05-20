@@ -12,7 +12,7 @@ add_task(async function test_hiding_tooltip() {
     opening: page1,
   });
 
-  let popup = new Promise(function(resolve) {
+  let popup = new Promise(function (resolve) {
     window.addEventListener("popupshown", resolve, { once: true });
   });
   // Fire a mousemove to trigger the tooltip.
@@ -21,7 +21,7 @@ add_task(async function test_hiding_tooltip() {
   });
   await popup;
 
-  let hiding = new Promise(function(resolve) {
+  let hiding = new Promise(function (resolve) {
     window.addEventListener("popuphiding", resolve, { once: true });
   });
   let loaded = BrowserTestUtils.browserLoaded(

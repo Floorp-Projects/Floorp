@@ -5,10 +5,7 @@ function run_test() {
 
   var success = false;
   try {
-    newURI = newURI
-      .mutate()
-      .setSpec("http: //foo.com")
-      .finalize();
+    newURI = newURI.mutate().setSpec("http: //foo.com").finalize();
   } catch (e) {
     success = e.result == Cr.NS_ERROR_MALFORMED_URI;
   }
@@ -20,10 +17,7 @@ function run_test() {
 
   success = false;
   try {
-    newURI
-      .mutate()
-      .setHost(" foo.com")
-      .finalize();
+    newURI.mutate().setHost(" foo.com").finalize();
   } catch (e) {
     success = e.result == Cr.NS_ERROR_MALFORMED_URI;
   }

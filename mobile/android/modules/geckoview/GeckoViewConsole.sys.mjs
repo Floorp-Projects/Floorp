@@ -87,7 +87,7 @@ export var GeckoViewConsole = {
         lineNumber,
       ]);
       body += "\n";
-      args.forEach(function(aFrame) {
+      args.forEach(function (aFrame) {
         const functionName =
           aFrame.functionName ||
           bundle.GetStringFromName("stacktrace.anonymousFunction");

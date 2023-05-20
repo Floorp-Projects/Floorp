@@ -13,7 +13,7 @@ const HTML_PATH = "/file_errorpage_www_suggestion.html";
 const KICK_OF_REQUEST_WITH_SUGGESTION =
   "http://suggestion-example.com" + TEST_PATH + HTML_PATH;
 
-add_task(async function() {
+add_task(async function () {
   info("Check that the www button shows up and leads to a secure www page");
 
   await SpecialPowers.pushPrefEnv({
@@ -41,7 +41,7 @@ add_task(async function() {
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(c => setTimeout(c, 2000));
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let doc = content.document;
     let innerHTML = doc.body.innerHTML;
     let errorPageL10nId = "about-httpsonly-title-alert";
@@ -65,7 +65,7 @@ add_task(async function() {
     }
   });
   await pageShownPromise;
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let doc = content.document;
     let innerHTML = doc.body.innerHTML;
     ok(

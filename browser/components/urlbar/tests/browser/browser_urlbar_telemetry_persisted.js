@@ -40,7 +40,7 @@ add_setup(async () => {
   // Enable event recording for the events.
   Services.telemetry.setEventRecordingEnabled("navigation", true);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     Services.telemetry.clearScalars();
     Services.telemetry.clearEvents();

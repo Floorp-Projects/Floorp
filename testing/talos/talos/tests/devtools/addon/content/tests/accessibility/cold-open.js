@@ -16,7 +16,7 @@ const {
   SIMPLE_URL,
 } = require("damp-test/tests/head");
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup(SIMPLE_URL);
   await openAccessibilityAndLog("cold");
   await closeToolbox();

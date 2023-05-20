@@ -597,7 +597,7 @@ var gMenuBuilder = {
 };
 
 // Called from pageAction or browserAction popup.
-global.actionContextMenu = function(contextData) {
+global.actionContextMenu = function (contextData) {
   contextData.tab = tabTracker.activeTab;
   contextData.pageUrl = contextData.tab.linkedBrowser.currentURI.spec;
   gMenuBuilder.build(contextData);

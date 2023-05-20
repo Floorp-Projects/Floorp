@@ -57,7 +57,7 @@ add_task(async function download_saveas_file() {
     }
 
     await new Promise(resolve => {
-      MockFilePicker.showCallback = function(fp) {
+      MockFilePicker.showCallback = function (fp) {
         saveFile.append("sample");
         MockFilePicker.setFiles([saveFile]);
         setTimeout(() => {

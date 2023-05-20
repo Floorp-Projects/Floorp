@@ -92,7 +92,7 @@ var WindowListener = {
 
     win.addEventListener(
       "load",
-      function() {
+      function () {
         if (
           win.document.documentElement.getAttribute("windowtype") == WINDOW_TYPE
         ) {

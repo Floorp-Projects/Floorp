@@ -13,7 +13,7 @@ add_task(async function testLastAccessed() {
       permissions: ["tabs"],
     },
     async background() {
-      browser.test.onMessage.addListener(async function(msg, past) {
+      browser.test.onMessage.addListener(async function (msg, past) {
         let [tab1] = await browser.tabs.query({
           url: "https://example.com/?1",
         });

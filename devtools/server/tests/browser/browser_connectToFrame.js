@@ -11,7 +11,7 @@ const {
   connectToFrame,
 } = require("resource://devtools/server/connectors/frame-connector.js");
 
-add_task(async function() {
+add_task(async function () {
   // Create a minimal browser with a message manager
   const browser = document.createXULElement("browser");
   browser.setAttribute("type", "content");

@@ -55,7 +55,7 @@ let mockedInternal = {
   hasSyncedThisSession: false,
 };
 
-add_setup(async function() {
+add_setup(async function () {
   const getSignedInUser = FxAccounts.config.getSignedInUser;
   FxAccounts.config.getSignedInUser = async () =>
     Promise.resolve({ uid: "uid", email: "foo@bar.com" });
@@ -166,14 +166,14 @@ async function asyncCleanup() {
 }
 
 // When Sync is not setup.
-add_task(async function() {
+add_task(async function () {
   gSync.updateAllUI({ status: UIState.STATUS_NOT_CONFIGURED });
   await openPrefsFromMenuPanel("PanelUI-remotetabs-setupsync", "synced-tabs");
 });
 add_task(asyncCleanup);
 
 // When an account is connected by Sync is not enabled.
-add_task(async function() {
+add_task(async function () {
   gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, syncEnabled: false });
   await openPrefsFromMenuPanel(
     "PanelUI-remotetabs-syncdisabled",
@@ -183,7 +183,7 @@ add_task(async function() {
 add_task(asyncCleanup);
 
 // When Sync is configured in an unverified state.
-add_task(async function() {
+add_task(async function () {
   gSync.updateAllUI({
     status: UIState.STATUS_NOT_VERIFIED,
     email: "foo@bar.com",
@@ -193,7 +193,7 @@ add_task(async function() {
 add_task(asyncCleanup);
 
 // When Sync is configured in a "needs reauthentication" state.
-add_task(async function() {
+add_task(async function () {
   gSync.updateAllUI({
     status: UIState.STATUS_LOGIN_FAILED,
     email: "foo@bar.com",
@@ -202,7 +202,7 @@ add_task(async function() {
 });
 
 // Test the Connect Another Device button
-add_task(async function() {
+add_task(async function () {
   gSync.updateAllUI({
     status: UIState.STATUS_SIGNED_IN,
     syncEnabled: true,
@@ -229,7 +229,7 @@ add_task(async function() {
 });
 
 // Test the "Sync Now" button
-add_task(async function() {
+add_task(async function () {
   gSync.updateAllUI({
     status: UIState.STATUS_SIGNED_IN,
     syncEnabled: true,
@@ -401,7 +401,7 @@ add_task(async function() {
 
   let didSync = false;
   let oldDoSync = gSync.doSync;
-  gSync.doSync = function() {
+  gSync.doSync = function () {
     didSync = true;
     gSync.doSync = oldDoSync;
   };
@@ -415,7 +415,7 @@ add_task(async function() {
 });
 
 // Test the pagination capabilities (Show More/All tabs)
-add_task(async function() {
+add_task(async function () {
   mockedInternal.getTabClients = () => {
     return Promise.resolve([
       {
@@ -423,7 +423,7 @@ add_task(async function() {
         type: "client",
         name: "My Desktop",
         lastModified: 1492201200,
-        tabs: (function() {
+        tabs: (function () {
           let allTabsDesktop = [];
           // We choose 77 tabs, because TABS_PER_PAGE is 25, which means
           // on the second to last page we should have 22 items shown

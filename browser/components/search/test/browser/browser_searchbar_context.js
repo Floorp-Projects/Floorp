@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
-add_setup(async function() {
+add_setup(async function () {
   await gCUITestUtils.addSearchBar();
 
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
@@ -29,7 +29,7 @@ add_setup(async function() {
     set: [["browser.search.suggest.enabled", false]],
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await BrowserTestUtils.closeWindow(win);
     gCUITestUtils.removeSearchBar();
   });

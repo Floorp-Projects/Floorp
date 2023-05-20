@@ -18,7 +18,7 @@ function sendObserverNotification(topic) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ topic, windowId }],
-    function(args) {
+    function (args) {
       Services.obs.notifyObservers(
         content.window,
         args.topic,
@@ -32,7 +32,7 @@ function setTrackEnabled(audio, video) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ audio, video }],
-    function(args) {
+    function (args) {
       let stream = content.wrappedJSObject.gStreams[0];
       if (args.audio != null) {
         stream.getAudioTracks()[0].enabled = args.audio;
@@ -80,7 +80,7 @@ function cloneTracks(audio, video) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ audio, video }],
-    function(args) {
+    function (args) {
       if (!content.wrappedJSObject.gClones) {
         content.wrappedJSObject.gClones = [];
       }
@@ -100,7 +100,7 @@ function stopClonedTracks(audio, video) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ audio, video }],
-    function(args) {
+    function (args) {
       let clones = content.wrappedJSObject.gClones || [];
       if (args.audio != null) {
         clones.filter(t => t.kind == "audio").forEach(t => t.stop());

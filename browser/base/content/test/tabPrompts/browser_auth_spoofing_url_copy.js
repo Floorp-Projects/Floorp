@@ -27,7 +27,7 @@ async function trigger401AndHandle() {
     set: [["privacy.authPromptSpoofingProtection", true]],
   });
   let dialogShown = waitForDialogAndCopyURL();
-  await BrowserTestUtils.withNewTab(CROSS_DOMAIN_URL, async function() {
+  await BrowserTestUtils.withNewTab(CROSS_DOMAIN_URL, async function () {
     await dialogShown;
   });
   await new Promise(resolve => {

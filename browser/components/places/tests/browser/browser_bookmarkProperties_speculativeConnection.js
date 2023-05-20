@@ -15,7 +15,7 @@ let spy = sandbox
   .stub(PlacesUIUtils, "setupSpeculativeConnection")
   .returns(Promise.resolve());
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
 
   let toolbar = document.getElementById("PersonalToolbar");
@@ -23,7 +23,7 @@ add_setup(async function() {
 
   if (toolbar.collapsed) {
     await promiseSetToolbarVisibility(toolbar, true);
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       return promiseSetToolbarVisibility(toolbar, false);
     });
   }
@@ -68,7 +68,7 @@ add_task(async function checkMenuSpeculativeConnection() {
     );
   }
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
     // if BMB was not originally in UI, remove it.
     if (!origBMBlocation) {

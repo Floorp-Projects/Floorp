@@ -31,7 +31,7 @@ add_task(async function test_open_bookmark_from_library() {
 
   let library = await promiseLibrary("UnfiledBookmarks");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await promiseLibraryClosed(library);
     await PlacesUtils.bookmarks.eraseEverything();
   });

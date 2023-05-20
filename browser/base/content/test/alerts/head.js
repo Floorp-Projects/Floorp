@@ -19,7 +19,7 @@ async function addNotificationPermission(originString) {
  * doesn't call `window.close()`.
  */
 function promiseWindowClosed(window) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     Services.ww.registerNotification(function observer(subject, topic, data) {
       if (topic == "domwindowclosed" && subject == window) {
         Services.ww.unregisterNotification(observer);
@@ -39,7 +39,7 @@ function promiseWindowClosed(window) {
  */
 function openNotification(aBrowser, fn, timeout) {
   info(`openNotification: ${fn}`);
-  return SpecialPowers.spawn(aBrowser, [[fn, timeout]], async function([
+  return SpecialPowers.spawn(aBrowser, [[fn, timeout]], async function ([
     contentFn,
     contentTimeout,
   ]) {
@@ -66,7 +66,7 @@ function openNotification(aBrowser, fn, timeout) {
 }
 
 function closeNotification(aBrowser) {
-  return SpecialPowers.spawn(aBrowser, [], function() {
+  return SpecialPowers.spawn(aBrowser, [], function () {
     content.wrappedJSObject._notification.close();
   });
 }

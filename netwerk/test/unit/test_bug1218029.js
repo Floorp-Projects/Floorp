@@ -104,7 +104,7 @@ function execute_test(test) {
 
   listener.onStartRequest(channel);
   var offset = 0;
-  test.chunks.forEach(function(chunkLength) {
+  test.chunks.forEach(function (chunkLength) {
     listener.onDataAvailable(channel, stream, offset, chunkLength);
     offset += chunkLength;
   });

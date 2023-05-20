@@ -28,7 +28,7 @@ let extensionData = {
   background: backgroundScript,
 };
 
-add_task(async function() {
+add_task(async function () {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
   await extension.awaitFinish("runtime.getPlatformInfo");

@@ -126,7 +126,7 @@ if (AppConstants.MOZ_CRASHREPORTER) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   if (
     !AppConstants.NIGHTLY_BUILD &&
     !AppConstants.MOZ_DEV_EDITION &&

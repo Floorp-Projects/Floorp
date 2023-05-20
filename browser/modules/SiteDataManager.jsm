@@ -12,13 +12,13 @@ var EXPORTED_SYMBOLS = ["SiteDataManager"];
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "gStringBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gStringBundle", function () {
   return Services.strings.createBundle(
     "chrome://browser/locale/siteData.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function () {
   return Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
@@ -514,7 +514,7 @@ var SiteDataManager = {
         Ci.nsIClearDataService.CLEAR_EME |
         Ci.nsIClearDataService.CLEAR_ALL_CACHES;
       promises.push(
-        new Promise(function(resolve) {
+        new Promise(function (resolve) {
           const { clearData } = Services;
           if (domainOrHost) {
             // First try to clear by base domain for aDomainOrHost. If we can't
@@ -630,7 +630,7 @@ var SiteDataManager = {
    * @returns a Promise that resolves when the data is cleared.
    */
   removeCache() {
-    return new Promise(function(resolve) {
+    return new Promise(function (resolve) {
       Services.clearData.deleteData(
         Ci.nsIClearDataService.CLEAR_ALL_CACHES,
         resolve
@@ -645,7 +645,7 @@ var SiteDataManager = {
    * @returns a Promise that resolves when the data is cleared.
    */
   async removeSiteData() {
-    await new Promise(function(resolve) {
+    await new Promise(function (resolve) {
       Services.clearData.deleteData(
         Ci.nsIClearDataService.CLEAR_COOKIES |
           Ci.nsIClearDataService.CLEAR_DOM_STORAGES |

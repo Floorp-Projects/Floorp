@@ -11,7 +11,7 @@ const URL2 = `http://example.com/${PATH}`;
 const URL3 = `http://example.org/${PATH}`;
 
 // A bunch of boilerplate which needs to be dealt with.
-add_task(async function() {
+add_task(async function () {
   // Turn on BC preservation and frameloader rebuilding to ensure that the
   // BrowsingContext is preserved.
   await SpecialPowers.pushPrefEnv({

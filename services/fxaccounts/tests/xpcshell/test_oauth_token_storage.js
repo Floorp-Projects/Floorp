@@ -65,23 +65,23 @@ function MockFxAccountsClient() {
   this._email = "nobody@example.com";
   this._verified = false;
 
-  this.accountStatus = function(uid) {
+  this.accountStatus = function (uid) {
     return Promise.resolve(!!uid && !this._deletedOnServer);
   };
 
-  this.signOut = function() {
+  this.signOut = function () {
     return Promise.resolve();
   };
-  this.registerDevice = function() {
+  this.registerDevice = function () {
     return Promise.resolve();
   };
-  this.updateDevice = function() {
+  this.updateDevice = function () {
     return Promise.resolve();
   };
-  this.signOutAndDestroyDevice = function() {
+  this.signOutAndDestroyDevice = function () {
     return Promise.resolve();
   };
-  this.getDeviceList = function() {
+  this.getDeviceList = function () {
     return Promise.resolve();
   };
 
@@ -142,7 +142,7 @@ add_task(async function testCacheStorage() {
   // Hook what the impl calls to save to disk.
   let cas = fxa._internal.currentAccountState;
   let origPersistCached = cas._persistCachedTokens.bind(cas);
-  cas._persistCachedTokens = function() {
+  cas._persistCachedTokens = function () {
     return origPersistCached().then(() => {
       Services.obs.notifyObservers(null, "testhelper-fxa-cache-persist-done");
     });

@@ -210,7 +210,7 @@ export class ModuleCache {
    * @throws {Error}
    *     If the provided module folder is unexpected.
    */
-  #getModuleClass = function(moduleName, originType, destinationType) {
+  #getModuleClass = function (moduleName, originType, destinationType) {
     if (
       destinationType === lazy.RootMessageHandler.type &&
       originType !== destinationType

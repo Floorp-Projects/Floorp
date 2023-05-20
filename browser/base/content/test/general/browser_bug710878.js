@@ -8,13 +8,13 @@ const PAGE =
  * Tests that we correctly compute the text for context menu
  * selection of some content.
  */
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url: PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       let contextMenu = document.getElementById("contentAreaContextMenu");
       let awaitPopupShown = BrowserTestUtils.waitForEvent(
         contextMenu,

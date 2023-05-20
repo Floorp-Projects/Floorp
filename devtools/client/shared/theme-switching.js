@@ -4,7 +4,7 @@
 
 /* eslint-env browser */
 "use strict";
-(function() {
+(function () {
   const { require } = ChromeUtils.importESModule(
     "resource://devtools/shared/loader/Loader.sys.mjs"
   );
@@ -134,7 +134,7 @@
     addThemeObserver(handleThemeChange);
     window.addEventListener(
       "unload",
-      function() {
+      function () {
         removeThemeObserver(handleThemeChange);
       },
       { once: true }

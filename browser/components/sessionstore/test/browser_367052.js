@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // make sure that the next closed tab will increase getClosedTabCount
   let max_tabs_undo = Services.prefs.getIntPref(
     "browser.sessionstore.max_tabs_undo"
@@ -42,7 +42,7 @@ add_task(async function() {
 });
 
 function promiseSHistoryCount(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     return docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory.count;
   });
 }

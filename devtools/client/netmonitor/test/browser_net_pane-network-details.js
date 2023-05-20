@@ -25,7 +25,7 @@ const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = [
   { url: "sjs_content-type-test-server.sjs?fmt=ws" },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(FILTERING_URL, { requestCount: 1 });
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");

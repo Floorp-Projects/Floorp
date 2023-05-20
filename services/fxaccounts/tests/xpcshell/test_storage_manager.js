@@ -60,7 +60,7 @@ MockedSecureStorage.prototype = {
   // This constructor must be declared without
   // object shorthand or we get an exception of
   // "TypeError: this.STORAGE_LOCKED is not a constructor"
-  STORAGE_LOCKED: function() {},
+  STORAGE_LOCKED: function () {},
   /* eslint-enable object-shorthand */
   async get(uid, email) {
     this.fetchCount++;
@@ -82,11 +82,11 @@ MockedSecureStorage.prototype = {
 };
 
 function add_storage_task(testFunction) {
-  add_task(async function() {
+  add_task(async function () {
     print("Starting test with secure storage manager");
     await testFunction(new FxAccountsStorageManager());
   });
-  add_task(async function() {
+  add_task(async function () {
     print("Starting test with simple storage manager");
     await testFunction(new FxAccountsStorageManager({ useSecure: false }));
   });

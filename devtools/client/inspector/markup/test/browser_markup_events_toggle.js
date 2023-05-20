@@ -10,7 +10,7 @@ const TEST_URL = URL_ROOT_SSL + "doc_markup_events_toggle.html";
 
 loadHelperScript("helper_events_test_runner.js");
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
   const { resourceCommand } = toolbox.commands;
   await inspector.markup.expandAll();
@@ -291,7 +291,7 @@ async function toggleEventListenerCheckbox(tooltip, headerEl) {
  *          Note that "mouseup" isn't handled here.
  */
 function getTargetElementHandledEventData() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     // In doc_markup_events_toggle.html , we count the events handled by the target in
     // a stringified object in dataset.handledEvents.
     return JSON.parse(

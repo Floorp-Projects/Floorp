@@ -6,7 +6,7 @@
 
 // Test that configuring two different highlighters to autohide
 // will not overwrite each other's timers.
-add_task(async function() {
+add_task(async function () {
   info("Loading the test document and opening the inspector");
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<p id='one'>TEST 1</p>"

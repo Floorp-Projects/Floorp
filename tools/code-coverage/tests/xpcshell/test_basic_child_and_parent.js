@@ -55,7 +55,7 @@ async function run_test() {
     )
   );
 
-  sendCommand("load('support.js');", async function() {
+  sendCommand("load('support.js');", async function () {
     await codeCoverage.flushCounters();
 
     const second_flush_files = getFiles();

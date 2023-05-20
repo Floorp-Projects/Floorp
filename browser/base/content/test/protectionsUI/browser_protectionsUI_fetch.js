@@ -6,11 +6,11 @@ add_task(async function test_fetch() {
     set: [["privacy.trackingprotection.enabled", true]],
   });
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     newTabBrowser
   ) {
     let contentBlockingEvent = waitForContentBlockingEvent();
-    await SpecialPowers.spawn(newTabBrowser, [], async function() {
+    await SpecialPowers.spawn(newTabBrowser, [], async function () {
       await content.wrappedJSObject
         .test_fetch()
         .then(response => Assert.ok(false, "should have denied the request"))

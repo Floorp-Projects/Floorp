@@ -18,7 +18,7 @@ addAccessibleTask(
       <td role="gridcell" id="grid_cell4">cell4</td>
     </tr>
   </table>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ addAccessibleTask(
       <div role="gridcell" id="treegrid_cell6">cell2</div>
     </div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ addAccessibleTask(
     <h6 id="h6">heading6</h6>
     <div id="ariaHeadingNoLevel" role="heading">ariaHeadingNoLevel</div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -124,7 +124,7 @@ addAccessibleTask(
     <li id="combo1_opt3" role="option">Shazaam</li>
     <li id="combo1_opt4" role="option">JoeSentMe</li>
   </ul>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -149,7 +149,7 @@ addAccessibleTask(
       <div role="cell" id="table_cell" aria-colindex="3">cell</div>
     </div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -183,7 +183,7 @@ addAccessibleTask(
       </div>
     </div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // Attributes calculated even when row is wrapped in a div.
@@ -204,7 +204,7 @@ addAccessibleTask(
     <div role="listitem" id="t1_li1">Oranges</div>
   </div>
   <div role="listitem" id="t1_li3">Bananas</div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -242,7 +242,7 @@ addAccessibleTask(
     </div>
     <div id="comm_nested_3" role="comment"><p>Comment 3 level 1</p></div>
   </article>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // Test group attributes of ARIA comments
@@ -268,7 +268,7 @@ addAccessibleTask(
   `<div role="tree" id="tree4"><div role="treeitem"
   id="tree4_ti1">Item 1</div><div role="treeitem"
   id="tree4_ti2">Item 2</div></div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // Test that group position information updates after deleting node.
@@ -338,7 +338,7 @@ addAccessibleTask(
     </div>
   </div>
 `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     testGroupAttrs(getAcc("ti1"), 1, 2, 1);
@@ -375,7 +375,7 @@ addAccessibleTask(
       <div role="treeitem" id="ti2">second</div>
     </div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     testGroupAttrs(getAcc("ti1"), 1, 1, 1);

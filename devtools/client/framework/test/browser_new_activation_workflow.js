@@ -6,8 +6,8 @@
 var toolbox;
 
 function test() {
-  addTab("about:blank").then(async function() {
-    loadWebConsole().then(function() {
+  addTab("about:blank").then(async function () {
+    loadWebConsole().then(function () {
       console.log("loaded");
     });
   });
@@ -18,7 +18,7 @@ function loadWebConsole() {
   const tab = gBrowser.selectedTab;
   return gDevTools
     .showToolboxForTab(tab, { toolId: "webconsole" })
-    .then(function(aToolbox) {
+    .then(function (aToolbox) {
       toolbox = aToolbox;
       checkToolLoading();
     });
@@ -28,15 +28,15 @@ function checkToolLoading() {
   is(toolbox.currentToolId, "webconsole", "The web console is selected");
   ok(toolbox.isReady, "toolbox is ready");
 
-  selectAndCheckById("jsdebugger").then(function() {
-    selectAndCheckById("styleeditor").then(function() {
+  selectAndCheckById("jsdebugger").then(function () {
+    selectAndCheckById("styleeditor").then(function () {
       testToggle();
     });
   });
 }
 
 function selectAndCheckById(id) {
-  return toolbox.selectTool(id).then(function() {
+  return toolbox.selectTool(id).then(function () {
     const tab = toolbox.doc.getElementById("toolbox-tab-" + id);
     is(
       tab.classList.contains("selected"),
@@ -56,7 +56,7 @@ function testToggle() {
     // Cannot reuse a target after it's destroyed.
     gDevTools
       .showToolboxForTab(gBrowser.selectedTab, { toolId: "styleeditor" })
-      .then(function(aToolbox) {
+      .then(function (aToolbox) {
         toolbox = aToolbox;
         is(
           toolbox.currentToolId,
@@ -71,7 +71,7 @@ function testToggle() {
 }
 
 function finishUp() {
-  toolbox.destroy().then(function() {
+  toolbox.destroy().then(function () {
     toolbox = null;
     gBrowser.removeCurrentTab();
     finish();

@@ -175,7 +175,7 @@ function waitForMPDialog(action, aWindow = window) {
   );
   const BRAND_FULL_NAME = BRAND_BUNDLE.GetStringFromName("brandFullName");
   let dialogShown = TestUtils.topicObserved("common-dialog-loaded");
-  return dialogShown.then(function([subject]) {
+  return dialogShown.then(function ([subject]) {
     let dialog = subject.Dialog;
     let expected = "Password Required - " + BRAND_FULL_NAME;
     Assert.equal(

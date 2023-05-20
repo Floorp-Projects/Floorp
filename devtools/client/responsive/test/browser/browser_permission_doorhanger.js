@@ -31,7 +31,7 @@ function waitForGeolocationPrompt(win, browser) {
 
 addRDMTask(
   null,
-  async function() {
+  async function () {
     // we want to explicitly tests http and https, hence
     // disabling https-first mode for this test.
     await pushPref("dom.security.https_first", false);

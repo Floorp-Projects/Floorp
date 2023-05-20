@@ -244,7 +244,7 @@ function openBrowserWindow(
     let uriArray = Cc["@mozilla.org/array;1"].createInstance(
       Ci.nsIMutableArray
     );
-    urlOrUrlList.forEach(function(uri) {
+    urlOrUrlList.forEach(function (uri) {
       var sstring = Cc["@mozilla.org/supports-string;1"].createInstance(
         Ci.nsISupportsString
       );

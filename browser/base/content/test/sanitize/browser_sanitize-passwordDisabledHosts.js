@@ -1,7 +1,7 @@
 // Bug 474792 - Clear "Never remember passwords for this site" when
 // clearing site-specific settings in Clear Recent History dialog
 
-add_task(async function() {
+add_task(async function () {
   // getLoginSavingEnabled always returns false if password capture is disabled.
   await SpecialPowers.pushPrefEnv({ set: [["signon.rememberSignons", true]] });
 

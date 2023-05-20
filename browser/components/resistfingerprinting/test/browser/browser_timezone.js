@@ -97,7 +97,7 @@ add_task(async function test_timezone_exempt() {
     forceNewProcess: true,
   });
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     SpecialPowers.Cu.getJSTestingFunctions().setTimeZone("PST8PDT");
     is(
       Intl.DateTimeFormat("en-US").resolvedOptions().timeZone,

@@ -16,7 +16,7 @@ const l10n = new LocalizationHelper(
   "devtools/client/locales/components.properties"
 );
 const { div, span, button } = dom;
-loader.lazyGetter(this, "MDNLink", function() {
+loader.lazyGetter(this, "MDNLink", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/MdnLink.js")
   );

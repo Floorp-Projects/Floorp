@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await startCustomizing();
   is(gBrowser.tabs.length, 2, "Should have 2 tabs");
 

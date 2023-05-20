@@ -4,7 +4,7 @@
 
 let getExtension = () => {
   return ExtensionTestUtils.loadExtension({
-    background: async function() {
+    background: async function () {
       const runningListener = isRunning => {
         if (isRunning) {
           browser.test.sendMessage("started");

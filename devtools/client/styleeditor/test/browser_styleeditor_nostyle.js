@@ -7,7 +7,7 @@
 
 const TESTCASE_URI = TEST_BASE_HTTP + "nostyle.html";
 
-add_task(async function() {
+add_task(async function () {
   // Make enough room for the "append style sheet" link to not wrap,
   // as it messes up with EvenEventUtils.synthesizeMouse
   await pushPref("devtools.styleeditor.navSidebarWidth", 500);

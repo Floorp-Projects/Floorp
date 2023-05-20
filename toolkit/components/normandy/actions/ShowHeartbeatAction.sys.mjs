@@ -21,7 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gAllRecipeStorage", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gAllRecipeStorage", function () {
   return new lazy.Storage("normandy-heartbeat");
 });
 

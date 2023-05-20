@@ -53,7 +53,7 @@ function promisePopupShown(popup) {
     } else {
       popup.addEventListener(
         "popupshown",
-        function(event) {
+        function (event) {
           resolve();
         },
         { once: true }

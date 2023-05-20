@@ -22,7 +22,7 @@ const TOP_SITES_URLS = [
 let suggestionsEngine;
 let defaultEngine;
 
-add_setup(async function() {
+add_setup(async function () {
   suggestionsEngine = await SearchTestUtils.promiseNewSearchEngine({
     url: getRootDirectory(gTestPath) + SUGGESTIONS_ENGINE_NAME,
   });
@@ -357,7 +357,7 @@ add_task(async function menubar_item() {
 // Tests that entering search mode invalidates pageproxystate and that
 // pageproxystate remains invalid after exiting search mode.
 add_task(async function invalidate_pageproxystate() {
-  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
     await UrlbarTestUtils.promisePopupOpen(window, () => {
       EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
     });

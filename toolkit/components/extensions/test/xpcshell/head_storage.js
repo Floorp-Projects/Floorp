@@ -319,7 +319,7 @@ async function test_background_page_storage(testAreaName) {
       this.testKey1 = "testValue1";
     }
 
-    CustomObj.prototype.toString = function() {
+    CustomObj.prototype.toString = function () {
       return '{"testKey2":"testValue2"}';
     };
 

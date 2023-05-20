@@ -7,7 +7,7 @@
 
 const kDownloadAutoHidePref = "browser.download.autohideButton";
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   Services.prefs.clearUserPref(kDownloadAutoHidePref);
   if (document.documentElement.hasAttribute("customizing")) {
     await gCustomizeMode.reset();

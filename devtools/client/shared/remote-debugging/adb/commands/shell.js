@@ -11,7 +11,7 @@ const client = require("resource://devtools/client/shared/remote-debugging/adb/a
 
 const OKAY = 0x59414b4f;
 
-const shell = async function(deviceId, command) {
+const shell = async function (deviceId, command) {
   if (!deviceId) {
     throw new Error("ADB shell command needs the device id");
   }
@@ -22,7 +22,7 @@ const shell = async function(deviceId, command) {
   dumpn("shell " + command + " on " + deviceId);
 
   return new Promise((resolve, reject) => {
-    const shutdown = function() {
+    const shutdown = function () {
       dumpn("shell shutdown");
       socket.close();
       reject("BAD_RESPONSE");
@@ -81,23 +81,23 @@ const shell = async function(deviceId, command) {
     };
 
     const socket = client.connect();
-    socket.s.onerror = function(event) {
+    socket.s.onerror = function (event) {
       dumpn("shell onerror");
       reject("SOCKET_ERROR");
     };
 
-    socket.s.onopen = function(event) {
+    socket.s.onopen = function (event) {
       dumpn("shell onopen");
       state = "start";
       runFSM();
     };
 
-    socket.s.onclose = function(event) {
+    socket.s.onclose = function (event) {
       resolve(stdout);
       dumpn("shell onclose");
     };
 
-    socket.s.ondata = function(event) {
+    socket.s.ondata = function (event) {
       dumpn("shell ondata");
       runFSM(event.data);
     };

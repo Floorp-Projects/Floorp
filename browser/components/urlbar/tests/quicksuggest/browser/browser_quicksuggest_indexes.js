@@ -43,7 +43,7 @@ const REMOTE_SETTINGS_RESULTS = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   // This test intermittently times out on Mac TV WebRender.
   if (AppConstants.platform == "macosx") {
     requestLongerTimeout(3);

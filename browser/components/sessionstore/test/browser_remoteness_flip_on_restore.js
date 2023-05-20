@@ -214,7 +214,7 @@ async function runScenarios(scenarios) {
  * a variety of initial remoteness states. For this particular
  * set of tests, we assume that tabs are restoring on demand.
  */
-add_task(async function() {
+add_task(async function () {
   // This test opens and closes windows, which might bog down
   // a debug build long enough to time out the test, so we
   // extend the tolerance on timeouts.

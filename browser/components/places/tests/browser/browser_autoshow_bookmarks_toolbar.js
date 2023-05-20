@@ -8,7 +8,7 @@ const TOOLBAR_VISIBILITY_PREF = "browser.toolbars.bookmarks.visibility";
 let bookmarkPanel;
 let win;
 
-add_setup(async function() {
+add_setup(async function () {
   Services.prefs.clearUserPref(LOCATION_PREF);
   await PlacesUtils.bookmarks.eraseEverything();
 

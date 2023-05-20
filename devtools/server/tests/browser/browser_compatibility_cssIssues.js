@@ -107,7 +107,7 @@ async function testNodeCssIssues(selector, walker, compatibility, expected) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, walker, target } = await initInspectorFront(URL);
   const compatibility = await inspector.getCompatibilityFront();
 

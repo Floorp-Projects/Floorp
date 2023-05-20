@@ -15,7 +15,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 /** Defines the type of a Hub Message. */
 var MessageType;
-(function(_MessageType) {
+(function (_MessageType) {
   /** Indicates the message is an Invocation message and implements the {@link @microsoft/signalr.InvocationMessage} interface. */
   MessageType[(MessageType.Invocation = 1)] = "Invocation";
   /** Indicates the message is a StreamItem message and implements the {@link @microsoft/signalr.StreamItemMessage} interface. */

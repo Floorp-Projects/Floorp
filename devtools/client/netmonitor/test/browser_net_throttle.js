@@ -7,7 +7,7 @@
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   await throttleTest({ throttle: true, addLatency: true });
   await throttleTest({ throttle: true, addLatency: false });
   await throttleTest({ throttle: false, addLatency: false });

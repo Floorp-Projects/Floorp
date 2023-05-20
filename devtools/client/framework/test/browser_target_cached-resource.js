@@ -15,7 +15,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_task(async function() {
+add_task(async function () {
   info("Open console");
   const tab = await addTab(TEST_URI);
   const toolbox = await openToolboxForTab(tab, "webconsole");

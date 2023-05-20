@@ -1,5 +1,5 @@
-onmessage = function(e) {
-  clients.matchAll().then(function(c) {
+onmessage = function (e) {
+  clients.matchAll().then(function (c) {
     if (c.length === 0) {
       // We cannot proceed.
       return;
@@ -8,14 +8,14 @@ onmessage = function(e) {
     registration
       .unregister()
       .then(
-        function() {
+        function () {
           c[0].postMessage("DONE");
         },
-        function() {
+        function () {
           c[0].postMessage("ERROR");
         }
       )
-      .then(function() {
+      .then(function () {
         c[0].postMessage("FINISH");
       });
   });

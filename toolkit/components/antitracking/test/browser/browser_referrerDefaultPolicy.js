@@ -25,7 +25,9 @@ async function testOnWindowBody(win, expectedReferrer, rp) {
   await promiseTabLoadEvent(tab, TEST_TOP_PAGE);
 
   info("Loading tracking scripts and tracking images");
-  let referrer = await SpecialPowers.spawn(b, [{ rp }], async function({ rp }) {
+  let referrer = await SpecialPowers.spawn(b, [{ rp }], async function ({
+    rp,
+  }) {
     {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => {
@@ -481,7 +483,7 @@ async function testOnUnsafeUrl(isPrivate) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   info("Starting referrer default policy test");
 
   await SpecialPowers.flushPrefEnv();
@@ -612,7 +614,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
 
   await executeTests();
@@ -620,7 +622,7 @@ add_task(async function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>

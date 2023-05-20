@@ -1,7 +1,7 @@
-add_setup(async function() {
+add_setup(async function () {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("privacy.firstparty.isolate");
   });
 });
@@ -16,7 +16,7 @@ add_task(async function test_remote_window_open_js_uri() {
 
   await BrowserTestUtils.browserLoaded(browser);
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     Assert.ok(true, "origin " + content.document.nodePrincipal.origin);
 
     Assert.ok(
@@ -54,12 +54,12 @@ add_task(async function test_remote_window_open_js_uri2() {
  `
   );
 
-  await BrowserTestUtils.browserLoaded(browser, true, function(url) {
+  await BrowserTestUtils.browserLoaded(browser, true, function (url) {
     info("URL:" + url);
     return url == "http://example.com/";
   });
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     Assert.ok(true, "origin " + content.document.nodePrincipal.origin);
 
     Assert.ok(
@@ -77,7 +77,7 @@ add_task(async function test_remote_window_open_js_uri2() {
     );
 
     let iframe = content.document.getElementById("iframe1");
-    await SpecialPowers.spawn(iframe, [expectDomain], function(domain) {
+    await SpecialPowers.spawn(iframe, [expectDomain], function (domain) {
       Assert.equal(
         content.document.nodePrincipal.originAttributes.firstPartyDomain,
         domain,

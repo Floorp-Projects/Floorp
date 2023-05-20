@@ -75,7 +75,7 @@ if (Services.appinfo.OS !== "Linux") {
   TESTS.push({ baseSelector: "#id6", nb: 2, used: [0, 1] });
 }
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
 

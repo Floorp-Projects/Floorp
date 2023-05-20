@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
 requestLongerTimeout(4);
 
 // Test that the Browser Toolbox still works after navigating a content tab
-add_task(async function() {
+add_task(async function () {
   // Forces the Browser Toolbox to open on the inspector by default
   await pushPref("devtools.browsertoolbox.panel", "inspector");
 

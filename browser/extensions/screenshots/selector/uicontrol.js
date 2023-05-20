@@ -7,7 +7,7 @@
 
 "use strict";
 
-this.uicontrol = (function() {
+this.uicontrol = (function () {
   const exports = {};
 
   /** ********************************************************
@@ -827,7 +827,7 @@ this.uicontrol = (function() {
    * Selection communication
    */
 
-  exports.activate = function() {
+  exports.activate = function () {
     if (!document.body) {
       callBackground("abortStartShot");
       const tagName = String(document.documentElement.tagName || "").replace(
@@ -852,7 +852,7 @@ this.uicontrol = (function() {
     return document.body.tagName === "FRAMESET";
   }
 
-  exports.deactivate = function() {
+  exports.deactivate = function () {
     try {
       sendEvent("internal", "deactivate");
       setState("cancel");
@@ -866,7 +866,7 @@ this.uicontrol = (function() {
 
   let unloadTime = 0;
 
-  exports.unload = function() {
+  exports.unload = function () {
     // Note that ui.unload() will be called on its own
     unloadTime = Date.now();
     removeHandlers();
@@ -882,7 +882,7 @@ this.uicontrol = (function() {
   function addHandlers() {
     ["mouseup", "mousedown", "mousemove", "click"].forEach(eventName => {
       const fn = watchFunction(
-        assertIsTrusted(function(event) {
+        assertIsTrusted(function (event) {
           if (typeof event.button === "number" && event.button !== 0) {
             // Not a left click
             return undefined;

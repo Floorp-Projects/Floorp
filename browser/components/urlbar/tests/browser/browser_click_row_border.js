@@ -5,9 +5,9 @@
 
 const TEST_URL = "https://example.com/autocomplete";
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesTestUtils.addVisits(TEST_URL);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 });

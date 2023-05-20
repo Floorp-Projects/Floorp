@@ -873,9 +873,9 @@ const TESTCASES_BOTH_CHANGED_AND_UNCHANGED = [
 
 function do_test(testcases, testFn) {
   for (let tc of testcases) {
-    (function() {
+    (function () {
       let testcase = tc;
-      add_task(async function() {
+      add_task(async function () {
         info("Starting testcase: " + testcase.description);
         let ccNumber = testcase.profileData["cc-number"];
         if (ccNumber) {

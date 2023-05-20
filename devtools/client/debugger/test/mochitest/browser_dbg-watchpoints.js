@@ -9,7 +9,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-sources.html");
 
   // Do not await for navigation as an early breakpoint pauses the document load

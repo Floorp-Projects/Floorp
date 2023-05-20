@@ -167,7 +167,7 @@ addEventListener(
  */
 addEventListener(
   "TalosPowers:ParentExec:QueryEvent",
-  function(e) {
+  function (e) {
     if (
       content.location.protocol != "file:" &&
       content.location.hostname != "localhost" &&

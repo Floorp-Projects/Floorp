@@ -18,7 +18,7 @@ const EMPTY_SW_HTML = URL_ROOT_SSL + "resources/service-workers/empty-sw.html";
 /**
  * Test that the appropriate fetch flag is displayed for service workers.
  */
-add_task(async function() {
+add_task(async function () {
   await enableServiceWorkerDebugging();
   const { document, tab, window } = await openAboutDebugging({
     enableWorkerUpdates: true,

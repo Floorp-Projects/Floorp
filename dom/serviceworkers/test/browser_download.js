@@ -24,12 +24,12 @@ function windowObserver(win, topic) {
 
   win.addEventListener(
     "load",
-    function() {
+    function () {
       if (
         win.document.documentURI ===
         "chrome://mozapps/content/downloads/unknownContentType.xhtml"
       ) {
-        executeSoon(function() {
+        executeSoon(function () {
           let dialog = win.document.getElementById("unknownContentType");
           let button = dialog.getButton("accept");
           button.disabled = false;
@@ -54,13 +54,13 @@ function test() {
         ["dom.serviceWorkers.testing.enabled", true],
       ],
     },
-    function() {
+    function () {
       var url = gTestRoot + "download/window.html";
       var tab = BrowserTestUtils.addTab(gBrowser);
       gBrowser.selectedTab = tab;
 
       Downloads.getList(Downloads.ALL)
-        .then(function(downloadList) {
+        .then(function (downloadList) {
           var downloadListener;
 
           function downloadVerifier(aDownload) {
@@ -85,7 +85,7 @@ function test() {
 
           return downloadList.addView(downloadListener);
         })
-        .then(function() {
+        .then(function () {
           BrowserTestUtils.loadURIString(gBrowser, url);
         });
     }

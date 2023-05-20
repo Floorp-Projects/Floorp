@@ -47,11 +47,11 @@ async function clearHistoryAndWait() {
 let MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
-add_task(async function() {
+add_task(async function () {
   const IMAGE_URL =
     "http://mochi.test:8888/browser/toolkit/content/tests/browser/doggy.png";
 
-  await BrowserTestUtils.withNewTab(IMAGE_URL, async function(browser) {
+  await BrowserTestUtils.withNewTab(IMAGE_URL, async function (browser) {
     let tmpDir = FileUtils.getDir("TmpD", [], true);
     let dir = newDirectory();
     let downloadLastDir = new DownloadLastDir(null);
@@ -59,7 +59,7 @@ add_task(async function() {
     await setFile(downloadLastDir, IMAGE_URL, dir);
     // Ensure that "browser.download.lastDir" points to a different directory
     await setFile(downloadLastDir, null, tmpDir);
-    registerCleanupFunction(async function() {
+    registerCleanupFunction(async function () {
       await clearHistoryAndWait();
       dir.remove(true);
     });
@@ -68,7 +68,7 @@ add_task(async function() {
     let showFilePickerPromise = new Promise(resolve => {
       MockFilePicker.showCallback = fp => resolve(fp.displayDirectory.path);
     });
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       MockFilePicker.cleanup();
     });
 

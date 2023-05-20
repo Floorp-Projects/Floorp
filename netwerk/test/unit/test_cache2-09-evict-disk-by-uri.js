@@ -8,18 +8,18 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "a1m", "a1d", function(entry) {
+    new OpenCallback(NEW, "a1m", "a1d", function (entry) {
       asyncOpenCacheEntry(
         "http://a/",
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "a1m", "a1d", function(entry) {
+        new OpenCallback(NORMAL, "a1m", "a1d", function (entry) {
           var storage = getCacheStorage("disk");
           storage.asyncDoomURI(
             createURI("http://a/"),
             "",
-            new EvictionCallback(true, function() {
+            new EvictionCallback(true, function () {
               finish_cache2_test();
             })
           );

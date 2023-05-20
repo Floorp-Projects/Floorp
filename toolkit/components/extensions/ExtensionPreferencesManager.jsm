@@ -53,7 +53,7 @@ const { ExtensionUtils } = ChromeUtils.import(
 
 const { ExtensionError } = ExtensionUtils;
 
-XPCOMUtils.defineLazyGetter(lazy, "defaultPreferences", function() {
+XPCOMUtils.defineLazyGetter(lazy, "defaultPreferences", function () {
   return new lazy.Preferences({ defaultBranch: true });
 });
 

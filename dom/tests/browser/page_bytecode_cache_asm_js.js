@@ -1,4 +1,4 @@
-window.onerror = function(e) {
+window.onerror = function (e) {
   document.getElementById("result").textContent = e;
 };
 

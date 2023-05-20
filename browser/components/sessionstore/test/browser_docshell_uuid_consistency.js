@@ -5,7 +5,7 @@ add_task(async function duplicateTab() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   if (!Services.appinfo.sessionHistoryInParent) {
-    await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
       let docshell = content.window.docShell.QueryInterface(
         Ci.nsIWebNavigation
       );
@@ -24,7 +24,7 @@ add_task(async function duplicateTab() {
   await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
   if (!Services.appinfo.sessionHistoryInParent) {
-    await SpecialPowers.spawn(tab2.linkedBrowser, [], function() {
+    await SpecialPowers.spawn(tab2.linkedBrowser, [], function () {
       let docshell = content.window.docShell.QueryInterface(
         Ci.nsIWebNavigation
       );
@@ -50,7 +50,7 @@ add_task(async function contentToChromeNavigate() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   if (!Services.appinfo.sessionHistoryInParent) {
-    await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
       let docshell = content.window.docShell.QueryInterface(
         Ci.nsIWebNavigation
       );

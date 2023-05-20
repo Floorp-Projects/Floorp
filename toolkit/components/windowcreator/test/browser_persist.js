@@ -19,13 +19,13 @@ const REFTESTS = [
 ];
 
 async function persist(name, uri) {
-  return BrowserTestUtils.withNewTab(uri, async function(browser) {
+  return BrowserTestUtils.withNewTab(uri, async function (browser) {
     // Snapshot the doc as loaded, this is our reference.
     info("snapshotting reference");
     let reference = await snapshotWindow(browser);
 
     info("starting persistence");
-    let doc = await new Promise(function(resolve) {
+    let doc = await new Promise(function (resolve) {
       browser.frameLoader.startPersistence(null, {
         onDocumentReady(d) {
           resolve(d);
@@ -56,7 +56,7 @@ async function persist(name, uri) {
 
     info("persisting document");
     // Wait for the persisted document.
-    await new Promise(function(resolve) {
+    await new Promise(function (resolve) {
       wbp.progressListener = {
         onProgressChange() {},
         onLocationChange() {},
@@ -75,7 +75,7 @@ async function persist(name, uri) {
 
     info("load done, loading persisted document");
     let fileUri = Services.io.newFileURI(tmpFile).spec;
-    let test = await BrowserTestUtils.withNewTab(fileUri, async function(
+    let test = await BrowserTestUtils.withNewTab(fileUri, async function (
       persistedBrowser
     ) {
       info("snapshotting persisted document");
@@ -85,7 +85,7 @@ async function persist(name, uri) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   for (let filename of REFTESTS) {
     let uri = contentBase + filename;
     let { test, reference } = await persist(filename, uri);

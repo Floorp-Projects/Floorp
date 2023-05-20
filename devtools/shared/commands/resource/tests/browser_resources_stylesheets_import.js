@@ -18,7 +18,7 @@ const TEST_URL = `https://example.org/document-builder.sjs?html=
   <h1>import stylesheet test</h1>
   <iframe src="${encodeURIComponent(IFRAME_URL)}"></iframe>`;
 
-add_task(async function() {
+add_task(async function () {
   info("Check resource available feature of the ResourceCommand");
 
   const tab = await addTab(TEST_URL);

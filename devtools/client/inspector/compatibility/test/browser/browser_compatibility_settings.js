@@ -21,7 +21,7 @@ const {
   COMPATIBILITY_UPDATE_TARGET_BROWSERS_COMPLETE,
 } = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
-add_task(async function() {
+add_task(async function () {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(
       "devtools.inspector.compatibility.target-browsers"

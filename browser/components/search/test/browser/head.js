@@ -91,7 +91,7 @@ function getOneOffs() {
 }
 
 async function typeInSearchField(browser, text, fieldName) {
-  await SpecialPowers.spawn(browser, [[fieldName, text]], async function([
+  await SpecialPowers.spawn(browser, [[fieldName, text]], async function ([
     contentFieldName,
     contentText,
   ]) {

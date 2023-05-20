@@ -21,7 +21,7 @@ function open_subdialog_and_test_generic_start_state(
   return SpecialPowers.spawn(
     browser,
     [{ url, domcontentloadedFnStr }],
-    async function(args) {
+    async function (args) {
       let rv = { acceptCount: 0 };
       let win = content.window;
       content.gSubDialog.open(args.url, undefined, rv);
@@ -117,7 +117,7 @@ async function close_subdialog_and_test_generic_end_state(
   let dialogclosingPromise = SpecialPowers.spawn(
     browser,
     [{ closingButton, acceptCount }],
-    async function(expectations) {
+    async function (expectations) {
       let win = content.window;
       let subdialog = win.gSubDialog._topDialog;
       let frame = subdialog._frame;
@@ -210,7 +210,7 @@ add_task(
       tab.linkedBrowser,
       "DOMTitleChanged"
     );
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
       let dialog = content.window.gSubDialog._topDialog;
       let dialogWin = dialog._frame.contentWindow;
       let dialogTitleElement = dialog._titleElement;
@@ -230,7 +230,7 @@ add_task(
     info("waiting for DOMTitleChanged event");
     await domtitlechangedPromise;
 
-    SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
       let dialogTitleElement =
         content.window.gSubDialog._topDialog._titleElement;
       Assert.equal(
@@ -243,7 +243,7 @@ add_task(
     // Accept the dialog
     await close_subdialog_and_test_generic_end_state(
       tab.linkedBrowser,
-      function() {
+      function () {
         content.window.gSubDialog._topDialog._frame.contentDocument
           .getElementById("subDialog")
           .acceptDialog();
@@ -260,7 +260,7 @@ add_task(async function check_canceling_dialog() {
   info("canceling the dialog");
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
-    function() {
+    function () {
       content.window.gSubDialog._topDialog._frame.contentDocument
         .getElementById("subDialog")
         .cancelDialog();
@@ -279,7 +279,7 @@ add_task(async function check_reopening_dialog() {
     gDialogURL2
   );
 
-  SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let win = content.window;
     let dialogs = win.gSubDialog._dialogs;
     let lowerDialog = dialogs[0];
@@ -310,7 +310,7 @@ add_task(async function check_reopening_dialog() {
   info("closing two dialogs");
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
-    function() {
+    function () {
       content.window.gSubDialog._topDialog._frame.contentDocument
         .getElementById("subDialog")
         .acceptDialog();
@@ -320,7 +320,7 @@ add_task(async function check_reopening_dialog() {
   );
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
-    function() {
+    function () {
       content.window.gSubDialog._topDialog._frame.contentDocument
         .getElementById("subDialog")
         .acceptDialog();
@@ -338,7 +338,7 @@ add_task(async function check_opening_while_closing() {
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
-    function() {
+    function () {
       content.window.gSubDialog._topDialog._frame.contentDocument
         .getElementById("subDialog")
         .acceptDialog();
@@ -354,7 +354,7 @@ add_task(async function window_close_on_dialog() {
   info("canceling the dialog");
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
-    function() {
+    function () {
       content.window.gSubDialog._topDialog._frame.contentWindow.close();
     },
     null,
@@ -368,7 +368,7 @@ add_task(async function click_close_button_on_dialog() {
   info("canceling the dialog");
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
-    function() {
+    function () {
       return BrowserTestUtils.synthesizeMouseAtCenter(
         ".dialogClose",
         {},
@@ -400,7 +400,7 @@ add_task(async function background_click_should_close_dialog() {
   info("clicking the overlay background");
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
-    function() {
+    function () {
       return BrowserTestUtils.synthesizeMouseAtPoint(
         2,
         2,
@@ -420,7 +420,7 @@ add_task(async function escape_should_close_dialog() {
   info("canceling the dialog");
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
-    function() {
+    function () {
       return BrowserTestUtils.synthesizeKey("VK_ESCAPE", {}, tab.linkedBrowser);
     },
     "cancel",
@@ -432,7 +432,7 @@ add_task(async function escape_should_close_dialog() {
 add_task(async function correct_width_and_height_should_be_used_for_dialog() {
   await open_subdialog_and_test_generic_start_state(tab.linkedBrowser);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     function fuzzyEqual(value, expectedValue, fuzz, msg) {
       Assert.greaterOrEqual(expectedValue + fuzz, value, msg);
       Assert.lessOrEqual(expectedValue - fuzz, value, msg);
@@ -462,7 +462,7 @@ add_task(async function correct_width_and_height_should_be_used_for_dialog() {
 
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
-    function() {
+    function () {
       content.window.gSubDialog._topDialog._frame.contentWindow.close();
     },
     null,
@@ -495,7 +495,7 @@ add_task(
       }
     );
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [oldHeight], async function(
+    await SpecialPowers.spawn(tab.linkedBrowser, [oldHeight], async function (
       contentOldHeight
     ) {
       function fuzzyEqual(value, expectedValue, fuzz, msg) {
@@ -537,7 +537,7 @@ add_task(
 
     await close_subdialog_and_test_generic_end_state(
       tab.linkedBrowser,
-      function() {
+      function () {
         content.window.gSubDialog._topDialog._frame.contentWindow.window.close();
       },
       null,
@@ -555,7 +555,7 @@ add_task(async function dialog_too_tall_should_get_reduced_in_height() {
     }
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     function fuzzyEqual(value, expectedValue, fuzz, msg) {
       Assert.greaterOrEqual(expectedValue + fuzz, value, msg);
       Assert.lessOrEqual(expectedValue - fuzz, value, msg);
@@ -584,7 +584,7 @@ add_task(async function dialog_too_tall_should_get_reduced_in_height() {
 
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
-    function() {
+    function () {
       content.window.gSubDialog._topDialog._frame.contentWindow.window.close();
     },
     null,
@@ -603,7 +603,7 @@ add_task(
       }
     );
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
       let frame = content.window.gSubDialog._topDialog._frame;
       Assert.ok(
         frame.style.width.endsWith("px"),
@@ -623,7 +623,7 @@ add_task(
 
     await close_subdialog_and_test_generic_end_state(
       tab.linkedBrowser,
-      function() {
+      function () {
         content.window.gSubDialog._topDialog._frame.contentWindow.window.close();
       },
       null,

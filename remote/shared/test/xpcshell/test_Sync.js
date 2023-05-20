@@ -294,7 +294,7 @@ add_task(function test_PollPromise_funcTypes() {
     Assert.throws(() => new PollPromise(type), /TypeError/);
   }
   new PollPromise(() => {});
-  new PollPromise(function() {});
+  new PollPromise(function () {});
 });
 
 add_task(function test_PollPromise_timeoutTypes() {

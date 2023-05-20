@@ -12,7 +12,7 @@ importScripts("resource://gre/modules/ObjectUtils.jsm");
 
 importScripts("file_ioutils_test_fixtures.js");
 
-self.onmessage = async function(msg) {
+self.onmessage = async function (msg) {
   const tmpDir = await PathUtils.getTempDir();
 
   // IOUtils functionality is the same when called from the main thread, or a

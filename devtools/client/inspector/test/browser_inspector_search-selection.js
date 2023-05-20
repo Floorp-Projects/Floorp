@@ -6,7 +6,7 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Focus the search box");
@@ -64,7 +64,7 @@ add_task(async function() {
   }
 });
 
-const sendKeyAndCheck = async function(
+const sendKeyAndCheck = async function (
   inspector,
   description,
   key,

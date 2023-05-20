@@ -28,7 +28,7 @@
       this.shadowRoot.append(fragment);
 
       let button1 = shadowRoot.querySelector(".visible-page");
-      button1.onclick = function() {
+      button1.onclick = function () {
         Services.obs.notifyObservers(
           gBrowser.ownerGlobal,
           "screenshots-take-screenshot",
@@ -37,7 +37,7 @@
       };
 
       let button2 = shadowRoot.querySelector(".full-page");
-      button2.onclick = function() {
+      button2.onclick = function () {
         Services.obs.notifyObservers(
           gBrowser.ownerGlobal,
           "screenshots-take-screenshot",

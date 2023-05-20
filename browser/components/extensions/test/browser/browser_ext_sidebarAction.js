@@ -24,14 +24,14 @@ let extData = {
       </body></html>
     `,
 
-    "sidebar.js": function() {
+    "sidebar.js": function () {
       window.onload = () => {
         browser.test.sendMessage("sidebar");
       };
     },
   },
 
-  background: function() {
+  background: function () {
     browser.test.onMessage.addListener(async ({ msg, data }) => {
       if (msg === "set-panel") {
         await browser.sidebarAction.setPanel({ panel: null });

@@ -223,7 +223,7 @@ async function multi_page_login(login_info, context, commands) {
 
   await password_field.sendKeys(login_info.password);
 
-  return async function() {
+  return async function () {
     password_field.sendKeys(webdriver.Key.ENTER);
     await commands.wait.byTime(5000);
   };

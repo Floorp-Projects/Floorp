@@ -6,7 +6,7 @@
 
 /* import-globals-from ../../head.js */
 
-add_task(async function() {
+add_task(async function () {
   const scale = window.docShell.QueryInterface(Ci.nsIBaseWindow)
     .devicePixelsPerDesktopPixel;
   let { bounds, rects } = TestRunner._findBoundingBox(["#tabbrowser-tabs"]);

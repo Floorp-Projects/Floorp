@@ -255,7 +255,7 @@ this.storage = class extends ExtensionAPI {
       onChanged: makeOnChangedEventTarget("storage.local.onChanged"),
     };
     for (let method of ["get", "set", "remove", "clear"]) {
-      local[method] = async function(...args) {
+      local[method] = async function (...args) {
         try {
           // Discover the selected backend if it is not known yet.
           if (!selectedBackend) {

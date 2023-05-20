@@ -13,7 +13,7 @@ const testServer = createVersionizedHttpTestServer(
 );
 const TEST_URL = testServer.urlFor("index.html");
 
-add_task(async function() {
+add_task(async function () {
   // We open against a blank page and only then navigate to the test page
   // so that sources aren't GC-ed before opening the debugger.
   // When we (re)load a page while the debugger is opened, the debugger

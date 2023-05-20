@@ -9,7 +9,7 @@ const TOOLBARID = "test-toolbar-added-during-customize-mode";
 // The ID of a button that is not placed (ie, is in the palette) by default
 const kNonPlacedWidgetId = "open-file-button";
 
-add_task(async function() {
+add_task(async function () {
   await startCustomizing();
   let toolbar = createToolbarWithPlacements(TOOLBARID, []);
   CustomizableUI.addWidgetToArea(kNonPlacedWidgetId, TOOLBARID);

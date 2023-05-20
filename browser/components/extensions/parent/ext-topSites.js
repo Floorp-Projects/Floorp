@@ -25,7 +25,7 @@ this.topSites = class extends ExtensionAPI {
   getAPI(context) {
     return {
       topSites: {
-        get: async function(options) {
+        get: async function (options) {
           // We fallback to newtab = false behavior if the user disabled their
           // Top Sites feed.
           let getNewtabSites =

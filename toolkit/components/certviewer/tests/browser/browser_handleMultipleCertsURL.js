@@ -16,8 +16,8 @@ async function checkSubjectName(inputPage, subjectsNameInfo) {
       gBrowser,
       url: inputPage,
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [subjectsNameInfo], async function(
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [subjectsNameInfo], async function (
         subjectsNameInfoExpected
       ) {
         let certificateSection = await ContentTaskUtils.waitForCondition(() => {
@@ -74,8 +74,8 @@ async function checkTabsName(inputPage, tabsNames) {
       gBrowser,
       url: inputPage,
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [tabsNames], async function(
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [tabsNames], async function (
         expectedTabsNames
       ) {
         let certificateSection = await ContentTaskUtils.waitForCondition(() => {
@@ -124,8 +124,8 @@ async function checkDOM(inputPage, errorExpected) {
       gBrowser,
       url: inputPage,
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [errorExpected], async function(
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [errorExpected], async function (
         errorExpected
       ) {
         let certificateSection = await ContentTaskUtils.waitForCondition(() => {

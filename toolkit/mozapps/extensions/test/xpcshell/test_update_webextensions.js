@@ -41,7 +41,7 @@ async function promiseInstallWebExtension(aData) {
   return addon;
 }
 
-var checkUpdates = async function(
+var checkUpdates = async function (
   aData,
   aReason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE
 ) {

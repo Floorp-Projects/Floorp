@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
  * Tests if the clear button empties the request menu.
  */
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setBoolPref("devtools.webconsole.filter.net", true);
 
   const { monitor, toolbox } = await initNetMonitor(SIMPLE_URL, {

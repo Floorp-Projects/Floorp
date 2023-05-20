@@ -1,11 +1,11 @@
 /* eslint-env mozilla/frame-script */
 
-(function() {
+(function () {
   const TRESIZE_PREFIX = "tresize@mozilla.org:";
 
   addEventListener(
     TRESIZE_PREFIX + "chrome-run-event",
-    function(e) {
+    function (e) {
       var uniqueMessageId =
         TRESIZE_PREFIX +
         content.document.documentURI +

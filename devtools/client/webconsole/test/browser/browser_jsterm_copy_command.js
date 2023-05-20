@@ -26,7 +26,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
   <div><p></p></div>
 </body>`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const random = Math.random();
   const string = "Text: " + random;
@@ -39,14 +39,14 @@ add_task(async function() {
   const outerHTML = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [id],
-    function(elementId) {
+    function (elementId) {
       return content.document.getElementById(elementId).outerHTML;
     }
   );
   await testCopy(hud, `$("#${id}")`, outerHTML);
 });
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   await executeAndWaitForErrorMessage(
     hud,

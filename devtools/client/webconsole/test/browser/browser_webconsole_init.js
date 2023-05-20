@@ -7,7 +7,7 @@ const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-console.html";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { ui } = hud;
 
@@ -16,7 +16,7 @@ add_task(async function() {
 
   const receievedMessages = waitForMessageByType(hud, "19", ".console-api");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.doLogs(20);
   });
 

@@ -25,7 +25,7 @@ function getLocalScopeLevels(originalAstScopes) {
 }
 
 export function generateInlinePreview(cx, frame) {
-  return async function({ dispatch, getState, parserWorker, client }) {
+  return async function ({ dispatch, getState, parserWorker, client }) {
     if (!frame || !features.inlinePreview) {
       return null;
     }

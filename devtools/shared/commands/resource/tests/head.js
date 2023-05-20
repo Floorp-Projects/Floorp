@@ -122,7 +122,7 @@ function checkValue(name, value, expected) {
 
 async function triggerNetworkRequests(browser, commands) {
   for (let i = 0; i < commands.length; i++) {
-    await SpecialPowers.spawn(browser, [commands[i]], async function(code) {
+    await SpecialPowers.spawn(browser, [commands[i]], async function (code) {
       const script = content.document.createElement("script");
       script.append(
         content.document.createTextNode(

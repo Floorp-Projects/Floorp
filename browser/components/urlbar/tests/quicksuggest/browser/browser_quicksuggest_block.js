@@ -47,7 +47,7 @@ const REMOTE_SETTINGS_RESULTS = [
 // Spy for the custom impression/click sender
 let spy;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.bestMatch.blockingEnabled", true],

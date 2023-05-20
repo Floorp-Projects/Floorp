@@ -23,10 +23,10 @@ var gTests = [
   {
     desc: "WebChannel generic message",
     run() {
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         let tab;
         let channel = new WebChannel("generic", Services.io.newURI(HTTP_PATH));
-        channel.listen(function(id, message, target) {
+        channel.listen(function (id, message, target) {
           is(id, "generic");
           is(message.something.nested, "hello");
           channel.stopListening();
@@ -44,9 +44,9 @@ var gTests = [
   {
     desc: "WebChannel generic message in a private window.",
     async run() {
-      let promiseTestDone = new Promise(function(resolve, reject) {
+      let promiseTestDone = new Promise(function (resolve, reject) {
         let channel = new WebChannel("generic", Services.io.newURI(HTTP_PATH));
-        channel.listen(function(id, message, target) {
+        channel.listen(function (id, message, target) {
           is(id, "generic");
           is(message.something.nested, "hello");
           channel.stopListening();
@@ -66,11 +66,11 @@ var gTests = [
   {
     desc: "WebChannel two way communication",
     run() {
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         let tab;
         let channel = new WebChannel("twoway", Services.io.newURI(HTTP_PATH));
 
-        channel.listen(function(id, message, sender) {
+        channel.listen(function (id, message, sender) {
           is(id, "twoway", "bad id");
           ok(message.command, "command not ok");
 
@@ -101,12 +101,12 @@ var gTests = [
         "twoway",
         Services.io.newURI(HTTP_IFRAME_PATH)
       );
-      let promiseTestDone = new Promise(function(resolve, reject) {
-        parentChannel.listen(function(id, message, sender) {
+      let promiseTestDone = new Promise(function (resolve, reject) {
+        parentChannel.listen(function (id, message, sender) {
           reject(new Error("WebChannel message incorrectly sent to parent"));
         });
 
-        iframeChannel.listen(function(id, message, sender) {
+        iframeChannel.listen(function (id, message, sender) {
           is(id, "twoway", "bad id (2)");
           ok(message.command, "command not ok (2)");
 
@@ -125,7 +125,7 @@ var gTests = [
           gBrowser,
           url: HTTP_PATH + HTTP_ENDPOINT + "?iframe",
         },
-        async function() {
+        async function () {
           await promiseTestDone;
           parentChannel.stopListening();
           iframeChannel.stopListening();
@@ -168,10 +168,10 @@ var gTests = [
         Services.io.newURI(HTTP_REDIRECTED_IFRAME_PATH)
       );
 
-      let promiseTestDone = new Promise(function(resolve, reject) {
-        preRedirectChannel.listen(function(id, message, preRedirectSender) {
+      let promiseTestDone = new Promise(function (resolve, reject) {
+        preRedirectChannel.listen(function (id, message, preRedirectSender) {
           if (message.command === "redirecting") {
-            postRedirectChannel.listen(function(
+            postRedirectChannel.listen(function (
               aId,
               aMessage,
               aPostRedirectSender
@@ -207,7 +207,7 @@ var gTests = [
           gBrowser,
           url: HTTP_PATH + HTTP_ENDPOINT + "?iframe_pre_redirect",
         },
-        async function() {
+        async function () {
           await promiseTestDone;
           preRedirectChannel.stopListening();
           postRedirectChannel.stopListening();
@@ -218,14 +218,14 @@ var gTests = [
   {
     desc: "WebChannel multichannel",
     run() {
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         let tab;
         let channel = new WebChannel(
           "multichannel",
           Services.io.newURI(HTTP_PATH)
         );
 
-        channel.listen(function(id, message, sender) {
+        channel.listen(function (id, message, sender) {
           is(id, "multichannel");
           gBrowser.removeTab(tab);
           resolve();
@@ -246,8 +246,8 @@ var gTests = [
       // an unsolicted message is sent from Chrome->Content which is then
       // echoed back. If the echo is received here, then the content
       // received the message.
-      let messagePromise = new Promise(function(resolve, reject) {
-        channel.listen(function(id, message, sender) {
+      let messagePromise = new Promise(function (resolve, reject) {
+        channel.listen(function (id, message, sender) {
           is(id, "echo");
           is(message.command, "unsolicited");
 
@@ -260,7 +260,7 @@ var gTests = [
           gBrowser,
           url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited",
         },
-        async function(targetBrowser) {
+        async function (targetBrowser) {
           channel.send(
             { command: "unsolicited" },
             {
@@ -283,8 +283,8 @@ var gTests = [
       // an unsolicted message is sent from Chrome->Content which is then
       // echoed back. If the echo is received here, then the content
       // received the message.
-      let messagePromise = new Promise(function(resolve, reject) {
-        channel.listen(function(id, message, sender) {
+      let messagePromise = new Promise(function (resolve, reject) {
+        channel.listen(function (id, message, sender) {
           is(id, "echo");
           is(message.command, "unsolicited");
 
@@ -297,7 +297,7 @@ var gTests = [
           gBrowser,
           url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited",
         },
-        async function(targetBrowser) {
+        async function (targetBrowser) {
           channel.send(
             { command: "unsolicited" },
             {
@@ -325,8 +325,8 @@ var gTests = [
       // `unsolicited_no_response_expected` is sent to the wrong principal
       // and should not be echoed back. The second, `done`, is sent to the
       // correct principal and should be echoed back.
-      let messagePromise = new Promise(function(resolve, reject) {
-        channel.listen(function(id, message, sender) {
+      let messagePromise = new Promise(function (resolve, reject) {
+        channel.listen(function (id, message, sender) {
           is(id, "echo");
 
           if (message.command === "done") {
@@ -342,7 +342,7 @@ var gTests = [
           gBrowser,
           url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited",
         },
-        async function(targetBrowser) {
+        async function (targetBrowser) {
           let mismatchURI = Services.io.newURI(HTTP_MISMATCH_PATH);
           let mismatchPrincipal = Services.scriptSecurityManager.createContentPrincipal(
             mismatchURI,
@@ -398,8 +398,8 @@ var gTests = [
         Services.io.newURI(HTTP_PATH)
       );
 
-      let testDonePromise = new Promise(function(resolve, reject) {
-        channel.listen(function(id, message, sender) {
+      let testDonePromise = new Promise(function (resolve, reject) {
+        channel.listen(function (id, message, sender) {
           if (message.command === "start") {
             channel.send({ command: "done" }, sender);
           } else if (message.command === "done") {
@@ -415,7 +415,7 @@ var gTests = [
           gBrowser,
           url: HTTP_PATH + HTTP_ENDPOINT + "?bubbles",
         },
-        async function() {
+        async function () {
           await testDonePromise;
           channel.stopListening();
         }
@@ -445,7 +445,7 @@ var gTests = [
           gBrowser,
           url: HTTP_PATH + HTTP_ENDPOINT + "?object",
         },
-        async function() {
+        async function () {
           await testDonePromise;
           channel.stopListening();
         }
@@ -490,7 +490,7 @@ var gTests = [
           gBrowser,
           url: HTTP_PATH + HTTP_ENDPOINT + "?object",
         },
-        async function() {
+        async function () {
           await testDonePromise;
           Services.prefs.setCharPref(webchannelWhitelistPref, origWhitelist);
           channel.stopListening();
@@ -530,7 +530,7 @@ var gTests = [
           gBrowser,
           url: HTTP_PATH + HTTP_ENDPOINT + "?error_thrown",
         },
-        async function() {
+        async function () {
           await testDonePromise;
           channel.stopListening();
           echoChannel.stopListening();
@@ -560,7 +560,7 @@ var gTests = [
           gBrowser,
           url: HTTP_PATH + HTTP_ENDPOINT + "?error_invalid_channel",
         },
-        async function() {
+        async function () {
           await testDonePromise;
           echoChannel.stopListening();
         }
@@ -572,7 +572,7 @@ var gTests = [
 function test() {
   waitForExplicitFinish();
 
-  (async function() {
+  (async function () {
     await SpecialPowers.pushPrefEnv({
       set: [["dom.security.https_first_pbm", false]],
     });

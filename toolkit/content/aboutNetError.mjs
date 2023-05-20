@@ -272,7 +272,7 @@ function recordTRREventTelemetry(
   const netErrorButtonDiv = document.getElementById("netErrorButtonContainer");
   const buttons = netErrorButtonDiv.querySelectorAll("button");
   for (let b of buttons) {
-    b.addEventListener("click", function(e) {
+    b.addEventListener("click", function (e) {
       let target = e.originalTarget;
       let telemetryId = target.dataset.telemetryId;
       RPMRecordTelemetryEvent(
@@ -874,7 +874,7 @@ function setupBlockingReportingUI() {
   );
   checkbox.checked = !!reportingAutomatic;
 
-  checkbox.addEventListener("change", function({ target: { checked } }) {
+  checkbox.addEventListener("change", function ({ target: { checked } }) {
     RPMSetBoolPref("security.xfocsp.errorReporting.automatic", checked);
 
     // If we're enabling reports, send a report for this failure.
@@ -1548,7 +1548,7 @@ function setFocus(selector, position = "afterbegin") {
 }
 
 for (let button of document.querySelectorAll(".try-again")) {
-  button.addEventListener("click", function() {
+  button.addEventListener("click", function () {
     retryThis(this);
   });
 }

@@ -2,7 +2,7 @@
 
 const SCALAR_ABOUT_HOME = "browser.engagement.navigation.about_home";
 
-add_setup(async function() {
+add_setup(async function () {
   // about:home uses IndexedDB. However, the test finishes too quickly and doesn't
   // allow it enougth time to save. So it throws. This disables all the uncaught
   // exception in this file and that's the reason why we split about:home tests
@@ -44,7 +44,7 @@ add_setup(async function() {
     ],
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
     Services.telemetry.canRecordExtended = oldCanRecord;
@@ -67,7 +67,7 @@ add_task(async function test_abouthome_activitystream_simpleQuery() {
   await BrowserTestUtils.browserStopped(tab.linkedBrowser, "about:home");
 
   info("Wait for ContentSearchUI search provider to initialize.");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(
       () => content.wrappedJSObject.gContentSearchController.defaultEngine
     );

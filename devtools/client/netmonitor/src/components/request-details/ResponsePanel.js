@@ -58,7 +58,7 @@ const SearchBox = createFactory(
   require("resource://devtools/client/shared/components/SearchBox.js")
 );
 
-loader.lazyGetter(this, "MODE", function() {
+loader.lazyGetter(this, "MODE", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .MODE;
 });

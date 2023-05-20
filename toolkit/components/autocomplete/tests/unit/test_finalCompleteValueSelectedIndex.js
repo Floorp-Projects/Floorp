@@ -8,7 +8,7 @@ var selectByWasCalled = false;
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
   this.popup.selectedIndex = 0;
-  this.popup.selectBy = function(reverse, page) {
+  this.popup.selectBy = function (reverse, page) {
     Assert.equal(selectByWasCalled, false);
     selectByWasCalled = true;
     Assert.equal(reverse, false);
@@ -25,7 +25,7 @@ add_test(function test_handleEnter_key() {
     ["mozilla.org", "http://www.mozilla.org"],
   ];
   // First check the case where we do select a value with the keyboard:
-  doSearch("moz", results, function(aController) {
+  doSearch("moz", results, function (aController) {
     Assert.equal(aController.input.textValue, "moz");
     Assert.equal(
       aController.getFinalCompleteValueAt(0),
@@ -58,7 +58,7 @@ add_test(function test_handleEnter_mouse() {
     ["mozilla.org", "http://www.mozilla.org"],
   ];
   // Then the case where we do not:
-  doSearch("moz", results, function(aController) {
+  doSearch("moz", results, function (aController) {
     Assert.equal(aController.input.textValue, "moz");
     Assert.equal(
       aController.getFinalCompleteValueAt(0),
@@ -90,7 +90,7 @@ add_test(function test_handleEnter_preselected() {
     ["mozilla.org", "http://www.mozilla.org"],
   ];
   // Then test a preselection.
-  doSearch("moz", results, function(aController) {
+  doSearch("moz", results, function (aController) {
     Assert.equal(aController.input.textValue, "moz");
     Assert.equal(
       aController.getFinalCompleteValueAt(0),

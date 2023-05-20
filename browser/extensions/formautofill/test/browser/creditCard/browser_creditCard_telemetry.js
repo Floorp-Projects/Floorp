@@ -158,9 +158,9 @@ async function openTabAndUseCreditCard(
   return null;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   Services.telemetry.setEventRecordingEnabled("creditcard", true);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.telemetry.setEventRecordingEnabled("creditcard", false);
   });
 });
@@ -180,7 +180,7 @@ add_task(async function test_popup_opened() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       const focusInput = "#cc-number";
 
       await openPopupOn(browser, focusInput);
@@ -231,7 +231,7 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_WITHOUT_AUTOCOMPLETE_URL },
-    async function(browser) {
+    async function (browser) {
       const focusInput = "#cc-number";
 
       await openPopupOn(browser, focusInput);
@@ -288,7 +288,7 @@ add_task(
     // (detected by Fathom)
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_WITHOUT_AUTOCOMPLETE_URL },
-      async function(browser) {
+      async function (browser) {
         await openPopupOn(browser, "#form2-cc-number #cc-number");
         await closePopup(browser);
       }
@@ -305,7 +305,7 @@ add_task(
     // (detected by regexp-based heuristic)
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_WITHOUT_AUTOCOMPLETE_URL },
-      async function(browser) {
+      async function (browser) {
         await openPopupOn(browser, "#form2-cc-other #cc-name");
         await closePopup(browser);
       }
@@ -352,7 +352,7 @@ add_task(async function test_submit_creditCard_new() {
     });
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
-      async function(browser) {
+      async function (browser) {
         let onPopupShown = waitForPopupShown();
         let onChanged;
         if (expectChanged !== undefined) {
@@ -522,7 +522,7 @@ add_task(async function test_submit_creditCard_update() {
     let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
-      async function(browser) {
+      async function (browser) {
         let onPopupShown = waitForPopupShown();
         let onChanged;
         if (expectChanged !== undefined) {

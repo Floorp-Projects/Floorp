@@ -9,7 +9,7 @@
 // * whether the UIs update after selecting another tool
 // * whether the UIs update after selecting animation inspector again
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Switch to 2 pane inspector to see if the animation only refreshes when visible"
   );

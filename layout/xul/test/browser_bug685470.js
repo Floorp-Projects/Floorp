@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   const html =
     '<p id="p1" title="tooltip is here">This paragraph has a tooltip.</p>';
   await BrowserTestUtils.openNewForegroundTab(

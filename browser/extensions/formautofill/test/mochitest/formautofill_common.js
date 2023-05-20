@@ -450,7 +450,7 @@ function formAutoFillCommonSetup() {
 
   document.addEventListener(
     "DOMContentLoaded",
-    function() {
+    function () {
       defaultTextColor = window
         .getComputedStyle(document.querySelector("input"))
         .getPropertyValue("color");

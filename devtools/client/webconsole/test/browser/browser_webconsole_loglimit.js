@@ -9,7 +9,7 @@ const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for " +
   "Old messages are removed after passing devtools.hud.loglimit";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.hud.loglimit", 140);
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
@@ -19,7 +19,7 @@ add_task(async function() {
     "test message [149]",
     ".console-api"
   );
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     for (let i = 0; i < 150; i++) {
       content.console.log(`test message [${i}]`);
     }
@@ -57,7 +57,7 @@ add_task(async function() {
   );
 
   onMessage = waitForMessageByType(hud, "hello world", ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.console.log("hello world");
   });
   await onMessage;

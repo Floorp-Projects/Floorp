@@ -3,7 +3,7 @@
 
 // Tests frecency of unvisited bookmarks.
 
-add_task(async function() {
+add_task(async function () {
   // Randomly sorted by date.
   const now = new Date();
   const bookmarks = [

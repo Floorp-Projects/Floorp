@@ -7,7 +7,7 @@ do_get_profile();
 
 // Test that interrupted sanitizations are properly tracked.
 
-add_task(async function() {
+add_task(async function () {
   const { Sanitizer } = ChromeUtils.importESModule(
     "resource:///modules/Sanitizer.sys.mjs"
   );

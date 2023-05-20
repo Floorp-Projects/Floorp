@@ -114,7 +114,7 @@ function testHistogram(histogramId, expectedNonZeroRanges) {
 add_setup(async () => {
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.telemetry.canRecordExtended = oldCanRecord;
   });
 
@@ -184,7 +184,7 @@ add_task(async function test_disabledHosts_statistics() {
  */
 add_task(async function test_settings_statistics() {
   let oldRememberSignons = Services.prefs.getBoolPref("signon.rememberSignons");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.setBoolPref("signon.rememberSignons", oldRememberSignons);
   });
 

@@ -59,7 +59,7 @@ async function doorhangerTest(testFn) {
 }
 
 add_task(function test_doorhanger_keep() {
-  return doorhangerTest(async function(extension) {
+  return doorhangerTest(async function (extension) {
     is(gBrowser.visibleTabs.length, 3, "There are 3 visible tabs");
 
     // Hide the first tab, expect the doorhanger.
@@ -96,7 +96,7 @@ add_task(function test_doorhanger_keep() {
 });
 
 add_task(function test_doorhanger_disable() {
-  return doorhangerTest(async function(extension) {
+  return doorhangerTest(async function (extension) {
     is(gBrowser.visibleTabs.length, 3, "There are 3 visible tabs");
 
     // Hide the first tab, expect the doorhanger.

@@ -18,7 +18,7 @@ requestLongerTimeout(4);
 
 // Check that CSS rules are displayed with the proper source label in the
 // browser toolbox.
-add_task(async function() {
+add_task(async function () {
   // Forces the Browser Toolbox to open on the inspector by default
   await pushPref("devtools.browsertoolbox.panel", "inspector");
   // Enable Multiprocess Browser Toolbox

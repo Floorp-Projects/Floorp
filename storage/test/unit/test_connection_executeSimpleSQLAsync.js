@@ -40,7 +40,7 @@ add_task(async function test_create_and_add() {
   completion = await executeSimpleSQLAsync(
     adb,
     "SELECT string, number FROM test WHERE id = 1",
-    function(aResultSet) {
+    function (aResultSet) {
       result = aResultSet.getNextRow();
       Assert.equal(2, result.numEntries);
       Assert.equal(TEXT, result.getString(0));
@@ -52,7 +52,7 @@ add_task(async function test_create_and_add() {
   Assert.notEqual(result, null);
   result = null;
 
-  await executeSimpleSQLAsync(adb, "SELECT COUNT(0) FROM test", function(
+  await executeSimpleSQLAsync(adb, "SELECT COUNT(0) FROM test", function (
     aResultSet
   ) {
     result = aResultSet.getNextRow();
@@ -68,7 +68,7 @@ add_task(async function test_asyncClose_does_not_complete_before_statement() {
   let adb = await openAsyncDatabase(getTestDB());
   let executed = false;
 
-  let reason = await executeSimpleSQLAsync(adb, "SELECT * FROM test", function(
+  let reason = await executeSimpleSQLAsync(adb, "SELECT * FROM test", function (
     aResultSet
   ) {
     let result = aResultSet.getNextRow();

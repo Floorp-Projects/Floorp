@@ -199,7 +199,7 @@ function* testSteps() {
     }
 
     doCompare(keyI);
-    store.add(i, keyI).onsuccess = function(e) {
+    store.add(i, keyI).onsuccess = function (e) {
       is(
         indexedDB.cmp(e.target.result, keyI),
         0,

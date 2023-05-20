@@ -14,9 +14,9 @@ add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     { gBrowser, url: "http://example.com" },
-    async function(browser) {
+    async function (browser) {
       if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-        await SpecialPowers.spawn(browser, [], async function() {
+        await SpecialPowers.spawn(browser, [], async function () {
           let cw = content;
           let oldTitle = cw.document.title;
           ok(oldTitle, "Content window should initially have a title.");
@@ -38,7 +38,7 @@ add_task(async function test() {
       let bc = browser.browsingContext;
       let oldTitle = browser.browsingContext.currentWindowGlobal.documentTitle;
       ok(oldTitle, "Content window should initially have a title.");
-      SpecialPowers.spawn(browser, [], async function() {
+      SpecialPowers.spawn(browser, [], async function () {
         content.history.pushState("", "", "new_page");
       });
 

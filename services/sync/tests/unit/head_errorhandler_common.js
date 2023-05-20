@@ -156,7 +156,7 @@ const EHTestsCommon = {
     });
   },
 
-  CatapultEngine: (function() {
+  CatapultEngine: (function () {
     function CatapultEngine() {
       SyncEngine.call(this, "Catapult", Service);
     }

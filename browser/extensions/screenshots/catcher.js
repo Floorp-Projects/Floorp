@@ -7,7 +7,7 @@
 // eslint-disable-next-line no-var
 var global = this;
 
-this.catcher = (function() {
+this.catcher = (function () {
   const exports = {};
 
   let handler;
@@ -16,7 +16,7 @@ this.catcher = (function() {
 
   const log = global.log;
 
-  exports.unhandled = function(error, info) {
+  exports.unhandled = function (error, info) {
     if (!error.noReport) {
       log.error("Unhandled error:", error, info);
     }
@@ -54,7 +54,7 @@ this.catcher = (function() {
 
   /** Wrap the function, and if it raises any exceptions then call unhandled() */
   exports.watchFunction = function watchFunction(func, quiet) {
-    return function() {
+    return function () {
       try {
         return func.apply(this, arguments);
       } catch (e) {
@@ -84,7 +84,7 @@ this.catcher = (function() {
     });
   };
 
-  exports.registerHandler = function(h) {
+  exports.registerHandler = function (h) {
     if (handler) {
       log.error("registerHandler called after handler was already registered");
       return;

@@ -24,7 +24,7 @@ add_task(async function testCORSNotificationPresent() {
 
   info("making request to a origin that doesn't allow cross origin");
   const requestUrl = HTTPS_EXAMPLE_ORG_URL + "sjs_simple-test-server.sjs";
-  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function (
     url
   ) {
     content.wrappedJSObject.performRequests(
@@ -80,7 +80,7 @@ add_task(async function testCORSNotificationNotPresent() {
 
   info("Making request to a origin that allows cross origin");
   const requestUrl = "https://test1.example.com" + CORS_SJS_PATH;
-  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function (
     url
   ) {
     content.wrappedJSObject.performRequests(

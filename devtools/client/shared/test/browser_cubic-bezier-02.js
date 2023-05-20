@@ -16,7 +16,7 @@ const {
 // in order to remove its margin and prevent shifted positions
 const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-02.html";
 
-add_task(async function() {
+add_task(async function () {
   const { host, win, doc } = await createHost("bottom", TEST_URI);
 
   // Required or widget will be clipped inside of 'bottom'

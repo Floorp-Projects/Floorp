@@ -16,7 +16,7 @@
 // relevant parts of our tests.
 var Profiler;
 
-(function() {
+(function () {
   var _profiler;
 
   // If this script is loaded in a framescript context, there won't be a

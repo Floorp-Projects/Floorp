@@ -137,7 +137,7 @@ const TESTS = [
 var gUTM;
 var gNextFunc;
 
-XPCOMUtils.defineLazyGetter(this, "gCompReg", function() {
+XPCOMUtils.defineLazyGetter(this, "gCompReg", function () {
   return Cm.QueryInterface(Ci.nsIComponentRegistrar);
 });
 
@@ -276,7 +276,7 @@ const gTest8TimerCallback = {
   notify: function T8CB_notify(aTimer) {
     TESTS[8].notified = true;
     TESTS[8].notifyTime = Date.now();
-    executeSoon(function() {
+    executeSoon(function () {
       check_test8thru10(gTest8TimerCallback);
     });
   },
@@ -293,7 +293,7 @@ const gTest9TimerCallback = {
   notify: function T9CB_notify(aTimer) {
     TESTS[9].notified = true;
     TESTS[9].notifyTime = Date.now();
-    executeSoon(function() {
+    executeSoon(function () {
       check_test8thru10(gTest8TimerCallback);
     });
   },

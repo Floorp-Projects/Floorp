@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-add_setup(async function() {
+add_setup(async function () {
   await setupPolicyEngineWithJson({
     policies: {
       SupportMenu: {

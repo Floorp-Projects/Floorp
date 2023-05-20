@@ -4,7 +4,7 @@
 // be saved into session store and thus, it will not show up in
 // Recently Closed Tabs.
 
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:privatebrowsing");
   let browser = tab.linkedBrowser;
   await promiseBrowserLoaded(browser);

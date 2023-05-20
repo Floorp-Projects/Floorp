@@ -15,9 +15,7 @@ export default {
 window.MozXULElement.insertFTLIfNeeded("browser/aboutLogins.ftl");
 
 const Template = ({ historyItems }) =>
-  html`
-    <login-timeline .history=${historyItems}></login-timeline>
-  `;
+  html` <login-timeline .history=${historyItems}></login-timeline> `;
 
 const ACTION_ID_CREATED = "login-item-timeline-action-created";
 const ACTION_ID_UPDATED = "login-item-timeline-action-updated";

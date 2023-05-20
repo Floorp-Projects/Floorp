@@ -6,7 +6,7 @@
 const TAB_URL = URL_ROOT + "resources/service-workers/simple.html";
 
 // check telemetry for unregistering a service worker
-add_task(async function() {
+add_task(async function () {
   await enableApplicationPanel();
 
   const { panel, tab, commands } = await openNewTabAndApplicationPanel(TAB_URL);

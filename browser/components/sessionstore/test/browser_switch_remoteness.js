@@ -3,7 +3,7 @@
 const URL = "http://example.com/browser_switch_remoteness_";
 
 function countHistoryEntries(browser, expected) {
-  return SpecialPowers.spawn(browser, [{ expected }], async function(args) {
+  return SpecialPowers.spawn(browser, [{ expected }], async function (args) {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory;
     Assert.equal(
@@ -14,7 +14,7 @@ function countHistoryEntries(browser, expected) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   // Open a new window.
   let win = await promiseNewWindowLoaded();
 

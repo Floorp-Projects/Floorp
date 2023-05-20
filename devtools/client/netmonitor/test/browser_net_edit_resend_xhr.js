@@ -8,7 +8,7 @@
  * cloned request retains the same cause type.
  */
 
-add_task(async function() {
+add_task(async function () {
   if (
     Services.prefs.getBoolPref(
       "devtools.netmonitor.features.newEditAndResend",
@@ -73,7 +73,7 @@ add_task(async function() {
  * new request retains the same cause type.
  */
 
-add_task(async function() {
+add_task(async function () {
   if (
     Services.prefs.getBoolPref(
       "devtools.netmonitor.features.newEditAndResend",

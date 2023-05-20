@@ -38,7 +38,7 @@ function Saved(props) {
       {
         itemId,
       },
-      function(resp) {
+      function (resp) {
         const { data } = resp;
         if (data.status == "success") {
           setRemovedStatusState({ removedStatus: "removed" });
@@ -60,7 +60,7 @@ function Saved(props) {
 
   useEffect(() => {
     // Wait confirmation of save before flipping to final saved state
-    panelMessaging.addMessageListener("PKT_saveLink", function(resp) {
+    panelMessaging.addMessageListener("PKT_saveLink", function (resp) {
       const { data } = resp;
       if (data.status == "error") {
         // Use localizedKey or fallback to a generic catch all error.
@@ -81,17 +81,19 @@ function Saved(props) {
       });
     });
 
-    panelMessaging.addMessageListener("PKT_articleInfoFetched", function(resp) {
+    panelMessaging.addMessageListener("PKT_articleInfoFetched", function (
+      resp
+    ) {
       setSavedStoryState(resp?.data?.item_preview);
     });
 
-    panelMessaging.addMessageListener("PKT_getArticleInfoAttempted", function(
+    panelMessaging.addMessageListener("PKT_getArticleInfoAttempted", function (
       resp
     ) {
       setArticleInfoAttempted(true);
     });
 
-    panelMessaging.addMessageListener("PKT_renderItemRecs", function(resp) {
+    panelMessaging.addMessageListener("PKT_renderItemRecs", function (resp) {
       const { data } = resp;
 
       // This is the ML model used to recommend the story.

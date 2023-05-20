@@ -9,7 +9,7 @@
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes.html";
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
-add_task(async function() {
+add_task(async function () {
   const env = await openInspectorForURL(TEST_URL);
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
   const { highlighterTestFront, inspector } = env;
@@ -444,8 +444,9 @@ async function testInsetMoveEdges(config) {
   // NOTE: No change to bottom inset until Bug 1456777 is fixed.
   ok(
     definition.includes(
-      `${top + dy}px ${elemWidth - right - dx}px ${100 - y - height}% ${x +
-        10}%`
+      `${top + dy}px ${elemWidth - right - dx}px ${100 - y - height}% ${
+        x + 10
+      }%`
     ),
     "Inset edges successfully moved"
   );

@@ -66,7 +66,7 @@ var { Assert: AssertCls } = ChromeUtils.importESModule(
 );
 
 // Pass a custom report function for xpcshell-test style reporting.
-var Assert = new AssertCls(function(err, message, stack) {
+var Assert = new AssertCls(function (err, message, stack) {
   if (err) {
     do_report_result(false, err.message, err.stack);
   } else {
@@ -80,13 +80,13 @@ function record(condition, name, diag, stack) {
   do_report_result(condition, name, stack);
 }
 
-var _add_params = function(params) {
+var _add_params = function (params) {
   if (typeof _XPCSHELL_PROCESS != "undefined") {
     params.xpcshell_process = _XPCSHELL_PROCESS;
   }
 };
 
-var _dumpLog = function(raw_msg) {
+var _dumpLog = function (raw_msg) {
   dump("\n" + JSON.stringify(raw_msg) + "\n");
 };
 
@@ -427,7 +427,7 @@ function _setupDevToolsServer(breakpointFiles, callback) {
     // Or when devtools are destroyed and we should stop observing.
     "xpcshell-test-devtools-shutdown",
   ];
-  let observe = function(subject, topic, data) {
+  let observe = function (subject, topic, data) {
     if (topic === "devtools-thread-ready") {
       const threadActor = subject.wrappedJSObject;
       threadActor.setBreakpointOnLoad(breakpointFiles);
@@ -623,7 +623,7 @@ function _execute_test() {
   }
 
   // Execute all of our cleanup functions.
-  let reportCleanupError = function(ex) {
+  let reportCleanupError = function (ex) {
     let stack, filename;
     if (ex && typeof ex == "object" && "stack" in ex) {
       stack = ex.stack;

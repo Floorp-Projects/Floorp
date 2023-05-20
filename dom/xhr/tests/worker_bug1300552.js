@@ -25,13 +25,13 @@ xhr.send({
 
 var aborted = false;
 
-xhr.onprogress = function() {
+xhr.onprogress = function () {
   info("Onprogress, we abort!");
   aborted = true;
   xhr.abort();
 };
 
-xhr.onloadend = function() {
+xhr.onloadend = function () {
   ok(aborted, "We are still alive after an abort()!");
   finish();
 };

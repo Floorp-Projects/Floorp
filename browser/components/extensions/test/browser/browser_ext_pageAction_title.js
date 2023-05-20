@@ -50,7 +50,7 @@ add_task(async function testTabSwitchContext() {
       "2.png": imageBuffer,
     },
 
-    getTests: function(tabs) {
+    getTests: function (tabs) {
       let details = [
         {
           icon: browser.runtime.getURL("default.png"),
@@ -227,7 +227,7 @@ add_task(async function testDefaultTitle() {
       "icon.png": imageBuffer,
     },
 
-    getTests: function(tabs) {
+    getTests: function (tabs) {
       let details = [
         {
           title: "Foo Extension",

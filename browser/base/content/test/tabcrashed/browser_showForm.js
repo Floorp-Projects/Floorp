@@ -18,7 +18,7 @@ add_task(async function test_show_form() {
       gBrowser,
       url: PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       // Flip the pref so that the checkbox should be checked
       // by default.
       let pref = TabCrashHandler.prefs.root + "sendReport";

@@ -23,7 +23,7 @@ const PREF = "accessibility.blockautorefresh";
  * @returns Promise
  */
 async function attemptFakeRefresh(browser, expectRefresh) {
-  await SpecialPowers.spawn(browser, [expectRefresh], async function(
+  await SpecialPowers.spawn(browser, [expectRefresh], async function (
     contentExpectRefresh
   ) {
     let URI = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
@@ -59,7 +59,7 @@ add_task(async function test_can_enable_and_block() {
       gBrowser,
       url: TARGET_PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       // By default, we should be able to reload the page.
       await attemptFakeRefresh(browser, true);
 
@@ -106,7 +106,7 @@ async function testRealRefresh(refreshPage, delay) {
       gBrowser,
       url: "about:blank",
     },
-    async function(browser) {
+    async function (browser) {
       await pushPrefs(["accessibility.blockautorefresh", true]);
 
       BrowserTestUtils.loadURIString(
@@ -171,7 +171,7 @@ add_task(async function test_can_update_notification() {
       gBrowser,
       url: "about:blank",
     },
-    async function(browser) {
+    async function (browser) {
       await pushPrefs(["accessibility.blockautorefresh", true]);
 
       // First, attempt a redirect

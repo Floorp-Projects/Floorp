@@ -31,7 +31,7 @@ function download_failed(install) {
   is(install.error, AddonManager.ERROR_CORRUPT_FILE, "Install should fail");
 }
 
-const finish_test = async function(count) {
+const finish_test = async function (count) {
   is(count, 0, "No add-ons should have been installed");
   PermissionTestUtils.remove("http://example.com", "install");
 

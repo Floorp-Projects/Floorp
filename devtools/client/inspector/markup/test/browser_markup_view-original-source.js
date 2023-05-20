@@ -7,7 +7,7 @@ const TEST_URI = URL_ROOT + "doc_markup_view-original-source.html";
 
 // Test that event handler links go to the right debugger source when the
 // event handler is source mapped.
-add_task(async function() {
+add_task(async function () {
   const { inspector, tab, toolbox } = await openInspectorForURL(TEST_URI);
 
   const nodeFront = await getNodeFront("#foo", inspector);

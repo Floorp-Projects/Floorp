@@ -23,7 +23,7 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/ExtensionControlledPopup.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
+XPCOMUtils.defineLazyGetter(this, "strBundle", function () {
   return Services.strings.createBundle(
     "chrome://global/locale/extensions.properties"
   );
@@ -1364,7 +1364,7 @@ this.tabs = class extends ExtensionAPIPersistent {
           picker.defaultString = filename;
 
           return new Promise(resolve => {
-            picker.open(function(retval) {
+            picker.open(function (retval) {
               if (retval == 0 || retval == 2) {
                 // OK clicked (retval == 0) or replace confirmed (retval == 2)
 

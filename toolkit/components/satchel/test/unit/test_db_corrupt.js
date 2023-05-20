@@ -46,7 +46,7 @@ add_test(function test_corruptFormHistoryDB_emptyInit() {
     "test that FormHistory initializes an empty DB in place of corrupt DB."
   );
 
-  (async function() {
+  (async function () {
     let count = await FormHistory.count({});
     Assert.equal(count, 0);
     count = await FormHistory.count({ fieldname: "name-A", value: "value-A" });
@@ -60,8 +60,8 @@ add_test(function test_corruptFormHistoryDB_emptyInit() {
 add_test(function test_corruptFormHistoryDB_addEntry() {
   do_log_info("test adding an entry to the empty DB.");
 
-  updateEntry("add", "name-A", "value-A", function() {
-    countEntries("name-A", "value-A", function(count) {
+  updateEntry("add", "name-A", "value-A", function () {
+    countEntries("name-A", "value-A", function (count) {
       Assert.ok(count == 1);
       run_next_test();
     });
@@ -71,8 +71,8 @@ add_test(function test_corruptFormHistoryDB_addEntry() {
 add_test(function test_corruptFormHistoryDB_removeEntry() {
   do_log_info("test removing an entry to the empty DB.");
 
-  updateEntry("remove", "name-A", "value-A", function() {
-    countEntries("name-A", "value-A", function(count) {
+  updateEntry("remove", "name-A", "value-A", function () {
+    countEntries("name-A", "value-A", function (count) {
       Assert.ok(count == 0);
       run_next_test();
     });

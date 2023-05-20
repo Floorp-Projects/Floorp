@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
   this.otherWin = await openAndLoadWindow({ private: true }, true);
   await startCustomizing(this.otherWin);

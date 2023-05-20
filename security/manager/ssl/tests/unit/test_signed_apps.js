@@ -74,7 +74,7 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
     }
 
     // Now, append any new entries to the end
-    newEntries.forEach(function(newEntry) {
+    newEntries.forEach(function (newEntry) {
       let sis = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
         Ci.nsIStringInputStream
       );
@@ -241,7 +241,7 @@ const COSEOnlyAgain = 0b111;
 
 function add_signature_test(policy, test) {
   // First queue up a test to set the desired policy:
-  add_test(function() {
+  add_test(function () {
     Services.prefs.setIntPref("security.signed_app_signatures.policy", policy);
     run_next_test();
   });
@@ -250,7 +250,7 @@ function add_signature_test(policy, test) {
 }
 
 for (let testcase of hashTestcases) {
-  add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+  add_signature_test(PKCS7WithSHA1OrSHA256, function () {
     certdb.openSignedAppFileAsync(
       Ci.nsIX509CertDB.AppXPCShellRoot,
       original_app_path(testcase.name),
@@ -259,7 +259,7 @@ for (let testcase of hashTestcases) {
   });
 }
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("empty_signerInfos"),
@@ -270,7 +270,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("unsigned_app"),
@@ -278,7 +278,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("unknown_issuer_app"),
@@ -289,7 +289,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function() {
+add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("cose_signed_with_pkcs7"),
@@ -297,7 +297,7 @@ add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(COSEAndPKCS7WithSHA256, function() {
+add_signature_test(COSEAndPKCS7WithSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("app_mf-256_sf-256_p7-256"),
@@ -305,7 +305,7 @@ add_signature_test(COSEAndPKCS7WithSHA256, function() {
   );
 });
 
-add_signature_test(COSEAndPKCS7WithSHA256, function() {
+add_signature_test(COSEAndPKCS7WithSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("app_mf-1_sf-256_p7-256"),
@@ -316,7 +316,7 @@ add_signature_test(COSEAndPKCS7WithSHA256, function() {
   );
 });
 
-add_signature_test(COSERequiredAndPKCS7WithSHA1OrSHA256, function() {
+add_signature_test(COSERequiredAndPKCS7WithSHA1OrSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("app_mf-256_sf-256_p7-256"),
@@ -327,7 +327,7 @@ add_signature_test(COSERequiredAndPKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(COSERequiredAndPKCS7WithSHA256, function() {
+add_signature_test(COSERequiredAndPKCS7WithSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("app_mf-256_sf-256_p7-256"),
@@ -338,7 +338,7 @@ add_signature_test(COSERequiredAndPKCS7WithSHA256, function() {
   );
 });
 
-add_signature_test(COSERequiredAndPKCS7WithSHA256, function() {
+add_signature_test(COSERequiredAndPKCS7WithSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("only_cose_signed"),
@@ -349,7 +349,7 @@ add_signature_test(COSERequiredAndPKCS7WithSHA256, function() {
   );
 });
 
-add_signature_test(COSERequiredAndPKCS7WithSHA1OrSHA256, function() {
+add_signature_test(COSERequiredAndPKCS7WithSHA1OrSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("only_cose_signed"),
@@ -360,7 +360,7 @@ add_signature_test(COSERequiredAndPKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function() {
+add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("cose_multiple_signed_with_pkcs7"),
@@ -368,7 +368,7 @@ add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function() {
+add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("cose_int_signed_with_pkcs7"),
@@ -376,7 +376,7 @@ add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function() {
+add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("only_cose_signed"),
@@ -387,7 +387,7 @@ add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(COSEOnly, function() {
+add_signature_test(COSEOnly, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("cose_multiple_signed_with_pkcs7"),
@@ -398,7 +398,7 @@ add_signature_test(COSEOnly, function() {
   );
 });
 
-add_signature_test(COSEOnly, function() {
+add_signature_test(COSEOnly, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("only_cose_multiple_signed"),
@@ -406,7 +406,7 @@ add_signature_test(COSEOnly, function() {
   );
 });
 
-add_signature_test(COSEOnly, function() {
+add_signature_test(COSEOnly, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("only_cose_signed"),
@@ -414,7 +414,7 @@ add_signature_test(COSEOnly, function() {
   );
 });
 
-add_signature_test(COSEOnlyAgain, function() {
+add_signature_test(COSEOnlyAgain, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("only_cose_signed"),
@@ -422,7 +422,7 @@ add_signature_test(COSEOnlyAgain, function() {
   );
 });
 
-add_signature_test(COSEOnly, function() {
+add_signature_test(COSEOnly, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("cose_signed_with_pkcs7"),
@@ -434,7 +434,7 @@ add_signature_test(COSEOnly, function() {
 });
 
 // Sanity check to ensure a no-op tampering gives a valid result
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   let tampered = tampered_app_path("identity_tampering");
   tamper(original_app_path("app_mf-1_sf-1_p7-1"), tampered, {}, []);
   certdb.openSignedAppFileAsync(
@@ -444,7 +444,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   let tampered = tampered_app_path("missing_rsa");
   tamper(
     original_app_path("app_mf-1_sf-1_p7-1"),
@@ -459,7 +459,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   let tampered = tampered_app_path("missing_sf");
   tamper(
     original_app_path("app_mf-1_sf-1_p7-1"),
@@ -474,7 +474,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   let tampered = tampered_app_path("missing_manifest_mf");
   tamper(
     original_app_path("app_mf-1_sf-1_p7-1"),
@@ -492,7 +492,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   let tampered = tampered_app_path("missing_entry");
   tamper(
     original_app_path("app_mf-1_sf-1_p7-1"),
@@ -507,7 +507,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   let tampered = tampered_app_path("truncated_entry");
   tamper(
     original_app_path("app_mf-1_sf-1_p7-1"),
@@ -522,7 +522,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   let tampered = tampered_app_path("truncated_manifestFile");
   tamper(
     original_app_path("app_mf-1_sf-1_p7-1"),
@@ -540,7 +540,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   let tampered = tampered_app_path("truncated_signatureFile");
   tamper(
     original_app_path("app_mf-1_sf-1_p7-1"),
@@ -558,7 +558,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   let tampered = tampered_app_path("truncated_pkcs7File");
   tamper(
     original_app_path("app_mf-1_sf-1_p7-1"),
@@ -573,7 +573,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   let tampered = tampered_app_path("unsigned_entry");
   tamper(original_app_path("app_mf-1_sf-1_p7-1"), tampered, {}, [
     { name: "unsigned.txt", content: "unsigned content!" },
@@ -585,7 +585,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   let tampered = tampered_app_path("unsigned_metainf_entry");
   tamper(original_app_path("app_mf-1_sf-1_p7-1"), tampered, {}, [
     { name: "META-INF/unsigned.txt", content: "unsigned content!" },
@@ -691,7 +691,7 @@ var coseTestcasesProd = [
 
 for (let policy of cosePolicies) {
   for (let testcase of [...coseTestcasesStage, ...coseTestcasesProd]) {
-    add_signature_test(policy, function() {
+    add_signature_test(policy, function () {
       certdb.openSignedAppFileAsync(
         testcase.root,
         original_app_path(testcase.name),
@@ -944,7 +944,7 @@ add_signature_test(COSEOnly, function testOnlyCOSEFileTampered() {
 // with (making the signature invalid). Then, the file was signed with
 // PKCS7/SHA1. We need to ensure that if we're configured to process COSE, this
 // verification fails.
-add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function() {
+add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("cose_tampered_good_pkcs7"),
@@ -956,7 +956,7 @@ add_signature_test(COSEAndPKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_signature_test(COSEOnly, function() {
+add_signature_test(COSEOnly, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("cose_tampered_good_pkcs7"),
@@ -969,7 +969,7 @@ add_signature_test(COSEOnly, function() {
 });
 
 // If we're not processing COSE, this should verify successfully.
-add_signature_test(PKCS7WithSHA1OrSHA256, function() {
+add_signature_test(PKCS7WithSHA1OrSHA256, function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("cose_tampered_good_pkcs7"),
@@ -981,7 +981,7 @@ add_signature_test(PKCS7WithSHA1OrSHA256, function() {
   );
 });
 
-add_test(function() {
+add_test(function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("bug_1411458"),
@@ -990,7 +990,7 @@ add_test(function() {
 });
 
 // This has a big manifest file (~2MB). It should verify correctly.
-add_test(function() {
+add_test(function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("big_manifest"),
@@ -1000,7 +1000,7 @@ add_test(function() {
 
 // This has a huge manifest file (~10MB). Manifest files this large are not
 // supported (8MB is the limit). It should not verify correctly.
-add_test(function() {
+add_test(function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("huge_manifest"),
@@ -1013,7 +1013,7 @@ add_test(function() {
 
 // Verification should pass despite a not-yet-valid EE certificate.
 // Regression test for bug 1713628
-add_test(function() {
+add_test(function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("validity_not_yet_valid"),
@@ -1023,7 +1023,7 @@ add_test(function() {
 
 // Verification should pass despite an expired EE certificate.
 // Regression test for bug 1267318 and bug 1548973
-add_test(function() {
+add_test(function () {
   certdb.openSignedAppFileAsync(
     Ci.nsIX509CertDB.AppXPCShellRoot,
     original_app_path("validity_expired"),

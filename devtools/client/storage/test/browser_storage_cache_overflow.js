@@ -8,7 +8,7 @@
 
 const ITEMS_PER_PAGE = 50;
 
-add_task(async function() {
+add_task(async function () {
   await openTabAndSetupStorage(
     URL_ROOT_COM_SSL + "storage-cache-overflow.html"
   );

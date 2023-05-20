@@ -380,8 +380,8 @@ function run_test() {
 
   run_next_test();
 
-  registerCleanupFunction(function() {
-    server.stop(function() {});
+  registerCleanupFunction(function () {
+    server.stop(function () {});
   });
 }
 

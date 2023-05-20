@@ -8,7 +8,7 @@
 
 const TEST_URI = `data:text/html,<!DOCTYPE html>Test console.table with modified variable`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {

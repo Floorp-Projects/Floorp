@@ -33,12 +33,7 @@ describe("AuditController component:", () => {
 
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.find("span").length).toBe(1);
-    expect(
-      wrapper
-        .find("span")
-        .first()
-        .props()
-    ).toMatchObject({
+    expect(wrapper.find("span").first().props()).toMatchObject({
       checks: undefined,
     });
 

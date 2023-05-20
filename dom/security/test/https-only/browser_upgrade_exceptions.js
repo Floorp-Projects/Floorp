@@ -3,7 +3,7 @@
 // This test ensures that various configurable upgrade exceptions work
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(2);
 
   await SpecialPowers.pushPrefEnv({

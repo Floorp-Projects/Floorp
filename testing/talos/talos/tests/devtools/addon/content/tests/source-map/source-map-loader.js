@@ -16,7 +16,7 @@ const {
   SourceMapLoader,
 } = require("resource://devtools/client/shared/source-map-loader/index.js");
 
-module.exports = async function() {
+module.exports = async function () {
   await testSetup("data:text/html,source-map");
   const sourceMapLoader = new SourceMapLoader();
 

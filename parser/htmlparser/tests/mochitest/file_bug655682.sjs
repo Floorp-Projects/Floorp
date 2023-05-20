@@ -18,7 +18,7 @@ function handleRequest(request, response) {
     response.bodyOutputStream.flush();
     timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
-    callback = function() {
+    callback = function () {
       if (getState("triggered") == "triggered") {
         response.write("<td>B</td></tr></table>");
         response.finish();

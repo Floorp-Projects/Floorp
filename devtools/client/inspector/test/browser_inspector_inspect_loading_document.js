@@ -77,7 +77,7 @@ add_task(async function testSlowLoadingDocument() {
   let unblockRequest;
   const onRequestUnblocked = new Promise(r => (unblockRequest = r));
 
-  httpServer.registerPathHandler(`/`, async function(request, response) {
+  httpServer.registerPathHandler(`/`, async function (request, response) {
     response.processAsync();
     response.setStatusLine(request.httpVersion, 200, "OK");
 

@@ -6,9 +6,7 @@ const { DownloadUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/DownloadUtils.sys.mjs"
 );
 
-const gDecimalSymbol = Number(5.4)
-  .toLocaleString()
-  .match(/\D/);
+const gDecimalSymbol = Number(5.4).toLocaleString().match(/\D/);
 function _(str) {
   return str.replace(/\./g, gDecimalSymbol);
 }
@@ -138,10 +136,7 @@ function testAllGetReadableDates() {
     sevendaysago,
     sevendaysago.toLocaleDateString(undefined, { month: "long" }) +
       " " +
-      sevendaysago
-        .getDate()
-        .toString()
-        .padStart(2, "0")
+      sevendaysago.getDate().toString().padStart(2, "0")
   );
 
   let [, dateTimeFull] = DownloadUtils.getReadableDates(today_11_30);

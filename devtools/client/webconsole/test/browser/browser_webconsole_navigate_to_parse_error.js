@@ -15,7 +15,7 @@ const TEST_VIOLATION =
 const CSP_VIOLATION_MSG =
   "Content-Security-Policy: Couldn\u2019t process unknown directive \u2018navigate-to\u2019";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
 

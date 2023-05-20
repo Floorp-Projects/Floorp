@@ -103,7 +103,7 @@ add_task(async function test_getcurrent_privateBrowsing() {
           </body>
         </html>
       `,
-      "sidebar.js": function() {
+      "sidebar.js": function () {
         browser.theme.getCurrent().then(theme => {
           if (!theme?.images) {
             browser.test.fail(

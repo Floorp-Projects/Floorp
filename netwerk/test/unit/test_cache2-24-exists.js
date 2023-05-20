@@ -3,7 +3,7 @@
 function run_test() {
   do_get_profile();
 
-  var mc = new MultipleCallbacks(2, function() {
+  var mc = new MultipleCallbacks(2, function () {
     var mem = getCacheStorage("memory");
     var disk = getCacheStorage("disk");
 
@@ -24,7 +24,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     Services.loadContextInfo.default,
-    new OpenCallback(NEW | WAITFORWRITE, "meta", "data", function(entry) {
+    new OpenCallback(NEW | WAITFORWRITE, "meta", "data", function (entry) {
       mc.fired();
     })
   );
@@ -34,7 +34,7 @@ function run_test() {
     "memory",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     Services.loadContextInfo.default,
-    new OpenCallback(NEW | WAITFORWRITE, "meta", "data", function(entry) {
+    new OpenCallback(NEW | WAITFORWRITE, "meta", "data", function (entry) {
       mc.fired();
     })
   );

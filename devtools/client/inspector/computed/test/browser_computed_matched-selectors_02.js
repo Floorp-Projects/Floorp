@@ -5,7 +5,7 @@
 
 // Tests for matched selector texts in the computed view.
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8,<div style='color:blue;'></div>");
   const { inspector, view } = await openComputedView();
   await selectNode("div", inspector);
@@ -30,7 +30,7 @@ add_task(async function() {
 
 function getPropertyView(computedView, name) {
   let propertyView = null;
-  computedView.propertyViews.some(function(view) {
+  computedView.propertyViews.some(function (view) {
     if (view.name == name) {
       propertyView = view;
       return true;

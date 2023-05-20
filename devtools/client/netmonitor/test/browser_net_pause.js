@@ -6,7 +6,7 @@
 /**
  * Tests if the pause/resume button works.
  */
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor, toolbox } = await initNetMonitor(PAUSE_URL, {
     requestCount: 1,
   });
@@ -116,7 +116,7 @@ function assertRequestCount(store, count) {
  */
 async function performRequestAndWait(tab, monitor, requestURL) {
   const wait = waitForRequest(monitor.panelWin.document, requestURL);
-  await SpecialPowers.spawn(tab.linkedBrowser, [requestURL], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [requestURL], async function (
     url
   ) {
     await content.wrappedJSObject.performRequests(url);
@@ -137,7 +137,7 @@ async function performPausedRequest(tab, monitor, toolbox) {
       ignoreExistingResources: true,
     }
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [SIMPLE_URL], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [SIMPLE_URL], async function (
     url
   ) {
     await content.wrappedJSObject.performRequests(url);

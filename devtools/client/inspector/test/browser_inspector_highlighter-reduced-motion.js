@@ -10,7 +10,7 @@
 const TEST_URL =
   "data:text/html;charset=utf-8,<h1>test1</h1><h2>test2</h2><h3>test3</h3>";
 
-add_task(async function() {
+add_task(async function () {
   info("Disable ui.prefersReducedMotion");
   await pushPref("ui.prefersReducedMotion", 0);
 

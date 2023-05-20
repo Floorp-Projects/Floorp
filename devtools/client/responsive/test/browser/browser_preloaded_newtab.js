@@ -9,7 +9,7 @@ const TEST_URL = "https://example.com/";
 
 addRDMTask(
   null,
-  async function() {
+  async function () {
     const preloadedBrowser = gBrowser.preloadedBrowser;
 
     // Open a tab with about:newtab.

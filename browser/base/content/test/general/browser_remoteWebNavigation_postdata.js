@@ -46,7 +46,7 @@ add_task(async function test_remoteWebNavigation_postdata() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   await new Promise(resolve => {
-    server.stop(function() {
+    server.stop(function () {
       resolve();
     });
   });

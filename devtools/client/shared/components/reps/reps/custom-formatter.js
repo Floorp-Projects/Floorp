@@ -5,7 +5,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // ReactJS
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   // Dependencies
@@ -211,9 +211,9 @@ define(function(require, exports, module) {
               mode: props.mode == MODE.LONG ? MODE.SHORT : MODE.TINY,
               roots: [
                 {
-                  path: `${gripOrPrimitive?.actorID ??
-                    gripOrPrimitive?.actor ??
-                    null}`,
+                  path: `${
+                    gripOrPrimitive?.actorID ?? gripOrPrimitive?.actor ?? null
+                  }`,
                   contents: {
                     value: gripOrPrimitive,
                     front: child && !!child.typeName ? child : null,

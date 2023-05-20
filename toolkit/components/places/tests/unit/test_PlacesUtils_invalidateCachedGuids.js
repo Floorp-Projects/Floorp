@@ -44,8 +44,8 @@ add_task(async function test_invalidateCachedGuids() {
   info("Change GUIDs");
   await PlacesUtils.withConnectionWrapper(
     "test_invalidateCachedGuids",
-    async function(db) {
-      await db.executeTransaction(async function() {
+    async function (db) {
+      await db.executeTransaction(async function () {
         await changeGuid(db, ids.get("bookmarkAAAA"), "bookmarkCCCC");
         await changeGuid(db, ids.get("bookmarkBBBB"), "bookmarkDDDD");
       });

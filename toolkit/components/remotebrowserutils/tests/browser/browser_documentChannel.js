@@ -86,11 +86,11 @@ async function postFrom(start, target) {
       gBrowser,
       url: start,
     },
-    async function(browser) {
+    async function (browser) {
       info("Test tab ready: postFrom " + start);
 
       // Create the form element in our loaded URI.
-      await SpecialPowers.spawn(browser, [{ target }], function({ target }) {
+      await SpecialPowers.spawn(browser, [{ target }], function ({ target }) {
         // eslint-disable-next-line no-unsanitized/property
         content.document.body.innerHTML = `
         <form method="post" action="${target}">
@@ -167,7 +167,7 @@ async function testLoadAndRedirect(
       gBrowser,
       url: start,
     },
-    async function(_browser) {
+    async function (_browser) {
       info("Test tab ready: getFrom " + start);
 
       let browser = gBrowser.selectedBrowser;

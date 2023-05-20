@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   is(
     BrowserConsoleManager.getBrowserConsoleSessionState(),
     false,

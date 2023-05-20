@@ -25,7 +25,7 @@ add_task(async function test_root_icon() {
       "extension.png": IMAGE_ARRAYBUFFER,
     },
 
-    background: function() {
+    background: function () {
       let menuitemId = browser.contextMenus.create({
         title: "child-to-delete",
         onclick: () => {
@@ -123,7 +123,7 @@ add_task(async function test_child_icon() {
       "green_icon.png": IMAGE_ARRAYBUFFER_GREEN,
     },
 
-    background: function() {
+    background: function () {
       browser.test.onMessage.addListener(msg => {
         if (msg !== "add-additional-contextmenu-items") {
           return;
@@ -288,10 +288,7 @@ add_task(async function test_manifest_without_icons() {
   items = menu.getElementsByAttribute("label", "first item");
   is(items.length, 1, "First child item should exist");
   is(
-    items[0]
-      .getAttribute("image")
-      .split("/")
-      .pop(),
+    items[0].getAttribute("image").split("/").pop(),
     "red.png",
     "First item should have an icon"
   );
@@ -299,10 +296,7 @@ add_task(async function test_manifest_without_icons() {
   items = menu.getElementsByAttribute("label", "second item");
   is(items.length, 1, "Secobnd child item should exist");
   is(
-    items[0]
-      .getAttribute("image")
-      .split("/")
-      .pop(),
+    items[0].getAttribute("image").split("/").pop(),
     "green.png",
     "Second item should have an icon"
   );
@@ -341,7 +335,7 @@ add_task(async function test_child_icon_update() {
       "blue_icon.png": IMAGE_ARRAYBUFFER_BLUE,
     },
 
-    background: function() {
+    background: function () {
       browser.test.onMessage.addListener(msg => {
         if (msg === "update-contextmenu-item") {
           browser.contextMenus.update(

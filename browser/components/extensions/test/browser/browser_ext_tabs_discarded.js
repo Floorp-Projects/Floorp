@@ -36,7 +36,7 @@ add_task(async function test_discarded() {
         { url: [{ hostContains: "example.com" }] }
       );
 
-      browser.tabs.onCreated.addListener(function(tab) {
+      browser.tabs.onCreated.addListener(function (tab) {
         browser.test.assertEq(
           true,
           tab.discarded,
@@ -145,7 +145,7 @@ add_task(async function test_create_then_discard() {
       permissions: ["tabs", "webNavigation"],
     },
 
-    background: async function() {
+    background: async function () {
       let createdTab;
 
       browser.tabs.onUpdated.addListener((tabId, updatedInfo) => {

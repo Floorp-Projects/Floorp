@@ -36,7 +36,7 @@ function createFileWithData(fileData) {
   });
 }
 
-addMessageListener("files.open", function(message) {
+addMessageListener("files.open", function (message) {
   let promises = [];
   let list = [];
 

@@ -43,7 +43,7 @@ add_task(async function test_save_link_cross_origin() {
     await popupShown;
 
     let filePickerShow = new Promise(r => {
-      MockFilePicker.showCallback = function(fp) {
+      MockFilePicker.showCallback = function (fp) {
         ok(true, "filepicker should be shown");
         info("MockFilePicker showCallback");
 

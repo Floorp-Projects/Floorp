@@ -76,7 +76,7 @@ Services.prefs.setBoolPref("browser.safebrowsing.debug", true);
 Services.prefs.setCharPref("browser.safebrowsing.id", "Firefox\xFF\xFF");
 
 // Register tables.
-TEST_TABLE_DATA_LIST.forEach(function(t) {
+TEST_TABLE_DATA_LIST.forEach(function (t) {
   gListManager.registerTable(
     t.tableName,
     t.providerName,
@@ -140,7 +140,7 @@ const SERVER_INVOLVED_TEST_CASE_LIST = [
     disableAllUpdates();
 
     // Enable all tables including TEST_TABLE_DATA_V4!
-    TEST_TABLE_DATA_LIST.forEach(function(t) {
+    TEST_TABLE_DATA_LIST.forEach(function (t) {
       gListManager.enableUpdate(t.tableName);
     });
 
@@ -194,7 +194,7 @@ add_test(function test_partialUpdateV4() {
 
 // Tests nsIUrlListManager.getGethashUrl.
 add_test(function test_getGethashUrl() {
-  TEST_TABLE_DATA_LIST.forEach(function(t) {
+  TEST_TABLE_DATA_LIST.forEach(function (t) {
     equal(gListManager.getGethashUrl(t.tableName), t.gethashUrl);
   });
   equal(
@@ -209,7 +209,7 @@ function run_test() {
   gHttpServ = new HttpServer();
   gHttpServ.registerDirectory("/", do_get_cwd());
 
-  gHttpServ.registerPathHandler("/safebrowsing/update", function(
+  gHttpServ.registerPathHandler("/safebrowsing/update", function (
     request,
     response
   ) {
@@ -253,7 +253,7 @@ function run_test() {
   gHttpServV4 = new HttpServer();
   gHttpServV4.registerDirectory("/", do_get_cwd());
 
-  gHttpServV4.registerPathHandler("/safebrowsing/update", function(
+  gHttpServV4.registerPathHandler("/safebrowsing/update", function (
     request,
     response
   ) {
@@ -323,8 +323,8 @@ function run_test() {
 
   gHttpServV4.start(5555);
 
-  registerCleanupFunction(function() {
-    return (async function() {
+  registerCleanupFunction(function () {
+    return (async function () {
       await Promise.all([gHttpServ.stop(), gHttpServV4.stop()]);
     })();
   });

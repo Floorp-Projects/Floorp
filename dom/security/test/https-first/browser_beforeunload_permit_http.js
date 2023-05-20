@@ -33,7 +33,7 @@ const TEST_PATH_HTTP = getRootDirectory(gTestPath).replace(
  * 4. Trigger a session history navigation by clicking the "back button".
  * 5. This attempted navigation leads to a prompt which askes for permission to leave page - accept it
  */
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.security.https_first", true],
@@ -110,7 +110,7 @@ async function openPage() {
   // Open about:blank in a new tab
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       // Load http page
       BrowserTestUtils.loadURIString(
         browser,
@@ -122,7 +122,7 @@ async function openPage() {
       let hasInteractedWith = await SpecialPowers.spawn(
         browser,
         [""],
-        function() {
+        function () {
           return content.document.userHasInteracted;
         }
       );
@@ -145,7 +145,7 @@ async function loadPageAndReload(testCase) {
   // Open about:blank in a new tab
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       BrowserTestUtils.loadURIString(
         browser,
         `${TEST_PATH_HTTP}file_beforeunload_permit_http.html`
@@ -157,7 +157,7 @@ async function loadPageAndReload(testCase) {
       let hasInteractedWith = await SpecialPowers.spawn(
         browser,
         [""],
-        function() {
+        function () {
           return content.document.userHasInteracted;
         }
       );
@@ -174,7 +174,7 @@ async function loadPagesAndUseBackButton() {
   // Open about:blank in a new tab
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       BrowserTestUtils.loadURIString(
         browser,
         `${TEST_PATH_HTTP}file_beforeunload_permit_http.html`
@@ -192,7 +192,7 @@ async function loadPagesAndUseBackButton() {
       let hasInteractedWith = await SpecialPowers.spawn(
         browser,
         [""],
-        function() {
+        function () {
           return content.document.userHasInteracted;
         }
       );

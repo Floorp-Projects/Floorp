@@ -41,7 +41,7 @@ const MAX_REQUESTS = 15;
  * @returns {Promise}          A promise that will resolve when the translation
  *                             task is finished.
  */
-var BingTranslator = function(
+var BingTranslator = function (
   translationDocument,
   sourceLanguage,
   targetLanguage

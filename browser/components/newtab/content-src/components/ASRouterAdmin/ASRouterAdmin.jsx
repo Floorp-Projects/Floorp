@@ -885,23 +885,25 @@ export class ASRouterAdminInner extends React.PureComponent {
           >
             {isBlocked ? "Unblock" : "Block"}
           </button>
-          {// eslint-disable-next-line no-nested-ternary
-          isBlocked ? null : isModified ? (
-            <button
-              className="button restore"
-              // eslint-disable-next-line react/jsx-no-bind
-              onClick={e => this.resetJSON(msg)}
-            >
-              Reset
-            </button>
-          ) : (
-            <button
-              className="button show"
-              onClick={this.handleOverride(msg.id)}
-            >
-              Show
-            </button>
-          )}
+          {
+            // eslint-disable-next-line no-nested-ternary
+            isBlocked ? null : isModified ? (
+              <button
+                className="button restore"
+                // eslint-disable-next-line react/jsx-no-bind
+                onClick={e => this.resetJSON(msg)}
+              >
+                Reset
+              </button>
+            ) : (
+              <button
+                className="button show"
+                onClick={this.handleOverride(msg.id)}
+              >
+                Show
+              </button>
+            )
+          }
           {isBlocked ? null : (
             <button
               className="button modify"

@@ -11,14 +11,14 @@ add_task(async function report_validity() {
       gBrowser,
       url: `data:text/html,<my-control></my-control>`,
     },
-    async function(aBrowser) {
+    async function (aBrowser) {
       let promisePopupShown = BrowserTestUtils.waitForEvent(
         window,
         "popupshown"
       );
 
       let message = "valueMissing message";
-      await SpecialPowers.spawn(aBrowser, [message], function(aMessage) {
+      await SpecialPowers.spawn(aBrowser, [message], function (aMessage) {
         class MyControl extends content.HTMLElement {
           static get formAssociated() {
             return true;
@@ -63,14 +63,14 @@ add_task(async function form_report_validity() {
       gBrowser,
       url: `data:text/html,<form><my-control></my-control></form>`,
     },
-    async function(aBrowser) {
+    async function (aBrowser) {
       let promisePopupShown = BrowserTestUtils.waitForEvent(
         window,
         "popupshown"
       );
 
       let message = "valueMissing message";
-      await SpecialPowers.spawn(aBrowser, [message], function(aMessage) {
+      await SpecialPowers.spawn(aBrowser, [message], function (aMessage) {
         class MyControl extends content.HTMLElement {
           static get formAssociated() {
             return true;

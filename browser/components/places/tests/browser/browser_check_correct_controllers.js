@@ -100,7 +100,7 @@ function promiseLoadedSidebar(cmd) {
     let sidebar = document.getElementById("sidebar");
     sidebar.addEventListener(
       "load",
-      function() {
+      function () {
         executeSoon(() => resolve(sidebar));
       },
       { capture: true, once: true }

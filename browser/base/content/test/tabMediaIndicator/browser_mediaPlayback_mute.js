@@ -67,7 +67,7 @@ async function test_visibility(url, browser) {
       gBrowser,
       url: "about:blank",
     },
-    function() {}
+    function () {}
   );
 
   ok(!browser.audioMuted, "Audio should not be muted by default");
@@ -81,7 +81,7 @@ async function test_visibility(url, browser) {
   is(result.computedMuted, true, "Audio is muted");
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["media.useAudioChannelService.testing", true]],
   });

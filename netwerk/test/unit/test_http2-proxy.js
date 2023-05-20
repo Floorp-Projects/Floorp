@@ -95,7 +95,7 @@ class SimpleAuthPrompt2 {
   }
   asyncPromptAuth(channel, callback, context, encryptionLevel, authInfo) {
     this.signal.triggered = true;
-    executeSoon(function() {
+    executeSoon(function () {
       authInfo.username = "user";
       authInfo.password = "pass";
       callback.onAuthAvailable(context, authInfo);
@@ -151,7 +151,7 @@ function get_response(channel, flags = CL_ALLOW_UNKNOWN_CL, delay = 0) {
       flags
     );
     if (delay > 0) {
-      do_timeout(delay, function() {
+      do_timeout(delay, function () {
         channel.asyncOpen(listener);
       });
     } else {
@@ -232,14 +232,14 @@ class http2ProxyCode {
     // connections when shutting down the proxy.
     proxy.socketIndex = 0;
     proxy.socketMap = {};
-    proxy.on("connection", function(socket) {
+    proxy.on("connection", function (socket) {
       let index = proxy.socketIndex++;
       proxy.socketMap[index] = socket;
-      socket.on("close", function() {
+      socket.on("close", function () {
         delete proxy.socketMap[index];
       });
     });
-    proxy.closeSockets = function() {
+    proxy.closeSockets = function () {
       for (let i in proxy.socketMap) {
         proxy.socketMap[i].destroy();
       }

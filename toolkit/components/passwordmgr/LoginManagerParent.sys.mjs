@@ -1477,8 +1477,9 @@ export class LoginManagerParent extends JSWindowActorParent {
         let popupNotifications = promptBrowser.ownerGlobal.PopupNotifications;
         let notif = popupNotifications.getNotification("password", browser);
         lazy.log(
-          `_onPasswordEditedOrGenerated: Has doorhanger? ${notif &&
-            notif.dismissed}`
+          `_onPasswordEditedOrGenerated: Has doorhanger? ${
+            notif && notif.dismissed
+          }`
         );
         if (notif && notif.dismissed) {
           prompter.promptToChangePassword(

@@ -279,7 +279,7 @@ export class MigratorBase {
     }
 
     // Used to periodically give back control to the main-thread loop.
-    let unblockMainThread = function() {
+    let unblockMainThread = function () {
       return new Promise(resolve => {
         Services.tm.dispatchToMainThread(resolve);
       });
@@ -392,9 +392,9 @@ export class MigratorBase {
     };
 
     // Called either directly or through the bookmarks import callback.
-    let doMigrate = async function() {
+    let doMigrate = async function () {
       let resourcesGroupedByItems = new Map();
-      resources.forEach(function(resource) {
+      resources.forEach(function (resource) {
         if (!resourcesGroupedByItems.has(resource.type)) {
           resourcesGroupedByItems.set(resource.type, new Set());
         }
@@ -405,7 +405,7 @@ export class MigratorBase {
         throw new Error("No items to import");
       }
 
-      let notify = function(aMsg, aItemType) {
+      let notify = function (aMsg, aItemType) {
         Services.obs.notifyObservers(null, aMsg, aItemType);
       };
 
@@ -428,7 +428,7 @@ export class MigratorBase {
         let itemSuccess = false;
         for (let res of itemResources) {
           let completeDeferred = lazy.PromiseUtils.defer();
-          let resourceDone = function(aSuccess) {
+          let resourceDone = function (aSuccess) {
             itemResources.delete(res);
             itemSuccess |= aSuccess;
             if (itemResources.size == 0) {
@@ -490,7 +490,7 @@ export class MigratorBase {
       // Note: We do not need to do so for the Firefox migrator
       // (=startupOnlyMigrator), as it just copies over the places database
       // from another profile.
-      await (async function() {
+      await (async function () {
         // Tell nsBrowserGlue we're importing default bookmarks.
         let browserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
           Ci.nsIObserver
@@ -510,7 +510,7 @@ export class MigratorBase {
         // we need to make sure we're going to know when it's finished
         // initializing places:
         let placesInitedPromise = new Promise(resolve => {
-          let onPlacesInited = function() {
+          let onPlacesInited = function () {
             Services.obs.removeObserver(
               onPlacesInited,
               TOPIC_PLACES_DEFAULTS_FINISHED

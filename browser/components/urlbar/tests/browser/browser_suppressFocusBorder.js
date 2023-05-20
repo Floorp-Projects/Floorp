@@ -37,10 +37,10 @@ class AwaitPromiseProvider extends UrlbarTestUtils.TestProvider {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     SpecialPowers.clipboardCopyString("");
   });
 });

@@ -9,7 +9,7 @@ async function createTestFile(filename, content) {
   return path;
 }
 
-add_task(async function() {
+add_task(async function () {
   var postFilename = "post_file.html";
   var actionFilename = "action_file.html";
 

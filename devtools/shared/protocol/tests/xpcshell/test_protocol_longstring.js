@@ -116,7 +116,7 @@ function run_test() {
 
   let strfront = null;
 
-  const expectRootChildren = function(size) {
+  const expectRootChildren = function (size) {
     Assert.equal(rootActor.__poolMap.size, size + 1);
     Assert.equal(rootFront.__poolMap.size, size + 1);
   };

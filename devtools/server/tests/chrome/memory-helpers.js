@@ -15,7 +15,7 @@ var gReduceTimePrecision = Services.prefs.getBoolPref(
   "privacy.reduceTimerPrecision"
 );
 Services.prefs.setBoolPref("privacy.reduceTimerPrecision", false);
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   Services.prefs.clearUserPref("devtools.debugger.log");
   Services.prefs.setBoolPref(
     "privacy.reduceTimerPrecision",

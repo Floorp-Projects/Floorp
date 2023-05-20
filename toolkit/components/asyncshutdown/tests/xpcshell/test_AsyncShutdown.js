@@ -84,7 +84,7 @@ add_task(async function test_reentrant() {
     // event loop before calling `lock.wait()`, which we do by forcing
     // a Promise.resolve().
     //
-    let promiseSteps = (async function() {
+    let promiseSteps = (async function () {
       await Promise.resolve();
 
       info("Waiting until we have entered the outer blocker");
@@ -125,7 +125,7 @@ add_task(async function test_phase_removeBlocker() {
     };
 
     lock.addBlocker("Wait forever", blocker);
-    let do_remove_blocker = function(aLock, aBlocker, aShouldRemove) {
+    let do_remove_blocker = function (aLock, aBlocker, aShouldRemove) {
       info(
         "Attempting to remove blocker " +
           aBlocker +
@@ -197,7 +197,7 @@ add_task(async function test_state() {
   let barrier = new AsyncShutdown.Barrier("test_filename");
   let deferred = PromiseUtils.defer();
   let { filename, lineNumber } = Components.stack;
-  barrier.client.addBlocker(BLOCKER_NAME, function() {
+  barrier.client.addBlocker(BLOCKER_NAME, function () {
     return deferred.promise;
   });
 
@@ -275,6 +275,6 @@ add_task(async function test_multistate() {
   await promiseDone;
 });
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
 });

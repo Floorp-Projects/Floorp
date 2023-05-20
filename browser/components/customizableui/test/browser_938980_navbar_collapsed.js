@@ -11,7 +11,7 @@ var navbar = document.getElementById("nav-bar");
 var tabsToolbar = document.getElementById("TabsToolbar");
 
 // Customization reset should restore visibility to default-visible toolbars.
-add_task(async function() {
+add_task(async function () {
   is(navbar.collapsed, false, "Test should start with navbar visible");
   setToolbarVisibility(navbar, false);
   is(navbar.collapsed, true, "navbar should be hidden now");
@@ -26,7 +26,7 @@ add_task(async function() {
 });
 
 // Customization reset should restore collapsed-state to default-collapsed toolbars.
-add_task(async function() {
+add_task(async function () {
   ok(
     CustomizableUI.inDefaultState,
     "Everything should be in its default state"
@@ -72,7 +72,7 @@ add_task(async function() {
 });
 
 // Check that the menubar will be collapsed by resetting, if the platform supports it.
-add_task(async function() {
+add_task(async function () {
   let menubar = document.getElementById("toolbar-menubar");
   const canMenubarCollapse = CustomizableUI.isToolbarDefaultCollapsed(
     menubar.id
@@ -126,7 +126,7 @@ add_task(async function() {
 });
 
 // Customization reset should restore collapsed-state to default-collapsed toolbars.
-add_task(async function() {
+add_task(async function () {
   ok(
     CustomizableUI.inDefaultState,
     "Everything should be in its default state"
@@ -167,7 +167,7 @@ add_task(async function() {
 });
 
 // Check that the menubar will be collapsed by resetting, if the platform supports it.
-add_task(async function() {
+add_task(async function () {
   let menubar = document.getElementById("toolbar-menubar");
   const canMenubarCollapse = CustomizableUI.isToolbarDefaultCollapsed(
     menubar.id

@@ -27,11 +27,11 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       // check that PDF is opened with internal viewer
       await waitForPdfJS(browser, TESTROOT + "file_pdfjs_test.pdf");
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         Assert.ok(
           content.document.querySelector("div#viewer"),
           "document content has viewer UI"

@@ -51,7 +51,7 @@ add_task(async function test_merged_item_chunking() {
   let buf = await openMirror("merged_item_chunking");
 
   info("Set up local tree with 1500 bookmarks");
-  let localGuids = await buf.db.executeTransaction(function() {
+  let localGuids = await buf.db.executeTransaction(function () {
     let url = new URL("http://example.com/a");
     return insertManyUnfiledBookmarks(buf.db, url);
   });
@@ -117,7 +117,7 @@ add_task(async function test_deletion_chunking() {
   let buf = await openMirror("deletion_chunking");
 
   info("Set up local tree with 1500 bookmarks");
-  let guids = await buf.db.executeTransaction(function() {
+  let guids = await buf.db.executeTransaction(function () {
     let url = new URL("http://example.com/a");
     return insertManyUnfiledBookmarks(buf.db, url);
   });

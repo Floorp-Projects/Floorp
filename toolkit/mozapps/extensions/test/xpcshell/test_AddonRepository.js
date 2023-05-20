@@ -219,7 +219,7 @@ add_task(async function setup() {
 // Tests homepageURL and getSearchURL()
 add_task(async function test_1() {
   function check_urls(aPreference, aGetURL, aTests) {
-    aTests.forEach(function(aTest) {
+    aTests.forEach(function (aTest) {
       Services.prefs.setCharPref(aPreference, aTest.preferenceValue);
       Assert.equal(aGetURL(aTest), aTest.expectedURL);
     });

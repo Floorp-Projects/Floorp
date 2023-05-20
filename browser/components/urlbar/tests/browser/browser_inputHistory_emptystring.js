@@ -30,7 +30,7 @@ async function do_test(openFn, pickMethod) {
       gBrowser,
       url: "about:blank",
     },
-    async function(browser) {
+    async function (browser) {
       await PlacesTestUtils.clearInputHistory();
       await openFn();
       await UrlbarTestUtils.promiseSearchComplete(window);
@@ -50,7 +50,7 @@ async function do_test(openFn, pickMethod) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   for (let i = 0; i < 5; i++) {
     await PlacesTestUtils.addVisits(TEST_URL);

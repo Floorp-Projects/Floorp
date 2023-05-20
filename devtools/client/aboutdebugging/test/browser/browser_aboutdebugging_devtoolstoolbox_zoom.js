@@ -16,7 +16,7 @@ const L10N = new LocalizationHelper(
 
 // Check that the about:devtools-toolbox tab can be zoomed in and that the zoom
 // persists after switching tabs.
-add_task(async function() {
+add_task(async function () {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 

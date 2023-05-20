@@ -1,4 +1,4 @@
-window.addEventListener("load", function() {
+window.addEventListener("load", function () {
   let str = "さ".repeat(97);
   for (let i = 0; i < 2000; i++) {
     let p = document.createElement("p");

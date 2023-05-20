@@ -15,7 +15,7 @@ const TEST_URI = `
   <span id="matches">Some styled text</span>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.inspector.activeSidebar", "computedview");
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openComputedView();

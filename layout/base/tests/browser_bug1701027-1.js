@@ -40,7 +40,7 @@
 // viewport which causes us to do a partial display list update including the
 // anonymous content, which hits the assert we are aiming to test.
 
-add_task(async function() {
+add_task(async function () {
   function getChromeURL(filename) {
     let chromeURL = getRootDirectory(gTestPath) + filename;
     return chromeURL;

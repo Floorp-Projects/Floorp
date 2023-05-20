@@ -3,7 +3,7 @@
 
 var TEST_STATE = { windows: [{ tabs: [{ url: "about:blank" }] }] };
 
-add_task(async function() {
+add_task(async function () {
   function assertNumberOfTabs(num, msg) {
     is(gBrowser.tabs.length, num, msg);
   }

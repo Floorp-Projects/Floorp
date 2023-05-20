@@ -11,14 +11,14 @@ const TEST_URI =
   "https://example.com/browser/devtools/client/" +
   "netmonitor/test/html_tracking-protection.html";
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
 /**
  * Test that tracking resources are properly marked in the Network panel.
  */
-add_task(async function() {
+add_task(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
 
   const { monitor, tab } = await initNetMonitor(TEST_URI, { requestCount: 1 });

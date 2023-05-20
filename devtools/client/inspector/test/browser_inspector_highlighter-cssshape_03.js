@@ -11,7 +11,7 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes.html";
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 const TEST_LEVELS = [0.5, 1, 2];
 
-add_task(async function() {
+add_task(async function () {
   const inspector = await openInspectorForURL(TEST_URL);
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
   const { highlighterTestFront } = inspector;

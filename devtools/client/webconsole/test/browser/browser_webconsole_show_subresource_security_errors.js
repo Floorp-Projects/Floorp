@@ -12,7 +12,7 @@ const TEST_DOC =
   "test/browser/test-subresource-security-error.html";
 const SAMPLE_MSG = "specified a header that could not be parsed successfully.";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
   await navigateTo(TEST_DOC);

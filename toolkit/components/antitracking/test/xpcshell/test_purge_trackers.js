@@ -500,7 +500,7 @@ async function testExpiredInteractionPermission() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 }
 
-add_task(async function() {
+add_task(async function () {
   const cookieBehaviors = [
     Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
     Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN,

@@ -341,7 +341,7 @@ function fixupSearchQueries(aNode, aFolderIdMap) {
  */
 function fixupQuery(aQueryURL, aFolderIdMap) {
   let invalid = false;
-  let convert = function(str, existingFolderId) {
+  let convert = function (str, existingFolderId) {
     let guid;
     if (
       Object.keys(OLD_BOOKMARK_QUERY_TRANSLATIONS).includes(existingFolderId)

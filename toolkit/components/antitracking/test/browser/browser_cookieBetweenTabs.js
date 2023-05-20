@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.flushPrefEnv();
   await SpecialPowers.pushPrefEnv({
     set: [

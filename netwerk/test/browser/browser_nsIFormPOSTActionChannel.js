@@ -183,8 +183,8 @@ document.getElementById('form').submit();
 function frameScript() {
   /* eslint-env mozilla/frame-script */
   /* eslint-disable mozilla/no-arbitrary-setTimeout */
-  addMessageListener("Test:WaitForIFrame", function() {
-    var check = function() {
+  addMessageListener("Test:WaitForIFrame", function () {
+    var check = function () {
       if (content) {
         var frame = content.document.getElementById("frame");
         if (frame) {
@@ -233,7 +233,7 @@ function loadTestTab(uri) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   var handler = new CustomProtocolHandler();
   Services.io.registerProtocolHandler(
     SCHEME,
@@ -242,26 +242,26 @@ add_task(async function() {
       Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE,
     -1
   );
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.io.unregisterProtocolHandler(SCHEME);
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   var [hasUploadStream] = await loadTestTab(NORMAL_FORM_URI);
   is(hasUploadStream, "no", "normal action should not have uploadStream");
 
   gBrowser.removeCurrentTab();
 });
 
-add_task(async function() {
+add_task(async function () {
   var [hasUploadStream] = await loadTestTab(UPLOAD_FORM_URI);
   is(hasUploadStream, "no", "upload action should not have uploadStream");
 
   gBrowser.removeCurrentTab();
 });
 
-add_task(async function() {
+add_task(async function () {
   var [hasUploadStream, postData, headers] = await loadTestTab(POST_FORM_URI);
 
   is(hasUploadStream, "yes", "post action should have uploadStream");

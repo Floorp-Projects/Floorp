@@ -51,10 +51,7 @@ export class FxAccountsTelemetry {
   }
 
   generateUUID() {
-    return Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1);
+    return Services.uuid.generateUUID().toString().slice(1, -1);
   }
 
   // A flow ID can be anything that's "probably" unique, so for now use a UUID.

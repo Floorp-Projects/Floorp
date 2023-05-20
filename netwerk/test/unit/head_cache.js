@@ -84,7 +84,7 @@ function syncWithCacheIOThread(callback, force) {
       "disk",
       Ci.nsICacheStorage.OPEN_READONLY,
       null,
-      function(status, entry) {
+      function (status, entry) {
         Assert.equal(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
         callback();
       }
@@ -103,7 +103,7 @@ function get_device_entry_count(where, lci, continuation) {
 
   var visitor = {
     onCacheStorageInfo(entryCount, consumption) {
-      executeSoon(function() {
+      executeSoon(function () {
         continuation(entryCount, consumption);
       });
     },
@@ -119,7 +119,7 @@ function asyncCheckCacheEntryPresence(key, where, shouldExist, continuation) {
     where,
     Ci.nsICacheStorage.OPEN_READONLY,
     null,
-    function(status, entry) {
+    function (status, entry) {
       if (shouldExist) {
         dump("TEST-INFO | checking cache key " + key + " exists @ " + where);
         Assert.equal(status, Cr.NS_OK);

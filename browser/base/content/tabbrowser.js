@@ -2809,7 +2809,7 @@
       this.tabAnimationsInProgress++;
 
       if (animate) {
-        requestAnimationFrame(function() {
+        requestAnimationFrame(function () {
           // kick the animation off
           t.setAttribute("fadein", "true");
         });
@@ -2906,7 +2906,7 @@
         // Call _handleNewTab asynchronously as it needs to know if the
         // new tab is selected.
         setTimeout(
-          function(tabContainer) {
+          function (tabContainer) {
             tabContainer._handleNewTab(t);
           },
           0,
@@ -3987,7 +3987,7 @@
       aTab.removeAttribute("bursting");
 
       setTimeout(
-        function(tab, tabbrowser) {
+        function (tab, tabbrowser) {
           if (
             tab.container &&
             window.getComputedStyle(tab).maxWidth == "0.1px"
@@ -4304,7 +4304,7 @@
         this.tabContainer._updateCloseButtons();
 
         setTimeout(
-          function(tabs) {
+          function (tabs) {
             tabs._lastTabClosedByMouse = false;
           },
           0,

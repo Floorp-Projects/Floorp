@@ -46,7 +46,7 @@ Listener.prototype = {
   onStopRequest(request, status) {
     Assert.equal(this._buffer, this._response);
     if (--expectedOnStopRequests == 0) {
-      do_timeout(10, function() {
+      do_timeout(10, function () {
         httpserver.stop(do_test_finished);
       });
     }
@@ -65,7 +65,7 @@ function run_test() {
   // clear cache
   evict_cache_entries();
 
-  httpProtocolHandler.EnsureHSTSDataReady().then(function() {
+  httpProtocolHandler.EnsureHSTSDataReady().then(function () {
     var ch0 = setupChannel(
       "/bug596443",
       "Response0",
@@ -94,8 +94,8 @@ function triggerHandlers() {
 
 var handlers = [];
 function handler(metadata, response) {
-  var func = function(body) {
-    return function() {
+  var func = function (body) {
+    return function () {
       response.setStatusLine(metadata.httpVersion, 200, "Ok");
       response.setHeader("Content-Type", "text/plain", false);
       response.setHeader("Content-Length", "" + body.length, false);

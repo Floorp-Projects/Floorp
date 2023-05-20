@@ -53,7 +53,7 @@ ChromeUtils.defineModuleGetter(
 
 // We don't want to spend time initializing the full loader here so we create
 // our own lazy require.
-XPCOMUtils.defineLazyGetter(lazy, "Telemetry", function() {
+XPCOMUtils.defineLazyGetter(lazy, "Telemetry", function () {
   const { require } = ChromeUtils.importESModule(
     "resource://devtools/shared/loader/Loader.sys.mjs"
   );
@@ -63,7 +63,7 @@ XPCOMUtils.defineLazyGetter(lazy, "Telemetry", function() {
   return Telemetry;
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "KeyShortcutsBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "KeyShortcutsBundle", function () {
   return new Localization(["devtools/startup/key-shortcuts.ftl"], true);
 });
 
@@ -89,7 +89,7 @@ function getLocalizedKeyShortcut(id) {
   }
 }
 
-XPCOMUtils.defineLazyGetter(lazy, "KeyShortcuts", function() {
+XPCOMUtils.defineLazyGetter(lazy, "KeyShortcuts", function () {
   const isMac = AppConstants.platform == "macosx";
 
   // Common modifier shared by most key shortcuts
@@ -297,7 +297,7 @@ export function validateProfilerWebChannelUrl(targetUrl) {
   return frontEndUrl;
 }
 
-XPCOMUtils.defineLazyGetter(lazy, "ProfilerPopupBackground", function() {
+XPCOMUtils.defineLazyGetter(lazy, "ProfilerPopupBackground", function () {
   return ChromeUtils.import(
     "resource://devtools/client/performance-new/shared/background.jsm.js"
   );
@@ -1009,7 +1009,7 @@ DevToolsStartup.prototype = {
     let devtoolsThreadResumed = false;
     const pauseOnStartup = cmdLine.handleFlag("wait-for-jsdebugger", false);
     if (pauseOnStartup) {
-      const observe = function(subject, topic, data) {
+      const observe = function (subject, topic, data) {
         devtoolsThreadResumed = true;
         Services.obs.removeObserver(observe, "devtools-thread-ready");
       };

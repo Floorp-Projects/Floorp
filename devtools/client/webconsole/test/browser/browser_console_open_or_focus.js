@@ -10,7 +10,7 @@ requestLongerTimeout(2);
 const TEST_MESSAGE = "testmessage";
 const { Tools } = require("resource://devtools/client/definitions.js");
 
-add_task(async function() {
+add_task(async function () {
   info("Get main browser window");
   const mainWindow = Services.wm.getMostRecentWindow(null);
 

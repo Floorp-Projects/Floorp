@@ -9,7 +9,7 @@ const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html><script>\u6e2c</script>";
 const EXPECTED_REPORT = "ReferenceError: \u6e2c is not defined";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // On e10s, the exception is triggered in child process

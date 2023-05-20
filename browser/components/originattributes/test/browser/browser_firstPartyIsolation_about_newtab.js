@@ -1,4 +1,4 @@
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.newtab.preload", false],
@@ -33,7 +33,7 @@ add_task(async function test_aboutNewTab() {
   let attrs = {
     firstPartyDomain: "about.ef2a7dd5-93bc-417f-a698-142c3116864f.mozilla",
   };
-  await SpecialPowers.spawn(tab.linkedBrowser, [{ attrs }], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [{ attrs }], async function (
     args
   ) {
     Assert.ok(true, "principal " + content.document.nodePrincipal.origin);

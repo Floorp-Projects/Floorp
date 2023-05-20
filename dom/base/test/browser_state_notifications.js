@@ -77,7 +77,7 @@ const uri3 = "data:text/html;charset=utf-8,<h1>3</h1>";
 
 const uri4 = "chrome://browser/content/license.html";
 
-const test = Test(async function() {
+const test = Test(async function () {
   let documentInteractive = receive(
     "content-document-interactive",
     isData,

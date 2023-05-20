@@ -5,7 +5,7 @@
 
 // Test the impression telemetry behavior with its preferences.
 
-add_setup(async function() {
+add_setup(async function () {
   await setup();
 });
 

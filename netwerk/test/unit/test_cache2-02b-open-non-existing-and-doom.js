@@ -11,7 +11,7 @@ add_task(async function test() {
       "disk",
       Ci.nsICacheStorage.OPEN_READONLY,
       null,
-      new OpenCallback(NOTFOUND, null, null, function(entry) {
+      new OpenCallback(NOTFOUND, null, null, function (entry) {
         resolve(entry);
       })
     );
@@ -24,7 +24,7 @@ add_task(async function test() {
       "disk",
       Ci.nsICacheStorage.OPEN_READONLY,
       null,
-      new OpenCallback(NOTFOUND, null, null, function(entry) {
+      new OpenCallback(NOTFOUND, null, null, function (entry) {
         resolve(entry);
       })
     );
@@ -37,7 +37,7 @@ add_task(async function test() {
       "disk",
       Ci.nsICacheStorage.OPEN_NORMALLY,
       null,
-      new OpenCallback(NEW, "b1m", "b1d", function(entry) {
+      new OpenCallback(NEW, "b1m", "b1d", function (entry) {
         resolve(entry);
       })
     );
@@ -50,7 +50,7 @@ add_task(async function test() {
       "disk",
       Ci.nsICacheStorage.OPEN_NORMALLY,
       null,
-      new OpenCallback(NORMAL, "b1m", "b1d", function(entry) {
+      new OpenCallback(NORMAL, "b1m", "b1d", function (entry) {
         resolve(entry);
       })
     );

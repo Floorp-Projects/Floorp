@@ -1,4 +1,4 @@
-onmessage = function(e) {
+onmessage = function (e) {
   if (!e.source) {
     dump("ERROR: message doesn't have a source.");
   }

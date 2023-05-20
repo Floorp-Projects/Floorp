@@ -5,7 +5,7 @@
 
 // Test that animations with an overflowed delay and end delay are not displayed.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_overflowed_delay_end_delay.html");
   const { panel } = await openAnimationInspector();
 

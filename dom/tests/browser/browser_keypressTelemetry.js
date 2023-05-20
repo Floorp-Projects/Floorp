@@ -26,7 +26,7 @@ function getRecordedKeypressCount() {
   return totalCount;
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["toolkit.telemetry.ipcBatchTimeout", 10]],
   });

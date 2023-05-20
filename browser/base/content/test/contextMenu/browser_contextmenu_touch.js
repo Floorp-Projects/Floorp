@@ -35,7 +35,7 @@ async function openAndCheckContextMenu(contextMenu, target) {
 }
 
 // Ensure that we can run touch events properly for windows [10]
-add_setup(async function() {
+add_setup(async function () {
   let isWindows = AppConstants.isPlatformAndVersionAtLeast("win", "10.0");
   await SpecialPowers.pushPrefEnv({
     set: [["apz.test.fails_with_native_injection", isWindows]],
@@ -44,7 +44,7 @@ add_setup(async function() {
 
 // Test the content area context menu.
 add_task(async function test_contentarea_contextmenu_touch() {
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let contextMenu = document.getElementById("contentAreaContextMenu");
     await openAndCheckContextMenu(contextMenu, browser);
   });
@@ -53,7 +53,7 @@ add_task(async function test_contentarea_contextmenu_touch() {
 // Test the back and forward buttons.
 add_task(async function test_back_forward_button_contextmenu_touch() {
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  await BrowserTestUtils.withNewTab("http://example.com", async function(
+  await BrowserTestUtils.withNewTab("http://example.com", async function (
     browser
   ) {
     let contextMenu = document.getElementById("backForwardMenu");

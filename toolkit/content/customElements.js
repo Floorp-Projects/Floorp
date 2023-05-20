@@ -32,7 +32,7 @@
   // to modify the class so we can instrument function calls in local development:
   if (instrumentClasses) {
     let define = window.customElements.define;
-    window.customElements.define = function(name, c, opts) {
+    window.customElements.define = function (name, c, opts) {
       instrumentCustomElementClass(c);
       return define.call(this, name, c, opts);
     };
@@ -45,7 +45,7 @@
     );
   }
 
-  MozElements.printInstrumentation = function(collapsed) {
+  MozElements.printInstrumentation = function (collapsed) {
     let summaries = [];
     let totalCalls = 0;
     let totalTime = 0;
@@ -113,7 +113,7 @@
     let data = { instances: 0 };
 
     function wrapFunction(name, fn) {
-      return function() {
+      return function () {
         if (!data[name]) {
           data[name] = { time: 0, calls: 0 };
         }
@@ -681,7 +681,7 @@
             if (MozQueryInterface.isInstance(propOrMethod)) {
               return Reflect.get(target, prop, receiver);
             }
-            return function(...args) {
+            return function (...args) {
               return propOrMethod.apply(target, args);
             };
           }
@@ -837,7 +837,7 @@
     This function explicitly returns null so that there is no confusion
     about which custom elements from ES Modules have been loaded.
     */
-    window.ensureCustomElements = function(...elementNames) {
+    window.ensureCustomElements = function (...elementNames) {
       return Promise.all(
         elementNames
           .filter(name => !customElements.get(name))

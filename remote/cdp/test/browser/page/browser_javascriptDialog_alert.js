@@ -5,7 +5,7 @@
 
 // Test a browser alert is detected via Page.javascriptDialogOpening and can be
 // closed with Page.handleJavaScriptDialog
-add_task(async function({ client }) {
+add_task(async function ({ client }) {
   const { Page } = client;
 
   info("Enable the page domain");

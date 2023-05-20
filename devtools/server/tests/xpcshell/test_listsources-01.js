@@ -11,8 +11,8 @@ var gNumTimesSourcesSent = 0;
 
 add_task(
   threadFrontTest(async ({ threadFront, debuggee, client }) => {
-    client.request = (function(origRequest) {
-      return function(request, onResponse) {
+    client.request = (function (origRequest) {
+      return function (request, onResponse) {
         if (request.type === "sources") {
           ++gNumTimesSourcesSent;
         }
@@ -28,7 +28,7 @@ add_task(
     const response = await threadFront.getSources();
 
     Assert.ok(
-      response.sources.some(function(s) {
+      response.sources.some(function (s) {
         return s.url && s.url.match(/test_listsources-01.js/);
       })
     );

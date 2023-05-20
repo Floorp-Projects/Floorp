@@ -20,7 +20,7 @@ const POLICY_PREF = "suggest.quicksuggest.nonsponsored";
 let gDefaultBranch = Services.prefs.getDefaultBranch("browser.urlbar.");
 let gUserBranch = Services.prefs.getBranch("browser.urlbar.");
 
-add_setup(async function() {
+add_setup(async function () {
   await QuickSuggestTestUtils.ensureQuickSuggestInit();
 });
 
@@ -327,7 +327,7 @@ function clearOnboardingPrefs() {
 //
 // Expected:
 // * All history prefs set on the default branch
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.history,
@@ -349,7 +349,7 @@ add_task(async function() {
 //
 // Expected:
 // * All offline prefs set on the default branch
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.history,
@@ -371,7 +371,7 @@ add_task(async function() {
 //
 // Expected:
 // * All online prefs set on the default branch
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.history,
@@ -396,7 +396,7 @@ add_task(async function() {
 //
 // Expected:
 // * All offline prefs set on the default branch
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -423,7 +423,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain on
 // * Sponsored suggestions: remain off
 // * Data collection: remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -456,7 +456,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain off
 // * Sponsored suggestions: remain on
 // * Data collection: remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -489,7 +489,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain off
 // * Sponsored suggestions: remain off
 // * Data collection: remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -524,7 +524,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain on
 // * Sponsored suggestions: remain on
 // * Data collection: remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -557,7 +557,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain off
 // * Sponsored suggestions: remain off
 // * Data collection: remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -592,7 +592,7 @@ add_task(async function() {
 //
 // Expected:
 // * All online prefs set on the default branch
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -619,7 +619,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain on
 // * Sponsored suggestions: remain off
 // * Data collection: remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -652,7 +652,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain off
 // * Sponsored suggestions: remain on
 // * Data collection: remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -685,7 +685,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain off
 // * Sponsored suggestions: remain off
 // * Data collection: remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -720,7 +720,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain on
 // * Sponsored suggestions: remain on
 // * Data collection: remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -753,7 +753,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain on
 // * Sponsored suggestions: remain off
 // * Data collection: remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -788,7 +788,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain off
 // * Sponsored suggestions: remain on
 // * Data collection: remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -823,7 +823,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain off
 // * Sponsored suggestions: remain off
 // * Data collection: remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -858,7 +858,7 @@ add_task(async function() {
 //
 // Expected:
 // * All online prefs set on the default branch
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -885,7 +885,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain on
 // * Sponsored suggestions: remain off
 // * Data collection: remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -918,7 +918,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain off
 // * Sponsored suggestions: remain on
 // * Data collection: remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -951,7 +951,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain off
 // * Sponsored suggestions: remain off
 // * Data collection: remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -986,7 +986,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain on
 // * Sponsored suggestions: remain on
 // * Data collection: remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -1019,7 +1019,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain on
 // * Sponsored suggestions: remain off
 // * Data collection: remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -1054,7 +1054,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain off
 // * Sponsored suggestions: remain on
 // * Data collection: remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -1089,7 +1089,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: remain off
 // * Sponsored suggestions: remain off
 // * Data collection: remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -1126,7 +1126,7 @@ add_task(async function() {
 //
 // Expected:
 // * Sponsored suggestions: on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -1154,7 +1154,7 @@ add_task(async function() {
 //
 // Expected:
 // * Sponsored suggestions: remain off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -1188,7 +1188,7 @@ add_task(async function() {
 //
 // Expected:
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -1217,7 +1217,7 @@ add_task(async function() {
 //
 // Expected:
 // * Data collection: remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
@@ -1251,7 +1251,7 @@ add_task(async function() {
 //
 // Expected:
 // * Sponsored suggestions: off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -1280,7 +1280,7 @@ add_task(async function() {
 //
 // Expected:
 // * Sponsored suggestions: remain on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -1314,7 +1314,7 @@ add_task(async function() {
 //
 // Expected:
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -1343,7 +1343,7 @@ add_task(async function() {
 //
 // Expected:
 // * Data collection: remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
@@ -1384,7 +1384,7 @@ add_task(async function() {
 //
 //    Expected:
 //    * Suggestions remain on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments([
     {
       initialPrefsToSet: {
@@ -1437,7 +1437,7 @@ add_task(async function() {
 //
 // Expected:
 // * Suggestions remain off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: {
@@ -1481,7 +1481,7 @@ add_task(async function() {
 //
 //    Expected:
 //    * Suggestions remain off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments([
     {
       initialPrefsToSet: {
@@ -1534,7 +1534,7 @@ add_task(async function() {
 //
 // Expected:
 // * Suggestions remain on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: {
@@ -1578,7 +1578,7 @@ add_task(async function() {
 //
 //    Expected:
 //    * Data collection remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments(
     [
       {
@@ -1628,7 +1628,7 @@ add_task(async function() {
 //
 // Expected:
 // * Data collection remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: {
@@ -1667,7 +1667,7 @@ add_task(async function() {
 //
 //    Expected:
 //    * Data collection remains off
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments(
     [
       {
@@ -1717,7 +1717,7 @@ add_task(async function() {
 //
 // Expected:
 // * Data collection remains on
-add_task(async function() {
+add_task(async function () {
   await checkEnrollments({
     initialPrefsToSet: {
       defaultBranch: {
@@ -1899,7 +1899,7 @@ async function checkEnrollments(options) {
 // Preference policy test for the following:
 // * Status: locked
 // * Value: false
-add_task(async function() {
+add_task(async function () {
   await doPolicyTest({
     prefPolicy: {
       Status: "locked",
@@ -1914,7 +1914,7 @@ add_task(async function() {
 // Preference policy test for the following:
 // * Status: locked
 // * Value: true
-add_task(async function() {
+add_task(async function () {
   await doPolicyTest({
     prefPolicy: {
       Status: "locked",
@@ -1929,7 +1929,7 @@ add_task(async function() {
 // Preference policy test for the following:
 // * Status: default
 // * Value: false
-add_task(async function() {
+add_task(async function () {
   await doPolicyTest({
     prefPolicy: {
       Status: "default",
@@ -1944,7 +1944,7 @@ add_task(async function() {
 // Preference policy test for the following:
 // * Status: default
 // * Value: true
-add_task(async function() {
+add_task(async function () {
   await doPolicyTest({
     prefPolicy: {
       Status: "default",
@@ -1959,7 +1959,7 @@ add_task(async function() {
 // Preference policy test for the following:
 // * Status: user
 // * Value: false
-add_task(async function() {
+add_task(async function () {
   await doPolicyTest({
     prefPolicy: {
       Status: "user",
@@ -1974,7 +1974,7 @@ add_task(async function() {
 // Preference policy test for the following:
 // * Status: user
 // * Value: true
-add_task(async function() {
+add_task(async function () {
   await doPolicyTest({
     prefPolicy: {
       Status: "user",

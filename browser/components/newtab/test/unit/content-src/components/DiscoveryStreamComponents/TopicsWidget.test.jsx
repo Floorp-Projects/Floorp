@@ -91,10 +91,7 @@ describe("Discovery Stream <TopicsWidget>", () => {
 
     it("should dispatch click event for technology", () => {
       // Click technology topic.
-      wrapper
-        .find(SafeAnchor)
-        .at(0)
-        .simulate("click");
+      wrapper.find(SafeAnchor).at(0).simulate("click");
 
       // First call is DiscoveryStreamLoadedContent, which is already tested.
       const [second, third, fourth] = dispatch.getCalls().slice(1, 4);
@@ -145,10 +142,7 @@ describe("Discovery Stream <TopicsWidget>", () => {
 
     it("should dispatch click event for must reads", () => {
       // Click must reads topic.
-      wrapper
-        .find(SafeAnchor)
-        .at(8)
-        .simulate("click");
+      wrapper.find(SafeAnchor).at(8).simulate("click");
 
       // First call is DiscoveryStreamLoadedContent, which is already tested.
       const [second, third, fourth] = dispatch.getCalls().slice(1, 4);
@@ -199,10 +193,7 @@ describe("Discovery Stream <TopicsWidget>", () => {
 
     it("should dispatch click event for more topics", () => {
       // Click more-topics.
-      wrapper
-        .find(SafeAnchor)
-        .at(9)
-        .simulate("click");
+      wrapper.find(SafeAnchor).at(9).simulate("click");
 
       // First call is DiscoveryStreamLoadedContent, which is already tested.
       const [second, third, fourth] = dispatch.getCalls().slice(1, 4);

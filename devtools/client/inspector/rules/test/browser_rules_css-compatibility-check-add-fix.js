@@ -97,7 +97,7 @@ const TEST_DATA_FIX_EXPERIMENTAL_SUPPORTED = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await pushPref(
     "devtools.inspector.compatibility.target-browsers",
     JSON.stringify(TARGET_BROWSERS)

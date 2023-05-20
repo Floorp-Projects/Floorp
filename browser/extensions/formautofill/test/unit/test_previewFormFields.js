@@ -139,7 +139,7 @@ const TESTCASES = [
 
 function run_tests(testcases) {
   for (let testcase of testcases) {
-    add_task(async function() {
+    add_task(async function () {
       info("Starting testcase: " + testcase.description);
       let doc = MockDocument.createTestDocument(
         "http://localhost:8080/test/",

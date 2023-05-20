@@ -10,7 +10,7 @@ addAccessibleTask(
     <option id="o1">hello</option>
     <option id="o2">world</option>
   </select>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const select = findAccessibleChildByID(accDoc, "select");
     ok(
       isAccessible(select.firstChild, [nsIAccessibleSelectable]),

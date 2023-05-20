@@ -20,11 +20,11 @@ const OKAY = 0x59414b4f;
 // Asynchronously runs an adb command.
 // @param command The command as documented in
 // http://androidxref.com/4.0.4/xref/system/core/adb/SERVICES.TXT
-const runCommand = function(command) {
+const runCommand = function (command) {
   dumpn("runCommand " + command);
   return new Promise((resolve, reject) => {
     if (!adbProcess.ready) {
-      setTimeout(function() {
+      setTimeout(function () {
         reject("ADB_NOT_READY");
       });
       return;
@@ -32,22 +32,22 @@ const runCommand = function(command) {
 
     const socket = client.connect();
 
-    socket.s.onopen = function() {
+    socket.s.onopen = function () {
       dumpn("runCommand onopen");
       const req = client.createRequest(command);
       socket.send(req);
     };
 
-    socket.s.onerror = function() {
+    socket.s.onerror = function () {
       dumpn("runCommand onerror");
       reject("NETWORK_ERROR");
     };
 
-    socket.s.onclose = function() {
+    socket.s.onclose = function () {
       dumpn("runCommand onclose");
     };
 
-    socket.s.ondata = function(event) {
+    socket.s.ondata = function (event) {
       dumpn("runCommand ondata");
       const data = event.data;
 

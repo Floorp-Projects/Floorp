@@ -13,10 +13,10 @@ function run_test() {
 
   function add(ch) {
     stack.do(
-      function() {
+      function () {
         str += ch;
       },
-      function() {
+      function () {
         str = str.slice(0, -1);
       }
     );

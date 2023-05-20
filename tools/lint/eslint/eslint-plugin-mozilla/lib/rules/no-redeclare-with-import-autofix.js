@@ -29,7 +29,7 @@ const gIgnoredImports = new Set(["loader", "require"]);
  * @return {function}
  */
 function trapReport(context) {
-  return function(obj) {
+  return function (obj) {
     let declarator = obj.node.parent;
     while (
       declarator &&

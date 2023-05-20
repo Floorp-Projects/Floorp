@@ -9,7 +9,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<p>Select me!</p>";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     TEST_URL
   );

@@ -42,7 +42,7 @@ const PREF_LOG_SENSITIVE_DETAILS = "services.common.hawk.log.sensitive";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "log", function() {
+XPCOMUtils.defineLazyGetter(lazy, "log", function () {
   let log = Log.repository.getLogger("Hawk");
   // We set the log itself to "debug" and set the level from the preference to
   // the appender.  This allows other things to send the logs to different
@@ -66,7 +66,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", function() {
 
 // A boolean to indicate if personally identifiable information (or anything
 // else sensitive, such as credentials) should be logged.
-XPCOMUtils.defineLazyGetter(lazy, "logPII", function() {
+XPCOMUtils.defineLazyGetter(lazy, "logPII", function () {
   try {
     return Services.prefs.getBoolPref(PREF_LOG_SENSITIVE_DETAILS);
   } catch (_) {
@@ -85,7 +85,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logPII", function() {
  * @param host
  *        The url of the host
  */
-export var HawkClient = function(host) {
+export var HawkClient = function (host) {
   this.host = host;
 
   // Clock offset in milliseconds between our client's clock and the date

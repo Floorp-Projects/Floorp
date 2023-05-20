@@ -171,7 +171,7 @@ function run_test() {
 
   run_next_test();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     httpServer.stop(() => {});
   });
 }

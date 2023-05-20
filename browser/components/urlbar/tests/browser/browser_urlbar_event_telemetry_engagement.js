@@ -19,7 +19,7 @@ requestLongerTimeout(5);
 // Each test is a function that executes an urlbar action and returns the
 // expected event object.
 const tests = [
-  async function(win) {
+  async function (win) {
     info("Type something, press Enter.");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -46,7 +46,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Type a multi-word query, press Enter.");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -73,7 +73,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Paste something, press Enter.");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -101,7 +101,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Type something, click one-off and press enter.");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -140,7 +140,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info(
       "Type something, select one-off with enter, and select result with enter."
     );
@@ -179,7 +179,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Type something, ESC, type something else, press Enter.");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -204,7 +204,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Type a keyword, Enter.");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -231,7 +231,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     let tipProvider = registerTipProvider();
     info("Selecting a tip's main button, enter.");
     win.gURLBar.search("x");
@@ -256,7 +256,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     let tipProvider = registerTipProvider();
     info("Selecting a tip's help option.");
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -288,7 +288,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Type something and canonize");
     win.gURLBar.select();
     const promise = BrowserTestUtils.waitForDocLoadAndStopIt(
@@ -318,7 +318,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Type something, click on bookmark entry.");
     // Add a clean bookmark.
     const bookmark = await PlacesUtils.bookmarks.insert({
@@ -362,7 +362,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Type an autofilled string, Enter.");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -392,7 +392,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Type something, select bookmark entry, Enter.");
 
     // Add a clean bookmark and the input history in order to detect in InputHistory
@@ -436,7 +436,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Type something, select remote search suggestion, Enter.");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -466,7 +466,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Type something, select form history, Enter.");
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.maxHistoricalSearchSuggestions", 2]],
@@ -501,7 +501,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Type @, enter on a keywordoffer, then search and press enter.");
     win.gURLBar.select();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -559,7 +559,7 @@ const tests = [
     ];
   },
 
-  async function(win) {
+  async function (win) {
     info("Type an @alias, then space, then search and press enter.");
     const alias = "testalias";
     await SearchTestUtils.installSearchExtension({
@@ -602,7 +602,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Drop something.");
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     EventUtils.synthesizeDrop(
@@ -629,7 +629,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Paste and Go something.");
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await SimpleTest.promiseClipboardChange("www.example.com", () => {
@@ -669,7 +669,7 @@ const tests = [
   // The URLs in the down arrow/autoOpen tests must vary from test to test,
   // else  the first Top Site results will be a switch-to-tab result and a page
   // load will not occur.
-  async function(win) {
+  async function (win) {
     info("Open the panel with DOWN, select with DOWN, Enter.");
     await addTopSite("http://example.org/");
     win.gURLBar.value = "";
@@ -700,7 +700,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Open the panel with DOWN, click on entry.");
     await addTopSite("http://example.com/");
     win.gURLBar.value = "";
@@ -734,7 +734,7 @@ const tests = [
   // The URLs in the autoOpen tests must vary from test to test, else
   // the first Top Site results will be a switch-to-tab result and a page load
   // will not occur.
-  async function(win) {
+  async function (win) {
     info(
       "With pageproxystate=valid, autoopen the panel, select with DOWN, Enter."
     );
@@ -766,7 +766,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("With pageproxystate=valid, autoopen the panel, click on entry.");
     await addTopSite("http://example.com/");
     win.gURLBar.value = "";
@@ -797,7 +797,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("With pageproxystate=invalid, open retained results, Enter.");
     await addTopSite("http://example.org/");
     win.gURLBar.value = "example.org";
@@ -825,7 +825,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("With pageproxystate=invalid, open retained results, click on entry.");
     // This value must be different from the previous test, to avoid reopening
     // the view.
@@ -855,7 +855,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Reopen the view: type, blur, focus, confirm.");
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
@@ -901,7 +901,7 @@ const tests = [
     ];
   },
 
-  async function(win) {
+  async function (win) {
     info("Open search mode with a keyboard shortcut.");
     // Bug 1797801: If the search mode used is the same as the default engine and
     // showSearchTerms is enabled, the chiclet will remain in the urlbar on the search.
@@ -946,7 +946,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Open search mode from a tab-to-search result.");
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
@@ -1028,7 +1028,7 @@ const tests = [
     ];
   },
 
-  async function(win) {
+  async function (win) {
     info("Sanity check we are not stuck on 'returned'");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -1055,7 +1055,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Reopen the view: type, blur, focus, backspace, type, confirm.");
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
@@ -1104,7 +1104,7 @@ const tests = [
     ];
   },
 
-  async function(win) {
+  async function (win) {
     info("Reopen the view: type, blur, focus, type (overwrite), confirm.");
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
@@ -1151,7 +1151,7 @@ const tests = [
     ];
   },
 
-  async function(win) {
+  async function (win) {
     info("Sanity check we are not stuck on 'restarted'");
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
@@ -1179,7 +1179,7 @@ const tests = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 
@@ -1207,7 +1207,7 @@ add_setup(async function() {
     url: "http://example.com/?q=%s",
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.keywords.remove("kw");
     await PlacesUtils.bookmarks.remove(bm);
     await PlacesUtils.history.clear();

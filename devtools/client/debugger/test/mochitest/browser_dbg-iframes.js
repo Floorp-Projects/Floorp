@@ -14,7 +14,7 @@ requestLongerTimeout(3);
  *  1. pause in the main thread
  *  2. pause in the iframe
  */
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-iframes.html");
 
   // test pausing in the main thread

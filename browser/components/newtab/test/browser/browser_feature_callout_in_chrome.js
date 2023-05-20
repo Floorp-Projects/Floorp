@@ -131,7 +131,7 @@ const testMessage = {
 
 const testMessageCalloutSelector = testMessage.message.content.screens[0].id;
 
-add_setup(async function() {
+add_setup(async function () {
   requestLongerTimeout(2);
 });
 

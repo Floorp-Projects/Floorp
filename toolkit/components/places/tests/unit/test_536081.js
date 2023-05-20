@@ -10,7 +10,7 @@ const TEST_URL = {
   s: "goog",
 };
 
-add_task(async function() {
+add_task(async function () {
   print("Testing url: " + TEST_URL.u);
   await PlacesTestUtils.addVisits(uri(TEST_URL.u));
 

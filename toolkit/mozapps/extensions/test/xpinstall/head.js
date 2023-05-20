@@ -144,7 +144,7 @@ var Harness = {
       win.PanelUI.notificationPanel.addEventListener("popupshown", this);
 
       var self = this;
-      registerCleanupFunction(async function() {
+      registerCleanupFunction(async function () {
         Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
         Services.prefs.clearUserPref(PREF_INSTALL_REQUIRESECUREORIGIN);
         Services.prefs.clearUserPref(
@@ -174,7 +174,7 @@ var Harness = {
           "Should be no active installs at the end of the test"
         );
         await Promise.all(
-          aInstalls.map(async function(aInstall) {
+          aInstalls.map(async function (aInstall) {
             info(
               "Install for " +
                 aInstall.sourceURI +
@@ -212,7 +212,7 @@ var Harness = {
     let count = this.installCount;
 
     is(this.runningInstalls.length, 0, "Should be no running installs left");
-    this.runningInstalls.forEach(function(aInstall) {
+    this.runningInstalls.forEach(function (aInstall) {
       info(
         "Install for " + aInstall.sourceURI + " is in state " + aInstall.state
       );
@@ -362,7 +362,7 @@ var Harness = {
       installInfo.install();
     } else {
       this.expectingCancelled = true;
-      installInfo.installs.forEach(function(install) {
+      installInfo.installs.forEach(function (install) {
         install.cancel();
       });
       this.expectingCancelled = false;
@@ -512,7 +512,7 @@ var Harness = {
         this.installBlocked(installInfo);
         break;
       case "addon-install-failed":
-        installInfo.installs.forEach(function(aInstall) {
+        installInfo.installs.forEach(function (aInstall) {
           isnot(
             this.runningInstalls.indexOf(aInstall),
             -1,

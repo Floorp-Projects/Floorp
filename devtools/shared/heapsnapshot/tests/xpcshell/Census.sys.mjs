@@ -167,7 +167,7 @@ Census.assertAllNotMoreThan = makeBasisChecker({
 
 // Return a walker that checks that the subject census has within |fudge|
 // items of each category of the count in |basis|.
-Census.assertAllWithin = function(fudge, basis) {
+Census.assertAllWithin = function (fudge, basis) {
   return makeBasisChecker({
     compare: (subject, base) => ok(Math.abs(subject - base) <= fudge),
     missing: missingProp,

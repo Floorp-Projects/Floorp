@@ -18,7 +18,7 @@ addAccessibleTask(
           cols="6">ab cd e</textarea>
 <textarea id="empty"></textarea>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const textarea = findAccessibleChildByID(docAcc, "textarea", [
       nsIAccessibleText,
     ]);
@@ -405,7 +405,7 @@ addAccessibleTask(
   <p id="p">a<a id="link" href="https://example.com/">b</a></p>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const textarea = findAccessibleChildByID(docAcc, "textarea", [
       nsIAccessibleText,
     ]);

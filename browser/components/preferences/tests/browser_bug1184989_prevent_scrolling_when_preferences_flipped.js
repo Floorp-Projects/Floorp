@@ -1,13 +1,13 @@
 const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 
-add_task(async function() {
+add_task(async function () {
   waitForExplicitFinish();
 
   const tabURL =
     getRootDirectory(gTestPath) +
     "browser_bug1184989_prevent_scrolling_when_preferences_flipped.xhtml";
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: tabURL }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: tabURL }, async function (
     browser
   ) {
     let doc = browser.contentDocument;
@@ -38,7 +38,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#search" },
-    async function(browser) {
+    async function (browser) {
       let doc = browser.contentDocument;
       let container = doc.getElementsByClassName("main-content")[0];
 

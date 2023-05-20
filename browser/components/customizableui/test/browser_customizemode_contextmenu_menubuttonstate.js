@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   ok(
     !PanelUI.menuButton.hasAttribute("open"),
     "Menu button should not be 'pressed' outside customize mode"

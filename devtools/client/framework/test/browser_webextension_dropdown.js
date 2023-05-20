@@ -49,7 +49,7 @@ add_task(async function runTest() {
   ok(browser, "found extension panel browser");
 
   info("Waiting for menu");
-  await ContentTask.spawn(browser, null, async function() {
+  await ContentTask.spawn(browser, null, async function () {
     const menu = content.document.getElementById("menu");
     const event = new content.MouseEvent("mousedown");
     menu.dispatchEvent(event);

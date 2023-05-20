@@ -1,6 +1,6 @@
 "use strict";
 
-(function() {
+(function () {
   async function startProfiler(settings) {
     let startPromise = Services.profiler.StartProfiler(
       settings.entries,

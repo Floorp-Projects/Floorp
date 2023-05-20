@@ -28,7 +28,7 @@ add_task(async function content_script_on_xml_prettyprinted_document() {
       ],
     },
     files: {
-      "start.js": async function() {
+      "start.js": async function () {
         const el = document.createElement("ext-el");
         document.documentElement.append(el);
         if (document.readyState !== "complete") {

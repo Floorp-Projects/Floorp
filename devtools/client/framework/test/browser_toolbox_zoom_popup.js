@@ -11,8 +11,8 @@ const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 // frames menu.
 const TEST_URL = "data:text/html;charset=utf-8,<iframe/>";
 
-add_task(async function() {
-  registerCleanupFunction(async function() {
+add_task(async function () {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref("devtools.toolbox.zoomValue");
   });
   const zoom = 1.4;

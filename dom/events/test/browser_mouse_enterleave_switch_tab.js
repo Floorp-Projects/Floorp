@@ -17,7 +17,7 @@ async function synthesizeMouseAndWait(aBrowser, aEvent) {
 function AddMouseEventListener(aBrowser) {
   return SpecialPowers.spawn(aBrowser, [], () => {
     content.catchedEvents = [];
-    let listener = function(aEvent) {
+    let listener = function (aEvent) {
       content.catchedEvents.push(aEvent.type);
     };
 

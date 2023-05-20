@@ -69,7 +69,7 @@ async function rightClickOpenInNewTabAndReturnContent(selector) {
   let blobDataFromContent = await ContentTask.spawn(
     gBrowser.selectedBrowser,
     null,
-    async function() {
+    async function () {
       while (!content.document.querySelector("body pre")) {
         await new Promise(resolve =>
           content.setTimeout(() => {
@@ -116,7 +116,7 @@ async function openInNewTabAndReturnContent(selector) {
   let blobDataFromContent = await ContentTask.spawn(
     gBrowser.selectedBrowser,
     null,
-    async function() {
+    async function () {
       while (!content.document.querySelector("body pre")) {
         await new Promise(resolve =>
           content.setTimeout(() => {
@@ -135,7 +135,7 @@ async function openInNewTabAndReturnContent(selector) {
   return blobDataFromContent;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.partition.bloburl_per_agent_cluster", false]],
   });

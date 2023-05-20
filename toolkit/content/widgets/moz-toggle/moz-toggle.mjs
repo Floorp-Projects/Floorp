@@ -106,9 +106,7 @@ export default class MozToggle extends MozLitElement {
   }
 
   supportLinkTemplate() {
-    return html`
-      <slot name="support-link"></slot>
-    `;
+    return html` <slot name="support-link"></slot> `;
   }
 
   render() {

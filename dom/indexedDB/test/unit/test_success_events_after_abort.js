@@ -34,7 +34,7 @@ function* testSteps() {
 
   request = objectStore.get(1);
   request.onsuccess = unexpectedSuccessHandler;
-  request.onerror = function(event) {
+  request.onerror = function (event) {
     is(event.target.error.name, "AbortError", "Good error");
     sawError = true;
     event.preventDefault();

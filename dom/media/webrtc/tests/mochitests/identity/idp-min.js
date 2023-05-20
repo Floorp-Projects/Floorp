@@ -1,4 +1,4 @@
-(function(global) {
+(function (global) {
   "use strict";
   // A minimal implementation of the interface.
   // Though this isn't particularly functional.

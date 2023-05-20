@@ -36,7 +36,7 @@ class PauseScopedObjectActor extends ObjectActor {
      * Handle a protocol request to promote a pause-lifetime grip to a
      * thread-lifetime grip.
      */
-    this.threadGrip = this.withPaused(function() {
+    this.threadGrip = this.withPaused(function () {
       this.hooks.promote();
       return {};
     });
@@ -47,7 +47,7 @@ class PauseScopedObjectActor extends ObjectActor {
   }
 
   withPaused(method) {
-    return function() {
+    return function () {
       if (this.isPaused()) {
         return method.apply(this, arguments);
       }

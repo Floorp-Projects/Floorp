@@ -64,10 +64,7 @@ export class NodeCache {
       const browsingContext = node.ownerGlobal?.browsingContext;
 
       // For not yet cached nodes generate a unique id without curly braces.
-      nodeId = Services.uuid
-        .generateUUID()
-        .toString()
-        .slice(1, -1);
+      nodeId = Services.uuid.generateUUID().toString().slice(1, -1);
 
       const details = {
         browserId: browsingContext?.browserId,

@@ -27,7 +27,7 @@ async function test_with_filter(fnFilterWithContentId) {
 
   info("Open a tab with single_frame.html in it.");
   const url = BASE_URL + "single_frame.html";
-  return BrowserTestUtils.withNewTab(url, async function(contentBrowser) {
+  return BrowserTestUtils.withNewTab(url, async function (contentBrowser) {
     const contentPid = await SpecialPowers.spawn(contentBrowser, [], () => {
       return Services.appinfo.processID;
     });
@@ -43,7 +43,7 @@ async function test_with_filter(fnFilterWithContentId) {
 
     let pidsWithSamplerThread = null;
     await TestUtils.waitForCondition(
-      async function() {
+      async function () {
         let pidsStringBefore = JSON.stringify(pidsWithSamplerThread);
         pidsWithSamplerThread = await GetPidsWithSamplerThread();
         return JSON.stringify(pidsWithSamplerThread) == pidsStringBefore;
@@ -56,7 +56,7 @@ async function test_with_filter(fnFilterWithContentId) {
     info("Capture the profile data.");
     const profile = await waitSamplingAndStopAndGetProfile();
 
-    await TestUtils.waitForCondition(async function() {
+    await TestUtils.waitForCondition(async function () {
       return !(await GetPidsWithSamplerThread()).length;
     }, "Wait for all sampler threads to stop after profiler stop");
 

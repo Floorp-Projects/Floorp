@@ -6,7 +6,7 @@
  * the correct attributes and visits the expected URL for the engine.
  */
 
-add_task(async function() {
+add_task(async function () {
   await SearchTestUtils.installSearchExtension(
     { keyword: "moz" },
     { setAsDefault: true }
@@ -23,7 +23,7 @@ add_task(async function() {
     set: [["browser.urlbar.autoFill", false]],
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     try {
       BrowserTestUtils.removeTab(tab);
     } catch (ex) {

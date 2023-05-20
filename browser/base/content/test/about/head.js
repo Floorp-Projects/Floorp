@@ -32,17 +32,18 @@ async function injectErrorPageFrame(tab, src, sandboxed) {
     true
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [src, sandboxed], async function(
-    frameSrc,
-    frameSandboxed
-  ) {
-    let iframe = content.document.createElement("iframe");
-    iframe.src = frameSrc;
-    if (frameSandboxed) {
-      iframe.setAttribute("sandbox", "allow-scripts");
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [src, sandboxed],
+    async function (frameSrc, frameSandboxed) {
+      let iframe = content.document.createElement("iframe");
+      iframe.src = frameSrc;
+      if (frameSandboxed) {
+        iframe.setAttribute("sandbox", "allow-scripts");
+      }
+      content.document.body.appendChild(iframe);
     }
-    content.document.body.appendChild(iframe);
-  });
+  );
 
   await loadedPromise;
 }
@@ -80,7 +81,7 @@ async function openErrorPage(src, useFrame, sandboxed) {
 function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
   retryTimes = typeof retryTimes !== "undefined" ? retryTimes : 30;
   var tries = 0;
-  var interval = setInterval(function() {
+  var interval = setInterval(function () {
     if (tries >= retryTimes) {
       ok(false, errorMsg);
       moveOn();
@@ -97,7 +98,7 @@ function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
     }
     tries++;
   }, 100);
-  var moveOn = function() {
+  var moveOn = function () {
     clearInterval(interval);
     nextTest();
   };

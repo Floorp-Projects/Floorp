@@ -7,7 +7,7 @@ function restore_prefs() {
 }
 
 let ORIGINAL_PREF_VALUE = undefined;
-add_setup(async function() {
+add_setup(async function () {
   // It seems that this pref is given a special testing value for some reason.
   // Unset that value for this test, but save the old value
   if (Services.prefs.prefHasUserValue("dom.disable_open_during_load")) {
@@ -37,7 +37,7 @@ async function test_popup_blocker_disabled({ disabled, locked }) {
     tab.linkedBrowser,
     [{ disabled, locked }],
     // eslint-disable-next-line no-shadow
-    async function({ disabled, locked }) {
+    async function ({ disabled, locked }) {
       let checkbox = content.document.getElementById("popupPolicy");
       is(
         checkbox.checked,

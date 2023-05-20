@@ -19,7 +19,7 @@ const DOCUMENT_WITH_ONE_STYLESHEET =
     ].join("\n")
   );
 
-add_task(async function() {
+add_task(async function () {
   const { ui } = await openStyleEditorForURL(DOCUMENT_WITH_ONE_STYLESHEET);
 
   // Spam the "devtools.source-map.client-service.enabled" pref observer callback (#onOrigSourcesPrefChanged)

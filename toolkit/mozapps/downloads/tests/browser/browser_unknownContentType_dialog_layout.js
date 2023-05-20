@@ -49,7 +49,7 @@ add_task(async function test_unknownContentType_dialog_layout() {
               "load",
               function onLoad(event) {
                 // Let the dialog initialize
-                SimpleTest.executeSoon(function() {
+                SimpleTest.executeSoon(function () {
                   UCTObserver.opened.resolve(win);
                 });
               },
@@ -74,7 +74,7 @@ add_task(async function test_unknownContentType_dialog_layout() {
         waitForLoad: false,
         waitForStateStop: true,
       },
-      async function() {
+      async function () {
         let uctWindow = await UCTObserver.opened.promise;
 
         for (let [id, props] of Object.entries(test.elements)) {

@@ -27,7 +27,7 @@ function checkResponse(r, response, responseText) {
     response.statusText,
     "Both responses should have the same status text"
   );
-  return r.text().then(function(text) {
+  return r.text().then(function (text) {
     // Avoid dumping out the large response text to the log if they're equal.
     if (text !== responseText) {
       is(text, responseText, "The response body should be correct");
@@ -36,19 +36,19 @@ function checkResponse(r, response, responseText) {
 }
 
 fetch(new Request(req1))
-  .then(function(r) {
+  .then(function (r) {
     response1 = r;
     return response1.text();
   })
-  .then(function(text) {
+  .then(function (text) {
     response1Text = text;
     return fetch(new Request(req3));
   })
-  .then(function(r) {
+  .then(function (r) {
     response3 = r;
     return response3.text();
   })
-  .then(function(text) {
+  .then(function (text) {
     response3Text = text;
     return testRequest(
       req1,
@@ -59,7 +59,7 @@ fetch(new Request(req1))
       req1.url.replace("#fragment", "#other")
     );
   })
-  .then(function() {
+  .then(function () {
     return testRequest(
       req1.url,
       req2.url,
@@ -69,7 +69,7 @@ fetch(new Request(req1))
       req1.url.replace("#fragment", "#other")
     );
   })
-  .then(function() {
+  .then(function () {
     testDone();
   });
 
@@ -84,22 +84,22 @@ function testRequest(
 ) {
   return caches
     .open(name)
-    .then(function(cache) {
+    .then(function (cache) {
       c = cache;
       return c.add(request1);
     })
-    .then(function() {
+    .then(function () {
       return c.add(request3);
     })
-    .then(function() {
+    .then(function () {
       return Promise.all(
-        ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"].map(function(method) {
+        ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"].map(function (method) {
           var r = new Request(request1, { method });
           return c.add(r).then(
-            function() {
+            function () {
               ok(false, "Promise should be rejected");
             },
-            function(err) {
+            function (err) {
               is(
                 err.name,
                 "TypeError",
@@ -110,33 +110,33 @@ function testRequest(
         })
       );
     })
-    .then(function() {
+    .then(function () {
       return c.matchAll(request1);
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 1, "Should only find 1 item");
       return checkResponse(r[0], response1, response1Text);
     })
-    .then(function() {
+    .then(function () {
       return c.matchAll(new Request(request1, { method: "HEAD" }));
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 0, "Should be an empty array when match a HEAD request.");
       return c.matchAll(new Request(request1, { method: "HEAD" }), {
         ignoreMethod: true,
       });
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 1, "Should only find 1 item");
       return checkResponse(r[0], response1, response1Text);
     })
-    .then(function() {
+    .then(function () {
       return Promise.all(
-        ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"].map(function(method) {
+        ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"].map(function (method) {
           var req = new Request(request1, { method });
           return c
             .matchAll(req)
-            .then(function(r) {
+            .then(function (r) {
               is(
                 r.length,
                 0,
@@ -144,53 +144,53 @@ function testRequest(
               );
               return c.matchAll(req, { ignoreMethod: true });
             })
-            .then(function(r) {
+            .then(function (r) {
               is(r.length, 1, "Should only find 1 item");
               return checkResponse(r[0], response1, response1Text);
             });
         })
       );
     })
-    .then(function() {
+    .then(function () {
       return c.matchAll(requestWithDifferentFragment);
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 1, "Should only find 1 item");
       return checkResponse(r[0], response1, response1Text);
     })
-    .then(function() {
+    .then(function () {
       return c.matchAll(requestWithAlternateQueryString, {
         ignoreSearch: true,
       });
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 2, "Should find 2 items");
       return Promise.all([
         checkResponse(r[0], response1, response1Text),
         checkResponse(r[1], response3, response3Text),
       ]);
     })
-    .then(function() {
+    .then(function () {
       return c.matchAll(request3);
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 1, "Should only find 1 item");
       return checkResponse(r[0], response3, response3Text);
     })
-    .then(function() {
+    .then(function () {
       return c.matchAll();
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 2, "Should find 2 items");
       return Promise.all([
         checkResponse(r[0], response1, response1Text),
         checkResponse(r[1], response3, response3Text),
       ]);
     })
-    .then(function() {
+    .then(function () {
       return caches
         .match(request1, { cacheName: name + "mambojambo" })
-        .then(function() {
+        .then(function () {
           is(
             typeof r,
             "undefined",
@@ -198,18 +198,18 @@ function testRequest(
           );
           return caches.has(name + "mambojambo");
         })
-        .then(function(hasCache) {
+        .then(function (hasCache) {
           ok(!hasCache, "The wrong cache should still not exist");
         });
     })
-    .then(function() {
+    .then(function () {
       return c.matchAll(unknownReq);
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 0, "Searching for an unknown request should not succeed");
       return caches.match(unknownReq, { cacheName: name });
     })
-    .then(function(r) {
+    .then(function (r) {
       is(
         typeof r,
         "undefined",
@@ -218,48 +218,48 @@ function testRequest(
       // Make sure that cacheName is ignored on Cache
       return c.matchAll(request1, { cacheName: name + "mambojambo" });
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 1, "Should only find 1 item");
       return checkResponse(r[0], response1, response1Text);
     })
-    .then(function() {
+    .then(function () {
       return caches.delete(name);
     })
-    .then(function(success) {
+    .then(function (success) {
       ok(success, "We should be able to delete the cache successfully");
       // Make sure that the cache is still usable after deletion.
       return c.matchAll(request1);
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 1, "Should only find 1 item");
       return checkResponse(r[0], response1, response1Text);
     })
-    .then(function() {
+    .then(function () {
       return c.matchAll(request3);
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 1, "Should only find 1 item");
       return checkResponse(r[0], response3, response3Text);
     })
-    .then(function() {
+    .then(function () {
       return c.matchAll();
     })
-    .then(function(r) {
+    .then(function (r) {
       is(r.length, 2, "Should find 2 items");
       return Promise.all([
         checkResponse(r[0], response1, response1Text),
         checkResponse(r[1], response3, response3Text),
       ]);
     })
-    .then(function() {
+    .then(function () {
       // Now, drop the cache, reopen and verify that we can't find the request any more.
       c = null;
       return caches.open(name);
     })
-    .then(function(cache) {
+    .then(function (cache) {
       return cache.matchAll();
     })
-    .then(function(r) {
+    .then(function (r) {
       is(
         r.length,
         0,
@@ -267,7 +267,7 @@ function testRequest(
       );
       return caches.delete(name);
     })
-    .then(function(deleted) {
+    .then(function (deleted) {
       ok(deleted, "The cache should be deleted successfully");
     });
 }

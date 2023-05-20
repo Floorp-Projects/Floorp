@@ -11,7 +11,7 @@ const TEST_URI =
 add_task(async function testExpandNestedPromise() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     let nestedPromise = Promise.resolve({});
     for (let i = 5; i > 0; --i) {
       nestedPromise[i] = i;
@@ -39,7 +39,7 @@ add_task(async function testExpandNestedPromise() {
 add_task(async function testExpandCyclicPromise() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     let resolve;
     const cyclicPromise = new Promise(r => {
       resolve = r;

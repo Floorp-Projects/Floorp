@@ -7,7 +7,7 @@
  * Test that WS messages can be navigated between using the keyboard.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(WS_PAGE_URL, {
     requestCount: 1,
   });

@@ -10,7 +10,7 @@ var gSubject = {};
 add_test(function test_function_observer() {
   let foo = false;
 
-  let onFoo = function(subject, data) {
+  let onFoo = function (subject, data) {
     foo = !foo;
     Assert.equal(subject, gSubject);
     Assert.equal(data, "some data");

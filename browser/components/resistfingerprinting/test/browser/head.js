@@ -36,7 +36,7 @@ const PERFORMANCE_TIMINGS = [
  * Sets up tests for making sure that performance APIs have been correctly
  * spoofed or disabled.
  */
-let setupPerformanceAPISpoofAndDisableTest = async function(
+let setupPerformanceAPISpoofAndDisableTest = async function (
   resistFingerprinting,
   reduceTimerPrecision,
   crossOriginIsolated,
@@ -147,7 +147,7 @@ let isTimeValueRounded = (x, expectedPrecision, console) => {
   return false;
 };
 
-let setupAndRunCrossOriginIsolatedTest = async function(
+let setupAndRunCrossOriginIsolatedTest = async function (
   options,
   expectedPrecision,
   runTests,
@@ -276,7 +276,7 @@ async function calcMaximumAvailSize(aChromeWidth, aChromeHeight) {
     let contentSize = await SpecialPowers.spawn(
       tab.linkedBrowser,
       [],
-      async function() {
+      async function () {
         let result = {
           width: content.innerWidth,
           height: content.innerHeight,
@@ -336,7 +336,7 @@ async function calcPopUpWindowChromeUISize() {
   let result = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    async function() {
+    async function () {
       let win;
 
       await new Promise(resolve => {
@@ -390,7 +390,7 @@ async function testWindowOpen(
     targetHeight: aTargetHeight,
   };
 
-  await SpecialPowers.spawn(aBrowser, [testParams], async function(input) {
+  await SpecialPowers.spawn(aBrowser, [testParams], async function (input) {
     // Call window.open() with window features.
     await new Promise(resolve => {
       let win = content.open("http://example.net/", "", input.winFeatures);
@@ -458,7 +458,7 @@ async function testWindowSizeSetting(
     testOuter: aTestOuter,
   };
 
-  await SpecialPowers.spawn(aBrowser, [testParams], async function(input) {
+  await SpecialPowers.spawn(aBrowser, [testParams], async function (input) {
     let win;
     // Open a new window and wait until it loads.
     await new Promise(resolve => {
@@ -649,11 +649,11 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
       gBrowser,
       url: uri,
     },
-    async function(browser) {
+    async function (browser) {
       let result = await SpecialPowers.spawn(
         browser,
         [IFRAME_DOMAIN, CROSS_ORIGIN_DOMAIN, extraData],
-        async function(iframe_domain_, cross_origin_domain_, extraData_) {
+        async function (iframe_domain_, cross_origin_domain_, extraData_) {
           return content.wrappedJSObject.runTheTest(
             iframe_domain_,
             cross_origin_domain_,

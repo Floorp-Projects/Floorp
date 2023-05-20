@@ -8,7 +8,7 @@ const { Service } = ChromeUtils.importESModule(
 Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
 function login_handling(handler) {
-  return function(request, response) {
+  return function (request, response) {
     if (has_hawk_header(request)) {
       handler(request, response);
     } else {
@@ -124,7 +124,7 @@ add_task(async function test_login_on_sync() {
     _("Sync calls login.");
     let oldLogin = Service.login;
     let loginCalled = false;
-    Service.login = async function() {
+    Service.login = async function () {
       loginCalled = true;
       Service.status.login = LOGIN_SUCCEEDED;
       this._loggedIn = false; // So that sync aborts.
@@ -144,7 +144,7 @@ add_task(async function test_login_on_sync() {
     // ready to sync, so use it as an indicator.
     let scheduleNextSyncF = Service.scheduler.scheduleNextSync;
     let scheduleCalled = false;
-    Service.scheduler.scheduleNextSync = function(wait) {
+    Service.scheduler.scheduleNextSync = function (wait) {
       scheduleCalled = true;
       scheduleNextSyncF.call(this, wait);
     };
@@ -186,10 +186,10 @@ add_task(async function test_login_on_sync() {
     let cSTCalled = false;
     let lockedSyncCalled = false;
 
-    Service.scheduler.clearSyncTriggers = function() {
+    Service.scheduler.clearSyncTriggers = function () {
       cSTCalled = true;
     };
-    Service._lockedSync = async function() {
+    Service._lockedSync = async function () {
       lockedSyncCalled = true;
     };
 

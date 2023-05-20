@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
 // error.
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
-add_setup(async function() {
+add_setup(async function () {
   await pushPrefs(
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"],
@@ -38,14 +38,14 @@ add_task(async function navigation() {
         });
       </script>`,
     },
-    async function(browser) {
+    async function (browser) {
       let promiseFsState = waitForFullscreenState(document, true);
       // Trigger click event
       BrowserTestUtils.synthesizeMouseAtCenter("#button", {}, browser);
       await promiseFsState;
 
       promiseFsState = waitForFullscreenState(document, false);
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         content.location.href = "about:blank";
       });
       await promiseFsState;
@@ -69,13 +69,13 @@ async function startTests(testFun, name) {
           gBrowser,
           url,
         },
-        async function(browser) {
+        async function (browser) {
           let promiseFsState = waitForFullscreenState(document, true);
           // Trigger click event in inner most iframe
           SpecialPowers.spawn(
             browser.browsingContext.children[0].children[0],
             [],
-            function() {
+            function () {
               content.setTimeout(() => {
                 content.document.getElementById("div").click();
               }, 0);
@@ -104,7 +104,7 @@ async function startTests(testFun, name) {
 }
 
 function NavigateRemoteDocument(aBrowsingContext, aURL) {
-  return SpecialPowers.spawn(aBrowsingContext, [aURL], async function(url) {
+  return SpecialPowers.spawn(aBrowsingContext, [aURL], async function (url) {
     content.location.href = url;
   });
 }

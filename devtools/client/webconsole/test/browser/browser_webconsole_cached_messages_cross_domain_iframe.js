@@ -10,13 +10,13 @@ const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-iframe-parent.html";
 
-add_task(async function() {
+add_task(async function () {
   // test-iframe-parent has an iframe pointing to http://mochi.test:8888/browser/devtools/client/webconsole/test/browser/test-iframe-child.html
   info("Open the tab first");
   await addTab(TEST_URI);
 
   info("Evaluate an expression that will throw, so we'll have cached messages");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.document.querySelector("button").click();
   });
 

@@ -1,4 +1,4 @@
-var p = new Promise(function(resolve, reject) {
+var p = new Promise(function (resolve, reject) {
   // This causes a runnable to be queued.
   reject(new Error());
   postMessage("loaded");

@@ -12,7 +12,7 @@ declTest("getActor with remoteType match", {
       "JSProcessActorParent should have value."
     );
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let child = ChromeUtils.domProcessChild;
       ok(child, "DOMProcessChild should have value.");
       ok(
@@ -35,7 +35,7 @@ declTest("getActor with remoteType mismatch", {
       "Should throw if its remoteTypes don't match."
     );
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let child = ChromeUtils.domProcessChild;
       ok(child, "DOMProcessChild should have value.");
       Assert.throws(

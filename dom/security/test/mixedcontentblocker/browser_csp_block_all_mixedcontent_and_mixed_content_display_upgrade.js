@@ -30,7 +30,7 @@ function on_new_message(msgObj) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["security.mixed_content.upgrade_display_content", true]],
   });
@@ -46,11 +46,11 @@ add_task(async function() {
       url,
       waitForLoad: true,
     },
-    async function(browser) {
+    async function (browser) {
       let loadedElements = await ContentTask.spawn(
         browser,
         [],
-        async function() {
+        async function () {
           // Check image loaded
           let image = content.document.getElementById("some-img");
           let imageLoaded =

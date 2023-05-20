@@ -36,7 +36,7 @@ const NODES = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
   const container = inspector.panelDoc.getElementById("inspector-breadcrumbs");
 

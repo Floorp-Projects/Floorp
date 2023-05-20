@@ -43,9 +43,9 @@ add_task(
     await client.waitForRequestsToSettle();
 
     done = true;
-    threadFront.once("paused", function(packet) {
+    threadFront.once("paused", function (packet) {
       // The breakpoint should not be hit again.
-      threadFront.resume().then(function() {
+      threadFront.resume().then(function () {
         Assert.ok(false);
       });
     });

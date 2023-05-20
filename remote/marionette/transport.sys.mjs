@@ -27,10 +27,10 @@ XPCOMUtils.defineLazyGetter(lazy, "ScriptableInputStream", () => {
 const flags = { wantVerbose: false, wantLogging: false };
 
 const dumpv = flags.wantVerbose
-  ? function(msg) {
+  ? function (msg) {
       dump(msg + "\n");
     }
-  : function() {};
+  : function () {};
 
 const PACKET_HEADER_MAX = 200;
 

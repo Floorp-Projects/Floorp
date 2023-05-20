@@ -13,7 +13,7 @@ let readerButton = document.getElementById("reader-mode-button");
 add_task(async function test_readermode_available_for_local_files() {
   await BrowserTestUtils.withNewTab(
     TEST_BASE_URI + "readerModeArticle.html",
-    async function(browser) {
+    async function (browser) {
       await TestUtils.waitForCondition(
         () => !readerButton.hidden,
         "Reader mode button should become visible"

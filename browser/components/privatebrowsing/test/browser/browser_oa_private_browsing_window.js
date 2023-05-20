@@ -9,7 +9,7 @@ const DUMMY_PAGE = PATH + "empty_file.html";
 
 add_task(
   async function test_principal_right_click_open_link_in_new_private_win() {
-    await BrowserTestUtils.withNewTab(TEST_PAGE, async function(browser) {
+    await BrowserTestUtils.withNewTab(TEST_PAGE, async function (browser) {
       let promiseNewWindow = BrowserTestUtils.waitForNewWindow({
         url: DUMMY_PAGE,
       });
@@ -31,7 +31,7 @@ add_task(
         privateWin.gBrowser.selectedBrowser,
         [{ DUMMY_PAGE, TEST_PAGE }],
         // eslint-disable-next-line no-shadow
-        async function({ DUMMY_PAGE, TEST_PAGE }) {
+        async function ({ DUMMY_PAGE, TEST_PAGE }) {
           // eslint-disable-line
 
           let channel = content.docShell.currentDocumentChannel;

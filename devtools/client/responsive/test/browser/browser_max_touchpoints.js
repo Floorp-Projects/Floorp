@@ -11,7 +11,7 @@
 const TEST_DOCUMENT = `doc_with_remote_iframe_and_isolated_cross_origin_capabilities.sjs`;
 const TEST_COM_URL = URL_ROOT_COM_SSL + TEST_DOCUMENT;
 
-addRDMTask(TEST_COM_URL, async function({ ui, browser, tab }) {
+addRDMTask(TEST_COM_URL, async function ({ ui, browser, tab }) {
   reloadOnTouchChange(true);
   info("Test initial value for maxTouchPoints.");
   is(

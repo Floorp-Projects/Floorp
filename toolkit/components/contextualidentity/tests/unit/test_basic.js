@@ -14,7 +14,7 @@ const TEST_STORE_FILE_PATH = PathUtils.join(
 let cis;
 
 // Basic tests
-add_task(function() {
+add_task(function () {
   ok(!!ContextualIdentityService, "ContextualIdentityService exists");
 
   cis = ContextualIdentityService.createNewInstanceForTesting(
@@ -38,7 +38,7 @@ add_task(function() {
 });
 
 // Make sure we are not allowed to only use whitespaces as a container name
-add_task(function() {
+add_task(function () {
   Assert.throws(
     () =>
       cis.create(
@@ -51,7 +51,7 @@ add_task(function() {
   );
 });
 
-add_task(function() {
+add_task(function () {
   ok(!!cis.getPublicIdentityFromId(2), "Identity 2 exists");
   Assert.throws(
     () =>
@@ -67,7 +67,7 @@ add_task(function() {
 });
 
 // Create a new identity
-add_task(function() {
+add_task(function () {
   equal(cis.getPublicIdentities().length, 4, "By default, 4 containers.");
 
   let identity = cis.create("New Container", "Icon", "Color");
@@ -123,7 +123,7 @@ add_task(function() {
 });
 
 // Update an identity
-add_task(function() {
+add_task(function () {
   ok(!!cis.getPublicIdentityFromId(2), "Identity 2 exists");
 
   equal(

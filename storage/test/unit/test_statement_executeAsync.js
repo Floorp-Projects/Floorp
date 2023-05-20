@@ -62,7 +62,7 @@ function execAsync(aStmt, aOptions, aResults) {
   } else {
     // array
     resultsExpected = aResults.length;
-    resultsChecker = function(aResultNum, aTup, aCaller) {
+    resultsChecker = function (aResultNum, aTup, aCaller) {
       aResults[aResultNum](aTup, aCaller);
     };
   }
@@ -307,7 +307,7 @@ function test_get_data() {
   );
   stmt.bindByIndex(0, INTEGER);
   execAsync(stmt, {}, [
-    function(tuple) {
+    function (tuple) {
       Assert.notEqual(null, tuple);
 
       // Check that it's what we expect
@@ -383,7 +383,7 @@ function test_tuple_out_of_bounds() {
 
   var stmt = makeTestStatement("SELECT string FROM test");
   execAsync(stmt, {}, [
-    function(tuple) {
+    function (tuple) {
       Assert.notEqual(null, tuple);
 
       // Check all out of bounds - should throw

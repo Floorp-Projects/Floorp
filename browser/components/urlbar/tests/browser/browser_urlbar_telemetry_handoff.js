@@ -33,7 +33,7 @@ async function waitForIdle() {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
 
@@ -61,7 +61,7 @@ add_setup(async function() {
   Services.telemetry.canRecordExtended = true;
   Services.telemetry.setEventRecordingEnabled("navigation", true);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
 
     Services.telemetry.canRecordExtended = oldCanRecord;
@@ -89,7 +89,7 @@ add_task(async function test_search() {
   await BrowserTestUtils.browserStopped(tab.linkedBrowser, newtab);
 
   info("Focus on search input in newtab content");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const searchInput = content.document.querySelector(".fake-editable");
     searchInput.click();
   });
@@ -121,7 +121,7 @@ add_task(async function test_search_private_mode() {
   let tab = privateWindow.gBrowser.selectedTab;
 
   info("Focus on search input in newtab content");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const searchInput = content.document.querySelector(".fake-editable");
     searchInput.click();
   });

@@ -7,7 +7,7 @@ async function focusWindow(win) {
   let promise = new Promise(resolve => {
     win.addEventListener(
       "focus",
-      function() {
+      function () {
         resolve();
       },
       { capture: true, once: true }
@@ -126,7 +126,7 @@ add_task(async function test_normal_popup_notification_1() {
       gBrowser: normalWin.gBrowser,
       url: form1Url,
     },
-    async function(browser) {
+    async function (browser) {
       let fieldValues = await submitFormAndGetResults(
         browser,
         "formsubmit.sjs",
@@ -184,7 +184,7 @@ add_task(async function test_private_popup_notification_2() {
       gBrowser: privateWin.gBrowser,
       url: form1Url,
     },
-    async function(browser) {
+    async function (browser) {
       let fieldValues = await submitFormAndGetResults(
         browser,
         "formsubmit.sjs",
@@ -277,7 +277,7 @@ add_task(async function test_private_popup_notification_no_capture_pref_2b() {
       gBrowser: privateWin.gBrowser,
       url: form1Url,
     },
-    async function(browser) {
+    async function (browser) {
       let fieldValues = await submitFormAndGetResults(
         browser,
         "formsubmit.sjs",
@@ -341,7 +341,7 @@ add_task(async function test_normal_popup_notification_3() {
       gBrowser: normalWin.gBrowser,
       url: form1Url,
     },
-    async function(browser) {
+    async function (browser) {
       let fieldValues = await submitFormAndGetResults(
         browser,
         "formsubmit.sjs",
@@ -400,7 +400,7 @@ add_task(async function test_private_popup_notification_3b() {
       gBrowser: privateWin.gBrowser,
       url: form1Url,
     },
-    async function(browser) {
+    async function (browser) {
       let fieldValues = await submitFormAndGetResults(
         browser,
         "formsubmit.sjs",
@@ -460,7 +460,7 @@ add_task(async function test_normal_new_password_4() {
       gBrowser: normalWin.gBrowser,
       url: form2Url,
     },
-    async function(browser) {
+    async function (browser) {
       let fieldValues = await submitFormAndGetResults(
         browser,
         "formsubmit.sjs",
@@ -530,7 +530,7 @@ add_task(async function test_private_new_password_5() {
       gBrowser: privateWin.gBrowser,
       url: form2Url,
     },
-    async function(browser) {
+    async function (browser) {
       let fieldValues = await submitFormAndGetResults(
         browser,
         "formsubmit.sjs",
@@ -586,7 +586,7 @@ add_task(async function test_normal_with_login_6() {
       gBrowser: normalWin.gBrowser,
       url: form2Url,
     },
-    async function(browser) {
+    async function (browser) {
       let fieldValues = await submitFormAndGetResults(
         browser,
         "formsubmit.sjs",
@@ -635,7 +635,7 @@ add_task(async function test_normal_autofilled_7() {
       gBrowser: normalWin.gBrowser,
       url: "about:blank",
     },
-    async function(browser) {
+    async function (browser) {
       // Add the observer before loading the form page
       let formFilled = listenForTestNotification("FormProcessed");
       await SimpleTest.promiseFocus(browser.ownerGlobal);
@@ -679,7 +679,7 @@ add_task(async function test_private_not_autofilled_8() {
       gBrowser: privateWin.gBrowser,
       url: form1Url,
     },
-    async function(browser) {
+    async function (browser) {
       await formFilled;
       let fieldValues = await submitFormAndGetResults(
         browser,
@@ -753,7 +753,7 @@ add_task(async function test_normal_autofilled_10() {
       gBrowser: normalWin.gBrowser,
       url: form1Url,
     },
-    async function(browser) {
+    async function (browser) {
       await formFilled;
       let fieldValues = await submitFormAndGetResults(
         browser,
@@ -787,7 +787,7 @@ add_task(async function test_normal_http_basic_auth() {
       gBrowser: normalWin.gBrowser,
       url: "https://example.com",
     },
-    async function(browser) {
+    async function (browser) {
       await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
       Assert.ok(true, "Auth-required page loaded");
 
@@ -795,7 +795,7 @@ add_task(async function test_normal_http_basic_auth() {
       let fieldValues = await SpecialPowers.spawn(
         browser,
         [[]],
-        async function() {
+        async function () {
           let username = content.document.getElementById("user").textContent;
           let password = content.document.getElementById("pass").textContent;
           let ok = content.document.getElementById("ok").textContent;
@@ -856,7 +856,7 @@ add_task(async function test_private_http_basic_auth() {
       gBrowser: privateWin.gBrowser,
       url: "https://example.com",
     },
-    async function(browser) {
+    async function (browser) {
       await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
 
       let fieldValues = await getFormSubmitResponseResult(
@@ -911,7 +911,7 @@ add_task(async function test_private_http_basic_auth_no_capture_pref() {
       gBrowser: privateWin.gBrowser,
       url: "https://example.com",
     },
-    async function(browser) {
+    async function (browser) {
       await loadAccessRestrictedURL(browser, authUrl, "test", "testpass");
 
       let fieldValues = await getFormSubmitResponseResult(

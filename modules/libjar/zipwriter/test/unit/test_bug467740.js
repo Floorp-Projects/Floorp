@@ -11,7 +11,7 @@ function run_test() {
   //     size, but is invalid since it contains no ZIP signature.
   var invalidArchives = ["emptyfile.txt", "smallfile.txt", "test.png"];
 
-  invalidArchives.forEach(function(invalidArchive) {
+  invalidArchives.forEach(function (invalidArchive) {
     // Get a reference to the invalid file
     var invalidFile = do_get_file(DATA_DIR + invalidArchive);
 

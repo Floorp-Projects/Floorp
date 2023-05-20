@@ -240,7 +240,7 @@ add_task(async function test_download_preferred_action() {
   }
   let downloadList = await Downloads.getList(Downloads.PUBLIC);
   let oldLaunchFile = DownloadIntegration.launchFile;
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await removeAllDownloads();
     DownloadIntegration.launchFile = oldLaunchFile;
     Services.prefs.clearUserPref(

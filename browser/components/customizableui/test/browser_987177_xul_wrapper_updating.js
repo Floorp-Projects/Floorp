@@ -5,7 +5,7 @@
 "use strict";
 
 const BUTTONID = "test-XUL-wrapper-widget";
-add_task(function() {
+add_task(function () {
   let btn = createDummyXULButton(BUTTONID, "XUL btn");
   gNavToolbox.palette.appendChild(btn);
   let groupWrapper = CustomizableUI.getWidget(BUTTONID);

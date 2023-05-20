@@ -55,7 +55,7 @@ function* testSteps() {
     .transaction("foo")
     .objectStore("foo")
     .index("foo")
-    .openKeyCursor().onsuccess = function(event) {
+    .openKeyCursor().onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.key, data.num, "Good key");

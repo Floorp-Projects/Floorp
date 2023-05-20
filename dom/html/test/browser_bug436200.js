@@ -23,7 +23,7 @@ async function run_test(shouldShowPrompt, msg) {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, kTestPage);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let form = content.document.getElementById("test_form");
     form.submit();
   });

@@ -31,7 +31,7 @@ WebVTTParserWrapper.prototype = {
   watch(callback) {
     this.parser.oncue = callback.onCue;
     this.parser.onregion = callback.onRegion;
-    this.parser.onparsingerror = function(e) {
+    this.parser.onparsingerror = function (e) {
       // Passing the just the error code back is enough for our needs.
       callback.onParsingError("code" in e ? e.code : -1);
     };

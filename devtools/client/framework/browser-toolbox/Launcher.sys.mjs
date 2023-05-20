@@ -465,7 +465,7 @@ const prefObserver = {
   },
 };
 Services.prefs.addObserver("devtools.debugger.log", prefObserver);
-const unloadObserver = function(subject) {
+const unloadObserver = function (subject) {
   if (subject.wrappedJSObject == require("@loader/unload")) {
     Services.prefs.removeObserver("devtools.debugger.log", prefObserver);
     Services.obs.removeObserver(unloadObserver, "devtools:loader:destroy");

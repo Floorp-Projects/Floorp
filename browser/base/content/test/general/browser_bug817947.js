@@ -6,7 +6,7 @@ const PREF = "browser.sessionstore.restore_on_demand";
 
 add_task(async () => {
   Services.prefs.setBoolPref(PREF, true);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref(PREF);
   });
 

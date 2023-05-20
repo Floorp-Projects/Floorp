@@ -29,7 +29,7 @@ const isMenuChecked = () => {
   return menu.getAttribute("checked") === "true";
 };
 
-add_task(async function() {
+add_task(async function () {
   await startup(window);
 
   ok(!isMenuChecked(), "RDM menu item is unchecked by default");
@@ -62,6 +62,6 @@ addRDMTaskWithPreAndPost(
   }
 );
 
-add_task(async function() {
+add_task(async function () {
   await removeTab(tab2);
 });

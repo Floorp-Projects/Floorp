@@ -17,7 +17,9 @@ async function runTest(doNewTab) {
   filePaths.push(testFile.path);
 
   // Open file:// page tab in which to run the test.
-  await BrowserTestUtils.withNewTab(fileUriString, async function(fileBrowser) {
+  await BrowserTestUtils.withNewTab(fileUriString, async function (
+    fileBrowser
+  ) {
     // Create a form to post to server that writes posted data into body as JSON.
 
     var promiseLoad;

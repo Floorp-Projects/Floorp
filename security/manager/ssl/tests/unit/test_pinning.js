@@ -30,7 +30,7 @@ const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
 );
 
 function add_clear_override(host) {
-  add_test(function() {
+  add_test(function () {
     let certOverrideService = Cc[
       "@mozilla.org/security/certoverride;1"
     ].getService(Ci.nsICertOverrideService);
@@ -43,7 +43,7 @@ function test_strict() {
   // In strict mode, we always evaluate pinning data, regardless of whether the
   // issuer is a built-in trust anchor. We only enforce pins that are not in
   // test mode.
-  add_test(function() {
+  add_test(function () {
     Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);
     run_next_test();
   });
@@ -110,7 +110,7 @@ function test_strict() {
 function test_mitm() {
   // In MITM mode, we allow pinning to pass if the chain resolves to any
   // user-specified trust anchor, even if it is not in the pinset.
-  add_test(function() {
+  add_test(function () {
     Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 1);
     run_next_test();
   });
@@ -159,7 +159,7 @@ function test_mitm() {
 
 function test_disabled() {
   // Disable pinning.
-  add_test(function() {
+  add_test(function () {
     Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 0);
     run_next_test();
   });
@@ -200,7 +200,7 @@ function test_disabled() {
 
 function test_enforce_test_mode() {
   // In enforce test mode, we always enforce all pins, even test pins.
-  add_test(function() {
+  add_test(function () {
     Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 3);
     run_next_test();
   });
@@ -304,7 +304,7 @@ function run_test() {
   test_disabled();
   test_enforce_test_mode();
 
-  add_test(function() {
+  add_test(function () {
     check_pinning_telemetry();
   });
   run_next_test();

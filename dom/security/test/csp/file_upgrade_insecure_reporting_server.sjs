@@ -71,7 +71,7 @@ function handleRequest(request, response) {
   // (4) Finally we receive the report, let's return the request from (1)
   // signaling that we received the report correctly
   if (request.queryString == "report") {
-    getObjectState("queryResult", function(queryResponse) {
+    getObjectState("queryResult", function (queryResponse) {
       if (!queryResponse) {
         return;
       }

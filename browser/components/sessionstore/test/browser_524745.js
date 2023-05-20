@@ -10,8 +10,8 @@ function test() {
 
   waitForExplicitFinish();
 
-  whenNewWindowLoaded({ private: false }, function(window_B) {
-    waitForFocus(function() {
+  whenNewWindowLoaded({ private: false }, function (window_B) {
+    waitForFocus(function () {
       // Add identifying information to window_B
       ss.setCustomWindowValue(window_B, uniqKey, uniqVal);
       let state = JSON.parse(ss.getBrowserState());
@@ -24,7 +24,7 @@ function test() {
 
       // Now minimize window_B. The selected window shouldn't have the secret data
       window_B.minimize();
-      waitForFocus(async function() {
+      waitForFocus(async function () {
         state = JSON.parse(ss.getBrowserState());
         selectedWindow = state.windows[state.selectedWindow - 1];
         ok(

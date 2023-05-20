@@ -825,7 +825,7 @@ ClientEngine.prototype = {
    * @return false to abort sync
    */
   async processIncomingCommands() {
-    return this._notify("clients:process-commands", "", async function() {
+    return this._notify("clients:process-commands", "", async function () {
       if (
         !this.localCommands ||
         (this._lastModifiedOnProcessCommands == this._localClientLastModified &&

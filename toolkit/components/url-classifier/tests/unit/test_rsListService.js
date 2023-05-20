@@ -75,7 +75,7 @@ let gDbService = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(
 
 class UpdateEvent extends EventTarget {}
 function waitForEvent(element, eventName) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     element.addEventListener(eventName, e => resolve(e.detail), { once: true });
   });
 }

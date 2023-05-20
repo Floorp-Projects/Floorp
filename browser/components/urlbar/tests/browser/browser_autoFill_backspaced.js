@@ -44,8 +44,8 @@ async function test_autocomplete(data) {
   gURLBar.blur();
 }
 
-add_task(async function() {
-  registerCleanupFunction(async function() {
+add_task(async function () {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref("browser.urlbar.autoFill");
     Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
     gURLBar.handleRevert();
@@ -64,7 +64,7 @@ add_task(async function() {
     url: "http://example.com/",
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
   });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.remove(bm);
   });
 

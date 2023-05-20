@@ -15,7 +15,7 @@ let timer = null;
 
 function handleRequest(request, response) {
   const query = {};
-  request.queryString.split("&").forEach(function(val) {
+  request.queryString.split("&").forEach(function (val) {
     const [name, value] = val.split("=");
     query[name] = unescape(value);
   });
@@ -36,7 +36,7 @@ function handleRequest(request, response) {
 
   timer = Cc["@mozilla.org/timer;1"].createInstance(nsITimer);
   timer.initWithCallback(
-    function() {
+    function () {
       response.write(IMAGE);
       response.finish();
     },

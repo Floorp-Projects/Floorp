@@ -1,6 +1,6 @@
 function handleRequest(request, response) {
   var query = {};
-  request.queryString.split("&").forEach(function(val) {
+  request.queryString.split("&").forEach(function (val) {
     var [name, value] = val.split("=");
     query[name] = unescape(value);
   });

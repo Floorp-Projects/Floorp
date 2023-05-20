@@ -5,7 +5,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // Dependencies
   const validProtocols = /(http|https|ftp|data|resource|chrome):/i;
 
@@ -320,7 +320,7 @@ define(function(require, exports, module) {
    * render a fallback rep if the render fails.
    */
   function wrapRender(renderMethod) {
-    const wrappedFunction = function(props) {
+    const wrappedFunction = function (props) {
       try {
         return renderMethod.call(this, props);
       } catch (e) {

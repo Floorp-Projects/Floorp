@@ -7,7 +7,7 @@ let finderIterator = new FinderIterator();
 var gFindResults = [];
 // Stub the method that instantiates nsIFind and does all the interaction with
 // the docShell to be searched through.
-finderIterator._iterateDocument = function*(word, window, finder) {
+finderIterator._iterateDocument = function* (word, window, finder) {
   for (let range of gFindResults) {
     yield range;
   }

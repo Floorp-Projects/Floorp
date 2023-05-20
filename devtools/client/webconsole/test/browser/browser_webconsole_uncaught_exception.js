@@ -8,7 +8,7 @@
 
 const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>Test uncaught exception`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   await checkThrowingWithStack(hud, `"tomato"`, "Uncaught tomato");
@@ -39,7 +39,7 @@ add_task(async function() {
 
   info("Check custom error with name and message getters");
   // register the class
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const script = content.document.createElement("script");
     script.append(
       content.document.createTextNode(
@@ -101,7 +101,7 @@ async function checkThrowingWithStack(
   expectedMessage,
   additionalFrameLines = []
 ) {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [expression], function(
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [expression], function (
     expr
   ) {
     const script = content.document.createElement("script");

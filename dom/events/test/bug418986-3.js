@@ -1,7 +1,7 @@
 SimpleTest.waitForExplicitFinish();
 
 // The main testing function.
-var test = async function(isContent) {
+var test = async function (isContent) {
   await SpecialPowers.contentTransformsReceived(window);
 
   // Each definition is [eventType, prefSetting]
@@ -19,7 +19,7 @@ var test = async function(isContent) {
   let setup;
 
   // This function is called when the event handler fires.
-  let handleEvent = function(event, prefVal) {
+  let handleEvent = function (event, prefVal) {
     let resisting = prefVal && isContent;
     if (resisting) {
       is(
@@ -48,11 +48,11 @@ var test = async function(isContent) {
   // and then synthesize a mouse event in the div, to test
   // whether the resulting events resist fingerprinting by
   // suppressing absolute screen coordinates.
-  nextTest = function() {
+  nextTest = function () {
     let [eventType, prefVal] = eventDefs[testCounter];
     SpecialPowers.pushPrefEnv(
       { set: [["privacy.resistFingerprinting", prefVal]] },
-      function() {
+      function () {
         // The following code creates a new div for each event in eventDefs,
         // attaches a listener to listen for the event, and then generates
         // a fake event at the center of the div.
@@ -68,11 +68,11 @@ var test = async function(isContent) {
         document.getElementById("body").appendChild(div);
         // Seems we can't add an event listener in chrome unless we run
         // it in a later task.
-        window.setTimeout(function() {
+        window.setTimeout(function () {
           div.addEventListener(eventType, event => handleEvent(event, prefVal));
           // For some reason, the following synthesizeMouseAtCenter call only seems to run if we
           // wrap it in a window.setTimeout(..., 0).
-          window.setTimeout(function() {
+          window.setTimeout(function () {
             synthesizeMouseAtCenter(div, { type: eventType });
           }, 0);
         }, 0);

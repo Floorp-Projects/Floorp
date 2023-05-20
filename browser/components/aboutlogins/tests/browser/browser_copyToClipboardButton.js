@@ -8,7 +8,7 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:logins" },
-    async function(browser) {
+    async function (browser) {
       let TEST_LOGIN = {
         guid: "70a",
         username: "jared",
@@ -16,7 +16,7 @@ add_task(async function test() {
         origin: "https://www.example.com",
       };
 
-      await SpecialPowers.spawn(browser, [TEST_LOGIN], async function(login) {
+      await SpecialPowers.spawn(browser, [TEST_LOGIN], async function (login) {
         let loginItem = Cu.waiveXrays(
           content.document.querySelector("login-item")
         );
@@ -57,7 +57,7 @@ add_task(async function test() {
         await SimpleTest.promiseClipboardChange(
           testObj.expectedValue,
           async () => {
-            await SpecialPowers.spawn(browser, [testObj], async function(
+            await SpecialPowers.spawn(browser, [testObj], async function (
               aTestObj
             ) {
               let loginItem = content.document.querySelector("login-item");
@@ -72,7 +72,9 @@ add_task(async function test() {
         await reauthObserved;
         Assert.ok(true, testObj.expectedValue + " is on clipboard now");
 
-        await SpecialPowers.spawn(browser, [testObj], async function(aTestObj) {
+        await SpecialPowers.spawn(browser, [testObj], async function (
+          aTestObj
+        ) {
           let loginItem = Cu.waiveXrays(
             content.document.querySelector("login-item")
           );

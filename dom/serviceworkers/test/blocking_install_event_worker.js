@@ -11,7 +11,7 @@ function postMessageToTest(msg) {
 
 addEventListener("install", evt => {
   // This must be a simple promise to trigger the CC failure.
-  evt.waitUntil(new Promise(function() {}));
+  evt.waitUntil(new Promise(function () {}));
   postMessageToTest({ type: "INSTALL_EVENT" });
 });
 

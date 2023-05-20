@@ -67,7 +67,7 @@ async function run_one_testcase(testcase) {
   let ohttpServer = ohttp.server();
 
   let httpServer = new HttpServer();
-  httpServer.registerPathHandler("/", function(request, response) {
+  httpServer.registerPathHandler("/", function (request, response) {
     let inputStream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
       Ci.nsIScriptableInputStream
     );
@@ -152,7 +152,7 @@ async function run_one_testcase(testcase) {
     );
   }
   let response = await new Promise((resolve, reject) => {
-    NetUtil.asyncFetch(obliviousHttpChannel, function(inputStream, result) {
+    NetUtil.asyncFetch(obliviousHttpChannel, function (inputStream, result) {
       let scriptableInputStream = Cc[
         "@mozilla.org/scriptableinputstream;1"
       ].createInstance(Ci.nsIScriptableInputStream);

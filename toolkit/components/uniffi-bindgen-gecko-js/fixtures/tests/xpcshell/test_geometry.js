@@ -5,7 +5,7 @@ const Geometry = ChromeUtils.importESModule(
   "resource://gre/modules/RustGeometry.sys.mjs"
 );
 
-add_task(async function() {
+add_task(async function () {
   const ln1 = new Geometry.Line(
     new Geometry.Point(0, 0, "p1"),
     new Geometry.Point(1, 2, "p2")

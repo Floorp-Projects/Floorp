@@ -10,7 +10,7 @@ const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html>Test clear cache<script>abcdef</script>";
 const EXPECTED_REPORT = "ReferenceError: abcdef is not defined";
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URI);
   let hud = await openConsole(tab);
 
@@ -79,7 +79,7 @@ add_task(async function() {
 
 function logTextToConsole(hud, text) {
   const onMessage = waitForMessageByType(hud, text, ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [text], function(str) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [text], function (str) {
     content.wrappedJSObject.console.log(str);
   });
   return onMessage;

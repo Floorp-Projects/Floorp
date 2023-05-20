@@ -23,7 +23,7 @@ const TEST_URIs = [
 ];
 
 async function setup() {
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     // Clean up any leftover stubs.
     sinon.restore();
   });
@@ -227,7 +227,7 @@ function promisePopupShown(popup) {
   return new Promise(resolve => {
     popup.addEventListener(
       "popupshown",
-      function() {
+      function () {
         resolve();
       },
       { capture: true, once: true }

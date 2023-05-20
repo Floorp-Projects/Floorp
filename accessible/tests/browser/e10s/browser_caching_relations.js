@@ -28,7 +28,7 @@ addAccessibleTask(
   <div id="dependant1">label</div>
   <div id="dependant2">label2</div>
   <div role="checkbox" id="host"></div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     for (let spec of attrRelationsSpec) {
       await testRelated(browser, accDoc, ...spec);
     }
@@ -44,7 +44,7 @@ addAccessibleTask(
   <input type="checkbox" id="dependant1">
   <input type="checkbox" id="dependant2">
   <label id="host">label</label>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     await testRelated(
       browser,
       accDoc,
@@ -61,7 +61,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<div id="label">label</div><button id="button" aria-labelledby="label">`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const button = findAccessibleChildByID(accDoc, "button");
     const label = findAccessibleChildByID(accDoc, "label");
 
@@ -81,7 +81,7 @@ addAccessibleTask(
     <input type="number" id="dependant2" value="25"> =
     <output name="host" id="host"></output>
   </form>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     await testRelated(
       browser,
       accDoc,
@@ -98,7 +98,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `data:text/html,<label id="label" for="input">label</label><input id="input">`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const input = findAccessibleChildByID(accDoc, "input");
     const label = findAccessibleChildByID(accDoc, "label");
     await testCachedRelation(input, RELATION_LABELLED_BY, label);
@@ -116,7 +116,7 @@ addAccessibleTask(
   <label id="host">
     <input type="checkbox" id="dependant1">
   </label>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const input = findAccessibleChildByID(accDoc, "dependant1");
     const label = findAccessibleChildByID(accDoc, "host");
 
@@ -131,7 +131,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `hello world`,
-  async function(browser, primaryDocAcc, secondaryDocAcc) {
+  async function (browser, primaryDocAcc, secondaryDocAcc) {
     // The root accessible should EMBED the top level
     // content document. If this test runs in an iframe,
     // the test harness will pass in doc accs for both the
@@ -156,7 +156,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<p id="p">hello world</p>`,
-  async function(browser, primaryDocAcc, secondaryDocAcc) {
+  async function (browser, primaryDocAcc, secondaryDocAcc) {
     // The CONTAINING_TAB_PANE of any acc should be the top level
     // content document. If this test runs in an iframe,
     // the test harness will pass in doc accs for both the
@@ -191,7 +191,7 @@ addAccessibleTask(
   <div id="item2">world</div>
   <a id="link2" href="#anchor">b</a>
   <a id="namedLink" name="anchor">c</a>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const link = findAccessibleChildByID(accDoc, "link");
     const link2 = findAccessibleChildByID(accDoc, "link2");
     const namedLink = findAccessibleChildByID(accDoc, "namedLink");
@@ -234,7 +234,7 @@ addAccessibleTask(
     <div role="treeitem" id="treeitem">test</div>
     <div role="treeitem" id="treeitem2">test</div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const tree = findAccessibleChildByID(accDoc, "tree");
     const treeItem = findAccessibleChildByID(accDoc, "treeitem");
     const treeItem2 = findAccessibleChildByID(accDoc, "treeitem2");
@@ -258,7 +258,7 @@ addAccessibleTask(
     <div id="l1i2" role="listitem" aria-level="2">b</div>
     <div id="l1i3" role="listitem" aria-level="1">c</div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const list = findAccessibleChildByID(accDoc, "l1");
     const listItem1 = findAccessibleChildByID(accDoc, "l1i1");
     const listItem2 = findAccessibleChildByID(accDoc, "l1i2");
@@ -282,7 +282,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   ``,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     await testCachedRelation(accDoc, RELATION_NODE_CHILD_OF, accDoc.parent);
   },
   { topLevel: true, chrome: true }

@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger(
     "doc-scripts.html",
     "simple1.js",
@@ -28,7 +28,7 @@ add_task(async function() {
   is(countTabs(dbg), 2);
 });
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger(
     "doc-scripts.html",
     "simple1.js",

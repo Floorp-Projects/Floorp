@@ -138,7 +138,7 @@ addAccessibleTask(
   <img id="click" src="http://example.com/a11y/accessible/tests/mochitest/moz.png"
        alt="A third image of Mozilla logo" onclick="alert('Clicked, too!');"/>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     // Test non-linked image
     await testCoordinates(docAcc, "nonLinkedImage", 89, 38);
 
@@ -170,7 +170,7 @@ addAccessibleTask(
   <br>Linked image:<br>
   <a href="http://www.mozilla.org"><img id="linkedImage" src="http://example.com/a11y/accessible/tests/mochitest/moz.png"></a>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const imgAcc = findAccessibleChildByID(docAcc, "linkedImage", [
       Ci.nsIAccessibleImage,
     ]);

@@ -5,6 +5,6 @@
 
 "use strict";
 
-window.addEventListener("editorReady", function() {
+window.addEventListener("editorReady", function () {
   editor.setText("Script successfully injected!");
 });

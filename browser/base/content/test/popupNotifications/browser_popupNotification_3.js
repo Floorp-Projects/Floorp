@@ -206,14 +206,14 @@ var tests = [
       // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       await promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       let notifyObj = new BasicNotification(this.id);
-      notifyObj.options.eventCallback = function(eventName) {
+      notifyObj.options.eventCallback = function (eventName) {
         if (eventName == "removed") {
           ok(true, "Notification removed in background tab after reloading");
           goNext();
         }
       };
       showNotification(notifyObj);
-      executeSoon(function() {
+      executeSoon(function () {
         gBrowser.selectedBrowser.reload();
       });
     },
@@ -233,17 +233,17 @@ var tests = [
 
       let notifyObj = new BasicNotification(this.id);
       notifyObj.browser = browser;
-      notifyObj.options.eventCallback = function(eventName) {
+      notifyObj.options.eventCallback = function (eventName) {
         if (eventName == "removed") {
           ok(true, "Notification removed in background tab after reloading");
-          executeSoon(function() {
+          executeSoon(function () {
             gBrowser.removeTab(newTab);
             goNext();
           });
         }
       };
       showNotification(notifyObj);
-      executeSoon(function() {
+      executeSoon(function () {
         browser.reload();
       });
     },
@@ -298,7 +298,7 @@ var tests = [
         "data:text/html;charset=utf8,<iframe%20id='iframe'%20src='http://example.com/'>"
       );
       this.notifyObj = new BasicNotification(this.id);
-      this.notifyObj.options.eventCallback = function(eventName) {
+      this.notifyObj.options.eventCallback = function (eventName) {
         if (eventName == "removed") {
           ok(
             false,
@@ -316,7 +316,7 @@ var tests = [
           // eslint-disable-next-line @microsoft/sdl/no-insecure-url
           wgp.documentURI.spec.startsWith("http://example.org/")
         ),
-        SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+        SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
           content.document
             .getElementById("iframe")
             // eslint-disable-next-line @microsoft/sdl/no-insecure-url
@@ -347,7 +347,7 @@ var tests = [
       this.testNotif1 = new BasicNotification(this.id);
       this.testNotif1.message += " 1";
       this.notification1 = showNotification(this.testNotif1);
-      this.testNotif1.options.eventCallback = function(eventName) {
+      this.testNotif1.options.eventCallback = function (eventName) {
         info("notifyObj1.options.eventCallback: " + eventName);
         if (eventName == "dismissed") {
           throw new Error("Oops 1!");
@@ -357,7 +357,7 @@ var tests = [
       this.testNotif2 = new BasicNotification(this.id);
       this.testNotif2.message += " 2";
       this.testNotif2.id += "-2";
-      this.testNotif2.options.eventCallback = function(eventName) {
+      this.testNotif2.options.eventCallback = function (eventName) {
         info("notifyObj2.options.eventCallback: " + eventName);
         if (eventName == "dismissed") {
           throw new Error("Oops 2!");

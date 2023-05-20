@@ -1,4 +1,4 @@
-self.addEventListener("fetch", function(event) {
+self.addEventListener("fetch", function (event) {
   dump("fetch " + event.request.url + "\n");
   if (event.request.url.includes("iframe2.html")) {
     var body =

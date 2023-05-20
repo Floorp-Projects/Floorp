@@ -10,7 +10,7 @@ async function expectSavedAddresses(expectedCount) {
   return addresses;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.formautofill.addresses.capture.v2.enabled", true]],
   });
@@ -21,7 +21,7 @@ add_task(async function test_save_doorhanger_shown_no_profile() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
 
       await focusUpdateSubmitForm(browser, {
@@ -49,7 +49,7 @@ add_task(async function test_save_doorhanger_shown_different_address() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
 
       await focusUpdateSubmitForm(browser, {
@@ -77,7 +77,7 @@ add_task(
 
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: ADDRESS_FORM_URL },
-      async function(browser) {
+      async function (browser) {
         let onPopupShown = waitForPopupShown();
         await focusUpdateSubmitForm(browser, {
           focusSelector: "#given-name",
@@ -106,7 +106,7 @@ add_task(async function test_update_doorhanger_shown_add_email_field() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#given-name",
@@ -136,7 +136,7 @@ add_task(async function test_doorhanger_not_shown_when_autofill_untouched() {
   let onUsed = waitForStorageChangedEvents("notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       await sleep(1000);
       await openPopupOn(browser, "form #given-name");
       await sleep(1000);
@@ -149,7 +149,7 @@ add_task(async function test_doorhanger_not_shown_when_autofill_untouched() {
         TEST_ADDRESS_2["given-name"]
       );
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let form = content.document.getElementById("form");
         form.querySelector("input[type=submit]").click();
       });
@@ -172,7 +172,7 @@ add_task(async function test_doorhanger_not_shown_when_fill_duplicate() {
   let onUsed = waitForStorageChangedEvents("notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#given-name",
         newValues: {
@@ -207,7 +207,7 @@ add_task(
     let onUsed = waitForStorageChangedEvents("notifyUsed");
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: ADDRESS_FORM_URL },
-      async function(browser) {
+      async function (browser) {
         await openPopupOn(browser, "form #given-name");
         await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
         await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);

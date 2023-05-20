@@ -22,7 +22,7 @@ if (!window.vidible?.version) {
     return Array.from(v, c => c.toString(16)).join("");
   };
 
-  const sendMessageToAddon = (function() {
+  const sendMessageToAddon = (function () {
     const shimId = "Vidible";
     const pendingMessages = new Map();
     const channel = new MessageChannel();
@@ -45,7 +45,7 @@ if (!window.vidible?.version) {
     }
     window.addEventListener("ShimHelperReady", reconnect);
     reconnect();
-    return function(message) {
+    return function (message) {
       const messageId = getGUID();
       return new Promise(resolve => {
         const payload = { message, messageId, shimId };
@@ -55,7 +55,7 @@ if (!window.vidible?.version) {
     };
   })();
 
-  const Shimmer = (function() {
+  const Shimmer = (function () {
     // If a page might store references to an object before we replace it,
     // ensure that it only receives proxies to that object created by
     // `Shimmer.proxy(obj)`. Later when the unshimmed object is created,
@@ -96,7 +96,7 @@ if (!window.vidible?.version) {
       for (const key in shim) {
         const value = shim[key];
         if (typeof value === "function") {
-          shim[key] = function() {
+          shim[key] = function () {
             const unshimmed = unshimmedObjects.get(prox);
             if (unshimmed) {
               return unshimmed[key].apply(unshimmed, arguments);
@@ -250,7 +250,7 @@ if (!window.vidible?.version) {
     return placeholder;
   };
 
-  const Player = function(parent) {
+  const Player = function (parent) {
     const existing = playersByNode.get(parent);
     if (existing) {
       return existing;
@@ -270,7 +270,7 @@ if (!window.vidible?.version) {
     return player;
   };
 
-  const changeData = function(fn) {
+  const changeData = function (fn) {
     const data = playerData.get(this);
     if (data) {
       fn(data);

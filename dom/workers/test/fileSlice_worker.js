@@ -3,7 +3,7 @@
  * and an optional content type to slice the blob. Returns an object
  * containing the size and type of the sliced blob.
  */
-onmessage = function(event) {
+onmessage = function (event) {
   var blob = event.data.blob;
   var start = event.data.start;
   var end = event.data.end;

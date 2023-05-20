@@ -12,7 +12,7 @@ add_task(async function testStartingAutoScrollInAboutContent() {
     ],
   });
 
-  await BrowserTestUtils.withNewTab("about:support", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:support", async function (browser) {
     let autoScroller;
     let promiseStartAutoScroll = new Promise(resolve => {
       let onPopupShown = event => {
@@ -33,7 +33,7 @@ add_task(async function testStartingAutoScrollInAboutContent() {
     });
 
     ok(!browser.isRemoteBrowser, "Browser should not be remote.");
-    await ContentTask.spawn(browser, null, async function() {
+    await ContentTask.spawn(browser, null, async function () {
       await ContentTaskUtils.waitForCondition(
         () =>
           content.document.documentElement.scrollHeight >

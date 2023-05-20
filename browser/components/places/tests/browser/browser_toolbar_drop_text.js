@@ -15,7 +15,7 @@ add_task(async function test() {
 
   if (toolbar.collapsed) {
     await promiseSetToolbarVisibility(toolbar, true);
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       return promiseSetToolbarVisibility(toolbar, false);
     });
   }
@@ -37,7 +37,7 @@ add_task(async function test() {
    * @param {string} aMimeType
    *        The mime type to use for the drop operation.
    */
-  let simulateDragDrop = async function(aEffect, aMimeType) {
+  let simulateDragDrop = async function (aEffect, aMimeType) {
     const url = "http://www.mozilla.org/D1995729-A152-4e30-8329-469B01F30AA7";
     let promiseItemAddedNotification = PlacesTestUtils.waitForNotification(
       "bookmark-added",
@@ -81,7 +81,7 @@ add_task(async function test() {
    * @param {string} aMimeType
    *        The mime type to use for the drop operation.
    */
-  let simulateDragDropMultiple = async function(aEffect, aMimeType) {
+  let simulateDragDropMultiple = async function (aEffect, aMimeType) {
     const urls = [
       "http://www.mozilla.org/C54263C6-A484-46CF-8E2B-FE131586348A",
       "http://www.mozilla.org/71381257-61E6-4376-AF7C-BF3C5FD8870D",

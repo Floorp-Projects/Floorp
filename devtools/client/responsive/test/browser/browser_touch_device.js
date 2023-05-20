@@ -24,7 +24,7 @@ addDeviceForTest(testDevice);
 
 addRDMTask(
   TEST_URL,
-  async function({ ui }) {
+  async function ({ ui }) {
     reloadOnTouchChange(true);
 
     await waitStartup(ui);

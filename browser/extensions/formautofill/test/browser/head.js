@@ -265,7 +265,7 @@ async function waitForStorageChangedEvents(...eventTypes) {
  *        The expected autofilling value for the element
  */
 async function waitForAutofill(target, selector, value) {
-  await SpecialPowers.spawn(target, [selector, value], async function(
+  await SpecialPowers.spawn(target, [selector, value], async function (
     selector,
     val
   ) {
@@ -415,7 +415,7 @@ async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
   const { previouslyFocused, previouslyIdentified } = await SpecialPowers.spawn(
     browserOrContext,
     [selector],
-    async function(selector) {
+    async function (selector) {
       const { FormLikeFactory } = ChromeUtils.importESModule(
         "resource://gre/modules/FormLikeFactory.sys.mjs"
       );
@@ -448,7 +448,7 @@ async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
     await SpecialPowers.spawn(
       browserOrContext.parent,
       [browserOrContext],
-      async function(browsingContext) {
+      async function (browsingContext) {
         browsingContext.embedderElement.focus();
       }
     );
@@ -466,7 +466,7 @@ async function focusAndWaitForFieldsIdentified(browserOrContext, selector) {
   FormAutofillParent.removeMessageObserver(fieldsIdentifiedObserver);
 
   await sleep();
-  await SpecialPowers.spawn(browserOrContext, [], async function() {
+  await SpecialPowers.spawn(browserOrContext, [], async function () {
     const { FormLikeFactory } = ChromeUtils.importESModule(
       "resource://gre/modules/FormLikeFactory.sys.mjs"
     );
@@ -602,7 +602,7 @@ async function closePopup(browser) {
     "hidden"
   );
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     content.document.activeElement.blur();
   });
 
@@ -621,7 +621,7 @@ async function closePopupForSubframe(browser, frameBrowsingContext) {
     "hidden"
   );
 
-  await SpecialPowers.spawn(frameBrowsingContext, [], async function() {
+  await SpecialPowers.spawn(frameBrowsingContext, [], async function () {
     content.document.activeElement.blur();
   });
 
@@ -829,7 +829,7 @@ async function setStorage(...items) {
   }
 }
 
-add_setup(function() {
+add_setup(function () {
   OSKeyStoreTestUtils.setup();
 });
 

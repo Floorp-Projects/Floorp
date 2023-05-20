@@ -7,7 +7,7 @@
 const kTestBtnId = "test-removable-navbar-customize-mode";
 
 // Items without the removable attribute in the navbar should be considered non-removable
-add_task(async function() {
+add_task(async function () {
   let btn = createDummyXULButton(
     kTestBtnId,
     "Test removable in navbar in customize mode"

@@ -688,10 +688,10 @@ function populateLayers(
 
       if (hasImg || true) {
         layerPreview.mouseoverElem = elem;
-        layerPreview.onmouseenter = function() {
+        layerPreview.onmouseenter = function () {
           this.mouseoverElem.onmouseover();
         };
-        layerPreview.onmouseout = function() {
+        layerPreview.onmouseout = function () {
           this.mouseoverElem.onmouseout();
         };
       }

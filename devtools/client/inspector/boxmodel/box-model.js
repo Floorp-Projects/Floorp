@@ -166,7 +166,7 @@ BoxModel.prototype = {
       this._updateReasons.push(reason);
     }
 
-    const lastRequest = async function() {
+    const lastRequest = async function () {
       if (
         !this.inspector ||
         !this.isPanelVisible() ||

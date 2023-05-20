@@ -37,7 +37,7 @@ add_task(async function test_disallowed_import() {
     },
 
     files: {
-      "main.js": async function() {
+      "main.js": async function () {
         let disallowedURLs = [
           "data:text/javascript,void 0",
           "javascript:void 0",
@@ -83,7 +83,7 @@ add_task(async function test_normal_import() {
     },
 
     files: {
-      "main.js": async function() {
+      "main.js": async function () {
         /* global exportFunction */
         const url = browser.runtime.getURL("module1.js");
 
@@ -157,7 +157,7 @@ add_task(async function test_import_web_accessible() {
     },
 
     files: {
-      "main.js": async function() {
+      "main.js": async function () {
         let mod = await import(browser.runtime.getURL("module1.js"));
         browser.test.assertEq(mod.bar, 2);
         browser.test.assertEq(mod.counter(), 0);
@@ -213,7 +213,7 @@ add_task(async function test_import_web_accessible_after_page() {
     },
 
     files: {
-      "main.js": async function() {
+      "main.js": async function () {
         browser.test.onMessage.addListener(async msg => {
           browser.test.assertEq(msg, "import");
 

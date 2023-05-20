@@ -9,20 +9,20 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "206m", "206part1-", function(entry) {
+    new OpenCallback(NEW, "206m", "206part1-", function (entry) {
       // Open normally but wait for validation from the server
       asyncOpenCacheEntry(
         "http://r206/",
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(PARTIAL, "206m", "206part1-", function(entry) {
+        new OpenCallback(PARTIAL, "206m", "206part1-", function (entry) {
           // emulate 206 from the server, i.e. resume transaction and write content to the output stream
           new OpenCallback(
             NEW | WAITFORWRITE | PARTIAL,
             "206m",
             "-part2",
-            function(entry) {
+            function (entry) {
               entry.setValid();
             }
           ).onCacheEntryAvailable(entry, true, Cr.NS_OK);
@@ -36,7 +36,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "206m", "206part1--part2", function(entry) {
+        new OpenCallback(NORMAL, "206m", "206part1--part2", function (entry) {
           mc.fired();
         })
       );
@@ -45,7 +45,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "206m", "206part1--part2", function(entry) {
+        new OpenCallback(NORMAL, "206m", "206part1--part2", function (entry) {
           mc.fired();
         })
       );
@@ -54,7 +54,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "206m", "206part1--part2", function(entry) {
+        new OpenCallback(NORMAL, "206m", "206part1--part2", function (entry) {
           mc.fired();
         })
       );

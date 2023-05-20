@@ -43,7 +43,7 @@ add_task(async function test_ShowCertificate() {
     viewCertButton.click();
     await loaded;
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
       let certificateSection = await ContentTaskUtils.waitForCondition(() => {
         return content.document.querySelector("certificate-section");
       }, "Certificate section found");
@@ -237,7 +237,7 @@ add_task(async function test_ValidCert() {
 add_task(async function test_SiteData() {
   await SiteDataTestUtils.addToIndexedDB(TEST_ORIGIN);
 
-  await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function (browser) {
     let totalUsage = await SiteDataTestUtils.getQuotaUsage(TEST_ORIGIN);
     Assert.greater(totalUsage, 0, "The total usage should not be 0");
 
@@ -302,7 +302,7 @@ add_task(async function test_Cookies() {
     value: "1",
   });
 
-  await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function (browser) {
     let pageInfo = BrowserPageInfo(TEST_ORIGIN, "securityTab");
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
 

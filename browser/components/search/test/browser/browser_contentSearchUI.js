@@ -260,7 +260,7 @@ function focusContentSearchBar() {
 let extension1;
 let extension2;
 
-add_setup(async function() {
+add_setup(async function () {
   let originalOnMessageSearch = ContentSearch._onMessageSearch;
   let originalOnMessageManageEngines = ContentSearch._onMessageManageEngines;
 
@@ -478,7 +478,7 @@ add_task(async function cycleSuggestions() {
   await focusContentSearchBar();
   await msg("key", { key: "x", waitForSuggestions: true });
 
-  let cycle = async function(aSelectedButtonIndex) {
+  let cycle = async function (aSelectedButtonIndex) {
     let modifiers = {
       shiftKey: true,
       accelKey: true,
@@ -580,9 +580,7 @@ add_task(async function cycleOneOffs() {
   checkState(state, "xbar", ["xfoo", "xbar"], 1, 0);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    Cu.waiveXrays(content)
-      .gController._oneOffButtons.pop()
-      .remove();
+    Cu.waiveXrays(content).gController._oneOffButtons.pop().remove();
   });
   await msg("reset");
 });

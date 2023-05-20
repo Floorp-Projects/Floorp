@@ -140,7 +140,7 @@ async function do_test_update_with_file_replaced(wantPostponeTest) {
 
   let promptCount = 0;
   let didReplaceFile = false;
-  install.promptHandler = async function() {
+  install.promptHandler = async function () {
     ++promptCount;
     equal(install.state, AddonManager.STATE_DOWNLOADED);
     await IOUtils.copy(

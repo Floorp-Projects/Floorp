@@ -22,25 +22,25 @@ const L10N = new LocalizationHelper(
  * @param {KeyShortcuts}
  *        KeyShortcuts instance where the zoom keys should be added.
  */
-exports.register = function(window, shortcuts) {
+exports.register = function (window, shortcuts) {
   const bc = BrowsingContext.getFromWindow(window);
   let zoomValue = parseFloat(Services.prefs.getCharPref(ZOOM_PREF));
-  const zoomIn = function(event) {
+  const zoomIn = function (event) {
     setZoom(zoomValue + 0.1);
     event.preventDefault();
   };
 
-  const zoomOut = function(event) {
+  const zoomOut = function (event) {
     setZoom(zoomValue - 0.1);
     event.preventDefault();
   };
 
-  const zoomReset = function(event) {
+  const zoomReset = function (event) {
     setZoom(1);
     event.preventDefault();
   };
 
-  const setZoom = function(newValue) {
+  const setZoom = function (newValue) {
     // cap zoom value
     zoomValue = Math.max(newValue, MIN_ZOOM);
     zoomValue = Math.min(zoomValue, MAX_ZOOM);

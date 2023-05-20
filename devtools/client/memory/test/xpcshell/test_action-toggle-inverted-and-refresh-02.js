@@ -23,7 +23,7 @@ const {
   changeView,
 } = require("resource://devtools/client/memory/actions/view.js");
 
-add_task(async function() {
+add_task(async function () {
   const front = new StubbedMemoryFront();
   const heapWorker = new HeapAnalysesClient();
   await front.attach();

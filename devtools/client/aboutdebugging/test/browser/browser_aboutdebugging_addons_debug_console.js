@@ -41,7 +41,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   await installTemporaryExtensionFromXPI(
     {
       background() {
-        window.myWebExtensionAddonFunction = function() {
+        window.myWebExtensionAddonFunction = function () {
           console.log(
             "Background page function called",
             this.browser.runtime.getManifest()
@@ -73,7 +73,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
           </body>
         </html>
       `,
-        "popup.js": function() {
+        "popup.js": function () {
           console.log("Popup log");
 
           const style = document.createElement("style");
@@ -120,7 +120,7 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
           </body>
         </html>
       `,
-        "other-popup.js": function() {
+        "other-popup.js": function () {
           console.log("Other popup log");
 
           const style = document.createElement("style");
@@ -288,7 +288,7 @@ add_task(async function testWebExtensionNoBgScript() {
           </body>
         </html>
       `,
-        "popup.js": function() {
+        "popup.js": function () {
           console.log("Popup-only log");
 
           const style = document.createElement("style");

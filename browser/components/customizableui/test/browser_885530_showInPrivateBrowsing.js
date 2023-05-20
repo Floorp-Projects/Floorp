@@ -23,7 +23,7 @@ function assertWidgetExists(aWindow, aExists) {
 
 // A widget that is created with showInPrivateBrowsing undefined should
 // have that value default to true.
-add_task(function() {
+add_task(function () {
   let wrapper = CustomizableUI.createWidget({
     id: kWidgetId,
   });
@@ -37,7 +37,7 @@ add_task(function() {
 // Add a widget via the API with showInPrivateBrowsing set to false
 // and ensure it does not appear in pre-existing or newly created
 // private windows.
-add_task(async function() {
+add_task(async function () {
   let plain1 = await openAndLoadWindow();
   let private1 = await openAndLoadWindow({ private: true });
   CustomizableUI.createWidget({
@@ -87,7 +87,7 @@ add_task(async function() {
 // Add a widget via the API with showInPrivateBrowsing set to true,
 // and ensure that it appears in pre-existing or newly created
 // private browsing windows.
-add_task(async function() {
+add_task(async function () {
   let plain1 = await openAndLoadWindow();
   let private1 = await openAndLoadWindow({ private: true });
 

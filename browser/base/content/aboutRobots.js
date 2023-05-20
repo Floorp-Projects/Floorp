@@ -4,7 +4,7 @@
 
 var buttonClicked = false;
 var button = document.getElementById("errorTryAgain");
-button.onclick = function() {
+button.onclick = function () {
   if (buttonClicked) {
     button.style.visibility = "hidden";
   } else {

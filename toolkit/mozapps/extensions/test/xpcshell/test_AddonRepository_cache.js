@@ -436,7 +436,7 @@ function check_results(aActualAddons, aExpectedAddons, aFromRepository) {
 
   // Separately test updateDate (it should only be equal to the
   // REPOSITORY values if it is from the repository)
-  aActualAddons.forEach(function(aActualAddon) {
+  aActualAddons.forEach(function (aActualAddon) {
     if (aActualAddon.updateDate) {
       let time = aActualAddon.updateDate.getTime();
       Assert.equal(time === 1000 * REPOSITORY_UPDATEDATE, aFromRepository);
@@ -470,7 +470,7 @@ function check_cache(aExpectedToFind, aExpectedImmediately) {
         let expected = aExpectedToFind[i] ? REPOSITORY_ADDONS[i] : null;
         // can't Promise-wrap this because we're also testing whether the callback is
         // sync or async
-        AddonRepository.getCachedAddonByID(REPOSITORY_ADDONS[i].id, function(
+        AddonRepository.getCachedAddonByID(REPOSITORY_ADDONS[i].id, function (
           aAddon
         ) {
           Assert.equal(immediatelyFound, aExpectedImmediately);

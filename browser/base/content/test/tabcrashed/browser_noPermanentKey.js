@@ -3,7 +3,7 @@
 const PAGE =
   "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 
-add_setup(async function() {
+add_setup(async function () {
   await setupLocalCrashReportServer();
 });
 
@@ -17,13 +17,13 @@ add_task(async function test_without_dump() {
       gBrowser,
       url: PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       delete browser.permanentKey;
 
       await BrowserTestUtils.crashFrame(browser);
       let crashReport = promiseCrashReport();
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let doc = content.document;
         Assert.ok(
           doc.documentElement.classList.contains("crashDumpAvailable"),

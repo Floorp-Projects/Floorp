@@ -29,13 +29,13 @@ function assertSelected(index) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   let maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:mozilla"
   );
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     BrowserTestUtils.removeTab(tab);
   });

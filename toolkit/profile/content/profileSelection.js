@@ -55,7 +55,7 @@ function startup() {
       try {
         if (profile === gProfileService.defaultProfile) {
           setTimeout(
-            function(a) {
+            function (a) {
               profilesElement.ensureElementIsVisible(a);
               profilesElement.selectItem(a);
             },

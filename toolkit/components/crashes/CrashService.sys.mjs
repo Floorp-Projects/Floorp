@@ -98,7 +98,7 @@ function runMinidumpAnalyzer(minidumpPath, allThreads) {
  *          minidump.
  */
 function computeMinidumpHash(minidumpPath) {
-  return (async function() {
+  return (async function () {
     try {
       let minidumpData = await IOUtils.read(minidumpPath);
       let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
@@ -133,7 +133,7 @@ function computeMinidumpHash(minidumpPath) {
  *         annotations.
  */
 function processExtraFile(extraPath) {
-  return (async function() {
+  return (async function () {
     try {
       let decoder = new TextDecoder();
       let extraData = await IOUtils.read(extraPath);

@@ -180,7 +180,7 @@ export var Utils = {
   notify(prefix) {
     return function NotifyMaker(name, data, func) {
       let thisArg = this;
-      let notify = function(state, subject) {
+      let notify = function (state, subject) {
         let mesg = prefix + name + ":" + state;
         thisArg._log.trace("Event: " + mesg);
         Observers.notify(mesg, subject, data);
@@ -233,14 +233,14 @@ export var Utils = {
 
     // Create a getter if it doesn't exist yet
     if (!prot.__lookupGetter__(prop)) {
-      prot.__defineGetter__(prop, function() {
+      prot.__defineGetter__(prop, function () {
         return this[defer][prop];
       });
     }
 
     // Create a setter if it doesn't exist yet
     if (!prot.__lookupSetter__(prop)) {
-      prot.__defineSetter__(prop, function(val) {
+      prot.__defineSetter__(prop, function (val) {
         this[defer][prop] = val;
       });
     }
@@ -299,17 +299,11 @@ export var Utils = {
    *   abcdefghijk8mn9pqrstuvwxyz234567
    */
   base32ToFriendly: function base32ToFriendly(input) {
-    return input
-      .toLowerCase()
-      .replace(/l/g, "8")
-      .replace(/o/g, "9");
+    return input.toLowerCase().replace(/l/g, "8").replace(/o/g, "9");
   },
 
   base32FromFriendly: function base32FromFriendly(input) {
-    return input
-      .toUpperCase()
-      .replace(/8/g, "L")
-      .replace(/9/g, "O");
+    return input.toUpperCase().replace(/8/g, "L").replace(/9/g, "O");
   },
 
   /**
@@ -764,7 +758,7 @@ export class SerializableSet extends Set {
   }
 }
 
-XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function() {
+XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function () {
   let converter = Cc[
     "@mozilla.org/intl/scriptableunicodeconverter"
   ].createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -782,7 +776,7 @@ export var Svc = {};
 Svc.Prefs = new Preferences(PREFS_BRANCH);
 Svc.Obs = Observers;
 
-Svc.Obs.add("xpcom-shutdown", function() {
+Svc.Obs.add("xpcom-shutdown", function () {
   for (let name in Svc) {
     delete Svc[name];
   }

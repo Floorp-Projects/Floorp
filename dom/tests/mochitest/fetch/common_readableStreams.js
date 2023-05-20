@@ -389,7 +389,7 @@ function workify(func) {
   return new Promise((resolve, reject) => {
     let worker = new Worker("worker_readableStreams.js");
     worker.postMessage(func);
-    worker.onmessage = function(e) {
+    worker.onmessage = function (e) {
       if (e.data.type == "done") {
         resolve();
         return;

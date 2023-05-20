@@ -194,7 +194,7 @@ module.exports = {
         }
       },
 
-      "Program:exit": function() {
+      "Program:exit": function () {
         for (let { name, node } of unknownProperties) {
           let property = lazyProperties.get(name);
           if (!property) {

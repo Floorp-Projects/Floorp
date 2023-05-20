@@ -653,7 +653,7 @@ GMPWrapper.prototype = {
   },
 
   _arePluginFilesOnDisk() {
-    let fileExists = function(aGmpPath, aFileName) {
+    let fileExists = function (aGmpPath, aFileName) {
       let f = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       let path = PathUtils.join(aGmpPath, aFileName);
       f.initWithPath(path);

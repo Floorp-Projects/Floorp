@@ -1,6 +1,6 @@
-self.addEventListener("install", function(event) {
+self.addEventListener("install", function (event) {
   event.waitUntil(
-    caches.open("cache").then(function(cache) {
+    caches.open("cache").then(function (cache) {
       var synth = new Response(
         '<!DOCTYPE html><script>window.parent.postMessage({status: "done-synth-sw"}, "*");</script>',
         { headers: { "Content-Type": "text/html" } }
@@ -13,7 +13,7 @@ self.addEventListener("install", function(event) {
   );
 });
 
-self.addEventListener("fetch", function(event) {
+self.addEventListener("fetch", function (event) {
   if (event.request.url.includes("index.html")) {
     event.respondWith(caches.match(event.request));
   } else if (event.request.url.includes("synth-sw.html")) {

@@ -45,7 +45,7 @@ add_task(async function test() {
 
   info("Reloading the debuggee and performing all requests again...");
   await triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.wrappedJSObject.performRequests();
   });
   await onEvents;

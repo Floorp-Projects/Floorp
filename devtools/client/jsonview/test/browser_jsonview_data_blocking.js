@@ -25,7 +25,7 @@ add_task(async function test_blocked_data_exposure() {
   });
   await BrowserTestUtils.withNewTab(TEST_PATH + "empty.html", async browser => {
     const tabCount = gBrowser.tabs.length;
-    await SpecialPowers.spawn(browser, [], function() {
+    await SpecialPowers.spawn(browser, [], function () {
       content.w = content.window.open(
         "data:application/vnd.mozilla.json.view,1",
         "_blank"
@@ -38,7 +38,7 @@ add_task(async function test_blocked_data_exposure() {
       // We have no way to detect that it has or hasn't, so a setTimeout is the best we
       // can do, unfortunately.
       return new Promise(resolve => {
-        content.setTimeout(function() {
+        content.setTimeout(function () {
           // Putting the resolve before the check to avoid JS errors potentially causing
           // the test to time out.
           resolve();

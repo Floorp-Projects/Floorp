@@ -316,10 +316,10 @@ function run_test() {
     ctypes.void_t
   );
   library.close();
-  do_check_throws(function() {
+  do_check_throws(function () {
     test_void_t();
   }, Error);
-  do_check_throws(function() {
+  do_check_throws(function () {
     library.declare("test_void_t_cdecl", ctypes.default_abi, ctypes.void_t);
   }, Error);
 
@@ -327,11 +327,11 @@ function run_test() {
   library = ctypes.open(libfile.path);
   let obj = {};
   obj.declare = library.declare;
-  do_check_throws(function() {
+  do_check_throws(function () {
     run_void_tests(obj);
   }, Error);
   obj.close = library.close;
-  do_check_throws(function() {
+  do_check_throws(function () {
     obj.close();
   }, Error);
 
@@ -346,7 +346,7 @@ function run_test() {
   Assert.equal(obj.t(), 109);
 
   // bug 521937
-  do_check_throws(function() {
+  do_check_throws(function () {
     let nolib = ctypes.open("notfoundlibrary.dll");
     nolib.close();
   }, Error);
@@ -376,18 +376,18 @@ function run_test() {
 
 function run_abstract_class_tests() {
   // Test that ctypes.CType is an abstract constructor that throws.
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.CType();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     new ctypes.CType();
   }, TypeError);
 
   Assert.ok(ctypes.CType.hasOwnProperty("prototype"));
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.CType.prototype();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     new ctypes.CType.prototype();
   }, TypeError);
 
@@ -406,16 +406,16 @@ function run_abstract_class_tests() {
   Assert.ok(ctypes.CType.prototype.prototype === ctypes.CData.prototype);
 
   // Check that the shared properties and functions on ctypes.CType.prototype throw.
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.CType.prototype.name;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.CType.prototype.size;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.CType.prototype.ptr;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.CType.prototype.array();
   }, TypeError);
 
@@ -425,10 +425,10 @@ function run_abstract_class_tests() {
   Assert.equal(typeof ctypes.CType.prototype.toSource(), "string");
 
   // Test that ctypes.CData is an abstract constructor that throws.
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.CData();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     new ctypes.CData();
   }, TypeError);
 
@@ -450,16 +450,16 @@ function run_abstract_class_tests() {
   Assert.ok(ctypes.CData.prototype.hasOwnProperty("toSource"));
 
   // Check that the shared properties and functions on ctypes.CData.prototype throw.
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.CData.prototype.value;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.CData.prototype.value = null;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.CData.prototype.address();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.CData.prototype.readString();
   }, TypeError);
 
@@ -470,7 +470,7 @@ function run_abstract_class_tests() {
 }
 
 function run_Int64_tests() {
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64();
   }, TypeError);
 
@@ -488,10 +488,10 @@ function run_Int64_tests() {
   Assert.ok(ctypes.Int64.prototype.hasOwnProperty("toSource"));
 
   // Check that the shared functions on ctypes.Int64.prototype throw.
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.prototype.toString();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.prototype.toSource();
   }, TypeError);
 
@@ -504,22 +504,22 @@ function run_Int64_tests() {
   for (let radix = 2; radix <= 36; ++radix) {
     Assert.equal(int64.toString(radix), "0");
   }
-  do_check_throws(function() {
+  do_check_throws(function () {
     int64.toString(0);
   }, RangeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     int64.toString(1);
   }, RangeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     int64.toString(37);
   }, RangeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     int64.toString(10, 2);
   }, TypeError);
 
   // Test Int64.toSource().
   Assert.equal(int64.toSource(), 'ctypes.Int64("0")');
-  do_check_throws(function() {
+  do_check_throws(function () {
     int64.toSource(10);
   }, TypeError);
 
@@ -674,14 +674,14 @@ function run_Int64_tests() {
     },
   ];
   for (let i = 0; i < vals.length; i++) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.Int64(vals[i]);
     }, TypeError);
   }
 
   vals = ["-0x8000000000000001", "0x8000000000000000"];
   for (let i = 0; i < vals.length; i++) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.Int64(vals[i]);
     }, RangeError);
   }
@@ -693,10 +693,10 @@ function run_Int64_tests() {
   Assert.equal(ctypes.Int64.compare(ctypes.Int64(-5), ctypes.Int64(-5)), 0);
   Assert.equal(ctypes.Int64.compare(ctypes.Int64(-5), ctypes.Int64(-4)), -1);
   Assert.equal(ctypes.Int64.compare(ctypes.Int64(-4), ctypes.Int64(-5)), 1);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.compare(ctypes.Int64(4), ctypes.UInt64(4));
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.compare(4, 5);
   }, TypeError);
 
@@ -705,16 +705,16 @@ function run_Int64_tests() {
   Assert.equal(ctypes.Int64.hi(ctypes.Int64(0x28590a1c921de000)), 0x28590a1c);
   Assert.equal(ctypes.Int64.lo(ctypes.Int64(-0x28590a1c921de000)), 0x6de22000);
   Assert.equal(ctypes.Int64.hi(ctypes.Int64(-0x28590a1c921de000)), -0x28590a1d);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.lo(ctypes.UInt64(0));
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.hi(ctypes.UInt64(0));
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.lo(0);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.hi(0);
   }, TypeError);
 
@@ -737,23 +737,23 @@ function run_Int64_tests() {
     "-8000000000000000"
   );
   /* eslint-disable mozilla/use-returnValue */
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.join(-0x80000001, 0);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.join(0x80000000, 0);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.join(0, -0x1);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.Int64.join(0, 0x800000000);
   }, TypeError);
   /* eslint-enable mozilla/use-returnValue */
 }
 
 function run_UInt64_tests() {
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64();
   }, TypeError);
 
@@ -771,10 +771,10 @@ function run_UInt64_tests() {
   Assert.ok(ctypes.UInt64.prototype.hasOwnProperty("toSource"));
 
   // Check that the shared functions on ctypes.UInt64.prototype throw.
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.prototype.toString();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.prototype.toSource();
   }, TypeError);
 
@@ -787,22 +787,22 @@ function run_UInt64_tests() {
   for (let radix = 2; radix <= 36; ++radix) {
     Assert.equal(uint64.toString(radix), "0");
   }
-  do_check_throws(function() {
+  do_check_throws(function () {
     uint64.toString(0);
   }, RangeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     uint64.toString(1);
   }, RangeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     uint64.toString(37);
   }, RangeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     uint64.toString(10, 2);
   }, TypeError);
 
   // Test UInt64.toSource().
   Assert.equal(uint64.toSource(), 'ctypes.UInt64("0")');
-  do_check_throws(function() {
+  do_check_throws(function () {
     uint64.toSource(10);
   }, TypeError);
 
@@ -931,14 +931,14 @@ function run_UInt64_tests() {
     },
   ];
   for (let i = 0; i < vals.length; i++) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.UInt64(vals[i]);
     }, TypeError);
   }
 
   vals = ["0x10000000000000000"];
   for (let i = 0; i < vals.length; i++) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.UInt64(vals[i]);
     }, RangeError);
   }
@@ -947,10 +947,10 @@ function run_UInt64_tests() {
   Assert.equal(ctypes.UInt64.compare(ctypes.UInt64(5), ctypes.UInt64(5)), 0);
   Assert.equal(ctypes.UInt64.compare(ctypes.UInt64(5), ctypes.UInt64(4)), 1);
   Assert.equal(ctypes.UInt64.compare(ctypes.UInt64(4), ctypes.UInt64(5)), -1);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.compare(ctypes.UInt64(4), ctypes.Int64(4));
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.compare(4, 5);
   }, TypeError);
 
@@ -959,16 +959,16 @@ function run_UInt64_tests() {
   Assert.equal(ctypes.UInt64.hi(ctypes.UInt64(0x28590a1c921de000)), 0x28590a1c);
   Assert.equal(ctypes.UInt64.lo(ctypes.UInt64(0xa8590a1c921de000)), 0x921de000);
   Assert.equal(ctypes.UInt64.hi(ctypes.UInt64(0xa8590a1c921de000)), 0xa8590a1c);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.lo(ctypes.Int64(0));
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.hi(ctypes.Int64(0));
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.lo(0);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.hi(0);
   }, TypeError);
 
@@ -988,16 +988,16 @@ function run_UInt64_tests() {
   );
   Assert.equal(ctypes.UInt64.join(0, 0).toString(16), "0");
   /* eslint-disable mozilla/use-returnValue */
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.join(-0x1, 0);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.join(0x100000000, 0);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.join(0, -0x1);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.UInt64.join(0, 0x1000000000);
   }, TypeError);
   /* eslint-enable mozilla/use-returnValue */
@@ -1236,16 +1236,16 @@ function run_basic_class_tests(t) {
   Assert.ok(t.prototype.constructor === t);
 
   // Check that the shared properties and functions on 't.prototype' throw.
-  do_check_throws(function() {
+  do_check_throws(function () {
     t.prototype.value;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     t.prototype.value = null;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     t.prototype.address();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     t.prototype.readString();
   }, TypeError);
 
@@ -1317,7 +1317,7 @@ function run_bool_tests(library) {
     },
   ];
   for (let i = 0; i < vals.length; i++) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       d.value = vals[i];
     }, TypeError);
   }
@@ -1470,7 +1470,7 @@ function run_integer_tests(library, t, name, size, signed, limits) {
     },
   ];
   for (let i = 0; i < vals.length; i++) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       d.value = vals[i];
     }, TypeError);
   }
@@ -1532,13 +1532,13 @@ function run_float_tests(library, t, name, size) {
   d = new t(20);
   Assert.equal(d.value, 20);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     d.value = ctypes.Int64(5);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     d.value = ctypes.Int64(-5);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     d.value = ctypes.UInt64(5);
   }, TypeError);
 
@@ -1557,7 +1557,7 @@ function run_float_tests(library, t, name, size) {
     d.value = 0xfffffffffffff000;
     Assert.equal(d.value, 0xfffffffffffff000);
 
-    do_check_throws(function() {
+    do_check_throws(function () {
       d.value = ctypes.Int64("0x7fffffffffffffff");
     }, TypeError);
   }
@@ -1596,7 +1596,7 @@ function run_float_tests(library, t, name, size) {
     },
   ];
   for (let i = 0; i < vals.length; i++) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       d.value = vals[i];
     }, TypeError);
   }
@@ -1754,7 +1754,7 @@ function run_wrapped_integer_tests(
     },
   ];
   for (let i = 0; i < vals.length; i++) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       d.value = vals[i];
     }, TypeError);
   }
@@ -1817,7 +1817,7 @@ function run_char_tests(library, t, name, size, signed, limits) {
     d.value = -10;
     Assert.equal(d.value, -10);
   } else {
-    do_check_throws(function() {
+    do_check_throws(function () {
       d.value = -10;
     }, TypeError);
   }
@@ -1850,7 +1850,7 @@ function run_char_tests(library, t, name, size, signed, limits) {
   d.value = true;
   Assert.equal(d.value, 1);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     d.value = "5";
   }, TypeError);
 
@@ -1881,7 +1881,7 @@ function run_char_tests(library, t, name, size, signed, limits) {
     },
   ];
   for (let i = 0; i < vals.length; i++) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       d.value = vals[i];
     }, TypeError);
   }
@@ -1898,11 +1898,11 @@ function run_char_tests(library, t, name, size, signed, limits) {
   Assert.equal(s.constructor.length, literal.length + 1);
   s = t.array(50)(literal);
   Assert.equal(s.readString(), literal);
-  do_check_throws(function() {
+  do_check_throws(function () {
     t.array(3)(literal);
   }, TypeError);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     t.ptr(literal);
   }, TypeError);
   let p = t.ptr(s);
@@ -1956,7 +1956,7 @@ function run_char16_tests(library, t, name, limits) {
   Assert.equal(toprimitive(d.value), 5);
   d = t(10);
   Assert.equal(toprimitive(d.value), 10);
-  do_check_throws(function() {
+  do_check_throws(function () {
     d.value = -10;
   }, TypeError);
   d = new t(20);
@@ -1964,7 +1964,7 @@ function run_char16_tests(library, t, name, limits) {
 
   d.value = ctypes.Int64(5);
   Assert.equal(d.value.charCodeAt(0), 5);
-  do_check_throws(function() {
+  do_check_throws(function () {
     d.value = ctypes.Int64(-10);
   }, TypeError);
   d.value = ctypes.UInt64(5);
@@ -2015,7 +2015,7 @@ function run_char16_tests(library, t, name, limits) {
     },
   ];
   for (let i = 0; i < vals.length; i++) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       d.value = vals[i];
     }, TypeError);
   }
@@ -2032,11 +2032,11 @@ function run_char16_tests(library, t, name, limits) {
   Assert.equal(s.constructor.length, literal.length + 1);
   s = t.array(50)(literal);
   Assert.equal(s.readString(), literal);
-  do_check_throws(function() {
+  do_check_throws(function () {
     t.array(3)(literal);
   }, TypeError);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     t.ptr(literal);
   }, TypeError);
   let p = t.ptr(s);
@@ -2094,12 +2094,12 @@ function run_type_ctor_class_tests(
 
   // Check that the shared properties and functions on 'c.prototype' throw.
   for (let p of props) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       c.prototype[p];
     }, TypeError);
   }
   for (let f of fns) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       c.prototype[f]();
     }, TypeError);
   }
@@ -2141,18 +2141,18 @@ function run_type_ctor_class_tests(
   // Check that the shared properties and functions on the prototype of
   // 't.prototype' (and thus also 't.prototype') throw.
   for (let p of instanceProps) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       Object.getPrototypeOf(t.prototype)[p];
     }, TypeError);
-    do_check_throws(function() {
+    do_check_throws(function () {
       t.prototype[p];
     }, TypeError);
   }
   for (let f of instanceFns) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       Object.getPrototypeOf(t.prototype)[f]();
     }, TypeError);
-    do_check_throws(function() {
+    do_check_throws(function () {
       t.prototype[f]();
     }, TypeError);
   }
@@ -2164,7 +2164,7 @@ function run_type_ctor_class_tests(
 
   // Check that the shared special properties on 't.prototype' throw.
   for (let p of specialProps) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       t.prototype[p];
     }, TypeError);
   }
@@ -2207,39 +2207,39 @@ function run_StructType_tests() {
     ["a", "b"]
   );
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType("a", [], 5);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType(null, []);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType("a", null);
   }, TypeError);
 
   // Check that malformed descriptors are an error.
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType("a", [{ x: ctypes.int32_t }, { x: ctypes.int8_t }]);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType("a", [5]);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType("a", [{}]);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType("a", [{ 5: ctypes.int32_t }]);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType("a", [{ "5": ctypes.int32_t }]);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType("a", [{ x: 5 }]);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType("a", [{ x: ctypes.int32_t() }]);
   }, TypeError);
 
@@ -2251,7 +2251,7 @@ function run_StructType_tests() {
   Assert.ok(opaque_t.prototype === undefined);
   Assert.ok(opaque_t.fields === undefined);
   Assert.ok(opaque_t.size === undefined);
-  do_check_throws(function() {
+  do_check_throws(function () {
     opaque_t();
   }, Error);
   let opaqueptr_t = opaque_t.ptr;
@@ -2264,34 +2264,34 @@ function run_StructType_tests() {
   let opaqueptr = opaqueptr_t();
   opaqueptr.value = opaqueptr_t(1);
   Assert.equal(ptrValue(opaqueptr), 1);
-  do_check_throws(function() {
+  do_check_throws(function () {
     opaqueptr.value = ctypes.StructType("a").ptr();
   }, TypeError);
 
   // Check that 'define' works.
-  do_check_throws(function() {
+  do_check_throws(function () {
     opaque_t.define();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     opaque_t.define([], 0);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     opaque_t.define([{}]);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     opaque_t.define([{ a: 0 }]);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     opaque_t.define([{ a: ctypes.int32_t, b: ctypes.int64_t }]);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     opaque_t.define([{ a: ctypes.int32_t }, { b: 0 }]);
   }, TypeError);
   Assert.ok(!opaque_t.hasOwnProperty("prototype"));
 
   // Check that circular references work with opaque structs...
   // but not crazy ones.
-  do_check_throws(function() {
+  do_check_throws(function () {
     opaque_t.define([{ b: opaque_t }]);
   }, TypeError);
   let circular_t = ctypes.StructType("circular", [{ a: opaqueptr_t }]);
@@ -2304,7 +2304,7 @@ function run_StructType_tests() {
 
   // Check that attempting to redefine a struct fails and if attempted, the
   // original definition is preserved.
-  do_check_throws(function() {
+  do_check_throws(function () {
     opaque_t.define([{ c: ctypes.int32_t.array(8) }]);
   }, Error);
   Assert.equal(opaque_t.size, circular_t.size);
@@ -2362,7 +2362,7 @@ function run_StructType_tests() {
       { a: ctypes.int8_t.array(0xffffffff) },
     ]);
     Assert.equal(large_t.size, 0xffffffff);
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.StructType("large_t", [{ a: large_t }, { b: ctypes.int8_t }]);
     }, RangeError);
 
@@ -2372,7 +2372,7 @@ function run_StructType_tests() {
       { a: ctypes.int16_t.array(0xfffffffe / 2) },
     ]);
     Assert.equal(large_t.size, 0xfffffffe);
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.StructType("large_t", [{ a: large_t }, { b: ctypes.int8_t }]);
     }, RangeError);
   } else {
@@ -2381,11 +2381,11 @@ function run_StructType_tests() {
       { a: ctypes.int8_t.array(0xfffffffffffff800) },
     ]);
     Assert.equal(large_t.size, 0xfffffffffffff800);
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.StructType("large_t", [{ a: large_t }, { b: ctypes.int8_t }]);
     }, RangeError);
     let small_t = ctypes.int8_t.array(0x400);
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.StructType("large_t", [{ a: large_t }, { b: small_t }]);
     }, RangeError);
 
@@ -2393,7 +2393,7 @@ function run_StructType_tests() {
       { a: ctypes.int8_t.array(0x1fffffffffffff) },
     ]);
     Assert.equal(large_t.size, 0x1fffffffffffff);
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.StructType("large_t", [
         { a: large_t.array(2) },
         { b: ctypes.int8_t },
@@ -2403,7 +2403,7 @@ function run_StructType_tests() {
     // Test 2: overflow struct size + field padding + field size.
     large_t = ctypes.int8_t.array(0xfffffffffffff800);
     small_t = ctypes.int8_t.array(0x800);
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.StructType("large_t", [{ a: large_t }, { b: small_t }]);
     }, RangeError);
 
@@ -2414,7 +2414,7 @@ function run_StructType_tests() {
     ]);
     Assert.equal(large_t.size, 0xfffffffffffff000);
     small_t = ctypes.int8_t.array(0xfff);
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.StructType("large_t", [{ a: large_t }, { b: small_t }]);
     }, RangeError);
   }
@@ -2425,10 +2425,10 @@ function run_StructType_tests() {
   g = new g_t(1, 2);
   Assert.equal(g.a, 1);
   Assert.equal(g.b, 2);
-  do_check_throws(function() {
+  do_check_throws(function () {
     g_t(1);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     g_t(1, 2, 3);
   }, TypeError);
 
@@ -2456,13 +2456,13 @@ function run_StructType_tests() {
   g_a = s.addressOfField("b");
   Assert.ok(g_a.constructor === g_t.ptr);
   Assert.equal(g_a.contents.a, s.b.a);
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.addressOfField();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.addressOfField("d");
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.addressOfField("a", 2);
   }, TypeError);
 
@@ -2474,35 +2474,35 @@ function run_StructType_tests() {
   Assert.equal(s.b.b, s2.b.b);
 
   // Test that structs can be set from an object using 'value'.
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.value;
   }, TypeError);
   let s_init = { a: 2, b: { a: 9, b: 5 }, c: 13 };
   s.value = s_init;
   Assert.equal(s.b.a, 9);
   Assert.equal(s.c, 13);
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.value = 5;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.value = ctypes.int32_t();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.value = {};
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.value = { a: 2 };
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.value = { a: 2, b: 5, c: 10 };
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.value = { "5": 2, b: { a: 9, b: 5 }, c: 13 };
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.value = { a: 2, b: { a: 9, b: 5 }, c: 13, d: 17 };
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     s.value = { a: 2, b: { a: 9, b: 5, e: 9 }, c: 13 };
   }, TypeError);
 
@@ -2517,7 +2517,7 @@ function run_StructType_tests() {
   v = v_t(8);
   Assert.equal(v.x, 8);
   let w_t = ctypes.StructType("w_t", [{ y: v_t }]);
-  do_check_throws(function() {
+  do_check_throws(function () {
     w_t(9);
   }, TypeError);
   let w = w_t({ x: 3 });
@@ -2539,10 +2539,10 @@ function run_StructType_tests() {
 
   // Check that structs containing arrays of undefined or zero length
   // are illegal, but arrays of defined length work.
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType("z_t", [{ a: ctypes.int32_t.array() }]);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.StructType("z_t", [{ a: ctypes.int32_t.array(0) }]);
   }, TypeError);
   z_t = ctypes.StructType("z_t", [{ a: ctypes.int32_t.array(6) }]);
@@ -2567,19 +2567,19 @@ function run_PointerType_tests() {
     []
   );
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.PointerType();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.PointerType(ctypes.int32_t, 5);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.PointerType(null);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.PointerType(ctypes.int32_t());
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.PointerType("void");
   }, TypeError);
 
@@ -2607,14 +2607,14 @@ function run_PointerType_tests() {
 
   // Test ExplicitConvert.
   let p = p_t();
-  do_check_throws(function() {
+  do_check_throws(function () {
     p.value;
   }, TypeError);
   Assert.equal(ptrValue(p), 0);
-  do_check_throws(function() {
+  do_check_throws(function () {
     p.contents;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     p.contents = g;
   }, TypeError);
   p = p_t(5);
@@ -2625,7 +2625,7 @@ function run_PointerType_tests() {
   // Test ImplicitConvert.
   p.value = null;
   Assert.equal(ptrValue(p), 0);
-  do_check_throws(function() {
+  do_check_throws(function () {
     p.value = 5;
   }, TypeError);
 
@@ -2634,25 +2634,25 @@ function run_PointerType_tests() {
   Assert.equal(f_t.name, "FILE*");
   Assert.equal(f_t.toSource(), 'ctypes.StructType("FILE").ptr');
   let f = new f_t();
-  do_check_throws(function() {
+  do_check_throws(function () {
     f.contents;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     f.contents = 0;
   }, TypeError);
   f = f_t(5);
-  do_check_throws(function() {
+  do_check_throws(function () {
     f.contents = 0;
   }, TypeError);
   Assert.equal(f.toSource(), 'FILE.ptr(ctypes.UInt64("0x5"))');
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     f_t(p);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     f.value = p;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     p.value = f;
   }, TypeError);
 
@@ -2692,14 +2692,12 @@ function run_PointerType_tests() {
   // but that the former cannot be dereferenced.
   let z_t = ctypes.int32_t.array().ptr;
   Assert.equal(ptrValue(z_t()), 0);
-  do_check_throws(function() {
+  do_check_throws(function () {
     z_t().contents;
   }, TypeError);
   z_t = ctypes.int32_t.array(0).ptr;
   Assert.equal(ptrValue(z_t()), 0);
-  let z = ctypes.int32_t
-    .array(0)()
-    .address();
+  let z = ctypes.int32_t.array(0)().address();
   Assert.equal(z.contents.length, 0);
 
   // TODO: Somehow, somewhere we should check that:
@@ -2753,7 +2751,7 @@ function run_PointerType_tests() {
             item_type +
             " array"
         );
-        do_check_throws(function() {
+        do_check_throws(function () {
           array_type(view);
         }, TypeError);
       } else {
@@ -2781,16 +2779,16 @@ function run_PointerType_tests() {
         let array_type_too_large = item_type.array(number_of_items + 1);
         let array_type_too_small = item_type.array(number_of_items - 1);
 
-        do_check_throws(function() {
+        do_check_throws(function () {
           array_type_too_large(c_arraybuffer);
         }, TypeError);
-        do_check_throws(function() {
+        do_check_throws(function () {
           array_type_too_small(c_arraybuffer);
         }, TypeError);
-        do_check_throws(function() {
+        do_check_throws(function () {
           array_type_too_large(view);
         }, TypeError);
-        do_check_throws(function() {
+        do_check_throws(function () {
           array_type_too_small(view);
         }, TypeError);
 
@@ -2816,16 +2814,16 @@ function run_PointerType_tests() {
           item_type +
           " pointer/array"
       );
-      do_check_throws(function() {
+      do_check_throws(function () {
         item_type.ptr(c_arraybuffer);
       }, TypeError);
-      do_check_throws(function() {
+      do_check_throws(function () {
         item_type.ptr(view);
       }, TypeError);
-      do_check_throws(function() {
+      do_check_throws(function () {
         ctypes.voidptr_t(c_arraybuffer);
       }, TypeError);
-      do_check_throws(function() {
+      do_check_throws(function () {
         ctypes.voidptr_t(view);
       }, TypeError);
     }
@@ -2844,25 +2842,25 @@ function run_FunctionType_tests() {
     undefined
   );
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.FunctionType();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, [ctypes.void_t]);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, [ctypes.void_t], 5);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, ctypes.void_t);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, null);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t());
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.FunctionType(ctypes.void_t, ctypes.void_t);
   }, Error);
 
@@ -2894,13 +2892,13 @@ function run_FunctionType_tests() {
   );
 
   // Check that constructing a FunctionType CData directly throws.
-  do_check_throws(function() {
+  do_check_throws(function () {
     f_t();
   }, TypeError);
 
   // Test ExplicitConvert.
   let f = fp_t();
-  do_check_throws(function() {
+  do_check_throws(function () {
     f.value;
   }, TypeError);
   Assert.equal(ptrValue(f), 0);
@@ -2912,7 +2910,7 @@ function run_FunctionType_tests() {
   // Test ImplicitConvert.
   f.value = null;
   Assert.equal(ptrValue(f), 0);
-  do_check_throws(function() {
+  do_check_throws(function () {
     f.value = 5;
   }, TypeError);
   Assert.equal(
@@ -2923,10 +2921,10 @@ function run_FunctionType_tests() {
   // Test ImplicitConvert from a function pointer of different type.
   let f2_t = ctypes.FunctionType(ctypes.default_abi, g_t, [ctypes.int32_t]);
   let f2 = f2_t.ptr();
-  do_check_throws(function() {
+  do_check_throws(function () {
     f.value = f2;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     f2.value = f;
   }, TypeError);
 
@@ -3009,16 +3007,16 @@ function run_ArrayType_tests() {
     ["addressOfElement"]
   );
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.ArrayType();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.ArrayType(null);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.ArrayType(ctypes.int32_t, 1, 5);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.ArrayType(ctypes.int32_t, -1);
   }, TypeError);
 
@@ -3042,7 +3040,7 @@ function run_ArrayType_tests() {
   );
   Assert.equal(a_t.array().name, name + "[][10]");
   Assert.equal(a_t.array(5).name, name + "[5][10]");
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.int32_t.array().array();
   }, Error);
 
@@ -3052,11 +3050,11 @@ function run_ArrayType_tests() {
   a[0] = g;
   Assert.equal(a[0].a, 1);
   Assert.equal(a[0].b, 2);
-  do_check_throws(function() {
+  do_check_throws(function () {
     a[-1];
   }, TypeError);
   Assert.equal(a[9].a, 0);
-  do_check_throws(function() {
+  do_check_throws(function () {
     a[10];
   }, RangeError);
 
@@ -3079,13 +3077,13 @@ function run_ArrayType_tests() {
   Assert.equal(a2.constructor.length, 5);
   Assert.equal(a2.length, 5);
   Assert.equal(a2.constructor.size, g_t.size * 5);
-  do_check_throws(function() {
+  do_check_throws(function () {
     new a2_t();
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.ArrayType(ctypes.ArrayType(g_t));
   }, Error);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.ArrayType(ctypes.ArrayType(g_t), 5);
   }, Error);
 
@@ -3097,27 +3095,27 @@ function run_ArrayType_tests() {
   // Check that array size bounds work, and that large, but not illegal, sizes
   // are OK.
   if (ctypes.size_t.size == 4) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.ArrayType(ctypes.int8_t, 0x100000000);
     }, TypeError);
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.ArrayType(ctypes.int16_t, 0x80000000);
     }, RangeError);
 
     let large_t = ctypes.int8_t.array(0x80000000);
-    do_check_throws(function() {
+    do_check_throws(function () {
       large_t.array(2);
     }, RangeError);
   } else {
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.ArrayType(ctypes.int8_t, ctypes.UInt64("0xffffffffffffffff"));
     }, TypeError);
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.ArrayType(ctypes.int16_t, ctypes.UInt64("0x8000000000000000"));
     }, RangeError);
 
     let large_t = ctypes.int8_t.array(0x8000000000000000);
-    do_check_throws(function() {
+    do_check_throws(function () {
       large_t.array(2);
     }, RangeError);
   }
@@ -3145,19 +3143,19 @@ function run_ArrayType_tests() {
 
   c.value = c;
   Assert.equal(c[3], 4);
-  do_check_throws(function() {
+  do_check_throws(function () {
     c.value;
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     c.value = [1, 2, 3, 4, 5];
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     c.value = [1, 2, 3, 4, 5, 6, 7];
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     c.value = [1, 2, 7.4, 4, 5, 6];
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     c.value = [];
   }, TypeError);
 }
@@ -3290,13 +3288,13 @@ function run_cast_tests() {
   Assert.equal(i.value, k.value);
 
   // Test casting to a type of undefined or larger size.
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.cast(i, ctypes.void_t);
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.cast(i, ctypes.int32_t.array());
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.cast(i, ctypes.int64_t);
   }, TypeError);
 
@@ -3339,7 +3337,7 @@ function run_void_tests(library) {
   Assert.equal(test_void_t(), undefined);
 
   // Test that library.declare throws with void function args.
-  do_check_throws(function() {
+  do_check_throws(function () {
     library.declare(
       "test_void_t_cdecl",
       ctypes.default_abi,
@@ -3359,7 +3357,7 @@ function run_void_tests(library) {
     // Check that WINAPI symbol lookup for a regular stdcall function fails on
     // Win32 (it's all the same on Win64 though).
     if (ctypes.voidptr_t.size == 4) {
-      do_check_throws(function() {
+      do_check_throws(function () {
         library.declare(
           "test_void_t_stdcall",
           ctypes.winapi_abi,
@@ -3395,7 +3393,7 @@ function run_string_tests(library) {
     [],
   ];
   for (let i = 0; i < vals.length; i++) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       test_ansi_len(vals[i]);
     }, TypeError);
   }
@@ -3742,10 +3740,10 @@ function run_function_tests(library) {
   // Test that we cannot call non-function pointers via call and apply
   let p_t = ctypes.PointerType(ctypes.int32_t);
   let p = p_t();
-  do_check_throws(function() {
+  do_check_throws(function () {
     p.call(null, "woo");
   }, TypeError);
-  do_check_throws(function() {
+  do_check_throws(function () {
     p.apply(null, ["woo"]);
   }, TypeError);
   /* eslint-enable no-useless-call */
@@ -3788,7 +3786,7 @@ function run_closure_tests(library) {
       return 1;
     }
     let fn_t = ctypes.FunctionType(ctypes.winapi_abi, ctypes.int32_t, []).ptr;
-    do_check_throws(function() {
+    do_check_throws(function () {
       fn_t(closure_fn);
     }, Error);
   }
@@ -3851,14 +3849,14 @@ function run_single_closure_tests(library, abi, suffix) {
 
   // Test a callback that returns void (see bug 682504).
   var fn_v_t = ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, []).ptr;
-  fn_v_t(function() {})(); // Don't crash
+  fn_v_t(function () {})(); // Don't crash
 
   // Code evaluated in a sandbox uses (and pushes) a separate JSContext.
   // Make sure that we don't run into an assertion caused by a cx stack
   // mismatch with the cx stashed in the closure.
   try {
     var sb = Cu.Sandbox("http://www.example.com");
-    sb.fn = fn_v_t(function() {
+    sb.fn = fn_v_t(function () {
       sb.foo = {};
     });
     Cu.evalInSandbox("fn();", sb);
@@ -3867,7 +3865,7 @@ function run_single_closure_tests(library, abi, suffix) {
   // Make sure that a void callback can't return an error sentinel.
   var sentinelThrew = false;
   try {
-    fn_v_t(function() {}, null, -1);
+    fn_v_t(function () {}, null, -1);
   } catch (e) {
     sentinelThrew = true;
   }
@@ -3899,7 +3897,7 @@ function run_variadic_tests(library) {
     6
   );
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.FunctionType(ctypes.default_abi, ctypes.bool, [
       ctypes.bool,
       "...",
@@ -3907,25 +3905,25 @@ function run_variadic_tests(library) {
     ]);
   }, Error);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     ctypes.FunctionType(ctypes.default_abi, ctypes.bool, ["..."]);
   }, Error);
 
   if ("winLastError" in ctypes) {
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.FunctionType(ctypes.stdcall_abi, ctypes.bool, [
         ctypes.bool,
         "...",
       ]);
     }, Error);
-    do_check_throws(function() {
+    do_check_throws(function () {
       ctypes.FunctionType(ctypes.winapi_abi, ctypes.bool, [ctypes.bool, "..."]);
     }, Error);
   }
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     // No variadic closure callbacks allowed.
-    sum_va_type(function() {});
+    sum_va_type(function () {});
   }, Error);
 
   let count_true_va = library.declare(
@@ -3993,7 +3991,7 @@ function run_variadic_tests(library) {
     sum_va_type.targetType.returnType,
     [ctypes.uint8_t]
   ).ptr;
-  do_check_throws(function() {
+  do_check_throws(function () {
     sum_va_type().value = sum_notva_type();
   }, TypeError);
 }

@@ -13,7 +13,7 @@ const certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
 const CERT_TEST =
   "MIHhMIGcAgEAMA0GCSqGSIb3DQEBBQUAMAwxCjAIBgNVBAMTAUEwHhcNMTEwMzIzMjMyNTE3WhcNMTEwNDIyMjMyNTE3WjAMMQowCAYDVQQDEwFBMEwwDQYJKoZIhvcNAQEBBQADOwAwOAIxANFm7ZCfYNJViaDWTFuMClX3+9u18VFGiyLfM6xJrxir4QVtQC7VUC/WUGoBUs9COQIDAQABMA0GCSqGSIb3DQEBBQUAAzEAx2+gIwmuYjJO5SyabqIm4lB1MandHH1HQc0y0tUFshBOMESTzQRPSVwPn77a6R9t";
 
-add_task(async function() {
+add_task(async function () {
   Assert.ok(Services.clearData);
 
   const TEST_URI = Services.io.newURI("http://test.com/");

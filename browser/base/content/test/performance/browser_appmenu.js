@@ -32,7 +32,7 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await ensureNoPreloadedBrowser();
   await disableFxaBadge();
 
@@ -72,7 +72,7 @@ add_task(async function() {
   // Now open a series of subviews, and then close the appmenu. We
   // should not reflow during any of this.
   await withPerfObserver(
-    async function() {
+    async function () {
       // This recursive function will take the current main or subview,
       // find all of the buttons that navigate to subviews inside it,
       // and click each one individually. Upon entering the new view,

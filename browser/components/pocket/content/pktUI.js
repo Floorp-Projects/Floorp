@@ -58,7 +58,7 @@ const POCKET_ONSAVERECS_PREF = "extensions.pocket.onSaveRecs";
 const POCKET_ONSAVERECS_LOCLES_PREF = "extensions.pocket.onSaveRecs.locales";
 const POCKET_HOME_PREF = "extensions.pocket.showHome";
 
-var pktUI = (function() {
+var pktUI = (function () {
   let _titleToSave = "";
   let _urlToSave = "";
 
@@ -138,7 +138,7 @@ var pktUI = (function() {
    * Show the sign-up panel
    */
   function showSignUp() {
-    getFirefoxAccountSignedInUser(function(userdata) {
+    getFirefoxAccountSignedInUser(function (userdata) {
       showPanel(
         "about:pocket-signup?" +
           "emailButton=" +
@@ -169,7 +169,7 @@ var pktUI = (function() {
    * Show the logged-out state / sign-up panel
    */
   function saveAndShowConfirmation() {
-    getFirefoxAccountSignedInUser(function(userdata) {
+    getFirefoxAccountSignedInUser(function (userdata) {
       showPanel(
         "about:pocket-saved?premiumStatus=" +
           (pktApi.isPremiumUser() ? "1" : "0") +
@@ -568,9 +568,7 @@ var pktUI = (function() {
   function closePanel() {
     // The panel frame doesn't exist until the Pocket panel is showing.
     // So we ensure it is open before attempting to hide it.
-    getPanelFrame()
-      ?.closest("panel")
-      ?.hidePopup();
+    getPanelFrame()?.closest("panel")?.hidePopup();
   }
 
   var toolbarPanelFrame;
@@ -631,7 +629,7 @@ var pktUI = (function() {
 })();
 
 // -- Communication to Background -- //
-var pktUIMessaging = (function() {
+var pktUIMessaging = (function () {
   /**
    * Send a message to the panel's frame
    */

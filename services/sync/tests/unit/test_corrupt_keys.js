@@ -19,7 +19,7 @@ add_task(async function test_locally_changed_keys() {
 
   let hmacErrorCount = 0;
   function counting(f) {
-    return async function() {
+    return async function () {
       hmacErrorCount++;
       return f.call(this);
     };

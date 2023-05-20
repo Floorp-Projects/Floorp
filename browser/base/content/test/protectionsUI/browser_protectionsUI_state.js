@@ -49,7 +49,7 @@ const sDisabledIconTooltip = gNavigatorBundle.getString(
   "trackingProtection.icon.disabledTooltip2"
 );
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   TrackingProtection = gProtectionsHandler = ThirdPartyCookies = tabbrowser = null;
   UrlClassifierTestUtils.cleanupTestTrackers();
   Services.prefs.clearUserPref(TP_PREF);

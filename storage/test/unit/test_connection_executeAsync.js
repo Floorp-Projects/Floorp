@@ -49,7 +49,7 @@ add_task(async function test_first_create_and_add() {
   stmts[1].bindBlobByIndex(3, BLOB, BLOB.length);
 
   // asynchronously execute the statements
-  let execResult = await executeMultipleStatementsAsync(db, stmts, function(
+  let execResult = await executeMultipleStatementsAsync(db, stmts, function (
     aResultSet
   ) {
     ok(false, "we only did inserts so we should not have gotten results!");
@@ -140,7 +140,7 @@ add_task(async function test_last_multiple_bindings_on_statements() {
   }
 
   // Execute asynchronously.
-  let execResult = await executeMultipleStatementsAsync(db, stmts, function(
+  let execResult = await executeMultipleStatementsAsync(db, stmts, function (
     aResultSet
   ) {
     ok(false, "we only did inserts so we should not have gotten results!");

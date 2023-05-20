@@ -133,7 +133,7 @@ addAccessibleTask(
   <p id='p3' dir='ltr' style='font-family: monospace;'>Привіт Світ</p>
   <pre id='p4' style='font-family: monospace;'>a%0abcdef</pre>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     info("Testing simple LtR text");
     await testTextNode(accDoc, browser, "p1");
     await testTextNode(accDoc, browser, "p2");
@@ -153,7 +153,7 @@ addAccessibleTask(
   <p id='p1' style='font-family: monospace;'>Tilimilitryamdiya</p>
   <p id='p2' dir='ltr' style='font-family: monospace;'>Привіт Світ</p>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     info("Testing partial ranges in LtR text");
     await testTextRange(accDoc, browser, "p1", 0, 4);
     await testTextRange(accDoc, browser, "p1", 2, 8);
@@ -178,7 +178,7 @@ addAccessibleTask(
   <p id='p6' style='font-family: monospace;'>hello world I'm on line one<br> and I'm a separate line two with slightly more text</p>
   <p id='p7' style='font-family: monospace;'>hello world<br>hello world</p>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     info("Testing multiline LtR text");
     await testTextNode(accDoc, browser, "p4");
     await testTextNode(accDoc, browser, "p5");
@@ -201,7 +201,7 @@ addAccessibleTask(
   <p id='p3' dir='rtl' style='font-family: monospace;'>لل لللل لل</p>
   <pre id='p4' dir='rtl' style='font-family: monospace;'>a%0abcdef</pre>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     info("Testing simple RtL text");
     await testTextNode(accDoc, browser, "p1");
     await testTextNode(accDoc, browser, "p2");
@@ -224,7 +224,7 @@ addAccessibleTask(
   <p id='p6' dir='rtl' style='font-family: monospace;'>hello world I'm on line one<br> and I'm a separate line two with slightly more text</p>
   <p id='p7' dir='rtl' style='font-family: monospace;'>hello world<br>hello world</p>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     info("Testing multiline RtL text");
     await testTextNode(accDoc, browser, "p4");
     //await testTextNode(accDoc, browser, "p5"); // w/ cache fails x, w - off by one char
@@ -245,7 +245,7 @@ addAccessibleTask(
   <p id='p1' dir='rtl' style='font-family: monospace;'>Tilimilitryamdiya</p>
   <p id='p2' dir='rtl' style='font-family: monospace;'>لل لللل لل</p>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     info("Testing partial ranges in RtL text");
     await testTextRange(accDoc, browser, "p1", 0, 4);
     await testTextRange(accDoc, browser, "p1", 2, 8);
@@ -278,7 +278,7 @@ addAccessibleTask(
     <p id='p6'>こんにちは世界</p>
   </div>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     info("Testing vertical-rl");
     await testTextNode(accDoc, browser, "p1");
     await testTextNode(accDoc, browser, "p2");
@@ -305,7 +305,7 @@ addAccessibleTask(
   <p id='p3' style='writing-mode: vertical-rl;'>你好世界<br> 你好世界 你好世界</p>
   <p id='p4' style='writing-mode: vertical-rl;'>hello world<br> hello world hello world</p>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     info("Testing vertical-rl multiline");
     await testTextNode(accDoc, browser, "p1");
     await testTextNode(accDoc, browser, "p2");
@@ -327,7 +327,7 @@ addAccessibleTask(
    <div id='d3'><p></p>hello world</div>
    <div id='d4'>hello world<p></p></div>
    <div id='d5'>oh<p></p>hello world</div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     info("Testing embedded chars");
     await testTextNode(accDoc, browser, "p1");
     await testTextNode(accDoc, browser, "p2");
@@ -346,7 +346,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<p id="p">a</p>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testTextNode(docAcc, browser, "p");
     const p = findAccessibleChildByID(docAcc, "p");
     info("Appending a character to text leaf");
@@ -369,7 +369,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<input id="input" value="a">`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const input = findAccessibleChildByID(docAcc, "input");
     testTextPos(input, 1, [0, 0], COORDTYPE_SCREEN_RELATIVE);
   },
@@ -396,7 +396,7 @@ addAccessibleTask(
   </style>
   <pre id="t">XX
 XXX</pre>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testChar(docAcc, browser, "t", 3);
   },
   {
@@ -423,7 +423,7 @@ addAccessibleTask(
   </style>
   <pre id="t">XX
 XXX</pre>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testTextNode(docAcc, browser, "t");
     await testChar(docAcc, browser, "t", 3);
   },
@@ -439,7 +439,7 @@ XXX</pre>`,
  */
 addAccessibleTask(
   `<p id="p">a</p>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const p = findAccessibleChildByID(docAcc, "p");
     testTextBounds(p, 0, 2, [0, 0, 0, 0], COORDTYPE_SCREEN_RELATIVE);
   },
@@ -464,7 +464,7 @@ addAccessibleTask(
 XXX
 XX
 X</pre>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testChar(docAcc, browser, "t", 0);
     await testChar(docAcc, browser, "t", 3);
     await testChar(docAcc, browser, "t", 7);
@@ -493,7 +493,7 @@ addAccessibleTask(
 XXX
 XX
 X</pre></div>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testChar(docAcc, browser, "t", 0);
     await testChar(docAcc, browser, "t", 3);
     await testChar(docAcc, browser, "t", 7);
@@ -515,7 +515,7 @@ addAccessibleTask(
 b
 c</textarea>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     // We can't use testChar because Range.getBoundingClientRect isn't supported
     // inside textareas.
     const textarea = findAccessibleChildByID(docAcc, "textarea");
@@ -555,7 +555,7 @@ c</textarea>
  */
 addAccessibleTask(
   `<input id="input" value="abc">`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const input = findAccessibleChildByID(docAcc, "input", [nsIAccessibleText]);
     info("Setting caret and focusing input");
     let caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, input);
@@ -637,7 +637,7 @@ addAccessibleTask(
 <p id="emptyFirstLine" style="white-space: pre-line;">
 foo</p>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testChar(docAcc, browser, "wrappedText", 0);
     await testChar(docAcc, browser, "wrappedText", 1);
     await testChar(docAcc, browser, "wrappedText", 2);
@@ -682,7 +682,7 @@ addAccessibleTask(
 XXX
 XX
 X</pre>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testChar(docAcc, browser, "t", 0);
     await testChar(docAcc, browser, "t", 3);
     await testChar(docAcc, browser, "t", 7);

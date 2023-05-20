@@ -22,7 +22,7 @@ function open_preferences(aCallback) {
   let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
   newTabBrowser.addEventListener(
     "Initialized",
-    function() {
+    function () {
       aCallback(gBrowser.contentWindow);
     },
     { capture: true, once: true }

@@ -17,7 +17,7 @@ Cu.crashIfNotInAutomation();
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID = "";
 var newClassID = Services.uuid.generateUUID();
-var newFactory = function(window) {
+var newFactory = function (window) {
   return {
     createInstance(aIID) {
       return new MockColorPickerInstance(window).QueryInterface(aIID);
@@ -96,7 +96,7 @@ MockColorPickerInstance.prototype = {
               this.showCallbackWrapped = this.showCallback;
             }
           }
-          var updateCb = function(color) {
+          var updateCb = function (color) {
             result = color;
             aColorPickerShownCallback.update(color);
           };

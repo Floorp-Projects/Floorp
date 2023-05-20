@@ -8,7 +8,7 @@
 const TEST_URL = `data:text/html,<!DOCTYPE html><meta charset=utf8>Got no style`;
 const CSS_URL = `${URL_ROOT_SSL}doc_theme.css`;
 
-add_task(async function() {
+add_task(async function () {
   // start on webconsole since it doesn't have much activity so we're less vulnerable
   // to pending promises.
   const toolbox = await openNewTabAndToolbox(TEST_URL, "webconsole");

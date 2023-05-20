@@ -290,7 +290,7 @@
 
       if (this.onLastPage && !aPageId) {
         if (this._fireEvent(this, "wizardfinish")) {
-          window.setTimeout(function() {
+          window.setTimeout(function () {
             window.close();
           }, 1);
         }
@@ -335,7 +335,7 @@
       }
 
       window.close();
-      window.setTimeout(function() {
+      window.setTimeout(function () {
         window.close();
       }, 1);
       return false;

@@ -17,7 +17,7 @@ const { TelemetryUtils } = ChromeUtils.import(
 const lazy = {};
 
 // Static configuration
-const gConfig = (function() {
+const gConfig = (function () {
   const baseUrl = Services.prefs.getStringPref(
     "signon.firefoxRelay.base_url",
     undefined
@@ -50,7 +50,7 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () =>
     "resource://gre/modules/FxAccounts.sys.mjs"
   ).getFxAccountsSingleton()
 );
-XPCOMUtils.defineLazyGetter(lazy, "strings", function() {
+XPCOMUtils.defineLazyGetter(lazy, "strings", function () {
   return new Localization([
     "branding/brand.ftl",
     "browser/firefoxRelay.ftl",

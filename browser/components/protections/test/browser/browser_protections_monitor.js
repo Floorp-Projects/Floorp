@@ -17,7 +17,7 @@ const mockMonitorData = {
   numBreachesResolved: 0,
 };
 
-add_task(async function() {
+add_task(async function () {
   const tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
     gBrowser,
@@ -48,7 +48,7 @@ add_task(async function() {
       "Error was not thrown for trying to reach the Monitor endpoint, the cache has worked."
     );
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
       await ContentTaskUtils.waitForCondition(() => {
         const hasLogins = content.document.querySelector(
           ".monitor-card.has-logins"
@@ -107,7 +107,7 @@ add_task(async function() {
     await BrowserTestUtils.reloadTab(tab);
   }
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const monitorCard = content.document.querySelector(".monitor-card");
       return !monitorCard["data-enabled"];
@@ -135,7 +135,7 @@ add_task(async function() {
 });
 
 async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const noLogins = content.document.querySelector(
         ".monitor-card.no-logins"

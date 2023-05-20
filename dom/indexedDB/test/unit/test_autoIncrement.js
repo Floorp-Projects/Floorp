@@ -7,7 +7,7 @@
 var disableWorkerTest = "Need to implement a gc() function for worker tests";
 
 if (!this.window) {
-  this.runTest = function() {
+  this.runTest = function () {
     todo(false, "Test disabled in xpcshell test suite for now");
     finishTest();
   };
@@ -16,7 +16,7 @@ if (!this.window) {
 var testGenerator = testSteps();
 
 function genCheck(key, value, test, options) {
-  return function(event) {
+  return function (event) {
     is(
       JSON.stringify(event.target.result),
       JSON.stringify(key),
@@ -33,7 +33,7 @@ function genCheck(key, value, test, options) {
       );
     }
 
-    event.target.source.get(key).onsuccess = function(event) {
+    event.target.source.get(key).onsuccess = function (event) {
       is(
         JSON.stringify(event.target.result),
         JSON.stringify(value),

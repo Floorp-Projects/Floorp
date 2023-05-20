@@ -7,7 +7,7 @@
  * Tests if JSON responses containing null values are properly displayed.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(JSON_BASIC_URL + "?name=null", {
     requestCount: 1,
   });

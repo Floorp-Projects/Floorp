@@ -157,7 +157,7 @@ var testCases = [
   },
 ];
 
-(function() {
+(function () {
   settings.forEach(setting => {
     ok(true, JSON.stringify(setting));
     if (setting.setup) {

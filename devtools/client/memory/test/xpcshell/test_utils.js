@@ -18,7 +18,7 @@ const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
 
-add_task(async function() {
+add_task(async function () {
   const s1 = utils.createSnapshot({ view: { state: viewState.CENSUS } });
   const s2 = utils.createSnapshot({ view: { state: viewState.CENSUS } });
   equal(

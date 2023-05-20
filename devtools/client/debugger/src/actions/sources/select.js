@@ -238,7 +238,7 @@ export function selectSpecificLocation(cx, location) {
  * related location in the generated source.
  */
 export function jumpToMappedLocation(cx, location) {
-  return async function(thunkArgs) {
+  return async function (thunkArgs) {
     const { client, dispatch } = thunkArgs;
     if (!client) {
       return null;
@@ -253,7 +253,7 @@ export function jumpToMappedLocation(cx, location) {
 
 // This is only used by tests
 export function jumpToMappedSelectedLocation(cx) {
-  return async function({ dispatch, getState }) {
+  return async function ({ dispatch, getState }) {
     const location = getSelectedLocation(getState());
     if (!location) {
       return;

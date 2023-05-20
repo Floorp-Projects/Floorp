@@ -7,7 +7,7 @@
 
 var newTab = null;
 
-add_task(async function() {
+add_task(async function () {
   info("Check preferences button existence and functionality");
   CustomizableUI.addWidgetToArea(
     "preferences-button",

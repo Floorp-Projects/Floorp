@@ -1,4 +1,4 @@
-addEventListener("error", function(e) {
+addEventListener("error", function (e) {
   var obj = {};
   for (var prop of ["message", "filename", "lineno"]) {
     obj[prop] = e[prop];
@@ -6,7 +6,7 @@ addEventListener("error", function(e) {
   obj.type = "event";
   postMessage(obj);
 });
-onerror = function(message, filename, lineno) {
+onerror = function (message, filename, lineno) {
   var obj = {
     message,
     filename,

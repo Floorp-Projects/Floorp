@@ -15,7 +15,7 @@ const TEST_URI =
 // Strip the colon prefix from pseudo-classes (:before => before)
 const PSEUDOS = PSEUDO_CLASSES.map(pseudo => pseudo.substr(1));
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     TEST_URI
   );

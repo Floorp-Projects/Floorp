@@ -14,12 +14,12 @@ function awaitAndCloseAlertDialog(browser) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
 
   // Focus and enter random text on input.
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let input = content.document.getElementById("input");
     input.focus();
     input.value = "abcd";
@@ -31,7 +31,7 @@ add_task(async function() {
   await dialogShown;
 
   // Check that the form should not have been submitted.
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let result = content.document.getElementById("result").innerHTML;
     info("submit result: " + result);
     is(result, "not submitted", "form should not have submitted");

@@ -31,19 +31,19 @@ const TabPanel = createFactory(
   require("resource://devtools/client/shared/components/tabs/Tabs.js").TabPanel
 );
 
-loader.lazyGetter(this, "SearchPanel", function() {
+loader.lazyGetter(this, "SearchPanel", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/search/SearchPanel.js")
   );
 });
 
-loader.lazyGetter(this, "RequestBlockingPanel", function() {
+loader.lazyGetter(this, "RequestBlockingPanel", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/request-blocking/RequestBlockingPanel.js")
   );
 });
 
-loader.lazyGetter(this, "HTTPCustomRequestPanel", function() {
+loader.lazyGetter(this, "HTTPCustomRequestPanel", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/new-request/HTTPCustomRequestPanel.js")
   );

@@ -31,7 +31,7 @@ const uri = Services.io.newURI("https://a.pinning.example.com");
 // using "Forget About Site" on a.pinning2.example.com, and then checking
 // that the platform doesn't consider a.pinning.example.com to be HSTS any
 // longer.
-add_task(async function() {
+add_task(async function () {
   sss.processHeader(uri, GOOD_MAX_AGE);
 
   Assert.ok(sss.isSecureURI(uri), "a.pinning.example.com should be HSTS");
@@ -48,7 +48,7 @@ add_task(async function() {
 // "Forget About Site" on example.com, and then checking that the platform
 // doesn't consider the subdomain to be HSTS any longer. Also test that
 // unrelated sites don't also get removed.
-add_task(async function() {
+add_task(async function () {
   sss.processHeader(uri, GOOD_MAX_AGE);
 
   Assert.ok(
@@ -76,7 +76,7 @@ add_task(async function() {
 // then checking that the platform doesn't consider the subdomain to be HSTS
 // for any originAttributes any longer. Also test that unrelated sites don't
 // also get removed.
-add_task(async function() {
+add_task(async function () {
   let originAttributesList = [
     {},
     { userContextId: 1 },

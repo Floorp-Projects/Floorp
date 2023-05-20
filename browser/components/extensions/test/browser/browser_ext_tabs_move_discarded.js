@@ -5,7 +5,7 @@
 add_task(async function move_discarded_to_window() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: { permissions: ["tabs"] },
-    background: async function() {
+    background: async function () {
       // Create a discarded tab
       let url = "http://example.com/";
       let tab = await browser.tabs.create({ url, discarded: true });

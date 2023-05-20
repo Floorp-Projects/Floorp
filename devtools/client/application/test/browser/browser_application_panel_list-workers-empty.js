@@ -10,7 +10,7 @@
 
 const EMPTY_URL = URL_ROOT + "resources/service-workers/empty.html";
 
-add_task(async function() {
+add_task(async function () {
   await enableApplicationPanel();
 
   const { panel, tab } = await openNewTabAndApplicationPanel(EMPTY_URL);

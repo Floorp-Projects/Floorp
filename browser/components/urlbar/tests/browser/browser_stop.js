@@ -11,7 +11,7 @@
 const goodURL = "http://mochi.test:8888/";
 const badURL = "http://mochi.test:8888/whatever.html";
 
-add_task(async function() {
+add_task(async function () {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, goodURL);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   is(

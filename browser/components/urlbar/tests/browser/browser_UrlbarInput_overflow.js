@@ -94,12 +94,12 @@ async function testVal(aExpected, overflowSide = "") {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   // We use a new tab for the test to be sure all the tab switching and loading
   // is complete before starting, otherwise onLocationChange for this tab could
   // override the value we set with an empty value.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gURLBar.setURI();
     BrowserTestUtils.removeTab(tab);
   });

@@ -12,7 +12,7 @@ function is(a, b, message) {
   ok(a === b, message);
 }
 
-onmessage = function(e) {
+onmessage = function (e) {
   self[e.data](SAME_COMPARTMENT).then(
     ok => {
       postMessage({ type: "done" });

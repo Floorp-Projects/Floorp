@@ -11,7 +11,7 @@ requestLongerTimeout(3);
  * collected, while numbers that don't look like credit card numbers will
  * still be collected.
  */
-add_task(async function() {
+add_task(async function () {
   const validCCNumbers = [
     // 15 digits
     "930771457288760",
@@ -101,7 +101,7 @@ add_task(async function() {
 });
 
 function setInputValue(browser, formValue) {
-  return SpecialPowers.spawn(browser, [formValue], async function(newValue) {
+  return SpecialPowers.spawn(browser, [formValue], async function (newValue) {
     content.document.getElementById("txt").setUserInput(newValue);
   });
 }

@@ -106,7 +106,7 @@ async function testNoIconsParsing(manifest) {
 }
 
 // Test simple icon set parsing
-add_task(async function() {
+add_task(async function () {
   await promiseStartupManager();
   await testSimpleIconsetParsing({
     name: "Web Extension Name",
@@ -146,7 +146,7 @@ add_task(async function() {
 });
 
 // Test AddonManager.getPreferredIconURL for retina screen sizes
-add_task(async function() {
+add_task(async function () {
   await testRetinaIconsetParsing({
     name: "Web Extension Name",
     version: "1.0",
@@ -186,7 +186,7 @@ add_task(async function() {
 });
 
 // Handles no icons gracefully
-add_task(async function() {
+add_task(async function () {
   await testNoIconsParsing({
     name: "Web Extension Name",
     version: "1.0",

@@ -1,4 +1,4 @@
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.InstallTrigger.enabled", true],
@@ -35,10 +35,10 @@ add_task(async function test() {
   }
 
   let URI = TESTROOT + "installtrigger.html?manualStartInstall" + triggers;
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URI }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URI }, async function (
     browser
   ) {
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let installTriggered = ContentTaskUtils.waitForEvent(
         docShell.chromeEventHandler,
         "InstallTriggered",

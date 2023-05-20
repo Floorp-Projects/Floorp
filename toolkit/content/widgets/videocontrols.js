@@ -2312,7 +2312,7 @@ this.VideoControlsImplWidget = class {
           }
           let val = obj[prop];
           if (typeof val == "function") {
-            return function() {
+            return function () {
               return val.apply(obj, arguments);
             };
           }

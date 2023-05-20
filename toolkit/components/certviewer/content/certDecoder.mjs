@@ -1254,10 +1254,7 @@ const hash = async (algo, buffer) => {
 
 const hashify = rawHash => {
   if (typeof rawHash === "string") {
-    return rawHash
-      .match(/.{2}/g)
-      .join(":")
-      .toUpperCase();
+    return rawHash.match(/.{2}/g).join(":").toUpperCase();
   }
   if (rawHash instanceof ArrayBuffer) {
     return arrayBufferToHex(rawHash);

@@ -29,7 +29,7 @@ function ok(test, message) {
  */
 function makeHandler(nameTemplate, eventName, expectedState, prefix, custom) {
   prefix += ": ";
-  return function(e) {
+  return function (e) {
     var name = nameTemplate.replace(/%1/, eventName);
     ok(e.constructor == Event, prefix + "event should be an Event");
     ok(e.type == eventName, prefix + "event type should be " + eventName);
@@ -77,7 +77,7 @@ for (var event of ["online", "offline"]) {
   );
 }
 
-onmessage = function(e) {
+onmessage = function (e) {
   if (e.data.type === "lastTest") {
     lastTest = true;
   } else if (e.data.type === "navigatorState") {

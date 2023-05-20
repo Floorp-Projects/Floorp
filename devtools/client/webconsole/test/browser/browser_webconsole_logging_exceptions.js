@@ -13,7 +13,7 @@ const TEST_URI =
   console.error("Foo", domExceptionOnLine2);
 </script>`);
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Wait for the error to be logged");

@@ -80,7 +80,7 @@ function fakePingId(type, number) {
   return id;
 }
 
-var checkPingsSaved = async function(pingIds) {
+var checkPingsSaved = async function (pingIds) {
   let allFound = true;
   for (let id of pingIds) {
     const path = PathUtils.join(TelemetryStorage.pingDirectoryPath, id);
@@ -1031,7 +1031,7 @@ add_task(async function test_pref_observer() {
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
 
   function waitAnnotateCrashReport(expectedValue, trigger) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       let keys = new Set(["TelemetryClientId", "TelemetryServerURL"]);
 
       let crs = {
@@ -1071,7 +1071,7 @@ add_task(async function test_pref_observer() {
         "@mozilla.org/toolkit/crash-reporter;1",
         crs
       );
-      registerCleanupFunction(function() {
+      registerCleanupFunction(function () {
         MockRegistrar.unregister(gMockCrs);
       });
 

@@ -7,7 +7,7 @@ const { SearchTestUtils } = ChromeUtils.importESModule(
 
 SearchTestUtils.init(this);
 
-add_task(async function() {
+add_task(async function () {
   // Our search would be handled by the urlbar normally and not by the docshell,
   // thus we must force going through dns first, so that the urlbar thinks
   // the value may be a url, and asks the docshell to visit it.

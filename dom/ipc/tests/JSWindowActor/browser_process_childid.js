@@ -14,7 +14,7 @@ declTest("test childid", {
     await SpecialPowers.spawn(
       browser,
       [parent.domProcess.childID],
-      async function(parentChildID) {
+      async function (parentChildID) {
         ok(
           ChromeUtils.domProcessChild.childID,
           "child process.childID should have a value."

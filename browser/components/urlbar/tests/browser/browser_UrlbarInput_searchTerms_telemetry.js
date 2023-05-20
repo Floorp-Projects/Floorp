@@ -21,7 +21,7 @@ const SEARCH_STRING = "chocolate cake";
 const PERSISTED_VIEWED = "urlbar.persistedsearchterms.view_count";
 const PERSISTED_REVERTED = "urlbar.persistedsearchterms.revert_by_popup_count";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.showSearchTerms.featureGate", true]],
   });
@@ -36,7 +36,7 @@ add_setup(async function() {
   defaultTestEngine = Services.search.getEngineByName("MozSearch");
   Services.telemetry.clearScalars();
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     Services.telemetry.clearScalars();
   });
@@ -155,7 +155,7 @@ add_task(async function history_api() {
   TelemetryTestUtils.assertScalar(scalars, PERSISTED_VIEWED, 1);
   TelemetryTestUtils.assertScalar(scalars, PERSISTED_REVERTED, undefined);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     let url = new URL(content.window.location);
     let someState = { value: true };
     url.searchParams.set("pc", "fake_code_2");

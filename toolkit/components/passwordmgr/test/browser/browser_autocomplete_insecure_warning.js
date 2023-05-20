@@ -15,7 +15,7 @@ add_task(async function test_clickInsecureFieldWarning() {
       gBrowser,
       url,
     },
-    async function(browser) {
+    async function (browser) {
       let popup = document.getElementById("PopupAutoComplete");
       Assert.ok(popup, "Got popup");
       await openACPopup(popup, browser, "#form-basic-username");

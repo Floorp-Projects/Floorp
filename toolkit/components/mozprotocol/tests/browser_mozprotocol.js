@@ -1,5 +1,5 @@
 // Check that entering moz://a into the address bar directs us to a new url
-add_task(async function() {
+add_task(async function () {
   let path = getRootDirectory(gTestPath).substring(
     "chrome://mochitests/content/".length
   );
@@ -12,7 +12,7 @@ add_task(async function() {
     ],
   });
 
-  await BrowserTestUtils.withNewTab("about:blank", async function() {
+  await BrowserTestUtils.withNewTab("about:blank", async function () {
     BrowserTestUtils.loadURIString(gBrowser, "moz://a");
     await BrowserTestUtils.waitForLocationChange(
       gBrowser,

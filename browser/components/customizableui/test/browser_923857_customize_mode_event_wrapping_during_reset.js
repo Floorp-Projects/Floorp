@@ -5,7 +5,7 @@
 "use strict";
 
 // Customize mode reset button should revert correctly
-add_task(async function() {
+add_task(async function () {
   await startCustomizing();
   let devButton = document.getElementById("developer-button");
   let fxaButton = document.getElementById("fxa-toolbar-menu-button");

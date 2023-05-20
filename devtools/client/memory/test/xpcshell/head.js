@@ -30,7 +30,7 @@ var SYSTEM_PRINCIPAL = Cc["@mozilla.org/systemprincipal;1"].createInstance(
 
 var EXPECTED_DTU_ASSERT_FAILURE_COUNT = 0;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   equal(
     DevToolsUtils.assertionFailureCount,
     EXPECTED_DTU_ASSERT_FAILURE_COUNT,
@@ -53,17 +53,17 @@ function StubbedMemoryFront() {
   this.dbg = initDebugger();
 }
 
-StubbedMemoryFront.prototype.attach = async function() {
+StubbedMemoryFront.prototype.attach = async function () {
   this.state = "attached";
 };
 
-StubbedMemoryFront.prototype.detach = async function() {
+StubbedMemoryFront.prototype.detach = async function () {
   this.state = "detached";
 };
 
 StubbedMemoryFront.prototype.saveHeapSnapshot = expectState(
   "attached",
-  async function() {
+  async function () {
     return ChromeUtils.saveHeapSnapshot({ runtime: true });
   },
   "saveHeapSnapshot"
@@ -71,12 +71,12 @@ StubbedMemoryFront.prototype.saveHeapSnapshot = expectState(
 
 StubbedMemoryFront.prototype.startRecordingAllocations = expectState(
   "attached",
-  async function() {}
+  async function () {}
 );
 
 StubbedMemoryFront.prototype.stopRecordingAllocations = expectState(
   "attached",
-  async function() {}
+  async function () {}
 );
 
 function waitUntilSnapshotState(store, expected) {

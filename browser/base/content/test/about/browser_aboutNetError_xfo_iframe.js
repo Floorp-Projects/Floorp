@@ -16,7 +16,7 @@ add_task(async function test_xfo_iframe() {
   let xfoBrowser = gBrowser.selectedTab.linkedBrowser;
 
   // The blocked page opened in a new window/tab
-  await SpecialPowers.spawn(xfoBrowser, [BLOCKED_PAGE], async function(
+  await SpecialPowers.spawn(xfoBrowser, [BLOCKED_PAGE], async function (
     xfoBlockedPage
   ) {
     let cookieHeader = content.document.getElementById("strictCookie");
@@ -78,7 +78,7 @@ async function setupPage(htmlPageName, blockedPage) {
   await browserLoaded;
   info("The error page has loaded!");
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let iframe = content.document.getElementById("theIframe");
 
     await ContentTaskUtils.waitForCondition(() =>
@@ -93,7 +93,7 @@ async function setupPage(htmlPageName, blockedPage) {
 
   // In the iframe, we see the correct error page and click on the button
   // to open the blocked page in a new window/tab
-  await SpecialPowers.spawn(frameContext, [], async function() {
+  await SpecialPowers.spawn(frameContext, [], async function () {
     let doc = content.document;
     let textLongDescription = doc.getElementById("errorLongDesc").textContent;
     let learnMoreLinkLocation = doc.getElementById("learnMoreLink").href;

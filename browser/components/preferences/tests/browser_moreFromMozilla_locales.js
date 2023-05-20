@@ -53,7 +53,7 @@ let mockFxA, unmockFxA;
 // tests override it to a dummy address, so we need to make the dummy address
 // appear like it's the default (using the actual default instance might cause a
 // remote connection, crashing the test harness).
-add_setup(async function() {
+add_setup(async function () {
   let { mock, unmock } = await mockDefaultFxAInstance();
   mockFxA = mock;
   unmockFxA = unmock;

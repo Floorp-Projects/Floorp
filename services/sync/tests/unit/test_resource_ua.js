@@ -21,7 +21,7 @@ var server;
 var expectedUA;
 var ua;
 function uaHandler(f) {
-  return function(request, response) {
+  return function (request, response) {
     ua = request.getHeader("User-Agent");
     return f(request, response);
   };

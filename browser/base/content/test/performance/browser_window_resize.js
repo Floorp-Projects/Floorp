@@ -66,7 +66,7 @@ async function resizeWindow(win, width, height) {
  * This test ensures that there are no unexpected
  * uninterruptible reflows when resizing windows.
  */
-add_task(async function() {
+add_task(async function () {
   const BOOKMARKS_COUNT = 150;
   const STARTING_WIDTH = 600;
   const STARTING_HEIGHT = 400;
@@ -120,7 +120,7 @@ add_task(async function() {
   await resizeWindow(win, STARTING_WIDTH, STARTING_HEIGHT);
 
   await withPerfObserver(
-    async function() {
+    async function () {
       await resizeWindow(win, SMALL_WIDTH, SMALL_HEIGHT);
       await resizeWindow(win, STARTING_WIDTH, STARTING_HEIGHT);
     },

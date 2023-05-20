@@ -37,7 +37,7 @@ add_task(async function test_referrer() {
   );
   await waitForLoad(DUMMY1);
 
-  await SpecialPowers.spawn(browser, [[DUMMY1, DUMMY2]], function([
+  await SpecialPowers.spawn(browser, [[DUMMY1, DUMMY2]], function ([
     dummy1,
     dummy2,
   ]) {
@@ -70,7 +70,7 @@ add_task(async function test_referrer() {
 add_task(async function test_history() {
   async function checkHistoryIndex(browser, n) {
     if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-      return SpecialPowers.spawn(browser, [n], function(n) {
+      return SpecialPowers.spawn(browser, [n], function (n) {
         let history =
           docShell.browsingContext.childSessionHistory.legacySHistory;
 
@@ -93,7 +93,7 @@ add_task(async function test_history() {
   await waitForLoad(DUMMY2);
 
   if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-    await SpecialPowers.spawn(browser, [[DUMMY1, DUMMY2]], function([
+    await SpecialPowers.spawn(browser, [[DUMMY1, DUMMY2]], function ([
       dummy1,
       dummy2,
     ]) {
@@ -139,7 +139,7 @@ add_task(async function test_history() {
 add_task(async function test_flags() {
   async function checkHistory(browser, { count, index }) {
     if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-      return SpecialPowers.spawn(browser, [[DUMMY2, count, index]], function([
+      return SpecialPowers.spawn(browser, [[DUMMY2, count, index]], function ([
         dummy2,
         count,
         index,

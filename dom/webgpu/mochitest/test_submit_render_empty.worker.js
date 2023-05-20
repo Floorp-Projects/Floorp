@@ -1,4 +1,4 @@
-self.addEventListener("message", async function(event) {
+self.addEventListener("message", async function (event) {
   try {
     const adapter = await navigator.gpu.requestAdapter();
     const device = await adapter.requestDevice();

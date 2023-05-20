@@ -192,7 +192,7 @@ FxAccountsWebChannel.prototype = {
     const { command, data } = message;
     let shouldCheckRemoteType =
       lazy.separatePrivilegedMozillaWebContentProcess &&
-      lazy.separatedMozillaDomains.some(function(val) {
+      lazy.separatedMozillaDomains.some(function (val) {
         return (
           lazy.accountServer.asciiHost == val ||
           lazy.accountServer.asciiHost.endsWith("." + val)

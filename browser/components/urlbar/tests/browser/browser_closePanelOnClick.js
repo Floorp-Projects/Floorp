@@ -8,7 +8,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab("about:robots", async () => {
     for (let elt of [
       gBrowser.selectedBrowser,

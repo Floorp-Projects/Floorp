@@ -6,7 +6,7 @@
 
 const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openFontInspectorForURL(TEST_URI);
   startTelemetry();
   await selectNode(".normal-text", inspector);

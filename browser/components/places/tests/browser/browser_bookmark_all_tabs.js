@@ -4,7 +4,7 @@
  */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const BASE_URL =
     "http://example.org/browser/browser/components/places/tests/browser/";
   const TEST_PAGES = [
@@ -38,7 +38,7 @@ add_task(async function() {
     "Correct titles are returned"
   );
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     for (let tab of tabs) {
       BrowserTestUtils.removeTab(tab);
     }

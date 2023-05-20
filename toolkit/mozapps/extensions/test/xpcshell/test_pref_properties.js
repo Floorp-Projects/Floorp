@@ -12,8 +12,8 @@ var gManagerEventsListener = {
       "onCheckUpdateSecurityChanged",
       "onUpdateModeChanged",
     ];
-    events.forEach(function(aEvent) {
-      this[aEvent] = function() {
+    events.forEach(function (aEvent) {
+      this[aEvent] = function () {
         info("Saw event " + aEvent);
         this.seenEvents.push(aEvent);
       };
@@ -33,7 +33,7 @@ var gManagerEventsListener = {
     while (this.expectedEvents.length) {
       let event = this.expectedEvents.pop();
       info("Looking for expected event " + event);
-      let matchingEvents = this.seenEvents.filter(function(aSeenEvent) {
+      let matchingEvents = this.seenEvents.filter(function (aSeenEvent) {
         return aSeenEvent == event;
       });
       Assert.equal(matchingEvents.length, 1);

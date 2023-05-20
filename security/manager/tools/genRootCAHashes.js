@@ -140,7 +140,7 @@ function writeRootHashes(fos) {
 
     // Output the sorted gTrustAnchors
     writeString(fos, FP_PREAMBLE);
-    gTrustAnchors.roots.forEach(function(fp) {
+    gTrustAnchors.roots.forEach(function (fp) {
       let fpBytes = atob(fp.sha256Fingerprint);
 
       writeString(fos, "  {\n");
@@ -252,7 +252,7 @@ writeTrustAnchors(trustAnchorsFile);
 
 // Sort all trust anchors before writing, as AccumulateRootCA.cpp
 // will perform binary searches
-gTrustAnchors.roots.sort(function(a, b) {
+gTrustAnchors.roots.sort(function (a, b) {
   // We need to work from the binary values, not the base64 values.
   let aBin = atob(a.sha256Fingerprint);
   let bBin = atob(b.sha256Fingerprint);

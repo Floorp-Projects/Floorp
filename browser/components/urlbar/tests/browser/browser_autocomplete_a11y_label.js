@@ -78,7 +78,7 @@ function forceGC() {
   SpecialPowers.forceCC();
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await initAccessibilityService();
 });
 
@@ -124,7 +124,7 @@ add_task(async function searchSuggestions() {
   Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
   let suggestionsEnabled = Services.prefs.getBoolPref(SUGGEST_URLBAR_PREF);
   Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref(SUGGEST_ALL_PREF);
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
   });

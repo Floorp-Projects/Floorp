@@ -13,7 +13,7 @@ const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for " +
   "bug 804845 and bug 619598";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   ok(!getInputValue(hud), "input is empty");

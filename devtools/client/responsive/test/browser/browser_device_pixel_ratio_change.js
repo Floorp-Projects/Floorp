@@ -27,7 +27,7 @@ addDeviceForTest(testDevice);
 
 addRDMTask(
   TEST_URL,
-  async function({ ui, manager }) {
+  async function ({ ui, manager }) {
     await waitStartup(ui);
 
     await testDefaults(ui);

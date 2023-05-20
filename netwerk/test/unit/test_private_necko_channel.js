@@ -44,9 +44,9 @@ function serverHandler(metadata, response) {
 }
 
 function checkRequest(request, data, context) {
-  get_device_entry_count("disk", null, function(count) {
+  get_device_entry_count("disk", null, function (count) {
     Assert.equal(count, 0);
-    get_device_entry_count("disk", Services.loadContextInfo.private, function(
+    get_device_entry_count("disk", Services.loadContextInfo.private, function (
       count
     ) {
       Assert.equal(count, 1);

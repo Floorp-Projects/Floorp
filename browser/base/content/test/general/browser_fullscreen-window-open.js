@@ -31,7 +31,7 @@ async function test() {
   runNextTest();
 }
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   // Exit browser fullscreen mode.
   newWin.BrowserFullScreen();
 
@@ -203,7 +203,7 @@ function waitForTabOpen(aOptions) {
     newBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
 
     let tab = aEvent.target;
-    whenTabLoaded(tab, function() {
+    whenTabLoaded(tab, function () {
       is(
         tab.linkedBrowser.contentTitle,
         message.title,
@@ -220,7 +220,7 @@ function waitForTabOpen(aOptions) {
   };
   newBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
 
-  let finalize = function() {
+  let finalize = function () {
     aOptions.finalizeFn();
     info("Finished: " + message.title);
     runNextTest();
@@ -251,7 +251,7 @@ function waitForWindowOpen(aOptions) {
 
   info("Running test: " + message.title);
 
-  let onFinalize = function() {
+  let onFinalize = function () {
     aOptions.finalizeFn();
 
     info("Finished: " + message.title);
@@ -279,7 +279,7 @@ function executeWindowOpenInContent(aParam) {
   SpecialPowers.spawn(
     newBrowser.selectedBrowser,
     [JSON.stringify(aParam)],
-    async function(dataTestParam) {
+    async function (dataTestParam) {
       let testElm = content.document.getElementById("test");
       testElm.setAttribute("data-test-param", dataTestParam);
       testElm.click();
@@ -300,7 +300,7 @@ function waitForWindowOpenFromChrome(aOptions) {
 
   info("Running test: " + message.title);
 
-  let onFinalize = function() {
+  let onFinalize = function () {
     aOptions.finalizeFn();
 
     info("Finished: " + message.title);

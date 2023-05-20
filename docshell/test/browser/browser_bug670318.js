@@ -14,9 +14,9 @@ const URL =
 add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-        await ContentTask.spawn(browser, URL, async function(URL) {
+        await ContentTask.spawn(browser, URL, async function (URL) {
           let history = docShell.QueryInterface(Ci.nsIWebNavigation)
             .sessionHistory;
           let count = 0;

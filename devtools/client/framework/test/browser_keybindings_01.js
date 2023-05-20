@@ -52,7 +52,7 @@ function setupKeyBindingsTest() {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URL);
   await new Promise(done => waitForFocus(done));
 

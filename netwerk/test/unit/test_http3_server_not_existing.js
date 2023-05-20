@@ -74,7 +74,7 @@ add_task(async function test_fatal_stream_error() {
   } while (result < 5);
 });
 
-let CheckOnlyHttp2Listener = function() {};
+let CheckOnlyHttp2Listener = function () {};
 
 CheckOnlyHttp2Listener.prototype = {
   onStartRequest: function testOnStartRequest(request) {},

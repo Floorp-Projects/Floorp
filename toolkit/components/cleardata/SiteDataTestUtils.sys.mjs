@@ -53,11 +53,11 @@ export var SiteDataTestUtils = {
         origin
       );
       let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
-      request.onupgradeneeded = function(e) {
+      request.onupgradeneeded = function (e) {
         let db = e.target.result;
         db.createObjectStore("TestStore");
       };
-      request.onsuccess = function(e) {
+      request.onsuccess = function (e) {
         let db = e.target.result;
         let tx = db.transaction("TestStore", "readwrite");
         let store = tx.objectStore("TestStore");
@@ -178,7 +178,7 @@ export var SiteDataTestUtils = {
   addServiceWorker(path) {
     let uri = Services.io.newURI(path);
     // Register a dummy ServiceWorker.
-    return BrowserTestUtils.withNewTab(uri.prePath, async function(browser) {
+    return BrowserTestUtils.withNewTab(uri.prePath, async function (browser) {
       return browser.ownerGlobal.SpecialPowers.spawn(
         browser,
         [{ path }],
@@ -253,10 +253,10 @@ export var SiteDataTestUtils = {
     return new Promise(resolve => {
       let data = true;
       let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
-      request.onupgradeneeded = function(e) {
+      request.onupgradeneeded = function (e) {
         data = false;
       };
-      request.onsuccess = function(e) {
+      request.onsuccess = function (e) {
         resolve(data);
       };
     });

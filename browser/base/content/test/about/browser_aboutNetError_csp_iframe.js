@@ -16,7 +16,7 @@ add_task(async function test_csp() {
   let cspBrowser = gBrowser.selectedTab.linkedBrowser;
 
   // The blocked page opened in a new window/tab
-  await SpecialPowers.spawn(cspBrowser, [BLOCKED_PAGE], async function(
+  await SpecialPowers.spawn(cspBrowser, [BLOCKED_PAGE], async function (
     cspBlockedPage
   ) {
     let cookieHeader = content.document.getElementById("strictCookie");
@@ -78,7 +78,7 @@ async function setupPage(htmlPageName, blockedPage) {
   await browserLoaded;
   info("The error page has loaded!");
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let iframe = content.document.getElementById("theIframe");
 
     await ContentTaskUtils.waitForCondition(() =>
@@ -94,7 +94,7 @@ async function setupPage(htmlPageName, blockedPage) {
 
   // In the iframe, we see the correct error page and click on the button
   // to open the blocked page in a new window/tab
-  await SpecialPowers.spawn(iframe, [], async function() {
+  await SpecialPowers.spawn(iframe, [], async function () {
     let doc = content.document;
 
     // aboutNetError.mjs is using async localization to format several

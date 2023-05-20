@@ -10,7 +10,7 @@ const {
   DEFAULT_VALUE_SUMMARY_LENGTH,
 } = require("resource://devtools/server/actors/inspector/walker.js");
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Expanding all nodes");

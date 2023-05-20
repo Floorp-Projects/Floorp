@@ -33,7 +33,7 @@ export const allowAllCerts = {};
 /**
  * Disable all security check and allow all certs.
  */
-allowAllCerts.enable = function() {
+allowAllCerts.enable = function () {
   // make it possible to register certificate overrides for domains
   // that use HSTS or HPKP
   lazy.Preferences.set(HSTS_PRELOAD_LIST_PREF, false);
@@ -47,7 +47,7 @@ allowAllCerts.enable = function() {
 /**
  * Enable all security check.
  */
-allowAllCerts.disable = function() {
+allowAllCerts.disable = function () {
   lazy.certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
     false
   );

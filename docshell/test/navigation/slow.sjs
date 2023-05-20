@@ -3,7 +3,7 @@ function handleRequest(request, response) {
 
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.init(
-    function() {
+    function () {
       response.finish();
     },
     5000,

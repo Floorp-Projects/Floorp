@@ -3,8 +3,8 @@ ChromeUtils.defineESModuleGetters(this, {
   TabStateCache: "resource:///modules/sessionstore/TabStateCache.sys.mjs",
 });
 
-add_task(async function() {
-  await BrowserTestUtils.withNewTab("http://example.com", async function(
+add_task(async function () {
+  await BrowserTestUtils.withNewTab("http://example.com", async function (
     aBrowser
   ) {
     let tab = gBrowser.getTabForBrowser(aBrowser);

@@ -57,7 +57,7 @@ const ChannelEventSinkFactory = ComponentUtils.generateSingletonFactory(
   ChannelEventSink
 );
 
-ChannelEventSinkFactory.register = function() {
+ChannelEventSinkFactory.register = function () {
   const registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   if (registrar.isCIDRegistered(SINK_CLASS_ID)) {
     return;
@@ -79,7 +79,7 @@ ChannelEventSinkFactory.register = function() {
   );
 };
 
-ChannelEventSinkFactory.unregister = function() {
+ChannelEventSinkFactory.unregister = function () {
   const registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.unregisterFactory(SINK_CLASS_ID, ChannelEventSinkFactory);
 
@@ -90,7 +90,7 @@ ChannelEventSinkFactory.unregister = function() {
   );
 };
 
-ChannelEventSinkFactory.getService = function() {
+ChannelEventSinkFactory.getService = function () {
   // Make sure the ChannelEventSink service is registered before accessing it
   ChannelEventSinkFactory.register();
 

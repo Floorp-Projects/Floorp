@@ -3,7 +3,7 @@
 function run_test() {
   var ios = Services.io;
 
-  var test_port = function(port, exception_expected) {
+  var test_port = function (port, exception_expected) {
     dump((port || "no port provided") + "\n");
     var exception_threw = false;
     try {

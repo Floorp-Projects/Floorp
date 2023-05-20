@@ -37,7 +37,7 @@ function run_test() {
 }
 
 if (!this.runTest) {
-  this.runTest = function() {
+  this.runTest = function () {
     do_get_profile();
 
     enableStorageTesting();
@@ -55,7 +55,7 @@ if (!this.runTest) {
     if (testSteps.constructor.name === "AsyncFunction") {
       // Do run our existing cleanup function that would normally be called by
       // the generator's call to finishTest().
-      registerCleanupFunction(function() {
+      registerCleanupFunction(function () {
         resetStorageTesting();
         resetTesting();
       });
@@ -83,7 +83,7 @@ function finishTest() {
   resetStorageTesting();
   resetTesting();
 
-  executeSoon(function() {
+  executeSoon(function () {
     do_test_finished();
   });
 }
@@ -93,7 +93,7 @@ function grabArgAndContinueHandler(arg) {
 }
 
 function continueToNextStep() {
-  executeSoon(function() {
+  executeSoon(function () {
     testGenerator.next();
   });
 }
@@ -274,7 +274,7 @@ function getUsage(usageHandler, getAll) {
 function getOriginUsage(principal, fromMemory = false) {
   let request = Services.qms.getUsageForPrincipal(
     principal,
-    function() {},
+    function () {},
     fromMemory
   );
 

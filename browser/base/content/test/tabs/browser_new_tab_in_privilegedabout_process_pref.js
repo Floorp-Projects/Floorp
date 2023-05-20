@@ -18,7 +18,7 @@ const ABOUT_WELCOME = "about:welcome";
 // eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const TEST_HTTP = "http://example.org/";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.newtab.preload", false],
@@ -39,7 +39,7 @@ add_setup(async function() {
 add_task(async function activity_stream_in_privileged_content_process() {
   Services.ppmm.releaseCachedProcesses();
 
-  await BrowserTestUtils.withNewTab(ABOUT_NEWTAB, async function(browser1) {
+  await BrowserTestUtils.withNewTab(ABOUT_NEWTAB, async function (browser1) {
     checkBrowserRemoteType(browser1, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE);
 
     // Note the processID for about:newtab for comparison later.
@@ -56,7 +56,7 @@ add_task(async function activity_stream_in_privileged_content_process() {
       `${ABOUT_WELCOME}?q=bar`,
       `${ABOUT_HOME}?q=baz`,
     ]) {
-      await BrowserTestUtils.withNewTab(url, async function(browser2) {
+      await BrowserTestUtils.withNewTab(url, async function (browser2) {
         is(
           browser2.frameLoader.remoteTab.osPid,
           privilegedPid,
@@ -76,7 +76,7 @@ add_task(async function activity_stream_in_privileged_content_process() {
 add_task(async function process_switching_through_loading_in_the_same_tab() {
   Services.ppmm.releaseCachedProcesses();
 
-  await BrowserTestUtils.withNewTab(TEST_HTTP, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_HTTP, async function (browser) {
     checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
 
     for (let [url, remoteType] of [
@@ -118,7 +118,7 @@ add_task(async function process_switching_through_loading_in_the_same_tab() {
 add_task(async function process_switching_through_navigation_features() {
   Services.ppmm.releaseCachedProcesses();
 
-  await BrowserTestUtils.withNewTab(ABOUT_NEWTAB, async function(
+  await BrowserTestUtils.withNewTab(ABOUT_NEWTAB, async function (
     initialBrowser
   ) {
     checkBrowserRemoteType(
@@ -152,7 +152,7 @@ add_task(async function process_switching_through_navigation_features() {
       content.open(uri, "_blank");
     });
     let newTab = await promiseTabOpened;
-    registerCleanupFunction(async function() {
+    registerCleanupFunction(async function () {
       BrowserTestUtils.removeTab(newTab);
     });
     let browser = newTab.linkedBrowser;

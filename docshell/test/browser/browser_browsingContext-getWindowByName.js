@@ -22,7 +22,7 @@ function addWindow(name) {
   return promise;
 }
 
-add_task(async function() {
+add_task(async function () {
   let windows = [await addWindow("first"), await addWindow("second")];
 
   for (let w of windows) {

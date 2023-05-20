@@ -9,7 +9,7 @@ const SOURCES = [
 ];
 
 async function getPreviewText(previewBrowser) {
-  return SpecialPowers.spawn(previewBrowser, [], function() {
+  return SpecialPowers.spawn(previewBrowser, [], function () {
     return content.document.body.textContent;
   });
 }
@@ -25,7 +25,7 @@ add_task(async function print_frame() {
 
     await BrowserTestUtils.withNewTab(
       "data:text/html," + source,
-      async function(browser) {
+      async function (browser) {
         let frameBC = browser.browsingContext.children[0];
         let helper = new PrintHelper(browser);
 

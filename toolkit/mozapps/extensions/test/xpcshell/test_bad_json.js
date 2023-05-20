@@ -5,7 +5,7 @@
 // Tests that we rebuild the database correctly if it contains
 // JSON data that parses correctly but doesn't contain required fields
 
-add_task(async function() {
+add_task(async function () {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   await promiseStartupManager();

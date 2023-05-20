@@ -25,7 +25,7 @@ var perfMetadata = {
 };
 
 var performance = performance || {};
-performance.now = (function() {
+performance.now = (function () {
   return (
     performance.now ||
     performance.mozNow ||
@@ -101,7 +101,7 @@ function makeChan(uri) {
   return chan;
 }
 
-let Http3CheckListener = function() {};
+let Http3CheckListener = function () {};
 
 Http3CheckListener.prototype = {
   onDataAvailableFired: false,
@@ -138,7 +138,7 @@ Http3CheckListener.prototype = {
   },
 };
 
-let WaitForHttp3Listener = function() {};
+let WaitForHttp3Listener = function () {};
 
 WaitForHttp3Listener.prototype = new Http3CheckListener();
 
@@ -195,7 +195,7 @@ function test_https_alt_svc() {
   doTest(httpsOrigin + "http3-test", h3Route, h3AltSvc);
 }
 
-let PerfHttp3Listener = function() {};
+let PerfHttp3Listener = function () {};
 
 PerfHttp3Listener.prototype = new Http3CheckListener();
 PerfHttp3Listener.prototype.amount = 0;

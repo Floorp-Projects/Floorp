@@ -92,12 +92,8 @@ export default class MozButtonGroup extends MozLitElement {
 
   render() {
     let slots = [
-      html`
-        <slot @slotchange=${this.onSlotchange}></slot>
-      `,
-      html`
-        <slot name="primary"></slot>
-      `,
+      html` <slot @slotchange=${this.onSlotchange}></slot> `,
+      html` <slot name="primary"></slot> `,
     ];
     if (this.platform == PLATFORM_WINDOWS) {
       slots = [slots[1], slots[0]];

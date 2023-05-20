@@ -28,7 +28,7 @@ add_task(async function checkWrongSystemTimeWarning() {
     info("Loading and waiting for the cert error");
     await certErrorLoaded;
 
-    return SpecialPowers.spawn(browser, [], async function() {
+    return SpecialPowers.spawn(browser, [], async function () {
       let doc = content.document;
       let div = doc.getElementById("errorShortDesc");
       let learnMoreLink = doc.getElementById("learnMoreLink");
@@ -115,7 +115,7 @@ add_task(async function checkCertError() {
     info("Loading and waiting for the cert error");
     await certErrorLoaded;
 
-    return SpecialPowers.spawn(browser, [], async function() {
+    return SpecialPowers.spawn(browser, [], async function () {
       let doc = content.document;
       let el = doc.getElementById("errorWhatToDoText");
       await ContentTaskUtils.waitForCondition(() => el.textContent);

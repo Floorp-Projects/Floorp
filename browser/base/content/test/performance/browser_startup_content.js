@@ -109,7 +109,7 @@ const forbiddenScripts = {
   ]),
 };
 
-add_task(async function() {
+add_task(async function () {
   SimpleTest.requestCompleteLog();
 
   let tab = await BrowserTestUtils.openNewForegroundTab({
@@ -128,7 +128,7 @@ add_task(async function() {
   // Load a custom frame script to avoid using ContentTask which loads Task.jsm
   mm.loadFrameScript(
     "data:text/javascript,(" +
-      function() {
+      function () {
         /* eslint-env mozilla/frame-script */
         const Cm = Components.manager;
         Cm.QueryInterface(Ci.nsIServiceManager);

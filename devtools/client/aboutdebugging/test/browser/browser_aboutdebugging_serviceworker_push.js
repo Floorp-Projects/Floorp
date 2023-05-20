@@ -14,7 +14,7 @@ const TAB_URL = URL_ROOT_SSL + "resources/service-workers/push-sw.html";
 
 // Test that clicking on the Push button next to a Service Worker works as intended.
 // It should trigger a "push" notification in the worker.
-add_task(async function() {
+add_task(async function () {
   await enableServiceWorkerDebugging();
   const { document, tab, window } = await openAboutDebugging({
     enableWorkerUpdates: true,

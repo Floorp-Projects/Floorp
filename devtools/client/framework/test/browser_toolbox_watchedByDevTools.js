@@ -13,7 +13,7 @@ const EXAMPLE_COM_URI =
 const EXAMPLE_ORG_URI =
   "https://example.org/document-builder.sjs?headers=Cross-Origin-Opener-Policy:same-origin&html=<div id=org>org</div>";
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(EXAMPLE_HTTP_URI);
 
   is(

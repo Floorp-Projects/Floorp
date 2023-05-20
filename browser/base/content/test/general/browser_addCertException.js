@@ -9,7 +9,7 @@
 // using the button contained therein to load the certificate exception
 // dialog, using that to add an exception, and finally successfully visiting
 // the site, including showing the right identity box and control center icons.
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await loadBadCertPage("https://expired.example.com");
 

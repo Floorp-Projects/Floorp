@@ -42,7 +42,7 @@ async function installSystemAddons(xml, waitIDs = []) {
 
   await serveSystemUpdate(
     xml,
-    async function() {
+    async function () {
       let { XPIProvider } = ChromeUtils.import(
         "resource://gre/modules/addons/XPIProvider.jsm"
       );
@@ -62,7 +62,7 @@ async function updateAllSystemAddons(xml) {
 
   await serveSystemUpdate(
     xml,
-    function() {
+    function () {
       return new Promise(resolve => {
         Services.obs.addObserver(function observer() {
           Services.obs.removeObserver(

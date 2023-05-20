@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info("Get a file without extension");
   let noExtFile = getTempFile("test_bug_1661365");
   Assert.ok(!noExtFile.leafName.includes("."), "Sanity check the filename");
@@ -17,7 +17,7 @@ add_task(async function() {
     noExtFile.leafName + ".exe",
     "Sanity check the file names."
   );
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await IOUtils.remove(noExtFile.path, { ignoreAbsent: true });
     await IOUtils.remove(exeFile.path, { ignoreAbsent: true });
   });

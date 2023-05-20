@@ -340,7 +340,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
 
   return new Promise(resolve => {
     Downloads.getList(Downloads.ALL)
-      .then(function(aList) {
+      .then(function (aList) {
         // Temporarily register a view that will get notified when the download we
         // are controlling becomes visible in the list of downloads.
         aList
@@ -423,7 +423,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 
   return new Promise(resolve => {
     Downloads.getList(Downloads.PUBLIC)
-      .then(function(aList) {
+      .then(function (aList) {
         // Temporarily register a view that will get notified when the download we
         // are controlling becomes visible in the list of downloads.
         aList
@@ -496,7 +496,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 function promiseDownloadMidway(aDownload) {
   return new Promise(resolve => {
     // Wait for the download to reach half of its progress.
-    let onchange = function() {
+    let onchange = function () {
       if (
         !aDownload.stopped &&
         !aDownload.canceled &&
@@ -527,7 +527,7 @@ function promiseDownloadMidway(aDownload) {
 function promiseDownloadStarted(aDownload) {
   return new Promise(resolve => {
     // Wait for the download to transfer some amount of bytes.
-    let onchange = function() {
+    let onchange = function () {
       if (
         !aDownload.stopped &&
         !aDownload.canceled &&
@@ -558,7 +558,7 @@ function promiseDownloadStarted(aDownload) {
 function promiseDownloadFinished(aDownload) {
   return new Promise(resolve => {
     // Wait for the download to finish.
-    let onchange = function() {
+    let onchange = function () {
       if (aDownload.succeeded || aDownload.error) {
         aDownload.onchange = null;
         resolve();
@@ -644,7 +644,7 @@ async function promiseVerifyContents(aPath, aExpectedContents) {
   await new Promise(resolve => {
     NetUtil.asyncFetch(
       { uri: NetUtil.newURI(file), loadUsingSystemPrincipal: true },
-      function(aInputStream, aStatus) {
+      function (aInputStream, aStatus) {
         Assert.ok(Components.isSuccessCode(aStatus));
         let contents = NetUtil.readInputStreamToString(
           aInputStream,
@@ -889,7 +889,7 @@ function continueResponses() {
  *        the server, when the continueResponses function is called.
  */
 function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn) {
-  gHttpServer.registerPathHandler(aPath, function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler(aPath, function (aRequest, aResponse) {
     info("Interruptible request started.");
 
     // Process the first part of the response.
@@ -984,7 +984,7 @@ add_setup(function test_common_initialize() {
     gHttpServer.identity.primaryPort
   );
   Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("network.dns.localDomains");
   });
 
@@ -992,7 +992,7 @@ add_setup(function test_common_initialize() {
   // this may block tests that use the interruptible handlers.
   Services.prefs.setBoolPref("browser.cache.disk.enable", false);
   Services.prefs.setBoolPref("browser.cache.memory.enable", false);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.cache.disk.enable");
     Services.prefs.clearUserPref("browser.cache.memory.enable");
   });
@@ -1002,7 +1002,7 @@ add_setup(function test_common_initialize() {
     "network.http.referer.disallowCrossSiteRelaxingDefault",
     false
   );
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref(
       "network.http.referer.disallowCrossSiteRelaxingDefault"
     );
@@ -1108,7 +1108,7 @@ add_setup(function test_common_initialize() {
 
   gHttpServer.registerPathHandler(
     "/shorter-than-content-length-http-1-1.txt",
-    function(aRequest, aResponse) {
+    function (aRequest, aResponse) {
       aResponse.processAsync();
       aResponse.setStatusLine("1.1", 200, "OK");
       aResponse.setHeader("Content-Type", "text/plain", false);
@@ -1122,14 +1122,14 @@ add_setup(function test_common_initialize() {
     }
   );
 
-  gHttpServer.registerPathHandler("/busy.txt", function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler("/busy.txt", function (aRequest, aResponse) {
     aResponse.setStatusLine("1.1", 504, "Gateway Timeout");
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.setHeader("Content-Length", "" + TEST_DATA_SHORT.length, false);
     aResponse.write(TEST_DATA_SHORT);
   });
 
-  gHttpServer.registerPathHandler("/redirect", function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler("/redirect", function (aRequest, aResponse) {
     aResponse.setStatusLine("1.1", 301, "Moved Permanently");
     aResponse.setHeader("Location", httpUrl("busy.txt"), false);
     aResponse.setHeader("Content-Type", "text/javascript", false);
@@ -1137,7 +1137,7 @@ add_setup(function test_common_initialize() {
   });
 
   // This URL will emulate being blocked by Windows Parental controls
-  gHttpServer.registerPathHandler("/parentalblocked.zip", function(
+  gHttpServer.registerPathHandler("/parentalblocked.zip", function (
     aRequest,
     aResponse
   ) {
@@ -1149,7 +1149,7 @@ add_setup(function test_common_initialize() {
   });
 
   // This URL sends some data followed by an RST packet
-  gHttpServer.registerPathHandler("/netreset.txt", function(
+  gHttpServer.registerPathHandler("/netreset.txt", function (
     aRequest,
     aResponse
   ) {

@@ -9,7 +9,7 @@ const URL =
 
 let tab1, tab2, modifiedPref;
 
-add_task(async function() {
+add_task(async function () {
   tab1 = await openToolboxOptionsInNewTab();
   tab2 = await openToolboxOptionsInNewTab();
 

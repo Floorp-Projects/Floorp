@@ -8,7 +8,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let tab1 = BrowserTestUtils.addTab(gBrowser);
   let tab2 = BrowserTestUtils.addTab(gBrowser);
 

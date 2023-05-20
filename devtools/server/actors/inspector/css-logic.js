@@ -165,7 +165,7 @@ class CssLogic {
     let ruleCount = 0;
 
     // Update the CssSheet objects.
-    this.forEachSheet(function(sheet) {
+    this.forEachSheet(function (sheet) {
       if (sheet.authorSheet && sheet.sheetAllowed) {
         ruleCount += sheet.ruleCount;
       }
@@ -280,7 +280,7 @@ class CssLogic {
     }
 
     const sheets = [];
-    this.forEachSheet(function(sheet) {
+    this.forEachSheet(function (sheet) {
       if (sheet.authorSheet) {
         sheets.push(sheet);
       }
@@ -419,7 +419,7 @@ class CssLogic {
     if (this._matchedSelectors) {
       if (callback) {
         this._passId++;
-        this._matchedSelectors.forEach(function(value) {
+        this._matchedSelectors.forEach(function (value) {
           callback.call(scope, value[0], value[1]);
           value[0].cssRule._passId = this._passId;
         }, this);
@@ -437,7 +437,7 @@ class CssLogic {
     for (const matchedRule of this._matchedRules) {
       const [rule, status, distance] = matchedRule;
 
-      rule.selectors.forEach(function(selector) {
+      rule.selectors.forEach(function (selector) {
         if (
           selector._matchId !== this._matchId &&
           (selector.inlineStyle ||
@@ -497,7 +497,7 @@ class CssLogic {
 
     const result = {};
 
-    this._matchedRules.some(function(value) {
+    this._matchedRules.some(function (value) {
       const rule = value[0];
       const status = value[1];
       properties = properties.filter(property => {
@@ -626,7 +626,7 @@ class CssLogic {
  * @param {Element} element the element for which you want the short name.
  * @return {string} the string to be displayed for element.
  */
-CssLogic.getShortName = function(element) {
+CssLogic.getShortName = function (element) {
   if (!element) {
     return "null";
   }
@@ -649,7 +649,7 @@ CssLogic.getShortName = function(element) {
  * @return {Array}
  *         An array of string selectors.
  */
-CssLogic.getSelectors = function(domRule) {
+CssLogic.getSelectors = function (domRule) {
   if (domRule.type !== CSSRule.STYLE_RULE) {
     // Return empty array since InspectorUtils.getSelectorCount() assumes
     // only STYLE_RULE type.
@@ -686,7 +686,7 @@ CssLogic.getBindingElementAndPseudo = getBindingElementAndPseudo;
  * @param {Node}
  * @returns {CSSStyleDeclaration}
  */
-CssLogic.getComputedStyle = function(node) {
+CssLogic.getComputedStyle = function (node) {
   if (
     !node ||
     Cu.isDeadWrapper(node) ||
@@ -718,7 +718,7 @@ CssLogic.getComputedStyle = function(node) {
  * @param {CSSStyleSheet} sheet the DOM object for the style sheet.
  * @return {string} the address of the stylesheet.
  */
-CssLogic.href = function(sheet) {
+CssLogic.href = function (sheet) {
   return sheet.href || sheet.associatedDocument.location;
 };
 
@@ -1290,7 +1290,7 @@ class CssPropertyInfo {
     this._cssLogic.processMatchedSelectors(this._processMatchedSelector, this);
 
     // Sort the selectors by how well they match the given element.
-    this._matchedSelectors.sort(function(selectorInfo1, selectorInfo2) {
+    this._matchedSelectors.sort(function (selectorInfo1, selectorInfo2) {
       return selectorInfo1.compareTo(selectorInfo2);
     });
 
@@ -1338,7 +1338,7 @@ class CssPropertyInfo {
   _refilterSelectors() {
     const passId = ++this._cssLogic._passId;
 
-    const iterator = function(selectorInfo) {
+    const iterator = function (selectorInfo) {
       const cssRule = selectorInfo.selector.cssRule;
       if (cssRule._passId != passId) {
         cssRule._passId = passId;

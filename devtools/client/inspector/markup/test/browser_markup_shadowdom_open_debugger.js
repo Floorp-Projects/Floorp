@@ -43,7 +43,7 @@ const TEST_URL =
   }
 </script>`);
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   // Test with an element to which we attach a shadow.
@@ -75,7 +75,7 @@ async function runTest(inspector, toolbox, selector, contentMethod) {
     "Call the content method that should attach a custom element definition"
   );
   const mutated = waitForMutation(inspector, "customElementDefined");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [{ contentMethod }], function(
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [{ contentMethod }], function (
     args
   ) {
     content.wrappedJSObject[args.contentMethod]();

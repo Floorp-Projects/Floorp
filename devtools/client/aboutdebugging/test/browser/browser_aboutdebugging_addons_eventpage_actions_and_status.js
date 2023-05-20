@@ -5,7 +5,7 @@
 /* import-globals-from helper-addons.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.eventPages.enabled", true]],
   });
@@ -44,7 +44,7 @@ add_task(async function test_eventpage_terminate_and_status_updates() {
         },
       },
       files: {
-        "bgpage.js": function() {
+        "bgpage.js": function () {
           // Emit a dump when the script is loaded to make it easier
           // to investigate intermittents.
           dump(`Background script loaded: ${window.location}\n`);

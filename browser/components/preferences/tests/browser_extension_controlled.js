@@ -90,7 +90,7 @@ function waitForMessageContent(messageId, l10nId, doc) {
 async function openNotificationsPermissionDialog() {
   let dialogOpened = promiseLoadSubDialog(PERMISSIONS_URL);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     let doc = content.document;
     let settingsButton = doc.getElementById("notificationSettingsButton");
     settingsButton.click();

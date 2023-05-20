@@ -35,7 +35,7 @@ async function addBookmark(bookmark) {
     title: bookmark.title,
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
   });
 }
@@ -48,7 +48,7 @@ async function prepareSearchEngine() {
     setAsDefault: true,
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
 
     // Make sure the popup is closed for the next test.

@@ -7,7 +7,7 @@
  * Test that custom request headers are sent even without clicking on the original request (bug 1583397)
  */
 
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(HTTPS_SIMPLE_URL, {
     requestCount: 1,
   });
