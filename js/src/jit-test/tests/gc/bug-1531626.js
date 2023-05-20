@@ -26,7 +26,7 @@ for (let max of testMaxSizesKB) {
 setMinMax(256, 1024);
 
 // Try invalid configurations.
-const badSizesKB = [ 0, 1, 128 * 1024 + 1];
+const badSizesKB = [ 0, 1, 129 * 1024];
 function assertParamOutOfRange(f) {
   assertErrorMessage(f, Object, "Parameter value out of range");
 }
