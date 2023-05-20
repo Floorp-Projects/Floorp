@@ -675,17 +675,7 @@ class GCSchedulingTunables {
   void resetParameter(JSGCParamKey key);
 
  private:
-  void setMinNurseryBytes(size_t value);
-  void setMaxNurseryBytes(size_t value);
-  void setSmallHeapSizeMaxBytes(size_t value);
-  void setLargeHeapSizeMinBytes(size_t value);
-  void setHighFrequencySmallHeapGrowth(double value);
-  void setHighFrequencyLargeHeapGrowth(double value);
-  void setLowFrequencyHeapGrowth(double value);
-  void setHeapGrowthFactor(double value);
-  void setMinEmptyChunkCount(uint32_t value);
-  void setMaxEmptyChunkCount(uint32_t value);
-
+  void maintainInvariantsAfterUpdate(JSGCParamKey updated);
   void checkInvariants();
 
   static bool megabytesToBytes(uint32_t value, size_t* bytesOut);
