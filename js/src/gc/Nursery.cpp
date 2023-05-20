@@ -1760,7 +1760,6 @@ void js::Nursery::maybeResizeNursery(JS::GCOptions options,
                                       tunables().gcMaxNurseryBytes());
 
   MOZ_ASSERT(roundSize(newCapacity) == newCapacity);
-  MOZ_ASSERT(newCapacity >= SystemPageSize());
 
   if (newCapacity > capacity()) {
     growAllocableSpace(newCapacity);
@@ -1893,7 +1892,11 @@ void js::Nursery::clearRecentGrowthData() {
 /* static */
 size_t js::Nursery::roundSize(size_t size) {
   size_t step = size >= ChunkSize ? ChunkSize : SystemPageSize();
-  return Round(size, step);
+  size = Round(size, step);
+
+  MOZ_ASSERT(size >= SystemPageSize());
+
+  return size;
 }
 
 void js::Nursery::growAllocableSpace(size_t newCapacity) {
