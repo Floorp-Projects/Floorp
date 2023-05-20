@@ -98,20 +98,14 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
         return false;
       }
       value = Nursery::roundSize(value);
-      if (value > gcMaxNurseryBytes_) {
-        return false;
-      }
-      gcMinNurseryBytes_ = value;
+      setMinNurseryBytes(value);
       break;
     case JSGC_MAX_NURSERY_BYTES:
       if (value < SystemPageSize() || value >= MaxNurseryBytesParam) {
         return false;
       }
       value = Nursery::roundSize(value);
-      if (value < gcMinNurseryBytes_) {
-        return false;
-      }
-      gcMaxNurseryBytes_ = value;
+      setMaxNurseryBytes(value);
       break;
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
       highFrequencyThreshold_ = TimeDuration::FromMilliseconds(value);
@@ -293,6 +287,20 @@ bool GCSchedulingTunables::kilobytesToBytes(uint32_t value, size_t* bytesOut) {
   return true;
 }
 
+void GCSchedulingTunables::setMinNurseryBytes(size_t value) {
+  gcMinNurseryBytes_ = value;
+  if (gcMaxNurseryBytes_ < gcMinNurseryBytes_) {
+    gcMaxNurseryBytes_ = gcMinNurseryBytes_;
+  }
+}
+
+void GCSchedulingTunables::setMaxNurseryBytes(size_t value) {
+  gcMaxNurseryBytes_ = value;
+  if (gcMinNurseryBytes_ > gcMaxNurseryBytes_) {
+    gcMinNurseryBytes_ = gcMaxNurseryBytes_;
+  }
+}
+
 void GCSchedulingTunables::setSmallHeapSizeMaxBytes(size_t value) {
   smallHeapSizeMaxBytes_ = value;
   if (smallHeapSizeMaxBytes_ >= largeHeapSizeMinBytes_) {
@@ -337,10 +345,10 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
       gcMaxBytes_ = TuningDefaults::GCMaxBytes;
       break;
     case JSGC_MIN_NURSERY_BYTES:
+      setMinNurseryBytes(TuningDefaults::GCMinNurseryBytes);
+      break;
     case JSGC_MAX_NURSERY_BYTES:
-      // Reset these togeather to maintain their min <= max invariant.
-      gcMinNurseryBytes_ = TuningDefaults::GCMinNurseryBytes;
-      gcMaxNurseryBytes_ = JS::DefaultNurseryMaxBytes;
+      setMaxNurseryBytes(JS::DefaultNurseryMaxBytes);
       break;
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
       highFrequencyThreshold_ =

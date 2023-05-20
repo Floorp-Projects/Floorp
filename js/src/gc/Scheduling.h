@@ -675,6 +675,8 @@ class GCSchedulingTunables {
   void resetParameter(JSGCParamKey key);
 
  private:
+  void setMinNurseryBytes(size_t value);
+  void setMaxNurseryBytes(size_t value);
   void setSmallHeapSizeMaxBytes(size_t value);
   void setLargeHeapSizeMinBytes(size_t value);
   void setHighFrequencySmallHeapGrowth(double value);
