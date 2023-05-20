@@ -356,10 +356,10 @@ export class SearchService {
 
   // nsISearchService
   async init() {
-    lazy.logConsole.debug("init");
     if (this.#initStarted) {
       return this.#initObservers.promise;
     }
+    lazy.logConsole.debug("init");
 
     TelemetryStopwatch.start("SEARCH_SERVICE_INIT_MS");
     this.#initStarted = true;
@@ -2623,7 +2623,7 @@ export class SearchService {
     let existingEngine = this.#getEngineByName(newEngine.name);
     if (existingEngine) {
       throw Components.Exception(
-        "An engine with that name already exists!",
+        `An engine called ${newEngine.name} already exists!`,
         Cr.NS_ERROR_FILE_ALREADY_EXISTS
       );
     }
