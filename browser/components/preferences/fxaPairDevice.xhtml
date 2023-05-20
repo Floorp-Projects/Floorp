@@ -8,49 +8,68 @@
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/fxaPairDevice.css" type="text/css"?>
 
-<window id="fxaPairDeviceDialog"
-        type="child"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        onload="gFxaPairDeviceDialog.init();"
-        onunload="gFxaPairDeviceDialog.uninit()"
-        data-l10n-id="fxa-pair-device-dialog-sync2"
-        data-l10n-attrs="style">
-<dialog id="fxaPairDeviceDialog1" buttons="accept">
-  <linkset>
-    <html:link rel="localization" href="branding/brand.ftl"/>
-    <html:link rel="localization" href="browser/preferences/fxaPairDevice.ftl"/>
-    <html:link rel="localization" href="toolkit/branding/accounts.ftl"/>
-  </linkset>
-  <script src="chrome://browser/content/preferences/fxaPairDevice.js"/>
+<window
+  id="fxaPairDeviceDialog"
+  type="child"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  onload="gFxaPairDeviceDialog.init();"
+  onunload="gFxaPairDeviceDialog.uninit()"
+  data-l10n-id="fxa-pair-device-dialog-sync2"
+  data-l10n-attrs="style"
+>
+  <dialog id="fxaPairDeviceDialog1" buttons="accept">
+    <linkset>
+      <html:link rel="localization" href="branding/brand.ftl" />
+      <html:link
+        rel="localization"
+        href="browser/preferences/fxaPairDevice.ftl"
+      />
+      <html:link rel="localization" href="toolkit/branding/accounts.ftl" />
+    </linkset>
+    <script src="chrome://browser/content/preferences/fxaPairDevice.js" />
 
-  <description id="pairTitle" data-l10n-id="fxa-qrcode-pair-title">
-  </description>
-  <vbox id="qrCodeDisplay">
-    <description class="pairHeading" data-l10n-id="fxa-qrcode-pair-step1">
+    <description id="pairTitle" data-l10n-id="fxa-qrcode-pair-title">
     </description>
-    <description class="pairHeading" data-l10n-id="fxa-qrcode-pair-step2-signin">
-      <html:img
-        src="chrome://browser/skin/preferences/ios-menu.svg"
-        data-l10n-name="ios-menu-icon"
-        class="menu-icon"/>
-      <html:img
-        src="chrome://browser/skin/preferences/android-menu.svg"
-        data-l10n-name="android-menu-icon"
-        class="menu-icon"/>
-    </description>
-    <description class="pairHeading" data-l10n-id="fxa-qrcode-pair-step3"></description>
-    <vbox>
-      <vbox align="center" id="qrWrapper" pairing-status="loading">
-        <box id="qrContainer"></box>
-        <box id="qrSpinner"></box>
-        <vbox id="qrError" onclick="gFxaPairDeviceDialog.startPairingFlow();">
-          <image id="refresh-qr" />
-          <label class="qr-error-text" data-l10n-id="fxa-qrcode-error-title"></label>
-          <label class="qr-error-text" data-l10n-id="fxa-qrcode-error-body"></label>
+    <vbox id="qrCodeDisplay">
+      <description class="pairHeading" data-l10n-id="fxa-qrcode-pair-step1">
+      </description>
+      <description
+        class="pairHeading"
+        data-l10n-id="fxa-qrcode-pair-step2-signin"
+      >
+        <html:img
+          src="chrome://browser/skin/preferences/ios-menu.svg"
+          data-l10n-name="ios-menu-icon"
+          class="menu-icon"
+        />
+        <html:img
+          src="chrome://browser/skin/preferences/android-menu.svg"
+          data-l10n-name="android-menu-icon"
+          class="menu-icon"
+        />
+      </description>
+      <description
+        class="pairHeading"
+        data-l10n-id="fxa-qrcode-pair-step3"
+      ></description>
+      <vbox>
+        <vbox align="center" id="qrWrapper" pairing-status="loading">
+          <box id="qrContainer"></box>
+          <box id="qrSpinner"></box>
+          <vbox id="qrError" onclick="gFxaPairDeviceDialog.startPairingFlow();">
+            <image id="refresh-qr" />
+            <label
+              class="qr-error-text"
+              data-l10n-id="fxa-qrcode-error-title"
+            ></label>
+            <label
+              class="qr-error-text"
+              data-l10n-id="fxa-qrcode-error-body"
+            ></label>
+          </vbox>
         </vbox>
       </vbox>
     </vbox>
-  </vbox>
-</dialog>
+  </dialog>
 </window>

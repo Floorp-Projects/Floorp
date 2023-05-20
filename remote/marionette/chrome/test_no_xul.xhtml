@@ -7,25 +7,52 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
-<html id="winTest"
+<html
+  id="winTest"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  xmlns="http://www.w3.org/1999/xhtml">
-
+  xmlns="http://www.w3.org/1999/xhtml"
+>
   <head>
     <title>Title Test</title>
   </head>
 
   <body xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     <vbox id="things">
-      <input xmlns="http://www.w3.org/1999/xhtml" id="textInput" size="6" value="test" label="input" />
-      <input xmlns="http://www.w3.org/1999/xhtml" id="textInput2" size="6" value="test" label="input" />
-      <input xmlns="http://www.w3.org/1999/xhtml" id="textInput3" class="asdf" size="6" value="test" label="input" />
+      <input
+        xmlns="http://www.w3.org/1999/xhtml"
+        id="textInput"
+        size="6"
+        value="test"
+        label="input"
+      />
+      <input
+        xmlns="http://www.w3.org/1999/xhtml"
+        id="textInput2"
+        size="6"
+        value="test"
+        label="input"
+      />
+      <input
+        xmlns="http://www.w3.org/1999/xhtml"
+        id="textInput3"
+        class="asdf"
+        size="6"
+        value="test"
+        label="input"
+      />
       <input type="checkbox" id="testBox" label="box" />
     </vbox>
 
-    <html:iframe id="iframe" name="iframename" src="chrome://remote/content/marionette/test2.xhtml" />
-    <html:iframe id="iframe" name="iframename" src="chrome://remote/content/marionette/test_nested_iframe.xhtml" />
+    <html:iframe
+      id="iframe"
+      name="iframename"
+      src="chrome://remote/content/marionette/test2.xhtml"
+    />
+    <html:iframe
+      id="iframe"
+      name="iframename"
+      src="chrome://remote/content/marionette/test_nested_iframe.xhtml"
+    />
   </body>
-
 </html>

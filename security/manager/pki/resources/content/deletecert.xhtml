@@ -8,24 +8,26 @@
 
 <!DOCTYPE window>
 
-<window data-l10n-id="certmgr-delete-cert2"
+<window
+  data-l10n-id="certmgr-delete-cert2"
   data-l10n-attrs="style"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
-  onload="onLoad();">
-<dialog id="deleteCertificate"
-  buttons="accept,cancel">
+  onload="onLoad();"
+>
+  <dialog id="deleteCertificate" buttons="accept,cancel">
+    <linkset>
+      <html:link
+        rel="localization"
+        href="security/certificates/certManager.ftl"
+      />
+    </linkset>
 
-  <linkset>
-    <html:link rel="localization" href="security/certificates/certManager.ftl"/>
-  </linkset>
+    <script src="pippki.js" />
+    <script src="chrome://pippki/content/deletecert.js" />
 
-  <script src="pippki.js" />
-  <script src="chrome://pippki/content/deletecert.js"/>
-
-  <description id="confirm"/>
-  <richlistbox id="certlist" class="box-padded"/>
-  <description id="impact"/>
-
-</dialog>
+    <description id="confirm" />
+    <richlistbox id="certlist" class="box-padded" />
+    <description id="impact" />
+  </dialog>
 </window>

@@ -8,54 +8,161 @@
     <title data-l10n-id="addons-page-title"></title>
 
     <!-- Bug 1571346 Remove 'unsafe-inline' from style-src within about:addons -->
-    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; style-src chrome: 'unsafe-inline'; img-src chrome: file: jar: https: http:; connect-src chrome: data: https: http:; object-src 'none'">
-    <meta name="color-scheme" content="light dark">
-    <link rel="stylesheet" href="chrome://global/content/tabprompts.css">
-    <link rel="stylesheet" href="chrome://global/skin/tabprompts.css">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome:; style-src chrome: 'unsafe-inline'; img-src chrome: file: jar: https: http:; connect-src chrome: data: https: http:; object-src 'none'"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="chrome://global/content/tabprompts.css" />
+    <link rel="stylesheet" href="chrome://global/skin/tabprompts.css" />
 
-    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
-    <link rel="stylesheet" href="chrome://mozapps/content/extensions/aboutaddons.css">
-    <link rel="stylesheet" href="chrome://mozapps/content/extensions/shortcuts.css">
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
+    <link
+      rel="stylesheet"
+      href="chrome://mozapps/content/extensions/aboutaddons.css"
+    />
+    <link
+      rel="stylesheet"
+      href="chrome://mozapps/content/extensions/shortcuts.css"
+    />
 
-    <link rel="shortcut icon" href="chrome://mozapps/skin/extensions/extension.svg">
+    <link
+      rel="shortcut icon"
+      href="chrome://mozapps/skin/extensions/extension.svg"
+    />
 
-    <link rel="localization" href="branding/brand.ftl">
-    <link rel="localization" href="toolkit/about/aboutAddons.ftl">
-    <link rel="localization" href="toolkit/about/abuseReports.ftl">
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="toolkit/about/aboutAddons.ftl" />
+    <link rel="localization" href="toolkit/about/abuseReports.ftl" />
 
     <!-- Defer scripts so all the templates are loaded by the time they run. -->
-    <script defer src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"></script>
-    <script defer src="chrome://mozapps/content/extensions/abuse-reports.js"></script>
-    <script defer src="chrome://mozapps/content/extensions/shortcuts.js"></script>
-    <script defer src="chrome://mozapps/content/extensions/drag-drop-addon-installer.js"></script>
-    <script defer src="chrome://mozapps/content/extensions/view-controller.js"></script>
-    <script defer src="chrome://mozapps/content/extensions/aboutaddons.js"></script>
-    <script type="module" src="chrome://global/content/elements/moz-toggle.mjs"></script>
-    <script type="module" src="chrome://global/content/elements/moz-support-link.mjs"></script>
+    <script
+      defer
+      src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"
+    ></script>
+    <script
+      defer
+      src="chrome://mozapps/content/extensions/abuse-reports.js"
+    ></script>
+    <script
+      defer
+      src="chrome://mozapps/content/extensions/shortcuts.js"
+    ></script>
+    <script
+      defer
+      src="chrome://mozapps/content/extensions/drag-drop-addon-installer.js"
+    ></script>
+    <script
+      defer
+      src="chrome://mozapps/content/extensions/view-controller.js"
+    ></script>
+    <script
+      defer
+      src="chrome://mozapps/content/extensions/aboutaddons.js"
+    ></script>
+    <script
+      type="module"
+      src="chrome://global/content/elements/moz-toggle.mjs"
+    ></script>
+    <script
+      type="module"
+      src="chrome://global/content/elements/moz-support-link.mjs"
+    ></script>
   </head>
   <body>
     <drag-drop-addon-installer></drag-drop-addon-installer>
     <div id="full">
       <div id="sidebar">
         <categories-box id="categories" orientation="vertical">
-          <button is="discover-button" viewid="addons://discover/" class="category" role="tab" name="discover"></button>
-          <button is="category-button" viewid="addons://list/extension" class="category" role="tab" name="extension"></button>
-          <button is="category-button" viewid="addons://list/theme" class="category" role="tab" name="theme"></button>
-          <button is="category-button" viewid="addons://list/plugin" class="category" role="tab" name="plugin"></button>
-          <button is="category-button" viewid="addons://list/dictionary" class="category" role="tab" name="dictionary" hidden default-hidden></button>
-          <button is="category-button" viewid="addons://list/locale" class="category" role="tab" name="locale" hidden default-hidden></button>
-          <button is="category-button" viewid="addons://list/sitepermission" class="category" role="tab" name="sitepermission" hidden default-hidden></button>
-          <button is="category-button" viewid="addons://updates/available" class="category" role="tab" name="available-updates" hidden default-hidden></button>
-          <button is="category-button" viewid="addons://updates/recent" class="category" role="tab" name="recent-updates" hidden default-hidden></button>
+          <button
+            is="discover-button"
+            viewid="addons://discover/"
+            class="category"
+            role="tab"
+            name="discover"
+          ></button>
+          <button
+            is="category-button"
+            viewid="addons://list/extension"
+            class="category"
+            role="tab"
+            name="extension"
+          ></button>
+          <button
+            is="category-button"
+            viewid="addons://list/theme"
+            class="category"
+            role="tab"
+            name="theme"
+          ></button>
+          <button
+            is="category-button"
+            viewid="addons://list/plugin"
+            class="category"
+            role="tab"
+            name="plugin"
+          ></button>
+          <button
+            is="category-button"
+            viewid="addons://list/dictionary"
+            class="category"
+            role="tab"
+            name="dictionary"
+            hidden
+            default-hidden
+          ></button>
+          <button
+            is="category-button"
+            viewid="addons://list/locale"
+            class="category"
+            role="tab"
+            name="locale"
+            hidden
+            default-hidden
+          ></button>
+          <button
+            is="category-button"
+            viewid="addons://list/sitepermission"
+            class="category"
+            role="tab"
+            name="sitepermission"
+            hidden
+            default-hidden
+          ></button>
+          <button
+            is="category-button"
+            viewid="addons://updates/available"
+            class="category"
+            role="tab"
+            name="available-updates"
+            hidden
+            default-hidden
+          ></button>
+          <button
+            is="category-button"
+            viewid="addons://updates/recent"
+            class="category"
+            role="tab"
+            name="recent-updates"
+            hidden
+            default-hidden
+          ></button>
         </categories-box>
         <div class="spacer"></div>
         <sidebar-footer></sidebar-footer>
       </div>
       <div id="content">
-        <addon-page-header id="page-header" page-options-id="page-options"></addon-page-header>
+        <addon-page-header
+          id="page-header"
+          page-options-id="page-options"
+        ></addon-page-header>
         <addon-page-options id="page-options"></addon-page-options>
 
-        <message-bar-stack id="abuse-reports-messages" reverse max-message-bar-count="3">
+        <message-bar-stack
+          id="abuse-reports-messages"
+          reverse
+          max-message-bar-count="3"
+        >
         </message-bar-stack>
 
         <div id="main"></div>
@@ -67,16 +174,34 @@
     <template name="addon-page-header">
       <div class="sticky-container">
         <div class="main-search">
-          <label for="search-addons" class="search-label" data-l10n-id="default-heading-search-label"></label>
+          <label
+            for="search-addons"
+            class="search-label"
+            data-l10n-id="default-heading-search-label"
+          ></label>
           <search-addons></search-addons>
         </div>
         <div class="main-heading">
-          <button class="back-button" action="go-back" data-l10n-id="header-back-button" hidden></button>
+          <button
+            class="back-button"
+            action="go-back"
+            data-l10n-id="header-back-button"
+            hidden
+          ></button>
           <h1 class="header-name"></h1>
           <div class="spacer"></div>
-          <addon-updates-message id="updates-message" hidden></addon-updates-message>
+          <addon-updates-message
+            id="updates-message"
+            hidden
+          ></addon-updates-message>
           <div class="page-options-menu">
-            <button class="more-options-button" action="page-options" aria-haspopup="menu" aria-expanded="false" data-l10n-id="addon-page-options-button"></button>
+            <button
+              class="more-options-button"
+              action="page-options"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              data-l10n-id="addon-page-options-button"
+            ></button>
           </div>
         </div>
       </div>
@@ -85,115 +210,216 @@
 
     <template name="addon-page-options">
       <panel-list>
-        <panel-item action="check-for-updates" data-l10n-id="addon-updates-check-for-updates" data-l10n-attrs="accesskey"></panel-item>
-        <panel-item action="view-recent-updates" data-l10n-id="addon-updates-view-updates" data-l10n-attrs="accesskey"></panel-item>
-        <hr>
-        <panel-item action="install-from-file" data-l10n-id="addon-install-from-file" data-l10n-attrs="accesskey"></panel-item>
-        <panel-item action="debug-addons" data-l10n-id="addon-open-about-debugging" data-l10n-attrs="accesskey"></panel-item>
-        <hr>
-        <panel-item action="set-update-automatically" data-l10n-id="addon-updates-update-addons-automatically" data-l10n-attrs="accesskey"></panel-item>
-        <panel-item action="reset-update-states" data-l10n-attrs="accesskey"></panel-item>
-        <hr>
-        <panel-item action="manage-shortcuts" data-l10n-id="addon-manage-extensions-shortcuts" data-l10n-attrs="accesskey"></panel-item>
+        <panel-item
+          action="check-for-updates"
+          data-l10n-id="addon-updates-check-for-updates"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
+        <panel-item
+          action="view-recent-updates"
+          data-l10n-id="addon-updates-view-updates"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
+        <hr />
+        <panel-item
+          action="install-from-file"
+          data-l10n-id="addon-install-from-file"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
+        <panel-item
+          action="debug-addons"
+          data-l10n-id="addon-open-about-debugging"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
+        <hr />
+        <panel-item
+          action="set-update-automatically"
+          data-l10n-id="addon-updates-update-addons-automatically"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
+        <panel-item
+          action="reset-update-states"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
+        <hr />
+        <panel-item
+          action="manage-shortcuts"
+          data-l10n-id="addon-manage-extensions-shortcuts"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
       </panel-list>
     </template>
 
     <template name="addon-options">
       <panel-list>
-        <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
-        <panel-item data-l10n-id="install-update-button" action="install-update" badged></panel-item>
-        <panel-item data-l10n-id="preferences-addon-button" action="preferences"></panel-item>
-        <hr>
-        <panel-item data-l10n-id="report-addon-button" action="report"></panel-item>
-        <hr>
-        <panel-item data-l10n-id="manage-addon-button" action="expand"></panel-item>
+        <panel-item
+          data-l10n-id="remove-addon-button"
+          action="remove"
+        ></panel-item>
+        <panel-item
+          data-l10n-id="install-update-button"
+          action="install-update"
+          badged
+        ></panel-item>
+        <panel-item
+          data-l10n-id="preferences-addon-button"
+          action="preferences"
+        ></panel-item>
+        <hr />
+        <panel-item
+          data-l10n-id="report-addon-button"
+          action="report"
+        ></panel-item>
+        <hr />
+        <panel-item
+          data-l10n-id="manage-addon-button"
+          action="expand"
+        ></panel-item>
       </panel-list>
     </template>
 
     <template name="plugin-options">
       <panel-list>
-        <panel-item data-l10n-id="always-activate-button" action="always-activate"></panel-item>
-        <panel-item data-l10n-id="never-activate-button" action="never-activate"></panel-item>
-        <hr>
-        <panel-item data-l10n-id="preferences-addon-button" action="preferences"></panel-item>
-        <hr>
-        <panel-item data-l10n-id="manage-addon-button" action="expand"></panel-item>
+        <panel-item
+          data-l10n-id="always-activate-button"
+          action="always-activate"
+        ></panel-item>
+        <panel-item
+          data-l10n-id="never-activate-button"
+          action="never-activate"
+        ></panel-item>
+        <hr />
+        <panel-item
+          data-l10n-id="preferences-addon-button"
+          action="preferences"
+        ></panel-item>
+        <hr />
+        <panel-item
+          data-l10n-id="manage-addon-button"
+          action="expand"
+        ></panel-item>
       </panel-list>
     </template>
 
     <template name="addon-permissions-list">
       <div class="addon-permissions-required" hidden>
-        <h2 class="permission-header" data-l10n-id="addon-permissions-required"></h2>
+        <h2
+          class="permission-header"
+          data-l10n-id="addon-permissions-required"
+        ></h2>
         <ul class="addon-permissions-list"></ul>
       </div>
       <div class="addon-permissions-optional" hidden>
-        <h2 class="permission-header" data-l10n-id="addon-permissions-optional"></h2>
+        <h2
+          class="permission-header"
+          data-l10n-id="addon-permissions-optional"
+        ></h2>
         <ul class="addon-permissions-list"></ul>
       </div>
-      <div class="addon-detail-row addon-permissions-empty" data-l10n-id="addon-permissions-empty" hidden></div>
+      <div
+        class="addon-detail-row addon-permissions-empty"
+        data-l10n-id="addon-permissions-empty"
+        hidden
+      ></div>
       <div class="addon-detail-row">
-        <a is="moz-support-link" support-page="extension-permissions" data-l10n-id="addon-permissions-learnmore"></a>
+        <a
+          is="moz-support-link"
+          support-page="extension-permissions"
+          data-l10n-id="addon-permissions-learnmore"
+        ></a>
       </div>
     </template>
 
     <template name="addon-sitepermissions-list">
       <div class="addon-permissions-required" hidden>
-        <h2 class="permission-header" data-l10n-id="addon-sitepermissions-required"><span data-l10n-name="hostname" class="addon-sitepermissions-host"></span></h2>
+        <h2
+          class="permission-header"
+          data-l10n-id="addon-sitepermissions-required"
+        >
+          <span
+            data-l10n-name="hostname"
+            class="addon-sitepermissions-host"
+          ></span>
+        </h2>
         <ul class="addon-permissions-list"></ul>
       </div>
     </template>
 
     <template name="card">
       <div class="card addon">
-        <img class="card-heading-image" role="presentation">
+        <img class="card-heading-image" role="presentation" />
         <div class="addon-card-collapsed">
-          <img class="card-heading-icon addon-icon" alt="">
+          <img class="card-heading-icon addon-icon" alt="" />
           <div class="card-contents">
             <div class="addon-name-container">
-              <a class="addon-badge addon-badge-recommended"
-                 is="moz-support-link"
-                 support-page="add-on-badges"
-                 utm-content="promoted-addon-badge"
-                 data-l10n-id="addon-badge-recommended2"
-                 hidden>
+              <a
+                class="addon-badge addon-badge-recommended"
+                is="moz-support-link"
+                support-page="add-on-badges"
+                utm-content="promoted-addon-badge"
+                data-l10n-id="addon-badge-recommended2"
+                hidden
+              >
               </a>
-              <a class="addon-badge addon-badge-line"
-                 is="moz-support-link"
-                 support-page="add-on-badges"
-                 utm-content="promoted-addon-badge"
-                 data-l10n-id="addon-badge-line3"
-                 hidden>
+              <a
+                class="addon-badge addon-badge-line"
+                is="moz-support-link"
+                support-page="add-on-badges"
+                utm-content="promoted-addon-badge"
+                data-l10n-id="addon-badge-line3"
+                hidden
+              >
               </a>
-              <a class="addon-badge addon-badge-verified"
-                 is="moz-support-link"
-                 support-page="add-on-badges"
-                 utm-content="promoted-addon-badge"
-                 data-l10n-id="addon-badge-verified2"
-                 hidden>
+              <a
+                class="addon-badge addon-badge-verified"
+                is="moz-support-link"
+                support-page="add-on-badges"
+                utm-content="promoted-addon-badge"
+                data-l10n-id="addon-badge-verified2"
+                hidden
+              >
               </a>
-              <a class="addon-badge addon-badge-private-browsing-allowed"
-                 is="moz-support-link"
-                 support-page="extensions-pb"
-                 data-l10n-id="addon-badge-private-browsing-allowed2"
-                 hidden>
+              <a
+                class="addon-badge addon-badge-private-browsing-allowed"
+                is="moz-support-link"
+                support-page="extensions-pb"
+                data-l10n-id="addon-badge-private-browsing-allowed2"
+                hidden
+              >
               </a>
               <div class="spacer"></div>
-              <button class="theme-enable-button" action="toggle-disabled" hidden></button>
-              <moz-toggle class="extension-enable-button" action="toggle-disabled" data-l10n-id="extension-enable-addon-button-label" hidden></moz-toggle>
+              <button
+                class="theme-enable-button"
+                action="toggle-disabled"
+                hidden
+              ></button>
+              <moz-toggle
+                class="extension-enable-button"
+                action="toggle-disabled"
+                data-l10n-id="extension-enable-addon-button-label"
+                hidden
+              ></moz-toggle>
               <button
                 class="more-options-button"
                 action="more-options"
                 data-l10n-id="addon-options-button"
                 aria-haspopup="menu"
-                aria-expanded="false"></button>
+                aria-expanded="false"
+              ></button>
             </div>
             <!-- This ends up in the tab order when the ellipsis happens, but it isn't necessary. -->
             <span class="addon-description" tabindex="-1"></span>
           </div>
         </div>
         <message-bar class="update-postponed-bar" align="center" hidden>
-          <span class="description" data-l10n-id="install-postponed-message"></span>
-          <button action="install-postponed" data-l10n-id="install-postponed-button"></button>
+          <span
+            class="description"
+            data-l10n-id="install-postponed-message"
+          ></span>
+          <button
+            action="install-postponed"
+            data-l10n-id="install-postponed-button"
+          ></button>
         </message-bar>
         <message-bar class="addon-card-message" align="center" hidden>
           <span></span>
@@ -205,10 +431,16 @@
     <template name="addon-name-container-in-disco-card">
       <div class="disco-card-head">
         <h3 class="disco-addon-name"></h3>
-        <span class="disco-addon-author"><a data-l10n-name="author" target="_blank"></a></span>
+        <span class="disco-addon-author"
+          ><a data-l10n-name="author" target="_blank"></a
+        ></span>
       </div>
       <button class="disco-cta-button" action="install-addon"></button>
-      <button class="disco-cta-button" data-l10n-id="manage-addon-button" action="manage-addon"></button>
+      <button
+        class="disco-cta-button"
+        data-l10n-id="manage-addon-button"
+        action="manage-addon"
+      ></button>
     </template>
 
     <template name="addon-description-in-disco-card">
@@ -223,10 +455,34 @@
 
     <template name="addon-details">
       <button-group class="tab-group">
-        <button is="named-deck-button" deck="details-deck" name="details" data-l10n-id="details-addon-button" class="tab-button ghost-button"></button>
-        <button is="named-deck-button" deck="details-deck" name="preferences" data-l10n-id="preferences-addon-button" class="tab-button ghost-button"></button>
-        <button is="named-deck-button" deck="details-deck" name="permissions" data-l10n-id="permissions-addon-button" class="tab-button ghost-button"></button>
-        <button is="named-deck-button" deck="details-deck" name="release-notes" data-l10n-id="release-notes-addon-button" class="tab-button ghost-button"></button>
+        <button
+          is="named-deck-button"
+          deck="details-deck"
+          name="details"
+          data-l10n-id="details-addon-button"
+          class="tab-button ghost-button"
+        ></button>
+        <button
+          is="named-deck-button"
+          deck="details-deck"
+          name="preferences"
+          data-l10n-id="preferences-addon-button"
+          class="tab-button ghost-button"
+        ></button>
+        <button
+          is="named-deck-button"
+          deck="details-deck"
+          name="permissions"
+          data-l10n-id="permissions-addon-button"
+          class="tab-button ghost-button"
+        ></button>
+        <button
+          is="named-deck-button"
+          deck="details-deck"
+          name="release-notes"
+          data-l10n-id="release-notes-addon-button"
+          class="tab-button ghost-button"
+        ></button>
       </button-group>
       <named-deck id="details-deck" is-tabbed>
         <section name="details">
@@ -235,8 +491,8 @@
             <button
               class="button-link addon-detail-description-toggle"
               data-l10n-id="addon-detail-description-expand"
-              hidden>
-            </button>
+              hidden
+            ></button>
           </div>
           <div class="addon-detail-contribute">
             <label data-l10n-id="detail-contributions-description"></label>
@@ -244,8 +500,8 @@
               class="addon-detail-contribute-button"
               action="contribute"
               data-l10n-id="detail-contributions-button"
-              data-l10n-attrs="accesskey">
-            </button>
+              data-l10n-attrs="accesskey"
+            ></button>
           </div>
           <div class="addon-detail-sitepermissions">
             <addon-sitepermissions-list></addon-sitepermissions-list>
@@ -253,48 +509,91 @@
           <div class="addon-detail-row addon-detail-row-updates">
             <label data-l10n-id="addon-detail-updates-label"></label>
             <div class="addon-detail-actions">
-              <button class="button-link" data-l10n-id="addon-detail-update-check-label" action="update-check" hidden></button>
+              <button
+                class="button-link"
+                data-l10n-id="addon-detail-update-check-label"
+                action="update-check"
+                hidden
+              ></button>
               <label class="radio-container-with-text">
-                <input type="radio" name="autoupdate" value="1">
+                <input type="radio" name="autoupdate" value="1" />
                 <span data-l10n-id="addon-detail-updates-radio-default"></span>
               </label>
               <label class="radio-container-with-text">
-                <input type="radio" name="autoupdate" value="2">
+                <input type="radio" name="autoupdate" value="2" />
                 <span data-l10n-id="addon-detail-updates-radio-on"></span>
               </label>
               <label class="radio-container-with-text">
-                <input type="radio" name="autoupdate" value="0">
+                <input type="radio" name="autoupdate" value="0" />
                 <span data-l10n-id="addon-detail-updates-radio-off"></span>
               </label>
             </div>
           </div>
-          <div class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing" hidden>
+          <div
+            class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing"
+            hidden
+          >
             <label data-l10n-id="detail-private-browsing-label"></label>
             <div class="addon-detail-actions">
               <label class="radio-container-with-text">
-                <input type="radio" name="private-browsing" value="1">
+                <input type="radio" name="private-browsing" value="1" />
                 <span data-l10n-id="addon-detail-private-browsing-allow"></span>
               </label>
               <label class="radio-container-with-text">
-                <input type="radio" name="private-browsing" value="0">
-                <span data-l10n-id="addon-detail-private-browsing-disallow"></span>
+                <input type="radio" name="private-browsing" value="0" />
+                <span
+                  data-l10n-id="addon-detail-private-browsing-disallow"
+                ></span>
               </label>
             </div>
           </div>
-          <div class="addon-detail-row addon-detail-help-row" data-l10n-id="addon-detail-private-browsing-help" hidden>
-            <a is="moz-support-link" support-page="extensions-pb" data-l10n-name="learn-more"></a>
+          <div
+            class="addon-detail-row addon-detail-help-row"
+            data-l10n-id="addon-detail-private-browsing-help"
+            hidden
+          >
+            <a
+              is="moz-support-link"
+              support-page="extensions-pb"
+              data-l10n-name="learn-more"
+            ></a>
           </div>
-          <div class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing-disallowed" hidden>
+          <div
+            class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing-disallowed"
+            hidden
+          >
             <label data-l10n-id="detail-private-disallowed-label"></label>
           </div>
-          <div class="addon-detail-row addon-detail-help-row" data-l10n-id="detail-private-disallowed-description2" hidden>
-            <a is="moz-support-link" data-l10n-name="learn-more" support-page="extensions-pb"></a>
+          <div
+            class="addon-detail-row addon-detail-help-row"
+            data-l10n-id="detail-private-disallowed-description2"
+            hidden
+          >
+            <a
+              is="moz-support-link"
+              data-l10n-name="learn-more"
+              support-page="extensions-pb"
+            ></a>
           </div>
-          <div class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing-required" hidden>
-            <label class="learn-more-label-link" data-l10n-id="detail-private-required-label"></label>
+          <div
+            class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing-required"
+            hidden
+          >
+            <label
+              class="learn-more-label-link"
+              data-l10n-id="detail-private-required-label"
+            ></label>
           </div>
-          <div class="addon-detail-row addon-detail-help-row" data-l10n-id="detail-private-required-description2" hidden>
-            <a is="moz-support-link" data-l10n-name="learn-more" support-page="extensions-pb"></a>
+          <div
+            class="addon-detail-row addon-detail-help-row"
+            data-l10n-id="detail-private-required-description2"
+            hidden
+          >
+            <a
+              is="moz-support-link"
+              data-l10n-name="learn-more"
+              support-page="extensions-pb"
+            ></a>
           </div>
           <div class="addon-detail-row addon-detail-row-author">
             <label data-l10n-id="addon-detail-author-label"></label>
@@ -326,7 +625,10 @@
     </template>
 
     <template name="five-star-rating">
-      <link rel="stylesheet" href="chrome://mozapps/content/extensions/rating-star.css">
+      <link
+        rel="stylesheet"
+        href="chrome://mozapps/content/extensions/rating-star.css"
+      />
       <span class="rating-star"></span>
       <span class="rating-star"></span>
       <span class="rating-star"></span>
@@ -338,20 +640,30 @@
       <message-bar class="discopane-notice" dismissable>
         <div class="discopane-notice-content">
           <span data-l10n-id="discopane-notice-recommendations"></span>
-          <a is="moz-support-link"
-             support-page="personalized-addons"
-             data-l10n-id="discopane-notice-learn-more"
-             action="notice-learn-more"></a>
+          <a
+            is="moz-support-link"
+            support-page="personalized-addons"
+            data-l10n-id="discopane-notice-learn-more"
+            action="notice-learn-more"
+          ></a>
         </div>
       </message-bar>
     </template>
 
     <template name="recommended-footer">
       <div class="amo-link-container view-footer-item">
-        <button class="primary" action="open-amo" data-l10n-id="find-more-addons"></button>
+        <button
+          class="primary"
+          action="open-amo"
+          data-l10n-id="find-more-addons"
+        ></button>
       </div>
       <div class="view-footer-item">
-        <a class="privacy-policy-link" data-l10n-id="privacy-policy" target="_blank"></a>
+        <a
+          class="privacy-policy-link"
+          data-l10n-id="privacy-policy"
+          target="_blank"
+        ></a>
       </div>
     </template>
 
@@ -363,7 +675,8 @@
               class="discopane-intro-learn-more-link"
               is="moz-support-link"
               support-page="recommended-extensions-program"
-              data-l10n-name="learn-more-trigger">
+              data-l10n-name="learn-more-trigger"
+            >
             </a>
           </span>
         </p>
@@ -374,40 +687,63 @@
     </template>
 
     <template name="recommended-extensions-section">
-      <h2 data-l10n-id="recommended-extensions-heading" class="header-name recommended-heading"></h2>
+      <h2
+        data-l10n-id="recommended-extensions-heading"
+        class="header-name recommended-heading"
+      ></h2>
       <taar-notice></taar-notice>
-      <recommended-addon-list type="extension" hide-installed></recommended-addon-list>
+      <recommended-addon-list
+        type="extension"
+        hide-installed
+      ></recommended-addon-list>
       <footer is="recommended-footer" class="view-footer"></footer>
     </template>
 
     <template name="recommended-themes-footer">
       <p data-l10n-id="recommended-theme-1" class="theme-recommendation">
-          <a data-l10n-name="link" target="_blank"></a>
+        <a data-l10n-name="link" target="_blank"></a>
       </p>
       <div class="amo-link-container view-footer-item">
-        <button class="primary" action="open-amo" data-l10n-id="find-more-themes"></button>
+        <button
+          class="primary"
+          action="open-amo"
+          data-l10n-id="find-more-themes"
+        ></button>
       </div>
     </template>
 
     <template name="recommended-themes-section">
-      <h2 data-l10n-id="recommended-themes-heading" class="header-name recommended-heading"></h2>
-      <recommended-addon-list type="theme" hide-installed></recommended-addon-list>
+      <h2
+        data-l10n-id="recommended-themes-heading"
+        class="header-name recommended-heading"
+      ></h2>
+      <recommended-addon-list
+        type="theme"
+        hide-installed
+      ></recommended-addon-list>
       <footer is="recommended-themes-footer" class="view-footer"></footer>
     </template>
 
     <template id="shortcut-view">
       <div class="error-message">
-        <img class="error-message-icon" src="chrome://global/skin/arrow/panelarrow-vertical.svg">
+        <img
+          class="error-message-icon"
+          src="chrome://global/skin/arrow/panelarrow-vertical.svg"
+        />
         <div class="error-message-label"></div>
       </div>
-      <message-bar-stack id="duplicate-warning-messages" reverse max-message-bar-count="5">
+      <message-bar-stack
+        id="duplicate-warning-messages"
+        reverse
+        max-message-bar-count="5"
+      >
       </message-bar-stack>
     </template>
 
     <template id="shortcut-card-template">
       <div class="card shortcut">
         <div class="card-heading">
-          <img class="card-heading-icon addon-icon">
+          <img class="card-heading-icon addon-icon" />
           <h2 class="addon-name"></h2>
         </div>
       </div>
@@ -416,7 +752,12 @@
     <template id="shortcut-row-template">
       <div class="shortcut-row">
         <label class="shortcut-label"></label>
-        <input class="shortcut-input" data-l10n-id="shortcuts-input" type="text" readonly>
+        <input
+          class="shortcut-input"
+          data-l10n-id="shortcuts-input"
+          type="text"
+          readonly
+        />
         <button class="shortcut-remove-button ghost-button"></button>
       </div>
     </template>

@@ -5,26 +5,29 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
-<!DOCTYPE window [
-]>
-<window id="test-window" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <popupset id="options-popupset">
-        <menupopup id="options-menupopup" position="before_end">
-            <menuitem id="option-enabled"
-                      type="checkbox"
-                      label="enabled"/>
-            <menuitem id="option-hidden"
-                      type="checkbox"
-                      label="hidden"
-                      hidden="true"/>
-            <menuitem id="option-disabled"
-                      type="checkbox"
-                      label="disabled"
-                      disabled="true"/>
-        </menupopup>
-    </popupset>
-    <hbox align="center" style="height: 300px;">
-      <button id="options-button"
-              popup="options-menupopup" label="button"/>
-    </hbox>
+<!DOCTYPE window [ ]>
+<window
+  id="test-window"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+>
+  <popupset id="options-popupset">
+    <menupopup id="options-menupopup" position="before_end">
+      <menuitem id="option-enabled" type="checkbox" label="enabled" />
+      <menuitem
+        id="option-hidden"
+        type="checkbox"
+        label="hidden"
+        hidden="true"
+      />
+      <menuitem
+        id="option-disabled"
+        type="checkbox"
+        label="disabled"
+        disabled="true"
+      />
+    </menupopup>
+  </popupset>
+  <hbox align="center" style="height: 300px">
+    <button id="options-button" popup="options-menupopup" label="button" />
+  </hbox>
 </window>

@@ -10,64 +10,82 @@
 
 <!DOCTYPE window>
 
-<window id="SanitizeDialog"
-        type="child"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        persist="lastSelected"
-        data-l10n-id="sanitize-prefs2"
-        data-l10n-attrs="style"
-        onload="gSanitizeDialog.init();">
-<dialog buttons="accept,cancel,help"
-        helpTopic="prefs-clear-private-data">
+<window
+  id="SanitizeDialog"
+  type="child"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  persist="lastSelected"
+  data-l10n-id="sanitize-prefs2"
+  data-l10n-attrs="style"
+  onload="gSanitizeDialog.init();"
+>
+  <dialog buttons="accept,cancel,help" helpTopic="prefs-clear-private-data">
+    <linkset>
+      <html:link rel="localization" href="browser/sanitize.ftl" />
+      <html:link rel="localization" href="branding/brand.ftl" />
+    </linkset>
 
-  <linkset>
-    <html:link rel="localization" href="browser/sanitize.ftl"/>
-    <html:link rel="localization" href="branding/brand.ftl"/>
-  </linkset>
+    <script src="chrome://browser/content/utilityOverlay.js" />
+    <script src="chrome://global/content/preferencesBindings.js" />
 
-  <script src="chrome://browser/content/utilityOverlay.js"/>
-  <script src="chrome://global/content/preferencesBindings.js"/>
+    <keyset>
+      <key
+        data-l10n-id="window-close"
+        modifiers="accel"
+        oncommand="Preferences.close(event)"
+      />
+    </keyset>
 
-  <keyset>
-    <key data-l10n-id="window-close" modifiers="accel" oncommand="Preferences.close(event)"/>
-  </keyset>
+    <script src="chrome://browser/content/preferences/dialogs/sanitize.js" />
 
-  <script src="chrome://browser/content/preferences/dialogs/sanitize.js"/>
+    <description data-l10n-id="clear-data-settings-label"></description>
 
-  <description data-l10n-id="clear-data-settings-label"></description>
-
-  <groupbox>
-    <label><html:h2 data-l10n-id="history-section-label"/></label>
-    <hbox>
-      <vbox data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
-        <checkbox data-l10n-id="item-history-and-downloads"
-                  preference="privacy.clearOnShutdown.history"/>
-        <checkbox data-l10n-id="item-active-logins"
-                  preference="privacy.clearOnShutdown.sessions"/>
-        <checkbox data-l10n-id="item-form-search-history"
-                  preference="privacy.clearOnShutdown.formdata"/>
-      </vbox>
-      <vbox>
-        <checkbox data-l10n-id="item-cookies"
-                  preference="privacy.clearOnShutdown.cookies"/>
-        <checkbox data-l10n-id="item-cache"
-                  preference="privacy.clearOnShutdown.cache"/>
-      </vbox>
-    </hbox>
-  </groupbox>
-  <groupbox>
-    <label><html:h2 data-l10n-id="data-section-label"/></label>
-    <hbox>
-      <vbox data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
-        <checkbox data-l10n-id="item-site-settings"
-                  preference="privacy.clearOnShutdown.siteSettings"/>
-      </vbox>
-      <vbox flex="1">
-        <checkbox data-l10n-id="item-offline-apps"
-                  preference="privacy.clearOnShutdown.offlineApps"/>
-      </vbox>
-    </hbox>
-  </groupbox>
-</dialog>
+    <groupbox>
+      <label><html:h2 data-l10n-id="history-section-label" /></label>
+      <hbox>
+        <vbox data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
+          <checkbox
+            data-l10n-id="item-history-and-downloads"
+            preference="privacy.clearOnShutdown.history"
+          />
+          <checkbox
+            data-l10n-id="item-active-logins"
+            preference="privacy.clearOnShutdown.sessions"
+          />
+          <checkbox
+            data-l10n-id="item-form-search-history"
+            preference="privacy.clearOnShutdown.formdata"
+          />
+        </vbox>
+        <vbox>
+          <checkbox
+            data-l10n-id="item-cookies"
+            preference="privacy.clearOnShutdown.cookies"
+          />
+          <checkbox
+            data-l10n-id="item-cache"
+            preference="privacy.clearOnShutdown.cache"
+          />
+        </vbox>
+      </hbox>
+    </groupbox>
+    <groupbox>
+      <label><html:h2 data-l10n-id="data-section-label" /></label>
+      <hbox>
+        <vbox data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
+          <checkbox
+            data-l10n-id="item-site-settings"
+            preference="privacy.clearOnShutdown.siteSettings"
+          />
+        </vbox>
+        <vbox flex="1">
+          <checkbox
+            data-l10n-id="item-offline-apps"
+            preference="privacy.clearOnShutdown.offlineApps"
+          />
+        </vbox>
+      </hbox>
+    </groupbox>
+  </dialog>
 </window>

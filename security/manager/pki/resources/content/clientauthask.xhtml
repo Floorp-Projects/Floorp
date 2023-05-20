@@ -7,41 +7,49 @@
 
 <!DOCTYPE window>
 
-<window data-l10n-id="client-auth-window"
+<window
+  data-l10n-id="client-auth-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
-  onload="onLoad();">
-<dialog id="certAuthAsk"
-  buttons="accept,cancel">
+  onload="onLoad();"
+>
+  <dialog id="certAuthAsk" buttons="accept,cancel">
+    <linkset>
+      <html:link rel="localization" href="security/pippki/pippki.ftl" />
+    </linkset>
 
-<linkset>
-  <html:link rel="localization" href="security/pippki/pippki.ftl"/>
-</linkset>
+    <stringbundleset id="stringbundleset">
+      <stringbundle
+        id="pippki_bundle"
+        src="chrome://pippki/locale/pippki.properties"
+      />
+    </stringbundleset>
 
-<stringbundleset id="stringbundleset">
-  <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
-</stringbundleset>
+    <script src="chrome://pippki/content/pippki.js" />
+    <script src="chrome://pippki/content/clientauthask.js" />
+    <script src="chrome://global/content/globalOverlay.js" />
+    <script src="chrome://global/content/editMenuOverlay.js" />
 
-<script src="chrome://pippki/content/pippki.js"/>
-<script src="chrome://pippki/content/clientauthask.js"/>
-<script src="chrome://global/content/globalOverlay.js"/>
-<script src="chrome://global/content/editMenuOverlay.js"/>
+    <description
+      style="font-weight: bold"
+      data-l10n-id="client-auth-site-description"
+    ></description>
+    <description id="hostname" />
+    <description id="organization" />
+    <description id="issuer" />
 
-<description style="font-weight: bold;" data-l10n-id="client-auth-site-description"></description>
-<description id="hostname"/>
-<description id="organization"/>
-<description id="issuer"/>
-
-<description style="font-weight: bold;" data-l10n-id="client-auth-choose-cert"></description>
-<!-- The items in this menulist must never be sorted,
+    <description
+      style="font-weight: bold"
+      data-l10n-id="client-auth-choose-cert"
+    ></description>
+    <!-- The items in this menulist must never be sorted,
      but remain in the order filled by the application
 -->
-<menulist id="nicknames" oncommand="onCertSelected();" native="true">
-    <menupopup/>
-</menulist>
-<description data-l10n-id="client-auth-cert-details"></description>
-<html:textarea readonly="readonly" id="details" style="height: 11em;"/>
-<checkbox id="rememberBox" checked="true" native="true"/>
-
-</dialog>
+    <menulist id="nicknames" oncommand="onCertSelected();" native="true">
+      <menupopup />
+    </menulist>
+    <description data-l10n-id="client-auth-cert-details"></description>
+    <html:textarea readonly="readonly" id="details" style="height: 11em" />
+    <checkbox id="rememberBox" checked="true" native="true" />
+  </dialog>
 </window>

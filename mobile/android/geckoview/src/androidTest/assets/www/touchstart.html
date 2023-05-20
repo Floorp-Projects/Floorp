@@ -1,37 +1,37 @@
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.5">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.5" />
     <style type="text/css">
-body {
-   margin: 0;
-   /* background contains one extra transparent.gif because we want trick the
+      body {
+        margin: 0;
+        /* background contains one extra transparent.gif because we want trick the
       contentful paint detection; We want to make sure the background is loaded
       before the test starts so we always wait for the contentful paint timestamp
       to exist, however, gradient isn't considered as contentful per spec, so Gecko
       wouldn't generate a timestamp for it. Hence, we added a transparent gif
       to the image list to trick the detection. */
-   background: url('/assets/www/transparent.gif'), linear-gradient(135deg, red, white);
-}
+        background: url("/assets/www/transparent.gif"),
+          linear-gradient(135deg, red, white);
+      }
 
-#one {
-   background-color: red;
-   width: 200%;
-   height: 100vh;
-}
-#two {
-   background-color: blue;
-   width: 200%;
-   height: 800vh;
-}
+      #one {
+        background-color: red;
+        width: 200%;
+        height: 100vh;
+      }
+      #two {
+        background-color: blue;
+        width: 200%;
+        height: 800vh;
+      }
     </style>
   </head>
   <body>
     <div id="one"></div>
     <div id="two"></div>
     <script>
-      document.getElementById("two").addEventListener("touchstart", e => {
-      });
+      document.getElementById("two").addEventListener("touchstart", e => {});
     </script>
   </body>
 </html>

@@ -6,26 +6,46 @@
 
 <html>
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome:; object-src 'none'"
+    />
     <meta name="color-scheme" content="light dark" />
-    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css">
-    <link rel="stylesheet" href="chrome://global/skin/aboutHttpsOnlyError.css">
-    <link rel="localization" href="branding/brand.ftl"/>
-    <link rel="localization" href="toolkit/about/aboutHttpsOnlyError.ftl">
+    <link
+      rel="stylesheet"
+      href="chrome://global/skin/in-content/info-pages.css"
+    />
+    <link
+      rel="stylesheet"
+      href="chrome://global/skin/aboutHttpsOnlyError.css"
+    />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="toolkit/about/aboutHttpsOnlyError.ftl" />
     <!-- If the location of the favicon is changed here, the FAVICON_ERRORPAGE_URL symbol in
          toolkit/components/places/src/nsFaviconService.h should be updated. -->
-    <link rel="icon" id="favicon" href="chrome://global/skin/icons/info.svg"/>
+    <link rel="icon" id="favicon" href="chrome://global/skin/icons/info.svg" />
     <title data-l10n-id="about-httpsonly-title-site-not-available"></title>
   </head>
   <body>
     <main class="container">
       <div class="title">
         <h2 data-l10n-id="about-httpsonly-title-alert"></h2>
-        <h1 class="title-text" data-l10n-id="about-httpsonly-title-site-not-available"></h1>
+        <h1
+          class="title-text"
+          data-l10n-id="about-httpsonly-title-site-not-available"
+        ></h1>
       </div>
-      <p id="insecure-explanation-unavailable" data-l10n-id="about-httpsonly-explanation-unavailable2" data-l10n-args='{"websiteUrl": ""}'></p>
+      <p
+        id="insecure-explanation-unavailable"
+        data-l10n-id="about-httpsonly-explanation-unavailable2"
+        data-l10n-args='{"websiteUrl": ""}'
+      ></p>
       <p id="learn-more-container">
-        <a id="learnMoreLink" target="_blank" data-l10n-id="about-httpsonly-link-learn-more"></a>
+        <a
+          id="learnMoreLink"
+          target="_blank"
+          data-l10n-id="about-httpsonly-link-learn-more"
+        ></a>
       </p>
 
       <b data-l10n-id="about-httpsonly-explanation-question"></b>
@@ -34,10 +54,20 @@
         <li data-l10n-id="about-httpsonly-explanation-risk"></li>
       </ul>
 
-      <p id="explanation-continue" data-l10n-id="about-httpsonly-explanation-continue"></p>
+      <p
+        id="explanation-continue"
+        data-l10n-id="about-httpsonly-explanation-continue"
+      ></p>
       <div class="button-container">
-        <button id="goBack" class="primary" data-l10n-id="about-httpsonly-button-go-back"></button>
-        <button id="openInsecure" data-l10n-id="about-httpsonly-button-continue-to-site"></button>
+        <button
+          id="goBack"
+          class="primary"
+          data-l10n-id="about-httpsonly-button-go-back"
+        ></button>
+        <button
+          id="openInsecure"
+          data-l10n-id="about-httpsonly-button-continue-to-site"
+        ></button>
       </div>
       <div class="suggestion-box" hidden>
         <h2 data-l10n-id="about-httpsonly-suggestion-box-header"></h2>
@@ -45,4 +75,4 @@
     </main>
     <script src="chrome://global/content/httpsonlyerror/errorpage.js"></script>
   </body>
-  </html>
+</html>
