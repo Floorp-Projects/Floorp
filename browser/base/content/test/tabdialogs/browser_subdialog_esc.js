@@ -17,8 +17,8 @@ const TEST_LOAD_PAGE = WEB_ROOT + "loadDelayedReply.sjs";
  * Tests that ESC on a SubDialog does not cancel ongoing loads in the parent.
  */
 add_task(async function test_subdialog_esc_does_not_cancel_load() {
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab(
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com",
     async function (browser) {
       // Start loading a page
@@ -65,8 +65,8 @@ add_task(async function test_subdialog_esc_does_not_cancel_load() {
  * Tests that ESC on a SubDialog with an open dropdown doesn't close the dialog.
  */
 add_task(async function test_subdialog_esc_on_dropdown_does_not_close_dialog() {
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab(
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com",
     async function (browser) {
       // Open the test dialog

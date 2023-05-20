@@ -52,8 +52,8 @@ add_setup(async function () {
  * Test that a manager for content prompts is added to tab dialog box.
  */
 add_task(async function test_tabdialog_content_prompts() {
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab(
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.com",
     async function (browser) {
       info("Open a tab prompt.");

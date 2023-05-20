@@ -38,8 +38,8 @@ const PREF_DEPRECATED_DEVICE_NAME = "services.sync.client.name";
 // them with the unicode replacement character.
 // At time of writing, FxA has a regex DISPLAY_SAFE_UNICODE_WITH_NON_BMP, which
 // the regex below is based on.
-// eslint-disable-next-line no-control-regex
 const INVALID_NAME_CHARS =
+  // eslint-disable-next-line no-control-regex
   /[\u0000-\u001F\u007F\u0080-\u009F\u2028-\u2029\uE000-\uF8FF\uFFF9-\uFFFC\uFFFE-\uFFFF]/g;
 const MAX_NAME_LEN = 255;
 const REPLACEMENT_CHAR = "\uFFFD";
