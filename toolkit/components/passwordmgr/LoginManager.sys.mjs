@@ -393,10 +393,8 @@ LoginManager.prototype = {
         continue;
       }
 
-      const {
-        username: plaintextUsername,
-        password: plaintextPassword,
-      } = login;
+      const { username: plaintextUsername, password: plaintextPassword } =
+        login;
       login.username = usernames[i];
       login.password = passwords[i];
       lazy.log.debug("Adding login");

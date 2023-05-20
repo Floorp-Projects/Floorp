@@ -843,9 +843,8 @@ async function waitUntilVisitedState(tab, selectors) {
         const ELEMENT_STATE_VISITED = 1 << 19;
 
         for (const selector of args) {
-          const target = content.wrappedJSObject.document.querySelector(
-            selector
-          );
+          const target =
+            content.wrappedJSObject.document.querySelector(selector);
           if (
             !(
               target &&
@@ -869,11 +868,13 @@ async function waitUntilVisitedState(tab, selectors) {
  * @returns Promise<Boolean>
  */
 function hasMatchingElementInContentPage(selector) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function (
-    innerSelector
-  ) {
-    return content.document.querySelector(innerSelector) !== null;
-  });
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector],
+    function (innerSelector) {
+      return content.document.querySelector(innerSelector) !== null;
+    }
+  );
 }
 
 /**
@@ -883,11 +884,13 @@ function hasMatchingElementInContentPage(selector) {
  * @returns Promise<Number> the number of matching elements
  */
 function getNumberOfMatchingElementsInContentPage(selector) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function (
-    innerSelector
-  ) {
-    return content.document.querySelectorAll(innerSelector).length;
-  });
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector],
+    function (innerSelector) {
+      return content.document.querySelectorAll(innerSelector).length;
+    }
+  );
 }
 
 /**
@@ -920,9 +923,8 @@ function setContentPageElementProperty(selector, propertyName, propertyValue) {
     gBrowser.selectedBrowser,
     [selector, propertyName, propertyValue],
     function (innerSelector, innerPropertyName, innerPropertyValue) {
-      content.document.querySelector(innerSelector)[
-        innerPropertyName
-      ] = innerPropertyValue;
+      content.document.querySelector(innerSelector)[innerPropertyName] =
+        innerPropertyValue;
     }
   );
 }

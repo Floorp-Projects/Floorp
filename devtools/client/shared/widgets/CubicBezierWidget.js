@@ -256,9 +256,8 @@ function CubicBezierWidget(
   this._onPointKeyDown = this._onPointKeyDown.bind(this);
   this._onCurveClick = this._onCurveClick.bind(this);
   this._onNewCoordinates = this._onNewCoordinates.bind(this);
-  this.onPrefersReducedMotionChange = this.onPrefersReducedMotionChange.bind(
-    this
-  );
+  this.onPrefersReducedMotionChange =
+    this.onPrefersReducedMotionChange.bind(this);
 
   // Add preset preview menu
   this.presets = new CubicBezierPresetWidget(parent);

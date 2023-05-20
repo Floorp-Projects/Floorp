@@ -702,9 +702,8 @@ var webrtcUI = {
       return;
     }
 
-    let actor = sharingState.browsingContext.currentWindowGlobal.getActor(
-      "WebRTC"
-    );
+    let actor =
+      sharingState.browsingContext.currentWindowGlobal.getActor("WebRTC");
 
     // Delete activePerms for all outerWindowIds under the current browser. We
     // need to do this prior to sending the stopSharing message, so WebRTCParent

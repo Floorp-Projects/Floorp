@@ -39,8 +39,10 @@ SyncedTabsDeckView.prototype = {
   },
 
   create(state) {
-    let deck = this._doc.importNode(this._deckTemplate.content, true)
-      .firstElementChild;
+    let deck = this._doc.importNode(
+      this._deckTemplate.content,
+      true
+    ).firstElementChild;
     this._clearChilden();
 
     let tabListWrapper = this._doc.createElement("div");

@@ -49,10 +49,8 @@ export class NetworkEventRecord {
     // nsIChannel.channelId is different for each and every request.
     this.#requestId = this.#wrappedChannel.id.toString();
 
-    const {
-      cookies,
-      headers,
-    } = lazy.NetworkUtils.fetchRequestHeadersAndCookies(channel);
+    const { cookies, headers } =
+      lazy.NetworkUtils.fetchRequestHeadersAndCookies(channel);
 
     // See the RequestData type definition for the full list of properties that
     // should be set on this object.
@@ -117,9 +115,8 @@ export class NetworkEventRecord {
    */
   addResponseStart(options) {
     const { channel, fromCache, rawHeaders = "" } = options;
-    const { headers } = lazy.NetworkUtils.fetchResponseHeadersAndCookies(
-      channel
-    );
+    const { headers } =
+      lazy.NetworkUtils.fetchResponseHeadersAndCookies(channel);
 
     const headersSize = rawHeaders.length;
     this.#responseData = {

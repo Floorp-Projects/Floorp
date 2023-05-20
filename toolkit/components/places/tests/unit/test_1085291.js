@@ -3,8 +3,9 @@ add_task(async function () {
   // have the extra bookmark properties (bookmarkGuid, dateAdded, lastModified).
 
   // getFolderContents opens the root node.
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid)
-    .root;
+  let root = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.toolbarGuid
+  ).root;
 
   async function insertAndTest(bmInfo) {
     bmInfo = await PlacesUtils.bookmarks.insert(bmInfo);

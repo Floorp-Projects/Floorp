@@ -213,8 +213,9 @@ add_task(async function test_sfv_list() {
   );
 
   // check list's member of inner list type
-  let inner_list_members = list_members[1].QueryInterface(Ci.nsISFVInnerList)
-    .items;
+  let inner_list_members = list_members[1].QueryInterface(
+    Ci.nsISFVInnerList
+  ).items;
   Assert.equal(inner_list_members.length, 2, "check inner list length");
 
   let inner_item1 = inner_list_members[0].QueryInterface(Ci.nsISFVItem);
@@ -316,8 +317,9 @@ add_task(async function test_sfv_dictionary() {
   //   "get dictionary member's parameter by key and check its value"
   // );
 
-  let dict_member2_items = dict_member2.QueryInterface(Ci.nsISFVInnerList)
-    .items;
+  let dict_member2_items = dict_member2.QueryInterface(
+    Ci.nsISFVInnerList
+  ).items;
   let dict_member2_params = dict_member2
     .QueryInterface(Ci.nsISFVInnerList)
     .params.QueryInterface(Ci.nsISFVParams);

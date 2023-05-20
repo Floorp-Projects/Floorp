@@ -179,10 +179,8 @@ function loadPanel(extensionId, extensionUrl, browserStyle) {
 
   getBrowser(sidebar).then(browser => {
     let uri = Services.io.newURI(policy.getURL());
-    let triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      uri,
-      {}
-    );
+    let triggeringPrincipal =
+      Services.scriptSecurityManager.createContentPrincipal(uri, {});
     browser.fixupAndLoadURIString(extensionUrl, { triggeringPrincipal });
   });
 }

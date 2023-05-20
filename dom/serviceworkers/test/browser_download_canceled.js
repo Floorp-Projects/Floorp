@@ -109,11 +109,13 @@ async function performCanceledDownload(tab, path) {
   // Wait for confirmation that the stream stopped.
   info(`wait for the ${path} stream to close.`);
   /* eslint-disable no-shadow */
-  const why = await SpecialPowers.spawn(tab.linkedBrowser, [path], function (
-    path
-  ) {
-    return content.wrappedJSObject.streamClosed[path].promise;
-  });
+  const why = await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [path],
+    function (path) {
+      return content.wrappedJSObject.streamClosed[path].promise;
+    }
+  );
   /* eslint-enable no-shadow */
   is(why.why, "canceled", "Ensure the stream canceled instead of timing out.");
   // Note that for the "sw-stream-download" case, we end up with a bogus

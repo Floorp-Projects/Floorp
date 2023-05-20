@@ -261,9 +261,8 @@ class MessagePayload extends Component {
     let decoder;
     try {
       decoder = new HandshakeProtocol();
-      const [remainingData, responseMessage] = decoder.parseHandshakeResponse(
-        payload
-      );
+      const [remainingData, responseMessage] =
+        decoder.parseHandshakeResponse(payload);
 
       if (responseMessage) {
         return {

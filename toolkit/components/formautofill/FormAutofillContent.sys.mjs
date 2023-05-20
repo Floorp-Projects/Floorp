@@ -279,9 +279,8 @@ export var FormAutofillContent = {
       }
     }
 
-    const validDetails = this._fieldDetailsManager.identifyAutofillFields(
-      element
-    );
+    const validDetails =
+      this._fieldDetailsManager.identifyAutofillFields(element);
 
     validDetails?.forEach(detail =>
       this._markAsAutofillField(detail.elementWeakRef.get())
@@ -338,9 +337,8 @@ export var FormAutofillContent = {
       let focusedCategory = lazy.FormAutofillUtils.getCategoryFromFieldName(
         focusedInputDetails.fieldName
       );
-      let categories = lazy.FormAutofillUtils.getCategoriesFromFieldNames(
-        profileFields
-      );
+      let categories =
+        lazy.FormAutofillUtils.getCategoriesFromFieldNames(profileFields);
       actor.sendAsyncMessage("FormAutofill:UpdateWarningMessage", {
         focusedCategory,
         categories,

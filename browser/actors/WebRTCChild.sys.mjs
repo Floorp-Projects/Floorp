@@ -387,9 +387,10 @@ function prompt(
   // nsIContentPermissionRequest, but because webrtc uses their own prompting
   // system, we should manually apply the delegate policy here. Permission
   // should be delegated using Feature Policy and top principal
-  const permDelegateHandler = aContentWindow.document.permDelegateHandler.QueryInterface(
-    Ci.nsIPermissionDelegateHandler
-  );
+  const permDelegateHandler =
+    aContentWindow.document.permDelegateHandler.QueryInterface(
+      Ci.nsIPermissionDelegateHandler
+    );
 
   const shouldDelegatePermission =
     permDelegateHandler.permissionDelegateFPEnabled;

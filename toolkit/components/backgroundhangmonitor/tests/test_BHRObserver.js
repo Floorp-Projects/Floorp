@@ -22,8 +22,8 @@ add_task(async function test_BHRObserver() {
 
   ensureProfilerInitialized();
 
-  let telSvc = Cc["@mozilla.org/bhr-telemetry-service;1"].getService()
-    .wrappedJSObject;
+  let telSvc =
+    Cc["@mozilla.org/bhr-telemetry-service;1"].getService().wrappedJSObject;
   ok(telSvc, "Should have BHRTelemetryService");
   let beforeLen = telSvc.payload.hangs.length;
 

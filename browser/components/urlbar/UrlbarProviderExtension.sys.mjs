@@ -213,10 +213,9 @@ export class UrlbarProviderExtension extends UrlbarProvider {
     );
     if (extResults) {
       for (let extResult of extResults) {
-        let result = await this._makeUrlbarResult(
-          context,
-          extResult
-        ).catch(ex => this.logger.error(ex));
+        let result = await this._makeUrlbarResult(context, extResult).catch(
+          ex => this.logger.error(ex)
+        );
         if (result) {
           addCallback(this, result);
         }

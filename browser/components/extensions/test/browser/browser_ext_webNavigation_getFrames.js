@@ -132,11 +132,8 @@ add_task(async function testWebNavigationFrames() {
 
   await extension.startup();
 
-  let {
-    collectedDetails,
-    getAllFramesDetails,
-    getFrameResults,
-  } = await extension.awaitMessage("webNavigationFrames.done");
+  let { collectedDetails, getAllFramesDetails, getFrameResults } =
+    await extension.awaitMessage("webNavigationFrames.done");
 
   is(getAllFramesDetails.length, 3, "expected number of frames found");
   is(

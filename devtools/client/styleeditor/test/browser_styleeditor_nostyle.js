@@ -29,9 +29,8 @@ add_task(async function () {
   );
   ok(!importButton.hasAttribute("disabled"), "import button is enabled");
 
-  const emptyPlaceHolderEl = getRootElement(panel).querySelector(
-    ".empty.placeholder"
-  );
+  const emptyPlaceHolderEl =
+    getRootElement(panel).querySelector(".empty.placeholder");
   isnot(
     emptyPlaceHolderEl.ownerGlobal.getComputedStyle(emptyPlaceHolderEl).display,
     "none",

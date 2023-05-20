@@ -91,9 +91,10 @@ let gGeneratedPasswordObserver = {
       // The last private browsing context closed so clear all cached generated
       // passwords for private window origins.
       for (let principalOrigin of gGeneratedPasswordsByPrincipalOrigin.keys()) {
-        let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-          principalOrigin
-        );
+        let principal =
+          Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            principalOrigin
+          );
         if (!principal.privateBrowsingId) {
           // The origin isn't for a private context so leave it alone.
           continue;
@@ -498,9 +499,8 @@ export class LoginManagerParent extends JSWindowActorParent {
   }
 
   #onFormProcessed(formid) {
-    const topActor = this.browsingContext.currentWindowGlobal.getActor(
-      "LoginManager"
-    );
+    const topActor =
+      this.browsingContext.currentWindowGlobal.getActor("LoginManager");
     topActor.sendAsyncMessage("PasswordManager:formProcessed", { formid });
     if (gListenerForTests) {
       gListenerForTests("FormProcessed", {
@@ -667,9 +667,8 @@ export class LoginManagerParent extends JSWindowActorParent {
     } else {
       let relatedRealmsOrigins = [];
       if (lazy.LoginHelper.relatedRealmsEnabled) {
-        relatedRealmsOrigins = await lazy.LoginRelatedRealmsParent.findRelatedRealms(
-          formOrigin
-        );
+        relatedRealmsOrigins =
+          await lazy.LoginRelatedRealmsParent.findRelatedRealms(formOrigin);
       }
       logins = await LoginManagerParent.searchAndDedupeLogins(formOrigin, {
         formActionOrigin: actionOrigin,
@@ -752,9 +751,8 @@ export class LoginManagerParent extends JSWindowActorParent {
       lazy.log("Creating new autocomplete search result.");
       let relatedRealmsOrigins = [];
       if (lazy.LoginHelper.relatedRealmsEnabled) {
-        relatedRealmsOrigins = await lazy.LoginRelatedRealmsParent.findRelatedRealms(
-          formOrigin
-        );
+        relatedRealmsOrigins =
+          await lazy.LoginRelatedRealmsParent.findRelatedRealms(formOrigin);
       }
       // Autocomplete results do not need to match actionOrigin or exact origin.
       logins = await LoginManagerParent.searchAndDedupeLogins(formOrigin, {
@@ -791,13 +789,12 @@ export class LoginManagerParent extends JSWindowActorParent {
       // We either generate a new password here, or grab the previously generated password
       // if we're still on the same domain when we generated the password
       generatedPassword = await this.getGeneratedPassword({ inputMaxLength });
-      const potentialConflictingLogins = await Services.logins.searchLoginsAsync(
-        {
+      const potentialConflictingLogins =
+        await Services.logins.searchLoginsAsync({
           origin: formOrigin,
           formActionOrigin: actionOrigin,
           httpRealm: null,
-        }
-      );
+        });
       willAutoSaveGeneratedPassword = !potentialConflictingLogins.find(
         login => login.username == ""
       );
@@ -859,9 +856,8 @@ export class LoginManagerParent extends JSWindowActorParent {
       browsingContext.currentWindowGlobal.documentPrincipal.origin;
     // Use the same password if we already generated one for this origin so that it doesn't change
     // with each search/keystroke and the user can easily re-enter a password in a confirmation field.
-    let generatedPW = gGeneratedPasswordsByPrincipalOrigin.get(
-      framePrincipalOrigin
-    );
+    let generatedPW =
+      gGeneratedPasswordsByPrincipalOrigin.get(framePrincipalOrigin);
     if (generatedPW) {
       return generatedPW.value;
     }
@@ -919,9 +915,8 @@ export class LoginManagerParent extends JSWindowActorParent {
 
     let framePrincipalOrigin =
       browsingContext.currentWindowGlobal.documentPrincipal.origin;
-    let generatedPW = gGeneratedPasswordsByPrincipalOrigin.get(
-      framePrincipalOrigin
-    );
+    let generatedPW =
+      gGeneratedPasswordsByPrincipalOrigin.get(framePrincipalOrigin);
 
     // We only want to record the first time it was shown for an origin
     if (generatedPW.autocompleteShown) {
@@ -1056,9 +1051,8 @@ export class LoginManagerParent extends JSWindowActorParent {
       formActionOrigin,
     });
 
-    const generatedPW = gGeneratedPasswordsByPrincipalOrigin.get(
-      framePrincipalOrigin
-    );
+    const generatedPW =
+      gGeneratedPasswordsByPrincipalOrigin.get(framePrincipalOrigin);
     const autoSavedStorageGUID = generatedPW?.storageGUID ?? "";
 
     // If we didn't find a username field, but seem to be changing a
@@ -1260,9 +1254,8 @@ export class LoginManagerParent extends JSWindowActorParent {
       }
     }
 
-    let generatedPW = gGeneratedPasswordsByPrincipalOrigin.get(
-      framePrincipalOrigin
-    );
+    let generatedPW =
+      gGeneratedPasswordsByPrincipalOrigin.get(framePrincipalOrigin);
 
     // Below here we have one login per hostPort + action + username with the
     // matching scheme being preferred.

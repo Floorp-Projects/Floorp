@@ -230,9 +230,8 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
 
   // Verify that console evaluations still work after reloading the page
   info("Reload the webextension document");
-  const {
-    onDomCompleteResource,
-  } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
+  const { onDomCompleteResource } =
+    await waitForNextTopLevelDomCompleteResource(toolbox.commands);
   hud.ui.wrapper.dispatchEvaluateExpression("location.reload()");
   await onDomCompleteResource;
 

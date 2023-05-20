@@ -243,7 +243,8 @@ add_task(
       {
         title: "XPI without ID in manifest",
         xpi: "data/webext-implicit-id.xpi",
-        expectedMessage: /Cannot find id for addon .+ Preference xpinstall.signatures.dev-root is set/,
+        expectedMessage:
+          /Cannot find id for addon .+ Preference xpinstall.signatures.dev-root is set/,
       },
       {
         title: "XPI with ID in manifest",

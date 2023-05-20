@@ -901,9 +901,8 @@ function threadFrontTest(test, options = {}) {
     // Cross the client/server boundary to retrieve the target actor & thread
     // actor instances, used by some tests.
     const rootActor = client.transport._serverConnection.rootActor;
-    const targetActor = rootActor._parameters.tabList.getTargetActorForTab(
-      "debuggee.js"
-    );
+    const targetActor =
+      rootActor._parameters.tabList.getTargetActorForTab("debuggee.js");
     const { threadActor } = targetActor;
 
     // Run the test function

@@ -21,9 +21,8 @@ add_task(
     const EXTENSION_ID = "test-devtools-eventpage@mozilla.org";
     const EXTENSION_NAME = "Temporary EventPage-based web extension";
 
-    const promiseBackgroundLoaded = promiseBackgroundContextLoaded(
-      EXTENSION_ID
-    );
+    const promiseBackgroundLoaded =
+      promiseBackgroundContextLoaded(EXTENSION_ID);
 
     let waitForBGStatusUpdate = promiseBackgroundStatusUpdate(window);
 
@@ -105,9 +104,8 @@ add_task(
     );
 
     info(`Click on the terminate button for ${EXTENSION_NAME}`);
-    const promiseBackgroundUnloaded = promiseBackgroundContextUnloaded(
-      EXTENSION_ID
-    );
+    const promiseBackgroundUnloaded =
+      promiseBackgroundContextUnloaded(EXTENSION_ID);
     const waitForTerminateSuccess = waitForDispatch(
       window.AboutDebugging.store,
       "TERMINATE_EXTENSION_BGSCRIPT_SUCCESS"
@@ -139,9 +137,8 @@ add_task(
       targetElement: target,
     });
 
-    const waitForBGSuspendIgnored = promiseTerminateBackgroundScriptIgnored(
-      EXTENSION_ID
-    );
+    const waitForBGSuspendIgnored =
+      promiseTerminateBackgroundScriptIgnored(EXTENSION_ID);
     waitForBGStatusUpdate = promiseBackgroundStatusUpdate(window);
     await triggerExtensionEventPageIdleTimeout(EXTENSION_ID);
     await Promise.race([waitForBGStatusUpdate, waitForBGSuspendIgnored]);

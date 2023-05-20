@@ -47,8 +47,9 @@ add_task(async function compress_bookmark_backups_test() {
   let recentBackup = await PlacesBackups.getMostRecentBackup();
   await PlacesUtils.bookmarks.remove(bm);
   await BookmarkJSONUtils.importFromFile(recentBackup, { replace: true });
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
-    .root;
+  let root = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.unfiledGuid
+  ).root;
   let node = root.getChild(0);
   Assert.equal(node.uri, url);
 

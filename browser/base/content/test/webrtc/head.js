@@ -355,23 +355,24 @@ function promiseMessage(
   browser = gBrowser.selectedBrowser
 ) {
   let startTime = performance.now();
-  let promise = ContentTask.spawn(browser, [aMessage, aCount], async function ([
-    expectedMessage,
-    expectedCount,
-  ]) {
-    return new Promise(resolve => {
-      function listenForMessage({ data }) {
-        if (
-          (!expectedMessage || data == expectedMessage) &&
-          --expectedCount == 0
-        ) {
-          content.removeEventListener("message", listenForMessage);
-          resolve(data);
+  let promise = ContentTask.spawn(
+    browser,
+    [aMessage, aCount],
+    async function ([expectedMessage, expectedCount]) {
+      return new Promise(resolve => {
+        function listenForMessage({ data }) {
+          if (
+            (!expectedMessage || data == expectedMessage) &&
+            --expectedCount == 0
+          ) {
+            content.removeEventListener("message", listenForMessage);
+            resolve(data);
+          }
         }
-      }
-      content.addEventListener("message", listenForMessage);
-    });
-  });
+        content.addEventListener("message", listenForMessage);
+      });
+    }
+  );
   if (aAction) {
     aAction();
   }
@@ -885,9 +886,8 @@ function checkDeviceSelectors(aExpectedTypes, aWindow = window) {
       ok(label.hidden, `${type} selector label should be hidden.`);
     }
   }
-  let ariaDescribedby = aWindow.PopupNotifications.panel.getAttribute(
-    "aria-describedby"
-  );
+  let ariaDescribedby =
+    aWindow.PopupNotifications.panel.getAttribute("aria-describedby");
   is(ariaDescribedby, expectedDescribedBy, "aria-describedby");
 
   let screenSelector = document.getElementById("webRTC-selectWindowOrScreen");

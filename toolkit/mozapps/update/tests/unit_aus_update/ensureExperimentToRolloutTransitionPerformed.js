@@ -63,9 +63,8 @@ async function run_test() {
   // that system to disable update.
   Services.prefs.setBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, true);
 
-  const originalBackgroundUpdateEnabled = await UpdateUtils.readUpdateConfigSetting(
-    backgroundUpdateEnabledPref
-  );
+  const originalBackgroundUpdateEnabled =
+    await UpdateUtils.readUpdateConfigSetting(backgroundUpdateEnabledPref);
 
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref(transitionPerformedPref);

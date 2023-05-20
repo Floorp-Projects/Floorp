@@ -98,70 +98,72 @@ add_task(async function () {
         "http://example.net/browser/browser/components/originattributes/test/browser/",
     };
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [argObj], async function (
-      arg
-    ) {
-      // The CSS cache needs to be cleared in-process.
-      content.windowUtils.clearSharedStyleSheetCache();
+    await SpecialPowers.spawn(
+      tab.linkedBrowser,
+      [argObj],
+      async function (arg) {
+        // The CSS cache needs to be cleared in-process.
+        content.windowUtils.clearSharedStyleSheetCache();
 
-      let videoURL = arg.urlPrefix + "file_thirdPartyChild.video.ogv";
-      let audioURL = arg.urlPrefix + "file_thirdPartyChild.audio.ogg";
-      let URLSuffix = "?r=" + arg.randomSuffix;
+        let videoURL = arg.urlPrefix + "file_thirdPartyChild.video.ogv";
+        let audioURL = arg.urlPrefix + "file_thirdPartyChild.audio.ogg";
+        let URLSuffix = "?r=" + arg.randomSuffix;
 
-      // Create the audio and video elements.
-      let audio = content.document.createElement("audio");
-      let video = content.document.createElement("video");
-      let audioSource = content.document.createElement("source");
+        // Create the audio and video elements.
+        let audio = content.document.createElement("audio");
+        let video = content.document.createElement("video");
+        let audioSource = content.document.createElement("source");
 
-      // Append the audio element into the body, and wait until they're finished.
-      await new content.Promise(resolve => {
-        let audioLoaded = false;
+        // Append the audio element into the body, and wait until they're finished.
+        await new content.Promise(resolve => {
+          let audioLoaded = false;
 
-        let audioListener = () => {
-          Assert.ok(true, `Audio suspended: ${audioURL + URLSuffix}`);
-          audio.removeEventListener("suspend", audioListener);
+          let audioListener = () => {
+            Assert.ok(true, `Audio suspended: ${audioURL + URLSuffix}`);
+            audio.removeEventListener("suspend", audioListener);
 
-          audioLoaded = true;
-          if (audioLoaded) {
+            audioLoaded = true;
+            if (audioLoaded) {
+              resolve();
+            }
+          };
+
+          Assert.ok(true, `Loading audio: ${audioURL + URLSuffix}`);
+
+          // Add the event listeners before everything in case we lose events.
+          audio.addEventListener("suspend", audioListener);
+
+          // Assign attributes for the audio element.
+          audioSource.setAttribute("src", audioURL + URLSuffix);
+          audioSource.setAttribute("type", "audio/ogg");
+
+          audio.appendChild(audioSource);
+          audio.autoplay = true;
+
+          content.document.body.appendChild(audio);
+        });
+
+        // Append the video element into the body, and wait until it's finished.
+        await new content.Promise(resolve => {
+          let listener = () => {
+            Assert.ok(true, `Video suspended: ${videoURL + URLSuffix}`);
+            video.removeEventListener("suspend", listener);
             resolve();
-          }
-        };
+          };
 
-        Assert.ok(true, `Loading audio: ${audioURL + URLSuffix}`);
+          Assert.ok(true, `Loading video: ${videoURL + URLSuffix}`);
 
-        // Add the event listeners before everything in case we lose events.
-        audio.addEventListener("suspend", audioListener);
+          // Add the event listener before everything in case we lose the event.
+          video.addEventListener("suspend", listener);
 
-        // Assign attributes for the audio element.
-        audioSource.setAttribute("src", audioURL + URLSuffix);
-        audioSource.setAttribute("type", "audio/ogg");
+          // Assign attributes for the video element.
+          video.setAttribute("src", videoURL + URLSuffix);
+          video.setAttribute("type", "video/ogg");
 
-        audio.appendChild(audioSource);
-        audio.autoplay = true;
-
-        content.document.body.appendChild(audio);
-      });
-
-      // Append the video element into the body, and wait until it's finished.
-      await new content.Promise(resolve => {
-        let listener = () => {
-          Assert.ok(true, `Video suspended: ${videoURL + URLSuffix}`);
-          video.removeEventListener("suspend", listener);
-          resolve();
-        };
-
-        Assert.ok(true, `Loading video: ${videoURL + URLSuffix}`);
-
-        // Add the event listener before everything in case we lose the event.
-        video.addEventListener("suspend", listener);
-
-        // Assign attributes for the video element.
-        video.setAttribute("src", videoURL + URLSuffix);
-        video.setAttribute("type", "video/ogg");
-
-        content.document.body.appendChild(video);
-      });
-    });
+          content.document.body.appendChild(video);
+        });
+      }
+    );
 
     let maybePartitionedSuffixes = [
       "iframe.html",

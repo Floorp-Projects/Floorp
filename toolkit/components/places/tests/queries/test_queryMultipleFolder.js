@@ -36,8 +36,10 @@ add_task(async function test_queryMultipleFolders_ids() {
     .map(guid => "parent=" + guid)
     .join("&")}&sort=5&maxResults=${maxResults}`;
   PlacesUtils.history.queryStringToQuery(queryString, query, options);
-  let rootNode = PlacesUtils.history.executeQuery(query.value, options.value)
-    .root;
+  let rootNode = PlacesUtils.history.executeQuery(
+    query.value,
+    options.value
+  ).root;
   rootNode.containerOpen = true;
   let resultLength = rootNode.childCount;
   Assert.equal(resultLength, maxResults);
@@ -73,8 +75,10 @@ add_task(async function test_queryMultipleFolders_guids() {
     .map(guid => "parent=" + guid)
     .join("&")}&sort=5&maxResults=${maxResults}`;
   PlacesUtils.history.queryStringToQuery(queryString, query, options);
-  let rootNode = PlacesUtils.history.executeQuery(query.value, options.value)
-    .root;
+  let rootNode = PlacesUtils.history.executeQuery(
+    query.value,
+    options.value
+  ).root;
   rootNode.containerOpen = true;
   let resultLength = rootNode.childCount;
   Assert.equal(resultLength, maxResults);

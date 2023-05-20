@@ -655,9 +655,10 @@ nsPlacesExpiration.prototype = {
     let diskAvailableBytes = DISKSIZE_FALLBACK_BYTES;
     try {
       // Protect against a full disk or tiny quota.
-      diskAvailableBytes = lazy.PlacesUtils.history.DBConnection.databaseFile.QueryInterface(
-        Ci.nsIFile
-      ).diskSpaceAvailable;
+      diskAvailableBytes =
+        lazy.PlacesUtils.history.DBConnection.databaseFile.QueryInterface(
+          Ci.nsIFile
+        ).diskSpaceAvailable;
     } catch (ex) {}
     if (diskAvailableBytes <= 0) {
       diskAvailableBytes = DISKSIZE_FALLBACK_BYTES;

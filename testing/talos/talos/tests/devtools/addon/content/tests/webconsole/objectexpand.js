@@ -64,9 +64,8 @@ module.exports = async function () {
   // Expand an object when there are many objectInspector instances in the console (See Bug 1599317)
   // First print a lot of objects and wait for them to be rendered
   const waitForInfoMessage = async () => {
-    const infoMessage = webconsole.hud.ui.outputNode.querySelector(
-      ".info.message"
-    );
+    const infoMessage =
+      webconsole.hud.ui.outputNode.querySelector(".info.message");
     if (
       infoMessage &&
       infoMessage.querySelectorAll(".tree").length === WARMUP_INFO_COUNT
@@ -100,9 +99,8 @@ async function logAndWaitForExpandedObjectDirMessage(
   expectedTreeItemCount
 ) {
   const waitForDirMessage = async () => {
-    const dirMessage = webconsole.hud.ui.outputNode.querySelector(
-      ".dir.message"
-    );
+    const dirMessage =
+      webconsole.hud.ui.outputNode.querySelector(".dir.message");
     if (dirMessage) {
       return dirMessage;
     }

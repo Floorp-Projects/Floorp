@@ -323,9 +323,8 @@ function LoadCerts() {
     Ci.nsICertOverrideService
   );
 
-  rememberedDecisionsRichList.richlist = document.getElementById(
-    "rememberedList"
-  );
+  rememberedDecisionsRichList.richlist =
+    document.getElementById("rememberedList");
   serverRichList.richlist = document.getElementById("serverList");
 
   rememberedDecisionsRichList.buildRichList();
@@ -583,15 +582,12 @@ function editCerts() {
 
 async function restoreCerts() {
   var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  let [
-    restoreFileDialog,
-    filePkcs12Spec,
-    fileCertSpec,
-  ] = await document.l10n.formatValues([
-    { id: "choose-p12-restore-file-dialog" },
-    { id: "file-browse-pkcs12-spec" },
-    { id: "file-browse-certificate-spec" },
-  ]);
+  let [restoreFileDialog, filePkcs12Spec, fileCertSpec] =
+    await document.l10n.formatValues([
+      { id: "choose-p12-restore-file-dialog" },
+      { id: "file-browse-pkcs12-spec" },
+      { id: "file-browse-certificate-spec" },
+    ]);
   fp.init(window, restoreFileDialog, Ci.nsIFilePicker.modeOpen);
   fp.appendFilter(filePkcs12Spec, "*.p12; *.pfx");
   fp.appendFilter(fileCertSpec, gCertFileTypes);

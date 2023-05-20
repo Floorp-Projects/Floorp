@@ -90,9 +90,8 @@ async function assertIssueList(panel, expectedIssues) {
       const unsupportedBrowserListEl = issueEl.querySelector(
         ".compatibility-unsupported-browser-list"
       );
-      const unsupportedBrowsersEl = unsupportedBrowserListEl.querySelectorAll(
-        "li"
-      );
+      const unsupportedBrowsersEl =
+        unsupportedBrowserListEl.querySelectorAll("li");
 
       is(
         unsupportedBrowsersEl.length,

@@ -309,8 +309,7 @@ export default [
   createVerticalTableElementTestCase("height", false, "table-row"),
   createVerticalTableElementTestCase("height", false, "table-row-group"),
   {
-    info:
-      "width's inactivity status for a row takes the table's writing mode into account",
+    info: "width's inactivity status for a row takes the table's writing mode into account",
     property: "width",
     createTestElement: rootNode => {
       const table = document.createElement("table");

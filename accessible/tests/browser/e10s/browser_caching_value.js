@@ -96,8 +96,7 @@ const valueTests = [
     expected: ["hey!", 6, 0, 7, 0],
   },
   {
-    desc:
-      "Value should change to @aria-valuetext when @aria-valuenow is removed",
+    desc: "Value should change to @aria-valuetext when @aria-valuenow is removed",
     id: "slider",
     attrs: [
       {

@@ -42,9 +42,8 @@ export var ManifestObtainer = {
       throw new TypeError("Invalid input. Expected XUL browser.");
     }
 
-    const actor = aBrowser.browsingContext.currentWindowGlobal.getActor(
-      "ManifestMessages"
-    );
+    const actor =
+      aBrowser.browsingContext.currentWindowGlobal.getActor("ManifestMessages");
 
     const reply = await actor.sendQuery(
       "DOM:ManifestObtainer:Obtain",

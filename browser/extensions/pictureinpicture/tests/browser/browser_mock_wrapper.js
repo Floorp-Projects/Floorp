@@ -159,9 +159,8 @@ async function setupVideoListeners(browser) {
     // Set a listener for "playing" event
     video.addEventListener("playing", async () => {
       info("Got playing event!");
-      let playPauseButton = content.document.querySelector(
-        ".play-pause-button"
-      );
+      let playPauseButton =
+        content.document.querySelector(".play-pause-button");
       ok(
         !playPauseButton.getAttribute("isPaused"),
         "playPauseButton does not have isPaused attribute."
@@ -171,9 +170,8 @@ async function setupVideoListeners(browser) {
     // Set a listener for "pause" event
     video.addEventListener("pause", async () => {
       info("Got pause event!");
-      let playPauseButton = content.document.querySelector(
-        ".play-pause-button"
-      );
+      let playPauseButton =
+        content.document.querySelector(".play-pause-button");
       // mock-wrapper's pause() method uses an invalid selector and should throw
       // an error. Test that the PiP wrapper uses the fallback pause() method.
       // This is to ensure PiP can handle cases where a site wrapper script is

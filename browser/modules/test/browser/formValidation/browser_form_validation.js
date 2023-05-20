@@ -35,9 +35,10 @@ function promiseTabLoadEvent(tab, url) {
   return loaded;
 }
 
-var gInvalidFormPopup = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal
-  .getActor("FormValidation")
-  ._getAndMaybeCreatePanel(document);
+var gInvalidFormPopup =
+  gBrowser.selectedBrowser.browsingContext.currentWindowGlobal
+    .getActor("FormValidation")
+    ._getAndMaybeCreatePanel(document);
 ok(
   gInvalidFormPopup,
   "The browser should have a popup to show when a form is invalid"
@@ -117,29 +118,34 @@ async function blurChildElement(browser) {
 }
 
 async function checkChildFocus(browser, message) {
-  await SpecialPowers.spawn(browser, [[message, testId]], async function (
-    args
-  ) {
-    let [msg, id] = args;
-    var focused =
-      content.document.activeElement == content.document.getElementById("i");
+  await SpecialPowers.spawn(
+    browser,
+    [[message, testId]],
+    async function (args) {
+      let [msg, id] = args;
+      var focused =
+        content.document.activeElement == content.document.getElementById("i");
 
-    var validMsg = true;
-    if (msg) {
-      validMsg = msg == content.document.getElementById("i").validationMessage;
+      var validMsg = true;
+      if (msg) {
+        validMsg =
+          msg == content.document.getElementById("i").validationMessage;
+      }
+
+      Assert.equal(
+        focused,
+        true,
+        "Test " + id + " First invalid element should be focused"
+      );
+      Assert.equal(
+        validMsg,
+        true,
+        "Test " +
+          id +
+          " The panel should show the message from validationMessage"
+      );
     }
-
-    Assert.equal(
-      focused,
-      true,
-      "Test " + id + " First invalid element should be focused"
-    );
-    Assert.equal(
-      validMsg,
-      true,
-      "Test " + id + " The panel should show the message from validationMessage"
-    );
-  });
+  );
 }
 
 /**

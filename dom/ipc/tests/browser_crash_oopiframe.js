@@ -84,10 +84,9 @@ async function testFrameCrash(numTabs) {
   if (numTabs == 1) {
     // The BrowsingContext is re-used, but the window global might still be
     // getting set up at this point, so wait until it's been initialized.
-    let {
-      subject: windowGlobal,
-    } = await BrowserUtils.promiseObserved("window-global-created", wgp =>
-      wgp.documentURI.spec.startsWith("about:framecrashed")
+    let { subject: windowGlobal } = await BrowserUtils.promiseObserved(
+      "window-global-created",
+      wgp => wgp.documentURI.spec.startsWith("about:framecrashed")
     );
 
     is(

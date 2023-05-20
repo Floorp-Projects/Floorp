@@ -41,10 +41,11 @@ async function openTabInUserContext(aURL, aUserContextId) {
     userContextId: aUserContextId,
   };
   info("Create triggeringPrincipal.");
-  let triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    makeURI(aURL),
-    originAttributes
-  );
+  let triggeringPrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(
+      makeURI(aURL),
+      originAttributes
+    );
   // Open the tab in the correct userContextId.
   info("Open the tab and wait for it to be loaded.");
   let tab = BrowserTestUtils.addTab(gBrowser, aURL, {

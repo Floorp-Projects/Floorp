@@ -686,9 +686,8 @@ export class ContextMenuChild extends JSWindowActorChild {
     }
 
     if (linkReferrerInfo) {
-      data.linkReferrerInfo = lazy.E10SUtils.serializeReferrerInfo(
-        linkReferrerInfo
-      );
+      data.linkReferrerInfo =
+        lazy.E10SUtils.serializeReferrerInfo(linkReferrerInfo);
     }
 
     // Notify observers (currently only webextensions) of the context menu being

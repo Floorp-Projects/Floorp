@@ -276,9 +276,8 @@ class SessionModule extends Module {
 
         for (const eventName of eventNames) {
           if (!globalEventSet.has(eventName)) {
-            const alreadyEnabledContextIds = this.#obtainEventEnabledBrowsingContextIds(
-              eventName
-            );
+            const alreadyEnabledContextIds =
+              this.#obtainEventEnabledBrowsingContextIds(eventName);
             globalEventSet.add(eventName);
             for (const contextId of alreadyEnabledContextIds) {
               eventMap.get(contextId).delete(eventName);

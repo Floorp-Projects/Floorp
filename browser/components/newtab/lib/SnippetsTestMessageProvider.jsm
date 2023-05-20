@@ -14,8 +14,7 @@ const MESSAGES = () => [
     template_version: "1.1.2",
     content: {
       text: "This is for <link0>preferences</link0> and <link1>about</link1>",
-      icon:
-        "https://snippets.cdn.mozilla.net/media/icons/1a8bb10e-8166-4e14-9e41-c1f85a41bcd2.png",
+      icon: "https://snippets.cdn.mozilla.net/media/icons/1a8bb10e-8166-4e14-9e41-c1f85a41bcd2.png",
       button_label: "Button Label",
       section_title_icon:
         "https://snippets.cdn.mozilla.net/media/icons/5878847e-a1fb-4204-aad9-09f6cf7f99ee.png",
@@ -48,8 +47,7 @@ const MESSAGES = () => [
     template_version: "1.1.2",
     content: {
       text: "This is for <link0>preferences</link0> and <link1>about</link1>",
-      icon:
-        "https://snippets.cdn.mozilla.net/media/icons/1a8bb10e-8166-4e14-9e41-c1f85a41bcd2.png",
+      icon: "https://snippets.cdn.mozilla.net/media/icons/1a8bb10e-8166-4e14-9e41-c1f85a41bcd2.png",
       button_label: "Button Label",
       section_title_icon:
         "https://snippets.cdn.mozilla.net/media/icons/5878847e-a1fb-4204-aad9-09f6cf7f99ee.png",
@@ -88,8 +86,7 @@ const MESSAGES = () => [
       title: "Firefox Account!",
       title_icon: TEST_ICON_16,
       title_icon_dark_theme: TEST_ICON_BW,
-      text:
-        "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
+      text: "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
       links: {
         syncLink: { url: "https://www.mozilla.org/en-US/firefox/accounts" },
       },
@@ -106,8 +103,7 @@ const MESSAGES = () => [
       title: "Firefox Account!",
       title_icon: TEST_ICON_16,
       title_icon_dark_theme: "",
-      text:
-        "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
+      text: "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
       links: {
         syncLink: { url: "https://www.mozilla.org/en-US/firefox/accounts" },
       },
@@ -121,8 +117,7 @@ const MESSAGES = () => [
     content: {
       icon: TEST_ICON,
       icon_dark_theme: TEST_ICON_BW,
-      text:
-        "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
+      text: "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
       links: {
         syncLink: { url: "https://www.mozilla.org/en-US/firefox/accounts" },
       },
@@ -135,8 +130,7 @@ const MESSAGES = () => [
     content: {
       icon: TEST_ICON,
       icon_dark_theme: TEST_ICON_BW,
-      text:
-        "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
+      text: "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
       links: {
         syncLink: { url: "https://www.mozilla.org/en-US/firefox/accounts" },
       },
@@ -154,8 +148,7 @@ const MESSAGES = () => [
       icon_dark_theme: TEST_ICON_BW,
       button_label: "Get one now!",
       button_url: "https://www.mozilla.org/en-US/firefox/accounts",
-      text:
-        "Sync it, link it, take it with you. All this and more with a Firefox Account.",
+      text: "Sync it, link it, take it with you. All this and more with a Firefox Account.",
       block_button_text: "Block",
     },
   },
@@ -213,8 +206,7 @@ const MESSAGES = () => [
       retry_button_label: "Try again?",
       links: {
         privacyLink: {
-          url:
-            "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
+          url: "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
         },
       },
     },
@@ -246,8 +238,7 @@ const MESSAGES = () => [
       error_text: "Error!",
       links: {
         privacyLink: {
-          url:
-            "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
+          url: "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
         },
       },
     },
@@ -282,8 +273,7 @@ const MESSAGES = () => [
       error_text: "Error!",
       links: {
         privacyLink: {
-          url:
-            "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
+          url: "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
         },
       },
     },
@@ -375,8 +365,7 @@ const MESSAGES = () => [
       success_text: "Check your device for the email message!",
       links: {
         privacyLink: {
-          url:
-            "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
+          url: "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
         },
       },
     },
@@ -406,8 +395,7 @@ const MESSAGES = () => [
       success_text: "Check your device for the email message!",
       links: {
         privacyLink: {
-          url:
-            "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
+          url: "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
         },
       },
     },
@@ -448,8 +436,7 @@ const MESSAGES = () => [
       success_text: "Check your device for the email message!",
       links: {
         privacyLink: {
-          url:
-            "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
+          url: "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
         },
       },
     },
@@ -492,8 +479,7 @@ const MESSAGES = () => [
       success_text: "Check your device for the email message!",
       links: {
         privacyLink: {
-          url:
-            "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
+          url: "https://www.mozilla.org/privacy/websites/?sample_rate=0.001&snippet_name=7894",
         },
       },
     },
@@ -517,8 +503,7 @@ const MESSAGES = () => [
       donation_amount_fourth: 5,
       donation_form_url:
         "https://donate.mozilla.org/pl/?utm_source=desktop-snippet&amp;utm_medium=snippet&amp;utm_campaign=donate&amp;utm_term=7556",
-      text:
-        "Big corporations want to restrict how we access the web. Fake news is making it harder for us to find the truth. Online bullies are silencing inspired voices. The <em>not-for-profit Mozilla Foundation</em> fights for a healthy internet with programs like our Tech Policy Fellowships and Internet Health Report; <b>will you donate today</b>?",
+      text: "Big corporations want to restrict how we access the web. Fake news is making it harder for us to find the truth. Online bullies are silencing inspired voices. The <em>not-for-profit Mozilla Foundation</em> fights for a healthy internet with programs like our Tech Policy Fellowships and Internet Health Report; <b>will you donate today</b>?",
     },
   },
   {
@@ -536,8 +521,7 @@ const MESSAGES = () => [
       donation_amount_third: 10,
       donation_amount_fourth: 5,
       donation_form_url: "https://donate.mozilla.org",
-      text:
-        "Big corporations want to restrict how we access the web. Fake news is making it harder for us to find the truth. Online bullies are silencing inspired voices. The <em>not-for-profit Mozilla Foundation</em> fights for a healthy internet with programs like our Tech Policy Fellowships and Internet Health Report; <b>will you donate today</b>?",
+      text: "Big corporations want to restrict how we access the web. Fake news is making it harder for us to find the truth. Online bullies are silencing inspired voices. The <em>not-for-profit Mozilla Foundation</em> fights for a healthy internet with programs like our Tech Policy Fellowships and Internet Health Report; <b>will you donate today</b>?",
       test: "bold",
     },
   },
@@ -555,8 +539,7 @@ const MESSAGES = () => [
       donation_amount_third: 10,
       donation_amount_fourth: 5,
       donation_form_url: "https://donate.mozilla.org",
-      text:
-        "Big corporations want to restrict how we access the web. Fake news is making it harder for us to find the truth. Online bullies are silencing inspired voices. The <em>not-for-profit Mozilla Foundation</em> fights for a healthy internet with programs like our Tech Policy Fellowships and Internet Health Report; <b>will you donate today</b>?",
+      text: "Big corporations want to restrict how we access the web. Fake news is making it harder for us to find the truth. Online bullies are silencing inspired voices. The <em>not-for-profit Mozilla Foundation</em> fights for a healthy internet with programs like our Tech Policy Fellowships and Internet Health Report; <b>will you donate today</b>?",
       test: "takeover",
     },
   },
@@ -569,8 +552,7 @@ const MESSAGES = () => [
       icon: TEST_ICON,
       icon_dark_theme: TEST_ICON_BW,
       title: "Firefox Account!",
-      text:
-        "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
+      text: "<syncLink>Sync it, link it, take it with you</syncLink>. All this and more with a Firefox Account.",
       links: {
         syncLink: { url: "https://www.mozilla.org/en-US/firefox/accounts" },
       },
@@ -586,8 +568,7 @@ const MESSAGES = () => [
       icon: TEST_ICON,
       icon_dark_theme: TEST_ICON_BW,
       title: "Firefox Account!",
-      text:
-        "Sync it, link it, take it with you. All this and more with a Firefox Account.",
+      text: "Sync it, link it, take it with you. All this and more with a Firefox Account.",
       block_button_text: "Block",
       section_title_icon: "chrome://global/skin/icons/pocket.svg",
       section_title_text: "Messages from Mozilla (click for info)",
@@ -600,8 +581,7 @@ const MESSAGES = () => [
     content: {
       icon: TEST_ICON,
       icon_dark_theme: TEST_ICON_BW,
-      text:
-        "Securely store passwords, bookmarks, and more with a Firefox Account. <syncLink>Sign up</syncLink>",
+      text: "Securely store passwords, bookmarks, and more with a Firefox Account. <syncLink>Sign up</syncLink>",
       links: {
         syncLink: { url: "https://www.mozilla.org/en-US/firefox/accounts" },
       },
@@ -614,8 +594,7 @@ const MESSAGES = () => [
     content: {
       icon: TEST_ICON,
       icon_dark_theme: TEST_ICON_BW,
-      text:
-        "<syncLink>Connect your Firefox Account to Sync</syncLink> your protected passwords, open tabs and bookmarks, and they'll always be available to you - on all of your devices.",
+      text: "<syncLink>Connect your Firefox Account to Sync</syncLink> your protected passwords, open tabs and bookmarks, and they'll always be available to you - on all of your devices.",
       links: {
         syncLink: { url: "https://www.mozilla.org/en-US/firefox/accounts" },
       },
@@ -629,8 +608,7 @@ const MESSAGES = () => [
       icon: TEST_ICON,
       icon_dark_theme: TEST_ICON_BW,
       title: "See if you've been part of an online data breach.",
-      text:
-        "Securely store passwords, bookmarks, and more with a Firefox Account. <syncLink>Sign up</syncLink>",
+      text: "Securely store passwords, bookmarks, and more with a Firefox Account. <syncLink>Sign up</syncLink>",
       links: {
         syncLink: { url: "https://www.mozilla.org/en-US/firefox/accounts" },
       },
@@ -659,8 +637,7 @@ const MESSAGES = () => [
       button_label: "Find Out Now",
       button_url: "https://www.mozilla.org/en-US/firefox/accounts",
       title: "See if you've been part of an online data breach.",
-      text:
-        "Firefox Monitor tells you what hackers already know about you. Here's some extra text to make the content really long.",
+      text: "Firefox Monitor tells you what hackers already know about you. Here's some extra text to make the content really long.",
       block_button_text: "Block",
     },
   },
@@ -686,8 +663,7 @@ const MESSAGES = () => [
       button_label: "Get monitor",
       button_action: "ENABLE_FIREFOX_MONITOR",
       button_action_args: {
-        url:
-          "https://monitor.firefox.com/oauth/init?utm_source=snippets&utm_campaign=monitor-snippet-test&form_type=email&entrypoint=newtab",
+        url: "https://monitor.firefox.com/oauth/init?utm_source=snippets&utm_campaign=monitor-snippet-test&form_type=email&entrypoint=newtab",
         flowRequestParams: {
           entrypoint: "snippets",
           utm_term: "monitor",

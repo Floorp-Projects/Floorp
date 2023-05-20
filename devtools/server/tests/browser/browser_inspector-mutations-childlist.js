@@ -19,22 +19,24 @@ function loadSelectors(walker, selectors) {
 }
 
 function doMoves(movesArg) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [movesArg], function (
-    moves
-  ) {
-    function setParent(nodeSelector, newParentSelector) {
-      const node = content.document.querySelector(nodeSelector);
-      if (newParentSelector) {
-        const newParent = content.document.querySelector(newParentSelector);
-        newParent.appendChild(node);
-      } else {
-        node.remove();
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [movesArg],
+    function (moves) {
+      function setParent(nodeSelector, newParentSelector) {
+        const node = content.document.querySelector(nodeSelector);
+        if (newParentSelector) {
+          const newParent = content.document.querySelector(newParentSelector);
+          newParent.appendChild(node);
+        } else {
+          node.remove();
+        }
+      }
+      for (const move of moves) {
+        setParent(move[0], move[1]);
       }
     }
-    for (const move of moves) {
-      setParent(move[0], move[1]);
-    }
-  });
+  );
 }
 
 /**

@@ -47,12 +47,8 @@ add_task(async function () {
 
   info("Wait for onLocationChange to be fired");
   {
-    const {
-      browsingContext,
-      location,
-      request,
-      flags,
-    } = await onLocationChanged;
+    const { browsingContext, location, request, flags } =
+      await onLocationChanged;
     is(
       browsingContext,
       firstPageBrowsingContext,
@@ -86,12 +82,8 @@ add_task(async function () {
     "The iframe BrowsingContext also exposes a WebProgress"
   );
   {
-    const {
-      browsingContext,
-      location,
-      request,
-      flags,
-    } = await onIframeLocationChanged;
+    const { browsingContext, location, request, flags } =
+      await onIframeLocationChanged;
     is(
       browsingContext,
       iframeBC,
@@ -127,12 +119,8 @@ add_task(async function () {
     );
   }
   {
-    const {
-      browsingContext,
-      location,
-      request,
-      flags,
-    } = await onSecondLocationChanged;
+    const { browsingContext, location, request, flags } =
+      await onSecondLocationChanged;
     is(
       browsingContext,
       secondPageBrowsingContext,
@@ -160,12 +148,8 @@ add_task(async function () {
   browser.goBack();
 
   {
-    const {
-      browsingContext,
-      location,
-      request,
-      flags,
-    } = await onBackLocationChanged;
+    const { browsingContext, location, request, flags } =
+      await onBackLocationChanged;
     is(
       browsingContext,
       firstPageBrowsingContext,

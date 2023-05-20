@@ -39,9 +39,8 @@ add_task(async function bookmark() {
     { gBrowser: win.gBrowser, url },
     async () => {
       // The bookmark button should not be starred.
-      const bookmarkButton = win.BrowserPageActions.urlbarButtonNodeForActionID(
-        "bookmark"
-      );
+      const bookmarkButton =
+        win.BrowserPageActions.urlbarButtonNodeForActionID("bookmark");
       Assert.ok(!bookmarkButton.hasAttribute("starred"));
 
       info("Click the button.");

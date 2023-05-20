@@ -9,7 +9,8 @@ class CommandModule extends Module {
     super(messageHandler);
     this._subscribedEvents = new Set();
 
-    this._createdByMessageHandlerConstructor = this._isCreatedByMessageHandlerConstructor();
+    this._createdByMessageHandlerConstructor =
+      this._isCreatedByMessageHandlerConstructor();
   }
   destroy() {}
 

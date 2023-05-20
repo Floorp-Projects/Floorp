@@ -785,9 +785,8 @@ export var pktApi = (function () {
       access_token: getAccessToken(),
     });
 
-    const useBFF = lazy.NimbusFeatures.saveToPocket.getVariable(
-      "bffRecentSaves"
-    );
+    const useBFF =
+      lazy.NimbusFeatures.saveToPocket.getVariable("bffRecentSaves");
 
     return apiRequest(
       {
@@ -841,9 +840,8 @@ export var pktApi = (function () {
       { count: 4 },
       {
         success(data) {
-          const useBFF = lazy.NimbusFeatures.saveToPocket.getVariable(
-            "bffRecentSaves"
-          );
+          const useBFF =
+            lazy.NimbusFeatures.saveToPocket.getVariable("bffRecentSaves");
 
           // Don't try to parse bad or missing data
           if (

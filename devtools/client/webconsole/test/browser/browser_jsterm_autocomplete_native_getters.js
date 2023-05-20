@@ -24,8 +24,8 @@ add_task(async function () {
   await onPopupOpen;
 
   ok(popup.isOpen, "popup is open");
-  const cacheMatches = ui.wrapper.getStore().getState().autocomplete.cache
-    .matches;
+  const cacheMatches = ui.wrapper.getStore().getState().autocomplete
+    .cache.matches;
   is(popup.itemCount, cacheMatches.length, "popup.itemCount is correct");
   ok(
     cacheMatches.includes("addEventListener"),

@@ -707,8 +707,9 @@ function verifyRequestItemTarget(
     const value = target
       .querySelector(".requests-list-status-code")
       .getAttribute("data-status-code");
-    const codeValue = target.querySelector(".requests-list-status-code")
-      .textContent;
+    const codeValue = target.querySelector(
+      ".requests-list-status-code"
+    ).textContent;
     const tooltip = target
       .querySelector(".requests-list-status-code")
       .getAttribute("title");
@@ -752,8 +753,9 @@ function verifyRequestItemTarget(
     is(tooltip, fullMimeType, "The tooltip type is correct.");
   }
   if (transferred !== undefined) {
-    const value = target.querySelector(".requests-list-transferred")
-      .textContent;
+    const value = target.querySelector(
+      ".requests-list-transferred"
+    ).textContent;
     const tooltip = target
       .querySelector(".requests-list-transferred")
       .getAttribute("title");
@@ -773,8 +775,9 @@ function verifyRequestItemTarget(
     is(tooltip, size, "The tooltip size is correct.");
   }
   if (time !== undefined) {
-    const value = target.querySelector(".requests-list-timings-total")
-      .textContent;
+    const value = target.querySelector(
+      ".requests-list-timings-total"
+    ).textContent;
     const tooltip = target
       .querySelector(".requests-list-timings-total")
       .getAttribute("title");

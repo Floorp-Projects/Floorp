@@ -32,9 +32,8 @@ async function checkDeviceManager({ buttonIsDisabled }) {
   }
 
   // Check to see if the button was updated correctly
-  let changePwButton = deviceManagerWindow.document.getElementById(
-    "change_pw_button"
-  );
+  let changePwButton =
+    deviceManagerWindow.document.getElementById("change_pw_button");
   is(
     changePwButton.getAttribute("disabled") == "true",
     buttonIsDisabled,

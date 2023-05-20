@@ -475,8 +475,9 @@ async function testSelectPosition(optionsBrowser, zoom) {
   let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(window);
   await BrowserTestUtils.synthesizeMouseAtCenter("select", {}, optionsBrowser);
   let popup = await popupShownPromise;
-  let popupLeft = popup.shadowRoot.querySelector(".menupopup-arrowscrollbox")
-    .screenX;
+  let popupLeft = popup.shadowRoot.querySelector(
+    ".menupopup-arrowscrollbox"
+  ).screenX;
   let browserLeft = optionsBrowser.screenX * zoom;
   ok(
     Math.abs(popupLeft - browserLeft) <= 1,

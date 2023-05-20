@@ -119,8 +119,8 @@ var PlacesOrganizer = {
       throw new Error("Containers hierarchy not specified");
     }
     let hierarchy = [].concat(aHierarchy);
-    let selectWasSuppressed = this._places.view.selection
-      .selectEventsSuppressed;
+    let selectWasSuppressed =
+      this._places.view.selection.selectEventsSuppressed;
     if (!selectWasSuppressed) {
       this._places.view.selection.selectEventsSuppressed = true;
     }
@@ -568,8 +568,9 @@ var PlacesOrganizer = {
           const [msg] = await document.l10n.formatMessages([
             { id: "places-details-pane-items-count", args: { count } },
           ]);
-          countString = msg.attributes.find(attr => attr.name === "value")
-            ?.value;
+          countString = msg.attributes.find(
+            attr => attr.name === "value"
+          )?.value;
         }
 
         const backupDate = PlacesBackups.getDateForFile(file);
@@ -627,13 +628,11 @@ var PlacesOrganizer = {
       }
     };
 
-    const [
-      title,
-      filterName,
-    ] = PlacesUIUtils.promptLocalization.formatValuesSync([
-      "places-bookmarks-restore-title",
-      "places-bookmarks-restore-filter-name",
-    ]);
+    const [title, filterName] =
+      PlacesUIUtils.promptLocalization.formatValuesSync([
+        "places-bookmarks-restore-title",
+        "places-bookmarks-restore-filter-name",
+      ]);
     fp.init(window, title, Ci.nsIFilePicker.modeOpen);
     fp.appendFilter(filterName, RESTORE_FILEPICKER_FILTER_EXT);
     fp.appendFilters(Ci.nsIFilePicker.filterAll);
@@ -702,13 +701,11 @@ var PlacesOrganizer = {
       }
     };
 
-    const [
-      title,
-      filterName,
-    ] = PlacesUIUtils.promptLocalization.formatValuesSync([
-      "places-bookmarks-backup-title",
-      "places-bookmarks-restore-filter-name",
-    ]);
+    const [title, filterName] =
+      PlacesUIUtils.promptLocalization.formatValuesSync([
+        "places-bookmarks-backup-title",
+        "places-bookmarks-restore-filter-name",
+      ]);
     fp.init(window, title, Ci.nsIFilePicker.modeSave);
     fp.appendFilter(filterName, RESTORE_FILEPICKER_FILTER_EXT);
     fp.defaultString = PlacesBackups.getFilenameForDate();

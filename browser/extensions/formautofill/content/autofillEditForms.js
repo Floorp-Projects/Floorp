@@ -512,9 +512,8 @@ class EditCreditCard extends EditAutofillForm {
       month: this._elements.form.querySelector("#cc-exp-month"),
       year: this._elements.form.querySelector("#cc-exp-year"),
       billingAddress: this._elements.form.querySelector("#billingAddressGUID"),
-      billingAddressRow: this._elements.form.querySelector(
-        ".billingAddressRow"
-      ),
+      billingAddressRow:
+        this._elements.form.querySelector(".billingAddressRow"),
     });
 
     this.attachEventListeners();
@@ -637,8 +636,8 @@ class EditCreditCard extends EditAutofillForm {
       field == this._elements.ccNumber &&
       !FormAutofillUtils.isCCNumber(field.value)
     ) {
-      let invalidCardNumberString = this._elements
-        .invalidCardNumberStringElement.textContent;
+      let invalidCardNumberString =
+        this._elements.invalidCardNumberStringElement.textContent;
       field.setCustomValidity(invalidCardNumberString || " ");
     }
   }

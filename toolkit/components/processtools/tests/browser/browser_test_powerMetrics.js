@@ -111,12 +111,10 @@ add_task(async () => {
   let cpuTimeByType = {},
     gpuTimeByType = {};
   for (let label of kGleanProcessTypeLabels) {
-    cpuTimeByType[label] = Glean.power.cpuTimePerProcessTypeMs[
-      label
-    ].testGetValue();
-    gpuTimeByType[label] = Glean.power.gpuTimePerProcessTypeMs[
-      label
-    ].testGetValue();
+    cpuTimeByType[label] =
+      Glean.power.cpuTimePerProcessTypeMs[label].testGetValue();
+    gpuTimeByType[label] =
+      Glean.power.gpuTimePerProcessTypeMs[label].testGetValue();
   }
   let totalCpuTime = Glean.power.totalCpuTimeMs.testGetValue();
   let totalGpuTime = Glean.power.totalGpuTimeMs.testGetValue();

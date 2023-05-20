@@ -1041,9 +1041,8 @@ var UnsubmittedCrashHandler = {
       return null;
     }
 
-    let notification = chromeWin.gNotificationBox.getNotificationWithValue(
-      notificationID
-    );
+    let notification =
+      chromeWin.gNotificationBox.getNotificationWithValue(notificationID);
     if (notification) {
       return null;
     }

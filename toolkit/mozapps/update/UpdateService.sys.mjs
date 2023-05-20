@@ -806,8 +806,9 @@ function getCanApplyUpdates() {
       // accepting a UAC prompt from an elevation request made by the updater.
       // Whether the client can elevate (e.g. has a split token) is determined
       // in nsXULAppInfo::GetUserCanElevate which is located in nsAppRunner.cpp.
-      let userCanElevate = Services.appinfo.QueryInterface(Ci.nsIWinAppHelper)
-        .userCanElevate;
+      let userCanElevate = Services.appinfo.QueryInterface(
+        Ci.nsIWinAppHelper
+      ).userCanElevate;
       if (lazy.gIsBackgroundTaskMode) {
         LOG(
           "getCanApplyUpdates - in background task mode, assuming user can't elevate"
@@ -1677,9 +1678,8 @@ function handleUpdateFailure(update) {
         getReadyUpdateDir(),
         (update.state = STATE_PENDING_ELEVATE)
       );
-      update.statusText = lazy.gUpdateBundle.GetStringFromName(
-        "elevationFailure"
-      );
+      update.statusText =
+        lazy.gUpdateBundle.GetStringFromName("elevationFailure");
     } else {
       LOG(
         "handleUpdateFailure - Failure because elevation was cancelled. " +
@@ -2860,9 +2860,8 @@ UpdateService.prototype = {
       for (let update of updates) {
         update.state = STATE_FAILED;
         update.errorCode = ERR_UPDATE_STATE_NONE;
-        update.statusText = lazy.gUpdateBundle.GetStringFromName(
-          "statusFailed"
-        );
+        update.statusText =
+          lazy.gUpdateBundle.GetStringFromName("statusFailed");
       }
       let newStatus = STATE_FAILED + ": " + ERR_UPDATE_STATE_NONE;
       pingStateAndStatusCodes(updates[0], true, newStatus);
@@ -2906,9 +2905,8 @@ UpdateService.prototype = {
         for (let update of updates) {
           update.state = STATE_FAILED;
           update.errorCode = ERR_CHANNEL_CHANGE;
-          update.statusText = lazy.gUpdateBundle.GetStringFromName(
-            "statusFailed"
-          );
+          update.statusText =
+            lazy.gUpdateBundle.GetStringFromName("statusFailed");
         }
         let newStatus = STATE_FAILED + ": " + ERR_CHANNEL_CHANGE;
         pingStateAndStatusCodes(updates[0], true, newStatus);
@@ -2963,9 +2961,8 @@ UpdateService.prototype = {
             Services.appinfo.appBuildID
         );
         tooOldUpdate.state = STATE_FAILED;
-        tooOldUpdate.statusText = lazy.gUpdateBundle.GetStringFromName(
-          "statusFailed"
-        );
+        tooOldUpdate.statusText =
+          lazy.gUpdateBundle.GetStringFromName("statusFailed");
         tooOldUpdate.errorCode = ERR_OLDER_VERSION_OR_SAME_BUILD;
         // This could be split out to report telemetry for each case.
         let newStatus = STATE_FAILED + ": " + ERR_OLDER_VERSION_OR_SAME_BUILD;
@@ -3110,9 +3107,8 @@ UpdateService.prototype = {
       if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CANCELATIONS)) {
         Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS);
       }
-      update.statusText = lazy.gUpdateBundle.GetStringFromName(
-        "installSuccess"
-      );
+      update.statusText =
+        lazy.gUpdateBundle.GetStringFromName("installSuccess");
 
       // The only time that update is not a reference to readyUpdate is when
       // readyUpdate is null.
@@ -4206,9 +4202,8 @@ UpdateService.prototype = {
         if (bitsResult != null) {
           LOG("Patch BITS result: " + bitsResult);
         }
-        let internalResult = this._downloader._patch.getProperty(
-          "internalResult"
-        );
+        let internalResult =
+          this._downloader._patch.getProperty("internalResult");
         if (internalResult != null) {
           LOG("Patch nsIIncrementalDownload result: " + internalResult);
         }
@@ -4301,9 +4296,8 @@ export function UpdateManager() {
       );
       this._readyUpdate.state = STATE_FAILED;
       this._readyUpdate.errorCode = ERR_UPDATE_STATE_NONE;
-      this._readyUpdate.statusText = lazy.gUpdateBundle.GetStringFromName(
-        "statusFailed"
-      );
+      this._readyUpdate.statusText =
+        lazy.gUpdateBundle.GetStringFromName("statusFailed");
       let newStatus = STATE_FAILED + ": " + ERR_UPDATE_STATE_NONE;
       pingStateAndStatusCodes(this._readyUpdate, true, newStatus);
       this.addUpdateToHistory(this._readyUpdate);
@@ -5779,12 +5773,17 @@ Downloader.prototype = {
     );
   },
 
-  _notifyDownloadStatusObservers: function Downloader_notifyDownloadStatusObservers() {
-    if (this._notifyDuringDownload) {
-      let status = this.updateService.isDownloading ? "downloading" : "idle";
-      Services.obs.notifyObservers(this._update, "update-downloading", status);
-    }
-  },
+  _notifyDownloadStatusObservers:
+    function Downloader_notifyDownloadStatusObservers() {
+      if (this._notifyDuringDownload) {
+        let status = this.updateService.isDownloading ? "downloading" : "idle";
+        Services.obs.notifyObservers(
+          this._update,
+          "update-downloading",
+          status
+        );
+      }
+    },
 
   /**
    * Whether or not we are currently downloading something.
@@ -6158,79 +6157,81 @@ Downloader.prototype = {
    * This speeds up BITS progress notifications in response to a user watching
    * the notifications.
    */
-  _maybeStartActiveNotifications: async function Downloader__maybeStartActiveNotifications() {
-    if (
-      this.usingBits &&
-      !this._bitsActiveNotifications &&
-      this.hasDownloadListeners &&
-      this._request
-    ) {
-      LOG(
-        "Downloader:_maybeStartActiveNotifications - Starting active " +
-          "notifications"
-      );
-      this._bitsActiveNotifications = true;
-      await Promise.all([
+  _maybeStartActiveNotifications:
+    async function Downloader__maybeStartActiveNotifications() {
+      if (
+        this.usingBits &&
+        !this._bitsActiveNotifications &&
+        this.hasDownloadListeners &&
         this._request
-          .setNoProgressTimeout(BITS_ACTIVE_NO_PROGRESS_TIMEOUT_SECS)
-          .catch(error => {
-            LOG(
-              "Downloader:_maybeStartActiveNotifications - Failed to set " +
-                "no progress timeout. Error: " +
-                error
-            );
-          }),
-        this._request
-          .changeMonitorInterval(BITS_ACTIVE_POLL_RATE_MS)
-          .catch(error => {
-            LOG(
-              "Downloader:_maybeStartActiveNotifications - Failed to increase " +
-                "status update frequency. Error: " +
-                error
-            );
-          }),
-      ]);
-    }
-  },
+      ) {
+        LOG(
+          "Downloader:_maybeStartActiveNotifications - Starting active " +
+            "notifications"
+        );
+        this._bitsActiveNotifications = true;
+        await Promise.all([
+          this._request
+            .setNoProgressTimeout(BITS_ACTIVE_NO_PROGRESS_TIMEOUT_SECS)
+            .catch(error => {
+              LOG(
+                "Downloader:_maybeStartActiveNotifications - Failed to set " +
+                  "no progress timeout. Error: " +
+                  error
+              );
+            }),
+          this._request
+            .changeMonitorInterval(BITS_ACTIVE_POLL_RATE_MS)
+            .catch(error => {
+              LOG(
+                "Downloader:_maybeStartActiveNotifications - Failed to increase " +
+                  "status update frequency. Error: " +
+                  error
+              );
+            }),
+        ]);
+      }
+    },
 
   /**
    * This slows down BITS progress notifications in response to a user no longer
    * watching the notifications.
    */
-  _maybeStopActiveNotifications: async function Downloader__maybeStopActiveNotifications() {
-    if (
-      this.usingBits &&
-      this._bitsActiveNotifications &&
-      !this.hasDownloadListeners &&
-      this._request
-    ) {
-      LOG(
-        "Downloader:_maybeStopActiveNotifications - Stopping active " +
-          "notifications"
-      );
-      this._bitsActiveNotifications = false;
-      await Promise.all([
+  _maybeStopActiveNotifications:
+    async function Downloader__maybeStopActiveNotifications() {
+      if (
+        this.usingBits &&
+        this._bitsActiveNotifications &&
+        !this.hasDownloadListeners &&
         this._request
-          .setNoProgressTimeout(BITS_IDLE_NO_PROGRESS_TIMEOUT_SECS)
-          .catch(error => {
-            LOG(
-              "Downloader:_maybeStopActiveNotifications - Failed to set " +
-                "no progress timeout: " +
-                error
-            );
-          }),
-        this._request
-          .changeMonitorInterval(BITS_IDLE_POLL_RATE_MS)
-          .catch(error => {
-            LOG(
-              "Downloader:_maybeStopActiveNotifications - Failed to decrease " +
-                "status update frequency: " +
-                error
-            );
-          }),
-      ]);
-    }
-  },
+      ) {
+        LOG(
+          "Downloader:_maybeStopActiveNotifications - Stopping active " +
+            "notifications"
+        );
+        this._bitsActiveNotifications = false;
+        await Promise.all([
+          this._request
+            .setNoProgressTimeout(BITS_IDLE_NO_PROGRESS_TIMEOUT_SECS)
+            .catch(error => {
+              LOG(
+                "Downloader:_maybeStopActiveNotifications - Failed to set " +
+                  "no progress timeout: " +
+                  error
+              );
+            }),
+          this._request
+            .changeMonitorInterval(BITS_IDLE_POLL_RATE_MS)
+            .catch(error => {
+              LOG(
+                "Downloader:_maybeStopActiveNotifications - Failed to decrease " +
+                  "status update frequency: " +
+                  error
+              );
+            }),
+        ]);
+      }
+    },
 
   /**
    * When the async request begins
@@ -6480,9 +6481,8 @@ Downloader.prototype = {
           writeStatusFile(getReadyUpdateDir(), state);
           writeVersionFile(getReadyUpdateDir(), this._update.appVersion);
           this._update.installDate = new Date().getTime();
-          this._update.statusText = lazy.gUpdateBundle.GetStringFromName(
-            "installPending"
-          );
+          this._update.statusText =
+            lazy.gUpdateBundle.GetStringFromName("installPending");
           Services.prefs.setIntPref(PREF_APP_UPDATE_DOWNLOAD_ATTEMPTS, 0);
         } else {
           LOG(
@@ -6897,9 +6897,8 @@ Downloader.prototype = {
     // The network request may require proxy authentication, so provide the
     // default nsIAuthPrompt if requested.
     if (iid.equals(Ci.nsIAuthPrompt)) {
-      var prompt = Cc[
-        "@mozilla.org/network/default-auth-prompt;1"
-      ].createInstance();
+      var prompt =
+        Cc["@mozilla.org/network/default-auth-prompt;1"].createInstance();
       return prompt.QueryInterface(iid);
     }
     throw Components.Exception("", Cr.NS_NOINTERFACE);

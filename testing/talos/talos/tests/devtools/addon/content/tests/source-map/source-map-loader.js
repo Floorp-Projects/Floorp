@@ -22,8 +22,7 @@ module.exports = async function () {
 
   const fakeGeneratedSource = {
     id: "fake-id",
-    url:
-      "http://example.com/tests/devtools/addon/content/tests/source-map/angular-min.js",
+    url: "http://example.com/tests/devtools/addon/content/tests/source-map/angular-min.js",
     sourceMapBaseURL:
       "http://example.com/tests/devtools/addon/content/tests/source-map/",
     sourceMapURL: "angular-min.js.map",

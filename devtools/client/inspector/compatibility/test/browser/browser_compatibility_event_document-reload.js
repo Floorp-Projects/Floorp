@@ -41,11 +41,8 @@ add_task(async function () {
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );
 
-  const {
-    allElementsPane,
-    inspector,
-    selectedElementPane,
-  } = await openCompatibilityView();
+  const { allElementsPane, inspector, selectedElementPane } =
+    await openCompatibilityView();
 
   info("Check the issues on the selected element");
   await assertIssueList(selectedElementPane, TEST_DATA_SELECTED);

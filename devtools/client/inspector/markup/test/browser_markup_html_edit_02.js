@@ -20,8 +20,8 @@ const TEST_DATA = [
         gBrowser.selectedBrowser,
         [],
         () => {
-          const node = content.document.querySelector("#badMarkup1")
-            .nextSibling;
+          const node =
+            content.document.querySelector("#badMarkup1").nextSibling;
           return [node.nodeName, node.data];
         }
       );
@@ -42,8 +42,8 @@ const TEST_DATA = [
         gBrowser.selectedBrowser,
         [],
         () => {
-          const node = content.document.querySelector("#badMarkup2")
-            .nextSibling;
+          const node =
+            content.document.querySelector("#badMarkup2").nextSibling;
           return [node.nodeName, node.data];
         }
       );

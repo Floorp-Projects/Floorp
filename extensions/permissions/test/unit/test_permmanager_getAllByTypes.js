@@ -32,12 +32,14 @@ function check_enumerator(permissionTypes, expectedPermissions) {
 function run_test() {
   let pm = Services.perms;
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "http://example.com"
-  );
-  let subPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "http://sub.example.com"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "http://example.com"
+    );
+  let subPrincipal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "http://sub.example.com"
+    );
 
   const PERM_TYPE_1 = "test/getallbytypes_1";
   const PERM_TYPE_2 = "test/getallbytypes_2";

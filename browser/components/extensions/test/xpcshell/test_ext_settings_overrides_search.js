@@ -36,8 +36,8 @@ add_task(async function test_extension_adding_engine() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
       icons: {
-        "16": "foo.ico",
-        "32": "foo32.ico",
+        16: "foo.ico",
+        32: "foo32.ico",
       },
       chrome_settings_overrides: {
         search_provider: {

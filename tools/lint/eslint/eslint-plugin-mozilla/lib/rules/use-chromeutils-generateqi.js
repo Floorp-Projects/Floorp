@@ -50,8 +50,7 @@ function funcToGenerateQI(context, node) {
 module.exports = {
   meta: {
     docs: {
-      url:
-        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-chromeutils-generateqi.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-chromeutils-generateqi.html",
     },
     fixable: "code",
     schema: [],
@@ -73,33 +72,34 @@ module.exports = {
         }
       },
 
-      "AssignmentExpression > MemberExpression[property.name='QueryInterface']": function (
-        node
-      ) {
-        const { right } = node.parent;
-        if (right.type === "FunctionExpression") {
+      "AssignmentExpression > MemberExpression[property.name='QueryInterface']":
+        function (node) {
+          const { right } = node.parent;
+          if (right.type === "FunctionExpression") {
+            context.report({
+              node: node.parent,
+              message: MSG_NO_JS_QUERY_INTERFACE,
+              fix(fixer) {
+                return fixer.replaceText(
+                  right,
+                  funcToGenerateQI(context, right)
+                );
+              },
+            });
+          }
+        },
+
+      "Property[key.name='QueryInterface'][value.type='FunctionExpression']":
+        function (node) {
           context.report({
-            node: node.parent,
+            node,
             message: MSG_NO_JS_QUERY_INTERFACE,
             fix(fixer) {
-              return fixer.replaceText(right, funcToGenerateQI(context, right));
+              let generateQI = funcToGenerateQI(context, node.value);
+              return fixer.replaceText(node, `QueryInterface: ${generateQI}`);
             },
           });
-        }
-      },
-
-      "Property[key.name='QueryInterface'][value.type='FunctionExpression']": function (
-        node
-      ) {
-        context.report({
-          node,
-          message: MSG_NO_JS_QUERY_INTERFACE,
-          fix(fixer) {
-            let generateQI = funcToGenerateQI(context, node.value);
-            return fixer.replaceText(node, `QueryInterface: ${generateQI}`);
-          },
-        });
-      },
+        },
     };
   },
 };

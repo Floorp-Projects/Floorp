@@ -169,9 +169,8 @@ add_task(async function test_pageTitleChanged() {
   const [testuri] = await task_add_visit();
   const title = "test-title";
 
-  const promiseNotify = PlacesTestUtils.waitForNotification(
-    "page-title-changed"
-  );
+  const promiseNotify =
+    PlacesTestUtils.waitForNotification("page-title-changed");
 
   await PlacesTestUtils.addVisits({
     uri: testuri,

@@ -7,11 +7,8 @@
 
 add_task(async function () {
   await addTab(URL_ROOT + "doc_custom_playback_rate.html");
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
 
   info("Checking animation detail visibility if animation was unselected");
   const detailEl = panel.querySelector("#animation-container .controlled");

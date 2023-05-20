@@ -19,13 +19,10 @@ const { pushBroadcastService } = ChromeUtils.import(
 const { SyncHistory } = ChromeUtils.importESModule(
   "resource://services-settings/SyncHistory.sys.mjs"
 );
-const {
-  RemoteSettings,
-  remoteSettingsBroadcastHandler,
-  BROADCAST_ID,
-} = ChromeUtils.importESModule(
-  "resource://services-settings/remote-settings.sys.mjs"
-);
+const { RemoteSettings, remoteSettingsBroadcastHandler, BROADCAST_ID } =
+  ChromeUtils.importESModule(
+    "resource://services-settings/remote-settings.sys.mjs"
+  );
 const { Utils } = ChromeUtils.importESModule(
   "resource://services-settings/Utils.sys.mjs"
 );

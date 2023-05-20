@@ -10,8 +10,7 @@ describe("getCallStackFrames selector", () => {
       const source1 = { id: "source1", url: "webpack:///src/App.js" };
       const source2 = {
         id: "source2",
-        url:
-          "webpack:///foo/node_modules/react-dom/lib/ReactCompositeComponent.js",
+        url: "webpack:///foo/node_modules/react-dom/lib/ReactCompositeComponent.js",
       };
       const state = {
         frames: [

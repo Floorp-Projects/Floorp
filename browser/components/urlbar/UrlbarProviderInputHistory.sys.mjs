@@ -213,10 +213,11 @@ class ProviderInputHistory extends UrlbarProvider {
         search_string: queryContext.searchString.toLowerCase(),
         matchBehavior: Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE,
         searchBehavior: lazy.UrlbarPrefs.get("defaultBehavior"),
-        userContextId: lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
-          queryContext.userContextId,
-          queryContext.isPrivate
-        ),
+        userContextId:
+          lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+            queryContext.userContextId,
+            queryContext.isPrivate
+          ),
         maxResults: queryContext.maxResults,
       },
     ];

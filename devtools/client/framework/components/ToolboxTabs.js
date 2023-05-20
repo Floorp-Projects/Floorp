@@ -206,9 +206,8 @@ class ToolboxTabs extends Component {
         visibleTabs.length
       ) {
         const removingToolId = visibleTabs.pop();
-        const removingToolWidth = this._cachedToolTabsWidthMap.get(
-          removingToolId
-        );
+        const removingToolWidth =
+          this._cachedToolTabsWidthMap.get(removingToolId);
         sumWidth -= removingToolWidth;
       }
 

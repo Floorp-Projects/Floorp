@@ -267,15 +267,15 @@ export async function runBackgroundTask(commandLine) {
         predicate,
         lock
       );
-      let telemetryClientID = await lazy.BackgroundTasksUtils.readTelemetryClientID(
-        lock
-      );
+      let telemetryClientID =
+        await lazy.BackgroundTasksUtils.readTelemetryClientID(lock);
       Glean.backgroundUpdate.clientId.set(telemetryClientID);
 
       // Read targeting snapshot, collect background update specific telemetry.  Never throws.
-      defaultProfileTargetingSnapshot = await BackgroundUpdate.readFirefoxMessagingSystemTargetingSnapshot(
-        lock
-      );
+      defaultProfileTargetingSnapshot =
+        await BackgroundUpdate.readFirefoxMessagingSystemTargetingSnapshot(
+          lock
+        );
     });
 
     for (let [name, value] of Object.entries(defaultProfilePrefs)) {

@@ -19,9 +19,8 @@ add_task(async function () {
     setToolbarVisibility(document.getElementById("PersonalToolbar"), true);
   }
 
-  let otherPersonalToolbar = this.otherWin.document.getElementById(
-    "PersonalToolbar"
-  );
+  let otherPersonalToolbar =
+    this.otherWin.document.getElementById("PersonalToolbar");
   let personalToolbar = document.getElementById("PersonalToolbar");
   ok(
     !otherPersonalToolbar.collapsed,

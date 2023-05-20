@@ -102,9 +102,8 @@ function goQuitApplication(event) {
 //
 function goUpdateCommand(aCommand) {
   try {
-    var controller = top.document.commandDispatcher.getControllerForCommand(
-      aCommand
-    );
+    var controller =
+      top.document.commandDispatcher.getControllerForCommand(aCommand);
 
     var enabled = false;
     if (controller) {
@@ -119,9 +118,8 @@ function goUpdateCommand(aCommand) {
 
 function goDoCommand(aCommand) {
   try {
-    var controller = top.document.commandDispatcher.getControllerForCommand(
-      aCommand
-    );
+    var controller =
+      top.document.commandDispatcher.getControllerForCommand(aCommand);
     if (controller && controller.isCommandEnabled(aCommand)) {
       controller.doCommand(aCommand);
     }

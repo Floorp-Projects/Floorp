@@ -40,13 +40,11 @@ const TESTS = [
   },
   {
     ct: "application/xhtml+xml",
-    val:
-      '<html xmlns="http://www.w3.org/1999/xhtml"><body contenteditable="true">fooz bar</body></html>',
+    val: '<html xmlns="http://www.w3.org/1999/xhtml"><body contenteditable="true">fooz bar</body></html>',
   },
   {
     ct: "application/xhtml+xml",
-    val:
-      '<html xmlns="http://www.w3.org/1999/xhtml" contenteditable="true"><body>fooz bar</body></html>',
+    val: '<html xmlns="http://www.w3.org/1999/xhtml" contenteditable="true"><body>fooz bar</body></html>',
   },
   {
     ct: "text/html",

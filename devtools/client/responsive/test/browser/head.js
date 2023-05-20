@@ -534,15 +534,19 @@ function getSessionHistory(browser) {
     const browsingContext = browser.browsingContext;
     const uri = browsingContext.currentWindowGlobal.documentURI.displaySpec;
     const history = browsingContext.sessionHistory;
-    const body = ContentTask.spawn(browser, browsingContext, function (
-      // eslint-disable-next-line no-shadow
-      browsingContext
-    ) {
-      const docShell = browsingContext.docShell.QueryInterface(
-        Ci.nsIWebNavigation
-      );
-      return docShell.document.body;
-    });
+    const body = ContentTask.spawn(
+      browser,
+      browsingContext,
+      function (
+        // eslint-disable-next-line no-shadow
+        browsingContext
+      ) {
+        const docShell = browsingContext.docShell.QueryInterface(
+          Ci.nsIWebNavigation
+        );
+        return docShell.document.body;
+      }
+    );
     const { SessionHistory } = ChromeUtils.importESModule(
       "resource://gre/modules/sessionstore/SessionHistory.sys.mjs"
     );

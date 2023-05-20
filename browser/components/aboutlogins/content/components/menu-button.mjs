@@ -158,8 +158,8 @@ export default class MenuButton extends HTMLElement {
   }
 
   _showMenu() {
-    this._menu.querySelector(".menuitem-import-file").hidden = !window
-      .AboutLoginsUtils.fileImportEnabled;
+    this._menu.querySelector(".menuitem-import-file").hidden =
+      !window.AboutLoginsUtils.fileImportEnabled;
 
     this._menu.hidden = false;
 

@@ -26,9 +26,8 @@ add_task(async function () {
 
   await focusSearchBoxUsingShortcut(inspector.panelWin);
 
-  const onSearchProcessingDone = inspector.searchSuggestions.once(
-    "processing-done"
-  );
+  const onSearchProcessingDone =
+    inspector.searchSuggestions.once("processing-done");
   synthesizeKeys("div", inspector.panelWin);
   info("Waiting for search query to complete");
   await onSearchProcessingDone;

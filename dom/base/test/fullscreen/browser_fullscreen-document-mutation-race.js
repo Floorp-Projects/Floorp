@@ -67,17 +67,19 @@ async function startTests(setupFun, name) {
 }
 
 function RemoveElementFromRemoteDocument(aBrowsingContext, aElementId) {
-  return SpecialPowers.spawn(aBrowsingContext, [aElementId], async function (
-    id
-  ) {
-    content.document.addEventListener(
-      "fullscreenchange",
-      function () {
-        content.document.getElementById(id).remove();
-      },
-      { once: true }
-    );
-  });
+  return SpecialPowers.spawn(
+    aBrowsingContext,
+    [aElementId],
+    async function (id) {
+      content.document.addEventListener(
+        "fullscreenchange",
+        function () {
+          content.document.getElementById(id).remove();
+        },
+        { once: true }
+      );
+    }
+  );
 }
 
 startTests(async browser => {

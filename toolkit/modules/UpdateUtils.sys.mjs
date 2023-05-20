@@ -1079,11 +1079,8 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function () {
     if (AppConstants.platform == "win") {
       // Add service pack and build number
       try {
-        const {
-          servicePackMajor,
-          servicePackMinor,
-          buildNumber,
-        } = lazy.WindowsVersionInfo.get();
+        const { servicePackMajor, servicePackMinor, buildNumber } =
+          lazy.WindowsVersionInfo.get();
         osVersion += `.${servicePackMajor}.${servicePackMinor}.${buildNumber}`;
       } catch (err) {
         console.error("Unable to retrieve windows version information: ", err);

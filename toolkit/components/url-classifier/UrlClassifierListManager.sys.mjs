@@ -841,8 +841,8 @@ function Init() {
   }
 
   // Pull the library in.
-  var jslib = Cc["@mozilla.org/url-classifier/jslib;1"].getService()
-    .wrappedJSObject;
+  var jslib =
+    Cc["@mozilla.org/url-classifier/jslib;1"].getService().wrappedJSObject;
   BindToObject = jslib.BindToObject;
   RequestBackoffV4 = jslib.RequestBackoffV4;
 

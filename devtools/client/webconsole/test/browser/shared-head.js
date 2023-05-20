@@ -176,9 +176,9 @@ async function findMessagesVirtualized({
 
   function getVisibleMessageMap() {
     return new Map(
-      JSON.parse(
-        scrollport.getAttribute("data-visible-messages")
-      ).map((id, i) => [id, i])
+      JSON.parse(scrollport.getAttribute("data-visible-messages")).map(
+        (id, i) => [id, i]
+      )
     );
   }
 

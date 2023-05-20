@@ -456,8 +456,9 @@ class AOMExtensionWrapper extends ExtensionWrapper {
 
   async _flushCache() {
     if (this.extension && this.extension.rootURI instanceof Ci.nsIJARURI) {
-      let file = this.extension.rootURI.JARFile.QueryInterface(Ci.nsIFileURL)
-        .file;
+      let file = this.extension.rootURI.JARFile.QueryInterface(
+        Ci.nsIFileURL
+      ).file;
       await Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {
         path: file.path,
       });

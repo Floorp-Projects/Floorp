@@ -129,8 +129,9 @@ add_task(async function () {
       ?.innerText.includes(PRETTY_PRINTED_FILENAME)
   );
   const header = eventTooltip.panel.querySelector(".event-header");
-  const headerFilename = header.querySelector(".event-tooltip-filename")
-    .innerText;
+  const headerFilename = header.querySelector(
+    ".event-tooltip-filename"
+  ).innerText;
   ok(
     headerFilename.endsWith(`${PRETTY_PRINTED_FILENAME}:51`),
     `Location in event tooltip is the pretty printed one (${headerFilename})`

@@ -34,9 +34,8 @@ test_newtab({
     let pocketSection = content.document.querySelector(
       "section[data-section-id='topstories']"
     );
-    let isPocketSectionCollapsed = pocketSection.className.includes(
-      "collapsed"
-    );
+    let isPocketSectionCollapsed =
+      pocketSection.className.includes("collapsed");
     ok(
       !isPocketSectionCollapsed,
       "Pocket section should not be collapsed on load"
@@ -59,9 +58,8 @@ test_newtab({
     let highlightsSection = content.document.querySelector(
       "section[data-section-id='topstories']"
     );
-    let isHighlightsSectionCollapsed = highlightsSection.className.includes(
-      "collapsed"
-    );
+    let isHighlightsSectionCollapsed =
+      highlightsSection.className.includes("collapsed");
     ok(
       !isHighlightsSectionCollapsed,
       "Highlights section should not be collapsed on load"

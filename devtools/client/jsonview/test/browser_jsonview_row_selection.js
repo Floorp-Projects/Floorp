@@ -214,14 +214,16 @@ add_task(async function () {
   );
 
   await assertRowSelected(2);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [scroll], function (
-    scrollPos
-  ) {
-    const scroller = content.document.querySelector(
-      ".jsonPanelBox .panelContent"
-    );
-    is(scroller.scrollTop, scrollPos, "Scroll did not change");
-  });
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [scroll],
+    function (scrollPos) {
+      const scroller = content.document.querySelector(
+        ".jsonPanelBox .panelContent"
+      );
+      is(scroller.scrollTop, scrollPos, "Scroll did not change");
+    }
+  );
 });
 
 async function assertRowSelected(rowNum) {

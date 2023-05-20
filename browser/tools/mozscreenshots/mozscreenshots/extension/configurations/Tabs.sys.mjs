@@ -17,9 +17,8 @@ export var Tabs = {
       selectors: ["#tabbrowser-tabs"],
       async applyConfig() {
         fiveTabsHelper();
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         hoverTab(browserWindow.gBrowser.tabs[3]);
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 3000);
@@ -32,23 +31,26 @@ export var Tabs = {
       selectors: ["#tabbrowser-tabs"],
       async applyConfig() {
         fiveTabsHelper();
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         let tab = browserWindow.gBrowser.addTab(PREFS_TAB, {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
         });
         browserWindow.gBrowser.pinTab(tab);
         tab = browserWindow.gBrowser.addTab(CUST_TAB, {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
         });
         browserWindow.gBrowser.pinTab(tab);
         tab = browserWindow.gBrowser.addTab("about:privatebrowsing", {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
         });
         browserWindow.gBrowser.pinTab(tab);
         tab = browserWindow.gBrowser.addTab("about:home", {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
         });
         browserWindow.gBrowser.pinTab(tab);
         browserWindow.gBrowser.selectTabAtIndex(5);
@@ -69,9 +71,8 @@ export var Tabs = {
       async applyConfig() {
         fiveTabsHelper();
 
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         browserWindow.gBrowser.loadTabs(
           [
             PREFS_TAB,
@@ -107,7 +108,8 @@ export var Tabs = {
           {
             inBackground: true,
             replace: true,
-            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal(),
           }
         );
         browserWindow.gBrowser.pinTab(browserWindow.gBrowser.tabs[1]);

@@ -46,9 +46,8 @@ function list_children(indent, key) {
 }
 
 // enumerate everything under BASE_PATH
-var key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
-  nsIWindowsRegKey
-);
+var key =
+  Cc["@mozilla.org/windows-registry-key;1"].createInstance(nsIWindowsRegKey);
 key.open(
   nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
   BASE_PATH,

@@ -1928,7 +1928,8 @@ const NetworkIntegration = {
     }
     let matchedRules;
     if (ruleManagers.length) {
-      const evaluateRulesTimerId = Glean.extensionsApisDnr.evaluateRulesTime.start();
+      const evaluateRulesTimerId =
+        Glean.extensionsApisDnr.evaluateRulesTime.start();
       try {
         const request = RequestDetails.fromChannelWrapper(channel);
         matchedRules = RequestEvaluator.evaluateRequest(request, ruleManagers);

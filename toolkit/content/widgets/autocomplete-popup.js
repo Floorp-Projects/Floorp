@@ -8,7 +8,9 @@
 // leaking to window scope.
 {
   const MozPopupElement = MozElements.MozElementMixin(XULPopupElement);
-  MozElements.MozAutocompleteRichlistboxPopup = class MozAutocompleteRichlistboxPopup extends MozPopupElement {
+  MozElements.MozAutocompleteRichlistboxPopup = class MozAutocompleteRichlistboxPopup extends (
+    MozPopupElement
+  ) {
     constructor() {
       super();
 
@@ -69,9 +71,8 @@
 
             switch (event.type) {
               case "mousedown":
-                this._disabledItemClicked = !!event.target.closest(
-                  "richlistitem"
-                )?.disabled;
+                this._disabledItemClicked =
+                  !!event.target.closest("richlistitem")?.disabled;
                 break;
               case "mouseup":
                 // Don't call onPopupClick for the scrollbar buttons, thumb,

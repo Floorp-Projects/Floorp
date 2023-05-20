@@ -281,28 +281,28 @@ function handleRequest(req, res) {
 
     rContent = Buffer.from(
       "0000" +
-      "0100" +
-      "0001" + // QDCOUNT
-      "0002" + // ANCOUNT
-      "00000000" + // NSCOUNT + ARCOUNT
-      "07636E616D652d61" + // cname-a
-      "076578616D706C6503636F6D00" + // .example.com
-      "00010001" + // question type (A) + question class (IN)
-      // answer record 1
-      "C00C" + // name pointer to cname-a.example.com
-      "0005" + // type (CNAME)
-      "0001" + // class
-      "00000037" + // TTL
-      "0012" + // RDLENGTH
-      "0468657265" + // here
-      "076578616D706C6503636F6D00" + // .example.com
-      // answer record 2, the A entry for the CNAME above
-      "0468657265" + // here
-      "076578616D706C6503636F6D00" + // .example.com
-      "0001" + // type (A)
-      "0001" + // class
-      "00000037" + // TTL
-      "0004" + // RDLENGTH
+        "0100" +
+        "0001" + // QDCOUNT
+        "0002" + // ANCOUNT
+        "00000000" + // NSCOUNT + ARCOUNT
+        "07636E616D652d61" + // cname-a
+        "076578616D706C6503636F6D00" + // .example.com
+        "00010001" + // question type (A) + question class (IN)
+        // answer record 1
+        "C00C" + // name pointer to cname-a.example.com
+        "0005" + // type (CNAME)
+        "0001" + // class
+        "00000037" + // TTL
+        "0012" + // RDLENGTH
+        "0468657265" + // here
+        "076578616D706C6503636F6D00" + // .example.com
+        // answer record 2, the A entry for the CNAME above
+        "0468657265" + // here
+        "076578616D706C6503636F6D00" + // .example.com
+        "0001" + // type (A)
+        "0001" + // class
+        "00000037" + // TTL
+        "0004" + // RDLENGTH
         "09080706", // IPv4 address
       "hex"
     );
@@ -972,8 +972,7 @@ function handleRequest(req, res) {
       push = res.push({
         hostname: "foo.example.com:" + serverPort,
         port: serverPort,
-        path:
-          "/dns-pushed-response?dns=AAAAAAABAAAAAAAABHB1c2gHZXhhbXBsZQNvcmcAABwAAQ",
+        path: "/dns-pushed-response?dns=AAAAAAABAAAAAAAABHB1c2gHZXhhbXBsZQNvcmcAABwAAQ",
         method: "GET",
         headers: {
           accept: "application/dns-message",
@@ -1423,8 +1422,7 @@ function handleRequest(req, res) {
     push = res.push({
       hostname: "foo.example.com:" + serverPort,
       port: serverPort,
-      path:
-        "/dns-pushed-response?dns=AAABAAABAAAAAAABCl9lc25pX3B1c2gHZXhhbXBsZQNjb20AABAAAQAAKRAAAAAAAAAIAAgABAABAAA",
+      path: "/dns-pushed-response?dns=AAABAAABAAAAAAABCl9lc25pX3B1c2gHZXhhbXBsZQNjb20AABAAAQAAKRAAAAAAAAAIAAgABAABAAA",
       method: "GET",
       headers: {
         accept: "application/dns-message",

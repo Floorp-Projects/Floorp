@@ -3001,7 +3001,7 @@ describe("ASRouter", () => {
         messages: [{ id: "1" }, { id: "2" }],
       });
       await Router.setState({
-        messageImpressions: { "1": [0, 1, 2], "2": [0, 1, 2] },
+        messageImpressions: { 1: [0, 1, 2], 2: [0, 1, 2] },
       }); // Add impressions for test messages
       let impressions = Object.values(Router.state.messageImpressions);
       assert.equal(impressions.filter(i => i.length).length, 2); // Both messages have impressions
@@ -3011,8 +3011,8 @@ describe("ASRouter", () => {
 
       assert.isEmpty(impressions.filter(i => i.length)); // Both messages now have zero impressions
       assert.calledWithExactly(Router._storage.set, "messageImpressions", {
-        "1": [],
-        "2": [],
+        1: [],
+        2: [],
       });
     });
   });
@@ -3022,7 +3022,7 @@ describe("ASRouter", () => {
         groups: [{ id: "1" }, { id: "2" }],
       });
       await Router.setState({
-        groupImpressions: { "1": [0, 1, 2], "2": [0, 1, 2] },
+        groupImpressions: { 1: [0, 1, 2], 2: [0, 1, 2] },
       }); // Add impressions for test groups
       let impressions = Object.values(Router.state.groupImpressions);
       assert.equal(impressions.filter(i => i.length).length, 2); // Both groups have impressions
@@ -3032,8 +3032,8 @@ describe("ASRouter", () => {
 
       assert.isEmpty(impressions.filter(i => i.length)); // Both groups now have zero impressions
       assert.calledWithExactly(Router._storage.set, "groupImpressions", {
-        "1": [],
-        "2": [],
+        1: [],
+        2: [],
       });
     });
   });

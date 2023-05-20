@@ -14,8 +14,7 @@ function getIconFile() {
   new Promise(resolve => {
     NetUtil.asyncFetch(
       {
-        uri:
-          "http://www.example.com/browser/browser/components/contextualidentity/test/browser/favicon-normal32.png",
+        uri: "http://www.example.com/browser/browser/components/contextualidentity/test/browser/favicon-normal32.png",
         loadUsingSystemPrincipal: true,
         contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
       },

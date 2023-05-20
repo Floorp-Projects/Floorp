@@ -149,7 +149,8 @@ export class NetErrorParent extends JSWindowActorParent {
       browser.fixupAndLoadURIString(
         this.getDefaultHomePage(browser.ownerGlobal),
         {
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
         }
       );
     } else {
@@ -246,7 +247,8 @@ export class NetErrorParent extends JSWindowActorParent {
     }
 
     let offlinePagePath = `chrome://global/content/neterror/supportpages/${supportPageSlug}.html`;
-    let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+    let triggeringPrincipal =
+      Services.scriptSecurityManager.getSystemPrincipal();
     this.browser.loadURI(Services.io.newURI(offlinePagePath), {
       triggeringPrincipal,
     });

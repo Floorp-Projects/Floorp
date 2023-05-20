@@ -252,12 +252,10 @@ export class WebDriverSession {
 
   get messageHandler() {
     if (!this._messageHandler) {
-      this._messageHandler = lazy.RootMessageHandlerRegistry.getOrCreateMessageHandler(
-        this.id
-      );
-      this._onMessageHandlerProtocolEvent = this._onMessageHandlerProtocolEvent.bind(
-        this
-      );
+      this._messageHandler =
+        lazy.RootMessageHandlerRegistry.getOrCreateMessageHandler(this.id);
+      this._onMessageHandlerProtocolEvent =
+        this._onMessageHandlerProtocolEvent.bind(this);
       this._messageHandler.on(
         "message-handler-protocol-event",
         this._onMessageHandlerProtocolEvent

@@ -26,9 +26,8 @@ async function expectFocusOnF6(
       [expectedElement],
       async function (expectedElementId) {
         content.lastResult = "";
-        let contentExpectedElement = content.document.getElementById(
-          expectedElementId
-        );
+        let contentExpectedElement =
+          content.document.getElementById(expectedElementId);
         if (!contentExpectedElement) {
           // Element not found, so look in the child frames.
           for (let f = 0; f < content.frames.length; f++) {

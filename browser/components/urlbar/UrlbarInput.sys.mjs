@@ -361,9 +361,10 @@ export class UrlbarInput {
         !dontShowSearchTerms &&
         lazy.UrlbarPrefs.isPersistedSearchTermsEnabled()
       ) {
-        this.window.gBrowser.selectedBrowser.searchTerms = lazy.UrlbarSearchUtils.getSearchTermIfDefaultSerpUri(
-          this.window.gBrowser.selectedBrowser.originalURI ?? uri
-        );
+        this.window.gBrowser.selectedBrowser.searchTerms =
+          lazy.UrlbarSearchUtils.getSearchTermIfDefaultSerpUri(
+            this.window.gBrowser.selectedBrowser.originalURI ?? uri
+          );
       }
     }
 
@@ -772,10 +773,8 @@ export class UrlbarInput {
           if (this.isPrivate) {
             flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
           }
-          let {
-            preferredURI: uri,
-            postData,
-          } = Services.uriFixup.getFixupURIInfo(url, flags);
+          let { preferredURI: uri, postData } =
+            Services.uriFixup.getFixupURIInfo(url, flags);
           if (
             where != "current" ||
             browser.lastLocationChange == lastLocationChange
@@ -1549,9 +1548,8 @@ export class UrlbarInput {
       maxResults: lazy.UrlbarPrefs.get("maxRichResults"),
       searchString,
       view: this.view,
-      userContextId: this.window.gBrowser.selectedBrowser.getAttribute(
-        "usercontextid"
-      ),
+      userContextId:
+        this.window.gBrowser.selectedBrowser.getAttribute("usercontextid"),
       currentPage: this.window.gBrowser.currentURI.spec,
       formHistoryName: this.formHistoryName,
       prohibitRemoteResults:
@@ -2944,9 +2942,8 @@ export class UrlbarInput {
         stripOnShare.setAttribute("hidden", true);
         return;
       }
-      let controller = this.document.commandDispatcher.getControllerForCommand(
-        "cmd_copy"
-      );
+      let controller =
+        this.document.commandDispatcher.getControllerForCommand("cmd_copy");
       // url bar is empty
       if (!controller.isCommandEnabled("cmd_copy")) {
         stripOnShare.setAttribute("hidden", true);
@@ -2993,9 +2990,8 @@ export class UrlbarInput {
       // because paste and go doesn't want a result selection.
       this.view.close();
 
-      let controller = this.document.commandDispatcher.getControllerForCommand(
-        "cmd_paste"
-      );
+      let controller =
+        this.document.commandDispatcher.getControllerForCommand("cmd_paste");
       let enabled = controller.isCommandEnabled("cmd_paste");
       if (enabled) {
         pasteAndGo.removeAttribute("disabled");
@@ -3320,7 +3316,8 @@ export class UrlbarInput {
         }
       }
       if (untrim) {
-        this.inputField.value = this._focusUntrimmedValue = this._untrimmedValue;
+        this.inputField.value = this._focusUntrimmedValue =
+          this._untrimmedValue;
       }
     }
 
@@ -3911,9 +3908,8 @@ function getDroppableData(event) {
       // If we succeed, try to pass security checks. If this works, return the
       // URL object. If the *security checks* fail, return null.
       try {
-        let principal = Services.droppedLinkHandler.getTriggeringPrincipal(
-          event
-        );
+        let principal =
+          Services.droppedLinkHandler.getTriggeringPrincipal(event);
         Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(
           principal,
           url.href,
@@ -4190,9 +4186,8 @@ class AddSearchEngineHelper {
     // Certain operations, like customization, destroy and recreate widgets,
     // so we cannot rely on cached elements.
     if (!this.input.querySelector(".menuseparator-add-engine")) {
-      this.contextSeparator = this.input.document.createXULElement(
-        "menuseparator"
-      );
+      this.contextSeparator =
+        this.input.document.createXULElement("menuseparator");
       this.contextSeparator.setAttribute("anonid", "add-engine-separator");
       this.contextSeparator.classList.add("menuseparator-add-engine");
       this.contextSeparator.collapsed = true;

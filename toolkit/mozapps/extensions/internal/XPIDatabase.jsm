@@ -1635,9 +1635,8 @@ const updatedAddonFluentIds = new Map([
         // {colorwayGroupName}-colorway@mozilla.org). L10n for colorway group
         // names is optional and falls back on the unlocalized name from the
         // theme's manifest. The intensity part, if present, must be localized.
-        let localizedColorwayGroupName = BuiltInThemesHelpers.getLocalizedColorwayGroupName(
-          addon.id
-        );
+        let localizedColorwayGroupName =
+          BuiltInThemesHelpers.getLocalizedColorwayGroupName(addon.id);
         let [colorwayGroupName, intensity] = addonIdPrefix.split("-", 2);
         if (intensity == colorwaySuffix) {
           // This theme doesn't have an intensity.

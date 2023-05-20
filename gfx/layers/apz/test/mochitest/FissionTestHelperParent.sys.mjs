@@ -71,9 +71,10 @@ export class FissionTestHelperParent extends JSWindowActorParent {
           );
           break;
         }
-        let oopifActor = oopifBrowsingContext.currentWindowGlobal.getActor(
-          "FissionTestHelper"
-        );
+        let oopifActor =
+          oopifBrowsingContext.currentWindowGlobal.getActor(
+            "FissionTestHelper"
+          );
         if (!oopifActor) {
           FissionTestHelperParent.SimpleTest.ok(
             false,

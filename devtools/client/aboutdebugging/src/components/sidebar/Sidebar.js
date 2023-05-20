@@ -200,12 +200,8 @@ class Sidebar extends PureComponent {
   }
 
   render() {
-    const {
-      dispatch,
-      selectedPage,
-      selectedRuntimeId,
-      isScanningUsb,
-    } = this.props;
+    const { dispatch, selectedPage, selectedRuntimeId, isScanningUsb } =
+      this.props;
 
     return dom.aside(
       {

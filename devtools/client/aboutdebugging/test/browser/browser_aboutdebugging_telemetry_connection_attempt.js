@@ -25,13 +25,8 @@ const USB_RUNTIME = {
  * - connection timeout
  */
 add_task(async function testSuccessfulConnectionAttempt() {
-  const {
-    doc,
-    mocks,
-    runtimeId,
-    sessionId,
-    tab,
-  } = await setupConnectionAttemptTest();
+  const { doc, mocks, runtimeId, sessionId, tab } =
+    await setupConnectionAttemptTest();
 
   await connectToRuntime(USB_RUNTIME.deviceName, doc);
 
@@ -57,13 +52,8 @@ add_task(async function testSuccessfulConnectionAttempt() {
 });
 
 add_task(async function testFailedConnectionAttempt() {
-  const {
-    doc,
-    mocks,
-    runtimeId,
-    sessionId,
-    tab,
-  } = await setupConnectionAttemptTest();
+  const { doc, mocks, runtimeId, sessionId, tab } =
+    await setupConnectionAttemptTest();
   mocks.runtimeClientFactoryMock.createClientForRuntime = async runtime => {
     throw new Error("failed");
   };
@@ -75,9 +65,8 @@ add_task(async function testFailedConnectionAttempt() {
     USB_RUNTIME.deviceName,
     doc
   );
-  const connectButton = usbRuntimeSidebarItem.querySelector(
-    ".qa-connect-button"
-  );
+  const connectButton =
+    usbRuntimeSidebarItem.querySelector(".qa-connect-button");
   connectButton.click();
   await waitUntil(() =>
     usbRuntimeSidebarItem.querySelector(".qa-connection-error")
@@ -114,13 +103,8 @@ add_task(async function testPendingConnectionAttempt() {
     100000
   );
 
-  const {
-    doc,
-    mocks,
-    runtimeId,
-    sessionId,
-    tab,
-  } = await setupConnectionAttemptTest();
+  const { doc, mocks, runtimeId, sessionId, tab } =
+    await setupConnectionAttemptTest();
 
   info("Simulate a pending connection");
   let resumeConnection;
@@ -137,9 +121,8 @@ add_task(async function testPendingConnectionAttempt() {
     USB_RUNTIME.deviceName,
     doc
   );
-  const connectButton = usbRuntimeSidebarItem.querySelector(
-    ".qa-connect-button"
-  );
+  const connectButton =
+    usbRuntimeSidebarItem.querySelector(".qa-connect-button");
   connectButton.click();
   await waitUntil(() => doc.querySelector(".qa-connection-not-responding"));
 
@@ -181,13 +164,8 @@ add_task(async function testCancelledConnectionAttempt() {
   );
   await pushPref("devtools.aboutdebugging.test-connection-cancel-delay", 1000);
 
-  const {
-    doc,
-    mocks,
-    runtimeId,
-    sessionId,
-    tab,
-  } = await setupConnectionAttemptTest();
+  const { doc, mocks, runtimeId, sessionId, tab } =
+    await setupConnectionAttemptTest();
 
   info("Simulate a connection timeout");
   mocks.runtimeClientFactoryMock.createClientForRuntime = async runtime => {
@@ -199,9 +177,8 @@ add_task(async function testCancelledConnectionAttempt() {
     USB_RUNTIME.deviceName,
     doc
   );
-  const connectButton = usbRuntimeSidebarItem.querySelector(
-    ".qa-connect-button"
-  );
+  const connectButton =
+    usbRuntimeSidebarItem.querySelector(".qa-connect-button");
   connectButton.click();
   await waitUntil(() =>
     usbRuntimeSidebarItem.querySelector(".qa-connection-timeout")

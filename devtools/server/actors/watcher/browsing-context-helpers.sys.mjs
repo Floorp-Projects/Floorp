@@ -180,7 +180,8 @@ export function isBrowsingContextPartOfContext(
     // and start emitting top level target from the server.
     // * when the callsite care about all the debugged browsing contexts,
     // no matter if their related targets are created by client or server.
-    const isClientSideTargetSwitching = !sessionContext.isServerTargetSwitchingEnabled;
+    const isClientSideTargetSwitching =
+      !sessionContext.isServerTargetSwitchingEnabled;
     const isTopLevelBrowsingContext = !browsingContext.parent;
     if (
       isClientSideTargetSwitching &&

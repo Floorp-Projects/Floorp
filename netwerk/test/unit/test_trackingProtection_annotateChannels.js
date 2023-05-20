@@ -202,9 +202,10 @@ var tests = [
         false
       );
     }
-    var principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      normalOrigin
-    );
+    var principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        normalOrigin
+      );
     testPriorityMap = [
       {
         path: normalOrigin + "/innocent.css",
@@ -262,9 +263,10 @@ var tests = [
         true
       );
     }
-    var principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-      normalOrigin
-    );
+    var principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        normalOrigin
+      );
     testPriorityMap = [
       {
         path: normalOrigin + "/innocent.css",

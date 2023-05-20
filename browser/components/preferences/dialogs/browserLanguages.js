@@ -445,11 +445,8 @@ var gBrowserLanguagesDialog = {
      */
 
     /** @type {Options} */
-    let {
-      telemetryId,
-      selectedLocalesForRestart,
-      search,
-    } = window.arguments[0];
+    let { telemetryId, selectedLocalesForRestart, search } =
+      window.arguments[0];
 
     this._telemetryId = telemetryId;
 

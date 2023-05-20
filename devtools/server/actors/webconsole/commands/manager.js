@@ -152,9 +152,8 @@ const WebConsoleCommandsManager = {
       window: consoleActor.evalGlobal,
       makeDebuggeeValue: debuggerGlobal.makeDebuggeeValue.bind(debuggerGlobal),
       createValueGrip: consoleActor.createValueGrip.bind(consoleActor),
-      preprocessDebuggerObject: consoleActor.preprocessDebuggerObject.bind(
-        consoleActor
-      ),
+      preprocessDebuggerObject:
+        consoleActor.preprocessDebuggerObject.bind(consoleActor),
       helperResult: null,
       consoleActor,
       evalInput,
@@ -310,72 +309,75 @@ WebConsoleCommandsManager.register("$_", {
           Specify the result type. Default value XPathResult.ANY_TYPE
  * @return array of Node
  */
-WebConsoleCommandsManager.register("$x", function (
-  owner,
-  xPath,
-  context,
-  resultType = owner.window.XPathResult.ANY_TYPE
-) {
-  const nodes = new owner.window.Array();
-  // Not waiving Xrays, since we want the original Document.evaluate function,
-  // instead of anything that's been redefined.
-  const doc = owner.window.document;
-  context = context || doc;
-  switch (resultType) {
-    case "number":
-      resultType = owner.window.XPathResult.NUMBER_TYPE;
-      break;
-
-    case "string":
-      resultType = owner.window.XPathResult.STRING_TYPE;
-      break;
-
-    case "bool":
-      resultType = owner.window.XPathResult.BOOLEAN_TYPE;
-      break;
-
-    case "node":
-      resultType = owner.window.XPathResult.FIRST_ORDERED_NODE_TYPE;
-      break;
-
-    case "nodes":
-      resultType = owner.window.XPathResult.UNORDERED_NODE_ITERATOR_TYPE;
-      break;
-  }
-  const results = doc.evaluate(xPath, context, null, resultType, null);
-  if (results.resultType === owner.window.XPathResult.NUMBER_TYPE) {
-    return results.numberValue;
-  }
-  if (results.resultType === owner.window.XPathResult.STRING_TYPE) {
-    return results.stringValue;
-  }
-  if (results.resultType === owner.window.XPathResult.BOOLEAN_TYPE) {
-    return results.booleanValue;
-  }
-  if (
-    results.resultType === owner.window.XPathResult.ANY_UNORDERED_NODE_TYPE ||
-    results.resultType === owner.window.XPathResult.FIRST_ORDERED_NODE_TYPE
+WebConsoleCommandsManager.register(
+  "$x",
+  function (
+    owner,
+    xPath,
+    context,
+    resultType = owner.window.XPathResult.ANY_TYPE
   ) {
-    return results.singleNodeValue;
-  }
-  if (
-    results.resultType ===
-      owner.window.XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE ||
-    results.resultType === owner.window.XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
-  ) {
-    for (let i = 0; i < results.snapshotLength; i++) {
-      nodes.push(results.snapshotItem(i));
+    const nodes = new owner.window.Array();
+    // Not waiving Xrays, since we want the original Document.evaluate function,
+    // instead of anything that's been redefined.
+    const doc = owner.window.document;
+    context = context || doc;
+    switch (resultType) {
+      case "number":
+        resultType = owner.window.XPathResult.NUMBER_TYPE;
+        break;
+
+      case "string":
+        resultType = owner.window.XPathResult.STRING_TYPE;
+        break;
+
+      case "bool":
+        resultType = owner.window.XPathResult.BOOLEAN_TYPE;
+        break;
+
+      case "node":
+        resultType = owner.window.XPathResult.FIRST_ORDERED_NODE_TYPE;
+        break;
+
+      case "nodes":
+        resultType = owner.window.XPathResult.UNORDERED_NODE_ITERATOR_TYPE;
+        break;
     }
+    const results = doc.evaluate(xPath, context, null, resultType, null);
+    if (results.resultType === owner.window.XPathResult.NUMBER_TYPE) {
+      return results.numberValue;
+    }
+    if (results.resultType === owner.window.XPathResult.STRING_TYPE) {
+      return results.stringValue;
+    }
+    if (results.resultType === owner.window.XPathResult.BOOLEAN_TYPE) {
+      return results.booleanValue;
+    }
+    if (
+      results.resultType === owner.window.XPathResult.ANY_UNORDERED_NODE_TYPE ||
+      results.resultType === owner.window.XPathResult.FIRST_ORDERED_NODE_TYPE
+    ) {
+      return results.singleNodeValue;
+    }
+    if (
+      results.resultType ===
+        owner.window.XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE ||
+      results.resultType === owner.window.XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
+    ) {
+      for (let i = 0; i < results.snapshotLength; i++) {
+        nodes.push(results.snapshotItem(i));
+      }
+      return nodes;
+    }
+
+    let node;
+    while ((node = results.iterateNext())) {
+      nodes.push(node);
+    }
+
     return nodes;
   }
-
-  let node;
-  while ((node = results.iterateNext())) {
-    nodes.push(node);
-  }
-
-  return nodes;
-});
+);
 
 /**
  * Returns the currently selected object in the highlighter.
@@ -452,23 +454,22 @@ WebConsoleCommandsManager.register("help", function (owner) {
  * @param object object
  *        Object to inspect.
  */
-WebConsoleCommandsManager.register("inspect", function (
-  owner,
-  object,
-  forceExpandInConsole = false
-) {
-  const dbgObj = owner.preprocessDebuggerObject(
-    owner.makeDebuggeeValue(object)
-  );
+WebConsoleCommandsManager.register(
+  "inspect",
+  function (owner, object, forceExpandInConsole = false) {
+    const dbgObj = owner.preprocessDebuggerObject(
+      owner.makeDebuggeeValue(object)
+    );
 
-  const grip = owner.createValueGrip(dbgObj);
-  owner.helperResult = {
-    type: "inspectObject",
-    input: owner.evalInput,
-    object: grip,
-    forceExpandInConsole,
-  };
-});
+    const grip = owner.createValueGrip(dbgObj);
+    owner.helperResult = {
+      type: "inspectObject",
+      input: owner.evalInput,
+      object: grip,
+      forceExpandInConsole,
+    };
+  }
+);
 
 /**
  * Copy the String representation of a value to the clipboard.

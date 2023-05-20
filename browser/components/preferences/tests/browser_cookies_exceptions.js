@@ -481,10 +481,10 @@ add_task(async function testPrivateBrowsingSessionPermissionsAreHidden() {
       assertListContents(params, []);
 
       let uri = Services.io.newURI("http://test.com");
-      let privateBrowsingPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-        uri,
-        { privateBrowsingId: 1 }
-      );
+      let privateBrowsingPrincipal =
+        Services.scriptSecurityManager.createContentPrincipal(uri, {
+          privateBrowsingId: 1,
+        });
 
       // Add a session permission for private browsing.
       PermissionTestUtils.add(

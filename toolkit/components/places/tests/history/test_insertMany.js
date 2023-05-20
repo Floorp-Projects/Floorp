@@ -112,9 +112,8 @@ add_task(async function test_insertMany() {
         "onError callback was called for each bad url"
       );
     } else {
-      const promiseRankingChanged = PlacesTestUtils.waitForNotification(
-        "pages-rank-changed"
-      );
+      const promiseRankingChanged =
+        PlacesTestUtils.waitForNotification("pages-rank-changed");
       result = await PlacesUtils.history.insertMany(pageInfos);
       await promiseRankingChanged;
     }

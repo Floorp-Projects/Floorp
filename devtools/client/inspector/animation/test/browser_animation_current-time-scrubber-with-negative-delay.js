@@ -11,11 +11,8 @@ add_task(async function () {
     ".cssanimation-normal",
     ".delay-negative",
   ]);
-  const {
-    animationInspector,
-    panel,
-    inspector,
-  } = await openAnimationInspector();
+  const { animationInspector, panel, inspector } =
+    await openAnimationInspector();
 
   info("Checking scrubber controller existence");
   const controllerEl = panel.querySelector(".current-time-scrubber-area");

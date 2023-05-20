@@ -26,12 +26,10 @@ var EXPORTED_SYMBOLS = [
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const {
-  computeSha256HashAsString,
-  getHashStringForCrypto,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/addons/crypto-utils.sys.mjs"
-);
+const { computeSha256HashAsString, getHashStringForCrypto } =
+  ChromeUtils.importESModule(
+    "resource://gre/modules/addons/crypto-utils.sys.mjs"
+  );
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
@@ -177,7 +175,8 @@ const MSG_JAR_FLUSH = "Extension:FlushJarCache";
 /**
  * Valid IDs fit this pattern.
  */
-var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
+var gIDTest =
+  /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
 
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"

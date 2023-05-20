@@ -168,7 +168,8 @@ function Editor(config) {
     // - \u2067 RIGHT-TO-LEFT ISOLATE
     // - \u2069 POP DIRECTIONAL ISOLATE
     // eslint-disable-next-line no-control-regex
-    specialChars: /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\u202d\u202e\u2066\u2067\u2069\ufeff\ufff9-\ufffc]/,
+    specialChars:
+      /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\u202d\u202e\u2066\u2067\u2069\ufeff\ufff9-\ufffc]/,
     specialCharPlaceholder: char => {
       // Use the doc provided to the setup function if we don't have a reference to a codeMirror
       // editor yet (this can happen when an Editor is being created with existing content)
@@ -184,9 +185,8 @@ function Editor(config) {
   this.config.extraKeys[Editor.keyFor("jumpToLine")] = () => this.jumpToLine();
   this.config.extraKeys[Editor.keyFor("moveLineUp", { noaccel: true })] = () =>
     this.moveLineUp();
-  this.config.extraKeys[
-    Editor.keyFor("moveLineDown", { noaccel: true })
-  ] = () => this.moveLineDown();
+  this.config.extraKeys[Editor.keyFor("moveLineDown", { noaccel: true })] =
+    () => this.moveLineDown();
   this.config.extraKeys[Editor.keyFor("toggleComment")] = "toggleComment";
 
   // Disable ctrl-[ and ctrl-] because toolbox uses those shortcuts.

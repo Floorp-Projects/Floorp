@@ -57,16 +57,17 @@ var TalosContentProfiler;
     if (typeof sendAsyncMessage !== "undefined") {
       return new Promise(resolve => {
         sendAsyncMessage("TalosContentProfiler:Command", { name, data });
-        addMessageListener("TalosContentProfiler:Response", function onMsg(
-          msg
-        ) {
-          if (msg.data.name != name) {
-            return;
-          }
+        addMessageListener(
+          "TalosContentProfiler:Response",
+          function onMsg(msg) {
+            if (msg.data.name != name) {
+              return;
+            }
 
-          removeMessageListener("TalosContentProfiler:Response", onMsg);
-          resolve(msg.data);
-        });
+            removeMessageListener("TalosContentProfiler:Response", onMsg);
+            resolve(msg.data);
+          }
+        );
       });
     }
 
@@ -80,17 +81,18 @@ var TalosContentProfiler;
       });
       document.dispatchEvent(event);
 
-      addEventListener("TalosContentProfilerResponse", function onResponse(
-        event
-      ) {
-        if (event.detail.name != name) {
-          return;
+      addEventListener(
+        "TalosContentProfilerResponse",
+        function onResponse(event) {
+          if (event.detail.name != name) {
+            return;
+          }
+
+          removeEventListener("TalosContentProfilerResponse", onResponse);
+
+          resolve(event.detail.data);
         }
-
-        removeEventListener("TalosContentProfilerResponse", onResponse);
-
-        resolve(event.detail.data);
-      });
+      );
     });
   }
 

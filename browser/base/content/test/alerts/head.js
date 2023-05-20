@@ -39,30 +39,31 @@ function promiseWindowClosed(window) {
  */
 function openNotification(aBrowser, fn, timeout) {
   info(`openNotification: ${fn}`);
-  return SpecialPowers.spawn(aBrowser, [[fn, timeout]], async function ([
-    contentFn,
-    contentTimeout,
-  ]) {
-    await new Promise((resolve, reject) => {
-      let win = content.wrappedJSObject;
-      let notification = win[contentFn]();
-      win._notification = notification;
+  return SpecialPowers.spawn(
+    aBrowser,
+    [[fn, timeout]],
+    async function ([contentFn, contentTimeout]) {
+      await new Promise((resolve, reject) => {
+        let win = content.wrappedJSObject;
+        let notification = win[contentFn]();
+        win._notification = notification;
 
-      function listener() {
-        notification.removeEventListener("show", listener);
-        resolve();
-      }
-
-      notification.addEventListener("show", listener);
-
-      if (contentTimeout) {
-        content.setTimeout(() => {
+        function listener() {
           notification.removeEventListener("show", listener);
-          reject("timed out");
-        }, contentTimeout);
-      }
-    });
-  });
+          resolve();
+        }
+
+        notification.addEventListener("show", listener);
+
+        if (contentTimeout) {
+          content.setTimeout(() => {
+            notification.removeEventListener("show", listener);
+            reject("timed out");
+          }, contentTimeout);
+        }
+      });
+    }
+  );
 }
 
 function closeNotification(aBrowser) {

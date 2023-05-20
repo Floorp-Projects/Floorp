@@ -53,11 +53,12 @@ add_task(async function () {
     const scrollPromise = new Promise(resolve => {
       content.window.addEventListener("scroll", resolve, { once: true });
     });
-    const dragFinisher = await content.wrappedJSObject.promiseVerticalScrollbarDrag(
-      content.window,
-      10,
-      10
-    );
+    const dragFinisher =
+      await content.wrappedJSObject.promiseVerticalScrollbarDrag(
+        content.window,
+        10,
+        10
+      );
 
     await scrollPromise;
     await dragFinisher();

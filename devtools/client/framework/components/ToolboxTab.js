@@ -50,14 +50,8 @@ class ToolboxTab extends Component {
       focusedButton,
       focusButton,
     } = this.props;
-    const {
-      id,
-      extensionId,
-      tooltip,
-      label,
-      iconOnly,
-      badge,
-    } = panelDefinition;
+    const { id, extensionId, tooltip, label, iconOnly, badge } =
+      panelDefinition;
     const isHighlighted = id === currentToolId;
 
     const className = [

@@ -65,16 +65,23 @@ const coefficients = {
 
 const biases = [["form", -4.402400970458984]];
 
-const loginRegex = /login|log-in|log_in|log in|signon|sign-on|sign_on|sign on|signin|sign-in|sign_in|sign in|einloggen|anmelden|logon|log-on|log_on|log on|Войти|ورود|登录|Přihlásit se|Přihlaste|Авторизоваться|Авторизация|entrar|ログイン|로그인|inloggen|Συνδέσου|accedi|ログオン|Giriş Yap|登入|connecter|connectez-vous|Connexion|Вход|inicia/i;
-const registerRegex = /regist|sign up|signup|sign-up|sign_up|join|new|登録|neu|erstellen|設定|신규|Créer|Nouveau|baru|nouă|nieuw|create[a-zA-Z\s]+account|create[a-zA-Z\s]+profile|activate[a-zA-Z\s]+account|Zugang anlegen|Angaben prüfen|Konto erstellen|ثبت نام|登録|注册|cadastr|Зарегистрироваться|Регистрация|Bellige alynmak|تسجيل|ΕΓΓΡΑΦΗΣ|Εγγραφή|Créer mon compte|Créer un compte|Mendaftar|가입하기|inschrijving|Zarejestruj się|Deschideți un cont|Создать аккаунт|ร่วม|Üye Ol|ساخت حساب کاربری|Schrijf je|S'inscrire/i;
+const loginRegex =
+  /login|log-in|log_in|log in|signon|sign-on|sign_on|sign on|signin|sign-in|sign_in|sign in|einloggen|anmelden|logon|log-on|log_on|log on|Войти|ورود|登录|Přihlásit se|Přihlaste|Авторизоваться|Авторизация|entrar|ログイン|로그인|inloggen|Συνδέσου|accedi|ログオン|Giriş Yap|登入|connecter|connectez-vous|Connexion|Вход|inicia/i;
+const registerRegex =
+  /regist|sign up|signup|sign-up|sign_up|join|new|登録|neu|erstellen|設定|신규|Créer|Nouveau|baru|nouă|nieuw|create[a-zA-Z\s]+account|create[a-zA-Z\s]+profile|activate[a-zA-Z\s]+account|Zugang anlegen|Angaben prüfen|Konto erstellen|ثبت نام|登録|注册|cadastr|Зарегистрироваться|Регистрация|Bellige alynmak|تسجيل|ΕΓΓΡΑΦΗΣ|Εγγραφή|Créer mon compte|Créer un compte|Mendaftar|가입하기|inschrijving|Zarejestruj się|Deschideți un cont|Создать аккаунт|ร่วม|Üye Ol|ساخت حساب کاربری|Schrijf je|S'inscrire/i;
 const emailRegex = /mail/i;
 const usernameRegex = /user|member/i;
 const nameRegex = /first|last|middle/i;
-const subscriptionRegex = /subscri|trial|offer|information|angebote|probe|ニュースレター|abonn|promotion|news/i;
-const termsAndConditionsRegex = /terms|condition|rules|policy|privacy|nutzungsbedingungen|AGB|richtlinien|datenschutz|términos|condiciones/i;
-const pwForgottenRegex = /forgot|reset|set password|vergessen|vergeten|oublié|dimenticata|Esqueceu|esqueci|Забыли|忘记|找回|Zapomenuté|lost|忘れた|忘れられた|忘れの方|재설정|찾기|help|فراموشی| را فراموش کرده اید|Восстановить|Unuttu|perdus|重新設定|recover|remind|request|restore|trouble|olvidada/i;
-const continueRegex = /continue|go on|weiter|fortfahren|ga verder|next|continuar/i;
-const rememberMeRegex = /remember|stay|speichern|merken|bleiben|auto_login|auto-login|auto login|ricordami|manter|mantenha|savelogin|keep me logged in|keep me signed in|save email address|save id|stay signed in|次回からログオンIDの入力を省略する|メールアドレスを保存する|を保存|아이디저장|아이디 저장|로그인 상태 유지|lembrar|mantenha-me conectado|Запомни меня|запомнить меня|Запомните меня|Не спрашивать в следующий раз|下次自动登录|记住我|recordar|angemeldet bleiben/i;
+const subscriptionRegex =
+  /subscri|trial|offer|information|angebote|probe|ニュースレター|abonn|promotion|news/i;
+const termsAndConditionsRegex =
+  /terms|condition|rules|policy|privacy|nutzungsbedingungen|AGB|richtlinien|datenschutz|términos|condiciones/i;
+const pwForgottenRegex =
+  /forgot|reset|set password|vergessen|vergeten|oublié|dimenticata|Esqueceu|esqueci|Забыли|忘记|找回|Zapomenuté|lost|忘れた|忘れられた|忘れの方|재설정|찾기|help|فراموشی| را فراموش کرده اید|Восстановить|Unuttu|perdus|重新設定|recover|remind|request|restore|trouble|olvidada/i;
+const continueRegex =
+  /continue|go on|weiter|fortfahren|ga verder|next|continuar/i;
+const rememberMeRegex =
+  /remember|stay|speichern|merken|bleiben|auto_login|auto-login|auto login|ricordami|manter|mantenha|savelogin|keep me logged in|keep me signed in|save email address|save id|stay signed in|次回からログオンIDの入力を省略する|メールアドレスを保存する|を保存|아이디저장|아이디 저장|로그인 상태 유지|lembrar|mantenha-me conectado|Запомни меня|запомнить меня|Запомните меня|Не спрашивать в следующий раз|下次自动登录|记住我|recordar|angemeldet bleiben/i;
 const alreadySignedUpRegex = /already|bereits|schon|ya tienes cuenta/i;
 const editProfile = /edit/i;
 

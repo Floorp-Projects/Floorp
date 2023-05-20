@@ -515,9 +515,8 @@ add_task(async function test_create_duplicate_login() {
       !confirmationDialog.hidden,
       "the discard-changes dialog should be visible"
     );
-    let discardChangesButton = confirmationDialog.shadowRoot.querySelector(
-      ".confirm-button"
-    );
+    let discardChangesButton =
+      confirmationDialog.shadowRoot.querySelector(".confirm-button");
     discardChangesButton.click();
 
     await ContentTaskUtils.waitForCondition(

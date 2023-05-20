@@ -109,9 +109,8 @@ class RootActor extends Actor {
     this._onTabListChanged = this.onTabListChanged.bind(this);
     this._onAddonListChanged = this.onAddonListChanged.bind(this);
     this._onWorkerListChanged = this.onWorkerListChanged.bind(this);
-    this._onServiceWorkerRegistrationListChanged = this.onServiceWorkerRegistrationListChanged.bind(
-      this
-    );
+    this._onServiceWorkerRegistrationListChanged =
+      this.onServiceWorkerRegistrationListChanged.bind(this);
     this._onProcessListChanged = this.onProcessListChanged.bind(this);
 
     this._extraActors = {};
@@ -418,7 +417,8 @@ class RootActor extends Actor {
     }
 
     // Reattach the onListChanged listener now that a client requested the list.
-    registrationList.onListChanged = this._onServiceWorkerRegistrationListChanged;
+    registrationList.onListChanged =
+      this._onServiceWorkerRegistrationListChanged;
 
     return registrationList.getList().then(actors => {
       const pool = new Pool(this.conn, "service-workers-registrations");

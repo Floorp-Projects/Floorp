@@ -182,7 +182,8 @@ async function setXHRBreakpoint(path, method) {
     await forEachThread(thread => thread.setXHRBreakpoint(path, method));
     return;
   }
-  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
+  const breakpointsFront =
+    await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.setXHRBreakpoint(path, method);
 }
 
@@ -193,7 +194,8 @@ async function removeXHRBreakpoint(path, method) {
     await forEachThread(thread => thread.removeXHRBreakpoint(path, method));
     return;
   }
-  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
+  const breakpointsFront =
+    await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.removeXHRBreakpoint(path, method);
 }
 
@@ -253,7 +255,8 @@ async function setBreakpoint(location, options) {
       thread.setBreakpoint(location, serverOptions)
     );
   }
-  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
+  const breakpointsFront =
+    await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.setBreakpoint(location, serverOptions);
 
   // Call setBreakpoint for threads linked to targets
@@ -279,7 +282,8 @@ async function removeBreakpoint(location) {
     // Without watcher support, unconditionally forward removeBreakpoint to all threads.
     return forEachThread(async thread => thread.removeBreakpoint(location));
   }
-  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
+  const breakpointsFront =
+    await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.removeBreakpoint(location);
 
   // Call removeBreakpoint for threads linked to targets
@@ -373,7 +377,8 @@ async function pauseOnExceptions(
 async function blackBox(sourceActor, shouldBlackBox, ranges) {
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (hasWatcherSupport) {
-    const blackboxingFront = await commands.targetCommand.watcherFront.getBlackboxingActor();
+    const blackboxingFront =
+      await commands.targetCommand.watcherFront.getBlackboxingActor();
     if (shouldBlackBox) {
       await blackboxingFront.blackbox(sourceActor.url, ranges);
     } else {
@@ -415,7 +420,8 @@ async function setEventListenerBreakpoints(ids) {
     await forEachThread(thread => thread.setActiveEventBreakpoints(ids));
     return;
   }
-  const breakpointListFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
+  const breakpointListFront =
+    await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointListFront.setActiveEventBreakpoints(ids);
 }
 
@@ -468,7 +474,8 @@ function fetchAncestorFramePositions(index) {
 async function setOverride(url, path) {
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (hasWatcherSupport) {
-    const networkFront = await commands.targetCommand.watcherFront.getNetworkParentActor();
+    const networkFront =
+      await commands.targetCommand.watcherFront.getNetworkParentActor();
     return networkFront.override(url, path);
   }
   return null;
@@ -477,7 +484,8 @@ async function setOverride(url, path) {
 async function removeOverride(url) {
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (hasWatcherSupport) {
-    const networkFront = await commands.targetCommand.watcherFront.getNetworkParentActor();
+    const networkFront =
+      await commands.targetCommand.watcherFront.getNetworkParentActor();
     networkFront.removeOverride(url);
   }
 }

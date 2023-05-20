@@ -32,9 +32,8 @@ add_task(async function test_newtab_tab_close_sends_ping() {
 
   Services.fog.testResetFOG();
   sendTriggerMessageSpy.resetHistory();
-  let TelemetryFeed = AboutNewTab.activityStream.store.feeds.get(
-    "feeds.telemetry"
-  );
+  let TelemetryFeed =
+    AboutNewTab.activityStream.store.feeds.get("feeds.telemetry");
   TelemetryFeed.init(); // INIT action doesn't happen by default.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -91,9 +90,8 @@ add_task(async function test_newtab_tab_nav_sends_ping() {
 
   Services.fog.testResetFOG();
   sendTriggerMessageSpy.resetHistory();
-  let TelemetryFeed = AboutNewTab.activityStream.store.feeds.get(
-    "feeds.telemetry"
-  );
+  let TelemetryFeed =
+    AboutNewTab.activityStream.store.feeds.get("feeds.telemetry");
   TelemetryFeed.init(); // INIT action doesn't happen by default.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -155,9 +153,8 @@ add_task(async function test_newtab_doesnt_send_nimbus() {
     value: { newtabPingEnabled: false },
   });
   Services.fog.testResetFOG();
-  let TelemetryFeed = AboutNewTab.activityStream.store.feeds.get(
-    "feeds.telemetry"
-  );
+  let TelemetryFeed =
+    AboutNewTab.activityStream.store.feeds.get("feeds.telemetry");
   TelemetryFeed.init(); // INIT action doesn't happen by default.
   sendTriggerMessageSpy.resetHistory();
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -187,9 +184,8 @@ add_task(async function test_newtab_doesnt_send_nimbus() {
   BrowserTestUtils.loadURIString(tab.linkedBrowser, "about:mozilla");
   BrowserTestUtils.removeTab(tab);
   await BrowserTestUtils.waitForCondition(() => {
-    let { sessions } = AboutNewTab.activityStream.store.feeds.get(
-      "feeds.telemetry"
-    );
+    let { sessions } =
+      AboutNewTab.activityStream.store.feeds.get("feeds.telemetry");
     return !Array.from(sessions.entries()).filter(
       ([k, v]) => v.session_id === sessionId
     ).length;
@@ -206,9 +202,8 @@ add_task(async function test_newtab_categorization_sends_ping() {
 
   Services.fog.testResetFOG();
   sendTriggerMessageSpy.resetHistory();
-  let TelemetryFeed = AboutNewTab.activityStream.store.feeds.get(
-    "feeds.telemetry"
-  );
+  let TelemetryFeed =
+    AboutNewTab.activityStream.store.feeds.get("feeds.telemetry");
   let pingSent = false;
   GleanPings.newtab.testBeforeNextSubmit(reason => {
     pingSent = true;

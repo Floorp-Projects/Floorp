@@ -208,13 +208,11 @@ add_task(async function double_redirect_cross_origin() {
     "double_redirect_cross_origin_both_hints",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.com/",
       },
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.net",
       },
     ],
@@ -230,8 +228,7 @@ add_task(async function double_redirect_cross_origin() {
         host: "https://example.com/",
       },
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.net",
       },
     ],
@@ -243,13 +240,11 @@ add_task(async function double_redirect_cross_origin() {
     "double_redirect_first_hint",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.com/",
       },
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.net",
       },
     ],
@@ -264,8 +259,7 @@ add_task(async function redirect_cross_origin() {
     "redirect_cross_origin_start_second_preload",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.net",
       },
     ],
@@ -277,8 +271,7 @@ add_task(async function redirect_cross_origin() {
     "redirect_cross_origin_dont_use_first_preload",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image&a",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image&a",
         host: "https://example.net",
       },
     ],
@@ -293,8 +286,7 @@ add_task(async function redirect_same_origin() {
     "hint_before_redirect_same_origin",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.org",
       },
     ],
@@ -306,8 +298,7 @@ add_task(async function redirect_same_origin() {
     "hint_after_redirect_same_origin",
     [
       {
-        link:
-          "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
+        link: "https://example.org/browser/netwerk/test/browser/early_hint_asset.sjs?as=image",
         host: "https://example.org",
       },
     ],

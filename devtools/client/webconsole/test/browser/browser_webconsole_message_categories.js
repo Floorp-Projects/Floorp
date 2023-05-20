@@ -126,14 +126,8 @@ add_task(async function () {
 });
 
 async function runTest(test, hud) {
-  const {
-    file,
-    category,
-    matchString,
-    typeSelector,
-    onload,
-    skipInE10s,
-  } = test;
+  const { file, category, matchString, typeSelector, onload, skipInE10s } =
+    test;
 
   if (skipInE10s && Services.appinfo.browserTabsRemoteAutostart) {
     return;

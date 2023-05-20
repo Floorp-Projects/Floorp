@@ -46,7 +46,8 @@ add_task(async function test_pageAction_basic() {
   let waitForConsole = new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, [
       {
-        message: /Reading manifest: Warning processing page_action.unrecognized_property: An unexpected property was found/,
+        message:
+          /Reading manifest: Warning processing page_action.unrecognized_property: An unexpected property was found/,
       },
     ]);
   });

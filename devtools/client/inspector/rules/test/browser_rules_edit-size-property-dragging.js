@@ -153,8 +153,9 @@ async function testIncrementAngleValue(view) {
 
 async function testPressingEscapeWhileDragging(view) {
   info("Testing pressing escape while dragging with mouse");
-  const marginPropEditor = getTextProperty(view, 1, { "margin-bottom": "0px" })
-    .editor;
+  const marginPropEditor = getTextProperty(view, 1, {
+    "margin-bottom": "0px",
+  }).editor;
   await runIncrementTest(marginPropEditor, view, [
     {
       startValue: "0px",

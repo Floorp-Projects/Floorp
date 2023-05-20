@@ -344,10 +344,8 @@ export class _Sections extends React.PureComponent {
     const enabledSections = this.props.Sections.filter(
       section => section.enabled
     );
-    const {
-      sectionOrder,
-      "feeds.topsites": showTopSites,
-    } = this.props.Prefs.values;
+    const { sectionOrder, "feeds.topsites": showTopSites } =
+      this.props.Prefs.values;
     // Enabled sections doesn't include Top Sites, so we add it if enabled.
     const expectedCount = enabledSections.length + ~~showTopSites;
 

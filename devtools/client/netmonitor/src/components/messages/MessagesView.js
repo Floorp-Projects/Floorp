@@ -72,11 +72,8 @@ class MessagesView extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const {
-      channelId,
-      openMessageDetailsTab,
-      selectedMessageVisible,
-    } = this.props;
+    const { channelId, openMessageDetailsTab, selectedMessageVisible } =
+      this.props;
 
     // If a new connection is selected, clear the filter text
     if (channelId !== prevProps.channelId) {
@@ -120,12 +117,8 @@ class MessagesView extends Component {
   }
 
   render() {
-    const {
-      messageDetailsOpen,
-      connector,
-      selectedMessage,
-      channelId,
-    } = this.props;
+    const { messageDetailsOpen, connector, selectedMessage, channelId } =
+      this.props;
 
     const { searchboxRef } = this;
     const { startPanelContainer } = this.state;

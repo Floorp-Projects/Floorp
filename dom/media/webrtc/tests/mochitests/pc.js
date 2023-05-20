@@ -1752,13 +1752,14 @@ PeerConnectionWrapper.prototype = {
       return Promise.resolve();
     }
 
-    const haveEnoughData = (element.readyState == element.HAVE_ENOUGH_DATA
-      ? Promise.resolve()
-      : haveEvent(
-          element,
-          "canplay",
-          wait(60000, new Error("Timeout for element " + element.id))
-        )
+    const haveEnoughData = (
+      element.readyState == element.HAVE_ENOUGH_DATA
+        ? Promise.resolve()
+        : haveEvent(
+            element,
+            "canplay",
+            wait(60000, new Error("Timeout for element " + element.id))
+          )
     ).then(_ => info("Element " + element.id + " has enough data."));
 
     const startTime = element.currentTime;

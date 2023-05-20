@@ -287,11 +287,8 @@ class App extends Component {
   }
 
   renderFilterBar() {
-    const {
-      closeSplitConsole,
-      filterBarDisplayMode,
-      webConsoleUI,
-    } = this.props;
+    const { closeSplitConsole, filterBarDisplayMode, webConsoleUI } =
+      this.props;
 
     return FilterBar({
       key: "filterbar",
@@ -363,11 +360,8 @@ class App extends Component {
   }
 
   renderEagerEvaluation() {
-    const {
-      eagerEvaluationEnabled,
-      serviceContainer,
-      inputEnabled,
-    } = this.props;
+    const { eagerEvaluationEnabled, serviceContainer, inputEnabled } =
+      this.props;
 
     if (!eagerEvaluationEnabled || !inputEnabled) {
       return null;
@@ -424,12 +418,8 @@ class App extends Component {
   }
 
   renderRootElement(children) {
-    const {
-      editorMode,
-      sidebarVisible,
-      inputEnabled,
-      eagerEvaluationEnabled,
-    } = this.props;
+    const { editorMode, sidebarVisible, inputEnabled, eagerEvaluationEnabled } =
+      this.props;
 
     const classNames = ["webconsole-app"];
     if (sidebarVisible) {

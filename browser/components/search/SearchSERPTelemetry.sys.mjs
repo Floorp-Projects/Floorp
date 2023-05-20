@@ -461,8 +461,8 @@ class TelemetryHandler {
   stopTrackingBrowser(browser, abandonmentReason) {
     for (let [url, item] of this._browserInfoByURL) {
       if (item.browserTelemetryStateMap.has(browser)) {
-        let impressionId = item.browserTelemetryStateMap.get(browser)
-          .impressionId;
+        let impressionId =
+          item.browserTelemetryStateMap.get(browser).impressionId;
         if (impressionIdsWithoutEngagementsSet.has(impressionId)) {
           this.recordAbandonmentTelemetry(impressionId, abandonmentReason);
         }

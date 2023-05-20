@@ -549,11 +549,8 @@ class Tree extends Component {
   }
 
   _autoExpand() {
-    const {
-      autoExpandDepth,
-      autoExpandNodeChildrenLimit,
-      initiallyExpanded,
-    } = this.props;
+    const { autoExpandDepth, autoExpandNodeChildrenLimit, initiallyExpanded } =
+      this.props;
 
     if (!autoExpandDepth && !initiallyExpanded) {
       return;

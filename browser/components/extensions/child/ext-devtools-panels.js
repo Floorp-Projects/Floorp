@@ -247,7 +247,8 @@ class ChildDevToolsInspectorSidebar extends ExtensionCommon.EventEmitter {
 
 this.devtools_panels = class extends ExtensionAPI {
   getAPI(context) {
-    const themeChangeObserver = ExtensionChildDevToolsUtils.getThemeChangeObserver();
+    const themeChangeObserver =
+      ExtensionChildDevToolsUtils.getThemeChangeObserver();
 
     return {
       devtools: {
@@ -259,10 +260,11 @@ this.devtools_panels = class extends ExtensionAPI {
               // method async we will return a promise object which can only be used by
               // chrome privileged code).
               return context.cloneScope.Promise.resolve().then(async () => {
-                const sidebarId = await context.childManager.callParentAsyncFunction(
-                  "devtools.panels.elements.createSidebarPane",
-                  [title]
-                );
+                const sidebarId =
+                  await context.childManager.callParentAsyncFunction(
+                    "devtools.panels.elements.createSidebarPane",
+                    [title]
+                  );
 
                 const sidebar = new ChildDevToolsInspectorSidebar(context, {
                   id: sidebarId,
@@ -284,10 +286,11 @@ this.devtools_panels = class extends ExtensionAPI {
             // method async we will return a promise object which can only be used by
             // chrome privileged code).
             return context.cloneScope.Promise.resolve().then(async () => {
-              const panelId = await context.childManager.callParentAsyncFunction(
-                "devtools.panels.create",
-                [title, icon, url]
-              );
+              const panelId =
+                await context.childManager.callParentAsyncFunction(
+                  "devtools.panels.create",
+                  [title, icon, url]
+                );
 
               const devtoolsPanel = new ChildDevToolsPanel(context, {
                 id: panelId,

@@ -37,9 +37,10 @@ add_task(async function () {
             browser,
             [aDescription],
             description => {
-              const runner = content.wrappedJSObject.createIMEStateWhenNoActiveElementTester(
-                description
-              );
+              const runner =
+                content.wrappedJSObject.createIMEStateWhenNoActiveElementTester(
+                  description
+                );
               return runner.run(content.document, content.window);
             }
           );
@@ -55,11 +56,12 @@ add_task(async function () {
             browser,
             [aDescription, index],
             (description, aIndex) => {
-              content.wrappedJSObject.runner = content.wrappedJSObject.createIMEStateOnFocusMoveTester(
-                description,
-                aIndex,
-                content.window
-              );
+              content.wrappedJSObject.runner =
+                content.wrappedJSObject.createIMEStateOnFocusMoveTester(
+                  description,
+                  aIndex,
+                  content.window
+                );
               return content.wrappedJSObject.runner.prepareToRun(
                 content.document.querySelector("div")
               );

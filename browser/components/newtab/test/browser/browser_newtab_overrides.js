@@ -9,13 +9,13 @@ registerCleanupFunction(() => {
 });
 
 function nextChangeNotificationPromise(aNewURL, testMessage) {
-  return TestUtils.topicObserved("newtab-url-changed", function observer(
-    aSubject,
-    aData
-  ) {
-    Assert.equal(aData, aNewURL, testMessage);
-    return true;
-  });
+  return TestUtils.topicObserved(
+    "newtab-url-changed",
+    function observer(aSubject, aData) {
+      Assert.equal(aData, aNewURL, testMessage);
+      return true;
+    }
+  );
 }
 
 /*

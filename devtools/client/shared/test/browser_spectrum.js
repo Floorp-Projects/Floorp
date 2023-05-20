@@ -80,9 +80,8 @@ function testColorPreviewDisplay(
   spectrum.updateUI();
 
   // Extract the first rgba value from the linear gradient
-  const linearGradientStr = colorPreviewStyle.getPropertyValue(
-    "background-image"
-  );
+  const linearGradientStr =
+    colorPreviewStyle.getPropertyValue("background-image");
   const colorPreviewValue = extractRgbaOverlayString(linearGradientStr);
 
   is(

@@ -130,7 +130,7 @@ async function setupExtensionWithUpdate(
 
   let baseManifest = {
     name: "Updates",
-    icons: { "48": "an-icon.png" },
+    icons: { 48: "an-icon.png" },
     browser_specific_settings: {
       gecko: {
         id,

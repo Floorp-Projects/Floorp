@@ -13,13 +13,11 @@ function TagPicker(props) {
   const [inputValue, setInputValue] = useState("");
 
   // Status can be success, waiting, or error.
-  const [
-    { tagInputStatus, tagInputErrorMessage },
-    setTagInputStatus,
-  ] = useState({
-    tagInputStatus: "",
-    tagInputErrorMessage: "",
-  });
+  const [{ tagInputStatus, tagInputErrorMessage }, setTagInputStatus] =
+    useState({
+      tagInputStatus: "",
+      tagInputErrorMessage: "",
+    });
 
   let handleKeyDown = e => {
     const enterKey = e.keyCode === 13;

@@ -141,9 +141,8 @@ function chooseProfileFolder() {
 
     // Disable the "Default Folder..." button when the default profile folder
     // was selected manually in the File Picker.
-    document.getElementById(
-      "useDefault"
-    ).disabled = newProfileRoot.parent.equals(gDefaultProfileParent);
+    document.getElementById("useDefault").disabled =
+      newProfileRoot.parent.equals(gDefaultProfileParent);
 
     gProfileRoot = newProfileRoot;
     updateProfileDisplay();
@@ -166,9 +165,8 @@ function checkCurrentInput(currentInput) {
         "profileFinishTextMac"
       );
     } else {
-      finishText.firstChild.data = gProfileManagerBundle.getString(
-        "profileFinishText"
-      );
+      finishText.firstChild.data =
+        gProfileManagerBundle.getString("profileFinishText");
     }
     canAdvance = true;
   } else {

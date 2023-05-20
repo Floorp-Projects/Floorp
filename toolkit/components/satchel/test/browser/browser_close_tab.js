@@ -10,35 +10,37 @@ add_task(async function test() {
   const url = `data:text/html,<input type="text" name="field1">`;
 
   // Open a dummy tab.
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function (
-    browser
-  ) {});
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url },
+    async function (browser) {}
+  );
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function (
-    browser
-  ) {
-    const { autoCompletePopup } = browser;
-    const mockHistory = [{ op: "add", fieldname: "field1", value: "value1" }];
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url },
+    async function (browser) {
+      const { autoCompletePopup } = browser;
+      const mockHistory = [{ op: "add", fieldname: "field1", value: "value1" }];
 
-    await FormHistory.update([{ op: "remove" }, ...mockHistory]);
-    await SpecialPowers.spawn(browser, [], async function () {
-      const input = content.document.querySelector("input");
+      await FormHistory.update([{ op: "remove" }, ...mockHistory]);
+      await SpecialPowers.spawn(browser, [], async function () {
+        const input = content.document.querySelector("input");
 
-      input.focus();
-    });
+        input.focus();
+      });
 
-    // show popup
-    await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    await TestUtils.waitForCondition(() => {
-      return autoCompletePopup.popupOpen;
-    });
+      // show popup
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await TestUtils.waitForCondition(() => {
+        return autoCompletePopup.popupOpen;
+      });
 
-    gBrowser.removeCurrentTab();
+      gBrowser.removeCurrentTab();
 
-    await TestUtils.waitForCondition(() => {
-      return !autoCompletePopup.popupOpen;
-    });
+      await TestUtils.waitForCondition(() => {
+        return !autoCompletePopup.popupOpen;
+      });
 
-    Assert.ok(!autoCompletePopup.popupOpen, "Ensure the popup is closed.");
-  });
+      Assert.ok(!autoCompletePopup.popupOpen, "Ensure the popup is closed.");
+    }
+  );
 });

@@ -126,9 +126,10 @@ add_task(async function testIntermediatePreferenceWriteCrossOrigin() {
     }
   });
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    TEST_DOMAIN_8
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      TEST_DOMAIN_8
+    );
   // Important to note that this is the site but not origin of TEST_3RD_PARTY_PAGE
   var permission = Services.perms.testPermissionFromPrincipal(
     principal,
@@ -137,9 +138,10 @@ add_task(async function testIntermediatePreferenceWriteCrossOrigin() {
   ok(permission == Services.perms.ALLOW_ACTION);
 
   // Test that checking the permission across site works
-  principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    TEST_DOMAIN_7
-  );
+  principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      TEST_DOMAIN_7
+    );
   // Important to note that this is the site but not origin of TEST_3RD_PARTY_PAGE
   permission = Services.perms.testPermissionFromPrincipal(
     principal,

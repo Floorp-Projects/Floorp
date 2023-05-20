@@ -126,9 +126,8 @@ class TabPickupContainer extends HTMLDetailsElement {
         }
         case `view0-${ErrorType.SYNC_DISCONNECTED}-action`: {
           const win = event.target.ownerGlobal;
-          const {
-            switchToTabHavingURI,
-          } = win.docShell.chromeEventHandler.ownerGlobal;
+          const { switchToTabHavingURI } =
+            win.docShell.chromeEventHandler.ownerGlobal;
           switchToTabHavingURI(
             "about:preferences?action=choose-what-to-sync#sync",
             true,
@@ -214,9 +213,8 @@ class TabPickupContainer extends HTMLDetailsElement {
     );
     const errorStateButton = this.querySelector("#error-state-button");
     const errorStateLink = this.querySelector("#error-state-link");
-    const errorStateProperties = SyncedTabsErrorHandler.getFluentStringsForErrorType(
-      this.errorState
-    );
+    const errorStateProperties =
+      SyncedTabsErrorHandler.getFluentStringsForErrorType(this.errorState);
 
     document.l10n.setAttributes(errorStateHeader, errorStateProperties.header);
     document.l10n.setAttributes(

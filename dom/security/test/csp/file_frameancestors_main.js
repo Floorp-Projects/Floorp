@@ -6,8 +6,7 @@ function setupFrames() {
   };
   var base = {
     self: "/tests/dom/security/test/csp/file_frameancestors.sjs",
-    a:
-      "http://mochi.test:8888/tests/dom/security/test/csp/file_frameancestors.sjs",
+    a: "http://mochi.test:8888/tests/dom/security/test/csp/file_frameancestors.sjs",
     b: "http://example.com/tests/dom/security/test/csp/file_frameancestors.sjs",
   };
 

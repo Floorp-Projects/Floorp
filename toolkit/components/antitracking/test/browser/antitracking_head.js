@@ -1245,11 +1245,13 @@ this.AntiTracking = {
           });
 
           info("Opening a window from the iframe.");
-          SpecialPowers.spawn(ifr, [{ popup: obj.popup }], async function (
-            obj
-          ) {
-            content.open(obj.popup);
-          });
+          SpecialPowers.spawn(
+            ifr,
+            [{ popup: obj.popup }],
+            async function (obj) {
+              content.open(obj.popup);
+            }
+          );
 
           info("Let's wait for the window to be closed");
           await windowClosed;
@@ -1344,11 +1346,13 @@ this.AntiTracking = {
           });
 
           info("Opening a window from the iframe.");
-          SpecialPowers.spawn(ifr, [{ popup: obj.popup }], async function (
-            obj
-          ) {
-            content.open(obj.popup);
-          });
+          SpecialPowers.spawn(
+            ifr,
+            [{ popup: obj.popup }],
+            async function (obj) {
+              content.open(obj.popup);
+            }
+          );
 
           info("Let's wait for the window to be closed");
           await windowClosed;

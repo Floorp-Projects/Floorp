@@ -78,17 +78,16 @@ add_task(async function () {
   // We have to start listening in order to ensure having a targetFront available
   await targetCommand.startListening();
 
-  const {
-    onResource: onReloaded,
-  } = await commands.resourceCommand.waitForNextResource(
-    commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate(resource) {
-        return resource.name == "dom-loading";
-      },
-    }
-  );
+  const { onResource: onReloaded } =
+    await commands.resourceCommand.waitForNextResource(
+      commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        ignoreExistingResources: true,
+        predicate(resource) {
+          return resource.name == "dom-loading";
+        },
+      }
+    );
 
   const backgroundPageURL = targetCommand.targetFront.url;
   ok(backgroundPageURL, "Got the background page URL");

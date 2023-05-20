@@ -79,8 +79,8 @@ Push.prototype = {
   askPermission() {
     lazy.console.debug("askPermission()");
 
-    let hasValidTransientUserGestureActivation = this._window.document
-      .hasValidTransientUserGestureActivation;
+    let hasValidTransientUserGestureActivation =
+      this._window.document.hasValidTransientUserGestureActivation;
 
     return this.createPromise((resolve, reject) => {
       let permissionDenied = () => {

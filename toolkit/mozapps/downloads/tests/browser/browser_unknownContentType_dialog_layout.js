@@ -13,8 +13,7 @@ const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xhtml";
 let tests = [
   {
     // This URL will trigger the simple UI, where only the Save an Cancel buttons are available
-    url:
-      "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.pif",
+    url: "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.pif",
     elements: {
       basicBox: { collapsed: false },
       normalBox: { collapsed: true },
@@ -22,8 +21,7 @@ let tests = [
   },
   {
     // This URL will trigger the full UI
-    url:
-      "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.txt",
+    url: "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.txt",
     elements: {
       basicBox: { collapsed: true },
       normalBox: { collapsed: false },

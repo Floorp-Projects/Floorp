@@ -180,9 +180,8 @@ add_task(async function escapeOnInitialPage() {
   Assert.ok(!UrlbarTestUtils.isPopupOpen(window, "UrlbarView is closed."));
   Assert.equal(gURLBar.value, TEST_QUERY, "Urlbar value hasn't changed.");
 
-  let oneOffs = UrlbarTestUtils.getOneOffSearchButtons(
-    window
-  ).getSelectableButtons(true);
+  let oneOffs =
+    UrlbarTestUtils.getOneOffSearchButtons(window).getSelectableButtons(true);
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: oneOffs[0].engine.name,
     entry: "oneoff",
@@ -209,9 +208,8 @@ add_task(async function escapeOnBrowsingPage() {
     Assert.ok(!UrlbarTestUtils.isPopupOpen(window, "UrlbarView is closed."));
     Assert.equal(gURLBar.value, TEST_QUERY, "Urlbar value hasn't changed.");
 
-    const oneOffs = UrlbarTestUtils.getOneOffSearchButtons(
-      window
-    ).getSelectableButtons(true);
+    const oneOffs =
+      UrlbarTestUtils.getOneOffSearchButtons(window).getSelectableButtons(true);
     await UrlbarTestUtils.assertSearchMode(window, {
       engineName: oneOffs[0].engine.name,
       entry: "oneoff",

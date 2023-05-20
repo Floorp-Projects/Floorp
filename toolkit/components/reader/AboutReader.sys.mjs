@@ -360,8 +360,8 @@ AboutReader.prototype = {
         }
         break;
       case "click":
-        const buttonLabel = target.attributes.getNamedItem(`data-telemetry-id`)
-          ?.value;
+        const buttonLabel =
+          target.attributes.getNamedItem(`data-telemetry-id`)?.value;
 
         if (buttonLabel) {
           Services.telemetry.recordEvent(
@@ -1497,8 +1497,8 @@ AboutReader.prototype = {
   },
 
   async _setupPocketCTA() {
-    let ctaVersion = lazy.NimbusFeatures.readerMode.getAllVariables()
-      ?.pocketCTAVersion;
+    let ctaVersion =
+      lazy.NimbusFeatures.readerMode.getAllVariables()?.pocketCTAVersion;
     this._isLoggedInPocketUser = await this._requestPocketLoginStatus();
     let elPocketCTAWrapper = this._doc.querySelector("#pocket-cta-container");
 

@@ -400,32 +400,34 @@ add_task(async function () {
   for (let stepIndex = 0; stepIndex < steps.length; stepIndex++) {
     let step = steps[stepIndex];
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [step], async function (
-      contentStep
-    ) {
-      return new Promise(resolve => {
-        let changedWin = content;
+    await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [step],
+      async function (contentStep) {
+        return new Promise(resolve => {
+          let changedWin = content;
 
-        let elem;
-        if (contentStep[0] == "select") {
-          changedWin = content.document.getElementById("frame").contentWindow;
-          elem = changedWin.document.getElementById("select");
-        } else {
-          elem = content.document.getElementById(contentStep[0]);
-        }
+          let elem;
+          if (contentStep[0] == "select") {
+            changedWin = content.document.getElementById("frame").contentWindow;
+            elem = changedWin.document.getElementById("select");
+          } else {
+            elem = content.document.getElementById(contentStep[0]);
+          }
 
-        changedWin.addEventListener(
-          "MozAfterPaint",
-          function () {
-            resolve();
-          },
-          { once: true }
-        );
+          changedWin.addEventListener(
+            "MozAfterPaint",
+            function () {
+              resolve();
+            },
+            { once: true }
+          );
 
-        elem.style = contentStep[1];
-        elem.getBoundingClientRect();
-      });
-    });
+          elem.style = contentStep[1];
+          elem.getBoundingClientRect();
+        });
+      }
+    );
 
     await openSelectPopup();
 

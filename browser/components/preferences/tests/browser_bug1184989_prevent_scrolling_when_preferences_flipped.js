@@ -7,34 +7,35 @@ add_task(async function () {
     getRootDirectory(gTestPath) +
     "browser_bug1184989_prevent_scrolling_when_preferences_flipped.xhtml";
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: tabURL }, async function (
-    browser
-  ) {
-    let doc = browser.contentDocument;
-    let container = doc.getElementById("container");
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: tabURL },
+    async function (browser) {
+      let doc = browser.contentDocument;
+      let container = doc.getElementById("container");
 
-    // Test button
-    let button = doc.getElementById("button");
-    button.focus();
-    let initialScrollTop = container.scrollTop;
-    EventUtils.sendString(" ");
-    await checkPageScrolling(container, "button", initialScrollTop);
+      // Test button
+      let button = doc.getElementById("button");
+      button.focus();
+      let initialScrollTop = container.scrollTop;
+      EventUtils.sendString(" ");
+      await checkPageScrolling(container, "button", initialScrollTop);
 
-    // Test checkbox
-    let checkbox = doc.getElementById("checkbox");
-    checkbox.focus();
-    initialScrollTop = container.scrollTop;
-    EventUtils.sendString(" ");
-    ok(checkbox.checked, "Checkbox is checked");
-    await checkPageScrolling(container, "checkbox", initialScrollTop);
+      // Test checkbox
+      let checkbox = doc.getElementById("checkbox");
+      checkbox.focus();
+      initialScrollTop = container.scrollTop;
+      EventUtils.sendString(" ");
+      ok(checkbox.checked, "Checkbox is checked");
+      await checkPageScrolling(container, "checkbox", initialScrollTop);
 
-    // Test radio
-    let radiogroup = doc.getElementById("radiogroup");
-    radiogroup.focus();
-    initialScrollTop = container.scrollTop;
-    EventUtils.sendString(" ");
-    await checkPageScrolling(container, "radio", initialScrollTop);
-  });
+      // Test radio
+      let radiogroup = doc.getElementById("radiogroup");
+      radiogroup.focus();
+      initialScrollTop = container.scrollTop;
+      EventUtils.sendString(" ");
+      await checkPageScrolling(container, "radio", initialScrollTop);
+    }
+  );
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#search" },

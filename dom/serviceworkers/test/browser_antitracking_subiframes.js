@@ -67,9 +67,8 @@ add_task(async function () {
     [{ url: SW_IFRAME_PAGE }],
     async function ({ url }) {
       content.document.userInteractionForTesting();
-      const payload = await content.wrappedJSObject.createIframeAndWaitForMessage(
-        url
-      );
+      const payload =
+        await content.wrappedJSObject.createIframeAndWaitForMessage(url);
       return payload;
     }
   );
@@ -82,9 +81,8 @@ add_task(async function () {
     topTab.linkedBrowser,
     [{ url: SW_IFRAME_PAGE }],
     async function ({ url }) {
-      const payload = await content.wrappedJSObject.createNestedIframeAndWaitForMessage(
-        url
-      );
+      const payload =
+        await content.wrappedJSObject.createNestedIframeAndWaitForMessage(url);
       return payload;
     }
   );

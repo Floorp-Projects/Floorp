@@ -411,25 +411,21 @@ export class AboutLoginsParent extends JSWindowActorParent {
         );
       }
     }
-    let [
-      title,
-      defaultFilename,
-      okButtonLabel,
-      csvFilterTitle,
-    ] = await lazy.AboutLoginsL10n.formatValues([
-      {
-        id: "about-logins-export-file-picker-title",
-      },
-      {
-        id: "about-logins-export-file-picker-default-filename",
-      },
-      {
-        id: "about-logins-export-file-picker-export-button",
-      },
-      {
-        id: "about-logins-export-file-picker-csv-filter-title",
-      },
-    ]);
+    let [title, defaultFilename, okButtonLabel, csvFilterTitle] =
+      await lazy.AboutLoginsL10n.formatValues([
+        {
+          id: "about-logins-export-file-picker-title",
+        },
+        {
+          id: "about-logins-export-file-picker-default-filename",
+        },
+        {
+          id: "about-logins-export-file-picker-export-button",
+        },
+        {
+          id: "about-logins-export-file-picker-csv-filter-title",
+        },
+      ]);
 
     fp.init(this.#ownerGlobal, title, Ci.nsIFilePicker.modeSave);
     fp.appendFilter(csvFilterTitle, "*.csv");
@@ -441,25 +437,21 @@ export class AboutLoginsParent extends JSWindowActorParent {
   }
 
   async #importFromFile() {
-    let [
-      title,
-      okButtonLabel,
-      csvFilterTitle,
-      tsvFilterTitle,
-    ] = await lazy.AboutLoginsL10n.formatValues([
-      {
-        id: "about-logins-import-file-picker-title",
-      },
-      {
-        id: "about-logins-import-file-picker-import-button",
-      },
-      {
-        id: "about-logins-import-file-picker-csv-filter-title",
-      },
-      {
-        id: "about-logins-import-file-picker-tsv-filter-title",
-      },
-    ]);
+    let [title, okButtonLabel, csvFilterTitle, tsvFilterTitle] =
+      await lazy.AboutLoginsL10n.formatValues([
+        {
+          id: "about-logins-import-file-picker-title",
+        },
+        {
+          id: "about-logins-import-file-picker-import-button",
+        },
+        {
+          id: "about-logins-import-file-picker-csv-filter-title",
+        },
+        {
+          id: "about-logins-import-file-picker-tsv-filter-title",
+        },
+      ]);
     let { result, path } = await this.openFilePickerDialog(
       title,
       okButtonLabel,
@@ -619,9 +611,8 @@ class AboutLoginsInternal {
     }
 
     if (lazy.BREACH_ALERTS_ENABLED) {
-      let breachesForThisLogin = await lazy.LoginBreaches.getPotentialBreachesByLoginGUID(
-        [login]
-      );
+      let breachesForThisLogin =
+        await lazy.LoginBreaches.getPotentialBreachesByLoginGUID([login]);
       let breachData = breachesForThisLogin.size
         ? breachesForThisLogin.get(login.guid)
         : false;
@@ -630,9 +621,10 @@ class AboutLoginsInternal {
         new Map([[login.guid, breachData]])
       );
       if (lazy.VULNERABLE_PASSWORDS_ENABLED) {
-        let vulnerablePasswordsForThisLogin = await lazy.LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID(
-          [login]
-        );
+        let vulnerablePasswordsForThisLogin =
+          await lazy.LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID(
+            [login]
+          );
         let isLoginVulnerable = !!vulnerablePasswordsForThisLogin.size;
         this.#messageSubscribers(
           "AboutLogins:UpdateVulnerableLogins",
@@ -731,9 +723,8 @@ class AboutLoginsInternal {
       let browser = subscriber.embedderElement;
       let { gBrowser } = browser.ownerGlobal;
       let notificationBox = gBrowser.getNotificationBox(browser);
-      let notification = notificationBox.getNotificationWithValue(
-        notificationId
-      );
+      let notification =
+        notificationBox.getNotificationWithValue(notificationId);
       if (!notification) {
         continue;
       }

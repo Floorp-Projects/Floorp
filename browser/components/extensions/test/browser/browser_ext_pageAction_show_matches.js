@@ -288,9 +288,8 @@ add_task(async function test_pageAction_restrictScheme_false() {
   async function expectPageAction(extension, tab, isShown) {
     await promiseAnimationFrame();
     let widgetId = makeWidgetId(extension.id);
-    let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(
-      widgetId
-    );
+    let pageActionId =
+      BrowserPageActions.urlbarButtonNodeIDForActionID(widgetId);
     let iconEl = document.getElementById(pageActionId);
 
     if (isShown) {

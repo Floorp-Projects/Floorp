@@ -54,8 +54,8 @@ async function testToolbarButtons(aActions) {
   });
   CustomizableUIInternal._updateForNewProtonVersion();
 
-  let navbarPlacements = CustomizableUI.getTestOnlyInternalProp("gSavedState")
-    .placements["nav-bar"];
+  let navbarPlacements =
+    CustomizableUI.getTestOnlyInternalProp("gSavedState").placements["nav-bar"];
   let includesHomeButton = navbarPlacements.includes("home-button");
   let includesLibraryButton = navbarPlacements.includes("library-button");
   let includesSidebarButton = navbarPlacements.includes("sidebar-button");

@@ -60,8 +60,7 @@ const tests = [
     expected: "another description",
   },
   {
-    desc:
-      "No description change when @alt is dropped but @aria-describedby remains",
+    desc: "No description change when @alt is dropped but @aria-describedby remains",
     attrs: [
       {
         attr: "alt",

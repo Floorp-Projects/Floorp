@@ -27,13 +27,15 @@ add_task(async function () {
     "https://example.com" + CORS_SJS_PATH,
     "http://example.com" + CORS_SJS_PATH,
   ];
-  await SpecialPowers.spawn(tab.linkedBrowser, [REQUEST_URLS], async function (
-    urls
-  ) {
-    for (const url of urls) {
-      content.wrappedJSObject.performRequests(1, url);
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [REQUEST_URLS],
+    async function (urls) {
+      for (const url of urls) {
+        content.wrappedJSObject.performRequests(1, url);
+      }
     }
-  });
+  );
   await wait;
 
   info("Selecting secure request.");

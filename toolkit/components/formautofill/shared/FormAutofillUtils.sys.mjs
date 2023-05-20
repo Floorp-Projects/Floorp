@@ -746,9 +746,8 @@ FormAutofillUtils = {
       ];
       let reAlternativeCountryNames = this._reAlternativeCountryNames[country];
       if (!reAlternativeCountryNames) {
-        reAlternativeCountryNames = this._reAlternativeCountryNames[
-          country
-        ] = [];
+        reAlternativeCountryNames = this._reAlternativeCountryNames[country] =
+          [];
       }
 
       if (countryName.length == 3) {

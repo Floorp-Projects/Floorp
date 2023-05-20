@@ -192,9 +192,8 @@ class StorageUI {
     this._tablePopup = this._panelDoc.getElementById("storage-table-popup");
     this._tablePopup.addEventListener("popupshowing", this.onTablePopupShowing);
 
-    this.onVariableViewPopupShowing = this.onVariableViewPopupShowing.bind(
-      this
-    );
+    this.onVariableViewPopupShowing =
+      this.onVariableViewPopupShowing.bind(this);
     this._variableViewPopup = this._panelDoc.getElementById(
       "variable-view-popup"
     );
@@ -1510,7 +1509,8 @@ class StorageUI {
       }
     }
 
-    this._tablePopupDeleteAllSessionCookies.hidden = !showDeleteAllSessionCookies;
+    this._tablePopupDeleteAllSessionCookies.hidden =
+      !showDeleteAllSessionCookies;
 
     if (type === "cookies") {
       const hostString = addEllipsis(data.host);
@@ -1564,7 +1564,8 @@ class StorageUI {
         }
       }
 
-      this._treePopupDeleteAllSessionCookies.hidden = !showDeleteAllSessionCookies;
+      this._treePopupDeleteAllSessionCookies.hidden =
+        !showDeleteAllSessionCookies;
 
       // The delete action is displayed for:
       // - IndexedDB databases (level 3 of the tree)

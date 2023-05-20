@@ -670,9 +670,10 @@ reftest.Runner = class {
     while (!isReftestReady) {
       // Note: We cannot compare the URL here. Before the navigation is complete
       // currentWindowGlobal.documentURI.spec will still point to the old URL.
-      const actor = webProgress.browsingContext.currentWindowGlobal.getActor(
-        "MarionetteReftest"
-      );
+      const actor =
+        webProgress.browsingContext.currentWindowGlobal.getActor(
+          "MarionetteReftest"
+        );
       isReftestReady = await actor.reftestWait(url, this.useRemoteTabs);
     }
   }

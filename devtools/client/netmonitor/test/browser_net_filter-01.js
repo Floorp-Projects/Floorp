@@ -45,12 +45,11 @@ const REQUESTS_WITH_MEDIA_AND_FLASH = REQUESTS_WITH_MEDIA.concat([
   { url: "sjs_content-type-test-server.sjs?fmt=flash" },
 ]);
 
-const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.concat(
-  [
+const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS =
+  REQUESTS_WITH_MEDIA_AND_FLASH.concat([
     /* Use new WebSocket() to mock native websocket request, then "Upgrade" will be added */
     { url: WS_URL + "sjs_content-type-test-server.sjs?fmt=ws", ws: true },
-  ]
-);
+  ]);
 
 const EXPECTED_REQUESTS = [
   {
@@ -222,11 +221,8 @@ add_task(async function () {
   const { monitor } = await initNetMonitor(FILTERING_URL, { requestCount: 1 });
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-    getSelectedRequest,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests, getSelectedRequest, getSortedRequests } =
+    windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 

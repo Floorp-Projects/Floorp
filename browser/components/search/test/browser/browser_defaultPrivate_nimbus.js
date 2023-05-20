@@ -69,9 +69,8 @@ add_task(async function test_nimbus_experiment() {
   );
   await ExperimentAPI.ready();
 
-  let reloadObserved = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  let reloadObserved =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
 
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "searchConfiguration",
@@ -87,9 +86,8 @@ add_task(async function test_nimbus_experiment() {
     "private",
     "Should have private as private default while in experiment"
   );
-  reloadObserved = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  reloadObserved =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
   await doExperimentCleanup();
   await reloadObserved;
   Assert.equal(
@@ -107,9 +105,8 @@ add_task(async function test_nimbus_experiment_urlbar_result_enabled() {
   );
   await ExperimentAPI.ready();
 
-  let reloadObserved = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  let reloadObserved =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
 
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "searchConfiguration",
@@ -125,9 +122,8 @@ add_task(async function test_nimbus_experiment_urlbar_result_enabled() {
     true,
     "Should have set the urlbar result enabled value to true"
   );
-  reloadObserved = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  reloadObserved =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
   await doExperimentCleanup();
   await reloadObserved;
   Assert.equal(

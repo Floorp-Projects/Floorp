@@ -800,9 +800,8 @@ ClientEngine.prototype = {
       this._log.trace(`Client ${clientId} got a new action`, [command, args]);
       await this._tracker.addChangedID(clientId);
       try {
-        telemetryExtra.deviceID = this.service.identity.hashedDeviceID(
-          clientId
-        );
+        telemetryExtra.deviceID =
+          this.service.identity.hashedDeviceID(clientId);
       } catch (_) {}
 
       this.service.recordTelemetryEvent(
@@ -1030,7 +1029,8 @@ ClientStore.prototype = {
       }
     }
     if (record.commands) {
-      const maxPayloadSize = this.engine.service.getMemcacheMaxRecordPayloadSize();
+      const maxPayloadSize =
+        this.engine.service.getMemcacheMaxRecordPayloadSize();
       let origOrder = new Map(record.commands.map((c, i) => [c, i]));
       // we sort first by priority, and second by age (indicated by order in the
       // original list)

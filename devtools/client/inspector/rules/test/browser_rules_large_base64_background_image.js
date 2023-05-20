@@ -63,9 +63,8 @@ add_task(async function () {
     !!propertyValues[1].querySelector(".propertyvalue-long-text"),
     "The second background-image has a special CSS class to be truncated"
   );
-  const ruleviewContainer = view.styleDocument.getElementById(
-    "ruleview-container"
-  );
+  const ruleviewContainer =
+    view.styleDocument.getElementById("ruleview-container");
   ok(
     ruleviewContainer.scrollHeight === ruleviewContainer.clientHeight,
     "The ruleview container does not have a scrollbar"

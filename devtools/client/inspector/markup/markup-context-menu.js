@@ -214,11 +214,8 @@ class MarkupContextMenu {
    * Jumps to the custom element definition in the debugger.
    */
   _jumpToCustomElementDefinition() {
-    const {
-      url,
-      line,
-      column,
-    } = this.selection.nodeFront.customElementLocation;
+    const { url, line, column } =
+      this.selection.nodeFront.customElementLocation;
     this.toolbox.viewSourceInDebugger(
       url,
       line,

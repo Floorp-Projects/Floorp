@@ -15,8 +15,9 @@ var gMockFxaDevices = null;
 var gUIStateStatus;
 
 function promiseSyncReady() {
-  let service = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
-    .wrappedJSObject;
+  let service = Cc["@mozilla.org/weave/service;1"].getService(
+    Ci.nsISupports
+  ).wrappedJSObject;
   return service.whenLoaded();
 }
 

@@ -28,9 +28,8 @@ add_task(async function test_beforeunload_stay_clears_urlbar() {
     EventUtils.sendString(inputValue.slice(-1));
 
     if (CONTENT_PROMPT_SUBDIALOG) {
-      let promptOpenedPromise = BrowserTestUtils.promiseAlertDialogOpen(
-        "cancel"
-      );
+      let promptOpenedPromise =
+        BrowserTestUtils.promiseAlertDialogOpen("cancel");
       EventUtils.synthesizeKey("VK_RETURN");
       await promptOpenedPromise;
       await TestUtils.waitForTick();

@@ -75,9 +75,8 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
           browser.test.sendMessage("newTabPageSet");
           break;
         case "tryClear":
-          let clearResult = await browser.browserSettings.newTabPageOverride.clear(
-            {}
-          );
+          let clearResult =
+            await browser.browserSettings.newTabPageOverride.clear({});
           browser.test.assertFalse(
             clearResult,
             "Calling newTabPageOverride.clear returns false."

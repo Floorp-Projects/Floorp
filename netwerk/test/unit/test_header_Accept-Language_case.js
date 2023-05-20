@@ -31,9 +31,8 @@ function run_test() {
     let expectedHeader = testData[i][1];
 
     intlPrefs.setCharPref("accept_languages", acceptLangPref);
-    let acceptLangHeader = setupChannel(testpath).getRequestHeader(
-      "Accept-Language"
-    );
+    let acceptLangHeader =
+      setupChannel(testpath).getRequestHeader("Accept-Language");
     equal(acceptLangHeader, expectedHeader);
   }
 

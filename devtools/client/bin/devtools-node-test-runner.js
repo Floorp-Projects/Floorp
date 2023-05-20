@@ -185,7 +185,8 @@ function getTypescriptErrors(out, err, testPath) {
   //   popup/panel.jsm.js(103,7): error TS2531: Object is possibly 'null'.
   // Which means:
   //   {file_path}({line},{col}): error TS{error_code}: {message}
-  const tsErrorRegex = /(?<file>(\w|\/|\.)+)\((?<line>\d+),(?<column>\d+)\): (?<message>error TS\d+\:.*)/;
+  const tsErrorRegex =
+    /(?<file>(\w|\/|\.)+)\((?<line>\d+),(?<column>\d+)\): (?<message>error TS\d+\:.*)/;
   const errors = [];
   for (const line of out.split("\n")) {
     const res = line.match(tsErrorRegex);

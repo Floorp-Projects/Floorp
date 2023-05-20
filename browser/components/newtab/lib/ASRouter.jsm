@@ -635,9 +635,8 @@ class _ASRouter {
     this.isUnblockedMessage = this.isUnblockedMessage.bind(this);
     this.unblockAll = this.unblockAll.bind(this);
     this.forceWNPanel = this.forceWNPanel.bind(this);
-    this._onExperimentEnrollmentsUpdated = this._onExperimentEnrollmentsUpdated.bind(
-      this
-    );
+    this._onExperimentEnrollmentsUpdated =
+      this._onExperimentEnrollmentsUpdated.bind(this);
     this.forcePBWindow = this.forcePBWindow.bind(this);
     Services.telemetry.setEventRecordingEnabled(REACH_EVENT_CATEGORY, true);
   }
@@ -877,14 +876,11 @@ class _ASRouter {
       let newState = { messages: [], providers: [] };
       for (const provider of this.state.providers) {
         if (needsUpdate.includes(provider)) {
-          const {
-            messages,
-            lastUpdated,
-            errors,
-          } = await MessageLoaderUtils.loadMessagesForProvider(provider, {
-            storage: this._storage,
-            dispatchCFRAction: this.dispatchCFRAction,
-          });
+          const { messages, lastUpdated, errors } =
+            await MessageLoaderUtils.loadMessagesForProvider(provider, {
+              storage: this._storage,
+              dispatchCFRAction: this.dispatchCFRAction,
+            });
           newState.providers.push({ ...provider, lastUpdated, errors });
           newState.messages = [...newState.messages, ...messages];
         } else {
@@ -1202,11 +1198,8 @@ class _ASRouter {
 
   // Return an object containing targeting parameters used to select messages
   _getMessagesContext() {
-    const {
-      messageImpressions,
-      previousSessionEnd,
-      screenImpressions,
-    } = this.state;
+    const { messageImpressions, previousSessionEnd, screenImpressions } =
+      this.state;
 
     return {
       get messageImpressions() {
@@ -2070,22 +2063,22 @@ class _ASRouter {
   }
 
   async forcePBWindow(browser, msg) {
-    const privateBrowserOpener = await new Promise((
-      resolveOnContentBrowserCreated // wrap this in a promise to give back the right browser
-    ) =>
-      browser.ownerGlobal.openTrustedLinkIn(
-        "about:privatebrowsing?debug",
-        "window",
-        {
-          private: true,
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(
-            {}
-          ),
-          csp: null,
-          resolveOnContentBrowserCreated,
-          opener: "devtools",
-        }
-      )
+    const privateBrowserOpener = await new Promise(
+      (
+        resolveOnContentBrowserCreated // wrap this in a promise to give back the right browser
+      ) =>
+        browser.ownerGlobal.openTrustedLinkIn(
+          "about:privatebrowsing?debug",
+          "window",
+          {
+            private: true,
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal({}),
+            csp: null,
+            resolveOnContentBrowserCreated,
+            opener: "devtools",
+          }
+        )
     );
 
     lazy.setTimeout(() => {

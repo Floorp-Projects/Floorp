@@ -224,9 +224,9 @@ add_task(async function focus_after_top_sites() {
     }
   }
 
-  let changedPromise = TestUtils.topicObserved(
-    "newtab-top-sites-changed"
-  ).then(() => info("Observed newtab-top-sites-changed"));
+  let changedPromise = TestUtils.topicObserved("newtab-top-sites-changed").then(
+    () => info("Observed newtab-top-sites-changed")
+  );
   await updateTopSites(sites => sites?.length == N_TOP_SITES);
   await changedPromise;
 

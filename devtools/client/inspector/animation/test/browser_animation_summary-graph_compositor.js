@@ -15,11 +15,8 @@ add_task(async function () {
     ".compositor-notall",
     ".no-compositor",
   ]);
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
 
   info("Check animation whose all properties are running on compositor");
   const summaryGraphAllEl = await findSummaryGraph(".compositor-all", panel);

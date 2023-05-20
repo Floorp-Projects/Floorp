@@ -320,11 +320,13 @@ function toPathString(segments) {
 }
 
 exports.createPathSegments = createPathSegments;
-exports.createSummaryGraphPathStringFunction = createSummaryGraphPathStringFunction;
+exports.createSummaryGraphPathStringFunction =
+  createSummaryGraphPathStringFunction;
 exports.DEFAULT_DURATION_RESOLUTION = DEFAULT_DURATION_RESOLUTION;
 exports.DEFAULT_EASING_HINT_STROKE_WIDTH = DEFAULT_EASING_HINT_STROKE_WIDTH;
 exports.DEFAULT_GRAPH_HEIGHT = DEFAULT_GRAPH_HEIGHT;
 exports.DEFAULT_KEYFRAMES_GRAPH_DURATION = DEFAULT_KEYFRAMES_GRAPH_DURATION;
-exports.getPreferredProgressThresholdByKeyframes = getPreferredProgressThresholdByKeyframes;
+exports.getPreferredProgressThresholdByKeyframes =
+  getPreferredProgressThresholdByKeyframes;
 exports.SummaryGraphHelper = SummaryGraphHelper;
 exports.toPathString = toPathString;

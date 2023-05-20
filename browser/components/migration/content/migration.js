@@ -297,8 +297,8 @@ var MigrationWizard = {
   },
 
   onImportSourcePageAdvanced(event) {
-    var newSource = document.getElementById("importSourceGroup").selectedItem
-      .id;
+    var newSource =
+      document.getElementById("importSourceGroup").selectedItem.id;
 
     this.recordEvent("browser_selected", { migrator_key: newSource });
 

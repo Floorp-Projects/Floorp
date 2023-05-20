@@ -190,15 +190,12 @@ export class PasswordFileMigrator extends FileMigratorBase {
   }
 
   async getFilePickerConfig() {
-    let [
-      title,
-      csvFilterTitle,
-      tsvFilterTitle,
-    ] = await lazy.gFluentStrings.formatValues([
-      { id: "migration-passwords-from-file-picker-title" },
-      { id: "migration-passwords-from-file-csv-filter-title" },
-      { id: "migration-passwords-from-file-tsv-filter-title" },
-    ]);
+    let [title, csvFilterTitle, tsvFilterTitle] =
+      await lazy.gFluentStrings.formatValues([
+        { id: "migration-passwords-from-file-picker-title" },
+        { id: "migration-passwords-from-file-csv-filter-title" },
+        { id: "migration-passwords-from-file-tsv-filter-title" },
+      ]);
 
     return {
       title,

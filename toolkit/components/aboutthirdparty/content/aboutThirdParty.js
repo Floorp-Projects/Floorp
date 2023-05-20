@@ -172,17 +172,13 @@ function onClickOpenDir(event) {
 
 // Returns whether we should restart.
 async function confirmRestartPrompt() {
-  let [
-    msg,
-    title,
-    restartButtonText,
-    restartLaterButtonText,
-  ] = await document.l10n.formatValues([
-    { id: "third-party-blocking-requires-restart" },
-    { id: "third-party-should-restart-title" },
-    { id: "third-party-restart-now" },
-    { id: "third-party-restart-later" },
-  ]);
+  let [msg, title, restartButtonText, restartLaterButtonText] =
+    await document.l10n.formatValues([
+      { id: "third-party-blocking-requires-restart" },
+      { id: "third-party-should-restart-title" },
+      { id: "third-party-restart-now" },
+      { id: "third-party-restart-later" },
+    ]);
   let buttonFlags =
     Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
     Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_IS_STRING +
@@ -468,9 +464,8 @@ function visualizeData(aData) {
       modTagsContainer.querySelector(".tag-shellex").hidden = false;
     }
 
-    newCard.querySelector(
-      ".blocked-by-builtin"
-    ).hidden = !module.isBlockedByBuiltin;
+    newCard.querySelector(".blocked-by-builtin").hidden =
+      !module.isBlockedByBuiltin;
     if (isBlocklistAvailable) {
       setUpBlockButton(newCard, isBlocklistDisabled, module);
     }

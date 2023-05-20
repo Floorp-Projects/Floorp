@@ -39,7 +39,8 @@ const PREF_DEPRECATED_DEVICE_NAME = "services.sync.client.name";
 // At time of writing, FxA has a regex DISPLAY_SAFE_UNICODE_WITH_NON_BMP, which
 // the regex below is based on.
 // eslint-disable-next-line no-control-regex
-const INVALID_NAME_CHARS = /[\u0000-\u001F\u007F\u0080-\u009F\u2028-\u2029\uE000-\uF8FF\uFFF9-\uFFFC\uFFFE-\uFFFF]/g;
+const INVALID_NAME_CHARS =
+  /[\u0000-\u001F\u007F\u0080-\u009F\u2028-\u2029\uE000-\uF8FF\uFFF9-\uFFFC\uFFFE-\uFFFF]/g;
 const MAX_NAME_LEN = 255;
 const REPLACEMENT_CHAR = "\uFFFD";
 
@@ -266,9 +267,9 @@ export class FxAccountsDevice {
     if (
       ourDevice &&
       (ourDevice.pushCallback === null || // fxa server doesn't know our subscription.
-      ourDevice.pushEndpointExpired || // fxa server thinks it has expired.
-      !subscription || // we don't have a local subscription.
-      subscription.isExpired() || // our local subscription is expired.
+        ourDevice.pushEndpointExpired || // fxa server thinks it has expired.
+        !subscription || // we don't have a local subscription.
+        subscription.isExpired() || // our local subscription is expired.
         ourDevice.pushCallback != subscription.endpoint) // we don't agree with fxa.
     ) {
       log.warn(`Our push endpoint needs resubscription`);
@@ -370,7 +371,8 @@ export class FxAccountsDevice {
     const remoteAvailableCommandsKeys = Object.keys(
       remoteAvailableCommands
     ).sort();
-    const localAvailableCommands = await this._fxai.commands.availableCommands();
+    const localAvailableCommands =
+      await this._fxai.commands.availableCommands();
     const localAvailableCommandsKeys = Object.keys(
       localAvailableCommands
     ).sort();
@@ -428,7 +430,8 @@ export class FxAccountsDevice {
     }
 
     try {
-      const subscription = await this._fxai.fxaPushService.registerPushEndpoint();
+      const subscription =
+        await this._fxai.fxaPushService.registerPushEndpoint();
       const deviceName = this.getLocalName();
       let deviceOptions = {};
 
@@ -442,7 +445,8 @@ export class FxAccountsDevice {
           deviceOptions.pushAuthKey = urlsafeBase64Encode(authKey);
         }
       }
-      deviceOptions.availableCommands = await this._fxai.commands.availableCommands();
+      deviceOptions.availableCommands =
+        await this._fxai.commands.availableCommands();
       const availableCommandsKeys = Object.keys(
         deviceOptions.availableCommands
       ).sort();

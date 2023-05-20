@@ -77,7 +77,8 @@ add_task(async function run_test() {
         "Should include our notes"
       );
       Assert.equal(extra["Add-ons"], "test%40mozilla.org:0.1");
-      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const UUID_REGEX =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       Assert.ok(
         "TelemetrySessionId" in extra,
         "The TelemetrySessionId field is present in the extra file"

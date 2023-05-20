@@ -27,15 +27,17 @@ add_task(async function () {
   const events = await newTitlePromise;
   const newtitle = events[0].title;
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [{ newtitle }], async function (
-    args
-  ) {
-    Assert.equal(
-      args.newtitle,
-      content.document.title,
-      "Title after pushstate."
-    );
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [{ newtitle }],
+    async function (args) {
+      Assert.equal(
+        args.newtitle,
+        content.document.title,
+        "Title after pushstate."
+      );
+    }
+  );
 
   await PlacesUtils.history.clear();
   gBrowser.removeTab(tab);

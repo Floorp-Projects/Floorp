@@ -422,10 +422,8 @@ const AbuseReporter = {
     if (dialogWin) {
       // If an abuse report dialog is already open, cancel the
       // previous report flow and start a new one.
-      const {
-        deferredReport,
-        promiseReport,
-      } = dialogWin.arguments[0].wrappedJSObject;
+      const { deferredReport, promiseReport } =
+        dialogWin.arguments[0].wrappedJSObject;
       deferredReport.resolve({ userCancelled: true });
       await promiseReport;
     }

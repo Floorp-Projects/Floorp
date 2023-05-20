@@ -52,9 +52,8 @@ class _ToolbarPanelHub {
     this._hideAppmenuButton = this._hideAppmenuButton.bind(this);
     this._showToolbarButton = this._showToolbarButton.bind(this);
     this._hideToolbarButton = this._hideToolbarButton.bind(this);
-    this.insertProtectionPanelMessage = this.insertProtectionPanelMessage.bind(
-      this
-    );
+    this.insertProtectionPanelMessage =
+      this.insertProtectionPanelMessage.bind(this);
 
     this.state = {};
     this._initialized = false;

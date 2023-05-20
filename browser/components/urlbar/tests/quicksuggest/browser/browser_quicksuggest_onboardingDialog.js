@@ -987,8 +987,8 @@ function assertLogo(sectionElement, expectedLogoType) {
 
   const logo = sectionElement.querySelector(".logo");
   Assert.ok(BrowserTestUtils.is_visible(logo));
-  const logoImage = sectionElement.ownerGlobal.getComputedStyle(logo)
-    .backgroundImage;
+  const logoImage =
+    sectionElement.ownerGlobal.getComputedStyle(logo).backgroundImage;
   Assert.equal(logoImage, expectedLogoImage);
 }
 

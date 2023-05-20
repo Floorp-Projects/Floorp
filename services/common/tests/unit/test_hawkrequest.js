@@ -3,12 +3,8 @@
 
 "use strict";
 
-const {
-  HAWKAuthenticatedRESTRequest,
-  deriveHawkCredentials,
-} = ChromeUtils.importESModule(
-  "resource://services-common/hawkrequest.sys.mjs"
-);
+const { HAWKAuthenticatedRESTRequest, deriveHawkCredentials } =
+  ChromeUtils.importESModule("resource://services-common/hawkrequest.sys.mjs");
 const { Async } = ChromeUtils.importESModule(
   "resource://services-common/async.sys.mjs"
 );

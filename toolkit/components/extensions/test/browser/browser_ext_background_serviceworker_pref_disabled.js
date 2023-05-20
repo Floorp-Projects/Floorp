@@ -27,7 +27,8 @@ add_task(async function test_background_serviceworker_disallowed() {
   let waitForConsole = new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, [
       {
-        message: /Reading manifest: Error processing background: background.service_worker is currently disabled/,
+        message:
+          /Reading manifest: Error processing background: background.service_worker is currently disabled/,
       },
     ]);
   });

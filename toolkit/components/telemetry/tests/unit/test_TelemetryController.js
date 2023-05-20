@@ -1196,8 +1196,11 @@ add_task(function test_scalar_filtering() {
     "test keyed scalars should be snapshotted"
   );
 
-  snapshot = Telemetry.getSnapshotForScalars("main", false, /* filter */ true)
-    .parent;
+  snapshot = Telemetry.getSnapshotForScalars(
+    "main",
+    false,
+    /* filter */ true
+  ).parent;
   keyedSnapshot = Telemetry.getSnapshotForKeyedScalars(
     "main",
     false,

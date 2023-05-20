@@ -163,9 +163,10 @@ class TranslationsEngineCache {
    */
   createGetter(actor, fromLanguage, toLanguage) {
     return async (onlyFromCache = false) => {
-      let enginePromise = this.#engines[
-        TranslationsChild.languagePairKey(fromLanguage, toLanguage)
-      ];
+      let enginePromise =
+        this.#engines[
+          TranslationsChild.languagePairKey(fromLanguage, toLanguage)
+        ];
       if (enginePromise) {
         return enginePromise;
       }

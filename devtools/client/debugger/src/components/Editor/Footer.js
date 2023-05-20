@@ -185,12 +185,8 @@ class SourceFooter extends PureComponent {
   }
 
   renderSourceSummary() {
-    const {
-      cx,
-      mappedSource,
-      jumpToMappedLocation,
-      selectedSource,
-    } = this.props;
+    const { cx, mappedSource, jumpToMappedLocation, selectedSource } =
+      this.props;
 
     if (!mappedSource || !selectedSource || !selectedSource.isOriginal) {
       return null;

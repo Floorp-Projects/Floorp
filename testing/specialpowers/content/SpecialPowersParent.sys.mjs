@@ -58,13 +58,10 @@ function doPrefEnvOp(fn) {
 }
 
 async function createWindowlessBrowser({ isPrivate = false } = {}) {
-  const {
-    promiseDocumentLoaded,
-    promiseEvent,
-    promiseObserved,
-  } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionUtils.jsm"
-  ).ExtensionUtils;
+  const { promiseDocumentLoaded, promiseEvent, promiseObserved } =
+    ChromeUtils.import(
+      "resource://gre/modules/ExtensionUtils.jsm"
+    ).ExtensionUtils;
 
   let windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
 
@@ -1366,18 +1363,11 @@ export class SpecialPowersParent extends JSWindowActorParent {
           // our promise resolves.
           let spawnStartTime = startTime;
           startTime = undefined;
-          let {
-            browsingContext,
-            task,
-            args,
-            caller,
-            hasHarness,
-            imports,
-          } = aMessage.data;
+          let { browsingContext, task, args, caller, hasHarness, imports } =
+            aMessage.data;
 
-          let spParent = browsingContext.currentWindowGlobal.getActor(
-            "SpecialPowers"
-          );
+          let spParent =
+            browsingContext.currentWindowGlobal.getActor("SpecialPowers");
 
           let taskId = nextTaskID++;
           if (hasHarness) {
@@ -1403,12 +1393,8 @@ export class SpecialPowersParent extends JSWindowActorParent {
         }
 
         case "Snapshot": {
-          let {
-            browsingContext,
-            rect,
-            background,
-            resetScrollPosition,
-          } = aMessage.data;
+          let { browsingContext, rect, background, resetScrollPosition } =
+            aMessage.data;
 
           return browsingContext.currentWindowGlobal
             .drawSnapshot(rect, 1.0, background, resetScrollPosition)

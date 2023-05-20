@@ -58,9 +58,9 @@ add_task(async function () {
   const issuesEl = doc.querySelector(".js-manifest-issues");
   ok(issuesEl !== null, "Validation issues are displayed");
 
-  const warningEl = [
-    ...issuesEl.querySelectorAll(".js-manifest-issue"),
-  ].find(x => x.textContent.includes("background_color"));
+  const warningEl = [...issuesEl.querySelectorAll(".js-manifest-issue")].find(
+    x => x.textContent.includes("background_color")
+  );
   ok(warningEl !== null, "A warning about background_color is displayed");
 
   // close the tab
@@ -119,8 +119,9 @@ add_task(async function () {
     URL_ROOT + "resources/manifest/icon.svg",
     "The icon image has the the icon url as source"
   );
-  const iconTextContent = iconEl.querySelector(".js-manifest-item-content")
-    .textContent;
+  const iconTextContent = iconEl.querySelector(
+    ".js-manifest-item-content"
+  ).textContent;
   ok(iconTextContent.includes("any"), "Purpose is being displayed");
 
   // close the tab

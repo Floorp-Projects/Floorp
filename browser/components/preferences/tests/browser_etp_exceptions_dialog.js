@@ -51,9 +51,8 @@ async function removeETPPermission(doc) {
   // Website is listed
   ok(permissionsBox.itemCount, "List is not empty");
   permissionsBox.selectItem(elements[0]);
-  let removePermissionButton = dialog.document.getElementById(
-    "removePermission"
-  );
+  let removePermissionButton =
+    dialog.document.getElementById("removePermission");
   is(
     removePermissionButton.hasAttribute("disabled"),
     false,

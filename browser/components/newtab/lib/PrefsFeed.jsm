@@ -153,9 +153,8 @@ class PrefsFeed {
     let searchTopSiteExperimentPrefValue = Services.prefs.getBoolPref(
       "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts"
     );
-    values[
-      "improvesearch.topSiteSearchShortcuts"
-    ] = searchTopSiteExperimentPrefValue;
+    values["improvesearch.topSiteSearchShortcuts"] =
+      searchTopSiteExperimentPrefValue;
     this._prefMap.set("improvesearch.topSiteSearchShortcuts", {
       value: searchTopSiteExperimentPrefValue,
     });

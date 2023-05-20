@@ -16,11 +16,10 @@ add_task(async function () {
 
   const tab = await addTab(FISSION_TEST_URL);
 
-  const {
-    client,
-    resourceCommand,
-    targetCommand,
-  } = await initResourceCommand(tab, { listenForWorkers: true });
+  const { client, resourceCommand, targetCommand } = await initResourceCommand(
+    tab,
+    { listenForWorkers: true }
+  );
 
   info("Wait for the workers (from the main page and the iframe) to be ready");
   const targets = [];

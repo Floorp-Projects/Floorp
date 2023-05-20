@@ -295,7 +295,8 @@ function makeUrlbarResult(tokens, info) {
               action.params.searchSuggestion,
               UrlbarUtils.HIGHLIGHT.SUGGESTED,
             ],
-            lowerCaseSuggestion: action.params.searchSuggestion.toLocaleLowerCase(),
+            lowerCaseSuggestion:
+              action.params.searchSuggestion.toLocaleLowerCase(),
           })
         );
       case "switchtab":
@@ -432,10 +433,11 @@ function Search(queryContext, listener, provider) {
     this._filterOnHost = engine.searchUrlDomain;
   }
 
-  this._userContextId = lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
-    this._userContextId,
-    this._inPrivateWindow
-  );
+  this._userContextId =
+    lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+      this._userContextId,
+      this._inPrivateWindow
+    );
 
   // Use the original string here, not the stripped one, so the tokenizer can
   // properly recognize token types.

@@ -34,10 +34,8 @@ const TEST_DATA_ALL = [
 add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const {
-    allElementsPane,
-    selectedElementPane,
-  } = await openCompatibilityView();
+  const { allElementsPane, selectedElementPane } =
+    await openCompatibilityView();
 
   info("Check nodes that caused issues on the selected element");
   is(

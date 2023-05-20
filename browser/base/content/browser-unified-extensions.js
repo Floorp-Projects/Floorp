@@ -175,9 +175,8 @@ customElements.define(
         OriginControls.getAttention(this.extension.policy, this.ownerGlobal)
       );
 
-      this.querySelector(
-        ".unified-extensions-item-name"
-      ).textContent = this.extension.name;
+      this.querySelector(".unified-extensions-item-name").textContent =
+        this.extension.name;
 
       AddonManager.getAddonByID(this.extension.id).then(addon => {
         const iconURL = AddonManager.getPreferredIconURL(addon, 32, window);

@@ -50,8 +50,7 @@ for (const { property, value } of PROPERTIES) {
 
 // Add a few test cases to check that z-index actually works inside grids and flexboxes.
 mainTests.push({
-  info:
-    "z-index is active even on unpositioned elements if they are grid items",
+  info: "z-index is active even on unpositioned elements if they are grid items",
   property: "z-index",
   createTestElement: rootNode => {
     const container = document.createElement("div");
@@ -66,8 +65,7 @@ mainTests.push({
 });
 
 mainTests.push({
-  info:
-    "z-index is active even on unpositioned elements if they are flex items",
+  info: "z-index is active even on unpositioned elements if they are flex items",
   property: "z-index",
   createTestElement: rootNode => {
     const container = document.createElement("div");

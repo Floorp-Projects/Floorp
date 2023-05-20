@@ -68,9 +68,8 @@ export let DownloadsViewableInternally = {
 
     // Register the check for use in DownloadIntegration
     lazy.Integration.downloads.register(base => ({
-      shouldViewDownloadInternally: this._shouldViewDownloadInternally.bind(
-        this
-      ),
+      shouldViewDownloadInternally:
+        this._shouldViewDownloadInternally.bind(this),
     }));
   },
 

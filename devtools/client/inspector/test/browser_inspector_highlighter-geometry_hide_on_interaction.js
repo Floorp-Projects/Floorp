@@ -64,9 +64,8 @@ add_task(async function () {
   await onHighlighterShown;
   ok(true, "highlighter is displayed again");
 
-  onHighlighterHidden = onHighlighterHidden = getOnceHighlighterHidden(
-    inspector
-  );
+  onHighlighterHidden = onHighlighterHidden =
+    getOnceHighlighterHidden(inspector);
   await selectNode("body", inspector);
   await onHighlighterHidden;
   ok(true, "Selecting another node hides the highlighter");

@@ -404,8 +404,7 @@ describe("mapExpression", () => {
       },
     },
     {
-      name:
-        "await (no bindings, object destructuring with renaming and default)",
+      name: "await (no bindings, object destructuring with renaming and default)",
       expression: "let {a: hello, b, c: world, d: $ = 4} = await x;",
       newExpression: `let hello, b, world, $;
 
@@ -420,8 +419,7 @@ describe("mapExpression", () => {
       },
     },
     {
-      name:
-        "await (no bindings, nested object destructuring + renaming + default)",
+      name: "await (no bindings, nested object destructuring + renaming + default)",
       expression: `let {
           a: hello, c: { y: { z = 10, b: bill, d: [e, f = 20] }}
         } = await x; z;`,
@@ -561,8 +559,7 @@ describe("mapExpression", () => {
       },
     },
     {
-      name:
-        "await (async function declaration with optional chaining operator)",
+      name: "await (async function declaration with optional chaining operator)",
       expression: "async function chain(x) { await x; return x?.y?.z; }",
       newExpression: "async function chain(x) { await x; return x?.y?.z; }",
       shouldMapBindings: false,

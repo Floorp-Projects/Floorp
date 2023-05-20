@@ -19,9 +19,8 @@ add_task(async function () {
   propertyView.matchedExpanded = true;
   await propertyView.refreshMatchedSelectors();
 
-  const span = propertyView.matchedSelectorsContainer.querySelector(
-    "span.rule-text"
-  );
+  const span =
+    propertyView.matchedSelectorsContainer.querySelector("span.rule-text");
   ok(span, "Found the first table row");
 
   const selector = propertyView.matchedSelectorViews[0];

@@ -188,12 +188,10 @@ export var PdfJs = {
       // If PDFJS is disabled, but we're still marked to handleInternally,
       // either put it back to what it was, or remove it.
       if (Services.prefs.prefHasUserValue(PREF_PREVIOUS_ACTION)) {
-        handlerInfo.preferredAction = Services.prefs.getIntPref(
-          PREF_PREVIOUS_ACTION
-        );
-        handlerInfo.alwaysAskBeforeHandling = Services.prefs.getBoolPref(
-          PREF_PREVIOUS_ASK
-        );
+        handlerInfo.preferredAction =
+          Services.prefs.getIntPref(PREF_PREVIOUS_ACTION);
+        handlerInfo.alwaysAskBeforeHandling =
+          Services.prefs.getBoolPref(PREF_PREVIOUS_ASK);
         Svc.handlerService.store(handlerInfo);
       } else {
         Svc.handlerService.remove(handlerInfo);

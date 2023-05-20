@@ -17,17 +17,13 @@ Services.scriptloader.loadSubScript(
 add_task(async function () {
   info("Creating a test document with 2 iframes containing animated nodes");
 
-  const {
-    inspector,
-    target,
-    walker,
-    animations,
-  } = await initAnimationsFrontForUrl(
-    "data:text/html;charset=utf-8," +
-      "<iframe id='iframe' src='" +
-      URL +
-      "'></iframe>"
-  );
+  const { inspector, target, walker, animations } =
+    await initAnimationsFrontForUrl(
+      "data:text/html;charset=utf-8," +
+        "<iframe id='iframe' src='" +
+        URL +
+        "'></iframe>"
+    );
 
   info("Try retrieving all animations from the root doc's <body> node");
   const rootBody = await walker.querySelector(walker.rootNode, "body");

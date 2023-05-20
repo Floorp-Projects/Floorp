@@ -19,14 +19,16 @@ class PictureInPictureVideoWrapper {
     }
   }
   setCaptionContainerObserver(video, updateCaptionsFunction) {
-    let container = document.querySelector('[data-testid="CueBoxContainer"]')
-      .parentElement;
+    let container = document.querySelector(
+      '[data-testid="CueBoxContainer"]'
+    ).parentElement;
 
     if (container) {
       updateCaptionsFunction("");
       const callback = function (mutationsList, observer) {
-        let text = container.querySelector('[data-testid="CueBoxContainer"]')
-          ?.innerText;
+        let text = container.querySelector(
+          '[data-testid="CueBoxContainer"]'
+        )?.innerText;
         updateCaptionsFunction(text);
       };
 

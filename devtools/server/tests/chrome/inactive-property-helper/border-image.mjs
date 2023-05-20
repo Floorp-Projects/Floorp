@@ -5,16 +5,14 @@
 // InactivePropertyHelper `border-image` test cases.
 export default [
   {
-    info:
-      "border-image is active on another element then a table element or internal table element where border-collapse is not set to collapse",
+    info: "border-image is active on another element then a table element or internal table element where border-collapse is not set to collapse",
     property: "border-image",
     tagName: "div",
     rules: ["div { border-image: linear-gradient(red, yellow) 10; }"],
     isActive: true,
   },
   {
-    info:
-      "border-image is active on another element then a table element or internal table element where border-collapse is set to collapse",
+    info: "border-image is active on another element then a table element or internal table element where border-collapse is set to collapse",
     property: "border-image",
     tagName: "div",
     rules: [
@@ -23,8 +21,7 @@ export default [
     isActive: true,
   },
   {
-    info:
-      "border-image is active on a td element with no table parent and the browser is not crashing",
+    info: "border-image is active on a td element with no table parent and the browser is not crashing",
     property: "border-image",
     tagName: "td",
     rules: [

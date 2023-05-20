@@ -24,29 +24,30 @@ async function check(contentTask, options = {}) {
   });
   channel = channel.QueryInterface(Ci.nsIFileChannel);
 
-  await BrowserTestUtils.withNewTab(channel.file.path, async function (
-    browser
-  ) {
-    let popupShownPromise = waitForNotificationPanel();
-    await SpecialPowers.spawn(browser, [], contentTask);
-    let panel = await popupShownPromise;
-    let notification = panel.children[0];
-    let body = notification.querySelector(".popup-notification-body");
-    if (
-      notification.id == "geolocation-notification" ||
-      notification.id == "xr-notification"
-    ) {
-      ok(
-        body.innerHTML.includes("local file"),
-        `file:// URIs should be displayed as local file.`
-      );
-    } else {
-      ok(
-        body.innerHTML.includes("Unknown origin"),
-        "file:// URIs should be displayed as unknown origin."
-      );
+  await BrowserTestUtils.withNewTab(
+    channel.file.path,
+    async function (browser) {
+      let popupShownPromise = waitForNotificationPanel();
+      await SpecialPowers.spawn(browser, [], contentTask);
+      let panel = await popupShownPromise;
+      let notification = panel.children[0];
+      let body = notification.querySelector(".popup-notification-body");
+      if (
+        notification.id == "geolocation-notification" ||
+        notification.id == "xr-notification"
+      ) {
+        ok(
+          body.innerHTML.includes("local file"),
+          `file:// URIs should be displayed as local file.`
+        );
+      } else {
+        ok(
+          body.innerHTML.includes("Unknown origin"),
+          "file:// URIs should be displayed as unknown origin."
+        );
+      }
     }
-  });
+  );
 
   if (!options.skipOnExtension) {
     // Test the scenario also on the extension page if not explicitly unsupported

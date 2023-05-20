@@ -279,21 +279,22 @@ var addProperty = async function (
     // This leads to odd values in the style attribute and might change in the
     // future. See https://bugzilla.mozilla.org/show_bug.cgi?id=1765943
     const expectedAttributeValue = `${CSS.escape(name)}: ${value}`;
-    view.inspector.walker.on("mutations", function onWalkerMutations(
-      mutations
-    ) {
-      // Wait until we receive a mutation which updates the style attribute
-      // with the expected value.
-      const receivedLastMutation = mutations.some(
-        mut =>
-          mut.attributeName === "style" &&
-          mut.newValue.includes(expectedAttributeValue)
-      );
-      if (receivedLastMutation) {
-        view.inspector.walker.off("mutations", onWalkerMutations);
-        r();
+    view.inspector.walker.on(
+      "mutations",
+      function onWalkerMutations(mutations) {
+        // Wait until we receive a mutation which updates the style attribute
+        // with the expected value.
+        const receivedLastMutation = mutations.some(
+          mut =>
+            mut.attributeName === "style" &&
+            mut.newValue.includes(expectedAttributeValue)
+        );
+        if (receivedLastMutation) {
+          view.inspector.walker.off("mutations", onWalkerMutations);
+          r();
+        }
       }
-    });
+    );
   });
 
   info("Adding name " + name);
@@ -625,10 +626,8 @@ async function clickSelectorIcon(view, selectorText, index = 0) {
   // Continuing to use selectorText ("element") would fail some of the checks below.
   const selector = icon.dataset.selector;
 
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   // If there is an active selector highlighter, get its configuration options.
   // Will be undefined if there isn't an active selector highlighter.

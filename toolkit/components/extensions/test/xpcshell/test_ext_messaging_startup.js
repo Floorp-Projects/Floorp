@@ -12,11 +12,8 @@ AddonTestUtils.createAppInfo(
   "43"
 );
 
-let {
-  promiseRestartManager,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+let { promiseRestartManager, promiseShutdownManager, promiseStartupManager } =
+  AddonTestUtils;
 
 const PAGE_HTML = `<!DOCTYPE html><meta charset="utf-8"><script src="script.js"></script>`;
 

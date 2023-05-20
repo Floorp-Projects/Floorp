@@ -69,13 +69,10 @@ add_task(async function containerIsolation_restricted() {
         });
       }
 
-      const [
-        restrictedTab,
-        unrestrictedTab,
-        noContainerTab,
-      ] = await new Promise(resolve => {
-        browser.test.onMessage.addListener(message => resolve(message));
-      });
+      const [restrictedTab, unrestrictedTab, noContainerTab] =
+        await new Promise(resolve => {
+          browser.test.onMessage.addListener(message => resolve(message));
+        });
 
       await browser.test.assertRejects(
         browser.webNavigation.getFrame({

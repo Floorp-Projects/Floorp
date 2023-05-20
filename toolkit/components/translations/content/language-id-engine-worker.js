@@ -167,9 +167,8 @@ function handleMessages(languageIdEngine) {
         case "language-id-request": {
           const { message, messageId } = data;
           try {
-            const [confidence, langTag] = languageIdEngine.identifyLanguage(
-              message
-            );
+            const [confidence, langTag] =
+              languageIdEngine.identifyLanguage(message);
             postMessage({
               type: "language-id-response",
               langTag,

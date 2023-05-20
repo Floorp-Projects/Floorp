@@ -44,9 +44,8 @@ registerCleanupFunction(function () {
   mailHandlerInfo.preferredApplicationHandler = gOriginalPreferredMailHandler;
   gHandlerService.store(mailHandlerInfo);
 
-  let pdfHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
-    "application/pdf"
-  );
+  let pdfHandlerInfo =
+    HandlerServiceTestUtils.getHandlerInfo("application/pdf");
   pdfHandlerInfo.preferredAction = Ci.nsIHandlerInfo.handleInternally;
   pdfHandlerInfo.preferredApplicationHandler = gOriginalPreferredPDFHandler;
   let handlers = pdfHandlerInfo.possibleApplicationHandlers;
@@ -106,9 +105,8 @@ add_setup(async function () {
   substituteWebHandlers(mailtoHandlerInfo);
 
   // Now add a pdf handler:
-  let pdfHandlerInfo = HandlerServiceTestUtils.getHandlerInfo(
-    "application/pdf"
-  );
+  let pdfHandlerInfo =
+    HandlerServiceTestUtils.getHandlerInfo("application/pdf");
   // PDF doesn't have built-in web handlers, so no need to scrub.
   gOriginalPreferredPDFHandler = pdfHandlerInfo.preferredApplicationHandler;
   let handlers = pdfHandlerInfo.possibleApplicationHandlers;

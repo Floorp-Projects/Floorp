@@ -113,12 +113,8 @@ describe("Group", () => {
 
     it("calls FrameMenu on right click", () => {
       const { component, props } = render();
-      const {
-        copyStackTrace,
-        toggleFrameworkGrouping,
-        toggleBlackBox,
-        cx,
-      } = props;
+      const { copyStackTrace, toggleFrameworkGrouping, toggleBlackBox, cx } =
+        props;
       const mockEvent = "mockEvent";
       component.simulate("contextmenu", mockEvent);
 

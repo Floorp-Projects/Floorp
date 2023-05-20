@@ -91,13 +91,15 @@ async function testResendRequest() {
     "The resent request is different resource from the second request"
   );
 
-  const customHeader = secondResend.originalResource.requestHeaders.headers.find(
-    header => header.name == "custom-header-xxx"
-  );
+  const customHeader =
+    secondResend.originalResource.requestHeaders.headers.find(
+      header => header.name == "custom-header-xxx"
+    );
 
-  const customHeaderInResentRequest = secondResend.newResource.requestHeaders.headers.find(
-    header => header.name == "custom-header-xxx"
-  );
+  const customHeaderInResentRequest =
+    secondResend.newResource.requestHeaders.headers.find(
+      header => header.name == "custom-header-xxx"
+    );
 
   is(
     customHeader.value,

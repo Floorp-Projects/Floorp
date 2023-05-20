@@ -98,22 +98,24 @@ async function openNewTabWithIframesAndConsole(tabUrl, iframes) {
   // to handle remote frames (we don't support creating frames target when the toolbox
   // is already open).
   await addTab(tabUrl);
-  await ContentTask.spawn(gBrowser.selectedBrowser, iframes, async function (
-    urls
-  ) {
-    const iframesLoadPromises = urls.map((url, i) => {
-      const iframe = content.document.createElement("iframe");
-      iframe.classList.add(`iframe-${i + 1}`);
-      const onLoadIframe = new Promise(resolve => {
-        iframe.addEventListener("load", resolve, { once: true });
+  await ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    iframes,
+    async function (urls) {
+      const iframesLoadPromises = urls.map((url, i) => {
+        const iframe = content.document.createElement("iframe");
+        iframe.classList.add(`iframe-${i + 1}`);
+        const onLoadIframe = new Promise(resolve => {
+          iframe.addEventListener("load", resolve, { once: true });
+        });
+        content.document.body.append(iframe);
+        iframe.src = url;
+        return onLoadIframe;
       });
-      content.document.body.append(iframe);
-      iframe.src = url;
-      return onLoadIframe;
-    });
 
-    await Promise.all(iframesLoadPromises);
-  });
+      await Promise.all(iframesLoadPromises);
+    }
+  );
 
   return openConsole();
 }

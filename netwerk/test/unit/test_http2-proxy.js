@@ -587,7 +587,8 @@ add_task(async function proxy_stream_reset_failure() {
 
 // The soft errors are not closing the session.
 add_task(async function origin_server_stream_soft_failure() {
-  var current_num_sessions_to_origin_server = await proxy_session_to_origin_server_counter();
+  var current_num_sessions_to_origin_server =
+    await proxy_session_to_origin_server_counter();
 
   const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://foo.example.com/illegalhpacksoft`),
@@ -612,7 +613,8 @@ add_task(async function origin_server_stream_soft_failure() {
 // The soft errors are not closing the session.
 add_task(
   async function origin_server_stream_soft_failure_multiple_streams_not_affected() {
-    var current_num_sessions_to_origin_server = await proxy_session_to_origin_server_counter();
+    var current_num_sessions_to_origin_server =
+      await proxy_session_to_origin_server_counter();
 
     let should_succeed = get_response(
       make_channel(`https://foo.example.com/750ms`)
@@ -766,7 +768,8 @@ add_task(async function proxy_success_check_number_of_session() {
 
 // The hard errors are closing the session.
 add_task(async function origin_server_stream_hard_failure() {
-  var current_num_sessions_to_origin_server = await proxy_session_to_origin_server_counter();
+  var current_num_sessions_to_origin_server =
+    await proxy_session_to_origin_server_counter();
   const { status, http_code, proxy_connect_response_code } = await get_response(
     make_channel(`https://foo.example.com/illegalhpackhard`),
     CL_EXPECT_FAILURE
@@ -812,7 +815,8 @@ add_task(async function origin_server_stream_hard_failure() {
 // The hard errors are closing the session.
 add_task(
   async function origin_server_stream_hard_failure_multiple_streams_affected() {
-    var current_num_sessions_to_origin_server = await proxy_session_to_origin_server_counter();
+    var current_num_sessions_to_origin_server =
+      await proxy_session_to_origin_server_counter();
     let should_fail = get_response(
       make_channel(`https://foo.example.com/750msNoData`),
       CL_EXPECT_FAILURE

@@ -10,9 +10,8 @@ add_setup(async function () {
   initialUrlbarSuggestValue = Services.prefs.getBoolPref(
     URLBAR_SUGGEST_PREF_NAME
   );
-  initialSuggestionsInPrivateValue = Services.prefs.getBoolPref(
-    PRIVATE_PREF_NAME
-  );
+  initialSuggestionsInPrivateValue =
+    Services.prefs.getBoolPref(PRIVATE_PREF_NAME);
 
   registerCleanupFunction(() => {
     Services.prefs.setBoolPref(SUGGEST_PREF_NAME, originalSuggest);

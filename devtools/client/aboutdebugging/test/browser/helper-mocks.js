@@ -69,9 +69,8 @@ class Mocks {
     // Add a client for THIS_FIREFOX, since about:debugging will start on the This Firefox
     // page.
     this._thisFirefoxClient = createThisFirefoxClientMock();
-    this._clients[RUNTIMES.THIS_FIREFOX][
-      RUNTIMES.THIS_FIREFOX
-    ] = this._thisFirefoxClient;
+    this._clients[RUNTIMES.THIS_FIREFOX][RUNTIMES.THIS_FIREFOX] =
+      this._thisFirefoxClient;
 
     // Enable mocks and remove them after the test.
     this.enableMocks();
@@ -164,9 +163,8 @@ class Mocks {
     // Add a valid client that can be returned for this particular runtime id.
     let mockUsbClient = runtimeInfo.clientWrapper;
     if (mockUsbClient) {
-      const originalGetDeviceDescription = mockUsbClient.getDeviceDescription.bind(
-        mockUsbClient
-      );
+      const originalGetDeviceDescription =
+        mockUsbClient.getDeviceDescription.bind(mockUsbClient);
       mockUsbClient.getDeviceDescription = async () => {
         const deviceDescription = await originalGetDeviceDescription();
         return {

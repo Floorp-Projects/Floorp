@@ -13,12 +13,10 @@ const {
   ERROR_PARSE,
   ERROR_UNKNOWN,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const {
-  FxAccountsProfileClient,
-  FxAccountsProfileClientError,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsProfileClient.sys.mjs"
-);
+const { FxAccountsProfileClient, FxAccountsProfileClientError } =
+  ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccountsProfileClient.sys.mjs"
+  );
 
 const STATUS_SUCCESS = 200;
 
@@ -87,8 +85,7 @@ add_test(function successfulResponse() {
     success: true,
     status: STATUS_SUCCESS,
     headers: { etag: "bogusETag" },
-    body:
-      '{"email":"someone@restmail.net","uid":"0d5c1a89b8c54580b8e3e8adadae864a"}',
+    body: '{"email":"someone@restmail.net","uid":"0d5c1a89b8c54580b8e3e8adadae864a"}',
   };
 
   client._Request = new mockResponse(response);
@@ -110,8 +107,7 @@ add_test(function setsIfNoneMatchETagHeader() {
     success: true,
     status: STATUS_SUCCESS,
     headers: {},
-    body:
-      '{"email":"someone@restmail.net","uid":"0d5c1a89b8c54580b8e3e8adadae864a"}',
+    body: '{"email":"someone@restmail.net","uid":"0d5c1a89b8c54580b8e3e8adadae864a"}',
   };
 
   let req = new mockResponse(response);
@@ -166,8 +162,7 @@ add_test(function serverErrorResponse() {
   let client = new FxAccountsProfileClient(PROFILE_OPTIONS);
   let response = {
     status: 500,
-    body:
-      '{ "code": 500, "errno": 100, "error": "Bad Request", "message": "Something went wrong", "reason": "Because the internet" }',
+    body: '{ "code": 500, "errno": 100, "error": "Bad Request", "message": "Something went wrong", "reason": "Because the internet" }',
   };
 
   client._Request = new mockResponse(response);
@@ -211,15 +206,13 @@ add_test(function server401ResponseThenSuccess() {
   let responses = [
     {
       status: 401,
-      body:
-        '{ "code": 401, "errno": 100, "error": "Token expired", "message": "That token is too old", "reason": "Because security" }',
+      body: '{ "code": 401, "errno": 100, "error": "Token expired", "message": "That token is too old", "reason": "Because security" }',
     },
     {
       success: true,
       status: STATUS_SUCCESS,
       headers: {},
-      body:
-        '{"avatar":"http://example.com/image.jpg","id":"0d5c1a89b8c54580b8e3e8adadae864a"}',
+      body: '{"avatar":"http://example.com/image.jpg","id":"0d5c1a89b8c54580b8e3e8adadae864a"}',
     },
   ];
 
@@ -283,8 +276,7 @@ add_test(function server401ResponsePersists() {
 
   let response = {
     status: 401,
-    body:
-      '{ "code": 401, "errno": 100, "error": "It\'s not your token, it\'s you!", "message": "I don\'t like you", "reason": "Because security" }',
+    body: '{ "code": 401, "errno": 100, "error": "It\'s not your token, it\'s you!", "message": "I don\'t like you", "reason": "Because security" }',
   };
 
   let numRequests = 0;

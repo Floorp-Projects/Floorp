@@ -137,10 +137,10 @@ FaviconObserver.prototype = {
   reset(aUserContextId, aExpectedCookie, aPageURI, aFaviconURL) {
     this._curUserContextId = aUserContextId;
     this._expectedCookie = aExpectedCookie;
-    this._expectedPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      aPageURI,
-      { userContextId: aUserContextId }
-    );
+    this._expectedPrincipal =
+      Services.scriptSecurityManager.createContentPrincipal(aPageURI, {
+        userContextId: aUserContextId,
+      });
     this._faviconURL = aFaviconURL;
     this._faviconLoaded = PromiseUtils.defer();
   },
@@ -166,17 +166,21 @@ async function generateCookies(aHost) {
   let tabInfoA = await openTabInUserContext(aHost, USER_CONTEXT_ID_PERSONAL);
   let tabInfoB = await openTabInUserContext(aHost, USER_CONTEXT_ID_WORK);
 
-  await SpecialPowers.spawn(tabInfoA.browser, [cookies[0]], async function (
-    value
-  ) {
-    content.document.cookie = value;
-  });
+  await SpecialPowers.spawn(
+    tabInfoA.browser,
+    [cookies[0]],
+    async function (value) {
+      content.document.cookie = value;
+    }
+  );
 
-  await SpecialPowers.spawn(tabInfoB.browser, [cookies[1]], async function (
-    value
-  ) {
-    content.document.cookie = value;
-  });
+  await SpecialPowers.spawn(
+    tabInfoB.browser,
+    [cookies[1]],
+    async function (value) {
+      content.document.cookie = value;
+    }
+  );
 
   BrowserTestUtils.removeTab(tabInfoA.tab);
   BrowserTestUtils.removeTab(tabInfoB.tab);

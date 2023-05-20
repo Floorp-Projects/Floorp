@@ -344,51 +344,53 @@ async function loadUITourTestPage(callback, host = "https://example.org/") {
           args,
           fnIndices,
         };
-        return SpecialPowers.spawn(browser, [taskArgs], async function (
-          contentArgs
-        ) {
-          let contentWin = Cu.waiveXrays(content);
-          let callbacksCalled = 0;
-          let resolveCallbackPromise;
-          let allCallbacksCalledPromise = new Promise(
-            resolve => (resolveCallbackPromise = resolve)
-          );
-          let argumentsWithFunctions = Cu.cloneInto(
-            contentArgs.args.map((arg, index) => {
-              if (arg === "" && contentArgs.fnIndices.includes(index)) {
-                return function () {
-                  callbacksCalled++;
-                  SpecialPowers.spawnChrome(
-                    [index, Array.from(arguments)],
-                    (indexParent, argumentsParent) => {
-                      // Please note that this handler only allows the callback to be used once.
-                      // That means that a single gContentAPI.observer() call can't be used
-                      // to observe multiple events.
-                      let window = this.browsingContext.topChromeWindow;
-                      let cb = window.gProxyCallbackMap.get(indexParent);
-                      window.gProxyCallbackMap.delete(indexParent);
-                      cb.apply(null, argumentsParent);
+        return SpecialPowers.spawn(
+          browser,
+          [taskArgs],
+          async function (contentArgs) {
+            let contentWin = Cu.waiveXrays(content);
+            let callbacksCalled = 0;
+            let resolveCallbackPromise;
+            let allCallbacksCalledPromise = new Promise(
+              resolve => (resolveCallbackPromise = resolve)
+            );
+            let argumentsWithFunctions = Cu.cloneInto(
+              contentArgs.args.map((arg, index) => {
+                if (arg === "" && contentArgs.fnIndices.includes(index)) {
+                  return function () {
+                    callbacksCalled++;
+                    SpecialPowers.spawnChrome(
+                      [index, Array.from(arguments)],
+                      (indexParent, argumentsParent) => {
+                        // Please note that this handler only allows the callback to be used once.
+                        // That means that a single gContentAPI.observer() call can't be used
+                        // to observe multiple events.
+                        let window = this.browsingContext.topChromeWindow;
+                        let cb = window.gProxyCallbackMap.get(indexParent);
+                        window.gProxyCallbackMap.delete(indexParent);
+                        cb.apply(null, argumentsParent);
+                      }
+                    );
+                    if (callbacksCalled >= contentArgs.fnIndices.length) {
+                      resolveCallbackPromise();
                     }
-                  );
-                  if (callbacksCalled >= contentArgs.fnIndices.length) {
-                    resolveCallbackPromise();
-                  }
-                };
-              }
-              return arg;
-            }),
-            content,
-            { cloneFunctions: true }
-          );
-          let rv = contentWin.Mozilla.UITour[contentArgs.methodName].apply(
-            contentWin.Mozilla.UITour,
-            argumentsWithFunctions
-          );
-          if (contentArgs.fnIndices.length) {
-            await allCallbacksCalledPromise;
+                  };
+                }
+                return arg;
+              }),
+              content,
+              { cloneFunctions: true }
+            );
+            let rv = contentWin.Mozilla.UITour[contentArgs.methodName].apply(
+              contentWin.Mozilla.UITour,
+              argumentsWithFunctions
+            );
+            if (contentArgs.fnIndices.length) {
+              await allCallbacksCalledPromise;
+            }
+            return rv;
           }
-          return rv;
-        });
+        );
       };
     },
   };

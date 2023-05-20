@@ -41,8 +41,7 @@ async function testTruncationWarning(hud) {
         typeSelector: ".console-api",
       },
       {
-        text:
-          "The image was cut off to 10000×10000 as the resulting image was too large",
+        text: "The image was cut off to 10000×10000 as the resulting image was too large",
         typeSelector: ".console-api",
       },
     ],
@@ -81,13 +80,11 @@ async function testDPRWarning(hud) {
         typeSelector: ".console-api",
       },
       {
-        text:
-          "The image was cut off to 10000×10000 as the resulting image was too large",
+        text: "The image was cut off to 10000×10000 as the resulting image was too large",
         typeSelector: ".console-api",
       },
       {
-        text:
-          "The device pixel ratio was reduced to 1 as the resulting image was too large",
+        text: "The device pixel ratio was reduced to 1 as the resulting image was too large",
         typeSelector: ".console-api",
       },
     ],

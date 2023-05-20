@@ -50,9 +50,8 @@ export async function getUsageForOrigin(principal, fromMemory) {
 }
 
 export async function clearStoragesForOrigin(principal) {
-  const request = SpecialPowers.Services.qms.clearStoragesForPrincipal(
-    principal
-  );
+  const request =
+    SpecialPowers.Services.qms.clearStoragesForPrincipal(principal);
 
   await new Promise(function (resolve) {
     request.callback = SpecialPowers.wrapCallback(function () {

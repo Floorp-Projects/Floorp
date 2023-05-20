@@ -395,30 +395,37 @@ decorate_task(
 );
 
 // start should throw if an invalid preferenceBranchType is given
-decorate_task(withMockExperiments(), withSendEventSpy(), async function ({
-  sendEventSpy,
-}) {
-  await Assert.rejects(
-    PreferenceExperiments.start({
-      slug: "test",
-      actionName: "SomeAction",
-      branch: "branch",
-      preferences: {
-        "fake.preference": {
-          preferenceValue: "value",
-          preferenceType: "string",
-          preferenceBranchType: "invalid",
+decorate_task(
+  withMockExperiments(),
+  withSendEventSpy(),
+  async function ({ sendEventSpy }) {
+    await Assert.rejects(
+      PreferenceExperiments.start({
+        slug: "test",
+        actionName: "SomeAction",
+        branch: "branch",
+        preferences: {
+          "fake.preference": {
+            preferenceValue: "value",
+            preferenceType: "string",
+            preferenceBranchType: "invalid",
+          },
         },
-      },
-    }),
-    /invalid value for preferenceBranchType: invalid/i,
-    "start threw an error due to an invalid preference branch type"
-  );
+      }),
+      /invalid value for preferenceBranchType: invalid/i,
+      "start threw an error due to an invalid preference branch type"
+    );
 
-  sendEventSpy.assertEvents([
-    ["enrollFailed", "preference_study", "test", { reason: "invalid-branch" }],
-  ]);
-});
+    sendEventSpy.assertEvents([
+      [
+        "enrollFailed",
+        "preference_study",
+        "test",
+        { reason: "invalid-branch" },
+      ],
+    ]);
+  }
+);
 
 // start should save experiment data, modify preferences, and register a
 // watcher.
@@ -593,33 +600,34 @@ decorate_task(
 );
 
 // start should detect if a new preference value type matches the previous value type
-decorate_task(withMockPreferences(), withSendEventSpy(), async function ({
-  mockPreferences,
-  sendEventSpy,
-}) {
-  mockPreferences.set("fake.type_preference", "oldvalue");
+decorate_task(
+  withMockPreferences(),
+  withSendEventSpy(),
+  async function ({ mockPreferences, sendEventSpy }) {
+    mockPreferences.set("fake.type_preference", "oldvalue");
 
-  await Assert.rejects(
-    PreferenceExperiments.start({
-      slug: "test",
-      actionName: "SomeAction",
-      branch: "branch",
-      preferences: {
-        "fake.type_preference": {
-          preferenceBranchType: "user",
-          preferenceValue: 12345,
-          preferenceType: "integer",
+    await Assert.rejects(
+      PreferenceExperiments.start({
+        slug: "test",
+        actionName: "SomeAction",
+        branch: "branch",
+        preferences: {
+          "fake.type_preference": {
+            preferenceBranchType: "user",
+            preferenceValue: 12345,
+            preferenceType: "integer",
+          },
         },
-      },
-    }),
-    /previous preference value is of type/i,
-    "start threw error for incompatible preference type"
-  );
+      }),
+      /previous preference value is of type/i,
+      "start threw error for incompatible preference type"
+    );
 
-  sendEventSpy.assertEvents([
-    ["enrollFailed", "preference_study", "test", { reason: "invalid-type" }],
-  ]);
-});
+    sendEventSpy.assertEvents([
+      ["enrollFailed", "preference_study", "test", { reason: "invalid-type" }],
+    ]);
+  }
+);
 
 // startObserver should throw if an observer for the experiment is already
 // active.
@@ -906,24 +914,26 @@ decorate_task(
 );
 
 // stop should throw if an experiment with the given name doesn't exist
-decorate_task(withMockExperiments(), withSendEventSpy(), async function ({
-  sendEventSpy,
-}) {
-  await Assert.rejects(
-    PreferenceExperiments.stop("test"),
-    /could not find/i,
-    "stop threw an error because there are no experiments with the given name"
-  );
+decorate_task(
+  withMockExperiments(),
+  withSendEventSpy(),
+  async function ({ sendEventSpy }) {
+    await Assert.rejects(
+      PreferenceExperiments.stop("test"),
+      /could not find/i,
+      "stop threw an error because there are no experiments with the given name"
+    );
 
-  sendEventSpy.assertEvents([
-    [
-      "unenrollFailed",
-      "preference_study",
-      "test",
-      { reason: "does-not-exist" },
-    ],
-  ]);
-});
+    sendEventSpy.assertEvents([
+      [
+        "unenrollFailed",
+        "preference_study",
+        "test",
+        { reason: "does-not-exist" },
+      ],
+    ]);
+  }
+);
 
 // stop should throw if the experiment is already expired
 decorate_task(

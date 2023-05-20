@@ -41,9 +41,8 @@ decorate_task(
       }),
     };
 
-    const webExtStartupPromise = AddonTestUtils.promiseWebExtensionStartup(
-      FIXTURE_ADDON_ID
-    );
+    const webExtStartupPromise =
+      AddonTestUtils.promiseWebExtensionStartup(FIXTURE_ADDON_ID);
 
     const rolloutAction = new AddonRolloutAction();
     await rolloutAction.processRecipe(
@@ -131,9 +130,8 @@ decorate_task(
       }),
     };
 
-    const webExtStartupPromise = AddonTestUtils.promiseWebExtensionStartup(
-      FIXTURE_ADDON_ID
-    );
+    const webExtStartupPromise =
+      AddonTestUtils.promiseWebExtensionStartup(FIXTURE_ADDON_ID);
 
     const rolloutAction = new AddonRolloutAction();
     await rolloutAction.processRecipe(

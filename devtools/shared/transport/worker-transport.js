@@ -109,4 +109,5 @@ WorkerThreadWorkerDebuggerTransport.prototype = {
   },
 };
 
-exports.WorkerThreadWorkerDebuggerTransport = WorkerThreadWorkerDebuggerTransport;
+exports.WorkerThreadWorkerDebuggerTransport =
+  WorkerThreadWorkerDebuggerTransport;

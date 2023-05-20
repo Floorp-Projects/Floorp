@@ -37,11 +37,8 @@ add_task(async function () {
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_DATA_ISSUES.uri)
   );
 
-  const {
-    allElementsPane,
-    inspector,
-    selectedElementPane,
-  } = await openCompatibilityView();
+  const { allElementsPane, inspector, selectedElementPane } =
+    await openCompatibilityView();
 
   info("Check issues at initial");
   await assertIssues(selectedElementPane, allElementsPane, TEST_DATA_ISSUES);

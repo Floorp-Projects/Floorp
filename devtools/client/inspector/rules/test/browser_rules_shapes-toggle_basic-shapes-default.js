@@ -44,8 +44,11 @@ add_task(async function () {
 
   for (const [selector, expectShapesToogle] of selectors) {
     await selectNode(selector, inspector);
-    const container = getRuleViewProperty(view, selector, "clip-path")
-      .valueSpan;
+    const container = getRuleViewProperty(
+      view,
+      selector,
+      "clip-path"
+    ).valueSpan;
     const shapesToggle = container.querySelector(".ruleview-shapeswatch");
 
     if (expectShapesToogle) {

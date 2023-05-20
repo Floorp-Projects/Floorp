@@ -11,8 +11,9 @@ class PictureInPictureVideoWrapper {
     if (container) {
       updateCaptionsFunction("");
       const callback = function (mutationsList, observer) {
-        let text = container.querySelector(".closed-captions.is-visible")
-          ?.innerText;
+        let text = container.querySelector(
+          ".closed-captions.is-visible"
+        )?.innerText;
         updateCaptionsFunction(text);
       };
 

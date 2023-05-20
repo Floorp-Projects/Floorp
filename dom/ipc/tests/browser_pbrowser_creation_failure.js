@@ -44,10 +44,9 @@ add_task(async function test_subframe_pbrowser_creation_failure() {
       );
       is(event.browsingContextId, bcid, "bcid should match");
 
-      let {
-        subject: windowGlobal,
-      } = await BrowserUtils.promiseObserved("window-global-created", wgp =>
-        wgp.documentURI.spec.startsWith("about:framecrashed")
+      let { subject: windowGlobal } = await BrowserUtils.promiseObserved(
+        "window-global-created",
+        wgp => wgp.documentURI.spec.startsWith("about:framecrashed")
       );
       is(windowGlobal.browsingContext.id, bcid, "bcid is correct");
 

@@ -155,9 +155,8 @@ function initTemporaryStorage(callback) {
 }
 
 function initPersistentOrigin(principal, callback) {
-  let request = SpecialPowers._getQuotaManager().initializePersistentOrigin(
-    principal
-  );
+  let request =
+    SpecialPowers._getQuotaManager().initializePersistentOrigin(principal);
   request.callback = callback;
 
   return request;
@@ -205,7 +204,8 @@ function clearOrigin(principal, persistence, callback) {
 }
 
 function clearPrivateBrowsing(callback) {
-  let request = SpecialPowers._getQuotaManager().clearStoragesForPrivateBrowsing();
+  let request =
+    SpecialPowers._getQuotaManager().clearStoragesForPrivateBrowsing();
   request.callback = callback;
 
   return request;

@@ -115,8 +115,7 @@ add_task(async function () {
         {
           // Note that the length and x values here are a bit weird because on
           // some fonts, we appear to detect the two words separately.
-          name:
-            "Initial bookmark text ('Getting Started' or 'Get Involved') appearing after startup",
+          name: "Initial bookmark text ('Getting Started' or 'Get Involved') appearing after startup",
           condition: r =>
             inRange(r.w, 25, 120) && // length of text
             inRange(r.h, 9, 15) && // height of text

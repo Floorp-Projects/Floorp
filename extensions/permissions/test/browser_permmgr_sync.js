@@ -1,7 +1,6 @@
 function addPerm(aOrigin, aName) {
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    aOrigin
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(aOrigin);
   Services.perms.addFromPrincipal(
     principal,
     aName,

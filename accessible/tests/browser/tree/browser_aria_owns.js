@@ -219,25 +219,25 @@ addAccessibleTask(
   }
 );
 
-addAccessibleTask(`<div id="a"></div><div id="b"></div>`, async function (
-  browser,
-  accDoc
-) {
-  testChildrenIds(accDoc, ["a", "b"]);
+addAccessibleTask(
+  `<div id="a"></div><div id="b"></div>`,
+  async function (browser, accDoc) {
+    testChildrenIds(accDoc, ["a", "b"]);
 
-  let waitFor = {
-    expected: [[EVENT_REORDER, e => e.accessible == accDoc]],
-  };
+    let waitFor = {
+      expected: [[EVENT_REORDER, e => e.accessible == accDoc]],
+    };
 
-  await contentSpawnMutation(browser, waitFor, function () {
-    content.document.documentElement.style.display = "none";
-    content.document.documentElement.getBoundingClientRect();
-    content.document.body.setAttribute("aria-owns", "b a");
-    content.document.documentElement.remove();
-  });
+    await contentSpawnMutation(browser, waitFor, function () {
+      content.document.documentElement.style.display = "none";
+      content.document.documentElement.getBoundingClientRect();
+      content.document.body.setAttribute("aria-owns", "b a");
+      content.document.documentElement.remove();
+    });
 
-  testChildrenIds(accDoc, []);
-});
+    testChildrenIds(accDoc, []);
+  }
+);
 
 // Don't allow ordinal child to be placed after aria-owned child (bug 1405796)
 addAccessibleTask(

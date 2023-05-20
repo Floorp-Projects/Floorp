@@ -457,8 +457,7 @@ add_task(async function noURIFragmentMatch1() {
       ],
     },
     {
-      desc:
-        "Autofill https://example.com/#TEST then search for https://example.com/#Te",
+      desc: "Autofill https://example.com/#TEST then search for https://example.com/#Te",
       searches: [
         {
           searchString: "https://example.com/#T",
@@ -538,8 +537,7 @@ add_task(async function noURIFragmentMatch2() {
       ],
     },
     {
-      desc:
-        "Autofill https://example.com/foo#TEST then search for https://example.com/foo#Te",
+      desc: "Autofill https://example.com/foo#TEST then search for https://example.com/foo#Te",
       searches: [
         {
           searchString: "https://example.com/foo#T",
@@ -687,8 +685,7 @@ add_task(async function noPathMatch() {
       ],
     },
     {
-      desc:
-        "Autofill example.com/shallow/deep/ then search for example.com/shallow/",
+      desc: "Autofill example.com/shallow/deep/ then search for example.com/shallow/",
       searches: [
         {
           searchString: "example.com/shallow/d",
@@ -722,8 +719,7 @@ add_task(async function noPathMatch() {
       ],
     },
     {
-      desc:
-        "Autofill example.com/shallow/deep/file then search for example.com/",
+      desc: "Autofill example.com/shallow/deep/file then search for example.com/",
       searches: [
         {
           searchString: "example.com/shallow/deep/f",
@@ -740,8 +736,7 @@ add_task(async function noPathMatch() {
       ],
     },
     {
-      desc:
-        "Autofill example.com/shallow/deep/file then search for example.com/s",
+      desc: "Autofill example.com/shallow/deep/file then search for example.com/s",
       searches: [
         {
           searchString: "example.com/shallow/deep/f",
@@ -758,8 +753,7 @@ add_task(async function noPathMatch() {
       ],
     },
     {
-      desc:
-        "Autofill example.com/shallow/deep/file then search for example.com/shallow/",
+      desc: "Autofill example.com/shallow/deep/file then search for example.com/shallow/",
       searches: [
         {
           searchString: "example.com/shallow/deep/f",
@@ -776,8 +770,7 @@ add_task(async function noPathMatch() {
       ],
     },
     {
-      desc:
-        "Autofill example.com/shallow/deep/file then search for example.com/shallow/d",
+      desc: "Autofill example.com/shallow/deep/file then search for example.com/shallow/d",
       searches: [
         {
           searchString: "example.com/shallow/deep/f",
@@ -794,8 +787,7 @@ add_task(async function noPathMatch() {
       ],
     },
     {
-      desc:
-        "Autofill example.com/shallow/deep/file then search for example.com/shallow/deep/",
+      desc: "Autofill example.com/shallow/deep/file then search for example.com/shallow/deep/",
       searches: [
         {
           searchString: "example.com/shallow/deep/f",

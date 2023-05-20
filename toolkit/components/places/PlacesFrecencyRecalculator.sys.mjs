@@ -204,9 +204,10 @@ export class PlacesFrecencyRecalculator {
     }
 
     // If alternative frecency is enabled, also recalculate a chunk of it.
-    affectedCount += await this.#alternativeFrecencyHelper.recalculateSomeOriginsAlternativeFrecencies(
-      { chunkSize }
-    );
+    affectedCount +=
+      await this.#alternativeFrecencyHelper.recalculateSomeOriginsAlternativeFrecencies(
+        { chunkSize }
+      );
 
     if (chunkSize > 0 && affectedCount >= chunkSize) {
       // There's more entries to recalculate, rearm the task.
@@ -321,7 +322,8 @@ export class PlacesFrecencyRecalculator {
         return;
       case "test-alternative-frecency-init":
         this.#alternativeFrecencyHelper = new AlternativeFrecencyHelper(this);
-        subject.promise = this.#alternativeFrecencyHelper.initializedDeferred.promise;
+        subject.promise =
+          this.#alternativeFrecencyHelper.initializedDeferred.promise;
     }
   }
 }

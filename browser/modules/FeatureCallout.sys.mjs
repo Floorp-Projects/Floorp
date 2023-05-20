@@ -348,8 +348,8 @@ export class FeatureCallout {
     overlap -= arrowWidth;
     // Is the document layout right to left?
     const RTL = this.doc.dir === "rtl";
-    const customPosition = this.currentScreen?.content
-      .callout_position_override;
+    const customPosition =
+      this.currentScreen?.content.callout_position_override;
 
     // Early exit if the container doesn't exist,
     // or if we're missing a parent element and don't have a custom callout position

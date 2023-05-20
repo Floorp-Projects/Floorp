@@ -37,9 +37,8 @@ async function testRuleView(ruleView, nodeFront) {
   const propertyList = ruleView.element.querySelectorAll(
     ".ruleview-propertylist"
   );
-  const fontExpander = propertyList[1].querySelectorAll(
-    ".ruleview-expander"
-  )[0];
+  const fontExpander =
+    propertyList[1].querySelectorAll(".ruleview-expander")[0];
   fontExpander.click();
 
   const rule = getRuleViewRule(ruleView, "#testElement");

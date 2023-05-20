@@ -179,10 +179,8 @@ add_task(async function openInCurrentTab() {
     info(test.desc);
 
     // Open a new tab.
-    let tab = (gBrowser.selectedTab = await BrowserTestUtils.openNewForegroundTab(
-      gBrowser,
-      test.url
-    ));
+    let tab = (gBrowser.selectedTab =
+      await BrowserTestUtils.openNewForegroundTab(gBrowser, test.url));
 
     Preferences.set("browser.urlbar.openintab", test.pref);
     let where = gURLBar._whereToOpen(test.event);

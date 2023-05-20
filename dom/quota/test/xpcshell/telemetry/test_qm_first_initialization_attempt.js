@@ -785,9 +785,8 @@ async function testSteps() {
 
     info(`Verifying ${histogramName} histogram for the main key ${mainKey}`);
 
-    const histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-      histogramName
-    );
+    const histogram =
+      TelemetryTestUtils.getAndClearKeyedHistogram(histogramName);
 
     for (const expectedInitResult of [false, true]) {
       info(

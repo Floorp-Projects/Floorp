@@ -180,11 +180,13 @@ add_task(async function test_edit_username() {
 });
 
 async function initForm(browser, formDefaults = {}) {
-  await ContentTask.spawn(browser, formDefaults, async function (
-    selectorValues
-  ) {
-    for (let [sel, value] of Object.entries(selectorValues)) {
-      content.document.querySelector(sel).value = value;
+  await ContentTask.spawn(
+    browser,
+    formDefaults,
+    async function (selectorValues) {
+      for (let [sel, value] of Object.entries(selectorValues)) {
+        content.document.querySelector(sel).value = value;
+      }
     }
-  });
+  );
 }

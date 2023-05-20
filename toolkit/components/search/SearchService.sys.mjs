@@ -261,10 +261,8 @@ export class SearchService {
     };
 
     if (this.#separatePrivateDefault) {
-      let [
-        privateTelemetryId,
-        defaultPrivateSearchEngineData,
-      ] = this.#getEngineInfo(this.defaultPrivateEngine);
+      let [privateTelemetryId, defaultPrivateSearchEngineData] =
+        this.#getEngineInfo(this.defaultPrivateEngine);
       result.defaultPrivateSearchEngine = privateTelemetryId;
       result.defaultPrivateSearchEngineData = defaultPrivateSearchEngineData;
     }
@@ -462,7 +460,8 @@ export class SearchService {
     }
 
     if (!this.#defaultOverrideAllowlist) {
-      this.#defaultOverrideAllowlist = new SearchDefaultOverrideAllowlistHandler();
+      this.#defaultOverrideAllowlist =
+        new SearchDefaultOverrideAllowlistHandler();
     }
 
     if (
@@ -1773,10 +1772,8 @@ export class SearchService {
     // 3) Update the default engines.
     // 4) Remove any old engines.
 
-    let {
-      engines: appDefaultConfigEngines,
-      privateDefault,
-    } = await this._fetchEngineSelectorEngines();
+    let { engines: appDefaultConfigEngines, privateDefault } =
+      await this._fetchEngineSelectorEngines();
 
     let configEngines = [...appDefaultConfigEngines];
     let oldEngineList = [...this._engines.values()];
@@ -2256,12 +2253,10 @@ export class SearchService {
       this._settings.setMetaDataAttribute(key, value);
     }
 
-    let {
-      engines,
-      privateDefault,
-    } = await this.#engineSelector.fetchEngineConfiguration(
-      searchEngineSelectorProperties
-    );
+    let { engines, privateDefault } =
+      await this.#engineSelector.fetchEngineConfiguration(
+        searchEngineSelectorProperties
+      );
 
     for (let e of engines) {
       if (!e.webExtension) {
@@ -2360,9 +2355,8 @@ export class SearchService {
       alphaEngines.sort((a, b) => {
         return collator.compare(a.name, b.name);
       });
-      return (this._cachedSortedEngines = this._cachedSortedEngines.concat(
-        alphaEngines
-      ));
+      return (this._cachedSortedEngines =
+        this._cachedSortedEngines.concat(alphaEngines));
     }
     lazy.logConsole.debug("#buildSortedEngineList: using default orders");
 
@@ -3012,7 +3006,8 @@ export class SearchService {
         // Starts with: www.google., search.aol., yandex.
         // or
         // Ends with: search.yahoo.com, .ask.com, .bing.com, .startpage.com, baidu.com, duckduckgo.com
-        const urlTest = /^(?:www\.google\.|search\.aol\.|yandex\.)|(?:search\.yahoo|\.ask|\.bing|\.startpage|\.baidu|duckduckgo)\.com$/;
+        const urlTest =
+          /^(?:www\.google\.|search\.aol\.|yandex\.)|(?:search\.yahoo|\.ask|\.bing|\.startpage|\.baidu|duckduckgo)\.com$/;
         sendSubmissionURL = urlTest.test(engineHost);
       }
     }
@@ -3223,12 +3218,14 @@ export class SearchService {
     ) {
       return;
     }
-    let nimbusPrivateDefaultUIEnabled = lazy.NimbusFeatures.searchConfiguration.getVariable(
-      "seperatePrivateDefaultUIEnabled"
-    );
-    let nimbusPrivateDefaultUrlbarResultEnabled = lazy.NimbusFeatures.searchConfiguration.getVariable(
-      "seperatePrivateDefaultUrlbarResultEnabled"
-    );
+    let nimbusPrivateDefaultUIEnabled =
+      lazy.NimbusFeatures.searchConfiguration.getVariable(
+        "seperatePrivateDefaultUIEnabled"
+      );
+    let nimbusPrivateDefaultUrlbarResultEnabled =
+      lazy.NimbusFeatures.searchConfiguration.getVariable(
+        "seperatePrivateDefaultUrlbarResultEnabled"
+      );
 
     let previousPrivateDefault = this.defaultPrivateEngine;
     let uiWasEnabled = this._separatePrivateDefaultEnabledPrefValue;

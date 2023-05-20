@@ -10,9 +10,8 @@ const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
 
-var gAutocompletePopup = Services.ww.activeWindow.document.getElementById(
-  "PopupAutoComplete"
-);
+var gAutocompletePopup =
+  Services.ww.activeWindow.document.getElementById("PopupAutoComplete");
 assert.ok(gAutocompletePopup, "Got autocomplete popup");
 
 var ParentUtils = {
@@ -150,9 +149,8 @@ var ParentUtils = {
   },
 };
 
-ParentUtils._popupshownListener = ParentUtils.popupshownListener.bind(
-  ParentUtils
-);
+ParentUtils._popupshownListener =
+  ParentUtils.popupshownListener.bind(ParentUtils);
 gAutocompletePopup.addEventListener(
   "popupshown",
   ParentUtils._popupshownListener

@@ -65,11 +65,9 @@ async function test_with_filter(fnFilterWithContentId) {
 }
 
 add_task(async function browser_test_profile_capture_along_with_content_pid() {
-  const {
-    contentPid,
-    pidsWithSamplerThread,
-    profile,
-  } = await test_with_filter(contentPid => ["GeckoMain", "pid:" + contentPid]);
+  const { contentPid, pidsWithSamplerThread, profile } = await test_with_filter(
+    contentPid => ["GeckoMain", "pid:" + contentPid]
+  );
 
   Assert.greater(
     pidsWithSamplerThread.length,
@@ -108,11 +106,9 @@ add_task(async function browser_test_profile_capture_along_with_content_pid() {
 
 add_task(async function browser_test_profile_capture_along_with_other_pid() {
   const parentPid = Services.appinfo.processID;
-  const {
-    contentPid,
-    pidsWithSamplerThread,
-    profile,
-  } = await test_with_filter(contentPid => ["GeckoMain", "pid:" + parentPid]);
+  const { contentPid, pidsWithSamplerThread, profile } = await test_with_filter(
+    contentPid => ["GeckoMain", "pid:" + parentPid]
+  );
 
   Assert.greater(
     pidsWithSamplerThread.length,
@@ -146,11 +142,9 @@ add_task(async function browser_test_profile_capture_along_with_other_pid() {
 
 add_task(async function browser_test_profile_capture_by_only_content_pid() {
   const parentPid = Services.appinfo.processID;
-  const {
-    contentPid,
-    pidsWithSamplerThread,
-    profile,
-  } = await test_with_filter(contentPid => ["pid:" + contentPid]);
+  const { contentPid, pidsWithSamplerThread, profile } = await test_with_filter(
+    contentPid => ["pid:" + contentPid]
+  );
 
   // The sampler thread always runs in the parent process, see bug 1754100.
   Assert.deepEqual(
@@ -180,10 +174,9 @@ add_task(async function browser_test_profile_capture_by_only_content_pid() {
 
 add_task(async function browser_test_profile_capture_by_only_parent_pid() {
   const parentPid = Services.appinfo.processID;
-  const {
-    pidsWithSamplerThread,
-    profile,
-  } = await test_with_filter(contentPid => ["pid:" + parentPid]);
+  const { pidsWithSamplerThread, profile } = await test_with_filter(
+    contentPid => ["pid:" + parentPid]
+  );
 
   Assert.deepEqual(
     pidsWithSamplerThread,

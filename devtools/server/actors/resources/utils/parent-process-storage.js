@@ -70,23 +70,18 @@ class ParentProcessStorage {
     );
 
     if (watcherActor.sessionContext.type == "browser-element") {
-      const {
-        browsingContext,
-        innerWindowID: innerWindowId,
-      } = watcherActor.browserElement;
+      const { browsingContext, innerWindowID: innerWindowId } =
+        watcherActor.browserElement;
       await this._spawnActor(browsingContext.id, innerWindowId);
     } else if (watcherActor.sessionContext.type == "webextension") {
-      const {
-        addonBrowsingContextID,
-        addonInnerWindowId,
-      } = watcherActor.sessionContext;
+      const { addonBrowsingContextID, addonInnerWindowId } =
+        watcherActor.sessionContext;
       await this._spawnActor(addonBrowsingContextID, addonInnerWindowId);
     } else if (watcherActor.sessionContext.type == "all") {
-      const parentProcessTargetActor = this.watcherActor.getTargetActorInParentProcess();
-      const {
-        browsingContextID,
-        innerWindowId,
-      } = parentProcessTargetActor.form();
+      const parentProcessTargetActor =
+        this.watcherActor.getTargetActorInParentProcess();
+      const { browsingContextID, innerWindowId } =
+        parentProcessTargetActor.form();
       await this._spawnActor(browsingContextID, innerWindowId);
     } else {
       throw new Error(

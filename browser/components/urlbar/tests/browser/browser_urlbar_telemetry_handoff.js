@@ -10,7 +10,8 @@ const { SearchSERPTelemetry } = ChromeUtils.importESModule(
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
-    searchPageRegexp: /^https:\/\/example.com\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
+    searchPageRegexp:
+      /^https:\/\/example.com\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -78,9 +79,8 @@ add_task(async function test_search() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
-  const histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  const histogram =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   info("Load about:newtab in new window");
   const newtab = "about:newtab";
@@ -110,9 +110,8 @@ add_task(async function test_search_private_mode() {
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
-  const histogram = TelemetryTestUtils.getAndClearKeyedHistogram(
-    "SEARCH_COUNTS"
-  );
+  const histogram =
+    TelemetryTestUtils.getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   info("Open private window");
   let privateWindow = await BrowserTestUtils.openNewBrowserWindow({

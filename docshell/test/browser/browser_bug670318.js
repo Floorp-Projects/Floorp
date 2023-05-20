@@ -17,8 +17,9 @@ add_task(async function test() {
     async function (browser) {
       if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
         await ContentTask.spawn(browser, URL, async function (URL) {
-          let history = docShell.QueryInterface(Ci.nsIWebNavigation)
-            .sessionHistory;
+          let history = docShell.QueryInterface(
+            Ci.nsIWebNavigation
+          ).sessionHistory;
           let count = 0;
 
           let testDone = {};
@@ -101,8 +102,9 @@ add_task(async function test() {
                 addEventListener(
                   "load",
                   evt => {
-                    let history = docShell.QueryInterface(Ci.nsIWebNavigation)
-                      .sessionHistory;
+                    let history = docShell.QueryInterface(
+                      Ci.nsIWebNavigation
+                    ).sessionHistory;
                     Assert.ok(
                       history.index < history.count,
                       "history.index is valid"

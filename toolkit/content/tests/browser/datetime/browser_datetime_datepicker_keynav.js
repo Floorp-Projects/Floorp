@@ -285,8 +285,9 @@ add_task(async function test_datepicker_keyboard_arrows() {
   await helper.openPicker(
     `data:text/html,<input id=date type=date value=${inputValue}>`
   );
-  let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
-    .contentDocument;
+  let pickerDoc = helper.panel.querySelector(
+    "#dateTimePopupFrame"
+  ).contentDocument;
   Assert.equal(helper.panel.state, "open", "Panel should be opened");
 
   // Move focus from 2016-12-10 to 2016-12-11:
@@ -366,8 +367,9 @@ add_task(async function test_datepicker_keyboard_home_end() {
   await helper.openPicker(
     `data:text/html,<input id=date type=date value=${inputValue}>`
   );
-  let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
-    .contentDocument;
+  let pickerDoc = helper.panel.querySelector(
+    "#dateTimePopupFrame"
+  ).contentDocument;
   Assert.equal(helper.panel.state, "open", "Panel should be opened");
 
   // Move focus from 2016-12-15 to 2016-12-11 (in the en-US locale):
@@ -451,8 +453,9 @@ add_task(async function test_datepicker_keyboard_pgup_pgdown() {
   await helper.openPicker(
     `data:text/html,<input id=date type=date value=${inputValue}>`
   );
-  let pickerDoc = helper.panel.querySelector("#dateTimePopupFrame")
-    .contentDocument;
+  let pickerDoc = helper.panel.querySelector(
+    "#dateTimePopupFrame"
+  ).contentDocument;
   Assert.equal(helper.panel.state, "open", "Panel should be opened");
 
   // Move focus from 2023-01-31 to 2022-12-31:

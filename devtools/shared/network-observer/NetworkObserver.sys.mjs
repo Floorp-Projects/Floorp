@@ -325,10 +325,8 @@ export class NetworkObserver {
         this.#createNetworkEvent(subject, { inProgressRequest: true });
       } else {
         // Handles any early blockings e.g by Web Extensions or by CORS
-        const {
-          blockingExtension,
-          blockedReason,
-        } = lazy.NetworkUtils.getBlockedReason(channel);
+        const { blockingExtension, blockedReason } =
+          lazy.NetworkUtils.getBlockedReason(channel);
         this.#createNetworkEvent(subject, { blockedReason, blockingExtension });
       }
     }
@@ -1172,10 +1170,8 @@ export class NetworkObserver {
     harTimings.connect = this.#getConnectTiming(timings);
     harTimings.ssl = this.#getSslTiming(timings);
 
-    let {
-      secureConnectionStartTime,
-      secureConnectionStartTimeRelative,
-    } = this.#getSecureConnectionStartTimeInfo(timings);
+    let { secureConnectionStartTime, secureConnectionStartTimeRelative } =
+      this.#getSecureConnectionStartTimeInfo(timings);
 
     // sometimes the connection information events are attached to a speculative
     // channel instead of this one, but necko might glue them back together in the
@@ -1235,10 +1231,8 @@ export class NetworkObserver {
     harTimings.send = this.#getSendTiming(timings);
     harTimings.wait = this.#getWaitTiming(timings);
     harTimings.receive = this.#getReceiveTiming(timings);
-    let {
-      startSendingTime,
-      startSendingTimeRelative,
-    } = this.#getStartSendingTimeInfo(timings, connectStartTimeTc);
+    let { startSendingTime, startSendingTimeRelative } =
+      this.#getStartSendingTimeInfo(timings, connectStartTimeTc);
 
     if (secureConnectionStartTimeRelative) {
       const time = Math.max(Math.round(secureConnectionStartTime / 1000), -1);
@@ -1271,11 +1265,8 @@ export class NetworkObserver {
     const serverTimings = new Array(channel.serverTiming.length);
 
     for (let i = 0; i < channel.serverTiming.length; ++i) {
-      const {
-        name,
-        duration,
-        description,
-      } = channel.serverTiming.queryElementAt(i, Ci.nsIServerTiming);
+      const { name, duration, description } =
+        channel.serverTiming.queryElementAt(i, Ci.nsIServerTiming);
       serverTimings[i] = { name, duration, description };
     }
 

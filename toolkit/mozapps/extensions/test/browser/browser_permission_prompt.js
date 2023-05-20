@@ -106,7 +106,7 @@ add_task(async function test_sideloaded_extension_permissions_prompt() {
       browser_specific_settings: { gecko: { id: ADDON_ID } },
       name: "Test 1",
       permissions: ["history", "https://*/*"],
-      icons: { "64": "foo-icon.png" },
+      icons: { 64: "foo-icon.png" },
     },
   };
 

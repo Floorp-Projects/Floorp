@@ -1088,12 +1088,10 @@ add_task(async function testExtensionControlledPasswordManager() {
       !isControlled,
       "Password manager pref is set to the expected value."
     );
-    let controlledLabel = gBrowser.contentDocument.getElementById(
-      CONTROLLED_LABEL_ID
-    );
-    let controlledButton = gBrowser.contentDocument.getElementById(
-      CONTROLLED_BUTTON_ID
-    );
+    let controlledLabel =
+      gBrowser.contentDocument.getElementById(CONTROLLED_LABEL_ID);
+    let controlledButton =
+      gBrowser.contentDocument.getElementById(CONTROLLED_BUTTON_ID);
     is(
       controlledLabel.hidden,
       !isControlled,

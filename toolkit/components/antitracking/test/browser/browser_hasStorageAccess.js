@@ -16,8 +16,7 @@ var settings = [
   },
   // 3rd-party no-tracker with permission
   {
-    name:
-      "Test whether 3rd-party non-tracker frame has storage access when storage permission is granted before",
+    name: "Test whether 3rd-party non-tracker frame has storage access when storage permission is granted before",
     topPage: TEST_TOP_PAGE,
     thirdPartyPage: TEST_4TH_PARTY_PAGE,
     setup: () => {
@@ -39,8 +38,7 @@ var settings = [
   },
   // 3rd-party tracker with permission
   {
-    name:
-      "Test whether 3rd-party tracker frame has storage access when storage access permission is granted before",
+    name: "Test whether 3rd-party tracker frame has storage access when storage access permission is granted before",
     topPage: TEST_TOP_PAGE,
     thirdPartyPage: TEST_3RD_PARTY_PAGE,
     setup: () => {

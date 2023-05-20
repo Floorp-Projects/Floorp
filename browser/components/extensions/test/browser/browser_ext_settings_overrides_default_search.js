@@ -207,8 +207,8 @@ add_task(async function test_extension_setting_default_engine_external() {
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
         icons: {
-          "48": "icon.png",
-          "96": "icon@2x.png",
+          48: "icon.png",
+          96: "icon@2x.png",
         },
         browser_specific_settings: {
           gecko: {

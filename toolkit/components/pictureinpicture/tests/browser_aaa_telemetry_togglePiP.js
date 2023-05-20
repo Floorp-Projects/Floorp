@@ -4,8 +4,10 @@
 "use strict";
 
 function getTelemetryToggleEnabled() {
-  const scalarData = Services.telemetry.getSnapshotForScalars("main", false)
-    .parent;
+  const scalarData = Services.telemetry.getSnapshotForScalars(
+    "main",
+    false
+  ).parent;
   return scalarData["pictureinpicture.toggle_enabled"];
 }
 

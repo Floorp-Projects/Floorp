@@ -9,9 +9,8 @@ export var UIDensities = {
     compactDensity: {
       selectors: ["#navigator-toolbox", "#appMenu-popup", "#widget-overflow"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         browserWindow.gCustomizeMode.setUIDensity(
           browserWindow.gUIDensity.MODE_COMPACT
         );
@@ -21,9 +20,8 @@ export var UIDensities = {
     normalDensity: {
       selectors: ["#navigator-toolbox", "#appMenu-popup", "#widget-overflow"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         browserWindow.gCustomizeMode.setUIDensity(
           browserWindow.gUIDensity.MODE_NORMAL
         );
@@ -33,9 +31,8 @@ export var UIDensities = {
     touchDensity: {
       selectors: ["#navigator-toolbox", "#appMenu-popup", "#widget-overflow"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         browserWindow.gCustomizeMode.setUIDensity(
           browserWindow.gUIDensity.MODE_TOUCH
         );

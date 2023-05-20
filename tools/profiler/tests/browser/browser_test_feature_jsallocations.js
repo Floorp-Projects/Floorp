@@ -30,10 +30,8 @@ add_task(async function test_profile_feature_jsallocations() {
 
     // Check that we can get some allocations when the feature is turned on.
     {
-      const {
-        parentThread,
-        contentThread,
-      } = await waitSamplingAndStopProfilerAndGetThreads(contentPid);
+      const { parentThread, contentThread } =
+        await waitSamplingAndStopProfilerAndGetThreads(contentPid);
       Assert.greater(
         getPayloadsOfType(parentThread, "JS allocation").length,
         0,
@@ -56,10 +54,8 @@ add_task(async function test_profile_feature_jsallocations() {
     // Check that no allocations were recorded, and allocation tracking was correctly
     // turned off.
     {
-      const {
-        parentThread,
-        contentThread,
-      } = await waitSamplingAndStopProfilerAndGetThreads(contentPid);
+      const { parentThread, contentThread } =
+        await waitSamplingAndStopProfilerAndGetThreads(contentPid);
       Assert.equal(
         getPayloadsOfType(parentThread, "JS allocation").length,
         0,

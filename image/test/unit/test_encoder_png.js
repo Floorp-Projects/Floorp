@@ -18,33 +18,8 @@ var png1A = {
       stride: 9,
 
       pixels: [
-        255,
-        0,
-        0,
-        255,
-        0,
-        0,
-        255,
-        0,
-        0,
-        0,
-        255,
-        0,
-        0,
-        255,
-        0,
-        0,
-        255,
-        0,
-        0,
-        0,
-        255,
-        0,
-        0,
-        255,
-        0,
-        0,
-        255,
+        255, 0, 0, 255, 0, 0, 255, 0, 0, 0, 255, 0, 0, 255, 0, 0, 255, 0, 0, 0,
+        255, 0, 0, 255, 0, 0, 255,
       ],
     },
   ],
@@ -67,33 +42,8 @@ var png1B = {
       stride: 9,
 
       pixels: [
-        255,
-        0,
-        0,
-        255,
-        0,
-        0,
-        255,
-        0,
-        0,
-        0,
-        255,
-        0,
-        0,
-        255,
-        0,
-        0,
-        255,
-        0,
-        0,
-        0,
-        255,
-        0,
-        0,
-        255,
-        0,
-        0,
-        255,
+        255, 0, 0, 255, 0, 0, 255, 0, 0, 0, 255, 0, 0, 255, 0, 0, 255, 0, 0, 0,
+        255, 0, 0, 255, 0, 0, 255,
       ],
     },
   ],
@@ -115,42 +65,8 @@ var png2A = {
       stride: 12,
 
       pixels: [
-        255,
-        0,
-        0,
-        255,
-        255,
-        0,
-        0,
-        170,
-        255,
-        0,
-        0,
-        85,
-        0,
-        255,
-        0,
-        255,
-        0,
-        255,
-        0,
-        170,
-        0,
-        255,
-        0,
-        85,
-        0,
-        0,
-        255,
-        255,
-        0,
-        0,
-        255,
-        170,
-        0,
-        0,
-        255,
-        85,
+        255, 0, 0, 255, 255, 0, 0, 170, 255, 0, 0, 85, 0, 255, 0, 255, 0, 255,
+        0, 170, 0, 255, 0, 85, 0, 0, 255, 255, 0, 0, 255, 170, 0, 0, 255, 85,
       ],
     },
   ],
@@ -173,42 +89,8 @@ var png2B = {
       stride: 12,
 
       pixels: [
-        255,
-        0,
-        0,
-        255,
-        255,
-        0,
-        0,
-        170,
-        255,
-        0,
-        0,
-        85,
-        0,
-        255,
-        0,
-        255,
-        0,
-        255,
-        0,
-        170,
-        0,
-        255,
-        0,
-        85,
-        0,
-        0,
-        255,
-        255,
-        0,
-        0,
-        255,
-        170,
-        0,
-        0,
-        255,
-        85,
+        255, 0, 0, 255, 255, 0, 0, 170, 255, 0, 0, 85, 0, 255, 0, 255, 0, 255,
+        0, 170, 0, 255, 0, 85, 0, 0, 255, 255, 0, 0, 255, 170, 0, 0, 255, 85,
       ],
     },
   ],
@@ -240,9 +122,8 @@ function run_test_for(input) {
 }
 
 function encodeImage(input) {
-  var encoder = Cc[
-    "@mozilla.org/image/encoder;2?type=image/png"
-  ].createInstance();
+  var encoder =
+    Cc["@mozilla.org/image/encoder;2?type=image/png"].createInstance();
   encoder.QueryInterface(Ci.imgIEncoder);
 
   var options = "";
@@ -280,9 +161,8 @@ function _encodeImageAsyncFactory(frame, options, encoder) {
 }
 
 function encodeImageAsync(input) {
-  var encoder = Cc[
-    "@mozilla.org/image/encoder;2?type=image/png"
-  ].createInstance();
+  var encoder =
+    Cc["@mozilla.org/image/encoder;2?type=image/png"].createInstance();
   encoder.QueryInterface(Ci.imgIEncoder);
 
   var options = "";
@@ -316,8 +196,8 @@ function makeDataURLFromAsync(encoder, mimetype, expected) {
   do_test_pending();
   var rawStream = encoder.QueryInterface(Ci.nsIAsyncInputStream);
 
-  var currentThread = Cc["@mozilla.org/thread-manager;1"].getService()
-    .currentThread;
+  var currentThread =
+    Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
 
   var bytes = [];
 

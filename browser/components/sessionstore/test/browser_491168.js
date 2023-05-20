@@ -71,9 +71,8 @@ add_task(async function () {
     Services.io.newURI(REFERRER2)
   );
 
-  tabState.entries[0].referrerInfo = E10SUtils.serializeReferrerInfo(
-    referrerInfo2
-  );
+  tabState.entries[0].referrerInfo =
+    E10SUtils.serializeReferrerInfo(referrerInfo2);
   await promiseTabState(tab, tabState);
 
   await checkDocumentReferrer(

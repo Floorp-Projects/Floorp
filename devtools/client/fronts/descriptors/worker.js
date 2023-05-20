@@ -128,9 +128,8 @@ class WorkerDescriptorFront extends DescriptorMixin(
   }
 
   async _getRegistrationIfActive() {
-    const {
-      registrations,
-    } = await this.client.mainRoot.listServiceWorkerRegistrations();
+    const { registrations } =
+      await this.client.mainRoot.listServiceWorkerRegistrations();
     return registrations.find(({ activeWorker }) => {
       return activeWorker && this.id === activeWorker.id;
     });

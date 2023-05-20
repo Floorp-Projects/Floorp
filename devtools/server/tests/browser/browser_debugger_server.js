@@ -156,39 +156,43 @@ async function testDevToolsServerKeepAlive() {
 }
 
 async function assertServerInitialized(tab, expected, message) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [expected, message], function (
-    _expected,
-    _message
-  ) {
-    const { require } = ChromeUtils.importESModule(
-      "resource://devtools/shared/loader/Loader.sys.mjs"
-    );
-    const {
-      DevToolsServer,
-    } = require("resource://devtools/server/devtools-server.js");
-    is(DevToolsServer.initialized, _expected, _message);
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [expected, message],
+    function (_expected, _message) {
+      const { require } = ChromeUtils.importESModule(
+        "resource://devtools/shared/loader/Loader.sys.mjs"
+      );
+      const {
+        DevToolsServer,
+      } = require("resource://devtools/server/devtools-server.js");
+      is(DevToolsServer.initialized, _expected, _message);
+    }
+  );
 }
 
 async function assertDevToolsOpened(tab, expected, message) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [expected, message], function (
-    _expected,
-    _message
-  ) {
-    is(ChromeUtils.isDevToolsOpened(), _expected, _message);
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [expected, message],
+    function (_expected, _message) {
+      is(ChromeUtils.isDevToolsOpened(), _expected, _message);
+    }
+  );
 }
 
 async function setContentServerKeepAlive(tab, keepAlive, message) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [keepAlive], function (
-    _keepAlive
-  ) {
-    const { require } = ChromeUtils.importESModule(
-      "resource://devtools/shared/loader/Loader.sys.mjs"
-    );
-    const {
-      DevToolsServer,
-    } = require("resource://devtools/server/devtools-server.js");
-    DevToolsServer.keepAlive = _keepAlive;
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [keepAlive],
+    function (_keepAlive) {
+      const { require } = ChromeUtils.importESModule(
+        "resource://devtools/shared/loader/Loader.sys.mjs"
+      );
+      const {
+        DevToolsServer,
+      } = require("resource://devtools/server/devtools-server.js");
+      DevToolsServer.keepAlive = _keepAlive;
+    }
+  );
 }

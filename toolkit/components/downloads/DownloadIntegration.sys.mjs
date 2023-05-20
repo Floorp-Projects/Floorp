@@ -664,10 +664,11 @@ export var DownloadIntegration = {
       fileExtension &&
       fileExtension.toLowerCase() == "exe";
 
-    let isExemptExecutableExtension = Services.policies.isExemptExecutableExtension(
-      aDownload.source.url,
-      fileExtension
-    );
+    let isExemptExecutableExtension =
+      Services.policies.isExemptExecutableExtension(
+        aDownload.source.url,
+        fileExtension
+      );
 
     // Ask for confirmation if the file is executable, except for .exe on
     // Windows where the operating system will show the prompt based on the

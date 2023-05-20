@@ -4,11 +4,8 @@
 "use strict";
 /* eslint-disable no-tabs */
 
-const {
-  RemoteAgentError,
-  UnknownMethodError,
-  UnsupportedError,
-} = ChromeUtils.importESModule("chrome://remote/content/cdp/Error.sys.mjs");
+const { RemoteAgentError, UnknownMethodError, UnsupportedError } =
+  ChromeUtils.importESModule("chrome://remote/content/cdp/Error.sys.mjs");
 
 add_task(function test_RemoteAgentError_ctor() {
   const e1 = new RemoteAgentError();

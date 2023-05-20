@@ -179,11 +179,10 @@ try {
 
       // When debugging chrome pages, we initialized a dedicated loader, also destroy it
       if (customLoader) {
-        const {
-          releaseDistinctSystemPrincipalLoader,
-        } = ChromeUtils.importESModule(
-          "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
-        );
+        const { releaseDistinctSystemPrincipalLoader } =
+          ChromeUtils.importESModule(
+            "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+          );
         releaseDistinctSystemPrincipalLoader(chromeGlobal);
       }
     }

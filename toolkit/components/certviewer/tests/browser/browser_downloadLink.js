@@ -51,9 +51,8 @@ add_task(async function test_checkForErrorSection() {
     certChain = certChain.join("").replace(/(\r\n|\n|\r)/gm, "");
 
     for (let i = 0; i < certTabs.length; i++) {
-      let downloadLink = downloadLinkContainers[i].querySelector(
-        ".download-link"
-      );
+      let downloadLink =
+        downloadLinkContainers[i].querySelector(".download-link");
 
       let downloadChainLink = downloadLinkContainers[i].querySelector(
         ".download-link-chain"

@@ -176,14 +176,15 @@ async function testPageWithURI(uri, message, expect) {
 
   // Check if HTTPS-Only Error-Page loaded instead
   let browser = tab.linkedBrowser;
-  await SpecialPowers.spawn(browser, [message, expect], function (
-    message,
-    expect
-  ) {
-    const doc = content.document;
-    let result = doc.documentURI.startsWith("about:httpsonlyerror");
-    is(result, expect, message);
-  });
+  await SpecialPowers.spawn(
+    browser,
+    [message, expect],
+    function (message, expect) {
+      const doc = content.document;
+      let result = doc.documentURI.startsWith("about:httpsonlyerror");
+      is(result, expect, message);
+    }
+  );
 
   // Close tab again
   BrowserTestUtils.removeTab(tab);

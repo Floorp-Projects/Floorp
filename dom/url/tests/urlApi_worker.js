@@ -167,8 +167,7 @@ onmessage = function () {
       search: "",
     },
     {
-      url:
-        "http://auser:apassword@www.abc.com:90/apath/afile.txt?asearch#ahash",
+      url: "http://auser:apassword@www.abc.com:90/apath/afile.txt?asearch#ahash",
       base: undefined,
       error: false,
       protocol: "http:",

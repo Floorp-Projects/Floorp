@@ -33,9 +33,8 @@ add_task(async function () {
   ok(homeButton, "home button present");
 
   async function drop(dragData, homepage) {
-    let setHomepageDialogPromise = BrowserTestUtils.promiseAlertDialogOpen(
-      "accept"
-    );
+    let setHomepageDialogPromise =
+      BrowserTestUtils.promiseAlertDialogOpen("accept");
     let setHomepagePromise = TestUtils.waitForPrefChange(
       HOMEPAGE_PREF,
       newVal => newVal == homepage
@@ -108,8 +107,7 @@ add_task(async function () {
       [
         {
           type: "text/plain",
-          data:
-            "http://mochi.test:8888/\nhttp://mochi.test:8888/b\nhttp://mochi.test:8888/c",
+          data: "http://mochi.test:8888/\nhttp://mochi.test:8888/b\nhttp://mochi.test:8888/c",
         },
       ],
     ],

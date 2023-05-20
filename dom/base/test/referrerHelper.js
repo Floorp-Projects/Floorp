@@ -37,12 +37,14 @@ function doXHR(url, onSuccess, onFail) {
  * This triggers state-resetting on the counter server.
  */
 function resetCounter() {
-  doXHR("/tests/dom/base/test/bug704320_counter.sjs?reset", advance, function (
-    xhr
-  ) {
-    ok(false, "Need to be able to reset the request counter");
-    SimpleTest.finish();
-  });
+  doXHR(
+    "/tests/dom/base/test/bug704320_counter.sjs?reset",
+    advance,
+    function (xhr) {
+      ok(false, "Need to be able to reset the request counter");
+      SimpleTest.finish();
+    }
+  );
 }
 
 /**

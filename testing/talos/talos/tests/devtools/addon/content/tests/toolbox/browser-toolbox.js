@@ -83,35 +83,37 @@ module.exports = async function () {
     };
   });
 
-  await evaluateInBrowserToolbox(consoleFront, [TEST_URL], async function (
-    testUrl
-  ) {
-    const {
-      createLocation,
-    } = require("devtools/client/debugger/src/utils/location");
-    dump("Wait for debugger to initialize\n");
-    const panel = await gToolbox.selectTool("jsdebugger");
-    const { dbg } = panel.panelWin;
-    dump("Wait for tab source in the content process\n");
-    const source = await waitFor(() => findSource(dbg, testUrl));
+  await evaluateInBrowserToolbox(
+    consoleFront,
+    [TEST_URL],
+    async function (testUrl) {
+      const {
+        createLocation,
+      } = require("devtools/client/debugger/src/utils/location");
+      dump("Wait for debugger to initialize\n");
+      const panel = await gToolbox.selectTool("jsdebugger");
+      const { dbg } = panel.panelWin;
+      dump("Wait for tab source in the content process\n");
+      const source = await waitFor(() => findSource(dbg, testUrl));
 
-    dump("Select this source\n");
-    const cx = dbg.selectors.getContext(dbg.store.getState());
-    dbg.actions.selectLocation(cx, createLocation({ source, line: 1 }));
-    await waitFor(() => {
-      const source = dbg.selectors.getSelectedSource(dbg.store.getState());
-      if (!source) {
-        return false;
-      }
-      const sourceTextContent = dbg.selectors.getSelectedSourceTextContent(
-        dbg.store.getState()
-      );
-      if (!sourceTextContent) {
-        return false;
-      }
-      return true;
-    });
-  });
+      dump("Select this source\n");
+      const cx = dbg.selectors.getContext(dbg.store.getState());
+      dbg.actions.selectLocation(cx, createLocation({ source, line: 1 }));
+      await waitFor(() => {
+        const source = dbg.selectors.getSelectedSource(dbg.store.getState());
+        if (!source) {
+          return false;
+        }
+        const sourceTextContent = dbg.selectors.getSelectedSourceTextContent(
+          dbg.store.getState()
+        );
+        if (!sourceTextContent) {
+          return false;
+        }
+        return true;
+      });
+    }
+  );
   test.done();
 
   test = runTest(`browser-toolbox.inspector-ready.DAMP`, true);
@@ -125,9 +127,9 @@ module.exports = async function () {
     const { hud } = await gToolbox.selectTool("webconsole");
     dump("Wait for test page console message to appear\n");
     await waitFor(() =>
-      Array.from(
-        hud.ui.window.document.querySelectorAll(".message-body")
-      ).some(el => el.innerText.includes("test page message"))
+      Array.from(hud.ui.window.document.querySelectorAll(".message-body")).some(
+        el => el.innerText.includes("test page message")
+      )
     );
   });
   test.done();

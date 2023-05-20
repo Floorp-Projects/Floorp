@@ -38,26 +38,30 @@ async function isUpdatedAfterScroll(
 ) {
   info("Check the rulers' position by default");
 
-  let xAxisRulerTransform = await highlighterTestFront.getHighlighterNodeAttribute(
-    `${ID}x-axis-ruler`,
-    "transform",
-    highlighterFront
-  );
-  let xAxisTextTransform = await highlighterTestFront.getHighlighterNodeAttribute(
-    `${ID}x-axis-text`,
-    "transform",
-    highlighterFront
-  );
-  let yAxisRulerTransform = await highlighterTestFront.getHighlighterNodeAttribute(
-    `${ID}y-axis-ruler`,
-    "transform",
-    highlighterFront
-  );
-  let yAxisTextTransform = await highlighterTestFront.getHighlighterNodeAttribute(
-    `${ID}y-axis-text`,
-    "transform",
-    highlighterFront
-  );
+  let xAxisRulerTransform =
+    await highlighterTestFront.getHighlighterNodeAttribute(
+      `${ID}x-axis-ruler`,
+      "transform",
+      highlighterFront
+    );
+  let xAxisTextTransform =
+    await highlighterTestFront.getHighlighterNodeAttribute(
+      `${ID}x-axis-text`,
+      "transform",
+      highlighterFront
+    );
+  let yAxisRulerTransform =
+    await highlighterTestFront.getHighlighterNodeAttribute(
+      `${ID}y-axis-ruler`,
+      "transform",
+      highlighterFront
+    );
+  let yAxisTextTransform =
+    await highlighterTestFront.getHighlighterNodeAttribute(
+      `${ID}y-axis-text`,
+      "transform",
+      highlighterFront
+    );
 
   is(xAxisRulerTransform, null, "x axis ruler is positioned properly");
   is(xAxisTextTransform, null, "x axis text are positioned properly");

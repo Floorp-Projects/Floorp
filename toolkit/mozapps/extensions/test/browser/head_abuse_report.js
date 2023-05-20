@@ -415,9 +415,8 @@ const AbuseReportTestUtils = {
   },
 
   triggerSubmit(reason, message) {
-    const reportEl = this.getReportDialog().document.querySelector(
-      "addon-abuse-report"
-    );
+    const reportEl =
+      this.getReportDialog().document.querySelector("addon-abuse-report");
     reportEl._form.elements.message.value = message;
     reportEl._form.elements.reason.value = reason;
     reportEl.submit();

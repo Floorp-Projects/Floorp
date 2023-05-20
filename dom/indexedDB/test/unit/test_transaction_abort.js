@@ -314,11 +314,10 @@ function* testSteps() {
 
   // During COMMITTING
   transaction = db.transaction("foo", "readwrite");
-  transaction
-    .objectStore("foo")
-    .put({ hello: "world" }, 1).onsuccess = function (event) {
-    continueToNextStep();
-  };
+  transaction.objectStore("foo").put({ hello: "world" }, 1).onsuccess =
+    function (event) {
+      continueToNextStep();
+    };
   yield undefined;
   try {
     transaction.abort();

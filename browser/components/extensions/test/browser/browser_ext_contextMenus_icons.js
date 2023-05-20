@@ -17,7 +17,7 @@ add_task(async function test_root_icon() {
       name: "contextMenus icons",
       permissions: ["contextMenus"],
       icons: {
-        "18": "extension.png",
+        18: "extension.png",
       },
     },
 
@@ -112,7 +112,7 @@ add_task(async function test_child_icon() {
     manifest: {
       permissions: ["contextMenus"],
       icons: {
-        "18": "black_icon.png",
+        18: "black_icon.png",
       },
     },
 
@@ -325,7 +325,7 @@ add_task(async function test_child_icon_update() {
     manifest: {
       permissions: ["contextMenus"],
       icons: {
-        "18": "black_icon.png",
+        18: "black_icon.png",
       },
     },
 

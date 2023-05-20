@@ -285,17 +285,15 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._slottedContainerKeys = new WeakMap();
 
   // Binding functions that need to be called in scope.
-  this._handleRejectionIfNotDestroyed = this._handleRejectionIfNotDestroyed.bind(
-    this
-  );
+  this._handleRejectionIfNotDestroyed =
+    this._handleRejectionIfNotDestroyed.bind(this);
   this._isImagePreviewTarget = this._isImagePreviewTarget.bind(this);
   this._onWalkerMutations = this._onWalkerMutations.bind(this);
   this._onBlur = this._onBlur.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
   this._onCopy = this._onCopy.bind(this);
-  this._onCollapseAttributesPrefChange = this._onCollapseAttributesPrefChange.bind(
-    this
-  );
+  this._onCollapseAttributesPrefChange =
+    this._onCollapseAttributesPrefChange.bind(this);
   this._onWalkerNodeStatesChanged = this._onWalkerNodeStatesChanged.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._onResourceAvailable = this._onResourceAvailable.bind(this);
@@ -428,8 +426,9 @@ MarkupView.prototype = {
   },
 
   _onDomMutation() {
-    const domMutationBreakpoints = this.inspector.toolbox.store.getState()
-      .domMutationBreakpoints.breakpoints;
+    const domMutationBreakpoints =
+      this.inspector.toolbox.store.getState().domMutationBreakpoints
+        .breakpoints;
     const breakpointIDsInCurrentState = [];
     for (const breakpoint of domMutationBreakpoints) {
       const nodeFront = breakpoint.nodeFront;
@@ -450,8 +449,8 @@ MarkupView.prototype = {
     for (const id of this._breakpointIDsInLocalState.keys()) {
       if (breakpointIDsInCurrentState.includes(id) === false) {
         const nodeFront = this._breakpointIDsInLocalState.get(id).nodeFront;
-        const mutationType = this._breakpointIDsInLocalState.get(id)
-          .mutationType;
+        const mutationType =
+          this._breakpointIDsInLocalState.get(id).mutationType;
         this._containersToUpdate.get(nodeFront).delete(mutationType);
         this._breakpointIDsInLocalState.delete(id);
       }
@@ -833,7 +832,8 @@ MarkupView.prototype = {
         if (data.type === this.inspector.highlighters.TYPES.GRID) {
           // Matches badges for "grid", "inline-grid" and "subgrid"
           const selector = "[data-display*='grid']:not(.active)";
-          const isLimited = this.inspector.highlighters.isGridHighlighterLimitReached();
+          const isLimited =
+            this.inspector.highlighters.isGridHighlighterLimitReached();
           Array.from(this._elt.querySelectorAll(selector)).map(el => {
             el.classList.toggle("interactive", !isLimited);
           });
@@ -2624,8 +2624,8 @@ MarkupView.prototype = {
         nextSibling.isMarkerPseudoElement ||
         nextSibling.isBeforePseudoElement
       ) {
-        nextSibling = this.getContainer(nextSibling).elt.nextSibling.container
-          .node;
+        nextSibling =
+          this.getContainer(nextSibling).elt.nextSibling.container.node;
       }
       if (nextSibling.isAfterPseudoElement) {
         parent = target.parentNode.container.node.parentNode();

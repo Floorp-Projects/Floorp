@@ -279,9 +279,8 @@ function DatePicker(context) {
             case " ":
             case "Escape": {
               // If the target is a toggle or a spinner on the month-year panel
-              const isOnMonthPicker = this.context.monthYearView.parentNode.contains(
-                event.target
-              );
+              const isOnMonthPicker =
+                this.context.monthYearView.parentNode.contains(event.target);
 
               if (this.state.isMonthPickerVisible && isOnMonthPicker) {
                 // While a control on the month-year picker panel is focused,

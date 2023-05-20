@@ -58,9 +58,8 @@ add_task(async function testPageActionTelemetry() {
   });
 
   let histogram = Services.telemetry.getHistogramById(HISTOGRAM);
-  let histogramKeyed = Services.telemetry.getKeyedHistogramById(
-    HISTOGRAM_KEYED
-  );
+  let histogramKeyed =
+    Services.telemetry.getKeyedHistogramById(HISTOGRAM_KEYED);
 
   histogram.clear();
   histogramKeyed.clear();

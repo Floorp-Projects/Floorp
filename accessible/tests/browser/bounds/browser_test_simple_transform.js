@@ -131,8 +131,10 @@ addAccessibleTask(
   async function (browser, docAcc) {
     const tree = { TEXT_CONTAINER: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }] };
 
-    const divWithTransform = findAccessibleChildByID(docAcc, "container")
-      .firstChild;
+    const divWithTransform = findAccessibleChildByID(
+      docAcc,
+      "container"
+    ).firstChild;
     testAccessibleTree(divWithTransform, tree);
     // testBoundsWithContent takes an id, but divWithTransform doesn't have one,
     // so we can't test the bounds for it.

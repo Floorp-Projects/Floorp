@@ -77,9 +77,8 @@ export class MessageHandlerFrameParent extends JSWindowActorParent {
     const [moduleName] = name.split(".");
 
     // Re-emit the event on the RootMessageHandler.
-    const messageHandler = lazy.RootMessageHandlerRegistry.getExistingMessageHandler(
-      sessionId
-    );
+    const messageHandler =
+      lazy.RootMessageHandlerRegistry.getExistingMessageHandler(sessionId);
     // TODO: getModuleInstance expects a CommandDestination in theory,
     // but only uses the MessageHandler type in practice, see Bug 1776389.
     const module = messageHandler.moduleCache.getModuleInstance(moduleName, {
@@ -104,9 +103,8 @@ export class MessageHandlerFrameParent extends JSWindowActorParent {
 
   async #handleSendCommandMessage(messageData) {
     const { sessionId, command } = messageData;
-    const messageHandler = lazy.RootMessageHandlerRegistry.getExistingMessageHandler(
-      sessionId
-    );
+    const messageHandler =
+      lazy.RootMessageHandlerRegistry.getExistingMessageHandler(sessionId);
     try {
       return await messageHandler.handleCommand(command);
     } catch (e) {

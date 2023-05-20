@@ -53,11 +53,12 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
 
   // Ensure that this tab has no history entries
   let sessionHistoryCount = await new Promise(resolve => {
-    SessionStore.getSessionHistory(gBrowser.selectedTab, function (
-      sessionHistory
-    ) {
-      resolve(sessionHistory.entries.length);
-    });
+    SessionStore.getSessionHistory(
+      gBrowser.selectedTab,
+      function (sessionHistory) {
+        resolve(sessionHistory.entries.length);
+      }
+    );
   });
 
   ok(

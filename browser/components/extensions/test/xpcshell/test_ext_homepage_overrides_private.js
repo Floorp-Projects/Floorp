@@ -10,11 +10,8 @@ const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
 
-const {
-  createAppInfo,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { createAppInfo, promiseShutdownManager, promiseStartupManager } =
+  AddonTestUtils;
 
 const EXTENSION_ID = "test_overrides@tests.mozilla.org";
 const HOMEPAGE_EXTENSION_CONTROLLED =

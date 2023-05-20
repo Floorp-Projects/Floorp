@@ -103,10 +103,11 @@ export var HandlerServiceTestUtils = {
     // testing, like the nsIExternalProtocolService::GetProtocolHandlerInfo
     // method does on the default nsIHandlerService instance.
     let osDefaultHandlerFound = {};
-    let handlerInfo = lazy.gExternalProtocolService.getProtocolHandlerInfoFromOS(
-      type,
-      osDefaultHandlerFound
-    );
+    let handlerInfo =
+      lazy.gExternalProtocolService.getProtocolHandlerInfoFromOS(
+        type,
+        osDefaultHandlerFound
+      );
     if (lazy.gHandlerService.exists(handlerInfo)) {
       lazy.gHandlerService.fillHandlerInfo(handlerInfo, "");
     } else {
@@ -212,7 +213,8 @@ export var HandlerServiceTestUtils = {
       Assert.equal(handlerInfo.preferredApplicationHandler, null);
     }
 
-    let handlerAppsArrayEnumerator = handlerInfo.possibleApplicationHandlers.enumerate();
+    let handlerAppsArrayEnumerator =
+      handlerInfo.possibleApplicationHandlers.enumerate();
     if (AppConstants.platform == "android") {
       // On Android, the first handler application is always the internal one.
       this.assertHandlerAppMatches(handlerAppsArrayEnumerator.getNext(), {

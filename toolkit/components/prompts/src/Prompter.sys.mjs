@@ -1080,9 +1080,8 @@ class ModalPrompter {
     try {
       if (IS_CONTENT) {
         // When in the content, get the PromptChild actor.
-        actor = this.browsingContext.window.windowGlobalChild.getActor(
-          "Prompt"
-        );
+        actor =
+          this.browsingContext.window.windowGlobalChild.getActor("Prompt");
       } else {
         // When in the parent, get the PromptParent actor.
         actor = this.browsingContext.currentWindowGlobal.getActor("Prompt");
@@ -1128,16 +1127,18 @@ class ModalPrompter {
       ) {
         // check if this is a request from a third party
         try {
-          args.isTopLevelCrossDomainAuth = this.browsingContext.currentWindowGlobal?.documentPrincipal?.isThirdPartyURI(
-            args.channel.URI
-          );
+          args.isTopLevelCrossDomainAuth =
+            this.browsingContext.currentWindowGlobal?.documentPrincipal?.isThirdPartyURI(
+              args.channel.URI
+            );
         } catch (e) {
           // isThirdPartyURI failes for about:/blob/data URIs
           console.warn("nsPrompter: isThirdPartyURI failed: " + e);
         }
       }
     } else {
-      args.promptPrincipal = this.browsingContext.window?.document.nodePrincipal;
+      args.promptPrincipal =
+        this.browsingContext.window?.document.nodePrincipal;
     }
     if (IS_CONTENT) {
       let docShell = this.browsingContext.docShell;
@@ -1163,7 +1164,8 @@ class ModalPrompter {
         windowUtils.enterModalState();
       }
     } else if (args.inPermitUnload) {
-      args.promptPrincipal = this.browsingContext.currentWindowGlobal.documentPrincipal;
+      args.promptPrincipal =
+        this.browsingContext.currentWindowGlobal.documentPrincipal;
     }
 
     // It is technically possible for multiple prompts to be sent from a single
@@ -1437,13 +1439,8 @@ class ModalPrompter {
       ...extraArgs,
     };
 
-    let [
-      label0,
-      label1,
-      label2,
-      defaultButtonNum,
-      isDelayEnabled,
-    ] = InternalPromptUtils.confirmExHelper(flags, button0, button1, button2);
+    let [label0, label1, label2, defaultButtonNum, isDelayEnabled] =
+      InternalPromptUtils.confirmExHelper(flags, button0, button1, button2);
 
     args.defaultButtonNum = defaultButtonNum;
     args.enableDelay = isDelayEnabled;

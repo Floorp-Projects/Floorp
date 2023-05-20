@@ -22,9 +22,8 @@ add_task(async function () {
   info("Opening a page with three frames, 4 loads should take place");
   await waitForLoadsInBrowser(tab.linkedBrowser, 4);
 
-  let browser_b = tab.linkedBrowser.contentDocument.getElementsByTagName(
-    "frame"
-  )[1];
+  let browser_b =
+    tab.linkedBrowser.contentDocument.getElementsByTagName("frame")[1];
   let document_b = browser_b.contentDocument;
   let links = document_b.getElementsByTagName("a");
 
@@ -57,9 +56,8 @@ add_task(async function () {
   await waitForLoadsInBrowser(newTab.linkedBrowser, 1);
 
   let expectedURLEnds = ["a.html", "b.html", "c1.html"];
-  let frames = newTab.linkedBrowser.contentDocument.getElementsByTagName(
-    "frame"
-  );
+  let frames =
+    newTab.linkedBrowser.contentDocument.getElementsByTagName("frame");
   for (let i = 0; i < frames.length; i++) {
     is(
       frames[i].contentDocument.location.href,

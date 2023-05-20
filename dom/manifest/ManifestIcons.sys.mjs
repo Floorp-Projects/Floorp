@@ -6,9 +6,8 @@ export var ManifestIcons = {
   async browserFetchIcon(aBrowser, manifest, iconSize) {
     const msgKey = "DOM:WebManifest:fetchIcon";
 
-    const actor = aBrowser.browsingContext.currentWindowGlobal.getActor(
-      "ManifestMessages"
-    );
+    const actor =
+      aBrowser.browsingContext.currentWindowGlobal.getActor("ManifestMessages");
     const reply = await actor.sendQuery(msgKey, { manifest, iconSize });
     if (!reply.success) {
       throw reply.result;

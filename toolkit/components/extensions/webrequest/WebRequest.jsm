@@ -867,9 +867,8 @@ HttpObserverManager = {
     };
 
     if (originAttributes) {
-      data.cookieStoreId = lazy.getCookieStoreIdForOriginAttributes(
-        originAttributes
-      );
+      data.cookieStoreId =
+        lazy.getCookieStoreIdForOriginAttributes(originAttributes);
     }
 
     return Object.assign(data, extraData);

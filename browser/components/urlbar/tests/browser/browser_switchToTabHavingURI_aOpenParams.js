@@ -208,7 +208,8 @@ function switchTab(aURI, aShouldFindExistingTab, aOpenParams = {}) {
     msg += "including";
   }
   msg += " query string.";
-  aOpenParams.triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+  aOpenParams.triggeringPrincipal =
+    Services.scriptSecurityManager.getSystemPrincipal();
   let tabFound = switchToTabHavingURI(aURI, true, aOpenParams);
   is(tabFound, aShouldFindExistingTab, msg);
 }

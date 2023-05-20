@@ -726,14 +726,12 @@ add_task(async function test_getKeyForScope_kb_migration() {
   Assert.deepEqual(newUser.scopedKeys, {
     "https://identity.mozilla.com/apps/oldsync": {
       kid: "1234567890123-IqQv4onc7VcVE1kTQkyyOw",
-      k:
-        "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+      k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
       kty: "oct",
     },
     "sync:addon_storage": {
       kid: "1234567890123-pBOR6B6JulbJr3BxKVOqIU4Cq_WAjFp4ApLn5NRVARE",
-      k:
-        "ut7VPrNYfXkA5gTopo2GCr-d4wtclV08TV26Y_Jv2IJlzYWSP26dzRau87gryIA5qJxZ7NnojeCadBjH2U-QyQ",
+      k: "ut7VPrNYfXkA5gTopo2GCr-d4wtclV08TV26Y_Jv2IJlzYWSP26dzRau87gryIA5qJxZ7NnojeCadBjH2U-QyQ",
       kty: "oct",
     },
   });
@@ -909,8 +907,7 @@ add_task(async function test_getKeyForScope_oldsync() {
   Assert.deepEqual(key, {
     scope: SCOPE_OLD_SYNC,
     kid: "1510726317123-IqQv4onc7VcVE1kTQkyyOw",
-    k:
-      "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+    k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
     kty: "oct",
   });
 });

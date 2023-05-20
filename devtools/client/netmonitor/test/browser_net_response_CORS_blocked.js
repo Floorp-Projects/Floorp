@@ -24,15 +24,17 @@ add_task(async function testCORSNotificationPresent() {
 
   info("making request to a origin that doesn't allow cross origin");
   const requestUrl = HTTPS_EXAMPLE_ORG_URL + "sjs_simple-test-server.sjs";
-  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function (
-    url
-  ) {
-    content.wrappedJSObject.performRequests(
-      url,
-      "triggering/preflight",
-      "post-data"
-    );
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [requestUrl],
+    async function (url) {
+      content.wrappedJSObject.performRequests(
+        url,
+        "triggering/preflight",
+        "post-data"
+      );
+    }
+  );
 
   info("Waiting until the requests appear in netmonitor");
   await wait;
@@ -80,15 +82,17 @@ add_task(async function testCORSNotificationNotPresent() {
 
   info("Making request to a origin that allows cross origin");
   const requestUrl = "https://test1.example.com" + CORS_SJS_PATH;
-  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function (
-    url
-  ) {
-    content.wrappedJSObject.performRequests(
-      url,
-      "triggering/preflight",
-      "post-data"
-    );
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [requestUrl],
+    async function (url) {
+      content.wrappedJSObject.performRequests(
+        url,
+        "triggering/preflight",
+        "post-data"
+      );
+    }
+  );
   info("waiting for requests to appear in netmonitor");
   await wait;
 

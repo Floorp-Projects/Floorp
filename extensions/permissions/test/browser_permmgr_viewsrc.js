@@ -1,9 +1,10 @@
 add_task(async function () {
   // Add a permission for example.com, start a new content process, and make
   // sure that the permission has been sent down.
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "https://example.com"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "https://example.com"
+    );
   Services.perms.addFromPrincipal(
     principal,
     "viewsourceTestingPerm",

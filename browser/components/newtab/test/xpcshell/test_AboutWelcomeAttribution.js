@@ -52,7 +52,7 @@ add_task(async function test_formatAttributionData() {
   const TEST_ADDON_INFO = {
     sourceURI: { scheme: "https", spec: "https://test.xpi" },
     name: "Test Add-on",
-    icons: { "64": "http://test.svg" },
+    icons: { 64: "http://test.svg" },
   };
   sandbox
     .stub(AttributionCode, "getAttrDataAsync")

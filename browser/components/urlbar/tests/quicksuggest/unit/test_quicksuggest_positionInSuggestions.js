@@ -102,13 +102,12 @@ const SECOND_POSITION_INTERVENTION_RESULT = new UrlbarResult(
   { url: "http://mozilla.org/a" }
 );
 SECOND_POSITION_INTERVENTION_RESULT.suggestedIndex = 1;
-const SECOND_POSITION_INTERVENTION_RESULT_PROVIDER = new UrlbarTestUtils.TestProvider(
-  {
+const SECOND_POSITION_INTERVENTION_RESULT_PROVIDER =
+  new UrlbarTestUtils.TestProvider({
     results: [SECOND_POSITION_INTERVENTION_RESULT],
     priority: 0,
     name: "second_position_intervention_provider",
-  }
-);
+  });
 
 const EXPECTED_GENERAL_HEURISTIC_RESULT = {
   providerName: UrlbarProviderHeuristicFallback.name,

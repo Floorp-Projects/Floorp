@@ -212,9 +212,8 @@ function displayNetworkID() {
     let networkID = gNetLinkSvc.networkID;
 
     document.getElementById("networkid_isUp").innerText = linkIsUp;
-    document.getElementById(
-      "networkid_statusKnown"
-    ).innerText = linkStatusKnown;
+    document.getElementById("networkid_statusKnown").innerText =
+      linkStatusKnown;
     document.getElementById("networkid_id").innerText = networkID;
   } catch (e) {
     document.getElementById("networkid_isUp").innerText = "<unknown>";

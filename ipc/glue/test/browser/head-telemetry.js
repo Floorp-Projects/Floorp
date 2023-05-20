@@ -69,8 +69,10 @@ async function waitForKeyedScalars(process) {
 async function waitForValue(process, codecNames, extra = "") {
   await ContentTaskUtils.waitForCondition(
     () => {
-      const telemetry = Telemetry.getSnapshotForKeyedScalars("main", false)
-        .content;
+      const telemetry = Telemetry.getSnapshotForKeyedScalars(
+        "main",
+        false
+      ).content;
       if (telemetry && MEDIA_AUDIO_PROCESS in telemetry) {
         const keyProcMimeTypes = Object.keys(telemetry[MEDIA_AUDIO_PROCESS]);
         const found = codecNames.every(item =>

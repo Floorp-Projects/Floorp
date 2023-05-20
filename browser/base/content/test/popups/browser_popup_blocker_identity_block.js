@@ -142,8 +142,11 @@ add_task(async function check_permission_state_change() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
 
   // Initially the permission state is BLOCK for popups (set by the prefs).
-  let state = SitePermissions.getForPrincipal(PRINCIPAL, "popup", gBrowser)
-    .state;
+  let state = SitePermissions.getForPrincipal(
+    PRINCIPAL,
+    "popup",
+    gBrowser
+  ).state;
   Assert.equal(state, SitePermissions.BLOCK);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {

@@ -235,9 +235,8 @@ export var DownloadsViewUI = {
     // Hide the "Go To Download Page" item if there's no referrer. Ideally the
     // Downloads API will require a referrer (see bug 1723712) to create a
     // download, but this fallback will ensure any failures aren't user facing.
-    contextMenu.querySelector(
-      ".downloadOpenReferrerMenuItem"
-    ).hidden = !download.source.referrerInfo?.originalReferrer;
+    contextMenu.querySelector(".downloadOpenReferrerMenuItem").hidden =
+      !download.source.referrerInfo?.originalReferrer;
 
     // Hide the "use system viewer" and "always use system viewer" items
     // if the feature is disabled or this download doesn't support it:
@@ -321,10 +320,11 @@ export var DownloadsViewUI = {
     //
     let filename = PathUtils.filename(download.target.path);
 
-    let isExemptExecutableExtension = Services.policies.isExemptExecutableExtension(
-      download.source.originalUrl || download.source.url,
-      filename?.split(".").at(-1)
-    );
+    let isExemptExecutableExtension =
+      Services.policies.isExemptExecutableExtension(
+        download.source.originalUrl || download.source.url,
+        filename?.split(".").at(-1)
+      );
 
     let shouldNotRememberChoice =
       !mimeInfo?.type ||
@@ -633,13 +633,8 @@ DownloadsViewUI.DownloadElementShell.prototype = {
    *        One of the presets defined in gDownloadElementButtons.
    */
   showButton(type) {
-    let {
-      commandName,
-      l10nId,
-      descriptionL10nId,
-      panelL10nId,
-      iconClass,
-    } = gDownloadElementButtons[type];
+    let { commandName, l10nId, descriptionL10nId, panelL10nId, iconClass } =
+      gDownloadElementButtons[type];
 
     this.buttonCommandName = commandName;
     let stringId = this.isPanel ? panelL10nId : l10nId;
@@ -713,15 +708,13 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       let totalBytes = this.download.hasProgress
         ? this.download.totalBytes
         : -1;
-      let [
-        status,
-        newEstimatedSecondsLeft,
-      ] = lazy.DownloadUtils.getDownloadStatus(
-        this.download.currentBytes,
-        totalBytes,
-        this.download.speed,
-        this.lastEstimatedSecondsLeft
-      );
+      let [status, newEstimatedSecondsLeft] =
+        lazy.DownloadUtils.getDownloadStatus(
+          this.download.currentBytes,
+          totalBytes,
+          this.download.speed,
+          this.lastEstimatedSecondsLeft
+        );
       this.lastEstimatedSecondsLeft = newEstimatedSecondsLeft;
 
       if (

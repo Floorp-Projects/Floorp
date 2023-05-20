@@ -199,9 +199,8 @@ define(function (require, exports, module) {
         const value = entry && entry.value !== undefined ? entry.value : entry;
         // Type is specified in grip's "class" field and for primitive
         // values use typeof.
-        const type = (value && value.class
-          ? value.class
-          : typeof value
+        const type = (
+          value && value.class ? value.class : typeof value
         ).toLowerCase();
 
         if (filter(type, value, key)) {

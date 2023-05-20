@@ -135,9 +135,8 @@ add_task(async function test_change_title_from_Toolbar() {
         "editBMPanel_namePicker"
       );
 
-      let editBookmarkDialogTitle = dialogWin.document.getElementById(
-        "titleText"
-      );
+      let editBookmarkDialogTitle =
+        dialogWin.document.getElementById("titleText");
       let bundle = dialogWin.document.getElementById("stringBundle");
 
       Assert.equal(

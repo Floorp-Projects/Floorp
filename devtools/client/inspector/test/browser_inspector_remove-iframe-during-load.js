@@ -73,9 +73,11 @@ add_task(async function () {
 });
 
 function contentPageHasNode(browser, selector) {
-  return SpecialPowers.spawn(browser, [selector], async function (
-    selectorChild
-  ) {
-    return !!content.document.querySelector(selectorChild);
-  });
+  return SpecialPowers.spawn(
+    browser,
+    [selector],
+    async function (selectorChild) {
+      return !!content.document.querySelector(selectorChild);
+    }
+  );
 }

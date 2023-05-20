@@ -93,13 +93,8 @@ class SidebarRuntimeItem extends PureComponent {
   }
 
   renderName() {
-    const {
-      deviceName,
-      getString,
-      isUnavailable,
-      isUnplugged,
-      name,
-    } = this.props;
+    const { deviceName, getString, isUnavailable, isUnplugged, name } =
+      this.props;
 
     let displayName, qaClassName;
     if (isUnplugged) {

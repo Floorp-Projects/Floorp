@@ -250,14 +250,8 @@ export class TopSiteLink extends React.PureComponent {
   }
 
   render() {
-    const {
-      children,
-      className,
-      isDraggable,
-      link,
-      onClick,
-      title,
-    } = this.props;
+    const { children, className, isDraggable, link, onClick, title } =
+      this.props;
     const topSiteOuterClassName = `top-site-outer${
       className ? ` ${className}` : ""
     }${link.isDragged ? " dragged" : ""}${
@@ -726,8 +720,8 @@ export class _TopSiteList extends React.PureComponent {
                 site: {
                   url: this.state.draggedSite.url,
                   label: this.state.draggedTitle,
-                  customScreenshotURL: this.state.draggedSite
-                    .customScreenshotURL,
+                  customScreenshotURL:
+                    this.state.draggedSite.customScreenshotURL,
                   // Only if the search topsites experiment is enabled
                   ...(this.state.draggedSite.searchTopSite && {
                     searchTopSite: true,

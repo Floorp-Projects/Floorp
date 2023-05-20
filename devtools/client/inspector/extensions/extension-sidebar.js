@@ -81,9 +81,10 @@ class ExtensionSidebar {
           },
           serviceContainer: {
             highlightDomElement: async (grip, options = {}) => {
-              const nodeFront = await this.inspector.inspectorFront.getNodeFrontFromNodeGrip(
-                grip
-              );
+              const nodeFront =
+                await this.inspector.inspectorFront.getNodeFrontFromNodeGrip(
+                  grip
+                );
               return this.inspector.highlighters.showHighlighterTypeForNode(
                 this.inspector.highlighters.TYPES.BOXMODEL,
                 nodeFront,
@@ -96,18 +97,16 @@ class ExtensionSidebar {
               );
             },
             openNodeInInspector: async grip => {
-              const nodeFront = await this.inspector.inspectorFront.getNodeFrontFromNodeGrip(
-                grip
-              );
-              const onInspectorUpdated = this.inspector.once(
-                "inspector-updated"
-              );
-              const onNodeFrontSet = this.inspector.toolbox.selection.setNodeFront(
-                nodeFront,
-                {
+              const nodeFront =
+                await this.inspector.inspectorFront.getNodeFrontFromNodeGrip(
+                  grip
+                );
+              const onInspectorUpdated =
+                this.inspector.once("inspector-updated");
+              const onNodeFrontSet =
+                this.inspector.toolbox.selection.setNodeFront(nodeFront, {
                   reason: "inspector-extension-sidebar",
-                }
-              );
+                });
 
               return Promise.all([onNodeFrontSet, onInspectorUpdated]);
             },

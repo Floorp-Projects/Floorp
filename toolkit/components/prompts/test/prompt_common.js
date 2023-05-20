@@ -85,9 +85,8 @@ async function runPromptCombinations(window, testFunc) {
 class PromptTestUtil {
   constructor(window) {
     this.window = window;
-    this.browsingContext = SpecialPowers.wrap(
-      window
-    ).windowGlobalChild.browsingContext;
+    this.browsingContext =
+      SpecialPowers.wrap(window).windowGlobalChild.browsingContext;
     this.promptService = SpecialPowers.Services.prompt;
     this.nsPrompt = Cc["@mozilla.org/prompter;1"]
       .getService(Ci.nsIPromptFactory)

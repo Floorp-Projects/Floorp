@@ -94,13 +94,8 @@ class WasmRemap {
   eachMapping(callback, context, order) {
     this._map.eachMapping(
       entry => {
-        const {
-          source,
-          generatedColumn,
-          originalLine,
-          originalColumn,
-          name,
-        } = entry;
+        const { source, generatedColumn, originalLine, originalColumn, name } =
+          entry;
         callback({
           source,
           generatedLine: generatedColumn,

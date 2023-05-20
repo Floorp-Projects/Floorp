@@ -62,9 +62,8 @@ export class PdfSandbox {
         sandbox
       );
 
-      this.support.commFun = sandbox.pdfjsScripting.wrappedJSObject.initSandbox(
-        sandboxInit
-      );
+      this.support.commFun =
+        sandbox.pdfjsScripting.wrappedJSObject.initSandbox(sandboxInit);
     } catch (error) {
       // error belongs to the sandbox so create a new one
       const msg = error.message;

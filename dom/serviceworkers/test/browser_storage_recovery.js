@@ -136,12 +136,14 @@ add_task(async function wiped_and_failed_update_check() {
   // Also, since the existing service worker's scripts are broken
   // we should also remove the registration completely when the
   // update fails.
-  let exists = await SpecialPowers.spawn(browser, [SCOPE], async function (
-    uri
-  ) {
-    let reg = await content.navigator.serviceWorker.getRegistration(uri);
-    return !!reg;
-  });
+  let exists = await SpecialPowers.spawn(
+    browser,
+    [SCOPE],
+    async function (uri) {
+      let reg = await content.navigator.serviceWorker.getRegistration(uri);
+      return !!reg;
+    }
+  );
   ok(
     !exists,
     "registration should be removed after scripts are wiped and update fails"

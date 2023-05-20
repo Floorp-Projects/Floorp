@@ -647,14 +647,14 @@ async function test_captiveportal_canonicalURL() {
     setModeAndURI(2, "doh?responseIP=2.2.2.2");
 
     const cpServer = new HttpServer();
-    cpServer.registerPathHandler("/cp", function handleRawData(
-      request,
-      response
-    ) {
-      response.setHeader("Content-Type", "text/plain", false);
-      response.setHeader("Cache-Control", "no-cache", false);
-      response.bodyOutputStream.write("data", 4);
-    });
+    cpServer.registerPathHandler(
+      "/cp",
+      function handleRawData(request, response) {
+        response.setHeader("Content-Type", "text/plain", false);
+        response.setHeader("Cache-Control", "no-cache", false);
+        response.bodyOutputStream.write("data", 4);
+      }
+    );
     cpServer.start(-1);
     cpServer.identity.setPrimary(
       "http",
@@ -773,14 +773,14 @@ async function test25e() {
   setModeAndURI(3, "doh?responseIP=192.192.192.192");
 
   const cpServer = new HttpServer();
-  cpServer.registerPathHandler("/cp", function handleRawData(
-    request,
-    response
-  ) {
-    response.setHeader("Content-Type", "text/plain", false);
-    response.setHeader("Cache-Control", "no-cache", false);
-    response.bodyOutputStream.write("data", 4);
-  });
+  cpServer.registerPathHandler(
+    "/cp",
+    function handleRawData(request, response) {
+      response.setHeader("Content-Type", "text/plain", false);
+      response.setHeader("Cache-Control", "no-cache", false);
+      response.bodyOutputStream.write("data", 4);
+    }
+  );
   cpServer.start(-1);
   cpServer.identity.setPrimary(
     "http",

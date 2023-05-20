@@ -30,12 +30,14 @@ let whitelist = [
     platforms: ["windows"],
   },
   {
-    sourceName: /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua)\.css$/i,
+    sourceName:
+      /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua)\.css$/i,
     errorMessage: /Unknown pseudo-class.*-moz-/i,
     isFromDevTools: false,
   },
   {
-    sourceName: /\b(scrollbars|xul|html|mathml|ua|forms|svg|manageDialog|autocomplete-item-shared|formautofill)\.css$/i,
+    sourceName:
+      /\b(scrollbars|xul|html|mathml|ua|forms|svg|manageDialog|autocomplete-item-shared|formautofill)\.css$/i,
     errorMessage: /Unknown property.*-moz-/i,
     isFromDevTools: false,
   },
@@ -62,7 +64,8 @@ let whitelist = [
   // PDF.js uses a property that is currently only supported in chrome.
   {
     sourceName: /web\/viewer\.css$/i,
-    errorMessage: /Unknown property ‘text-size-adjust’\. {2}Declaration dropped\./i,
+    errorMessage:
+      /Unknown property ‘text-size-adjust’\. {2}Declaration dropped\./i,
     isFromDevTools: false,
   },
   {
@@ -120,7 +123,8 @@ if (!Services.prefs.getBoolPref("layout.css.forced-color-adjust.enabled")) {
   // PDF.js uses a property that is currently not enabled.
   whitelist.push({
     sourceName: /web\/viewer\.css$/i,
-    errorMessage: /Unknown property ‘forced-color-adjust’\. {2}Declaration dropped\./i,
+    errorMessage:
+      /Unknown property ‘forced-color-adjust’\. {2}Declaration dropped\./i,
     isFromDevTools: false,
   });
 }

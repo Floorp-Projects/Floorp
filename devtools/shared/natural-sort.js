@@ -14,7 +14,8 @@
 
 "use strict";
 
-const tokenizeNumbersRx = /(^([+\-]?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?(?=\D|\s|$))|^0x[\da-fA-F]+$|\d+)/g;
+const tokenizeNumbersRx =
+  /(^([+\-]?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?(?=\D|\s|$))|^0x[\da-fA-F]+$|\d+)/g;
 const hexRx = /^0x[0-9a-f]+$/i;
 const startsWithNullRx = /^\0/;
 const endsWithNullRx = /\0$/;

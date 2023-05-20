@@ -192,9 +192,8 @@ export class AboutProtectionsParent extends JSWindowActorParent {
     // if the Primary Password isn't locked.
     if (userFacingLogins && Services.logins.isLoggedIn) {
       const logins = await lazy.LoginHelper.getAllUserFacingLogins();
-      potentiallyBreachedLogins = await lazy.LoginBreaches.getPotentialBreachesByLoginGUID(
-        logins
-      );
+      potentiallyBreachedLogins =
+        await lazy.LoginBreaches.getPotentialBreachesByLoginGUID(logins);
     }
 
     let mobileDeviceConnected =
@@ -385,7 +384,8 @@ export class AboutProtectionsParent extends JSWindowActorParent {
           return dataToSend;
         }
         let sumEvents = await lazy.TrackingDBService.sumAllEvents();
-        let earliestDate = await lazy.TrackingDBService.getEarliestRecordedDate();
+        let earliestDate =
+          await lazy.TrackingDBService.getEarliestRecordedDate();
         let eventsByDate = await lazy.TrackingDBService.getEventsByDateRange(
           aMessage.data.from,
           aMessage.data.to

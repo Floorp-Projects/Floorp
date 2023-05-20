@@ -32,7 +32,8 @@ function backgroundWithDNRAPICallHandlers() {
         result = await browser.declarativeNetRequest.getEnabledRulesets();
         break;
       case "getAvailableStaticRuleCount":
-        result = await browser.declarativeNetRequest.getAvailableStaticRuleCount();
+        result =
+          await browser.declarativeNetRequest.getAvailableStaticRuleCount();
         break;
       case "testMatchOutcome":
         result = await browser.declarativeNetRequest
@@ -576,7 +577,8 @@ add_task(async function test_ruleset_validation() {
       expected: [
         // Validation error emitted from the manifest schema validation.
         {
-          message: /rule_resources\.0\.id: String "_invalid_ruleset_id" must match/,
+          message:
+            /rule_resources\.0\.id: String "_invalid_ruleset_id" must match/,
         },
       ],
     },
@@ -612,7 +614,8 @@ add_task(async function test_ruleset_validation() {
       expectInstallFailed: false,
       expected: [
         {
-          message: /declarative_net_request: Static ruleset ids should be unique.*: "ruleset_2" at index 1, "ruleset_3" at index 3/,
+          message:
+            /declarative_net_request: Static ruleset ids should be unique.*: "ruleset_2" at index 1, "ruleset_3" at index 3/,
         },
       ],
     },
@@ -666,7 +669,8 @@ add_task(async function test_ruleset_validation() {
       expectInstallFailed: false,
       expected: [
         {
-          message: /declarative_net_request: Static rulesets paths are not unique.*: ".*ruleset_2.json" at index 1/,
+          message:
+            /declarative_net_request: Static rulesets paths are not unique.*: ".*ruleset_2.json" at index 1/,
         },
       ],
     },
@@ -700,10 +704,12 @@ add_task(async function test_ruleset_validation() {
       expectInstallFailed: false,
       expected: [
         {
-          message: /declarative_net_request.unexpected_prop: An unexpected property was found/,
+          message:
+            /declarative_net_request.unexpected_prop: An unexpected property was found/,
         },
         {
-          message: /rule_resources.0.unexpected_prop: An unexpected property was found/,
+          message:
+            /rule_resources.0.unexpected_prop: An unexpected property was found/,
         },
       ],
     },
@@ -723,7 +729,8 @@ add_task(async function test_ruleset_validation() {
       expectInstallFailed: false,
       expected: [
         {
-          message: /Reading declarative_net_request .*invalid_ruleset_with_comments\.json: JSON.parse: unexpected character/,
+          message:
+            /Reading declarative_net_request .*invalid_ruleset_with_comments\.json: JSON.parse: unexpected character/,
         },
       ],
     },
@@ -742,7 +749,8 @@ add_task(async function test_ruleset_validation() {
       expectInstallFailed: false,
       expected: [
         {
-          message: /Reading declarative_net_request .*invalid_ruleset_emptystring\.json: rules file must contain an Array/,
+          message:
+            /Reading declarative_net_request .*invalid_ruleset_emptystring\.json: rules file must contain an Array/,
         },
       ],
     },
@@ -761,7 +769,8 @@ add_task(async function test_ruleset_validation() {
       expectInstallFailed: false,
       expected: [
         {
-          message: /Reading declarative_net_request .*invalid_ruleset_object\.json: rules file must contain an Array/,
+          message:
+            /Reading declarative_net_request .*invalid_ruleset_object\.json: rules file must contain an Array/,
         },
       ],
     },
@@ -780,7 +789,8 @@ add_task(async function test_ruleset_validation() {
       expectInstallFailed: false,
       expected: [
         {
-          message: /Reading declarative_net_request .*invalid_ruleset_null\.json: rules file must contain an Array/,
+          message:
+            /Reading declarative_net_request .*invalid_ruleset_null\.json: rules file must contain an Array/,
         },
       ],
     },
@@ -1253,15 +1263,18 @@ add_task(async function test_static_rulesets_limits() {
     expected: [
       // Warnings emitted from the manifest schema validation.
       {
-        message: /declarative_net_request: Static rulesets are exceeding the MAX_NUMBER_OF_STATIC_RULESETS limit/,
+        message:
+          /declarative_net_request: Static rulesets are exceeding the MAX_NUMBER_OF_STATIC_RULESETS limit/,
       },
       {
-        message: /declarative_net_request: Enabled static rulesets are exceeding the MAX_NUMBER_OF_ENABLED_STATIC_RULESETS limit .* "ruleset_10"/,
+        message:
+          /declarative_net_request: Enabled static rulesets are exceeding the MAX_NUMBER_OF_ENABLED_STATIC_RULESETS limit .* "ruleset_10"/,
       },
       // Error reported on the browser console as part of loading enabled rulesets)
       // on enabled rulesets being ignored because exceeding the limit.
       {
-        message: /Ignoring enabled static ruleset exceeding the MAX_NUMBER_OF_ENABLED_STATIC_RULESETS .* "ruleset_10"/,
+        message:
+          /Ignoring enabled static ruleset exceeding the MAX_NUMBER_OF_ENABLED_STATIC_RULESETS .* "ruleset_10"/,
       },
     ],
   });
@@ -1406,10 +1419,12 @@ add_task(async function test_tabId_conditions_invalid_in_static_rules() {
   AddonTestUtils.checkMessages(messages, {
     expected: [
       {
-        message: /"ruleset1_with_tabId_condition": tabIds and excludedTabIds can only be specified in session rules/,
+        message:
+          /"ruleset1_with_tabId_condition": tabIds and excludedTabIds can only be specified in session rules/,
       },
       {
-        message: /"ruleset2_with_excludeTabId_condition": tabIds and excludedTabIds can only be specified in session rules/,
+        message:
+          /"ruleset2_with_excludeTabId_condition": tabIds and excludedTabIds can only be specified in session rules/,
       },
     ],
   });

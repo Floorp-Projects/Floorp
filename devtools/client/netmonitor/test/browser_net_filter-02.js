@@ -25,12 +25,11 @@ const REQUESTS_WITH_MEDIA_AND_FLASH = REQUESTS_WITH_MEDIA.concat([
   { url: "sjs_content-type-test-server.sjs?fmt=flash" },
 ]);
 
-const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.concat(
-  [
+const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS =
+  REQUESTS_WITH_MEDIA_AND_FLASH.concat([
     /* "Upgrade" is a reserved header and can not be set on XMLHttpRequest */
     { url: "sjs_content-type-test-server.sjs?fmt=ws" },
-  ]
-);
+  ]);
 
 const EXPECTED_REQUESTS = [
   {
@@ -152,11 +151,8 @@ add_task(async function () {
 
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  const {
-    getDisplayedRequests,
-    getSelectedRequest,
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  const { getDisplayedRequests, getSelectedRequest, getSortedRequests } =
+    windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
@@ -205,26 +201,7 @@ add_task(async function () {
   info("Testing html filtering again.");
   testFilterButtons(monitor, "html");
   await testContents([
-    1,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
+    1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
   ]);
 
   info("Performing more requests.");
@@ -235,36 +212,8 @@ add_task(async function () {
   info("Testing html filtering again.");
   testFilterButtons(monitor, "html");
   await testContents([
-    1,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    1,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
+    1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0,
+    0, 0, 0, 0, 0,
   ]);
 
   info("Resetting filters.");
@@ -274,36 +223,8 @@ add_task(async function () {
   );
   testFilterButtons(monitor, "all");
   await testContents([
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
   ]);
 
   await teardown(monitor);

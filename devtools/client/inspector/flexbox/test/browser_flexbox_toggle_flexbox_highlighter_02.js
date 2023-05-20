@@ -14,10 +14,8 @@ add_task(async function () {
   const { document: doc } = flexboxInspector;
   const { store } = inspector;
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
-  const {
-    getActiveHighlighter,
-    getNodeForActiveHighlighter,
-  } = getHighlighterTestHelpers(inspector);
+  const { getActiveHighlighter, getNodeForActiveHighlighter } =
+    getHighlighterTestHelpers(inspector);
 
   const onFlexHighlighterToggleRendered = waitForDOM(
     doc,

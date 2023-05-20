@@ -487,15 +487,13 @@ BookmarkImporter.prototype = {
     } else {
       let addDate = aElt.getAttribute("add_date");
       if (addDate) {
-        frame.previousDateAdded = this._convertImportedDateToInternalDate(
-          addDate
-        );
+        frame.previousDateAdded =
+          this._convertImportedDateToInternalDate(addDate);
       }
       let modDate = aElt.getAttribute("last_modified");
       if (modDate) {
-        frame.previousLastModifiedDate = this._convertImportedDateToInternalDate(
-          modDate
-        );
+        frame.previousLastModifiedDate =
+          this._convertImportedDateToInternalDate(modDate);
       }
     }
     this._curFrame.previousText = "";
@@ -543,9 +541,8 @@ BookmarkImporter.prototype = {
     }
     // Save bookmark's last modified date.
     if (lastModified) {
-      bookmark.lastModified = this._convertImportedDateToInternalDate(
-        lastModified
-      );
+      bookmark.lastModified =
+        this._convertImportedDateToInternalDate(lastModified);
     }
 
     if (!dateAdded && lastModified) {
@@ -708,18 +705,17 @@ BookmarkImporter.prototype = {
   /**
    * Converts a string date in seconds to a date object
    */
-  _convertImportedDateToInternalDate: function convertImportedDateToInternalDate(
-    aDate
-  ) {
-    try {
-      if (aDate && !isNaN(aDate)) {
-        return new Date(parseInt(aDate) * 1000); // in bookmarks.html this value is in seconds
+  _convertImportedDateToInternalDate:
+    function convertImportedDateToInternalDate(aDate) {
+      try {
+        if (aDate && !isNaN(aDate)) {
+          return new Date(parseInt(aDate) * 1000); // in bookmarks.html this value is in seconds
+        }
+      } catch (ex) {
+        // Do nothing.
       }
-    } catch (ex) {
-      // Do nothing.
-    }
-    return new Date();
-  },
+      return new Date();
+    },
 
   _walkTreeForImport(aDoc) {
     if (!aDoc) {
@@ -1138,9 +1134,12 @@ function fetchData(href) {
     xhr.onload = () => {
       resolve(xhr.responseXML);
     };
-    xhr.onabort = xhr.onerror = xhr.ontimeout = () => {
-      reject(new Error("xmlhttprequest failed"));
-    };
+    xhr.onabort =
+      xhr.onerror =
+      xhr.ontimeout =
+        () => {
+          reject(new Error("xmlhttprequest failed"));
+        };
     xhr.open("GET", href);
     xhr.responseType = "document";
     xhr.overrideMimeType("text/html");

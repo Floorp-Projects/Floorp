@@ -62,7 +62,8 @@ function test_generate_xpath() {
   info("Test generate xpath for input with id has single and double quote");
   let inputWithIdSingleDoubleQuote = doc.getElementsByTagName("input")[3];
   inputWithIdSingleDoubleQuote.setAttribute("id", "\"input'4");
-  let inputWithIdXPathSingleDoubleQuote = inputWithIdSingleDoubleQuote.generateXPath();
+  let inputWithIdXPathSingleDoubleQuote =
+    inputWithIdSingleDoubleQuote.generateXPath();
   let inputWithIdExpXPathSingleDoubleQuote =
     "//xhtml:input[@id=concat('\"input',\"'\",'4')]";
   equal(

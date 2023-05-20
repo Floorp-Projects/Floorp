@@ -20,10 +20,8 @@ const { LoginHelper } = SpecialPowers.ChromeUtils.importESModule(
   "resource://gre/modules/LoginHelper.sys.mjs"
 );
 
-const {
-  LENGTH: GENERATED_PASSWORD_LENGTH,
-  REGEX: GENERATED_PASSWORD_REGEX,
-} = LoginTestUtils.generation;
+const { LENGTH: GENERATED_PASSWORD_LENGTH, REGEX: GENERATED_PASSWORD_REGEX } =
+  LoginTestUtils.generation;
 const LOGIN_FIELD_UTILS = LoginTestUtils.loginField;
 const TESTS_DIR = "/tests/toolkit/components/passwordmgr/test/";
 
@@ -332,12 +330,10 @@ function checkLoginFormInFrame(
       passwordFieldIdF,
       expectedPasswordF
     ) => {
-      let usernameField = this.content.document.getElementById(
-        usernameFieldIdF
-      );
-      let passwordField = this.content.document.getElementById(
-        passwordFieldIdF
-      );
+      let usernameField =
+        this.content.document.getElementById(usernameFieldIdF);
+      let passwordField =
+        this.content.document.getElementById(passwordFieldIdF);
 
       let formID = usernameField.parentNode.id;
       Assert.equal(
@@ -696,22 +692,23 @@ async function loadFormIntoWindow(origin, html, win, task) {
   info(`Waiting for window to load for origin: ${origin}`);
   await loadedPromise;
 
-  await SpecialPowers.spawn(win, [html, task?.toString()], function (
-    contentHtml,
-    contentTask = null
-  ) {
-    // eslint-disable-next-line no-unsanitized/property
-    this.content.document.documentElement.innerHTML = contentHtml;
-    // Similar to the invokeContentTask helper in accessible/tests/browser/shared-head.js
-    if (contentTask) {
-      // eslint-disable-next-line no-eval
-      const runnableTask = eval(`
+  await SpecialPowers.spawn(
+    win,
+    [html, task?.toString()],
+    function (contentHtml, contentTask = null) {
+      // eslint-disable-next-line no-unsanitized/property
+      this.content.document.documentElement.innerHTML = contentHtml;
+      // Similar to the invokeContentTask helper in accessible/tests/browser/shared-head.js
+      if (contentTask) {
+        // eslint-disable-next-line no-eval
+        const runnableTask = eval(`
       (() => {
         return (${contentTask});
       })();`);
-      runnableTask.call(this);
+        runnableTask.call(this);
+      }
     }
-  });
+  );
 
   info("Waiting for the form to be processed");
   await processedPromise;

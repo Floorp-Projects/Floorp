@@ -359,11 +359,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       }
 
       // Recurse and fill the child.
-      let [
-        childResults,
-        childUsedLimits,
-        childHasMoreResults,
-      ] = this._fillGroup(child, childLimits, state);
+      let [childResults, childUsedLimits, childHasMoreResults] =
+        this._fillGroup(child, childLimits, state);
       results = results.concat(childResults);
       for (let key of Object.keys(usedLimits)) {
         usedLimits[key] += childUsedLimits[key];
@@ -896,9 +893,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         state.context.searchMode.engineName
       );
       if (engine) {
-        let searchModeRootDomain = lazy.UrlbarSearchUtils.getRootDomainFromEngine(
-          engine
-        );
+        let searchModeRootDomain =
+          lazy.UrlbarSearchUtils.getRootDomainFromEngine(engine);
         let resultUrl = new URL(result.payload.url);
         // Add a trailing "." to increase the stringency of the check. This
         // check covers most general cases. Some edge cases are not covered,

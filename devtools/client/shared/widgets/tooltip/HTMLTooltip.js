@@ -560,10 +560,8 @@ HTMLTooltip.prototype = {
       if (this.preferredHeight === "auto") {
         this.container.style.height = "auto";
       }
-      ({
-        width: preferredWidth,
-        height: measuredHeight,
-      } = this._measureContainerSize());
+      ({ width: preferredWidth, height: measuredHeight } =
+        this._measureContainerSize());
     } else {
       const themeWidth = 2 * EXTRA_BORDER[this.type];
       preferredWidth = this.preferredWidth + themeWidth;
@@ -703,12 +701,8 @@ HTMLTooltip.prototype = {
       // etc...)
       // availWidth/Height are the dimensions available to applications
       // excluding all the OS reserved space
-      const {
-        availLeft,
-        availTop,
-        availHeight,
-        availWidth,
-      } = this.doc.defaultView.screen;
+      const { availLeft, availTop, availHeight, availWidth } =
+        this.doc.defaultView.screen;
       viewportRect = {
         top: availTop,
         right: availLeft + availWidth,
@@ -718,12 +712,8 @@ HTMLTooltip.prototype = {
         height: availHeight,
       };
 
-      const {
-        screenX,
-        screenY,
-        outerWidth,
-        outerHeight,
-      } = this.doc.defaultView;
+      const { screenX, screenY, outerWidth, outerHeight } =
+        this.doc.defaultView;
       windowRect = {
         top: screenY,
         right: screenX + outerWidth,
@@ -752,7 +742,8 @@ HTMLTooltip.prototype = {
         viewportRect.width += diffWidth;
       }
     } else {
-      viewportRect = windowRect = this.doc.documentElement.getBoundingClientRect();
+      viewportRect = windowRect =
+        this.doc.documentElement.getBoundingClientRect();
     }
 
     return { viewportRect, windowRect };

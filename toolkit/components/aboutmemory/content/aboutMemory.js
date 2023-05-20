@@ -311,27 +311,29 @@ window.onload = function () {
   });
 
   // Ditto.
-  let fileInput2 = appendHiddenFileInput(header, "fileInput2", function (
-    aElem
-  ) {
-    let file = this.files[0];
-    // First time around, we stash a copy of the filename and reinvoke.  Second
-    // time around we do the diff and display.
-    if (!this.filename1) {
-      this.filename1 = file.mozFullPath;
+  let fileInput2 = appendHiddenFileInput(
+    header,
+    "fileInput2",
+    function (aElem) {
+      let file = this.files[0];
+      // First time around, we stash a copy of the filename and reinvoke.  Second
+      // time around we do the diff and display.
+      if (!this.filename1) {
+        this.filename1 = file.mozFullPath;
 
-      // aElem.skipClick is only true when testing -- it allows fileInput2's
-      // onchange handler to be re-called without having to go via the file
-      // picker.
-      if (!aElem.skipClick) {
-        this.click();
+        // aElem.skipClick is only true when testing -- it allows fileInput2's
+        // onchange handler to be re-called without having to go via the file
+        // picker.
+        if (!aElem.skipClick) {
+          this.click();
+        }
+      } else {
+        let filename1 = this.filename1;
+        delete this.filename1;
+        updateAboutMemoryFromTwoFiles(filename1, file.mozFullPath);
       }
-    } else {
-      let filename1 = this.filename1;
-      delete this.filename1;
-      updateAboutMemoryFromTwoFiles(filename1, file.mozFullPath);
     }
-  });
+  );
 
   const CuDesc = "Measure current memory reports and show.";
   const LdDesc = "Load memory reports from file and show.";

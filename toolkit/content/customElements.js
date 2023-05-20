@@ -364,9 +364,8 @@
 
         for (let [selector, newAttr] of list) {
           if (!(selector in this._inheritedElements)) {
-            this._inheritedElements[
-              selector
-            ] = this.getElementForAttrInheritance(selector);
+            this._inheritedElements[selector] =
+              this.getElementForAttrInheritance(selector);
           }
           let el = this._inheritedElements[selector];
           if (el) {
@@ -641,18 +640,17 @@
         cls.prototype.customInterfaces = ifaces;
 
         cls.prototype.QueryInterface = ChromeUtils.generateQI(ifaces);
-        cls.prototype.getCustomInterfaceCallback = function getCustomInterfaceCallback(
-          ifaceToCheck
-        ) {
-          if (
-            cls.prototype.customInterfaces.some(iface =>
-              iface.equals(ifaceToCheck)
-            )
-          ) {
-            return getInterfaceProxy(this);
-          }
-          return null;
-        };
+        cls.prototype.getCustomInterfaceCallback =
+          function getCustomInterfaceCallback(ifaceToCheck) {
+            if (
+              cls.prototype.customInterfaces.some(iface =>
+                iface.equals(ifaceToCheck)
+              )
+            ) {
+              return getInterfaceProxy(this);
+            }
+            return null;
+          };
       }
     };
 

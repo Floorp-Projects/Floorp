@@ -119,10 +119,8 @@ class WaterfallBackground {
       drawPixelAt(delta, color);
     }
 
-    const {
-      DOMCONTENTLOADED_TICKS_COLOR,
-      LOAD_TICKS_COLOR,
-    } = REQUESTS_WATERFALL;
+    const { DOMCONTENTLOADED_TICKS_COLOR, LOAD_TICKS_COLOR } =
+      REQUESTS_WATERFALL;
     drawTimestamp(
       state.timingMarkers.firstDocumentDOMContentLoadedTimestamp,
       this.getThemeColorAsRgba(DOMCONTENTLOADED_TICKS_COLOR, state.theme)

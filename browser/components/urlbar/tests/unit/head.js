@@ -8,12 +8,8 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-var {
-  UrlbarMuxer,
-  UrlbarProvider,
-  UrlbarQueryContext,
-  UrlbarUtils,
-} = ChromeUtils.importESModule("resource:///modules/UrlbarUtils.sys.mjs");
+var { UrlbarMuxer, UrlbarProvider, UrlbarQueryContext, UrlbarUtils } =
+  ChromeUtils.importESModule("resource:///modules/UrlbarUtils.sys.mjs");
 
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
@@ -796,7 +792,8 @@ function makeSearchResult(
   );
 
   if (typeof suggestion == "string") {
-    result.payload.lowerCaseSuggestion = result.payload.suggestion.toLocaleLowerCase();
+    result.payload.lowerCaseSuggestion =
+      result.payload.suggestion.toLocaleLowerCase();
     result.payload.trending = trending;
     result.payload.isRichSuggestion = isRichSuggestion;
   }

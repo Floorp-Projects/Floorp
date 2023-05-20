@@ -1025,10 +1025,8 @@ add_task(
     pref_set: [["extensions.eventPages.enabled", true]],
   },
   async function test_pending_sendNativeMessageReply_resets_bgscript_idle_timeout() {
-    const {
-      extension,
-      contextId,
-    } = await startupExtensionAndRequestPermission();
+    const { extension, contextId } =
+      await startupExtensionAndRequestPermission();
     await testSendNativeMessage({ extension, contextId });
     await waitForSubprocessExit();
     await extension.unload();
@@ -1040,10 +1038,8 @@ add_task(
     pref_set: [["extensions.eventPages.enabled", true]],
   },
   async function test_open_connectNativePort_resets_bgscript_idle_timeout() {
-    const {
-      extension,
-      contextId,
-    } = await startupExtensionAndRequestPermission();
+    const { extension, contextId } =
+      await startupExtensionAndRequestPermission();
     await testConnectNative({ extension, contextId });
     await waitForSubprocessExit();
     await extension.unload();

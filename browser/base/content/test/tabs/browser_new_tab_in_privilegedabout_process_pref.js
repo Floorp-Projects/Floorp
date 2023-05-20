@@ -118,109 +118,113 @@ add_task(async function process_switching_through_loading_in_the_same_tab() {
 add_task(async function process_switching_through_navigation_features() {
   Services.ppmm.releaseCachedProcesses();
 
-  await BrowserTestUtils.withNewTab(ABOUT_NEWTAB, async function (
-    initialBrowser
-  ) {
-    checkBrowserRemoteType(
-      initialBrowser,
-      E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE
-    );
-
-    // Note the processID for about:newtab for comparison later.
-    let privilegedPid = initialBrowser.frameLoader.remoteTab.osPid;
-
-    function assertIsPrivilegedProcess(browser, desc) {
-      is(
-        browser.messageManager.remoteType,
-        E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE,
-        `Check that ${desc} is loaded in privileged about: content process.`
+  await BrowserTestUtils.withNewTab(
+    ABOUT_NEWTAB,
+    async function (initialBrowser) {
+      checkBrowserRemoteType(
+        initialBrowser,
+        E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE
       );
+
+      // Note the processID for about:newtab for comparison later.
+      let privilegedPid = initialBrowser.frameLoader.remoteTab.osPid;
+
+      function assertIsPrivilegedProcess(browser, desc) {
+        is(
+          browser.messageManager.remoteType,
+          E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE,
+          `Check that ${desc} is loaded in privileged about: content process.`
+        );
+        is(
+          browser.frameLoader.remoteTab.osPid,
+          privilegedPid,
+          `Check that ${desc} is loaded in original privileged process.`
+        );
+      }
+
+      // Check that about:newtab opened from JS in about:newtab page is in the same process.
+      let promiseTabOpened = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        ABOUT_NEWTAB,
+        true
+      );
+      await SpecialPowers.spawn(initialBrowser, [ABOUT_NEWTAB], uri => {
+        content.open(uri, "_blank");
+      });
+      let newTab = await promiseTabOpened;
+      registerCleanupFunction(async function () {
+        BrowserTestUtils.removeTab(newTab);
+      });
+      let browser = newTab.linkedBrowser;
+      assertIsPrivilegedProcess(browser, "new tab opened from about:newtab");
+
+      // Check that reload does not break the privileged about: content process affinity.
+      BrowserReload();
+      await BrowserTestUtils.browserLoaded(browser, false, ABOUT_NEWTAB);
+      assertIsPrivilegedProcess(browser, "about:newtab after reload");
+
+      // Load http webpage
+      BrowserTestUtils.loadURIString(browser, TEST_HTTP);
+      await BrowserTestUtils.browserLoaded(browser, false, TEST_HTTP);
+      checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
+
+      // Check that using the history back feature switches back to privileged about: content process.
+      let promiseLocation = BrowserTestUtils.waitForLocationChange(
+        gBrowser,
+        ABOUT_NEWTAB
+      );
+      browser.goBack();
+      await promiseLocation;
+      // We will need to ensure that the process flip has fully completed so that
+      // the navigation history data will be available when we do browser.goForward();
+      await BrowserTestUtils.browserLoaded(browser);
+      assertIsPrivilegedProcess(browser, "about:newtab after history goBack");
+
+      // Check that using the history forward feature switches back to the web content process.
+      promiseLocation = BrowserTestUtils.waitForLocationChange(
+        gBrowser,
+        TEST_HTTP
+      );
+      browser.goForward();
+      await promiseLocation;
+      // We will need to ensure that the process flip has fully completed so that
+      // the navigation history data will be available when we do browser.gotoIndex(0);
+      await BrowserTestUtils.browserLoaded(browser);
+      checkBrowserRemoteType(
+        browser,
+        E10SUtils.WEB_REMOTE_TYPE,
+        "Check that tab runs in the web content process after using history goForward."
+      );
+
+      // Check that goto history index does not break the affinity.
+      promiseLocation = BrowserTestUtils.waitForLocationChange(
+        gBrowser,
+        ABOUT_NEWTAB
+      );
+      browser.gotoIndex(0);
+      await promiseLocation;
       is(
         browser.frameLoader.remoteTab.osPid,
         privilegedPid,
-        `Check that ${desc} is loaded in original privileged process.`
+        "Check that about:newtab is in privileged about: content process after history gotoIndex."
       );
+      assertIsPrivilegedProcess(
+        browser,
+        "about:newtab after history goToIndex"
+      );
+
+      BrowserTestUtils.loadURIString(browser, TEST_HTTP);
+      await BrowserTestUtils.browserLoaded(browser, false, TEST_HTTP);
+      checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
+
+      // Check that location change causes a change in process type as well.
+      await SpecialPowers.spawn(browser, [ABOUT_NEWTAB], uri => {
+        content.location = uri;
+      });
+      await BrowserTestUtils.browserLoaded(browser, false, ABOUT_NEWTAB);
+      assertIsPrivilegedProcess(browser, "about:newtab after location change");
     }
-
-    // Check that about:newtab opened from JS in about:newtab page is in the same process.
-    let promiseTabOpened = BrowserTestUtils.waitForNewTab(
-      gBrowser,
-      ABOUT_NEWTAB,
-      true
-    );
-    await SpecialPowers.spawn(initialBrowser, [ABOUT_NEWTAB], uri => {
-      content.open(uri, "_blank");
-    });
-    let newTab = await promiseTabOpened;
-    registerCleanupFunction(async function () {
-      BrowserTestUtils.removeTab(newTab);
-    });
-    let browser = newTab.linkedBrowser;
-    assertIsPrivilegedProcess(browser, "new tab opened from about:newtab");
-
-    // Check that reload does not break the privileged about: content process affinity.
-    BrowserReload();
-    await BrowserTestUtils.browserLoaded(browser, false, ABOUT_NEWTAB);
-    assertIsPrivilegedProcess(browser, "about:newtab after reload");
-
-    // Load http webpage
-    BrowserTestUtils.loadURIString(browser, TEST_HTTP);
-    await BrowserTestUtils.browserLoaded(browser, false, TEST_HTTP);
-    checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
-
-    // Check that using the history back feature switches back to privileged about: content process.
-    let promiseLocation = BrowserTestUtils.waitForLocationChange(
-      gBrowser,
-      ABOUT_NEWTAB
-    );
-    browser.goBack();
-    await promiseLocation;
-    // We will need to ensure that the process flip has fully completed so that
-    // the navigation history data will be available when we do browser.goForward();
-    await BrowserTestUtils.browserLoaded(browser);
-    assertIsPrivilegedProcess(browser, "about:newtab after history goBack");
-
-    // Check that using the history forward feature switches back to the web content process.
-    promiseLocation = BrowserTestUtils.waitForLocationChange(
-      gBrowser,
-      TEST_HTTP
-    );
-    browser.goForward();
-    await promiseLocation;
-    // We will need to ensure that the process flip has fully completed so that
-    // the navigation history data will be available when we do browser.gotoIndex(0);
-    await BrowserTestUtils.browserLoaded(browser);
-    checkBrowserRemoteType(
-      browser,
-      E10SUtils.WEB_REMOTE_TYPE,
-      "Check that tab runs in the web content process after using history goForward."
-    );
-
-    // Check that goto history index does not break the affinity.
-    promiseLocation = BrowserTestUtils.waitForLocationChange(
-      gBrowser,
-      ABOUT_NEWTAB
-    );
-    browser.gotoIndex(0);
-    await promiseLocation;
-    is(
-      browser.frameLoader.remoteTab.osPid,
-      privilegedPid,
-      "Check that about:newtab is in privileged about: content process after history gotoIndex."
-    );
-    assertIsPrivilegedProcess(browser, "about:newtab after history goToIndex");
-
-    BrowserTestUtils.loadURIString(browser, TEST_HTTP);
-    await BrowserTestUtils.browserLoaded(browser, false, TEST_HTTP);
-    checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
-
-    // Check that location change causes a change in process type as well.
-    await SpecialPowers.spawn(browser, [ABOUT_NEWTAB], uri => {
-      content.location = uri;
-    });
-    await BrowserTestUtils.browserLoaded(browser, false, ABOUT_NEWTAB);
-    assertIsPrivilegedProcess(browser, "about:newtab after location change");
-  });
+  );
 
   Services.ppmm.releaseCachedProcesses();
 });

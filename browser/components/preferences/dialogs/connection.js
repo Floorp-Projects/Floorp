@@ -152,12 +152,11 @@ var gConnectionsDialog = {
 
     this.updateReloadButton();
 
-    document.getElementById(
-      "networkProxyNoneLocalhost"
-    ).hidden = Services.prefs.getBoolPref(
-      "network.proxy.allow_hijacking_localhost",
-      false
-    );
+    document.getElementById("networkProxyNoneLocalhost").hidden =
+      Services.prefs.getBoolPref(
+        "network.proxy.allow_hijacking_localhost",
+        false
+      );
   },
 
   updateDNSPref() {

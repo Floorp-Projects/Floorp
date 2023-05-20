@@ -14,12 +14,10 @@ add_task(async function testUtilityActorNames() {
     browser => {
       const View = browser.contentWindow.View;
       const unknownActorName = "unknown";
-      const kDontExistFluentName = View.utilityActorNameToFluentName(
-        "i-dont-exist"
-      );
-      const unknownFluentName = View.utilityActorNameToFluentName(
-        unknownActorName
-      );
+      const kDontExistFluentName =
+        View.utilityActorNameToFluentName("i-dont-exist");
+      const unknownFluentName =
+        View.utilityActorNameToFluentName(unknownActorName);
 
       Assert.equal(
         unknownFluentName,

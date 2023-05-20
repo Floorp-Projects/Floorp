@@ -695,7 +695,8 @@ nsBrowserContentHandler.prototype = {
             // into account because that requires waiting for the session file
             // to be read. If a crash occurs after updating, before restarting,
             // we may open the startPage in addition to restoring the session.
-            willRestoreSession = lazy.SessionStartup.isAutomaticRestoreEnabled();
+            willRestoreSession =
+              lazy.SessionStartup.isAutomaticRestoreEnabled();
 
             overridePage = Services.urlFormatter.formatURLPref(
               "startup.homepage_override_url"
@@ -1058,10 +1059,8 @@ nsDefaultCommandLineHandler.prototype = {
         }
 
         async function handleNotification() {
-          const {
-            launchUrl,
-            privilegedName,
-          } = await alertService.handleWindowsTag(tag);
+          const { launchUrl, privilegedName } =
+            await alertService.handleWindowsTag(tag);
 
           // If `launchUrl` or `privilegedName` are provided, then the
           // notification was from a prior instance of the application and we

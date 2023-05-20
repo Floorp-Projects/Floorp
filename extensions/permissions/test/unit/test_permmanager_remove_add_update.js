@@ -24,9 +24,10 @@ add_task(async function test() {
   var pm = Services.perms;
   Assert.ok(pm.all.length === 0);
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "http://example.com"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "http://example.com"
+    );
 
   info("From session to persistent");
   pm.addFromPrincipal(

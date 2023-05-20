@@ -9,20 +9,7 @@
 const RESOLUTION_FACTOR_MIN = 0.96;
 const RESOLUTION_FACTOR_MAX = 1.04;
 const ZOOM_LEVELS = [
-  0.3,
-  0.5,
-  0.67,
-  0.8,
-  0.9,
-  1.0,
-  1.1,
-  1.2,
-  1.33,
-  1.5,
-  1.7,
-  2.0,
-  2.4,
-  3.0,
+  0.3, 0.5, 0.67, 0.8, 0.9, 1.0, 1.1, 1.2, 1.33, 1.5, 1.7, 2.0, 2.4, 3.0,
   // TODO(emilio): These should pass.
   // 0.3,
   // 3.0,

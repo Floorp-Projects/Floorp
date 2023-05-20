@@ -93,13 +93,9 @@ function checkDialogContents(win, notBefore, notAfter) {
     "correct number of items"
   );
 
-  let [
-    subject,
-    serialNum,
-    validity,
-    issuer,
-    tokenName,
-  ] = win.document.getElementById("details").value.split("\n");
+  let [subject, serialNum, validity, issuer, tokenName] = win.document
+    .getElementById("details")
+    .value.split("\n");
   is(
     subject,
     "Issued to: CN=Mochitest client",

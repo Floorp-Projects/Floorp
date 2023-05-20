@@ -467,9 +467,8 @@ class TelemetryFeed {
     }
 
     Object.keys(impressionSets).forEach(source => {
-      const { tiles, window_inner_width, window_inner_height } = impressionSets[
-        source
-      ];
+      const { tiles, window_inner_width, window_inner_height } =
+        impressionSets[source];
       const payload = this.createImpressionStats(port, {
         source,
         tiles,

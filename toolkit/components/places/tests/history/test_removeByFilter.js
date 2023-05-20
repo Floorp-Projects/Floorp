@@ -58,9 +58,8 @@ add_task(async function test_removeByFilter() {
     await checkBeforeRemove();
 
     // Take care of any observers (due to bookmarks)
-    let { placesEventListener, promiseObserved } = getObserverPromise(
-      bookmarkedUri
-    );
+    let { placesEventListener, promiseObserved } =
+      getObserverPromise(bookmarkedUri);
     if (placesEventListener) {
       PlacesObservers.addListener(
         ["page-title-changed", "history-cleared", "page-removed"],

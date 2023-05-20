@@ -268,10 +268,8 @@ add_task(async function testSameDocumentNavigation({ client }) {
 
   info("Check that Page.navigate can navigate to an anchor");
   const sameDocumentURL = `${PAGE_URL}#hash`;
-  const {
-    frameId: sameDocumentFrameId,
-    loaderId: sameDocumentLoaderId,
-  } = await Page.navigate({ url: sameDocumentURL });
+  const { frameId: sameDocumentFrameId, loaderId: sameDocumentLoaderId } =
+    await Page.navigate({ url: sameDocumentURL });
   ok(
     !sameDocumentLoaderId,
     "Page.navigate does not return a loaderId for same document navigation"
@@ -296,10 +294,8 @@ add_task(async function testSameDocumentNavigation({ client }) {
   );
 
   info("Check that navigating to the same hash URL does not timeout");
-  const {
-    frameId: sameHashFrameId,
-    loaderId: sameHashLoaderId,
-  } = await Page.navigate({ url: sameDocumentURL });
+  const { frameId: sameHashFrameId, loaderId: sameHashLoaderId } =
+    await Page.navigate({ url: sameDocumentURL });
   ok(
     !sameHashLoaderId,
     "Page.navigate does not return a loaderId for same document navigation"

@@ -29,16 +29,18 @@ add_setup(async function () {
 });
 
 async function testInstall(browser, args) {
-  let success = await SpecialPowers.spawn(browser, [{ args }], async function (
-    opts
-  ) {
-    let { args } = opts;
-    let install;
-    try {
-      install = await content.navigator.mozAddonManager.createInstall(args);
-    } catch (e) {}
-    return !!install;
-  });
+  let success = await SpecialPowers.spawn(
+    browser,
+    [{ args }],
+    async function (opts) {
+      let { args } = opts;
+      let install;
+      try {
+        install = await content.navigator.mozAddonManager.createInstall(args);
+      } catch (e) {}
+      return !!install;
+    }
+  );
   is(success, false, "Install was blocked");
 }
 

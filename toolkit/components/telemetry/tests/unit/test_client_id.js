@@ -11,7 +11,8 @@ const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
 
 var drsPath;
 
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuidRegex =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function run_test() {
   do_get_profile();

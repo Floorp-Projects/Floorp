@@ -10,9 +10,8 @@ add_task(async function clicking_make_default_checks_alwaysCheck_checkbox() {
   await test_with_mock_shellservice({ isDefault: false }, async function () {
     let checkDefaultBrowserState = isDefault => {
       let isDefaultPane = content.document.getElementById("isDefaultPane");
-      let isNotDefaultPane = content.document.getElementById(
-        "isNotDefaultPane"
-      );
+      let isNotDefaultPane =
+        content.document.getElementById("isNotDefaultPane");
       Assert.equal(
         ContentTaskUtils.is_hidden(isDefaultPane),
         !isDefault,

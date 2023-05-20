@@ -1220,10 +1220,10 @@ this.downloads = class extends ExtensionAPIPersistent {
               }
 
               return new Promise((resolve, reject) => {
-                let chromeWebNav = Services.appShell.createWindowlessBrowser(
-                  true
-                );
-                let system = Services.scriptSecurityManager.getSystemPrincipal();
+                let chromeWebNav =
+                  Services.appShell.createWindowlessBrowser(true);
+                let system =
+                  Services.scriptSecurityManager.getSystemPrincipal();
                 chromeWebNav.docShell.createAboutBlankContentViewer(
                   system,
                   system

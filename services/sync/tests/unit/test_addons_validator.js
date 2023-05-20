@@ -56,12 +56,8 @@ add_task(async function test_valid() {
       return item.type != "plugin";
     },
   });
-  let {
-    problemData,
-    clientRecords,
-    records,
-    deletedRecords,
-  } = await validator.compareClientWithServer(client, server);
+  let { problemData, clientRecords, records, deletedRecords } =
+    await validator.compareClientWithServer(client, server);
   equal(clientRecords.length, 4);
   equal(records.length, 1);
   equal(deletedRecords.length, 0);

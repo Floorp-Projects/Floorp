@@ -317,8 +317,8 @@ add_task(async function () {
   });
 
   // Find last widget that doesn't allow overflowing
-  let nonOverflowing = CustomizableUI.getCustomizationTarget(navbar)
-    .lastElementChild;
+  let nonOverflowing =
+    CustomizableUI.getCustomizationTarget(navbar).lastElementChild;
   is(
     nonOverflowing.getAttribute("overflows"),
     "false",

@@ -137,9 +137,8 @@ SelectContentHelper.prototype = {
     // any styles.
     this._pseudoStylesSetup = true;
     InspectorUtils.addPseudoClassLock(this.element, ":focus");
-    let lockedDescendants = (this._lockedDescendants = this.element.querySelectorAll(
-      ":checked"
-    ));
+    let lockedDescendants = (this._lockedDescendants =
+      this.element.querySelectorAll(":checked"));
     for (let child of lockedDescendants) {
       // Selected options have the :checked pseudo-class, which
       // we want to disable before calculating the computed

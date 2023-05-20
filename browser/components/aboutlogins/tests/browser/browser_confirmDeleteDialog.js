@@ -23,9 +23,8 @@ add_task(async function test() {
       content.document.querySelector("confirmation-dialog")
     );
     let cancelButton = dialog.shadowRoot.querySelector(".cancel-button");
-    let confirmDeleteButton = dialog.shadowRoot.querySelector(
-      ".confirm-button"
-    );
+    let confirmDeleteButton =
+      dialog.shadowRoot.querySelector(".confirm-button");
     let dismissButton = dialog.shadowRoot.querySelector(".dismiss-button");
     let message = dialog.shadowRoot.querySelector(".message");
     let title = dialog.shadowRoot.querySelector(".title");

@@ -34,9 +34,10 @@ add_task(async function () {
           browser,
           [i],
           aIndex => {
-            content.wrappedJSObject.runner = content.wrappedJSObject.createIMEStateOnReadonlyChangeTester(
-              aIndex
-            );
+            content.wrappedJSObject.runner =
+              content.wrappedJSObject.createIMEStateOnReadonlyChangeTester(
+                aIndex
+              );
             return content.wrappedJSObject.runner.prepareToRun(
               aIndex,
               content.window,
@@ -45,23 +46,17 @@ add_task(async function () {
           }
         );
         tester.checkBeforeRun(expectedResultBefore, tipWrapper);
-        const expectedResultOfMakingTextControlReadonly = await SpecialPowers.spawn(
-          browser,
-          [],
-          () => {
+        const expectedResultOfMakingTextControlReadonly =
+          await SpecialPowers.spawn(browser, [], () => {
             return content.wrappedJSObject.runner.runToMakeTextControlReadonly();
-          }
-        );
+          });
         tester.checkResultOfMakingTextControlReadonly(
           expectedResultOfMakingTextControlReadonly
         );
-        const expectedResultOfMakingTextControlEditable = await SpecialPowers.spawn(
-          browser,
-          [],
-          () => {
+        const expectedResultOfMakingTextControlEditable =
+          await SpecialPowers.spawn(browser, [], () => {
             return content.wrappedJSObject.runner.runToMakeTextControlEditable();
-          }
-        );
+          });
         tester.checkResultOfMakingTextControlEditable(
           expectedResultOfMakingTextControlEditable
         );

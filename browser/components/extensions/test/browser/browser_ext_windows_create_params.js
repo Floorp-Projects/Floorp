@@ -115,7 +115,8 @@ add_task(async function testWindowCreateFocused() {
     {
       expected: [
         {
-          message: /Warning processing focused: Opening inactive windows is not supported/,
+          message:
+            /Warning processing focused: Opening inactive windows is not supported/,
         },
       ],
     },

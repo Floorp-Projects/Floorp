@@ -84,9 +84,8 @@ class App extends PureComponent {
     this.onChangePixelRatio = this.onChangePixelRatio.bind(this);
     this.onChangeTouchSimulation = this.onChangeTouchSimulation.bind(this);
     this.onChangeUserAgent = this.onChangeUserAgent.bind(this);
-    this.onChangeViewportOrientation = this.onChangeViewportOrientation.bind(
-      this
-    );
+    this.onChangeViewportOrientation =
+      this.onChangeViewportOrientation.bind(this);
     this.onDeviceListUpdate = this.onDeviceListUpdate.bind(this);
     this.onEditCustomDevice = this.onEditCustomDevice.bind(this);
     this.onExit = this.onExit.bind(this);
@@ -96,9 +95,8 @@ class App extends PureComponent {
     this.onRotateViewport = this.onRotateViewport.bind(this);
     this.onScreenshot = this.onScreenshot.bind(this);
     this.onToggleLeftAlignment = this.onToggleLeftAlignment.bind(this);
-    this.onToggleReloadOnTouchSimulation = this.onToggleReloadOnTouchSimulation.bind(
-      this
-    );
+    this.onToggleReloadOnTouchSimulation =
+      this.onToggleReloadOnTouchSimulation.bind(this);
     this.onToggleReloadOnUserAgent = this.onToggleReloadOnUserAgent.bind(this);
     this.onToggleUserAgentInput = this.onToggleUserAgentInput.bind(this);
     this.onUpdateDeviceDisplayed = this.onUpdateDeviceDisplayed.bind(this);

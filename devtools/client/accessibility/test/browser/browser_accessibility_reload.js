@@ -33,8 +33,7 @@ const TEST_URI_2 = `<html>
  */
 const tests = [
   {
-    desc:
-      "Test the initial accessibility tree state after first row is expanded.",
+    desc: "Test the initial accessibility tree state after first row is expanded.",
     setup: async ({ doc }) => toggleRow(doc, 0),
     expected: {
       tree: [

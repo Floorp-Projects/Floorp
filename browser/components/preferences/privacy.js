@@ -297,9 +297,8 @@ function dataCollectionCheckboxHandler({
 
 // Sets the "Learn how" SUMO link in the Strict/Custom options of Content Blocking.
 function setUpContentBlockingWarnings() {
-  document.getElementById(
-    "fpiIncompatibilityWarning"
-  ).hidden = !gIsFirstPartyIsolated;
+  document.getElementById("fpiIncompatibilityWarning").hidden =
+    !gIsFirstPartyIsolated;
 }
 
 function initTCPStandardSection() {
@@ -1014,9 +1013,8 @@ var gPrivacyPane = {
       "command",
       gPrivacyPane.showMicrophoneExceptions
     );
-    document.getElementById(
-      "speakerSettingsRow"
-    ).hidden = !Services.prefs.getBoolPref("media.setsinkid.enabled", false);
+    document.getElementById("speakerSettingsRow").hidden =
+      !Services.prefs.getBoolPref("media.setsinkid.enabled", false);
     setEventListener(
       "speakerSettingsButton",
       "command",
@@ -1590,8 +1588,9 @@ var gPrivacyPane = {
 
     let completelyBlockCookies =
       behavior == Ci.nsICookieService.BEHAVIOR_REJECT;
-    let privateBrowsing = Preferences.get("browser.privatebrowsing.autostart")
-      .value;
+    let privateBrowsing = Preferences.get(
+      "browser.privatebrowsing.autostart"
+    ).value;
     deleteOnCloseCheckbox.disabled = privateBrowsing || completelyBlockCookies;
     deleteOnCloseNote.hidden = !privateBrowsing;
 
@@ -2458,9 +2457,8 @@ var gPrivacyPane = {
    */
   _updateFirefoxSuggestSection(onInit = false) {
     // Show the best match checkbox container as appropriate.
-    document.getElementById(
-      "firefoxSuggestBestMatchContainer"
-    ).hidden = !UrlbarPrefs.get("bestMatchEnabled");
+    document.getElementById("firefoxSuggestBestMatchContainer").hidden =
+      !UrlbarPrefs.get("bestMatchEnabled");
 
     let container = document.getElementById("firefoxSuggestContainer");
 
@@ -2893,9 +2891,8 @@ var gPrivacyPane = {
   },
 
   _updateRelayIntegrationUI() {
-    document.getElementById(
-      "relayIntegrationBox"
-    ).hidden = !FirefoxRelay.isAvailable;
+    document.getElementById("relayIntegrationBox").hidden =
+      !FirefoxRelay.isAvailable;
     document.getElementById("relayIntegration").checked =
       FirefoxRelay.isEnabled;
   },

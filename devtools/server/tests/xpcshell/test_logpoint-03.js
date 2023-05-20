@@ -71,7 +71,7 @@ function evalCode(debuggee) {
   /* eslint-disable */
   Cu.evalInSandbox(
     "debugger;\n" + // 1
-    "var a = 'three';\n" + // 2
+      "var a = 'three';\n" + // 2
       "var b = 2;\n", // 3
     debuggee,
     "1.8",

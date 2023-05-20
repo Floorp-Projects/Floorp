@@ -391,9 +391,10 @@ PurgeTrackerService.prototype = {
         cookie.rawHost +
         ChromeUtils.originAttributesToSuffix(cookie.originAttributes);
       try {
-        httpPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-          origin
-        );
+        httpPrincipal =
+          Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            origin
+          );
       } catch (e) {
         lazy.logger.error(
           `Creating principal from origin ${origin} led to error ${e}.`
@@ -408,9 +409,10 @@ PurgeTrackerService.prototype = {
         cookie.rawHost +
         ChromeUtils.originAttributesToSuffix(cookie.originAttributes);
       try {
-        httpsPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-          origin
-        );
+        httpsPrincipal =
+          Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            origin
+          );
       } catch (e) {
         lazy.logger.error(
           `Creating principal from origin ${origin} led to error ${e}.`

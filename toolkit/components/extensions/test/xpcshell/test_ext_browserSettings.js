@@ -17,11 +17,8 @@ Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 const SETTINGS_ID = "test_settings_staged_restart_webext@tests.mozilla.org";
 
-const {
-  createAppInfo,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { createAppInfo, promiseShutdownManager, promiseStartupManager } =
+  AddonTestUtils;
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();

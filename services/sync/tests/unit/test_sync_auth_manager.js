@@ -7,11 +7,10 @@ const { AuthenticationError, SyncAuthManager } = ChromeUtils.importESModule(
 const { Resource } = ChromeUtils.importESModule(
   "resource://services-sync/resource.sys.mjs"
 );
-const {
-  initializeIdentityWithTokenServerResponse,
-} = ChromeUtils.importESModule(
-  "resource://testing-common/services/sync/fxa_utils.sys.mjs"
-);
+const { initializeIdentityWithTokenServerResponse } =
+  ChromeUtils.importESModule(
+    "resource://testing-common/services/sync/fxa_utils.sys.mjs"
+  );
 const { HawkClient } = ChromeUtils.importESModule(
   "resource://services-common/hawkclient.sys.mjs"
 );
@@ -32,12 +31,10 @@ const { Service } = ChromeUtils.importESModule(
 const { Status } = ChromeUtils.importESModule(
   "resource://services-sync/status.sys.mjs"
 );
-const {
-  TokenServerClient,
-  TokenServerClientServerError,
-} = ChromeUtils.importESModule(
-  "resource://services-common/tokenserverclient.sys.mjs"
-);
+const { TokenServerClient, TokenServerClientServerError } =
+  ChromeUtils.importESModule(
+    "resource://services-common/tokenserverclient.sys.mjs"
+  );
 const { AccountState } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccounts.sys.mjs"
 );
@@ -609,19 +606,18 @@ add_task(async function test_getKeysErrorWithBackoff() {
   delete config.fxaccount.user.kExtSync;
   delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
-  await initializeIdentityWithHAWKResponseFactory(config, function (
-    method,
-    data,
-    uri
-  ) {
-    Assert.equal(method, "get");
-    Assert.equal(uri, "http://mockedserver:9999/account/keys");
-    return {
-      status: 503,
-      headers: { "content-type": "application/json", "x-backoff": "100" },
-      body: "{}",
-    };
-  });
+  await initializeIdentityWithHAWKResponseFactory(
+    config,
+    function (method, data, uri) {
+      Assert.equal(method, "get");
+      Assert.equal(uri, "http://mockedserver:9999/account/keys");
+      return {
+        status: 503,
+        headers: { "content-type": "application/json", "x-backoff": "100" },
+        body: "{}",
+      };
+    }
+  );
 
   let syncAuthManager = Service.identity;
   await Assert.rejects(
@@ -652,19 +648,18 @@ add_task(async function test_getKeysErrorWithRetry() {
   delete config.fxaccount.user.kExtSync;
   delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
-  await initializeIdentityWithHAWKResponseFactory(config, function (
-    method,
-    data,
-    uri
-  ) {
-    Assert.equal(method, "get");
-    Assert.equal(uri, "http://mockedserver:9999/account/keys");
-    return {
-      status: 503,
-      headers: { "content-type": "application/json", "retry-after": "100" },
-      body: "{}",
-    };
-  });
+  await initializeIdentityWithHAWKResponseFactory(
+    config,
+    function (method, data, uri) {
+      Assert.equal(method, "get");
+      Assert.equal(uri, "http://mockedserver:9999/account/keys");
+      return {
+        status: 503,
+        headers: { "content-type": "application/json", "retry-after": "100" },
+        body: "{}",
+      };
+    }
+  );
 
   let syncAuthManager = Service.identity;
   await Assert.rejects(
@@ -684,26 +679,29 @@ add_task(async function test_getHAWKErrors() {
 
   _("Arrange for a 401 - Sync should reflect an auth error.");
   let config = makeIdentityConfig();
-  await initializeIdentityWithHAWKResponseFactory(config, function (
-    method,
-    data,
-    uri
-  ) {
-    if (uri == "http://mockedserver:9999/oauth/token") {
-      Assert.equal(method, "post");
+  await initializeIdentityWithHAWKResponseFactory(
+    config,
+    function (method, data, uri) {
+      if (uri == "http://mockedserver:9999/oauth/token") {
+        Assert.equal(method, "post");
+        return {
+          status: 401,
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            code: 401,
+            errno: 110,
+            error: "invalid token",
+          }),
+        };
+      }
+      // For any follow-up requests that check account status.
       return {
-        status: 401,
+        status: 200,
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ code: 401, errno: 110, error: "invalid token" }),
+        body: JSON.stringify({}),
       };
     }
-    // For any follow-up requests that check account status.
-    return {
-      status: 200,
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({}),
-    };
-  });
+  );
   Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED, "login was rejected");
 
   // XXX - other interesting responses to return?
@@ -713,19 +711,18 @@ add_task(async function test_getHAWKErrors() {
   _(
     "Arrange for an empty body with a 200 response - should reflect a network error."
   );
-  await initializeIdentityWithHAWKResponseFactory(config, function (
-    method,
-    data,
-    uri
-  ) {
-    Assert.equal(method, "post");
-    Assert.equal(uri, "http://mockedserver:9999/oauth/token");
-    return {
-      status: 200,
-      headers: [],
-      body: "",
-    };
-  });
+  await initializeIdentityWithHAWKResponseFactory(
+    config,
+    function (method, data, uri) {
+      Assert.equal(method, "post");
+      Assert.equal(uri, "http://mockedserver:9999/oauth/token");
+      return {
+        status: 200,
+        headers: [],
+        body: "",
+      };
+    }
+  );
   Assert.equal(
     Status.login,
     LOGIN_FAILED_NETWORK_ERROR,
@@ -745,19 +742,18 @@ add_task(async function test_getGetKeysFailing401() {
   delete config.fxaccount.user.kExtSync;
   delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
-  await initializeIdentityWithHAWKResponseFactory(config, function (
-    method,
-    data,
-    uri
-  ) {
-    Assert.equal(method, "get");
-    Assert.equal(uri, "http://mockedserver:9999/account/keys");
-    return {
-      status: 401,
-      headers: { "content-type": "application/json" },
-      body: "{}",
-    };
-  });
+  await initializeIdentityWithHAWKResponseFactory(
+    config,
+    function (method, data, uri) {
+      Assert.equal(method, "get");
+      Assert.equal(uri, "http://mockedserver:9999/account/keys");
+      return {
+        status: 401,
+        headers: { "content-type": "application/json" },
+        body: "{}",
+      };
+    }
+  );
   Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED, "login was rejected");
 });
 
@@ -773,19 +769,18 @@ add_task(async function test_getGetKeysFailing503() {
   delete config.fxaccount.user.kExtSync;
   delete config.fxaccount.user.kExtKbHash;
   config.fxaccount.user.keyFetchToken = "keyfetchtoken";
-  await initializeIdentityWithHAWKResponseFactory(config, function (
-    method,
-    data,
-    uri
-  ) {
-    Assert.equal(method, "get");
-    Assert.equal(uri, "http://mockedserver:9999/account/keys");
-    return {
-      status: 503,
-      headers: { "content-type": "application/json" },
-      body: "{}",
-    };
-  });
+  await initializeIdentityWithHAWKResponseFactory(
+    config,
+    function (method, data, uri) {
+      Assert.equal(method, "get");
+      Assert.equal(uri, "http://mockedserver:9999/account/keys");
+      return {
+        status: 503,
+        headers: { "content-type": "application/json" },
+        body: "{}",
+      };
+    }
+  );
   Assert.equal(
     Status.login,
     LOGIN_FAILED_NETWORK_ERROR,

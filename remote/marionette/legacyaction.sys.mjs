@@ -67,14 +67,8 @@ action.Chain = function () {
 action.Chain.prototype.createATouch = function (elem, x, y, touchId) {
   const doc = elem.ownerDocument;
   const win = doc.defaultView;
-  const [
-    clientX,
-    clientY,
-    pageX,
-    pageY,
-    screenX,
-    screenY,
-  ] = this.getCoordinateInfo(elem, x, y);
+  const [clientX, clientY, pageX, pageY, screenX, screenY] =
+    this.getCoordinateInfo(elem, x, y);
   const atouch = doc.createTouch(
     win,
     elem,

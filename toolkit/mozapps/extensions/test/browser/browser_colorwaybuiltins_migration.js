@@ -54,7 +54,7 @@ const createMockThemeManifest = (id, version) => ({
   name: `Mock theme ${id} ${version}`,
   author: "Mozilla",
   version,
-  icons: { "32": "icon.svg" },
+  icons: { 32: "icon.svg" },
   theme: {
     colors: {
       toolbar: "red",

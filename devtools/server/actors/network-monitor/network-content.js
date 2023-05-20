@@ -135,9 +135,8 @@ class NetworkContentActor extends Actor {
     if (!this.networkEventStackTraceWatcher) {
       throw new Error("Not listening for network event stacktraces");
     }
-    const stacktrace = this.networkEventStackTraceWatcher.getStackTrace(
-      resourceId
-    );
+    const stacktrace =
+      this.networkEventStackTraceWatcher.getStackTrace(resourceId);
     return WebConsoleUtils.removeFramesAboveDebuggerEval(stacktrace);
   }
 }

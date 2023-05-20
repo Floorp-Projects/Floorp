@@ -192,11 +192,13 @@ async function assignCookiesUnderFirstParty(aURL, aFirstParty, aCookieValue) {
   let tabInfo = await openTabInFirstParty(aURL, aFirstParty);
 
   // Add cookies into the iframe.
-  await SpecialPowers.spawn(tabInfo.browser, [aCookieValue], async function (
-    value
-  ) {
-    content.document.cookie = value + "; SameSite=None; Secure;";
-  });
+  await SpecialPowers.spawn(
+    tabInfo.browser,
+    [aCookieValue],
+    async function (value) {
+      content.document.cookie = value + "; SameSite=None; Secure;";
+    }
+  );
 
   BrowserTestUtils.removeTab(tabInfo.tab);
 }

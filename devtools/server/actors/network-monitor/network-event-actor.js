@@ -79,10 +79,8 @@ class NetworkEventActor extends Actor {
     this._isNavigationRequest = lazy.NetworkUtils.isNavigationRequest(channel);
 
     // Retrieve cookies and headers from the channel
-    const {
-      cookies,
-      headers,
-    } = lazy.NetworkUtils.fetchRequestHeadersAndCookies(channel);
+    const { cookies, headers } =
+      lazy.NetworkUtils.fetchRequestHeadersAndCookies(channel);
 
     this._request = {
       cookies,
@@ -127,9 +125,8 @@ class NetworkEventActor extends Actor {
     // Use the WebSocket channel URL for websockets.
     const url = wsChannel ? wsChannel.URI.spec : channel.URI.spec;
 
-    let browsingContextID = lazy.NetworkUtils.getChannelBrowsingContextID(
-      channel
-    );
+    let browsingContextID =
+      lazy.NetworkUtils.getChannelBrowsingContextID(channel);
 
     // Ensure that we have a browsing context ID for all requests.
     // Only privileged requests debugged via the Browser Toolbox (sessionContext.type == "all") can be unrelated to any browsing context.
@@ -191,9 +188,8 @@ class NetworkEventActor extends Actor {
       fromServiceWorker: networkEventOptions.fromServiceWorker,
       innerWindowId: this._innerWindowId,
       isNavigationRequest: this._isNavigationRequest,
-      isThirdPartyTrackingResource: lazy.NetworkUtils.isThirdPartyTrackingResource(
-        channel
-      ),
+      isThirdPartyTrackingResource:
+        lazy.NetworkUtils.isThirdPartyTrackingResource(channel),
       isXHR,
       method: channel.requestMethod,
       priority: lazy.NetworkUtils.getChannelPriority(channel),
@@ -449,10 +445,8 @@ class NetworkEventActor extends Actor {
     let responseHeaders = [];
     let responseCookies = [];
     if (!this._blockedReason) {
-      const {
-        cookies,
-        headers,
-      } = lazy.NetworkUtils.fetchResponseHeadersAndCookies(channel);
+      const { cookies, headers } =
+        lazy.NetworkUtils.fetchResponseHeadersAndCookies(channel);
       responseCookies = cookies;
       responseHeaders = headers;
     }

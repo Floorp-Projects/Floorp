@@ -25,7 +25,7 @@ async function createWebExtension(details) {
   };
 
   if (details.iconURL) {
-    options.manifest.icons = { "64": details.iconURL };
+    options.manifest.icons = { 64: details.iconURL };
   }
 
   let xpi = AddonTestUtils.createTempWebExtensionFile(options);
@@ -235,9 +235,8 @@ add_task(async function test_sideloading() {
 
   // Test incognito checkbox in post install notification
   function setupPostInstallNotificationTest() {
-    let promiseNotificationShown = promiseAppMenuNotificationShown(
-      "addon-installed"
-    );
+    let promiseNotificationShown =
+      promiseAppMenuNotificationShown("addon-installed");
     return async function (addon) {
       info(`Expect post install notification for "${addon.name}"`);
       let postInstallPanel = await promiseNotificationShown;

@@ -233,13 +233,13 @@ add_task(async function testEndlessUpgradeDowngrade() {
   let content = "okok";
   httpserv.start(-1);
   let port = httpserv.identity.primaryPort;
-  httpserv.registerPathHandler(`/redirect_to_http`, function handler(
-    metadata,
-    response
-  ) {
-    response.setHeader("Content-Length", `${content.length}`);
-    response.bodyOutputStream.write(content, content.length);
-  });
+  httpserv.registerPathHandler(
+    `/redirect_to_http`,
+    function handler(metadata, response) {
+      response.setHeader("Content-Length", `${content.length}`);
+      response.bodyOutputStream.write(content, content.length);
+    }
+  );
   httpserv.identity.setPrimary("http", "test.httpsrr.redirect.com", port);
 
   let chan = makeChan(

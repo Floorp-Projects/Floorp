@@ -173,9 +173,8 @@ TESTCASES.forEach(testcase => {
 
       // Put the input element reference to `element` to make sure the result of
       // `activeFieldDetail` contains the same input element.
-      testcase.expectedResult[i].input.elementWeakRef = Cu.getWeakReference(
-        input
-      );
+      testcase.expectedResult[i].input.elementWeakRef =
+        Cu.getWeakReference(input);
 
       inputDetailAssertion(
         FormAutofillContent.activeFieldDetail,

@@ -507,11 +507,12 @@ SelectorAutocompleter.prototype = {
       query += "*";
     }
 
-    let suggestions = await this.inspector.commands.inspectorCommand.getSuggestionsForQuery(
-      query,
-      firstPart,
-      state
-    );
+    let suggestions =
+      await this.inspector.commands.inspectorCommand.getSuggestionsForQuery(
+        query,
+        firstPart,
+        state
+      );
 
     if (state === this.States.CLASS) {
       firstPart = "." + firstPart;

@@ -456,8 +456,8 @@ add_task(async function test_overflowable_toolbar() {
       let extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
         extensionIDs.at(-1)
       );
-      movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win)
-        .node;
+      movedNode =
+        CustomizableUI.getWidget(extensionWidgetID).forWindow(win).node;
       Assert.equal(movedNode.getAttribute("cui-areatype"), "toolbar");
 
       CustomizableUI.addWidgetToArea(
@@ -776,8 +776,8 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
         extensionIDs.at(-1)
       );
 
-      movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win)
-        .node;
+      movedNode =
+        CustomizableUI.getWidget(extensionWidgetID).forWindow(win).node;
 
       actionButton = movedNode.querySelector(
         ".unified-extensions-item-action-button"
@@ -1093,9 +1093,8 @@ add_task(async function test_overflow_with_a_second_window() {
 
       // This is the DOM node of the same CUI widget but in the maximized
       // window opened before.
-      aNodeInSecondWindow = CustomizableUI.getWidget(
-        extensionWidgetID
-      ).forWindow(secondWin).node;
+      aNodeInSecondWindow =
+        CustomizableUI.getWidget(extensionWidgetID).forWindow(secondWin).node;
 
       let actionButtonInSecondWindow = aNodeInSecondWindow.querySelector(
         ".unified-extensions-item-action-button"
@@ -1267,8 +1266,8 @@ add_task(async function test_overflow_with_extension_in_collapsed_area() {
         extensionIDs.at(-1)
       );
 
-      movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win)
-        .node;
+      movedNode =
+        CustomizableUI.getWidget(extensionWidgetID).forWindow(win).node;
 
       // Ensure that the toolbar is currently visible.
       await promiseSetToolbarVisibility(bookmarksToolbar, true);
@@ -1289,9 +1288,8 @@ add_task(async function test_overflow_with_extension_in_collapsed_area() {
         "expected node to not have any artificallyOverflowed prop"
       );
 
-      extensionWidgetPosition = CustomizableUI.getPlacementOfWidget(
-        extensionWidgetID
-      ).position;
+      extensionWidgetPosition =
+        CustomizableUI.getPlacementOfWidget(extensionWidgetID).position;
 
       // At this point we have an extension in the bookmarks toolbar, and this
       // toolbar is visible. We are going to resize the window (width) AND

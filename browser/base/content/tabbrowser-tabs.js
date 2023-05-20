@@ -280,9 +280,10 @@
           let visibleTabs = this._getVisibleTabs();
           let lastTab = visibleTabs[visibleTabs.length - 1];
           let winUtils = window.windowUtils;
-          let endOfTab = winUtils.getBoundsWithoutFlushing(lastTab)[
-            RTL_UI ? "left" : "right"
-          ];
+          let endOfTab =
+            winUtils.getBoundsWithoutFlushing(lastTab)[
+              RTL_UI ? "left" : "right"
+            ];
           if (
             (!RTL_UI && event.clientX > endOfTab) ||
             (RTL_UI && event.clientX < endOfTab)
@@ -818,9 +819,8 @@
         let newIndex = this._getDropIndex(event);
         let urls = links.map(link => link.url);
         let csp = browserDragAndDrop.getCsp(event);
-        let triggeringPrincipal = browserDragAndDrop.getTriggeringPrincipal(
-          event
-        );
+        let triggeringPrincipal =
+          browserDragAndDrop.getTriggeringPrincipal(event);
 
         (async () => {
           if (
@@ -1847,7 +1847,8 @@
       if (!this._backgroundTabScrollPromise) {
         this._backgroundTabScrollPromise = window
           .promiseDocumentFlushed(() => {
-            let lastTabRect = this._lastTabToScrollIntoView.getBoundingClientRect();
+            let lastTabRect =
+              this._lastTabToScrollIntoView.getBoundingClientRect();
             let selectedTab = this.selectedItem;
             if (selectedTab.pinned) {
               selectedTab = null;

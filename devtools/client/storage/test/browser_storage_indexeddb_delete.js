@@ -11,9 +11,8 @@ add_task(async function () {
     MAIN_DOMAIN_SECURED + "storage-empty-objectstores.html"
   );
 
-  const contextMenu = gPanelWindow.document.getElementById(
-    "storage-tree-popup"
-  );
+  const contextMenu =
+    gPanelWindow.document.getElementById("storage-tree-popup");
   const menuDeleteDb = contextMenu.querySelector("#storage-tree-popup-delete");
 
   info("test state before delete");

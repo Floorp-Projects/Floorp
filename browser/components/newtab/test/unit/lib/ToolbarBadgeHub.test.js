@@ -30,7 +30,8 @@ describe("ToolbarBadgeHub", () => {
     fakeAddImpression = sandbox.stub();
     fakeSendTelemetry = sandbox.stub();
     isBrowserPrivateStub = sandbox.stub();
-    const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
+    const onboardingMsgs =
+      await OnboardingMessageProvider.getUntranslatedMessages();
     fxaMessage = onboardingMsgs.find(({ id }) => id === "FXA_ACCOUNTS_BADGE");
     whatsnewMessage = {
       id: `WHATS_NEW_BADGE_71`,
@@ -381,11 +382,8 @@ describe("ToolbarBadgeHub", () => {
         sinon.match.func
       );
 
-      const [
-        ,
-        initFn,
-        uninitFn,
-      ] = everyWindowStub.registerCallback.firstCall.args;
+      const [, initFn, uninitFn] =
+        everyWindowStub.registerCallback.firstCall.args;
 
       initFn(window);
       // Test that it doesn't try to add a second notification

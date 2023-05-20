@@ -16,10 +16,8 @@ add_task(async function () {
   await toolbox.destroy();
 
   info("Testing the textbox context menu after reopening the toolbox");
-  const {
-    toolbox: newToolbox,
-    inspector: newInspector,
-  } = await openInspector();
+  const { toolbox: newToolbox, inspector: newInspector } =
+    await openInspector();
   await checkContextMenuOnSearchbox(newInspector, newToolbox);
 });
 

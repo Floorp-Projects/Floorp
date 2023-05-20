@@ -237,9 +237,8 @@ describe("<ImpressionStats>", () => {
     );
   });
   it("should unobserve the intersection observer when the wrapper is removed", () => {
-    const IntersectionObserver = buildIntersectionObserver(
-      ZeroIntersectEntries
-    );
+    const IntersectionObserver =
+      buildIntersectionObserver(ZeroIntersectEntries);
     const spy = sinon.spy(IntersectionObserver.prototype, "unobserve");
     const props = { dispatch: sinon.spy(), IntersectionObserver };
 

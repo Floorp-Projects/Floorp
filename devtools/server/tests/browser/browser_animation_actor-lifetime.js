@@ -67,9 +67,8 @@ add_task(async function () {
         // Convert actorID to current compartment string otherwise
         // searchAllConnectionsForActor is confused and won't find the actor.
         actorID = String(actorID);
-        const animationActors = DevToolsServer.searchAllConnectionsForActor(
-          actorID
-        );
+        const animationActors =
+          DevToolsServer.searchAllConnectionsForActor(actorID);
         if (!animationActors) {
           return 0;
         }

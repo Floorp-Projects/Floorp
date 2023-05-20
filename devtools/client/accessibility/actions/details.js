@@ -12,27 +12,29 @@ const {
  *
  * @param {Object} accessible front
  */
-exports.updateDetails = accessible => async ({ dispatch }) => {
-  const { walker: domWalker } = await accessible.targetFront.getFront(
-    "inspector"
-  );
-  // By the time getFront resolves, the accessibleFront may have been destroyed.
-  // This typically happens during navigations.
-  if (accessible.isDestroyed()) {
-    return;
-  }
-  try {
-    const response = await Promise.all([
-      domWalker.getNodeFromActor(accessible.actorID, [
-        "rawAccessible",
-        "DOMNode",
-      ]),
-      accessible.getRelations(),
-      accessible.audit(),
-      accessible.hydrate(),
-    ]);
-    dispatch({ accessible, type: UPDATE_DETAILS, response });
-  } catch (error) {
-    dispatch({ accessible, type: UPDATE_DETAILS, error });
-  }
-};
+exports.updateDetails =
+  accessible =>
+  async ({ dispatch }) => {
+    const { walker: domWalker } = await accessible.targetFront.getFront(
+      "inspector"
+    );
+    // By the time getFront resolves, the accessibleFront may have been destroyed.
+    // This typically happens during navigations.
+    if (accessible.isDestroyed()) {
+      return;
+    }
+    try {
+      const response = await Promise.all([
+        domWalker.getNodeFromActor(accessible.actorID, [
+          "rawAccessible",
+          "DOMNode",
+        ]),
+        accessible.getRelations(),
+        accessible.audit(),
+        accessible.hydrate(),
+      ]);
+      dispatch({ accessible, type: UPDATE_DETAILS, response });
+    } catch (error) {
+      dispatch({ accessible, type: UPDATE_DETAILS, error });
+    }
+  };

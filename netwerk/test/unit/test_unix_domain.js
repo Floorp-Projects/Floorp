@@ -399,9 +399,8 @@ function test_connect_permission() {
       dirName.permissions = allPermissions;
       socketName.permissions = 0;
 
-      let client2 = socketTransportService.createUnixDomainTransport(
-        socketName
-      );
+      let client2 =
+        socketTransportService.createUnixDomainTransport(socketName);
       let client2AsyncInput = client2
         .openInputStream(0, 0, 0)
         .QueryInterface(Ci.nsIAsyncInputStream);
@@ -421,9 +420,8 @@ function test_connect_permission() {
           // Now make everything accessible, and try one last time.
           socketName.permissions = allPermissions;
 
-          client3 = socketTransportService.createUnixDomainTransport(
-            socketName
-          );
+          client3 =
+            socketTransportService.createUnixDomainTransport(socketName);
 
           let client3Output = client3.openOutputStream(0, 0, 0);
           client3Output.write("Hanratty", 8);
@@ -670,9 +668,8 @@ function test_abstract_address_socket() {
     onStopListening: (aServ, aTransport) => {},
   });
 
-  let client = socketTransportService.createUnixDomainAbstractAddressTransport(
-    socketname
-  );
+  let client =
+    socketTransportService.createUnixDomainAbstractAddressTransport(socketname);
   Assert.equal(client.host, socketname);
   Assert.equal(client.port, 0);
   let clientInput = client

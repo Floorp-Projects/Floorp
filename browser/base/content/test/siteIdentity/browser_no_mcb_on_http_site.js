@@ -58,14 +58,16 @@ add_task(async function test1() {
     "Verifying MCB does not trigger warning/error for an http page ";
   expected += "with https css that includes http image";
 
-  await SpecialPowers.spawn(gTestBrowser, [expected], async function (
-    condition
-  ) {
-    await ContentTaskUtils.waitForCondition(
-      () => content.document.getElementById("testDiv").innerHTML == condition,
-      "Waited too long for status in Test 1!"
-    );
-  });
+  await SpecialPowers.spawn(
+    gTestBrowser,
+    [expected],
+    async function (condition) {
+      await ContentTaskUtils.waitForCondition(
+        () => content.document.getElementById("testDiv").innerHTML == condition,
+        "Waited too long for status in Test 1!"
+      );
+    }
+  );
 
   // Explicit OKs needed because the harness requires at least one call to ok.
   ok(true, "test 1 passed");
@@ -83,14 +85,16 @@ add_task(async function test2() {
     "Verifying MCB does not trigger warning/error for an http page ";
   expected += "with https css that includes http font";
 
-  await SpecialPowers.spawn(gTestBrowser, [expected], async function (
-    condition
-  ) {
-    await ContentTaskUtils.waitForCondition(
-      () => content.document.getElementById("testDiv").innerHTML == condition,
-      "Waited too long for status in Test 2!"
-    );
-  });
+  await SpecialPowers.spawn(
+    gTestBrowser,
+    [expected],
+    async function (condition) {
+      await ContentTaskUtils.waitForCondition(
+        () => content.document.getElementById("testDiv").innerHTML == condition,
+        "Waited too long for status in Test 2!"
+      );
+    }
+  );
 
   ok(true, "test 2 passed");
 
@@ -108,14 +112,16 @@ add_task(async function test3() {
   expected +=
     "with https css that imports another http css which includes http font";
 
-  await SpecialPowers.spawn(gTestBrowser, [expected], async function (
-    condition
-  ) {
-    await ContentTaskUtils.waitForCondition(
-      () => content.document.getElementById("testDiv").innerHTML == condition,
-      "Waited too long for status in Test 3!"
-    );
-  });
+  await SpecialPowers.spawn(
+    gTestBrowser,
+    [expected],
+    async function (condition) {
+      await ContentTaskUtils.waitForCondition(
+        () => content.document.getElementById("testDiv").innerHTML == condition,
+        "Waited too long for status in Test 3!"
+      );
+    }
+  );
 
   ok(true, "test3 passed");
 });

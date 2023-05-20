@@ -306,9 +306,8 @@ nsUnknownContentTypeDialog.prototype = {
 
       // Use file picker to show dialog.
       var nsIFilePicker = Ci.nsIFilePicker;
-      var picker = Cc["@mozilla.org/filepicker;1"].createInstance(
-        nsIFilePicker
-      );
+      var picker =
+        Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
       var windowTitle = bundle.GetStringFromName("saveDialogTitle");
       picker.init(parent, windowTitle, nsIFilePicker.modeSave);
       if (aDefaultFileName) {
@@ -535,10 +534,11 @@ nsUnknownContentTypeDialog.prototype = {
     var mimeType = this.mLauncher.MIMEInfo.MIMEType;
     let isPlain = mimeType == "text/plain";
 
-    this.isExemptExecutableExtension = Services.policies.isExemptExecutableExtension(
-      url.spec,
-      fname?.split(".").at(-1)
-    );
+    this.isExemptExecutableExtension =
+      Services.policies.isExemptExecutableExtension(
+        url.spec,
+        fname?.split(".").at(-1)
+      );
 
     var shouldntRememberChoice =
       mimeType == "application/octet-stream" ||
@@ -680,9 +680,10 @@ nsUnknownContentTypeDialog.prototype = {
         primaryExtension = mimeInfo.primaryExtension;
       } catch (ex) {}
       if (primaryExtension != "") {
-        typeString = this.dialogElement(
-          "strings"
-        ).getFormattedString("fileType", [primaryExtension.toUpperCase()]);
+        typeString = this.dialogElement("strings").getFormattedString(
+          "fileType",
+          [primaryExtension.toUpperCase()]
+        );
       }
       // 3. If we can't even do that, just give up and show the MIME type.
       else {
@@ -694,9 +695,10 @@ nsUnknownContentTypeDialog.prototype = {
       let [size, unit] = DownloadUtils.convertByteUnits(
         this.mLauncher.contentLength
       );
-      type.value = this.dialogElement(
-        "strings"
-      ).getFormattedString("orderedFileSizeWithType", [typeString, size, unit]);
+      type.value = this.dialogElement("strings").getFormattedString(
+        "orderedFileSizeWithType",
+        [typeString, size, unit]
+      );
     } else {
       type.value = typeString;
     }
@@ -730,9 +732,10 @@ nsUnknownContentTypeDialog.prototype = {
     // Use description, if we can get one.
     var desc = this.mLauncher.MIMEInfo.defaultDescription;
     if (desc) {
-      var defaultApp = this.dialogElement(
-        "strings"
-      ).getFormattedString("defaultApp", [desc]);
+      var defaultApp = this.dialogElement("strings").getFormattedString(
+        "defaultApp",
+        [desc]
+      );
       this.dialogElement("defaultHandler").label = defaultApp;
     } else {
       this.dialogElement("modeDeck").setAttribute("selectedIndex", "1");
@@ -774,9 +777,10 @@ nsUnknownContentTypeDialog.prototype = {
 
     // Fill in helper app info, if there is any.
     try {
-      this.chosenApp = this.mLauncher.MIMEInfo.preferredApplicationHandler.QueryInterface(
-        Ci.nsILocalHandlerApp
-      );
+      this.chosenApp =
+        this.mLauncher.MIMEInfo.preferredApplicationHandler.QueryInterface(
+          Ci.nsILocalHandlerApp
+        );
     } catch (e) {
       this.chosenApp = null;
     }
@@ -849,7 +853,8 @@ nsUnknownContentTypeDialog.prototype = {
       }
     }
 
-    otherHandler.nextSibling.hidden = otherHandler.nextSibling.nextSibling.hidden = false;
+    otherHandler.nextSibling.hidden =
+      otherHandler.nextSibling.nextSibling.hidden = false;
     this.updateOKButton();
   },
 
@@ -968,7 +973,8 @@ nsUnknownContentTypeDialog.prototype = {
         this.mLauncher.MIMEInfo.preferredAction !=
         this.nsIMIMEInfo.useSystemDefault;
       if (needUpdate) {
-        this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.useSystemDefault;
+        this.mLauncher.MIMEInfo.preferredAction =
+          this.nsIMIMEInfo.useSystemDefault;
       }
     } else if (this.useOtherHandler) {
       // For "open with", we need to check both preferred action and whether the user chose
@@ -987,7 +993,8 @@ nsUnknownContentTypeDialog.prototype = {
         this.mLauncher.MIMEInfo.preferredAction !=
         this.nsIMIMEInfo.handleInternally;
       if (needUpdate) {
-        this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.handleInternally;
+        this.mLauncher.MIMEInfo.preferredAction =
+          this.nsIMIMEInfo.handleInternally;
       }
     }
     // We will also need to update if the "always ask" flag has changed.
@@ -1005,9 +1012,8 @@ nsUnknownContentTypeDialog.prototype = {
     needUpdate = needUpdate || !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
 
     // Make sure mime info has updated setting for the "always ask" flag.
-    this.mLauncher.MIMEInfo.alwaysAskBeforeHandling = !this.dialogElement(
-      "rememberChoice"
-    ).checked;
+    this.mLauncher.MIMEInfo.alwaysAskBeforeHandling =
+      !this.dialogElement("rememberChoice").checked;
 
     return needUpdate && !discardUpdate;
   },
@@ -1069,9 +1075,8 @@ nsUnknownContentTypeDialog.prototype = {
       if (this.dialogElement("save").selected) {
         // see @notify
         // we cannot use opener's setTimeout, see bug 420405
-        this._saveToDiskTimer = Cc["@mozilla.org/timer;1"].createInstance(
-          nsITimer
-        );
+        this._saveToDiskTimer =
+          Cc["@mozilla.org/timer;1"].createInstance(nsITimer);
         this._saveToDiskTimer.initWithCallback(this, 0, nsITimer.TYPE_ONE_SHOT);
       } else {
         let uri = this.mLauncher.source;
@@ -1206,9 +1211,10 @@ nsUnknownContentTypeDialog.prototype = {
         // If there is none, use the extension to
         // identify the file, e.g. "ZIP file"
         if (fileExtension) {
-          typeString = this.dialogElement(
-            "strings"
-          ).getFormattedString("fileType", [fileExtension.toUpperCase()]);
+          typeString = this.dialogElement("strings").getFormattedString(
+            "fileType",
+            [fileExtension.toUpperCase()]
+          );
         } else {
           // If we can't even do that, just give up and show the MIME type.
           typeString = this.mLauncher.MIMEInfo.MIMEType;

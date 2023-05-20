@@ -43,9 +43,8 @@ class MenuList extends PureComponent {
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onMouseOverOrFocus = this.onMouseOverOrFocus.bind(this);
     this.onMouseOutOrBlur = this.onMouseOutOrBlur.bind(this);
-    this.notifyHighlightedChildChange = this.notifyHighlightedChildChange.bind(
-      this
-    );
+    this.notifyHighlightedChildChange =
+      this.notifyHighlightedChildChange.bind(this);
 
     this.setWrapperRef = element => {
       this.wrapperRef = element;

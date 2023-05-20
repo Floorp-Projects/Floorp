@@ -86,12 +86,8 @@ async function setViewportSizeWithInputKeys(ui) {
 }
 
 async function doInitialChecks(ui, expectedInnerWidth) {
-  const {
-    innerWidth,
-    matchesMedia,
-    outerHeight,
-    outerWidth,
-  } = await grabContentInfo(ui);
+  const { innerWidth, matchesMedia, outerHeight, outerWidth } =
+    await grabContentInfo(ui);
   is(innerWidth, expectedInnerWidth, "inner width should be as expected");
   is(outerWidth, 110, "device's outerWidth should be 110px");
   is(outerHeight, 500, "device's outerHeight should be 500px");

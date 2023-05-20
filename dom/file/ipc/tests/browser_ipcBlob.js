@@ -169,19 +169,21 @@ add_task(async function test_CtoPtoC_bc_small() {
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
   let browser2 = gBrowser.getBrowserForTab(tab2);
 
-  let status = await SpecialPowers.spawn(browser2, [blobURL], function (
-    blobURL
-  ) {
-    return new Promise(resolve => {
-      var xhr = new content.XMLHttpRequest();
-      xhr.open("GET", blobURL);
-      xhr.onloadend = function () {
-        resolve(xhr.response == "hello world!");
-      };
+  let status = await SpecialPowers.spawn(
+    browser2,
+    [blobURL],
+    function (blobURL) {
+      return new Promise(resolve => {
+        var xhr = new content.XMLHttpRequest();
+        xhr.open("GET", blobURL);
+        xhr.onloadend = function () {
+          resolve(xhr.response == "hello world!");
+        };
 
-      xhr.send();
-    });
-  });
+        xhr.send();
+      });
+    }
+  );
 
   ok(status, "CtoPtoC-blobURL: Data match!");
 

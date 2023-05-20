@@ -14,11 +14,8 @@ add_task(async function () {
     ".longhand",
     ".negative-delay",
   ]);
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
 
   info(
     "Set the scroll amount of animation and animated property to the bottom"

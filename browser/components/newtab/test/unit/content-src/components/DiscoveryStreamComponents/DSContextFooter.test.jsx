@@ -112,9 +112,8 @@ describe("<DSContextFooter>", () => {
     );
     assert.isTrue(bookmarkStatusMessage.exists());
 
-    const { fluentID: removeBookmarkFluentID } = cardContextTypes[
-      removeBookmarkBadge
-    ];
+    const { fluentID: removeBookmarkFluentID } =
+      cardContextTypes[removeBookmarkBadge];
 
     wrapper.setProps({ context_type: removeBookmarkBadge });
     await wrapper.update();

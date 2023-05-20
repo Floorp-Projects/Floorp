@@ -262,11 +262,8 @@ const mapStateToProps = state => {
   };
 };
 
-const {
-  setBreakpointOptions,
-  openConditionalPanel,
-  closeConditionalPanel,
-} = actions;
+const { setBreakpointOptions, openConditionalPanel, closeConditionalPanel } =
+  actions;
 
 const mapDispatchToProps = {
   setBreakpointOptions,

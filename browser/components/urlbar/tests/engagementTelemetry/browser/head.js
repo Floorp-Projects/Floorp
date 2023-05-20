@@ -407,8 +407,7 @@ async function setup() {
   });
 
   const engine = await SearchTestUtils.promiseNewSearchEngine({
-    url:
-      "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/searchSuggestionEngine.xml",
+    url: "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/searchSuggestionEngine.xml",
   });
   const originalDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(

@@ -1723,9 +1723,8 @@ function* testSteps() {
     );
   }
 
-  index.mozGetAll(
-    data[weightSort[0]].weight
-  ).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAll(data[weightSort[0]].weight).onsuccess =
+    grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1774,9 +1773,8 @@ function* testSteps() {
     is(event.target.result[i], data[weightSort[i]].ssn, "Got correct value");
   }
 
-  index.mozGetAllKeys(
-    data[weightSort[0]].weight
-  ).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAllKeys(data[weightSort[0]].weight).onsuccess =
+    grabEventAndContinueHandler;
   event = yield undefined;
 
   is(event.target.result instanceof Array, true, "Got an array");

@@ -11,12 +11,8 @@ let gHandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
 let gDownloadDir;
 const TestFiles = {};
 let downloads = [];
-const {
-  handleInternally,
-  saveToDisk,
-  useSystemDefault,
-  alwaysAsk,
-} = Ci.nsIHandlerInfo;
+const { handleInternally, saveToDisk, useSystemDefault, alwaysAsk } =
+  Ci.nsIHandlerInfo;
 
 function ensureMIMEState({ preferredAction, alwaysAskBeforeHandling = false }) {
   const mimeInfo = gMimeSvc.getFromTypeAndExtension("text/plain", "txt");

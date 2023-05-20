@@ -49,20 +49,16 @@ add_task(async function () {
     return content.document.querySelector("iframe").browsingContext;
   });
 
-  const [
-    iframeBorderLeft,
-    iframeBorderTop,
-    iframeX,
-    iframeY,
-  ] = await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-    await SpecialPowers.contentTransformsReceived(content);
-    const iframe = content.document.querySelector("iframe");
-    const rect = iframe.getBoundingClientRect();
-    const x = content.window.mozInnerScreenX + rect.left;
-    const y = content.window.mozInnerScreenY + rect.top;
-    const cs = content.window.getComputedStyle(iframe);
-    return [parseInt(cs.borderLeftWidth), parseInt(cs.borderTopWidth), x, y];
-  });
+  const [iframeBorderLeft, iframeBorderTop, iframeX, iframeY] =
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
+      await SpecialPowers.contentTransformsReceived(content);
+      const iframe = content.document.querySelector("iframe");
+      const rect = iframe.getBoundingClientRect();
+      const x = content.window.mozInnerScreenX + rect.left;
+      const y = content.window.mozInnerScreenY + rect.top;
+      const cs = content.window.getComputedStyle(iframe);
+      return [parseInt(cs.borderLeftWidth), parseInt(cs.borderTopWidth), x, y];
+    });
 
   const selectRect = await SpecialPowers.spawn(iframeBC, [], async function () {
     await SpecialPowers.contentTransformsReceived(content);

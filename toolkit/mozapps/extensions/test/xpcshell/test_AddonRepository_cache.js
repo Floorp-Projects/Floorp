@@ -137,7 +137,7 @@ const REPOSITORY_ADDONS = [
     ],
     description: "Repo Add-on 1 - Description\nSecond line",
     fullDescription: "Repo Add-on 1 - Full Description & some extra",
-    icons: { "32": BASE_URL + "/repo/1/icon.png" },
+    icons: { 32: BASE_URL + "/repo/1/icon.png" },
     homepageURL: BASE_URL + "/repo/1/homepage.html",
     supportURL: BASE_URL + "/repo/1/support.html",
     averageRating: 1,
@@ -163,7 +163,7 @@ const REPOSITORY_ADDONS = [
     ],
     description: "Repo Add-on 2 - Description",
     fullDescription: "Repo Add-on 2 - Full Description",
-    icons: { "32": BASE_URL + "/repo/2/icon.png" },
+    icons: { 32: BASE_URL + "/repo/2/icon.png" },
     screenshots: [
       {
         url: BASE_URL + "/repo/2/firstFull.png",
@@ -189,7 +189,7 @@ const REPOSITORY_ADDONS = [
     type: "theme",
     name: "Repo Add-on 3",
     version: "2.3",
-    icons: { "32": BASE_URL + "/repo/3/icon.png" },
+    icons: { 32: BASE_URL + "/repo/3/icon.png" },
     screenshots: [
       {
         url: BASE_URL + "/repo/3/firstFull.png",
@@ -219,7 +219,7 @@ const WITHOUT_CACHE = [
     authors: [{ name: "XPI Add-on 1 - Author" }],
     description: "XPI Add-on 1 - Description",
     get icons() {
-      return { "32": get_subfile_uri(ADDON_IDS[0], "icon.png") };
+      return { 32: get_subfile_uri(ADDON_IDS[0], "icon.png") };
     },
     homepageURL: `${BASE_URL}/xpi/1/homepage.html`,
     get optionsURL() {
@@ -241,7 +241,7 @@ const WITHOUT_CACHE = [
     name: "XPI Add-on 3",
     version: "1.3",
     get icons() {
-      return { "32": get_subfile_uri(ADDON_IDS[2], "icon.png") };
+      return { 32: get_subfile_uri(ADDON_IDS[2], "icon.png") };
     },
     screenshots: [
       {
@@ -274,7 +274,7 @@ const WITH_CACHE = [
     description: "XPI Add-on 1 - Description",
     fullDescription: "Repo Add-on 1 - Full Description & some extra",
     get icons() {
-      return { "32": get_subfile_uri(ADDON_IDS[0], "icon.png") };
+      return { 32: get_subfile_uri(ADDON_IDS[0], "icon.png") };
     },
     homepageURL: BASE_URL + "/xpi/1/homepage.html",
     supportURL: BASE_URL + "/repo/1/support.html",
@@ -304,7 +304,7 @@ const WITH_CACHE = [
     ],
     description: "Repo Add-on 2 - Description",
     fullDescription: "Repo Add-on 2 - Full Description",
-    icons: { "32": BASE_URL + "/repo/2/icon.png" },
+    icons: { 32: BASE_URL + "/repo/2/icon.png" },
     screenshots: [
       {
         url: BASE_URL + "/repo/2/firstFull.png",
@@ -334,7 +334,7 @@ const WITH_CACHE = [
       return get_subfile_uri(ADDON_IDS[2], "icon.png");
     },
     get icons() {
-      return { "32": get_subfile_uri(ADDON_IDS[2], "icon.png") };
+      return { 32: get_subfile_uri(ADDON_IDS[2], "icon.png") };
     },
     screenshots: [
       {
@@ -372,7 +372,7 @@ const WITH_EXTENSION_CACHE = [
     description: "XPI Add-on 1 - Description",
     fullDescription: "Repo Add-on 1 - Full Description & some extra",
     get icons() {
-      return { "32": get_subfile_uri(ADDON_IDS[0], "icon.png") };
+      return { 32: get_subfile_uri(ADDON_IDS[0], "icon.png") };
     },
     homepageURL: BASE_URL + "/xpi/1/homepage.html",
     supportURL: BASE_URL + "/repo/1/support.html",
@@ -402,7 +402,7 @@ const WITH_EXTENSION_CACHE = [
       return get_subfile_uri(ADDON_IDS[2], "icon.png");
     },
     get icons() {
-      return { "32": get_subfile_uri(ADDON_IDS[2], "icon.png") };
+      return { 32: get_subfile_uri(ADDON_IDS[2], "icon.png") };
     },
     screenshots: [
       {
@@ -470,17 +470,18 @@ function check_cache(aExpectedToFind, aExpectedImmediately) {
         let expected = aExpectedToFind[i] ? REPOSITORY_ADDONS[i] : null;
         // can't Promise-wrap this because we're also testing whether the callback is
         // sync or async
-        AddonRepository.getCachedAddonByID(REPOSITORY_ADDONS[i].id, function (
-          aAddon
-        ) {
-          Assert.equal(immediatelyFound, aExpectedImmediately);
-          if (expected == null) {
-            Assert.equal(aAddon, null);
-          } else {
-            check_results([aAddon], [expected], true);
+        AddonRepository.getCachedAddonByID(
+          REPOSITORY_ADDONS[i].id,
+          function (aAddon) {
+            Assert.equal(immediatelyFound, aExpectedImmediately);
+            if (expected == null) {
+              Assert.equal(aAddon, null);
+            } else {
+              check_results([aAddon], [expected], true);
+            }
+            resolve();
           }
-          resolve();
-        });
+        );
         immediatelyFound = false;
       })
     );

@@ -1,10 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {
-  _ExperimentFeature: ExperimentFeature,
-  NimbusFeatures,
-} = ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
+const { _ExperimentFeature: ExperimentFeature, NimbusFeatures } =
+  ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
 
 const { PrefUtils } = ChromeUtils.importESModule(
   "resource://normandy/lib/PrefUtils.sys.mjs"
@@ -337,12 +335,11 @@ add_task(async function test_enroll_setPref_rolloutsAndExperiments() {
 
     for (const enrollmentKind of enrollOrder) {
       const isRollout = enrollmentKind === ROLLOUT;
-      cleanupFns[
-        enrollmentKind
-      ] = await ExperimentFakes.enrollWithFeatureConfig(
-        configs[enrollmentKind],
-        { manager, isRollout }
-      );
+      cleanupFns[enrollmentKind] =
+        await ExperimentFakes.enrollWithFeatureConfig(configs[enrollmentKind], {
+          manager,
+          isRollout,
+        });
 
       assertExpectedPrefValues(
         pref,
@@ -2616,10 +2613,11 @@ add_task(async function test_prefChanged_noPrefSet() {
           for (const isRollout of [true, false]) {
             setPrefs(pref, { defaultBranchValue, userBranchValue });
 
-            const doEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
-              config,
-              { manager, isRollout }
-            );
+            const doEnrollmentCleanup =
+              await ExperimentFakes.enrollWithFeatureConfig(config, {
+                manager,
+                isRollout,
+              });
 
             PrefUtils.setPref(pref, OVERWRITE_VALUE, { branch });
 

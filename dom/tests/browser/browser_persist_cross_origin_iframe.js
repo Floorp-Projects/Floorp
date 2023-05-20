@@ -71,23 +71,24 @@ function checkContents(dir, expected, str) {
 }
 
 async function addFrame(browser, path, selector) {
-  await SpecialPowers.spawn(browser, [path, selector], async function (
-    path,
-    selector
-  ) {
-    let document = content.document;
-    let target = document.querySelector(selector);
-    if (content.HTMLIFrameElement.isInstance(target)) {
-      document = target.contentDocument;
-      target = document.body;
+  await SpecialPowers.spawn(
+    browser,
+    [path, selector],
+    async function (path, selector) {
+      let document = content.document;
+      let target = document.querySelector(selector);
+      if (content.HTMLIFrameElement.isInstance(target)) {
+        document = target.contentDocument;
+        target = document.body;
+      }
+      let element = document.createElement("iframe");
+      element.src = path;
+      await new Promise(resolve => {
+        element.onload = resolve;
+        target.appendChild(element);
+      });
     }
-    let element = document.createElement("iframe");
-    element.src = path;
-    await new Promise(resolve => {
-      element.onload = resolve;
-      target.appendChild(element);
-    });
-  });
+  );
 }
 
 async function handleResult(expected, str) {
@@ -110,87 +111,88 @@ async function handleResult(expected, str) {
 }
 
 add_task(async function () {
-  await BrowserTestUtils.withNewTab(TEST_PATH + "image.html", async function (
-    browser
-  ) {
-    await addFrame(browser, TEST_PATH + "image.html", "body");
-    await addFrame(browser, TEST_PATH2 + "image.html", "body>iframe");
+  await BrowserTestUtils.withNewTab(
+    TEST_PATH + "image.html",
+    async function (browser) {
+      await addFrame(browser, TEST_PATH + "image.html", "body");
+      await addFrame(browser, TEST_PATH2 + "image.html", "body>iframe");
 
-    gTestDir = createTemporarySaveDirectory();
+      gTestDir = createTemporarySaveDirectory();
 
-    MockFilePicker.displayDirectory = gTestDir;
-    MockFilePicker.showCallback = function (fp) {
-      let destFile = gTestDir.clone();
-      destFile.append("first.html");
-      MockFilePicker.setFiles([destFile]);
-      MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
-    };
+      MockFilePicker.displayDirectory = gTestDir;
+      MockFilePicker.showCallback = function (fp) {
+        let destFile = gTestDir.clone();
+        destFile.append("first.html");
+        MockFilePicker.setFiles([destFile]);
+        MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
+      };
 
-    let expected = [
-      "first.html",
-      "first_files",
-      "first_files/image.html",
-      "first_files/dummy.png",
-      "first_files/image_data",
-      "first_files/image_data/image.html",
-      "first_files/image_data/image_data",
-      "first_files/image_data/image_data/dummy.png",
-    ];
+      let expected = [
+        "first.html",
+        "first_files",
+        "first_files/image.html",
+        "first_files/dummy.png",
+        "first_files/image_data",
+        "first_files/image_data/image.html",
+        "first_files/image_data/image_data",
+        "first_files/image_data/image_data/dummy.png",
+      ];
 
-    // This saves the top-level document contained in `browser`
-    saveBrowser(browser);
-    await handleResult(expected, "Check toplevel: ");
+      // This saves the top-level document contained in `browser`
+      saveBrowser(browser);
+      await handleResult(expected, "Check toplevel: ");
 
-    // Instead of deleting previously saved files, we update our list
-    // of expected files for the next part of the test. To not clash
-    // we make sure to save to a different file name.
-    expected = expected.concat([
-      "second.html",
-      "second_files",
-      "second_files/dummy.png",
-      "second_files/image.html",
-      "second_files/image_data",
-      "second_files/image_data/dummy.png",
-    ]);
+      // Instead of deleting previously saved files, we update our list
+      // of expected files for the next part of the test. To not clash
+      // we make sure to save to a different file name.
+      expected = expected.concat([
+        "second.html",
+        "second_files",
+        "second_files/dummy.png",
+        "second_files/image.html",
+        "second_files/image_data",
+        "second_files/image_data/dummy.png",
+      ]);
 
-    MockFilePicker.showCallback = function (fp) {
-      let destFile = gTestDir.clone();
-      destFile.append("second.html");
-      MockFilePicker.setFiles([destFile]);
-      MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
-    };
+      MockFilePicker.showCallback = function (fp) {
+        let destFile = gTestDir.clone();
+        destFile.append("second.html");
+        MockFilePicker.setFiles([destFile]);
+        MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
+      };
 
-    // This saves the sub-document of the iframe contained in the
-    // top-level document, as indicated by passing a child browsing
-    // context as target for the save.
-    saveBrowser(browser, false, browser.browsingContext.children[0]);
-    await handleResult(expected, "Check subframe: ");
+      // This saves the sub-document of the iframe contained in the
+      // top-level document, as indicated by passing a child browsing
+      // context as target for the save.
+      saveBrowser(browser, false, browser.browsingContext.children[0]);
+      await handleResult(expected, "Check subframe: ");
 
-    // Instead of deleting previously saved files, we update our list
-    // of expected files for the next part of the test. To not clash
-    // we make sure to save to a different file name.
-    expected = expected.concat([
-      "third.html",
-      "third_files",
-      "third_files/dummy.png",
-    ]);
+      // Instead of deleting previously saved files, we update our list
+      // of expected files for the next part of the test. To not clash
+      // we make sure to save to a different file name.
+      expected = expected.concat([
+        "third.html",
+        "third_files",
+        "third_files/dummy.png",
+      ]);
 
-    MockFilePicker.showCallback = function (fp) {
-      let destFile = gTestDir.clone();
-      destFile.append("third.html");
-      MockFilePicker.setFiles([destFile]);
-      MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
-    };
+      MockFilePicker.showCallback = function (fp) {
+        let destFile = gTestDir.clone();
+        destFile.append("third.html");
+        MockFilePicker.setFiles([destFile]);
+        MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
+      };
 
-    // This saves the sub-document of the iframe contained in the
-    // first sub-document, as indicated by passing a child browsing
-    // context as target for the save. That frame is special, because
-    // it's cross-process.
-    saveBrowser(
-      browser,
-      false,
-      browser.browsingContext.children[0].children[0]
-    );
-    await handleResult(expected, "Check subframe: ");
-  });
+      // This saves the sub-document of the iframe contained in the
+      // first sub-document, as indicated by passing a child browsing
+      // context as target for the save. That frame is special, because
+      // it's cross-process.
+      saveBrowser(
+        browser,
+        false,
+        browser.browsingContext.children[0].children[0]
+      );
+      await handleResult(expected, "Check subframe: ");
+    }
+  );
 });

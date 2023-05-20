@@ -10,9 +10,10 @@ async function checkNonEmptyFields(url) {
         return content.document.querySelector("certificate-section");
       }, "Certificate section found");
 
-      let tabs = certificateSection.shadowRoot.querySelector(
-        ".certificate-tabs"
-      ).children;
+      let tabs =
+        certificateSection.shadowRoot.querySelector(
+          ".certificate-tabs"
+        ).children;
 
       Assert.ok(tabs, "Tabs were found");
       Assert.greater(tabs.length, 0, "There must at least one tab");
@@ -44,9 +45,8 @@ async function checkNonEmptyFields(url) {
       for (let i = 0; i < tabs.length; i++) {
         clickTabAndCheckSelection(i);
 
-        let infoGroups = certificateSection.shadowRoot.querySelectorAll(
-          "info-group"
-        );
+        let infoGroups =
+          certificateSection.shadowRoot.querySelectorAll("info-group");
         Assert.ok(infoGroups, "infoGroups found");
 
         for (let infoGroup of infoGroups) {

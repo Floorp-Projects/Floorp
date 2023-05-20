@@ -11,9 +11,8 @@ export var AppMenu = {
     appMenuMainView: {
       selectors: ["#appMenu-popup"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         await reopenAppMenu(browserWindow);
       },
     },
@@ -21,9 +20,8 @@ export var AppMenu = {
     appMenuHistorySubview: {
       selectors: ["#appMenu-popup"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         await reopenAppMenu(browserWindow);
 
         browserWindow.document.getElementById("appMenu-library-button").click();
@@ -38,9 +36,8 @@ export var AppMenu = {
     appMenuHelpSubview: {
       selectors: ["#appMenu-popup"],
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         await reopenAppMenu(browserWindow);
 
         browserWindow.document.getElementById("appMenu-help-button2").click();

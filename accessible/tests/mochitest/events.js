@@ -493,31 +493,30 @@ function eventQueue(aEventType) {
     }
   };
 
-  this.processNextInvokerInTimeout = function eventQueue_processNextInvokerInTimeout(
-    aUncondProcess
-  ) {
-    this.setInvokerStatus(kInvokerPending, "Process next invoker in timeout");
+  this.processNextInvokerInTimeout =
+    function eventQueue_processNextInvokerInTimeout(aUncondProcess) {
+      this.setInvokerStatus(kInvokerPending, "Process next invoker in timeout");
 
-    // No need to wait extra timeout when a) we know we don't need to do that
-    // and b) there's no any single unexpected event.
-    if (!aUncondProcess && this.areAllEventsExpected()) {
-      // We need delay to avoid events coalesce from different invokers.
-      var queue = this;
-      SimpleTest.executeSoon(function () {
-        queue.processNextInvoker();
-      });
-      return;
-    }
+      // No need to wait extra timeout when a) we know we don't need to do that
+      // and b) there's no any single unexpected event.
+      if (!aUncondProcess && this.areAllEventsExpected()) {
+        // We need delay to avoid events coalesce from different invokers.
+        var queue = this;
+        SimpleTest.executeSoon(function () {
+          queue.processNextInvoker();
+        });
+        return;
+      }
 
-    // Check in timeout invoker didn't fire registered events.
-    window.setTimeout(
-      function (aQueue) {
-        aQueue.processNextInvoker();
-      },
-      300,
-      this
-    );
-  };
+      // Check in timeout invoker didn't fire registered events.
+      window.setTimeout(
+        function (aQueue) {
+          aQueue.processNextInvoker();
+        },
+        300,
+        this
+      );
+    };
 
   /**
    * Handle events for the current invoker.
@@ -755,31 +754,31 @@ function eventQueue(aEventType) {
     return true;
   };
 
-  this.isUnexpectedEventScenario = function eventQueue_isUnexpectedEventsScenario(
-    aScenario
-  ) {
-    for (var idx = 0; idx < aScenario.length; idx++) {
-      if (!aScenario[idx].unexpected && !aScenario[idx].todo) {
-        break;
+  this.isUnexpectedEventScenario =
+    function eventQueue_isUnexpectedEventsScenario(aScenario) {
+      for (var idx = 0; idx < aScenario.length; idx++) {
+        if (!aScenario[idx].unexpected && !aScenario[idx].todo) {
+          break;
+        }
       }
-    }
 
-    return idx == aScenario.length;
-  };
+      return idx == aScenario.length;
+    };
 
-  this.hasUnexpectedEventsScenario = function eventQueue_hasUnexpectedEventsScenario() {
-    if (this.getInvoker().noEventsOnAction) {
-      return true;
-    }
-
-    for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
-      if (this.isUnexpectedEventScenario(this.mScenarios[scnIdx])) {
+  this.hasUnexpectedEventsScenario =
+    function eventQueue_hasUnexpectedEventsScenario() {
+      if (this.getInvoker().noEventsOnAction) {
         return true;
       }
-    }
 
-    return false;
-  };
+      for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
+        if (this.isUnexpectedEventScenario(this.mScenarios[scnIdx])) {
+          return true;
+        }
+      }
+
+      return false;
+    };
 
   this.hasMatchedScenario = function eventQueue_hasMatchedScenario() {
     for (var scnIdx = 0; scnIdx < this.mScenarios.length; scnIdx++) {
@@ -1498,7 +1497,8 @@ function synthFocus(aNodeOrID, aCheckerOrEventSeq) {
 
   this.invoke = function synthFocus_invoke() {
     if (this.DOMNode.editor) {
-      this.DOMNode.selectionStart = this.DOMNode.selectionEnd = this.DOMNode.value.length;
+      this.DOMNode.selectionStart = this.DOMNode.selectionEnd =
+        this.DOMNode.value.length;
     }
     this.DOMNode.focus();
   };

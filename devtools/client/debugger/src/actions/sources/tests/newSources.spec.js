@@ -11,12 +11,8 @@ import {
   makeOriginalSource,
   waitForState,
 } from "../../../utils/test-head";
-const {
-  getSource,
-  getSourceCount,
-  getSelectedSource,
-  getSourceByURL,
-} = selectors;
+const { getSource, getSourceCount, getSelectedSource, getSourceByURL } =
+  selectors;
 import sourceQueue from "../../../utils/source-queue";
 import { generatedToOriginalId } from "devtools/client/shared/source-map-loader/index";
 

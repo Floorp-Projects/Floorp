@@ -72,14 +72,15 @@ function promiseContentSearchReady(browser) {
         }
       }
 
-      content.addEventListener("ContentSearchService", function listener(
-        aEvent
-      ) {
-        if (aEvent.detail.type == "State") {
-          content.removeEventListener("ContentSearchService", listener);
-          resolve();
+      content.addEventListener(
+        "ContentSearchService",
+        function listener(aEvent) {
+          if (aEvent.detail.type == "State") {
+            content.removeEventListener("ContentSearchService", listener);
+            resolve();
+          }
         }
-      });
+      );
     });
   });
 }

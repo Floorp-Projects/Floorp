@@ -20,14 +20,10 @@ const {
 } = require("resource://devtools/shared/constants.js");
 
 add_task(async function () {
-  const {
-    target,
-    walker,
-    a11yWalker,
-    parentAccessibility,
-  } = await initAccessibilityFrontsForUrl(
-    `${MAIN_DOMAIN}doc_accessibility_text_label_audit_frame.html`
-  );
+  const { target, walker, a11yWalker, parentAccessibility } =
+    await initAccessibilityFrontsForUrl(
+      `${MAIN_DOMAIN}doc_accessibility_text_label_audit_frame.html`
+    );
 
   const tests = [
     ["Frame with no name", "#frame-1", { score: FAIL, issue: FRAME_NO_NAME }],

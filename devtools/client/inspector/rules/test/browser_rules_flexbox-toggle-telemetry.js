@@ -20,10 +20,8 @@ add_task(async function () {
   startTelemetry();
   const { inspector, view } = await openRuleView();
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.FLEXBOX;
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   await selectNode("#flex", inspector);
   const container = getRuleViewProperty(view, "#flex", "display").valueSpan;

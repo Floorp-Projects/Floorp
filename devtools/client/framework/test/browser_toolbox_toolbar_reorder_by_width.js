@@ -25,10 +25,8 @@ add_task(async function () {
   );
 
   const win = getWindow(toolbox);
-  const {
-    outerWidth: originalWindowWidth,
-    outerHeight: originalWindowHeight,
-  } = win;
+  const { outerWidth: originalWindowWidth, outerHeight: originalWindowHeight } =
+    win;
   registerCleanupFunction(() => {
     win.resizeTo(originalWindowWidth, originalWindowHeight);
   });

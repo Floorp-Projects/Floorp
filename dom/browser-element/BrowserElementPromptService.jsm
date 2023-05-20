@@ -254,9 +254,8 @@ BrowserElementAuthPrompt.prototype = {
       throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
 
-    let browserElementParent = BrowserElementPromptService.getBrowserElementParentForFrame(
-      frame
-    );
+    let browserElementParent =
+      BrowserElementPromptService.getBrowserElementParentForFrame(frame);
 
     if (!browserElementParent) {
       debug("Failed to load browser element parent.");
@@ -579,9 +578,8 @@ BrowserElementPromptFactory.prototype = {
     }
 
     // Try to find a BrowserElementChild for the window.
-    let browserElementChild = BrowserElementPromptService.getBrowserElementChildForWindow(
-      win
-    );
+    let browserElementChild =
+      BrowserElementPromptService.getBrowserElementChildForWindow(win);
 
     if (iid.number === Ci.nsIAuthPrompt2.number) {
       debug("Caller requests an instance of nsIAuthPrompt2.");
@@ -680,9 +678,8 @@ var BrowserElementPromptService = {
 
   _browserElementChildMap: {},
   mapWindowToBrowserElementChild(win, browserElementChild) {
-    this._browserElementChildMap[
-      this._getOuterWindowID(win)
-    ] = browserElementChild;
+    this._browserElementChildMap[this._getOuterWindowID(win)] =
+      browserElementChild;
   },
   unmapWindowToBrowserElementChild(win) {
     delete this._browserElementChildMap[this._getOuterWindowID(win)];

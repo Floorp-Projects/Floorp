@@ -70,7 +70,8 @@ export class BackgroundThumbnailsChild extends JSWindowActorChild {
 
         let loadURIOptions = {
           // Bug 1498603 verify usages of systemPrincipal here
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
           loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_STOP_CONTENT,
         };
         try {

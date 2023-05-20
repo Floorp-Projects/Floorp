@@ -11,11 +11,8 @@ ChromeUtils.defineESModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
-const {
-  createAppInfo,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { createAppInfo, promiseShutdownManager, promiseStartupManager } =
+  AddonTestUtils;
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
@@ -39,9 +36,10 @@ add_task(async function test_privacy() {
       "network.prefetch-next": true,
       // This pref starts with a numerical value and we need to use whatever the
       // default is or we encounter issues when the pref is reset during the test.
-      "network.http.speculative-parallel-limit": ExtensionPreferencesManager.getDefaultValue(
-        "network.http.speculative-parallel-limit"
-      ),
+      "network.http.speculative-parallel-limit":
+        ExtensionPreferencesManager.getDefaultValue(
+          "network.http.speculative-parallel-limit"
+        ),
       "network.dns.disablePrefetch": false,
     },
     "websites.hyperlinkAuditingEnabled": {

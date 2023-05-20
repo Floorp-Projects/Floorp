@@ -64,14 +64,8 @@ class BoxModelEditable extends PureComponent {
   }
 
   render() {
-    const {
-      box,
-      direction,
-      focusable,
-      level,
-      property,
-      textContent,
-    } = this.props;
+    const { box, direction, focusable, level, property, textContent } =
+      this.props;
 
     const rotate =
       direction &&

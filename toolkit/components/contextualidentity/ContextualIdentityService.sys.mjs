@@ -135,8 +135,8 @@ _ContextualIdentityService.prototype = {
     // Initialize default identities based on policy if available
     this._defaultIdentities = [];
     let userContextId = 1;
-    let policyIdentities = Services.policies?.getActivePolicies()?.Containers
-      ?.Default;
+    let policyIdentities =
+      Services.policies?.getActivePolicies()?.Containers?.Default;
     if (policyIdentities) {
       for (let identity of policyIdentities) {
         identity.public = true;

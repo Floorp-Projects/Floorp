@@ -208,10 +208,8 @@ class ExtensionStorageActor extends BaseStorageActor {
 
   async getStoragePrincipal() {
     const { extension } = this.getExtensionPolicy();
-    const {
-      backendEnabled,
-      storagePrincipal,
-    } = await ExtensionStorageIDB.selectBackend({ extension });
+    const { backendEnabled, storagePrincipal } =
+      await ExtensionStorageIDB.selectBackend({ extension });
 
     if (!backendEnabled) {
       // IDB backend disabled; give up.

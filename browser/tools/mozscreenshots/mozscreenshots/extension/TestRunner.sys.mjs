@@ -257,8 +257,12 @@ export var TestRunner = {
     // Scale for high-density displays
     const scale = Cc["@mozilla.org/gfx/screenmanager;1"]
       .getService(Ci.nsIScreenManager)
-      .screenForRect(browserWindow.screenX, browserWindow.screenY, 1, 1)
-      .defaultCSSScaleFactor;
+      .screenForRect(
+        browserWindow.screenX,
+        browserWindow.screenY,
+        1,
+        1
+      ).defaultCSSScaleFactor;
 
     const windowLeft = browserWindow.screenX * scale;
     const windowTop = browserWindow.screenY * scale;

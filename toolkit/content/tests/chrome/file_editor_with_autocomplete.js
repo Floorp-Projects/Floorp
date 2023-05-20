@@ -37,7 +37,8 @@ function nsDoTestsForEditorWithAutoComplete(
 
   this._target.focus();
 
-  this._DefaultCompleteDefaultIndex = this._controller.input.completeDefaultIndex;
+  this._DefaultCompleteDefaultIndex =
+    this._controller.input.completeDefaultIndex;
 }
 
 nsDoTestsForEditorWithAutoComplete.prototype = {
@@ -87,7 +88,8 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
       this._target.removeEventListener("input", onInput);
       this._checkResult(test, beforeInputEvents, inputEvents);
     }
-    this._controller.input.completeDefaultIndex = this._DefaultCompleteDefaultIndex;
+    this._controller.input.completeDefaultIndex =
+      this._DefaultCompleteDefaultIndex;
   },
 
   _checkResult(aTest, aBeforeInputEvents, aInputEvents) {

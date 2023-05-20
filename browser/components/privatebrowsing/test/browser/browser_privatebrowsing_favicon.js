@@ -162,11 +162,13 @@ function waitOnFaviconLoaded(aFaviconURL) {
 async function assignCookies(aBrowser, aURL, aCookieValue) {
   let tabInfo = await openTab(aBrowser, aURL);
 
-  await SpecialPowers.spawn(tabInfo.browser, [aCookieValue], async function (
-    value
-  ) {
-    content.document.cookie = value;
-  });
+  await SpecialPowers.spawn(
+    tabInfo.browser,
+    [aCookieValue],
+    async function (value) {
+      content.document.cookie = value;
+    }
+  );
 
   BrowserTestUtils.removeTab(tabInfo.tab);
 }

@@ -655,20 +655,20 @@ add_task(async function test_move_items_to_folder() {
   let bkm_b_info = { url: "http://test_move_items.com", title: "Bookmark B" };
 
   // Test moving items within the same folder.
-  let [
-    folder_a_txn_result,
-    bkm_a_txn_result,
-    bkm_b_txn_result,
-  ] = await PT.batch(async function () {
-    let folder_a_txn = PT.NewFolder(folder_a_info);
+  let [folder_a_txn_result, bkm_a_txn_result, bkm_b_txn_result] =
+    await PT.batch(async function () {
+      let folder_a_txn = PT.NewFolder(folder_a_info);
 
-    folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid = await folder_a_txn.transact();
-    let bkm_a_txn = PT.NewBookmark(bkm_a_info);
-    bkm_a_info.guid = await bkm_a_txn.transact();
-    let bkm_b_txn = PT.NewBookmark(bkm_b_info);
-    bkm_b_info.guid = await bkm_b_txn.transact();
-    return [folder_a_txn, bkm_a_txn, bkm_b_txn];
-  });
+      folder_a_info.guid =
+        bkm_a_info.parentGuid =
+        bkm_b_info.parentGuid =
+          await folder_a_txn.transact();
+      let bkm_a_txn = PT.NewBookmark(bkm_a_info);
+      bkm_a_info.guid = await bkm_a_txn.transact();
+      let bkm_b_txn = PT.NewBookmark(bkm_b_info);
+      bkm_b_info.guid = await bkm_b_txn.transact();
+      return [folder_a_txn, bkm_a_txn, bkm_b_txn];
+    });
 
   ensureUndoState(
     [[bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result]],
@@ -816,7 +816,11 @@ add_task(async function test_move_multiple_items_to_folder() {
   ] = await PT.batch(async function () {
     let folder_a_txn = PT.NewFolder(folder_a_info);
 
-    folder_a_info.guid = bkm_a_info.parentGuid = bkm_b_info.parentGuid = bkm_c_info.parentGuid = await folder_a_txn.transact();
+    folder_a_info.guid =
+      bkm_a_info.parentGuid =
+      bkm_b_info.parentGuid =
+      bkm_c_info.parentGuid =
+        await folder_a_txn.transact();
     let bkm_a_txn = PT.NewBookmark(bkm_a_info);
     bkm_a_info.guid = await bkm_a_txn.transact();
     let bkm_b_txn = PT.NewBookmark(bkm_b_info);

@@ -100,7 +100,8 @@ nsWebHandlerApp.prototype = {
         );
       }
 
-      let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+      let triggeringPrincipal =
+        Services.scriptSecurityManager.getSystemPrincipal();
       Services.tm.dispatchToMainThread(() =>
         aBrowsingContext.loadURI(uriToSend, { triggeringPrincipal })
       );

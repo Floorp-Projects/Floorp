@@ -16,11 +16,8 @@ const { SCORE_INCREMENT_XLARGE } = ChromeUtils.importESModule(
   "resource://services-sync/constants.sys.mjs"
 );
 
-const {
-  sanitizeStorageObject,
-  AutofillRecord,
-  AddressesEngine,
-} = ChromeUtils.importESModule("resource://autofill/FormAutofillSync.sys.mjs");
+const { sanitizeStorageObject, AutofillRecord, AddressesEngine } =
+  ChromeUtils.importESModule("resource://autofill/FormAutofillSync.sys.mjs");
 
 Services.prefs.setCharPref("extensions.formautofill.loglevel", "Trace");
 initTestLogging("Trace");

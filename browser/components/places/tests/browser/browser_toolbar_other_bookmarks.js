@@ -581,9 +581,8 @@ function testUpdatedNodeVisibility(otherWin) {
     }
   }
 
-  let otherToolbarItems = otherWin.document.getElementById(
-    "PlacesToolbarItems"
-  );
+  let otherToolbarItems =
+    otherWin.document.getElementById("PlacesToolbarItems");
   let otherVisibleNodes = [];
 
   for (let node of otherToolbarItems.children) {

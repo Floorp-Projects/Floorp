@@ -140,11 +140,8 @@ class DominatorTree extends Component {
   }
 
   render() {
-    const {
-      dominatorTree,
-      onViewSourceInDebugger,
-      onLoadMoreSiblings,
-    } = this.props;
+    const { dominatorTree, onViewSourceInDebugger, onLoadMoreSiblings } =
+      this.props;
 
     const parentMap = createParentMap(dominatorTree.root, node => node.nodeId);
 

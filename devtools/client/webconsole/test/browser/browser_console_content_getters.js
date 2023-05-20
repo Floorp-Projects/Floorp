@@ -19,75 +19,77 @@ add_task(async function () {
 
   const LONGSTRING = "ab ".repeat(1e5);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [LONGSTRING], function (
-    longString
-  ) {
-    const obj = Object.create(
-      null,
-      Object.getOwnPropertyDescriptors({
-        get myStringGetter() {
-          return "hello";
-        },
-        get myNumberGetter() {
-          return 123;
-        },
-        get myUndefinedGetter() {
-          return undefined;
-        },
-        get myNullGetter() {
-          return null;
-        },
-        get myZeroGetter() {
-          return 0;
-        },
-        get myEmptyStringGetter() {
-          return "";
-        },
-        get myFalseGetter() {
-          return false;
-        },
-        get myTrueGetter() {
-          return true;
-        },
-        get myObjectGetter() {
-          return { foo: "bar" };
-        },
-        get myArrayGetter() {
-          return Array.from({ length: 1000 }, (_, i) => i);
-        },
-        get myMapGetter() {
-          return new Map([["foo", { bar: "baz" }]]);
-        },
-        get myProxyGetter() {
-          const handler = {
-            get(target, name) {
-              return name in target ? target[name] : 37;
-            },
-          };
-          return new Proxy({ a: 1 }, handler);
-        },
-        get myThrowingGetter() {
-          throw new Error("myError");
-        },
-        get myLongStringGetter() {
-          return longString;
-        },
-      })
-    );
-    Object.defineProperty(obj, "MyPrint", { get: content.print });
-    Object.defineProperty(obj, "MyElement", { get: content.Element });
-    Object.defineProperty(obj, "MySetAttribute", {
-      get: content.Element.prototype.setAttribute,
-    });
-    Object.defineProperty(obj, "MySetClassName", {
-      get: Object.getOwnPropertyDescriptor(
-        content.Element.prototype,
-        "className"
-      ).set,
-    });
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [LONGSTRING],
+    function (longString) {
+      const obj = Object.create(
+        null,
+        Object.getOwnPropertyDescriptors({
+          get myStringGetter() {
+            return "hello";
+          },
+          get myNumberGetter() {
+            return 123;
+          },
+          get myUndefinedGetter() {
+            return undefined;
+          },
+          get myNullGetter() {
+            return null;
+          },
+          get myZeroGetter() {
+            return 0;
+          },
+          get myEmptyStringGetter() {
+            return "";
+          },
+          get myFalseGetter() {
+            return false;
+          },
+          get myTrueGetter() {
+            return true;
+          },
+          get myObjectGetter() {
+            return { foo: "bar" };
+          },
+          get myArrayGetter() {
+            return Array.from({ length: 1000 }, (_, i) => i);
+          },
+          get myMapGetter() {
+            return new Map([["foo", { bar: "baz" }]]);
+          },
+          get myProxyGetter() {
+            const handler = {
+              get(target, name) {
+                return name in target ? target[name] : 37;
+              },
+            };
+            return new Proxy({ a: 1 }, handler);
+          },
+          get myThrowingGetter() {
+            throw new Error("myError");
+          },
+          get myLongStringGetter() {
+            return longString;
+          },
+        })
+      );
+      Object.defineProperty(obj, "MyPrint", { get: content.print });
+      Object.defineProperty(obj, "MyElement", { get: content.Element });
+      Object.defineProperty(obj, "MySetAttribute", {
+        get: content.Element.prototype.setAttribute,
+      });
+      Object.defineProperty(obj, "MySetClassName", {
+        get: Object.getOwnPropertyDescriptor(
+          content.Element.prototype,
+          "className"
+        ).set,
+      });
 
-    content.wrappedJSObject.console.log("oi-test", obj);
-  });
+      content.wrappedJSObject.console.log("oi-test", obj);
+    }
+  );
 
   const node = await waitFor(() => findConsoleAPIMessage(hud, "oi-test"));
   const oi = node.querySelector(".tree");

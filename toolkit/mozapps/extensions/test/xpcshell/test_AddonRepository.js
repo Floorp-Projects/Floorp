@@ -93,7 +93,7 @@ var GET_RESULTS = [
     description: "Test Summary 1",
     fullDescription: "Test Description 1",
     iconURL: BASE_URL + "/icon1.png",
-    icons: { "32": BASE_URL + "/icon1.png" },
+    icons: { 32: BASE_URL + "/icon1.png" },
     screenshots: [
       {
         url: BASE_URL + "/full1-1.png",

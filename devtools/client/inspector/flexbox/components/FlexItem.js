@@ -35,13 +35,8 @@ class FlexItem extends PureComponent {
   }
 
   render() {
-    const {
-      dispatch,
-      flexItem,
-      index,
-      scrollToTop,
-      setSelectedNode,
-    } = this.props;
+    const { dispatch, flexItem, index, scrollToTop, setSelectedNode } =
+      this.props;
     const { nodeFront } = flexItem;
 
     return dom.button(

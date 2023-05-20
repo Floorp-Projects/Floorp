@@ -84,8 +84,9 @@ export class AboutLoginsTestUtils {
     for (let element of content.document.querySelectorAll(".row-details")) {
       rows.push(element.getAttribute("data-l10n-id"));
     }
-    const added = content.document.querySelector(".new-logins .result-count")
-      .textContent;
+    const added = content.document.querySelector(
+      ".new-logins .result-count"
+    ).textContent;
     const modified = content.document.querySelector(
       ".exiting-logins .result-count"
     ).textContent;

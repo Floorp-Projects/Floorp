@@ -346,8 +346,8 @@ export class LoginManagerStorage_json {
 
   async recordBreachAlertDismissal(loginGUID) {
     this._store.ensureDataReady();
-    const dismissedBreachAlertsByLoginGUID = this._store._data
-      .dismissedBreachAlertsByLoginGUID;
+    const dismissedBreachAlertsByLoginGUID =
+      this._store._data.dismissedBreachAlertsByLoginGUID;
 
     dismissedBreachAlertsByLoginGUID[loginGUID] = {
       timeBreachAlertDismissed: new Date().getTime(),

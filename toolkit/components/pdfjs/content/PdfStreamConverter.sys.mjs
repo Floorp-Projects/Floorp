@@ -1010,10 +1010,8 @@ PdfStreamConverter.prototype = {
       // fall through, this appears to be a pdf.
     }
 
-    let {
-      alwaysAskBeforeHandling,
-      shouldOpen,
-    } = this._validateAndMaybeUpdatePDFPrefs();
+    let { alwaysAskBeforeHandling, shouldOpen } =
+      this._validateAndMaybeUpdatePDFPrefs();
 
     if (shouldOpen) {
       return HTML;
@@ -1213,14 +1211,14 @@ PdfStreamConverter.prototype = {
     // e.g. useful for NoScript. Make make sure we reuse the origin attributes
     // from the request channel to keep isolation consistent.
     var uri = lazy.NetUtil.newURI(PDF_VIEWER_WEB_PAGE);
-    var resourcePrincipal = Services.scriptSecurityManager.createContentPrincipal(
-      uri,
-      aRequest.loadInfo.originAttributes
-    );
+    var resourcePrincipal =
+      Services.scriptSecurityManager.createContentPrincipal(
+        uri,
+        aRequest.loadInfo.originAttributes
+      );
     // Remember the principal we would have had before we mess with it.
-    let originalPrincipal = Services.scriptSecurityManager.getChannelResultPrincipal(
-      aRequest
-    );
+    let originalPrincipal =
+      Services.scriptSecurityManager.getChannelResultPrincipal(aRequest);
     aRequest.owner = resourcePrincipal;
     aRequest.setProperty("noPDFJSPrincipal", originalPrincipal);
 

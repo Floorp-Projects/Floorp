@@ -28,11 +28,13 @@ add_task(async function () {
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
-  await SpecialPowers.spawn(tab.linkedBrowser, [HTML_LONG_URL], async function (
-    url
-  ) {
-    content.wrappedJSObject.performRequests(1, url);
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [HTML_LONG_URL],
+    async function (url) {
+      content.wrappedJSObject.performRequests(1, url);
+    }
+  );
   await wait;
 
   const requestItem = document.querySelector(".request-list-item");

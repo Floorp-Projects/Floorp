@@ -23,8 +23,9 @@ function copyToTemporaryFile(f) {
 }
 
 function* dirIter(directory) {
-  var testsDir = Services.io.newURI(directory).QueryInterface(Ci.nsIFileURL)
-    .file;
+  var testsDir = Services.io
+    .newURI(directory)
+    .QueryInterface(Ci.nsIFileURL).file;
 
   let en = testsDir.directoryEntries;
   while (en.hasMoreElements()) {

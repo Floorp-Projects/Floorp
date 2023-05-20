@@ -17,12 +17,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "privacy.userContext.enabled"
 );
 
-var {
-  DefaultMap,
-  DefaultWeakMap,
-  ExtensionError,
-  parseMatchPatterns,
-} = ExtensionUtils;
+var { DefaultMap, DefaultWeakMap, ExtensionError, parseMatchPatterns } =
+  ExtensionUtils;
 
 var { defineLazyGetter } = ExtensionCommon;
 

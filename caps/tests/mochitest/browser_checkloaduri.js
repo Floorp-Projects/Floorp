@@ -335,49 +335,59 @@ add_task(async function () {
   }
 
   // Now test blob URIs, which we need to do in-content.
-  await BrowserTestUtils.withNewTab("http://www.example.com/", async function (
-    browser
-  ) {
-    await SpecialPowers.spawn(browser, [testURL.toString()], async function (
-      testURLFn
-    ) {
-      // eslint-disable-next-line no-shadow , no-eval
-      let testURL = eval("(" + testURLFn + ")");
-      // eslint-disable-next-line no-shadow
-      let ssm = Services.scriptSecurityManager;
-      // eslint-disable-next-line no-shadow
-      let baseFlags = ssm.STANDARD | ssm.DONT_REPORT_ERRORS;
-      // eslint-disable-next-line no-unused-vars
-      let b = new content.Blob(["I am a blob"]);
-      let contentBlobURI = content.URL.createObjectURL(b);
-      let contentPrincipal = content.document.nodePrincipal;
-      // Loading this blob URI from the content page should work:
-      testURL(contentPrincipal, contentBlobURI, true, true, true, baseFlags);
-      testURL(
-        contentPrincipal,
-        contentBlobURI,
-        true,
-        true,
-        true,
-        baseFlags | ssm.DISALLOW_INHERIT_PRINCIPAL
-      );
+  await BrowserTestUtils.withNewTab(
+    "http://www.example.com/",
+    async function (browser) {
+      await SpecialPowers.spawn(
+        browser,
+        [testURL.toString()],
+        async function (testURLFn) {
+          // eslint-disable-next-line no-shadow , no-eval
+          let testURL = eval("(" + testURLFn + ")");
+          // eslint-disable-next-line no-shadow
+          let ssm = Services.scriptSecurityManager;
+          // eslint-disable-next-line no-shadow
+          let baseFlags = ssm.STANDARD | ssm.DONT_REPORT_ERRORS;
+          // eslint-disable-next-line no-unused-vars
+          let b = new content.Blob(["I am a blob"]);
+          let contentBlobURI = content.URL.createObjectURL(b);
+          let contentPrincipal = content.document.nodePrincipal;
+          // Loading this blob URI from the content page should work:
+          testURL(
+            contentPrincipal,
+            contentBlobURI,
+            true,
+            true,
+            true,
+            baseFlags
+          );
+          testURL(
+            contentPrincipal,
+            contentBlobURI,
+            true,
+            true,
+            true,
+            baseFlags | ssm.DISALLOW_INHERIT_PRINCIPAL
+          );
 
-      testURL(
-        contentPrincipal,
-        "view-source:" + contentBlobURI,
-        false,
-        false,
-        true,
-        baseFlags
+          testURL(
+            contentPrincipal,
+            "view-source:" + contentBlobURI,
+            false,
+            false,
+            true,
+            baseFlags
+          );
+          testURL(
+            contentPrincipal,
+            "view-source:" + contentBlobURI,
+            false,
+            false,
+            true,
+            baseFlags | ssm.DISALLOW_INHERIT_PRINCIPAL
+          );
+        }
       );
-      testURL(
-        contentPrincipal,
-        "view-source:" + contentBlobURI,
-        false,
-        false,
-        true,
-        baseFlags | ssm.DISALLOW_INHERIT_PRINCIPAL
-      );
-    });
-  });
+    }
+  );
 });

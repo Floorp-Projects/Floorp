@@ -21,11 +21,8 @@ add_task(async function () {
   await pushPref("devtools.inspector.three-pane-enabled", false);
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([".end-delay", ".negative-delay"]);
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
   const timeScale = new TimeScale(animationInspector.state.animations);
 
   info("Checking animation list header element existence");
@@ -38,8 +35,8 @@ add_task(async function () {
 
   info("Checking time tick item elements existence");
   await assertTickLabels(timeScale, listContainerEl);
-  const timelineTickItemLength = listContainerEl.querySelectorAll(".tick-label")
-    .length;
+  const timelineTickItemLength =
+    listContainerEl.querySelectorAll(".tick-label").length;
 
   info("Checking timeline tick item elements after enlarge sidebar width");
   await setSidebarWidth("100%", inspector);
@@ -80,9 +77,8 @@ async function assertTickLabels(timeScale, listContainerEl) {
   );
   ok(true, "The expected number of timeline ticks were found");
 
-  const timelineTickItemEls = timelineTickListEl.querySelectorAll(
-    ".tick-label"
-  );
+  const timelineTickItemEls =
+    timelineTickListEl.querySelectorAll(".tick-label");
 
   info("Make sure graduations are evenly distributed and show the right times");
   for (const [index, tickEl] of timelineTickItemEls.entries()) {

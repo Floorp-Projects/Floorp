@@ -31,9 +31,8 @@ export class PromptCollection {
           "confirmRepostPrompt"
         );
       }
-      resendLabel = this.stringBundles.app.GetStringFromName(
-        "resendButton.label"
-      );
+      resendLabel =
+        this.stringBundles.app.GetStringFromName("resendButton.label");
     } catch (exception) {
       console.error("Failed to get strings from appstrings.properties");
       return false;

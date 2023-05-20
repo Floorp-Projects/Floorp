@@ -17,9 +17,8 @@ let cis;
 add_task(function () {
   ok(!!ContextualIdentityService, "ContextualIdentityService exists");
 
-  cis = ContextualIdentityService.createNewInstanceForTesting(
-    TEST_STORE_FILE_PATH
-  );
+  cis =
+    ContextualIdentityService.createNewInstanceForTesting(TEST_STORE_FILE_PATH);
   ok(!!cis, "We have our instance of ContextualIdentityService");
 
   equal(cis.getPublicIdentities().length, 4, "By default, 4 containers.");

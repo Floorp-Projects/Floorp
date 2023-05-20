@@ -6,12 +6,10 @@ const { ExperimentFakes } = ChromeUtils.importESModule(
 const { ExperimentManager } = ChromeUtils.importESModule(
   "resource://nimbus/lib/ExperimentManager.sys.mjs"
 );
-const {
-  RemoteSettingsExperimentLoader,
-  EnrollmentsContext,
-} = ChromeUtils.importESModule(
-  "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs"
-);
+const { RemoteSettingsExperimentLoader, EnrollmentsContext } =
+  ChromeUtils.importESModule(
+    "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs"
+  );
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );

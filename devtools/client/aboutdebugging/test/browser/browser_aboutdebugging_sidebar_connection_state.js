@@ -35,9 +35,8 @@ add_task(async function () {
     RUNTIME_DEVICE_NAME,
     document
   );
-  const connectButton = usbRuntimeSidebarItem.querySelector(
-    ".qa-connect-button"
-  );
+  const connectButton =
+    usbRuntimeSidebarItem.querySelector(".qa-connect-button");
 
   info("Simulate to happen connection error");
   mocks.runtimeClientFactoryMock.createClientForRuntime = async runtime => {
@@ -124,9 +123,8 @@ add_task(async function () {
     RUNTIME_DEVICE_NAME,
     document
   );
-  const connectButton = usbRuntimeSidebarItem.querySelector(
-    ".qa-connect-button"
-  );
+  const connectButton =
+    usbRuntimeSidebarItem.querySelector(".qa-connect-button");
 
   let resumeConnection;
   const resumeConnectionPromise = new Promise(r => {

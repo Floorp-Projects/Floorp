@@ -41,7 +41,7 @@ async function test_2() {
 
 async function test_3() {
   let aInstall = await AddonManager.getInstallForURL(addon_url, {
-    icons: { "32": icon32_url },
+    icons: { 32: icon32_url },
   });
   Assert.equal(aInstall.iconURL, icon32_url);
   Assert.notEqual(aInstall.icons, null);
@@ -52,7 +52,7 @@ async function test_3() {
 
 async function test_4() {
   let aInstall = await AddonManager.getInstallForURL(addon_url, {
-    icons: { "32": icon32_url, "64": icon64_url },
+    icons: { 32: icon32_url, 64: icon64_url },
   });
   Assert.equal(aInstall.iconURL, icon32_url);
   Assert.notEqual(aInstall.icons, null);

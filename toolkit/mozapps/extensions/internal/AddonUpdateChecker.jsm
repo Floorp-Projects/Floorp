@@ -267,9 +267,10 @@ function UpdateParser(aId, aUrl, aObserver) {
   try {
     this.request = new lazy.ServiceRequest({ mozAnon: true });
     this.request.open("GET", this.url, true);
-    this.request.channel.notificationCallbacks = new lazy.CertUtils.BadCertHandler(
-      !lazy.AddonSettings.UPDATE_REQUIREBUILTINCERTS
-    );
+    this.request.channel.notificationCallbacks =
+      new lazy.CertUtils.BadCertHandler(
+        !lazy.AddonSettings.UPDATE_REQUIREBUILTINCERTS
+      );
     this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     // Prevent the request from writing to cache.
     this.request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;

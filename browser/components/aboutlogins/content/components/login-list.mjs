@@ -350,8 +350,8 @@ export default class LoginList extends HTMLElement {
         );
         let newlySelectedLogin;
         if (firstVisibleListItem) {
-          newlySelectedLogin = this._logins[firstVisibleListItem.dataset.guid]
-            .login;
+          newlySelectedLogin =
+            this._logins[firstVisibleListItem.dataset.guid].login;
         } else {
           // Clear the filter if all items have been filtered out.
           this.classList.remove("create-login-selected");
@@ -361,8 +361,8 @@ export default class LoginList extends HTMLElement {
               detail: "",
             })
           );
-          newlySelectedLogin = this._logins[this._loginGuidsSortedOrder[0]]
-            .login;
+          newlySelectedLogin =
+            this._logins[this._loginGuidsSortedOrder[0]].login;
         }
 
         // Select the first visible login after any possible filter is applied.
@@ -613,9 +613,8 @@ export default class LoginList extends HTMLElement {
           return listItem.dataset.guid == login.guid;
         });
         let newlySelectedIndex = index > 0 ? index - 1 : index + 1;
-        let newlySelectedLogin = this._logins[
-          visibleListItems[newlySelectedIndex].dataset.guid
-        ].login;
+        let newlySelectedLogin =
+          this._logins[visibleListItems[newlySelectedIndex].dataset.guid].login;
         window.dispatchEvent(
           new CustomEvent("AboutLoginsLoginSelected", {
             detail: newlySelectedLogin,

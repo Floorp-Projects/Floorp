@@ -230,7 +230,8 @@ var State = {
     }
 
     if (extensionCountersEnabled()) {
-      let extCounters = await ExtensionParent.ParentAPIManager.retrievePerformanceCounters();
+      let extCounters =
+        await ExtensionParent.ParentAPIManager.retrievePerformanceCounters();
       for (let [id, apiMap] of extCounters) {
         let dispatchCount = 0,
           duration = 0;
@@ -402,14 +403,8 @@ var State = {
       }
       // For each subitem, create a new object including the deltas since the previous time.
       let children = tab.children.map(child => {
-        let {
-          host,
-          dispatchCount,
-          duration,
-          memory,
-          isWorker,
-          counterId,
-        } = child;
+        let { host, dispatchCount, duration, memory, isWorker, counterId } =
+          child;
         let dispatchesSincePrevious = dispatchCount;
         let durationSincePrevious = duration;
         if (prevChildren.has(counterId)) {

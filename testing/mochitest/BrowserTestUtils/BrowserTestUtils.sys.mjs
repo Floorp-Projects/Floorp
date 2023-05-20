@@ -58,9 +58,8 @@ NewProcessSelector.prototype = {
 };
 
 let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-let selectorFactory = ComponentUtils.generateSingletonFactory(
-  NewProcessSelector
-);
+let selectorFactory =
+  ComponentUtils.generateSingletonFactory(NewProcessSelector);
 registrar.registerFactory(OUR_PROCESSSELECTOR_CID, "", null, selectorFactory);
 
 const kAboutPageRegistrationContentScript =
@@ -2644,7 +2643,8 @@ export var BrowserTestUtils = {
    */
   addTab(tabbrowser, uri, params = {}, beforeLoadFunc = null) {
     if (!params.triggeringPrincipal) {
-      params.triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+      params.triggeringPrincipal =
+        Services.scriptSecurityManager.getSystemPrincipal();
     }
     if (!params.allowInheritPrincipal) {
       params.allowInheritPrincipal = true;
@@ -2763,9 +2763,8 @@ export var BrowserTestUtils = {
       await this.waitForCondition(() => aBrowsingContext.currentWindowGlobal);
     }
 
-    let actor = aBrowsingContext.currentWindowGlobal.getActor(
-      "BrowserTestUtils"
-    );
+    let actor =
+      aBrowsingContext.currentWindowGlobal.getActor("BrowserTestUtils");
     actor.sendAsyncMessage(aMessageName, aMessageData);
   },
 
@@ -2784,9 +2783,8 @@ export var BrowserTestUtils = {
       await this.waitForCondition(() => aBrowsingContext.currentWindowGlobal);
     }
 
-    let actor = aBrowsingContext.currentWindowGlobal.getActor(
-      "BrowserTestUtils"
-    );
+    let actor =
+      aBrowsingContext.currentWindowGlobal.getActor("BrowserTestUtils");
     return actor.sendQuery(aMessageName, aMessageData).then(val => {
       ChromeUtils.addProfilerMarker(
         "BrowserTestUtils",

@@ -292,9 +292,8 @@ class MigrationUtils {
         MIGRATOR_MODULES
       )) {
         if (platforms.includes(AppConstants.platform)) {
-          let { [symbol]: migratorClass } = ChromeUtils.importESModule(
-            moduleURI
-          );
+          let { [symbol]: migratorClass } =
+            ChromeUtils.importESModule(moduleURI);
           if (gMigrators.has(migratorClass.key)) {
             console.error(
               "A pre-existing migrator exists with key " +

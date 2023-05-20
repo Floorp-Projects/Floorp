@@ -99,9 +99,8 @@ class ToolboxTabsOrderManager {
     this.dragStartX = e.pageX;
     this.dragTarget = e.target;
     this.previousPageX = e.pageX;
-    this.toolboxContainerElement = this.dragTarget.closest(
-      "#toolbox-container"
-    );
+    this.toolboxContainerElement =
+      this.dragTarget.closest("#toolbox-container");
     this.toolboxTabsElement = this.dragTarget.closest(".toolbox-tabs");
     this.isOrderUpdated = false;
     this.eventTarget = this.dragTarget.ownerGlobal.top;
@@ -118,9 +117,8 @@ class ToolboxTabsOrderManager {
       this.dragTarget.offsetLeft + diffPageX + this.dragTarget.clientWidth / 2;
     let isDragTargetPreviousSibling = false;
 
-    const tabElements = this.toolboxTabsElement.querySelectorAll(
-      ".devtools-tab"
-    );
+    const tabElements =
+      this.toolboxTabsElement.querySelectorAll(".devtools-tab");
 
     // Calculate the minimum and maximum X-offset that can be valid for the drag target.
     const firstElement = tabElements[0];

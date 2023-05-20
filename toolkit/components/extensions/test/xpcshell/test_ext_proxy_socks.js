@@ -10,8 +10,8 @@ const BinaryInputStream = CC(
   "setInputStream"
 );
 
-const currentThread = Cc["@mozilla.org/thread-manager;1"].getService()
-  .currentThread;
+const currentThread =
+  Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
 
 // Most of the socks logic here is copied and upgraded to support authentication
 // for socks5. The original test is from netwerk/test/unit/test_socks.js

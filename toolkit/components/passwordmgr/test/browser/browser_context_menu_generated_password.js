@@ -325,9 +325,8 @@ add_task(async function fill_generated_password_with_matching_logins() {
       );
 
       let popupMenu = document.getElementById("fill-login-popup");
-      let firstLoginItem = popupMenu.getElementsByClassName(
-        "context-login-item"
-      )[0];
+      let firstLoginItem =
+        popupMenu.getElementsByClassName("context-login-item")[0];
       firstLoginItem.doCommand();
 
       await passwordChangedPromise;

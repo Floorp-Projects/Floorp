@@ -81,9 +81,8 @@ class WebExtensionDescriptorActor extends Actor {
   form() {
     const { addonId } = this;
     const policy = lazy.ExtensionParent.WebExtensionPolicy.getByID(addonId);
-    const persistentBackgroundScript = lazy.ExtensionParent.DebugUtils.hasPersistentBackgroundScript(
-      addonId
-    );
+    const persistentBackgroundScript =
+      lazy.ExtensionParent.DebugUtils.hasPersistentBackgroundScript(addonId);
     const backgroundScriptStatus = this._getBackgroundScriptStatus();
 
     return {
@@ -161,9 +160,8 @@ class WebExtensionDescriptorActor extends Actor {
       return this._form;
     }
 
-    this._browser = await lazy.ExtensionParent.DebugUtils.getExtensionProcessBrowser(
-      this
-    );
+    this._browser =
+      await lazy.ExtensionParent.DebugUtils.getExtensionProcessBrowser(this);
 
     const policy = lazy.ExtensionParent.WebExtensionPolicy.getByID(
       this.addonId

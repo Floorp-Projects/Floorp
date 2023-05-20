@@ -581,10 +581,10 @@ describe("DiscoveryStreamFeed", () => {
 
       const { layout } = feed.store.getState().DiscoveryStream;
       assert.deepEqual(layout[0].components[2].placement.ad_types, [1230]);
-      assert.deepEqual(layout[0].components[2].placement.zone_ids, [
-        4560,
-        7890,
-      ]);
+      assert.deepEqual(
+        layout[0].components[2].placement.zone_ids,
+        [4560, 7890]
+      );
     });
     it("should create a layout with spoc topsite position data", async () => {
       feed.config.hardcoded_layout = true;
@@ -603,10 +603,10 @@ describe("DiscoveryStreamFeed", () => {
 
       const { layout } = feed.store.getState().DiscoveryStream;
       assert.deepEqual(layout[0].components[0].placement.ad_types, [1230]);
-      assert.deepEqual(layout[0].components[0].placement.zone_ids, [
-        4560,
-        7890,
-      ]);
+      assert.deepEqual(
+        layout[0].components[0].placement.zone_ids,
+        [4560, 7890]
+      );
     });
     it("should create a layout with proper spoc url with a site id", async () => {
       feed.config.hardcoded_layout = true;
@@ -1922,15 +1922,15 @@ describe("DiscoveryStreamFeed", () => {
 
   describe("#recordBlockFlightId", () => {
     it("should call writeDataPref with new flight id added", () => {
-      sandbox.stub(feed, "readDataPref").returns({ "1234": 1 });
+      sandbox.stub(feed, "readDataPref").returns({ 1234: 1 });
       sandbox.stub(feed, "writeDataPref").returns();
 
       feed.recordBlockFlightId("5678");
 
       assert.calledOnce(feed.readDataPref);
       assert.calledWith(feed.writeDataPref, "discoverystream.flight.blocks", {
-        "1234": 1,
-        "5678": 1,
+        1234: 1,
+        5678: 1,
       });
     });
   });

@@ -4,9 +4,8 @@
 "use strict";
 
 add_task(async function test_policy_managedbookmarks() {
-  let managedBookmarksMenu = window.document.getElementById(
-    "managed-bookmarks"
-  );
+  let managedBookmarksMenu =
+    window.document.getElementById("managed-bookmarks");
 
   is(
     managedBookmarksMenu.hidden,
@@ -105,9 +104,8 @@ add_task(async function test_policy_managedbookmarks() {
 });
 
 add_task(async function test_open_managedbookmark() {
-  let managedBookmarksMenu = window.document.getElementById(
-    "managed-bookmarks"
-  );
+  let managedBookmarksMenu =
+    window.document.getElementById("managed-bookmarks");
 
   let promise = BrowserTestUtils.waitForEvent(
     managedBookmarksMenu.menupopup,
@@ -161,9 +159,8 @@ add_task(async function test_open_managedbookmark() {
 });
 
 add_task(async function test_copy_managedbookmark() {
-  let managedBookmarksMenu = window.document.getElementById(
-    "managed-bookmarks"
-  );
+  let managedBookmarksMenu =
+    window.document.getElementById("managed-bookmarks");
 
   let promise = BrowserTestUtils.waitForEvent(
     managedBookmarksMenu.menupopup,

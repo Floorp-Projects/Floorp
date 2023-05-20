@@ -205,7 +205,8 @@ add_task(async function test_getTemporaryDownloadsDirectory() {
   Assert.notEqual(downloadDir, "");
 
   if ("nsILocalFileMac" in Ci) {
-    let preferredDownloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
+    let preferredDownloadDir =
+      await DownloadIntegration.getPreferredDownloadsDirectory();
     Assert.equal(downloadDir, preferredDownloadDir);
   } else {
     let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);

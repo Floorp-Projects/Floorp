@@ -50,7 +50,11 @@ const sDisabledIconTooltip = gNavigatorBundle.getString(
 );
 
 registerCleanupFunction(function () {
-  TrackingProtection = gProtectionsHandler = ThirdPartyCookies = tabbrowser = null;
+  TrackingProtection =
+    gProtectionsHandler =
+    ThirdPartyCookies =
+    tabbrowser =
+      null;
   UrlClassifierTestUtils.cleanupTestTrackers();
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(TP_PB_PREF);

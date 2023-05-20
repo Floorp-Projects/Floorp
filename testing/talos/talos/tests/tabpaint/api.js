@@ -139,7 +139,8 @@ this.tabpaint = class extends ExtensionAPI {
         win.performance.now() + win.performance.timing.navigationStart
       }`,
       {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       }
     );
 

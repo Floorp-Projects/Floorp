@@ -23,8 +23,7 @@ const EXISTING_RESOURCES = [
   },
   {
     styleText: "body { margin: 1px; }",
-    href:
-      "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.css",
+    href: "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.css",
     nodeHref:
       "https://example.com/browser/devtools/shared/commands/resource/tests/style_document.html",
     isNew: false,
@@ -56,8 +55,7 @@ const EXISTING_RESOURCES = [
   },
   {
     styleText: "body { padding: 1px; }",
-    href:
-      "https://example.org/browser/devtools/shared/commands/resource/tests/style_iframe.css",
+    href: "https://example.org/browser/devtools/shared/commands/resource/tests/style_iframe.css",
     nodeHref:
       "https://example.org/browser/devtools/shared/commands/resource/tests/style_iframe.html",
     isNew: false,
@@ -359,10 +357,8 @@ async function testNestedResourceUpdateFeature() {
 
   const tab = await addTab(STYLE_TEST_URL);
 
-  const {
-    outerWidth: originalWindowWidth,
-    outerHeight: originalWindowHeight,
-  } = tab.ownerGlobal;
+  const { outerWidth: originalWindowWidth, outerHeight: originalWindowHeight } =
+    tab.ownerGlobal;
 
   registerCleanupFunction(() => {
     tab.ownerGlobal.resizeTo(originalWindowWidth, originalWindowHeight);

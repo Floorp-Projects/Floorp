@@ -66,61 +66,71 @@ add_task(async function () {
     false,
     expectedPageCheck
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [kTestPage], function (
-    kTestPage
-  ) {
-    ok(
-      !content.document.nodePrincipal.isSystemPrincipal,
-      "about:cache with query params should still not have system principal"
-    );
-    let principal = content.document.nodePrincipal;
-    is(
-      principal.spec,
-      content.document.location.href,
-      "Principal matches location"
-    );
-    let channel = content.docShell.currentDocumentChannel;
-    principal = channel.loadInfo.triggeringPrincipal;
-    is(
-      principal.spec,
-      "about:cache",
-      "Triggering principal matches previous location"
-    );
-    ok(!channel.loadInfo.loadingPrincipal, "Loading principal should be null.");
-    let links = [
-      ...content.document.querySelectorAll("a[href*='" + kTestPage + "']"),
-    ];
-    is(links.length, 1, "Should have 1 link to the entry for " + kTestPage);
-    links[0].click();
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [kTestPage],
+    function (kTestPage) {
+      ok(
+        !content.document.nodePrincipal.isSystemPrincipal,
+        "about:cache with query params should still not have system principal"
+      );
+      let principal = content.document.nodePrincipal;
+      is(
+        principal.spec,
+        content.document.location.href,
+        "Principal matches location"
+      );
+      let channel = content.docShell.currentDocumentChannel;
+      principal = channel.loadInfo.triggeringPrincipal;
+      is(
+        principal.spec,
+        "about:cache",
+        "Triggering principal matches previous location"
+      );
+      ok(
+        !channel.loadInfo.loadingPrincipal,
+        "Loading principal should be null."
+      );
+      let links = [
+        ...content.document.querySelectorAll("a[href*='" + kTestPage + "']"),
+      ];
+      is(links.length, 1, "Should have 1 link to the entry for " + kTestPage);
+      links[0].click();
+    }
+  );
   await entryLoaded;
   info("about:cache entry loaded");
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [triggeringURISpec], function (
-    triggeringURISpec
-  ) {
-    ok(
-      !content.document.nodePrincipal.isSystemPrincipal,
-      "about:cache-entry should also not have system principal"
-    );
-    let principal = content.document.nodePrincipal;
-    is(
-      principal.spec,
-      content.document.location.href,
-      "Principal matches location"
-    );
-    let channel = content.docShell.currentDocumentChannel;
-    principal = channel.loadInfo.triggeringPrincipal;
-    is(
-      principal.spec,
-      triggeringURISpec,
-      "Triggering principal matches previous location"
-    );
-    ok(!channel.loadInfo.loadingPrincipal, "Loading principal should be null.");
-    ok(
-      content.document.querySelectorAll("th").length,
-      "Should have several table headers with data."
-    );
-  });
+  await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [triggeringURISpec],
+    function (triggeringURISpec) {
+      ok(
+        !content.document.nodePrincipal.isSystemPrincipal,
+        "about:cache-entry should also not have system principal"
+      );
+      let principal = content.document.nodePrincipal;
+      is(
+        principal.spec,
+        content.document.location.href,
+        "Principal matches location"
+      );
+      let channel = content.docShell.currentDocumentChannel;
+      principal = channel.loadInfo.triggeringPrincipal;
+      is(
+        principal.spec,
+        triggeringURISpec,
+        "Triggering principal matches previous location"
+      );
+      ok(
+        !channel.loadInfo.loadingPrincipal,
+        "Loading principal should be null."
+      );
+      ok(
+        content.document.querySelectorAll("th").length,
+        "Should have several table headers with data."
+      );
+    }
+  );
   BrowserTestUtils.removeTab(tab);
 });

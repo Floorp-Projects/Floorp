@@ -16,17 +16,13 @@ add_task(async function () {
   // go to This Firefox and inspect the new tab
   info("Inspecting a new tab in This Firefox");
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const {
-    devtoolsDocument,
-    devtoolsTab,
-    devtoolsWindow,
-  } = await openAboutDevtoolsToolbox(document, tab, window, "about:home");
+  const { devtoolsDocument, devtoolsTab, devtoolsWindow } =
+    await openAboutDevtoolsToolbox(document, tab, window, "about:home");
 
   info("Clicking reload button and waiting for requests to complete");
   const toolbox = getToolbox(devtoolsWindow);
-  const {
-    onDomCompleteResource,
-  } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
+  const { onDomCompleteResource } =
+    await waitForNextTopLevelDomCompleteResource(toolbox.commands);
 
   // Watch for navigation promises.
   const refreshes = Promise.all([

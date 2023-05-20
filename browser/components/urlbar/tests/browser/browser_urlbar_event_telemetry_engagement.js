@@ -113,8 +113,8 @@ const tests = [
 
     let searchPromise = UrlbarTestUtils.promiseSearchComplete(win);
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
-    let selectedOneOff = UrlbarTestUtils.getOneOffSearchButtons(win)
-      .selectedButton;
+    let selectedOneOff =
+      UrlbarTestUtils.getOneOffSearchButtons(win).selectedButton;
     selectedOneOff.click();
     await searchPromise;
     await UrlbarTestUtils.assertSearchMode(win, {
@@ -155,8 +155,8 @@ const tests = [
       fireInputEvent: true,
     });
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true }, win);
-    let selectedOneOff = UrlbarTestUtils.getOneOffSearchButtons(win)
-      .selectedButton;
+    let selectedOneOff =
+      UrlbarTestUtils.getOneOffSearchButtons(win).selectedButton;
     Assert.ok(selectedOneOff);
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await searchPromise;

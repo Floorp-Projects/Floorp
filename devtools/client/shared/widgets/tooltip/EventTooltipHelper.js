@@ -44,9 +44,8 @@ class EventTooltip extends EventEmitter {
     this._tooltip.eventTooltip = this;
 
     this._headerClicked = this._headerClicked.bind(this);
-    this._eventToggleCheckboxChanged = this._eventToggleCheckboxChanged.bind(
-      this
-    );
+    this._eventToggleCheckboxChanged =
+      this._eventToggleCheckboxChanged.bind(this);
 
     this._subscriptions = [];
 

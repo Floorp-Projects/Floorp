@@ -27,9 +27,10 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 function sendFormAutofillMessage(name, data) {
-  let actor = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
-    "FormAutofill"
-  );
+  let actor =
+    gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+      "FormAutofill"
+    );
   return actor.receiveMessage({ name, data });
 }
 

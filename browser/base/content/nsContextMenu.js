@@ -274,9 +274,10 @@ class nsContextMenu {
 
       this.browser = this.ownerDoc.defaultView.docShell.chromeEventHandler;
       this.selectionInfo = SelectionUtils.getSelectionDetails(window);
-      this.actor = this.browser.browsingContext.currentWindowGlobal.getActor(
-        "ContextMenu"
-      );
+      this.actor =
+        this.browser.browsingContext.currentWindowGlobal.getActor(
+          "ContextMenu"
+        );
     }
 
     this.remoteType = this.actor?.domProcess?.remoteType;
@@ -710,9 +711,8 @@ class nsContextMenu {
     );
 
     if (haveSetDesktopBackground && this.onLoadedImage) {
-      document.getElementById(
-        "context-setDesktopBackground"
-      ).disabled = this.contentData.disableSetDesktopBackground;
+      document.getElementById("context-setDesktopBackground").disabled =
+        this.contentData.disableSetDesktopBackground;
     }
   }
 
@@ -802,8 +802,8 @@ class nsContextMenu {
     if (this.inFrame) {
       // To make it easier to debug the browser running with out-of-process iframes, we
       // display the process PID of the iframe in the context menu for the subframe.
-      let frameOsPid = this.actor.manager.browsingContext.currentWindowGlobal
-        .osPid;
+      let frameOsPid =
+        this.actor.manager.browsingContext.currentWindowGlobal.osPid;
       this.setItemAttr("context-frameOsPid", "label", "PID: " + frameOsPid);
 
       // We need to check if "Take Screenshot" should be displayed in the "This Frame"
@@ -1563,7 +1563,8 @@ class nsContextMenu {
         relatedToCurrent,
         inBackground: inNewWindow,
         skipAnimation: inNewWindow,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
       const viewSourceBrowser = tabBrowser.getBrowserForTab(tab);
       if (inNewWindow) {
@@ -2176,8 +2177,8 @@ class nsContextMenu {
    */
   copyStrippedLink() {
     let strippedLinkURI = this.getStrippedLink();
-    let strippedLinkURL = Services.io.createExposableURI(strippedLinkURI)
-      ?.displaySpec;
+    let strippedLinkURL =
+      Services.io.createExposableURI(strippedLinkURI)?.displaySpec;
     if (strippedLinkURL) {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
         Ci.nsIClipboardHelper

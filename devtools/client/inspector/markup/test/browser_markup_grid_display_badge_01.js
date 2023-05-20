@@ -19,10 +19,8 @@ add_task(async function () {
   const { inspector } = await openLayoutView();
   const { highlighters, store } = inspector;
   const HIGHLIGHTER_TYPE = inspector.highlighters.TYPES.GRID;
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   info("Check the grid display badge is shown and not active.");
   await selectNode("#grid", inspector);

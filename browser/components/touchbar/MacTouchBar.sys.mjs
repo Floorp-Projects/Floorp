@@ -446,10 +446,10 @@ export class TouchBarHelper {
     switch (topic) {
       case "touchbar-location-change":
         let updatedInputs = ["Back", "Forward"];
-        gBuiltInInputs.Back.disabled = !TouchBarHelper.window.gBrowser
-          .canGoBack;
-        gBuiltInInputs.Forward.disabled = !TouchBarHelper.window.gBrowser
-          .canGoForward;
+        gBuiltInInputs.Back.disabled =
+          !TouchBarHelper.window.gBrowser.canGoBack;
+        gBuiltInInputs.Forward.disabled =
+          !TouchBarHelper.window.gBrowser.canGoForward;
         if (subject.QueryInterface(Ci.nsIWebProgress)?.isTopLevel) {
           this.activeUrl = data;
           // ReaderView button is disabled on every toplevel location change

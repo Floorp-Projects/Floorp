@@ -568,14 +568,8 @@ class RequestListContextMenu {
   }
 
   async copyAsPowerShell(request) {
-    let {
-      id,
-      url,
-      method,
-      requestHeaders,
-      requestPostData,
-      requestCookies,
-    } = request;
+    let { id, url, method, requestHeaders, requestPostData, requestCookies } =
+      request;
 
     requestHeaders =
       requestHeaders ||

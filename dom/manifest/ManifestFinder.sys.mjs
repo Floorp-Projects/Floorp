@@ -27,9 +27,8 @@ export var ManifestFinder = {
       throw new TypeError("Invalid input.");
     }
 
-    const actor = aBrowser.browsingContext.currentWindowGlobal.getActor(
-      "ManifestMessages"
-    );
+    const actor =
+      aBrowser.browsingContext.currentWindowGlobal.getActor("ManifestMessages");
     const reply = await actor.sendQuery("DOM:WebManifest:hasManifestLink");
     return reply.result;
   },

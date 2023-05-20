@@ -3,20 +3,15 @@
 
 "use strict";
 
-const {
-  ON_PROFILE_CHANGE_NOTIFICATION,
-  WEBCHANNEL_ID,
-  log,
-} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+const { ON_PROFILE_CHANGE_NOTIFICATION, WEBCHANNEL_ID, log } =
+  ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const { CryptoUtils } = ChromeUtils.importESModule(
   "resource://services-crypto/utils.sys.mjs"
 );
-const {
-  FxAccountsWebChannel,
-  FxAccountsWebChannelHelpers,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsWebChannel.sys.mjs"
-);
+const { FxAccountsWebChannel, FxAccountsWebChannelHelpers } =
+  ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccountsWebChannel.sys.mjs"
+  );
 
 const URL_STRING = "https://example.com";
 

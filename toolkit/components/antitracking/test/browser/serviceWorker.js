@@ -73,14 +73,12 @@ self.addEventListener("message", async e => {
 
         idxDB.onsuccess = evt => {
           let db = evt.target.result;
-          db
-            .transaction("foobar")
-            .objectStore("foobar")
-            .get(1).onsuccess = ee => {
-            resolve(
-              ee.target.result === undefined ? "" : ee.target.result.value
-            );
-          };
+          db.transaction("foobar").objectStore("foobar").get(1).onsuccess =
+            ee => {
+              resolve(
+                ee.target.result === undefined ? "" : ee.target.result.value
+              );
+            };
         };
       });
       res.result = "OK";

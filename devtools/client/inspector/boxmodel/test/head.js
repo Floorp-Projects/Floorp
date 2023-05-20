@@ -70,14 +70,15 @@ function waitForMarkupLoaded(inspector) {
 }
 
 function getStyle(browser, selector, propertyName) {
-  return SpecialPowers.spawn(browser, [selector, propertyName], async function (
-    _selector,
-    _propertyName
-  ) {
-    return content.document
-      .querySelector(_selector)
-      .style.getPropertyValue(_propertyName);
-  });
+  return SpecialPowers.spawn(
+    browser,
+    [selector, propertyName],
+    async function (_selector, _propertyName) {
+      return content.document
+        .querySelector(_selector)
+        .style.getPropertyValue(_propertyName);
+    }
+  );
 }
 
 function setStyle(browser, selector, propertyName, value) {

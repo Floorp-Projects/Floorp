@@ -147,9 +147,8 @@ declTest("destroy actor by tab being closed", {
     let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
     let newTabBrowser = newTab.linkedBrowser;
 
-    let parent = newTabBrowser.browsingContext.currentWindowGlobal.getActor(
-      "TestWindow"
-    );
+    let parent =
+      newTabBrowser.browsingContext.currentWindowGlobal.getActor("TestWindow");
     ok(parent, "JSWindowActorParent should have value.");
 
     // We can't depend on `SpecialPowers.spawn` to resolve our promise, as the

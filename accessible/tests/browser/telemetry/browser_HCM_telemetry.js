@@ -34,9 +34,8 @@ function reset() {
 
 async function openColorsDialog() {
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
-  const colorsButton = gBrowser.selectedBrowser.contentDocument.getElementById(
-    "colors"
-  );
+  const colorsButton =
+    gBrowser.selectedBrowser.contentDocument.getElementById("colors");
 
   const dialogOpened = promiseLoadSubDialog(
     "chrome://browser/content/preferences/dialogs/colors.xhtml"

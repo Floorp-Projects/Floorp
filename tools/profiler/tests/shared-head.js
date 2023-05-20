@@ -284,7 +284,8 @@ async function stopNowAndGetProfile() {
   // receives the following `getProfileDataAsArrayBuffer()`.
   Services.profiler.Pause();
 
-  const profileArrayBuffer = await Services.profiler.getProfileDataAsArrayBuffer();
+  const profileArrayBuffer =
+    await Services.profiler.getProfileDataAsArrayBuffer();
   await Services.profiler.StopProfiler();
 
   const profileUint8Array = new Uint8Array(profileArrayBuffer);
@@ -544,7 +545,9 @@ Object.assign(Assert, {
 });
 
 const Expect = {
-  any: () => actual => {} /* We don't check anything more than the presence of this property. */,
+  any:
+    () =>
+    actual => {} /* We don't check anything more than the presence of this property. */,
 };
 
 /* These functions are part of the Assert object, and we want to reuse them. */
@@ -555,8 +558,10 @@ const Expect = {
   "objectContainsOnly",
 ].forEach(
   assertChecker =>
-    (Expect[assertChecker] = expected => (actual, ...moreArgs) =>
-      Assert[assertChecker](actual, expected, ...moreArgs))
+    (Expect[assertChecker] =
+      expected =>
+      (actual, ...moreArgs) =>
+        Assert[assertChecker](actual, expected, ...moreArgs))
 );
 
 /* These functions will only check for the type. */

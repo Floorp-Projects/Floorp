@@ -234,9 +234,8 @@ function addSources(state, sources) {
     // In case of original source, maintain the mapping of generated source to original sources map.
     if (source.isOriginal) {
       const generatedSourceId = originalToGeneratedId(source.id);
-      let originalSourceIds = state.mutableOriginalSources.get(
-        generatedSourceId
-      );
+      let originalSourceIds =
+        state.mutableOriginalSources.get(generatedSourceId);
       if (!originalSourceIds) {
         originalSourceIds = [];
         state.mutableOriginalSources.set(generatedSourceId, originalSourceIds);

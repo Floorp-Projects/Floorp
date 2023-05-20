@@ -170,9 +170,8 @@ add_task(
         const { document } = browser.contentWindow;
         await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
         const parentEl = document.querySelector("#tab-pickup-container");
-        const calloutStartingTopPosition = document.querySelector(
-          calloutSelector
-        ).style.top;
+        const calloutStartingTopPosition =
+          document.querySelector(calloutSelector).style.top;
 
         //container has been toggled/minimized
         parentEl.removeAttribute("open", "");

@@ -153,9 +153,8 @@ function waitForNotificationBar(notificationID, browser, callback) {
     let notificationBox = gBrowser.getNotificationBox(browser);
     waitForCondition(
       () =>
-        (notification = notificationBox.getNotificationWithValue(
-          notificationID
-        )),
+        (notification =
+          notificationBox.getNotificationWithValue(notificationID)),
       () => {
         ok(
           notification,

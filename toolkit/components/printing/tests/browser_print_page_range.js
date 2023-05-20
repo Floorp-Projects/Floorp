@@ -174,9 +174,9 @@ add_task(async function testPageRangeSets() {
     helper.text(helper.get("custom-range"), ",");
 
     let validStrings = {
-      "1": [1, 1],
+      1: [1, 1],
       "1,": [1, 1],
-      "2": [2, 2],
+      2: [2, 2],
       "1-2": [1, 2],
       "1,2": [1, 2],
       "1,2,": [1, 2],

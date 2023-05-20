@@ -471,8 +471,9 @@ add_task(async function test_permissions_and_policy() {
   );
 
   const panel = await popupPromise;
-  const description = panel.querySelector(".popup-notification-description")
-    .textContent;
+  const description = panel.querySelector(
+    ".popup-notification-description"
+  ).textContent;
   ok(
     description.startsWith("Your system administrator"),
     "Policy specific error is shown."

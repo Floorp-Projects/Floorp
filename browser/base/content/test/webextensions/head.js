@@ -252,8 +252,9 @@ function checkNotification(panel, checkIcon, permissions, sideloaded) {
     is(icon, checkIcon, "Notification icon is correct");
   }
 
-  let description = panel.querySelector(".popup-notification-description")
-    .textContent;
+  let description = panel.querySelector(
+    ".popup-notification-description"
+  ).textContent;
   let expectedDescription = "webextPerms.header";
   if (permissions.length) {
     expectedDescription += "WithPerms";
@@ -392,9 +393,8 @@ async function testInstallMethod(installFn, telemetryBase) {
       } catch (err) {}
     } else {
       // Look for post-install notification
-      let postInstallPromise = promiseAppMenuNotificationShown(
-        "addon-installed"
-      );
+      let postInstallPromise =
+        promiseAppMenuNotificationShown("addon-installed");
       panel.button.click();
 
       // Press OK on the post-install notification

@@ -82,9 +82,8 @@ add_task(async function testContentBlockingMessage() {
     ".warn"
   );
   emitContentBlockingMessage(hud);
-  const {
-    node: contentBlockedWarningGroupNode,
-  } = await onContentBlockedWarningGroupMessage;
+  const { node: contentBlockedWarningGroupNode } =
+    await onContentBlockedWarningGroupMessage;
   is(
     contentBlockedWarningGroupNode.querySelector(".warning-group-badge")
       .textContent,
@@ -135,9 +134,8 @@ add_task(async function testContentBlockingMessage() {
     ".warn"
   );
   emitStorageAccessBlockedMessage(hud);
-  const {
-    node: storageBlockedWarningGroupNode,
-  } = await onStorageBlockedWarningGroupMessage;
+  const { node: storageBlockedWarningGroupNode } =
+    await onStorageBlockedWarningGroupMessage;
   is(
     storageBlockedWarningGroupNode.querySelector(".warning-group-badge")
       .textContent,

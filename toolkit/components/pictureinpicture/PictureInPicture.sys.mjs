@@ -915,12 +915,8 @@ export var PictureInPicture = {
       let centerY = top + (height * PipScreenCssToDesktopScale) / 2;
 
       // We have the screen, now we will get the dimensions of the screen
-      let [
-        PiPScreenLeft,
-        PiPScreenTop,
-        PiPScreenWidth,
-        PiPScreenHeight,
-      ] = this.getAvailScreenSize(PiPScreen);
+      let [PiPScreenLeft, PiPScreenTop, PiPScreenWidth, PiPScreenHeight] =
+        this.getAvailScreenSize(PiPScreen);
 
       // Check that the center of the last PiP location is within the screen limits
       // If it's not, then we will use the default size and position
@@ -996,12 +992,8 @@ export var PictureInPicture = {
       requestingWin.outerWidth * requestingCssToDesktopScale,
       requestingWin.outerHeight * requestingCssToDesktopScale
     );
-    let [
-      screenLeft,
-      screenTop,
-      screenWidth,
-      screenHeight,
-    ] = this.getAvailScreenSize(screen);
+    let [screenLeft, screenTop, screenWidth, screenHeight] =
+      this.getAvailScreenSize(screen);
 
     let screenCssToDesktopScale =
       screen.defaultCSSScaleFactor / screen.contentsScaleFactor;
@@ -1136,12 +1128,8 @@ export var PictureInPicture = {
     // the conflict occurred
     const conflictScreen = this.getWorkingScreen(conflictLoc.x, conflictLoc.y);
 
-    const [
-      screenTop,
-      screenLeft,
-      screenWidth,
-      screenHeight,
-    ] = this.getAvailScreenSize(conflictScreen);
+    const [screenTop, screenLeft, screenWidth, screenHeight] =
+      this.getAvailScreenSize(conflictScreen);
 
     const screenRect = new Rect(
       screenTop,

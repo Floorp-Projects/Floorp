@@ -130,8 +130,9 @@ async function testMenuBookmarks() {
 }
 
 async function testToolbarBookmarks() {
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid)
-    .root;
+  let root = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.toolbarGuid
+  ).root;
 
   // child count (add 2 for pre-existing items, one of the feeds is skipped
   // because it doesn't have href)
@@ -161,8 +162,9 @@ async function testToolbarBookmarks() {
 }
 
 function testUnfiledBookmarks() {
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
-    .root;
+  let root = PlacesUtils.getFolderContents(
+    PlacesUtils.bookmarks.unfiledGuid
+  ).root;
   // child count (add 1 for pre-existing item)
   Assert.equal(root.childCount, bookmarkData.length + 1);
   for (let i = 1; i < root.childCount; ++i) {

@@ -43,9 +43,8 @@ add_task(async function test() {
     window,
     "placesCmd_copy"
   );
-  let treeController = tree.controllers.getControllerForCommand(
-    "placesCmd_copy"
-  );
+  let treeController =
+    tree.controllers.getControllerForCommand("placesCmd_copy");
   ok(controller == treeController, "tree controller was returned");
 
   // Open the context menu for a toolbar item, and check if the toolbar's

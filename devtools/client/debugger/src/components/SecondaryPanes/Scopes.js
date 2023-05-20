@@ -31,12 +31,8 @@ const { ObjectInspector } = objectInspector;
 
 class Scopes extends PureComponent {
   constructor(props) {
-    const {
-      why,
-      selectedFrame,
-      originalFrameScopes,
-      generatedFrameScopes,
-    } = props;
+    const { why, selectedFrame, originalFrameScopes, generatedFrameScopes } =
+      props;
 
     super(props);
 
@@ -276,23 +272,19 @@ const mapStateToProps = state => {
   const selectedFrame = getSelectedFrame(state, cx.thread);
   const selectedSource = getSelectedSource(state);
 
-  const {
-    scope: originalFrameScopes,
-    pending: originalPending,
-  } = getOriginalFrameScope(
-    state,
-    cx.thread,
-    selectedSource?.id,
-    selectedFrame?.id
-  ) || { scope: null, pending: false };
+  const { scope: originalFrameScopes, pending: originalPending } =
+    getOriginalFrameScope(
+      state,
+      cx.thread,
+      selectedSource?.id,
+      selectedFrame?.id
+    ) || { scope: null, pending: false };
 
-  const {
-    scope: generatedFrameScopes,
-    pending: generatedPending,
-  } = getGeneratedFrameScope(state, cx.thread, selectedFrame?.id) || {
-    scope: null,
-    pending: false,
-  };
+  const { scope: generatedFrameScopes, pending: generatedPending } =
+    getGeneratedFrameScope(state, cx.thread, selectedFrame?.id) || {
+      scope: null,
+      pending: false,
+    };
 
   return {
     cx,

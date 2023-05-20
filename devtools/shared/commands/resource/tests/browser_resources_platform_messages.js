@@ -16,11 +16,8 @@ add_task(async function () {
 });
 
 async function testPlatformMessagesResources() {
-  const {
-    client,
-    resourceCommand,
-    targetCommand,
-  } = await initMultiProcessResourceCommand();
+  const { client, resourceCommand, targetCommand } =
+    await initMultiProcessResourceCommand();
 
   const cachedMessages = [
     "This is a cached message",
@@ -104,11 +101,8 @@ async function testPlatformMessagesResources() {
 }
 
 async function testPlatformMessagesResourcesWithIgnoreExistingResources() {
-  const {
-    client,
-    resourceCommand,
-    targetCommand,
-  } = await initMultiProcessResourceCommand();
+  const { client, resourceCommand, targetCommand } =
+    await initMultiProcessResourceCommand();
 
   info(
     "Check whether onAvailable will not be called with existing platform messages"

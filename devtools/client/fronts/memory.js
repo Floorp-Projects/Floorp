@@ -83,7 +83,8 @@ class MemoryFront extends FrontClassWithSpec(memorySpec) {
         snapshotId,
       });
 
-      const outFilePath = HeapSnapshotFileUtils.getNewUniqueHeapSnapshotTempFilePath();
+      const outFilePath =
+        HeapSnapshotFileUtils.getNewUniqueHeapSnapshotTempFilePath();
       const outFile = new lazy.FileUtils.File(outFilePath);
       const outFileStream = lazy.FileUtils.openSafeFileOutputStream(outFile);
 

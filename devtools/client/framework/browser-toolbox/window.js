@@ -8,12 +8,10 @@ var { loader, require } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );
 
-var {
-  useDistinctSystemPrincipalLoader,
-  releaseDistinctSystemPrincipalLoader,
-} = ChromeUtils.importESModule(
-  "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
-);
+var { useDistinctSystemPrincipalLoader, releaseDistinctSystemPrincipalLoader } =
+  ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+  );
 
 // Require this module to setup core modules
 loader.require("resource://devtools/client/framework/devtools-browser.js");

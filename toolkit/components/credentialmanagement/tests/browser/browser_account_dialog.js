@@ -398,8 +398,7 @@ add_task(async function test_multiple_acccount_show_picture() {
         icons: [
           {
             size: 256,
-            url:
-              "https://example.net/browser/toolkit/components/credentialmanagement/tests/browser/custom.svg",
+            url: "https://example.net/browser/toolkit/components/credentialmanagement/tests/browser/custom.svg",
           },
         ],
       },

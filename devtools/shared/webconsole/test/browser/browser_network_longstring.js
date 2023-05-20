@@ -69,7 +69,8 @@ add_task(async function () {
   await commands.destroy();
 
   DevToolsServer.LONG_STRING_LENGTH = ORIGINAL_LONG_STRING_LENGTH;
-  DevToolsServer.LONG_STRING_INITIAL_LENGTH = ORIGINAL_LONG_STRING_INITIAL_LENGTH;
+  DevToolsServer.LONG_STRING_INITIAL_LENGTH =
+    ORIGINAL_LONG_STRING_INITIAL_LENGTH;
 });
 
 function assertRequestHeaders(response) {

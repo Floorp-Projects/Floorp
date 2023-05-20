@@ -267,9 +267,8 @@ const SectionsManager = {
       storedPrefs = {};
       console.error(`Problem getting stored prefs for ${feedPrefName}`);
     }
-    const defaultSection = BUILT_IN_SECTIONS(featureConfig)[feedPrefName](
-      options
-    );
+    const defaultSection =
+      BUILT_IN_SECTIONS(featureConfig)[feedPrefName](options);
     const section = Object.assign({}, defaultSection, {
       pref: Object.assign(
         {},
@@ -396,9 +395,8 @@ const SectionsManager = {
           `No context menu for highlight type ${card.type} is configured`
         );
       } else {
-        card.contextMenuOptions = this.CONTEXT_MENU_OPTIONS_FOR_HIGHLIGHT_TYPES[
-          card.type
-        ];
+        card.contextMenuOptions =
+          this.CONTEXT_MENU_OPTIONS_FOR_HIGHLIGHT_TYPES[card.type];
 
         // Remove any options that shouldn't be there based on CONTEXT_MENU_PREFS.
         // For example: If the Pocket extension is disabled, we should remove the CheckSavedToPocket option

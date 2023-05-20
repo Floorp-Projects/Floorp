@@ -144,9 +144,8 @@ const assertDNRStoreData = async (
         `Expect rule at index ${ruleIdx} to be an instance of the Rule class`
       );
       if (expectedRule.condition.regexFilter) {
-        const compiledRegexFilter = actualData.rules[
-          ruleIdx
-        ].condition.getCompiledRegexFilter();
+        const compiledRegexFilter =
+          actualData.rules[ruleIdx].condition.getCompiledRegexFilter();
         Assert.equal(
           compiledRegexFilter?.constructor.name,
           "RegExp",

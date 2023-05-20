@@ -141,12 +141,11 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
      * @param {object} data The data object to send.
      */
     _sendToAll(message, data) {
-      ChromeUtils.nondeterministicGetWeakSetKeys(
-        BrowsingContexts
-      ).forEach(browser =>
-        browser.currentWindowGlobal
-          .getActor("ShieldFrame")
-          .sendAsyncMessage(message, data)
+      ChromeUtils.nondeterministicGetWeakSetKeys(BrowsingContexts).forEach(
+        browser =>
+          browser.currentWindowGlobal
+            .getActor("ShieldFrame")
+            .sendAsyncMessage(message, data)
       );
     },
 
@@ -219,9 +218,8 @@ XPCOMUtils.defineLazyGetter(AboutPages, "aboutStudies", () => {
     },
 
     openDataPreferences() {
-      const browserWindow = Services.wm.getMostRecentWindow(
-        "navigator:browser"
-      );
+      const browserWindow =
+        Services.wm.getMostRecentWindow("navigator:browser");
       browserWindow.openPreferences("privacy-reports");
     },
 

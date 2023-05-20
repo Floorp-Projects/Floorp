@@ -2627,10 +2627,8 @@ PlacesUtils.keywords = {
       throw new Error("Invalid keyword");
     }
 
-    let {
-      keyword,
-      source = Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-    } = keywordOrEntry;
+    let { keyword, source = Ci.nsINavBookmarksService.SOURCE_DEFAULT } =
+      keywordOrEntry;
     keyword = keywordOrEntry.keyword.trim().toLowerCase();
     return PlacesUtils.withConnectionWrapper(
       "PlacesUtils.keywords.remove",

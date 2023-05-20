@@ -55,9 +55,8 @@ add_setup(async () => {
 });
 
 async function switchExperiment(newExperiment) {
-  let promiseReloaded = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  let promiseReloaded =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
   let promiseSaved = promiseSaveSettingsData();
 
   // Stub getVariable to populate the cache with our expected data
@@ -225,9 +224,8 @@ add_task(async function test_experiment_setting_user_changed_back_during() {
 });
 
 add_task(async function test_experiment_setting_user_changed_back_private() {
-  Services.search.defaultPrivateEngine = Services.search.getEngineByName(
-    "engine1"
-  );
+  Services.search.defaultPrivateEngine =
+    Services.search.getEngineByName("engine1");
 
   Assert.equal(
     Services.search.defaultPrivateEngine.name,
@@ -255,9 +253,8 @@ add_task(async function test_experiment_setting_user_changed_back_private() {
   );
 
   // User resets to the original default engine.
-  Services.search.defaultPrivateEngine = Services.search.getEngineByName(
-    "engine1"
-  );
+  Services.search.defaultPrivateEngine =
+    Services.search.getEngineByName("engine1");
   Assert.equal(
     Services.search.defaultPrivateEngine.name,
     "engine1",

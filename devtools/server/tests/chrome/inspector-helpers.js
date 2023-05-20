@@ -53,8 +53,8 @@ SimpleTest.registerCleanupFunction(function () {
  */
 async function attachURL(url) {
   // Get the current browser window
-  const gBrowser = Services.wm.getMostRecentWindow("navigator:browser")
-    .gBrowser;
+  const gBrowser =
+    Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
 
   // open the url in a new tab, save a reference to the new inner window global object
   // and wait for it to load. The tests rely on this window object to send a "ready"

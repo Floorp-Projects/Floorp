@@ -380,30 +380,26 @@ async function testStores(commands) {
               if (!data[resourceType].dataByHost[host]) {
                 data[resourceType].dataByHost[host] = {};
               }
-              data[resourceType].dataByHost[
-                host
-              ].main = await resource.getStoreObjects(host, null, {
-                sessionString,
-              });
-              for (const name of resource.hosts[host]) {
-                const objName = JSON.parse(name).slice(0, 1);
-                data[resourceType].dataByHost[host][
-                  objName
-                ] = await resource.getStoreObjects(
-                  host,
-                  [JSON.stringify(objName)],
-                  { sessionString }
-                );
-                data[resourceType].dataByHost[host][
-                  name
-                ] = await resource.getStoreObjects(host, [name], {
+              data[resourceType].dataByHost[host].main =
+                await resource.getStoreObjects(host, null, {
                   sessionString,
                 });
+              for (const name of resource.hosts[host]) {
+                const objName = JSON.parse(name).slice(0, 1);
+                data[resourceType].dataByHost[host][objName] =
+                  await resource.getStoreObjects(
+                    host,
+                    [JSON.stringify(objName)],
+                    { sessionString }
+                  );
+                data[resourceType].dataByHost[host][name] =
+                  await resource.getStoreObjects(host, [name], {
+                    sessionString,
+                  });
               }
             } else {
-              data[resourceType].dataByHost[
-                host
-              ] = await resource.getStoreObjects(host, null, { sessionString });
+              data[resourceType].dataByHost[host] =
+                await resource.getStoreObjects(host, null, { sessionString });
             }
           }
         }

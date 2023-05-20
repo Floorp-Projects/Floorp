@@ -17,7 +17,8 @@ add_task(async function test_tab_manager_close() {
     set: [["browser.tabs.tabmanager.enabled", true]],
   });
 
-  let win = await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
+  let win =
+    await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
   win.gTabsPanel.init();
   await addTabTo(win.gBrowser, URL1);
   await addTabTo(win.gBrowser, URL2);

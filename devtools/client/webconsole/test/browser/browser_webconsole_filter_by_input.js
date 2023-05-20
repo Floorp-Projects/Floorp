@@ -203,37 +203,37 @@ function createServerAndGetTestUrl() {
   httpServer.registerContentType("html", "text/html");
   httpServer.registerContentType("js", "application/javascript");
 
-  httpServer.registerPathHandler("/" + HTML_FILENAME, function (
-    request,
-    response
-  ) {
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.write(HTML_CONTENT);
-  });
-  httpServer.registerPathHandler("/" + JS_ASCII_FILENAME, function (
-    request,
-    response
-  ) {
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.setHeader("Content-Type", "application/javascript", false);
-    let content = "";
-    for (const curSeason of SEASONS) {
-      content += `console.log("${curSeason.english}");`;
+  httpServer.registerPathHandler(
+    "/" + HTML_FILENAME,
+    function (request, response) {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.write(HTML_CONTENT);
     }
-    response.write(content);
-  });
-  httpServer.registerPathHandler("/" + ENCODED_JS_UNICODE_FILENAME, function (
-    request,
-    response
-  ) {
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.setHeader("Content-Type", "application/javascript", false);
-    let content = "";
-    for (const curSeason of SEASONS) {
-      content += `console.log("${curSeason.escapedChinese}");`;
+  );
+  httpServer.registerPathHandler(
+    "/" + JS_ASCII_FILENAME,
+    function (request, response) {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "application/javascript", false);
+      let content = "";
+      for (const curSeason of SEASONS) {
+        content += `console.log("${curSeason.english}");`;
+      }
+      response.write(content);
     }
-    response.write(content);
-  });
+  );
+  httpServer.registerPathHandler(
+    "/" + ENCODED_JS_UNICODE_FILENAME,
+    function (request, response) {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "application/javascript", false);
+      let content = "";
+      for (const curSeason of SEASONS) {
+        content += `console.log("${curSeason.escapedChinese}");`;
+      }
+      response.write(content);
+    }
+  );
   const port = httpServer.identity.primaryPort;
   return `http://localhost:${port}/${HTML_FILENAME}`;
 }

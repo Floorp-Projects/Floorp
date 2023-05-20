@@ -30,9 +30,8 @@ add_task(async function () {
     "Sidebar item shows as `Waiting for browser`"
   );
 
-  const hasConnectButton = usbRuntimeSidebarItem.querySelector(
-    ".qa-connect-button"
-  );
+  const hasConnectButton =
+    usbRuntimeSidebarItem.querySelector(".qa-connect-button");
   ok(!hasConnectButton, "Connect button is not displayed");
 
   const hasLink = usbRuntimeSidebarItem.querySelector(".qa-sidebar-link");

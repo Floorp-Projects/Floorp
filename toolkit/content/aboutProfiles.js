@@ -249,20 +249,16 @@ async function removeProfile(profile) {
   let deleteFiles = false;
 
   if (profile.rootDir.exists()) {
-    let [
-      title,
-      msg,
-      dontDeleteStr,
-      deleteStr,
-    ] = await document.l10n.formatValues([
-      { id: "profiles-delete-profile-title" },
-      {
-        id: "profiles-delete-profile-confirm",
-        args: { dir: profile.rootDir.path },
-      },
-      { id: "profiles-dont-delete-files" },
-      { id: "profiles-delete-files" },
-    ]);
+    let [title, msg, dontDeleteStr, deleteStr] =
+      await document.l10n.formatValues([
+        { id: "profiles-delete-profile-title" },
+        {
+          id: "profiles-delete-profile-confirm",
+          args: { dir: profile.rootDir.path },
+        },
+        { id: "profiles-dont-delete-files" },
+        { id: "profiles-delete-files" },
+      ]);
     let buttonPressed = Services.prompt.confirmEx(
       window,
       title,

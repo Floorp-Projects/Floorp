@@ -215,10 +215,8 @@ this.storage = class extends ExtensionAPI {
     // by asking to the main process (as soon as the storage.local API has been accessed for
     // the first time).
     const getStorageLocalBackend = async () => {
-      const {
-        backendEnabled,
-        storagePrincipal,
-      } = await ExtensionStorageIDB.selectBackend(context);
+      const { backendEnabled, storagePrincipal } =
+        await ExtensionStorageIDB.selectBackend(context);
 
       if (!backendEnabled) {
         return this.getLocalFileBackend(context, { deserialize, serialize });
@@ -275,10 +273,11 @@ this.storage = class extends ExtensionAPI {
             if (method !== "get") {
               // Let the outer try to catch rejections returned by the backend methods.
               try {
-                const result = await context.childManager.callParentAsyncFunction(
-                  "storage.local.callMethodInParentProcess",
-                  [method, args]
-                );
+                const result =
+                  await context.childManager.callParentAsyncFunction(
+                    "storage.local.callMethodInParentProcess",
+                    [method, args]
+                  );
                 return result;
               } catch (err) {
                 // Just return the rejection as is, the error has been normalized in the

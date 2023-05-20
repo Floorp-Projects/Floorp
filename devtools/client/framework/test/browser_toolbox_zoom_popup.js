@@ -66,12 +66,8 @@ add_task(async function () {
   ];
 
   for (const menu of menuList) {
-    const {
-      buttonBounds,
-      menuType,
-      menuBounds,
-      arrowBounds,
-    } = await getButtonAndMenuInfo(toolbox, menu);
+    const { buttonBounds, menuType, menuBounds, arrowBounds } =
+      await getButtonAndMenuInfo(toolbox, menu);
 
     switch (menuType) {
       case "native":

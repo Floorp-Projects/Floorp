@@ -67,12 +67,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Extension.jsm"
 );
 
-var {
-  makeWidgetId,
-  promisePopupShown,
-  getPanelForNode,
-  awaitBrowserLoaded,
-} = AppUiTestInternals;
+var { makeWidgetId, promisePopupShown, getPanelForNode, awaitBrowserLoaded } =
+  AppUiTestInternals;
 
 // The extension tests can run a lot slower under ASAN.
 if (AppConstants.ASAN) {

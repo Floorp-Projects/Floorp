@@ -56,7 +56,7 @@ describe("pause - scopes", () => {
   describe("getFramePopVariables", () => {
     describe("falsey values", () => {
       // NOTE: null and undefined are treated like objects and given a type
-      const falsey = { false: false, "0": 0, null: { type: "null" } };
+      const falsey = { false: false, 0: 0, null: { type: "null" } };
       for (const test in falsey) {
         const value = falsey[test];
         it(`shows ${test} returns`, () => {

@@ -14,14 +14,10 @@ const {
 } = require("resource://devtools/server/actors/highlighters/utils/accessibility.js");
 
 add_task(async function () {
-  const {
-    target,
-    walker,
-    parentAccessibility,
-    a11yWalker,
-  } = await initAccessibilityFrontsForUrl(
-    MAIN_DOMAIN + "doc_accessibility_infobar.html"
-  );
+  const { target, walker, parentAccessibility, a11yWalker } =
+    await initAccessibilityFrontsForUrl(
+      MAIN_DOMAIN + "doc_accessibility_infobar.html"
+    );
 
   info("Button front checks");
   await checkNameAndRole(walker, "#button", a11yWalker, "Accessible Button");

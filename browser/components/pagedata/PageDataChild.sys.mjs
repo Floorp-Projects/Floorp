@@ -36,9 +36,8 @@ export class PageDataChild extends JSWindowActorChild {
    * Called when the actor is created for a new page.
    */
   actorCreated() {
-    this.#isContentWindowPrivate = lazy.PrivateBrowsingUtils.isContentWindowPrivate(
-      this.contentWindow
-    );
+    this.#isContentWindowPrivate =
+      lazy.PrivateBrowsingUtils.isContentWindowPrivate(this.contentWindow);
   }
 
   /**

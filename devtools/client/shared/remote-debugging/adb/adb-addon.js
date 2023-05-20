@@ -38,8 +38,11 @@ class ADBAddon extends EventEmitter {
     this._status = ADB_ADDON_STATES.UNKNOWN;
 
     const addonsListener = {};
-    addonsListener.onEnabled = addonsListener.onDisabled = addonsListener.onInstalled = addonsListener.onUninstalled = () =>
-      this.updateInstallStatus();
+    addonsListener.onEnabled =
+      addonsListener.onDisabled =
+      addonsListener.onInstalled =
+      addonsListener.onUninstalled =
+        () => this.updateInstallStatus();
     AddonManager.addAddonListener(addonsListener);
 
     this.updateInstallStatus();

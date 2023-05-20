@@ -343,8 +343,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "getUserMedia screen sharing in a first process + screen sharing in a second process",
+    desc: "getUserMedia screen sharing in a first process + screen sharing in a second process",
     skipObserverVerification: true,
     run: async function checkMultiProcessScreen() {
       // Request screen sharing in the first tab.

@@ -38,14 +38,12 @@ add_setup(async function () {
   });
 
   await SearchTestUtils.promiseNewSearchEngine({
-    url:
-      "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine.xml",
+    url: "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine.xml",
     setAsDefault: true,
   });
 
   await SearchTestUtils.promiseNewSearchEngine({
-    url:
-      "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine_diacritics.xml",
+    url: "chrome://mochitests/content/browser/browser/components/search/test/browser/testEngine_diacritics.xml",
     setAsDefaultPrivate: true,
   });
 

@@ -188,12 +188,10 @@ EnterprisePoliciesManager.prototype = {
         continue;
       }
 
-      let {
-        valid: parametersAreValid,
-        parsedValue: parsedParameters,
-      } = lazy.JsonSchemaValidator.validate(policyParameters, policySchema, {
-        allowExtraProperties: true,
-      });
+      let { valid: parametersAreValid, parsedValue: parsedParameters } =
+        lazy.JsonSchemaValidator.validate(policyParameters, policySchema, {
+          allowExtraProperties: true,
+        });
 
       if (!parametersAreValid) {
         lazy.log.error(`Invalid parameters specified for ${policyName}.`);
@@ -458,8 +456,9 @@ EnterprisePoliciesManager.prototype = {
       return false;
     }
     let { hostname } = urlObject;
-    let exemptArray = this.getActivePolicies()
-      ?.ExemptDomainFileTypePairsFromFileTypeDownloadWarnings;
+    let exemptArray =
+      this.getActivePolicies()
+        ?.ExemptDomainFileTypePairsFromFileTypeDownloadWarnings;
     if (!hostname || !extension || !exemptArray) {
       return false;
     }

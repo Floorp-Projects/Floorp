@@ -182,9 +182,8 @@ ExtensionManager = {
       // Register any existent dynamically registered content script for the extension
       // when a content process is started for the first time (which also cover
       // a content process that crashed and it has been recreated).
-      const registeredContentScripts = this.registeredContentScripts.get(
-        policy
-      );
+      const registeredContentScripts =
+        this.registeredContentScripts.get(policy);
 
       for (let [scriptId, options] of getData(extension, "contentScripts") ||
         []) {
@@ -261,9 +260,8 @@ ExtensionManager = {
           let policy = WebExtensionPolicy.getByID(data.id);
 
           if (policy) {
-            const registeredContentScripts = this.registeredContentScripts.get(
-              policy
-            );
+            const registeredContentScripts =
+              this.registeredContentScripts.get(policy);
 
             for (const { scriptId, options } of data.scripts) {
               const type =
@@ -297,9 +295,8 @@ ExtensionManager = {
           let policy = WebExtensionPolicy.getByID(data.id);
 
           if (policy) {
-            const registeredContentScripts = this.registeredContentScripts.get(
-              policy
-            );
+            const registeredContentScripts =
+              this.registeredContentScripts.get(policy);
 
             for (const scriptId of data.scriptIds) {
               const script = registeredContentScripts.get(scriptId);
@@ -316,9 +313,8 @@ ExtensionManager = {
           let policy = WebExtensionPolicy.getByID(data.id);
 
           if (policy) {
-            const registeredContentScripts = this.registeredContentScripts.get(
-              policy
-            );
+            const registeredContentScripts =
+              this.registeredContentScripts.get(policy);
 
             for (const { scriptId, options } of data.scripts) {
               const oldScript = registeredContentScripts.get(scriptId);

@@ -40,12 +40,8 @@ function getBackgroundServiceWorkerRegistration(extension) {
 function waitForTerminatedWorkers(swRegInfo) {
   info(`Wait all ${swRegInfo.scope} workers to be terminated`);
   return TestUtils.waitForCondition(() => {
-    const {
-      evaluatingWorker,
-      installingWorker,
-      waitingWorker,
-      activeWorker,
-    } = swRegInfo;
+    const { evaluatingWorker, installingWorker, waitingWorker, activeWorker } =
+      swRegInfo;
     return !(
       evaluatingWorker ||
       installingWorker ||

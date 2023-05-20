@@ -201,9 +201,10 @@ add_task(async function test_deleteFromPrincipal() {
   let unregistered = SiteDataTestUtils.promiseServiceWorkerUnregistered(
     "https://test1.example.com"
   );
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "https://test1.example.com/"
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "https://test1.example.com/"
+    );
   await new Promise(aResolve => {
     Services.clearData.deleteDataFromPrincipal(
       principal,

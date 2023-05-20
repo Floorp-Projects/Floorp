@@ -564,9 +564,10 @@ describe("test String with URL", () => {
   });
 
   it("does render a link in a grip array", () => {
-    const object = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js").get(
-      '["http://example.com/abcdefghijabcdefghij some other text"]'
-    );
+    const object =
+      require("resource://devtools/client/shared/components/test/node/stubs/reps/grip-array.js").get(
+        '["http://example.com/abcdefghijabcdefghij some other text"]'
+      );
     const length = getGripLengthBubbleText(object);
     const openLink = jest.fn();
     const element = renderRep(object, { openLink });
@@ -598,9 +599,10 @@ describe("test String with URL", () => {
   });
 
   it("does render a link in a grip object", () => {
-    const object = require("resource://devtools/client/shared/components/test/node/stubs/reps/grip.js").get(
-      '{test: "http://example.com/ some other text"}'
-    );
+    const object =
+      require("resource://devtools/client/shared/components/test/node/stubs/reps/grip.js").get(
+        '{test: "http://example.com/ some other text"}'
+      );
     const openLink = jest.fn();
     const element = renderRep(object, { openLink });
 

@@ -504,9 +504,10 @@ function prompt(aActor, aBrowser, aRequest) {
     requestTypes,
   } = aRequest;
 
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    aRequest.origin
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      aRequest.origin
+    );
 
   // For add-on principals, we immediately check for permission instead
   // of waiting for the notification to focus. This allows for supporting
@@ -964,7 +965,8 @@ function prompt(aActor, aBrowser, aRequest) {
           }
 
           let perms = Services.perms;
-          let chromePrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+          let chromePrincipal =
+            Services.scriptSecurityManager.getSystemPrincipal();
           perms.addFromPrincipal(
             chromePrincipal,
             "MediaManagerVideo",

@@ -27,41 +27,38 @@ async function test_ntp_theme(theme, isBrightText) {
 
   let browser = gBrowser.selectedBrowser;
 
-  let {
-    originalBackground,
-    originalCardBackground,
-    originalColor,
-  } = await SpecialPowers.spawn(browser, [], function () {
-    let doc = content.document;
-    ok(
-      !doc.documentElement.hasAttribute("lwt-newtab"),
-      "New tab page should not have lwt-newtab attribute"
-    );
-    ok(
-      !doc.documentElement.hasAttribute("lwt-newtab-brighttext"),
-      `New tab page should not have lwt-newtab-brighttext attribute`
-    );
+  let { originalBackground, originalCardBackground, originalColor } =
+    await SpecialPowers.spawn(browser, [], function () {
+      let doc = content.document;
+      ok(
+        !doc.documentElement.hasAttribute("lwt-newtab"),
+        "New tab page should not have lwt-newtab attribute"
+      );
+      ok(
+        !doc.documentElement.hasAttribute("lwt-newtab-brighttext"),
+        `New tab page should not have lwt-newtab-brighttext attribute`
+      );
 
-    return {
-      originalBackground: content.getComputedStyle(doc.body).backgroundColor,
-      originalCardBackground: content.getComputedStyle(
-        doc.querySelector(".top-site-outer .tile")
-      ).backgroundColor,
-      originalColor: content.getComputedStyle(
-        doc.querySelector(".outer-wrapper")
-      ).color,
-      // We check the value of --newtab-link-primary-color directly because the
-      // elements on which it is applied are hard to test. It is most visible in
-      // the "learn more" link in the Pocket section. We cannot show the Pocket
-      // section since it hits the network, and the usual workarounds to change
-      // its backend only work in browser/. This variable is also used in
-      // the Edit Top Site modal, but showing/hiding that is very verbose and
-      // would make this test almost unreadable.
-      originalLinks: content
-        .getComputedStyle(doc.documentElement)
-        .getPropertyValue("--newtab-link-primary-color"),
-    };
-  });
+      return {
+        originalBackground: content.getComputedStyle(doc.body).backgroundColor,
+        originalCardBackground: content.getComputedStyle(
+          doc.querySelector(".top-site-outer .tile")
+        ).backgroundColor,
+        originalColor: content.getComputedStyle(
+          doc.querySelector(".outer-wrapper")
+        ).color,
+        // We check the value of --newtab-link-primary-color directly because the
+        // elements on which it is applied are hard to test. It is most visible in
+        // the "learn more" link in the Pocket section. We cannot show the Pocket
+        // section since it hits the network, and the usual workarounds to change
+        // its backend only work in browser/. This variable is also used in
+        // the Edit Top Site modal, but showing/hiding that is very verbose and
+        // would make this test almost unreadable.
+        originalLinks: content
+          .getComputedStyle(doc.documentElement)
+          .getPropertyValue("--newtab-link-primary-color"),
+      };
+    });
 
   await extension.startup();
 

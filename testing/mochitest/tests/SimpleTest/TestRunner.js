@@ -15,12 +15,10 @@
 
 "use strict";
 
-const {
-  StructuredLogger,
-  StructuredFormatter,
-} = SpecialPowers.ChromeUtils.importESModule(
-  "resource://testing-common/StructuredLog.sys.mjs"
-);
+const { StructuredLogger, StructuredFormatter } =
+  SpecialPowers.ChromeUtils.importESModule(
+    "resource://testing-common/StructuredLog.sys.mjs"
+  );
 
 function getElement(id) {
   return typeof id == "string" ? document.getElementById(id) : id;
@@ -743,7 +741,8 @@ TestRunner.testFinished = function (tests) {
         result = "ERROR";
       }
 
-      var unexpectedCrashDumpFiles = await SpecialPowers.findUnexpectedCrashDumpFiles();
+      var unexpectedCrashDumpFiles =
+        await SpecialPowers.findUnexpectedCrashDumpFiles();
       TestRunner._expectingProcessCrash = false;
       if (unexpectedCrashDumpFiles.length) {
         let subtest = "unexpected-crash-dump-found";

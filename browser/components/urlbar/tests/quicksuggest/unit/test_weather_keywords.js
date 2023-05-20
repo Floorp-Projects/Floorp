@@ -376,8 +376,7 @@ add_task(async function () {
 // * Expected: Nimbus keywords with settings min keyword length
 add_task(async function () {
   await doKeywordsTest({
-    desc:
-      "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length = 0",
+    desc: "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length = 0",
     settingsData: {
       keywords: ["weather"],
       min_keyword_length: 3,
@@ -413,8 +412,7 @@ add_task(async function () {
 // * Expected: use Nimbus values
 add_task(async function () {
   await doKeywordsTest({
-    desc:
-      "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length > 0",
+    desc: "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length > 0",
     settingsData: {
       keywords: ["weather"],
       min_keyword_length: 3,
@@ -450,8 +448,7 @@ add_task(async function () {
 // * Expected: Nimbus keywords with min keyword length pref
 add_task(async function () {
   await doKeywordsTest({
-    desc:
-      "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length = 0; pref exists",
+    desc: "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length = 0; pref exists",
     settingsData: {
       keywords: ["weather"],
       min_keyword_length: 3,
@@ -488,8 +485,7 @@ add_task(async function () {
 // * Expected: Nimbus keywords with min keyword length pref
 add_task(async function () {
   await doKeywordsTest({
-    desc:
-      "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length > 0; pref exists",
+    desc: "Settings: keywords, min keyword length > 0; Nimbus: keywords, min keyword length > 0; pref exists",
     settingsData: {
       keywords: ["weather", "forecast"],
       min_keyword_length: 3,
@@ -621,8 +617,7 @@ add_task(async function () {
 // * Expected: use Nimbus keywords and min keyword length pref
 add_task(async function () {
   await doKeywordsTest({
-    desc:
-      "Settings: none; Nimbus: keywords, min keyword length > 0; pref exists",
+    desc: "Settings: none; Nimbus: keywords, min keyword length > 0; pref exists",
     nimbusValues: {
       weatherKeywords: ["weather", "forecast"],
       weatherKeywordsMinimumLength: 3,

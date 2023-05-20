@@ -130,9 +130,10 @@ add_task(async function terminateScriptTest() {
   Services.obs.notifyObservers(hangReport, "process-hang-report");
   let notification = await promise;
 
-  let buttons = notification.currentNotification.buttonContainer.getElementsByTagName(
-    "button"
-  );
+  let buttons =
+    notification.currentNotification.buttonContainer.getElementsByTagName(
+      "button"
+    );
   is(buttons.length, buttonCount, "proper number of buttons");
 
   // Click the "Stop" button, we should get a terminate script callback
@@ -155,9 +156,10 @@ add_task(async function waitForScriptTest() {
   Services.obs.notifyObservers(hangReport, "process-hang-report");
   let notification = await promise;
 
-  let buttons = notification.currentNotification.buttonContainer.getElementsByTagName(
-    "button"
-  );
+  let buttons =
+    notification.currentNotification.buttonContainer.getElementsByTagName(
+      "button"
+    );
   is(buttons.length, buttonCount, "proper number of buttons");
 
   await pushPrefs(["browser.hangNotification.waitPeriod", 1000]);

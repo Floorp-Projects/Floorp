@@ -247,7 +247,8 @@ function migrateUpdateDirectory() {
   let pendingPingDestDir = destRootDir.clone();
   pendingPingDestDir.appendRelativePath(pendingPingRelDir);
   // Pending ping filenames are UUIDs.
-  const pendingPingFilenameRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+  const pendingPingFilenameRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
   if (pendingPingSourceDir.exists()) {
     try {
       for (let file of pendingPingSourceDir.directoryEntries) {

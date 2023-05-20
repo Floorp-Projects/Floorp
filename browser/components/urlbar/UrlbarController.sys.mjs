@@ -1111,10 +1111,11 @@ class TelemetryEvent {
         currentResults[selIndex],
         selType
       );
-      const selected_result_subtype = lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
-        currentResults[selIndex],
-        selectedElement
-      );
+      const selected_result_subtype =
+        lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
+          currentResults[selIndex],
+          selectedElement
+        );
 
       if (selected_result === "input_field" && !queryContext?.view?.isOpen) {
         numResults = 0;

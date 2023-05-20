@@ -88,8 +88,9 @@ function testUpdated(editor, originalHref) {
     "rule bracket has been auto-closed"
   );
 
-  const ruleCount = editor.summary.querySelector(".stylesheet-rule-count")
-    .textContent;
+  const ruleCount = editor.summary.querySelector(
+    ".stylesheet-rule-count"
+  ).textContent;
   is(parseInt(ruleCount, 10), 1, "new editor shows 1 rule after modification");
 
   is(editor.styleSheet.href, originalHref, "style sheet href did not change");

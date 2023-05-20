@@ -27,8 +27,9 @@ var openingObserver = {
         // We'll parse the report text as JSON and verify that the properties
         // have expected values.
         var reportText = "{}";
-        var uploadStream = subject.QueryInterface(Ci.nsIUploadChannel)
-          .uploadStream;
+        var uploadStream = subject.QueryInterface(
+          Ci.nsIUploadChannel
+        ).uploadStream;
 
         if (uploadStream) {
           // get the bytes from the request body

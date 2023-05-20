@@ -838,8 +838,7 @@ var gTests = [
   },
 
   {
-    desc:
-      "Switching between menu options maintains correct main action state while window sharing",
+    desc: "Switching between menu options maintains correct main action state while window sharing",
     skipObserverVerification: true,
     run: async function checkDoorhangerState() {
       await enableObserverVerification();

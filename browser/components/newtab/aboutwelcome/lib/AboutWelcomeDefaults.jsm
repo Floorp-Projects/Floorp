@@ -397,8 +397,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
           string_id: "mr2022-onboarding-mobile-download-subtitle",
         },
         hero_image: {
-          url:
-            "chrome://activity-stream/content/data/content/assets/mobile-download-qr-new-user.svg",
+          url: "chrome://activity-stream/content/data/content/assets/mobile-download-qr-new-user.svg",
         },
         cta_paragraph: {
           text: {
@@ -408,8 +407,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
           action: {
             type: "OPEN_URL",
             data: {
-              args:
-                "https://www.mozilla.org/firefox/mobile/get-app/?utm_medium=firefox-desktop&utm_source=onboarding-modal&utm_campaign=mr2022&utm_content=new-global",
+              args: "https://www.mozilla.org/firefox/mobile/get-app/?utm_medium=firefox-desktop&utm_source=onboarding-modal&utm_campaign=mr2022&utm_content=new-global",
               where: "tab",
             },
           },

@@ -319,9 +319,8 @@ class ProxyChannelFilter {
       ...extraData,
     };
     if (originAttributes) {
-      data.cookieStoreId = lazy.getCookieStoreIdForOriginAttributes(
-        originAttributes
-      );
+      data.cookieStoreId =
+        lazy.getCookieStoreIdForOriginAttributes(originAttributes);
     }
     if (this.extraInfoSpec.includes("requestHeaders")) {
       data.requestHeaders = channel.getRequestHeaders();

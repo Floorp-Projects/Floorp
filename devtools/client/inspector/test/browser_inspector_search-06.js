@@ -77,9 +77,8 @@ async function synthesizeKeys(keys, inspector) {
   for (const key of keys) {
     info("Synthesizing key " + key + " in the search box");
     const eventHandled = once(inspector.searchBox, "keypress", true);
-    const onSearchProcessingDone = inspector.searchSuggestions.once(
-      "processing-done"
-    );
+    const onSearchProcessingDone =
+      inspector.searchSuggestions.once("processing-done");
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
     await eventHandled;
     info("Waiting for the search query to complete");

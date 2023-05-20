@@ -14,9 +14,8 @@ add_task(async function duplicateTab() {
     });
   } else {
     let historyID = tab.linkedBrowser.browsingContext.historyID;
-    let shEntry = tab.linkedBrowser.browsingContext.sessionHistory.getEntryAtIndex(
-      0
-    );
+    let shEntry =
+      tab.linkedBrowser.browsingContext.sessionHistory.getEntryAtIndex(0);
     is(shEntry.docshellID.toString(), historyID.toString());
   }
 
@@ -33,9 +32,8 @@ add_task(async function duplicateTab() {
     });
   } else {
     let historyID = tab2.linkedBrowser.browsingContext.historyID;
-    let shEntry = tab2.linkedBrowser.browsingContext.sessionHistory.getEntryAtIndex(
-      0
-    );
+    let shEntry =
+      tab2.linkedBrowser.browsingContext.sessionHistory.getEntryAtIndex(0);
     is(shEntry.docshellID.toString(), historyID.toString());
   }
 

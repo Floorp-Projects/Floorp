@@ -537,11 +537,8 @@ function assertPaused(dbg, msg = "client is paused") {
  */
 async function waitForPaused(dbg, url) {
   info("Waiting for the debugger to pause");
-  const {
-    getSelectedScope,
-    getCurrentThread,
-    getCurrentThreadFrames,
-  } = dbg.selectors;
+  const { getSelectedScope, getCurrentThread, getCurrentThreadFrames } =
+    dbg.selectors;
 
   await waitForState(
     dbg,
@@ -948,16 +945,15 @@ async function reloadWhenPausedBeforePageLoaded(dbg, ...sources) {
   // But we can at least listen for the next DOCUMENT_EVENT's dom-loading,
   // which should be fired even if the page is pause the earliest.
   const { resourceCommand } = dbg.commands;
-  const {
-    onResource: onTopLevelDomLoading,
-  } = await resourceCommand.waitForNextResource(
-    resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate: resource =>
-        resource.targetFront.isTopLevel && resource.name === "dom-loading",
-    }
-  );
+  const { onResource: onTopLevelDomLoading } =
+    await resourceCommand.waitForNextResource(
+      resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        ignoreExistingResources: true,
+        predicate: resource =>
+          resource.targetFront.isTopLevel && resource.name === "dom-loading",
+      }
+    );
 
   gBrowser.reloadTab(gBrowser.selectedTab);
 
@@ -1314,17 +1310,19 @@ function invokeInTab(fnc, ...args) {
 function clickElementInTab(selector) {
   info(`click element ${selector} in tab`);
 
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function (
-    _selector
-  ) {
-    const element = content.document.querySelector(_selector);
-    // Run the click in another event loop in order to immediately resolve spawn's promise.
-    // Otherwise if we pause on click and navigate, the JSWindowActor used by spawn will
-    // be destroyed while its query is still pending. And this would reject the promise.
-    content.setTimeout(() => {
-      element.click();
-    });
-  });
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector],
+    function (_selector) {
+      const element = content.document.querySelector(_selector);
+      // Run the click in another event loop in order to immediately resolve spawn's promise.
+      // Otherwise if we pause on click and navigate, the JSWindowActor used by spawn will
+      // be destroyed while its query is still pending. And this would reject the promise.
+      content.setTimeout(() => {
+        element.click();
+      });
+    }
+  );
 }
 
 const isLinux = Services.appinfo.OS === "Linux";

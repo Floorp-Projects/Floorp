@@ -16,12 +16,8 @@ add_task(async function () {
   const {
     COMPATIBILITY_STATUS,
   } = require("resource://devtools/client/shared/remote-debugging/version-checker.js");
-  const {
-    COMPATIBLE,
-    TOO_OLD,
-    TOO_OLD_FENNEC,
-    TOO_RECENT,
-  } = COMPATIBILITY_STATUS;
+  const { COMPATIBLE, TOO_OLD, TOO_OLD_FENNEC, TOO_RECENT } =
+    COMPATIBILITY_STATUS;
 
   info("Create several mocked runtimes, with different compatibility reports");
   const mocks = new Mocks();

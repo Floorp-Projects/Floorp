@@ -112,9 +112,10 @@ export class PrincipalsCollector {
 
         let principalsMap = new Map();
         for (const origin of request.result) {
-          let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-            origin
-          );
+          let principal =
+            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              origin
+            );
           if (PrincipalsCollector.isSupportedPrincipal(principal)) {
             principalsMap.set(principal.origin, principal);
           }
@@ -156,9 +157,10 @@ export class PrincipalsCollector {
       // use http: or https: schema here.
       let principal;
       try {
-        principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-          "https://" + host
-        );
+        principal =
+          Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            "https://" + host
+          );
       } catch (e) {
         log(
           `ERROR: Could not create content principal for host '${host}' ${e.message}`

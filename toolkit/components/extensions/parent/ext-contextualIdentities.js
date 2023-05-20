@@ -178,9 +178,8 @@ this.contextualIdentities = class extends ExtensionAPIPersistent {
             );
           }
 
-          let identity = ContextualIdentityService.getPublicIdentityFromId(
-            containerId
-          );
+          let identity =
+            ContextualIdentityService.getPublicIdentityFromId(containerId);
           return convertIdentity(identity);
         },
 
@@ -225,9 +224,8 @@ this.contextualIdentities = class extends ExtensionAPIPersistent {
             );
           }
 
-          let identity = ContextualIdentityService.getPublicIdentityFromId(
-            containerId
-          );
+          let identity =
+            ContextualIdentityService.getPublicIdentityFromId(containerId);
           if (!identity) {
             throw new ExtensionError(
               `Invalid contextual identity: ${cookieStoreId}`
@@ -273,9 +271,8 @@ this.contextualIdentities = class extends ExtensionAPIPersistent {
             );
           }
 
-          let identity = ContextualIdentityService.getPublicIdentityFromId(
-            containerId
-          );
+          let identity =
+            ContextualIdentityService.getPublicIdentityFromId(containerId);
           if (!identity) {
             throw new ExtensionError(
               `Invalid contextual identity: ${cookieStoreId}`

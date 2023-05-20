@@ -533,9 +533,8 @@ var dataProviders = {
           break;
         case Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION:
           try {
-            var driverVersion = gfxInfo.getFeatureSuggestedDriverVersion(
-              feature
-            );
+            var driverVersion =
+              gfxInfo.getFeatureSuggestedDriverVersion(feature);
           } catch (e) {}
           msg = driverVersion
             ? { key: "try-newer-driver", args: { driverVersion } }
@@ -959,19 +958,17 @@ var dataProviders = {
       return;
     }
 
-    const {
-      PreferenceExperiments: NormandyPreferenceStudies,
-    } = ChromeUtils.importESModule(
-      "resource://normandy/lib/PreferenceExperiments.sys.mjs"
-    );
+    const { PreferenceExperiments: NormandyPreferenceStudies } =
+      ChromeUtils.importESModule(
+        "resource://normandy/lib/PreferenceExperiments.sys.mjs"
+      );
     const { AddonStudies: NormandyAddonStudies } = ChromeUtils.importESModule(
       "resource://normandy/lib/AddonStudies.sys.mjs"
     );
-    const {
-      PreferenceRollouts: NormandyPreferenceRollouts,
-    } = ChromeUtils.importESModule(
-      "resource://normandy/lib/PreferenceRollouts.sys.mjs"
-    );
+    const { PreferenceRollouts: NormandyPreferenceRollouts } =
+      ChromeUtils.importESModule(
+        "resource://normandy/lib/PreferenceRollouts.sys.mjs"
+      );
     const { ExperimentManager } = ChromeUtils.importESModule(
       "resource://nimbus/lib/ExperimentManager.sys.mjs"
     );

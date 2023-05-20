@@ -97,7 +97,7 @@ add_task(async function test_extension_changing_to_app_provided_default() {
   let ext1 = ExtensionTestUtils.loadExtension({
     manifest: {
       icons: {
-        "16": "foo.ico",
+        16: "foo.ico",
       },
       chrome_settings_overrides: {
         search_provider: {
@@ -164,7 +164,7 @@ add_task(async function test_extension_overriding_app_provided_default() {
         },
       },
       icons: {
-        "16": "foo.ico",
+        16: "foo.ico",
       },
       chrome_settings_overrides: {
         search_provider: {

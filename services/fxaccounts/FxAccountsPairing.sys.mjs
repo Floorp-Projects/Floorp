@@ -361,12 +361,8 @@ export class FxAccountsPairingFlow {
             `Wrong state for ${message}`
           );
           const oauthUri = await this._fxaConfig.promiseOAuthURI();
-          const {
-            uid,
-            email,
-            avatar,
-            displayName,
-          } = await this._fxa.getSignedInUser();
+          const { uid, email, avatar, displayName } =
+            await this._fxa.getSignedInUser();
           const deviceName = this._weave.Service.clientsEngine.localName;
           await this._pairingChannel.send({
             message: "pair:auth:metadata",

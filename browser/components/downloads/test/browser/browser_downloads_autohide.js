@@ -202,9 +202,8 @@ add_task(async function checkStateInCustomizeModeMultipleWindows() {
     "Button should be shown in customize mode."
   );
   let otherWin = await BrowserTestUtils.openNewBrowserWindow();
-  let otherDownloadsButton = otherWin.document.getElementById(
-    "downloads-button"
-  );
+  let otherDownloadsButton =
+    otherWin.document.getElementById("downloads-button");
   ok(
     otherDownloadsButton.hasAttribute("hidden"),
     "Button should be hidden in the other window."
@@ -398,9 +397,8 @@ add_task(async function checkStateWhenHiddenInPalette() {
     "Button shouldn't be visible in the window"
   );
 
-  let paletteButton = otherWin.gNavToolbox.palette.querySelector(
-    "#downloads-button"
-  );
+  let paletteButton =
+    otherWin.gNavToolbox.palette.querySelector("#downloads-button");
   ok(paletteButton, "Button should exist in the palette");
   if (paletteButton) {
     ok(paletteButton.hidden, "Button will still have the hidden attribute");

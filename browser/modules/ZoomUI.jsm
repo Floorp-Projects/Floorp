@@ -194,20 +194,20 @@ const { CustomizableUI } = ChromeUtils.import(
   "resource:///modules/CustomizableUI.jsm"
 );
 let customizationListener = {};
-customizationListener.onWidgetAdded = customizationListener.onWidgetRemoved = customizationListener.onWidgetMoved = function (
-  aWidgetId
-) {
-  if (aWidgetId == "zoom-controls") {
-    for (let window of CustomizableUI.windows) {
-      updateZoomUI(window.gBrowser.selectedBrowser);
+customizationListener.onWidgetAdded =
+  customizationListener.onWidgetRemoved =
+  customizationListener.onWidgetMoved =
+    function (aWidgetId) {
+      if (aWidgetId == "zoom-controls") {
+        for (let window of CustomizableUI.windows) {
+          updateZoomUI(window.gBrowser.selectedBrowser);
+        }
+      }
+    };
+customizationListener.onWidgetReset = customizationListener.onWidgetUndoMove =
+  function (aWidgetNode) {
+    if (aWidgetNode.id == "zoom-controls") {
+      updateZoomUI(aWidgetNode.ownerGlobal.gBrowser.selectedBrowser);
     }
-  }
-};
-customizationListener.onWidgetReset = customizationListener.onWidgetUndoMove = function (
-  aWidgetNode
-) {
-  if (aWidgetNode.id == "zoom-controls") {
-    updateZoomUI(aWidgetNode.ownerGlobal.gBrowser.selectedBrowser);
-  }
-};
+  };
 CustomizableUI.addListener(customizationListener);

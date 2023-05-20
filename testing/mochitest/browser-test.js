@@ -108,7 +108,8 @@ function testInit() {
       // eslint-disable-next-line no-undef
       var webNav = content.window.docShell.QueryInterface(Ci.nsIWebNavigation);
       let loadURIOptions = {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       };
       webNav.fixupAndLoadURIString(url, loadURIOptions);
     };
@@ -435,8 +436,7 @@ Tester.prototype = {
             if (lastURIcount >= 3) {
               this.currentTest.addResult(
                 new testResult({
-                  name:
-                    "terminating browser early - unable to close tabs; skipping remaining tests in folder",
+                  name: "terminating browser early - unable to close tabs; skipping remaining tests in folder",
                   allowFailure: this.currentTest.allowFailure,
                 })
               );
@@ -461,7 +461,8 @@ Tester.prototype = {
     if (window.gBrowser && AppConstants.MOZ_APP_NAME != "thunderbird") {
       gBrowser.addTab("about:blank", {
         skipAnimation: true,
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
       gBrowser.removeTab(gBrowser.selectedTab, { skipPermitUnload: true });
       gBrowser.stop();
@@ -955,9 +956,8 @@ Tester.prototype = {
           let path = Services.env.get("MOZ_UPLOAD_DIR");
           let profilePath = PathUtils.join(path, filename);
           try {
-            const {
-              profile,
-            } = await Services.profiler.getProfileDataAsGzippedArrayBuffer();
+            const { profile } =
+              await Services.profiler.getProfileDataAsGzippedArrayBuffer();
             await IOUtils.write(profilePath, new Uint8Array(profile));
             this.currentTest.addResult(
               new testResult({
@@ -1377,9 +1377,8 @@ Tester.prototype = {
       var self = this;
       var timeoutExpires = Date.now() + gTimeoutSeconds * 1000;
       var waitUntilAtLeast = timeoutExpires - 1000;
-      this.currentTest.scope.__waitTimer = this.SimpleTest._originalSetTimeout.apply(
-        window,
-        [
+      this.currentTest.scope.__waitTimer =
+        this.SimpleTest._originalSetTimeout.apply(window, [
           function timeoutFn() {
             // We sometimes get woken up long before the gTimeoutSeconds
             // have elapsed (when running in chaos mode for example). This
@@ -1440,8 +1439,7 @@ Tester.prototype = {
             self.nextTest();
           },
           gTimeoutSeconds * 1000,
-        ]
-      );
+        ]);
     }
   },
 
@@ -1782,12 +1780,11 @@ function testScope(aTester, aTest, expected) {
     self.__expectedMaxAsserts = max;
   };
 
-  this.setExpectedFailuresForSelfTest = function test_setExpectedFailuresForSelfTest(
-    expectedAllowedFailureCount
-  ) {
-    aTest.allowFailure = true;
-    aTest.expectedAllowedFailureCount = expectedAllowedFailureCount;
-  };
+  this.setExpectedFailuresForSelfTest =
+    function test_setExpectedFailuresForSelfTest(expectedAllowedFailureCount) {
+      aTest.allowFailure = true;
+      aTest.expectedAllowedFailureCount = expectedAllowedFailureCount;
+    };
 
   this.finish = function test_finish() {
     self.__done = true;

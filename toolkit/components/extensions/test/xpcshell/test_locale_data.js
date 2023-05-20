@@ -153,7 +153,7 @@ add_task(async function testExtractLocalizedManifest() {
       name: "__MSG_extensionName__",
       default_locale: "en_US",
       icons: {
-        "16": "__MSG_extensionIcon__",
+        16: "__MSG_extensionIcon__",
       },
     },
 

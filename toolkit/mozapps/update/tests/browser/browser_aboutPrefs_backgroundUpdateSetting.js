@@ -60,9 +60,8 @@ WARNING! This test involves background update, but background tasks are
     tab.linkedBrowser,
     [UpdateUtils.PER_INSTALLATION_PREFS_SUPPORTED],
     async perInstallationPrefsSupported => {
-      let backgroundUpdateCheckbox = content.document.getElementById(
-        "backgroundUpdate"
-      );
+      let backgroundUpdateCheckbox =
+        content.document.getElementById("backgroundUpdate");
       is(
         backgroundUpdateCheckbox.hidden,
         !perInstallationPrefsSupported,
@@ -92,9 +91,8 @@ WARNING! This test involves background update, but background tasks are
   await UpdateUtils.writeUpdateConfigSetting(BACKGROUND_UPDATE_PREF, true);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-    let backgroundUpdateCheckbox = content.document.getElementById(
-      "backgroundUpdate"
-    );
+    let backgroundUpdateCheckbox =
+      content.document.getElementById("backgroundUpdate");
     is(
       backgroundUpdateCheckbox.disabled,
       false,
@@ -125,9 +123,8 @@ WARNING! This test involves background update, but background tasks are
   );
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-    let backgroundUpdateCheckbox = content.document.getElementById(
-      "backgroundUpdate"
-    );
+    let backgroundUpdateCheckbox =
+      content.document.getElementById("backgroundUpdate");
     is(
       backgroundUpdateCheckbox.checked,
       false,

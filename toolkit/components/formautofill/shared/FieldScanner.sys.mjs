@@ -218,11 +218,8 @@ export class FieldScanner {
       throw new Error("Try to push the non-existing element info.");
     }
     const element = this.#elements[elementIndex];
-    const [
-      fieldName,
-      autocompleteInfo,
-      confidence,
-    ] = lazy.FormAutofillHeuristics.getInferredInfo(element, this);
+    const [fieldName, autocompleteInfo, confidence] =
+      lazy.FormAutofillHeuristics.getInferredInfo(element, this);
     const fieldDetail = new FieldDetail(element, fieldName, {
       autocompleteInfo,
       confidence,
@@ -328,9 +325,10 @@ export class FieldScanner {
       return confidences.map(c => {
         let result = {};
         for (let [fieldName, confidence] of Object.entries(c)) {
-          let type = lazy.FormAutofillUtils.formAutofillConfidencesKeyToCCFieldType(
-            fieldName
-          );
+          let type =
+            lazy.FormAutofillUtils.formAutofillConfidencesKeyToCCFieldType(
+              fieldName
+            );
           result[type] = confidence;
         }
         return result;

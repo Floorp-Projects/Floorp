@@ -389,21 +389,22 @@ add_task(async function test_navigate_back_from_website() {
 
             go_back();
 
-            gBrowser.addEventListener("pageshow", async function listener(
-              event
-            ) {
-              if (event.target.location != "about:addons") {
-                return;
-              }
-              gBrowser.removeEventListener("pageshow", listener);
-              aManager = await wait_for_view_load(
-                gBrowser.contentWindow.wrappedJSObject
-              );
-              info("Part 5");
-              is_in_list(aManager, "addons://list/plugin", false, true);
+            gBrowser.addEventListener(
+              "pageshow",
+              async function listener(event) {
+                if (event.target.location != "about:addons") {
+                  return;
+                }
+                gBrowser.removeEventListener("pageshow", listener);
+                aManager = await wait_for_view_load(
+                  gBrowser.contentWindow.wrappedJSObject
+                );
+                info("Part 5");
+                is_in_list(aManager, "addons://list/plugin", false, true);
 
-              resolve();
-            });
+                resolve();
+              }
+            );
           });
         });
       });

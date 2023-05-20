@@ -70,7 +70,8 @@ add_task(async function testUnknownProperties() {
     expected: [
       { message: /processing permissions\.0: Value "unknownPermission"/ },
       {
-        message: /processing unknown_property: An unexpected property was found in the WebExtension manifest/,
+        message:
+          /processing unknown_property: An unexpected property was found in the WebExtension manifest/,
       },
     ],
   });

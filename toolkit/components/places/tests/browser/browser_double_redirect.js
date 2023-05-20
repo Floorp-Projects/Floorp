@@ -56,13 +56,8 @@ add_task(async function () {
       handleEvents(events) {
         is(events.length, 1, "Right number of visits notified");
         is(events[0].type, "page-visited");
-        let {
-          url,
-          visitId,
-          visitTime,
-          referringVisitId,
-          transitionType,
-        } = events[0];
+        let { url, visitId, visitTime, referringVisitId, transitionType } =
+          events[0];
         this.onVisit(url, visitId, visitTime, referringVisitId, transitionType);
       },
     };

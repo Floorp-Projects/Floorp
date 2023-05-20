@@ -76,7 +76,9 @@
     }
   }
 
-  MozElements.MozAutocompleteProfileListitem = class MozAutocompleteProfileListitem extends MozAutocompleteProfileListitemBase {
+  MozElements.MozAutocompleteProfileListitem = class MozAutocompleteProfileListitem extends (
+    MozAutocompleteProfileListitemBase
+  ) {
     static get markup() {
       return `
         <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box">
@@ -237,9 +239,8 @@
               ),
             ];
 
-        let separator = this._stringBundle.GetStringFromName(
-          "fieldNameSeparator"
-        );
+        let separator =
+          this._stringBundle.GetStringFromName("fieldNameSeparator");
         let warningTextTmplKey = hasExtraCategories
           ? "phishingWarningMessage"
           : "phishingWarningMessage2";
@@ -249,10 +250,10 @@
           )
           .join(separator);
 
-        this._warningTextBox.textContent = this._stringBundle.formatStringFromName(
-          warningTextTmplKey,
-          [categoriesText]
-        );
+        this._warningTextBox.textContent =
+          this._stringBundle.formatStringFromName(warningTextTmplKey, [
+            categoriesText,
+          ]);
         this.parentNode.parentNode.adjustHeight();
       };
 
@@ -286,9 +287,8 @@
             : "autocompleteFooterOption2";
       }
 
-      let buttonText = this._stringBundle.GetStringFromName(
-        buttonTextBundleKey
-      );
+      let buttonText =
+        this._stringBundle.GetStringFromName(buttonTextBundleKey);
       this._optionButton.textContent = buttonText;
 
       let value = JSON.parse(this.getAttribute("ac-value"));
@@ -396,9 +396,8 @@
       this._adjustAutofillItemLayout();
       this.setAttribute("formautofillattached", "true");
 
-      let clearFormBtnLabel = this._stringBundle.GetStringFromName(
-        "clearFormBtnLabel2"
-      );
+      let clearFormBtnLabel =
+        this._stringBundle.GetStringFromName("clearFormBtnLabel2");
       this._clearBtn.textContent = clearFormBtnLabel;
     }
   }

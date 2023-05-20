@@ -49,7 +49,8 @@ async function importKeyPair(publicKeyBuffer, privateKeyBuffer) {
 // The example from draft-ietf-webpush-encryption-09.
 add_task(async function static_aes128gcm() {
   let fixture = {
-    ciphertext: from64(`DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27ml
+    ciphertext:
+      from64(`DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27ml
                         mlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPT
                         pK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN`),
     plaintext: new TextEncoder().encode(

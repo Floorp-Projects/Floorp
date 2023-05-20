@@ -66,8 +66,7 @@ add_task(async function test_policy_dialog() {
         icons: [
           {
             size: 256,
-            url:
-              "https://example.net/browser/toolkit/components/credentialmanagement/tests/browser/custom.svg",
+            url: "https://example.net/browser/toolkit/components/credentialmanagement/tests/browser/custom.svg",
           },
         ],
       },

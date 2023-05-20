@@ -1502,10 +1502,8 @@ FinderHighlighter.prototype = {
     }
 
     // Make sure the dimmed mask node takes the full width and height that's available.
-    let {
-      width,
-      height,
-    } = (dict.lastWindowDimensions = this._getWindowDimensions(window));
+    let { width, height } = (dict.lastWindowDimensions =
+      this._getWindowDimensions(window));
     if (typeof dict.brightText != "boolean" || dict.updateAllRanges) {
       this._detectBrightText(dict);
     }
@@ -1696,14 +1694,10 @@ FinderHighlighter.prototype = {
 
       let pageContentChanged = dict.detectedGeometryChange;
       if (!pageContentChanged && !pageIsTooBig) {
-        let {
-          width: previousWidth,
-          height: previousHeight,
-        } = dict.lastWindowDimensions;
-        let {
-          width,
-          height,
-        } = (dict.lastWindowDimensions = this._getWindowDimensions(window));
+        let { width: previousWidth, height: previousHeight } =
+          dict.lastWindowDimensions;
+        let { width, height } = (dict.lastWindowDimensions =
+          this._getWindowDimensions(window));
         pageContentChanged =
           dict.detectedGeometryChange ||
           Math.abs(previousWidth - width) > kContentChangeThresholdPx ||

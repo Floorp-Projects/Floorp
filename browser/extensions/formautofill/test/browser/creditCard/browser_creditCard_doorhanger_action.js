@@ -136,9 +136,8 @@ add_task(async function test_update_doorhanger_click_save() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function (browser) {
-      let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
-        true
-      );
+      let osKeyStoreLoginShown =
+        OSKeyStoreTestUtils.waitForOSKeyStoreLogin(true);
       let onPopupShown = waitForPopupShown();
       await openPopupOn(browser, "form #cc-name");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);

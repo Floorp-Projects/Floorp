@@ -1,8 +1,9 @@
 "use strict";
 
-var gInvalidFormPopup = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal
-  .getActor("FormValidation")
-  ._getAndMaybeCreatePanel(document);
+var gInvalidFormPopup =
+  gBrowser.selectedBrowser.browsingContext.currentWindowGlobal
+    .getActor("FormValidation")
+    ._getAndMaybeCreatePanel(document);
 
 function checkPopupHide() {
   ok(

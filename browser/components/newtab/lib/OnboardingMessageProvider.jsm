@@ -296,8 +296,7 @@ const BASE_MESSAGES = () => [
               string_id: "mr2022-onboarding-mobile-download-subtitle",
             },
             hero_image: {
-              url:
-                "chrome://activity-stream/content/data/content/assets/mobile-download-qr-existing-user.svg",
+              url: "chrome://activity-stream/content/data/content/assets/mobile-download-qr-existing-user.svg",
             },
             cta_paragraph: {
               text: {
@@ -307,8 +306,7 @@ const BASE_MESSAGES = () => [
               action: {
                 type: "OPEN_URL",
                 data: {
-                  args:
-                    "https://www.mozilla.org/firefox/mobile/get-app/?utm_medium=firefox-desktop&utm_source=onboarding-modal&utm_campaign=mr2022&utm_content=existing-global",
+                  args: "https://www.mozilla.org/firefox/mobile/get-app/?utm_medium=firefox-desktop&utm_source=onboarding-modal&utm_campaign=mr2022&utm_content=existing-global",
                   where: "tab",
                 },
               },
@@ -568,8 +566,7 @@ const BASE_MESSAGES = () => [
                     ios: {
                       action: {
                         data: {
-                          args:
-                            "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fus%2Fapp%2Ffirefox-focus-privacy-browser%2Fid1055677337",
+                          args: "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fus%2Fapp%2Ffirefox-focus-privacy-browser%2Fid1055677337",
                           where: "tabshifted",
                         },
                         type: "OPEN_URL",
@@ -579,8 +576,7 @@ const BASE_MESSAGES = () => [
                     android: {
                       action: {
                         data: {
-                          args:
-                            "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.focus",
+                          args: "https://app.adjust.com/167k4ih?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.focus",
                           where: "tabshifted",
                         },
                         type: "OPEN_URL",
@@ -675,8 +671,7 @@ const BASE_MESSAGES = () => [
                     ios: {
                       action: {
                         data: {
-                          args:
-                            "https://app.adjust.com/a8bxj8j?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fde%2Fapp%2Fklar-by-firefox%2Fid1073435754",
+                          args: "https://app.adjust.com/a8bxj8j?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fde%2Fapp%2Fklar-by-firefox%2Fid1073435754",
                           where: "tabshifted",
                         },
                         type: "OPEN_URL",
@@ -686,8 +681,7 @@ const BASE_MESSAGES = () => [
                     android: {
                       action: {
                         data: {
-                          args:
-                            "https://app.adjust.com/a8bxj8j?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.klar",
+                          args: "https://app.adjust.com/a8bxj8j?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.klar",
                           where: "tabshifted",
                         },
                         type: "OPEN_URL",
@@ -778,8 +772,7 @@ const BASE_MESSAGES = () => [
                     ios: {
                       action: {
                         data: {
-                          args:
-                            "https://app.adjust.com/a8bxj8j?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fde%2Fapp%2Fklar-by-firefox%2Fid1073435754",
+                          args: "https://app.adjust.com/a8bxj8j?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fde%2Fapp%2Fklar-by-firefox%2Fid1073435754",
                           where: "tabshifted",
                         },
                         type: "OPEN_URL",
@@ -789,8 +782,7 @@ const BASE_MESSAGES = () => [
                     android: {
                       action: {
                         data: {
-                          args:
-                            "https://app.adjust.com/a8bxj8j?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.klar",
+                          args: "https://app.adjust.com/a8bxj8j?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.klar",
                           where: "tabshifted",
                         },
                         type: "OPEN_URL",

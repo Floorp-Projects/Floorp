@@ -83,13 +83,11 @@ async function fetchVisitPaths(url) {
     FROM path
   `;
 
-  const visits = await lazy.NewTabUtils.activityStreamProvider.executePlacesQuery(
-    query,
-    {
+  const visits =
+    await lazy.NewTabUtils.activityStreamProvider.executePlacesQuery(query, {
       columns: ["visit_id", "url"],
       params: { url },
-    }
-  );
+    });
   return visits;
 }
 

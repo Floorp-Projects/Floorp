@@ -40,10 +40,11 @@ function navigateDummyBrowser(browser, uri) {
     uri = Services.io.newURI(uri);
   }
   browser.currentURI = uri;
-  browser.contentPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    browser.currentURI,
-    {}
-  );
+  browser.contentPrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(
+      browser.currentURI,
+      {}
+    );
 }
 
 /**

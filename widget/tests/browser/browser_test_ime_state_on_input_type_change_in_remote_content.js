@@ -39,9 +39,10 @@ add_task(async function () {
             browser,
             [srcIndex, destIndex],
             (aSrcIndex, aDestIndex) => {
-              content.wrappedJSObject.runner = content.wrappedJSObject.createIMEStateOnInputTypeChangeTester(
-                aSrcIndex
-              );
+              content.wrappedJSObject.runner =
+                content.wrappedJSObject.createIMEStateOnInputTypeChangeTester(
+                  aSrcIndex
+                );
               return content.wrappedJSObject.runner.prepareToRun(
                 aDestIndex,
                 content.window,

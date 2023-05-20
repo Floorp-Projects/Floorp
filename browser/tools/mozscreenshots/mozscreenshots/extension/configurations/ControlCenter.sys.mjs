@@ -46,9 +46,8 @@ export var ControlCenter = {
           loadUsingSystemPrincipal: true,
         });
         channel = channel.QueryInterface(Ci.nsIFileChannel);
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         let gBrowser = browserWindow.gBrowser;
         BrowserTestUtils.loadURIString(
           gBrowser.selectedBrowser,
@@ -94,9 +93,10 @@ export var ControlCenter = {
     singlePermission: {
       selectors: CC_SELECTORS,
       async applyConfig() {
-        let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-          PERMISSIONS_PAGE
-        );
+        let principal =
+          Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            PERMISSIONS_PAGE
+          );
         SitePermissions.setForPrincipal(
           principal,
           "camera",
@@ -114,9 +114,10 @@ export var ControlCenter = {
         // TODO: (Bug 1330601) Rewrite this to consider temporary (TAB) permission states.
         // There are 2 possible non-default permission states, so we alternate between them.
         let states = [SitePermissions.ALLOW, SitePermissions.BLOCK];
-        let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-          PERMISSIONS_PAGE
-        );
+        let principal =
+          Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            PERMISSIONS_PAGE
+          );
         SitePermissions.listPermissions().forEach(function (permission, index) {
           SitePermissions.setForPrincipal(
             principal,
@@ -181,9 +182,8 @@ export var ControlCenter = {
     mixedActiveUnblocked: {
       selectors: CC_SELECTORS,
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         let gBrowser = browserWindow.gBrowser;
         await loadPage(MIXED_ACTIVE_CONTENT_URL);
         gBrowser.ownerGlobal.gIdentityHandler.disableMixedContentProtection();
@@ -199,9 +199,8 @@ export var ControlCenter = {
     mixedActiveUnblockedSubView: {
       selectors: CC_SELECTORS,
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         let gBrowser = browserWindow.gBrowser;
         await loadPage(MIXED_ACTIVE_CONTENT_URL);
         gBrowser.ownerGlobal.gIdentityHandler.disableMixedContentProtection();
@@ -254,9 +253,8 @@ export var ControlCenter = {
     trackingProtectionDisabled: {
       selectors: PP_SELECTORS,
       async applyConfig() {
-        let browserWindow = Services.wm.getMostRecentWindow(
-          "navigator:browser"
-        );
+        let browserWindow =
+          Services.wm.getMostRecentWindow("navigator:browser");
         let gBrowser = browserWindow.gBrowser;
         Services.prefs.setBoolPref("privacy.trackingprotection.enabled", true);
         await UrlClassifierTestUtils.addTestTrackers();

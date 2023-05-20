@@ -52,7 +52,8 @@ export function TokenServerClientNetworkError(error) {
 }
 
 TokenServerClientNetworkError.prototype = new TokenServerClientError();
-TokenServerClientNetworkError.prototype.constructor = TokenServerClientNetworkError;
+TokenServerClientNetworkError.prototype.constructor =
+  TokenServerClientNetworkError;
 TokenServerClientNetworkError.prototype._toStringFields = function () {
   return { error: this.error };
 };
@@ -90,7 +91,8 @@ export function TokenServerClientServerError(message, cause = "general") {
 }
 
 TokenServerClientServerError.prototype = new TokenServerClientError();
-TokenServerClientServerError.prototype.constructor = TokenServerClientServerError;
+TokenServerClientServerError.prototype.constructor =
+  TokenServerClientServerError;
 
 TokenServerClientServerError.prototype._toStringFields = function () {
   let fields = {

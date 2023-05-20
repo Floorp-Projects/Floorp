@@ -40,9 +40,8 @@ add_task(async function run_test() {
       }
     },
   };
-  bookmarksObserver.handlePlacesEvents = bookmarksObserver.handlePlacesEvents.bind(
-    bookmarksObserver
-  );
+  bookmarksObserver.handlePlacesEvents =
+    bookmarksObserver.handlePlacesEvents.bind(bookmarksObserver);
   PlacesUtils.observers.addListener(
     ["bookmark-removed", "bookmark-tags-changed"],
     bookmarksObserver.handlePlacesEvents

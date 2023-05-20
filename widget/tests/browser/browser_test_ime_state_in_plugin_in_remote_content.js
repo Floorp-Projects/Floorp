@@ -20,13 +20,14 @@ add_task(async function () {
       );
 
       await SpecialPowers.spawn(browser, [], () => {
-        content.wrappedJSObject.waitForIMEContentObserverSendingNotifications = () => {
-          return new content.window.Promise(resolve =>
-            content.window.requestAnimationFrame(() =>
-              content.window.requestAnimationFrame(resolve)
-            )
-          );
-        };
+        content.wrappedJSObject.waitForIMEContentObserverSendingNotifications =
+          () => {
+            return new content.window.Promise(resolve =>
+              content.window.requestAnimationFrame(() =>
+                content.window.requestAnimationFrame(resolve)
+              )
+            );
+          };
         content.document.body.innerHTML =
           '<input><object type="application/x-test"></object>';
       });

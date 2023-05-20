@@ -6,12 +6,8 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
 
-const {
-  AnimationFramePromise,
-  Deferred,
-  EventPromise,
-  PollPromise,
-} = ChromeUtils.importESModule("chrome://remote/content/shared/Sync.sys.mjs");
+const { AnimationFramePromise, Deferred, EventPromise, PollPromise } =
+  ChromeUtils.importESModule("chrome://remote/content/shared/Sync.sys.mjs");
 
 /**
  * Mimic a DOM node for listening for events.

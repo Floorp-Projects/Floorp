@@ -49,15 +49,11 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () =>
   FormAutofill.defineLogGetter(lazy, "FormAutofillParent")
 );
 
-const {
-  ENABLED_AUTOFILL_ADDRESSES_PREF,
-  ENABLED_AUTOFILL_CREDITCARDS_PREF,
-} = FormAutofill;
+const { ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF } =
+  FormAutofill;
 
-const {
-  ADDRESSES_COLLECTION_NAME,
-  CREDITCARDS_COLLECTION_NAME,
-} = FormAutofillUtils;
+const { ADDRESSES_COLLECTION_NAME, CREDITCARDS_COLLECTION_NAME } =
+  FormAutofillUtils;
 
 let gMessageObservers = new Set();
 
@@ -182,11 +178,13 @@ export let FormAutofillStatus = {
     lazy.log.debug("updateSavedFieldNames");
 
     let savedFieldNames;
-    const addressNames = await lazy.gFormAutofillStorage.addresses.getSavedFieldNames();
+    const addressNames =
+      await lazy.gFormAutofillStorage.addresses.getSavedFieldNames();
 
     // Don't access the credit cards store unless it is enabled.
     if (FormAutofill.isAutofillCreditCardsAvailable) {
-      const creditCardNames = await lazy.gFormAutofillStorage.creditCards.getSavedFieldNames();
+      const creditCardNames =
+        await lazy.gFormAutofillStorage.creditCards.getSavedFieldNames();
       savedFieldNames = new Set([...addressNames, ...creditCardNames]);
     } else {
       savedFieldNames = addressNames;

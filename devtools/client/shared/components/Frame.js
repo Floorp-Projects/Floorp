@@ -121,10 +121,11 @@ class Frame extends Component {
       //
       // and due to that, we need to use subscribeByLocation in order to
       // handle both cases with an without an ID.
-      this.unsubscribeSourceMapURLService = this.props.sourceMapURLService.subscribeByLocation(
-        location,
-        this._locationChanged
-      );
+      this.unsubscribeSourceMapURLService =
+        this.props.sourceMapURLService.subscribeByLocation(
+          location,
+          this._locationChanged
+        );
     }
   }
 

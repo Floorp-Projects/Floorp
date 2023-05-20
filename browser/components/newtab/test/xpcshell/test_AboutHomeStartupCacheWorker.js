@@ -231,8 +231,9 @@ add_task(async function test_cache_worker() {
     3,
     "There are 3 DSCards"
   );
-  let cardHostname = doc.querySelector("[data-section-id='topstories'] .source")
-    .innerText;
+  let cardHostname = doc.querySelector(
+    "[data-section-id='topstories'] .source"
+  ).innerText;
   equal(cardHostname, "bbc.com", "Card hostname is bbc.com");
 
   let placeholders = doc.querySelectorAll(".ds-card.placeholder");

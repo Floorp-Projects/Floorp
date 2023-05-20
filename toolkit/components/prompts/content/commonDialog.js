@@ -20,7 +20,8 @@ var propBag, args, Dialog;
     openerColorSchemeOverride &&
     window.browsingContext == window.browsingContext.top
   ) {
-    window.browsingContext.prefersColorSchemeOverride = openerColorSchemeOverride;
+    window.browsingContext.prefersColorSchemeOverride =
+      openerColorSchemeOverride;
   }
 }
 

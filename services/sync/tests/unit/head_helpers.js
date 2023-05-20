@@ -25,12 +25,8 @@ var { PlacesTestUtils } = ChromeUtils.importESModule(
 var { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
-var {
-  SerializableSet,
-  Svc,
-  Utils,
-  getChromeWindow,
-} = ChromeUtils.importESModule("resource://services-sync/util.sys.mjs");
+var { SerializableSet, Svc, Utils, getChromeWindow } =
+  ChromeUtils.importESModule("resource://services-sync/util.sys.mjs");
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );

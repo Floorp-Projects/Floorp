@@ -80,7 +80,8 @@ class Connector {
     // The owner object (NetMonitorAPI) received all events.
     this.owner = connection.owner;
 
-    this.networkFront = await this.commands.watcherFront.getNetworkParentActor();
+    this.networkFront =
+      await this.commands.watcherFront.getNetworkParentActor();
 
     this.dataProvider = new FirefoxDataProvider({
       commands: this.commands,

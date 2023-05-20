@@ -47,13 +47,8 @@ class StatusCode extends Component {
 
   render() {
     const { item } = this.props;
-    const {
-      fromCache,
-      fromServiceWorker,
-      status,
-      statusText,
-      blockedReason,
-    } = item;
+    const { fromCache, fromServiceWorker, status, statusText, blockedReason } =
+      item;
     let code;
 
     if (status) {

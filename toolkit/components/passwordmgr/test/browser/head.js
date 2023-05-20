@@ -200,8 +200,8 @@ async function getFormSubmitResponseResult(
           content.document.readyState == "complete"
         );
       }, `Wait for form submission load (${resultURL})`);
-      let username = content.document.querySelector(usernameSelector)
-        .textContent;
+      let username =
+        content.document.querySelector(usernameSelector).textContent;
       // Bug 1686071: Since generated passwords can have special characters in them,
       // we need to unescape the characters. These special characters are automatically escaped
       // when we submit a form in `submitFormAndGetResults`.

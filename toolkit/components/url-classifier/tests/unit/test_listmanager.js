@@ -209,43 +209,43 @@ function run_test() {
   gHttpServ = new HttpServer();
   gHttpServ.registerDirectory("/", do_get_cwd());
 
-  gHttpServ.registerPathHandler("/safebrowsing/update", function (
-    request,
-    response
-  ) {
-    let body = NetUtil.readInputStreamToString(
-      request.bodyInputStream,
-      request.bodyInputStream.available()
-    );
+  gHttpServ.registerPathHandler(
+    "/safebrowsing/update",
+    function (request, response) {
+      let body = NetUtil.readInputStreamToString(
+        request.bodyInputStream,
+        request.bodyInputStream.available()
+      );
 
-    // Verify if the request is as expected.
-    equal(body, gExpectedUpdateRequest);
+      // Verify if the request is as expected.
+      equal(body, gExpectedUpdateRequest);
 
-    // Respond the update which is controlled by the test case.
-    response.setHeader(
-      "Content-Type",
-      "application/vnd.google.safebrowsing-update",
-      false
-    );
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.bodyOutputStream.write(gUpdateResponse, gUpdateResponse.length);
+      // Respond the update which is controlled by the test case.
+      response.setHeader(
+        "Content-Type",
+        "application/vnd.google.safebrowsing-update",
+        false
+      );
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.bodyOutputStream.write(gUpdateResponse, gUpdateResponse.length);
 
-    gUpdatedCntForTableData++;
+      gUpdatedCntForTableData++;
 
-    if (gUpdatedCntForTableData !== SERVER_INVOLVED_TEST_CASE_LIST.length) {
-      // This is not the last test case so run the next once upon the
-      // the update success.
-      waitForUpdateSuccess(run_next_test);
-      return;
+      if (gUpdatedCntForTableData !== SERVER_INVOLVED_TEST_CASE_LIST.length) {
+        // This is not the last test case so run the next once upon the
+        // the update success.
+        waitForUpdateSuccess(run_next_test);
+        return;
+      }
+
+      if (gIsV4Updated) {
+        run_next_test(); // All tests are done. Just finish.
+        return;
+      }
+
+      info("Waiting for TEST_TABLE_DATA_V4 to be tested ...");
     }
-
-    if (gIsV4Updated) {
-      run_next_test(); // All tests are done. Just finish.
-      return;
-    }
-
-    info("Waiting for TEST_TABLE_DATA_V4 to be tested ...");
-  });
+  );
 
   gHttpServ.start(4444);
 
@@ -253,73 +253,73 @@ function run_test() {
   gHttpServV4 = new HttpServer();
   gHttpServV4.registerDirectory("/", do_get_cwd());
 
-  gHttpServV4.registerPathHandler("/safebrowsing/update", function (
-    request,
-    response
-  ) {
-    // V4 update request body should be empty.
-    equal(request.bodyInputStream.available(), 0);
+  gHttpServV4.registerPathHandler(
+    "/safebrowsing/update",
+    function (request, response) {
+      // V4 update request body should be empty.
+      equal(request.bodyInputStream.available(), 0);
 
-    // Not on the spec. Found in Chromium source code...
-    equal(request.getHeader("X-HTTP-Method-Override"), "POST");
+      // Not on the spec. Found in Chromium source code...
+      equal(request.getHeader("X-HTTP-Method-Override"), "POST");
 
-    // V4 update request uses GET.
-    equal(request.method, "GET");
+      // V4 update request uses GET.
+      equal(request.method, "GET");
 
-    // V4 append the base64 encoded request to the query string.
-    equal(request.queryString, gExpectedQueryV4);
-    equal(request.queryString.indexOf("+"), -1);
-    equal(request.queryString.indexOf("/"), -1);
+      // V4 append the base64 encoded request to the query string.
+      equal(request.queryString, gExpectedQueryV4);
+      equal(request.queryString.indexOf("+"), -1);
+      equal(request.queryString.indexOf("/"), -1);
 
-    // Respond a V2 compatible content for now. In the future we can
-    // send a meaningful response to test Bug 1284178 to see if the
-    // update is successfully stored to database.
-    response.setHeader(
-      "Content-Type",
-      "application/vnd.google.safebrowsing-update",
-      false
-    );
-    response.setStatusLine(request.httpVersion, 200, "OK");
+      // Respond a V2 compatible content for now. In the future we can
+      // send a meaningful response to test Bug 1284178 to see if the
+      // update is successfully stored to database.
+      response.setHeader(
+        "Content-Type",
+        "application/vnd.google.safebrowsing-update",
+        false
+      );
+      response.setStatusLine(request.httpVersion, 200, "OK");
 
-    // The protobuf binary represention of response:
-    //
-    // [
-    //   {
-    //     'threat_type': 2, // SOCIAL_ENGINEERING_PUBLIC
-    //     'response_type': 2, // FULL_UPDATE
-    //     'new_client_state': 'sta\x00te', // NEW_CLIENT_STATE
-    //     'checksum': { "sha256": CHECKSUM }, // CHECKSUM
-    //     'additions': { 'compression_type': RAW,
-    //                    'prefix_size': 4,
-    //                    'raw_hashes': "00000001000000020000000300000004"}
-    //   }
-    // ]
-    //
-    let content =
-      "\x0A\x4A\x08\x02\x20\x02\x2A\x18\x08\x01\x12\x14\x08\x04\x12\x10\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x03\x3A\x06\x73\x74\x61\x00\x74\x65\x42\x22\x0A\x20\x30\x67\xC7\x2C\x5E\x50\x1C\x31\xE3\xFE\xCA\x73\xF0\x47\xDC\x34\x1A\x95\x63\x99\xEC\x70\x5E\x0A\xEE\x9E\xFB\x17\xA1\x55\x35\x78\x12\x08\x08\x08\x10\x80\x94\xEB\xDC\x03";
+      // The protobuf binary represention of response:
+      //
+      // [
+      //   {
+      //     'threat_type': 2, // SOCIAL_ENGINEERING_PUBLIC
+      //     'response_type': 2, // FULL_UPDATE
+      //     'new_client_state': 'sta\x00te', // NEW_CLIENT_STATE
+      //     'checksum': { "sha256": CHECKSUM }, // CHECKSUM
+      //     'additions': { 'compression_type': RAW,
+      //                    'prefix_size': 4,
+      //                    'raw_hashes': "00000001000000020000000300000004"}
+      //   }
+      // ]
+      //
+      let content =
+        "\x0A\x4A\x08\x02\x20\x02\x2A\x18\x08\x01\x12\x14\x08\x04\x12\x10\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x03\x3A\x06\x73\x74\x61\x00\x74\x65\x42\x22\x0A\x20\x30\x67\xC7\x2C\x5E\x50\x1C\x31\xE3\xFE\xCA\x73\xF0\x47\xDC\x34\x1A\x95\x63\x99\xEC\x70\x5E\x0A\xEE\x9E\xFB\x17\xA1\x55\x35\x78\x12\x08\x08\x08\x10\x80\x94\xEB\xDC\x03";
 
-    response.bodyOutputStream.write(content, content.length);
+      response.bodyOutputStream.write(content, content.length);
 
-    if (gIsV4Updated) {
-      // This falls to the case where test_partialUpdateV4 is running.
-      // We are supposed to have verified the update request contains
-      // the state we set in the previous request.
-      waitForUpdateSuccess(run_next_test);
-      return;
-    }
-
-    waitUntilMetaDataSaved(NEW_CLIENT_STATE, CHECKSUM, () => {
-      gIsV4Updated = true;
-
-      if (gUpdatedCntForTableData === SERVER_INVOLVED_TEST_CASE_LIST.length) {
-        // All tests are done!
-        run_next_test();
+      if (gIsV4Updated) {
+        // This falls to the case where test_partialUpdateV4 is running.
+        // We are supposed to have verified the update request contains
+        // the state we set in the previous request.
+        waitForUpdateSuccess(run_next_test);
         return;
       }
 
-      info("Wait for all sever-involved tests to be done ...");
-    });
-  });
+      waitUntilMetaDataSaved(NEW_CLIENT_STATE, CHECKSUM, () => {
+        gIsV4Updated = true;
+
+        if (gUpdatedCntForTableData === SERVER_INVOLVED_TEST_CASE_LIST.length) {
+          // All tests are done!
+          run_next_test();
+          return;
+        }
+
+        info("Wait for all sever-involved tests to be done ...");
+      });
+    }
+  );
 
   gHttpServV4.start(5555);
 

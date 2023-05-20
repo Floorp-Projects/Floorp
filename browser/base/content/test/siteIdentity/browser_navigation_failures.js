@@ -29,8 +29,8 @@ add_task(async function () {
       true
     );
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .className;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").className;
     is(
       newIdentityMode,
       "certErrorPage notSecureText",
@@ -54,8 +54,8 @@ add_task(async function () {
       true
     );
 
-    let newIdentityMode = window.document.getElementById("identity-box")
-      .className;
+    let newIdentityMode =
+      window.document.getElementById("identity-box").className;
     is(
       newIdentityMode,
       "unknownIdentity",

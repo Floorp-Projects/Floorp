@@ -30,8 +30,7 @@ const MESSAGE_CONTENT = {
     text: "This is a test CFR",
     addon: {
       id: "954390",
-      icon:
-        "chrome://activity-stream/content/data/content/assets/cfr_fb_container.png",
+      icon: "chrome://activity-stream/content/data/content/assets/cfr_fb_container.png",
       title: "Facebook Container",
       users: "1455872",
       author: "Mozilla",

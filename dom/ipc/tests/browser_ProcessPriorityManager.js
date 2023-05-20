@@ -503,11 +503,13 @@ add_task(async function test_iframe_navigate() {
       // Do a cross-origin navigation in the iframe in the foreground tab.
       let iframe2URI = iframe2Host + "/browser/dom/ipc/tests/file_dummy.html";
       let loaded = BrowserTestUtils.browserLoaded(browser, true, iframe2URI);
-      await SpecialPowers.spawn(iframe, [iframe2URI], async function (
-        _iframe2URI
-      ) {
-        content.location = _iframe2URI;
-      });
+      await SpecialPowers.spawn(
+        iframe,
+        [iframe2URI],
+        async function (_iframe2URI) {
+          content.location = _iframe2URI;
+        }
+      );
       await loaded;
 
       let iframe2ChildID = browsingContextChildID(iframe);

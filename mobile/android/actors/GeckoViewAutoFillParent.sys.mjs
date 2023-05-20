@@ -85,6 +85,5 @@ export class GeckoViewAutoFillParent extends GeckoViewActorParent {
   }
 }
 
-const { debug, warn } = GeckoViewAutoFillParent.initLogging(
-  "GeckoViewAutoFill"
-);
+const { debug, warn } =
+  GeckoViewAutoFillParent.initLogging("GeckoViewAutoFill");

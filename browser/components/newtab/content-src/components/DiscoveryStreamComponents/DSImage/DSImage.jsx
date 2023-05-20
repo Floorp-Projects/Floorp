@@ -49,9 +49,8 @@ const PLACEHOLDER_IMAGE_DATA_ARRAY = [
   },
 ];
 
-const PLACEHOLDER_IMAGE_COLORS_ARRAY = "#0090ED #FF4F5F #2AC3A2 #FF7139 #A172FF #FFA437 #FF2A8A".split(
-  " "
-);
+const PLACEHOLDER_IMAGE_COLORS_ARRAY =
+  "#0090ED #FF4F5F #2AC3A2 #FF7139 #A172FF #FFA437 #FF2A8A".split(" ");
 
 function generateIndex({ keyCode, max }) {
   if (!keyCode) {
@@ -81,9 +80,8 @@ export function PlaceholderImage({ urlKey, titleKey }) {
     keyCode: titleKey,
     max: PLACEHOLDER_IMAGE_COLORS_ARRAY.length,
   });
-  const { rotation, offsetx, offsety, scale } = PLACEHOLDER_IMAGE_DATA_ARRAY[
-    dataIndex
-  ];
+  const { rotation, offsetx, offsety, scale } =
+    PLACEHOLDER_IMAGE_DATA_ARRAY[dataIndex];
   const color = PLACEHOLDER_IMAGE_COLORS_ARRAY[colorIndex];
   const style = {
     "--placeholderBackgroundColor": color,

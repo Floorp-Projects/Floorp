@@ -785,9 +785,10 @@ var TPS = {
     let getServerBookmarkState = async () => {
       let bookmarkEngine = lazy.Weave.Service.engineManager.get("bookmarks");
       let collection = bookmarkEngine.itemSource();
-      let collectionKey = bookmarkEngine.service.collectionKeys.keyForCollection(
-        bookmarkEngine.name
-      );
+      let collectionKey =
+        bookmarkEngine.service.collectionKeys.keyForCollection(
+          bookmarkEngine.name
+        );
       collection.full = true;
       let items = [];
       let resp = await collection.get();

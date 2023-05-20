@@ -706,9 +706,8 @@ const GeckoViewAutocomplete = {
 
       debug`delegateSelection - filling form`;
 
-      const actor = browsingContext.currentWindowGlobal.getActor(
-        "LoginManager"
-      );
+      const actor =
+        browsingContext.currentWindowGlobal.getActor("LoginManager");
 
       await actor.fillForm({
         browser,
@@ -722,16 +721,14 @@ const GeckoViewAutocomplete = {
       });
     } else if (selectionType === "creditCard") {
       const selectedCreditCard = selectedOption?.value?.toGecko();
-      const actor = browsingContext.currentWindowGlobal.getActor(
-        "FormAutofill"
-      );
+      const actor =
+        browsingContext.currentWindowGlobal.getActor("FormAutofill");
 
       actor.sendAsyncMessage("FormAutofill:FillForm", selectedCreditCard);
     } else if (selectionType === "address") {
       const selectedAddress = selectedOption?.value?.toGecko();
-      const actor = browsingContext.currentWindowGlobal.getActor(
-        "FormAutofill"
-      );
+      const actor =
+        browsingContext.currentWindowGlobal.getActor("FormAutofill");
 
       actor.sendAsyncMessage("FormAutofill:FillForm", selectedAddress);
     }

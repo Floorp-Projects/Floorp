@@ -3,14 +3,8 @@
 const { ctypes } = ChromeUtils.importESModule(
   "resource://gre/modules/ctypes.sys.mjs"
 );
-const {
-  ESE,
-  KERNEL,
-  gLibs,
-  COLUMN_TYPES,
-  declareESEFunction,
-  loadLibraries,
-} = ChromeUtils.importESModule("resource:///modules/ESEDBReader.sys.mjs");
+const { ESE, KERNEL, gLibs, COLUMN_TYPES, declareESEFunction, loadLibraries } =
+  ChromeUtils.importESModule("resource:///modules/ESEDBReader.sys.mjs");
 const { EdgeProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/EdgeProfileMigrator.sys.mjs"
 );

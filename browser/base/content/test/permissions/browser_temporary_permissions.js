@@ -13,9 +13,8 @@ const SUBFRAME_PAGE =
 
 // Test that setting temp permissions triggers a change in the identity block.
 add_task(async function testTempPermissionChangeEvents() {
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    ORIGIN
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(ORIGIN);
   let id = "geo";
 
   await BrowserTestUtils.withNewTab(ORIGIN, function (browser) {

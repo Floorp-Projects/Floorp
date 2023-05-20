@@ -17,9 +17,8 @@ const WEB_ROOT = getRootDirectory(gTestPath).replace(
  */
 function promiseStylesheetsLoaded(browser, styleSheetCount) {
   return TestUtils.waitForCondition(() => {
-    let actor = browser.browsingContext?.currentWindowGlobal?.getActor(
-      "PageStyle"
-    );
+    let actor =
+      browser.browsingContext?.currentWindowGlobal?.getActor("PageStyle");
     if (!actor) {
       info("No jswindowactor (yet?)");
       return false;

@@ -62,9 +62,8 @@ add_task(async function test_startup_with_missing() {
 });
 
 add_task(async function test_update_with_missing() {
-  let reloadObserved = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  let reloadObserved =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
 
   await RemoteSettings(SearchUtils.SETTINGS_KEY).emit("sync", {
     data: {
@@ -84,9 +83,8 @@ add_task(async function test_update_with_missing() {
     "Should have just the good engine"
   );
 
-  reloadObserved = SearchTestUtils.promiseSearchNotification(
-    "engines-reloaded"
-  );
+  reloadObserved =
+    SearchTestUtils.promiseSearchNotification("engines-reloaded");
 
   await RemoteSettings(SearchUtils.SETTINGS_KEY).emit("sync", {
     data: {

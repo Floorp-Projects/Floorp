@@ -31,8 +31,7 @@ const TEST_URI = `<html>
  */
 const tests = [
   {
-    desc:
-      "Check that the menu button is inactivate and the menu is closed initially.",
+    desc: "Check that the menu button is inactivate and the menu is closed initially.",
     expected: {
       simulation: {
         buttonActive: false,
@@ -40,8 +39,7 @@ const tests = [
     },
   },
   {
-    desc:
-      "Clicking the menu button shows the menu with No Simulation selected.",
+    desc: "Clicking the menu button shows the menu with No Simulation selected.",
     setup: async ({ doc }) => {
       await openSimulationMenu(doc);
     },
@@ -53,8 +51,7 @@ const tests = [
     },
   },
   {
-    desc:
-      "Selecting an option renders the menu button active and closes the menu.",
+    desc: "Selecting an option renders the menu button active and closes the menu.",
     setup: async ({ doc }) => {
       await toggleSimulationOption(doc, 2);
     },
@@ -78,8 +75,7 @@ const tests = [
     },
   },
   {
-    desc:
-      "Unselecting the option renders the button inactive and closes the menu.",
+    desc: "Unselecting the option renders the button inactive and closes the menu.",
     setup: async ({ doc }) => {
       await toggleSimulationOption(doc, 2);
     },

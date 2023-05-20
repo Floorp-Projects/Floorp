@@ -1068,9 +1068,10 @@ class HighlightersOverlay {
       // Save grid highlighter state.
       const { url } = this.target;
 
-      const selectors = await this.inspector.commands.inspectorCommand.getNodeFrontSelectorsFromTopDocument(
-        node
-      );
+      const selectors =
+        await this.inspector.commands.inspectorCommand.getNodeFrontSelectorsFromTopDocument(
+          node
+        );
 
       this.state.grids.set(node, { selectors, options, url });
 
@@ -1312,9 +1313,10 @@ class HighlightersOverlay {
       return;
     }
 
-    const highlighter = this.geometryEditorHighlighterShown.inspectorFront.getKnownHighlighter(
-      "GeometryEditorHighlighter"
-    );
+    const highlighter =
+      this.geometryEditorHighlighterShown.inspectorFront.getKnownHighlighter(
+        "GeometryEditorHighlighter"
+      );
 
     if (!highlighter) {
       return;
@@ -1395,9 +1397,10 @@ class HighlightersOverlay {
       return;
     }
 
-    const nodeFront = await this.inspector.commands.inspectorCommand.findNodeFrontFromSelectors(
-      selectors
-    );
+    const nodeFront =
+      await this.inspector.commands.inspectorCommand.findNodeFrontFromSelectors(
+        selectors
+      );
 
     if (nodeFront) {
       await showFunction(nodeFront, options);

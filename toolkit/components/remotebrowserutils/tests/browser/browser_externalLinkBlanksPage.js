@@ -17,9 +17,8 @@ let Pages = [httpURL("dummy_page.html"), fileURL("dummy_page.html")];
  * Creates dummy protocol handler
  */
 function initTestHandlers() {
-  let handlerInfo = HandlerServiceTestUtils.getBlankHandlerInfo(
-    "test-proto://"
-  );
+  let handlerInfo =
+    HandlerServiceTestUtils.getBlankHandlerInfo("test-proto://");
 
   let appHandler = Cc[
     "@mozilla.org/uriloader/local-handler-app;1"

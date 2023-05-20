@@ -236,7 +236,8 @@ async function testTopLevelNavigations(bfcacheInParent) {
 async function testTopLevelNavigationsOnDocumentWithIframe(bfcacheInParent) {
   info(" # Test TOP LEVEL navigations on document with iframe");
   // Create a TargetCommand for a given test tab
-  const tab = await addTab(`https://example.com/document-builder.sjs?id=top&html=
+  const tab =
+    await addTab(`https://example.com/document-builder.sjs?id=top&html=
     <h1>Top level</h1>
     <iframe src="${encodeURIComponent(
       "https://example.com/document-builder.sjs?id=iframe&html=<h2>In iframe</h2>"

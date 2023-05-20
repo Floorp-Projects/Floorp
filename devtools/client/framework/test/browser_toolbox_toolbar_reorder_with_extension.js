@@ -73,10 +73,8 @@ add_task(async function () {
     "devtools.toolbox.tabsOrder"
   );
   const win = getWindow(toolbox);
-  const {
-    outerWidth: originalWindowWidth,
-    outerHeight: originalWindowHeight,
-  } = win;
+  const { outerWidth: originalWindowWidth, outerHeight: originalWindowHeight } =
+    win;
   registerCleanupFunction(() => {
     Services.prefs.setCharPref(
       "devtools.toolbox.tabsOrder",

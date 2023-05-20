@@ -492,9 +492,8 @@ add_task(async function test_loadedTabsHistogram() {
 
   resetTimestamps();
   const tabCount = TelemetryTestUtils.getAndClearHistogram("TAB_COUNT");
-  const loadedTabCount = TelemetryTestUtils.getAndClearHistogram(
-    "LOADED_TAB_COUNT"
-  );
+  const loadedTabCount =
+    TelemetryTestUtils.getAndClearHistogram("LOADED_TAB_COUNT");
 
   checkTabCountHistogram(tabCount.snapshot(), {}, "TAB_COUNT - initial count");
   checkTabCountHistogram(

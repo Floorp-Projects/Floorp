@@ -52,9 +52,8 @@ add_task(async function () {
     thisFirefoxString,
     document
   );
-  const thisFirefoxLink = thisFirefoxSidebarItem.querySelector(
-    ".qa-sidebar-link"
-  );
+  const thisFirefoxLink =
+    thisFirefoxSidebarItem.querySelector(".qa-sidebar-link");
   info("Click on the ThisFirefox item in the sidebar");
   const requestsSuccess = waitForRequestsSuccess(window.AboutDebugging.store);
   thisFirefoxLink.click();

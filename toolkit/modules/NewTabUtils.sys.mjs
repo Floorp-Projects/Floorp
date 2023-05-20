@@ -1576,9 +1576,8 @@ var ActivityStreamLinks = {
         Date.now() - this._pocketLastUpdated > POCKET_UPDATE_TIME ||
         this._pocketLastLatest < latestSince
       ) {
-        this._savedPocketStories = await ActivityStreamProvider.getRecentlyPocketed(
-          aOptions
-        );
+        this._savedPocketStories =
+          await ActivityStreamProvider.getRecentlyPocketed(aOptions);
         this._pocketLastUpdated = Date.now();
         this._pocketLastLatest = latestSince;
       }
@@ -2235,27 +2234,26 @@ var ExpirationFilter = {
     lazy.PageThumbs.addExpirationFilter(this);
   },
 
-  filterForThumbnailExpiration: function ExpirationFilter_filterForThumbnailExpiration(
-    aCallback
-  ) {
-    if (!AllPages.enabled) {
-      aCallback([]);
-      return;
-    }
-
-    Links.populateCache(function () {
-      let urls = [];
-
-      // Add all URLs to the list that we want to keep thumbnails for.
-      for (let link of Links.getLinks().slice(0, 25)) {
-        if (link && link.url) {
-          urls.push(link.url);
-        }
+  filterForThumbnailExpiration:
+    function ExpirationFilter_filterForThumbnailExpiration(aCallback) {
+      if (!AllPages.enabled) {
+        aCallback([]);
+        return;
       }
 
-      aCallback(urls);
-    });
-  },
+      Links.populateCache(function () {
+        let urls = [];
+
+        // Add all URLs to the list that we want to keep thumbnails for.
+        for (let link of Links.getLinks().slice(0, 25)) {
+          if (link && link.url) {
+            urls.push(link.url);
+          }
+        }
+
+        aCallback(urls);
+      });
+    },
 };
 
 /**

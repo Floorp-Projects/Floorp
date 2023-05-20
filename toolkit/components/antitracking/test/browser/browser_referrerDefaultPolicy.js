@@ -25,59 +25,61 @@ async function testOnWindowBody(win, expectedReferrer, rp) {
   await promiseTabLoadEvent(tab, TEST_TOP_PAGE);
 
   info("Loading tracking scripts and tracking images");
-  let referrer = await SpecialPowers.spawn(b, [{ rp }], async function ({
-    rp,
-  }) {
-    {
-      let src = content.document.createElement("script");
-      let p = new content.Promise(resolve => {
-        src.onload = resolve;
-      });
-      content.document.body.appendChild(src);
-      if (rp) {
-        src.referrerPolicy = rp;
+  let referrer = await SpecialPowers.spawn(
+    b,
+    [{ rp }],
+    async function ({ rp }) {
+      {
+        let src = content.document.createElement("script");
+        let p = new content.Promise(resolve => {
+          src.onload = resolve;
+        });
+        content.document.body.appendChild(src);
+        if (rp) {
+          src.referrerPolicy = rp;
+        }
+        src.src =
+          "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?what=script";
+        await p;
       }
-      src.src =
-        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?what=script";
-      await p;
-    }
 
-    {
-      let img = content.document.createElement("img");
-      let p = new content.Promise(resolve => {
-        img.onload = resolve;
-      });
-      content.document.body.appendChild(img);
-      if (rp) {
-        img.referrerPolicy = rp;
+      {
+        let img = content.document.createElement("img");
+        let p = new content.Promise(resolve => {
+          img.onload = resolve;
+        });
+        content.document.body.appendChild(img);
+        if (rp) {
+          img.referrerPolicy = rp;
+        }
+        img.src =
+          "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?what=image";
+        await p;
       }
-      img.src =
-        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?what=image";
-      await p;
-    }
 
-    {
-      let iframe = content.document.createElement("iframe");
-      let p = new content.Promise(resolve => {
-        iframe.onload = resolve;
-      });
-      content.document.body.appendChild(iframe);
-      if (rp) {
-        iframe.referrerPolicy = rp;
+      {
+        let iframe = content.document.createElement("iframe");
+        let p = new content.Promise(resolve => {
+          iframe.onload = resolve;
+        });
+        content.document.body.appendChild(iframe);
+        if (rp) {
+          iframe.referrerPolicy = rp;
+        }
+        iframe.src =
+          "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?what=iframe";
+        await p;
+
+        p = new content.Promise(resolve => {
+          content.onmessage = event => {
+            resolve(event.data);
+          };
+        });
+        iframe.contentWindow.postMessage("ping", "*");
+        return p;
       }
-      iframe.src =
-        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?what=iframe";
-      await p;
-
-      p = new content.Promise(resolve => {
-        content.onmessage = event => {
-          resolve(event.data);
-        };
-      });
-      iframe.contentWindow.postMessage("ping", "*");
-      return p;
     }
-  });
+  );
 
   is(referrer, expectedReferrer, "The correct referrer must be read from DOM");
 

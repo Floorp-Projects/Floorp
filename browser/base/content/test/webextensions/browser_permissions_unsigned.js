@@ -38,8 +38,9 @@ add_task(async function test_unsigned() {
   let panel = await promisePopupNotificationShown("addon-webext-permissions");
 
   is(panel.getAttribute("icon"), WARNING_ICON);
-  let description = panel.querySelector(".popup-notification-description")
-    .textContent;
+  let description = panel.querySelector(
+    ".popup-notification-description"
+  ).textContent;
   checkPermissionString(
     description,
     "webextPerms.headerUnsignedWithPerms",

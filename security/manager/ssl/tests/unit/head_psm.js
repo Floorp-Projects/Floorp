@@ -29,8 +29,9 @@ const { X509 } = ChromeUtils.importESModule(
   "resource://gre/modules/psm/X509.sys.mjs"
 );
 
-const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2)
-  .isDebugBuild;
+const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"].getService(
+  Ci.nsIDebug2
+).isDebugBuild;
 
 // The test EV roots are only enabled in debug builds as a security measure.
 const gEVExpected = isDebugBuild;
@@ -700,18 +701,18 @@ async function asyncStartTLSTestServer(
 
   let httpServer = new HttpServer();
   let serverReady = new Promise(resolve => {
-    httpServer.registerPathHandler("/", function handleServerCallback(
-      aRequest,
-      aResponse
-    ) {
-      aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
-      aResponse.setHeader("Content-Type", "text/plain");
-      let responseBody = "OK!";
-      aResponse.bodyOutputStream.write(responseBody, responseBody.length);
-      executeSoon(function () {
-        httpServer.stop(resolve);
-      });
-    });
+    httpServer.registerPathHandler(
+      "/",
+      function handleServerCallback(aRequest, aResponse) {
+        aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
+        aResponse.setHeader("Content-Type", "text/plain");
+        let responseBody = "OK!";
+        aResponse.bodyOutputStream.write(responseBody, responseBody.length);
+        executeSoon(function () {
+          httpServer.stop(resolve);
+        });
+      }
+    );
     httpServer.start(CALLBACK_PORT);
   });
 
@@ -829,37 +830,37 @@ function startOCSPResponder(
     nssDBLocation
   );
   let httpServer = new HttpServer();
-  httpServer.registerPrefixHandler("/", function handleServerCallback(
-    aRequest,
-    aResponse
-  ) {
-    info("got request for: " + aRequest.path);
-    let basePath = aRequest.path.slice(1).split("/")[0];
-    if (expectedBasePaths.length >= 1) {
-      Assert.equal(
-        basePath,
-        expectedBasePaths.shift(),
-        "Actual and expected base path should match"
+  httpServer.registerPrefixHandler(
+    "/",
+    function handleServerCallback(aRequest, aResponse) {
+      info("got request for: " + aRequest.path);
+      let basePath = aRequest.path.slice(1).split("/")[0];
+      if (expectedBasePaths.length >= 1) {
+        Assert.equal(
+          basePath,
+          expectedBasePaths.shift(),
+          "Actual and expected base path should match"
+        );
+      }
+      Assert.ok(
+        expectedCertNames.length >= 1,
+        "expectedCertNames should contain >= 1 entries"
       );
+      if (expectedMethods && expectedMethods.length >= 1) {
+        Assert.equal(
+          aRequest.method,
+          expectedMethods.shift(),
+          "Actual and expected fetch method should match"
+        );
+      }
+      aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
+      aResponse.setHeader("Content-Type", "application/ocsp-response");
+      for (let headerPair of responseHeaderPairs) {
+        aResponse.setHeader(headerPair[0], headerPair[1]);
+      }
+      aResponse.write(ocspResponses.shift());
     }
-    Assert.ok(
-      expectedCertNames.length >= 1,
-      "expectedCertNames should contain >= 1 entries"
-    );
-    if (expectedMethods && expectedMethods.length >= 1) {
-      Assert.equal(
-        aRequest.method,
-        expectedMethods.shift(),
-        "Actual and expected fetch method should match"
-      );
-    }
-    aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
-    aResponse.setHeader("Content-Type", "application/ocsp-response");
-    for (let headerPair of responseHeaderPairs) {
-      aResponse.setHeader(headerPair[0], headerPair[1]);
-    }
-    aResponse.write(ocspResponses.shift());
-  });
+  );
   httpServer.identity.setPrimary("http", identity, serverPort);
   httpServer.start(serverPort);
   return {

@@ -89,9 +89,10 @@ add_task(async function () {
   assertSelected_one_off(0);
 
   info("Key Down numButtons-1 should select the last one-off");
-  let numButtons = UrlbarTestUtils.getOneOffSearchButtons(
-    window
-  ).getSelectableButtons(true).length;
+  let numButtons =
+    UrlbarTestUtils.getOneOffSearchButtons(window).getSelectableButtons(
+      true
+    ).length;
   repeat(numButtons - 1, () => EventUtils.synthesizeKey("KEY_ArrowDown"));
   assertSelected_one_off(numButtons - 1);
 

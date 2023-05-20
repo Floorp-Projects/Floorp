@@ -1362,9 +1362,9 @@ export class StyleEditorUI extends EventEmitter {
       sidebar.hidden = !showSidebar || !inSource;
 
       this.emit("at-rules-list-changed", editor);
-    }
+    })
       .bind(this)()
-      .catch(console.error));
+      .catch(console.error);
   };
 
   /**

@@ -15,11 +15,8 @@ add_task(async function () {
   );
   await pushPref("devtools.inspector.three-pane-enabled", false);
   await addTab(URL_ROOT + "doc_custom_playback_rate.html");
-  const {
-    animationInspector,
-    inspector,
-    panel,
-  } = await openAnimationInspector();
+  const { animationInspector, inspector, panel } =
+    await openAnimationInspector();
 
   info("Checking the UIs update after selecting another inspector");
   await selectNode("head", inspector);

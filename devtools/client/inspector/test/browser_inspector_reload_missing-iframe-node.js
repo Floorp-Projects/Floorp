@@ -25,9 +25,8 @@ add_task(async function () {
         div.id = "in-frame";
         div.textContent = "div in frame";
 
-        const frameContent = iframe.contentWindow.document.querySelector(
-          "body"
-        );
+        const frameContent =
+          iframe.contentWindow.document.querySelector("body");
         frameContent.appendChild(div);
         resolve();
       });

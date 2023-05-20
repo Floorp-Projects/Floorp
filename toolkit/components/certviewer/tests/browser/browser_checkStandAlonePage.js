@@ -70,9 +70,8 @@ add_task(async function test_dbItemDisplayed() {
           `.info-groups #certificate-viewer-tab-${category.id}`
         );
 
-        let listItems = certificateItems.shadowRoot.querySelectorAll(
-          "list-item"
-        );
+        let listItems =
+          certificateItems.shadowRoot.querySelectorAll("list-item");
 
         let item = Array.from(listItems).find(
           i =>

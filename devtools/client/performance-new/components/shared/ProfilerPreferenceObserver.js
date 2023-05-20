@@ -73,11 +73,8 @@ class ProfilerPreferenceObserver extends PureComponent {
   }
 
   _updateSettingsFromPreferences = () => {
-    const {
-      updateSettingsFromPreferences,
-      pageContext,
-      supportedFeatures,
-    } = this.props;
+    const { updateSettingsFromPreferences, pageContext, supportedFeatures } =
+      this.props;
 
     const recordingSettingsFromPrefs = getRecordingSettings(
       pageContext,

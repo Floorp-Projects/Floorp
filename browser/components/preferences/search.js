@@ -64,9 +64,8 @@ var gSearchPane = {
     let privateSuggestsPref = Preferences.get(
       "browser.search.suggest.enabled.private"
     );
-    let updateSuggestionCheckboxes = this._updateSuggestionCheckboxes.bind(
-      this
-    );
+    let updateSuggestionCheckboxes =
+      this._updateSuggestionCheckboxes.bind(this);
     suggestsPref.on("change", updateSuggestionCheckboxes);
     urlbarSuggestsPref.on("change", updateSuggestionCheckboxes);
     let urlbarSuggests = document.getElementById("urlBarSuggestion");
@@ -85,13 +84,15 @@ var gSearchPane = {
       "command",
       this._onBrowserSeparateDefaultEngineChange.bind(this)
     );
-    setEventListener("openLocationBarPrivacyPreferences", "click", function (
-      event
-    ) {
-      if (event.button == 0) {
-        gotoPref("privacy-locationBar");
+    setEventListener(
+      "openLocationBarPrivacyPreferences",
+      "click",
+      function (event) {
+        if (event.button == 0) {
+          gotoPref("privacy-locationBar");
+        }
       }
-    });
+    );
 
     this._initDefaultEngines();
     this._initShowSearchTermsCheckbox();
@@ -154,9 +155,8 @@ var gSearchPane = {
 
   _updatePrivateEngineDisplayBoxes() {
     const separateEnabled = this._separatePrivateDefaultEnabledPref.value;
-    document.getElementById(
-      "browserSeparateDefaultEngine"
-    ).hidden = !separateEnabled;
+    document.getElementById("browserSeparateDefaultEngine").hidden =
+      !separateEnabled;
 
     const separateDefault = this._separatePrivateDefaultPref.value;
 
@@ -232,14 +232,18 @@ var gSearchPane = {
   async buildDefaultEngineDropDowns() {
     await this._buildEngineDropDown(
       document.getElementById("defaultEngine"),
-      (await Services.search.getDefault()).name,
+      (
+        await Services.search.getDefault()
+      ).name,
       false
     );
 
     if (this._separatePrivateDefaultEnabledPref.value) {
       await this._buildEngineDropDown(
         document.getElementById("defaultPrivateEngine"),
-        (await Services.search.getDefaultPrivate()).name,
+        (
+          await Services.search.getDefaultPrivate()
+        ).name,
         true
       );
     }
@@ -402,8 +406,8 @@ var gSearchPane = {
         // If the user is going through the drop down using up/down keys, the
         // dropdown may still be open (eg. on Windows) when engine-default is
         // fired, so rebuilding the list unconditionally would get in the way.
-        let selectedEngine = document.getElementById("defaultEngine")
-          .selectedItem.engine;
+        let selectedEngine =
+          document.getElementById("defaultEngine").selectedItem.engine;
         if (selectedEngine.name != engine.name) {
           gSearchPane.buildDefaultEngineDropDowns();
         }
@@ -445,9 +449,8 @@ var gSearchPane = {
   },
 
   onTreeSelect() {
-    document.getElementById(
-      "removeEngineButton"
-    ).disabled = !gEngineView.isEngineSelectedAndRemovable();
+    document.getElementById("removeEngineButton").disabled =
+      !gEngineView.isEngineSelectedAndRemovable();
   },
 
   onTreeKeyPress(aEvent) {
@@ -584,9 +587,8 @@ var gSearchPane = {
         hiddenList.push(engine.name);
       }
     }
-    Preferences.get("browser.search.hiddenOneOffs").value = hiddenList.join(
-      ","
-    );
+    Preferences.get("browser.search.hiddenOneOffs").value =
+      hiddenList.join(",");
   },
 
   async setDefaultEngine() {

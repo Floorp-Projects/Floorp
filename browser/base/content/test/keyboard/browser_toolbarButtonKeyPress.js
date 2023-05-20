@@ -138,47 +138,49 @@ add_task(async function testPageActionsButtonPress() {
 
 // Test activation of the Back and Forward buttons from the keyboard.
 add_task(async function testBackForwardButtonPress() {
-  await BrowserTestUtils.withNewTab("https://example.com/1", async function (
-    aBrowser
-  ) {
-    BrowserTestUtils.loadURIString(aBrowser, "https://example.com/2");
+  await BrowserTestUtils.withNewTab(
+    "https://example.com/1",
+    async function (aBrowser) {
+      BrowserTestUtils.loadURIString(aBrowser, "https://example.com/2");
 
-    await BrowserTestUtils.browserLoaded(aBrowser);
-    let backButton = document.getElementById("back-button");
-    forceFocus(backButton);
-    let onLocationChange = waitForLocationChange();
-    EventUtils.synthesizeKey(" ");
-    await onLocationChange;
-    ok(true, "Location changed after back button pressed");
+      await BrowserTestUtils.browserLoaded(aBrowser);
+      let backButton = document.getElementById("back-button");
+      forceFocus(backButton);
+      let onLocationChange = waitForLocationChange();
+      EventUtils.synthesizeKey(" ");
+      await onLocationChange;
+      ok(true, "Location changed after back button pressed");
 
-    let forwardButton = document.getElementById("forward-button");
-    forceFocus(forwardButton);
-    onLocationChange = waitForLocationChange();
-    EventUtils.synthesizeKey(" ");
-    await onLocationChange;
-    ok(true, "Location changed after forward button pressed");
-  });
+      let forwardButton = document.getElementById("forward-button");
+      forceFocus(forwardButton);
+      onLocationChange = waitForLocationChange();
+      EventUtils.synthesizeKey(" ");
+      await onLocationChange;
+      ok(true, "Location changed after forward button pressed");
+    }
+  );
 });
 
 // Test activation of the Reload button from the keyboard.
 // This is a toolbarbutton with a click handler and no command handler, but
 // the toolbar keyboard navigation code should handle keyboard activation.
 add_task(async function testReloadButtonPress() {
-  await BrowserTestUtils.withNewTab("https://example.com/1", async function (
-    aBrowser
-  ) {
-    let button = document.getElementById("reload-button");
-    info("Waiting for button to be enabled.");
-    await TestUtils.waitForCondition(() => !button.disabled);
-    let loaded = BrowserTestUtils.browserLoaded(aBrowser);
-    info("Focusing button");
-    forceFocus(button);
-    info("Pressing space on the button");
-    EventUtils.synthesizeKey(" ");
-    info("Waiting for load.");
-    await loaded;
-    ok(true, "Page loaded after Reload button pressed");
-  });
+  await BrowserTestUtils.withNewTab(
+    "https://example.com/1",
+    async function (aBrowser) {
+      let button = document.getElementById("reload-button");
+      info("Waiting for button to be enabled.");
+      await TestUtils.waitForCondition(() => !button.disabled);
+      let loaded = BrowserTestUtils.browserLoaded(aBrowser);
+      info("Focusing button");
+      forceFocus(button);
+      info("Pressing space on the button");
+      EventUtils.synthesizeKey(" ");
+      info("Waiting for load.");
+      await loaded;
+      ok(true, "Page loaded after Reload button pressed");
+    }
+  );
 });
 
 // Test activation of the Sidebars button from the keyboard.
@@ -212,26 +214,30 @@ add_task(async function testSidebarsButtonPress() {
 // This is an image with a click handler on its parent and no command handler,
 // but the toolbar keyboard navigation code should handle keyboard activation.
 add_task(async function testBookmarkButtonPress() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function (
-    aBrowser
-  ) {
-    let button = document.getElementById("star-button-box");
-    forceFocus(button);
-    StarUI._createPanelIfNeeded();
-    let panel = document.getElementById("editBookmarkPanel");
-    let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
-    // The button ignores activation while the bookmarked status is being
-    // updated. So, wait for it to finish updating.
-    await TestUtils.waitForCondition(
-      () => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING
-    );
-    EventUtils.synthesizeKey(" ");
-    await focused;
-    ok(true, "Focus inside edit bookmark panel after Bookmark button pressed");
-    let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
-    EventUtils.synthesizeKey("KEY_Escape");
-    await hidden;
-  });
+  await BrowserTestUtils.withNewTab(
+    "https://example.com",
+    async function (aBrowser) {
+      let button = document.getElementById("star-button-box");
+      forceFocus(button);
+      StarUI._createPanelIfNeeded();
+      let panel = document.getElementById("editBookmarkPanel");
+      let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
+      // The button ignores activation while the bookmarked status is being
+      // updated. So, wait for it to finish updating.
+      await TestUtils.waitForCondition(
+        () => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING
+      );
+      EventUtils.synthesizeKey(" ");
+      await focused;
+      ok(
+        true,
+        "Focus inside edit bookmark panel after Bookmark button pressed"
+      );
+      let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
+      EventUtils.synthesizeKey("KEY_Escape");
+      await hidden;
+    }
+  );
 });
 
 // Test activation of the Bookmarks Menu button from the keyboard.
@@ -299,27 +305,32 @@ add_task(async function testDownloadsButtonPress() {
 // with a browser element to embed the pocket UI into it.
 // The Pocket panel should appear and focus should move inside it.
 add_task(async function testPocketButtonPress() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function (
-    aBrowser
-  ) {
-    let button = document.getElementById("save-to-pocket-button");
-    forceFocus(button);
-    // The panel is created on the fly, so we can't simply wait for focus
-    // inside it.
-    let showing = BrowserTestUtils.waitForEvent(document, "popupshowing", true);
-    EventUtils.synthesizeKey(" ");
-    let event = await showing;
-    let panel = event.target;
-    is(panel.id, "customizationui-widget-panel");
-    let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
-    await focused;
-    is(
-      document.activeElement.tagName,
-      "browser",
-      "Focus inside Pocket panel after Bookmark button pressed"
-    );
-    let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
-    EventUtils.synthesizeKey("KEY_Escape");
-    await hidden;
-  });
+  await BrowserTestUtils.withNewTab(
+    "https://example.com",
+    async function (aBrowser) {
+      let button = document.getElementById("save-to-pocket-button");
+      forceFocus(button);
+      // The panel is created on the fly, so we can't simply wait for focus
+      // inside it.
+      let showing = BrowserTestUtils.waitForEvent(
+        document,
+        "popupshowing",
+        true
+      );
+      EventUtils.synthesizeKey(" ");
+      let event = await showing;
+      let panel = event.target;
+      is(panel.id, "customizationui-widget-panel");
+      let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
+      await focused;
+      is(
+        document.activeElement.tagName,
+        "browser",
+        "Focus inside Pocket panel after Bookmark button pressed"
+      );
+      let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
+      EventUtils.synthesizeKey("KEY_Escape");
+      await hidden;
+    }
+  );
 });

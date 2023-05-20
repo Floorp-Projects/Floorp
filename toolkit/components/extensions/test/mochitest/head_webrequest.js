@@ -167,8 +167,9 @@ function background(events) {
 
     let { add, modify, remove } = expected.headers[phase];
     for (let name in add) {
-      let value = headers.find(h => h.name.toLowerCase() === name.toLowerCase())
-        .value;
+      let value = headers.find(
+        h => h.name.toLowerCase() === name.toLowerCase()
+      ).value;
       browser.test.assertEq(
         value,
         add[name],
@@ -177,8 +178,9 @@ function background(events) {
     }
 
     for (let name in modify) {
-      let value = headers.find(h => h.name.toLowerCase() === name.toLowerCase())
-        .value;
+      let value = headers.find(
+        h => h.name.toLowerCase() === name.toLowerCase()
+      ).value;
       browser.test.assertEq(
         value,
         modify[name],

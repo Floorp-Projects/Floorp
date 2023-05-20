@@ -692,9 +692,8 @@ DevToolsStartup.prototype = {
       return;
     }
     const featureFlagPref = "devtools.performance.popup.feature-flag";
-    const isPopupFeatureFlagEnabled = Services.prefs.getBoolPref(
-      featureFlagPref
-    );
+    const isPopupFeatureFlagEnabled =
+      Services.prefs.getBoolPref(featureFlagPref);
     this.profilerRecordingButtonCreated = true;
 
     // Listen for messages from the front-end. This needs to happen even if the

@@ -772,13 +772,12 @@ class _QuickSuggestTestUtils {
     // enrollments, but tests can trigger lots of updates back to back.
     await this.waitForScenarioUpdated();
 
-    let doExperimentCleanup = await lazy.ExperimentFakes.enrollWithFeatureConfig(
-      {
+    let doExperimentCleanup =
+      await lazy.ExperimentFakes.enrollWithFeatureConfig({
         enabled: true,
         featureId: "urlbar",
         value: valueOverrides,
-      }
-    );
+      });
 
     // Wait for the pref updates triggered by the experiment enrollment.
     this.info?.("Awaiting update after enrolling in experiment");

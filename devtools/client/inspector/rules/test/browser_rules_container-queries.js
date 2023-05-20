@@ -75,19 +75,16 @@ add_task(async function () {
 
   info("Check that the query container tooltip works as expected");
   // Retrieve query containers sizes
-  const {
-    bodyInlineSize,
-    bodyBlockSize,
-    sectionInlineSize,
-  } = await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    const body = content.document.body;
-    const section = content.document.querySelector("section");
-    return {
-      bodyInlineSize: content.getComputedStyle(body).inlineSize,
-      bodyBlockSize: content.getComputedStyle(body).blockSize,
-      sectionInlineSize: content.getComputedStyle(section).inlineSize,
-    };
-  });
+  const { bodyInlineSize, bodyBlockSize, sectionInlineSize } =
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+      const body = content.document.body;
+      const section = content.document.querySelector("section");
+      return {
+        bodyInlineSize: content.getComputedStyle(body).inlineSize,
+        bodyBlockSize: content.getComputedStyle(body).blockSize,
+        sectionInlineSize: content.getComputedStyle(section).inlineSize,
+      };
+    });
 
   await assertQueryContainerTooltip({
     inspector,
@@ -168,8 +165,9 @@ function assertContainerQueryData(view, expectedRules) {
     const expectedRule = expectedRules[i];
     info(`Checking rule #${i}: ${expectedRule.selector}`);
 
-    const selector = rulesInView[i].querySelector(".ruleview-selectorcontainer")
-      .innerText;
+    const selector = rulesInView[i].querySelector(
+      ".ruleview-selectorcontainer"
+    ).innerText;
     is(selector, expectedRule.selector, `Expected selector for ${selector}`);
 
     const ancestorDataEl = getRuleViewAncestorRulesDataElementByIndex(view, i);
@@ -209,10 +207,8 @@ async function assertJumpToContainerButton(
   // Ensure that the button can be targetted from EventUtils.
   selectContainerButton.scrollIntoView();
 
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   const onNodeHighlight = waitForHighlighterTypeShown(
     inspector.highlighters.TYPES.BOXMODEL
@@ -266,10 +262,8 @@ async function assertQueryContainerTooltip({
   // Ensure that the element can be targetted from EventUtils.
   tooltipTriggerEl.scrollIntoView();
 
-  const {
-    waitForHighlighterTypeShown,
-    waitForHighlighterTypeHidden,
-  } = getHighlighterTestHelpers(inspector);
+  const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
+    getHighlighterTestHelpers(inspector);
 
   const onNodeHighlight = waitForHighlighterTypeShown(
     inspector.highlighters.TYPES.BOXMODEL

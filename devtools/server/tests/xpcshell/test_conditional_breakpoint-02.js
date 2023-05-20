@@ -39,9 +39,9 @@ function evalCode(debuggee) {
   /* eslint-disable */
   Cu.evalInSandbox(
     "debugger;\n" + // line 1
-    "var a = 1;\n" + // line 2
-    "var b = 2;\n" + // line 3
-    "b++;" + // line 4
+      "var a = 1;\n" + // line 2
+      "var b = 2;\n" + // line 3
+      "b++;" + // line 4
       "debugger;", // line 5
     debuggee,
     "1.8",

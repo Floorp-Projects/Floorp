@@ -268,14 +268,8 @@ export class UrlbarValueFormatter {
       return false;
     }
 
-    let {
-      domain,
-      origin,
-      preDomain,
-      schemeWSlashes,
-      trimmedLength,
-      url,
-    } = urlMetaData;
+    let { domain, origin, preDomain, schemeWSlashes, trimmedLength, url } =
+      urlMetaData;
     // We strip http, so we should not show the scheme box for it.
     if (!lazy.UrlbarPrefs.get("trimURLs") || schemeWSlashes != "http://") {
       this.scheme.value = schemeWSlashes;

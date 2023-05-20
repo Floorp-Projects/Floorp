@@ -1774,8 +1774,10 @@ function getMockUpdRootDWin(aGetOldLocation) {
 function createWorldWritableAppUpdateDir() {
   // This function is only necessary in Windows
   if (AppConstants.platform == "win") {
-    let installDir = Services.dirsvc.get(XRE_EXECUTABLE_FILE, Ci.nsIFile)
-      .parent;
+    let installDir = Services.dirsvc.get(
+      XRE_EXECUTABLE_FILE,
+      Ci.nsIFile
+    ).parent;
     let exitValue = runTestHelperSync(["create-update-dir", installDir.path]);
     Assert.equal(exitValue, 0, "The helper process exit value should be 0");
   }

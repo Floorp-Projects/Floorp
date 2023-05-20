@@ -51,36 +51,35 @@ function test_asyncFetchBadCert() {
         onProgress() {},
         onStatus() {},
       };
-      NetUtil.asyncFetch(channel, function (
-        aInputStream,
-        aStatusCode,
-        aRequest
-      ) {
-        ok(!Components.isSuccessCode(aStatusCode), "request failed");
-        ok(
-          aRequest instanceof Ci.nsIHttpChannel,
-          "request is an nsIHttpChannel"
-        );
+      NetUtil.asyncFetch(
+        channel,
+        function (aInputStream, aStatusCode, aRequest) {
+          ok(!Components.isSuccessCode(aStatusCode), "request failed");
+          ok(
+            aRequest instanceof Ci.nsIHttpChannel,
+            "request is an nsIHttpChannel"
+          );
 
-        // Now try a valid request
-        NetUtil.asyncFetch(
-          {
-            uri: "https://example.com",
-            loadUsingSystemPrincipal: true,
-          },
-          function (aInputStream, aStatusCode, aRequest) {
-            info("aStatusCode for valid request: " + aStatusCode);
-            ok(Components.isSuccessCode(aStatusCode), "request succeeded");
-            ok(
-              aRequest instanceof Ci.nsIHttpChannel,
-              "request is an nsIHttpChannel"
-            );
-            ok(aRequest.requestSucceeded, "HTTP request succeeded");
+          // Now try a valid request
+          NetUtil.asyncFetch(
+            {
+              uri: "https://example.com",
+              loadUsingSystemPrincipal: true,
+            },
+            function (aInputStream, aStatusCode, aRequest) {
+              info("aStatusCode for valid request: " + aStatusCode);
+              ok(Components.isSuccessCode(aStatusCode), "request succeeded");
+              ok(
+                aRequest instanceof Ci.nsIHttpChannel,
+                "request is an nsIHttpChannel"
+              );
+              ok(aRequest.requestSucceeded, "HTTP request succeeded");
 
-            nextTest();
-          }
-        );
-      });
+              nextTest();
+            }
+          );
+        }
+      );
     }
   );
 }

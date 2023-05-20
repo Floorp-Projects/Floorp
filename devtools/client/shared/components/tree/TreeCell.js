@@ -78,14 +78,8 @@ define(function (require, exports, module) {
     }
 
     render() {
-      let {
-        member,
-        id,
-        value,
-        decorator,
-        renderValue,
-        enableInput,
-      } = this.props;
+      let { member, id, value, decorator, renderValue, enableInput } =
+        this.props;
       const type = member.type || "";
 
       // Compute class name list for the <td> element.

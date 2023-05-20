@@ -17,8 +17,7 @@ const twoTabs = [
     type: "tab",
     title: "Firefox Privacy Notice",
     url: "https://www.mozilla.org/en-US/privacy/firefox/",
-    icon:
-      "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
+    icon: "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
     lastUsed: 1655745700, // Mon, 20 Jun 2022 17:21:40 GMT
   },
 ];
@@ -71,16 +70,14 @@ const desktopTabs = [
     type: "tab",
     title: "Internet for people, not profits - Mozilla",
     url: "https://www.mozilla.org/",
-    icon:
-      "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
+    icon: "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
     lastUsed: 1655730486, // Mon Jan 19 1970 22:55:30 GMT+0000
   },
   {
     type: "tab",
     title: "Firefox Privacy Notice",
     url: "https://www.mozilla.org/en-US/privacy/firefox/",
-    icon:
-      "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
+    icon: "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
     lastUsed: 1673991540155, // Tue, 17 Jan 2023 16:39:00 GMT
   },
   {
@@ -97,16 +94,14 @@ const mobileTabs = [
     type: "tab",
     title: "Internet for people, not profits - Mozilla",
     url: "https://www.mozilla.org/",
-    icon:
-      "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
+    icon: "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
     lastUsed: 1606510800000, // Fri Nov 27 2020 16:00:00 GMT+0000
   },
   {
     type: "tab",
     title: "Firefox Privacy Notice",
     url: "https://www.mozilla.org/en-US/privacy/firefox/",
-    icon:
-      "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
+    icon: "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
     lastUsed: 1606510800000, // Fri Nov 27 2020 16:00:00 GMT+0000
   },
 ];
@@ -405,8 +400,9 @@ add_task(async function test_time_updates_correctly() {
 
     await setupListState(browser);
 
-    let initialTimeText = document.querySelector("span.synced-tab-li-time")
-      .textContent;
+    let initialTimeText = document.querySelector(
+      "span.synced-tab-li-time"
+    ).textContent;
     Assert.stringContains(
       initialTimeText,
       "Just now",

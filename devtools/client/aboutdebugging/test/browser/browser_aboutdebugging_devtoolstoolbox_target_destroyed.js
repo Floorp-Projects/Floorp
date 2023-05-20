@@ -12,11 +12,8 @@ add_task(async function () {
   // go to This Firefox and inspect the new tab
   info("Inspecting a new tab in This Firefox");
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
-  const {
-    devtoolsDocument,
-    devtoolsTab,
-    devtoolsWindow,
-  } = await openAboutDevtoolsToolbox(document, tab, window, "about:home");
+  const { devtoolsDocument, devtoolsTab, devtoolsWindow } =
+    await openAboutDevtoolsToolbox(document, tab, window, "about:home");
   const targetUrl = devtoolsDocument.querySelector(".devtools-textinput");
   ok(
     targetUrl.value.includes("about:home"),

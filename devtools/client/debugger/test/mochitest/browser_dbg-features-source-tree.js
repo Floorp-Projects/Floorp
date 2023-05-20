@@ -499,14 +499,14 @@ add_task(async function testSourceTreeWithEncodedPaths() {
       </body>
     `);
   });
-  httpServer.registerPathHandler(encodeURI("/my folder/my file.js"), function (
-    request,
-    response
-  ) {
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.setHeader("Content-Type", "application/javascript", false);
-    response.write(`const x = 42`);
-  });
+  httpServer.registerPathHandler(
+    encodeURI("/my folder/my file.js"),
+    function (request, response) {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "application/javascript", false);
+      response.write(`const x = 42`);
+    }
+  );
   const port = httpServer.identity.primaryPort;
 
   const dbg = await initDebuggerWithAbsoluteURL(

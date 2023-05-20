@@ -468,9 +468,9 @@ async function openViewAndAssertCached({
  */
 async function updateTopSitesAndAwaitChanged(expectedCount) {
   info("Updating top sites and awaiting newtab-top-sites-changed");
-  let changedPromise = TestUtils.topicObserved(
-    "newtab-top-sites-changed"
-  ).then(() => info("Observed newtab-top-sites-changed"));
+  let changedPromise = TestUtils.topicObserved("newtab-top-sites-changed").then(
+    () => info("Observed newtab-top-sites-changed")
+  );
   await updateTopSites(sites => sites?.length == expectedCount);
   await changedPromise;
 }

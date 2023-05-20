@@ -28,7 +28,8 @@ add_task(async function () {
         const tester = new IMEStateInTextControlOnReframeTester();
         await SpecialPowers.spawn(browser, [], () => {
           content.document.body.innerHTML = "<div contenteditable></div>";
-          content.wrappedJSObject.runner = content.wrappedJSObject.createIMEStateInTextControlOnReframeTester();
+          content.wrappedJSObject.runner =
+            content.wrappedJSObject.createIMEStateInTextControlOnReframeTester();
         });
         for (
           let index = 0;

@@ -271,8 +271,9 @@ add_task(async function test_add_mixed_types() {
     }
   );
 
-  const expectedCrashes = Object.keys(CrashManager.prototype.processTypes)
-    .length;
+  const expectedCrashes = Object.keys(
+    CrashManager.prototype.processTypes
+  ).length;
 
   Assert.ok(allAdd);
 

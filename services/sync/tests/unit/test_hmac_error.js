@@ -50,14 +50,8 @@ async function shared_setup() {
 
 add_task(async function hmac_error_during_404() {
   _("Attempt to replicate the HMAC error setup.");
-  let [
-    engine,
-    rotaryColl,
-    clientsColl,
-    keysWBO,
-    global,
-    tracker,
-  ] = await shared_setup();
+  let [engine, rotaryColl, clientsColl, keysWBO, global, tracker] =
+    await shared_setup();
 
   // Hand out 404s for crypto/keys.
   let keysHandler = keysWBO.handler();
@@ -115,14 +109,8 @@ add_task(async function hmac_error_during_404() {
 
 add_task(async function hmac_error_during_node_reassignment() {
   _("Attempt to replicate an HMAC error during node reassignment.");
-  let [
-    engine,
-    rotaryColl,
-    clientsColl,
-    keysWBO,
-    global,
-    tracker,
-  ] = await shared_setup();
+  let [engine, rotaryColl, clientsColl, keysWBO, global, tracker] =
+    await shared_setup();
 
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;

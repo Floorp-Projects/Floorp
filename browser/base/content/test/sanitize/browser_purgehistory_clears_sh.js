@@ -12,9 +12,8 @@ add_task(async function purgeHistoryTest() {
     },
     async function purgeHistoryTestInner(browser) {
       let backButton = browser.ownerDocument.getElementById("Browser:Back");
-      let forwardButton = browser.ownerDocument.getElementById(
-        "Browser:Forward"
-      );
+      let forwardButton =
+        browser.ownerDocument.getElementById("Browser:Forward");
 
       ok(
         !browser.webNavigation.canGoBack,

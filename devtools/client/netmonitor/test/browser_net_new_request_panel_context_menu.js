@@ -103,9 +103,8 @@ add_task(async function () {
 
   for (let i = 0; i < urlParametersValues.length; i++) {
     const { name, value } = expectedURLQueryParams[i];
-    const [formName, formValue] = urlParametersValues[i].querySelectorAll(
-      "textarea"
-    );
+    const [formName, formValue] =
+      urlParametersValues[i].querySelectorAll("textarea");
     is(
       name,
       formName.value,

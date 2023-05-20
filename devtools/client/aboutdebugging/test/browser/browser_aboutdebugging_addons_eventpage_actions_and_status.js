@@ -25,9 +25,8 @@ add_task(async function test_eventpage_terminate_and_status_updates() {
     "Temporary PersistentBackgroundPage-based web extension";
 
   const promiseBackgroundLoaded = promiseBackgroundContextLoaded(EXTENSION_ID);
-  const promiseBackgroundUnloaded = promiseBackgroundContextUnloaded(
-    EXTENSION_ID
-  );
+  const promiseBackgroundUnloaded =
+    promiseBackgroundContextUnloaded(EXTENSION_ID);
 
   let waitForBGStatusUpdate = promiseBackgroundStatusUpdate(window);
 

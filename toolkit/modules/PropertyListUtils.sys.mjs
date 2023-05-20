@@ -279,16 +279,11 @@ BinaryPropertyListReader.prototype = {
   _readTrailerInfo: function BPLR__readTrailer() {
     // The first 6 bytes of the 32-bytes trailer are unused
     let trailerOffset = this._dataView.byteLength - 26;
-    [
-      this._offsetTableIntegerSize,
-      this._objectRefSize,
-    ] = this._readUnsignedInts(trailerOffset, 1, 2);
+    [this._offsetTableIntegerSize, this._objectRefSize] =
+      this._readUnsignedInts(trailerOffset, 1, 2);
 
-    [
-      this._numberOfObjects,
-      this._rootObjectIndex,
-      this._offsetTableOffset,
-    ] = this._readUnsignedInts(trailerOffset + 2, 8, 3);
+    [this._numberOfObjects, this._rootObjectIndex, this._offsetTableOffset] =
+      this._readUnsignedInts(trailerOffset + 2, 8, 3);
   },
 
   _readObjectsOffsets: function BPLR__readObjectsOffsets() {

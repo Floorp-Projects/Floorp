@@ -2326,10 +2326,11 @@ DownloadCopySaver.prototype = {
               // Only the first, outermost encoding is considered.
               let encoding = aRequest.contentEncodings.getNext();
               if (encoding) {
-                aRequest.applyConversion = lazy.gExternalHelperAppService.applyDecodingForExtension(
-                  uri.fileExtension,
-                  encoding
-                );
+                aRequest.applyConversion =
+                  lazy.gExternalHelperAppService.applyDecodingForExtension(
+                    uri.fileExtension,
+                    encoding
+                  );
               }
             }
           }
@@ -2430,7 +2431,8 @@ DownloadCopySaver.prototype = {
             loadingPrincipal: download.source.loadingPrincipal,
             // triggeringPrincipal must be the system principal to prevent the
             // request from being mistaken as a third-party request.
-            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal(),
             securityFlags:
               Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
           });
@@ -2564,10 +2566,8 @@ DownloadCopySaver.prototype = {
     let targetPath = this.download.target.path;
     let partFilePath = this.download.target.partFilePath;
 
-    let {
-      shouldBlock,
-      verdict,
-    } = await lazy.DownloadIntegration.shouldBlockForReputationCheck(download);
+    let { shouldBlock, verdict } =
+      await lazy.DownloadIntegration.shouldBlockForReputationCheck(download);
     if (shouldBlock) {
       Services.telemetry
         .getKeyedHistogramById("DOWNLOADS_USER_ACTION_ON_BLOCKED_DOWNLOAD")

@@ -32,9 +32,8 @@ add_task(async function bookmark_all_tabs() {
         .getString("bookmarkAllTabsDefault");
       Assert.equal(namepicker.value, folderName, "Name field is correct.");
 
-      let promiseBookmarkAdded = PlacesTestUtils.waitForNotification(
-        "bookmark-added"
-      );
+      let promiseBookmarkAdded =
+        PlacesTestUtils.waitForNotification("bookmark-added");
 
       fillBookmarkTextField("editBMPanel_namePicker", "folder", dialog);
 

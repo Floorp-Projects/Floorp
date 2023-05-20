@@ -212,9 +212,10 @@ add_task(async function checkAdvancedDetails() {
         content.getComputedStyle(div).display !== "none",
         "Debug information is visible"
       );
-      let failedCertChain = content.docShell.failedChannel.securityInfo.failedCertChain.map(
-        cert => cert.getBase64DERString()
-      );
+      let failedCertChain =
+        content.docShell.failedChannel.securityInfo.failedCertChain.map(cert =>
+          cert.getBase64DERString()
+        );
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,
@@ -293,9 +294,10 @@ add_task(async function checkAdvancedDetailsForHSTS() {
       errorCode.click();
       let div = doc.getElementById("certificateErrorDebugInformation");
       let text = doc.getElementById("certificateErrorText");
-      let failedCertChain = content.docShell.failedChannel.securityInfo.failedCertChain.map(
-        cert => cert.getBase64DERString()
-      );
+      let failedCertChain =
+        content.docShell.failedChannel.securityInfo.failedCertChain.map(cert =>
+          cert.getBase64DERString()
+        );
       return {
         divDisplay: content.getComputedStyle(div).display,
         text: text.textContent,
@@ -385,9 +387,8 @@ add_task(async function checkViewCertificate() {
           return doc.querySelector("certificate-section");
         }, "Certificate section found");
 
-        let infoGroup = certificateSection.shadowRoot.querySelector(
-          "info-group"
-        );
+        let infoGroup =
+          certificateSection.shadowRoot.querySelector("info-group");
         Assert.ok(infoGroup, "infoGroup found");
 
         let items = infoGroup.shadowRoot.querySelectorAll("info-item");
@@ -400,9 +401,8 @@ add_task(async function checkViewCertificate() {
           "The correct item was selected"
         );
 
-        let commonnameValue = items[items.length - 1].shadowRoot.querySelector(
-          ".info"
-        ).textContent;
+        let commonnameValue =
+          items[items.length - 1].shadowRoot.querySelector(".info").textContent;
         Assert.equal(
           commonnameValue,
           "self-signed.example.com",

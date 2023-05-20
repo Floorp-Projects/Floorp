@@ -45,10 +45,8 @@ function test_policy(test) {
   }
 
   let referrer = NetUtil.newURI(test.referrer);
-  let triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    referrer,
-    {}
-  );
+  let triggeringPrincipal =
+    Services.scriptSecurityManager.createContentPrincipal(referrer, {});
   let chan = NetUtil.newChannel({
     uri: test.url,
     loadingPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),

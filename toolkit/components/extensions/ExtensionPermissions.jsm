@@ -225,8 +225,9 @@ class PermissionStore {
 
   async maybeImportFromOldKVStorePath() {
     try {
-      const oldStorePath = lazy.FileUtils.getDir("ProfD", [OLD_RKV_DIRNAME])
-        .path;
+      const oldStorePath = lazy.FileUtils.getDir("ProfD", [
+        OLD_RKV_DIRNAME,
+      ]).path;
       if (!(await IOUtils.exists(oldStorePath))) {
         return;
       }

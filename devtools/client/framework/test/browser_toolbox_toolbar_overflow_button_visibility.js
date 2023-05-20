@@ -19,10 +19,8 @@ add_task(async function () {
   );
 
   const win = getWindow(toolbox);
-  const {
-    outerWidth: originalWindowWidth,
-    outerHeight: originalWindowHeight,
-  } = win;
+  const { outerWidth: originalWindowWidth, outerHeight: originalWindowHeight } =
+    win;
   registerCleanupFunction(() => {
     for (const preference of toolboxButtonPreferences) {
       Services.prefs.clearUserPref(preference);

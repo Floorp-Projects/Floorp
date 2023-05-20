@@ -103,11 +103,8 @@ add_task(async function () {
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  const {
-    allElementsPane,
-    inspector,
-    selectedElementPane,
-  } = await openCompatibilityView();
+  const { allElementsPane, inspector, selectedElementPane } =
+    await openCompatibilityView();
   await selectNode(".test-class", inspector);
 
   info("Check the initial issue");

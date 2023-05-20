@@ -40,9 +40,10 @@ add_task(async function test() {
     "Expected number of engines retrieved from web page"
   );
 
-  const displayedAddEngineList = searchPopup.oneOffButtons.buttons.querySelectorAll(
-    ".searchbar-engine-one-off-add-engine"
-  );
+  const displayedAddEngineList =
+    searchPopup.oneOffButtons.buttons.querySelectorAll(
+      ".searchbar-engine-one-off-add-engine"
+    );
   Assert.equal(
     displayedAddEngineList.length,
     searchPopup.oneOffButtons._maxInlineAddEngines,

@@ -53,9 +53,8 @@ class ChannelEventSink {
   }
 }
 
-const ChannelEventSinkFactory = ComponentUtils.generateSingletonFactory(
-  ChannelEventSink
-);
+const ChannelEventSinkFactory =
+  ComponentUtils.generateSingletonFactory(ChannelEventSink);
 
 ChannelEventSinkFactory.register = function () {
   const registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);

@@ -58,23 +58,39 @@ function run_test() {
   run_bool_tests(library);
 
   run_integer_tests(library, ctypes.int8_t, "int8_t", 1, true, [-0x80, 0x7f]);
-  run_integer_tests(library, ctypes.int16_t, "int16_t", 2, true, [
-    -0x8000,
-    0x7fff,
-  ]);
-  run_integer_tests(library, ctypes.int32_t, "int32_t", 4, true, [
-    -0x80000000,
-    0x7fffffff,
-  ]);
+  run_integer_tests(
+    library,
+    ctypes.int16_t,
+    "int16_t",
+    2,
+    true,
+    [-0x8000, 0x7fff]
+  );
+  run_integer_tests(
+    library,
+    ctypes.int32_t,
+    "int32_t",
+    4,
+    true,
+    [-0x80000000, 0x7fffffff]
+  );
   run_integer_tests(library, ctypes.uint8_t, "uint8_t", 1, false, [0, 0xff]);
-  run_integer_tests(library, ctypes.uint16_t, "uint16_t", 2, false, [
-    0,
-    0xffff,
-  ]);
-  run_integer_tests(library, ctypes.uint32_t, "uint32_t", 4, false, [
-    0,
-    0xffffffff,
-  ]);
+  run_integer_tests(
+    library,
+    ctypes.uint16_t,
+    "uint16_t",
+    2,
+    false,
+    [0, 0xffff]
+  );
+  run_integer_tests(
+    library,
+    ctypes.uint32_t,
+    "uint32_t",
+    4,
+    false,
+    [0, 0xffffffff]
+  );
   run_integer_tests(library, ctypes.short, "short", 2, true, [-0x8000, 0x7fff]);
   run_integer_tests(
     library,
@@ -84,18 +100,30 @@ function run_test() {
     false,
     [0, 0xffff]
   );
-  run_integer_tests(library, ctypes.int, "int", 4, true, [
-    -0x80000000,
-    0x7fffffff,
-  ]);
-  run_integer_tests(library, ctypes.unsigned_int, "unsigned_int", 4, false, [
-    0,
-    0xffffffff,
-  ]);
-  run_integer_tests(library, ctypes.unsigned, "unsigned_int", 4, false, [
-    0,
-    0xffffffff,
-  ]);
+  run_integer_tests(
+    library,
+    ctypes.int,
+    "int",
+    4,
+    true,
+    [-0x80000000, 0x7fffffff]
+  );
+  run_integer_tests(
+    library,
+    ctypes.unsigned_int,
+    "unsigned_int",
+    4,
+    false,
+    [0, 0xffffffff]
+  );
+  run_integer_tests(
+    library,
+    ctypes.unsigned,
+    "unsigned_int",
+    4,
+    false,
+    [0, 0xffffffff]
+  );
 
   run_float_tests(library, ctypes.float32_t, "float32_t", 4);
   run_float_tests(library, ctypes.float64_t, "float64_t", 8);
@@ -260,14 +288,22 @@ function run_test() {
 
   // Test the character types.
   run_char_tests(library, ctypes.char, "char", 1, true, [-0x80, 0x7f]);
-  run_char_tests(library, ctypes.signed_char, "signed_char", 1, true, [
-    -0x80,
-    0x7f,
-  ]);
-  run_char_tests(library, ctypes.unsigned_char, "unsigned_char", 1, false, [
-    0,
-    0xff,
-  ]);
+  run_char_tests(
+    library,
+    ctypes.signed_char,
+    "signed_char",
+    1,
+    true,
+    [-0x80, 0x7f]
+  );
+  run_char_tests(
+    library,
+    ctypes.unsigned_char,
+    "unsigned_char",
+    1,
+    false,
+    [0, 0xff]
+  );
   run_char16_tests(library, ctypes.char16_t, "char16_t", [0, 0xffff]);
 
   // Test the special types.
@@ -2234,7 +2270,7 @@ function run_StructType_tests() {
     ctypes.StructType("a", [{ 5: ctypes.int32_t }]);
   }, TypeError);
   do_check_throws(function () {
-    ctypes.StructType("a", [{ "5": ctypes.int32_t }]);
+    ctypes.StructType("a", [{ 5: ctypes.int32_t }]);
   }, TypeError);
   do_check_throws(function () {
     ctypes.StructType("a", [{ x: 5 }]);
@@ -2497,7 +2533,7 @@ function run_StructType_tests() {
     s.value = { a: 2, b: 5, c: 10 };
   }, TypeError);
   do_check_throws(function () {
-    s.value = { "5": 2, b: { a: 9, b: 5 }, c: 13 };
+    s.value = { 5: 2, b: { a: 9, b: 5 }, c: 13 };
   }, TypeError);
   do_check_throws(function () {
     s.value = { a: 2, b: { a: 9, b: 5 }, c: 13, d: 17 };

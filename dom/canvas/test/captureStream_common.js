@@ -311,7 +311,8 @@ function CaptureStreamTestHelperWebGL(width, height) {
 CaptureStreamTestHelperWebGL.prototype = Object.create(
   CaptureStreamTestHelper.prototype
 );
-CaptureStreamTestHelperWebGL.prototype.constructor = CaptureStreamTestHelperWebGL;
+CaptureStreamTestHelperWebGL.prototype.constructor =
+  CaptureStreamTestHelperWebGL;
 
 /* Set the (uniform) color location for future draw calls. */
 CaptureStreamTestHelperWebGL.prototype.setFragmentColorLocation = function (

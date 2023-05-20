@@ -193,9 +193,8 @@ var tests = [
   {
     id: "Test#6b",
     run() {
-      let id = PopupNotifications.panel.firstElementChild.getAttribute(
-        "popupid"
-      );
+      let id =
+        PopupNotifications.panel.firstElementChild.getAttribute("popupid");
       ok(
         id.endsWith("Test#6a"),
         "Should have found the notification from Test6a"
@@ -261,9 +260,8 @@ var tests = [
       await BrowserTestUtils.closeWindow(win);
       await waitForWindowReadyForPopupNotifications(window);
 
-      let id = PopupNotifications.panel.firstElementChild.getAttribute(
-        "popupid"
-      );
+      let id =
+        PopupNotifications.panel.firstElementChild.getAttribute("popupid");
       ok(
         id.endsWith("Test#7"),
         "Should have found the notification from Test7"

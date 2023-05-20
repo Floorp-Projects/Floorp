@@ -151,20 +151,9 @@ export var DateTimePickerPanel = class {
           style: "short",
           calendar: "gregory",
         });
-        const monthStrings = [
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11,
-          12,
-        ].map(month => monthDisplayNames.of(month));
+        const monthStrings = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(
+          month => monthDisplayNames.of(month)
+        );
 
         const weekdayDisplayNames = new Services.intl.DisplayNames(locale, {
           type: "weekday",
@@ -173,13 +162,7 @@ export var DateTimePickerPanel = class {
         });
         const weekdayStrings = [
           // Weekdays starting Sunday (7) to Saturday (6).
-          7,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
+          7, 1, 2, 3, 4, 5, 6,
         ].map(weekday => weekdayDisplayNames.of(weekday));
 
         this.postMessageToPicker({
@@ -212,13 +195,8 @@ export var DateTimePickerPanel = class {
   setInputBoxValue(passAllValues) {
     switch (this.type) {
       case "time": {
-        const {
-          hour,
-          minute,
-          isHourSet,
-          isMinuteSet,
-          isDayPeriodSet,
-        } = this.pickerState;
+        const { hour, minute, isHourSet, isMinuteSet, isDayPeriodSet } =
+          this.pickerState;
         const isAnyValueSet = isHourSet || isMinuteSet || isDayPeriodSet;
         if (passAllValues && isAnyValueSet) {
           this.sendPickerValueChanged({ hour, minute });

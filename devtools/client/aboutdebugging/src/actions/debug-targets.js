@@ -293,11 +293,8 @@ function requestWorkers() {
     const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
-      const {
-        otherWorkers,
-        serviceWorkers,
-        sharedWorkers,
-      } = await clientWrapper.listWorkers();
+      const { otherWorkers, serviceWorkers, sharedWorkers } =
+        await clientWrapper.listWorkers();
 
       for (const serviceWorker of serviceWorkers) {
         const { registrationFront } = serviceWorker;

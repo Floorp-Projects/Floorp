@@ -6,9 +6,8 @@
 // Test that temp permissions are persisted through moving tabs to new windows.
 add_task(async function testTempPermissionOnTabMove() {
   let origin = "https://example.com/";
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    origin
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
   let id = "geo";
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, origin);
@@ -49,9 +48,8 @@ add_task(async function testTempPermissionOnTabMove() {
 // Test that temp permissions don't affect other tabs of the same URI.
 add_task(async function testTempPermissionMultipleTabs() {
   let origin = "https://example.com/";
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    origin
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
   let id = "geo";
 
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, origin);
@@ -107,9 +105,8 @@ add_task(async function testTempPermissionMultipleTabs() {
 // Test that temp permissions are cleared when closing tabs.
 add_task(async function testTempPermissionOnTabClose() {
   let origin = "https://example.com/";
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    origin
-  );
+  let principal =
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
   let id = "geo";
 
   ok(

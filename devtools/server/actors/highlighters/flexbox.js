@@ -497,10 +497,8 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
     const lineWidth = getDisplayPixelRatio(this.win);
     const options = { matrix: this.currentMatrix };
-    const {
-      width: containerWidth,
-      height: containerHeight,
-    } = getUntransformedQuad(this.container, "content").getBounds();
+    const { width: containerWidth, height: containerHeight } =
+      getUntransformedQuad(this.container, "content").getBounds();
 
     this.setupCanvas({
       useContainerScrollOffsets: true,
@@ -642,10 +640,8 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
       return;
     }
 
-    const {
-      width: containerWidth,
-      height: containerHeight,
-    } = getUntransformedQuad(this.container, "content").getBounds();
+    const { width: containerWidth, height: containerHeight } =
+      getUntransformedQuad(this.container, "content").getBounds();
 
     this.setupCanvas({
       lineDash: FLEXBOX_LINES_PROPERTIES.alignItems.lineDash,

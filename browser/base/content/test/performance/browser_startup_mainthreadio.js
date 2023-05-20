@@ -653,8 +653,8 @@ add_task(async function () {
 
   TestUtils.assertPackagedBuild();
 
-  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
-    .wrappedJSObject;
+  let startupRecorder =
+    Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
   await startupRecorder.done;
 
   // Add system add-ons to the list of known IO dynamically.
@@ -691,9 +691,8 @@ add_task(async function () {
     for (let m of profile.markers.data) {
       let markerName = profile.stringTable[m[nameCol]];
       if (markerName.startsWith("startupRecorder:")) {
-        phases[
-          markerName.split("startupRecorder:")[1]
-        ] = markersForCurrentPhase;
+        phases[markerName.split("startupRecorder:")[1]] =
+          markersForCurrentPhase;
         markersForCurrentPhase = [];
         continue;
       }

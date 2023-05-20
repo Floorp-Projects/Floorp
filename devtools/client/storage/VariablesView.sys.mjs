@@ -414,9 +414,8 @@ VariablesView.prototype = {
     const document = this.document;
     const ownerNode = this._parent.parentNode;
 
-    const container = (this._searchboxContainer = document.createXULElement(
-      "hbox"
-    ));
+    const container = (this._searchboxContainer =
+      document.createXULElement("hbox"));
     container.className = "devtools-toolbar devtools-input-toolbar";
 
     // Hide the variables searchbox container if there are no variables or
@@ -2629,9 +2628,8 @@ Variable.prototype = extend(Scope.prototype, {
     const document = this.document;
     const descriptor = this._initialDescriptor;
 
-    const separatorLabel = (this._separatorLabel = document.createXULElement(
-      "label"
-    ));
+    const separatorLabel = (this._separatorLabel =
+      document.createXULElement("label"));
     separatorLabel.className = "plain separator";
     separatorLabel.setAttribute("value", this.separatorStr + " ");
 
@@ -2692,27 +2690,24 @@ Variable.prototype = extend(Scope.prototype, {
     const descriptor = this._initialDescriptor;
 
     if ((ownerView.eval && this.getter) || this.setter) {
-      const editNode = (this._editNode = this.document.createXULElement(
-        "toolbarbutton"
-      ));
+      const editNode = (this._editNode =
+        this.document.createXULElement("toolbarbutton"));
       editNode.className = "plain variables-view-edit";
       editNode.addEventListener("mousedown", this._onEdit.bind(this));
       this._title.insertBefore(editNode, this._spacer);
     }
 
     if (ownerView.delete) {
-      const deleteNode = (this._deleteNode = this.document.createXULElement(
-        "toolbarbutton"
-      ));
+      const deleteNode = (this._deleteNode =
+        this.document.createXULElement("toolbarbutton"));
       deleteNode.className = "plain variables-view-delete";
       deleteNode.addEventListener("click", this._onDelete.bind(this));
       this._title.appendChild(deleteNode);
     }
 
     if (ownerView.new) {
-      const addPropertyNode = (this._addPropertyNode = this.document.createXULElement(
-        "toolbarbutton"
-      ));
+      const addPropertyNode = (this._addPropertyNode =
+        this.document.createXULElement("toolbarbutton"));
       addPropertyNode.className = "plain variables-view-add-property";
       addPropertyNode.addEventListener(
         "mousedown",
@@ -3240,13 +3235,13 @@ Property.prototype = extend(Variable.prototype, {
 /**
  * A generator-iterator over the VariablesView, Scopes, Variables and Properties.
  */
-VariablesView.prototype[Symbol.iterator] = Scope.prototype[
-  Symbol.iterator
-] = Variable.prototype[Symbol.iterator] = Property.prototype[
-  Symbol.iterator
-] = function* () {
-  yield* this._store;
-};
+VariablesView.prototype[Symbol.iterator] =
+  Scope.prototype[Symbol.iterator] =
+  Variable.prototype[Symbol.iterator] =
+  Property.prototype[Symbol.iterator] =
+    function* () {
+      yield* this._store;
+    };
 
 /**
  * Forget everything recorded about added scopes, variables or properties.

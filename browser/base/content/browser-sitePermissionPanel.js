@@ -64,9 +64,8 @@ var gPermissionPanel = {
       return null;
     }
     delete this._permissionPopup;
-    return (this._permissionPopup = document.getElementById(
-      "permission-popup"
-    ));
+    return (this._permissionPopup =
+      document.getElementById("permission-popup"));
   },
   get _permissionPopupMainView() {
     delete this._permissionPopupPopupMainView;
@@ -133,10 +132,8 @@ var gPermissionPanel = {
     let host = gIdentityHandler.getHostForDisplay();
 
     // Update header label
-    this._permissionPopupMainViewHeaderLabel.textContent = gNavigatorBundle.getFormattedString(
-      "permissions.header",
-      [host]
-    );
+    this._permissionPopupMainViewHeaderLabel.textContent =
+      gNavigatorBundle.getFormattedString("permissions.header", [host]);
 
     // Refresh the permission list
     this.updateSitePermissions();
@@ -473,7 +470,8 @@ var gPermissionPanel = {
       }
     }
 
-    let totalBlockedPopups = gBrowser.selectedBrowser.popupBlocker.getBlockedPopupCount();
+    let totalBlockedPopups =
+      gBrowser.selectedBrowser.popupBlocker.getBlockedPopupCount();
     let hasBlockedPopupIndicator = false;
     for (let permission of permissions) {
       let [id, key] = permission.id.split(SitePermissions.PERM_KEY_DELIMITER);
@@ -785,9 +783,10 @@ var gPermissionPanel = {
       if (permission.sharingState && idNoSuffix === "xr") {
         let origins = browser.getDevicePermissionOrigins(idNoSuffix);
         for (let origin of origins) {
-          let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-            origin
-          );
+          let principal =
+            Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+              origin
+            );
           this._removePermPersistentAllow(principal, permission.id);
         }
         origins.clear();

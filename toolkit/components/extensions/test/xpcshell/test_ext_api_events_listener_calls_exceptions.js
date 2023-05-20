@@ -251,9 +251,8 @@ add_task(async function test_api_listener_call_exception() {
     const expectedErrorRegExp = new RegExp(
       `Error: Mock webRequest listener exception`
     );
-    const expectedSourceName = extension.extension.baseURI.resolve(
-      "extpage.js"
-    );
+    const expectedSourceName =
+      extension.extension.baseURI.resolve("extpage.js");
     await page.spawn([], prepareWaitForConsoleMessage);
     await ExtensionTestUtils.fetch(
       "http://example.com",
@@ -278,9 +277,8 @@ add_task(async function test_api_listener_call_exception() {
     );
     // TODO(Bug 1810582): this should be expected to be the script url
     // where the exception has been originated from.
-    const expectedSourceName = extension.extension.baseURI.resolve(
-      "extpage.html"
-    );
+    const expectedSourceName =
+      extension.extension.baseURI.resolve("extpage.html");
 
     await page.spawn([], prepareWaitForConsoleMessage);
     notifyStorageSyncListener(extension);
@@ -301,9 +299,8 @@ add_task(async function test_api_listener_call_exception() {
     const expectedErrorRegExp = new RegExp(`uncaught exception: undefined`);
     // TODO(Bug 1810582): this should be expected to be the script url
     // where the exception has been originated from.
-    const expectedSourceName = extension.extension.baseURI.resolve(
-      "extpage.html"
-    );
+    const expectedSourceName =
+      extension.extension.baseURI.resolve("extpage.html");
     await page.spawn([], prepareWaitForConsoleMessage);
     ExtensionStorageIDB.notifyListeners(extension.id, {});
     await asyncAssertConsoleMessage({
@@ -331,9 +328,8 @@ add_task(async function test_api_listener_call_exception() {
     // it also has a getter for the message property, we expect it to be
     // logged using the string returned by the native toString method.
     const expectedErrorRegExp = new RegExp(`Error: test-contentscript-error`);
-    const expectedSourceName = extension.extension.baseURI.resolve(
-      "contentscript.js"
-    );
+    const expectedSourceName =
+      extension.extension.baseURI.resolve("contentscript.js");
 
     await contentPage.spawn([], prepareWaitForConsoleMessage);
     notifyStorageSyncListener(extension);

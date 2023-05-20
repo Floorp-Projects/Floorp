@@ -297,10 +297,8 @@ export var PlacesBackups = {
    * @resolves the number of serialized uri nodes.
    */
   async saveBookmarksToJSONFile(aFilePath) {
-    let {
-      count: nodeCount,
-      hash: hash,
-    } = await lazy.BookmarkJSONUtils.exportToFile(aFilePath);
+    let { count: nodeCount, hash: hash } =
+      await lazy.BookmarkJSONUtils.exportToFile(aFilePath);
 
     let backupFolderPath = await this.getBackupFolder();
     if (PathUtils.profileDir == backupFolderPath) {
@@ -417,13 +415,11 @@ export var PlacesBackups = {
       let newBackupFile = PathUtils.join(backupFolder, newBackupFilename);
       let newFilenameWithMetaData;
       try {
-        let {
-          count: nodeCount,
-          hash: hash,
-        } = await lazy.BookmarkJSONUtils.exportToFile(newBackupFile, {
-          compress: true,
-          failIfHashIs: mostRecentHash,
-        });
+        let { count: nodeCount, hash: hash } =
+          await lazy.BookmarkJSONUtils.exportToFile(newBackupFile, {
+            compress: true,
+            failIfHashIs: mostRecentHash,
+          });
         newFilenameWithMetaData = appendMetaDataToFilename(newBackupFilename, {
           count: nodeCount,
           hash,

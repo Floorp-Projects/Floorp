@@ -18,8 +18,8 @@ const DirectoryService = CC(
 );
 const Process = CC("@mozilla.org/process/util;1", "nsIProcess", "init");
 
-const currentThread = Cc["@mozilla.org/thread-manager;1"].getService()
-  .currentThread;
+const currentThread =
+  Cc["@mozilla.org/thread-manager;1"].getService().currentThread;
 
 var socks_test_server = null;
 var socks_listen_port = -1;

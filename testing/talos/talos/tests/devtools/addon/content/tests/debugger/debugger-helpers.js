@@ -191,9 +191,8 @@ function selectSource(dbg, url) {
       if (!location) {
         return false;
       }
-      const sourceTextContent = dbg.selectors.getSelectedSourceTextContent(
-        state
-      );
+      const sourceTextContent =
+        dbg.selectors.getSelectedSourceTextContent(state);
       if (!sourceTextContent) {
         return false;
       }

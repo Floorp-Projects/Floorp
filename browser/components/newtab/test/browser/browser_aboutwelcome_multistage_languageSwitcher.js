@@ -185,14 +185,11 @@ const liveLanguageSwitchSelectors = [
  */
 add_task(async function test_aboutwelcome_languageSwitcher_accept() {
   sandbox.restore();
-  const {
-    resolveLangPacks,
-    resolveInstaller,
-    mockable,
-  } = mockAddonAndLocaleAPIs({
-    systemLocale: "es-ES",
-    appLocale: "en-US",
-  });
+  const { resolveLangPacks, resolveInstaller, mockable } =
+    mockAddonAndLocaleAPIs({
+      systemLocale: "es-ES",
+      appLocale: "en-US",
+    });
 
   const { browser, flushClickTelemetry } = await openAboutWelcome();
   await testScreenContent(
@@ -307,14 +304,11 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
  */
 add_task(async function test_aboutwelcome_languageSwitcher_decline() {
   sandbox.restore();
-  const {
-    resolveLangPacks,
-    resolveInstaller,
-    mockable,
-  } = mockAddonAndLocaleAPIs({
-    systemLocale: "es-ES",
-    appLocale: "en-US",
-  });
+  const { resolveLangPacks, resolveInstaller, mockable } =
+    mockAddonAndLocaleAPIs({
+      systemLocale: "es-ES",
+      appLocale: "en-US",
+    });
 
   const { browser, flushClickTelemetry } = await openAboutWelcome();
   await testScreenContent(
@@ -399,14 +393,11 @@ add_task(async function test_aboutwelcome_languageSwitcher_decline() {
  */
 add_task(async function test_aboutwelcome_languageSwitcher_asyncCalls() {
   sandbox.restore();
-  const {
-    resolveLangPacks,
-    resolveInstaller,
-    mockable,
-  } = mockAddonAndLocaleAPIs({
-    systemLocale: "es-ES",
-    appLocale: "en-US",
-  });
+  const { resolveLangPacks, resolveInstaller, mockable } =
+    mockAddonAndLocaleAPIs({
+      systemLocale: "es-ES",
+      appLocale: "en-US",
+    });
 
   await openAboutWelcome();
 
@@ -434,14 +425,11 @@ add_task(async function test_aboutwelcome_languageSwitcher_asyncCalls() {
  */
 add_task(async function test_aboutwelcome_fallback_locale() {
   sandbox.restore();
-  const {
-    resolveLangPacks,
-    resolveInstaller,
-    mockable,
-  } = mockAddonAndLocaleAPIs({
-    systemLocale: "en-US",
-    appLocale: "it",
-  });
+  const { resolveLangPacks, resolveInstaller, mockable } =
+    mockAddonAndLocaleAPIs({
+      systemLocale: "en-US",
+      appLocale: "it",
+    });
 
   await openAboutWelcome();
 
@@ -598,14 +586,11 @@ add_task(async function test_aboutwelcome_languageSwitcher_bidiNotSupported() {
  */
 add_task(async function test_aboutwelcome_languageSwitcher_cancelWaiting() {
   sandbox.restore();
-  const {
-    resolveLangPacks,
-    resolveInstaller,
-    mockable,
-  } = mockAddonAndLocaleAPIs({
-    systemLocale: "es-ES",
-    appLocale: "en-US",
-  });
+  const { resolveLangPacks, resolveInstaller, mockable } =
+    mockAddonAndLocaleAPIs({
+      systemLocale: "es-ES",
+      appLocale: "en-US",
+    });
 
   const { browser, flushClickTelemetry } = await openAboutWelcome();
 

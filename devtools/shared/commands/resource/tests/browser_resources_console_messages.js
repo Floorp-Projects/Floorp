@@ -38,12 +38,10 @@ async function testTabConsoleMessagesResources(executeInIframe) {
   const targetDocumentUrl = executeInIframe ? IFRAME_URL : FISSION_TEST_URL;
 
   let runtimeDoneResolve;
-  const expectedExistingCalls = getExpectedExistingConsoleCalls(
-    targetDocumentUrl
-  );
-  const expectedRuntimeCalls = getExpectedRuntimeConsoleCalls(
-    targetDocumentUrl
-  );
+  const expectedExistingCalls =
+    getExpectedExistingConsoleCalls(targetDocumentUrl);
+  const expectedRuntimeCalls =
+    getExpectedRuntimeConsoleCalls(targetDocumentUrl);
   const onRuntimeDone = new Promise(resolve => (runtimeDoneResolve = resolve));
   const onAvailable = resources => {
     for (const resource of resources) {
@@ -54,9 +52,8 @@ async function testTabConsoleMessagesResources(executeInIframe) {
       );
       ok(resource.message, "message is wrapped into a message attribute");
       const isCachedMessage = !!expectedExistingCalls.length;
-      const expected = (isCachedMessage
-        ? expectedExistingCalls
-        : expectedRuntimeCalls
+      const expected = (
+        isCachedMessage ? expectedExistingCalls : expectedRuntimeCalls
       ).shift();
       checkConsoleAPICall(resource.message, expected);
       is(
@@ -135,9 +132,8 @@ async function testTabConsoleMessagesResourcesWithIgnoreExistingResources(
   );
   await logRuntimeMessages(tab.linkedBrowser, executeInIframe);
   const targetDocumentUrl = executeInIframe ? IFRAME_URL : FISSION_TEST_URL;
-  const expectedRuntimeConsoleCalls = getExpectedRuntimeConsoleCalls(
-    targetDocumentUrl
-  );
+  const expectedRuntimeConsoleCalls =
+    getExpectedRuntimeConsoleCalls(targetDocumentUrl);
   await waitUntil(
     () => availableResources.length === expectedRuntimeConsoleCalls.length
   );
