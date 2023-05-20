@@ -109,21 +109,6 @@ def lint(paths, config, binary=None, fix=None, rules=[], setup=None, **lintargs)
         return result
 
     # Then run Prettier
-    patterns = []
-    arg_wrapper = ""
-    if is_windows():
-        arg_wrapper = '"'
-    for p in paths:
-        filename, file_extension = os.path.splitext(p)
-        if file_extension:
-            patterns.append(p)
-        else:
-            patterns.append(
-                "{}{}/**/*.+({}){}".format(
-                    arg_wrapper, p, "|".join(config["extensions"]), arg_wrapper
-                )
-            )
-
     cmd_args = (
         [
             binary,
@@ -135,7 +120,7 @@ def lint(paths, config, binary=None, fix=None, rules=[], setup=None, **lintargs)
         # + exclude_args
         # Prettier only supports this from 2.3 and above (bug 1826062).
         # + "--no-error-on-unmatched-pattern",
-        + patterns
+        + paths
     )
     log.debug("Prettier command: {}".format(" ".join(cmd_args)))
 
@@ -234,18 +219,29 @@ def run_prettier(cmd_args, config, fix):
         return {"results": [], "fixed": 0}
 
     if errors:
-        errors = errors.decode(encoding, "replace")
+        errors = errors.decode(encoding, "replace").strip().split("\n")
+        errors = [
+            error
+            for error in errors
+            if not (
+                "No supported files were found" in error
+                or "No files matching the pattern were found" in error
+                # Unknown options are not an issue for Prettier, this avoids
+                # errors during tests.
+                or "Ignored unknown option" in error
+            )
+        ]
         # --no-error-on-unmatched-pattern was only added in Prettier 2.3,
         # when we upgrade to the latest version (bug 1826062), we can pass in
         # that argument and remove this check.
-        if "No matching files." in errors:
-            return {"results": [], "fixed": 0}
-        print(PRETTIER_ERROR_MESSAGE.format(errors))
-
-    if proc.returncode >= 2:
-        return 1
+        if len(errors):
+            print(PRETTIER_ERROR_MESSAGE.format("\n".join(errors)))
 
     if not output:
+        # If we have errors, but no output, we assume something really bad happened.
+        if errors and len(errors):
+            return 1
+
         return {"results": [], "fixed": 0}  # no output means success
 
     output = output.decode(encoding, "replace").splitlines()
