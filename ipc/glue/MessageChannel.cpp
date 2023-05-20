@@ -482,6 +482,11 @@ MessageChannel::~MessageChannel() {
             "MessageChannel destroyed without being closed "
             "(mChannelState == ChannelConnected).");
         break;
+      case ChannelTimeout:
+        MOZ_CRASH(
+            "MessageChannel destroyed without being closed "
+            "(mChannelState == ChannelTimeout).");
+        break;
       case ChannelClosing:
         MOZ_CRASH(
             "MessageChannel destroyed without being closed "
@@ -583,11 +588,6 @@ bool MessageChannel::Connected() const {
   return ChannelConnected == mChannelState;
 }
 
-bool MessageChannel::ConnectedOrClosing() const {
-  mMonitor->AssertCurrentThreadOwns();
-  return ChannelConnected == mChannelState || ChannelClosing == mChannelState;
-}
-
 bool MessageChannel::CanSend() const {
   if (!mMonitor) {
     return false;
@@ -600,7 +600,6 @@ void MessageChannel::Clear() {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
   MOZ_DIAGNOSTIC_ASSERT(IsClosedLocked(), "MessageChannel cleared too early?");
-  MOZ_ASSERT(ChannelClosed == mChannelState || ChannelError == mChannelState);
 
   // Don't clear mWorkerThread; we use it in AssertWorkerThread().
   //
@@ -681,7 +680,6 @@ bool MessageChannel::Open(ScopedPort aPort, Side aSide,
     mWorkerThread = eventTarget;
     mShutdownTask = shutdownTask;
     mLink = MakeUnique<PortLink>(this, std::move(aPort));
-    mChannelState = ChannelConnected;
     mSide = aSide;
   }
 
@@ -937,9 +935,8 @@ bool MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg) {
 
   if (MSG_ROUTING_NONE == aMsg.routing_id()) {
     if (GOODBYE_MESSAGE_TYPE == aMsg.type()) {
-      // We've received a GOODBYE message, close the connection and mark
-      // ourselves as "Closing".
-      mLink->Close();
+      // :TODO: Sort out Close() on this side racing with Close() on the
+      // other side
       mChannelState = ChannelClosing;
       if (LoggingEnabled()) {
         printf(
@@ -949,14 +946,6 @@ bool MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg) {
             static_cast<uint32_t>(base::GetCurrentProcId()),
             (mSide == ChildSide) ? "child" : "parent");
       }
-
-      // Notify the worker thread that the connection has been closed, as we
-      // will not receive an `OnChannelErrorFromLink` after calling
-      // `mLink->Close()`.
-      if (AwaitingSyncReply()) {
-        NotifyWorkerThread();
-      }
-      PostErrorNotifyTask();
       return true;
     } else if (CANCEL_MESSAGE_TYPE == aMsg.type()) {
       IPC_LOG("Cancel from message");
@@ -1028,7 +1017,6 @@ bool MessageChannel::ShouldDeferMessage(const Message& aMsg) {
 
 void MessageChannel::OnMessageReceivedFromLink(UniquePtr<Message> aMsg) {
   mMonitor->AssertCurrentThreadOwns();
-  MOZ_ASSERT(mChannelState == ChannelConnected);
 
   if (MaybeInterceptSpecialIOMessage(*aMsg)) {
     return;
@@ -1442,7 +1430,7 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, UniquePtr<Message>* aReply) {
 bool MessageChannel::HasPendingEvents() {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
-  return ConnectedOrClosing() && !mPending.isEmpty();
+  return Connected() && !mPending.isEmpty();
 }
 
 bool MessageChannel::ProcessPendingRequest(ActorLifecycleProxy* aProxy,
@@ -1457,7 +1445,7 @@ bool MessageChannel::ProcessPendingRequest(ActorLifecycleProxy* aProxy,
   msgid_t msgType = aUrgent->type();
 
   DispatchMessage(aProxy, std::move(aUrgent));
-  if (!ConnectedOrClosing()) {
+  if (!Connected()) {
     ReportConnectionError("ProcessPendingRequest", msgType);
     return false;
   }
@@ -1503,7 +1491,7 @@ void MessageChannel::RunMessage(ActorLifecycleProxy* aProxy,
 
   UniquePtr<Message>& msg = aTask.Msg();
 
-  if (!ConnectedOrClosing()) {
+  if (!Connected()) {
     ReportConnectionError("RunMessage", msg->type());
     return;
   }
@@ -1915,8 +1903,12 @@ void MessageChannel::ReportConnectionError(const char* aFunctionName,
     case ChannelClosed:
       errorMsg = "Closed channel: cannot send/recv";
       break;
+    case ChannelTimeout:
+      errorMsg = "Channel timeout: cannot send/recv";
+      break;
     case ChannelClosing:
-      errorMsg = "Channel closing: too late to send, messages will be lost";
+      errorMsg =
+          "Channel closing: too late to send/recv, messages will be lost";
       break;
     case ChannelError:
       errorMsg = "Channel error: cannot send/recv";
@@ -1999,7 +1991,6 @@ bool MessageChannel::MaybeHandleError(Result code, const Message& aMsg,
 
 void MessageChannel::OnChannelErrorFromLink() {
   mMonitor->AssertCurrentThreadOwns();
-  MOZ_ASSERT(mChannelState == ChannelConnected);
 
   IPC_LOG("OnChannelErrorFromLink");
 
@@ -2007,20 +1998,22 @@ void MessageChannel::OnChannelErrorFromLink() {
     NotifyWorkerThread();
   }
 
-  if (mAbortOnError) {
-    // mAbortOnError is set by main actors (e.g., ContentChild) to ensure
-    // that the process terminates even if normal shutdown is prevented.
-    // A MOZ_CRASH() here is not helpful because crash reporting relies
-    // on the parent process which we know is dead or otherwise unusable.
-    //
-    // Additionally, the parent process can (and often is) killed on Android
-    // when apps are backgrounded. We don't need to report a crash for
-    // normal behavior in that case.
-    printf_stderr("Exiting due to channel error.\n");
-    ProcessChild::QuickExit();
+  if (ChannelClosing != mChannelState) {
+    if (mAbortOnError) {
+      // mAbortOnError is set by main actors (e.g., ContentChild) to ensure
+      // that the process terminates even if normal shutdown is prevented.
+      // A MOZ_CRASH() here is not helpful because crash reporting relies
+      // on the parent process which we know is dead or otherwise unusable.
+      //
+      // Additionally, the parent process can (and often is) killed on Android
+      // when apps are backgrounded. We don't need to report a crash for
+      // normal behavior in that case.
+      printf_stderr("Exiting due to channel error.\n");
+      ProcessChild::QuickExit();
+    }
+    mChannelState = ChannelError;
+    mMonitor->Notify();
   }
-  mChannelState = ChannelError;
-  mMonitor->Notify();
 
   PostErrorNotifyTask();
 }
@@ -2029,9 +2022,9 @@ void MessageChannel::NotifyMaybeChannelError(ReleasableMonitorAutoLock& aLock) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
   aLock.AssertCurrentThreadOwns();
-  MOZ_ASSERT(mChannelState != ChannelConnected);
 
-  if (ChannelClosing == mChannelState || ChannelClosed == mChannelState) {
+  // TODO sort out Close() on this side racing with Close() on the other side
+  if (ChannelClosing == mChannelState) {
     // the channel closed, but we received a "Goodbye" message warning us
     // about it. no worries
     mChannelState = ChannelClosed;
@@ -2039,9 +2032,10 @@ void MessageChannel::NotifyMaybeChannelError(ReleasableMonitorAutoLock& aLock) {
     return;
   }
 
-  MOZ_ASSERT(ChannelError == mChannelState);
-
   Clear();
+
+  // Oops, error!  Let the listener know about it.
+  mChannelState = ChannelError;
 
   // IPDL assumes these notifications do not fire twice, so we do not let
   // that happen.
@@ -2108,31 +2102,38 @@ class GoodbyeMessage : public IPC::Message {
   }
 };
 
+void MessageChannel::SynchronouslyClose() {
+  AssertWorkerThread();
+  mMonitor->AssertCurrentThreadOwns();
+  mLink->SendClose();
+
+  MOZ_RELEASE_ASSERT(!mIsSameThreadChannel || ChannelClosed == mChannelState,
+                     "same-thread channel failed to synchronously close?");
+
+  while (ChannelClosed != mChannelState) mMonitor->Wait();
+}
+
 void MessageChannel::CloseWithError() {
   AssertWorkerThread();
 
-  // This lock guard may be reset by `NotifyMaybeChannelError` before invoking
-  // listener callbacks which may destroy this `MessageChannel`.
-  ReleasableMonitorAutoLock lock(*mMonitor);
-
-  switch (mChannelState) {
-    case ChannelError:
-      // Already errored, ensure we notify if we haven't yet.
-      NotifyMaybeChannelError(lock);
-      return;
-    case ChannelClosed:
-      // Already closed, we can't do anything.
-      return;
-    default:
-      // Either connected or closing, immediately convert to an error, and
-      // notify.
-      MOZ_ASSERT(mChannelState == ChannelConnected ||
-                 mChannelState == ChannelClosing);
-      mLink->Close();
-      mChannelState = ChannelError;
-      NotifyMaybeChannelError(lock);
-      return;
+  MonitorAutoLock lock(*mMonitor);
+  if (ChannelConnected != mChannelState) {
+    return;
   }
+  SynchronouslyClose();
+  mChannelState = ChannelError;
+  PostErrorNotifyTask();
+}
+
+void MessageChannel::CloseWithTimeout() {
+  AssertWorkerThread();
+
+  MonitorAutoLock lock(*mMonitor);
+  if (ChannelConnected != mChannelState) {
+    return;
+  }
+  SynchronouslyClose();
+  mChannelState = ChannelTimeout;
 }
 
 void MessageChannel::NotifyImpendingShutdown() {
@@ -2154,6 +2155,7 @@ void MessageChannel::Close() {
 
   switch (mChannelState) {
     case ChannelError:
+    case ChannelTimeout:
       // See bug 538586: if the listener gets deleted while the
       // IO thread's NotifyChannelError event is still enqueued
       // and subsequently deletes us, then the error event will
@@ -2172,8 +2174,7 @@ void MessageChannel::Close() {
       if (ChannelConnected == mChannelState) {
         SendMessageToLink(MakeUnique<GoodbyeMessage>());
       }
-      mLink->Close();
-      mChannelState = ChannelClosed;
+      SynchronouslyClose();
       NotifyChannelClosed(lock);
       return;
   }

@@ -31,7 +31,7 @@ class VsyncBridgeChild final : public PVsyncBridgeChild {
 
   void NotifyVsync(const VsyncEvent& aVsync, const layers::LayersId& aLayersId);
 
-  void HandleFatalError(const char* aMsg) override;
+  void HandleFatalError(const char* aMsg) const override;
 
  private:
   VsyncBridgeChild(RefPtr<VsyncIOThreadHolder>, const uint64_t& aProcessToken);

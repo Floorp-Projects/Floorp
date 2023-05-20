@@ -210,7 +210,7 @@ void UiCompositorControllerChild::ProcessingError(Result aCode,
   }
 }
 
-void UiCompositorControllerChild::HandleFatalError(const char* aMsg) {
+void UiCompositorControllerChild::HandleFatalError(const char* aMsg) const {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
 }
 

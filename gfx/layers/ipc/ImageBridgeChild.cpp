@@ -920,7 +920,7 @@ bool ImageBridgeChild::CanSend() const {
   return mCanSend;
 }
 
-void ImageBridgeChild::HandleFatalError(const char* aMsg) {
+void ImageBridgeChild::HandleFatalError(const char* aMsg) const {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
 }
 

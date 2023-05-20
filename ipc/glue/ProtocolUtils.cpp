@@ -389,20 +389,17 @@ Maybe<IProtocol*> IProtocol::ReadActor(IPC::MessageReader* aReader,
   return Some(listener);
 }
 
-void IProtocol::FatalError(const char* const aErrorMsg) {
+void IProtocol::FatalError(const char* const aErrorMsg) const {
   HandleFatalError(aErrorMsg);
 }
 
-void IProtocol::HandleFatalError(const char* aErrorMsg) {
+void IProtocol::HandleFatalError(const char* aErrorMsg) const {
   if (IProtocol* manager = Manager()) {
     manager->HandleFatalError(aErrorMsg);
     return;
   }
 
   mozilla::ipc::FatalError(aErrorMsg, mSide == ParentSide);
-  if (CanSend()) {
-    GetIPCChannel()->CloseWithError();
-  }
 }
 
 bool IProtocol::AllocShmem(size_t aSize, Shmem* aOutMem) {
@@ -632,8 +629,6 @@ void IToplevelProtocol::NotifyImpendingShutdown() {
 }
 
 void IToplevelProtocol::Close() { GetIPCChannel()->Close(); }
-
-void IToplevelProtocol::CloseWithError() { GetIPCChannel()->CloseWithError(); }
 
 void IToplevelProtocol::SetReplyTimeoutMs(int32_t aTimeoutMs) {
   GetIPCChannel()->SetReplyTimeoutMs(aTimeoutMs);

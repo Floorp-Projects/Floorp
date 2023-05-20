@@ -166,7 +166,7 @@ bool VideoBridgeChild::IsSameProcess() const {
   return OtherPid() == base::GetCurrentProcId();
 }
 
-void VideoBridgeChild::HandleFatalError(const char* aMsg) {
+void VideoBridgeChild::HandleFatalError(const char* aMsg) const {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
 }
 

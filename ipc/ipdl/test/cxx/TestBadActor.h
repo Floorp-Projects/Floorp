@@ -31,7 +31,7 @@ class TestBadActorParent : public PTestBadActorParent {
     QuitParent();
   }
 
-  virtual void HandleFatalError(const char* aErrorMsg) override;
+  virtual void HandleFatalError(const char* aErrorMsg) const override;
 
   PTestBadActorSubParent* AllocPTestBadActorSubParent();
 
