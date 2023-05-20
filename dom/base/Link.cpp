@@ -81,12 +81,10 @@ void Link::VisitedQueryFinished(bool aVisited) {
   // Tell the element to update its visited state.
   mElement->UpdateState(true);
 
-  if (StaticPrefs::layout_css_always_repaint_on_unvisited()) {
-    // Even if the state didn't actually change, we need to repaint in order for
-    // the visited state not to be observable.
-    nsLayoutUtils::PostRestyleEvent(GetElement(), RestyleHint::RestyleSubtree(),
-                                    nsChangeHint_RepaintFrame);
-  }
+  // Even if the state didn't actually change, we need to repaint in order for
+  // the visited state not to be observable.
+  nsLayoutUtils::PostRestyleEvent(GetElement(), RestyleHint::RestyleSubtree(),
+                                  nsChangeHint_RepaintFrame);
 }
 
 ElementState Link::LinkState() const {
