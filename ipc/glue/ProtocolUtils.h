@@ -242,8 +242,8 @@ class IProtocol : public HasResultCodes {
   bool AllocUnsafeShmem(size_t aSize, Shmem* aOutMem);
   bool DeallocShmem(Shmem& aMem);
 
-  void FatalError(const char* const aErrorMsg);
-  virtual void HandleFatalError(const char* aErrorMsg);
+  void FatalError(const char* const aErrorMsg) const;
+  virtual void HandleFatalError(const char* aErrorMsg) const;
 
  protected:
   virtual ~IProtocol();
@@ -433,7 +433,6 @@ class IToplevelProtocol : public IProtocol {
   void NotifyImpendingShutdown();
 
   void Close();
-  void CloseWithError();
 
   void SetReplyTimeoutMs(int32_t aTimeoutMs);
 

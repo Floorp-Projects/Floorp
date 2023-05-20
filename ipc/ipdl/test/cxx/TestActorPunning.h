@@ -38,7 +38,7 @@ class TestActorPunningParent : public PTestActorPunningParent {
     QuitParent();
   }
 
-  virtual void HandleFatalError(const char* aErrorMsg) override;
+  virtual void HandleFatalError(const char* aErrorMsg) const override;
 };
 
 class TestActorPunningPunnedParent : public PTestActorPunningPunnedParent {

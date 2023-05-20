@@ -23,7 +23,7 @@ mozilla::ipc::IPCResult TestActorPunningParent::RecvPun(
 // By default, fatal errors kill the parent process, but this makes it
 // hard to test, so instead we use the previous behavior and kill the
 // child process.
-void TestActorPunningParent::HandleFatalError(const char* aErrorMsg) {
+void TestActorPunningParent::HandleFatalError(const char* aErrorMsg) const {
   if (!!strcmp(aErrorMsg, "Error deserializing 'PTestActorPunningSubParent'")) {
     fail("wrong fatal error");
   }

@@ -589,7 +589,7 @@ void VRManagerChild::StopActivity() {
   Unused << SendStopActivity();
 }
 
-void VRManagerChild::HandleFatalError(const char* aMsg) {
+void VRManagerChild::HandleFatalError(const char* aMsg) const {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
 }
 

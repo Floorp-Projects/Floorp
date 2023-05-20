@@ -312,7 +312,7 @@ class ImageBridgeChild final : public PImageBridgeChild,
 
   bool InForwarderThread() override { return InImageBridgeChildThread(); }
 
-  void HandleFatalError(const char* aMsg) override;
+  void HandleFatalError(const char* aMsg) const override;
 
   wr::MaybeExternalImageId GetNextExternalImageId() override;
 

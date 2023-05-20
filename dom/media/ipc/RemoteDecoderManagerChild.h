@@ -107,7 +107,7 @@ class RemoteDecoderManagerChild final
       RemoteDecodeIn aLocation);
 
  protected:
-  void HandleFatalError(const char* aMsg) override;
+  void HandleFatalError(const char* aMsg) const override;
 
   PRemoteDecoderChild* AllocPRemoteDecoderChild(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
