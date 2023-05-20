@@ -18,7 +18,7 @@ const FRAME_TEST_URI = `https://example.com/document-builder.sjs?html=${encodeUR
 const BYPASS_WALKERFRONT_CHILDREN_IFRAME_GUARD_PREF =
   "devtools.testing.bypass-walker-children-iframe-guard";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref(BYPASS_WALKERFRONT_CHILDREN_IFRAME_GUARD_PREF, true);
   const { inspector } = await openInspectorForURL(IFRAME_TEST_URI);
   await testElementBlockedByCSP("iframe", inspector);

@@ -410,7 +410,7 @@ async function test_emitLatchedEvents(eventPrefix, initialDelta, cmd) {
   }
 
   let check = (aDir, aMsg) => ok(cmd[aDir].callCount == expect[aDir], aMsg);
-  let checkBoth = function(aNum, aInc, aDec) {
+  let checkBoth = function (aNum, aInc, aDec) {
     let prefix = "Step " + aNum + ": ";
     check("inc", prefix + aInc);
     check("dec", prefix + aDec);
@@ -832,10 +832,7 @@ function test_rotateHelperGetImageRotation(aImageElement) {
     return 0;
   }
 
-  transformValue = transformValue
-    .split("(")[1]
-    .split(")")[0]
-    .split(",");
+  transformValue = transformValue.split("(")[1].split(")")[0].split(",");
   var rotation = Math.round(
     Math.atan2(transformValue[1], transformValue[0]) * (180 / Math.PI)
   );
@@ -999,7 +996,7 @@ async function test_rotateGesturesOnTab() {
   }
 
   // Quick function to normalize rotation to 0 <= r < 360
-  var normRot = function(rotation) {
+  var normRot = function (rotation) {
     rotation = rotation % 360;
     if (rotation < 0) {
       rotation += 360;

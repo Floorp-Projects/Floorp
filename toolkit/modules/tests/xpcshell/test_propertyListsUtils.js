@@ -11,7 +11,7 @@ function checkValue(aPropertyListObject, aType, aValue) {
   Assert.equal(PropertyListUtils.getObjectType(aPropertyListObject), aType);
   if (aValue !== undefined) {
     // Perform strict equality checks until Bug 714467 is fixed.
-    let strictEqualityCheck = function(a, b) {
+    let strictEqualityCheck = function (a, b) {
       Assert.equal(typeof a, typeof b);
       Assert.equal(a, b);
     };
@@ -101,7 +101,7 @@ function checkMainPropertyList(aPropertyListRoot) {
 }
 
 function readPropertyList(aFile, aCallback) {
-  PropertyListUtils.read(aFile, function(aPropertyListRoot) {
+  PropertyListUtils.read(aFile, function (aPropertyListRoot) {
     // Null root indicates failure to read property list.
     // Note: It is important not to run do_check_n/eq directly on Dict and array
     // objects, because it cases their toString to get invoked, doing away with

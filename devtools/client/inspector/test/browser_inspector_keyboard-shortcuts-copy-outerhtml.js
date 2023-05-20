@@ -6,7 +6,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TEST_URL = URL_ROOT + "doc_inspector_outerhtml.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   const root = inspector.markup._elt;
 

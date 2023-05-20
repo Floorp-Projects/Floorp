@@ -18,11 +18,11 @@ function run_test() {
   runHttpTests(tests, testComplete(srv));
 }
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + srv.identity.primaryPort + "/";
 });
 
-XPCOMUtils.defineLazyGetter(this, "tests", function() {
+XPCOMUtils.defineLazyGetter(this, "tests", function () {
   return [
     new Test(URL, init, startCustomIndexHandler, stopCustomIndexHandler),
     new Test(URL, init, startDefaultIndexHandler, stopDefaultIndexHandler),

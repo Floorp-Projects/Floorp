@@ -1070,7 +1070,7 @@ var Control = {
   },
 };
 
-window.onload = async function() {
+window.onload = async function () {
   Control.init();
 
   let addons = await AddonManager.getAddonsByTypes(["extension"]);

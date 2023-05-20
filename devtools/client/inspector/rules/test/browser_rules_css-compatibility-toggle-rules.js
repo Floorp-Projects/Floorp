@@ -118,7 +118,7 @@ const TEST_DATA_TOGGLE_INLINE = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await pushPref(
     "devtools.inspector.ruleview.inline-compatibility-warning.enabled",
     true

@@ -33,7 +33,7 @@ function set_private_cookie(value, callback) {
 }
 
 function check_cookie_presence(value, isPrivate, expected, callback) {
-  setup_chan("present?cookie=" + value.replace("=", "|"), isPrivate, function(
+  setup_chan("present?cookie=" + value.replace("=", "|"), isPrivate, function (
     req
   ) {
     req.QueryInterface(Ci.nsIHttpChannel);
@@ -101,25 +101,25 @@ function run_test() {
     executeSoon(tests.shift());
   }
 
-  tests.push(function() {
+  tests.push(function () {
     set_cookie("C1=V1", check_cookie);
   });
-  tests.push(function() {
+  tests.push(function () {
     set_private_cookie("C2=V2", check_cookie);
   });
-  tests.push(function() {
+  tests.push(function () {
     // Check that the first cookie is present in a non-private request
     check_cookie_presence("C1=V1", false, true, runNextTest);
   });
-  tests.push(function() {
+  tests.push(function () {
     // Check that the second cookie is present in a private request
     check_cookie_presence("C2=V2", true, true, runNextTest);
   });
-  tests.push(function() {
+  tests.push(function () {
     // Check that the first cookie is not present in a private request
     check_cookie_presence("C1=V1", true, false, runNextTest);
   });
-  tests.push(function() {
+  tests.push(function () {
     // Check that the second cookie is not present in a non-private request
     check_cookie_presence("C2=V2", false, false, runNextTest);
   });
@@ -128,7 +128,7 @@ function run_test() {
   // since the notification needs to run in the parent process but there is
   // no existing mechanism to make that happen.
   if (!inChildProcess()) {
-    tests.push(function() {
+    tests.push(function () {
       // Simulate all private browsing instances being closed
       Services.obs.notifyObservers(null, "last-pb-context-exited");
       // Check that all private cookies are now unavailable in new private requests
@@ -136,7 +136,7 @@ function run_test() {
     });
   }
 
-  tests.push(function() {
+  tests.push(function () {
     httpserver.stop(do_test_finished);
   });
 

@@ -21,7 +21,7 @@ const kApiKeyPref = "browser.translation.yandex.apiKeyOverride";
 const kDetectLanguagePref = "browser.translation.detectLanguage";
 const kShowUIPref = "browser.translation.ui.show";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       [kEnginePref, "Yandex"],
@@ -45,7 +45,7 @@ add_task(async function test_yandex_translation() {
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     const { TranslationDocument } = ChromeUtils.import(
       "resource:///modules/translation/TranslationDocument.jsm"
     );

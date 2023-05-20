@@ -6,7 +6,7 @@ const { Service } = ChromeUtils.importESModule(
 );
 
 function login_handling(handler) {
-  return function(request, response) {
+  return function (request, response) {
     if (
       request.hasHeader("Authorization") &&
       request.getHeader("Authorization").includes('Hawk id="id"')
@@ -48,7 +48,7 @@ add_task(async function run_test() {
     Svc.Prefs.set("lastPing", Math.floor(Date.now() / 1000));
 
     let threw = false;
-    Svc.Obs.add("weave:service:sync:error", function(subject, data) {
+    Svc.Obs.add("weave:service:sync:error", function (subject, data) {
       threw = true;
     });
 

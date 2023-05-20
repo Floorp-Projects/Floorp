@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   do_get_profile();
 
   let existingFile = Services.dirsvc

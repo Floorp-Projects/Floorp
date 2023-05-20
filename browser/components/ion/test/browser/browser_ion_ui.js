@@ -872,7 +872,7 @@ add_task(async function testEnrollmentPings() {
 
       // Verify that the proper pings were generated.
       let pings;
-      await TestUtils.waitForCondition(async function() {
+      await TestUtils.waitForCondition(async function () {
         pings = await TelemetryArchive.promiseArchivedPingList();
         return pings.length - beginPingCount >= 2;
       }, "Wait until we have at least 2 pings in the telemetry archive");

@@ -5,7 +5,7 @@ const URI =
   BASE_ORIGIN +
   "/browser/browser/components/contextualidentity/test/browser/empty_file.html";
 
-add_task(async function() {
+add_task(async function () {
   info("Opening a new container tab...");
 
   let tab = BrowserTestUtils.addTab(gBrowser, URI, { userContextId: 1 });
@@ -15,7 +15,7 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(browser);
 
   info("Create a HTMLAnchorElement...");
-  await SpecialPowers.spawn(browser, [URI], function(uri) {
+  await SpecialPowers.spawn(browser, [URI], function (uri) {
     let anchor = content.document.createElement("a");
     anchor.setAttribute("id", "clickMe");
     anchor.setAttribute("href", uri);
@@ -27,7 +27,7 @@ add_task(async function() {
   let newTab = await new Promise((resolve, reject) => {
     gBrowser.tabContainer.addEventListener(
       "TabOpen",
-      function(openEvent) {
+      function (openEvent) {
         resolve(openEvent.target);
       },
       { once: true }

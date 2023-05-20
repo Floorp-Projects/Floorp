@@ -10,7 +10,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 
 let gPathsToRemove = [];
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.download.useDownloadDir", true]],
   });
@@ -27,7 +27,7 @@ add_setup(async function() {
 async function testLinkWithoutExtension(type, shouldHaveExtension) {
   info("Checking " + type);
 
-  let task = function() {
+  let task = function () {
     return SpecialPowers.spawn(gBrowser.selectedBrowser, [type], mimetype => {
       let link = content.document.createElement("a");
       link.textContent = "Click me";
@@ -200,7 +200,7 @@ add_task(async function test_broken_saved_handlerinfo_and_useless_mimetypes() {
   );
   handlerSvc.store(bogusType);
   let tabToClean = null;
-  let task = function() {
+  let task = function () {
     return BrowserTestUtils.openNewForegroundTab({
       gBrowser,
       opening: TEST_PATH + "file_as.exe?foo=bar",

@@ -52,7 +52,7 @@ async function decayInputHistory() {
     .wrappedJSObject.decay();
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // We don't want autofill to influence this test.

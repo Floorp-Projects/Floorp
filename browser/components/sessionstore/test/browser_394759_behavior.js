@@ -20,7 +20,7 @@
  * @returns Promise
  */
 function testWindows(windowsToOpen, expectedResults) {
-  return (async function() {
+  return (async function () {
     let num = 0;
     for (let winData of windowsToOpen) {
       let features = "chrome,dialog=no," + (winData.isPopup ? "all=no" : "all");
@@ -34,7 +34,7 @@ function testWindows(windowsToOpen, expectedResults) {
     }
 
     let closedWindowData = ss.getClosedWindowData();
-    let numPopups = closedWindowData.filter(function(el, i, arr) {
+    let numPopups = closedWindowData.filter(function (el, i, arr) {
       return el.isPopup;
     }).length;
     let numNormal = ss.getClosedWindowCount() - numPopups;

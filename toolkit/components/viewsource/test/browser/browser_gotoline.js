@@ -4,7 +4,7 @@
 
 var content = "line 1\nline 2\nline 3";
 
-add_task(async function() {
+add_task(async function () {
   // First test with text with the text/html mimetype.
   let tab = await openDocument("data:text/html," + encodeURIComponent(content));
   await checkViewSource(tab);
@@ -15,9 +15,9 @@ add_task(async function() {
   gBrowser.removeTab(tab);
 });
 
-var checkViewSource = async function(aTab) {
+var checkViewSource = async function (aTab) {
   let browser = aTab.linkedBrowser;
-  await SpecialPowers.spawn(browser, [content], async function(text) {
+  await SpecialPowers.spawn(browser, [content], async function (text) {
     is(content.document.body.textContent, text, "Correct content loaded");
   });
 
@@ -29,7 +29,7 @@ var checkViewSource = async function(aTab) {
       },
       "ViewSourcePage"
     );
-    await SpecialPowers.spawn(browser, [i], async function(i) {
+    await SpecialPowers.spawn(browser, [i], async function (i) {
       let selection = content.getSelection();
       Assert.equal(selection.toString(), "line " + i, "Correct text selected");
     });

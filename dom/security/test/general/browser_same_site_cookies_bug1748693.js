@@ -14,7 +14,7 @@ function checkCookies(expectedCookies = {}) {
   return SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [expectedCookies],
-    async function(expectedCookies) {
+    async function (expectedCookies) {
       let cookies = content.document.getElementById("msg").innerHTML;
       info(cookies);
       for (const [cookie, expected] of Object.entries(expectedCookies)) {

@@ -89,7 +89,7 @@ async function test_socket_conn() {
   await new Promise(resolve => {
     transport.hooks = {
       onPacket(packet) {
-        this.onPacket = function({ unicode }) {
+        this.onPacket = function ({ unicode }) {
           Assert.equal(unicode, unicodeString);
           transport.close();
         };

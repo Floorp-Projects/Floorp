@@ -1,4 +1,4 @@
-(function() {
+(function () {
   var accumulatedRect = null;
   var onpaint = [];
   var debug = SpecialPowers.getBoolPref("testing.paint_listener.debug", false);
@@ -53,7 +53,7 @@
       if (debug) {
         dump("waiting for paint suppression to end...\n");
       }
-      window.setTimeout(function() {
+      window.setTimeout(function () {
         waitForPaints(callback, subdoc, flushMode);
       }, 0);
       return;
@@ -73,7 +73,7 @@
       if (debug) {
         dump("waiting for paint...\n");
       }
-      onpaint.push(function() {
+      onpaint.push(function () {
         waitForPaints(callback, subdoc, FlushModes.NOFLUSH);
       });
       if (utils.isTestControllingRefreshes) {
@@ -90,17 +90,17 @@
     callback.apply(null, result);
   }
 
-  window.waitForAllPaintsFlushed = function(callback, subdoc) {
+  window.waitForAllPaintsFlushed = function (callback, subdoc) {
     waitForPaints(callback, subdoc, FlushModes.FLUSH);
   };
 
-  window.waitForAllPaints = function(callback) {
+  window.waitForAllPaints = function (callback) {
     waitForPaints(callback, null, FlushModes.NOFLUSH);
   };
 
-  window.promiseAllPaintsDone = function(subdoc = null, flush = false) {
+  window.promiseAllPaintsDone = function (subdoc = null, flush = false) {
     var flushmode = flush ? FlushModes.FLUSH : FlushModes.NOFLUSH;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       // The callback is given the components of the rect, but resolve() can
       // only be given one arg, so we turn it back into an array.
       waitForPaints((l, r, t, b) => resolve([l, r, t, b]), subdoc, flushmode);

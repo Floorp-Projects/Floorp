@@ -29,9 +29,7 @@ class OverviewInView extends ViewPage {
   }
 
   render() {
-    return html`
-      <slot></slot>
-    `;
+    return html` <slot></slot> `;
   }
 }
 customElements.define("view-overview", OverviewInView);

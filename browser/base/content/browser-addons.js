@@ -47,7 +47,7 @@ customElements.define(
         return;
       }
 
-      this.notification.options.installs.forEach(function(aInstall) {
+      this.notification.options.installs.forEach(function (aInstall) {
         aInstall.addListener(this);
       }, this);
 
@@ -71,7 +71,7 @@ customElements.define(
       if (!this.notification) {
         return;
       }
-      this.notification.options.installs.forEach(function(aInstall) {
+      this.notification.options.installs.forEach(function (aInstall) {
         aInstall.removeListener(this);
       }, this);
 
@@ -128,7 +128,7 @@ customElements.define(
 
     cancel() {
       let installs = this.notification.options.installs;
-      installs.forEach(function(aInstall) {
+      installs.forEach(function (aInstall) {
         try {
           aInstall.cancel();
         } catch (e) {
@@ -148,7 +148,7 @@ customElements.define(
       let progress = 0;
       let maxProgress = 0;
 
-      this.notification.options.installs.forEach(function(aInstall) {
+      this.notification.options.installs.forEach(function (aInstall) {
         if (aInstall.maxProgress == -1) {
           maxProgress = -1;
         }
@@ -824,7 +824,7 @@ var gXPInstallObserver = {
         options.installs = installInfo.installs;
         options.contentWindow = browser.contentWindow;
         options.sourceURI = browser.currentURI;
-        options.eventCallback = function(aEvent) {
+        options.eventCallback = function (aEvent) {
           switch (aEvent) {
             case "removed":
               options.contentWindow = null;

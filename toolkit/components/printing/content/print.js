@@ -23,7 +23,7 @@ const PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
   Ci.nsIPrintSettingsService
 );
 
-var logger = (function() {
+var logger = (function () {
   const getMaxLogLevel = () =>
     Services.prefs.getBoolPref("print.debug", false) ? "all" : "warn";
 
@@ -1357,12 +1357,12 @@ var PrintSettingsViewProxy = {
         };
         // see if they match the none, minimum, or default margin values
         let allMarginPresets = this.get(target, "marginPresets");
-        const marginsMatch = function(lhs, rhs) {
+        const marginsMatch = function (lhs, rhs) {
           return Object.keys(marginSettings).every(
             name => lhs[name].toFixed(2) == rhs[name].toFixed(2)
           );
         };
-        const potentialPresets = (function() {
+        const potentialPresets = (function () {
           let presets = [];
           const minimumIsNone = marginsMatch(
             allMarginPresets.none,
@@ -1517,7 +1517,7 @@ var PrintSettingsViewProxy = {
         break;
 
       case "printDuplex": {
-        let duplex = (function() {
+        let duplex = (function () {
           switch (value) {
             case "off":
               break;

@@ -27,7 +27,7 @@ function openAboutPrefPromise(win) {
   ];
   return Promise.all(promises);
 }
-add_setup(async function() {
+add_setup(async function () {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   // Open a new tab to keep the window open.
   await BrowserTestUtils.openNewForegroundTab(
@@ -37,7 +37,7 @@ add_setup(async function() {
 });
 
 // Test only displaying notification once within the given interval
-add_task(async function() {
+add_task(async function () {
   const win = Services.wm.getMostRecentWindow("navigator:browser");
   const TEST_NOTIFICATION_INTERVAL_MS = 2000;
   await SpecialPowers.pushPrefEnv({
@@ -98,7 +98,7 @@ add_task(async function() {
 });
 
 // Test guiding user to the about:preferences when usage exceeds the given threshold
-add_task(async function() {
+add_task(async function () {
   const win = Services.wm.getMostRecentWindow("navigator:browser");
   await SpecialPowers.pushPrefEnv({
     set: [["browser.storageManager.pressureNotification.minIntervalMS", 0]],
@@ -147,7 +147,7 @@ add_task(async function() {
 });
 
 // Test not displaying the 2nd notification if one is already being displayed
-add_task(async function() {
+add_task(async function () {
   const win = Services.wm.getMostRecentWindow("navigator:browser");
   const TEST_NOTIFICATION_INTERVAL_MS = 0;
   await SpecialPowers.pushPrefEnv({

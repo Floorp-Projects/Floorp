@@ -220,7 +220,7 @@ function appendFiltersForContentType(
  *          is accepted.
  */
 function promiseTargetFile(aFpP, win) {
-  return (async function() {
+  return (async function () {
     let downloadLastDir = new lazy.DownloadLastDir(win);
 
     // Default to the user's default downloads directory configured
@@ -256,7 +256,7 @@ function promiseTargetFile(aFpP, win) {
     appendFiltersForContentType(fp, aFpP.contentType, aFpP.fileInfo.fileExt);
 
     let result = await new Promise(resolve => {
-      fp.open(function(aResult) {
+      fp.open(function (aResult) {
         resolve(aResult);
       });
     });

@@ -41,7 +41,7 @@ add_task(async function test_other_popup_closes() {
         "hidden"
       );
       await SpecialPowers.spawn(browser, [], () => {
-        content.navigator.geolocation.getCurrentPosition(function() {});
+        content.navigator.geolocation.getCurrentPosition(function () {});
       });
       await notificationShown;
       // Should already be hidden at this point.
@@ -75,7 +75,7 @@ add_task(async function test_dont_open_while_other_popup_open() {
         "shown"
       );
       await SpecialPowers.spawn(browser, [], () => {
-        content.navigator.geolocation.getCurrentPosition(function() {});
+        content.navigator.geolocation.getCurrentPosition(function () {});
       });
       await notificationShown;
       let popupShown = BrowserTestUtils.waitForPopupEvent(

@@ -3,7 +3,7 @@ var timer;
 function armTimer(response) {
   timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(
-    function() {
+    function () {
       if (
         getState("docwritepreloadssecond") == "second" &&
         getState("docwritepreloadsthird") == "third"

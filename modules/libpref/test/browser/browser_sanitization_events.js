@@ -49,9 +49,10 @@ add_task(async function sanitized_pref_test() {
 
   TelemetryTestUtils.assertNumberOfEvents(0, { process: "content" });
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL }, async function(
-    browser
-  ) {});
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_URL },
+    async function (browser) {}
+  );
 
   // Needed because otherwise we advance too quickly
   await waitForEventCount(1);

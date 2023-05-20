@@ -72,7 +72,7 @@ module.exports = DominatorTreeNode;
  * @param {DominatorTreeNode} parent
  * @param {DominatorTreeNode} child
  */
-DominatorTreeNode.addChild = function(parent, child) {
+DominatorTreeNode.addChild = function (parent, child) {
   if (parent.children === undefined) {
     parent.children = [];
   }
@@ -105,7 +105,11 @@ LabelAndShallowSizeVisitor.prototype = Object.create(Visitor);
 /**
  * @overrides Visitor.prototype.enter
  */
-LabelAndShallowSizeVisitor.prototype.enter = function(breakdown, report, edge) {
+LabelAndShallowSizeVisitor.prototype.enter = function (
+  breakdown,
+  report,
+  edge
+) {
   if (this._labelPieces && edge) {
     this._labelPieces.push(edge);
   }
@@ -114,7 +118,7 @@ LabelAndShallowSizeVisitor.prototype.enter = function(breakdown, report, edge) {
 /**
  * @overrides Visitor.prototype.exit
  */
-LabelAndShallowSizeVisitor.prototype.exit = function(breakdown, report, edge) {
+LabelAndShallowSizeVisitor.prototype.exit = function (breakdown, report, edge) {
   if (this._labelPieces && edge) {
     this._labelPieces.pop();
   }
@@ -123,7 +127,11 @@ LabelAndShallowSizeVisitor.prototype.exit = function(breakdown, report, edge) {
 /**
  * @overrides Visitor.prototype.count
  */
-LabelAndShallowSizeVisitor.prototype.count = function(breakdown, report, edge) {
+LabelAndShallowSizeVisitor.prototype.count = function (
+  breakdown,
+  report,
+  edge
+) {
   if (report.count === 0) {
     return;
   }
@@ -139,7 +147,7 @@ LabelAndShallowSizeVisitor.prototype.count = function(breakdown, report, edge) {
  *
  * @returns {Object}
  */
-LabelAndShallowSizeVisitor.prototype.label = function() {
+LabelAndShallowSizeVisitor.prototype.label = function () {
   return this._label;
 };
 
@@ -148,7 +156,7 @@ LabelAndShallowSizeVisitor.prototype.label = function() {
  *
  * @returns {Number}
  */
-LabelAndShallowSizeVisitor.prototype.shallowSize = function() {
+LabelAndShallowSizeVisitor.prototype.shallowSize = function () {
   return this._shallowSize;
 };
 
@@ -170,7 +178,7 @@ LabelAndShallowSizeVisitor.prototype.shallowSize = function() {
  *          - {Number} shallowSize
  *          - {Object} label
  */
-DominatorTreeNode.getLabelAndShallowSize = function(
+DominatorTreeNode.getLabelAndShallowSize = function (
   nodeId,
   snapshot,
   breakdown
@@ -203,7 +211,7 @@ DominatorTreeNode.getLabelAndShallowSize = function(
  *
  * @returns {DominatorTreeNode}
  */
-DominatorTreeNode.partialTraversal = function(
+DominatorTreeNode.partialTraversal = function (
   dominatorTree,
   snapshot,
   breakdown,
@@ -256,7 +264,7 @@ DominatorTreeNode.partialTraversal = function(
  *
  * @returns {DominatorTreeNode}
  */
-DominatorTreeNode.insert = function(
+DominatorTreeNode.insert = function (
   nodeTree,
   path,
   newChildren,
@@ -299,7 +307,7 @@ DominatorTreeNode.insert = function(
  *
  * @returns {DominatorTreeNode|null}
  */
-DominatorTreeNode.getNodeByIdAlongPath = function(id, tree, path) {
+DominatorTreeNode.getNodeByIdAlongPath = function (id, tree, path) {
   function find(node, i) {
     if (!node || node.nodeId !== path[i]) {
       return null;
@@ -333,7 +341,7 @@ DominatorTreeNode.getNodeByIdAlongPath = function(id, tree, path) {
  * @param {Array<DominatorTreeNode>} treeNodes
  * @param {Number} maxNumPaths
  */
-DominatorTreeNode.attachShortestPaths = function(
+DominatorTreeNode.attachShortestPaths = function (
   snapshot,
   breakdown,
   start,

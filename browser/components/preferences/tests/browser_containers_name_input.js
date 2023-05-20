@@ -1,14 +1,14 @@
 const CONTAINERS_URL =
   "chrome://browser/content/preferences/dialogs/containers.xhtml";
 
-add_setup(async function() {
+add_setup(async function () {
   await openPreferencesViaOpenPreferencesAPI("containers", { leaveOpen: true });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   async function openDialog() {
     let doc = gBrowser.selectedBrowser.contentDocument;
 

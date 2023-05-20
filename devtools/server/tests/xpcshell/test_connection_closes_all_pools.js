@@ -24,7 +24,7 @@ class FakeActor extends Pool {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   const transport = new LocalDebuggerTransport();
   const conn = new DevToolsServerConnection("prefix", transport);
 
@@ -64,7 +64,7 @@ add_task(async function() {
   equal(actor2b.destroyedCount, 1, "actor2 was successfully destroyed");
 });
 
-add_task(async function() {
+add_task(async function () {
   const transport = new LocalDebuggerTransport();
   const conn = new DevToolsServerConnection("prefix", transport);
 

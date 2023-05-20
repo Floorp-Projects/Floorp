@@ -6,7 +6,7 @@
 // Test for the following data of impression telemetry.
 // - search_mode
 
-add_setup(async function() {
+add_setup(async function () {
   await initSearchModeTest();
   // Increase the pausing time to ensure entering search mode.
   await SpecialPowers.pushPrefEnv({

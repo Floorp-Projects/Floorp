@@ -314,9 +314,7 @@ add_task(async function test_telemetry_storage_local_unexpected_error() {
   Services.telemetry.clearEvents();
 
   const methods = ["clear", "get", "remove", "set"];
-  const veryLongErrorName = `VeryLongErrorName${Array(200)
-    .fill(0)
-    .join("")}`;
+  const veryLongErrorName = `VeryLongErrorName${Array(200).fill(0).join("")}`;
   const otherError = new Error("an error recorded as OtherError");
 
   const recordedErrors = [

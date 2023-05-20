@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(async function() {
+add_task(async function () {
   const ROOT =
     "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
   const URL = ROOT + "discovery.html";

@@ -1,6 +1,6 @@
 function ok(aCondition, aMessage) {
-  return new Promise(function(resolve, reject) {
-    self.clients.matchAll().then(function(res) {
+  return new Promise(function (resolve, reject) {
+    self.clients.matchAll().then(function (res) {
       if (!res.length) {
         reject();
         return;

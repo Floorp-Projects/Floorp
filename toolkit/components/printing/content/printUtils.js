@@ -521,7 +521,7 @@ var PrintUtils = {
 
       // We must not try to print using an nsIPrintSettings without a printer
       // name set.
-      const printerName = (function() {
+      const printerName = (function () {
         if (isValidPrinterName(aPrinterName)) {
           return aPrinterName;
         }
@@ -785,7 +785,7 @@ class PrintPreview extends MozElements.BaseControl {
     // nsDocumentViewer::OnDonePrinting, or by the print preview code.
     //
     // When that happens, we should remove us from the DOM if connected.
-    browser.addEventListener("DOMWindowClose", function(e) {
+    browser.addEventListener("DOMWindowClose", function (e) {
       if (this.isConnected) {
         this.remove();
       }
@@ -794,7 +794,7 @@ class PrintPreview extends MozElements.BaseControl {
     });
 
     if (this.settingsBrowser) {
-      browser.addEventListener("contextmenu", function(e) {
+      browser.addEventListener("contextmenu", function (e) {
         e.preventDefault();
       });
 

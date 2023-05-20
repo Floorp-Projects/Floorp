@@ -41,7 +41,7 @@ add_task(async function test_tracker_persistence() {
 
   let promiseSave = new Promise((resolve, reject) => {
     let save = tracker._storage._save;
-    tracker._storage._save = function() {
+    tracker._storage._save = function () {
       save.call(tracker._storage).then(resolve, reject);
     };
   });

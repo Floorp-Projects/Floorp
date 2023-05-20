@@ -167,7 +167,7 @@ addAccessibleTask(
     <h1 id="a">A</h1><h1 id="b">B</h1>
   </div>
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const a = findAccessibleChildByID(accDoc, "a");
     const b = findAccessibleChildByID(accDoc, "b");
     const dpr = await getContentDPR(browser);
@@ -209,7 +209,7 @@ addAccessibleTask(
   <div id="b" style="background-color: yellowgreen;">
     <div id="bb" style="top: -30px; background-color: turquoise"></div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const a = findAccessibleChildByID(accDoc, "a");
     const aa = findAccessibleChildByID(accDoc, "aa");
     const dpr = await getContentDPR(browser);
@@ -249,7 +249,7 @@ addAccessibleTask(
   <div id="container" style="display: flex; flex-direction: row-reverse;">
     <div id="aNode">abcde</div><div id="fNode">fghij</div>
   </div>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const container = findAccessibleChildByID(docAcc, "container");
     const aNode = findAccessibleChildByID(docAcc, "aNode");
     const fNode = findAccessibleChildByID(docAcc, "fNode");

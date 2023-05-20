@@ -22,7 +22,7 @@ async function performChecks(tab) {
 }
 
 function test() {
-  (async function() {
+  (async function () {
     toggleAllTools(true);
     const tab = await addTab("about:blank");
     await performChecks(tab);

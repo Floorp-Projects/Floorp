@@ -355,7 +355,7 @@ export function Store(name, engine) {
 
   this._log = Log.repository.getLogger(`Sync.Engine.${name}.Store`);
 
-  XPCOMUtils.defineLazyGetter(this, "_timer", function() {
+  XPCOMUtils.defineLazyGetter(this, "_timer", function () {
     return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   });
 }
@@ -558,7 +558,7 @@ EngineManager.prototype = {
     // Return an array of engines if we have an array of names
     if (Array.isArray(name)) {
       let engines = [];
-      name.forEach(function(name) {
+      name.forEach(function (name) {
         let engine = this.get(name);
         if (engine) {
           engines.push(engine);

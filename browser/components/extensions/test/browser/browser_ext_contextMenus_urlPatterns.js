@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html"
@@ -13,7 +13,7 @@ add_task(async function() {
       permissions: ["contextMenus"],
     },
 
-    background: function() {
+    background: function () {
       // Test menu items using targetUrlPatterns.
       browser.contextMenus.create({
         title: "targetUrlPatterns-patternMatches-contextAll",

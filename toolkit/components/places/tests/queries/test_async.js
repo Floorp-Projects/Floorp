@@ -309,7 +309,7 @@ var DataHelper = {
    */
   makeDataArray: function DH_makeDataArray(aData) {
     let self = this;
-    return aData.map(function(dat) {
+    return aData.map(function (dat) {
       let type = dat.type;
       dat = self._makeDataWithDefaults(dat, self.defaults[type]);
       switch (type) {

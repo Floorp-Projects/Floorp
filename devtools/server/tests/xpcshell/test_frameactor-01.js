@@ -24,7 +24,7 @@ add_task(
 function evalCode(debuggee) {
   debuggee.eval(
     "(" +
-      function() {
+      function () {
         function stopMe() {
           debugger;
         }

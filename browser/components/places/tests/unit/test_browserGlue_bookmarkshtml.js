@@ -9,7 +9,7 @@
  * browser.bookmarks.autoExportHTML is set to true.
  */
 
-add_task(async function() {
+add_task(async function () {
   remove_bookmarks_html();
 
   Services.prefs.setBoolPref("browser.bookmarks.autoExportHTML", true);

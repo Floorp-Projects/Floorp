@@ -38,7 +38,7 @@ module.exports = {
    * Change the viewport device.
    */
   changeDevice(id, device, deviceType) {
-    return async function({ dispatch }) {
+    return async function ({ dispatch }) {
       dispatch({
         type: CHANGE_DEVICE,
         id,
@@ -81,7 +81,7 @@ module.exports = {
    * Remove the viewport's device assocation.
    */
   removeDeviceAssociation(id) {
-    return async function({ dispatch }) {
+    return async function ({ dispatch }) {
       post(window, "remove-device-association");
 
       dispatch({

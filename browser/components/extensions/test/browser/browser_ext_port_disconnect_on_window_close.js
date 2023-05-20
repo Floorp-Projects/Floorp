@@ -24,7 +24,7 @@ add_task(async function connect_from_window_and_close() {
 
     files: {
       "page.html": `<!DOCTYPE html><meta charset="utf-8"><script src="page.js"></script>`,
-      "page.js": function() {
+      "page.js": function () {
         let port = browser.runtime.connect({ name: "page_to_bg" });
         port.onDisconnect.addListener(() => {
           browser.test.fail("Unexpected onDisconnect event in page");

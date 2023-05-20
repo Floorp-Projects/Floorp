@@ -14,7 +14,7 @@ add_task(async function test_removeVisitsByFilter() {
 
   // Populate a database with 20 entries, remove a subset of entries,
   // ensure consistency.
-  let remover = async function(options) {
+  let remover = async function (options) {
     info("Remover with options " + JSON.stringify(options));
     let SAMPLE_SIZE = options.sampleSize;
 

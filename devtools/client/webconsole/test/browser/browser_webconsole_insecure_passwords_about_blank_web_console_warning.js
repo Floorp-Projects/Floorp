@@ -14,7 +14,7 @@ const INSECURE_PASSWORD_MSG =
   "Password fields present on an insecure (http://) iframe." +
   " This is a security risk that allows user login credentials to be stolen.";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("dom.security.https_first", false);
   const hud = await openNewTabAndConsole(TEST_URI);
   await waitFor(() => findWarningMessage(hud, INSECURE_PASSWORD_MSG), "", 100);

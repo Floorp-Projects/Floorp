@@ -33,7 +33,7 @@ const { KeyValueService } = ChromeUtils.importESModule(
   "resource://gre/modules/kvstore.sys.mjs"
 );
 
-(async function() {
+(async function () {
   const currentDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile).path;
   const testEnvDir = Services.appinfo.is64Bit ? "test-env-64" : "test-env-32";
   const testEnvPath = PathUtils.join(currentDir, testEnvDir);

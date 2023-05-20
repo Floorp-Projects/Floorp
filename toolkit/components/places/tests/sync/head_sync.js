@@ -84,7 +84,7 @@ function run_test() {
 // A test helper to insert local roots directly into Places, since the public
 // bookmarks APIs no longer support custom roots.
 async function insertLocalRoot({ guid, title }) {
-  await PlacesUtils.withConnectionWrapper("insertLocalRoot", async function(
+  await PlacesUtils.withConnectionWrapper("insertLocalRoot", async function (
     db
   ) {
     let dateAdded = PlacesUtils.toPRTime(new Date());

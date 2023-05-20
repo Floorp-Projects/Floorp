@@ -24,11 +24,7 @@ class OpenTabsInView extends ViewPage {
     const itemTemplates = [];
 
     for (let i = 1; i <= numRows; i++) {
-      itemTemplates.push(
-        html`
-          <p>Open Tab Row ${i}</p>
-        `
-      );
+      itemTemplates.push(html` <p>Open Tab Row ${i}</p> `);
     }
 
     return html`

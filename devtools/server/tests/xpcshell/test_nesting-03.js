@@ -5,7 +5,7 @@
 
 // Test that we can detect nested event loops in tabs with the same URL.
 
-add_task(async function() {
+add_task(async function () {
   const GLOBAL_NAME = "test-nesting1";
 
   initTestDevToolsServer();

@@ -20,14 +20,15 @@ function run_test() {
     ["D", "C"],
     ["\u010C", "D"],
     ["D", "\u010C"],
-  ].forEach(function(pair) {
+  ].forEach(function (pair) {
     do_test_pending();
     var cmp = pair[0].localeCompare(pair[1]);
-    sendCommand("'" + pair[0] + "'.localeCompare('" + pair[1] + "');", function(
-      result
-    ) {
-      Assert.equal(cmp, result);
-      do_test_finished();
-    });
+    sendCommand(
+      "'" + pair[0] + "'.localeCompare('" + pair[1] + "');",
+      function (result) {
+        Assert.equal(cmp, result);
+        do_test_finished();
+      }
+    );
   });
 }

@@ -20,7 +20,7 @@
 requestLongerTimeout(2);
 SimpleTest.requestCompleteLog();
 
-add_task(async function() {
+add_task(async function () {
   await setup();
 
   // Using this variable to parallelize and collect tests
@@ -182,7 +182,7 @@ async function evaluate() {
 async function runTest(test) {
   const queryString = test.queryString;
   info(`TEST-CASE-${test.queryString} - runTest BEGIN`);
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(
       browser,
       false, // includeSubFrames

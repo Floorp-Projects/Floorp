@@ -17,7 +17,7 @@ const TARGET_PAGE = ROOT + "dummy.html";
  *        the visibility state of the toolbars
  */
 function getToolbarsFromBrowserContent(aBrowser) {
-  return SpecialPowers.spawn(aBrowser, [], async function() {
+  return SpecialPowers.spawn(aBrowser, [], async function () {
     // This is still chrome context.
     // Inject a script that runs on content context, and gather the result.
 
@@ -196,13 +196,13 @@ function testNonDefaultChromeToolbars(toolbars) {
  * A window opened with "location=no, personalbar=no, toolbar=no, scrollbars=no,
  * menubar=no, status=no", should only have location visible.
  */
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url: CONTENT_PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       // First, call the default window.open() which will open a new tab
       let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
       await BrowserTestUtils.synthesizeMouseAtCenter(
@@ -253,13 +253,13 @@ add_task(async function() {
  * A window opened with "location=no, personalbar=no, toolbar=no, scrollbars=no,
  * menubar=no, status=no", should only have location visible.
  */
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url: CONTENT_PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       // Open a blank window with toolbars hidden
       let winPromise = BrowserTestUtils.waitForNewWindow();
       await BrowserTestUtils.synthesizeMouseAtCenter(
@@ -292,7 +292,7 @@ add_task(async function() {
  * A window opened with "location=no, personalbar=no, toolbar=no, scrollbars=no,
  * menubar=no, status=no", should not have any toolbar visible.
  */
-add_task(async function() {
+add_task(async function () {
   // First open a default window from this chrome context
   let defaultWindowPromise = BrowserTestUtils.waitForNewWindow({
     url: TARGET_PAGE,

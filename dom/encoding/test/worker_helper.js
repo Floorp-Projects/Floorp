@@ -6,20 +6,20 @@ function runTestInWorker(files) {
   function workerRun() {
     var tests = [];
     var asserts;
-    test = function(func, msg) {
+    test = function (func, msg) {
       asserts = [];
       tests.push({ asserts, msg });
     };
-    assert_equals = function(result, expected, msg) {
+    assert_equals = function (result, expected, msg) {
       asserts.push(["assert_equals", result, expected, msg]);
     };
-    assert_true = function(condition, msg) {
+    assert_true = function (condition, msg) {
       asserts.push(["assert_true", condition, msg]);
     };
-    assert_unreached = function(condition, msg) {
+    assert_unreached = function (condition, msg) {
       asserts.push(["assert_unreached", condition, msg]);
     };
-    onmessage = function(event) {
+    onmessage = function (event) {
       importScripts.apply(self, event.data);
       runTest();
       postMessage(tests);
@@ -32,15 +32,15 @@ function runTestInWorker(files) {
   var worker = new Worker(url);
   var base = location.toString().replace(/\/[^\/]*$/, "/");
   worker.postMessage(
-    files.map(function(f) {
+    files.map(function (f) {
       return base + f;
     })
   );
-  worker.onmessage = function(event) {
+  worker.onmessage = function (event) {
     URL.revokeObjectURL(url);
-    event.data.forEach(function(t) {
-      test(function() {
-        t.asserts.forEach(function(a) {
+    event.data.forEach(function (t) {
+      test(function () {
+        t.asserts.forEach(function (a) {
           func = a.shift();
           self[func].apply(self, a);
         });

@@ -94,7 +94,7 @@ add_task(async function checkTelemetryClickEvents() {
         bc = bc.children[0];
       }
 
-      await SpecialPowers.spawn(bc, [object], async function(objectId) {
+      await SpecialPowers.spawn(bc, [object], async function (objectId) {
         let doc = content.document;
 
         await ContentTaskUtils.waitForCondition(

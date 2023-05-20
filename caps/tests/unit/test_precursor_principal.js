@@ -127,7 +127,7 @@ add_task(async function sandboxed_precursor() {
   });
   await extension.startup();
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await extension.unload();
   });
 

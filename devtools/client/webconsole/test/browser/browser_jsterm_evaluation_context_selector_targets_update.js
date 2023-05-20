@@ -11,7 +11,7 @@ const IFRAME_PATH = `${FILE_FOLDER}/test-console-evaluation-context-selector-chi
 // Test that when a target is destroyed, it does not appear in the list anymore (and
 // the context is set to the top one if the destroyed target was selected).
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.popups.debug", true);
   await pushPref("devtools.webconsole.input.context", true);
 
@@ -65,7 +65,7 @@ add_task(async function() {
   ]);
 
   info("Add another iframe");
-  ContentTask.spawn(gBrowser.selectedBrowser, [IFRAME_PATH], function(path) {
+  ContentTask.spawn(gBrowser.selectedBrowser, [IFRAME_PATH], function (path) {
     const iframe = content.document.createElement("iframe");
     iframe.src = `https://test1.example.org/${path}?id=iframe-2`;
     content.document.body.append(iframe);
@@ -115,7 +115,7 @@ add_task(async function() {
   ok(true, "The context was set to the selected iframe document");
 
   info("Remove the first iframe from the content document");
-  ContentTask.spawn(gBrowser.selectedBrowser, [], function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.querySelector("iframe").remove();
   });
 
@@ -151,7 +151,7 @@ add_task(async function() {
   ok(true, "The context was set to the selected iframe document");
 
   info("Remove the second iframe from the content document");
-  ContentTask.spawn(gBrowser.selectedBrowser, [], function() {
+  ContentTask.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.querySelector("iframe").remove();
   });
 
@@ -170,7 +170,7 @@ add_task(async function() {
   info("Open a popup");
   const originalTab = gBrowser.selectedTab;
   let onSwitchedHost = hud.toolbox.once("host-changed");
-  await ContentTask.spawn(gBrowser.selectedBrowser, [IFRAME_PATH], function(
+  await ContentTask.spawn(gBrowser.selectedBrowser, [IFRAME_PATH], function (
     path
   ) {
     content.open(`https://test2.example.org/${path}?id=popup`);
@@ -220,7 +220,7 @@ add_task(async function() {
 
   info("Open a second popup and reload the original tab");
   onSwitchedHost = hud.toolbox.once("host-changed");
-  await ContentTask.spawn(originalTab.linkedBrowser, [IFRAME_PATH], function(
+  await ContentTask.spawn(originalTab.linkedBrowser, [IFRAME_PATH], function (
     path
   ) {
     content.open(`https://test2.example.org/${path}?id=popup2`);

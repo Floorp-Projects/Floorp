@@ -79,7 +79,7 @@ function testPermListHasEntries(expectEntries) {
   ok(!listEntryCount, "List of permissions is empty");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   registerCleanupFunction(() => {
     Services.perms.removeAll();
     Services.prefs.clearUserPref(AUTOPLAY_PREF);
@@ -89,7 +89,7 @@ add_setup(async function() {
 add_task(async function testMainViewVisible() {
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.ALLOWED);
 
-  await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function() {
+  await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function () {
     ok(
       BrowserTestUtils.is_hidden(autoplayBlockedIcon()),
       "Blocked icon not shown"
@@ -102,7 +102,7 @@ add_task(async function testMainViewVisible() {
 
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
 
-  await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function (browser) {
     let permissionsList = document.getElementById(
       "permission-popup-permission-list"
     );
@@ -199,7 +199,7 @@ add_task(async function testGloballyBlockedOnNewWindow() {
 add_task(async function testBFCache() {
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
 
-  await BrowserTestUtils.withNewTab("about:home", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:home", async function (browser) {
     BrowserTestUtils.loadURIString(browser, AUTOPLAY_PAGE);
     await blockedIconShown();
 
@@ -245,7 +245,7 @@ add_task(async function testBlockedIconFromCORSIframe() {
 add_task(async function testChangingBlockingSettingDuringNavigation() {
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
 
-  await BrowserTestUtils.withNewTab("about:home", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:home", async function (browser) {
     await blockedIconHidden();
     BrowserTestUtils.loadURIString(browser, AUTOPLAY_PAGE);
     await blockedIconShown();
@@ -298,7 +298,7 @@ add_task(async function testSlowLoadingPage() {
 add_task(async function testBlockedAll() {
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED_ALL);
 
-  await BrowserTestUtils.withNewTab("about:home", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:home", async function (browser) {
     await blockedIconHidden();
     BrowserTestUtils.loadURIString(browser, MUTED_AUTOPLAY_PAGE);
     await blockedIconShown();
@@ -332,9 +332,9 @@ add_task(async function testBlockedAll() {
 add_task(async function testMultiplePlayNotificationsFromJS() {
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
 
-  await BrowserTestUtils.withNewTab("about:home", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:home", async function (browser) {
     let count = 0;
-    browser.addEventListener("GloballyAutoplayBlocked", function() {
+    browser.addEventListener("GloballyAutoplayBlocked", function () {
       is(++count, 1, "Shouldn't get more than one autoplay blocked event");
     });
 

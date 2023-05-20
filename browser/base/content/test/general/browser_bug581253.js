@@ -10,7 +10,7 @@ add_task(async function test_remove_bookmark_with_tag_via_edit_bookmark() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
     BrowserTestUtils.removeTab(tab);
     await PlacesUtils.history.clear();

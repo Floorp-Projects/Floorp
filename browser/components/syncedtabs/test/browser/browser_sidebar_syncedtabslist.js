@@ -99,7 +99,7 @@ async function testClean() {
   await new Promise(resolve => {
     window.SidebarUI.browser.contentWindow.addEventListener(
       "unload",
-      function() {
+      function () {
         resolve();
       },
       { once: true }

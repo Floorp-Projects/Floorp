@@ -70,7 +70,7 @@ var TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   const searchBox = inspector.searchBox;
   const popup = inspector.searchSuggestions.searchPopup;

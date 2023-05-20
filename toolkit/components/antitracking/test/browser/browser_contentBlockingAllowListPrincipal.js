@@ -75,7 +75,7 @@ function createFrame(browser, src, id, sandboxAttr) {
   return SpecialPowers.spawn(
     browser,
     [{ page: src, frameId: id, sandboxAttr }],
-    async function(obj) {
+    async function (obj) {
       await new content.Promise(resolve => {
         let frame = content.document.createElement("iframe");
         frame.src = obj.page;
@@ -179,7 +179,7 @@ add_task(async test_windowOpen => {
     );
 
     // Call window.open from iframe.
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       content.open("https://example.org/");
     });
 
@@ -218,7 +218,7 @@ add_task(async test_windowOpenFromSandboxedFrame => {
       );
 
       // Call window.open from iframe.
-      await SpecialPowers.spawn(frameBrowsingContext, [], async function() {
+      await SpecialPowers.spawn(frameBrowsingContext, [], async function () {
         content.open("https://example.org/");
       });
 

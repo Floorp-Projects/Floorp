@@ -11,13 +11,13 @@ const TEST_URI =
     <h1>Object Inspector on records and tuples</h1>`
   );
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const hasSupport = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       return typeof content.wrappedJSObject.Record == "function";
     }
   );

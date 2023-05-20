@@ -5,7 +5,7 @@ function handleRequest(request, response) {
     Components.interfaces.nsITimer
   );
   timer.init(
-    function() {
+    function () {
       response.write("Here the content. But slowly.");
       response.finish();
     },

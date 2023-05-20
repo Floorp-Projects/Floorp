@@ -90,7 +90,7 @@ function TagPicker(props) {
         url: props.itemUrl,
         tags: tagsToSubmit,
       },
-      function(resp) {
+      function (resp) {
         const { data } = resp;
 
         if (data.status === "success") {

@@ -75,7 +75,7 @@ const DB_SCHEMA = 6;
 const DB_MIN_JSON_SCHEMA = 5;
 const DB_BATCH_TIMEOUT_MS = 50;
 
-const BLANK_DB = function() {
+const BLANK_DB = function () {
   return {
     addons: new Map(),
     schema: DB_SCHEMA,
@@ -689,7 +689,7 @@ var AddonRepository = {
       return null;
     }
 
-    url = url.replace(/%([A-Z_]+)%/g, function(aMatch, aKey) {
+    url = url.replace(/%([A-Z_]+)%/g, function (aMatch, aKey) {
       return aKey in aSubstitutions
         ? encodeURIComponent(aSubstitutions[aKey])
         : aMatch;

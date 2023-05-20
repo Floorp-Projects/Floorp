@@ -9,16 +9,16 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "31m", "31d", function(entry) {
+    new OpenCallback(NEW, "31m", "31d", function (entry) {
       // Open normally but wait for validation from the server
       asyncOpenCacheEntry(
         "http://304/",
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(REVAL, "31m", "31d", function(entry) {
+        new OpenCallback(REVAL, "31m", "31d", function (entry) {
           // emulate 304 from the server
-          executeSoon(function() {
+          executeSoon(function () {
             entry.setValid(); // this will trigger OpenCallbacks bellow
           });
         })
@@ -31,7 +31,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "31m", "31d", function(entry) {
+        new OpenCallback(NORMAL, "31m", "31d", function (entry) {
           mc.fired();
         })
       );
@@ -40,7 +40,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "31m", "31d", function(entry) {
+        new OpenCallback(NORMAL, "31m", "31d", function (entry) {
           mc.fired();
         })
       );
@@ -49,7 +49,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "31m", "31d", function(entry) {
+        new OpenCallback(NORMAL, "31m", "31d", function (entry) {
           mc.fired();
         })
       );

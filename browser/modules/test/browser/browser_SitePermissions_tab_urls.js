@@ -36,7 +36,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
 
   let id = "microphone";
 
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     for (let principal of same) {
       let loaded = BrowserTestUtils.browserLoaded(
         browser,

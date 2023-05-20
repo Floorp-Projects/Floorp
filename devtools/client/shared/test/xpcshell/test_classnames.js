@@ -9,7 +9,7 @@
 
 const classnames = require("resource://devtools/client/shared/classnames.js");
 
-add_task(async function() {
+add_task(async function () {
   Assert.equal(
     classnames(),
     "",

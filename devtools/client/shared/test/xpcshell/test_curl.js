@@ -12,7 +12,7 @@ const Curl = curl.Curl;
 const CurlUtils = curl.CurlUtils;
 
 // Test `Curl.generateCommand` headers forwarding/filtering
-add_task(async function() {
+add_task(async function () {
   const request = {
     url: "https://example.com/form/",
     method: "GET",
@@ -85,7 +85,7 @@ add_task(async function() {
 });
 
 // Test `Curl.generateCommand` URL glob handling
-add_task(async function() {
+add_task(async function () {
   let request = {
     url: "https://example.com/",
     method: "GET",
@@ -120,7 +120,7 @@ add_task(async function() {
 });
 
 // Test `Curl.generateCommand` data POSTing
-add_task(async function() {
+add_task(async function () {
   const request = {
     url: "https://example.com/form/",
     method: "POST",
@@ -155,7 +155,7 @@ add_task(async function() {
 });
 
 // Test `Curl.generateCommand` data POSTing - not post data
-add_task(async function() {
+add_task(async function () {
   const request = {
     url: "https://example.com/form/",
     method: "POST",
@@ -184,7 +184,7 @@ add_task(async function() {
 });
 
 // Test `Curl.generateCommand` multipart data POSTing
-add_task(async function() {
+add_task(async function () {
   const boundary = "----------14808";
   const request = {
     url: "https://example.com/form/",
@@ -239,7 +239,7 @@ add_task(async function() {
 });
 
 // Test `CurlUtils.removeBinaryDataFromMultipartText` doesn't change text data
-add_task(async function() {
+add_task(async function () {
   const boundary = "----------14808";
   const postTextLines = [
     `--${boundary}`,
@@ -266,7 +266,7 @@ add_task(async function() {
 });
 
 // Test `CurlUtils.removeBinaryDataFromMultipartText` removes binary data
-add_task(async function() {
+add_task(async function () {
   const boundary = "----------14808";
   const postTextLines = [
     `--${boundary}`,
@@ -294,7 +294,7 @@ add_task(async function() {
 });
 
 // Test `Curl.generateCommand` add --compressed flag
-add_task(async function() {
+add_task(async function () {
   let request = {
     url: "https://example.com/",
     method: "GET",

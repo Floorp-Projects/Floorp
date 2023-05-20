@@ -14,7 +14,7 @@ var gContentDoc;
 var detachedWindow;
 
 function test() {
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gContentDoc = null;
   });
   UITourTest();

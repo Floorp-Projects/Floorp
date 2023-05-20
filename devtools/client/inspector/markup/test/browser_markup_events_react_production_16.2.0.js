@@ -123,7 +123,7 @@ const TEST_DATA = [
 ];
 /* eslint-enable */
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Switch to 2 pane inspector to avoid sidebar width issues with opening events"
   );

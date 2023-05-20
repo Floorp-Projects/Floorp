@@ -9,7 +9,7 @@ var BLURB_CYCLE_MS = 20000;
 // How frequently we should update the progress bar state, in milliseconds.
 var PROGRESS_BAR_INTERVAL_MS = 250;
 
-window.attachEvent("onload", function() {
+window.attachEvent("onload", function () {
   // Set direction on the two components of the layout.
   var direction = external.getTextDirection();
   document.getElementById("text_column").style.direction = direction;
@@ -26,7 +26,7 @@ window.attachEvent("onload", function() {
   );
 
   // Poll and update the progress bar percentage.
-  setInterval(function() {
+  setInterval(function () {
     var percent = external.getProgressBarPercent();
     var progressBar = document.getElementById("progress_bar");
     progressBar.setAttribute("aria-valuenow", percent);

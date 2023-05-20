@@ -335,7 +335,7 @@ var gMainPane = {
       )
     ) {
       document.getElementById("pictureInPictureBox").hidden = false;
-      setEventListener("pictureInPictureToggleEnabled", "command", function(
+      setEventListener("pictureInPictureToggleEnabled", "command", function (
         event
       ) {
         if (!event.target.checked) {
@@ -382,30 +382,30 @@ var gMainPane = {
       }
     }
 
-    setEventListener("ctrlTabRecentlyUsedOrder", "command", function() {
+    setEventListener("ctrlTabRecentlyUsedOrder", "command", function () {
       Services.prefs.clearUserPref("browser.ctrlTab.migrated");
     });
-    setEventListener("manageBrowserLanguagesButton", "command", function() {
+    setEventListener("manageBrowserLanguagesButton", "command", function () {
       gMainPane.showBrowserLanguagesSubDialog({ search: false });
     });
     if (AppConstants.MOZ_UPDATER) {
       // These elements are only compiled in when the updater is enabled
-      setEventListener("checkForUpdatesButton", "command", function() {
+      setEventListener("checkForUpdatesButton", "command", function () {
         gAppUpdater.checkForUpdates();
       });
-      setEventListener("downloadAndInstallButton", "command", function() {
+      setEventListener("downloadAndInstallButton", "command", function () {
         gAppUpdater.startDownload();
       });
-      setEventListener("updateButton", "command", function() {
+      setEventListener("updateButton", "command", function () {
         gAppUpdater.buttonRestartAfterDownload();
       });
-      setEventListener("checkForUpdatesButton2", "command", function() {
+      setEventListener("checkForUpdatesButton2", "command", function () {
         gAppUpdater.checkForUpdates();
       });
-      setEventListener("checkForUpdatesButton3", "command", function() {
+      setEventListener("checkForUpdatesButton3", "command", function () {
         gAppUpdater.checkForUpdates();
       });
-      setEventListener("checkForUpdatesButton4", "command", function() {
+      setEventListener("checkForUpdatesButton4", "command", function () {
         gAppUpdater.checkForUpdates();
       });
     }
@@ -494,7 +494,7 @@ var gMainPane = {
 
     document
       .getElementById("migrationWizardDialog")
-      .addEventListener("MigrationWizard:Close", function(e) {
+      .addEventListener("MigrationWizard:Close", function (e) {
         e.currentTarget.close();
       });
 
@@ -969,7 +969,7 @@ var gMainPane = {
       gMainPane.handleDefaultZoomChange(parsedZoom);
     });
 
-    setEventListener("zoomText", "command", function() {
+    setEventListener("zoomText", "command", function () {
       win.ZoomManager.toggleZoom();
     });
 
@@ -3010,7 +3010,7 @@ var gMainPane = {
     if (canOpenWithOtherApp) {
       let menuItem = document.createXULElement("menuitem");
       menuItem.className = "choose-app-item";
-      menuItem.addEventListener("command", function(e) {
+      menuItem.addEventListener("command", function (e) {
         gMainPane.chooseApp(e);
       });
       document.l10n.setAttributes(menuItem, "applications-use-other");
@@ -3023,7 +3023,7 @@ var gMainPane = {
       menuPopup.appendChild(menuItem);
       menuItem = document.createXULElement("menuitem");
       menuItem.className = "manage-app-item";
-      menuItem.addEventListener("command", function(e) {
+      menuItem.addEventListener("command", function (e) {
         gMainPane.manageApp(e);
       });
       document.l10n.setAttributes(menuItem, "applications-manage-app");
@@ -4179,14 +4179,14 @@ const AppearanceChooser = {
     // Forward the click to the "colors" button.
     document
       .getElementById("web-appearance-manage-colors-link")
-      .addEventListener("click", function(e) {
+      .addEventListener("click", function (e) {
         document.getElementById("colors").click();
         e.preventDefault();
       });
 
     document
       .getElementById("web-appearance-manage-themes-link")
-      .addEventListener("click", function(e) {
+      .addEventListener("click", function (e) {
         window.browsingContext.topChromeWindow.BrowserOpenAddonsMgr(
           "addons://list/theme"
         );

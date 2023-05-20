@@ -27,7 +27,7 @@ async function promiseFindFinished(gBrowser, searchText, highlightOn = false) {
       // resolving the promise.
       let waitMore = highlightOn;
       let findTimeout = setTimeout(() => foundOrTimedout(null), 5000);
-      let foundOrTimedout = function(aData) {
+      let foundOrTimedout = function (aData) {
         if (aData !== null && waitMore) {
           waitMore = false;
           return;
@@ -169,10 +169,10 @@ function leave_icon(icon) {
  * Used to listen events if you just need it once
  */
 function once(target, name) {
-  var p = new Promise(function(resolve, reject) {
+  var p = new Promise(function (resolve, reject) {
     target.addEventListener(
       name,
-      function() {
+      function () {
         resolve();
       },
       { once: true }

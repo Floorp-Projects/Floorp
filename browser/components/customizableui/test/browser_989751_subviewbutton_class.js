@@ -16,7 +16,7 @@ function insertClassNameToMenuChildren(parentMenu) {
 }
 
 function checkSubviewButtonClass(menuId, buttonId, subviewId) {
-  return async function() {
+  return async function () {
     // Initialize DevTools before starting the test in order to create menuitems in
     // menuWebDeveloperPopup.
     ChromeUtils.importESModule(
@@ -85,7 +85,7 @@ add_task(
   )
 );
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   tempElement.classList.remove(kCustomClass);
   tempElement = null;
 });

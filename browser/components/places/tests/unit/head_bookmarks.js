@@ -42,7 +42,7 @@ function checkItemHasAnnotation(guid, name) {
   });
 }
 
-var createCorruptDB = async function() {
+var createCorruptDB = async function () {
   let dbPath = PathUtils.join(PathUtils.profileDir, "places.sqlite");
   await IOUtils.remove(dbPath);
 
@@ -72,7 +72,7 @@ const NUMBER_OF_TRIES = 30;
  * @returns {Promise} to the asynchronous value being polled.
  * @throws if the asynchronous value is not available after tryCount attempts.
  */
-var waitForResolvedPromise = async function(
+var waitForResolvedPromise = async function (
   promiseFn,
   timeoutMsg,
   tryCount = NUMBER_OF_TRIES

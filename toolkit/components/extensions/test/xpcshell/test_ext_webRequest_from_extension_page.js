@@ -12,7 +12,7 @@ add_task(async function request_from_extension_page() {
     },
     files: {
       "tab.html": `<!DOCTYPE html><script src="tab.js"></script>`,
-      "tab.js": async function() {
+      "tab.js": async function () {
         browser.webRequest.onHeadersReceived.addListener(
           details => {
             let { responseHeaders } = details;

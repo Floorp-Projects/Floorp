@@ -603,9 +603,9 @@ add_task(async function checkFrecentSites() {
 
   message = {
     id: "foo",
-    targeting: `'mozilla2.com' in topFrecentSites[.lastVisitDate >= ${timeDaysAgo(
-      1
-    ) - 1}]|mapToProperty('host')`,
+    targeting: `'mozilla2.com' in topFrecentSites[.lastVisitDate >= ${
+      timeDaysAgo(1) - 1
+    }]|mapToProperty('host')`,
   };
   is(
     await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
@@ -615,9 +615,9 @@ add_task(async function checkFrecentSites() {
 
   message = {
     id: "foo",
-    targeting: `'mozilla2.com' in topFrecentSites[.lastVisitDate >= ${timeDaysAgo(
-      0
-    ) - 1}]|mapToProperty('host')`,
+    targeting: `'mozilla2.com' in topFrecentSites[.lastVisitDate >= ${
+      timeDaysAgo(0) - 1
+    }]|mapToProperty('host')`,
   };
   ok(
     !(await ASRouterTargeting.findMatchingMessage({ messages: [message] })),
@@ -626,10 +626,9 @@ add_task(async function checkFrecentSites() {
 
   message = {
     id: "foo",
-    targeting: `(topFrecentSites[.frecency >= 900 && .lastVisitDate >= ${timeDaysAgo(
-      1
-    ) -
-      1}]|mapToProperty('host') intersect ['mozilla3.com', 'mozilla2.com', 'mozilla1.com'])|length > 0`,
+    targeting: `(topFrecentSites[.frecency >= 900 && .lastVisitDate >= ${
+      timeDaysAgo(1) - 1
+    }]|mapToProperty('host') intersect ['mozilla3.com', 'mozilla2.com', 'mozilla1.com'])|length > 0`,
   };
   is(
     await ASRouterTargeting.findMatchingMessage({ messages: [message] }),

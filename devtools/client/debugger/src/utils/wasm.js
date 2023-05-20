@@ -82,7 +82,7 @@ export function getWasmLineNumberFormatter(sourceId) {
     codeOf0,
   ];
   let last0 = 7;
-  return function(number) {
+  return function (number) {
     const offset = lineToWasmOffset(sourceId, number - 1);
     if (offset == undefined) {
       return "";

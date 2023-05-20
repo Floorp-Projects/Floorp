@@ -10,7 +10,7 @@ const TEST_URI =
   "<p>bug 699308 - test iframe navigation</p>" +
   "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
 
-add_task(async function() {
+add_task(async function () {
   const {
     inspector,
     toolbox,

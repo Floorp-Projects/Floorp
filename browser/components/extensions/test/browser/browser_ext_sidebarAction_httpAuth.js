@@ -29,7 +29,7 @@ add_task(async function sidebar_httpAuthPrompt() {
         A Test Sidebar
         </body></html>
       `,
-      "sidebar.js": function() {
+      "sidebar.js": function () {
         fetch(
           "https://example.com/browser/browser/components/extensions/test/browser/authenticate.sjs?user=user&pass=pass",
           { credentials: "include" }

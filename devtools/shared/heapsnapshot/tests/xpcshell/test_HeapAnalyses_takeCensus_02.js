@@ -5,7 +5,7 @@
 // Test that the HeapAnalyses{Client,Worker} can take censuses with breakdown
 // options.
 
-add_task(async function() {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   const snapshotFilePath = saveNewHeapSnapshot();

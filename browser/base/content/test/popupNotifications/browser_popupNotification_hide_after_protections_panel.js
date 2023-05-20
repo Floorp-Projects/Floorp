@@ -5,10 +5,10 @@
 add_task(async function test_hide_popup_with_protections_panel_showing() {
   await BrowserTestUtils.withNewTab(
     "https://test1.example.com/",
-    async function(browser) {
+    async function (browser) {
       // Request location permissions and wait for that prompt to appear.
       let popupShownPromise = waitForNotificationPanel();
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         content.navigator.geolocation.getCurrentPosition(() => {});
       });
       await popupShownPromise;

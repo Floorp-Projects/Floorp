@@ -5,7 +5,7 @@
 "use strict";
 
 // Test that the add button is hidden for the indexedDB storage type.
-add_task(async function() {
+add_task(async function () {
   await openTabAndSetupStorage(
     MAIN_DOMAIN_SECURED + "storage-empty-objectstores.html"
   );

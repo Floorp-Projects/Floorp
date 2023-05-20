@@ -59,9 +59,9 @@ Point.prototype = {
   },
 };
 
-(function() {
+(function () {
   function takePointOrArgs(f) {
-    return function(arg1, arg2) {
+    return function (arg1, arg2) {
       if (arg2 === undefined) {
         return f.call(this, arg1.x, arg1.y);
       }

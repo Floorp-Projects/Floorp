@@ -16,7 +16,7 @@ add_task(async function test_remove_single() {
   await PlacesTestUtils.addVisits(WITNESS_URI);
   Assert.ok(page_in_database(WITNESS_URI));
 
-  let remover = async function(name, filter, options) {
+  let remover = async function (name, filter, options) {
     info(name);
     info(JSON.stringify(options));
     info("Setting up visit");

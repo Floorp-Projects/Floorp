@@ -33,7 +33,7 @@ async function cleanup() {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.flushPrefEnv();
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -269,7 +269,7 @@ add_task(async function testRedirectHeuristicDisabled() {
 
 class UpdateEvent extends EventTarget {}
 function waitForEvent(element, eventName) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     element.addEventListener(eventName, e => resolve(e.detail), { once: true });
   });
 }

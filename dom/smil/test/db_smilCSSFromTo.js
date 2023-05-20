@@ -197,7 +197,7 @@ var _fromToTestLists = {
 };
 
 function _tweakForLetterSpacing(testcases) {
-  return testcases.map(function(t) {
+  return testcases.map(function (t) {
     let valMap = Object.assign({}, t.computedValMap);
     for (let prop of Object.keys(valMap)) {
       if (valMap[prop] == "0px") {

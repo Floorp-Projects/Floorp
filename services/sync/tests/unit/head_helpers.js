@@ -76,7 +76,7 @@ add_setup(async function head_setup() {
   }
 });
 
-XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
+XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function () {
   let { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs"
   );
@@ -101,7 +101,7 @@ XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
   return schema;
 });
 
-XPCOMUtils.defineLazyGetter(this, "SyncPingValidator", function() {
+XPCOMUtils.defineLazyGetter(this, "SyncPingValidator", function () {
   const { JsonSchema } = ChromeUtils.importESModule(
     "resource://gre/modules/JsonSchema.sys.mjs"
   );
@@ -272,7 +272,7 @@ function get_sync_test_telemetry() {
   let { SyncTelemetry } = ChromeUtils.importESModule(
     "resource://services-sync/telemetry.sys.mjs"
   );
-  SyncTelemetry.tryRefreshDevices = function() {};
+  SyncTelemetry.tryRefreshDevices = function () {};
   let testEngines = ["rotary", "steam", "sterling", "catapult", "nineties"];
   for (let engineName of testEngines) {
     SyncTelemetry.allowedEngines.add(engineName);
@@ -357,7 +357,7 @@ function wait_for_pings(expectedPings) {
     let telem = get_sync_test_telemetry();
     let oldSubmit = telem.submit;
     let pings = [];
-    telem.submit = function(record) {
+    telem.submit = function (record) {
       pings.push(record);
       if (pings.length == expectedPings) {
         telem.submit = oldSubmit;
@@ -395,7 +395,7 @@ async function sync_and_validate_telem(
   let telem = get_sync_test_telemetry();
   let oldSubmit = telem.submit;
   try {
-    telem.submit = function(record) {
+    telem.submit = function (record) {
       // This is called via an observer, so failures here don't cause the test
       // to fail :(
       try {
@@ -457,7 +457,7 @@ async function sync_engine_and_validate_telem(
 
   let oldSubmit = telem.submit;
   let submitPromise = new Promise((resolve, reject) => {
-    telem.submit = function(ping) {
+    telem.submit = function (ping) {
       telem.submit = oldSubmit;
       ping.syncs.forEach(record => {
         if (record && record.status) {
@@ -536,7 +536,7 @@ async function sync_engine_and_validate_telem(
 // has fired.
 function promiseOneObserver(topic, callback) {
   return new Promise((resolve, reject) => {
-    let observer = function(subject, data) {
+    let observer = function (subject, data) {
       Svc.Obs.remove(topic, observer);
       resolve({ subject, data });
     };
@@ -696,7 +696,7 @@ function add_bookmark_test(task) {
     "resource://services-sync/engines/bookmarks.sys.mjs"
   );
 
-  add_task(async function() {
+  add_task(async function () {
     _(`Running bookmarks test ${task.name}`);
     let engine = new BookmarksEngine(Service);
     await engine.initialize();

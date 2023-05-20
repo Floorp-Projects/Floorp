@@ -23,7 +23,7 @@ const { SessionFile } = ChromeUtils.importESModule(
  * of the backup directory. This will also compress the file using lz4 compression.
  */
 function promise_reset_session(backups = {}) {
-  return (async function() {
+  return (async function () {
     // Reset the histogram.
     Telemetry.getHistogramById(HistogramId).clear();
 

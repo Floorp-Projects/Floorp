@@ -45,7 +45,7 @@ function onMessageReceived(event) {
 
     // Any other message indicates error, succes or todo message of a test
     default:
-      t.step(function() {
+      t.step(function () {
         assert_true(!event.data.match(failureRegExp), event.data);
       });
       break;

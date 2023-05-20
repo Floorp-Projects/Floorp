@@ -60,7 +60,7 @@ function createSubframe(bc, url) {
   return actor.sendQuery("CreateIframe", { url });
 }
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setBoolPref("dom.security.https_first", false);
   ChromeUtils.registerWindowActor(ACTOR, {
     allFrames: true,

@@ -8,7 +8,7 @@
 
 "use strict";
 
-this.sitehelper = (function() {
+this.sitehelper = (function () {
   catcher.registerHandler(errorObj => {
     callBackground("reportError", errorObj);
   });

@@ -36,7 +36,7 @@ updatePreferredDevices({
 
 addRDMTask(
   TEST_URL,
-  async function({ ui }) {
+  async function ({ ui }) {
     reloadOnUAChange(true);
 
     // Test defaults
@@ -87,7 +87,7 @@ addRDMTask(
 
 addRDMTask(
   null,
-  async function() {
+  async function () {
     const tab = await addTab(TEST_URL);
     const { ui } = await openRDM(tab);
 

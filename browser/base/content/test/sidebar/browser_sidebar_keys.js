@@ -40,7 +40,7 @@ add_task(async function test_sidebar_in_customize_mode() {
       0
     );
     CustomizableUI.ensureWidgetPlacedInWindow("sidebar-button", window);
-    registerCleanupFunction(function() {
+    registerCleanupFunction(function () {
       CustomizableUI.removeWidgetFromArea("sidebar-button");
     });
   }

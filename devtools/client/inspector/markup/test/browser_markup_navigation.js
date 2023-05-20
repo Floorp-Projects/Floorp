@@ -75,7 +75,7 @@ const TEST_DATA = [
   ["KEY_ArrowDown", "head"],
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Making sure the markup-view frame is focused");

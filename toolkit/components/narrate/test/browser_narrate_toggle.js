@@ -10,7 +10,7 @@ registerCleanupFunction(teardown);
 add_task(async function testToggleNarrate() {
   setup();
 
-  await spawnInNewReaderTab(TEST_ARTICLE, async function() {
+  await spawnInNewReaderTab(TEST_ARTICLE, async function () {
     let $ = content.document.querySelector.bind(content.document);
 
     await NarrateTestUtils.waitForNarrateToggle(content);

@@ -6,7 +6,7 @@
 add_task(async function moveMultipleWindows() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: { permissions: ["tabs"] },
-    background: async function() {
+    background: async function () {
       let numToId = new Map();
       let idToNum = new Map();
       let windowToInitialTabs = new Map();

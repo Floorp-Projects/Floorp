@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const TEST_URI =
     "data:text/html;charset=utf8,<!DOCTYPE html><title>bug871156</title>\n" +
     "<p>hello world";
@@ -22,7 +22,7 @@ add_task(async function() {
   const tabSelected = new Promise(resolve => {
     gBrowser.tabContainer.addEventListener(
       "TabSelect",
-      function() {
+      function () {
         if (gBrowser.selectedTab == firstTab) {
           info("tab selected");
           resolve(null);

@@ -18,7 +18,7 @@
  *
  * @return {Promise<boolean>}
  */
-exports.viewSourceInStyleEditor = async function(
+exports.viewSourceInStyleEditor = async function (
   toolbox,
   stylesheetResourceOrGeneratedURL,
   generatedLine,
@@ -112,7 +112,7 @@ exports.viewSourceInStyleEditor = async function(
  *
  * @return {Promise<boolean>}
  */
-exports.viewSourceInDebugger = async function(
+exports.viewSourceInDebugger = async function (
   toolbox,
   generatedURL,
   generatedLine,
@@ -182,7 +182,7 @@ async function getOriginalLocation(
  *
  * @return {Promise}
  */
-exports.viewSource = async function(
+exports.viewSource = async function (
   toolbox,
   sourceURL,
   sourceLine,

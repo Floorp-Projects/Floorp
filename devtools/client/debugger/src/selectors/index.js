@@ -40,7 +40,7 @@ import { objectInspector } from "devtools/client/shared/components/reps/index";
 
 const { reducer } = objectInspector;
 
-Object.keys(reducer).forEach(function(key) {
+Object.keys(reducer).forEach(function (key) {
   if (key === "default" || key === "__esModule") {
     return;
   }

@@ -12,7 +12,7 @@
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 const IFRAME_URL = URL_ROOT_ORG_SSL + "fission_iframe.html";
 
-add_task(async function() {
+add_task(async function () {
   info("Execute test in top level document");
   await testTabConsoleMessagesResources(false);
   await testTabConsoleMessagesResourcesWithIgnoreExistingResources(false);
@@ -597,7 +597,7 @@ async function logRuntimeMessages(browser, executeInIframe) {
       console.error("foobarBaz-asmjs-error", undefined);
     }
 
-    (function(global, foreign) {
+    (function (global, foreign) {
       "use asm";
       function inAsmJS2() {
         foreign.fromAsmJS();

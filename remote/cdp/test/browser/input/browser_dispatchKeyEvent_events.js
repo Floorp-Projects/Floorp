@@ -30,7 +30,7 @@ add_task(async function testShiftEvents({ client }) {
   await withModifier(Input, "Shift", "shift", "Tab");
   events = await getEvents();
   checkEvent(events[1], "keydown", "Tab", "shift", true);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const input = content.document.querySelector("input");
     isnot(input, content.document.activeElement, "input should lose focus");
   });

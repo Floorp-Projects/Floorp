@@ -33,7 +33,7 @@ add_task(async function test_network_markers_service_worker_register() {
     await SpecialPowers.spawn(
       contentBrowser,
       [serviceWorkerFileName],
-      async function(serviceWorkerFileName) {
+      async function (serviceWorkerFileName) {
         await content.wrappedJSObject.registerServiceWorkerAndWait(
           serviceWorkerFileName
         );

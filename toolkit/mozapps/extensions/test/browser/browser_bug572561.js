@@ -60,7 +60,7 @@ function check_hidden(aExpectedHidden) {
 }
 
 // Tests that a non-active install does not make the locale category show
-add_test(function() {
+add_test(function () {
   check_hidden(true);
   gInstall = gProvider.createInstalls(gInstallProperties)[0];
   gInstall.addTestListener(gTestInstallListener);
@@ -70,7 +70,7 @@ add_test(function() {
 
 // Test that restarting the add-on manager with a non-active install
 // does not cause the locale category to show
-add_test(async function() {
+add_test(async function () {
   let aWindow = await restart_manager(gManagerWindow, null);
   gManagerWindow = aWindow;
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
@@ -79,13 +79,13 @@ add_test(async function() {
 });
 
 // Test that installing the install shows the locale category
-add_test(function() {
+add_test(function () {
   gInstall.install();
 });
 
 // Test that restarting the add-on manager does not cause the locale category
 // to become hidden
-add_test(async function() {
+add_test(async function () {
   let aWindow = await restart_manager(gManagerWindow, null);
   gManagerWindow = aWindow;
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);

@@ -398,7 +398,7 @@ DownloadsViewUI.BaseView = class {
  * HistoryDownloadElementShell and the DownloadsViewItem for the panel. The
  * history view may use a HistoryDownload object in place of a Download object.
  */
-DownloadsViewUI.DownloadElementShell = function() {};
+DownloadsViewUI.DownloadElementShell = function () {};
 
 DownloadsViewUI.DownloadElementShell.prototype = {
   /**
@@ -456,7 +456,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       document.importNode(downloadListItemFragment, true)
     );
     let downloadButton = this.element.querySelector(".downloadButton");
-    downloadButton.addEventListener("command", function(event) {
+    downloadButton.addEventListener("command", function (event) {
       event.target.ownerGlobal.DownloadsView.onDownloadButton(event);
     });
     for (let [propertyName, selector] of [

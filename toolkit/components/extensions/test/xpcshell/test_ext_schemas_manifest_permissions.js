@@ -2,7 +2,7 @@
 
 const { ExtensionAPI } = ExtensionCommon;
 
-add_task(async function() {
+add_task(async function () {
   const schema = [
     {
       namespace: "manifest",

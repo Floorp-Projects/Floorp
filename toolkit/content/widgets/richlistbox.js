@@ -310,11 +310,7 @@
           return aItem.id;
         };
         state +=
-          " " +
-          [...this.selectedItems]
-            .filter(getId)
-            .map(getId)
-            .join(" ");
+          " " + [...this.selectedItems].filter(getId).map(getId).join(" ");
       }
       if (state) {
         this.setAttribute("last-selected", state);

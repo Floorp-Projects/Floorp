@@ -6,7 +6,7 @@
 
 const TEST_PAGE = TEST_DOMAIN + TEST_PATH + "file_iframe_document_open.html";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       [
@@ -57,7 +57,7 @@ add_task(async function test_thirdParty_iframe() {
   );
 
   // Open the test page within a third-party context.
-  await SpecialPowers.spawn(tab.linkedBrowser, [TEST_PAGE], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [TEST_PAGE], async function (
     page
   ) {
     let ifr = content.document.createElement("iframe");

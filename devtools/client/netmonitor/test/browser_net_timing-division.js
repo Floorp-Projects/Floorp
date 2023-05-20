@@ -6,7 +6,7 @@
 /**
  * Tests if timing intervals are divided against seconds when appropriate.
  */
-add_task(async function() {
+add_task(async function () {
   // Show only few columns, so there is enough space
   // for the waterfall.
   await pushPref(
@@ -25,7 +25,7 @@ add_task(async function() {
 
   const wait = waitForNetworkEvents(monitor, 2);
   // Timeout needed for having enough divisions on the time scale.
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.wrappedJSObject.performRequests(2, null, 3000);
   });
   await wait;

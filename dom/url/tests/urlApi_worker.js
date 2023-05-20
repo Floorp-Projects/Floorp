@@ -15,7 +15,7 @@ function is(a, b, msg) {
 }
 
 // eslint-disable-next-line complexity
-onmessage = function() {
+onmessage = function () {
   let status = false;
   try {
     if (URL instanceof Object) {

@@ -2,7 +2,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const uri = "data:text/html,<body><input>";
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);

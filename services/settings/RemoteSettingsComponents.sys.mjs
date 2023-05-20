@@ -8,7 +8,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 
-export var RemoteSettingsTimer = function() {};
+export var RemoteSettingsTimer = function () {};
 RemoteSettingsTimer.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsITimerCallback"]),
   classID: Components.ID("{5e756573-234a-49ea-bbe4-59ec7a70657d}"),

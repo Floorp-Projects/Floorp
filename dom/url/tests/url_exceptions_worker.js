@@ -2,7 +2,7 @@ function ok(a, msg) {
   postMessage({ type: "status", status: !!a, msg });
 }
 
-onmessage = function(event) {
+onmessage = function (event) {
   // URL.href throws
   var url = new URL("http://www.example.com");
   ok(url, "URL created");

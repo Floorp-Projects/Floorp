@@ -2,15 +2,15 @@ var keepAlivePromise;
 var resolvePromise;
 var result = "Failed";
 
-onactivate = function(event) {
+onactivate = function (event) {
   event.waitUntil(clients.claim());
 };
 
-onmessage = function(event) {
+onmessage = function (event) {
   if (event.data === "Start") {
     event.waitUntil(Promise.reject());
 
-    keepAlivePromise = new Promise(function(resolve, reject) {
+    keepAlivePromise = new Promise(function (resolve, reject) {
       resolvePromise = resolve;
     });
 
@@ -26,7 +26,7 @@ onmessage = function(event) {
 };
 
 addEventListener("fetch", e => {
-  let respondWithPromise = new Promise(function(res, rej) {
+  let respondWithPromise = new Promise(function (res, rej) {
     setTimeout(() => {
       res(new Response("ok"));
     }, 0);

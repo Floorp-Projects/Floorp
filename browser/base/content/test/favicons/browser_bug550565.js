@@ -3,7 +3,7 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(tabBrowser) {
+    async function (tabBrowser) {
       const URI = testPath + "file_with_favicon.html";
       const expectedIcon = testPath + "file_generic_favicon.ico";
       let faviconPromise = waitForLinkAvailable(tabBrowser);
@@ -15,7 +15,7 @@ add_task(async function test() {
 
       faviconPromise = waitForLinkAvailable(tabBrowser);
 
-      await SpecialPowers.spawn(tabBrowser, [], function() {
+      await SpecialPowers.spawn(tabBrowser, [], function () {
         content.history.pushState("page2", "page2", "page2");
       });
 

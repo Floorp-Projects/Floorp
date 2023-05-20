@@ -551,7 +551,7 @@ export var Bookmarks = Object.freeze({
       return [];
     }
 
-    return (async function() {
+    return (async function () {
       let treeParent = await fetchBookmark({ guid: tree.guid });
       if (!treeParent) {
         throw new Error("The parent you specified doesn't exist.");
@@ -795,7 +795,7 @@ export var Bookmarks = Object.freeze({
             info.source
           );
 
-          let updatedItem = await db.executeTransaction(async function() {
+          let updatedItem = await db.executeTransaction(async function () {
             let updatedItem = await updateBookmark(
               db,
               updateInfo,
@@ -1256,7 +1256,7 @@ export var Bookmarks = Object.freeze({
       removeInfos.push(removeInfo);
     }
 
-    return (async function() {
+    return (async function () {
       let removeItems = [];
       for (let info of removeInfos) {
         // We must be able to remove a bookmark even if it has an invalid url.
@@ -1342,9 +1342,9 @@ export var Bookmarks = Object.freeze({
 
     return lazy.PlacesUtils.withConnectionWrapper(
       "Bookmarks.jsm: eraseEverything",
-      async function(db) {
+      async function (db) {
         let urls;
-        await db.executeTransaction(async function() {
+        await db.executeTransaction(async function () {
           urls = await removeFoldersContents(
             db,
             Bookmarks.userContentRoots,
@@ -2053,7 +2053,7 @@ async function updateBookmark(
 function insertBookmark(item, parent) {
   return lazy.PlacesUtils.withConnectionWrapper(
     "Bookmarks.jsm: insertBookmark",
-    async function(db) {
+    async function (db) {
       // If a guid was not provided, generate one, so we won't need to fetch the
       // bookmark just after having created it.
       let hasExistingGuid = item.hasOwnProperty("guid");
@@ -2151,7 +2151,7 @@ function insertBookmark(item, parent) {
 function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
   return lazy.PlacesUtils.withConnectionWrapper(
     "Bookmarks.jsm: insertBookmarkTree",
-    async function(db) {
+    async function (db) {
       await db.executeTransaction(async function transaction() {
         await lazy.PlacesUtils.maybeInsertManyPlaces(db, urls);
 
@@ -2301,7 +2301,7 @@ async function queryBookmarks(info) {
 
   return lazy.PlacesUtils.withConnectionWrapper(
     "Bookmarks.jsm: queryBookmarks",
-    async function(db) {
+    async function (db) {
       // _id, _childCount, _grandParentId and _parentId fields
       // are required to be in the result by the converting function
       // hence setting them to NULL
@@ -2342,7 +2342,7 @@ async function queryBookmarks(info) {
  *
  */
 async function fetchBookmark(info, options = {}) {
-  let query = async function(db) {
+  let query = async function (db) {
     let rows = await db.executeCached(
       `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
               b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
@@ -2375,7 +2375,7 @@ async function fetchBookmark(info, options = {}) {
 }
 
 async function fetchBookmarkByPosition(info, options = {}) {
-  let query = async function(db) {
+  let query = async function (db) {
     let index = info.index == Bookmarks.DEFAULT_INDEX ? null : info.index;
     let rows = await db.executeCached(
       `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
@@ -2407,7 +2407,7 @@ async function fetchBookmarkByPosition(info, options = {}) {
 }
 
 async function fetchBookmarksByTags(info, options = {}) {
-  let query = async function(db) {
+  let query = async function (db) {
     let rows = await db.executeCached(
       `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
               b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
@@ -2454,7 +2454,7 @@ async function fetchBookmarksByTags(info, options = {}) {
 }
 
 async function fetchBookmarksByGUIDPrefix(info, options = {}) {
-  let query = async function(db) {
+  let query = async function (db) {
     let rows = await db.executeCached(
       `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
               b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
@@ -2484,7 +2484,7 @@ async function fetchBookmarksByGUIDPrefix(info, options = {}) {
 }
 
 async function fetchBookmarksByURL(info, options = {}) {
-  let query = async function(db) {
+  let query = async function (db) {
     let rows = await db.executeCached(
       `/* do not warn (bug no): not worth to add an index */
       SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
@@ -2525,7 +2525,7 @@ async function fetchBookmarksByURL(info, options = {}) {
 }
 
 async function fetchBookmarksByParentGUID(info, options = {}) {
-  let query = async function(db) {
+  let query = async function (db) {
     let rows = await db.executeCached(
       `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
               b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
@@ -2560,7 +2560,7 @@ async function fetchBookmarksByParentGUID(info, options = {}) {
 function fetchRecentBookmarks(numberOfItems) {
   return lazy.PlacesUtils.withConnectionWrapper(
     "Bookmarks.jsm: fetchRecentBookmarks",
-    async function(db) {
+    async function (db) {
       let rows = await db.executeCached(
         `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
                 b.dateAdded, b.lastModified, b.type,
@@ -2613,7 +2613,7 @@ async function fetchBookmarksByParent(db, info) {
 function removeBookmarks(items, options) {
   return lazy.PlacesUtils.withConnectionWrapper(
     "Bookmarks.jsm: removeBookmarks",
-    async function(db) {
+    async function (db) {
       let urls = [];
 
       await db.executeTransaction(async function transaction() {
@@ -2726,7 +2726,7 @@ function reorderChildren(parent, orderedChildrenGuids, options) {
   return lazy.PlacesUtils.withConnectionWrapper(
     "Bookmarks.jsm: reorderChildren",
     db =>
-      db.executeTransaction(async function() {
+      db.executeTransaction(async function () {
         // Fetch old indices for the notifications.
         const oldIndices = new Map();
         (
@@ -2969,7 +2969,7 @@ function validateBookmarkObject(name, input, behavior) {
  *
  * @note the folder itself is also updated.
  */
-var setAncestorsLastModified = async function(
+var setAncestorsLastModified = async function (
   db,
   folderGuid,
   time,
@@ -3016,7 +3016,7 @@ var setAncestorsLastModified = async function(
  * @return {Array}
  *         An array of the affected urls.
  */
-var removeFoldersContents = async function(db, folderGuids, options) {
+var removeFoldersContents = async function (db, folderGuids, options) {
   let syncChangeDelta = lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(
     options.source
   );
@@ -3164,7 +3164,7 @@ function insertTombstones(db, itemsRemoved, syncChangeDelta) {
 
 // Bumps the change counter for all bookmarks with URLs referenced in removed
 // tag folders.
-var addSyncChangesForRemovedTagFolders = async function(
+var addSyncChangesForRemovedTagFolders = async function (
   db,
   itemsRemoved,
   syncChangeDelta
@@ -3228,7 +3228,7 @@ function adjustSeparatorsSyncCounter(
  * @rejects if an error happens while querying.
  */
 async function retrieveFullBookmarkPath(guid, options = {}) {
-  let query = async function(db) {
+  let query = async function (db) {
     let rows = await db.executeCached(
       `WITH RECURSIVE parents(guid, _id, _parent, title) AS
           (SELECT guid, id AS _id, parent AS _parent,

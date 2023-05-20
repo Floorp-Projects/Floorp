@@ -20,8 +20,8 @@ function test() {
 
   win.addEventListener(
     "load",
-    function() {
-      waitForFocus(function() {
+    function () {
+      waitForFocus(function () {
         doc = win.document;
         table = new TableWidget(doc.querySelector("box"), {
           initialColumns: {
@@ -53,7 +53,7 @@ function endTests() {
   finish();
 }
 
-var startTests = async function() {
+var startTests = async function () {
   populateTable();
   await testMouseInteraction();
   endTests();
@@ -183,7 +183,7 @@ async function hideCol(id) {
 /**
  * Tests if clicking the table items does the expected behavior
  */
-var testMouseInteraction = async function() {
+var testMouseInteraction = async function () {
   info("Testing mouse interaction with the table");
   ok(!table.selectedRow, "Nothing should be selected beforehand");
 

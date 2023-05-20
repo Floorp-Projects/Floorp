@@ -28,13 +28,11 @@ function evalCode() {
       debugger;
     }
 
-    Promise.resolve()
-      .then(foo)
-      .then(foo);
+    Promise.resolve().then(foo).then(foo);
   });
 }
 
-const testObjectGroup = async function() {
+const testObjectGroup = async function () {
   let packet = await executeOnNextTickAndWaitForPause(evalCode, gThreadFront);
 
   const environment = await packet.frame.getEnvironment();

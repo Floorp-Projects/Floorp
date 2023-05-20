@@ -14,7 +14,7 @@ const TOP_LEVEL_URL = `https://example.com/document-builder.sjs?html=
     <h1>highlighter test</h1>
     <iframe src='${REMOTE_IFRAME_URL}'></iframe>`;
 
-add_task(async function() {
+add_task(async function () {
   const { ui } = await openStyleEditorForURL(TOP_LEVEL_URL);
 
   info(

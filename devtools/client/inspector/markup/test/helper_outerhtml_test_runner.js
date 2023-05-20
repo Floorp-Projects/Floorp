@@ -20,7 +20,7 @@
  */
 function runEditOuterHTMLTests(tests, inspector) {
   info("Running " + tests.length + " edit-outer-html tests");
-  return (async function() {
+  return (async function () {
     for (const step of tests) {
       await runEditOuterHTMLTest(step, inspector);
     }

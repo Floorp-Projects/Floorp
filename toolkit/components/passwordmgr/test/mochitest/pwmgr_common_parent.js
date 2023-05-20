@@ -154,13 +154,13 @@ addMessageListener(
   }
 );
 
-addMessageListener("loadRecipes", async function(recipes) {
+addMessageListener("loadRecipes", async function (recipes) {
   var recipeParent = await LoginManagerParent.recipeParentPromise;
   await recipeParent.load(recipes);
   sendAsyncMessage("loadedRecipes", recipes);
 });
 
-addMessageListener("resetRecipes", async function() {
+addMessageListener("resetRecipes", async function () {
   let recipeParent = await LoginManagerParent.recipeParentPromise;
   await recipeParent.reset();
   sendAsyncMessage("recipesReset");

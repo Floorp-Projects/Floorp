@@ -539,7 +539,7 @@ function serializeTest(test, num) {
   return `{url: ${JSON.stringify(url)}, task: ${task}}`;
 }
 
-add_task(async function() {
+add_task(async function () {
   function background(TASKS) {
     async function runTest(test, num, details) {
       browser.test.log(`Running test #${num}: ${details.url}`);

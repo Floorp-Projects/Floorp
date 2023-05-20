@@ -6,7 +6,7 @@
 
 const TEST_URL = 'data:text/html;charset=utf8,<img src="about:logo" /><div>';
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   const { markup } = inspector;
 

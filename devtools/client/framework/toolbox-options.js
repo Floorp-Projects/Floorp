@@ -232,7 +232,7 @@ OptionsPanel.prototype = {
     // Signal tool registering/unregistering globally (for the tools registered
     // globally) and per toolbox (for the tools registered to a single toolbox).
     // This event handler expect this to be binded to the related checkbox element.
-    const onCheckboxClick = function(telemetry, tool) {
+    const onCheckboxClick = function (telemetry, tool) {
       // Set the kill switch pref boolean to true
       Services.prefs.setBoolPref(tool.visibilityswitch, this.checked);
 
@@ -392,7 +392,7 @@ OptionsPanel.prototype = {
       inputRadio.setAttribute("type", "radio");
       inputRadio.setAttribute("value", theme.id);
       inputRadio.setAttribute("name", "devtools-theme-item");
-      inputRadio.addEventListener("change", function(e) {
+      inputRadio.addEventListener("change", function (e) {
         SetPref(themeBox.getAttribute("data-pref"), e.target.value);
       });
 
@@ -498,7 +498,7 @@ OptionsPanel.prototype = {
       if (GetPref(prefCheckbox.getAttribute("data-pref"))) {
         prefCheckbox.setAttribute("checked", true);
       }
-      prefCheckbox.addEventListener("change", function(e) {
+      prefCheckbox.addEventListener("change", function (e) {
         const checkbox = e.target;
         SetPref(checkbox.getAttribute("data-pref"), checkbox.checked);
       });
@@ -517,7 +517,7 @@ OptionsPanel.prototype = {
           radioInput.setAttribute("checked", true);
         }
 
-        radioInput.addEventListener("change", function(e) {
+        radioInput.addEventListener("change", function (e) {
           SetPref(radioGroup.getAttribute("data-pref"), e.target.value);
         });
       }
@@ -526,7 +526,7 @@ OptionsPanel.prototype = {
     for (const prefSelect of prefSelects) {
       const pref = GetPref(prefSelect.getAttribute("data-pref"));
       const options = [...prefSelect.options];
-      options.some(function(option) {
+      options.some(function (option) {
         const value = option.value;
         // non strict check to allow int values.
         if (value == pref) {
@@ -536,7 +536,7 @@ OptionsPanel.prototype = {
         return false;
       });
 
-      prefSelect.addEventListener("change", function(e) {
+      prefSelect.addEventListener("change", function (e) {
         const select = e.target;
         SetPref(
           select.getAttribute("data-pref"),

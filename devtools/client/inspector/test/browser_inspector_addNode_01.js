@@ -7,7 +7,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<h1>Add node</h1>";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   const { panelDoc } = inspector;
 

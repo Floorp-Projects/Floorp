@@ -43,7 +43,7 @@ const EXPECTED_FUNCTION = "window.hitBreakpoint()";
 
 const TEST_URL = PAGES_BASE_URL + "custom/debugger/index.html";
 
-module.exports = async function() {
+module.exports = async function () {
   const tab = await testSetup(TEST_URL, { disableCache: true });
   Services.prefs.setBoolPref("devtools.debugger.features.map-scopes", false);
 

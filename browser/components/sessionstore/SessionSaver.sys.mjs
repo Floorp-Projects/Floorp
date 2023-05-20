@@ -50,7 +50,7 @@ function notify(subject, topic) {
 
 // TelemetryStopwatch helper functions.
 function stopWatch(method) {
-  return function(...histograms) {
+  return function (...histograms) {
     for (let hist of histograms) {
       TelemetryStopwatch[method]("FX_SESSION_RESTORE_" + hist);
     }

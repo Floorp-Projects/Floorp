@@ -891,7 +891,7 @@ class TabBase {
   }
 }
 
-defineLazyGetter(TabBase.prototype, "incognito", function() {
+defineLazyGetter(TabBase.prototype, "incognito", function () {
   return this._incognito;
 });
 

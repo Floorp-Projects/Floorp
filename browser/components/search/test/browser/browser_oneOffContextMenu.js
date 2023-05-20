@@ -6,7 +6,7 @@ const TEST_ENGINE_BASENAME = "testEngine.xml";
 let searchbar;
 let searchIcon;
 
-add_setup(async function() {
+add_setup(async function () {
   searchbar = await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();

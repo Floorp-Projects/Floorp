@@ -33,7 +33,7 @@ function waitForTitleChange(toolbox) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
   await addTab(URL);

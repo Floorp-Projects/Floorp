@@ -17,7 +17,7 @@ const EXPRESSION_SELECTORS = {
   input: "input.input-expression",
 };
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-script-switching.html");
 
   await togglePauseOnExceptions(dbg, true, true);

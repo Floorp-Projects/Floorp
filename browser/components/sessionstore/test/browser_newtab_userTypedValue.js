@@ -7,7 +7,7 @@ requestLongerTimeout(4);
  * produces an empty URL bar, rather than leaving its URL explicitly
  * there as a 'user typed value'.
  */
-add_task(async function() {
+add_task(async function () {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:logo");
   let tabOpenedAndSwitchedTo = BrowserTestUtils.switchTab(

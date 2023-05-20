@@ -19,7 +19,7 @@ const { SearchUtils } = ChromeUtils.importESModule(
 AddonTestUtils.initMochitest(this);
 SearchTestUtils.init(this);
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.w3c_touch_events.enabled", 0]],
   });

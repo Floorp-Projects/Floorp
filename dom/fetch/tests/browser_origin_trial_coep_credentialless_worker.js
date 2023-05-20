@@ -32,7 +32,7 @@ async function addCookieToOrigin(origin) {
     fetchRequestURL
   );
 
-  await SpecialPowers.spawn(addcookieTab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(addcookieTab.linkedBrowser, [], async function () {
     content.document.cookie = "coep=credentialless; SameSite=None; Secure";
   });
   await BrowserTestUtils.removeTab(addcookieTab);
@@ -64,7 +64,7 @@ async function testOrigin(
   await SpecialPowers.spawn(
     noCredentiallessTab.linkedBrowser,
     [fetchRequestURL, GET_STATE_URL, workerScriptURL, expectedCookieResult],
-    async function(
+    async function (
       fetchRequestURL,
       getStateURL,
       workerScriptURL,
@@ -80,14 +80,14 @@ async function testOrigin(
 
       if (expectedCookieResult == "error") {
         await new Promise(r => {
-          worker.onerror = function() {
+          worker.onerror = function () {
             ok(true, "worker has error");
             r();
           };
         });
       } else {
         await new Promise(r => {
-          worker.addEventListener("message", async function() {
+          worker.addEventListener("message", async function () {
             // This request is used to get the saved state from the
             // previous fetch request.
             const response = await content.fetch(getStateURL, {
@@ -124,7 +124,7 @@ async function dedicatedWorkerTest(
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.tabs.remote.coep.credentialless", false], // Explicitly set credentialless to false because we want to test origin trial

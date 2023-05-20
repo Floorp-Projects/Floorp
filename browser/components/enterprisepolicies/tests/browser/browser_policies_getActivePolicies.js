@@ -38,7 +38,7 @@ add_task(async function test_wrong_policies() {
 });
 
 add_task(async function test_content_process() {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     try {
       Services.policies.getActivePolicies();
     } catch (ex) {

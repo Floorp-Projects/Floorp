@@ -43,7 +43,7 @@ var listener_3 = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
+XPCOMUtils.defineLazyGetter(this, "listener_2", function () {
   return {
     // this listener is used to process the revalidation of the
     // corrupted cache entry. its revalidation prompts it to be cleaned
@@ -75,7 +75,7 @@ XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
   };
 });
 
-XPCOMUtils.defineLazyGetter(this, "listener_1", function() {
+XPCOMUtils.defineLazyGetter(this, "listener_1", function () {
   return {
     // this listener processes the initial request from a empty cache.
     // the server responds with the wrong data ('A')

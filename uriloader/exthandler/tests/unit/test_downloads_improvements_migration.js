@@ -24,7 +24,7 @@ Integration.downloads.defineESModuleGetter(
  * browser.download.improvements_to_download_panel is disabled.
  */
 add_task(async function test_migration_pref_disabled() {
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref(
       "browser.download.improvements_to_download_panel"
     );
@@ -109,7 +109,7 @@ add_task(async function test_migration_pref_enabled() {
     return false;
   };
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref(
       "browser.download.improvements_to_download_panel"
     );
@@ -195,7 +195,7 @@ add_task(async function test_migration_pref_enabled() {
  * the migration was already run.
  */
 add_task(async function test_migration_pref_enabled_already_run() {
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref(
       "browser.download.improvements_to_download_panel"
     );
@@ -254,7 +254,7 @@ add_task(async function test_migration_pref_enabled_already_run() {
  * Test migration of SVG and XML info.
  */
 add_task(async function test_migration_pref_enabled_xml_svg() {
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref(
       "browser.download.improvements_to_download_panel"
     );

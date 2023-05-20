@@ -11,7 +11,7 @@ function test() {
   waitForExplicitFinish();
   Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     if (gBrowser.tabs.length > 1) {
       gBrowser.removeTab(gBrowser.tabs[1]);
     }
@@ -35,7 +35,7 @@ function test() {
     is(formdata && formdata.id.foo, "bar", "tab state's formdata is valid");
 
     promiseTabRestored(tab).then(() => {
-      SpecialPowers.spawn(browser, [], function() {
+      SpecialPowers.spawn(browser, [], function () {
         let input = content.document.getElementById("foo");
         is(input.value, "bar", "formdata has been restored correctly");
       }).then(() => {

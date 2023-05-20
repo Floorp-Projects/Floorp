@@ -110,7 +110,7 @@ async function startIssueServer() {
     await new Promise(resolve => server.stop(resolve));
   });
 
-  server.registerPathHandler("/new", function(request, response) {
+  server.registerPathHandler("/new", function (request, response) {
     response.setHeader("Content-Type", "text/html", false);
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.write(landingTemplate);

@@ -28,7 +28,7 @@ const kAboutPagesRegistered = Promise.all([
   ),
 ]);
 
-add_task(async function() {
+add_task(async function () {
   await kAboutPagesRegistered;
 
   let consoleListener = {

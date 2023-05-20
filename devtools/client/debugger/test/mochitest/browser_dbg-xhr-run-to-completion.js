@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-xhr-run-to-completion.html");
   invokeInTab("singleRequest", "doc-xhr-run-to-completion.html");
   await waitForPaused(dbg);
@@ -25,7 +25,7 @@ add_task(async function() {
 // Test that XHR handlers are not called when pausing in the debugger,
 // including when there are multiple XHRs and multiple times we pause before
 // they can be processed.
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-xhr-run-to-completion.html");
   invokeInTab("multipleRequests", "doc-xhr-run-to-completion.html");
   await waitForPaused(dbg);

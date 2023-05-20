@@ -8,7 +8,7 @@ function handleRequest(request, response) {
   response.processAsync();
   timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(
-    function() {
+    function () {
       response.finish();
     },
     500,

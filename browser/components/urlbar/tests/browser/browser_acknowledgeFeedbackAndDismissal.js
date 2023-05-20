@@ -13,7 +13,7 @@ const FEEDBACK_COMMAND = "show_less_frequently";
 
 let gTestProvider;
 
-add_setup(async function() {
+add_setup(async function () {
   gTestProvider = new TestProvider({
     results: [
       new UrlbarResult(

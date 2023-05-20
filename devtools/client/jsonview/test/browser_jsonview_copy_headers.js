@@ -5,7 +5,7 @@
 
 const TEST_JSON_URL = URL_ROOT + "valid_json.json";
 
-add_task(async function() {
+add_task(async function () {
   info("Test valid JSON started");
 
   await addJsonViewTab(TEST_JSON_URL);

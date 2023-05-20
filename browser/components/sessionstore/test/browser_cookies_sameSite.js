@@ -77,7 +77,7 @@ async function verifyRestore(url, sameSiteSetting) {
  * Tests that cookie.sameSite flag is stored and restored correctly by
  * sessionstore.
  */
-add_task(async function() {
+add_task(async function () {
   // Test for various possible values of cookie.sameSite and schemeMap.
   await verifyRestore(TEST_HTTP_URL, Ci.nsICookie.SAMESITE_NONE);
   await verifyRestore(TEST_HTTP_URL, Ci.nsICookie.SAMESITE_LAX);

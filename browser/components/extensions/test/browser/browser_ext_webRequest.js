@@ -65,7 +65,7 @@ let events = {
   onCompleted: [{ urls }, ["responseHeaders"]],
 };
 
-add_setup(async function() {
+add_setup(async function () {
   extension = makeExtension(events);
   await extension.startup();
 });

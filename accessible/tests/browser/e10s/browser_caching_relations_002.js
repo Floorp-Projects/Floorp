@@ -20,7 +20,7 @@ addAccessibleTask(
     <input type="radio" id="r6" name="r">I have a different name but am
      in the same group
   </fieldset>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const r1 = findAccessibleChildByID(accDoc, "r1");
     const r2 = findAccessibleChildByID(accDoc, "r2");
     const r3 = findAccessibleChildByID(accDoc, "r3");
@@ -56,7 +56,7 @@ addAccessibleTask(
     <div role="radio" id="r2">hello</div><br>
     <div role="radio" id="r3">world</div><br>
   </fieldset>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const r1 = findAccessibleChildByID(accDoc, "r1");
     const r2 = findAccessibleChildByID(accDoc, "r2");
     let r3 = findAccessibleChildByID(accDoc, "r3");
@@ -92,7 +92,7 @@ addAccessibleTask(
   <label id="l">
     <select id="s">
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const label = findAccessibleChildByID(accDoc, "l");
     const select = findAccessibleChildByID(accDoc, "s");
     const div = findAccessibleChildByID(accDoc, "d");
@@ -128,7 +128,7 @@ addAccessibleTask(
   `
   <div id="label">before</div><input id="input" aria-labelledby="label">
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let label = findAccessibleChildByID(accDoc, "label");
     const input = findAccessibleChildByID(accDoc, "input");
 
@@ -165,7 +165,7 @@ addAccessibleTask(
   `
   <a id="link" href="#foo#bar">Origin</a><br>
   <a id="anchor" name="foo#bar">Destination`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const link = findAccessibleChildByID(accDoc, "link");
     const anchor = findAccessibleChildByID(accDoc, "anchor");
 
@@ -190,7 +190,7 @@ addAccessibleTask(
   <label id="l">
     <select id="s">
   `,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const label = findAccessibleChildByID(accDoc, "l");
     const select = findAccessibleChildByID(accDoc, "s");
     const div = findAccessibleChildByID(accDoc, "d");

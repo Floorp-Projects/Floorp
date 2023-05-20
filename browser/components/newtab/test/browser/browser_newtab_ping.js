@@ -16,7 +16,7 @@ const { ExperimentFakes } = ChromeUtils.importESModule(
 
 let sendTriggerMessageSpy;
 
-add_setup(function() {
+add_setup(function () {
   let sandbox = sinon.createSandbox();
   sendTriggerMessageSpy = sandbox.spy(ASRouter, "sendTriggerMessage");
 

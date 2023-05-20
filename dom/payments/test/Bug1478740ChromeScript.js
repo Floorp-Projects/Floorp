@@ -69,22 +69,22 @@ paymentSrv.setTestingUIService(
   DummyUIService.QueryInterface(Ci.nsIPaymentUIService)
 );
 
-addMessageListener("reject-payment", function() {
+addMessageListener("reject-payment", function () {
   rejectPayment(DummyUIService.requestId);
   sendAsyncMessage("reject-payment-complete");
 });
 
-addMessageListener("start-test", function(testName) {
+addMessageListener("start-test", function (testName) {
   DummyUIService.testName = testName;
   sendAsyncMessage("start-test-complete");
 });
 
-addMessageListener("finish-test", function() {
+addMessageListener("finish-test", function () {
   DummyUIService.testName = "";
   sendAsyncMessage("finish-test-complete");
 });
 
-addMessageListener("teardown", function() {
+addMessageListener("teardown", function () {
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage("teardown-complete");
 });

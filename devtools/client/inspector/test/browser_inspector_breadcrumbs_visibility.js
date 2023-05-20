@@ -30,7 +30,7 @@ const NODES = [
   { action: "end", title: NODE_SIX },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(TEST_URI);
 
   // No way to wait for scrolling to end (Bug 1172171)
@@ -108,7 +108,7 @@ function isElementInViewport(window, el) {
   );
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   // Restore the host type for other tests.
   Services.prefs.clearUserPref("devtools.toolbox.host");
 });

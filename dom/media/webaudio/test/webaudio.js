@@ -39,10 +39,10 @@ function expectRejectedPromise(that, func, exceptionName) {
   ok(promise instanceof Promise, "Expect a Promise");
 
   promise
-    .then(function(res) {
+    .then(function (res) {
       ok(false, "Promise resolved when it should have been rejected.");
     })
-    .catch(function(err) {
+    .catch(function (err) {
       is(
         err.name,
         exceptionName,
@@ -232,7 +232,7 @@ function runTest() {
       }
 
       if (gTest.createGraphAsync) {
-        gTest.createGraphAsync(context, function(nodeToInspect) {
+        gTest.createGraphAsync(context, function (nodeToInspect) {
           testOutput(nodeToInspect, expectedBuffers, callback);
         });
       } else {
@@ -249,7 +249,7 @@ function runTest() {
           0
         );
         nodeToInspect.connect(sp);
-        sp.onaudioprocess = function(e) {
+        sp.onaudioprocess = function (e) {
           var expectedBuffer = expectedBuffers.shift();
           testLength += expectedBuffer.length;
           compareBuffers(e.inputBuffer, expectedBuffer);
@@ -266,7 +266,7 @@ function runTest() {
     function testOnOfflineContext(callback, sampleRate) {
       function testOutput(nodeToInspect, expectedBuffers, callback) {
         nodeToInspect.connect(context.destination);
-        context.oncomplete = function(e) {
+        context.oncomplete = function (e) {
           var samplesSeen = 0;
           while (expectedBuffers.length) {
             var expectedBuffer = expectedBuffers.shift();
@@ -300,9 +300,9 @@ function runTest() {
       runTestOnContext(context, callback, testOutput);
     }
 
-    testOnNormalContext(function() {
+    testOnNormalContext(function () {
       if (!gTest.skipOfflineContextTests) {
-        testOnOfflineContext(function() {
+        testOnOfflineContext(function () {
           testOnOfflineContext(done, 44100);
         }, 48000);
       } else {

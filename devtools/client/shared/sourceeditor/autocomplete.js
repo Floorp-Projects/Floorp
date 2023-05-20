@@ -197,10 +197,7 @@ function insertPopupItem(ed, popupItem) {
     .split("")
     .reverse()
     .join("");
-  const backwardsPreLabel = preLabel
-    .split("")
-    .reverse()
-    .join("");
+  const backwardsPreLabel = preLabel.split("").reverse().join("");
 
   // If there is additional text in the preLabel vs the line, then
   // just insert the entire autocomplete text.  An example:

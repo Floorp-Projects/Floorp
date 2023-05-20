@@ -10,7 +10,7 @@ addDebuggerToGlobal(globalThis);
 /**
  * Records coverage for each test by way of the js debugger.
  */
-export var CoverageCollector = function(prefix) {
+export var CoverageCollector = function (prefix) {
   this._prefix = prefix;
   this._dbg = new Debugger();
   this._dbg.collectCoverageInfo = true;
@@ -28,7 +28,7 @@ export var CoverageCollector = function(prefix) {
   this._testIndex = 0;
 };
 
-CoverageCollector.prototype._getLinesCovered = function() {
+CoverageCollector.prototype._getLinesCovered = function () {
   let coveredLines = {};
   let currentCoverage = {};
   this._scripts.forEach(s => {
@@ -85,7 +85,7 @@ CoverageCollector.prototype._getLinesCovered = function() {
   return coveredLines;
 };
 
-CoverageCollector.prototype._getUncoveredLines = function() {
+CoverageCollector.prototype._getUncoveredLines = function () {
   let uncoveredLines = {};
   this._scripts.forEach(s => {
     let scriptName = s.url;
@@ -96,7 +96,7 @@ CoverageCollector.prototype._getUncoveredLines = function() {
     }
 
     // Get all lines in the script
-    scriptOffsets.forEach(function(element, index) {
+    scriptOffsets.forEach(function (element, index) {
       if (!element) {
         return;
       }
@@ -116,7 +116,7 @@ CoverageCollector.prototype._getUncoveredLines = function() {
   return uncoveredLines;
 };
 
-CoverageCollector.prototype._getMethodNames = function() {
+CoverageCollector.prototype._getMethodNames = function () {
   let methodNames = {};
   this._scripts.forEach(s => {
     let method = s.displayName;
@@ -138,7 +138,7 @@ CoverageCollector.prototype._getMethodNames = function() {
      * push a record of the form:
      * <method name> : <lines covered>
      */
-    scriptOffsets.forEach(function(element, index) {
+    scriptOffsets.forEach(function (element, index) {
       if (!element) {
         return;
       }
@@ -155,7 +155,7 @@ CoverageCollector.prototype._getMethodNames = function() {
  * associating them with the given test name. The result is written
  * to a json file in a specified directory.
  */
-CoverageCollector.prototype.recordTestCoverage = function(testName) {
+CoverageCollector.prototype.recordTestCoverage = function (testName) {
   dump("Collecting coverage for: " + testName + "\n");
   let rawLines = this._getLinesCovered(testName);
   let methods = this._getMethodNames();
@@ -204,7 +204,7 @@ CoverageCollector.prototype.recordTestCoverage = function(testName) {
 /**
  * Tear down the debugger after all tests are complete.
  */
-CoverageCollector.prototype.finalize = function() {
+CoverageCollector.prototype.finalize = function () {
   this._dbg.removeAllDebuggees();
   this._dbg.enabled = false;
 };

@@ -114,7 +114,7 @@ add_task(async function test_sidebarAction_not_allowed() {
         </html>
       `,
 
-      "sidebar.js": function() {
+      "sidebar.js": function () {
         window.onload = () => {
           browser.test.sendMessage("sidebar");
         };

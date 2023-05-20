@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "http://mochi.test:8888/"
@@ -13,7 +13,7 @@ add_task(async function() {
       permissions: ["tabs"],
     },
 
-    background: function() {
+    background: function () {
       let messages_received = [];
 
       let tabId;
@@ -69,7 +69,7 @@ add_task(async function() {
     },
 
     files: {
-      "tab.js": function() {
+      "tab.js": function () {
         let port = browser.runtime.connect({ name: "tab-connection-name" });
         port.postMessage("tab to background port message");
         port.onMessage.addListener(msg => {

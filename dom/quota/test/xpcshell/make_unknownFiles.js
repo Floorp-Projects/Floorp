@@ -115,7 +115,7 @@ async function testSteps() {
       wantGlobalProperties: ["caches", "fetch"],
     });
 
-    const promise = new Promise(function(resolve, reject) {
+    const promise = new Promise(function (resolve, reject) {
       sandbox.resolve = resolve;
       sandbox.reject = reject;
     });

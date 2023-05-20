@@ -104,13 +104,13 @@ const NormalUIService = {
   QueryInterface: ChromeUtils.generateQI(["nsIPaymentUIService"]),
 };
 
-addMessageListener("set-normal-ui-service", function() {
+addMessageListener("set-normal-ui-service", function () {
   paymentSrv.setTestingUIService(
     NormalUIService.QueryInterface(Ci.nsIPaymentUIService)
   );
 });
 
-addMessageListener("teardown", function() {
+addMessageListener("teardown", function () {
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage("teardown-complete");
 });

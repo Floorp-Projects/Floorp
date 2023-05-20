@@ -8,7 +8,7 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserver.identity.primaryPort;
 });
 
@@ -68,7 +68,7 @@ function makeChan(url, loadingUrl) {
 function TestListener(resolve) {
   this.resolve = resolve;
 }
-TestListener.prototype.onStartRequest = function(request, context) {
+TestListener.prototype.onStartRequest = function (request, context) {
   // Need to do the instanceof to allow request.responseStatus
   // to be read.
   if (!(request instanceof Ci.nsIHttpChannel)) {
@@ -77,7 +77,7 @@ TestListener.prototype.onStartRequest = function(request, context) {
 
   Assert.equal(expectedResponse, request.responseStatus, "HTTP Status code");
 };
-TestListener.prototype.onStopRequest = function(request, context, status) {
+TestListener.prototype.onStopRequest = function (request, context, status) {
   Assert.equal(expectedRequests, requestsMade, "Number of requests made ");
   Assert.equal(
     exptTypeOneCount,
@@ -92,7 +92,7 @@ TestListener.prototype.onStopRequest = function(request, context, status) {
 
   this.resolve();
 };
-TestListener.prototype.onDataAvaiable = function(
+TestListener.prototype.onDataAvaiable = function (
   request,
   context,
   stream,

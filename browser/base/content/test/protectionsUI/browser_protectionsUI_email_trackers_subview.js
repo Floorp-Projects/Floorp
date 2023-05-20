@@ -145,7 +145,7 @@ async function assertSitesListed(blocked) {
   BrowserTestUtils.removeTab(tab);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   Services.prefs.setBoolPref(TP_PREF, true);
 
   await UrlClassifierTestUtils.addTestTrackers();

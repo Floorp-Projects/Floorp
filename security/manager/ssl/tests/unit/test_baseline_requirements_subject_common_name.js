@@ -36,7 +36,7 @@ function checkCertOn25August2016(cert, expectedResult) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("privacy.reduceTimerPrecision");
   });

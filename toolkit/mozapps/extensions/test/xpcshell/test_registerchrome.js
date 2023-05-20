@@ -6,7 +6,7 @@ function getFileURI(path) {
   return Services.io.newFileURI(file);
 }
 
-add_task(async function() {
+add_task(async function () {
   const registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(
     Ci.nsIChromeRegistry
   );
@@ -64,7 +64,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   const INVALID_VALUES = [
     {},
     "foo",

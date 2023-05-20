@@ -15,7 +15,7 @@ async function setHidden(browser, value) {
 
 addAccessibleTask(
   '<div id="container"><input id="child"></div>',
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let container = findAccessibleChildByID(accDoc, "container");
 
     testAccessibleTree(container, { SECTION: [{ ENTRY: [] }] });

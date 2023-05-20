@@ -5,7 +5,7 @@
 
 loadTestSubscript("head_abuse_report.js");
 
-add_setup(async function() {
+add_setup(async function () {
   await AbuseReportTestUtils.setup();
 });
 
@@ -731,7 +731,7 @@ add_task(async function test_abusereport_from_browserAction_remove() {
     report: true,
   });
 
-  await BrowserTestUtils.withNewTab("about:blank", async function() {
+  await BrowserTestUtils.withNewTab("about:blank", async function () {
     info(`Open browserAction context menu in toolbar context menu`);
     let promiseMenu = reportFromContextMenuRemove();
 

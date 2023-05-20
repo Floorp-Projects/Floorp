@@ -23,8 +23,9 @@ this.callBackground = function callBackground(funcName, ...args) {
     } else {
       log.error("Unexpected background result:", result);
       const exc = new Error(
-        `Bad response type from background page: ${(result && result.type) ||
-          undefined}`
+        `Bad response type from background page: ${
+          (result && result.type) || undefined
+        }`
       );
       exc.resultType = result ? result.type || "undefined" : "undefined result";
       throw exc;

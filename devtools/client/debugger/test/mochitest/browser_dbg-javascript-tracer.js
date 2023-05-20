@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // This is preffed off for now, so ensure turning it on
   await pushPref("devtools.debugger.features.javascript-tracing", true);
 
@@ -178,7 +178,7 @@ add_task(async function testPageKeyShortcut() {
   info(
     "Focus the page in order to assert that the page keeps the focus when enabling the tracer"
   );
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     content.focus();
   });
   await waitFor(
@@ -191,7 +191,7 @@ add_task(async function testPageKeyShortcut() {
   );
 
   info("Toggle ON the tracing via the key shortcut from the web page");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     EventUtils.synthesizeKey(
       "VK_5",
       { ctrlKey: true, shiftKey: true },
@@ -211,7 +211,7 @@ add_task(async function testPageKeyShortcut() {
   );
 
   info("Toggle it back off, wit the same shortcut");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     EventUtils.synthesizeKey(
       "VK_5",
       { ctrlKey: true, shiftKey: true },

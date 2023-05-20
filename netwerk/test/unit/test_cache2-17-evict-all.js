@@ -7,7 +7,7 @@ function run_test() {
 
   var storage = getCacheStorage("disk");
   storage.asyncVisitStorage(
-    new VisitCallback(0, 0, [], function() {
+    new VisitCallback(0, 0, [], function () {
       finish_cache2_test();
     }),
     true

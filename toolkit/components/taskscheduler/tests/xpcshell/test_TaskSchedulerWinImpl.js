@@ -26,21 +26,17 @@ const uuidGenerator = Services.uuid;
 
 function randomName() {
   return (
-    "moz-taskschd-test-" +
-    uuidGenerator
-      .generateUUID()
-      .toString()
-      .slice(1, -1)
+    "moz-taskschd-test-" + uuidGenerator.generateUUID().toString().slice(1, -1)
   );
 }
 
 const gFolderName = randomName();
 
 // Override task folder name, to prevent colliding with other tests.
-WinImpl._taskFolderName = function() {
+WinImpl._taskFolderName = function () {
   return gFolderName;
 };
-WinImpl._taskFolderNameParts = function() {
+WinImpl._taskFolderNameParts = function () {
   return {
     parentName: "\\",
     subName: gFolderName,

@@ -9,7 +9,7 @@
 const SEARCH = "20%";
 const TEST_URI = URL_ROOT + "doc_keyframeanimation.html";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, view } = await openRuleView();
   await selectNode("#boxy", inspector);

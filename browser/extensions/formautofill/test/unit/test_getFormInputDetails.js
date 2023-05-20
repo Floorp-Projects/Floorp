@@ -1,7 +1,7 @@
 "use strict";
 
 var FormAutofillContent;
-add_task(async function() {
+add_task(async function () {
   ({ FormAutofillContent } = ChromeUtils.importESModule(
     "resource://autofill/FormAutofillContent.sys.mjs"
   ));
@@ -158,7 +158,7 @@ function inputDetailAssertion(detail, expected) {
 }
 
 TESTCASES.forEach(testcase => {
-  add_task(async function() {
+  add_task(async function () {
     info("Starting testcase: " + testcase.description);
 
     let doc = MockDocument.createTestDocument(

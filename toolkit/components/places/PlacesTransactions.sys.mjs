@@ -316,7 +316,7 @@ export var PlacesTransactions = {
       ) {
         throw new Error("Must pass only transaction entries");
       }
-      return TransactionsManager.batch(async function() {
+      return TransactionsManager.batch(async function () {
         for (let txn of transactionsToBatch) {
           try {
             await txn.transact();
@@ -653,7 +653,7 @@ var TransactionsManager = {
   },
 
   clearTransactionsHistory(undoEntries, redoEntries) {
-    let promise = this._mainEnqueuer.enqueue(function() {
+    let promise = this._mainEnqueuer.enqueue(function () {
       if (undoEntries && redoEntries) {
         lazy.TransactionsHistory.clearAllEntries();
       } else if (undoEntries) {
@@ -707,7 +707,7 @@ function DefineTransaction(requiredProps = [], optionalProps = []) {
     }
   }
 
-  let ctor = function(input) {
+  let ctor = function (input) {
     // We want to support both syntaxes:
     // let t = new PlacesTransactions.NewBookmark(),
     // let t = PlacesTransactions.NewBookmark()
@@ -761,7 +761,7 @@ function checkProperty(obj, prop, required, checkFn) {
   return !required;
 }
 
-DefineTransaction.childObjectValidate = function(obj) {
+DefineTransaction.childObjectValidate = function (obj) {
   if (
     obj &&
     checkProperty(obj, "title", false, v => typeof v == "string") &&
@@ -776,7 +776,7 @@ DefineTransaction.childObjectValidate = function(obj) {
   throw new Error("Invalid child object");
 };
 
-DefineTransaction.urlValidate = function(url) {
+DefineTransaction.urlValidate = function (url) {
   if (url instanceof Ci.nsIURI) {
     return URL.fromURI(url);
   }
@@ -784,7 +784,11 @@ DefineTransaction.urlValidate = function(url) {
 };
 
 DefineTransaction.inputProps = new Map();
-DefineTransaction.defineInputProps = function(names, validateFn, defaultValue) {
+DefineTransaction.defineInputProps = function (
+  names,
+  validateFn,
+  defaultValue
+) {
   for (let name of names) {
     this.inputProps.set(name, {
       validateValue(value) {
@@ -810,7 +814,7 @@ DefineTransaction.defineInputProps = function(names, validateFn, defaultValue) {
   }
 };
 
-DefineTransaction.defineArrayInputProp = function(name, basePropertyName) {
+DefineTransaction.defineArrayInputProp = function (name, basePropertyName) {
   let baseProp = this.inputProps.get(basePropertyName);
   if (!baseProp) {
     throw new Error(`Unknown input property: ${basePropertyName}`);
@@ -871,11 +875,11 @@ DefineTransaction.defineArrayInputProp = function(name, basePropertyName) {
   });
 };
 
-DefineTransaction.validatePropertyValue = function(prop, input, required) {
+DefineTransaction.validatePropertyValue = function (prop, input, required) {
   return this.inputProps.get(prop).validateInput(input, required);
 };
 
-DefineTransaction.getInputObjectForSingleValue = function(
+DefineTransaction.getInputObjectForSingleValue = function (
   input,
   requiredProps,
   optionalProps
@@ -900,7 +904,7 @@ DefineTransaction.getInputObjectForSingleValue = function(
   return { [propName]: propValue };
 };
 
-DefineTransaction.verifyInput = function(
+DefineTransaction.verifyInput = function (
   input,
   requiredProps = [],
   optionalProps = []
@@ -1096,14 +1100,14 @@ PT.NewBookmark.prototype = Object.seal({
 
     await createItem();
 
-    this.undo = async function() {
+    this.undo = async function () {
       // Pick up the removed info so we have the accurate last-modified value.
       await PlacesUtils.bookmarks.remove(info);
       if (tags.length) {
         PlacesUtils.tagging.untagURI(url.URI, tags);
       }
     };
-    this.redo = async function() {
+    this.redo = async function () {
       await createItem();
     };
     return info.guid;
@@ -1165,10 +1169,10 @@ PT.NewFolder.prototype = Object.seal({
     }
     await createItem();
 
-    this.undo = async function() {
+    this.undo = async function () {
       await PlacesUtils.bookmarks.remove(folderGuid);
     };
-    this.redo = async function() {
+    this.redo = async function () {
       await createItem();
     };
     return folderGuid;
@@ -1219,7 +1223,7 @@ PT.Move.prototype = Object.seal({
 
     await PlacesUtils.bookmarks.moveToFolder(guids, newParentGuid, index);
 
-    this.undo = async function() {
+    this.undo = async function () {
       // Undo has the potential for moving multiple bookmarks to multiple different
       // folders and positions, which is very complicated to manage. Therefore we do
       // individual moves one at a time and hopefully everything is put back approximately
@@ -1306,7 +1310,7 @@ PT.EditUrl.prototype = Object.seal({
     }
     await updateItem();
 
-    this.undo = async function() {
+    this.undo = async function () {
       await PlacesUtils.bookmarks.update(originalInfo);
       // Move tags from new URI to original URI.
       if (originalTags.length) {
@@ -1322,7 +1326,7 @@ PT.EditUrl.prototype = Object.seal({
       }
     };
 
-    this.redo = async function() {
+    this.redo = async function () {
       updatedInfo = await updateItem();
     };
   },
@@ -1359,7 +1363,7 @@ PT.EditKeyword.prototype = Object.seal({
       });
     }
 
-    this.undo = async function() {
+    this.undo = async function () {
       if (keyword) {
         await PlacesUtils.keywords.remove(keyword);
       }
@@ -1421,10 +1425,10 @@ PT.SortByName.prototype = {
     }
     await PlacesUtils.bookmarks.reorder(guid, newOrderGuids);
 
-    this.undo = async function() {
+    this.undo = async function () {
       await PlacesUtils.bookmarks.reorder(guid, oldOrderGuids);
     };
-    this.redo = async function() {
+    this.redo = async function () {
       await PlacesUtils.bookmarks.reorder(guid, newOrderGuids);
     };
   },
@@ -1453,7 +1457,7 @@ PT.Remove.prototype = {
       }
     }
 
-    let removeThem = async function() {
+    let removeThem = async function () {
       if (removedItems.length) {
         // We have to pass just the guids as although remove() accepts full
         // info items, promiseBookmarksTree returns dateAdded and lastModified
@@ -1465,7 +1469,7 @@ PT.Remove.prototype = {
     };
     await removeThem();
 
-    this.undo = async function() {
+    this.undo = async function () {
       for (let info of removedItems) {
         try {
           await createItemsFromBookmarksTree(info, true);
@@ -1516,12 +1520,12 @@ PT.Tag.prototype = {
         }
       }
     }
-    this.undo = async function() {
+    this.undo = async function () {
       for (let f of onUndo) {
         await f();
       }
     };
-    this.redo = async function() {
+    this.redo = async function () {
       for (let f of onRedo) {
         await f();
       }
@@ -1565,12 +1569,12 @@ PT.Untag.prototype = {
         }
       });
     }
-    this.undo = async function() {
+    this.undo = async function () {
       for (let f of onUndo) {
         await f();
       }
     };
-    this.redo = async function() {
+    this.redo = async function () {
       for (let f of onRedo) {
         await f();
       }
@@ -1668,12 +1672,12 @@ PT.RenameTag.prototype = {
         }
       }
     }
-    this.undo = async function() {
+    this.undo = async function () {
       for (let f of onUndo) {
         await f();
       }
     };
-    this.redo = async function() {
+    this.redo = async function () {
       for (let f of onRedo) {
         await f();
       }
@@ -1706,13 +1710,13 @@ PT.Copy.prototype = {
 
     let newItemGuid = await createItemsFromBookmarksTree(creationInfo, false);
     let newItemInfo = null;
-    this.undo = async function() {
+    this.undo = async function () {
       if (!newItemInfo) {
         newItemInfo = await PlacesUtils.promiseBookmarksTree(newItemGuid);
       }
       await PlacesUtils.bookmarks.remove(newItemGuid);
     };
-    this.redo = async function() {
+    this.redo = async function () {
       await createItemsFromBookmarksTree(newItemInfo, true);
     };
 

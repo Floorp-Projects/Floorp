@@ -22,7 +22,7 @@ async function invokeAndPause({ global, threadFront }, expression) {
 }
 
 function run_test() {
-  return (async function() {
+  return (async function () {
     const dbg = await setupTestFromUrl("stepping.js");
     const { threadFront } = dbg;
 

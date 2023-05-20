@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["network.cookie.cookieBehavior", 1],
@@ -14,13 +14,13 @@ add_setup(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   let dir = getChromeDir(getResolvedURI(gTestPath));
   dir.append("file_localStorage.html");
   const uriString = Services.io.newFileURI(dir).spec;
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uriString);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     let result = content.document.getElementById("result");
 
     is(

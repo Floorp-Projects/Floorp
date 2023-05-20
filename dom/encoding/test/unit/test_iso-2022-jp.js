@@ -1,4 +1,4 @@
-test(function() {
+test(function () {
   var bytes = [
     27,
     36,

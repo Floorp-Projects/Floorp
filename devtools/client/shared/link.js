@@ -34,7 +34,7 @@ function _getTopWindow() {
  * @param {Object} options
  *        Optional parameters, see documentation for openUILinkIn in utilityOverlay.js
  */
-exports.openDocLink = async function(url, options) {
+exports.openDocLink = async function (url, options) {
   const top = _getTopWindow();
   if (!top) {
     return;
@@ -54,7 +54,7 @@ exports.openDocLink = async function(url, options) {
  * @param {Object} options
  *        Optional parameters, see documentation for openUILinkIn in utilityOverlay.js
  */
-exports.openContentLink = async function(url, options = {}) {
+exports.openContentLink = async function (url, options = {}) {
   const top = _getTopWindow();
   if (!top) {
     return;
@@ -77,7 +77,7 @@ exports.openContentLink = async function(url, options = {}) {
  * @param {Object} options
  *        Optional parameters, see documentation for openUILinkIn in utilityOverlay.js
  */
-exports.openTrustedLink = async function(url, options) {
+exports.openTrustedLink = async function (url, options) {
   const top = _getTopWindow();
   if (!top) {
     return;

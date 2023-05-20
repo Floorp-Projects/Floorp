@@ -24,10 +24,7 @@ function getSiteBlockedErrorDetails(docShell) {
 
       // Remove the query to avoid leaking sensitive data
       if (reportUri instanceof Ci.nsIURL) {
-        reportUri = reportUri
-          .mutate()
-          .setQuery("")
-          .finalize();
+        reportUri = reportUri.mutate().setQuery("").finalize();
       }
 
       let triggeringPrincipal = docShell.failedChannel.loadInfo

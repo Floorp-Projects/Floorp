@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Test that changing the URL in a pinned tab works correctly
 
   let TEST_LINK_INITIAL = "about:mozilla";
@@ -50,7 +50,7 @@ add_task(async function() {
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://example.org/"
   );
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let link = content.document.createElement("a");
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     link.href = "http://example.org/";
@@ -60,12 +60,12 @@ add_task(async function() {
   info("Created & clicked link");
   let extraTab = await newTabPromise;
   info("Got a new tab");
-  await SpecialPowers.spawn(extraTab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(extraTab.linkedBrowser, [], async function () {
     is(content.opener, null, "No opener should be available");
   });
   BrowserTestUtils.removeTab(extraTab);
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   gBrowser.removeTab(gBrowser.selectedTab);
 });

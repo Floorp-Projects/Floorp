@@ -7,7 +7,7 @@
 
 const TEST_URI = URL_ROOT_SSL + "doc_inspector_reload_xul.xhtml";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("dom.allow_XUL_XBL_for_file", false);
 
   const { tab, inspector, toolbox } = await openInspectorForURL(TEST_URI);

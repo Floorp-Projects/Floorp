@@ -13,7 +13,7 @@ const TEST_URI =
 // to keep tests consistant across OSs we are setting the dpr to 1
 const dpr = "--dpr 1";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("wait for the iframes to be loaded");
@@ -92,10 +92,7 @@ add_task(async function() {
   );
   const date = new Date();
   const monthString = (date.getMonth() + 1).toString().padStart(2, "0");
-  const dayString = date
-    .getDate()
-    .toString()
-    .padStart(2, "0");
+  const dayString = date.getDate().toString().padStart(2, "0");
   const expectedDateString = `${date.getFullYear()}-${monthString}-${dayString}`;
 
   let screenshotDir;

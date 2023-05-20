@@ -1,6 +1,6 @@
 "use strict";
 
-self.addEventListener("message", function(event) {
+self.addEventListener("message", function (event) {
   switch (event.data) {
     case "ping":
       self.postMessage("pong");

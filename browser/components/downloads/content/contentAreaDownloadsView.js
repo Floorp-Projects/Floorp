@@ -45,6 +45,6 @@ var ContentAreaDownloadsView = {
   },
 };
 
-window.onload = function() {
+window.onload = function () {
   ContentAreaDownloadsView.init();
 };

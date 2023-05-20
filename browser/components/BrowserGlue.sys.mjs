@@ -832,13 +832,13 @@ if (AppConstants.MOZ_CRASHREPORTER) {
   });
 }
 
-XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function () {
   return Services.strings.createBundle(
     "chrome://branding/locale/brand.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gBrowserBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gBrowserBundle", function () {
   return Services.strings.createBundle(
     "chrome://browser/locale/browser.properties"
   );
@@ -904,7 +904,7 @@ export function BrowserGlue() {
     "nsIUserIdleService"
   );
 
-  XPCOMUtils.defineLazyGetter(this, "_distributionCustomizer", function() {
+  XPCOMUtils.defineLazyGetter(this, "_distributionCustomizer", function () {
     const { DistributionCustomizer } = ChromeUtils.import(
       "resource:///modules/distribution.js"
     );
@@ -2632,7 +2632,7 @@ BrowserGlue.prototype = {
       {
         name: "trackStartupCrashEndSetTimeout",
         task: () => {
-          lazy.setTimeout(function() {
+          lazy.setTimeout(function () {
             Services.tm.idleDispatchToMainThread(
               Services.startup.trackStartupCrashEnd
             );
@@ -3028,7 +3028,7 @@ BrowserGlue.prototype = {
 
   _addBreachAlertsPrefObserver() {
     const BREACH_ALERTS_PREF = "signon.management.page.breach-alerts.enabled";
-    const clearVulnerablePasswordsIfBreachAlertsDisabled = async function() {
+    const clearVulnerablePasswordsIfBreachAlertsDisabled = async function () {
       if (!Services.prefs.getBoolPref(BREACH_ALERTS_PREF)) {
         await lazy.LoginBreaches.clearAllPotentiallyVulnerablePasswords();
       }
@@ -3422,7 +3422,7 @@ BrowserGlue.prototype = {
    * If a backup for today doesn't exist, this creates one.
    */
   _backupBookmarks: function BG__backupBookmarks() {
-    return (async function() {
+    return (async function () {
       let lastBackupFile = await lazy.PlacesBackups.getMostRecentBackup();
       // Should backup bookmarks if there are no backups or the maximum
       // interval between backups elapsed.

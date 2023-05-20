@@ -100,7 +100,7 @@ const attributesTests = [
 addAccessibleTask(
   `
   <input id="textbox" value="hello">`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let textbox = findAccessibleChildByID(accDoc, "textbox");
     for (let {
       desc,
@@ -146,7 +146,7 @@ addAccessibleTask(
 <p id="p">text</p>
 <textarea id="textarea"></textarea>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     testAttrs(docAcc, { tag: "body" }, true);
     const p = findAccessibleChildByID(docAcc, "p");
     testAttrs(p, { tag: "p" }, true);
@@ -172,7 +172,7 @@ addAccessibleTask(
   <input id="checkbox" type="checkbox">
   <input id="radio" type="radio">
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     function testInputType(id, inputType) {
       if (inputType == undefined) {
         testAbsentAttrs(findAccessibleChildByID(docAcc, id), {
@@ -209,7 +209,7 @@ addAccessibleTask(
   <button id="button">b</button>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const div = findAccessibleChildByID(docAcc, "div");
     testAttrs(div, { display: "block" }, true);
     const ins = findAccessibleChildByID(docAcc, "ins");
@@ -248,7 +248,7 @@ addAccessibleTask(
 </audio>
 <img src="http://example.com/a11y/accessible/tests/mochitest/moz.png" usemap="#unslottedMap">
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const normalArea = findAccessibleChildByID(docAcc, "normalArea");
     testAbsentAttrs(normalArea, { display: "" });
     const unslottedArea = findAccessibleChildByID(docAcc, "unslottedArea");
@@ -269,7 +269,7 @@ addAccessibleTask(
 <button id="buttonSummary"><details><summary>test</summary></details></button>
 <div id="div"></div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const h1 = findAccessibleChildByID(docAcc, "h1");
     testAbsentAttrs(h1, { "explicit-name": "" });
     const buttonContent = findAccessibleChildByID(docAcc, "buttonContent");
@@ -322,7 +322,7 @@ addAccessibleTask(
 <div id="foo" aria-foo="bar">foo</div>
 <div id="mutate" aria-current="true">mutate</div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const currentTrue = findAccessibleChildByID(docAcc, "currentTrue");
     testAttrs(currentTrue, { current: "true" }, true);
     const currentFalse = findAccessibleChildByID(docAcc, "currentFalse");
@@ -413,7 +413,7 @@ addAccessibleTask(
 <article id="markupWithRole" role="banner">markupWithRole</article>
 <article id="markupWithEmptyRole" role="">markupWithEmptyRole</article>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const knownRole = findAccessibleChildByID(docAcc, "knownRole");
     testAttrs(knownRole, { "xml-roles": "main" }, true);
     const emptyRole = findAccessibleChildByID(docAcc, "emptyRole");
@@ -459,7 +459,7 @@ addAccessibleTask(
 <div id="nonLiveRole" role="group"><p>nonLiveRole</p></div>
 <div id="other" aria-atomic="true" aria-busy="true" aria-relevant="additions"><p>other</p></div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const noLive = findAccessibleChildByID(docAcc, "noLive");
     for (const acc of [noLive, noLive.firstChild]) {
       testAbsentAttrs(acc, {
@@ -520,7 +520,7 @@ addAccessibleTask(
 <p id="withId">withId</p>
 <div id="noIdParent"><p>noId</p></div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const withId = findAccessibleChildByID(docAcc, "withId");
     testAttrs(withId, { id: "withId" }, true);
     const noId = findAccessibleChildByID(docAcc, "noIdParent").firstChild;
@@ -538,7 +538,7 @@ addAccessibleTask(
 <div id="valuetext" role="slider" aria-valuetext="text"></div>
 <div id="noValue" role="button"></div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const valuenow = findAccessibleChildByID(docAcc, "valuenow");
     testAttrs(valuenow, { valuetext: "1" }, true);
     const valuetext = findAccessibleChildByID(docAcc, "valuetext");
@@ -580,7 +580,7 @@ addAccessibleTask(
 <div id="noClass">noClass</div>
 <div id="mutate">mutate</div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const oneClass = findAccessibleChildByID(docAcc, "oneClass");
     testAttrs(oneClass, { class: "c1" }, true);
     const multiClass = findAccessibleChildByID(docAcc, "multiClass");
@@ -614,7 +614,7 @@ addAccessibleTask(
 <img id="alt" alt="alt" src="${kImgUrl}">
 <img id="mutate">
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const noAlt = findAccessibleChildByID(docAcc, "noAlt");
     testAttrs(noAlt, { src: kImgUrl }, true);
     if (browser.isRemoteBrowser) {

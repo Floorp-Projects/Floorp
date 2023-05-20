@@ -11,9 +11,9 @@ function startNewPrivateWindowTestCase(aTestNumber) {
     "browser_referrer_open_link_in_private: " +
       getReferrerTestDescription(aTestNumber)
   );
-  contextMenuOpened(gTestWindow, "testlink").then(function(aContextMenu) {
-    newWindowOpened().then(function(aNewWindow) {
-      BrowserTestUtils.firstBrowserLoaded(aNewWindow, false).then(function() {
+  contextMenuOpened(gTestWindow, "testlink").then(function (aContextMenu) {
+    newWindowOpened().then(function (aNewWindow) {
+      BrowserTestUtils.firstBrowserLoaded(aNewWindow, false).then(function () {
         checkReferrerAndStartNextTest(
           aTestNumber,
           aNewWindow,

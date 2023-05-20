@@ -30,7 +30,7 @@ async function testScript(tab) {
   await new Promise(resolve => setTimeout(resolve, 0));
 }
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URL);
 
   // Run the test scenario first before recording in order to load all the

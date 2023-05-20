@@ -24,7 +24,7 @@ MemoryStats._hasMemoryStatistics.vsizeMaxContiguous = MEM_STAT_UNKNOWN;
 MemoryStats._hasMemoryStatistics.residentFast = MEM_STAT_UNKNOWN;
 MemoryStats._hasMemoryStatistics.heapAllocated = MEM_STAT_UNKNOWN;
 
-MemoryStats._getService = function(className, interfaceName) {
+MemoryStats._getService = function (className, interfaceName) {
   var service;
   try {
     service = Cc[className].getService(Ci[interfaceName]);
@@ -36,7 +36,7 @@ MemoryStats._getService = function(className, interfaceName) {
   return service;
 };
 
-MemoryStats._nsIFile = function(pathname) {
+MemoryStats._nsIFile = function (pathname) {
   var f;
   var contractID = "@mozilla.org/file/local;1";
   try {
@@ -48,13 +48,13 @@ MemoryStats._nsIFile = function(pathname) {
   return f;
 };
 
-MemoryStats.constructPathname = function(directory, basename) {
+MemoryStats.constructPathname = function (directory, basename) {
   var d = MemoryStats._nsIFile(directory);
   d.append(basename);
   return d.path;
 };
 
-MemoryStats.dump = function(
+MemoryStats.dump = function (
   testNumber,
   testURL,
   dumpOutputDirectory,
@@ -63,7 +63,7 @@ MemoryStats.dump = function(
 ) {
   // Use dump because treeherder uses --quiet, which drops 'info'
   // from the structured logger.
-  var info = function(message) {
+  var info = function (message) {
     dump(message + "\n");
   };
 
@@ -108,7 +108,7 @@ MemoryStats.dump = function(
     );
     md.dumpMemoryReportsToNamedFile(
       dumpfile,
-      function() {
+      function () {
         info("TEST-INFO | " + testURL + " | MEMDUMP-END");
       },
       null,

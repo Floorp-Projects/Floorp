@@ -309,7 +309,7 @@ async function testImportedBookmarks() {
 }
 
 function checkItem(aExpected, aNode) {
-  return (async function() {
+  return (async function () {
     let bookmark = await PlacesUtils.bookmarks.fetch(aNode.bookmarkGuid);
 
     for (let prop in aExpected) {

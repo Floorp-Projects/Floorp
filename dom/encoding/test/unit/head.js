@@ -129,7 +129,7 @@ function test(func, msg) {
 }
 
 function run_test() {
-  tests.forEach(function(t) {
+  tests.forEach(function (t) {
     info(`test group: ${t.msg}, {source_file: ${t.filename}}`);
     t.func();
   });

@@ -1,7 +1,7 @@
 let value = "";
 let fetch_url = "";
 
-self.onfetch = function(e) {
+self.onfetch = function (e) {
   fetch_url = e.request.url;
 };
 

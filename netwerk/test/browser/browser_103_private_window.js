@@ -6,7 +6,7 @@
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("network.early-hints.enabled");
 });
 

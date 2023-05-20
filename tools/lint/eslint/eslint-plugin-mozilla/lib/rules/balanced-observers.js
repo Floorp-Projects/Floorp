@@ -106,8 +106,8 @@ module.exports = {
         }
       },
 
-      "Program:exit": function() {
-        getUnbalancedObservers().forEach(function(observer) {
+      "Program:exit": function () {
+        getUnbalancedObservers().forEach(function (observer) {
           context.report({
             node: observer.node,
             messageId: "noCorresponding",

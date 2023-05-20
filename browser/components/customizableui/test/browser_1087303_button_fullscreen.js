@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info("Check fullscreen button existence and functionality");
 
   CustomizableUI.addWidgetToArea(

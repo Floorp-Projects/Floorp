@@ -19,7 +19,7 @@ function containsFocus(aDoc, aElm) {
   return false;
 }
 
-add_task(async function() {
+add_task(async function () {
   info("Create a test tab and open the toolbox");
   const toolbox = await openNewTabAndToolbox(TEST_URL, "webconsole");
   const doc = toolbox.doc;
@@ -87,7 +87,7 @@ add_task(async function() {
 });
 
 // Test that moving the focus of tab button and selecting it.
-add_task(async function() {
+add_task(async function () {
   info("Create a test tab and open the toolbox");
   const toolbox = await openNewTabAndToolbox(TEST_URL, "inspector");
   const doc = toolbox.doc;

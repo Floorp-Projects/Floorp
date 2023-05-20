@@ -57,7 +57,7 @@ function promiseWaitForAlertActive(aNotificationBox) {
   let deferred = PromiseUtils.defer();
   aNotificationBox.stack.addEventListener(
     "AlertActive",
-    function() {
+    function () {
       deferred.resolve();
     },
     { once: true }
@@ -94,7 +94,7 @@ function triggerInfoBar(expectedTimeoutMs) {
   showInfobarCallback();
 }
 
-var checkInfobarButton = async function(aNotification) {
+var checkInfobarButton = async function (aNotification) {
   // Check that the button on the data choices infobar does the right thing.
   let buttons = aNotification.buttonContainer.getElementsByTagName("button");
   Assert.equal(
@@ -111,7 +111,7 @@ var checkInfobarButton = async function(aNotification) {
   await promiseNextTick();
 };
 
-add_setup(async function() {
+add_setup(async function () {
   const isFirstRun = Preferences.get(PREF_FIRST_RUN, true);
   const bypassNotification = Preferences.get(PREF_BYPASS_NOTIFICATION, true);
   const currentPolicyVersion = Preferences.get(PREF_CURRENT_POLICY_VERSION, 1);

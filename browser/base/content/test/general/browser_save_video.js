@@ -8,7 +8,7 @@ MockFilePicker.init(window);
  * TestCase for bug 564387
  * <https://bugzilla.mozilla.org/show_bug.cgi?id=564387>
  */
-add_task(async function() {
+add_task(async function () {
   var fileName;
 
   let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -36,7 +36,7 @@ add_task(async function() {
   var destFile = destDir.clone();
 
   MockFilePicker.displayDirectory = destDir;
-  MockFilePicker.showCallback = function(fp) {
+  MockFilePicker.showCallback = function (fp) {
     fileName = fp.defaultString;
     destFile.append(fileName);
     MockFilePicker.setFiles([destFile]);
@@ -62,7 +62,7 @@ add_task(async function() {
     mockTransferRegisterer.register();
   });
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     mockTransferRegisterer.unregister();
     MockFilePicker.cleanup();
     destDir.remove(true);

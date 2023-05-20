@@ -13,6 +13,6 @@ function responseMsg(msg) {
     });
 }
 
-onfetch = function(e) {
+onfetch = function (e) {
   responseMsg(e.request.url);
 };

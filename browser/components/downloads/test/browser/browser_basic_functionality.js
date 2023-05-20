@@ -3,7 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await task_resetState();
 });
 
@@ -30,7 +30,7 @@ add_task(async function test_basic_functionality() {
   // For testing purposes, show all the download items at once.
   var originalCountLimit = DownloadsView.kItemCountLimit;
   DownloadsView.kItemCountLimit = DownloadData.length;
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     DownloadsView.kItemCountLimit = originalCountLimit;
   });
 

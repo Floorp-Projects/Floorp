@@ -69,7 +69,7 @@ add_task(async function overrideContext_permissions() {
     // The menus.overrideContext method can only be called during a
     // "contextmenu" event. So we use a generator to run tests, and yield
     // before we call overrideContext after an asynchronous operation.
-    let testGenerator = (async function*() {
+    let testGenerator = (async function* () {
       browser.test.assertEq(
         undefined,
         browser.menus.overrideContext,

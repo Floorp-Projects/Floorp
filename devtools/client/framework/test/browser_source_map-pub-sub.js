@@ -25,7 +25,7 @@ const SOURCE_MAP_PREF = "devtools.source-map.client-service.enabled";
 const GENERATED_LINE = 84;
 const ORIGINAL_LINE = 11;
 
-add_task(async function() {
+add_task(async function () {
   // Push a pref env so any changes will be reset at the end of the test.
   await SpecialPowers.pushPrefEnv({});
 

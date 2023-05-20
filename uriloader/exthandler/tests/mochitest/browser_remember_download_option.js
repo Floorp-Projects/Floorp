@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   // create mocked objects
   let launcher = createMockedObjects(true);
 

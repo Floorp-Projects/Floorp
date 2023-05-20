@@ -42,7 +42,7 @@ function waitForClear() {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.webapi.testing", true],
@@ -63,7 +63,7 @@ async function testInstall(browser, args, steps, description) {
   let success = await SpecialPowers.spawn(
     browser,
     [{ args, steps }],
-    async function(opts) {
+    async function (opts) {
       let { args, steps } = opts;
       let install = await content.navigator.mozAddonManager.createInstall(args);
       if (!install) {
@@ -186,7 +186,7 @@ async function testInstall(browser, args, steps, description) {
 }
 
 function makeInstallTest(task) {
-  return async function() {
+  return async function () {
     // withNewTab() will close the test tab before returning, at which point
     // the cleanup event will come from the content process.  We need to see
     // that event but don't want to race to install a listener for it after
@@ -202,7 +202,7 @@ function makeInstallTest(task) {
 }
 
 function makeRegularTest(options, what) {
-  return makeInstallTest(async function(browser) {
+  return makeInstallTest(async function (browser) {
     let steps = [
       { action: "install" },
       {
@@ -294,7 +294,7 @@ add_task(
 );
 
 add_task(
-  makeInstallTest(async function(browser) {
+  makeInstallTest(async function (browser) {
     let steps = [
       { action: "cancel" },
       {
@@ -324,7 +324,7 @@ add_task(
 );
 
 add_task(
-  makeInstallTest(async function(browser) {
+  makeInstallTest(async function (browser) {
     let steps = [
       { action: "install", expectError: true },
       {
@@ -359,7 +359,7 @@ add_task(
 );
 
 add_task(
-  makeInstallTest(async function(browser) {
+  makeInstallTest(async function (browser) {
     let steps = [
       { action: "install", expectError: true },
       {
@@ -401,7 +401,7 @@ add_task(async function test_permissions_and_policy() {
     let result = await SpecialPowers.spawn(
       browser,
       [{ url, pattern }],
-      function(opts) {
+      function (opts) {
         return new Promise(resolve => {
           content.navigator.mozAddonManager
             .createInstall({ url: opts.url })
@@ -496,7 +496,7 @@ add_task(async function test_permissions_and_policy() {
 });
 
 add_task(
-  makeInstallTest(async function(browser) {
+  makeInstallTest(async function (browser) {
     let xpiURL = `${SECURE_TESTROOT}../xpinstall/incompatible.xpi`;
     let id = "incompatible-xpi@tests.mozilla.org";
 
@@ -524,7 +524,7 @@ add_task(
 );
 
 add_task(
-  makeInstallTest(async function(browser) {
+  makeInstallTest(async function (browser) {
     const options = { url: XPI_URL, addonId };
     let steps = [
       { action: "install" },

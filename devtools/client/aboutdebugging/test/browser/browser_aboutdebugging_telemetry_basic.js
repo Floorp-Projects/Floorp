@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
 /**
  * Check that telemetry events are recorded when opening and closing about debugging.
  */
-add_task(async function() {
+add_task(async function () {
   setupTelemetryTest();
 
   const { tab } = await openAboutDebugging();

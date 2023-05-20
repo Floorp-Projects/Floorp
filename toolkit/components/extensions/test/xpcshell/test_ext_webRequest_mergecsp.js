@@ -42,7 +42,7 @@ let extensionData = {
   },
   background() {
     let csp_value = undefined;
-    browser.test.onMessage.addListener(function(msg) {
+    browser.test.onMessage.addListener(function (msg) {
       csp_value = msg;
       browser.test.sendMessage("csp-set");
     });

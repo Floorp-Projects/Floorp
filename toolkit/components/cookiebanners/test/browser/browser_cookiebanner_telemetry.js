@@ -122,7 +122,7 @@ async function openLookUpTelemetryTestPage(browser, testInTop, page, domain) {
   await clickFinishPromise;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Clear telemetry before starting telemetry test.
   Services.fog.testResetFOG();
 

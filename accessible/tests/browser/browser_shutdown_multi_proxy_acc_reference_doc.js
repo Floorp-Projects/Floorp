@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Making sure that the e10s is enabled on Windows for testing.
   await setE10sPrefs();
 
@@ -33,7 +33,7 @@ add_task(async function() {
         <body id="body"><div id="div"></div></body>
       </html>`,
     },
-    async function(browser) {
+    async function (browser) {
       let docLoadedEvent = await docLoaded;
       let docAcc = docLoadedEvent.accessibleDocument;
       ok(docAcc, "Accessible document proxy is created");

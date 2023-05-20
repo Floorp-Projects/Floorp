@@ -7,7 +7,7 @@ const TEST_ROOT =
   "http://mochi.test:8888/browser/browser/base/content/test/favicons/";
 const TEST_URL = TEST_ROOT + "file_favicon_change.html";
 
-add_task(async function() {
+add_task(async function () {
   let extraTab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
   let haveChanged = waitForFavicon(
     extraTab.linkedBrowser,
@@ -20,7 +20,7 @@ add_task(async function() {
 
   haveChanged = waitForFavicon(extraTab.linkedBrowser, TEST_ROOT + "moz.png");
 
-  SpecialPowers.spawn(extraTab.linkedBrowser, [], function() {
+  SpecialPowers.spawn(extraTab.linkedBrowser, [], function () {
     let ev = new content.CustomEvent("PleaseChangeFavicon", {});
     content.dispatchEvent(ev);
   });

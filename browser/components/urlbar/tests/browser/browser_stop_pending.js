@@ -22,7 +22,7 @@ const SLOW_PAGE2 =
  * 3) before the URL for step 2 has finished loading, load a third URL
  * we don't revert to the URL from (1).
  */
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "http://example.com",
@@ -83,7 +83,7 @@ add_task(async function() {
  *
  * The URL bar continues to contain the URL of the page we wanted to visit.
  */
-add_task(async function() {
+add_task(async function () {
   let socket = Cc["@mozilla.org/network/server-socket;1"].createInstance(
     Ci.nsIServerSocket
   );
@@ -144,7 +144,7 @@ add_task(async function() {
  *
  * The URL bar continues to contain the second URL.
  */
-add_task(async function() {
+add_task(async function () {
   let socket = Cc["@mozilla.org/network/server-socket;1"].createInstance(
     Ci.nsIServerSocket
   );

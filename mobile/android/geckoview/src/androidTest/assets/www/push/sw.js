@@ -1,18 +1,18 @@
-self.addEventListener("install", function() {
+self.addEventListener("install", function () {
   self.skipWaiting();
 });
 
-self.addEventListener("activate", function(e) {
+self.addEventListener("activate", function (e) {
   e.waitUntil(self.clients.claim());
 });
 
-self.addEventListener("push", async function(e) {
+self.addEventListener("push", async function (e) {
   const clients = await self.clients.matchAll();
   let text = "";
   if (e.data) {
     text = e.data.text();
   }
-  clients.forEach(function(client) {
+  clients.forEach(function (client) {
     client.postMessage({ type: "push", payload: text });
   });
 
@@ -22,9 +22,9 @@ self.addEventListener("push", async function(e) {
   } catch (e) {}
 });
 
-self.addEventListener("pushsubscriptionchange", async function(e) {
+self.addEventListener("pushsubscriptionchange", async function (e) {
   const clients = await self.clients.matchAll();
-  clients.forEach(function(client) {
+  clients.forEach(function (client) {
     client.postMessage({ type: "pushsubscriptionchange" });
   });
 });

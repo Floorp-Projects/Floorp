@@ -117,7 +117,7 @@ add_task(async function test_backoff503() {
   engine.exception = { status: 503, headers: { "retry-after": BACKOFF } };
 
   let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function(subject) {
+  Svc.Obs.add("weave:service:backoff:interval", function (subject) {
     backoffInterval = subject;
   });
 

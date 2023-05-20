@@ -21,7 +21,7 @@ declTest("crash actor", {
       );
       ok(parent, "JSWindowActorParent should have value.");
 
-      await SpecialPowers.spawn(newTabBrowser, [], async function() {
+      await SpecialPowers.spawn(newTabBrowser, [], async function () {
         let child = content.windowGlobalChild;
         ok(child, "WindowGlobalChild should have value.");
         is(
@@ -70,7 +70,7 @@ declTest("crash actor", {
       );
       ok(parent, "JSWindowActorParent should have value.");
 
-      await SpecialPowers.spawn(newTabBrowser, [], async function() {
+      await SpecialPowers.spawn(newTabBrowser, [], async function () {
         let child = content.windowGlobalChild;
         ok(child, "WindowGlobalChild should have value.");
         is(

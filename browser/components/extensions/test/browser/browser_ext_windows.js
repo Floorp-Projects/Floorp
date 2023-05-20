@@ -25,7 +25,7 @@ add_task(async function testWindowGetAll() {
   );
 
   let extension = ExtensionTestUtils.loadExtension({
-    background: async function() {
+    background: async function () {
       let wins = await browser.windows.getAll();
       browser.test.assertEq(2, wins.length, "Expect two windows");
 

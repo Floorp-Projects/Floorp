@@ -8,7 +8,7 @@ var test2Complete = false;
 
 function executeWithTimeout() {
   return new Promise(resolve =>
-    executeSoon(function() {
+    executeSoon(function () {
       ok(true, "we get here after a timeout");
       resolve();
     })
@@ -25,7 +25,7 @@ add_task(async function asyncTest_no2() {
   test2Complete = true;
 });
 
-add_task(function() {
+add_task(function () {
   ok(test1Complete, "We have been through test 1");
   ok(test2Complete, "We have been through test 2");
 });

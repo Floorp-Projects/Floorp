@@ -8,7 +8,7 @@ declTest("asyncMessage testing", {
     let actorParent = parent.getActor("TestWindow");
     ok(actorParent, "JSWindowActorParent should have value.");
 
-    await ContentTask.spawn(browser, {}, async function() {
+    await ContentTask.spawn(browser, {}, async function () {
       let child = content.windowGlobalChild;
       let actorChild = child.getActor("TestWindow");
       ok(actorChild, "JSWindowActorChild should have value.");
@@ -31,7 +31,7 @@ declTest("asyncMessage without both sides", {
   async test(browser) {
     // If we don't create a parent actor, make sure the parent actor
     // gets created by having sent the message.
-    await ContentTask.spawn(browser, {}, async function() {
+    await ContentTask.spawn(browser, {}, async function () {
       let child = content.windowGlobalChild;
       let actorChild = child.getActor("TestWindow");
       ok(actorChild, "JSWindowActorChild should have value.");

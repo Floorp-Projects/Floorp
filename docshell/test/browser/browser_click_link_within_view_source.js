@@ -18,7 +18,7 @@ add_task(async function test_click_link_within_view_source() {
   DUMMY_FILE_URI.append(DUMMY_FILE);
   DUMMY_FILE_URI = Services.io.newFileURI(DUMMY_FILE_URI).spec;
 
-  await BrowserTestUtils.withNewTab(TEST_FILE_URI, async function(aBrowser) {
+  await BrowserTestUtils.withNewTab(TEST_FILE_URI, async function (aBrowser) {
     let tabSpec = gBrowser.selectedBrowser.currentURI.spec;
     info("loading: " + tabSpec);
     ok(
@@ -44,7 +44,7 @@ add_task(async function test_click_link_within_view_source() {
       false,
       url => url.endsWith("dummy_page.html")
     );
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
       if (content.document.readyState != "complete") {
         await ContentTaskUtils.waitForEvent(
           content.document,

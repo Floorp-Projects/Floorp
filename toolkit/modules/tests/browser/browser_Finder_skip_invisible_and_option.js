@@ -22,7 +22,7 @@ add_task(async function test_skip_invisible() {
       gBrowser,
       url: "data:text/html;charset=utf-8," + encodeURIComponent(URI),
     },
-    async function(browser) {
+    async function (browser) {
       let finder = browser.finder;
       let listener = {
         onFindResult() {
@@ -88,7 +88,7 @@ add_task(async function test_find_anon_content() {
       gBrowser,
       url: "data:text/html;charset=utf-8," + encodeURIComponent(URI),
     },
-    async function(browser) {
+    async function (browser) {
       let finder = browser.finder;
       let listener = {
         onFindResult() {

@@ -8,7 +8,7 @@ const TEST_URI =
   "test/browser/" +
   "test-location-styleeditor-link.html";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.filter.css", true);
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);

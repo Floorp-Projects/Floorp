@@ -7,7 +7,7 @@ const CONTENT_CREATED = "ipc:content-created";
 async function spawnNewAndTest(recur, pids) {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank", forceNewProcess: true },
-    async function(browser) {
+    async function (browser) {
       // Make sure our new browser is in its own process.
       let newPid = browser.frameLoader.remoteTab.osPid;
       ok(!pids.has(newPid), "new tab is in its own process: " + recur);
@@ -18,7 +18,7 @@ async function spawnNewAndTest(recur, pids) {
       } else {
         await BrowserTestUtils.withNewTab(
           { gBrowser, url: "about:blank" },
-          function(lastBrowser) {
+          function (lastBrowser) {
             let lastPid = lastBrowser.frameLoader.remoteTab.osPid;
             ok(pids.has(lastPid), "final tab cannot be in its own process");
           }

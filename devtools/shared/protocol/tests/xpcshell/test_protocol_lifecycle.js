@@ -6,7 +6,7 @@
 const { Actor } = require("resource://devtools/shared/protocol/Actor.js");
 const { Front } = require("resource://devtools/shared/protocol/Front.js");
 
-add_task(async function() {
+add_task(async function () {
   // Front constructor expect to be provided a client object
   const client = {};
   const front = new Front(client);

@@ -9,7 +9,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-sourcemaps.html");
 
   await waitForSources(dbg, "entry.js");
@@ -22,9 +22,7 @@ add_task(async function() {
   await waitForLoadedSource(dbg, "entry.js");
 
   ok(
-    getCM(dbg)
-      .getValue()
-      .includes("window.keepMeAlive"),
+    getCM(dbg).getValue().includes("window.keepMeAlive"),
     "Original source text loaded correctly"
   );
 });

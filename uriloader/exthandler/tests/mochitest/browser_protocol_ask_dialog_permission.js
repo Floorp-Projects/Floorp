@@ -454,7 +454,7 @@ async function closeDialog(browser, dialog, confirm, scheme) {
   return dialogClosedPromise;
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   // Clean up test handlers
   TEST_PROTOS.forEach(scheme => {
     let handlerInfo = HandlerServiceTestUtils.getHandlerInfo(scheme);
@@ -465,7 +465,7 @@ registerCleanupFunction(function() {
   Services.perms.removeAll();
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["security.external_protocol_requires_permission", true]],
   });

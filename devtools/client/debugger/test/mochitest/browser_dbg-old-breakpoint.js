@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   clearDebuggerPreferences();
 
   const pending = {
@@ -70,7 +70,7 @@ add_task(async function() {
 // Test that if we show a breakpoint with an old generated location, it is
 // removed after we load the original source and find the new generated
 // location.
-add_task(async function() {
+add_task(async function () {
   clearDebuggerPreferences();
 
   const pending = {

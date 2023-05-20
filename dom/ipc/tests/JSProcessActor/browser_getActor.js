@@ -23,7 +23,7 @@ declTest("getActor on both sides", {
       "Checking that we can observe parent creation"
     );
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let child = ChromeUtils.domProcessChild;
       ok(child, "WindowGlobalChild should have value.");
       let actorChild = child.getActor("TestProcessActor");

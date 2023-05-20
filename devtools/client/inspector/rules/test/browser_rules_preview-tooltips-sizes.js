@@ -12,7 +12,7 @@ const BASE_64_URL =
   "0AAAAUElEQVRYR+3UsQkAQAhD0TjJ7T+Wk3gbxMIizbcVITwwJWlkZtptpXp+v94TAAEE4gLTvgfOf770RB" +
   "EAAQTiAvEiIgACCMQF4kVEAAQQSAt8xsyeAW6R8eIAAAAASUVORK5CYII=";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(
     "data:text/html;charset=utf-8," +
       encodeURIComponent(`

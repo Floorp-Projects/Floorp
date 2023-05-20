@@ -8,7 +8,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const ITEM_NAME = "ls1";
   const UPDATE_COUNT = 3;
 

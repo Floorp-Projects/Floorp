@@ -27,7 +27,7 @@ add_setup(async () => {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   // This keyword needs to be unique to prevent history entries from unrelated
   // tests from appearing in the suggestions list.
   let extension = ExtensionTestUtils.loadExtension({
@@ -37,7 +37,7 @@ add_task(async function() {
       },
     },
 
-    background: function() {
+    background: function () {
       browser.omnibox.onInputStarted.addListener(() => {
         browser.test.sendMessage("on-input-started-fired");
       });

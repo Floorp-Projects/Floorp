@@ -504,7 +504,7 @@ export class SafariProfileMigrator extends MigratorBase {
     }
 
     let resources = [];
-    let pushProfileFileResource = function(aFileName, aConstructor) {
+    let pushProfileFileResource = function (aFileName, aConstructor) {
       let file = profileDir.clone();
       file.append(aFileName);
       if (file.exists()) {

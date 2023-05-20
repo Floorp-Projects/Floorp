@@ -255,7 +255,7 @@ function test_utf_samples() {
   var encoded = new TextEncoder().encode(sample);
   assert_array_equals(encoded, cases[0].expected, "expected equal encodings");
 
-  cases.forEach(function(t) {
+  cases.forEach(function (t) {
     var decoded = new TextDecoder(t.encoding).decode(
       new Uint8Array(t.expected)
     );

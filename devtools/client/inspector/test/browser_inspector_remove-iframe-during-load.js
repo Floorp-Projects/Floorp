@@ -7,7 +7,7 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_remove-iframe-during-load.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, tab } = await openInspectorForURL("about:blank");
   await selectNode("body", inspector);
 
@@ -25,7 +25,7 @@ add_task(async function() {
 
   // We do not want to wait for the inspector to be fully ready before testing
   // so we load TEST_URL and just wait for the content window to be done loading
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     await content.wrappedJSObject.readyPromise;
   });
 
@@ -41,7 +41,7 @@ add_task(async function() {
 
   // Create/remove an extra one now, after the load event.
   info("Creating and removing an iframe.");
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     const iframe = content.document.createElement("iframe");
     content.document.body.appendChild(iframe);
     iframe.remove();
@@ -55,9 +55,13 @@ add_task(async function() {
   // Assert that the markup-view is displayed and works
   ok(!(await contentPageHasNode(browser, "iframe")), "Iframe has been removed");
 
-  const expectedText = await SpecialPowers.spawn(browser, [], async function() {
-    return content.document.querySelector("#yay").textContent;
-  });
+  const expectedText = await SpecialPowers.spawn(
+    browser,
+    [],
+    async function () {
+      return content.document.querySelector("#yay").textContent;
+    }
+  );
   is(expectedText, "load", "Load event fired.");
 
   info("Wait for the inspector to be properly reloaded");
@@ -69,7 +73,7 @@ add_task(async function() {
 });
 
 function contentPageHasNode(browser, selector) {
-  return SpecialPowers.spawn(browser, [selector], async function(
+  return SpecialPowers.spawn(browser, [selector], async function (
     selectorChild
   ) {
     return !!content.document.querySelector(selectorChild);

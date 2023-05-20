@@ -59,7 +59,7 @@ function test() {
     null,
     "val4",
   ];
-  let callback = function() {
+  let callback = function () {
     testTabCount--;
     if (testTabCount == 0) {
       finish();

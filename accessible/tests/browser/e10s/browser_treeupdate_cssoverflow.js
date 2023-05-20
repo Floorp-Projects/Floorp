@@ -10,7 +10,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 addAccessibleTask(
   `
   <div id="container"><div id="scrollarea" style="overflow:auto;"><input>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const id1 = "container";
     const container = findAccessibleChildByID(accDoc, id1);
 

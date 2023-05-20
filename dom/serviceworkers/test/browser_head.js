@@ -38,8 +38,8 @@ function getPrincipal(url, attrs) {
 }
 
 async function _qm_requestFinished(request) {
-  await new Promise(function(resolve) {
-    request.callback = function() {
+  await new Promise(function (resolve) {
+    request.callback = function () {
       resolve();
     };
   });
@@ -134,7 +134,7 @@ async function install_sw(swDesc) {
       await SpecialPowers.spawn(
         browser,
         [{ swScript: swDesc.script, swScope: swDesc.scope }],
-        async function({ swScript, swScope }) {
+        async function ({ swScript, swScope }) {
           await content.wrappedJSObject.registerAndWaitForActive(
             swScript,
             swScope
@@ -166,7 +166,7 @@ async function consume_storage(origin, storageDesc) {
       url: pageUrlStr,
     },
     async browser => {
-      await SpecialPowers.spawn(browser, [storageDesc], async function({
+      await SpecialPowers.spawn(browser, [storageDesc], async function ({
         cacheBytes,
         idbBytes,
       }) {
@@ -208,7 +208,7 @@ async function navigate_and_get_body(swDesc, debugTag) {
     },
     async browser => {
       info(` Tab opened, querying body content.`);
-      const spawnResult = await SpecialPowers.spawn(browser, [], function() {
+      const spawnResult = await SpecialPowers.spawn(browser, [], function () {
         const controlled = !!content.navigator.serviceWorker.controller;
         // Special-case about: URL's.
         let loc = content.document.documentURI;
@@ -235,13 +235,13 @@ async function navigate_and_get_body(swDesc, debugTag) {
 }
 
 function waitForIframeLoad(iframe) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     iframe.onload = resolve;
   });
 }
 
 function waitForRegister(scope, callback) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let listener = {
       onRegister(registration) {
         if (registration.scope !== scope) {
@@ -256,7 +256,7 @@ function waitForRegister(scope, callback) {
 }
 
 function waitForUnregister(scope) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let listener = {
       onUnregister(registration) {
         if (registration.scope !== scope) {
@@ -273,7 +273,7 @@ function waitForUnregister(scope) {
 // Be careful using this helper function, please make sure QuotaUsageCheck must
 // happen, otherwise test would be stucked in this function.
 function waitForQuotaUsageCheckFinish(scope) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let listener = {
       onQuotaUsageCheckFinish(registration) {
         if (registration.scope !== scope) {
@@ -288,7 +288,7 @@ function waitForQuotaUsageCheckFinish(scope) {
 }
 
 function waitForServiceWorkerRegistrationChange(registration, callback) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let listener = {
       onChange() {
         registration.removeListener(listener);
@@ -303,7 +303,7 @@ function waitForServiceWorkerRegistrationChange(registration, callback) {
 }
 
 function waitForServiceWorkerShutdown() {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     let observer = {
       observe(subject, topic, data) {
         if (topic !== "service-worker-shutdown") {

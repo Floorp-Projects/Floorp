@@ -130,7 +130,7 @@ async function expandFrames(frames, { getState, sourceMapLoader }) {
  * @static
  */
 export function mapFrames(cx) {
-  return async function(thunkArgs) {
+  return async function (thunkArgs) {
     const { dispatch, getState } = thunkArgs;
     const frames = getFrames(getState(), cx.thread);
     if (!frames) {

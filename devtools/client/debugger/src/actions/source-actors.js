@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 export function insertSourceActors(sourceActors) {
-  return function({ dispatch }) {
+  return function ({ dispatch }) {
     dispatch({
       type: "INSERT_SOURCE_ACTORS",
       sourceActors,

@@ -2,8 +2,8 @@ ChromeUtils.defineESModuleGetters(this, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
-add_task(async function() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function(
+add_task(async function () {
+  await BrowserTestUtils.withNewTab("https://example.com", async function (
     aBrowser
   ) {
     BrowserTestUtils.loadURIString(aBrowser, "https://example.org");

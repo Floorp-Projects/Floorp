@@ -10,7 +10,7 @@
 
 const TEST_URI = `${URL_ROOT}doc_class_panel_autocomplete.html`;
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, view } = await openRuleView();
   const { addEl: textInput } = view.classListPreviewer;
@@ -71,7 +71,7 @@ add_task(async function() {
   // Modify the content page and assert that the new class is displayed in the
   // autocomplete if the user types a new letter.
   const onNewMutation = inspector.inspectorFront.walker.once("new-mutations");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function () {
     content.document.body.classList.add("auto-body-added-by-script");
   });
   await onNewMutation;

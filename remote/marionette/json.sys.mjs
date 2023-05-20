@@ -105,7 +105,7 @@ function cloneObject(value, seen, cloneAlgorithm) {
  *     If the element has gone stale, indicating it is no longer
  *     attached to the DOM.
  */
-json.clone = function(value, nodeCache) {
+json.clone = function (value, nodeCache) {
   function cloneJSON(value, seen) {
     if (seen === undefined) {
       seen = new Set();
@@ -199,7 +199,7 @@ json.clone = function(value, nodeCache) {
  * @throws {StaleElementReferenceError}
  *     If the element is stale, indicating it is no longer attached to the DOM.
  */
-json.deserialize = function(value, nodeCache, win) {
+json.deserialize = function (value, nodeCache, win) {
   function deserializeJSON(value, seen) {
     if (seen === undefined) {
       seen = new Set();

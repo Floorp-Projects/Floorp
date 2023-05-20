@@ -19,7 +19,7 @@ requestLongerTimeout(4);
 // Test that expanding a browser element of a webextension in the browser toolbox works
 // as expected (See Bug 1696862).
 
-add_task(async function() {
+add_task(async function () {
   const extension = ExtensionTestUtils.loadExtension({
     // manifest_version: 2,
     manifest: {
@@ -42,7 +42,7 @@ add_task(async function() {
             <h1 id="sidebar-extension-h1">Sidebar Extension Test</h1>
           </body>
         </html>`,
-      "sidebar.js": function() {
+      "sidebar.js": function () {
         window.onload = () => {
           // eslint-disable-next-line no-undef
           browser.test.sendMessage("sidebar-ready");

@@ -1,4 +1,4 @@
-onactivate = function(e) {
+onactivate = function (e) {
   var result = {
     resolve_value: false,
     match_count_before: -1,
@@ -8,18 +8,18 @@ onactivate = function(e) {
 
   self.clients
     .matchAll()
-    .then(function(matched) {
+    .then(function (matched) {
       // should be 0
       result.match_count_before = matched.length;
     })
-    .then(function() {
+    .then(function () {
       return clients.claim();
     })
-    .then(function(ret) {
+    .then(function (ret) {
       result.resolve_value = ret;
       return clients.matchAll();
     })
-    .then(function(matched) {
+    .then(function (matched) {
       // should be 1
       result.match_count_after = matched.length;
       if (result.match_count_after === 1) {

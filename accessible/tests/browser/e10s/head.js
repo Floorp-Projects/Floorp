@@ -36,7 +36,7 @@ async function testCachedRelation(identifier, relType, relatedIdentifiers) {
   info(`Testing ${relDescr}`);
 
   if (!relatedIdentifiers) {
-    await untilCacheOk(function() {
+    await untilCacheOk(function () {
       let r = getRelationByType(identifier, relType);
       if (r) {
         info(`Fetched ${r.targetsCount} relations from cache`);
@@ -52,7 +52,7 @@ async function testCachedRelation(identifier, relType, relatedIdentifiers) {
     relatedIdentifiers instanceof Array
       ? relatedIdentifiers
       : [relatedIdentifiers];
-  await untilCacheOk(function() {
+  await untilCacheOk(function () {
     let r = getRelationByType(identifier, relType);
     if (r) {
       info(
@@ -74,7 +74,7 @@ async function testCachedRelation(identifier, relType, relatedIdentifiers) {
     return;
   }
 
-  await untilCacheOk(function() {
+  await untilCacheOk(function () {
     const relation = getRelationByType(identifier, relType);
     const actualTargets = relation ? relation.getTargets() : null;
     if (!actualTargets) {
@@ -105,7 +105,7 @@ async function testCachedRelation(identifier, relType, relatedIdentifiers) {
     return true;
   }, "All given related accessibles are targets of fetched relation.");
 
-  await untilCacheOk(function() {
+  await untilCacheOk(function () {
     const relation = getRelationByType(identifier, relType);
     const actualTargets = relation ? relation.getTargets() : null;
     if (!actualTargets) {

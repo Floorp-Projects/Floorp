@@ -75,7 +75,7 @@ const TEST_CASES = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // By default, proxies don't apply to 127.0.0.1. We need them to for this test, though:

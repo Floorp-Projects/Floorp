@@ -16,7 +16,7 @@ add_task(async function testValidCache() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "data:text/html;charset=utf-8,pageA1" },
-    async function(browser) {
+    async function (browser) {
       // Make a simple modification for bfcache testing.
       await SpecialPowers.spawn(browser, [], () => {
         content.document.body.textContent = "modified";
@@ -56,7 +56,7 @@ add_task(async function testExpiredCache() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "data:text/html;charset=utf-8,pageB1" },
-    async function(browser) {
+    async function (browser) {
       // Make a simple modification for bfcache testing.
       await SpecialPowers.spawn(browser, [], () => {
         content.document.body.textContent = "modified";

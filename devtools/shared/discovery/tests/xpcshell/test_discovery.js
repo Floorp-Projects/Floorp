@@ -73,7 +73,7 @@ Object.defineProperty(discovery.device, "name", {
   },
 });
 
-add_task(async function() {
+add_task(async function () {
   // At startup, no remote devices are known
   deepEqual(discovery.getRemoteDevicesWithService("devtools"), []);
   deepEqual(discovery.getRemoteDevicesWithService("penguins"), []);

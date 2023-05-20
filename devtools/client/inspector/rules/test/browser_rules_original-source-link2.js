@@ -11,7 +11,7 @@ const PREF = "devtools.source-map.client-service.enabled";
 const SCSS_LOC = "doc_sourcemaps.scss:4";
 const CSS_LOC = "doc_sourcemaps2.css:1";
 
-add_task(async function() {
+add_task(async function () {
   info("Setting the " + PREF + " pref to true");
   Services.prefs.setBoolPref(PREF, true);
 
@@ -83,7 +83,7 @@ function verifyLinkText(text, view) {
   const label = getRuleViewLinkByIndex(view, 1).querySelector(
     ".ruleview-rule-source-label"
   );
-  return waitForSuccess(function() {
+  return waitForSuccess(function () {
     return label.textContent == text;
   }, "Link text changed to display correct location: " + text);
 }

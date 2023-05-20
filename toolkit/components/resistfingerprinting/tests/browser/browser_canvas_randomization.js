@@ -557,7 +557,7 @@ async function runTest(enabled) {
   await BrowserTestUtils.closeWindow(privateWindow);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Disable the fingerprinting randomization.
   await SpecialPowers.pushPrefEnv({
     set: [

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["test.aboutconfig.a", "test value 1"],
@@ -12,7 +12,7 @@ add_setup(async function() {
 });
 
 add_task(async function test_search() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     await this.document.l10n.translateFragment(this.document.documentElement);
     let prefArray = Services.prefs.getChildList("");
 
@@ -94,7 +94,7 @@ add_task(async function test_search() {
 });
 
 add_task(async function test_search_wildcard() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     const extra = 1; // "Add" row
 
     // A trailing wildcard
@@ -118,7 +118,7 @@ add_task(async function test_search_wildcard() {
 });
 
 add_task(async function test_search_delayed() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     // Start with the initial empty page.
     this.search("");
 
@@ -163,7 +163,7 @@ add_task(async function test_search_delayed() {
 });
 
 add_task(async function test_search_add_row_color() {
-  await AboutConfigTest.withNewTab(async function() {
+  await AboutConfigTest.withNewTab(async function () {
     // When the row is the only one displayed, it doesn't have the "odd" class.
     this.search("test.aboutconfig.add");
     Assert.equal(this.rows.length, 1);

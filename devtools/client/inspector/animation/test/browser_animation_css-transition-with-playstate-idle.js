@@ -27,7 +27,7 @@ const PAGE_URL = `data:text/html;charset=utf-8,
 </body>
 </html>`;
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(PAGE_URL);
   const { animationInspector, panel } = await openAnimationInspector();
 
@@ -64,7 +64,7 @@ add_task(async function() {
  * Local helper to toggle the "visible" class on the element with a transition defined.
  */
 async function toggleVisibleClass(tab) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const win = content.wrappedJSObject;
     win.document.querySelector("div").classList.toggle("visible");
   });

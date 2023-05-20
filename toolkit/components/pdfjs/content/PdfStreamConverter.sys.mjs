@@ -1190,7 +1190,7 @@ PdfStreamConverter.prototype = {
         var requestListener = new RequestListener(actions);
         domWindow.document.addEventListener(
           PDFJS_EVENT_ID,
-          function(event) {
+          function (event) {
             requestListener.receive(event);
           },
           false,

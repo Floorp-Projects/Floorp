@@ -5,7 +5,7 @@
 import { getScopeItemPath } from "../../utils/pause/scopes/utils";
 
 export function setExpandedScope(cx, item, expanded) {
-  return function({ dispatch, getState }) {
+  return function ({ dispatch, getState }) {
     return dispatch({
       type: "SET_EXPANDED_SCOPE",
       cx,

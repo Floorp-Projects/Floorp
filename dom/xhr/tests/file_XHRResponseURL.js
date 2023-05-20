@@ -51,14 +51,14 @@ function info(aMessage) {
 }
 
 function request(aURL) {
-  return new Promise(function(aResolve, aReject) {
+  return new Promise(function (aResolve, aReject) {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", aURL);
-    xhr.addEventListener("load", function() {
+    xhr.addEventListener("load", function () {
       xhr.succeeded = true;
       aResolve(xhr);
     });
-    xhr.addEventListener("error", function() {
+    xhr.addEventListener("error", function () {
       xhr.succeeded = false;
       aResolve(xhr);
     });
@@ -67,12 +67,12 @@ function request(aURL) {
 }
 
 function createSequentialRequest(aParameters, aTest) {
-  var sequence = aParameters.reduce(function(aPromise, aParam) {
+  var sequence = aParameters.reduce(function (aPromise, aParam) {
     return aPromise
-      .then(function() {
+      .then(function () {
         return request(aParam.requestURL);
       })
-      .then(function(aXHR) {
+      .then(function (aXHR) {
         return aTest(aXHR, aParam);
       });
   }, Promise.resolve());
@@ -224,12 +224,12 @@ function testSuccessResponse() {
     },
   ];
 
-  var sequence = createSequentialRequest(parameters, function(aXHR, aParam) {
+  var sequence = createSequentialRequest(parameters, function (aXHR, aParam) {
     ok(aXHR.succeeded, "assert request succeeded");
     is(aXHR.responseURL, aParam.responseURL, aParam.message);
   });
 
-  sequence.then(function() {
+  sequence.then(function () {
     URL.revokeObjectURL(blobURL);
   });
 
@@ -252,7 +252,7 @@ function testFailedResponse() {
     },
   ];
 
-  var sequence = createSequentialRequest(parameters, function(aXHR, aParam) {
+  var sequence = createSequentialRequest(parameters, function (aXHR, aParam) {
     ok(!aXHR.succeeded, "assert request failed");
     is(aXHR.responseURL, "", aParam.message);
   });
@@ -286,19 +286,19 @@ function testNotToLeakResponseURLWhileDoingRedirectsInWindow() {
     "specialpowers-http-notify-request"
   );
 
-  return new Promise(function(aResolve, aReject) {
+  return new Promise(function (aResolve, aReject) {
     xhr.open(
       "GET",
       "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text"
     );
-    xhr.addEventListener("load", function() {
+    xhr.addEventListener("load", function () {
       SpecialPowers.removeObserver(
         requestObserver,
         "specialpowers-http-notify-request"
       );
       aResolve();
     });
-    xhr.addEventListener("error", function() {
+    xhr.addEventListener("error", function () {
       ok(false, "unexpected request falilure");
       SpecialPowers.removeObserver(
         requestObserver,
@@ -312,7 +312,7 @@ function testNotToLeakResponseURLWhileDoingRedirectsInWindow() {
 
 function testNotToLeakResponseURLWhileDoingRedirectsInWorker() {
   var xhr = new XMLHttpRequest();
-  var testRedirect = function(e) {
+  var testRedirect = function (e) {
     if (e.data === "request" && xhr.readyState === XMLHttpRequest.OPENED) {
       is(
         xhr.responseURL,
@@ -322,19 +322,19 @@ function testNotToLeakResponseURLWhileDoingRedirectsInWorker() {
     }
   };
 
-  return new Promise(function(aResolve, aReject) {
+  return new Promise(function (aResolve, aReject) {
     self.addEventListener("message", testRedirect);
     message({ type: "redirect_test", status: "start" });
     xhr.open(
       "GET",
       "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text"
     );
-    xhr.addEventListener("load", function() {
+    xhr.addEventListener("load", function () {
       self.removeEventListener("message", testRedirect);
       message({ type: "redirect_test", status: "end" });
       aResolve();
     });
-    xhr.addEventListener("error", function(e) {
+    xhr.addEventListener("error", function (e) {
       ok(false, "unexpected request falilure");
       self.removeEventListener("message", testRedirect);
       message({ type: "redirect_test", status: "end" });
@@ -345,8 +345,8 @@ function testNotToLeakResponseURLWhileDoingRedirectsInWorker() {
 }
 
 function waitForAllMessagesProcessed() {
-  return new Promise(function(aResolve, aReject) {
-    var id = setInterval(function() {
+  return new Promise(function (aResolve, aReject) {
+    var id = setInterval(function () {
       if (message.ping === message.pong) {
         clearInterval(id);
         aResolve();
@@ -355,7 +355,7 @@ function waitForAllMessagesProcessed() {
   });
 }
 
-self.addEventListener("message", function(aEvent) {
+self.addEventListener("message", function (aEvent) {
   if (aEvent.data === "start") {
     ok(
       "responseURL" in new XMLHttpRequest(),
@@ -369,16 +369,16 @@ self.addEventListener("message", function(aEvent) {
 
     var promise = testSuccessResponse();
     promise
-      .then(function() {
+      .then(function () {
         return testFailedResponse();
       })
-      .then(function() {
+      .then(function () {
         return testNotToLeakResponseURLWhileDoingRedirects();
       })
-      .then(function() {
+      .then(function () {
         return waitForAllMessagesProcessed();
       })
-      .then(function() {
+      .then(function () {
         message("done");
       });
   }

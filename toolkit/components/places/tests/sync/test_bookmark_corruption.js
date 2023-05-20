@@ -535,7 +535,7 @@ add_task(async function test_corrupt_local_roots() {
     );
 
     info("Move local Places root into toolbar");
-    await buf.db.executeTransaction(async function() {
+    await buf.db.executeTransaction(async function () {
       await reparentItem(
         buf.db,
         PlacesUtils.bookmarks.menuGuid,
@@ -554,7 +554,7 @@ add_task(async function test_corrupt_local_roots() {
     );
   } finally {
     info("Restore local roots");
-    await buf.db.executeTransaction(async function() {
+    await buf.db.executeTransaction(async function () {
       await reparentItem(buf.db, PlacesUtils.bookmarks.rootGuid);
       await reparentItem(
         buf.db,
@@ -3151,7 +3151,7 @@ add_task(async function test_invalid_local_urls() {
   // The public API doesn't let us insert invalid URLs (for good reason!), so
   // we update them directly in Places.
   info("Invalidate local URLs");
-  await buf.db.executeTransaction(async function() {
+  await buf.db.executeTransaction(async function () {
     const invalidURLs = [
       {
         guid: "bookmarkAAAA",

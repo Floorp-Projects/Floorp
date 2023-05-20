@@ -7,7 +7,7 @@
  * Tests if beacons from other tabs are properly ignored.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { monitor, tab } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });
@@ -29,7 +29,7 @@ add_task(async function() {
   );
 
   const wait = waitForNetworkEvents(monitor, 1);
-  await SpecialPowers.spawn(beaconTab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(beaconTab.linkedBrowser, [], async function () {
     content.wrappedJSObject.performRequests();
   });
   await reloadBrowser({ browser: tab.linkedBrowser });

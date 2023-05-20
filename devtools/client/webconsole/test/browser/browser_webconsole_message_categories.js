@@ -33,7 +33,7 @@ const TESTS = [
     matchString: "multipart/form-data",
     typeSelector: ".warn",
     onload() {
-      SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+      SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
         const form = content.document.querySelector("form");
         form.submit();
       });
@@ -99,7 +99,7 @@ const TESTS = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   // Disable bfcache for Fission for now.
   // If Fission is disabled, the pref is no-op.
   await SpecialPowers.pushPrefEnv({

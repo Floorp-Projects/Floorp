@@ -10,7 +10,7 @@ const {
 
 const { Front, types } = require("resource://devtools/shared/protocol.js");
 
-module.exports = function({ resource, watcherFront, targetFront }) {
+module.exports = function ({ resource, watcherFront, targetFront }) {
   if (!(resource instanceof Front) && watcherFront) {
     // instantiate front for session storage
     resource = types.getType("sessionStorage").read(resource, targetFront);

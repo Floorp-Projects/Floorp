@@ -34,7 +34,7 @@ streamListener.prototype = {
   },
 };
 
-add_task(async function() {
+add_task(async function () {
   info("Test that the default icon has the right content type.");
   let channel = NetUtil.newChannel({
     uri: PlacesUtils.favicons.defaultFavicon,
@@ -48,7 +48,7 @@ add_task(async function() {
   await listener.done.promise;
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test icon URI that we don't know anything about.  Will serve the default icon."
   );
@@ -64,7 +64,7 @@ add_task(async function() {
   await listener.done.promise;
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that the content type of a favicon we add is correct.");
   let testURI = uri("http://mozilla.org/");
   // Add the data before opening

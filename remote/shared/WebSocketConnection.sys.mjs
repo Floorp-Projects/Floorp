@@ -24,10 +24,7 @@ export class WebSocketConnection {
    *     Reference to the httpd.js's connection needed for clean-up.
    */
   constructor(webSocket, httpdConnection) {
-    this.id = Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1);
+    this.id = Services.uuid.generateUUID().toString().slice(1, -1);
 
     this.httpdConnection = httpdConnection;
 

@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Create a minimal browser
   const browser = document.createXULElement("browser");
   browser.setAttribute("type", "content");

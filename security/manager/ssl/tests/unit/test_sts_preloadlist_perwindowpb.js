@@ -191,7 +191,7 @@ function test_part1() {
   uri = Services.io.newURI("https://includesubdomains2.preloaded.test");
   ok(gSSService.isSecureURI(uri));
   gSSService.processHeader(uri, "max-age=1");
-  do_timeout(1250, function() {
+  do_timeout(1250, function () {
     ok(!gSSService.isSecureURI(uri));
     run_next_test();
   });
@@ -233,7 +233,7 @@ function test_private_browsing1() {
   uri = Services.io.newURI("https://includesubdomains2.preloaded.test");
   ok(gSSService.isSecureURI(uri, PRIVATE_ORIGIN_ATTRIBUTES));
   gSSService.processHeader(uri, "max-age=1", PRIVATE_ORIGIN_ATTRIBUTES);
-  do_timeout(1250, function() {
+  do_timeout(1250, function () {
     ok(!gSSService.isSecureURI(uri, PRIVATE_ORIGIN_ATTRIBUTES));
     // Simulate leaving private browsing mode
     Services.obs.notifyObservers(null, "last-pb-context-exited");

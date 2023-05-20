@@ -31,7 +31,7 @@ MockFilePicker.init(window);
 const tempDir = createTemporarySaveDirectory();
 MockFilePicker.displayDirectory = tempDir;
 
-add_setup(async function() {
+add_setup(async function () {
   info("Setting the prefs.");
 
   await SpecialPowers.pushPrefEnv({
@@ -44,7 +44,7 @@ add_setup(async function() {
   info("Setting MockFilePicker.");
   mockTransferRegisterer.register();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     mockTransferRegisterer.unregister();
     MockFilePicker.cleanup();
     tempDir.remove(true);
@@ -99,7 +99,7 @@ function createPromiseForTransferComplete() {
       MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
 
       MockFilePicker.showCallback = null;
-      mockTransferCallback = function(downloadSuccess) {
+      mockTransferCallback = function (downloadSuccess) {
         ok(downloadSuccess, "File should have been downloaded successfully");
         mockTransferCallback = () => {};
         resolve();

@@ -27,14 +27,14 @@ function throttle(func, wait, scope) {
   let timeout = null;
   let previous = 0;
 
-  const later = function() {
+  const later = function () {
     previous = Date.now();
     timeout = null;
     result = func.apply(scope, args);
     args = null;
   };
 
-  const throttledFunction = function() {
+  const throttledFunction = function () {
     const now = Date.now();
     const remaining = wait - (now - previous);
     args = arguments;

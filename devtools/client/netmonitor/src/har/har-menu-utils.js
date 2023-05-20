@@ -15,7 +15,7 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyGetter(this, "HarImporter", function() {
+loader.lazyGetter(this, "HarImporter", function () {
   return require("resource://devtools/client/netmonitor/src/har/har-importer.js")
     .HarImporter;
 });

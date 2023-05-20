@@ -5,7 +5,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // ReactJS
   const {
     button,
@@ -84,7 +84,7 @@ define(function(require, exports, module) {
       // Regenerate config to include tooltip title
       if (shouldRenderTooltip) {
         // Reduce for plaintext
-        const tooltipString = tinyElements.reduce(function(acc, cur) {
+        const tooltipString = tinyElements.reduce(function (acc, cur) {
           return acc.concat(cur.content);
         }, "");
 
@@ -92,7 +92,7 @@ define(function(require, exports, module) {
       }
 
       // Reduce for React elements
-      const tinyElementsRender = tinyElements.reduce(function(acc, cur) {
+      const tinyElementsRender = tinyElements.reduce(function (acc, cur) {
         acc.push(span(cur.config, cur.content));
         return acc;
       }, []);

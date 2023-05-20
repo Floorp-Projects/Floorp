@@ -48,7 +48,7 @@ export class InfoItem extends HTMLElement {
       // If the item is not currently drawn and we can't measure its dimensions
       // then attach an observer that will measure it once it appears.
       if (info.clientWidth <= 0) {
-        let observer = new IntersectionObserver(function([
+        let observer = new IntersectionObserver(function ([
           { intersectionRatio },
         ]) {
           if (intersectionRatio > 0) {

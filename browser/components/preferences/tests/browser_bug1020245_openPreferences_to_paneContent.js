@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test opening to the differerent panes and subcategories in Preferences
-add_task(async function() {
+add_task(async function () {
   let prefs = await openPreferencesViaOpenPreferencesAPI("panePrivacy");
   is(prefs.selectedPane, "panePrivacy", "Privacy pane was selected");
   prefs = await openPreferencesViaHash("privacy");
@@ -48,7 +48,7 @@ add_task(async function() {
 });
 
 // Test opening Preferences with subcategory on an existing Preferences tab. See bug 1358475.
-add_task(async function() {
+add_task(async function () {
   let prefs = await openPreferencesViaOpenPreferencesAPI("general", {
     leaveOpen: true,
   });
@@ -84,7 +84,7 @@ add_task(async function() {
 });
 
 // Test opening to a subcategory displays the correct values for preferences
-add_task(async function() {
+add_task(async function () {
   // Skip if crash reporting isn't enabled since the checkbox will be missing.
   if (!AppConstants.MOZ_CRASHREPORTER) {
     return;
@@ -107,7 +107,7 @@ add_task(async function() {
   await SpecialPowers.popPrefEnv();
 });
 
-add_task(async function() {
+add_task(async function () {
   // Skip if crash reporting isn't enabled since the checkbox will be missing.
   if (!AppConstants.MOZ_CRASHREPORTER) {
     return;
@@ -144,10 +144,10 @@ function openPreferencesViaHash(aPane) {
 
     newTabBrowser.addEventListener(
       "Initialized",
-      function() {
+      function () {
         newTabBrowser.contentWindow.addEventListener(
           "load",
-          async function() {
+          async function () {
             let win = gBrowser.contentWindow;
             let selectedPane = win.history.state;
             await finalPrefPaneLoaded;

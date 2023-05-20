@@ -19,8 +19,8 @@ add_task(
       const location = { sourceUrl: source.url, line: 6, column: 21 };
       setBreakpoint(threadFront, location);
 
-      const packet = await executeOnNextTickAndWaitForPause(function() {
-        reload(targetFront).then(function() {
+      const packet = await executeOnNextTickAndWaitForPause(function () {
+        reload(targetFront).then(function () {
           loadSubScriptWithOptions(SOURCE_URL, {
             target: debuggee,
             ignoreCache: true,

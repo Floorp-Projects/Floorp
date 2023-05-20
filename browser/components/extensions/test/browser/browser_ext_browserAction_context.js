@@ -258,7 +258,7 @@ let tabSwitchTestData = {
     "2.png": imageBuffer,
   },
 
-  getTests: function(tabs, windows) {
+  getTests: function (tabs, windows) {
     let manifest = browser.runtime.getManifest();
     let { manifest_version } = manifest;
     const action = manifest_version < 3 ? "browserAction" : "action";
@@ -491,7 +491,7 @@ add_task(async function testDefaultTitle() {
       "icon.png": imageBuffer,
     },
 
-    getTests: function(tabs, windows) {
+    getTests: function (tabs, windows) {
       let details = [
         {
           title: "Foo Extension",
@@ -627,7 +627,7 @@ add_task(async function testPropertyRemoval() {
       "tab.png": imageBuffer,
     },
 
-    getTests: function(tabs, windows) {
+    getTests: function (tabs, windows) {
       let defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
       let details = [
         {
@@ -812,7 +812,7 @@ add_task(async function testMultipleWindows() {
       "window2.png": imageBuffer,
     },
 
-    getTests: function(tabs, windows) {
+    getTests: function (tabs, windows) {
       let details = [
         {
           icon: browser.runtime.getURL("default.png"),
@@ -983,7 +983,7 @@ add_task(async function testDefaultBadgeTextColor() {
       "window2.png": imageBuffer,
     },
 
-    getTests: function(tabs, windows) {
+    getTests: function (tabs, windows) {
       let details = [
         {
           icon: browser.runtime.getURL("default.png"),
@@ -1133,7 +1133,7 @@ add_task(async function testNavigationClearsData() {
     manifest: {
       browser_action: { default_title },
     },
-    background: function() {
+    background: function () {
       browser.test.onMessage.addListener(
         async ({ method, param, expect, msg }) => {
           let result = await browser.browserAction[method](param);

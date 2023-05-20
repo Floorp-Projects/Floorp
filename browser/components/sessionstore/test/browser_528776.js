@@ -17,7 +17,7 @@ function browserWindowsCount(expected) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   browserWindowsCount(1);
 
   let win = await BrowserTestUtils.openNewBrowserWindow();

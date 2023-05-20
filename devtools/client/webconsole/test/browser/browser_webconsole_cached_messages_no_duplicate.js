@@ -19,7 +19,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8><script>
     }, 50);
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   info("Add a tab and open the console");
   const tab = await addTab(TEST_URI, { waitForLoad: false });
   const hud = await openConsole(tab);

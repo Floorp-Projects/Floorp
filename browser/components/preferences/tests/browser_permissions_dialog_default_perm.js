@@ -59,7 +59,7 @@ async function addDefaultTestPermissions() {
 async function openPermissionsDialog() {
   let dialogOpened = promiseLoadSubDialog(PERMISSIONS_URL);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     let doc = content.document;
     let settingsButton = doc.getElementById("addonExceptions");
     settingsButton.click();
@@ -69,7 +69,7 @@ async function openPermissionsDialog() {
   await sitePermissionsDialog.document.mozSubdialogReady;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await addDefaultTestPermissions();
 });
 
@@ -117,10 +117,7 @@ add_task(async function removeAll() {
   );
 
   info("Accepting dialog to apply the changes.");
-  doc
-    .querySelector("dialog")
-    .getButton("accept")
-    .click();
+  doc.querySelector("dialog").getButton("accept").click();
 
   info("Waiting for dialog to close.");
   await dialogClosePromise;

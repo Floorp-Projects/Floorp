@@ -10,7 +10,7 @@ const TESTCASE_URI =
   '<div id="testdiv" style="font-size:10px;">' +
   "Test div!</div>";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TESTCASE_URI);
 
   info("Opening the rule view and selecting the test node");

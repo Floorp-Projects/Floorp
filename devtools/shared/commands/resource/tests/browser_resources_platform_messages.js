@@ -6,7 +6,7 @@
 // Test the ResourceCommand API around PLATFORM_MESSAGE
 // Reproduces assertions from: devtools/shared/webconsole/test/chrome/test_nsiconsolemessage.html
 
-add_task(async function() {
+add_task(async function () {
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);

@@ -300,7 +300,7 @@ TalosPowersService.prototype = {
       // There aren't currently any easily observable notifications or
       // events to let us know when the feed is ready, so we'll just poll
       // for now.
-      let pollForFeed = async function() {
+      let pollForFeed = async function () {
         let foundFeed = AboutNewTab.activityStream.store.feeds.get(
           "feeds.system.topsites"
         );
@@ -347,7 +347,7 @@ TalosPowersService.prototype = {
       // the firstPaint measurement hasn't been set yet. In
       // that case, we set up an observer for the next time
       // a window is painted and re-retrieve the startup info.
-      let obs = function(subject, topic) {
+      let obs = function (subject, topic) {
         Services.obs.removeObserver(this, topic);
         startupInfo = Services.startup.getStartupInfo();
         mm.sendAsyncMessage(

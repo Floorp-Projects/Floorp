@@ -11,7 +11,7 @@ const CHROME_WORKER_URL = CHROME_URL_ROOT + "test_worker.js";
 
 const DESCRIPTOR_TYPES = require("resource://devtools/client/fronts/descriptors/descriptor-types.js");
 
-add_task(async function() {
+add_task(async function () {
   // Enabled fission prefs
   await pushPref("devtools.browsertoolbox.scope", "everything");
   // Disable the preloaded process as it gets created lazily and may interfere

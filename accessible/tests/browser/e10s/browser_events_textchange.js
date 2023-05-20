@@ -97,7 +97,7 @@ addAccessibleTask(
   `
   <p id="p">abc</p>
   <input id="input" value="input" />`,
-  async function(browser) {
+  async function (browser) {
     let events = [
       { isInserted: false, str: "abc", offset: 0 },
       { isInserted: true, str: "def", offset: 0 },

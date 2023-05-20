@@ -10,7 +10,7 @@ function promiseLayout() {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   registerCleanupFunction(() => CustomizableUI.reset());
 });
 

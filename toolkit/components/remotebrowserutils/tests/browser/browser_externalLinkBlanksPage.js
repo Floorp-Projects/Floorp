@@ -47,7 +47,7 @@ async function runTest() {
       ],
     });
     for (let page of Pages) {
-      await BrowserTestUtils.withNewTab(page, async function(aBrowser) {
+      await BrowserTestUtils.withNewTab(page, async function (aBrowser) {
         await SpecialPowers.spawn(aBrowser, [], async () => {
           let h = content.document.createElement("h1");
           ok(h);

@@ -15,7 +15,7 @@ const TEST_DATA = [
 ];
 
 // Test for animatable property which can specify the non standard CSS color value.
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_special_colors.html");
   const { panel } = await openAnimationInspector();
 

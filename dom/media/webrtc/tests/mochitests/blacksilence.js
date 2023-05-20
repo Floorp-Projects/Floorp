@@ -1,4 +1,4 @@
-(function(global) {
+(function (global) {
   "use strict";
 
   // an invertible check on the condition.

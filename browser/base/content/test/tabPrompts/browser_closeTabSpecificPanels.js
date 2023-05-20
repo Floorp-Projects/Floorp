@@ -7,7 +7,7 @@
  *
  */
 
-add_task(async function() {
+add_task(async function () {
   let tab1 = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/#0");
   let tab2 = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/#1");
   let specificPanel = document.createXULElement("panel");

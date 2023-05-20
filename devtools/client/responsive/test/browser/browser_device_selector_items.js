@@ -47,7 +47,7 @@ updatePreferredDevices({
 
 addRDMTask(
   URL_ROOT,
-  async function({ ui }) {
+  async function ({ ui }) {
     const deviceSelector = ui.toolWindow.document.getElementById(
       "device-selector"
     );

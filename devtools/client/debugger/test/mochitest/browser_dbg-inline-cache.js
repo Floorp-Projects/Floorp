@@ -35,7 +35,7 @@ server.registerPathHandler("/inline-cache.html", (request, response) => {
 
 const SOURCE_URL = `http://localhost:${server.identity.primaryPort}/inline-cache.html`;
 
-add_task(async function() {
+add_task(async function () {
   info("Load document with inline script");
   const tab = await addTab(SOURCE_URL);
   info("Open debugger");
@@ -140,7 +140,7 @@ function makeChanges() {
 }
 
 function getPageValue(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     return content.document.querySelector("script").textContent.trim();
   });
 }

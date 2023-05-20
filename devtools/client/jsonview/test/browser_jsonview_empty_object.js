@@ -4,7 +4,7 @@
 "use strict";
 
 function testRootObject(objExpr, summary = objExpr) {
-  return async function() {
+  return async function () {
     info("Test JSON with root empty object " + objExpr + " started");
 
     const TEST_JSON_URL = "data:application/json," + objExpr;
@@ -16,7 +16,7 @@ function testRootObject(objExpr, summary = objExpr) {
 }
 
 function testNestedObject(objExpr, summary = objExpr) {
-  return async function() {
+  return async function () {
     info("Test JSON with nested empty object " + objExpr + " started");
 
     const TEST_JSON_URL = "data:application/json,[" + objExpr + "]";

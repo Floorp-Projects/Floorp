@@ -18,7 +18,7 @@ loader.lazyRequireGetter(
   "resource://devtools/client/shared/vendor/react-prop-types.js"
 );
 
-loader.lazyGetter(this, "MODE", function() {
+loader.lazyGetter(this, "MODE", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .MODE;
 });

@@ -1,8 +1,8 @@
-onmessage = function() {
+onmessage = function () {
   importScripts(["referrer.sjs?import"]);
   var xhr = new XMLHttpRequest();
   xhr.open("GET", "referrer.sjs?result", true);
-  xhr.onload = function() {
+  xhr.onload = function () {
     postMessage(xhr.responseText);
   };
   xhr.send();

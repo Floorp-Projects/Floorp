@@ -53,13 +53,13 @@ function check_throws(closure, error) {
 }
 
 function check_open_throws(error) {
-  check_throws(function() {
+  check_throws(function () {
     chan.open(listener);
   }, error);
 }
 
 function check_async_open_throws(error) {
-  check_throws(function() {
+  check_throws(function () {
     chan.asyncOpen(listener);
   }, error);
 }
@@ -103,20 +103,20 @@ function test_channel(createChanClosure) {
 }
 
 function test_data_channel() {
-  test_channel(function() {
+  test_channel(function () {
     return makeChan("data:text/plain,foo");
   });
 }
 
 function test_http_channel() {
-  test_channel(function() {
+  test_channel(function () {
     return makeChan("http://localhost:" + httpserv.identity.primaryPort + "/");
   });
 }
 
 function test_file_channel() {
   var file = do_get_file("data/test_readline1.txt");
-  test_channel(function() {
+  test_channel(function () {
     return new_file_channel(file);
   });
 }

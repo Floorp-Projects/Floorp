@@ -7,7 +7,7 @@ const SPONSORED_QUERY = "sponsored";
 const NONSPONSORED_QUERY = "nonsponsored";
 
 // test for exposure events
-add_setup(async function() {
+add_setup(async function () {
   await initExposureTest();
 });
 

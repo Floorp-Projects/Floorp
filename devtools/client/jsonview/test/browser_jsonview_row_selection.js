@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info("Test 1 JSON row selection started");
 
   // Create a tall JSON so that there is a scrollbar.
@@ -23,7 +23,7 @@ add_task(async function() {
   await assertRowSelected(null);
 
   // Focus the tree and select first row.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const tree = content.document.querySelector(".treeTable");
     tree.focus();
     is(tree, content.document.activeElement, "Tree should be focused");
@@ -31,7 +31,7 @@ add_task(async function() {
   });
   await assertRowSelected(1);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -43,7 +43,7 @@ add_task(async function() {
   await BrowserTestUtils.synthesizeKey("VK_END", {}, tab.linkedBrowser);
   await assertRowSelected(numRows);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -57,7 +57,7 @@ add_task(async function() {
   });
   await assertRowSelected(2);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -67,7 +67,7 @@ add_task(async function() {
   });
   await BrowserTestUtils.synthesizeKey("VK_UP", {}, tab.linkedBrowser);
   await assertRowSelected(1);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -75,7 +75,7 @@ add_task(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test 2 JSON row selection started");
 
   const numRows = 4;
@@ -93,7 +93,7 @@ add_task(async function() {
   await assertRowSelected(1);
 
   // Synthesize multiple down arrow keydowns to select following rows.
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     content.document.querySelector(".treeTable").focus();
   });
   for (let i = 2; i < numRows; ++i) {
@@ -124,7 +124,7 @@ add_task(async function() {
   await assertRowSelected(numRows - 1);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test 3 JSON row selection started");
 
   // Create a JSON with a row taller than the panel.
@@ -133,7 +133,7 @@ add_task(async function() {
 
   is(await getElementCount(".treeRow"), 3, "Got the expected number of rows.");
   await assertRowSelected(null);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -149,7 +149,7 @@ add_task(async function() {
     row.click();
   });
   await assertRowSelected(2);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -163,7 +163,7 @@ add_task(async function() {
   // Select the last row.
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, tab.linkedBrowser);
   await assertRowSelected(3);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     const scroller = content.document.querySelector(
       ".jsonPanelBox .panelContent"
     );
@@ -182,7 +182,7 @@ add_task(async function() {
   const scroll = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       const scroller = content.document.querySelector(
         ".jsonPanelBox .panelContent"
       );
@@ -214,7 +214,7 @@ add_task(async function() {
   );
 
   await assertRowSelected(2);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [scroll], function(
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [scroll], function (
     scrollPos
   ) {
     const scroller = content.document.querySelector(
@@ -228,7 +228,7 @@ async function assertRowSelected(rowNum) {
   const idx = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       return [].indexOf.call(
         content.document.querySelectorAll(".treeRow"),
         content.document.querySelector(".treeRow.selected")

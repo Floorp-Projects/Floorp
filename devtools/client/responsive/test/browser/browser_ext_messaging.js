@@ -182,7 +182,7 @@ addRDMTask(TEST_URL, async function test_tab_sender() {
     },
 
     files: {
-      "content-script.js": async function() {
+      "content-script.js": async function () {
         browser.test.log("Content script init");
 
         browser.test.log("Listen to background");

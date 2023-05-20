@@ -11,7 +11,7 @@
 
 const TEST_URLS = ["https://example.com/", "https://example.org/"];
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
 
   registerCleanupFunction(async () => {

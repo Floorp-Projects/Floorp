@@ -27,7 +27,7 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
  * @returns Promise
  */
 function promiseCrashReport(expectedExtra = {}) {
-  return (async function() {
+  return (async function () {
     info("Starting wait on crash-report-status");
     let [subject] = await TestUtils.topicObserved(
       "crash-report-status",
@@ -123,7 +123,7 @@ async function setupLocalCrashReportServer() {
   Services.env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
   Services.env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
     Services.env.set("MOZ_CRASHREPORTER_URL", serverUrl);
   });
@@ -135,7 +135,7 @@ async function setupLocalCrashReportServer() {
  */
 function prepareNoDump() {
   let originalGetDumpID = TabCrashHandler.getDumpID;
-  TabCrashHandler.getDumpID = function(browser) {
+  TabCrashHandler.getDumpID = function (browser) {
     return null;
   };
   registerCleanupFunction(() => {
@@ -156,7 +156,7 @@ function unsetBuildidMatchDontSendEnv() {
 }
 
 function getEventPromise(eventName, eventKind) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     info("Installing event listener (" + eventKind + ")");
     window.addEventListener(
       eventName,

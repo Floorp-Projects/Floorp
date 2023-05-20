@@ -7,7 +7,7 @@ function handleRequest(request, response) {
 
   timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(
-    function() {
+    function () {
       response.write("asyncState = 'loaded';\n");
       response.finish();
     },

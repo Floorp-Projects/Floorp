@@ -73,7 +73,7 @@ PlacesInsertionPoint.prototype = {
 
 function PlacesController(aView) {
   this._view = aView;
-  XPCOMUtils.defineLazyGetter(this, "profileName", function() {
+  XPCOMUtils.defineLazyGetter(this, "profileName", function () {
     return Services.dirsvc.get("ProfD", Ci.nsIFile).leafName;
   });
 
@@ -1128,7 +1128,7 @@ PlacesController.prototype = {
     // Avoid handling descendants of a copied node, the transactions take care
     // of them automatically.
     let copiedFolders = [];
-    aNodes.forEach(function(node) {
+    aNodes.forEach(function (node) {
       if (this._shouldSkipNode(node, copiedFolders)) {
         return;
       }
@@ -1136,7 +1136,7 @@ PlacesController.prototype = {
         copiedFolders.push(node);
       }
 
-      contents.forEach(function(content) {
+      contents.forEach(function (content) {
         content.entries.push(PlacesUtils.wrapNode(node, content.type));
       });
     }, this);
@@ -1153,7 +1153,7 @@ PlacesController.prototype = {
     let hasData = false;
     // This order matters here!  It controls how this and other applications
     // select data to be inserted based on type.
-    contents.forEach(function(content) {
+    contents.forEach(function (content) {
       if (content.entries.length) {
         hasData = true;
         let glue =
@@ -1187,7 +1187,7 @@ PlacesController.prototype = {
   set cutNodes(aNodes) {
     let self = this;
     function updateCutNodes(aValue) {
-      self._cutNodes.forEach(function(aNode) {
+      self._cutNodes.forEach(function (aNode) {
         self._view.toggleCutNode(aNode, aValue);
       });
     }

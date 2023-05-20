@@ -776,8 +776,8 @@ var webrtcUI = {
     if (AppConstants.platform == "macosx" && !Services.focus.activeWindow) {
       browserWindow.addEventListener(
         "activate",
-        function() {
-          Services.tm.dispatchToMainThread(function() {
+        function () {
+          Services.tm.dispatchToMainThread(function () {
             browserWindow.gPermissionPanel.openPopup(aEvent);
           });
         },

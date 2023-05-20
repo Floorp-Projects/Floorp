@@ -3,6 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 // Throwing message listener
-onmessage = function(event) {
+onmessage = function (event) {
   throw new Error("Bah!");
 };

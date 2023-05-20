@@ -16,7 +16,7 @@ function finish(result) {
 }
 
 function complete(test, valid) {
-  return function(x) {
+  return function (x) {
     if (valid) {
       finish(valid(x));
     } else {
@@ -26,18 +26,18 @@ function complete(test, valid) {
 }
 
 function memcmp_complete(test, value) {
-  return function(x) {
+  return function (x) {
     finish(util.memcmp(x, value));
   };
 }
 
 function error(test) {
-  return function(x) {
+  return function (x) {
     throw x;
   };
 }
 
-onmessage = function(msg) {
+onmessage = function (msg) {
   // eslint-disable-next-line no-eval
   var test = eval("(" + msg.data + ")");
 

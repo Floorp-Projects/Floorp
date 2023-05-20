@@ -95,7 +95,7 @@ async function setupLogins(...logins) {
   return savedLogins;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["signon.autofillForms", false]],
   });
@@ -127,7 +127,7 @@ async function promptToChangePasswordTest(testData) {
       gBrowser,
       TEST_ORIGIN,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       let notif = await showChangePasswordDoorhanger(
         browser,

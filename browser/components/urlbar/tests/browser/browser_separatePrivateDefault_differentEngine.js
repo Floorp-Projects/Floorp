@@ -14,7 +14,7 @@ const serverInfo = {
 let gAliasEngine;
 let gPrivateEngine;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],

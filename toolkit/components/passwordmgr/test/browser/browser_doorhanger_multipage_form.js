@@ -113,7 +113,7 @@ async function test_save_change(testData) {
         "https://example.com/browser/toolkit/components/" +
         "passwordmgr/test/browser/form_multipage.html",
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
 
       // Update the username filed from the test case.
@@ -125,7 +125,7 @@ async function test_save_change(testData) {
       // Submit the username-only form, which then advance to the password-only
       // form.
       info(`submit the username-only form`);
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let doc = this.content.document;
         doc.getElementById("form-basic-submit").click();
         await ContentTaskUtils.waitForCondition(() => {
@@ -142,7 +142,7 @@ async function test_save_change(testData) {
       // Submit the form.
       info(`submit the password-only form`);
       let formSubmittedPromise = listenForTestNotification("ShowDoorhanger");
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let doc = this.content.document;
         doc.getElementById("form-basic-submit").click();
       });

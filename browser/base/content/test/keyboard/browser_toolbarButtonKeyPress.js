@@ -122,7 +122,7 @@ add_task(async function testPageActionsButtonPress() {
   registerCleanupFunction(() => {
     BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
   });
-  await BrowserTestUtils.withNewTab("https://example.com", async function() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function () {
     let button = document.getElementById("pageActionButton");
     forceFocus(button);
     EventUtils.synthesizeKey(" ");
@@ -138,7 +138,7 @@ add_task(async function testPageActionsButtonPress() {
 
 // Test activation of the Back and Forward buttons from the keyboard.
 add_task(async function testBackForwardButtonPress() {
-  await BrowserTestUtils.withNewTab("https://example.com/1", async function(
+  await BrowserTestUtils.withNewTab("https://example.com/1", async function (
     aBrowser
   ) {
     BrowserTestUtils.loadURIString(aBrowser, "https://example.com/2");
@@ -164,7 +164,7 @@ add_task(async function testBackForwardButtonPress() {
 // This is a toolbarbutton with a click handler and no command handler, but
 // the toolbar keyboard navigation code should handle keyboard activation.
 add_task(async function testReloadButtonPress() {
-  await BrowserTestUtils.withNewTab("https://example.com/1", async function(
+  await BrowserTestUtils.withNewTab("https://example.com/1", async function (
     aBrowser
   ) {
     let button = document.getElementById("reload-button");
@@ -212,7 +212,7 @@ add_task(async function testSidebarsButtonPress() {
 // This is an image with a click handler on its parent and no command handler,
 // but the toolbar keyboard navigation code should handle keyboard activation.
 add_task(async function testBookmarkButtonPress() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function(
+  await BrowserTestUtils.withNewTab("https://example.com", async function (
     aBrowser
   ) {
     let button = document.getElementById("star-button-box");
@@ -299,7 +299,7 @@ add_task(async function testDownloadsButtonPress() {
 // with a browser element to embed the pocket UI into it.
 // The Pocket panel should appear and focus should move inside it.
 add_task(async function testPocketButtonPress() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function(
+  await BrowserTestUtils.withNewTab("https://example.com", async function (
     aBrowser
   ) {
     let button = document.getElementById("save-to-pocket-button");

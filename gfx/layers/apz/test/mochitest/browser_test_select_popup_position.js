@@ -112,7 +112,7 @@ async function runPopupPositionTest(parentDocumentFileName) {
   BrowserTestUtils.removeTab(tab);
 }
 
-add_task(async function() {
+add_task(async function () {
   if (!SpecialPowers.useRemoteSubframes) {
     ok(
       true,
@@ -125,6 +125,6 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   await runPopupPositionTest("helper_test_select_popup_position_zoomed.html");
 });

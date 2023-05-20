@@ -361,7 +361,7 @@ add_task(async function test_navigate_back_from_website() {
   info("Part 2");
 
   await new Promise(resolve =>
-    executeSoon(function() {
+    executeSoon(function () {
       ok(gBrowser.canGoBack, "Should be able to go back");
       ok(!gBrowser.canGoForward, "Should not be able to go forward");
 
@@ -383,7 +383,7 @@ add_task(async function test_navigate_back_from_website() {
         wait_for_page_load(gBrowser.selectedBrowser).then(() => {
           info("Part 4");
 
-          executeSoon(function() {
+          executeSoon(function () {
             ok(gBrowser.canGoBack, "Should be able to go back");
             ok(!gBrowser.canGoForward, "Should not be able to go forward");
 

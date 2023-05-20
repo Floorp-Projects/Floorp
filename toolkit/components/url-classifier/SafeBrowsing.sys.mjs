@@ -501,7 +501,7 @@ export var SafeBrowsing = {
 
     if (loggingEnabled) {
       let providerStr = "";
-      Object.keys(this.providers).forEach(function(provider) {
+      Object.keys(this.providers).forEach(function (provider) {
         if (providerStr === "") {
           providerStr = provider;
         } else {
@@ -511,7 +511,7 @@ export var SafeBrowsing = {
       log("Providers: " + providerStr);
     }
 
-    Object.keys(this.providers).forEach(function(provider) {
+    Object.keys(this.providers).forEach(function (provider) {
       if (provider == "test") {
         return; // skip
       }
@@ -552,7 +552,7 @@ export var SafeBrowsing = {
         "browser.safebrowsing.provider." + provider + ".lists"
       );
       if (lists) {
-        lists.forEach(function(list) {
+        lists.forEach(function (list) {
           this.listToProvider[list] = provider;
         }, this);
       } else {

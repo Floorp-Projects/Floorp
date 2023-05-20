@@ -12,7 +12,7 @@ const WORKER_NAME = "testserviceworker";
 // to:
 // - this firefox
 // does not crash. See Bug 1519088.
-add_task(async function() {
+add_task(async function () {
   const mocks = new Mocks();
 
   const { document, tab, window } = await openAboutDebugging({

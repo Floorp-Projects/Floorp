@@ -185,8 +185,9 @@ class AboutWelcomeChild extends JSWindowActorChild {
       }) || {};
 
     lazy.log.debug(
-      `Loading about:welcome with ${experimentMetadata?.slug ??
-        "no"} experiment`
+      `Loading about:welcome with ${
+        experimentMetadata?.slug ?? "no"
+      } experiment`
     );
 
     let featureConfig = lazy.NimbusFeatures.aboutwelcome.getAllVariables();

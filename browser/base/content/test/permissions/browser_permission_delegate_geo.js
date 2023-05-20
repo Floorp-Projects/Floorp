@@ -95,7 +95,7 @@ async function checkGeolocation(browser, frameId, expect) {
           "resource://gre/modules/E10SUtils.sys.mjs"
         );
 
-        E10SUtils.wrapHandlingUserInput(this.content, true, function() {
+        E10SUtils.wrapHandlingUserInput(this.content, true, function () {
           let frameDoc = this.content.document;
           frameDoc.getElementById("geo").click();
         });
@@ -112,7 +112,7 @@ async function checkGeolocation(browser, frameId, expect) {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await new Promise(r => {
     SpecialPowers.pushPrefEnv(
       {
@@ -135,7 +135,7 @@ add_setup(async function() {
 // Test that temp blocked permissions in first party affect the third party
 // iframe.
 add_task(async function testUseTempPermissionsFirstParty() {
-  await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function(
+  await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function (
     browser
   ) {
     SitePermissions.setForPrincipal(
@@ -155,7 +155,7 @@ add_task(async function testUseTempPermissionsFirstParty() {
 // Test that persistent permissions in first party affect the third party
 // iframe.
 add_task(async function testUsePersistentPermissionsFirstParty() {
-  await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function(
+  await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function (
     browser
   ) {
     async function checkPermission(aPermission, aExpect) {
@@ -195,7 +195,7 @@ add_task(async function testUsePersistentPermissionsFirstParty() {
 // Test that we do not prompt for maybe unsafe permission delegation if the
 // origin of the page is the original src origin.
 add_task(async function testPromptInMaybeUnsafePermissionDelegation() {
-  await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function(
+  await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function (
     browser
   ) {
     // Persistent allow top level origin
@@ -212,7 +212,7 @@ add_task(async function testPromptInMaybeUnsafePermissionDelegation() {
 // change location to origin which is not explicitly trusted. The prompt popup
 // should include both first and third party origin.
 add_task(async function testPromptChangeLocationUnsafePermissionDelegation() {
-  await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function(
+  await BrowserTestUtils.withNewTab(CROSS_SUBFRAME_PAGE, async function (
     browser
   ) {
     // Persistent allow top level origin
@@ -225,7 +225,7 @@ add_task(async function testPromptChangeLocationUnsafePermissionDelegation() {
     let otherURI =
       "https://test1.example.com/browser/browser/base/content/test/permissions/permissions.html";
     let loaded = BrowserTestUtils.browserLoaded(browser, true, otherURI);
-    await SpecialPowers.spawn(iframe, [otherURI], async function(_otherURI) {
+    await SpecialPowers.spawn(iframe, [otherURI], async function (_otherURI) {
       content.location = _otherURI;
     });
     await loaded;
@@ -241,7 +241,7 @@ add_task(async function testPromptChangeLocationUnsafePermissionDelegation() {
 // If we are in unsafe permission delegation and the origin is explicitly
 // trusted in ancestor chain. Do not need prompt
 add_task(async function testExplicitlyAllowedInChain() {
-  await BrowserTestUtils.withNewTab(CROSS_FRAME_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(CROSS_FRAME_PAGE, async function (browser) {
     // Persistent allow top level origin
     PermissionTestUtils.add(uri, "geo", Perms.ALLOW_ACTION);
 
@@ -258,7 +258,7 @@ add_task(async function testExplicitlyAllowedInChain() {
     let otherURI =
       "https://test2.example.com/browser/browser/base/content/test/permissions/permissions.html";
     let loaded = BrowserTestUtils.browserLoaded(browser, true, otherURI);
-    await SpecialPowers.spawn(iframe, [otherURI], async function(_otherURI) {
+    await SpecialPowers.spawn(iframe, [otherURI], async function (_otherURI) {
       content.location = _otherURI;
     });
     await loaded;

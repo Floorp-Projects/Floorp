@@ -1053,9 +1053,7 @@ add_task(async function testGoBackButton() {
 
   let loadDetailView = () => {
     let loaded = waitForViewLoad(win);
-    getAddonCard(win, id)
-      .querySelector("[action=expand]")
-      .click();
+    getAddonCard(win, id).querySelector("[action=expand]").click();
     return loaded;
   };
 

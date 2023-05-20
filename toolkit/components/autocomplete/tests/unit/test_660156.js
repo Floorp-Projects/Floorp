@@ -9,7 +9,7 @@ function AutoCompleteAsyncSearch(aName, aResult) {
 AutoCompleteAsyncSearch.prototype = Object.create(
   AutoCompleteSearchBase.prototype
 );
-AutoCompleteAsyncSearch.prototype.startSearch = function(
+AutoCompleteAsyncSearch.prototype.startSearch = function (
   aSearchString,
   aSearchParam,
   aPreviousResult,
@@ -23,7 +23,7 @@ AutoCompleteAsyncSearch.prototype.startSearch = function(
   });
 };
 
-AutoCompleteAsyncSearch.prototype._returnResults = function(aListener) {
+AutoCompleteAsyncSearch.prototype._returnResults = function (aListener) {
   var result = this._result;
 
   result.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
@@ -40,7 +40,7 @@ function AutoCompleteSyncSearch(aName, aResult) {
 AutoCompleteSyncSearch.prototype = Object.create(
   AutoCompleteAsyncSearch.prototype
 );
-AutoCompleteSyncSearch.prototype.startSearch = function(
+AutoCompleteSyncSearch.prototype.startSearch = function (
   aSearchString,
   aSearchParam,
   aPreviousResult,
@@ -102,7 +102,7 @@ function run_test() {
   controller.input = input;
   controller.startSearch(inputStr);
 
-  input.onSearchComplete = function() {
+  input.onSearchComplete = function () {
     Assert.equal(input.textValue, results[0]);
 
     // Unregister searches

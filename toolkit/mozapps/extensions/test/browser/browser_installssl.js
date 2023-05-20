@@ -27,7 +27,7 @@ function test() {
   requestLongerTimeout(4);
   waitForExplicitFinish();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     var cos = Cc["@mozilla.org/security/certoverride;1"].getService(
       Ci.nsICertOverrideService
     );

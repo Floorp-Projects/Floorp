@@ -57,7 +57,7 @@ add_task(async function openingWithDevToolsClosed() {
     "view-source:" + URL_ROOT + "command-line.html"
   );
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     const selection = content.getSelection();
     Assert.equal(
       selection.toString(),
@@ -92,7 +92,7 @@ add_task(async function openingWithDevToolsButUnknownSource() {
     "view-source:" + URL_ROOT + "command-line.html"
   );
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     const selection = content.getSelection();
     Assert.equal(
       selection.toString(),

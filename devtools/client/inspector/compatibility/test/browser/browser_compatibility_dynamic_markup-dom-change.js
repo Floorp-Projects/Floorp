@@ -45,7 +45,7 @@ const TEST_URI = `
   </body>
 `;
 
-add_task(async function() {
+add_task(async function () {
   info("Testing dynamic DOM mutation using JavaScript");
   const tab = await addTab(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
@@ -82,7 +82,7 @@ add_task(async function() {
  * loaded in the toolbox
  * @return {Promise} Resolves when the node has been selected.
  */
-var clickContainer = async function(selector, inspector) {
+var clickContainer = async function (selector, inspector) {
   info("Clicking on the markup-container for node " + selector);
 
   const nodeFront = await getNodeFront(selector, inspector);

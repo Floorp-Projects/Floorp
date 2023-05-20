@@ -12,7 +12,7 @@ const URL =
   "https://example.com/document-builder.sjs?html=" +
   `<meta charset=utf8><iframe src='${IFRAME_URL}'></iframe><div id=top>top</div>`;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.command-button-frames.enabled", true);
 
   // Don't show the third panel to limit the logs and activity.

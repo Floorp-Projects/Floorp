@@ -41,11 +41,11 @@ function createPromiseForFilePicker() {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   tempDir = createTemporarySaveDirectory();
   MockFilePicker.displayDirectory = tempDir;
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     MockFilePicker.cleanup();
     await cleanupDownloads();
     tempDir.remove(true);
@@ -67,7 +67,7 @@ add_task(async function test_downloading_pdf_nonprivate_window() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       await waitForPdfJS(browser, pdfUrl);
 
       const tabCount = gBrowser.tabs.length;

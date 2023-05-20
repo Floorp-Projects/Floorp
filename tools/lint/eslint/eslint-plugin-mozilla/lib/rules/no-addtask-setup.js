@@ -28,7 +28,7 @@ module.exports = {
   },
   create(context) {
     return {
-      "Program > ExpressionStatement > CallExpression": function(node) {
+      "Program > ExpressionStatement > CallExpression": function (node) {
         let callee = node.callee;
         if (callee.type === "Identifier" && callee.name === "add_task") {
           let arg = node.arguments[0];

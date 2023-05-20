@@ -51,7 +51,7 @@ const TEST_PING_TYPE = "test-ping-type";
 
 var gClientID = null;
 
-XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", async function() {
+XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", async function () {
   return PathUtils.join(PathUtils.profileDir, "datareporting");
 });
 
@@ -691,7 +691,7 @@ add_task(async function test_sendNewProfile() {
 
   // Make sure Telemetry is shut down before beginning and that we have
   // no pending pings.
-  let resetTest = async function() {
+  let resetTest = async function () {
     await TelemetryController.testShutdown();
     await TelemetryStorage.testClearPendingPings();
     PingServer.clearRequests();

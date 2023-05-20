@@ -163,7 +163,7 @@ async function installTestAddon(doc) {
     {
       background() {
         const { browser } = this;
-        window.backgroundFunction = function() {
+        window.backgroundFunction = function () {
           browser.test.sendMessage("onBackgroundFunctionCalled");
         };
       },
@@ -185,9 +185,9 @@ async function installTestAddon(doc) {
           </body>
         </html>
       `,
-        "popup.js": function() {
+        "popup.js": function () {
           const { browser } = this;
-          window.popupPageFunction = function() {
+          window.popupPageFunction = function () {
             browser.test.sendMessage(
               "onPopupPageFunctionCalled",
               browser.runtime.getManifest()

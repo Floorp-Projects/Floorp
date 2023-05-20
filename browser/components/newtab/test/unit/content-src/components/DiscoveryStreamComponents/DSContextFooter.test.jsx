@@ -99,11 +99,7 @@ describe("<DSContextFooter>", () => {
     );
 
     assert.equal(
-      wrapper
-        .find(".story-sponsored-label")
-        .children()
-        .at(0)
-        .type(),
+      wrapper.find(".story-sponsored-label").children().at(0).type(),
       FluentOrText
     );
   });

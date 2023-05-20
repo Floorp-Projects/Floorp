@@ -23,7 +23,7 @@ add_task(async function test_download_clickable() {
   let publicList = await Downloads.getList(Downloads.PUBLIC);
   await publicList.add(download);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await task_resetState();
     Services.telemetry.clearScalars();
   });

@@ -49,7 +49,7 @@ loader.lazyRequireGetter(
 );
 
 // Localized strings for (devtools/client/locales/en-US/startup.properties)
-loader.lazyGetter(this, "L10N", function() {
+loader.lazyGetter(this, "L10N", function () {
   const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
   return new LocalizationHelper("devtools/client/locales/startup.properties");
 });

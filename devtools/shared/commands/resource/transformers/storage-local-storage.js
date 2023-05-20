@@ -10,7 +10,7 @@ const {
 
 const { Front, types } = require("resource://devtools/shared/protocol.js");
 
-module.exports = function({ resource, watcherFront, targetFront }) {
+module.exports = function ({ resource, watcherFront, targetFront }) {
   if (!(resource instanceof Front) && watcherFront) {
     // instantiate front for local storage
     resource = types.getType("localStorage").read(resource, targetFront);

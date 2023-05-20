@@ -74,7 +74,7 @@ add_task(async function test_recording() {
   let processCreated = TestUtils.topicObserved(CONTENT_CREATED);
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank", forceNewProcess: true },
-    async function(browser) {
+    async function (browser) {
       // Make sure our new browser is in its own process. The processCreated
       // promise should have already resolved by this point.
       await processCreated;
@@ -105,7 +105,7 @@ add_task(async function test_recording() {
       });
 
       // Accumulate from the content process into both dynamic scalars.
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         Services.telemetry.scalarAdd(
           "telemetry.test.dynamic.pre_content_spawn_expiration",
           1
@@ -206,9 +206,9 @@ add_task(async function test_aggregation() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank", forceNewProcess: true },
-    async function(browser) {
+    async function (browser) {
       // Accumulate from the content process into both dynamic scalars.
-      await SpecialPowers.spawn(browser, [SCALAR_FULL_NAME], async function(
+      await SpecialPowers.spawn(browser, [SCALAR_FULL_NAME], async function (
         aName
       ) {
         Services.telemetry.scalarAdd(aName, 3);

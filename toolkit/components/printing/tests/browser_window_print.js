@@ -22,7 +22,7 @@ add_task(async function test_print_blocks() {
 
   await BrowserTestUtils.withNewTab(
     `${TEST_PATH}file_window_print.html`,
-    async function(browser) {
+    async function (browser) {
       info(
         "Waiting for the first window.print() to run and ensure we're showing the preview..."
       );
@@ -80,7 +80,7 @@ add_task(async function test_print_delayed_during_load() {
 
   await BrowserTestUtils.withNewTab(
     `${TEST_PATH}file_window_print_delayed_during_load.html`,
-    async function(browser) {
+    async function (browser) {
       info(
         "Waiting for the first window.print() to run and ensure we're showing the preview..."
       );
@@ -114,7 +114,7 @@ add_task(async function test_print_on_sandboxed_frame() {
 
   await BrowserTestUtils.withNewTab(
     `${TEST_PATH}file_window_print_sandboxed_iframe.html`,
-    async function(browser) {
+    async function (browser) {
       info(
         "Waiting for the first window.print() to run and ensure we're showing the preview..."
       );
@@ -141,7 +141,7 @@ add_task(async function test_print_another_iframe_and_remove() {
 
   await BrowserTestUtils.withNewTab(
     `${TEST_PATH}file_window_print_another_iframe_and_remove.html`,
-    async function(browser) {
+    async function (browser) {
       let firstFrame = browser.browsingContext.children[0];
       info("Clicking on the button in the first iframe");
       BrowserTestUtils.synthesizeMouse("button", 0, 0, {}, firstFrame);
@@ -166,7 +166,7 @@ add_task(async function test_window_print_coop_site() {
       null,
       "There shouldn't be any print preview browser"
     );
-    await BrowserTestUtils.withNewTab(url, async function(browser) {
+    await BrowserTestUtils.withNewTab(url, async function (browser) {
       await new PrintHelper(browser).waitForDialog();
 
       ok(true, "Shouldn't crash");
@@ -182,7 +182,7 @@ add_task(async function test_window_print_iframe_remove_on_afterprint() {
   );
   await BrowserTestUtils.withNewTab(
     `${TEST_PATH}file_window_print_iframe_remove_on_afterprint.html`,
-    async function(browser) {
+    async function (browser) {
       await new PrintHelper(browser).waitForDialog();
       let modalBefore = await SpecialPowers.spawn(browser, [], () => {
         return content.windowUtils.isInModalState();
@@ -257,7 +257,7 @@ add_task(async function test_print_with_oop_iframe() {
 
   await BrowserTestUtils.withNewTab(
     `${TEST_PATH}file_window_print_oop_iframe.html`,
-    async function(browser) {
+    async function (browser) {
       info(
         "Waiting for window.print() to run and ensure we're showing the preview..."
       );
@@ -283,7 +283,7 @@ add_task(async function test_base_uri_srcdoc() {
   );
 
   const PARENT_URI = `${TEST_PATH}file_window_print_srcdoc_base_uri.html`;
-  await BrowserTestUtils.withNewTab(PARENT_URI, async function(browser) {
+  await BrowserTestUtils.withNewTab(PARENT_URI, async function (browser) {
     info(
       "Waiting for window.print() to run and ensure we're showing the preview..."
     );
@@ -312,7 +312,7 @@ add_task(async function test_print_reentrant() {
   );
 
   const URI = `${TEST_PATH}file_window_print_reentrant.html`;
-  await BrowserTestUtils.withNewTab(URI, async function(browser) {
+  await BrowserTestUtils.withNewTab(URI, async function (browser) {
     info(
       "Waiting for window.print() to run and ensure we're showing the preview..."
     );

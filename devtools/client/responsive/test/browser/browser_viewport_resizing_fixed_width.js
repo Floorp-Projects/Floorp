@@ -9,7 +9,7 @@ const TEST_URL =
   "data:text/html;charset=utf-8," +
   '<head><meta name="viewport" content="width=300"/></head>' +
   "<body>meta viewport width 300</body>";
-addRDMTask(TEST_URL, async function({ ui, manager }) {
+addRDMTask(TEST_URL, async function ({ ui, manager }) {
   info("--- Starting viewport test output ---");
 
   // We're going to take a 600,300 viewport (before) and resize it

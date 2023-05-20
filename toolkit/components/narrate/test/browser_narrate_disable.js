@@ -14,7 +14,7 @@ registerCleanupFunction(() => {
 add_task(async function testNarratePref() {
   setup();
 
-  await spawnInNewReaderTab(TEST_ARTICLE, function() {
+  await spawnInNewReaderTab(TEST_ARTICLE, function () {
     is(
       content.document.querySelectorAll(NarrateTestUtils.TOGGLE).length,
       1,
@@ -24,7 +24,7 @@ add_task(async function testNarratePref() {
 
   setBoolPref(ENABLE_PREF, false);
 
-  await spawnInNewReaderTab(TEST_ARTICLE, function() {
+  await spawnInNewReaderTab(TEST_ARTICLE, function () {
     ok(
       !content.document.querySelector(NarrateTestUtils.TOGGLE),
       "narrate is disabled and is not in reader mode"
@@ -33,7 +33,7 @@ add_task(async function testNarratePref() {
 
   setBoolPref(ENABLE_PREF, true);
 
-  await spawnInNewReaderTab(TEST_ARTICLE, function() {
+  await spawnInNewReaderTab(TEST_ARTICLE, function () {
     is(
       content.document.querySelectorAll(NarrateTestUtils.TOGGLE).length,
       1,

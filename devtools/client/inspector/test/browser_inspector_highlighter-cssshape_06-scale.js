@@ -10,7 +10,7 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes.html";
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 const SHAPE_SELECTORS = ["#polygon-transform", "#circle", "#ellipse", "#inset"];
 
-add_task(async function() {
+add_task(async function () {
   const env = await openInspectorForURL(TEST_URL);
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
   const { highlighterTestFront, inspector } = env;

@@ -9,7 +9,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 add_task(async function test_all_images_mentioned() {
   await BrowserTestUtils.withNewTab(
     TEST_PATH + "all_images.html",
-    async function() {
+    async function () {
       let pageInfo = BrowserPageInfo(
         gBrowser.selectedBrowser.currentURI.spec,
         "mediaTab"
@@ -54,7 +54,7 @@ add_task(async function test_view_image_info() {
   await BrowserTestUtils.withNewTab(
     TEST_PATH + "all_images.html",
 
-    async function(browser) {
+    async function (browser) {
       let contextMenu = document.getElementById("contentAreaContextMenu");
       let viewImageInfo = document.getElementById("context-viewimageinfo");
 

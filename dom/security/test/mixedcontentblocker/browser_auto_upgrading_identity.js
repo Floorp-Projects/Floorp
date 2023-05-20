@@ -11,8 +11,10 @@ add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [["security.mixed_content.upgrade_display_content", true]],
   });
-  await BrowserTestUtils.withNewTab(TEST_TOPLEVEL_URI, async function(browser) {
-    await ContentTask.spawn(browser, {}, async function() {
+  await BrowserTestUtils.withNewTab(TEST_TOPLEVEL_URI, async function (
+    browser
+  ) {
+    await ContentTask.spawn(browser, {}, async function () {
       let testImg = content.document.getElementById("testimage");
       ok(
         testImg.src.includes("auto_upgrading_identity.png"),
@@ -32,8 +34,10 @@ add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [["security.mixed_content.upgrade_display_content", false]],
   });
-  await BrowserTestUtils.withNewTab(TEST_TOPLEVEL_URI, async function(browser) {
-    await ContentTask.spawn(browser, {}, async function() {
+  await BrowserTestUtils.withNewTab(TEST_TOPLEVEL_URI, async function (
+    browser
+  ) {
+    await ContentTask.spawn(browser, {}, async function () {
       let testImg = content.document.getElementById("testimage");
       ok(
         testImg.src.includes("auto_upgrading_identity.png"),

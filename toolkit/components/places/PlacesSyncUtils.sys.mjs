@@ -89,9 +89,9 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
   resetSyncId() {
     return lazy.PlacesUtils.withConnectionWrapper(
       "HistorySyncUtils: resetSyncId",
-      function(db) {
+      function (db) {
         let newSyncId = lazy.PlacesUtils.history.makeGuid();
-        return db.executeTransaction(async function() {
+        return db.executeTransaction(async function () {
           await setHistorySyncId(db, newSyncId);
           return newSyncId;
         });
@@ -113,7 +113,7 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
     }
     await lazy.PlacesUtils.withConnectionWrapper(
       "HistorySyncUtils: ensureCurrentSyncId",
-      async function(db) {
+      async function (db) {
         let existingSyncId = await lazy.PlacesUtils.metadata.getWithConnection(
           db,
           HistorySyncUtils.SYNC_ID_META_KEY,
@@ -134,7 +134,7 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
             newSyncId,
           }
         );
-        await db.executeTransaction(function() {
+        await db.executeTransaction(function () {
           return setHistorySyncId(db, newSyncId);
         });
       }
@@ -277,7 +277,7 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
     let validatedGuid = lazy.PlacesUtils.BOOKMARK_VALIDATORS.guid(guid);
     return lazy.PlacesUtils.withConnectionWrapper(
       "PlacesSyncUtils.history: changeGuid",
-      async function(db) {
+      async function (db) {
         await db.executeCached(
           `
             UPDATE moz_places
@@ -460,9 +460,9 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
   resetSyncId() {
     return lazy.PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: resetSyncId",
-      function(db) {
+      function (db) {
         let newSyncId = lazy.PlacesUtils.history.makeGuid();
-        return db.executeTransaction(async function() {
+        return db.executeTransaction(async function () {
           await setBookmarksSyncId(db, newSyncId);
           await resetAllSyncStatuses(
             db,
@@ -494,7 +494,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
     }
     await lazy.PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: ensureCurrentSyncId",
-      async function(db) {
+      async function (db) {
         let existingSyncId = await lazy.PlacesUtils.metadata.getWithConnection(
           db,
           BookmarkSyncUtils.SYNC_ID_META_KEY,
@@ -526,7 +526,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
           "Bookmarks sync ID changed; resetting sync statuses",
           { existingSyncId, newSyncId }
         );
-        await db.executeTransaction(async function() {
+        await db.executeTransaction(async function () {
           await setBookmarksSyncId(db, newSyncId);
           await resetAllSyncStatuses(
             db,
@@ -657,7 +657,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
 
     return lazy.PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: fetchChildRecordIds",
-      async function(db) {
+      async function (db) {
         let childGuids = await fetchChildGuids(db, parentGuid);
         return childGuids.map(guid => BookmarkSyncUtils.guidToRecordId(guid));
       }
@@ -675,8 +675,8 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
   migrateOldTrackerEntries(entries) {
     return lazy.PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: migrateOldTrackerEntries",
-      function(db) {
-        return db.executeTransaction(async function() {
+      function (db) {
+        return db.executeTransaction(async function () {
           // Mark all existing bookmarks as synced, and clear their change
           // counters to avoid a full upload on the next sync. Note that
           // this means we'll miss changes made between startup and the first
@@ -804,7 +804,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
   havePendingChanges() {
     return lazy.PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: havePendingChanges",
-      async function(db) {
+      async function (db) {
         let rows = await db.executeCached(`
           WITH RECURSIVE
           syncedItems(id, guid, syncChangeCounter) AS (
@@ -874,7 +874,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
   pushChanges(changeRecords) {
     return lazy.PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: pushChanges",
-      async function(db) {
+      async function (db) {
         let skippedCount = 0;
         let weakCount = 0;
         let updateParams = [];
@@ -923,7 +923,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
         // during the sync, its change counter will still be > 0 for the
         // next sync.
         if (updateParams.length || tombstoneGuidsToRemove.length) {
-          await db.executeTransaction(async function() {
+          await db.executeTransaction(async function () {
             if (updateParams.length) {
               await db.executeCached(
                 `
@@ -978,7 +978,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
 
     return lazy.PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: remove",
-      async function(db) {
+      async function (db) {
         let folderGuids = [];
         for (let recordId of recordIds) {
           if (recordId in lazy.ROOT_RECORD_ID_TO_GUID) {
@@ -1053,8 +1053,8 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
   reset() {
     return lazy.PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: reset",
-      function(db) {
-        return db.executeTransaction(async function() {
+      function (db) {
+        return db.executeTransaction(async function () {
           await BookmarkSyncUtils.resetSyncMetadata(db, SOURCE_SYNC);
         });
       }
@@ -1096,7 +1096,7 @@ const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
     }
     return lazy.PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: fetch",
-      async function(db) {
+      async function (db) {
         // Convert the Places bookmark object to a Sync bookmark and add
         // kind-specific properties. Titles are required for bookmarks,
         // and folders; optional for queries, and omitted for separators.
@@ -1330,7 +1330,7 @@ function validateChangeRecord(name, changeRecord, behavior) {
 
 // Similar to the private `fetchBookmarksByParent` implementation in
 // `Bookmarks.jsm`.
-var fetchChildGuids = async function(db, parentGuid) {
+var fetchChildGuids = async function (db, parentGuid) {
   let rows = await db.executeCached(
     `
     SELECT guid
@@ -1388,7 +1388,7 @@ function updateTagQueryFolder(db, info) {
 function removeConflictingKeywords(bookmarkURL, newKeyword) {
   return lazy.PlacesUtils.withConnectionWrapper(
     "BookmarkSyncUtils: removeConflictingKeywords",
-    async function(db) {
+    async function (db) {
       let entryForURL = await lazy.PlacesUtils.keywords.fetch({
         url: bookmarkURL.href,
       });
@@ -1644,7 +1644,7 @@ function syncBookmarkToPlacesBookmark(info) {
 
 // Creates and returns a Sync bookmark object containing the bookmark's
 // tags, keyword.
-var fetchBookmarkItem = async function(db, bookmarkItem) {
+var fetchBookmarkItem = async function (db, bookmarkItem) {
   let item = await placesBookmarkToSyncBookmark(db, bookmarkItem);
 
   if (!item.title) {
@@ -1753,7 +1753,7 @@ function addRowToChangeRecords(row, changeRecords) {
  * @resolves to an object containing records for changed bookmarks, keyed by
  *           the record ID.
  */
-var pullSyncChanges = async function(db, forGuids = []) {
+var pullSyncChanges = async function (db, forGuids = []) {
   let changeRecords = {};
 
   let itemConditions = ["syncChangeCounter >= 1"];
@@ -1867,7 +1867,7 @@ async function deleteSyncedFolder(db, bookmarkItem) {
 }
 
 // Removes a synced bookmark or empty folder from the database.
-var deleteSyncedAtom = async function(bookmarkItem) {
+var deleteSyncedAtom = async function (bookmarkItem) {
   try {
     await lazy.PlacesUtils.bookmarks.remove(bookmarkItem.guid, {
       preventRemovalOfNonEmptyFolders: true,
@@ -1925,7 +1925,7 @@ function markChangesAsSyncing(db, changeRecords) {
  *
  * @return {Promise}
  */
-var removeTombstones = function(db, guids) {
+var removeTombstones = function (db, guids) {
   if (!guids.length) {
     return Promise.resolve();
   }
@@ -1940,7 +1940,7 @@ var removeTombstones = function(db, guids) {
  *
  * @return {Promise}
  */
-var removeUndeletedTombstones = function(db, guids) {
+var removeUndeletedTombstones = function (db, guids) {
   if (!guids.length) {
     return Promise.resolve();
   }

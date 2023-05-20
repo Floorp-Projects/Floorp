@@ -5,7 +5,7 @@
 
 var ID = "debuggable@tests.mozilla.org";
 
-add_task(async function() {
+add_task(async function () {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
   await promiseStartupManager();

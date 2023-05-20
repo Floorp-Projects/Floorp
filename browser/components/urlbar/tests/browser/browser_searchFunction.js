@@ -8,7 +8,7 @@
 const ALIAS = "@enginealias";
 let aliasEngine;
 
-add_setup(async function() {
+add_setup(async function () {
   // Run this in a new tab, to ensure all the locationchange notifications have
   // fired.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
@@ -18,7 +18,7 @@ add_setup(async function() {
   });
   aliasEngine = Services.search.getEngineByName("Example");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(tab);
     gURLBar.handleRevert();
   });

@@ -356,10 +356,10 @@ function test_readAsBinaryString(blob, text) {
     let r = new FileReader();
     is(r.readyState, FileReader.EMPTY, "correct initial binary readyState");
 
-    r.addEventListener("load", function() {
+    r.addEventListener("load", function () {
       onloadHasRun = true;
     });
-    r.addEventListener("loadstart", function() {
+    r.addEventListener("loadstart", function () {
       onloadStartHasRun = true;
     });
 
@@ -394,10 +394,10 @@ function test_readAsArrayBuffer(blob, text) {
       "correct initial arrayBuffer readyState"
     );
 
-    r.addEventListener("load", function() {
+    r.addEventListener("load", function () {
       onloadHasRun = true;
     });
-    r.addEventListener("loadstart", function() {
+    r.addEventListener("loadstart", function () {
       onloadStartHasRun = true;
     });
 
@@ -668,7 +668,7 @@ function test_abort(blob) {
 
     let r = new FileReader();
 
-    r.onabort = function(event) {
+    r.onabort = function (event) {
       is(abortHasRun, false, "abort should only fire once");
       is(loadEndHasRun, false, "loadend shouldn't have fired yet");
       abortHasRun = true;
@@ -689,7 +689,7 @@ function test_abort(blob) {
       );
     };
 
-    r.onloadend = function(event) {
+    r.onloadend = function (event) {
       is(abortHasRun, true, "abort should fire before loadend");
       is(loadEndHasRun, false, "loadend should only fire once");
       loadEndHasRun = true;
@@ -710,13 +710,13 @@ function test_abort(blob) {
       );
     };
 
-    r.onload = function() {
+    r.onload = function () {
       ok(false, "load should not fire for aborted reads");
     };
-    r.onerror = function() {
+    r.onerror = function () {
       ok(false, "error should not fire for aborted reads");
     };
-    r.onprogress = function() {
+    r.onprogress = function () {
       ok(false, "progress should not fire for aborted reads");
     };
 
@@ -746,7 +746,7 @@ function test_abort_readAsX(blob, text) {
     let reuseAbortHasRun = false;
 
     let r = new FileReader();
-    r.onabort = function(event) {
+    r.onabort = function (event) {
       is(reuseAbortHasRun, false, "abort should only fire once");
       reuseAbortHasRun = true;
       is(
@@ -765,7 +765,7 @@ function test_abort_readAsX(blob, text) {
         "file data should be null on aborted reads"
       );
     };
-    r.onload = function() {
+    r.onload = function () {
       ok(false, "load should fire for nested reads");
     };
 
@@ -808,7 +808,7 @@ function test_nonExisting(blob) {
   return new Promise(resolve => {
     let r = new FileReader();
 
-    r.onerror = function(event) {
+    r.onerror = function (event) {
       is(
         event.target.readyState,
         FileReader.DONE,
@@ -826,7 +826,7 @@ function test_nonExisting(blob) {
       );
       resolve();
     };
-    r.onload = function(event) {
+    r.onload = function (event) {
       is(false, "nonexistent file shouldn't load! (FIXME: bug 1122788)");
     };
 

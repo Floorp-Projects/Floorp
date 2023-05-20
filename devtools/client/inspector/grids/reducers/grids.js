@@ -78,7 +78,7 @@ const reducers = {
   },
 };
 
-module.exports = function(grids = INITIAL_GRIDS, action) {
+module.exports = function (grids = INITIAL_GRIDS, action) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return grids;

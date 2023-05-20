@@ -38,7 +38,7 @@ function run_test() {
     ["view-source:http://mozilla.org/", "http://mozilla.org/", true],
   ];
 
-  tests.forEach(function(aTest) {
+  tests.forEach(function (aTest) {
     do_info("Comparing " + aTest[0] + " to " + aTest[1]);
 
     var uri1 = NetUtil.newURI(aTest[0]);

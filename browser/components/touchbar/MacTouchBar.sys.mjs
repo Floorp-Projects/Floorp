@@ -657,7 +657,7 @@ export class TouchBarInput {
     // In the TouchBarInput constuctor, we filtered so children contains only
     // those inputs with titles to be localized. We can be confident that the
     // results in titles match up with the inputs to be localized.
-    children.forEach(function(child, index) {
+    children.forEach(function (child, index) {
       child.title = titles[index];
       localizedStrings[child.key] = child.title;
     });

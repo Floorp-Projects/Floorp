@@ -30,7 +30,7 @@ InitialListener.prototype = {
   onStartRequest(request) {},
   onStopRequest(request, status) {
     Assert.equal(1, numberOfCLHandlerCalls);
-    executeSoon(function() {
+    executeSoon(function () {
       var channel = setupChannel(
         "http://localhost:" + httpserv.identity.primaryPort + "/post"
       );
@@ -46,7 +46,7 @@ RedirectingListener.prototype = {
   onStartRequest(request) {},
   onStopRequest(request, status) {
     Assert.equal(1, numberOfHandlerCalls);
-    executeSoon(function() {
+    executeSoon(function () {
       var channel = setupChannel(
         "http://localhost:" + httpserv.identity.primaryPort + "/post"
       );

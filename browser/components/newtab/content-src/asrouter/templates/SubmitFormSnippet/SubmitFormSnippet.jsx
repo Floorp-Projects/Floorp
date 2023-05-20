@@ -210,7 +210,7 @@ export class SubmitFormSnippet extends React.PureComponent {
   }
 
   wrapSectionHeader(url) {
-    return function(children) {
+    return function (children) {
       return <a href={url}>{children}</a>;
     };
   }

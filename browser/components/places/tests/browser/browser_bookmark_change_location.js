@@ -12,7 +12,7 @@ const TEST_URL2 = "about:credits";
 const TEST_URL3 = "about:config";
 
 // Setup.
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.toolbars.bookmarks.visibility", "always"]],
   });
@@ -138,7 +138,7 @@ add_task(async function test_change_location_from_Toolbar() {
 add_task(async function test_change_location_from_Sidebar() {
   let bm = await PlacesUtils.bookmarks.fetch({ url: TEST_URL2 });
 
-  await withSidebarTree("bookmarks", async function(tree) {
+  await withSidebarTree("bookmarks", async function (tree) {
     tree.selectItems([bm.guid]);
 
     await withBookmarksDialog(

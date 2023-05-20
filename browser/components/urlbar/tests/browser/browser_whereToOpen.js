@@ -14,7 +14,7 @@ const META_CLICK = new MouseEvent("click", { button: 0, [META_KEY]: true });
 const MIDDLE_CLICK = new MouseEvent("click", { button: 1 });
 
 let old_openintab = Preferences.get("browser.urlbar.openintab");
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   Preferences.set("browser.urlbar.openintab", old_openintab);
 });
 

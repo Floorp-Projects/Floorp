@@ -204,7 +204,7 @@ const TESTCASES = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   Services.prefs.setStringPref(
     "extensions.formautofill.creditCards.heuristics.fathom.testConfidence",
     "1"
@@ -218,7 +218,7 @@ add_setup(async function() {
 });
 
 TESTCASES.forEach(testcase => {
-  add_task(async function() {
+  add_task(async function () {
     info("Starting testcase: " + testcase.description);
 
     let doc = MockDocument.createTestDocument(

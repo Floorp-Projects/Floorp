@@ -19,7 +19,7 @@ const serverInfo = {
 var gEngine;
 var gEngine2;
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
   await SpecialPowers.pushPrefEnv({
@@ -41,7 +41,7 @@ add_setup(async function() {
     gEngine,
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await Services.search.setDefault(
       oldDefaultEngine,
       Ci.nsISearchService.CHANGE_REASON_UNKNOWN

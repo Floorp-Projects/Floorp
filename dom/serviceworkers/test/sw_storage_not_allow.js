@@ -1,7 +1,7 @@
 let clientId;
-addEventListener("fetch", function(event) {
+addEventListener("fetch", function (event) {
   event.respondWith(
-    (async function() {
+    (async function () {
       if (event.request.url.includes("getClients")) {
         // Expected to fail since the storage access is not allowed.
         try {
@@ -28,6 +28,6 @@ addEventListener("fetch", function(event) {
   );
 });
 
-addEventListener("activate", function(event) {
+addEventListener("activate", function (event) {
   event.waitUntil(clients.claim());
 });

@@ -210,7 +210,7 @@ ElementEditor.prototype = {
           () => {
             doMods.apply();
           },
-          function() {
+          function () {
             undoMods.apply();
           }
         );

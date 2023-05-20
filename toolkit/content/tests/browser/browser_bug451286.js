@@ -3,7 +3,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_task(async function() {
+add_task(async function () {
   const SEARCH_TEXT = "text";
   const DATAURI = "data:text/html," + SEARCH_TEXT;
 
@@ -50,7 +50,7 @@ add_task(async function() {
   ok(unhighlightSnapshot, "Got unhighlightSnapshot");
 
   // Select the matches that should have been highlighted manually
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let doc = content.document;
     let win = doc.defaultView;
 

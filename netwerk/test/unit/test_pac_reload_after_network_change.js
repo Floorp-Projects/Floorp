@@ -14,7 +14,7 @@ var { setTimeout } = ChromeUtils.importESModule(
 let pacServer;
 const proxyPort = 4433;
 
-add_setup(async function() {
+add_setup(async function () {
   pacServer = new HttpServer();
   pacServer.registerPathHandler("/proxy.pac", function handler(
     metadata,

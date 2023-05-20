@@ -68,7 +68,7 @@ var gTreeUtils = {
 
     var sortFunction = null;
     if (aComparator) {
-      sortFunction = function(a, b) {
+      sortFunction = function (a, b) {
         return aComparator(a[aColumn], b[aColumn]);
       };
     }

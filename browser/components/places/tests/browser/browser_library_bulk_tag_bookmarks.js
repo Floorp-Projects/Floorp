@@ -103,7 +103,7 @@ add_task(async function test_bulk_tag_tags_selector() {
       "Found expected number of tags in the tags selector"
     );
 
-    Array.prototype.forEach.call(children, function(aChild) {
+    Array.prototype.forEach.call(children, function (aChild) {
       let tag = aChild.querySelector("label").getAttribute("value");
       ok(true, "Found tag '" + tag + "' in the selector");
       ok(aAvailableTags.includes(tag), "Found expected tag");

@@ -8,7 +8,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 // Test that the tree is correct for browser elements containing remote
 // documents.
-addAccessibleTask(`test`, async function(browser, docAcc) {
+addAccessibleTask(`test`, async function (browser, docAcc) {
   // testAccessibleTree also verifies childCount, indexInParent and parent.
   testAccessibleTree(browser, {
     INTERNAL_FRAME: [{ DOCUMENT: [{ TEXT_LEAF: [] }] }],

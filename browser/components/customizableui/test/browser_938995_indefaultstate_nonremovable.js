@@ -7,7 +7,7 @@
 const kWidgetId = "test-non-removable-widget";
 
 // Adding non-removable items to a toolbar or the panel shouldn't change inDefaultState
-add_task(async function() {
+add_task(async function () {
   ok(CustomizableUI.inDefaultState, "Should start in default state");
 
   let button = createDummyXULButton(

@@ -8,7 +8,7 @@ const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 /**
  * Test the filters_changed telemetry event.
  */
-add_task(async function() {
+add_task(async function () {
   const { monitor } = await initNetMonitor(HTTPS_SIMPLE_URL, {
     requestCount: 1,
   });

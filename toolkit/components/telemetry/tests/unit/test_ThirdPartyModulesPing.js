@@ -57,7 +57,7 @@ add_task(async function setup() {
   return TelemetryController.testSetup();
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   return PingServer.stop();
 });
 
@@ -156,7 +156,7 @@ add_task(async function test_send_ping() {
     );
     Assert.ok(typeof modRecord.trustFlags == "number", "'trustFlags' exists");
 
-    let mod = expectedModules.find(function(elem) {
+    let mod = expectedModules.find(function (elem) {
       return elem.nameMatch.test(modRecord.resolvedDllName);
     });
 

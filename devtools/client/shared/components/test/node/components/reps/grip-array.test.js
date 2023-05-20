@@ -100,9 +100,7 @@ describe("GripArray - more than short mode max props", () => {
     let length = getGripLengthBubbleText(object);
 
     const shortLength = maxLengthMap.get(MODE.SHORT);
-    const shortContent = Array(shortLength)
-      .fill('"test string"')
-      .join(", ");
+    const shortContent = Array(shortLength).fill('"test string"').join(", ");
     const longContent = Array(shortLength + 1)
       .fill('"test string"')
       .join(", ");
@@ -131,13 +129,9 @@ describe("GripArray - more than long mode max props", () => {
 
     const shortLength = maxLengthMap.get(MODE.SHORT);
     const longLength = maxLengthMap.get(MODE.LONG);
-    const shortContent = Array(shortLength)
-      .fill('"test string"')
-      .join(", ");
+    const shortContent = Array(shortLength).fill('"test string"').join(", ");
     const defaultOutput = `Array${length} [ ${shortContent}, … ]`;
-    const longContent = Array(longLength)
-      .fill('"test string"')
-      .join(", ");
+    const longContent = Array(longLength).fill('"test string"').join(", ");
 
     expect(
       renderRep({ mode: undefined, shouldRenderTooltip: true }).text()

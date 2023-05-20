@@ -7,7 +7,7 @@ const PREF_DEPRECATION_WARNINGS = "devtools.errorconsole.deprecation_warnings";
 // A flag that indicates whether deprecation warnings should be logged.
 var logWarnings = Services.prefs.getBoolPref(PREF_DEPRECATION_WARNINGS);
 
-Services.prefs.addObserver(PREF_DEPRECATION_WARNINGS, function(
+Services.prefs.addObserver(PREF_DEPRECATION_WARNINGS, function (
   aSubject,
   aTopic,
   aData

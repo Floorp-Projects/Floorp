@@ -51,13 +51,13 @@ function renderXHRBreakpointsComponent(propsOverride) {
   return xhrBreakpointsComponent;
 }
 
-describe("XHR Breakpoints", function() {
-  it("should render with 0 expressions passed from props", function() {
+describe("XHR Breakpoints", function () {
+  it("should render with 0 expressions passed from props", function () {
     const xhrBreakpointsComponent = renderXHRBreakpointsComponent();
     expect(xhrBreakpointsComponent).toMatchSnapshot();
   });
 
-  it("should render with 8 expressions passed from props", function() {
+  it("should render with 8 expressions passed from props", function () {
     const allXHRBreakpointMethods = {
       xhrBreakpoints: [
         {
@@ -132,7 +132,7 @@ describe("XHR Breakpoints", function() {
     expect(xhrBreakpointsComponent).toMatchSnapshot();
   });
 
-  it("should display xhr-input-method on click", function() {
+  it("should display xhr-input-method on click", function () {
     const xhrBreakpointsComponent = renderXHRBreakpointsComponent();
     xhrBreakpointsComponent.find(".xhr-input-url").simulate("focus");
 
@@ -142,13 +142,13 @@ describe("XHR Breakpoints", function() {
     expect(xhrInputContainer.hasClass("focused")).toBeTruthy();
   });
 
-  it("should have focused and editing default to false", function() {
+  it("should have focused and editing default to false", function () {
     const xhrBreakpointsComponent = renderXHRBreakpointsComponent();
     expect(xhrBreakpointsComponent.state("focused")).toBe(false);
     expect(xhrBreakpointsComponent.state("editing")).toBe(false);
   });
 
-  it("should have state {..focused: true, editing: true} on focus", function() {
+  it("should have state {..focused: true, editing: true} on focus", function () {
     const xhrBreakpointsComponent = renderXHRBreakpointsComponent();
     xhrBreakpointsComponent.find(".xhr-input-url").simulate("focus");
     expect(xhrBreakpointsComponent.state("focused")).toBe(true);
@@ -157,7 +157,7 @@ describe("XHR Breakpoints", function() {
 
   // shifting focus from .xhr-input to any other element apart from
   // .xhr-input-method should unrender .xhr-input-method
-  it("shifting focus should unrender XHR methods", function() {
+  it("shifting focus should unrender XHR methods", function () {
     const propsOverride = {
       onXHRAdded: jest.fn,
       togglePauseOnAny: jest.fn,
@@ -193,7 +193,7 @@ describe("XHR Breakpoints", function() {
 
   // shifting focus from .xhr-input to .xhr-input-method
   // should not unrender .xhr-input-method
-  it("shifting focus to XHR methods should not unrender", function() {
+  it("shifting focus to XHR methods should not unrender", function () {
     const xhrBreakpointsComponent = renderXHRBreakpointsComponent();
     xhrBreakpointsComponent.find(".xhr-input-url").simulate("focus");
 
@@ -214,7 +214,7 @@ describe("XHR Breakpoints", function() {
     expect(xhrInputContainer.hasClass("focused")).toBeTruthy();
   });
 
-  it("should have all 8 methods available as options", function() {
+  it("should have all 8 methods available as options", function () {
     const xhrBreakpointsComponent = renderXHRBreakpointsComponent();
     xhrBreakpointsComponent.find(".xhr-input-url").simulate("focus");
 
@@ -238,7 +238,7 @@ describe("XHR Breakpoints", function() {
     });
   });
 
-  it("should return focus to input box after selecting a method", function() {
+  it("should return focus to input box after selecting a method", function () {
     const xhrBreakpointsComponent = renderXHRBreakpointsComponent();
 
     // focus starts off at .xhr-input
@@ -259,7 +259,7 @@ describe("XHR Breakpoints", function() {
     expect(xhrBreakpointsComponent.state("editing")).toBe(true);
   });
 
-  it("should submit the URL and method when adding a breakpoint", function() {
+  it("should submit the URL and method when adding a breakpoint", function () {
     const setXHRBreakpointCallback = jest.fn();
     const propsOverride = {
       setXHRBreakpoint: setXHRBreakpointCallback,
@@ -274,7 +274,7 @@ describe("XHR Breakpoints", function() {
 
     // check each of the available methods to see whether
     // adding them as a method to a new breakpoint works as expected
-    availableXHRMethods.forEach(function(method) {
+    availableXHRMethods.forEach(function (method) {
       const xhrBreakpointsComponent = renderXHRBreakpointsComponent(
         propsOverride
       );
@@ -294,7 +294,7 @@ describe("XHR Breakpoints", function() {
     });
   });
 
-  it("should submit the URL and method when editing a breakpoint", function() {
+  it("should submit the URL and method when editing a breakpoint", function () {
     const setXHRBreakpointCallback = jest.fn();
     const mockEvent = {
       preventDefault: jest.fn(),

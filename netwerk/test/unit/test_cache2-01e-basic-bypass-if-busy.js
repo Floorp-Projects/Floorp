@@ -9,7 +9,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW | DONTFILL, "a1m", "a1d", function(entry) {
+    new OpenCallback(NEW | DONTFILL, "a1m", "a1d", function (entry) {
       var bypassed = false;
 
       // Open and bypass
@@ -18,7 +18,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_BYPASS_IF_BUSY,
         null,
-        new OpenCallback(NOTFOUND, "", "", function(entry) {
+        new OpenCallback(NOTFOUND, "", "", function (entry) {
           Assert.ok(!bypassed);
           bypassed = true;
         })
@@ -28,7 +28,7 @@ function run_test() {
       // 1. we want finish_cache2_test call for sure after do_test_pending, but all the callbacks here
       //    may invoke synchronously
       // 2. precaution when the OPEN_BYPASS_IF_BUSY invocation become a post one day
-      executeSoon(function() {
+      executeSoon(function () {
         Assert.ok(bypassed);
         finish_cache2_test();
       });

@@ -77,7 +77,7 @@ add_task(async function updateReaderView() {
   );
 
   let url = TEST_PATH + "readerModeArticle.html";
-  await BrowserTestUtils.withNewTab(url, async function() {
+  await BrowserTestUtils.withNewTab(url, async function () {
     await BrowserTestUtils.waitForCondition(() => !readerButton.hidden);
 
     Assert.equal(

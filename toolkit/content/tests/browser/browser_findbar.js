@@ -299,7 +299,7 @@ add_task(async function test_open_and_close_keys() {
   let scrollPosition = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    async function() {
+    async function () {
       return content.document.body.scrollTop;
     }
   );
@@ -343,7 +343,7 @@ add_task(async function test_input_keypress() {
   await EventUtils.synthesizeKey("KEY_ArrowDown");
   await scrollPromise;
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function () {
     await ContentTaskUtils.waitForCondition(
       () =>
         content.document.defaultView.innerHeight +
@@ -360,7 +360,7 @@ add_task(async function test_input_keypress() {
   await EventUtils.synthesizeKey("KEY_ArrowDown", { accelKey: true });
   await completeScrollPromise;
 
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, async function () {
     await ContentTaskUtils.waitForCondition(
       () =>
         content.document.defaultView.innerHeight +
@@ -547,7 +547,7 @@ function promiseRemotenessChange(tab, shouldBeRemote) {
     let browser = gBrowser.getBrowserForTab(tab);
     tab.addEventListener(
       "TabRemotenessChange",
-      function() {
+      function () {
         resolve();
       },
       { once: true }

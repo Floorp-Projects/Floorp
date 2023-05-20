@@ -22,7 +22,7 @@ export function PeerConnectionIdp(win, timeout) {
   this._resetAssertion();
 }
 
-(function() {
+(function () {
   PeerConnectionIdp._mLinePattern = new RegExp("^m=", "m");
   // attributes are funny, the 'a' is case sensitive, the name isn't
   let pattern = "^a=[iI][dD][eE][nN][tT][iI][tT][yY]:(\\S+)";

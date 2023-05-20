@@ -355,7 +355,7 @@ async function unregisterServiceWorker(tab, expectedPageUrl) {
  */
 async function waitForRegistrationReady(tab, expectedPageUrl) {
   await asyncWaitUntil(() =>
-    SpecialPowers.spawn(tab.linkedBrowser, [expectedPageUrl], function(_url) {
+    SpecialPowers.spawn(tab.linkedBrowser, [expectedPageUrl], function (_url) {
       try {
         const win = content.wrappedJSObject;
         const isExpectedUrl = win.location.href === _url;

@@ -7,7 +7,7 @@
  * This test ensures that we limit textruns in case of very long urls or titles.
  */
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.searches", true]],
   });
@@ -25,7 +25,7 @@ add_task(async function() {
     { value: `A long ${lotsOfSpaces} textruns suggestion` },
   ]);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
   });

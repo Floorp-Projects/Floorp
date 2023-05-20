@@ -8,7 +8,7 @@
  * (including Unicode)
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(API_CALLS_URL, {
     requestCount: 1,
   });
@@ -33,7 +33,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 5);
 
-  REQUEST_URIS.forEach(function(uri, index) {
+  REQUEST_URIS.forEach(function (uri, index) {
     verifyRequestItemTarget(
       document,
       getDisplayedRequests(store.getState()),

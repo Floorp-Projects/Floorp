@@ -56,7 +56,7 @@ requestLongerTimeout(4);
  *   it preloads/precaches the data without us having touched localStorage or
  *   added an event listener.
  */
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Stop the preallocated process manager from speculatively creating

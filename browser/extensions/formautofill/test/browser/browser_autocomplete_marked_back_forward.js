@@ -25,7 +25,7 @@ add_task(async function setup_storage() {
 });
 
 add_task(async function test_back_forward() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     browser
   ) {
     const { autoCompletePopup } = browser;

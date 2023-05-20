@@ -36,7 +36,7 @@ const TEST_URL =
   })();
   </script>`);
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   info("Waiting for element picker to become active.");

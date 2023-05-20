@@ -25,7 +25,7 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/platform/clipboard.js"
 );
 
-loader.lazyGetter(this, "TOOLBOX_L10N", function() {
+loader.lazyGetter(this, "TOOLBOX_L10N", function () {
   return new LocalizationHelper("devtools/client/locales/toolbox.properties");
 });
 

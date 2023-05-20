@@ -7,7 +7,7 @@
 const TEST_DOCUMENT = "target_configuration_test_doc.sjs";
 const TEST_URI = URL_ROOT_COM_SSL + TEST_DOCUMENT;
 
-add_task(async function() {
+add_task(async function () {
   info("Setup the test page with workers of all types");
   const tab = await addTab(TEST_URI);
 
@@ -160,7 +160,7 @@ function topLevelDocumentMatchPrefersDarkColorSchemeMediaAtStartup() {
 }
 
 function getIframeBrowsingContext() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     // Ensure we've rendered the iframe so that the prefers-color-scheme
     // value propagated from the embedder is up-to-date.
     await new Promise(resolve => {

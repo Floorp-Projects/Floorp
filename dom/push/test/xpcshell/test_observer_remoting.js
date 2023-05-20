@@ -74,7 +74,7 @@ async function testInChild() {
   await promiseNotifierObservers;
 }
 
-var waitForNotifierObservers = async function(
+var waitForNotifierObservers = async function (
   { text, principal },
   shouldNotify = false
 ) {

@@ -68,6 +68,6 @@ ContentObserver.prototype = {
 
 // Utility functions.
 
-ContentObserver.GetInnerWindowID = function(window) {
+ContentObserver.GetInnerWindowID = function (window) {
   return window.windowGlobalChild.innerWindowId;
 };

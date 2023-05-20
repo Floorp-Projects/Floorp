@@ -35,7 +35,7 @@ async function clickVisibleButton(browser, selector) {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   SpecialPowers.pushPrefEnv({
     set: [
       ["ui.prefersReducedMotion", 1],

@@ -40,7 +40,7 @@ add_task(async function test_manual_app_update_policy() {
       continueFile: null,
     },
     async tab => {
-      await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+      await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
         let setting = content.document.getElementById(
           "updateSettingsContainer"
         );

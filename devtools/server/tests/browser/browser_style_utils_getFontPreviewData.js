@@ -7,10 +7,10 @@
 
 const TEST_URI = "data:text/html,<title>Test getFontPreviewData</title>";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     const { require } = ChromeUtils.importESModule(
       "resource://devtools/shared/loader/Loader.sys.mjs"
     );

@@ -4,7 +4,7 @@
 
 let getExtension = () => {
   return ExtensionTestUtils.loadExtension({
-    background: async function() {
+    background: async function () {
       let [tab] = await browser.tabs.query({
         active: true,
         currentWindow: true,

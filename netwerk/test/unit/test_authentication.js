@@ -8,11 +8,11 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 // Turn off the authentication dialog blocking for this test.
 Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PORT", function() {
+XPCOMUtils.defineLazyGetter(this, "PORT", function () {
   return httpserv.identity.primaryPort;
 });
 
@@ -515,7 +515,7 @@ add_task(async function test_nonascii_xhr() {
   await new Promise(resolve => {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", URL + "/auth/non_ascii", true, "é", "é");
-    xhr.onreadystatechange = function(event) {
+    xhr.onreadystatechange = function (event) {
       if (xhr.readyState == 4) {
         Assert.equal(xhr.status, 200);
         resolve();
@@ -849,10 +849,10 @@ function authShortDigest(metadata, response) {
   response.setHeader("WWW-Authenticate", "Digest", false);
 }
 
-let buildLargePayload = (function() {
+let buildLargePayload = (function () {
   let size = 33 * 1024;
   let ret = "";
-  return function() {
+  return function () {
     // Return cached value.
     if (ret.length) {
       return ret;

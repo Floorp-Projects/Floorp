@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-preview.html", "preview.js");
 
   await testPreviews(dbg, "testInline", [

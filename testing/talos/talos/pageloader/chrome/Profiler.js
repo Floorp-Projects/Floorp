@@ -18,7 +18,7 @@
 // relevant parts of our tests.
 var Profiler;
 
-(function() {
+(function () {
   var _profiler;
 
   // If this script is loaded in a framescript context, there won't be a
@@ -151,7 +151,7 @@ var Profiler;
             );
 
             // The last argument (the callback) is optional.
-            NetUtil.asyncCopy(istream, ostream, function(status) {
+            NetUtil.asyncCopy(istream, ostream, function (status) {
               if (!Components.isSuccessCode(status)) {
                 reject();
                 return;

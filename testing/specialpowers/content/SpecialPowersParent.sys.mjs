@@ -290,7 +290,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
     }
 
     var success = !!aFilenames.length;
-    aFilenames.forEach(function(crashFilename) {
+    aFilenames.forEach(function (crashFilename) {
       var file = crashDumpDir.clone();
       file.append(crashFilename);
       if (file.exists()) {
@@ -395,7 +395,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
       }
     }
 
-    observers.forEach(function(observer) {
+    observers.forEach(function (observer) {
       try {
         observer.observe(subject, topic, data);
       } catch (e) {}
@@ -882,7 +882,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
             let createdFiles = this._createdFiles;
 
             let promises = [];
-            aMessage.data.forEach(function(request) {
+            aMessage.data.forEach(function (request) {
               const filePerms = 0o666;
               let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
               if (request.name) {
@@ -905,7 +905,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
               outStream.close();
               promises.push(
                 File.createFromFileName(testFile.path, request.options).then(
-                  function(file) {
+                  function (file) {
                     filePaths.push(file);
                   }
                 )
@@ -922,7 +922,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
 
         case "SpecialPowers.RemoveFiles":
           if (this._createdFiles) {
-            this._createdFiles.forEach(function(testFile) {
+            this._createdFiles.forEach(function (testFile) {
               try {
                 testFile.remove(false);
               } catch (e) {}
@@ -1120,7 +1120,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
               this._chromeScriptListeners.push({ id, name, listener });
             },
             removeMessageListener: (name, listener) => {
-              let index = this._chromeScriptListeners.findIndex(function(obj) {
+              let index = this._chromeScriptListeners.findIndex(function (obj) {
                 return (
                   obj.id == id && obj.name == name && obj.listener == listener
                 );

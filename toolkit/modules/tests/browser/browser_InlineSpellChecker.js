@@ -44,9 +44,9 @@ var tests = {
       is(
         actualFlags,
         expectedFlags,
-        `For input type "${type}" expected flags ${"0x" +
-          expectedFlags.toString(16)}; ` +
-          `got ${"0x" + actualFlags.toString(16)}`
+        `For input type "${type}" expected flags ${
+          "0x" + expectedFlags.toString(16)
+        }; ` + `got ${"0x" + actualFlags.toString(16)}`
       );
     }
   },

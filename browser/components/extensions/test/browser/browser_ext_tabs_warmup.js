@@ -18,7 +18,7 @@ add_task(async function testWarmupTab() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       let backgroundTab = (
         await browser.tabs.query({
           lastFocusedWindow: true,

@@ -7,7 +7,7 @@
  * Tests if Open in new tab works by ContextMenu.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(OPEN_REQUEST_IN_TAB_URL, {
     requestCount: 1,
   });
@@ -84,7 +84,7 @@ add_task(async function() {
  * Tests if Open in new tab works by DoubleClick RequestItem.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(OPEN_REQUEST_IN_TAB_URL, {
     requestCount: 1,
   });
@@ -159,7 +159,7 @@ add_task(async function() {
  * Tests if Open in new tab works by middle click RequestItem.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(OPEN_REQUEST_IN_TAB_URL, {
     requestCount: 1,
   });
@@ -239,7 +239,7 @@ async function performRequest(monitor, tab, method, contentType, payload) {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [[method, contentType, payload]],
-    async function([method_, contentType_, payload_]) {
+    async function ([method_, contentType_, payload_]) {
       content.wrappedJSObject.performRequest(method_, contentType_, payload_);
     }
   );
@@ -251,7 +251,7 @@ async function checkTabResponse(checkedTab, method, contentType, payload) {
   await SpecialPowers.spawn(
     checkedTab.linkedBrowser,
     [[method, contentType, payload]],
-    async function([method_, contentType_, payload_]) {
+    async function ([method_, contentType_, payload_]) {
       const { body } = content.wrappedJSObject.document;
       const expected = [method_, contentType_, payload_].join("\n");
       info("Response from the server:" + body.innerHTML.replace(/\n/g, "\\n"));

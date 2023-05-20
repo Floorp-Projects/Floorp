@@ -17,14 +17,14 @@ function waitForNewWindow() {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   let tmpDir = PathUtils.join(
     PathUtils.tempDir,
     "testsavedir" + Math.floor(Math.random() * 2 ** 32)
   );
   // Create this dir if it doesn't exist (ignores existing dirs)
   await IOUtils.makeDirectory(tmpDir);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     try {
       await IOUtils.remove(tmpDir, { recursive: true });
     } catch (e) {

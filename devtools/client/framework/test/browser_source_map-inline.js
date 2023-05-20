@@ -19,7 +19,7 @@ const PAGE_URL = `${TEST_ROOT}doc_empty-tab-01.html`;
 const JS_URL = `${TEST_ROOT}code_inline_bundle.js`;
 const ORIGINAL_URL = "webpack:///code_inline_original.js";
 
-add_task(async function() {
+add_task(async function () {
   const toolbox = await openNewTabAndToolbox(PAGE_URL, "jsdebugger");
   const service = toolbox.sourceMapURLService;
 

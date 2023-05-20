@@ -20,7 +20,7 @@ add_task(async function testSiteScopedPermissionSubdomainAffectsBaseDomain() {
   );
   let id = "3rdPartyStorage^https://example.org";
 
-  await BrowserTestUtils.withNewTab(EMPTY_PAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(EMPTY_PAGE, async function (browser) {
     Services.perms.addFromPrincipal(
       subdomainPrincipal,
       id,
@@ -67,7 +67,7 @@ add_task(async function testSiteScopedPermissionBaseDomainAffectsSubdomain() {
   );
   let id = "3rdPartyStorage^https://example.org";
 
-  await BrowserTestUtils.withNewTab(SUBDOMAIN_EMPTY_PAGE, async function(
+  await BrowserTestUtils.withNewTab(SUBDOMAIN_EMPTY_PAGE, async function (
     browser
   ) {
     Services.perms.addFromPrincipal(principal, id, SitePermissions.ALLOW);

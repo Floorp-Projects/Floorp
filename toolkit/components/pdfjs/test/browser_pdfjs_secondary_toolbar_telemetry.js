@@ -28,7 +28,7 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       Services.fog.testResetFOG();
 
       // check that PDF is opened with internal viewer
@@ -43,7 +43,7 @@ add_task(async function test() {
       });
 
       await BrowserTestUtils.waitForCondition(async () =>
-        SpecialPowers.spawn(browser, [], async function() {
+        SpecialPowers.spawn(browser, [], async function () {
           return !content.document
             .querySelector("#secondaryToolbar")
             .classList.contains("hidden");
@@ -58,7 +58,7 @@ add_task(async function test() {
       await Services.fog.testFlushAllChildren();
       Assert.equal(Glean.pdfjs.buttons.cursor_hand_tool.testGetValue(), 1);
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         var viewer = content.wrappedJSObject.PDFViewerApplication;
         await viewer.close();
       });

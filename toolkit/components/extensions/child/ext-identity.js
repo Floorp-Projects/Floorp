@@ -37,13 +37,13 @@ this.identity = class extends ExtensionAPI {
     let { extension } = context;
     return {
       identity: {
-        getRedirectURL: function(path = "") {
+        getRedirectURL: function (path = "") {
           let hash = computeHash(extension.id);
           let url = new URL(`https://${hash}.${redirectDomain}/`);
           url.pathname = path;
           return url.href;
         },
-        launchWebAuthFlow: function(details) {
+        launchWebAuthFlow: function (details) {
           // Validate the url and retreive redirect_uri if it was provided.
           let url, redirectURI;
           let baseRedirectURL = this.getRedirectURL();

@@ -12,7 +12,7 @@ var xslt =
   '  <xsl:template match="Error"/>' +
   "</xsl:stylesheet>";
 
-onfetch = function(event) {
+onfetch = function (event) {
   if (event.request.url.includes("test.xsl")) {
     if (testType == "synthetic") {
       if (event.request.mode != "cors") {
@@ -53,6 +53,6 @@ onfetch = function(event) {
   }
 };
 
-onmessage = function(event) {
+onmessage = function (event) {
   testType = event.data;
 };

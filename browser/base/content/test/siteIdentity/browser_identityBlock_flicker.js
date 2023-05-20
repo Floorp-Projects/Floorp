@@ -24,7 +24,7 @@ add_task(async function test() {
   };
   let classChanges = 0;
 
-  let observer = new MutationObserver(function(mutations) {
+  let observer = new MutationObserver(function (mutations) {
     for (let mutation of mutations) {
       is(mutation.type, "attributes");
       is(mutation.attributeName, "class");

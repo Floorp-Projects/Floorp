@@ -12,7 +12,7 @@ const {
 } = require("resource://devtools/client/shared/theme.js");
 const { PrefObserver } = require("resource://devtools/client/shared/prefs.js");
 
-add_task(async function() {
+add_task(async function () {
   testGetTheme();
   testSetTheme();
   testGetColor();

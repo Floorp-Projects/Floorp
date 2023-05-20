@@ -265,7 +265,7 @@ add_task(async function checkPermissions() {
       needPreviousData: true,
       newData: "https://mytest.com",
       steps: ["addNewPermission", "save"],
-      expected: (function() {
+      expected: (function () {
         let result = websites.slice();
         result.push("https://mytest.com");
         return result;

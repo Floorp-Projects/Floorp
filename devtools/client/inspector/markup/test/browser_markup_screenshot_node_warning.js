@@ -7,7 +7,7 @@ const TEST_URL = `data:text/html;charset=utf8,
   <div id="blue-node" style="width:30px;height:11000px;background:rgb(0, 0, 255)"></div>`;
 
 // Test taking a screenshot of a tall node displays a warning message in the notification box.
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(encodeURI(TEST_URL));
 
   info("Select the blue node");

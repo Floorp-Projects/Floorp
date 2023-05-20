@@ -53,7 +53,7 @@ const DOCUMENT_DATA_URL = "data:text/html;charset=utf-8," + DOCUMENT_HTML;
 const EXAMPLE_ORG_DOCUMENT_URL =
   "https://example.org/document-builder.sjs?html=" + DOCUMENT_HTML;
 
-add_task(async function() {
+add_task(async function () {
   await addTab(DOCUMENT_DATA_URL);
   const { toolbox, inspector, view } = await openRuleView();
 
@@ -64,7 +64,7 @@ add_task(async function() {
   await testAllStylesheets(inspector, view, toolbox);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Check that link to the style editor works after tab reload");
   await addTab(EXAMPLE_ORG_DOCUMENT_URL);
   const { toolbox, inspector, view } = await openRuleView();

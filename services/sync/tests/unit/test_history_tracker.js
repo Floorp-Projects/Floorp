@@ -78,7 +78,7 @@ add_task(async function test_start_tracking() {
   _("Add hook for save completion.");
   let savePromise = new Promise((resolve, reject) => {
     let save = tracker._storage._save;
-    tracker._storage._save = async function() {
+    tracker._storage._save = async function () {
       try {
         await save.call(this);
         resolve();

@@ -328,32 +328,32 @@ this.bookmarks = class extends ExtensionAPIPersistent {
           }
         },
 
-        getChildren: function(id) {
+        getChildren: function (id) {
           // TODO: We should optimize this.
           return getTree(id, true);
         },
 
-        getTree: function() {
+        getTree: function () {
           return getTree(PlacesUtils.bookmarks.rootGuid, false);
         },
 
-        getSubTree: function(id) {
+        getSubTree: function (id) {
           return getTree(id, false);
         },
 
-        search: function(query) {
+        search: function (query) {
           return PlacesUtils.bookmarks
             .search(query)
             .then(result => result.map(convertBookmarks));
         },
 
-        getRecent: function(numberOfItems) {
+        getRecent: function (numberOfItems) {
           return PlacesUtils.bookmarks
             .getRecent(numberOfItems)
             .then(result => result.map(convertBookmarks));
         },
 
-        create: function(bookmark) {
+        create: function (bookmark) {
           let info = {
             title: bookmark.title || "",
           };
@@ -395,7 +395,7 @@ this.bookmarks = class extends ExtensionAPIPersistent {
           }
         },
 
-        move: function(id, destination) {
+        move: function (id, destination) {
           throwIfRootId(id);
           let info = {
             guid: id,
@@ -422,7 +422,7 @@ this.bookmarks = class extends ExtensionAPIPersistent {
           }
         },
 
-        update: function(id, changes) {
+        update: function (id, changes) {
           throwIfRootId(id);
           let info = {
             guid: id,
@@ -447,7 +447,7 @@ this.bookmarks = class extends ExtensionAPIPersistent {
           }
         },
 
-        remove: function(id) {
+        remove: function (id) {
           throwIfRootId(id);
           let info = {
             guid: id,
@@ -465,7 +465,7 @@ this.bookmarks = class extends ExtensionAPIPersistent {
           }
         },
 
-        removeTree: function(id) {
+        removeTree: function (id) {
           throwIfRootId(id);
           let info = {
             guid: id,

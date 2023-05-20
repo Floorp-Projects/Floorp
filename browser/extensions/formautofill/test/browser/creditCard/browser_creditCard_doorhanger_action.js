@@ -4,7 +4,7 @@ add_task(async function test_save_doorhanger_click_save() {
   let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
 
       await focusUpdateSubmitForm(browser, {
@@ -34,7 +34,7 @@ add_task(async function test_save_doorhanger_click_save() {
 add_task(async function test_save_doorhanger_click_never_save() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -62,7 +62,7 @@ add_task(async function test_save_doorhanger_click_never_save() {
 add_task(async function test_save_doorhanger_click_cancel_save() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -96,7 +96,7 @@ add_task(async function test_update_doorhanger_click_update() {
   let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
@@ -135,7 +135,7 @@ add_task(async function test_update_doorhanger_click_save() {
   let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
-    async function(browser) {
+    async function (browser) {
       let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
         true
       );

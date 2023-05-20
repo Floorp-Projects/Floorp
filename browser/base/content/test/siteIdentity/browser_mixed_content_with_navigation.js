@@ -33,7 +33,7 @@ const kTestcases = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   for (let testcase of kTestcases) {
     await run_testcase(testcase);
   }

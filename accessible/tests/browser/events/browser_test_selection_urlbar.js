@@ -26,7 +26,7 @@ async function runTests() {
     url: Services.io.newURI("http://www.addons.mozilla.org/"),
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await BrowserTestUtils.closeWindow(newWin);
     await PlacesUtils.bookmarks.remove(bookmark);
   });

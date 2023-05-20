@@ -5,7 +5,7 @@
 "use strict";
 
 // Make this available to both AMD and CJS environments
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   // Load all existing rep templates
   const Undefined = require("devtools/client/shared/components/reps/reps/undefined");
   const Null = require("devtools/client/shared/components/reps/reps/null");
@@ -87,7 +87,7 @@ define(function(require, exports, module) {
    * to the current value type. The value must be passed in as the 'object'
    * property.
    */
-  const Rep = function(props) {
+  const Rep = function (props) {
     const { object, defaultRep } = props;
     const rep = getRep(
       object,

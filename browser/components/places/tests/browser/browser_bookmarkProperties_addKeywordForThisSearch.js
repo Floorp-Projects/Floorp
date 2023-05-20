@@ -11,7 +11,7 @@ add_task(async function add_keyword() {
       gBrowser,
       url: TEST_URL,
     },
-    async function(browser) {
+    async function (browser) {
       // We must wait for the context menu code to build metadata.
       await openContextMenuForContentSelector(
         browser,
@@ -20,11 +20,11 @@ add_task(async function add_keyword() {
 
       await withBookmarksDialog(
         false,
-        function() {
+        function () {
           AddKeywordForSearchField();
           contentAreaContextMenu.hidePopup();
         },
-        async function(dialogWin) {
+        async function (dialogWin) {
           let acceptBtn = dialogWin.document
             .getElementById("bookmarkpropertiesdialog")
             .getButton("accept");
@@ -45,7 +45,7 @@ add_task(async function add_keyword() {
           // After the notification, the keywords cache will update asynchronously.
           info("Check the keyword entry has been created");
           let entry;
-          await TestUtils.waitForCondition(async function() {
+          await TestUtils.waitForCondition(async function () {
             entry = await PlacesUtils.keywords.fetch("kw");
             return !!entry;
           }, "Unable to find the expected keyword");
@@ -94,7 +94,7 @@ add_task(async function reopen_same_field() {
     keyword: "kw",
     postData: "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s",
   });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.keywords.remove("kw");
   });
   // Reopening on the same input field should show the existing keyword.
@@ -103,7 +103,7 @@ add_task(async function reopen_same_field() {
       gBrowser,
       url: TEST_URL,
     },
-    async function(browser) {
+    async function (browser) {
       // We must wait for the context menu code to build metadata.
       await openContextMenuForContentSelector(
         browser,
@@ -112,11 +112,11 @@ add_task(async function reopen_same_field() {
 
       await withBookmarksDialog(
         true,
-        function() {
+        function () {
           AddKeywordForSearchField();
           contentAreaContextMenu.hidePopup();
         },
-        async function(dialogWin) {
+        async function (dialogWin) {
           let elt = dialogWin.document.getElementById(
             "editBMPanel_keywordField"
           );
@@ -139,7 +139,7 @@ add_task(async function open_other_field() {
     keyword: "kw2",
     postData: "search%3D%25s",
   });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.keywords.remove("kw2");
   });
   // Reopening on another field of the same page that has different postData
@@ -149,7 +149,7 @@ add_task(async function open_other_field() {
       gBrowser,
       url: TEST_URL,
     },
-    async function(browser) {
+    async function (browser) {
       // We must wait for the context menu code to build metadata.
       await openContextMenuForContentSelector(
         browser,
@@ -158,11 +158,11 @@ add_task(async function open_other_field() {
 
       await withBookmarksDialog(
         true,
-        function() {
+        function () {
           AddKeywordForSearchField();
           contentAreaContextMenu.hidePopup();
         },
-        function(dialogWin) {
+        function (dialogWin) {
           let acceptBtn = dialogWin.document
             .getElementById("bookmarkpropertiesdialog")
             .getButton("accept");
@@ -184,8 +184,5 @@ function getPostDataString(stream) {
     Ci.nsIScriptableInputStream
   );
   sis.init(stream);
-  return sis
-    .read(stream.available())
-    .split("\n")
-    .pop();
+  return sis.read(stream.available()).split("\n").pop();
 }

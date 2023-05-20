@@ -26,7 +26,7 @@ add_task(async function collapse_multiple_pending_update_requests() {
   // of RemoteSettings accesses matches with what we expect.
   const originalClientGet = ExtensionBlocklistMLBF._client.get;
   const spyClientGet = (tag, returnValue) => {
-    ExtensionBlocklistMLBF._client.get = async function() {
+    ExtensionBlocklistMLBF._client.get = async function () {
       // Record the method call.
       observed.push(tag);
       // Clone a valid record and tag it so we can identify it below.
@@ -39,7 +39,7 @@ add_task(async function collapse_multiple_pending_update_requests() {
   // Another significant part of updating is fetching the MLBF attachment.
   // Add a spy too, so we can check which attachment is being requested.
   const originalFetchMLBF = ExtensionBlocklistMLBF._fetchMLBF;
-  ExtensionBlocklistMLBF._fetchMLBF = async function(record) {
+  ExtensionBlocklistMLBF._fetchMLBF = async function (record) {
     observed.push(`fetchMLBF:${record.tagged}`);
     throw new Error(`Deliberately ignoring call to MLBF:${record.tagged}`);
   };

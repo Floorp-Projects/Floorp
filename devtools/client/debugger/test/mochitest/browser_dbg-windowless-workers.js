@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.debugger.threads-visible", true);
 
   const dbg = await initDebugger("doc-windowless-workers.html");

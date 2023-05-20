@@ -12,7 +12,7 @@
 
 const TEST_URL = "data:text/html,test-page";
 
-add_task(async function() {
+add_task(async function () {
   info(" ### Test detaching the top target");
 
   // Create a TargetCommand for a given test tab

@@ -16,10 +16,7 @@ loadTestSubscript("head_devtools.js");
  */
 function getAdditionalPanelId(toolbox, label) {
   // Copy the tools array and pop the last element from it.
-  const panelDef = toolbox
-    .getAdditionalTools()
-    .slice()
-    .pop();
+  const panelDef = toolbox.getAdditionalTools().slice().pop();
   is(panelDef.label, label, "Additional panel label is the expected label");
   return panelDef.id;
 }

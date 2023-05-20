@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIProtocolProxyService"
 );
 
-XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
+XPCOMUtils.defineLazyGetter(this, "systemSettings", function () {
   return {
     QueryInterface: ChromeUtils.generateQI(["nsISystemProxySettings"]),
 
@@ -95,10 +95,7 @@ add_task(async function testDirectProxy() {
     .createInstance(Ci.nsIURIMutator)
     .setSpec("wss://ws.mozilla.org/")
     .finalize();
-  let uri = proxyURI
-    .mutate()
-    .setScheme("https")
-    .finalize();
+  let uri = proxyURI.mutate().setScheme("https").finalize();
 
   let chan = Services.io.newChannelFromURIWithProxyFlags(
     uri,
@@ -121,10 +118,7 @@ add_task(async function testWebSocketProxy() {
     .createInstance(Ci.nsIURIMutator)
     .setSpec("wss://ws.mozilla.org/")
     .finalize();
-  let uri = proxyURI
-    .mutate()
-    .setScheme("https")
-    .finalize();
+  let uri = proxyURI.mutate().setScheme("https").finalize();
 
   let proxyFlags =
     Ci.nsIProtocolProxyService.RESOLVE_PREFER_SOCKS_PROXY |

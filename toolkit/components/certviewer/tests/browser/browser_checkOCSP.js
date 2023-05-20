@@ -4,8 +4,8 @@
 "use strict";
 
 async function checkOCSP(url, shouldBeRendered) {
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
-    await SpecialPowers.spawn(browser, [shouldBeRendered], async function(
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
+    await SpecialPowers.spawn(browser, [shouldBeRendered], async function (
       shouldBeRendered
     ) {
       let certificateSection = await ContentTaskUtils.waitForCondition(() => {

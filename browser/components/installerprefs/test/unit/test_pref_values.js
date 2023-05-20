@@ -7,7 +7,7 @@
  * Test that pref values are reflected correctly.
  */
 
-add_task(function() {
+add_task(function () {
   const PREFS_LIST = ["installer.true.value", "installer.false.value"];
 
   Services.prefs.setBoolPref("installer.true.value", true);

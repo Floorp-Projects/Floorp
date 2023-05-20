@@ -5,7 +5,7 @@
 
 const TEST_URI = "data:text/html,<!DOCTYPE html>Test error documentation";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Check that errors with entries in errordocs.js display links next to their messages.

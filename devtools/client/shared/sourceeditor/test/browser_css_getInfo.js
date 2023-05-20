@@ -209,7 +209,7 @@ add_task(async function test() {
   for (const expected of tests) {
     ++i;
     const caret = expected.splice(0, 1)[0];
-    await SpecialPowers.spawn(browser, [[i, tests.length]], function([
+    await SpecialPowers.spawn(browser, [[i, tests.length]], function ([
       idx,
       len,
     ]) {
@@ -239,7 +239,7 @@ add_task(async function test() {
           actual.value +
           "]."
       );
-      await SpecialPowers.spawn(browser, [], function() {
+      await SpecialPowers.spawn(browser, [], function () {
         const progress = content.document.getElementById("progress");
         progress.classList.add("failed");
       });

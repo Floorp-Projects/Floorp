@@ -9,7 +9,7 @@ let extension;
 let defaultEngine;
 let addedEngine;
 
-add_setup(async function() {
+add_setup(async function () {
   // Disable window occlusion. Bug 1733955
   if (navigator.platform.indexOf("Win") == 0) {
     await SpecialPowers.pushPrefEnv({
@@ -44,7 +44,7 @@ add_setup(async function() {
 });
 
 async function ensureIcon(tab, expectedIcon) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [expectedIcon], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [expectedIcon], async function (
     icon
   ) {
     await ContentTaskUtils.waitForCondition(() => !content.document.hidden);
@@ -67,7 +67,7 @@ async function ensurePlaceholder(tab, expectedId, expectedEngine) {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [expectedId, expectedEngine],
-    async function(id, engine) {
+    async function (id, engine) {
       await ContentTaskUtils.waitForCondition(() => !content.document.hidden);
 
       await ContentTaskUtils.waitForCondition(

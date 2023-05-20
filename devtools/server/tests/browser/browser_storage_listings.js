@@ -475,7 +475,7 @@ function testLocalStorage({ hosts, dataByHost }) {
   return testLocalStorageObjects(0, hosts, dataByHost);
 }
 
-var testLocalStorageObjects = async function(index, hosts, dataByHost) {
+var testLocalStorageObjects = async function (index, hosts, dataByHost) {
   const host = Object.keys(hosts)[index];
   ok(
     !!storeMap["local-storage"][host],
@@ -727,7 +727,7 @@ async function testIDBEntries(index, hosts, dataByHost) {
   await testObjectStores(++index, hosts, dataByHost);
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.documentCookies.maxage", 0]],
   });

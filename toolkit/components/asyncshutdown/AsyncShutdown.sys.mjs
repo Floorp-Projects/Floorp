@@ -66,7 +66,7 @@ const DELAY_WARNING_MS = 10 * 1000;
 // (allowing for sleep).
 const PREF_DELAY_CRASH_MS = "toolkit.asyncshutdown.crash_timeout";
 var DELAY_CRASH_MS = Services.prefs.getIntPref(PREF_DELAY_CRASH_MS, 60 * 1000); // One minute
-Services.prefs.addObserver(PREF_DELAY_CRASH_MS, function() {
+Services.prefs.addObserver(PREF_DELAY_CRASH_MS, function () {
   DELAY_CRASH_MS = Services.prefs.getIntPref(PREF_DELAY_CRASH_MS);
 });
 
@@ -221,7 +221,7 @@ function log(msg, prefix = "", error = null) {
 }
 const PREF_DEBUG_LOG = "toolkit.asyncshutdown.log";
 var DEBUG_LOG = Services.prefs.getBoolPref(PREF_DEBUG_LOG, false);
-Services.prefs.addObserver(PREF_DEBUG_LOG, function() {
+Services.prefs.addObserver(PREF_DEBUG_LOG, function () {
   DEBUG_LOG = Services.prefs.getBoolPref(PREF_DEBUG_LOG);
 });
 
@@ -258,7 +258,7 @@ function safeGetState(fetchState) {
     // Simplify the rest of the code by ensuring that we can simply
     // concatenate the result to a message.
     if (data && typeof data == "object") {
-      data.toString = function() {
+      data.toString = function () {
         return string;
       };
     }
@@ -293,7 +293,7 @@ function looseTimer(delay) {
   let beats = Math.ceil(delay / DELAY_BEAT);
   let deferred = lazy.PromiseUtils.defer();
   timer.initWithCallback(
-    function() {
+    function () {
       if (beats <= 0) {
         deferred.resolve();
       }
@@ -1060,7 +1060,7 @@ Barrier.prototype = Object.freeze({
       );
 
       promise = promise.then(
-        function() {
+        function () {
           timeToCrash.reject();
         } /* No error is possible here*/
       );

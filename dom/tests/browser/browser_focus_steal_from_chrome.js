@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(2);
 
   let testingList = [
@@ -70,8 +70,8 @@ add_task(async function() {
     },
   ];
 
-  await BrowserTestUtils.withNewTab("about:blank", async function(bg) {
-    await BrowserTestUtils.withNewTab("about:blank", async function(fg) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (bg) {
+    await BrowserTestUtils.withNewTab("about:blank", async function (fg) {
       for (let test of testingList) {
         // Focus the foreground tab's content
         fg.focus();

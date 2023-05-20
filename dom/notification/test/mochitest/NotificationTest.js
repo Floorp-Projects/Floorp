@@ -1,4 +1,4 @@
-var NotificationTest = (function() {
+var NotificationTest = (function () {
   "use strict";
 
   function info(msg, name) {
@@ -52,9 +52,9 @@ var NotificationTest = (function() {
     run(tests, callback) {
       let ready = setup_testing_env();
 
-      addLoadEvent(async function() {
+      addLoadEvent(async function () {
         await ready;
-        executeTests(tests, function() {
+        executeTests(tests, function () {
           teardown_testing_env();
           callback && callback();
         });

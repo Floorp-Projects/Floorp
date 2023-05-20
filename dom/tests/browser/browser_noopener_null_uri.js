@@ -1,5 +1,5 @@
 add_task(async function browserNoopenerNullUri() {
-  await BrowserTestUtils.withNewTab({ gBrowser }, async function(aBrowser) {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async function (aBrowser) {
     let numTabs = gBrowser.tabs.length;
     await SpecialPowers.spawn(aBrowser, [], async () => {
       ok(

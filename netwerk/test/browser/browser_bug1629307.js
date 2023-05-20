@@ -11,7 +11,7 @@ const { PromptTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromptTestUtils.jsm"
 );
 
-add_task(async function() {
+add_task(async function () {
   SpecialPowers.pushPrefEnv({
     set: [["network.auth.supress_auth_prompt_for_XFO_failures", true]],
   });
@@ -29,10 +29,10 @@ add_task(async function() {
     },
     { buttonNumClick: 1 }
   )
-    .then(function() {
+    .then(function () {
       hasPrompt = true;
     })
-    .catch(function() {});
+    .catch(function () {});
 
   BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, URL);
 
@@ -46,7 +46,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   SpecialPowers.pushPrefEnv({
     set: [["network.auth.supress_auth_prompt_for_XFO_failures", false]],
   });
@@ -64,10 +64,10 @@ add_task(async function() {
     },
     { buttonNumClick: 1 }
   )
-    .then(function() {
+    .then(function () {
       hasPrompt = true;
     })
-    .catch(function() {});
+    .catch(function () {});
 
   BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, URL);
 

@@ -1550,7 +1550,7 @@ export var PlacesUIUtils = {
       "placesContext_copy",
     ];
     // Hide everything. We'll unhide the things we need.
-    Array.from(menupopup.children).forEach(function(child) {
+    Array.from(menupopup.children).forEach(function (child) {
       child.hidden = true;
     });
     // Store triggerNode in controller for checking if commands are enabled
@@ -1730,7 +1730,7 @@ export var PlacesUIUtils = {
             { type: lazy.PlacesUtils.TYPE_PLAINTEXT, entries: [] },
           ];
 
-          contents.forEach(function(content) {
+          contents.forEach(function (content) {
             content.entries.push(lazy.PlacesUtils.wrapNode(node, content.type));
           });
 
@@ -1747,7 +1747,7 @@ export var PlacesUIUtils = {
             );
           }
 
-          contents.forEach(function(content) {
+          contents.forEach(function (content) {
             addData(content.type, content.entries.join(lazy.PlacesUtils.endl));
           });
 
@@ -1971,7 +1971,7 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "SUPPORTED_FLAVORS", () => {
   return [...PlacesUIUtils.PLACES_FLAVORS, ...PlacesUIUtils.URI_FLAVORS];
 });
 
-XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function() {
+XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function () {
   return Services.prefs.getComplexValue(
     "intl.ellipsis",
     Ci.nsIPrefLocalizedString

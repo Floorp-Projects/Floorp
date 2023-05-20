@@ -9,7 +9,7 @@
  * an exact URL match
  */
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.netmonitor.features.requestBlocking", true);
 
   const { tab, monitor } = await initNetMonitor(HTTPS_CUSTOM_GET_URL, {
@@ -40,16 +40,16 @@ add_task(async function() {
   const TEST_URL_4 = HTTPS_SEARCH_SJS + "test/something/test4";
 
   let wait = waitForNetworkEvents(monitor, 4);
-  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_1, async function(url) {
+  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_1, async function (url) {
     content.wrappedJSObject.performRequests(1, url);
   });
-  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_2, async function(url) {
+  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_2, async function (url) {
     content.wrappedJSObject.performRequests(1, url);
   });
-  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_3, async function(url) {
+  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_3, async function (url) {
     content.wrappedJSObject.performRequests(1, url);
   });
-  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_4, async function(url) {
+  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_4, async function (url) {
     content.wrappedJSObject.performRequests(1, url);
   });
   await wait;
@@ -90,7 +90,7 @@ add_task(async function() {
 
   // Request the unblocked URL again, ensure the URL was not blocked
   wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_1, async function(url) {
+  await ContentTask.spawn(tab.linkedBrowser, TEST_URL_1, async function (url) {
     content.wrappedJSObject.performRequests(1, url);
   });
   await wait;

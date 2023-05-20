@@ -91,7 +91,7 @@ async function updateTopSites(condition, searchShortcuts = false) {
   }, "Waiting for top sites to be updated");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   UrlbarTestUtils.init(this);
   Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
   registerCleanupFunction(async () => {

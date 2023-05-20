@@ -22,7 +22,7 @@ if (typeof window !== "undefined") {
 
 var TalosContentProfiler;
 
-(function() {
+(function () {
   // Whether or not this TalosContentProfiler object has had initFromObject
   // or initFromURLQueryParams called on it. Any functions that will send
   // events to the parent to change the behaviour of the Gecko Profiler

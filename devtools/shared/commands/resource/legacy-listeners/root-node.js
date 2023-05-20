@@ -6,7 +6,7 @@
 
 const ResourceCommand = require("resource://devtools/shared/commands/resource/resource-command.js");
 
-module.exports = async function({ targetFront, onAvailable, onDestroyed }) {
+module.exports = async function ({ targetFront, onAvailable, onDestroyed }) {
   // XXX: When watching root node for a non top-level target, this will also
   // ensure the inspector & walker fronts for the target are initialized.
   // This also implies that we call reparentRemoteFrame on the new walker, which

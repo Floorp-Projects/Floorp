@@ -8,7 +8,7 @@ const TEST_URL_2 = `https://example.com/document-builder.sjs?html=<meta charset=
 
 // Test that deleting a node in a same-process iframe and doing a navigation
 // does not freeze the browser or break the toolbox.
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL_1);
 
   info("Select a node in a same-process iframe");

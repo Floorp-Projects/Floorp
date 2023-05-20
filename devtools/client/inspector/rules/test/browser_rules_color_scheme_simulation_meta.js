@@ -12,7 +12,7 @@ const TEST_URI = `https://example.com/document-builder.sjs?html=
       <meta name=color-scheme content="dark light">
       Hello!
 `;
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector } = await openRuleView();
 

@@ -20,7 +20,7 @@ add_task(async function test_beforeunload_stay_clears_urlbar() {
   });
 
   const TEST_URL = TEST_ROOT + "file_beforeunload_stop.html";
-  await BrowserTestUtils.withNewTab(TEST_URL, async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_URL, async function (browser) {
     gURLBar.focus();
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     const inputValue = "http://example.org/?q=typed";
@@ -69,7 +69,7 @@ add_task(async function test_beforeunload_stay_clears_urlbar() {
 
     // Now we need to get rid of the handler to avoid the prompt coming up when trying to close the
     // tab when we exit `withNewTab`. :-)
-    await SpecialPowers.spawn(browser, [], function() {
+    await SpecialPowers.spawn(browser, [], function () {
       content.window.onbeforeunload = null;
     });
   });

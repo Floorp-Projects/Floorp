@@ -5,7 +5,7 @@
 // This test makes sure that the geolocation prompt does not show a remember
 // control inside the private browsing mode.
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.vr.always_support_vr", true]],
   });
@@ -13,7 +13,7 @@ add_setup(async function() {
 
 add_task(async function test() {
   function checkPrompt(aURL, aName, aPrivateMode, aWindow) {
-    return (async function() {
+    return (async function () {
       aWindow.gBrowser.selectedTab = BrowserTestUtils.addTab(
         aWindow.gBrowser,
         aURL
@@ -49,7 +49,7 @@ add_task(async function test() {
   }
 
   function checkPrivateBrowsingRememberPrompt(aURL, aName) {
-    return (async function() {
+    return (async function () {
       let win = await BrowserTestUtils.openNewBrowserWindow();
       let browser = win.gBrowser.selectedBrowser;
       BrowserTestUtils.loadURIString(browser, aURL);

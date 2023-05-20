@@ -218,7 +218,7 @@ function findTab(tabs, title) {
 
 function waitForNewSource(threadFront, url) {
   dump("Waiting for new source with url '" + url + "'.\n");
-  return waitForEvent(threadFront, "newSource", function(packet) {
+  return waitForEvent(threadFront, "newSource", function (packet) {
     return packet.source.url === url;
   });
 }
@@ -439,7 +439,7 @@ function initTestDevToolsServer(server = DevToolsServer) {
   }
 
   // Allow incoming connections.
-  server.init(function() {
+  server.init(function () {
     return true;
   });
 }
@@ -531,9 +531,9 @@ function writeFile(fileName, content) {
 }
 
 function StubTransport() {}
-StubTransport.prototype.ready = function() {};
-StubTransport.prototype.send = function() {};
-StubTransport.prototype.close = function() {};
+StubTransport.prototype.ready = function () {};
+StubTransport.prototype.send = function () {};
+StubTransport.prototype.close = function () {};
 
 // Create async version of the object where calling each method
 // is equivalent of calling it with asyncall. Mainly useful for
@@ -569,7 +569,7 @@ function waitForEvent(front, type, predicate) {
     return front.once(type);
   }
 
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     function listener(packet) {
       if (!predicate(packet)) {
         return;

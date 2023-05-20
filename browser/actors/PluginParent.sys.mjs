@@ -12,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CrashSubmit: "resource://gre/modules/CrashSubmit.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gNavigatorBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gNavigatorBundle", function () {
   const url = "chrome://browser/locale/browser.properties";
   return Services.strings.createBundle(url);
 });

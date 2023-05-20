@@ -261,13 +261,13 @@ CaptureStreamTestHelper2D.prototype = Object.create(
 CaptureStreamTestHelper2D.prototype.constructor = CaptureStreamTestHelper2D;
 
 /* Clear all drawn content on |canvas|. */
-CaptureStreamTestHelper2D.prototype.clear = function(canvas) {
+CaptureStreamTestHelper2D.prototype.clear = function (canvas) {
   var ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 };
 
 /* Draw the color |color| to the source canvas |canvas|. Format [R,G,B,A]. */
-CaptureStreamTestHelper2D.prototype.drawColor = function(
+CaptureStreamTestHelper2D.prototype.drawColor = function (
   canvas,
   color,
   {
@@ -288,7 +288,7 @@ CaptureStreamTestHelper2D.prototype.drawColor = function(
 };
 
 /* Test that the given 2d canvas is NOT origin-clean. */
-CaptureStreamTestHelper2D.prototype.testNotClean = function(canvas) {
+CaptureStreamTestHelper2D.prototype.testNotClean = function (canvas) {
   var ctx = canvas.getContext("2d");
   var error = "OK";
   try {
@@ -314,14 +314,14 @@ CaptureStreamTestHelperWebGL.prototype = Object.create(
 CaptureStreamTestHelperWebGL.prototype.constructor = CaptureStreamTestHelperWebGL;
 
 /* Set the (uniform) color location for future draw calls. */
-CaptureStreamTestHelperWebGL.prototype.setFragmentColorLocation = function(
+CaptureStreamTestHelperWebGL.prototype.setFragmentColorLocation = function (
   colorLocation
 ) {
   this.colorLocation = colorLocation;
 };
 
 /* Clear the given WebGL context with |color|. */
-CaptureStreamTestHelperWebGL.prototype.clearColor = function(canvas, color) {
+CaptureStreamTestHelperWebGL.prototype.clearColor = function (canvas, color) {
   info("WebGL: clearColor(" + color.name + ")");
   var gl = canvas.getContext("webgl");
   var conv = color.data.map(i => i / 255.0);
@@ -330,7 +330,7 @@ CaptureStreamTestHelperWebGL.prototype.clearColor = function(canvas, color) {
 };
 
 /* Set an already setFragmentColorLocation() to |color| and drawArrays() */
-CaptureStreamTestHelperWebGL.prototype.drawColor = function(canvas, color) {
+CaptureStreamTestHelperWebGL.prototype.drawColor = function (canvas, color) {
   info("WebGL: drawArrays(" + color.name + ")");
   var gl = canvas.getContext("webgl");
   var conv = color.data.map(i => i / 255.0);

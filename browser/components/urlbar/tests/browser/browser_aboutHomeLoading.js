@@ -34,7 +34,7 @@ add_task(async function clearURLBarAfterParentProcessURL() {
     let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
     newTabBrowser.addEventListener(
       "Initialized",
-      async function() {
+      async function () {
         resolve(gBrowser.selectedTab);
       },
       { capture: true, once: true }
@@ -65,7 +65,7 @@ add_task(async function clearURLBarAfterParentProcessURLInExistingTab() {
     let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
     newTabBrowser.addEventListener(
       "Initialized",
-      async function() {
+      async function () {
         resolve(gBrowser.selectedTab);
       },
       { capture: true, once: true }
@@ -172,7 +172,7 @@ add_task(async function dontTemporarilyShowAboutHome() {
  * some value into the URL bar, that the URL bar is cleared if
  * the homepage is one of the initial pages set.
  */
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     {
       url: "http://example.com",

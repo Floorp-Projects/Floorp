@@ -3,7 +3,7 @@
 /**
  * Test dragging a removable=false widget within its own area as well as to the palette.
  */
-add_task(async function() {
+add_task(async function () {
   await startCustomizing();
   let forwardButton = document.getElementById("forward-button");
   is(

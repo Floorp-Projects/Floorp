@@ -81,7 +81,7 @@ function handleRequest(request, response) {
     response.write(WIN);
 
     // return the result
-    getObjectState("queryResult", function(queryResponse) {
+    getObjectState("queryResult", function (queryResponse) {
       if (!queryResponse) {
         return;
       }

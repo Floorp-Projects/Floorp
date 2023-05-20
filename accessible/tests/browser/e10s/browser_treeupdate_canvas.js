@@ -12,7 +12,7 @@ addAccessibleTask(
   <canvas id="canvas">
     <div id="dialog" role="dialog" style="display: none;"></div>
   </canvas>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let canvas = findAccessibleChildByID(accDoc, "canvas");
     let dialog = findAccessibleChildByID(accDoc, "dialog");
 

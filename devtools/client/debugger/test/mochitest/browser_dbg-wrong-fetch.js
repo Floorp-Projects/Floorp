@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(`${EXAMPLE_URL}different_html.sjs`);
 
   // This goop is here to manually clear the HTTP cache because setting response

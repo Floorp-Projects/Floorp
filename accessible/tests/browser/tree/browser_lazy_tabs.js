@@ -5,7 +5,7 @@
 
 // Test that lazy background tabs aren't unintentionally loaded when building
 // the a11y tree (bug 1700708).
-addAccessibleTask(``, async function(browser, accDoc) {
+addAccessibleTask(``, async function (browser, accDoc) {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.sessionstore.restore_on_demand", true]],
   });

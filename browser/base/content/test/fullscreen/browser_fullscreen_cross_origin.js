@@ -8,14 +8,14 @@ const ORIGIN =
 
 add_task(async function test_fullscreen_cross_origin() {
   async function requestFullscreen(aAllow, aExpect) {
-    await BrowserTestUtils.withNewTab(ORIGIN, async function(browser) {
+    await BrowserTestUtils.withNewTab(ORIGIN, async function (browser) {
       const iframeId = aExpect == "allowed" ? "frameAllowed" : "frameDenied";
 
       info("Start fullscreen on iframe " + iframeId);
       await SpecialPowers.spawn(
         browser,
         [{ aExpect, iframeId }],
-        async function(args) {
+        async function (args) {
           let frame = content.document.getElementById(args.iframeId);
           frame.focus();
           await SpecialPowers.spawn(frame, [args.aExpect], async expect => {

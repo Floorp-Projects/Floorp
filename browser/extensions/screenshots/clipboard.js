@@ -6,10 +6,10 @@
 
 "use strict";
 
-this.clipboard = (function() {
+this.clipboard = (function () {
   const exports = {};
 
-  exports.copy = function(text) {
+  exports.copy = function (text) {
     return new Promise((resolve, reject) => {
       const element = document.createElement("iframe");
       element.src = browser.runtime.getURL("blank.html");

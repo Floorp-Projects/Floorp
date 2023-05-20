@@ -44,7 +44,7 @@ add_task(async function test_setup() {
     LOCAL_WHITELIST_DATA.gethashUrl
   );
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gListManager.unregisterTable(LOCAL_WHITELIST_DATA.tableName);
 
     Services.prefs.clearUserPref("browser.safebrowsing.passwords.enabled");
@@ -57,7 +57,7 @@ add_test(function test_setup_local_whitelist() {
   // to SafeBrowsing database while update.
   gHttpServ = new HttpServer();
   gHttpServ.registerDirectory("/", do_get_cwd());
-  gHttpServ.registerPathHandler("/safebrowsing/update", function(
+  gHttpServ.registerPathHandler("/safebrowsing/update", function (
     request,
     response
   ) {
@@ -96,7 +96,7 @@ add_test(function test_setup_local_whitelist() {
   gHttpServ.start(5555);
 
   // Trigger the update once http server is ready.
-  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+  Services.obs.addObserver(function (aSubject, aTopic, aData) {
     if (aData.startsWith("success")) {
       run_next_test();
     } else {
@@ -105,8 +105,8 @@ add_test(function test_setup_local_whitelist() {
   }, "safebrowsing-update-finished");
   gListManager.forceUpdates(LOCAL_WHITELIST_DATA.tableName);
 
-  registerCleanupFunction(function() {
-    return (async function() {
+  registerCleanupFunction(function () {
+    return (async function () {
       await new Promise(resolve => {
         gHttpServ.stop(resolve);
       });

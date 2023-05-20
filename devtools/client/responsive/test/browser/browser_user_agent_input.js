@@ -6,7 +6,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = "data:text/html;charset=utf-8,";
 const NEW_USER_AGENT = "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0";
 
-addRDMTask(TEST_URL, async function({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   reloadOnUAChange(true);
 
   info("Check the default state of the user agent input");

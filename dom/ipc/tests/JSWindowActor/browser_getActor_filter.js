@@ -16,7 +16,7 @@ declTest("getActor with mismatch", {
       "Should throw if it doesn't match."
     );
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
 
@@ -37,7 +37,7 @@ declTest("getActor with matches", {
     let parent = browser.browsingContext.currentWindowGlobal;
     ok(parent.getActor("TestWindow"), "JSWindowActorParent should have value.");
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       ok(child.getActor("TestWindow"), "JSWindowActorChild should have value.");
@@ -50,7 +50,7 @@ declTest("getActor with iframe matches", {
   matches: ["*://*/*"],
 
   async test(browser) {
-    await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
+    await SpecialPowers.spawn(browser, [TEST_URL], async function (url) {
       // Create and append an iframe into the window's document.
       let frame = content.document.createElement("iframe");
       frame.src = url;
@@ -74,7 +74,7 @@ declTest("getActor with iframe mismatch", {
   matches: ["about:home"],
 
   async test(browser) {
-    await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
+    await SpecialPowers.spawn(browser, [TEST_URL], async function (url) {
       // Create and append an iframe into the window's document.
       let frame = content.document.createElement("iframe");
       frame.src = url;
@@ -101,7 +101,7 @@ declTest("getActor with remoteType match", {
     let parent = browser.browsingContext.currentWindowGlobal;
     ok(parent.getActor("TestWindow"), "JSWindowActorParent should have value.");
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       ok(child.getActor("TestWindow"), "JSWindowActorChild should have value.");
@@ -114,7 +114,7 @@ declTest("getActor with iframe remoteType match", {
   remoteTypes: ["web"],
 
   async test(browser) {
-    await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
+    await SpecialPowers.spawn(browser, [TEST_URL], async function (url) {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       ok(child.getActor("TestWindow"), "JSWindowActorChild should have value.");
@@ -149,7 +149,7 @@ declTest("getActor with remoteType mismatch", {
       "Should throw if its remoteTypes don't match."
     );
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       Assert.throws(
@@ -169,7 +169,7 @@ declTest("getActor with iframe messageManagerGroups match", {
     let parent = browser.browsingContext.currentWindowGlobal;
     ok(parent.getActor("TestWindow"), "JSWindowActorParent should have value.");
 
-    await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
+    await SpecialPowers.spawn(browser, [TEST_URL], async function (url) {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       ok(child.getActor("TestWindow"), "JSWindowActorChild should have value.");
@@ -189,7 +189,7 @@ declTest("getActor with iframe messageManagerGroups mismatch", {
       "Should throw if its messageManagerGroups doesn't match."
     );
 
-    await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
+    await SpecialPowers.spawn(browser, [TEST_URL], async function (url) {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       Assert.throws(
@@ -205,7 +205,7 @@ declTest("getActor without allFrames", {
   allFrames: false,
 
   async test(browser) {
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       // Create and append an iframe into the window's document.
       let frame = content.document.createElement("iframe");
       content.document.body.appendChild(frame);
@@ -224,7 +224,7 @@ declTest("getActor with allFrames", {
   allFrames: true,
 
   async test(browser) {
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       // Create and append an iframe into the window's document.
       let frame = content.document.createElement("iframe");
       content.document.body.appendChild(frame);

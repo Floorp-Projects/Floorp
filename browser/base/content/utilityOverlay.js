@@ -322,7 +322,7 @@ function eventMatchesKey(aEvent, aKey) {
   if (keyModifiers) {
     keyModifiers = keyModifiers.split(/[\s,]+/);
     // Capitalize first letter of aKey's modifers to compare to aEvent's modifier
-    keyModifiers.forEach(function(modifier, index) {
+    keyModifiers.forEach(function (modifier, index) {
       if (modifier == "accel") {
         keyModifiers[index] =
           AppConstants.platform == "macosx" ? "Meta" : "Control";
@@ -424,7 +424,7 @@ function openAboutDialog() {
 async function openPreferences(paneID, extraArgs) {
   // This function is duplicated from preferences.js.
   function internalPrefCategoryNameToFriendlyName(aName) {
-    return (aName || "").replace(/^pane./, function(toReplace) {
+    return (aName || "").replace(/^pane./, function (toReplace) {
       return toReplace[4].toLowerCase();
     });
   }

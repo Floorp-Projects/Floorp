@@ -8,10 +8,7 @@ const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompter");
 
 export class GeckoViewPrompter {
   constructor(aParent) {
-    this.id = Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1); // Discard surrounding braces
+    this.id = Services.uuid.generateUUID().toString().slice(1, -1); // Discard surrounding braces
 
     if (aParent) {
       if (Window.isInstance(aParent)) {

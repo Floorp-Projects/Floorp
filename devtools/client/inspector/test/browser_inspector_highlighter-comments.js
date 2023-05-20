@@ -8,7 +8,7 @@
 
 const TEST_PAGE = URL_ROOT + "doc_inspector_highlighter-comments.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     TEST_PAGE
   );

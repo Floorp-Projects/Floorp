@@ -23,9 +23,9 @@ for (var event of ["online", "offline"]) {
   );
 }
 
-onmessage = function(e) {
+onmessage = function (e) {
   if (e.data === "lastTest") {
-    children.forEach(function(w) {
+    children.forEach(function (w) {
       w.postMessage({ type: "lastTest" });
     });
     lastTest = true;
@@ -38,11 +38,11 @@ function setupChildren(cb) {
     var w = new Worker("onLine_worker_child.js");
     children.push(w);
 
-    w.onerror = function(e) {
+    w.onerror = function (e) {
       info("Error creating child " + e.message);
     };
 
-    w.onmessage = function(e) {
+    w.onmessage = function (e) {
       if (e.data.type === "ready") {
         info("Got ready from child");
         readyCount++;
@@ -65,6 +65,6 @@ function setupChildren(cb) {
   }
 }
 
-setupChildren(function() {
+setupChildren(function () {
   postMessage({ type: "ready" });
 });

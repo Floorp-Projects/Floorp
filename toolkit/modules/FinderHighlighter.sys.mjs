@@ -1377,7 +1377,7 @@ FinderHighlighter.prototype = {
           Cu.cloneInto(kModalOutlineAnim.keyframes, window),
           kModalOutlineAnim.duration
         );
-        animation.onfinish = function() {
+        animation.onfinish = function () {
           dict.animations.delete(this);
         };
         dict.animations.add(animation);

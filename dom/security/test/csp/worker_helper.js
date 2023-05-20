@@ -38,7 +38,7 @@ function doXHRGetBlob(uri) {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", uri);
     xhr.responseType = "blob";
-    xhr.addEventListener("load", function() {
+    xhr.addEventListener("load", function () {
       is(
         xhr.status,
         200,

@@ -69,7 +69,7 @@ async function checkDoesNotOpenOnFocus(win) {
   await promiseState;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.autoFill", true]],
   });
@@ -84,7 +84,7 @@ add_setup(async function() {
       transition: PlacesUtils.history.TRANSITIONS.TYPED,
     },
   ]);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 });

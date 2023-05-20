@@ -100,7 +100,7 @@ element.Strategy = {
  *     If a single element is requested, this error will throw if the
  *     element is not found.
  */
-element.find = function(container, strategy, selector, options = {}) {
+element.find = function (container, strategy, selector, options = {}) {
   const { all = false, startNode, timeout = 0 } = options;
 
   let searchFn;
@@ -192,7 +192,7 @@ function find_(
  * @returns {Node}
  *     First element matching <var>expression</var>.
  */
-element.findByXPath = function(document, startNode, expression) {
+element.findByXPath = function (document, startNode, expression) {
   let iter = document.evaluate(
     expression,
     startNode,
@@ -216,7 +216,7 @@ element.findByXPath = function(document, startNode, expression) {
  * @returns {Iterable.<Node>}
  *     Iterator over nodes matching <var>expression</var>.
  */
-element.findByXPathAll = function*(document, startNode, expression) {
+element.findByXPathAll = function* (document, startNode, expression) {
   let iter = document.evaluate(
     expression,
     startNode,
@@ -243,7 +243,7 @@ element.findByXPathAll = function*(document, startNode, expression) {
  * @returns {Iterable.<HTMLAnchorElement>}
  *     Sequence of link elements which text is <var>s</var>.
  */
-element.findByLinkText = function(startNode, linkText) {
+element.findByLinkText = function (startNode, linkText) {
   return filterLinks(
     startNode,
     link => lazy.atom.getElementText(link).trim() === linkText
@@ -263,7 +263,7 @@ element.findByLinkText = function(startNode, linkText) {
  *     Iterator of link elements which text containins
  *     <var>linkText</var>.
  */
-element.findByPartialLinkText = function(startNode, linkText) {
+element.findByPartialLinkText = function (startNode, linkText) {
   return filterLinks(startNode, link =>
     lazy.atom.getElementText(link).includes(linkText)
   );
@@ -456,7 +456,7 @@ function getLinks(startNode) {
  * @returns {Node=}
  *     First match to <var>selector</var>, or null if no match was found.
  */
-element.findClosest = function(startNode, selector) {
+element.findClosest = function (startNode, selector) {
   let node = startNode;
   while (node.parentNode && node.parentNode.nodeType == ELEMENT_NODE) {
     node = node.parentNode;
@@ -486,7 +486,7 @@ element.findClosest = function(startNode, selector) {
  *     If the element has gone stale, indicating its node document is no
  *     longer the active document or it is no longer attached to the DOM.
  */
-element.getKnownElement = function(browsingContext, nodeId, nodeCache) {
+element.getKnownElement = function (browsingContext, nodeId, nodeCache) {
   if (!element.isNodeReferenceKnown(browsingContext, nodeId, nodeCache)) {
     throw new lazy.error.NoSuchElementError(
       `The element with the reference ${nodeId} is not known in the current browsing context`
@@ -534,7 +534,7 @@ element.getKnownElement = function(browsingContext, nodeId, nodeCache) {
  *     If the ShadowRoot is detached, indicating its node document is no
  *     longer the active document or it is no longer attached to the DOM.
  */
-element.getKnownShadowRoot = function(browsingContext, nodeId, nodeCache) {
+element.getKnownShadowRoot = function (browsingContext, nodeId, nodeCache) {
   if (!element.isNodeReferenceKnown(browsingContext, nodeId, nodeCache)) {
     throw new lazy.error.NoSuchShadowRootError(
       `The shadow root with the reference ${nodeId} is not known in the current browsing context`
@@ -572,7 +572,7 @@ element.getKnownShadowRoot = function(browsingContext, nodeId, nodeCache) {
  * @returns {boolean}
  *     True if <var>seq</va> is a collection.
  */
-element.isCollection = function(seq) {
+element.isCollection = function (seq) {
   switch (Object.prototype.toString.call(seq)) {
     case "[object Arguments]":
     case "[object Array]":
@@ -602,7 +602,7 @@ element.isCollection = function(seq) {
  * @returns {boolean}
  *     True if <var>shadowRoot</var> is detached, false otherwise.
  */
-element.isDetached = function(shadowRoot) {
+element.isDetached = function (shadowRoot) {
   return (
     !shadowRoot.ownerDocument.isActive() || element.isStale(shadowRoot.host)
   );
@@ -624,7 +624,7 @@ element.isDetached = function(shadowRoot) {
  * @returns {boolean}
  *     True if the element is known in the given browsing context.
  */
-element.isNodeReferenceKnown = function(browsingContext, nodeId, nodeCache) {
+element.isNodeReferenceKnown = function (browsingContext, nodeId, nodeCache) {
   const nodeDetails = nodeCache.getReferenceDetails(nodeId);
   if (nodeDetails === null) {
     return false;
@@ -653,7 +653,7 @@ element.isNodeReferenceKnown = function(browsingContext, nodeId, nodeCache) {
  * @returns {boolean}
  *     True if <var>el</var> is stale, false otherwise.
  */
-element.isStale = function(el) {
+element.isStale = function (el) {
   if (!el.ownerGlobal) {
     // Without a valid inner window the document is basically closed.
     return true;
@@ -676,7 +676,7 @@ element.isStale = function(el) {
  * @returns {boolean}
  *     True if element is selected, false otherwise.
  */
-element.isSelected = function(el) {
+element.isSelected = function (el) {
   if (!el) {
     return false;
   }
@@ -709,7 +709,7 @@ element.isSelected = function(el) {
  * @returns {boolean}
  *     True if element is read only.
  */
-element.isReadOnly = function(el) {
+element.isReadOnly = function (el) {
   return (
     element.isDOMElement(el) &&
     ["input", "textarea"].includes(el.localName) &&
@@ -728,7 +728,7 @@ element.isReadOnly = function(el) {
  * @returns {boolean}
  *     True if element, or its container group, is disabled.
  */
-element.isDisabled = function(el) {
+element.isDisabled = function (el) {
   if (!element.isDOMElement(el)) {
     return false;
   }
@@ -768,7 +768,7 @@ element.isDisabled = function(el) {
  * @returns {boolean}
  *     True if editable, false otherwise.
  */
-element.isMutableFormControl = function(el) {
+element.isMutableFormControl = function (el) {
   if (!element.isDOMElement(el)) {
     return false;
   }
@@ -818,7 +818,7 @@ element.isMutableFormControl = function(el) {
  * @returns {boolean}
  *     True if editing host, false otherwise.
  */
-element.isEditingHost = function(el) {
+element.isEditingHost = function (el) {
   return (
     element.isDOMElement(el) &&
     (el.isContentEditable || el.ownerDocument.designMode == "on")
@@ -849,7 +849,7 @@ element.isEditingHost = function(el) {
  * @returns {boolean}
  *     True if editable, false otherwise.
  */
-element.isEditable = function(el) {
+element.isEditable = function (el) {
   if (!element.isDOMElement(el)) {
     return false;
   }
@@ -881,7 +881,11 @@ element.isEditable = function(el) {
  * @throws TypeError
  *     If <var>xOffset</var> or <var>yOffset</var> are not numbers.
  */
-element.coordinates = function(node, xOffset = undefined, yOffset = undefined) {
+element.coordinates = function (
+  node,
+  xOffset = undefined,
+  yOffset = undefined
+) {
   let box = node.getBoundingClientRect();
 
   if (typeof xOffset == "undefined" || xOffset === null) {
@@ -916,7 +920,7 @@ element.coordinates = function(node, xOffset = undefined, yOffset = undefined) {
  * @returns {boolean}
  *     True if if <var>el</var> is in viewport, false otherwise.
  */
-element.inViewport = function(el, x = undefined, y = undefined) {
+element.inViewport = function (el, x = undefined, y = undefined) {
   let win = el.ownerGlobal;
   let c = element.coordinates(el, x, y);
   let vp = {
@@ -952,7 +956,7 @@ element.inViewport = function(el, x = undefined, y = undefined) {
  * @returns {Element}
  *     Container element of <var>el</var>.
  */
-element.getContainer = function(el) {
+element.getContainer = function (el) {
   // Does <option> or <optgroup> have a valid context,
   // meaning is it a child of <datalist> or <select>?
   if (["option", "optgroup"].includes(el.localName)) {
@@ -983,7 +987,7 @@ element.getContainer = function(el) {
  * @returns {boolean}
  *     True if <var>el</var> is inside the viewport, or false otherwise.
  */
-element.isInView = function(el) {
+element.isInView = function (el) {
   let originalPointerEvents = el.style.pointerEvents;
 
   try {
@@ -1010,11 +1014,8 @@ element.isInView = function(el) {
  * @returns {string}
  *     UUID.
  */
-element.generateUUID = function() {
-  return Services.uuid
-    .generateUUID()
-    .toString()
-    .slice(1, -1);
+element.generateUUID = function () {
+  return Services.uuid.generateUUID().toString().slice(1, -1);
 };
 
 /**
@@ -1033,7 +1034,7 @@ element.generateUUID = function() {
  * @returns {boolean}
  *     True if visible, false otherwise.
  */
-element.isVisible = function(el, x = undefined, y = undefined) {
+element.isVisible = function (el, x = undefined, y = undefined) {
   let win = el.ownerGlobal;
 
   if (!lazy.atom.isElementDisplayed(el, win)) {
@@ -1069,7 +1070,7 @@ element.isVisible = function(el, x = undefined, y = undefined) {
  * @returns {boolean}
  *     True if element is obscured, false otherwise.
  */
-element.isObscured = function(el) {
+element.isObscured = function (el) {
   let tree = element.getPointerInteractablePaintTree(el);
   return !el.contains(tree[0]);
 };
@@ -1103,7 +1104,7 @@ element.isObscured = function(el) {
  *     X and Y coordinates that denotes the in-view centre point of
  *     `rect`.
  */
-element.getInViewCentrePoint = function(rect, win) {
+element.getInViewCentrePoint = function (rect, win) {
   const { floor, max, min } = Math;
 
   // calculate the intersection of the rect that is inside the viewport
@@ -1138,7 +1139,7 @@ element.getInViewCentrePoint = function(rect, win) {
  * @returns {Array.<DOMElement>}
  *     Sequence of elements in paint order.
  */
-element.getPointerInteractablePaintTree = function(el) {
+element.getPointerInteractablePaintTree = function (el) {
   const doc = el.ownerDocument;
   const win = doc.defaultView;
   const rootNode = el.getRootNode();
@@ -1171,7 +1172,7 @@ element.isKeyboardInteractable = () => true;
  * @param {DOMElement} el
  *     Element to scroll into view.
  */
-element.scrollIntoView = function(el) {
+element.scrollIntoView = function (el) {
   if (el.scrollIntoView) {
     el.scrollIntoView({ block: "end", inline: "nearest" });
   }
@@ -1187,7 +1188,7 @@ element.scrollIntoView = function(el) {
  * @returns {boolean}
  *     True if <var>obj</var> is an element, false otherwise.
  */
-element.isElement = function(obj) {
+element.isElement = function (obj) {
   return element.isDOMElement(obj) || element.isXULElement(obj);
 };
 
@@ -1199,7 +1200,7 @@ element.isElement = function(obj) {
  * @returns {ShadowRoot}
  *     Shadow root of the element.
  */
-element.getShadowRoot = function(el) {
+element.getShadowRoot = function (el) {
   const shadowRoot = el.openOrClosedShadowRoot;
   if (!shadowRoot) {
     throw new lazy.error.NoSuchShadowRootError();
@@ -1216,7 +1217,7 @@ element.getShadowRoot = function(el) {
  * @returns {boolean}
  *     True if <var>node</var> is a shadow root, false otherwise.
  */
-element.isShadowRoot = function(node) {
+element.isShadowRoot = function (node) {
   return (
     node &&
     node.nodeType === DOCUMENT_FRAGMENT_NODE &&
@@ -1233,7 +1234,7 @@ element.isShadowRoot = function(node) {
  * @returns {boolean}
  *     True if <var>obj</var> is a DOM element, false otherwise.
  */
-element.isDOMElement = function(obj) {
+element.isDOMElement = function (obj) {
   return obj && obj.nodeType == ELEMENT_NODE && !element.isXULElement(obj);
 };
 
@@ -1246,7 +1247,7 @@ element.isDOMElement = function(obj) {
  * @returns {boolean}
  *     True if <var>obj</var> is a XULElement, false otherwise.
  */
-element.isXULElement = function(obj) {
+element.isXULElement = function (obj) {
   return obj && obj.nodeType === ELEMENT_NODE && obj.namespaceURI === XUL_NS;
 };
 
@@ -1260,7 +1261,7 @@ element.isXULElement = function(obj) {
  *     True if <var>node</var> is in a privileged document,
  *     false otherwise.
  */
-element.isInPrivilegedDocument = function(node) {
+element.isInPrivilegedDocument = function (node) {
   return !!node?.nodePrincipal?.isSystemPrincipal;
 };
 
@@ -1273,7 +1274,7 @@ element.isInPrivilegedDocument = function(node) {
  * @returns {boolean}
  *     True if <var>obj</var> is a DOM window.
  */
-element.isDOMWindow = function(obj) {
+element.isDOMWindow = function (obj) {
   // TODO(ato): This should use Object.prototype.toString.call(node)
   // but it's not clear how to write a good xpcshell test for that,
   // seeing as we stub out a WindowProxy.
@@ -1327,7 +1328,7 @@ const boolEls = {
  * @returns {boolean}
  *     True if the attribute is boolean, false otherwise.
  */
-element.isBooleanAttribute = function(el, attr) {
+element.isBooleanAttribute = function (el, attr) {
   if (!element.isDOMElement(el)) {
     return false;
   }

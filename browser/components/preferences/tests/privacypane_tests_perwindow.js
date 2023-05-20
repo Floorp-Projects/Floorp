@@ -59,13 +59,13 @@ function test_dependent_elements(win) {
     win.document.getElementById("deleteOnClose"),
     win.document.getElementById("alwaysClear"),
   ];
-  controls.forEach(function(control) {
+  controls.forEach(function (control) {
     ok(control, "the dependent controls should exist");
   });
   let independents = [
     win.document.getElementById("contentBlockingBlockCookiesCheckbox"),
   ];
-  independents.forEach(function(control) {
+  independents.forEach(function (control) {
     ok(control, "the independent controls should exist");
   });
   let cookieexceptions = win.document.getElementById("cookieExceptions");
@@ -82,7 +82,7 @@ function test_dependent_elements(win) {
   ok(alwaysclearsettings, "the clear data settings button should exist");
 
   function expect_disabled(disabled) {
-    controls.forEach(function(control) {
+    controls.forEach(function (control) {
       is(
         control.disabled,
         disabled,
@@ -108,7 +108,7 @@ function test_dependent_elements(win) {
     }
   }
   function check_independents(expected) {
-    independents.forEach(function(control) {
+    independents.forEach(function (control) {
       is(
         control.disabled,
         expected,
@@ -148,7 +148,7 @@ function test_dependent_cookie_elements(win) {
   let blockCookiesMenu = win.document.getElementById("blockCookiesMenu");
 
   let controls = [blockCookiesMenu, deleteOnCloseCheckbox];
-  controls.forEach(function(control) {
+  controls.forEach(function (control) {
     ok(control, "the dependent cookie controls should exist");
   });
   let blockCookiesCheckbox = win.document.getElementById(
@@ -157,7 +157,7 @@ function test_dependent_cookie_elements(win) {
   ok(blockCookiesCheckbox, "the block cookies checkbox should exist");
 
   function expect_disabled(disabled, c = controls) {
-    c.forEach(function(control) {
+    c.forEach(function (control) {
       is(
         control.disabled,
         disabled,
@@ -265,12 +265,12 @@ async function test_dependent_prefs(win) {
     win.document.getElementById("rememberHistory"),
     win.document.getElementById("rememberForms"),
   ];
-  controls.forEach(function(control) {
+  controls.forEach(function (control) {
     ok(control, "the micro-management controls should exist");
   });
 
   function expect_checked(checked) {
-    controls.forEach(function(control) {
+    controls.forEach(function (control) {
       is(
         control.checked,
         checked,
@@ -294,7 +294,7 @@ async function test_dependent_prefs(win) {
   // even if they're unchecked in custom mode
   historymode.value = "custom";
   controlChanged(historymode);
-  controls.forEach(function(control) {
+  controls.forEach(function (control) {
     control.checked = false;
     controlChanged(control);
   });

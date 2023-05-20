@@ -21,7 +21,7 @@ async function grantOptionalPermission(extension, permissions) {
 
 var someOtherTab, testTab;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.manifestV3.enabled", true]],
   });
@@ -656,7 +656,7 @@ add_task(async function test_show_hide_frame() {
       frameId = await SpecialPowers.spawn(
         gBrowser.selectedBrowser,
         [],
-        function() {
+        function () {
           const { WebNavigationFrames } = ChromeUtils.import(
             "resource://gre/modules/WebNavigationFrames.jsm"
           );
@@ -797,7 +797,7 @@ add_task(async function test_show_hide_editable_selection() {
       selectionText = await SpecialPowers.spawn(
         gBrowser.selectedBrowser,
         [],
-        function() {
+        function () {
           let node = content.document.getElementById("editabletext");
           node.scrollIntoView();
           node.select();
@@ -839,16 +839,18 @@ add_task(async function test_show_hide_video() {
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [VIDEO_URL], function(
-        VIDEO_URL
-      ) {
-        let video = content.document.createElement("video");
-        video.controls = true;
-        video.src = VIDEO_URL;
-        content.document.body.appendChild(video);
-        video.scrollIntoView();
-        video.focus();
-      });
+      await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [VIDEO_URL],
+        function (VIDEO_URL) {
+          let video = content.document.createElement("video");
+          video.controls = true;
+          video.src = VIDEO_URL;
+          content.document.body.appendChild(video);
+          video.scrollIntoView();
+          video.focus();
+        }
+      );
 
       await openContextMenu("video");
     },
@@ -883,16 +885,18 @@ add_task(async function test_show_hide_audio() {
       targetElementId: EXPECT_TARGET_ELEMENT,
     },
     async doOpenMenu() {
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [AUDIO_URL], function(
-        AUDIO_URL
-      ) {
-        let audio = content.document.createElement("audio");
-        audio.controls = true;
-        audio.src = AUDIO_URL;
-        content.document.body.appendChild(audio);
-        audio.scrollIntoView();
-        audio.focus();
-      });
+      await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [AUDIO_URL],
+        function (AUDIO_URL) {
+          let audio = content.document.createElement("audio");
+          audio.controls = true;
+          audio.src = AUDIO_URL;
+          content.document.body.appendChild(audio);
+          audio.scrollIntoView();
+          audio.focus();
+        }
+      );
 
       await openContextMenu("audio");
     },

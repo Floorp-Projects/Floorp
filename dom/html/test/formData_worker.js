@@ -16,8 +16,8 @@ function todo(a, msg) {
 
 importScripts("formData_test.js");
 
-onmessage = function() {
-  runTest(function() {
+onmessage = function () {
+  runTest(function () {
     postMessage({ type: "finish" });
   });
 };

@@ -31,7 +31,7 @@ function ResourceLoader(res, rej) {
 }
 
 /** Loads the identified https:// URL. */
-ResourceLoader.load = function(uri, doc) {
+ResourceLoader.load = function (uri, doc) {
   return new Promise((resolve, reject) => {
     let listener = new ResourceLoader(resolve, reject);
     let ioChannel = NetUtil.newChannel({
@@ -112,7 +112,7 @@ export function IdpSandbox(domain, protocol, win) {
   this.window = win;
 }
 
-IdpSandbox.checkDomain = function(domain) {
+IdpSandbox.checkDomain = function (domain) {
   if (!domain || typeof domain !== "string") {
     throw new Error(
       "Invalid domain for identity provider: " +
@@ -126,7 +126,7 @@ IdpSandbox.checkDomain = function(domain) {
  * want someone adding relative paths (e.g., '../../myuri'), which could be used
  * to move outside of /.well-known/ and into space that they control.
  */
-IdpSandbox.checkProtocol = function(protocol) {
+IdpSandbox.checkProtocol = function (protocol) {
   let message = "Invalid protocol for identity provider: ";
   if (!protocol || typeof protocol !== "string") {
     throw new Error(message + "must be a non-zero length string");
@@ -140,7 +140,7 @@ IdpSandbox.checkProtocol = function(protocol) {
  * Turns a domain and protocol into a URI.  This does some aggressive checking
  * to make sure that we aren't being fooled somehow.  Throws on fooling.
  */
-IdpSandbox.createIdpUri = function(domain, protocol) {
+IdpSandbox.createIdpUri = function (domain, protocol) {
   IdpSandbox.checkDomain(domain);
   IdpSandbox.checkProtocol(protocol);
 

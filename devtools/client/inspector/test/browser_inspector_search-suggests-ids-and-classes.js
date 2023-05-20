@@ -107,7 +107,7 @@ const TEST_URL = `<span class="span" id="span">
                   <button class="bb bc" id="bb"></button>
                   <button class="bc" id="ba"></button>`;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURI(TEST_URL)
   );

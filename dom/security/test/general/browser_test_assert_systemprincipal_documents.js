@@ -3,7 +3,7 @@
 const kTestPath = getRootDirectory(gTestPath);
 const kTestURI = kTestPath + "file_assert_systemprincipal_documents.html";
 
-add_setup(async function() {
+add_setup(async function () {
   // We expect the assertion in function
   // CheckSystemPrincipalLoads as defined in
   // file dom/security/nsContentSecurityManager.cpp
@@ -22,7 +22,7 @@ add_task(async function open_test_iframe_in_tab() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: kTestURI },
     async browser => {
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let outerPrincipal = content.document.nodePrincipal;
         ok(
           outerPrincipal.isSystemPrincipal,

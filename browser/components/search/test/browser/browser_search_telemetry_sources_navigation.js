@@ -82,7 +82,7 @@ UrlbarTestUtils.init(this);
 
 let tab;
 
-add_setup(async function() {
+add_setup(async function () {
   searchCounts.clear();
   Services.telemetry.clearScalars();
 

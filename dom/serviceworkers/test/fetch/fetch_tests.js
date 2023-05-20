@@ -5,13 +5,13 @@ function fetchXHRWithMethod(name, method, onload, onerror, headers) {
 
   onload =
     onload ||
-    function() {
+    function () {
       my_ok(false, "XHR load should not complete successfully");
       finish();
     };
   onerror =
     onerror ||
-    function() {
+    function () {
       my_ok(
         false,
         "XHR load for " + name + " should be intercepted successfully"
@@ -21,14 +21,14 @@ function fetchXHRWithMethod(name, method, onload, onerror, headers) {
 
   var x = new XMLHttpRequest();
   x.open(method, name, true);
-  x.onload = function() {
+  x.onload = function () {
     onload(x);
   };
-  x.onerror = function() {
+  x.onerror = function () {
     onerror(x);
   };
   headers = headers || [];
-  headers.forEach(function(header) {
+  headers.forEach(function (header) {
     x.setRequestHeader(header[0], header[1]);
   });
   x.send();
@@ -51,7 +51,7 @@ function fetchXHR(name, onload, onerror, headers) {
   return fetchXHRWithMethod(name, "GET", onload, onerror, headers);
 }
 
-fetchXHR("bare-synthesized.txt", function(xhr) {
+fetchXHR("bare-synthesized.txt", function (xhr) {
   my_ok(xhr.status == 200, "load should be successful");
   my_ok(
     xhr.responseText == "synthesized response body",
@@ -60,7 +60,7 @@ fetchXHR("bare-synthesized.txt", function(xhr) {
   finish();
 });
 
-fetchXHR("test-respondwith-response.txt", function(xhr) {
+fetchXHR("test-respondwith-response.txt", function (xhr) {
   my_ok(
     xhr.status == 200,
     "test-respondwith-response load should be successful"
@@ -72,7 +72,7 @@ fetchXHR("test-respondwith-response.txt", function(xhr) {
   finish();
 });
 
-fetchXHR("synthesized-404.txt", function(xhr) {
+fetchXHR("synthesized-404.txt", function (xhr) {
   my_ok(xhr.status == 404, "load should 404");
   my_ok(
     xhr.responseText == "synthesized response body",
@@ -81,7 +81,7 @@ fetchXHR("synthesized-404.txt", function(xhr) {
   finish();
 });
 
-fetchXHR("synthesized-headers.txt", function(xhr) {
+fetchXHR("synthesized-headers.txt", function (xhr) {
   my_ok(xhr.status == 200, "load should be successful");
   my_ok(
     xhr.getResponseHeader("X-Custom-Greeting") === "Hello",
@@ -94,7 +94,7 @@ fetchXHR("synthesized-headers.txt", function(xhr) {
   finish();
 });
 
-fetchXHR("synthesized-redirect-real-file.txt", function(xhr) {
+fetchXHR("synthesized-redirect-real-file.txt", function (xhr) {
   dump("Got status AARRGH " + xhr.status + " " + xhr.responseText + "\n");
   my_ok(xhr.status == 200, "load should be successful");
   my_ok(
@@ -104,7 +104,7 @@ fetchXHR("synthesized-redirect-real-file.txt", function(xhr) {
   finish();
 });
 
-fetchXHR("synthesized-redirect-twice-real-file.txt", function(xhr) {
+fetchXHR("synthesized-redirect-twice-real-file.txt", function (xhr) {
   my_ok(xhr.status == 200, "load should be successful");
   my_ok(
     xhr.responseText == "This is a real file.\n",
@@ -113,7 +113,7 @@ fetchXHR("synthesized-redirect-twice-real-file.txt", function(xhr) {
   finish();
 });
 
-fetchXHR("synthesized-redirect-synthesized.txt", function(xhr) {
+fetchXHR("synthesized-redirect-synthesized.txt", function (xhr) {
   my_ok(xhr.status == 200, "synth+redirect+synth load should be successful");
   my_ok(
     xhr.responseText == "synthesized response body",
@@ -122,7 +122,7 @@ fetchXHR("synthesized-redirect-synthesized.txt", function(xhr) {
   finish();
 });
 
-fetchXHR("synthesized-redirect-twice-synthesized.txt", function(xhr) {
+fetchXHR("synthesized-redirect-twice-synthesized.txt", function (xhr) {
   my_ok(
     xhr.status == 200,
     "synth+redirect+synth (twice) load should be successful"
@@ -134,39 +134,39 @@ fetchXHR("synthesized-redirect-twice-synthesized.txt", function(xhr) {
   finish();
 });
 
-fetchXHR("redirect.sjs", function(xhr) {
+fetchXHR("redirect.sjs", function (xhr) {
   my_ok(xhr.status == 404, "redirected load should be uninterrupted");
   finish();
 });
 
-fetchXHR("ignored.txt", function(xhr) {
+fetchXHR("ignored.txt", function (xhr) {
   my_ok(xhr.status == 404, "load should be uninterrupted");
   finish();
 });
 
-fetchXHR("rejected.txt", null, function(xhr) {
+fetchXHR("rejected.txt", null, function (xhr) {
   my_ok(xhr.status == 0, "load should not complete");
   finish();
 });
 
-fetchXHR("nonresponse.txt", null, function(xhr) {
+fetchXHR("nonresponse.txt", null, function (xhr) {
   my_ok(xhr.status == 0, "load should not complete");
   finish();
 });
 
-fetchXHR("nonresponse2.txt", null, function(xhr) {
+fetchXHR("nonresponse2.txt", null, function (xhr) {
   my_ok(xhr.status == 0, "load should not complete");
   finish();
 });
 
-fetchXHR("nonpromise.txt", null, function(xhr) {
+fetchXHR("nonpromise.txt", null, function (xhr) {
   my_ok(xhr.status == 0, "load should not complete");
   finish();
 });
 
 fetchXHR(
   "headers.txt",
-  function(xhr) {
+  function (xhr) {
     my_ok(xhr.status == 200, "load should be successful");
     my_ok(xhr.responseText == "1", "request header checks should have passed");
     finish();
@@ -178,7 +178,7 @@ fetchXHR(
   ]
 );
 
-fetchXHR("http://user:pass@mochi.test:8888/user-pass", function(xhr) {
+fetchXHR("http://user:pass@mochi.test:8888/user-pass", function (xhr) {
   my_ok(xhr.status == 200, "load should be successful");
   my_ok(
     xhr.responseText == "http://user:pass@mochi.test:8888/user-pass",
@@ -187,7 +187,7 @@ fetchXHR("http://user:pass@mochi.test:8888/user-pass", function(xhr) {
   finish();
 });
 
-fetchXHR("readable-stream.txt", function(xhr) {
+fetchXHR("readable-stream.txt", function (xhr) {
   my_ok(xhr.status == 200, "loading completed");
   my_ok(xhr.responseText == "Hello!", "The message is correct!");
   finish();
@@ -195,11 +195,11 @@ fetchXHR("readable-stream.txt", function(xhr) {
 
 fetchXHR(
   "readable-stream-locked.txt",
-  function(xhr) {
+  function (xhr) {
     my_ok(false, "This should not be called!");
     finish();
   },
-  function() {
+  function () {
     my_ok(true, "The exception has been correctly handled!");
     finish();
   }
@@ -207,11 +207,11 @@ fetchXHR(
 
 fetchXHR(
   "readable-stream-with-exception.txt",
-  function(xhr) {
+  function (xhr) {
     my_ok(false, "This should not be called!");
     finish();
   },
-  function() {
+  function () {
     my_ok(true, "The exception has been correctly handled!");
     finish();
   }
@@ -219,11 +219,11 @@ fetchXHR(
 
 fetchXHR(
   "readable-stream-with-exception2.txt",
-  function(xhr) {
+  function (xhr) {
     my_ok(false, "This should not be called!");
     finish();
   },
-  function() {
+  function () {
     my_ok(true, "The exception has been correctly handled!");
     finish();
   }
@@ -231,11 +231,11 @@ fetchXHR(
 
 fetchXHR(
   "readable-stream-already-consumed.txt",
-  function(xhr) {
+  function (xhr) {
     my_ok(false, "This should not be called!");
     finish();
   },
-  function() {
+  function () {
     my_ok(true, "The exception has been correctly handled!");
     finish();
   }
@@ -249,7 +249,7 @@ expectedUncompressedResponse += "\n";
 
 // ServiceWorker does not intercept, at which point the network request should
 // be correctly decoded.
-fetchXHR("deliver-gzip.sjs", function(xhr) {
+fetchXHR("deliver-gzip.sjs", function (xhr) {
   my_ok(xhr.status == 200, "network gzip load should be successful");
   my_ok(
     xhr.responseText == expectedUncompressedResponse,
@@ -266,7 +266,7 @@ fetchXHR("deliver-gzip.sjs", function(xhr) {
   finish();
 });
 
-fetchXHR("hello.gz", function(xhr) {
+fetchXHR("hello.gz", function (xhr) {
   my_ok(xhr.status == 200, "gzip load should be successful");
   my_ok(
     xhr.responseText == expectedUncompressedResponse,
@@ -283,7 +283,7 @@ fetchXHR("hello.gz", function(xhr) {
   finish();
 });
 
-fetchXHR("hello-after-extracting.gz", function(xhr) {
+fetchXHR("hello-after-extracting.gz", function (xhr) {
   my_ok(xhr.status == 200, "gzip load after extracting should be successful");
   my_ok(
     xhr.responseText == expectedUncompressedResponse,
@@ -300,7 +300,7 @@ fetchXHR("hello-after-extracting.gz", function(xhr) {
   finish();
 });
 
-fetchXHR(corsServerURL + "?status=200&allowOrigin=*", function(xhr) {
+fetchXHR(corsServerURL + "?status=200&allowOrigin=*", function (xhr) {
   my_ok(
     xhr.status == 200,
     "cross origin load with correct headers should be successful"
@@ -321,7 +321,7 @@ fetchXHR(
     uriOrigin +
     "&allowOrigin=" +
     uriOrigin,
-  function(xhr) {
+  function (xhr) {
     my_ok(
       xhr.status == 200,
       "cross origin load with correct headers should be successful"
@@ -341,7 +341,7 @@ fetchXHR(
     { server: origin },
     { server: "http://example.org", allowOrigin: origin },
   ]),
-  function(xhr) {
+  function (xhr) {
     my_ok(
       xhr.status == 200,
       "cross origin load with correct headers should be successful"
@@ -360,7 +360,7 @@ fetchXHR(
 fetchXHR(
   corsServerURL + "?status=200&allowOrigin=*",
   null,
-  function(xhr) {
+  function (xhr) {
     my_ok(
       xhr.status == 0,
       "cross origin load with incorrect headers should be a failure"
@@ -377,7 +377,7 @@ fetchXHR(
 fetchXHR(
   "http://example.org" + corsServerPath + "?status=200&allowOrigin=*",
   null,
-  function(xhr) {
+  function (xhr) {
     my_ok(
       xhr.status == 0,
       "cross origin load with incorrect headers should be a failure"
@@ -390,7 +390,7 @@ fetchXHR(
 // Test that when the page fetches a url the controlling SW forces a redirect to
 // another location. This other location fetch should also be intercepted by
 // the SW.
-fetchXHR("something.txt", function(xhr) {
+fetchXHR("something.txt", function (xhr) {
   my_ok(xhr.status == 200, "load should be successful");
   my_ok(
     xhr.responseText == "something else response body",
@@ -403,7 +403,7 @@ fetchXHR("something.txt", function(xhr) {
 // made from the SW through fetch(). fetch() fetches a server-side JavaScript
 // file that force a redirect. The redirect location fetch does not go through
 // the SW.
-fetchXHR("redirect_serviceworker.sjs", function(xhr) {
+fetchXHR("redirect_serviceworker.sjs", function (xhr) {
   my_ok(xhr.status == 200, "load should be successful");
   my_ok(
     xhr.responseText == "// empty worker, always succeed!\n",
@@ -414,7 +414,7 @@ fetchXHR("redirect_serviceworker.sjs", function(xhr) {
 
 fetchXHR(
   "empty-header",
-  function(xhr) {
+  function (xhr) {
     my_ok(xhr.status == 200, "load should be successful");
     my_ok(
       xhr.responseText == "emptyheader",
@@ -430,10 +430,10 @@ expectAsyncResult();
 fetch(
   "http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*"
 ).then(
-  function(res) {
+  function (res) {
     my_ok(res.ok, "Valid CORS request should receive valid response");
     my_ok(res.type == "cors", "Response type should be CORS");
-    res.text().then(function(body) {
+    res.text().then(function (body) {
       my_ok(
         body === "<res>hello pass</res>\n",
         "cors response body should match"
@@ -441,7 +441,7 @@ fetch(
       finish();
     });
   },
-  function(e) {
+  function (e) {
     my_ok(false, "CORS Fetch failed");
     finish();
   }
@@ -452,15 +452,15 @@ fetch(
   "http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200",
   { mode: "no-cors" }
 ).then(
-  function(res) {
+  function (res) {
     my_ok(res.type == "opaque", "Response type should be opaque");
     my_ok(res.status == 0, "Status should be 0");
-    res.text().then(function(body) {
+    res.text().then(function (body) {
       my_ok(body === "", "opaque response body should be empty");
       finish();
     });
   },
-  function(e) {
+  function (e) {
     my_ok(false, "no-cors Fetch failed");
     finish();
   }
@@ -468,14 +468,14 @@ fetch(
 
 expectAsyncResult();
 fetch("opaque-on-same-origin").then(
-  function(res) {
+  function (res) {
     my_ok(
       false,
       "intercepted opaque response for non no-cors request should fail."
     );
     finish();
   },
-  function(e) {
+  function (e) {
     my_ok(
       true,
       "intercepted opaque response for non no-cors request should fail."
@@ -486,14 +486,14 @@ fetch("opaque-on-same-origin").then(
 
 expectAsyncResult();
 fetch("http://example.com/opaque-no-cors", { mode: "no-cors" }).then(
-  function(res) {
+  function (res) {
     my_ok(
       res.type == "opaque",
       "intercepted opaque response for no-cors request should have type opaque."
     );
     finish();
   },
-  function(e) {
+  function (e) {
     my_ok(
       false,
       "intercepted opaque response for no-cors request should pass."
@@ -504,14 +504,14 @@ fetch("http://example.com/opaque-no-cors", { mode: "no-cors" }).then(
 
 expectAsyncResult();
 fetch("http://example.com/cors-for-no-cors", { mode: "no-cors" }).then(
-  function(res) {
+  function (res) {
     my_ok(
       res.type == "cors",
       "synthesize CORS response should result in outer CORS response"
     );
     finish();
   },
-  function(e) {
+  function (e) {
     my_ok(false, "cors-for-no-cors request should not reject");
     finish();
   }
@@ -527,10 +527,10 @@ function arrayBufferFromString(str) {
 
 expectAsyncResult();
 fetch(new Request("body-simple", { method: "POST", body: "my body" }))
-  .then(function(res) {
+  .then(function (res) {
     return res.text();
   })
-  .then(function(body) {
+  .then(function (body) {
     my_ok(
       body == "my bodymy body",
       "the body of the intercepted fetch should be visible in the SW"
@@ -545,10 +545,10 @@ fetch(
     body: arrayBufferFromString("my body"),
   })
 )
-  .then(function(res) {
+  .then(function (res) {
     return res.text();
   })
-  .then(function(body) {
+  .then(function (body) {
     my_ok(
       body == "my bodymy body",
       "the ArrayBufferView body of the intercepted fetch should be visible in the SW"
@@ -563,10 +563,10 @@ fetch(
     body: arrayBufferFromString("my body").buffer,
   })
 )
-  .then(function(res) {
+  .then(function (res) {
     return res.text();
   })
-  .then(function(body) {
+  .then(function (body) {
     my_ok(
       body == "my bodymy body",
       "the ArrayBuffer body of the intercepted fetch should be visible in the SW"
@@ -579,10 +579,10 @@ var usp = new URLSearchParams();
 usp.set("foo", "bar");
 usp.set("baz", "qux");
 fetch(new Request("body-urlsearchparams", { method: "POST", body: usp }))
-  .then(function(res) {
+  .then(function (res) {
     return res.text();
   })
-  .then(function(body) {
+  .then(function (body) {
     my_ok(
       body == "foo=bar&baz=quxfoo=bar&baz=qux",
       "the URLSearchParams body of the intercepted fetch should be visible in the SW"
@@ -595,10 +595,10 @@ var fd = new FormData();
 fd.set("foo", "bar");
 fd.set("baz", "qux");
 fetch(new Request("body-formdata", { method: "POST", body: fd }))
-  .then(function(res) {
+  .then(function (res) {
     return res.text();
   })
-  .then(function(body) {
+  .then(function (body) {
     my_ok(
       body.indexOf('Content-Disposition: form-data; name="foo"\r\n\r\nbar') <
         body.indexOf('Content-Disposition: form-data; name="baz"\r\n\r\nqux'),
@@ -614,10 +614,10 @@ fetch(
     body: new Blob(new String("my body")),
   })
 )
-  .then(function(res) {
+  .then(function (res) {
     return res.text();
   })
-  .then(function(body) {
+  .then(function (body) {
     my_ok(
       body == "my bodymy body",
       "the Blob body of the intercepted fetch should be visible in the SW"
@@ -627,27 +627,27 @@ fetch(
 
 expectAsyncResult();
 fetch("interrupt.sjs").then(
-  function(res) {
+  function (res) {
     my_ok(true, "interrupted fetch succeeded");
     res.text().then(
-      function(body) {
+      function (body) {
         my_ok(false, "interrupted fetch shouldn't have complete body");
         finish();
       },
-      function() {
+      function () {
         my_ok(true, "interrupted fetch shouldn't have complete body");
         finish();
       }
     );
   },
-  function(e) {
+  function (e) {
     my_ok(false, "interrupted fetch failed");
     finish();
   }
 );
 
-["DELETE", "GET", "HEAD", "OPTIONS", "POST", "PUT"].forEach(function(method) {
-  fetchXHRWithMethod("xhr-method-test.txt", method, function(xhr) {
+["DELETE", "GET", "HEAD", "OPTIONS", "POST", "PUT"].forEach(function (method) {
+  fetchXHRWithMethod("xhr-method-test.txt", method, function (xhr) {
     my_ok(xhr.status == 200, method + " load should be successful");
     if (method === "HEAD") {
       my_ok(
@@ -666,18 +666,18 @@ fetch("interrupt.sjs").then(
 
 expectAsyncResult();
 fetch(new Request("empty-header", { headers: { emptyheader: "" } }))
-  .then(function(res) {
+  .then(function (res) {
     return res.text();
   })
   .then(
-    function(body) {
+    function (body) {
       my_ok(
         body == "emptyheader",
         "The empty header was observed in the fetch event"
       );
       finish();
     },
-    function(err) {
+    function (err) {
       my_ok(false, "A promise was rejected with " + err);
       finish();
     }
@@ -685,15 +685,15 @@ fetch(new Request("empty-header", { headers: { emptyheader: "" } }))
 
 expectAsyncResult();
 fetch("fetchevent-extendable")
-  .then(function(res) {
+  .then(function (res) {
     return res.text();
   })
   .then(
-    function(body) {
+    function (body) {
       my_ok(body == "extendable", "FetchEvent inherits from ExtendableEvent");
       finish();
     },
-    function(err) {
+    function (err) {
       my_ok(false, "A promise was rejected with " + err);
       finish();
     }
@@ -701,15 +701,15 @@ fetch("fetchevent-extendable")
 
 expectAsyncResult();
 fetch("fetchevent-request")
-  .then(function(res) {
+  .then(function (res) {
     return res.text();
   })
   .then(
-    function(body) {
+    function (body) {
       my_ok(body == "non-nullable", "FetchEvent.request must be non-nullable");
       finish();
     },
-    function(err) {
+    function (err) {
       my_ok(false, "A promise was rejected with " + err);
       finish();
     }

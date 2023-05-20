@@ -37,7 +37,7 @@ add_task(async function test() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let blob = await SpecialPowers.spawn(browser, [file.leafName], function(
+  let blob = await SpecialPowers.spawn(browser, [file.leafName], function (
     fileName
   ) {
     return new content.window.Promise(resolve => {
@@ -45,7 +45,7 @@ add_task(async function test() {
       xhr.responseType = "blob";
       xhr.open("GET", fileName);
       xhr.send();
-      xhr.onload = function() {
+      xhr.onload = function () {
         resolve(xhr.response);
       };
     });

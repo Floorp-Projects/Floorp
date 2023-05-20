@@ -16,7 +16,7 @@ async function test_dialog_window() {
 
     diagWin.addEventListener(
       "load",
-      function() {
+      function () {
         resolve();
       },
       { once: true }
@@ -33,7 +33,7 @@ async function test_dialog_window() {
   await BrowserTestUtils.closeWindow(diagWin);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting", true]],
   });

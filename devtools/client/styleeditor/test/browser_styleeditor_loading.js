@@ -6,7 +6,7 @@
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "longload.html";
 
-add_task(async function() {
+add_task(async function () {
   // launch Style Editor right when the tab is created (before load)
   // this checks that the Style Editor still launches correctly when it is
   // opened *while* the page is still loading. The Style Editor should not

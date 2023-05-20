@@ -14,7 +14,7 @@ add_task(
       const location = { sourceUrl: source.url, line: 3, column: 56 };
       setBreakpoint(threadFront, location);
 
-      const packet = await executeOnNextTickAndWaitForPause(function() {
+      const packet = await executeOnNextTickAndWaitForPause(function () {
         Cu.evalInSandbox("f()", debuggee);
       }, threadFront);
 

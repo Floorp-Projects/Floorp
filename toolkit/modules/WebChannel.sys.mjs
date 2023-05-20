@@ -84,7 +84,7 @@ export var WebChannelBroker = Object.create({
  *        permission manager.
  * @constructor
  */
-export var WebChannel = function(id, originOrPermission) {
+export var WebChannel = function (id, originOrPermission) {
   if (!id || !originOrPermission) {
     throw new Error("WebChannel id and originOrPermission are required.");
   }

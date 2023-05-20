@@ -50,7 +50,7 @@ addAccessibleTask(
         <span role="gridcell">cell</span>
       </div>
     </div>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info(
       'role="tablist" role="listbox" role="grid" role="tree" role="treegrid"'
     );
@@ -75,7 +75,7 @@ addAccessibleTask(
      <div role="tab" id="tab_multi1">tab1</div>
      <div role="tab" id="tab_multi2">tab2</div>
    </div>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info('role="tablist" aria-multiselectable');
     let tablist = findAccessibleChildByID(docAcc, "tablist", [
       nsIAccessibleSelectable,
@@ -98,7 +98,7 @@ addAccessibleTask(
      <div role="option" id="listbox2_item1">item1</div>
      <div role="option" id="listbox2_item2">item2</div>
    </div>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info('role="listbox" aria-multiselectable');
     let listbox = findAccessibleChildByID(docAcc, "listbox", [
       nsIAccessibleSelectable,
@@ -140,7 +140,7 @@ addAccessibleTask(
       </tr>
     </tobdy>
   </table>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info('role="grid" aria-multiselectable, selectable children in subtree');
     let grid = findAccessibleChildByID(docAcc, "grid", [
       nsIAccessibleSelectable,

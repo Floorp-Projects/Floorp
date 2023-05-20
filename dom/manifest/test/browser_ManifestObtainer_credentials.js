@@ -7,7 +7,7 @@ const { ManifestObtainer } = ChromeUtils.importESModule(
 );
 
 // Don't send cookies
-add_task(async function() {
+add_task(async function () {
   const testPath = "/browser/dom/manifest/test/cookie_setter.html";
   const tabURL = `https://example.com${testPath}`;
   const browser = BrowserTestUtils.addTab(gBrowser, tabURL).linkedBrowser;
@@ -19,7 +19,7 @@ add_task(async function() {
 });
 
 // Send cookies
-add_task(async function() {
+add_task(async function () {
   const testPath =
     "/browser/dom/manifest/test/cookie_setter_with_credentials.html";
   const tabURL = `https://example.com${testPath}`;
@@ -32,7 +32,7 @@ add_task(async function() {
 });
 
 // Cross origin - we go from example.com to example.org
-add_task(async function() {
+add_task(async function () {
   const testPath =
     "/browser/dom/manifest/test/cookie_setter_with_credentials_cross_origin.html";
   const tabURL = `https://example.com${testPath}`;

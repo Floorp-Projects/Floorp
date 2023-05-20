@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // This test fails with server side target switching disabled
   if (!isFissionEnabled() && !isEveryFrameTargetEnabled()) {
     return;

@@ -21,7 +21,7 @@ function run_test() {
   run_next_test();
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   remove_bookmarks_html();
   remove_all_JSON_backups();
   return PlacesUtils.bookmarks.eraseEverything();

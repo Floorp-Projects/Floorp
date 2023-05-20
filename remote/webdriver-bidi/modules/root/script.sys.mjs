@@ -21,10 +21,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 function getUUID() {
-  return Services.uuid
-    .generateUUID()
-    .toString()
-    .slice(1, -1);
+  return Services.uuid.generateUUID().toString().slice(1, -1);
 }
 
 /**

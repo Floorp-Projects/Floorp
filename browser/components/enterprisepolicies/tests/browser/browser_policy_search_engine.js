@@ -86,7 +86,7 @@ add_task(async function test_prevent_install_ui() {
     gBrowser,
     "about:preferences#search"
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let linkContainer = content.document.getElementById("addEnginesBox");
     if (!linkContainer.hidden) {
       await ContentTaskUtils.waitForMutationCondition(

@@ -81,10 +81,7 @@ function backgroundScript() {
     } partitionKey=${JSON.stringify(cookie.partitionKey)}`;
   }
   function stringifyCookies(cookies) {
-    return cookies
-      .map(stringifyCookie)
-      .sort()
-      .join(" , ");
+    return cookies.map(stringifyCookie).sort().join(" , ");
   }
 
   // detailsIn may have partitionKey and firstPartyDomain attributes.

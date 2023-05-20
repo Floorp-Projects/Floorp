@@ -104,7 +104,7 @@ function getConfigData(testInput) {
 
 const engineSelector = new SearchEngineSelector();
 
-add_task(async function() {
+add_task(async function () {
   const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
   const getStub = sinon.stub(settings, "get");
 

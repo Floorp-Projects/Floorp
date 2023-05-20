@@ -60,7 +60,7 @@ add_task(async function testSteps() {
       "finish"
   );
 
-  await new Promise(function(resolve) {
+  await new Promise(function (resolve) {
     setTimeout(resolve, flushSleepTimeSec * 1000);
   });
 

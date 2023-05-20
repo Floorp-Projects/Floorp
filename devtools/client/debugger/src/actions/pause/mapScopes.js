@@ -85,7 +85,7 @@ export async function buildOriginalScopes(
 }
 
 export function toggleMapScopes() {
-  return async function({ dispatch, getState }) {
+  return async function ({ dispatch, getState }) {
     if (isMapScopesEnabled(getState())) {
       dispatch({ type: "TOGGLE_MAP_SCOPES", mapScopes: false });
       return;
@@ -110,7 +110,7 @@ export function toggleMapScopes() {
 }
 
 export function mapScopes(cx, scopes, frame) {
-  return async function(thunkArgs) {
+  return async function (thunkArgs) {
     const { dispatch, client, getState } = thunkArgs;
     assert(cx.thread == frame.thread, "Thread mismatch");
 
@@ -119,7 +119,7 @@ export function mapScopes(cx, scopes, frame) {
       cx,
       thread: cx.thread,
       frame,
-      [PROMISE]: (async function() {
+      [PROMISE]: (async function () {
         if (frame.isOriginal && frame.originalVariables) {
           const frameId = getSelectedFrameId(getState(), cx.thread);
           return buildOriginalScopes(frame, client, cx, frameId, scopes);
@@ -132,7 +132,7 @@ export function mapScopes(cx, scopes, frame) {
 }
 
 export function getMappedScopes(cx, scopes, frame) {
-  return async function(thunkArgs) {
+  return async function (thunkArgs) {
     const { getState, dispatch } = thunkArgs;
     const generatedSource = frame.generatedLocation.source;
 
@@ -188,7 +188,7 @@ export function getMappedScopes(cx, scopes, frame) {
 }
 
 export function getMappedScopesForLocation(location) {
-  return async function(thunkArgs) {
+  return async function (thunkArgs) {
     const { dispatch, getState } = thunkArgs;
     const cx = getThreadContext(getState());
     const mappedLocation = await getMappedLocation(location, thunkArgs);

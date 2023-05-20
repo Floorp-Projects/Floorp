@@ -7,12 +7,12 @@
  * Tests unit conversion on browser.
  */
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.unitConversion.enabled", true]],
   });
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     SpecialPowers.clipboardCopyString("");
   });
 });

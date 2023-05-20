@@ -6,7 +6,7 @@
 // Check display of custom formatters in debugger.
 const TEST_FILENAME = `doc_dbg-custom-formatters.html`;
 
-add_task(async function() {
+add_task(async function () {
   // TODO: This preference can be removed once the custom formatters feature is stable enough
   await pushPref("devtools.custom-formatters", true);
   await pushPref("devtools.custom-formatters.enabled", true);

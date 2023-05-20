@@ -5,7 +5,7 @@ const TEST_PAGE = "/browser/browser/base/content/test/zoom/zoom_test.html";
 var gTestTab, gBgTab, gTestZoom;
 
 function testBackgroundLoad() {
-  (async function() {
+  (async function () {
     is(
       ZoomManager.zoom,
       gTestZoom,
@@ -21,7 +21,7 @@ function testBackgroundLoad() {
 }
 
 function testInitialZoom() {
-  (async function() {
+  (async function () {
     is(ZoomManager.zoom, 1, "initial zoom level should be 1");
     FullZoom.enlarge();
 
@@ -36,7 +36,7 @@ function testInitialZoom() {
 function test() {
   waitForExplicitFinish();
 
-  (async function() {
+  (async function () {
     gTestTab = BrowserTestUtils.addTab(gBrowser);
     await FullZoomHelper.selectTabAndWaitForLocationChange(gTestTab);
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url

@@ -14,15 +14,15 @@ function id_for_tab(url, page) {
       url: url + page,
       waitForLoad: true,
     },
-    async function(browser) {
-      return SpecialPowers.spawn(browser, [""], function() {
+    async function (browser) {
+      return SpecialPowers.spawn(browser, [""], function () {
         return content.wrappedJSObject.get_first_input_id();
       });
     }
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   let com_page1;
   let com_page1_reload;
   let org_page1;

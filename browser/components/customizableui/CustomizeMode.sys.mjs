@@ -41,7 +41,7 @@ ChromeUtils.defineModuleGetter(
   "BrowserUsageTelemetry",
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
-XPCOMUtils.defineLazyGetter(lazy, "gWidgetsBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gWidgetsBundle", function () {
   const kUrl =
     "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
@@ -2810,9 +2810,9 @@ CustomizeMode.prototype = {
       if (score >= winScore) {
         let arena = elements.arena;
         let image = "url(chrome://browser/skin/customizableui/whimsy.png)";
-        let position = `${(window.RTL_UI ? gameSide : 0) +
-          xAdj * ball[0] -
-          10}px ${ball[1] - 10}px`;
+        let position = `${
+          (window.RTL_UI ? gameSide : 0) + xAdj * ball[0] - 10
+        }px ${ball[1] - 10}px`;
         let repeat = "no-repeat";
         let size = "20px";
         if (arena.style.backgroundImage) {

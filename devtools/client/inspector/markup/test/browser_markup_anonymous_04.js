@@ -8,7 +8,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_anonymous.html";
 const PREF = "devtools.inspector.showAllAnonymousContent";
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setBoolPref(PREF, true);
 
   const { inspector } = await openInspectorForURL(TEST_URL);

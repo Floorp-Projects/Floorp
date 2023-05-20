@@ -147,7 +147,7 @@ function hasPriorData(dataType) {
  * @param {Array} options.data.updated
  * @param {Array} options.data.deleted
  */
-const updateCertBlocklist = async function({
+const updateCertBlocklist = async function ({
   data: { current, created, updated, deleted },
 }) {
   let items = [];

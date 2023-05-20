@@ -52,7 +52,7 @@ function run_test() {
   run_next_test();
 }
 
-let Http3CheckListener = function() {};
+let Http3CheckListener = function () {};
 
 Http3CheckListener.prototype = {
   expectedRoute: "",

@@ -1,7 +1,7 @@
 // This file expects `tests` to have been declared in the global scope.
 /* global tests */
 
-var RemoteCanvas = function(url, id) {
+var RemoteCanvas = function (url, id) {
   this.url = url;
   this.id = id;
   this.snapshot = null;
@@ -10,24 +10,24 @@ var RemoteCanvas = function(url, id) {
 RemoteCanvas.CANVAS_WIDTH = 200;
 RemoteCanvas.CANVAS_HEIGHT = 200;
 
-RemoteCanvas.prototype.compare = function(otherCanvas, expected) {
+RemoteCanvas.prototype.compare = function (otherCanvas, expected) {
   return compareSnapshots(this.snapshot, otherCanvas.snapshot, expected)[0];
 };
 
-RemoteCanvas.prototype.load = function(callback) {
+RemoteCanvas.prototype.load = function (callback) {
   var iframe = document.createElement("iframe");
   iframe.id = this.id + "-iframe";
   iframe.width = RemoteCanvas.CANVAS_WIDTH + "px";
   iframe.height = RemoteCanvas.CANVAS_HEIGHT + "px";
   iframe.src = this.url;
   var me = this;
-  iframe.addEventListener("load", function() {
+  iframe.addEventListener("load", function () {
     info("iframe loaded");
     var m = iframe.contentDocument.getElementById("av");
     m.addEventListener(
       "suspend",
-      function(aEvent) {
-        setTimeout(function() {
+      function (aEvent) {
+        setTimeout(function () {
           let mediaElement = iframe.contentDocument.querySelector(
             "audio, video"
           );
@@ -46,7 +46,7 @@ RemoteCanvas.prototype.load = function(callback) {
   window.document.body.appendChild(iframe);
 };
 
-RemoteCanvas.prototype.remotePageLoaded = function(callback) {
+RemoteCanvas.prototype.remotePageLoaded = function (callback) {
   var ldrFrame = document.getElementById(this.id + "-iframe");
   this.snapshot = snapshotWindow(ldrFrame.contentWindow);
   this.snapshot.id = this.id + "-canvas";
@@ -54,7 +54,7 @@ RemoteCanvas.prototype.remotePageLoaded = function(callback) {
   callback(this);
 };
 
-RemoteCanvas.prototype.cleanup = function() {
+RemoteCanvas.prototype.cleanup = function () {
   var iframe = document.getElementById(this.id + "-iframe");
   iframe.remove();
   var canvas = document.getElementById(this.id + "-canvas");
@@ -108,10 +108,10 @@ SimpleTest.requestCompleteLog();
 
 window.addEventListener(
   "load",
-  function() {
+  function () {
     SpecialPowers.pushPrefEnv(
       { set: [["media.cache_size", 40000]] },
-      function() {
+      function () {
         runTest(0);
       }
     );

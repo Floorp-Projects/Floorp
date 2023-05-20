@@ -55,7 +55,7 @@ async function test_hint_asset(testName, asset, variant) {
       url: requestUrl,
       waitForLoad: true,
     },
-    async function(browser) {
+    async function (browser) {
       if (asset === "fetch") {
         // wait until the fetch is complete
         await TestUtils.waitForCondition(_ => {

@@ -165,7 +165,7 @@ add_task(async function test_event_multisession() {
 
   const root1 = createRootMessageHandler("session-id-event_multisession-1");
   let root1Events = 0;
-  const onRoot1Event = function(evtName, wrappedEvt) {
+  const onRoot1Event = function (evtName, wrappedEvt) {
     if (wrappedEvt.name === "event-from-window-global") {
       root1Events++;
     }
@@ -174,7 +174,7 @@ add_task(async function test_event_multisession() {
 
   const root2 = createRootMessageHandler("session-id-event_multisession-2");
   let root2Events = 0;
-  const onRoot2Event = function(evtName, wrappedEvt) {
+  const onRoot2Event = function (evtName, wrappedEvt) {
     if (wrappedEvt.name === "event-from-window-global") {
       root2Events++;
     }
@@ -182,7 +182,7 @@ add_task(async function test_event_multisession() {
   root2.on("message-handler-event", onRoot2Event);
 
   let registryEvents = 0;
-  const onRegistryEvent = function(evtName, wrappedEvt) {
+  const onRegistryEvent = function (evtName, wrappedEvt) {
     if (wrappedEvt.name === "event-from-window-global") {
       registryEvents++;
     }
@@ -238,7 +238,7 @@ add_task(async function test_event_with_frames() {
   );
 
   const rootEvents = [];
-  const onRootEvent = function(evtName, wrappedEvt) {
+  const onRootEvent = function (evtName, wrappedEvt) {
     if (wrappedEvt.name === "event-from-window-global") {
       rootEvents.push(wrappedEvt.data.text);
     }

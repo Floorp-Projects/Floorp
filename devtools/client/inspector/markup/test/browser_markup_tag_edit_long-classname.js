@@ -11,7 +11,7 @@ const classname =
   "AAAAAAAAAAAA-BBBBBBBBBBBBB-CCCCCCCCCCCCC-DDDDDDDDDDDDDD-EEEEEEEEEEEEE";
 const TEST_URL = `data:text/html;charset=utf8, <div class="${classname}"></div>`;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   await selectNode("div", inspector);

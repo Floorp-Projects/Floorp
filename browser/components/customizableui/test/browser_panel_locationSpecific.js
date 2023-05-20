@@ -10,7 +10,7 @@
  *
  */
 
-add_task(async function() {
+add_task(async function () {
   let specificPanel = document.createXULElement("panel");
   specificPanel.setAttribute("locationspecific", "true");
   specificPanel.setAttribute("noautohide", "true");

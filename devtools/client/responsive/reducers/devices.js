@@ -115,7 +115,7 @@ const reducers = {
   },
 };
 
-module.exports = function(devices = INITIAL_DEVICES, action) {
+module.exports = function (devices = INITIAL_DEVICES, action) {
   const reducer = reducers[action.type];
   if (!reducer) {
     return devices;

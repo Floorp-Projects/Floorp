@@ -203,7 +203,7 @@ export var PlacesTestUtils = Object.freeze({
   promiseAsyncUpdates() {
     return lazy.PlacesUtils.withConnectionWrapper(
       "promiseAsyncUpdates",
-      async function(db) {
+      async function (db) {
         try {
           await db.executeCached("BEGIN EXCLUSIVE");
           await db.executeCached("COMMIT");
@@ -264,8 +264,8 @@ export var PlacesTestUtils = Object.freeze({
   markBookmarksAsSynced() {
     return lazy.PlacesUtils.withConnectionWrapper(
       "PlacesTestUtils: markBookmarksAsSynced",
-      function(db) {
-        return db.executeTransaction(async function() {
+      function (db) {
+        return db.executeTransaction(async function () {
           await db.executeCached(
             `WITH RECURSIVE
            syncedItems(id) AS (
@@ -305,8 +305,8 @@ export var PlacesTestUtils = Object.freeze({
   setBookmarkSyncFields(...aFieldInfos) {
     return lazy.PlacesUtils.withConnectionWrapper(
       "PlacesTestUtils: setBookmarkSyncFields",
-      function(db) {
-        return db.executeTransaction(async function() {
+      function (db) {
+        return db.executeTransaction(async function () {
           for (let info of aFieldInfos) {
             if (!lazy.PlacesUtils.isValidGuid(info.guid)) {
               throw new Error(`Invalid GUID: ${info.guid}`);
@@ -527,14 +527,8 @@ export var PlacesTestUtils = Object.freeze({
     if (url2.protocol != "place:") {
       throw new Error("Expected a place: uri, got " + url2.href);
     }
-    let tokens1 = url1.pathname
-      .split("&")
-      .sort()
-      .join("&");
-    let tokens2 = url2.pathname
-      .split("&")
-      .sort()
-      .join("&");
+    let tokens1 = url1.pathname.split("&").sort().join("&");
+    let tokens2 = url2.pathname.split("&").sort().join("&");
     if (tokens1 != tokens2) {
       dump(`Failed comparison between:\n${tokens1}\n${tokens2}\n`);
       return false;

@@ -15,7 +15,7 @@ declTest("getActor on both sides", {
       "Checking that we can observe parent creation"
     );
 
-    await SpecialPowers.spawn(browser, [], async function() {
+    await SpecialPowers.spawn(browser, [], async function () {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       is(

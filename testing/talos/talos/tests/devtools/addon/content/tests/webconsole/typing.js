@@ -16,7 +16,7 @@ const {
 const TEST_NAME = "console.typing";
 const LOGS_NUMBER = 500;
 
-module.exports = async function() {
+module.exports = async function () {
   const input = "abcdefghijklmnopqrst";
   await testSetup(`data:text/html,<!DOCTYPE html><meta charset=utf8><script>
     for (let i = 0; i < ${LOGS_NUMBER}; i++) {

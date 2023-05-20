@@ -12,7 +12,7 @@ const TEST_URI =
   "<iframe style='margin:100px' src='data:text/html," +
   '<div id="inner">Look I am here!</div>\'>';
 
-add_task(async function() {
+add_task(async function () {
   info("Enable command-button-frames preference setting");
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
   const { inspector, toolbox } = await openInspectorForURL(TEST_URI);

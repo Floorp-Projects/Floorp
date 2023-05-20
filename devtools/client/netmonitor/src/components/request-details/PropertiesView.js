@@ -24,11 +24,11 @@ const TreeViewClass = require("resource://devtools/client/shared/components/tree
 const TreeView = createFactory(TreeViewClass);
 const PropertiesViewContextMenu = require("resource://devtools/client/netmonitor/src/widgets/PropertiesViewContextMenu.js");
 
-loader.lazyGetter(this, "Rep", function() {
+loader.lazyGetter(this, "Rep", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .REPS.Rep;
 });
-loader.lazyGetter(this, "MODE", function() {
+loader.lazyGetter(this, "MODE", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .MODE;
 });

@@ -72,7 +72,7 @@ function parseQueryString(encodedString, useArrays) {
 function loadFile(url, callback) {
   let req = new XMLHttpRequest();
   req.open("GET", url);
-  req.onload = function() {
+  req.onload = function () {
     if (req.readyState == 4) {
       if (req.status == 200) {
         try {
@@ -233,19 +233,21 @@ if (params.comparePrefs) {
 }
 
 // Log things to the console if appropriate.
-TestRunner.logger.addListener("dumpListener", consoleLevel + "", function(msg) {
+TestRunner.logger.addListener("dumpListener", consoleLevel + "", function (
+  msg
+) {
   dump(msg.info.join(" ") + "\n");
 });
 
 var gTestList = [];
 var RunSet = {};
 
-RunSet.runall = function(e) {
+RunSet.runall = function (e) {
   // Filter tests to include|exclude tests based on data in params.filter.
   // This allows for including or excluding tests from the gTestList
   // TODO Only used by ipc tests, remove once those are implemented sanely
   if (params.testManifest) {
-    getTestManifest(getTestManifestURL(params.testManifest), params, function(
+    getTestManifest(getTestManifestURL(params.testManifest), params, function (
       filter
     ) {
       gTestList = filterTests(filter, gTestList, params.runOnly);
@@ -256,7 +258,7 @@ RunSet.runall = function(e) {
   }
 };
 
-RunSet.runtests = function(e) {
+RunSet.runtests = function (e) {
   // Which tests we're going to run
   var my_tests = gTestList;
 
@@ -276,7 +278,7 @@ RunSet.runtests = function(e) {
   TestRunner.runTests(my_tests);
 };
 
-RunSet.reloadAndRunAll = function(e) {
+RunSet.reloadAndRunAll = function (e) {
   e.preventDefault();
   //window.location.hash = "";
   if (params.autorun) {
@@ -337,7 +339,7 @@ function hookup() {
 
 function getPrefList() {
   if (params.ignorePrefsFile) {
-    loadFile(getTestManifestURL(params.ignorePrefsFile), function(prefs) {
+    loadFile(getTestManifestURL(params.ignorePrefsFile), function (prefs) {
       TestRunner.ignorePrefs = prefs;
       RunSet.runall();
     });

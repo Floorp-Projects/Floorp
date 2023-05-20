@@ -64,7 +64,7 @@ function defineLazyGetter(object, name, lambda) {
  *        The name of the interface to query the service to.
  */
 function defineLazyServiceGetter(object, name, contract, interfaceName) {
-  defineLazyGetter(object, name, function() {
+  defineLazyGetter(object, name, function () {
     return Cc[contract].getService(Ci[interfaceName]);
   });
 }

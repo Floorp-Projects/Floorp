@@ -54,7 +54,7 @@ function promiseRequestDeviceAncestor(
   return SpecialPowers.spawn(
     aBrowser,
     [{ aRequestAudio, aRequestVideo, aType, aBadDevice }],
-    async function(args) {
+    async function (args) {
       let global = content.wrappedJSObject.document.getElementById("frame4")
         .contentWindow;
       global.requestDevice(

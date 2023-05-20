@@ -22,7 +22,7 @@ function fission_subtest_init() {
  * returns an async function which can be added to a thenable chain.
  */
 function loadOOPIFrame(iframeElementId, iframePage) {
-  return async function() {
+  return async function () {
     if (window.location.href.startsWith("https://example.com/")) {
       dump(
         `WARNING: Calling loadOOPIFrame from ${window.location.href} so the iframe may not be OOP\n`
@@ -32,7 +32,7 @@ function loadOOPIFrame(iframeElementId, iframePage) {
 
     let url =
       "https://example.com/browser/gfx/layers/apz/test/mochitest/" + iframePage;
-    let loadPromise = promiseOneEvent(window, "OOPIF:Load", function(e) {
+    let loadPromise = promiseOneEvent(window, "OOPIF:Load", function (e) {
       return typeof e.data.content == "string" && e.data.content == url;
     });
     let elem = document.getElementById(iframeElementId);
@@ -52,7 +52,7 @@ function loadOOPIFrame(iframeElementId, iframePage) {
  * the two cases.
  */
 async function fissionHitTest(point, iframeElement) {
-  let get_iframe_compositor_test_data = function() {
+  let get_iframe_compositor_test_data = function () {
     let utils = SpecialPowers.getDOMWindowUtils(window);
     return JSON.stringify(utils.getCompositorAPZTestData());
   };
@@ -95,7 +95,7 @@ async function fissionHitTest(point, iframeElement) {
   );
 
   // See which test data has new hit results
-  let hitResultCount = function(testData) {
+  let hitResultCount = function (testData) {
     return Object.keys(testData.hitResults).length;
   };
 
@@ -105,7 +105,7 @@ async function fissionHitTest(point, iframeElement) {
     hitResultCount(newParentTestData) > hitResultCount(oldParentTestData);
 
   // Extract the results from the appropriate test data
-  let lastHitResult = function(testData) {
+  let lastHitResult = function (testData) {
     let lastHit =
       testData.hitResults[Object.keys(testData.hitResults).length - 1];
     return {

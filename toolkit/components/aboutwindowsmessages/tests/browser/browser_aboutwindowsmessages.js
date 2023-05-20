@@ -25,7 +25,7 @@ add_task(async () => {
   let newWindow = await BrowserTestUtils.openNewBrowserWindow({
     url: TEST_LINK,
   });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await BrowserTestUtils.closeWindow(newWindow);
   });
   await BrowserTestUtils.withNewTab(

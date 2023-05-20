@@ -53,7 +53,7 @@ function CubicBezier(coordinates) {
     }
   }
 
-  this.coordinates.toString = function() {
+  this.coordinates.toString = function () {
     return (
       this.map(n => {
         return (Math.round(n * 100) / 100 + "").replace(/^0\./, ".");
@@ -387,7 +387,7 @@ CubicBezierWidget.prototype = {
       self._updateFromPoints();
     };
 
-    doc.onmouseup = function() {
+    doc.onmouseup = function () {
       point.focus();
       doc.onmousemove = doc.onmouseup = null;
     };

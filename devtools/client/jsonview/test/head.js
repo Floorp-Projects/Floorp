@@ -65,7 +65,7 @@ async function addJsonViewTab(
 
   // Catch RequireJS errors (usually timeouts)
   const error = tabLoaded.then(() =>
-    SpecialPowers.spawn(browser, [], function() {
+    SpecialPowers.spawn(browser, [], function () {
       return new Promise((resolve, reject) => {
         const { requirejs } = content.wrappedJSObject;
         if (requirejs) {
@@ -83,7 +83,7 @@ async function addJsonViewTab(
   await Promise.race([
     error,
     // eslint-disable-next-line no-shadow
-    ContentTask.spawn(browser, data, async function(data) {
+    ContentTask.spawn(browser, data, async function (data) {
       // Check if there is a JSONView object.
       const { JSONView } = content.wrappedJSObject;
       if (!JSONView) {
@@ -255,7 +255,7 @@ function waitForFilter() {
       }
 
       // Wait till the first row has 'hidden' class set.
-      const observer = new content.MutationObserver(function(mutations) {
+      const observer = new content.MutationObserver(function (mutations) {
         for (let i = 0; i < mutations.length; i++) {
           const mutation = mutations[i];
           if (mutation.attributeName == "class") {

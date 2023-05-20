@@ -241,7 +241,7 @@ const TESTS = [
 let containerID = 0;
 let elms = {};
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(`data:text/html;charset=utf-8,
     <h1 id="some-id" class="some-class">foo<span>Child span<span></h1>`);
 

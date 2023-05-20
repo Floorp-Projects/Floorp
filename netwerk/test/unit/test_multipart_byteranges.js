@@ -4,7 +4,7 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 
-XPCOMUtils.defineLazyGetter(this, "uri", function() {
+XPCOMUtils.defineLazyGetter(this, "uri", function () {
   return "http://localhost:" + httpserver.identity.primaryPort + "/multipart";
 });
 

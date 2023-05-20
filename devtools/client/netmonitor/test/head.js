@@ -332,7 +332,7 @@ function initNetMonitor(
     );
   }
 
-  return (async function() {
+  return (async function () {
     await SpecialPowers.pushPrefEnv({
       set: [
         // Capture all stacks so that the timing of devtools opening
@@ -378,7 +378,7 @@ function initNetMonitor(
 function restartNetMonitor(monitor, { requestCount }) {
   info("Restarting the specified network monitor.");
 
-  return (async function() {
+  return (async function () {
     const tab = monitor.commands.descriptorFront.localTab;
     const url = tab.linkedBrowser.currentURI.spec;
 
@@ -411,7 +411,7 @@ async function clearNetworkEvents(monitor) {
 function teardown(monitor) {
   info("Destroying the specified network monitor.");
 
-  return (async function() {
+  return (async function () {
     const tab = monitor.commands.descriptorFront.localTab;
 
     await waitForAllNetworkUpdateEvents();
@@ -880,7 +880,7 @@ function promiseXHR(data) {
 
     xhr.addEventListener(
       "loadend",
-      function(event) {
+      function (event) {
         resolve({ status: xhr.status, response: xhr.response });
       },
       { once: true }

@@ -8,7 +8,7 @@ const TEST_URI =
   "https://example.com/" +
   "browser/browser/components/sessionstore/test/empty.html";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Set the pref to true so we know exactly how many tabs should be restoring at

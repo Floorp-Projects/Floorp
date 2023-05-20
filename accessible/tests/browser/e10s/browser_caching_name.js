@@ -472,7 +472,7 @@ async function testNameRule(browser, target, ruleset, expected) {
 markupTests.forEach(({ id, ruleset, markup, expected }) =>
   addAccessibleTask(
     markup,
-    async function(browser, accDoc) {
+    async function (browser, accDoc) {
       const observer = {
         observe(subject, topic, data) {
           const event = subject.QueryInterface(nsIAccessibleEvent);
@@ -495,7 +495,7 @@ markupTests.forEach(({ id, ruleset, markup, expected }) =>
  */
 addAccessibleTask(
   ``,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let nameChanged = waitForEvent(EVENT_NAME_CHANGE, docAcc);
     await invokeContentTask(browser, [], () => {
       content.document.title = "new title";
@@ -515,7 +515,7 @@ addAccessibleTask(
 <button id="button" aria-labelledby="label">
 <div id="label" hidden>a</div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const button = findAccessibleChildByID(docAcc, "button");
     testName(button, "a");
     info("Changing label textContent");

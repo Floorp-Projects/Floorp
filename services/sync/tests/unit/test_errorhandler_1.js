@@ -12,7 +12,7 @@ const fakeServer = new SyncServer();
 fakeServer.start();
 const fakeServerUrl = "http://localhost:" + fakeServer.port;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   return promiseStopServer(fakeServer).finally(() => {
     Svc.Prefs.resetBranch("");
   });

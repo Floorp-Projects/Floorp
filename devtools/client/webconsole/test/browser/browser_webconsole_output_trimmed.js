@@ -53,7 +53,7 @@ const TEST_ITEMS = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Check that expected output and actual trimmed output match

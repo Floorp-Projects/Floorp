@@ -37,7 +37,7 @@ function run_test() {
  */
 function newConnection(prefix) {
   let conn;
-  DevToolsServer.createRootActor = function(connection) {
+  DevToolsServer.createRootActor = function (connection) {
     conn = connection;
     return new RootActor(connection, {});
   };

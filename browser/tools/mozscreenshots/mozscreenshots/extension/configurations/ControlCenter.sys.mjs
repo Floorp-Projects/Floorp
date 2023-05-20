@@ -117,7 +117,7 @@ export var ControlCenter = {
         let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
           PERMISSIONS_PAGE
         );
-        SitePermissions.listPermissions().forEach(function(permission, index) {
+        SitePermissions.listPermissions().forEach(function (permission, index) {
           SitePermissions.setForPrincipal(
             principal,
             permission,

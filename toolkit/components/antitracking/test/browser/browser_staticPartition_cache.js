@@ -51,7 +51,7 @@ async function checkCache(suffixes, originAttributes) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   info("Disable predictor and accept all");
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -98,7 +98,9 @@ add_task(async function() {
         "http://example.net/browser/browser/components/originattributes/test/browser/",
     };
 
-    await SpecialPowers.spawn(tab.linkedBrowser, [argObj], async function(arg) {
+    await SpecialPowers.spawn(tab.linkedBrowser, [argObj], async function (
+      arg
+    ) {
       // The CSS cache needs to be cleared in-process.
       content.windowUtils.clearSharedStyleSheetCache();
 

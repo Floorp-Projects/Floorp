@@ -14,12 +14,12 @@ const {
 const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 
-loader.lazyGetter(this, "SearchBoxAutocompletePopup", function() {
+loader.lazyGetter(this, "SearchBoxAutocompletePopup", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/SearchBoxAutocompletePopup.js")
   );
 });
-loader.lazyGetter(this, "MDNLink", function() {
+loader.lazyGetter(this, "MDNLink", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/MdnLink.js")
   );

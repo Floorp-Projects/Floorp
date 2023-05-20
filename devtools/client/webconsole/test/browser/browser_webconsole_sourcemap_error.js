@@ -8,7 +8,7 @@
 const BASE =
   "http://example.com/browser/devtools/client/webconsole/" + "test/browser/";
 
-add_task(async function() {
+add_task(async function () {
   for (const test of [
     "test-sourcemap-error-01.html",
     "test-sourcemap-error-02.html",

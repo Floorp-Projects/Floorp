@@ -39,7 +39,7 @@ try {
   // so it's safe to do nothing with this here.
 }
 
-XPCOMUtils.defineLazyGetter(lazy, "gCryptoHash", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gCryptoHash", function () {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 });
 
@@ -89,7 +89,7 @@ function toHash(aValue) {
 /**
  * Singleton that provides storage functionality.
  */
-XPCOMUtils.defineLazyGetter(lazy, "Storage", function() {
+XPCOMUtils.defineLazyGetter(lazy, "Storage", function () {
   return new LinksStorage();
 });
 
@@ -290,7 +290,7 @@ var AllPages = {
       }
     }
     // and all notifications get forwarded to each page.
-    this._pages.forEach(function(aPage) {
+    this._pages.forEach(function (aPage) {
       aPage.observe(aSubject, aTopic, aData);
     }, this);
   },
@@ -302,7 +302,7 @@ var AllPages = {
   _addObserver: function AllPages_addObserver() {
     Services.prefs.addObserver(PREF_NEWTAB_ENABLED, this, true);
     Services.obs.addObserver(this, "page-thumbnail:create", true);
-    this._addObserver = function() {};
+    this._addObserver = function () {};
   },
 
   QueryInterface: ChromeUtils.generateQI([
@@ -1754,7 +1754,7 @@ var Links = {
     }
 
     // Filter blocked and pinned links and duplicate base domains.
-    links = links.filter(function(link) {
+    links = links.filter(function (link) {
       let site = NewTabUtils.extractSite(link.url);
       if (site == null || sites.has(site)) {
         return false;
@@ -2106,7 +2106,7 @@ var Links = {
     // Make sure to update open about:newtab instances. If there are no opened
     // pages we can just wait for the next new tab to populate the cache again.
     if (AllPages.length && AllPages.enabled) {
-      this.populateCache(function() {
+      this.populateCache(function () {
         AllPages.update();
       }, true);
     } else {
@@ -2132,7 +2132,7 @@ var Links = {
    */
   _addObserver: function Links_addObserver() {
     Services.obs.addObserver(this, "browser:purge-session-history", true);
-    this._addObserver = function() {};
+    this._addObserver = function () {};
   },
 
   QueryInterface: ChromeUtils.generateQI([
@@ -2243,7 +2243,7 @@ var ExpirationFilter = {
       return;
     }
 
-    Links.populateCache(function() {
+    Links.populateCache(function () {
       let urls = [];
 
       // Add all URLs to the list that we want to keep thumbnails for.
@@ -2339,7 +2339,7 @@ export var NewTabUtils = {
     PinnedLinks.resetCache();
     BlockedLinks.resetCache();
 
-    Links.populateCache(function() {
+    Links.populateCache(function () {
       AllPages.update();
     }, true);
   },

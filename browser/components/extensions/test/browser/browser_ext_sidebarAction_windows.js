@@ -22,7 +22,7 @@ let extData = {
       </body></html>
     `,
 
-    "sidebar.js": function() {
+    "sidebar.js": function () {
       window.onload = () => {
         browser.test.sendMessage("sidebar");
       };

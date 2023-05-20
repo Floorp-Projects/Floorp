@@ -16,7 +16,7 @@ function ok(cond, msg) {
   Assert.ok(!!cond, msg);
 }
 
-add_setup(function() {
+add_setup(function () {
   do_get_profile();
 
   enableTesting();
@@ -27,7 +27,7 @@ add_setup(function() {
 });
 
 function returnToEventLoop() {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     executeSoon(resolve);
   });
 }
@@ -105,7 +105,7 @@ function initTemporaryOrigin(persistence, principal) {
 function getOriginUsage(principal, fromMemory = false) {
   let request = Services.qms.getUsageForPrincipal(
     principal,
-    function() {},
+    function () {},
     fromMemory
   );
 
@@ -219,7 +219,7 @@ function getRelativeFile(relativePath) {
   let profileDir = getProfileDir();
 
   let file = profileDir.clone();
-  relativePath.split("/").forEach(function(component) {
+  relativePath.split("/").forEach(function (component) {
     file.append(component);
   });
 
@@ -296,8 +296,8 @@ class RequestError extends Error {
 }
 
 async function requestFinished(request) {
-  await new Promise(function(resolve) {
-    request.callback = function() {
+  await new Promise(function (resolve) {
+    request.callback = function () {
       resolve();
     };
   });

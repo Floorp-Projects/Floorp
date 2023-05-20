@@ -5,7 +5,7 @@ const CustomTypes = ChromeUtils.importESModule(
   "resource://gre/modules/RustCustomTypes.sys.mjs"
 );
 
-add_task(async function() {
+add_task(async function () {
   // JS right now doesn't treat custom types as anything but it's native counterparts
   let demo = await CustomTypes.getCustomTypesDemo();
   Assert.equal(demo.url, "http://example.com/");

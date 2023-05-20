@@ -266,7 +266,7 @@ function areContentSyscallsSandboxed(level) {
 // Tests executing OS API calls in the content process. Limited to Mac
 // and Linux calls for now.
 //
-add_task(async function() {
+add_task(async function () {
   // This test is only relevant in e10s
   if (!gMultiProcessBrowser) {
     ok(false, "e10s is enabled");

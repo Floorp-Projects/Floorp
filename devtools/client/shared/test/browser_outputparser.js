@@ -7,7 +7,7 @@ const {
   getClientCssProperties,
 } = require("resource://devtools/client/fronts/css-properties.js");
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("layout.css.backdrop-filter.enabled", true);
   await pushPref("layout.css.individual-transform.enabled", true);
   await pushPref("layout.css.color-mix.enabled", true);
@@ -618,7 +618,7 @@ function testParseVariable(doc, parser) {
   ];
 
   for (const test of TESTS) {
-    const getValue = function(varName) {
+    const getValue = function (varName) {
       return test.variables[varName];
     };
 

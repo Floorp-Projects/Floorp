@@ -108,7 +108,7 @@ function buffer2string(buf) {
   if (!(buf.constructor === Uint8Array)) {
     buf = new Uint8Array(buf);
   }
-  buf.map(function(x) {
+  buf.map(function (x) {
     return (str += String.fromCharCode(x));
   });
   return str;
@@ -129,7 +129,7 @@ function base64ToBytes(b64encoded) {
     window
       .atob(b64encoded)
       .split("")
-      .map(function(c) {
+      .map(function (c) {
         return c.charCodeAt(0);
       })
   );
@@ -183,7 +183,7 @@ function webAuthnDecodeCBORAttestation(aCborAttBuf) {
   }
 
   return webAuthnDecodeAuthDataArray(new Uint8Array(attObj.authData)).then(
-    function(aAuthDataObj) {
+    function (aAuthDataObj) {
       attObj.authDataObj = aAuthDataObj;
       return Promise.resolve(attObj);
     }
@@ -257,7 +257,7 @@ function webAuthnDecodeAuthDataArray(aAuthData) {
   console.log("Y: " + pubkeyObj[cose_crv_y]);
   console.log("Uncompressed (hex): " + hexEncode(pubKeyBytes));
 
-  return importPublicKey(pubKeyBytes).then(function(aKeyHandle) {
+  return importPublicKey(pubKeyBytes).then(function (aKeyHandle) {
     return Promise.resolve({
       rpIdHash,
       flags,
@@ -293,7 +293,7 @@ function deriveAppAndChallengeParam(appId, clientData, attestation) {
   return Promise.all([
     crypto.subtle.digest("SHA-256", appIdBuf),
     crypto.subtle.digest("SHA-256", clientData),
-  ]).then(function(digests) {
+  ]).then(function (digests) {
     return {
       appParam: new Uint8Array(digests[0]),
       challengeParam: new Uint8Array(digests[1]),

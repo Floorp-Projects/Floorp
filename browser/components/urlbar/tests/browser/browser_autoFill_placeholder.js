@@ -16,7 +16,7 @@
 // Allow more time for verify mode.
 requestLongerTimeout(5);
 
-add_setup(async function() {
+add_setup(async function () {
   await cleanUp();
 });
 

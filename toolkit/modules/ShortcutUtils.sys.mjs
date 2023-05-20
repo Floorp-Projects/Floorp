@@ -8,13 +8,13 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "PlatformKeys", function() {
+XPCOMUtils.defineLazyGetter(lazy, "PlatformKeys", function () {
   return Services.strings.createBundle(
     "chrome://global-platform/locale/platformKeys.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "Keys", function() {
+XPCOMUtils.defineLazyGetter(lazy, "Keys", function () {
   return Services.strings.createBundle(
     "chrome://global/locale/keys.properties"
   );

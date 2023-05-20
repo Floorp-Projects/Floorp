@@ -23,52 +23,52 @@ function run_test() {
   //* *************************************************************************//
   // Nullsafety
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.getPrefType(null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.getBoolPref(null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.setBoolPref(null, false);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.getIntPref(null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.setIntPref(null, 0);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.getCharPref(null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.setCharPref(null, null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.getStringPref(null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.setStringPref(null, null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.clearUserPref(null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.prefHasUserValue(null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.lockPref(null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.prefIsLocked(null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.unlockPref(null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.deleteBranch(null);
   }, Cr.NS_ERROR_INVALID_ARG);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.getChildList(null);
   }, Cr.NS_ERROR_INVALID_ARG);
 
@@ -84,21 +84,21 @@ function run_test() {
   Assert.equal(ps.root, "");
 
   // bool...
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.getBoolPref("UserPref.nonexistent.getBoolPref");
   }, Cr.NS_ERROR_UNEXPECTED);
   ps.setBoolPref("UserPref.nonexistent.setBoolPref", false);
   Assert.equal(ps.getBoolPref("UserPref.nonexistent.setBoolPref"), false);
 
   // int...
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.getIntPref("UserPref.nonexistent.getIntPref");
   }, Cr.NS_ERROR_UNEXPECTED);
   ps.setIntPref("UserPref.nonexistent.setIntPref", 5);
   Assert.equal(ps.getIntPref("UserPref.nonexistent.setIntPref"), 5);
 
   // char
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.getCharPref("UserPref.nonexistent.getCharPref");
   }, Cr.NS_ERROR_UNEXPECTED);
   ps.setCharPref("UserPref.nonexistent.setCharPref", "_test");
@@ -143,7 +143,7 @@ function run_test() {
   let largeStr = new Array(MAX_PREF_LENGTH + 1).join("x");
   ps.setCharPref("UserPref.large.char", largeStr);
   largeStr += "x";
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.setCharPref("UserPref.large.char", largeStr);
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
@@ -247,10 +247,10 @@ function run_test() {
   // pref Locking/Unlocking tests
 
   // locking and unlocking a nonexistent pref should throw
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.lockPref("DefaultPref.nonexistent");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
-  do_check_throws(function() {
+  do_check_throws(function () {
     ps.unlockPref("DefaultPref.nonexistent");
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
@@ -297,24 +297,24 @@ function run_test() {
   pb1 = ps.getDefaultBranch("DefaultPref");
 
   // getting prefs on deleted user branches should throw
-  do_check_throws(function() {
+  do_check_throws(function () {
     pb.getBoolPref("DefaultPref.bool");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     pb.getIntPref("DefaultPref.int");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     pb.getCharPref("DefaultPref.char");
   }, Cr.NS_ERROR_UNEXPECTED);
 
   // getting prefs on deleted default branches should throw
-  do_check_throws(function() {
+  do_check_throws(function () {
     pb1.getBoolPref("DefaultPref.bool");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     pb1.getIntPref("DefaultPref.int");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     pb1.getCharPref("DefaultPref.char");
   }, Cr.NS_ERROR_UNEXPECTED);
 
@@ -343,13 +343,13 @@ function run_test() {
   ps.readUserPrefsFromFile(prefFile);
 
   // former prefs should have been replaced/lost
-  do_check_throws(function() {
+  do_check_throws(function () {
     pb.getBoolPref("ReadPref.bool");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     pb.getIntPref("ReadPref.int");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     pb.getCharPref("ReadPref.char");
   }, Cr.NS_ERROR_UNEXPECTED);
 

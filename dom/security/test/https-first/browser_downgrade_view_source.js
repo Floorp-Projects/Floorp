@@ -12,7 +12,7 @@ const TEST_PATH_HTTPS = getRootDirectory(gTestPath).replace(
 );
 
 async function runTest(desc, url, expectedURI, excpectedContent) {
-  await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
     let loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
     BrowserTestUtils.loadURIString(browser, url);
     await loaded;
@@ -20,7 +20,7 @@ async function runTest(desc, url, expectedURI, excpectedContent) {
     await SpecialPowers.spawn(
       browser,
       [desc, expectedURI, excpectedContent],
-      async function(desc, expectedURI, excpectedContent) {
+      async function (desc, expectedURI, excpectedContent) {
         let loadedURI = content.document.documentURI;
         is(loadedURI, expectedURI, desc);
         let loadedContent = content.document.body.textContent;
@@ -30,7 +30,7 @@ async function runTest(desc, url, expectedURI, excpectedContent) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(2);
 
   await SpecialPowers.pushPrefEnv({

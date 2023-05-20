@@ -1,6 +1,6 @@
 addEventListener(
   "foobar",
-  function(evt) {
+  function (evt) {
     postMessage({
       type: evt.type,
       bubbles: evt.bubbles,
@@ -13,7 +13,7 @@ addEventListener(
 
 addEventListener(
   "message",
-  function(evt) {
+  function (evt) {
     // Test the constructor of CustomEvent
     var e = new CustomEvent("foobar", {
       bubbles: true,

@@ -1,5 +1,5 @@
 async function testPageInfo() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function(
+  await BrowserTestUtils.withNewTab("https://example.com", async function (
     browser
   ) {
     let pageInfo = BrowserPageInfo();

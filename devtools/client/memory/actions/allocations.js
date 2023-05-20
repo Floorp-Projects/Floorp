@@ -8,8 +8,8 @@ const {
   ALLOCATION_RECORDING_OPTIONS,
 } = require("resource://devtools/client/memory/constants.js");
 
-exports.toggleRecordingAllocationStacks = function(commands) {
-  return async function({ dispatch, getState }) {
+exports.toggleRecordingAllocationStacks = function (commands) {
+  return async function ({ dispatch, getState }) {
     dispatch({ type: actions.TOGGLE_RECORD_ALLOCATION_STACKS_START });
 
     if (commands.targetCommand.hasTargetWatcherSupport()) {

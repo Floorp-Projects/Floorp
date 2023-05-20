@@ -2,8 +2,8 @@ let dir = getChromeDir(getResolvedURI(gTestPath));
 dir.append("file_dummy.html");
 const uriString = Services.io.newFileURI(dir).spec;
 
-add_task(async function() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function(
+add_task(async function () {
+  await BrowserTestUtils.withNewTab("https://example.com", async function (
     browser
   ) {
     // Override the browser's `prepareToChangeRemoteness` so that we can delay
@@ -35,7 +35,7 @@ add_task(async function() {
     info("Creating new tab loaded in file URI process");
     let fileProcess;
     let browserParentDestroyed = PromiseUtils.defer();
-    await BrowserTestUtils.withNewTab(uriString, async function(otherBrowser) {
+    await BrowserTestUtils.withNewTab(uriString, async function (otherBrowser) {
       let remoteTab = otherBrowser.frameLoader.remoteTab;
       fileProcess = remoteTab.contentProcessId;
       info("Loaded test URI in pid: " + fileProcess);

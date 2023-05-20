@@ -21,7 +21,7 @@ var httpProtocolHandler = Cc[
   "@mozilla.org/network/protocol;1?name=http"
 ].getService(Ci.nsIHttpProtocolHandler);
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpServer.identity.primaryPort;
 });
 
@@ -54,7 +54,7 @@ function run_test() {
   httpServer.registerPathHandler("/content", contentHandler);
   httpServer.start(-1);
 
-  httpProtocolHandler.EnsureHSTSDataReady().then(function() {
+  httpProtocolHandler.EnsureHSTSDataReady().then(function () {
     var chan1 = make_channel(URL + "/content");
     chan1.asyncOpen(
       new ChannelListener(firstTimeThrough, null, CL_ALLOW_UNKNOWN_CL)

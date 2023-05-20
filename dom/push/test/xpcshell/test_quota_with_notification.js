@@ -69,7 +69,7 @@ add_task(async function test_expiration_origin_threshold() {
 
   let updateQuotaPromise = new Promise((resolve, reject) => {
     let quotaUpdateCount = 0;
-    PushService._updateQuotaTestCallback = function() {
+    PushService._updateQuotaTestCallback = function () {
       quotaUpdateCount++;
       if (quotaUpdateCount == numMessages) {
         resolve();

@@ -22,7 +22,7 @@ async function play(tab) {
     }
   );
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let audio = content.document.querySelector("audio");
     await audio.play();
   });
@@ -64,7 +64,7 @@ async function addWebRTCTab(win = window) {
   let popupPromise = new Promise(resolve => {
     win.PopupNotifications.panel.addEventListener(
       "popupshown",
-      function() {
+      function () {
         executeSoon(resolve);
       },
       { once: true }

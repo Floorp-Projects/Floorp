@@ -16,11 +16,11 @@ add_task(async function run_test() {
 
   // Try crashing with a pure virtual call
   await do_crash(
-    function() {
+    function () {
       crashType = CrashTestUtils.CRASH_PURE_VIRTUAL_CALL;
       crashReporter.annotateCrashReport("TestKey", "TestValue");
     },
-    function(mdump, extra) {
+    function (mdump, extra) {
       Assert.equal(extra.TestKey, "TestValue");
     },
     // process will exit with a zero exit status

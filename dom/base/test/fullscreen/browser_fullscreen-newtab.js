@@ -20,8 +20,8 @@ async function runTest() {
       gBrowser,
       url: kPage,
     },
-    async function(browser) {
-      let promiseFsEvents = SpecialPowers.spawn(browser, [], function() {
+    async function (browser) {
+      let promiseFsEvents = SpecialPowers.spawn(browser, [], function () {
         return new Promise(resolve => {
           let countFsChange = 0;
           let countFsError = 0;
@@ -74,7 +74,7 @@ async function runTest() {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   await pushPrefs(
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"]
@@ -82,7 +82,7 @@ add_task(async function() {
   await runTest();
 });
 
-add_task(async function() {
+add_task(async function () {
   await pushPrefs(
     ["full-screen-api.transition-duration.enter", "200 200"],
     ["full-screen-api.transition-duration.leave", "200 200"]

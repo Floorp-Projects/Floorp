@@ -37,7 +37,7 @@ add_task(async function test_experiment_plain_text() {
 
   let { win, tab } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     const infoContainer = content.document.querySelector(".info");
     const infoTitle = content.document.getElementById("info-title");
     const infoBody = content.document.getElementById("info-body");
@@ -83,7 +83,7 @@ add_task(async function test_experiment_info_disabled() {
 
   let { win, tab } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     is(
       content.document.querySelector(".info"),
       undefined,
@@ -110,7 +110,7 @@ add_task(async function test_experiment_promo_disabled() {
 
   let { win, tab } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     is(
       content.document.querySelector(".promo"),
       undefined,
@@ -149,7 +149,7 @@ add_task(async function test_experiment_format_urls() {
 
   let { win, tab } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab, [LOCALE], async function(locale) {
+  await SpecialPowers.spawn(tab, [LOCALE], async function (locale) {
     is(
       content.document.querySelector(".info a").getAttribute("href"),
       "http://foo.mozilla.com/" + locale,
@@ -288,7 +288,7 @@ add_task(async function test_experiment_bottom_promo() {
 
   let { win, tab } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     is(
       content.document
         .querySelector(".promo-cta button")
@@ -355,7 +355,7 @@ add_task(async function test_experiment_below_search_promo() {
 
   let { win, tab } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     is(
       content.document
         .querySelector(".promo-cta button")
@@ -427,7 +427,7 @@ add_task(async function test_experiment_top_promo() {
 
   let { win, tab } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     ok(
       !content.document.querySelector("#info-title"),
       "Should remove the infoTitle element"

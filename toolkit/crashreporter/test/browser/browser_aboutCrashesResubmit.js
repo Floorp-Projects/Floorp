@@ -51,7 +51,7 @@ function check_submit_pending(tab, crashes) {
     // loaded the crash report page
     ok(true, "got submission onload");
 
-    SpecialPowers.spawn(browser, [], function() {
+    SpecialPowers.spawn(browser, [], function () {
       // grab the Crash ID here to verify later
       let CrashID = content.location.search.split("=")[1];
       let CrashURL = content.location.toString();
@@ -131,7 +131,7 @@ function check_submit_pending(tab, crashes) {
     url => url !== "about:crashes"
   ).then(csp_onload);
   function csp_pageshow() {
-    SpecialPowers.spawn(browser, [{ CrashID, CrashURL }], function({
+    SpecialPowers.spawn(browser, [{ CrashID, CrashURL }], function ({
       CrashID,
       CrashURL,
     }) {

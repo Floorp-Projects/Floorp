@@ -14,7 +14,7 @@ const ADB_VERSION = "v1.3.37";
  * Check that the node picker button in about:devtools-toolbox has the expected class when
  * connecting to an Android phone.
  */
-add_task(async function() {
+add_task(async function () {
   // We use a real local client combined with a mocked USB runtime to be able to open
   // about:devtools-toolbox on a real target.
   const clientWrapper = await createLocalClientWrapper();

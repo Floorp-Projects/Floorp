@@ -16,7 +16,7 @@ add_task(async function test_addBlockerFailureState() {
   // immediately, as it initially contains "Not started"
   let barrier = new AsyncShutdown.Barrier("test_addBlocker_failure");
   let deferred = PromiseUtils.defer();
-  barrier.client.addBlocker(BLOCKER_NAME, function() {
+  barrier.client.addBlocker(BLOCKER_NAME, function () {
     return deferred.promise;
   });
 

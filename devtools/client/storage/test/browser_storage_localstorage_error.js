@@ -7,7 +7,7 @@
 // Test that for pages where local/sessionStorage is not available (like about:home),
 // the host still appears in the storage tree and no unhandled exception is thrown.
 
-add_task(async function() {
+add_task(async function () {
   await openTabAndSetupStorage("about:home");
 
   const itemsToOpen = [

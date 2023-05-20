@@ -259,7 +259,7 @@ class Message extends Component {
                   navigator.clipboard.writeText(
                     JSON.stringify(
                       this.props.message,
-                      function(key, value) {
+                      function (key, value) {
                         // The message can hold one or multiple fronts that we need to serialize
                         if (value?.getGrip) {
                           return value.getGrip();

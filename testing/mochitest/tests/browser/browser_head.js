@@ -1,6 +1,6 @@
 var testVar;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   ok(true, "I'm a cleanup function in test file");
   is(
     this.testVar,

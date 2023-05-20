@@ -19,7 +19,7 @@ Services.scriptloader.loadSubScript(
 /**
  * Tests if on clicking the stack frame, UI switches to the Debugger panel.
  */
-add_task(async function() {
+add_task(async function () {
   // Set a higher panel height in order to get full CodeMirror content
   await pushPref("devtools.toolbox.footer.height", 400);
 

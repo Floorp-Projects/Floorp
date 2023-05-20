@@ -20,7 +20,7 @@ function makeChan(uri) {
   return chan;
 }
 
-let channelListener = function(closure) {
+let channelListener = function (closure) {
   this._closure = closure;
   this._start = Date.now();
 };
@@ -163,7 +163,7 @@ add_task(async function test_http2() {
     // This function is handled within the httpserver where setTimeout is
     // available.
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout, no-undef
-    setTimeout(function() {
+    setTimeout(function () {
       resp.write(
         Buffer.from([
           0xfa,
@@ -309,7 +309,7 @@ add_task(async function test_http2() {
     // This function is handled within the httpserver where setTimeout is
     // available.
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout, no-undef
-    setTimeout(function() {
+    setTimeout(function () {
       resp.end(
         Buffer.from([
           0x98,

@@ -50,7 +50,7 @@ function promiseSave() {
 
 let mockHelperAppService;
 
-add_setup(async function() {
+add_setup(async function () {
   // Replace the real helper app dialog with our own.
   mockHelperAppService = ComponentUtils.generateSingletonFactory(
     HelperAppLauncherDialog
@@ -84,19 +84,20 @@ add_setup(async function() {
 add_task(async function simple_navigation() {
   // Tests that simple navigation gives us the right windowContext (that is,
   // the window that we're using).
-  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL }, async function(
-    browser
-  ) {
-    let saveHappened = promiseSave();
-    await BrowserTestUtils.synthesizeMouseAtCenter(
-      "#regular_load",
-      {},
-      browser
-    );
-    let windowContext = await saveHappened;
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_URL },
+    async function (browser) {
+      let saveHappened = promiseSave();
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "#regular_load",
+        {},
+        browser
+      );
+      let windowContext = await saveHappened;
 
-    is(windowContext, browser.ownerGlobal, "got the right windowContext");
-  });
+      is(windowContext, browser.ownerGlobal, "got the right windowContext");
+    }
+  );
 });
 
 // Given a browser pointing to download_page.html, clicks on the link that
@@ -123,67 +124,70 @@ async function testNewTab(browser) {
 add_task(async function target_blank() {
   // Tests that a link with target=_blank opens a new tab and closes it,
   // returning the window that we're using for navigation.
-  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL }, async function(
-    browser
-  ) {
-    await testNewTab(browser);
-  });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_URL },
+    async function (browser) {
+      await testNewTab(browser);
+    }
+  );
 });
 
 add_task(async function target_blank_no_opener() {
   // Tests that a link with target=_blank and no opener opens a new tab
   // and closes it, returning the window that we're using for navigation.
-  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL }, async function(
-    browser
-  ) {
-    let saveHappened = promiseSave();
-    let tabOpened = BrowserTestUtils.waitForEvent(
-      gBrowser.tabContainer,
-      "TabOpen"
-    ).then(event => {
-      return [event.target, BrowserTestUtils.waitForTabClosing(event.target)];
-    });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_URL },
+    async function (browser) {
+      let saveHappened = promiseSave();
+      let tabOpened = BrowserTestUtils.waitForEvent(
+        gBrowser.tabContainer,
+        "TabOpen"
+      ).then(event => {
+        return [event.target, BrowserTestUtils.waitForTabClosing(event.target)];
+      });
 
-    await BrowserTestUtils.synthesizeMouseAtCenter(
-      "#target_blank_no_opener",
-      {},
-      browser
-    );
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "#target_blank_no_opener",
+        {},
+        browser
+      );
 
-    let windowContext = await saveHappened;
-    is(windowContext, browser.ownerGlobal, "got the right windowContext");
-    let [tab, closingPromise] = await tabOpened;
-    await closingPromise;
-    is(tab.linkedBrowser, null, "tab was opened and closed");
-  });
+      let windowContext = await saveHappened;
+      is(windowContext, browser.ownerGlobal, "got the right windowContext");
+      let [tab, closingPromise] = await tabOpened;
+      await closingPromise;
+      is(tab.linkedBrowser, null, "tab was opened and closed");
+    }
+  );
 });
 
 add_task(async function open_in_new_tab_no_opener() {
   // Tests that a link with target=_blank and no opener opens a new tab
   // and closes it, returning the window that we're using for navigation.
-  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL }, async function(
-    browser
-  ) {
-    let saveHappened = promiseSave();
-    let tabOpened = BrowserTestUtils.waitForEvent(
-      gBrowser.tabContainer,
-      "TabOpen"
-    ).then(event => {
-      return [event.target, BrowserTestUtils.waitForTabClosing(event.target)];
-    });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_URL },
+    async function (browser) {
+      let saveHappened = promiseSave();
+      let tabOpened = BrowserTestUtils.waitForEvent(
+        gBrowser.tabContainer,
+        "TabOpen"
+      ).then(event => {
+        return [event.target, BrowserTestUtils.waitForTabClosing(event.target)];
+      });
 
-    await BrowserTestUtils.synthesizeMouseAtCenter(
-      "#open_in_new_tab_no_opener",
-      {},
-      browser
-    );
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "#open_in_new_tab_no_opener",
+        {},
+        browser
+      );
 
-    let windowContext = await saveHappened;
-    is(windowContext, browser.ownerGlobal, "got the right windowContext");
-    let [tab, closingPromise] = await tabOpened;
-    await closingPromise;
-    is(tab.linkedBrowser, null, "tab was opened and closed");
-  });
+      let windowContext = await saveHappened;
+      is(windowContext, browser.ownerGlobal, "got the right windowContext");
+      let [tab, closingPromise] = await tabOpened;
+      await closingPromise;
+      is(tab.linkedBrowser, null, "tab was opened and closed");
+    }
+  );
 });
 
 add_task(async function new_window() {
@@ -191,30 +195,35 @@ add_task(async function new_window() {
   // width and a height in window.open) opens a new window for the load,
   // realizes that we need to close that window and returns the *original*
   // window as the window context.
-  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL }, async function(
-    browser
-  ) {
-    let saveHappened = promiseSave();
-    let windowOpened = BrowserTestUtils.waitForNewWindow();
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_URL },
+    async function (browser) {
+      let saveHappened = promiseSave();
+      let windowOpened = BrowserTestUtils.waitForNewWindow();
 
-    await BrowserTestUtils.synthesizeMouseAtCenter("#new_window", {}, browser);
-    let win = await windowOpened;
-    // Now allow request to complete:
-    fetch(SJS_URL + "?finish");
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "#new_window",
+        {},
+        browser
+      );
+      let win = await windowOpened;
+      // Now allow request to complete:
+      fetch(SJS_URL + "?finish");
 
-    let windowContext = await saveHappened;
-    is(windowContext, browser.ownerGlobal, "got the right windowContext");
+      let windowContext = await saveHappened;
+      is(windowContext, browser.ownerGlobal, "got the right windowContext");
 
-    // The window should close on its own. If not, this test will time out.
-    await BrowserTestUtils.domWindowClosed(win);
-    ok(win.closed, "window was opened and closed");
+      // The window should close on its own. If not, this test will time out.
+      await BrowserTestUtils.domWindowClosed(win);
+      ok(win.closed, "window was opened and closed");
 
-    is(
-      await fetch(SJS_URL + "?reset").then(r => r.text()),
-      "OK",
-      "Test reseted"
-    );
-  });
+      is(
+        await fetch(SJS_URL + "?reset").then(r => r.text()),
+        "OK",
+        "Test reseted"
+      );
+    }
+  );
 });
 
 add_task(async function new_window_no_opener() {
@@ -222,67 +231,69 @@ add_task(async function new_window_no_opener() {
   // width and a height in window.open) opens a new window for the load,
   // realizes that we need to close that window and returns the *original*
   // window as the window context.
-  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL }, async function(
-    browser
-  ) {
-    let saveHappened = promiseSave();
-    let windowOpened = BrowserTestUtils.waitForNewWindow();
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_URL },
+    async function (browser) {
+      let saveHappened = promiseSave();
+      let windowOpened = BrowserTestUtils.waitForNewWindow();
 
-    await BrowserTestUtils.synthesizeMouseAtCenter(
-      "#new_window_no_opener",
-      {},
-      browser
-    );
-    let win = await windowOpened;
-    // Now allow request to complete:
-    fetch(SJS_URL + "?finish");
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        "#new_window_no_opener",
+        {},
+        browser
+      );
+      let win = await windowOpened;
+      // Now allow request to complete:
+      fetch(SJS_URL + "?finish");
 
-    await saveHappened;
+      await saveHappened;
 
-    // The window should close on its own. If not, this test will time out.
-    await BrowserTestUtils.domWindowClosed(win);
-    ok(win.closed, "window was opened and closed");
+      // The window should close on its own. If not, this test will time out.
+      await BrowserTestUtils.domWindowClosed(win);
+      ok(win.closed, "window was opened and closed");
 
-    is(
-      await fetch(SJS_URL + "?reset").then(r => r.text()),
-      "OK",
-      "Test reseted"
-    );
-  });
+      is(
+        await fetch(SJS_URL + "?reset").then(r => r.text()),
+        "OK",
+        "Test reseted"
+      );
+    }
+  );
 });
 
 add_task(async function nested_window_opens() {
   // Tests that the window auto-closing feature works if the download is
   // initiated by a window that, itself, has an opener (see bug 1373109).
-  await BrowserTestUtils.withNewTab({ gBrowser, url: PAGE_URL }, async function(
-    outerBrowser
-  ) {
-    let secondTabPromise = BrowserTestUtils.waitForNewTab(
-      gBrowser,
-      `${PAGE_URL}?newwin`,
-      true
-    );
-    BrowserTestUtils.synthesizeMouseAtCenter(
-      "#open_in_new_tab",
-      {},
-      outerBrowser
-    );
-    let secondTab = await secondTabPromise;
-    let nestedBrowser = secondTab.linkedBrowser;
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: PAGE_URL },
+    async function (outerBrowser) {
+      let secondTabPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        `${PAGE_URL}?newwin`,
+        true
+      );
+      BrowserTestUtils.synthesizeMouseAtCenter(
+        "#open_in_new_tab",
+        {},
+        outerBrowser
+      );
+      let secondTab = await secondTabPromise;
+      let nestedBrowser = secondTab.linkedBrowser;
 
-    await SpecialPowers.spawn(nestedBrowser, [], function() {
-      ok(content.opener, "this window has an opener");
-    });
+      await SpecialPowers.spawn(nestedBrowser, [], function () {
+        ok(content.opener, "this window has an opener");
+      });
 
-    await testNewTab(nestedBrowser);
+      await testNewTab(nestedBrowser);
 
-    isnot(
-      secondTab.linkedBrowser,
-      null,
-      "the page that triggered the download is still open"
-    );
-    BrowserTestUtils.removeTab(secondTab);
-  });
+      isnot(
+        secondTab.linkedBrowser,
+        null,
+        "the page that triggered the download is still open"
+      );
+      BrowserTestUtils.removeTab(secondTab);
+    }
+  );
 });
 
 add_task(async function cleanup() {

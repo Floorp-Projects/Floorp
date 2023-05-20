@@ -16,7 +16,7 @@ add_task(async function add_folder_default_button() {
     url: "http://example.com/",
   });
 
-  await withSidebarTree("bookmarks", async function(tree) {
+  await withSidebarTree("bookmarks", async function (tree) {
     // Select the new bookmark in the sidebar.
     tree.selectItems([newBookmark.guid]);
     Assert.ok(

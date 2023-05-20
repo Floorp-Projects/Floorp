@@ -7,7 +7,7 @@ function test() {
 
   // avoid prompting about phishing
   Services.prefs.setIntPref(phishyUserPassPref, 32);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref(phishyUserPassPref);
   });
 
@@ -19,7 +19,7 @@ const phishyUserPassPref = "network.http.phishy-userpass-length";
 function nextTest() {
   let testCase = tests.shift();
   if (testCase) {
-    testCase(function() {
+    testCase(function () {
       executeSoon(nextTest);
     });
   } else {
@@ -29,7 +29,7 @@ function nextTest() {
 
 var tests = [
   function revert(next) {
-    loadTabInWindow(window, function(tab) {
+    loadTabInWindow(window, function (tab) {
       gURLBar.handleRevert();
       is(
         gURLBar.value,
@@ -43,10 +43,10 @@ var tests = [
   function customize(next) {
     // Need to wait for delayedStartup for the customization part of the test,
     // since that's where BrowserToolboxCustomizeDone is set.
-    BrowserTestUtils.openNewBrowserWindow().then(function(win) {
-      loadTabInWindow(win, function() {
-        openToolbarCustomizationUI(function() {
-          closeToolbarCustomizationUI(function() {
+    BrowserTestUtils.openNewBrowserWindow().then(function (win) {
+      loadTabInWindow(win, function () {
+        openToolbarCustomizationUI(function () {
+          closeToolbarCustomizationUI(function () {
             is(
               win.gURLBar.value,
               "example.com",
@@ -60,7 +60,7 @@ var tests = [
     });
   },
   function pageloaderror(next) {
-    loadTabInWindow(window, function(tab) {
+    loadTabInWindow(window, function (tab) {
       // Load a new URL and then immediately stop it, to simulate a page load
       // error.
       BrowserTestUtils.loadURIString(
@@ -106,8 +106,8 @@ function openToolbarCustomizationUI(aCallback, aBrowserWin) {
 
   aBrowserWin.gNavToolbox.addEventListener(
     "customizationready",
-    function() {
-      executeSoon(function() {
+    function () {
+      executeSoon(function () {
         aCallback(aBrowserWin);
       });
     },
@@ -118,7 +118,7 @@ function openToolbarCustomizationUI(aCallback, aBrowserWin) {
 function closeToolbarCustomizationUI(aCallback, aBrowserWin) {
   aBrowserWin.gNavToolbox.addEventListener(
     "aftercustomization",
-    function() {
+    function () {
       executeSoon(aCallback);
     },
     { once: true }

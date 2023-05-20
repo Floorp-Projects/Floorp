@@ -6,11 +6,11 @@
 
 "use strict";
 
-add_setup(async function() {
+add_setup(async function () {
   const PREF_TRIMURL = "browser.urlbar.trimURLs";
   const PREF_AUTOFILL = "browser.urlbar.autoFill";
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref(PREF_TRIMURL);
     Services.prefs.clearUserPref(PREF_AUTOFILL);
     await PlacesUtils.history.clear();

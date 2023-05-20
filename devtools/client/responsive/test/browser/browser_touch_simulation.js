@@ -12,7 +12,7 @@ const PREF_DOM_META_VIEWPORT_ENABLED = "dom.meta-viewport.enabled";
 // is allowed.
 const DELAY_MIN = 250;
 
-addRDMTask(TEST_URL, async function({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   reloadOnTouchChange(true);
 
   await waitBootstrap(ui);
@@ -28,7 +28,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
 });
 
 async function testWithNoTouch(ui) {
-  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function () {
     const div = content.document.querySelector("div");
     let x = 0,
       y = 0;
@@ -119,7 +119,7 @@ async function testWithNoTouch(ui) {
 }
 
 async function testWithTouch(ui) {
-  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function () {
     const div = content.document.querySelector("div");
     let x = 0,
       y = 0;
@@ -213,7 +213,7 @@ async function testWithTouch(ui) {
   // "changedTouches" field to be undefined when using deprecated TouchEvent APIs.
   // See Bug 1549220 and Bug 1588438 for more information on this issue.
   info("Test that changed touches captured on the content window are defined.");
-  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+  await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function () {
     const div = content.document.querySelector("div");
 
     content.addEventListener(
@@ -236,7 +236,7 @@ async function testWithMetaViewportEnabled(ui) {
   await SpecialPowers.spawn(
     ui.getViewportBrowser(),
     [{ delay_min: DELAY_MIN }],
-    async function({ delay_min }) {
+    async function ({ delay_min }) {
       // A helper for testing the delay between touchend and click events.
       async function testDelay(mvc, el) {
         const touchendPromise = ContentTaskUtils.waitForEvent(el, "touchend");
@@ -287,7 +287,7 @@ async function testWithMetaViewportDisabled(ui) {
   await SpecialPowers.spawn(
     ui.getViewportBrowser(),
     [{ delay_min: DELAY_MIN }],
-    async function({ delay_min }) {
+    async function ({ delay_min }) {
       const meta = content.document.querySelector("meta[name=viewport]");
       const div = content.document.querySelector("div");
 

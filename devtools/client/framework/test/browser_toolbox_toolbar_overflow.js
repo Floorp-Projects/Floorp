@@ -7,7 +7,7 @@
 // toolbar starts to present an overflow.
 const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab("about:blank");
 
   info("Open devtools on the Inspector in a bottom dock");

@@ -92,7 +92,7 @@ async function withNewSearchEngine(taskFn) {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SearchTestUtils.installSearchExtension(
     {
       name: "MozSearch",
@@ -136,7 +136,7 @@ add_setup(async function() {
   UrlbarTestUtils.init(this);
 
   // Make sure to restore the engine once we're done.
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
     await PlacesUtils.history.clear();
@@ -372,7 +372,7 @@ add_task(async function test_oneOff_enterSelection() {
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
 
-  await withNewSearchEngine(async function() {
+  await withNewSearchEngine(async function () {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.maxHistoricalSearchSuggestions", 1]],
     });
@@ -477,7 +477,7 @@ add_task(async function test_suggestion_click() {
     "SEARCH_COUNTS"
   );
 
-  await withNewSearchEngine(async function(engine) {
+  await withNewSearchEngine(async function (engine) {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "about:blank"
@@ -545,7 +545,7 @@ add_task(async function test_suggestion_arrowEnterSelection() {
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
 
-  await withNewSearchEngine(async function() {
+  await withNewSearchEngine(async function () {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "about:blank"
@@ -577,7 +577,7 @@ add_task(async function test_suggestion_tabEnterSelection() {
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
 
-  await withNewSearchEngine(async function() {
+  await withNewSearchEngine(async function () {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "about:blank"
@@ -609,7 +609,7 @@ add_task(async function test_suggestion_enterSelection() {
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
 
-  await withNewSearchEngine(async function() {
+  await withNewSearchEngine(async function () {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "about:blank"
@@ -646,7 +646,7 @@ add_task(async function test_searchmode_suggestion_click() {
     "SEARCH_COUNTS"
   );
 
-  await withNewSearchEngine(async function(engine) {
+  await withNewSearchEngine(async function (engine) {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "about:blank"
@@ -718,7 +718,7 @@ add_task(async function test_searchmode_suggestion_arrowEnterSelection() {
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
 
-  await withNewSearchEngine(async function(engine) {
+  await withNewSearchEngine(async function (engine) {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "about:blank"
@@ -752,7 +752,7 @@ add_task(async function test_suggestion_tabEnterSelection() {
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
 
-  await withNewSearchEngine(async function(engine) {
+  await withNewSearchEngine(async function (engine) {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "about:blank"
@@ -787,7 +787,7 @@ add_task(async function test_suggestion_enterSelection() {
     "FX_URLBAR_SELECTED_RESULT_METHOD"
   );
 
-  await withNewSearchEngine(async function(engine) {
+  await withNewSearchEngine(async function (engine) {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "about:blank"
@@ -908,7 +908,7 @@ add_task(async function test_formHistory_arrowEnterSelection() {
     set: [["browser.urlbar.maxHistoricalSearchSuggestions", 1]],
   });
 
-  await withNewSearchEngine(async function() {
+  await withNewSearchEngine(async function () {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "about:blank"
@@ -950,7 +950,7 @@ add_task(async function test_formHistory_tabEnterSelection() {
     set: [["browser.urlbar.maxHistoricalSearchSuggestions", 1]],
   });
 
-  await withNewSearchEngine(async function() {
+  await withNewSearchEngine(async function () {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "about:blank"
@@ -992,7 +992,7 @@ add_task(async function test_formHistory_enterSelection() {
     set: [["browser.urlbar.maxHistoricalSearchSuggestions", 1]],
   });
 
-  await withNewSearchEngine(async function() {
+  await withNewSearchEngine(async function () {
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       "about:blank"

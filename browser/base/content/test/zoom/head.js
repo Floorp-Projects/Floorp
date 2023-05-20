@@ -7,7 +7,7 @@ let gContentPrefs = Cc["@mozilla.org/content-pref/service;1"].getService(
 
 let gLoadContext = Cu.createLoadContext();
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await new Promise(resolve => {
     gContentPrefs.removeByName(window.FullZoom.name, gLoadContext, {
       handleResult() {},
@@ -131,7 +131,7 @@ var FullZoomHelper = {
         }
       }, true);
 
-      this.waitForLocationChange().then(function() {
+      this.waitForLocationChange().then(function () {
         didZoom = true;
         if (didLoad) {
           resolve();
@@ -168,7 +168,7 @@ var FullZoomHelper = {
         gBrowser.goForward();
       }
 
-      this.waitForLocationChange().then(function() {
+      this.waitForLocationChange().then(function () {
         didZoom = true;
         if (didPs) {
           resolve();
@@ -178,7 +178,7 @@ var FullZoomHelper = {
   },
 
   failAndContinue: function failAndContinue(func) {
-    return function(err) {
+    return function (err) {
       console.error(err);
       ok(false, err);
       func();

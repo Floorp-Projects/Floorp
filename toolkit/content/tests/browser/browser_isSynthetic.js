@@ -29,7 +29,7 @@ function waitForPageShow(browser) {
   return BrowserTestUtils.waitForContentEvent(browser, "pageshow", true);
 }
 
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
   await BrowserTestUtils.browserLoaded(browser);

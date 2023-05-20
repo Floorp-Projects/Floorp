@@ -16,7 +16,7 @@ const {
 // Log a stream of console messages, 1 per rAF.  Then record the average
 // time per rAF.  The idea is that the console being slow can slow down
 // content (i.e. Bug 1237368).
-module.exports = async function() {
+module.exports = async function () {
   let TOTAL_MESSAGES = 100;
   let tab = await testSetup(SIMPLE_URL);
   let messageManager = tab.linkedBrowser.messageManager;

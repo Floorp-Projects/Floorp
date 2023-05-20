@@ -239,7 +239,7 @@ var bookmarksObserver = {
   },
 
   async assertItemChanged(views, guid, newValue) {
-    let validator = function(aElementOrTreeIndex) {
+    let validator = function (aElementOrTreeIndex) {
       if (typeof aElementOrTreeIndex == "number") {
         let sidebar = document.getElementById("sidebar");
         let tree = sidebar.contentDocument.getElementById("bookmarks-view");

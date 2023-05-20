@@ -16,7 +16,7 @@ const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><p>test case-sensit
     FooBar = true;
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;

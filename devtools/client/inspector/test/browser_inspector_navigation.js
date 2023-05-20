@@ -19,7 +19,7 @@ const TEST_URL_3 =
 const TEST_URL_4 =
   "data:text/html;charset=utf-8," + encodeURIComponent("<h1>bar</h1>");
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL_1);
 
   await selectNode("#i1", inspector);
@@ -53,7 +53,7 @@ add_task(async function() {
   await selectNode("#i1", inspector);
 });
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL_3);
 
   await selectNode("img", inspector);

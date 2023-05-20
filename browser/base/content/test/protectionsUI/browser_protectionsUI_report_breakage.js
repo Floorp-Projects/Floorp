@@ -28,7 +28,7 @@ let { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
 
-add_setup(async function() {
+add_setup(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
 
   registerCleanupFunction(() => {
@@ -68,7 +68,7 @@ add_setup(async function() {
 add_task(async function testReportBreakageCancel() {
   Services.prefs.setBoolPref(TP_PREF, true);
 
-  await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
+  await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function () {
     await openProtectionsPanel();
     await TestUtils.waitForCondition(() =>
       gProtectionsHandler._protectionsPopup.hasAttribute("blocking")
@@ -159,7 +159,7 @@ add_task(async function testReportBreakageSiteException() {
 });
 
 add_task(async function testNoTracking() {
-  await BrowserTestUtils.withNewTab(BENIGN_PAGE, async function() {
+  await BrowserTestUtils.withNewTab(BENIGN_PAGE, async function () {
     await openProtectionsPanel();
 
     let siteNotWorkingButton = document.getElementById(
@@ -176,7 +176,7 @@ add_task(async function testReportBreakageError() {
   Services.prefs.setBoolPref(TP_PREF, true);
   // Make sure that we correctly strip the query.
   let url = TRACKING_PAGE + "?a=b&1=abc&unicode=🦊";
-  await BrowserTestUtils.withNewTab(url, async function() {
+  await BrowserTestUtils.withNewTab(url, async function () {
     await openAndTestReportBreakage(TRACKING_PAGE, "trackingprotection", true);
   });
 
@@ -187,7 +187,7 @@ add_task(async function testTP() {
   Services.prefs.setBoolPref(TP_PREF, true);
   // Make sure that we correctly strip the query.
   let url = TRACKING_PAGE + "?a=b&1=abc&unicode=🦊";
-  await BrowserTestUtils.withNewTab(url, async function() {
+  await BrowserTestUtils.withNewTab(url, async function () {
     await openAndTestReportBreakage(TRACKING_PAGE, "trackingprotection");
   });
 
@@ -201,7 +201,7 @@ add_task(async function testCR() {
   );
   // Make sure that we correctly strip the query.
   let url = COOKIE_PAGE + "?a=b&1=abc&unicode=🦊";
-  await BrowserTestUtils.withNewTab(url, async function() {
+  await BrowserTestUtils.withNewTab(url, async function () {
     await openAndTestReportBreakage(COOKIE_PAGE, "cookierestrictions");
   });
 
@@ -213,9 +213,9 @@ add_task(async function testFP() {
   Services.prefs.setBoolPref(FP_PREF, true);
   // Make sure that we correctly strip the query.
   let url = TRACKING_PAGE + "?a=b&1=abc&unicode=🦊";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let promise = waitForContentBlockingEvent();
-    await SpecialPowers.spawn(browser, [], function() {
+    await SpecialPowers.spawn(browser, [], function () {
       content.postMessage("fingerprinting", "*");
     });
     await promise;
@@ -232,9 +232,9 @@ add_task(async function testCM() {
   Services.prefs.setBoolPref(CM_PREF, true);
   // Make sure that we correctly strip the query.
   let url = TRACKING_PAGE + "?a=b&1=abc&unicode=🦊";
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     let promise = waitForContentBlockingEvent();
-    await SpecialPowers.spawn(browser, [], function() {
+    await SpecialPowers.spawn(browser, [], function () {
       content.postMessage("cryptomining", "*");
     });
     await promise;

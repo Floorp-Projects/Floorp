@@ -19,7 +19,7 @@ async function done() {
   ChromeUtils.unregisterWindowActor("ForceRefresh");
   let tab = gBrowser.selectedTab;
   let tabBrowser = gBrowser.getBrowserForTab(tab);
-  await ContentTask.spawn(tabBrowser, null, async function() {
+  await ContentTask.spawn(tabBrowser, null, async function () {
     const swr = await content.navigator.serviceWorker.getRegistration();
     await swr.unregister();
   });
@@ -41,7 +41,7 @@ function test() {
         ["browser.cache.memory.enable", false],
       ],
     },
-    async function() {
+    async function () {
       // create ForceRefreseh window actor
       const { ForceRefreshParent } = ChromeUtils.importESModule(
         getRootDirectory(gTestPath) + "ForceRefreshParent.sys.mjs"

@@ -76,7 +76,7 @@ export async function test_hint_preload_internal(
       url: requestUrl,
       waitForLoad: true,
     },
-    async function() {}
+    async function () {}
   );
 
   let gotRequestCount = await fetch(

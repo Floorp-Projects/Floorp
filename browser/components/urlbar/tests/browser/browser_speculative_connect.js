@@ -17,7 +17,7 @@ const serverInfo = {
   port: 20709, // Must be identical to what is in searchSuggestionEngine2.xml
 };
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.autoFill", true],
@@ -46,7 +46,7 @@ add_setup(async function() {
     url: getRootDirectory(gTestPath) + TEST_ENGINE_BASENAME,
     setAsDefault: true,
   });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 });

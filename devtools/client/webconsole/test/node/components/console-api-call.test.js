@@ -393,43 +393,25 @@ describe("ConsoleAPICall component:", () => {
       expect(frameLinks.length).toBe(3);
 
       expect(
-        frameLinks
-          .eq(0)
-          .find(".frame-link-function-display-name")
-          .text()
+        frameLinks.eq(0).find(".frame-link-function-display-name").text()
       ).toBe("testStacktraceFiltering");
-      expect(
-        frameLinks
-          .eq(0)
-          .find(".frame-link-filename")
-          .text()
-      ).toBe(filepath);
+      expect(frameLinks.eq(0).find(".frame-link-filename").text()).toBe(
+        filepath
+      );
 
       expect(
-        frameLinks
-          .eq(1)
-          .find(".frame-link-function-display-name")
-          .text()
+        frameLinks.eq(1).find(".frame-link-function-display-name").text()
       ).toBe("foo");
-      expect(
-        frameLinks
-          .eq(1)
-          .find(".frame-link-filename")
-          .text()
-      ).toBe(filepath);
+      expect(frameLinks.eq(1).find(".frame-link-filename").text()).toBe(
+        filepath
+      );
 
       expect(
-        frameLinks
-          .eq(2)
-          .find(".frame-link-function-display-name")
-          .text()
+        frameLinks.eq(2).find(".frame-link-function-display-name").text()
       ).toBe("triggerPacket");
-      expect(
-        frameLinks
-          .eq(2)
-          .find(".frame-link-filename")
-          .text()
-      ).toBe(filepath);
+      expect(frameLinks.eq(2).find(".frame-link-filename").text()).toBe(
+        filepath
+      );
 
       // it should not be collapsible.
       expect(wrapper.find(`.theme-twisty`).length).toBe(0);
@@ -459,43 +441,25 @@ describe("ConsoleAPICall component:", () => {
       expect(frameLinks.length).toBe(3);
 
       expect(
-        frameLinks
-          .eq(0)
-          .find(".frame-link-function-display-name")
-          .text()
+        frameLinks.eq(0).find(".frame-link-function-display-name").text()
       ).toBe("testStacktraceWithLog");
-      expect(
-        frameLinks
-          .eq(0)
-          .find(".frame-link-filename")
-          .text()
-      ).toBe(filepath);
+      expect(frameLinks.eq(0).find(".frame-link-filename").text()).toBe(
+        filepath
+      );
 
       expect(
-        frameLinks
-          .eq(1)
-          .find(".frame-link-function-display-name")
-          .text()
+        frameLinks.eq(1).find(".frame-link-function-display-name").text()
       ).toBe("foo");
-      expect(
-        frameLinks
-          .eq(1)
-          .find(".frame-link-filename")
-          .text()
-      ).toBe(filepath);
+      expect(frameLinks.eq(1).find(".frame-link-filename").text()).toBe(
+        filepath
+      );
 
       expect(
-        frameLinks
-          .eq(2)
-          .find(".frame-link-function-display-name")
-          .text()
+        frameLinks.eq(2).find(".frame-link-function-display-name").text()
       ).toBe("triggerPacket");
-      expect(
-        frameLinks
-          .eq(2)
-          .find(".frame-link-filename")
-          .text()
-      ).toBe(filepath);
+      expect(frameLinks.eq(2).find(".frame-link-filename").text()).toBe(
+        filepath
+      );
 
       // it should not be collapsible.
       expect(wrapper.find(`.theme-twisty`).length).toBe(0);

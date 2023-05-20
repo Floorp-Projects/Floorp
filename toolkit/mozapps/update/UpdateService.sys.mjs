@@ -515,8 +515,8 @@ function waitForOtherInstances() {
   let iterations = 0;
   const maxIterations = Math.ceil(timeout / interval);
 
-  gOtherInstancePollPromise = new Promise(function(resolve, reject) {
-    let poll = function() {
+  gOtherInstancePollPromise = new Promise(function (resolve, reject) {
+    let poll = function () {
       iterations++;
       if (!isOtherInstanceRunning()) {
         LOG("waitForOtherInstances - no other instances found, exiting");
@@ -3621,7 +3621,7 @@ UpdateService.prototype = {
     var vc = Services.vc;
     let lastCheckCode = AUSTLMY.CHK_NO_COMPAT_UPDATE_FOUND;
 
-    updates.forEach(function(aUpdate) {
+    updates.forEach(function (aUpdate) {
       // Ignore updates for older versions of the application and updates for
       // the same version of the application with the same build ID.
       if (updateIsAtLeastAsOldAsCurrentVersion(aUpdate)) {

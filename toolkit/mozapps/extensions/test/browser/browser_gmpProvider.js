@@ -58,7 +58,7 @@ add_task(async function initializeState() {
   gPrefs.setBoolPref(GMPPrefs.KEY_LOGGING_DUMP, true);
   gPrefs.setIntPref(GMPPrefs.KEY_LOGGING_LEVEL, 0);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     for (let addon of gMockAddons) {
       gPrefs.clearUserPref(getKey(GMPPrefs.KEY_PLUGIN_ENABLED, addon.id));
       gPrefs.clearUserPref(getKey(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, addon.id));

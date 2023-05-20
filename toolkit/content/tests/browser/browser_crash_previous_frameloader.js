@@ -58,7 +58,7 @@ add_task(async function test_crash_in_previous_frameloader() {
       gBrowser,
       url: "http://example.com",
     },
-    async function(browser) {
+    async function (browser) {
       // First, sanity check...
       Assert.ok(
         browser.isRemoteBrowser,
@@ -83,12 +83,12 @@ add_task(async function test_crash_in_previous_frameloader() {
 
       // The name of the game is to cause a crash in a remote browser,
       // and then immediately swap out the browser for a non-remote one.
-      await SpecialPowers.spawn(browser, [], function() {
+      await SpecialPowers.spawn(browser, [], function () {
         const { ctypes } = ChromeUtils.importESModule(
           "resource://gre/modules/ctypes.sys.mjs"
         );
 
-        let dies = function() {
+        let dies = function () {
           ChromeUtils.privateNoteIntentionalCrash();
           let zero = new ctypes.intptr_t(8);
           let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
@@ -98,7 +98,7 @@ add_task(async function test_crash_in_previous_frameloader() {
         // When the parent flips the remoteness of the browser, the
         // page should receive the pagehide event, which we'll then
         // use to crash the frameloader.
-        docShell.chromeEventHandler.addEventListener("pagehide", function() {
+        docShell.chromeEventHandler.addEventListener("pagehide", function () {
           dump("\nEt tu, Brute?\n");
           dies();
         });

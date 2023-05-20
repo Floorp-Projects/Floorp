@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
 // error.
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
-add_setup(async function() {
+add_setup(async function () {
   await pushPrefs(
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"],
@@ -34,13 +34,13 @@ async function startTests(testFun, name) {
           gBrowser,
           url,
         },
-        async function(browser) {
+        async function (browser) {
           let promiseFsState = waitForFullscreenState(document, true);
           // Trigger click event in inner most iframe
           SpecialPowers.spawn(
             browser.browsingContext.children[0].children[0],
             [],
-            function() {
+            function () {
               content.setTimeout(() => {
                 content.document.getElementById("div").click();
               }, 0);
@@ -93,7 +93,7 @@ function MutateAndNavigateFromRemoteDocument(
   return SpecialPowers.spawn(
     aBrowsingContext,
     [aElementId, aURL],
-    async function(id, url) {
+    async function (id, url) {
       let element = content.document.getElementById(id);
       element.requestFullscreen();
       content.document.body.appendChild(element);

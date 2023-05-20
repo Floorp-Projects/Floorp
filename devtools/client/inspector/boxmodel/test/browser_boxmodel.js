@@ -149,7 +149,7 @@ var res2 = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const style =
     "div { position: absolute; top: 42px; left: 42px; " +
     "height: 100.111px; width: 100px; border: 10px solid black; " +

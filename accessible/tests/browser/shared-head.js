@@ -426,7 +426,7 @@ function snippetToURL(doc, options = {}) {
 }
 
 function accessibleTask(doc, task, options = {}) {
-  return async function() {
+  return async function () {
     gIsRemoteIframe = options.remoteIframe;
     gIsIframe = options.iframe || gIsRemoteIframe;
     let url;
@@ -484,7 +484,7 @@ function accessibleTask(doc, task, options = {}) {
               );
             },
       },
-      async function(browser) {
+      async function (browser) {
         registerCleanupFunction(() => {
           if (browser) {
             let tab = gBrowser.getTabForBrowser(browser);
@@ -766,7 +766,7 @@ async function contentSpawnMutation(browser, waitFor, func, args = []) {
   unexpectedListener.stop();
 
   // Go back to normal refresh driver ticks.
-  await invokeContentTask(browser, [], function() {
+  await invokeContentTask(browser, [], function () {
     content.windowUtils.restoreNormalRefresh();
   });
 
@@ -873,7 +873,7 @@ function untilCacheIs(retrievalFunc, expected, message) {
 
 async function waitForContentPaint(browser) {
   await SpecialPowers.spawn(browser, [], () => {
-    return new Promise(function(r) {
+    return new Promise(function (r) {
       content.requestAnimationFrame(() => content.setTimeout(r));
     });
   });

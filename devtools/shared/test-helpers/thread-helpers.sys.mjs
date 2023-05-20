@@ -51,7 +51,7 @@ export function traceAllJSCalls({ prefix = "", pause } = {}) {
   debuggerSandbox.Services = Services;
   const f = Cu.evalInSandbox(
     "(" +
-      function(pauseInMs, prefixString) {
+      function (pauseInMs, prefixString) {
         const dbg = new Debugger();
         // Add absolutely all the globals...
         dbg.addAllGlobalsAsDebuggees();
@@ -116,7 +116,7 @@ export function traceAllJSCalls({ prefix = "", pause } = {}) {
               pauseInMs,
               Ci.nsITimer.TYPE_ONE_SHOT
             );
-            Services.tm.spinEventLoopUntil("debugger-slow-motion", function() {
+            Services.tm.spinEventLoopUntil("debugger-slow-motion", function () {
               return !freeze;
             });
           }

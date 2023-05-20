@@ -14,7 +14,7 @@ add_task(async function test_setup() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   await promisePocketEnabled();
 
   // check context menu exists

@@ -313,7 +313,7 @@ const versions = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   let cert = getTestServerCertificate();
   ok(!!cert, "Got self-signed cert");
   for (let v of versions) {
@@ -338,6 +338,6 @@ add_task(async function() {
   }
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   prefs.clearUserPref("security.tls.version.max");
 });

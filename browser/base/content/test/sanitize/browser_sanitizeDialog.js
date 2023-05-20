@@ -46,10 +46,10 @@ async function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   requestLongerTimeout(3);
   await blankSlate();
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await blankSlate();
     await PlacesTestUtils.promiseAsyncUpdates();
   });
@@ -60,7 +60,7 @@ add_setup(async function() {
  */
 add_task(async function default_state() {
   let dh = new DialogHelper();
-  dh.onload = function() {
+  dh.onload = function () {
     // Select "Last Hour"
     this.selectDuration(Sanitizer.TIMESPAN_HOUR);
     this.acceptDialog();
@@ -85,12 +85,12 @@ add_task(async function test_cancel() {
   await PlacesTestUtils.addVisits(places);
 
   let dh = new DialogHelper();
-  dh.onload = function() {
+  dh.onload = function () {
     this.selectDuration(Sanitizer.TIMESPAN_HOUR);
     this.checkPrefCheckbox("history", false);
     this.cancelDialog();
   };
-  dh.onunload = async function() {
+  dh.onunload = async function () {
     await promiseHistoryClearedState(uris, false);
     await blankSlate();
     await promiseHistoryClearedState(uris, true);
@@ -136,12 +136,12 @@ add_task(async function test_history_downloads_checked() {
   await PlacesTestUtils.addVisits(places);
 
   let dh = new DialogHelper();
-  dh.onload = function() {
+  dh.onload = function () {
     this.selectDuration(Sanitizer.TIMESPAN_HOUR);
     this.checkPrefCheckbox("history", true);
     this.acceptDialog();
   };
-  dh.onunload = async function() {
+  dh.onunload = async function () {
     intPrefIs(
       "sanitize.timeSpan",
       Sanitizer.TIMESPAN_HOUR,
@@ -210,7 +210,7 @@ add_task(async function test_history_downloads_unchecked() {
 
   await PlacesTestUtils.addVisits(places);
   let dh = new DialogHelper();
-  dh.onload = function() {
+  dh.onload = function () {
     is(
       this.isWarningPanelVisible(),
       false,
@@ -224,7 +224,7 @@ add_task(async function test_history_downloads_unchecked() {
     this.checkPrefCheckbox("formdata", true);
     this.acceptDialog();
   };
-  dh.onunload = async function() {
+  dh.onunload = async function () {
     intPrefIs(
       "sanitize.timeSpan",
       Sanitizer.TIMESPAN_HOUR,
@@ -272,7 +272,7 @@ add_task(async function test_everything() {
   let pURI;
   // within past hour, within past two hours, within past four hours and
   // outside past four hours
-  [10, 70, 130, 250].forEach(function(aValue) {
+  [10, 70, 130, 250].forEach(function (aValue) {
     pURI = makeURI("https://" + aValue + "-minutes-ago.com/");
     places.push({ uri: pURI, visitDate: visitTimeForMinutesAgo(aValue) });
     uris.push(pURI);
@@ -282,7 +282,7 @@ add_task(async function test_everything() {
 
   await PlacesTestUtils.addVisits(places);
   let dh = new DialogHelper();
-  dh.onload = function() {
+  dh.onload = function () {
     is(
       this.isWarningPanelVisible(),
       false,
@@ -293,7 +293,7 @@ add_task(async function test_everything() {
     this.checkPrefCheckbox("history", true);
     this.acceptDialog();
   };
-  dh.onunload = async function() {
+  dh.onunload = async function () {
     await promiseSanitized;
     intPrefIs(
       "sanitize.timeSpan",
@@ -319,7 +319,7 @@ add_task(async function test_everything_warning() {
   let pURI;
   // within past hour, within past two hours, within past four hours and
   // outside past four hours
-  [10, 70, 130, 250].forEach(function(aValue) {
+  [10, 70, 130, 250].forEach(function (aValue) {
     pURI = makeURI("https://" + aValue + "-minutes-ago.com/");
     places.push({ uri: pURI, visitDate: visitTimeForMinutesAgo(aValue) });
     uris.push(pURI);
@@ -329,7 +329,7 @@ add_task(async function test_everything_warning() {
 
   await PlacesTestUtils.addVisits(places);
   let dh = new DialogHelper();
-  dh.onload = function() {
+  dh.onload = function () {
     is(
       this.isWarningPanelVisible(),
       true,
@@ -340,7 +340,7 @@ add_task(async function test_everything_warning() {
     this.checkPrefCheckbox("history", true);
     this.acceptDialog();
   };
-  dh.onunload = async function() {
+  dh.onunload = async function () {
     intPrefIs(
       "sanitize.timeSpan",
       Sanitizer.TIMESPAN_EVERYTHING,
@@ -376,7 +376,7 @@ add_task(async function test_cannot_clear_history() {
   let uris = [pURI];
 
   let dh = new DialogHelper();
-  dh.onload = function() {
+  dh.onload = function () {
     // Check that the relevant checkboxes are enabled
     var cb = this.win.document.querySelectorAll(
       "checkbox[preference='privacy.cpd.formdata']"
@@ -397,7 +397,7 @@ add_task(async function test_cannot_clear_history() {
     this.checkAllCheckboxes();
     this.acceptDialog();
   };
-  dh.onunload = async function() {
+  dh.onunload = async function () {
     await promiseSanitized;
 
     await promiseHistoryClearedState(uris, true);
@@ -412,7 +412,7 @@ add_task(async function test_cannot_clear_history() {
 add_task(async function test_no_formdata_history_to_clear() {
   let promiseSanitized = promiseSanitizationComplete();
   let dh = new DialogHelper();
-  dh.onload = function() {
+  dh.onload = function () {
     boolPrefIs(
       "cpd.history",
       true,
@@ -448,7 +448,7 @@ add_task(async function test_form_entries() {
   let promiseSanitized = promiseSanitizationComplete();
 
   let dh = new DialogHelper();
-  dh.onload = function() {
+  dh.onload = function () {
     boolPrefIs(
       "cpd.formdata",
       true,
@@ -469,7 +469,7 @@ add_task(async function test_form_entries() {
 
     this.acceptDialog();
   };
-  dh.onunload = async function() {
+  dh.onunload = async function () {
     await promiseSanitized;
     let exists = await formNameExists(formEntry);
     ok(!exists, "form entry " + formEntry + " should no longer exist");
@@ -492,14 +492,14 @@ add_task(async function test_offline_apps_permissions() {
 
   // Open the dialog
   let dh = new DialogHelper();
-  dh.onload = function() {
+  dh.onload = function () {
     this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
     // Clear only offlineApps
     this.uncheckAllCheckboxes();
     this.checkPrefCheckbox("siteSettings", true);
     this.acceptDialog();
   };
-  dh.onunload = async function() {
+  dh.onunload = async function () {
     await promiseSanitized;
 
     // Check all has been deleted (privileges, data, cache)

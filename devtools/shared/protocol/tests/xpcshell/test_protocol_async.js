@@ -89,7 +89,7 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
 }
 protocol.registerFront(RootFront);
 
-add_task(async function() {
+add_task(async function () {
   DevToolsServer.createRootActor = conn => new RootActor(conn);
   DevToolsServer.init();
 

@@ -52,7 +52,7 @@ const day = 864e5;
  * @param {Function} get - Function that will be used as a getter.
  */
 function defineCachedGetter(obj, prop, get) {
-  defineGetter(obj, prop, function() {
+  defineGetter(obj, prop, function () {
     if (!this._[prop]) {
       this._[prop] = get.call(this);
     }
@@ -780,24 +780,24 @@ class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
       years: date.getFullYear() - now.getFullYear(),
     };
 
-    defineCachedGetter(diff, "months", function() {
+    defineCachedGetter(diff, "months", function () {
       return this.years * 12 + date.getMonth() - now.getMonth();
     });
-    defineCachedGetter(diff, "weeks", function() {
+    defineCachedGetter(diff, "weeks", function () {
       return Math.trunc(this.days / 7);
     });
-    defineCachedGetter(diff, "days", function() {
+    defineCachedGetter(diff, "days", function () {
       return Math.trunc((startOf(date, "day") - startOf(now, "day")) / day);
     });
-    defineCachedGetter(diff, "hours", function() {
+    defineCachedGetter(diff, "hours", function () {
       return Math.trunc((startOf(date, "hour") - startOf(now, "hour")) / hour);
     });
-    defineCachedGetter(diff, "minutes", function() {
+    defineCachedGetter(diff, "minutes", function () {
       return Math.trunc(
         (startOf(date, "minute") - startOf(now, "minute")) / minute
       );
     });
-    defineCachedGetter(diff, "seconds", function() {
+    defineCachedGetter(diff, "seconds", function () {
       return Math.trunc(
         (startOf(date, "second") - startOf(now, "second")) / second
       );
@@ -808,7 +808,7 @@ class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
     };
 
     for (let prop of Object.keys(diff)) {
-      defineGetter(absDiff, prop, function() {
+      defineGetter(absDiff, prop, function () {
         return Math.abs(diff[prop]);
       });
     }

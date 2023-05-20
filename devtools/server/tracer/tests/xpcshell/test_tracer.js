@@ -10,7 +10,7 @@ const {
   stopTracing,
 } = ChromeUtils.import("resource://devtools/server/tracer/tracer.jsm");
 
-add_task(async function() {
+add_task(async function () {
   // Because this test uses evalInSandbox, we need to tweak the following prefs
   Services.prefs.setBoolPref(
     "security.allow_parent_unrestricted_js_loads",
@@ -91,7 +91,7 @@ add_task(async function testTracingJSMGlobal() {
   const listenerSandbox = Cu.Sandbox(systemPrincipal);
   Cu.evalInSandbox(
     "new " +
-      function() {
+      function () {
         globalThis.toggles = [];
         globalThis.frames = [];
         globalThis.listener = {

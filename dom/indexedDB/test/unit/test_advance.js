@@ -35,15 +35,12 @@ function* testSteps() {
   }
 
   function getIndex() {
-    return db
-      .transaction("")
-      .objectStore("")
-      .index("");
+    return db.transaction("").objectStore("").index("");
   }
 
   let count = 0;
 
-  getObjectStore().openCursor().onsuccess = function(event) {
+  getObjectStore().openCursor().onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       count++;
@@ -58,7 +55,7 @@ function* testSteps() {
 
   count = 0;
 
-  getObjectStore().openCursor().onsuccess = function(event) {
+  getObjectStore().openCursor().onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.primaryKey, count, "Got correct object");
@@ -79,7 +76,7 @@ function* testSteps() {
 
   count = 0;
 
-  getIndex().openCursor().onsuccess = function(event) {
+  getIndex().openCursor().onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.primaryKey, count, "Got correct object");
@@ -100,7 +97,7 @@ function* testSteps() {
 
   count = 0;
 
-  getIndex().openKeyCursor().onsuccess = function(event) {
+  getIndex().openKeyCursor().onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.primaryKey, count, "Got correct object");
@@ -121,7 +118,7 @@ function* testSteps() {
 
   count = 0;
 
-  getObjectStore().openCursor().onsuccess = function(event) {
+  getObjectStore().openCursor().onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.primaryKey, count, "Got correct object");
@@ -141,7 +138,7 @@ function* testSteps() {
 
   count = dataCount - 1;
 
-  getObjectStore().openCursor(null, "prev").onsuccess = function(event) {
+  getObjectStore().openCursor(null, "prev").onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.primaryKey, count, "Got correct object");
@@ -162,7 +159,7 @@ function* testSteps() {
 
   count = dataCount - 1;
 
-  getObjectStore().openCursor(null, "prev").onsuccess = function(event) {
+  getObjectStore().openCursor(null, "prev").onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
       is(cursor.primaryKey, count, "Got correct object");

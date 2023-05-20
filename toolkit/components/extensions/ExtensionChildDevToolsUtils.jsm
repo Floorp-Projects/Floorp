@@ -92,7 +92,7 @@ var ExtensionChildDevToolsUtils = {
    */
   initThemeChangeObserver(themeName, context) {
     if (!themeChangeObserver) {
-      themeChangeObserver = new ThemeChangeObserver(themeName, function() {
+      themeChangeObserver = new ThemeChangeObserver(themeName, function () {
         themeChangeObserver = null;
       });
     }

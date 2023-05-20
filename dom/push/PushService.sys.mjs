@@ -23,7 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.sys.mjs",
 });
 
-const CONNECTION_PROTOCOLS = (function() {
+const CONNECTION_PROTOCOLS = (function () {
   if ("android" != AppConstants.MOZ_WIDGET_TOOLKIT) {
     ({ PushServiceWebSocket } = ChromeUtils.importESModule(
       "resource://gre/modules/PushServiceWebSocket.sys.mjs"

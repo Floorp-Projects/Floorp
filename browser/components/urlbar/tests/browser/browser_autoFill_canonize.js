@@ -28,8 +28,8 @@ async function test_autocomplete(data) {
   gURLBar.blur();
 }
 
-add_task(async function() {
-  registerCleanupFunction(async function() {
+add_task(async function () {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref("browser.urlbar.autoFill");
     gURLBar.handleRevert();
     await PlacesUtils.history.clear();

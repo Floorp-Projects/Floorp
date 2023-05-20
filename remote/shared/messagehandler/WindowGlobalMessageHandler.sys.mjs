@@ -140,10 +140,7 @@ export class WindowGlobalMessageHandler extends MessageHandler {
         structuredUpdates.get(moduleName).set(category, new Set());
       }
 
-      structuredUpdates
-        .get(moduleName)
-        .get(category)
-        .add(sessionDataItem);
+      structuredUpdates.get(moduleName).get(category).add(sessionDataItem);
     }
 
     const sessionDataPromises = [];

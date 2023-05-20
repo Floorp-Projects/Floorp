@@ -5,7 +5,7 @@
 
 // Test adjusting the created time with different playback rate of animation.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_custom_playback_rate.html");
   const {
     animationInspector,

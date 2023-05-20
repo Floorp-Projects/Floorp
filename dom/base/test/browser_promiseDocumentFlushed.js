@@ -64,7 +64,7 @@ async function cleanTheDOM() {
   await window.promiseDocumentFlushed(() => {});
 }
 
-add_setup(async function() {
+add_setup(async function () {
   registerCleanupFunction(cleanTheDOM);
 });
 

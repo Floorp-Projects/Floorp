@@ -26,7 +26,7 @@ var innermost = makeNested(cyclicalObject, 1000);
 innermost.baz = cyclicalObject;
 
 var objectWithSaneGetter = {};
-objectWithSaneGetter.__defineGetter__("foo", function() {
+objectWithSaneGetter.__defineGetter__("foo", function () {
   return 5;
 });
 
@@ -41,7 +41,7 @@ objectWithSaneGetter2.prototype = {
 const throwingGetterThrownString = "bad";
 
 var objectWithThrowingGetter = {};
-objectWithThrowingGetter.__defineGetter__("foo", function() {
+objectWithThrowingGetter.__defineGetter__("foo", function () {
   throw throwingGetterThrownString;
 });
 
@@ -320,7 +320,7 @@ for (let index = 0; index < messages.length; index++) {
   }
 }
 
-onmessage = function(event) {
+onmessage = function (event) {
   for (let index = 0; index < messages.length; index++) {
     var exception = undefined;
 
@@ -341,12 +341,14 @@ onmessage = function(event) {
       (exception !== undefined && !messages[index].exception) ||
       (exception === undefined && messages[index].exception)
     ) {
-      throw "Exception inconsistency [index = " +
+      throw (
+        "Exception inconsistency [index = " +
         index +
         ", " +
         messages[index].toSource() +
         "]: " +
-        exception;
+        exception
+      );
     }
   }
 };

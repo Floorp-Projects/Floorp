@@ -15,11 +15,11 @@ LogController.logLevel = {
 };
 
 /* set minimum logging level */
-LogController.logLevelAtLeast = function(minLevel) {
+LogController.logLevelAtLeast = function (minLevel) {
   if (typeof minLevel == "string") {
     minLevel = LogController.logLevel[minLevel];
   }
-  return function(msg) {
+  return function (msg) {
     var msgLevel = msg.level;
     if (typeof msgLevel == "string") {
       msgLevel = LogController.logLevel[msgLevel];
@@ -29,7 +29,7 @@ LogController.logLevelAtLeast = function(minLevel) {
 };
 
 /* creates the log message with the given level and info */
-LogController.createLogMessage = function(level, info) {
+LogController.createLogMessage = function (level, info) {
   var msg = {};
   msg.num = LogController.counter;
   msg.level = level;
@@ -39,7 +39,7 @@ LogController.createLogMessage = function(level, info) {
 };
 
 /* helper method to return a sub-array */
-LogController.extend = function(args, skip) {
+LogController.extend = function (args, skip) {
   var ret = [];
   for (var i = skip; i < args.length; i++) {
     ret.push(args[i]);
@@ -48,7 +48,7 @@ LogController.extend = function(args, skip) {
 };
 
 /* logs message with given level. Currently used locally by log() and error() */
-LogController.logWithLevel = function(level, message /*, ...*/) {
+LogController.logWithLevel = function (level, message /*, ...*/) {
   var msg = LogController.createLogMessage(
     level,
     LogController.extend(arguments, 1)
@@ -58,17 +58,17 @@ LogController.logWithLevel = function(level, message /*, ...*/) {
 };
 
 /* log with level INFO */
-LogController.log = function(message /*, ...*/) {
+LogController.log = function (message /*, ...*/) {
   LogController.logWithLevel("INFO", message);
 };
 
 /* log with level ERROR */
-LogController.error = function(message /*, ...*/) {
+LogController.error = function (message /*, ...*/) {
   LogController.logWithLevel("ERROR", message);
 };
 
 /* send log message to listeners */
-LogController.dispatchListeners = function(msg) {
+LogController.dispatchListeners = function (msg) {
   for (var k in LogController.listeners) {
     var pair = LogController.listeners[k];
     if (pair.ident != k || (pair[0] && !pair[0](msg))) {
@@ -79,7 +79,7 @@ LogController.dispatchListeners = function(msg) {
 };
 
 /* add a listener to this log given an identifier, a filter (can be null) and the listener object */
-LogController.addListener = function(ident, filter, listener) {
+LogController.addListener = function (ident, filter, listener) {
   if (typeof filter == "string") {
     filter = LogController.logLevelAtLeast(filter);
   } else if (filter !== null && typeof filter !== "function") {
@@ -91,6 +91,6 @@ LogController.addListener = function(ident, filter, listener) {
 };
 
 /* remove a listener from this log */
-LogController.removeListener = function(ident) {
+LogController.removeListener = function (ident) {
   delete LogController.listeners[ident];
 };

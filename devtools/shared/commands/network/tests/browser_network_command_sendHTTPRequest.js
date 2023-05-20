@@ -5,7 +5,7 @@
 
 // Test the NetworkCommand's sendHTTPRequest
 
-add_task(async function() {
+add_task(async function () {
   info("Test NetworkCommand.sendHTTPRequest");
   const tab = await addTab("data:text/html,foo");
   const commands = await CommandsFactory.forTab(tab);

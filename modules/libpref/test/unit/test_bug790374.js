@@ -20,7 +20,7 @@ function run_test() {
   prefs.unlockPref(PREF_NAME);
   prefs.setCharPref(PREF_NAME, "");
   prefs.lockPref(PREF_NAME);
-  do_check_throws(function() {
+  do_check_throws(function () {
     userprefs.getFloatPref(PREF_NAME);
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
@@ -28,7 +28,7 @@ function run_test() {
   prefs.setCharPref(PREF_NAME, "18.0a1");
   prefs.lockPref(PREF_NAME);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     userprefs.getFloatPref(PREF_NAME);
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
@@ -36,7 +36,7 @@ function run_test() {
   prefs.setCharPref(PREF_NAME, "09.25.2012");
   prefs.lockPref(PREF_NAME);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     userprefs.getFloatPref(PREF_NAME);
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 
@@ -44,7 +44,7 @@ function run_test() {
   prefs.setCharPref(PREF_NAME, "aString");
   prefs.lockPref(PREF_NAME);
 
-  do_check_throws(function() {
+  do_check_throws(function () {
     userprefs.getFloatPref(PREF_NAME);
   }, Cr.NS_ERROR_ILLEGAL_VALUE);
 }

@@ -128,7 +128,7 @@ add_task(async function test_storage_managed_from_content_script() {
     },
 
     files: {
-      "contentscript.js": async function() {
+      "contentscript.js": async function () {
         browser.test.sendMessage(
           "results",
           await browser.storage.managed.get()

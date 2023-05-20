@@ -43,7 +43,7 @@ let stub = sinon.stub(gBrowser, "MacSharingService").get(() => {
   };
 });
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   stub.restore();
 });
 

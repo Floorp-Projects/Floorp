@@ -84,7 +84,7 @@ function getAccessibleName(accessible) {
  *          Failure audit report if accessible object has no or empty name, null
  *          otherwise.
  */
-const mustHaveNonEmptyNameRule = function(issue, accessible) {
+const mustHaveNonEmptyNameRule = function (issue, accessible) {
   const name = getAccessibleName(accessible);
   return name ? null : { score: FAIL, issue };
 };
@@ -97,7 +97,7 @@ const mustHaveNonEmptyNameRule = function(issue, accessible) {
  *          Best practices audit report if accessible object has no or empty
  *          name, null otherwise.
  */
-const shouldHaveNonEmptyNameRule = function(issue, accessible) {
+const shouldHaveNonEmptyNameRule = function (issue, accessible) {
   const name = getAccessibleName(accessible);
   return name ? null : { score: BEST_PRACTICES, issue };
 };
@@ -134,7 +134,7 @@ const dialogRule = shouldHaveNonEmptyNameRule.bind(null, DIALOG_NO_NAME);
  *          Failure audit report if interactive accessible object has no name,
  *          null otherwise.
  */
-const imageRule = function(accessible) {
+const imageRule = function (accessible) {
   const name = getAccessibleName(accessible);
   return name != null ? null : { score: FAIL, issue: IMAGE_NO_NAME };
 };
@@ -148,7 +148,7 @@ const imageRule = function(accessible) {
  *          warning if the name does not come from a visible label, null
  *          otherwise.
  */
-const formRule = function(accessible) {
+const formRule = function (accessible) {
   const name = getAccessibleName(accessible);
   if (!name) {
     return { score: FAIL, issue: FORM_NO_NAME };
@@ -174,7 +174,7 @@ const formRule = function(accessible) {
  *          or has a name that is not derived from a required location, null
  *          otherwise.
  */
-const formGroupingRule = function(accessible) {
+const formGroupingRule = function (accessible) {
   const name = getAccessibleName(accessible);
   const { DOMNode } = accessible;
 
@@ -221,7 +221,7 @@ const formGroupingRule = function(accessible) {
  *          Failure audit report depending on requirements for dialogs or form
  *          meter element, null otherwise.
  */
-const textContainerRule = function(accessible) {
+const textContainerRule = function (accessible) {
   const { DOMNode } = accessible;
 
   switch (DOMNode.nodeName) {
@@ -248,7 +248,7 @@ const textContainerRule = function(accessible) {
  *          not provided or if it is not derived from a required location, null
  *          otherwise.
  */
-const internalFrameRule = function(accessible) {
+const internalFrameRule = function (accessible) {
   const { DOMNode } = accessible;
   switch (DOMNode.nodeName) {
     case "FRAME":
@@ -288,7 +288,7 @@ const internalFrameRule = function(accessible) {
  *          Failure audit report if document accessible object has no or empty
  *          title, null otherwise.
  */
-const documentRule = function(accessible) {
+const documentRule = function (accessible) {
   const title = accessible.DOMNode.title && accessible.DOMNode.title.trim();
   return title ? null : { score: FAIL, issue: DOCUMENT_NO_TITLE };
 };
@@ -301,7 +301,7 @@ const documentRule = function(accessible) {
  *          Failure audit report if heading accessible object has no or
  *          empty name or if its text content is empty, null otherwise.
  */
-const headingRule = function(accessible) {
+const headingRule = function (accessible) {
   const name = getAccessibleName(accessible);
   if (!name) {
     return { score: FAIL, issue: HEADING_NO_NAME };
@@ -320,7 +320,7 @@ const headingRule = function(accessible) {
  *          Failure audit report if toolbar accessible object is not the only
  *          toolbar in the document and has no or empty title, null otherwise.
  */
-const toolbarRule = function(accessible) {
+const toolbarRule = function (accessible) {
   const toolbars = accessible.DOMNode.ownerDocument.querySelectorAll(
     `[role="toolbar"]`
   );
@@ -339,7 +339,7 @@ const toolbarRule = function(accessible) {
  *          or in case when it's an <area> element with href attribute the name
  *          is not specified by an alt attribute, null otherwise.
  */
-const linkRule = function(accessible) {
+const linkRule = function (accessible) {
   const { DOMNode } = accessible;
   if (DOMNode.nodeName === "AREA" && DOMNode.hasAttribute("href")) {
     const alt = DOMNode.getAttribute("alt");
@@ -361,7 +361,7 @@ const linkRule = function(accessible) {
  *          Failure audit report if mglyph accessible object has no or empty
  *          name, and no or empty alt attribute, null otherwise.
  */
-const mathmlGlyphRule = function(accessible) {
+const mathmlGlyphRule = function (accessible) {
   const name = getAccessibleName(accessible);
   if (name) {
     return null;

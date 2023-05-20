@@ -4,7 +4,7 @@
  */
 
 export async function runTestInWorker(script, base, listener) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     const globalHeadUrl = new URL(
       "resource://testing-common/dom/quota/test/modules/worker/head.js"
     );
@@ -13,7 +13,7 @@ export async function runTestInWorker(script, base, listener) {
 
     const worker = new Worker(globalHeadUrl.href);
 
-    worker.onmessage = async function(event) {
+    worker.onmessage = async function (event) {
       const data = event.data;
       const moduleName = data.moduleName;
       const objectName = data.objectName;
@@ -54,7 +54,7 @@ export async function runTestInWorker(script, base, listener) {
       }
     };
 
-    worker.onerror = function(event) {
+    worker.onerror = function (event) {
       listener.onOk(false, "Worker had an error: " + event.data);
       resolve();
     };

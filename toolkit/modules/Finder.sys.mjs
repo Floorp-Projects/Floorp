@@ -51,7 +51,7 @@ export function Finder(docShell) {
   );
 }
 
-Finder.isFindbarVisible = function(docShell) {
+Finder.isFindbarVisible = function (docShell) {
   return activeFinderRoots.has(docShell.browsingContext.top);
 };
 

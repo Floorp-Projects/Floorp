@@ -7,7 +7,7 @@ const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
 const NEW_RULE = "body { background-color: purple; }";
 
-add_task(async function() {
+add_task(async function () {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 2, "correct number of editors");
@@ -26,7 +26,7 @@ add_task(async function() {
   const rules = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [0],
-    async function(index) {
+    async function (index) {
       const sheet = content.document.styleSheets[index];
       return [...sheet.cssRules].map(rule => rule.cssText);
     }

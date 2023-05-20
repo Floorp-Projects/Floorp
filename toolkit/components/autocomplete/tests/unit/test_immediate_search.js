@@ -71,7 +71,7 @@ add_test(function test_immediate_search() {
   Assert.equal(input.textValue, "moz-immediate");
 
   // Wait for both queries to finish.
-  input.onSearchComplete = function() {
+  input.onSearchComplete = function () {
     // Sanity check.
     Assert.equal(input.textValue, "moz-immediate");
 
@@ -118,7 +118,7 @@ add_test(function test_immediate_search_notimeout() {
 
   controller.input = input;
   let complete = false;
-  input.onSearchComplete = function() {
+  input.onSearchComplete = function () {
     complete = true;
   };
   controller.startSearch(inputStr);
@@ -160,7 +160,7 @@ add_test(function test_delayed_search_notimeout() {
 
   controller.input = input;
   let complete = false;
-  input.onSearchComplete = function() {
+  input.onSearchComplete = function () {
     complete = true;
   };
   controller.startSearch(inputStr);

@@ -14,14 +14,14 @@ add_task(async function testInvalidIconSizes() {
       page_action: {},
     },
 
-    background: function() {
+    background: function () {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 
         let promises = [];
         for (let api of ["pageAction", "browserAction"]) {
           // helper function to run setIcon and check if it fails
-          let assertSetIconThrows = function(detail, error, message) {
+          let assertSetIconThrows = function (detail, error, message) {
             detail.tabId = tabId;
             browser.test.assertThrows(
               () => browser[api].setIcon(detail),
@@ -97,7 +97,7 @@ add_task(async function testDefaultDetails() {
         page_action: { default_icon: icon },
       },
 
-      background: function() {
+      background: function () {
         browser.tabs.query({ active: true, currentWindow: true }, tabs => {
           let tabId = tabs[0].id;
 
@@ -157,7 +157,7 @@ add_task(async function testSecureURLsDenied() {
       page_action: {},
     },
 
-    background: function() {
+    background: function () {
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         let tabId = tabs[0].id;
 

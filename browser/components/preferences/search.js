@@ -85,7 +85,7 @@ var gSearchPane = {
       "command",
       this._onBrowserSeparateDefaultEngineChange.bind(this)
     );
-    setEventListener("openLocationBarPrivacyPreferences", "click", function(
+    setEventListener("openLocationBarPrivacyPreferences", "click", function (
       event
     ) {
       if (event.button == 0) {
@@ -794,7 +794,7 @@ EngineStore.prototype = {
   },
 
   reloadIcons() {
-    this._engines.forEach(function(e) {
+    this._engines.forEach(function (e) {
       e.iconURI = e.originalEngine.iconURI;
     });
   },

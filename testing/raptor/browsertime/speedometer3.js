@@ -4,7 +4,7 @@
 
 /* eslint-env node */
 
-module.exports = async function(context, commands) {
+module.exports = async function (context, commands) {
   context.log.info("Starting Speedometer 3 test");
   let url = context.options.browsertime.url;
   let page_cycles = context.options.browsertime.page_cycles;

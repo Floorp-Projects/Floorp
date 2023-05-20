@@ -106,7 +106,7 @@ async function pickResult({ input, payloadURL, redirectTo }) {
   await onLoad;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   registerCleanupFunction(async () => {

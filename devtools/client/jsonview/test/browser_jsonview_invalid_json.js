@@ -5,7 +5,7 @@
 
 const TEST_JSON_URL = URL_ROOT + "invalid_json.json";
 
-add_task(async function() {
+add_task(async function () {
   info("Test invalid JSON started");
 
   await addJsonViewTab(TEST_JSON_URL);

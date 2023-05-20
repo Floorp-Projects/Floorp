@@ -70,7 +70,7 @@ add_task(async function test_experiment_toggle_style() {
     },
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await doExperimentCleanup();
   });
 

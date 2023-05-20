@@ -193,14 +193,14 @@ var NotificationDB = {
     switch (message.name) {
       case "Notification:GetAll":
         this.queueTask("getall", message.data)
-          .then(function(notifications) {
+          .then(function (notifications) {
             returnMessage("Notification:GetAll:Return:OK", {
               requestID: message.data.requestID,
               origin: message.data.origin,
               notifications,
             });
           })
-          .catch(function(error) {
+          .catch(function (error) {
             returnMessage("Notification:GetAll:Return:KO", {
               requestID: message.data.requestID,
               origin: message.data.origin,
@@ -211,12 +211,12 @@ var NotificationDB = {
 
       case "Notification:Save":
         this.queueTask("save", message.data)
-          .then(function() {
+          .then(function () {
             returnMessage("Notification:Save:Return:OK", {
               requestID: message.data.requestID,
             });
           })
-          .catch(function(error) {
+          .catch(function (error) {
             returnMessage("Notification:Save:Return:KO", {
               requestID: message.data.requestID,
               errorMsg: error,
@@ -226,12 +226,12 @@ var NotificationDB = {
 
       case "Notification:Delete":
         this.queueTask("delete", message.data)
-          .then(function() {
+          .then(function () {
             returnMessage("Notification:Delete:Return:OK", {
               requestID: message.data.requestID,
             });
           })
-          .catch(function(error) {
+          .catch(function (error) {
             returnMessage("Notification:Delete:Return:KO", {
               requestID: message.data.requestID,
               errorMsg: error,
@@ -257,7 +257,7 @@ var NotificationDB = {
 
     this.tasks.push({ operation, data, defer });
 
-    var promise = new Promise(function(resolve, reject) {
+    var promise = new Promise(function (resolve, reject) {
       defer.resolve = resolve;
       defer.reject = reject;
     });

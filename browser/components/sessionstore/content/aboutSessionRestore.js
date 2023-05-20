@@ -17,7 +17,7 @@ var gTreeInitialized = false;
 
 // Page initialization
 
-window.onload = function() {
+window.onload = function () {
   let toggleTabs = document.getElementById("tabsToggle");
   if (toggleTabs) {
     let tabList = document.getElementById("tabList");
@@ -96,14 +96,14 @@ async function initTreeView() {
   }
   let winLabels = await document.l10n.formatValues(l10nIds);
   gTreeData = [];
-  gStateObject.windows.forEach(function(aWinData, aIx) {
+  gStateObject.windows.forEach(function (aWinData, aIx) {
     var winState = {
       label: winLabels[aIx],
       open: true,
       checked: true,
       ix: aIx,
     };
-    winState.tabs = aWinData.tabs.map(function(aTabData) {
+    winState.tabs = aWinData.tabs.map(function (aTabData) {
       var entry = aTabData.entries[aTabData.index - 1] || {
         url: "about:blank",
       };

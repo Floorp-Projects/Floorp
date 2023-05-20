@@ -9,7 +9,7 @@
 const TEST_URI =
   "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for bug 595350";
 
-add_task(async function() {
+add_task(async function () {
   requestLongerTimeout(3);
   // Bug 1518138: GC heuristics are broken for this test, so that the test
   // ends up running out of memory. Try to work-around the problem by GCing
@@ -42,7 +42,7 @@ add_task(async function() {
 
     // Log a message in the newly opened console.
     const onMessage = waitForMessageByType(hud, message, ".console-api");
-    await SpecialPowers.spawn(browser, [message], function(msg) {
+    await SpecialPowers.spawn(browser, [message], function (msg) {
       content.console.log(msg);
     });
     await onMessage;

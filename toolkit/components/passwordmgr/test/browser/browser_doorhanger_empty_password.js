@@ -1,4 +1,4 @@
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["signon.rememberSignons.visibilityToggle", true]],
   });
@@ -17,10 +17,10 @@ add_task(async function test_empty_password() {
       url:
         "https://example.com/browser/toolkit/components/passwordmgr/test/browser/form_basic.html",
     },
-    async function(browser) {
+    async function (browser) {
       // Submit the form in the content page with the credentials from the test
       // case. This will cause the doorhanger notification to be displayed.
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let doc = content.document;
         doc.getElementById("form-basic-username").setUserInput("username");
         doc.getElementById("form-basic-password").setUserInput("pw");

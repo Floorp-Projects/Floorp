@@ -3,7 +3,7 @@
 function run_test() {
   do_get_profile();
 
-  var mc = new MultipleCallbacks(2, function() {
+  var mc = new MultipleCallbacks(2, function () {
     finish_cache2_test();
   });
 
@@ -12,19 +12,19 @@ function run_test() {
     "memory",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     Services.loadContextInfo.default,
-    new OpenCallback(NEW, "meta", "data", function(entry) {
+    new OpenCallback(NEW, "meta", "data", function (entry) {
       // Check the default
       equal(entry.isForcedValid, false);
 
       // Forced valid and confirm
       entry.forceValidFor(2);
-      do_timeout(1000, function() {
+      do_timeout(1000, function () {
         equal(entry.isForcedValid, true);
         mc.fired();
       });
 
       // Confirm the timeout occurs
-      do_timeout(3000, function() {
+      do_timeout(3000, function () {
         equal(entry.isForcedValid, false);
         mc.fired();
       });

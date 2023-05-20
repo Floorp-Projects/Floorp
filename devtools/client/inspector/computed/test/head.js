@@ -84,7 +84,7 @@ function getComputedViewPropertyView(view, name) {
  * @return {Promise} A promise that resolves to the property matched rules
  * container
  */
-var getComputedViewMatchedRules = async function(view, name) {
+var getComputedViewMatchedRules = async function (view, name) {
   let expander;
   let propertyContent;
   for (const property of view.styleDocument.querySelectorAll(

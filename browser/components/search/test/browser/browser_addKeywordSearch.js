@@ -13,7 +13,7 @@ var testData = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const TEST_URL =
     "http://example.org/browser/browser/components/search/test/browser/test.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
@@ -32,7 +32,7 @@ add_task(async function() {
       await SpecialPowers.spawn(
         tab.linkedBrowser,
         [{ action, param, method, id }],
-        async function(args) {
+        async function (args) {
           let doc = content.document;
           let form = doc.createElement("form");
           form.id = args.id;

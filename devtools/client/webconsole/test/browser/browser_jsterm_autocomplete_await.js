@@ -7,7 +7,7 @@
 
 const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>Autocomplete await expression`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;

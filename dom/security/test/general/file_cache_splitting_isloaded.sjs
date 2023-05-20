@@ -25,7 +25,7 @@ function handleRequest(request, response) {
   response.write(IMG_BYTES);
 
   // return the result
-  getObjectState("wait", function(queryResponse) {
+  getObjectState("wait", function (queryResponse) {
     if (!queryResponse) {
       return;
     }

@@ -160,7 +160,7 @@ const TEST_DATA = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // There are cases that URLBar loses focus before assertion of this test.
@@ -176,7 +176,7 @@ add_setup(async function() {
     title: "example title",
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     SpecialPowers.clipboardCopyString("");
   });

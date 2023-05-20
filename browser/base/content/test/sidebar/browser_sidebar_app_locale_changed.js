@@ -74,7 +74,7 @@ add_task(async function test_ext_sidebar_panel_reloaded_on_locale_changes() {
             A Test Sidebar
           </body>
         </html>`,
-      "sidebar.js": function() {
+      "sidebar.js": function () {
         const { browser } = this;
         window.onload = () => {
           browser.test.sendMessage("sidebar");

@@ -43,10 +43,7 @@ function handleRequest(req, resp) {
 
   if (
     req.hasHeader("Cookie") &&
-    req
-      .getHeader("Cookie")
-      .split(";")
-      .includes("red")
+    req.getHeader("Cookie").split(";").includes("red")
   ) {
     resp.write(
       '<html style="background: #f00;">' + setCookieScript + "</html>"
@@ -57,10 +54,7 @@ function handleRequest(req, resp) {
 
   if (
     req.hasHeader("Cookie") &&
-    req
-      .getHeader("Cookie")
-      .split(";")
-      .includes("green")
+    req.getHeader("Cookie").split(";").includes("green")
   ) {
     resp.write(
       '<html style="background: #0f0;">' + setCookieScript + "</html>"

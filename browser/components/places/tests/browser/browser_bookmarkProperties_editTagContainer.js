@@ -7,7 +7,7 @@ add_task(async function editTagContainer() {
     url: uri.spec,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.remove(bm);
   });
 
@@ -15,7 +15,7 @@ add_task(async function editTagContainer() {
 
   let library = await promiseLibrary();
   let PlacesOrganizer = library.PlacesOrganizer;
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await promiseLibraryClosed(library);
   });
 

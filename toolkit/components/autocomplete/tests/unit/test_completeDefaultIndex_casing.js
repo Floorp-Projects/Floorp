@@ -16,7 +16,7 @@ function AutoCompleteInput(aSearches) {
 AutoCompleteInput.prototype = Object.create(AutoCompleteInputBase.prototype);
 
 add_test(function test_keyNavigation() {
-  doSearch("MOZ", "mozilla", function(aController) {
+  doSearch("MOZ", "mozilla", function (aController) {
     Assert.equal(aController.input.textValue, "MOZilla");
     // Hardcode KeyboardEvent.DOM_VK_RIGHT, because we can't easily
     // include KeyboardEvent here.
@@ -26,7 +26,7 @@ add_test(function test_keyNavigation() {
 });
 
 add_test(function test_handleEnter() {
-  doSearch("MOZ", "mozilla", function(aController) {
+  doSearch("MOZ", "mozilla", function (aController) {
     Assert.equal(aController.input.textValue, "MOZilla");
     aController.handleEnter(false);
     Assert.equal(aController.input.textValue, "mozilla");

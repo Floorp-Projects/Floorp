@@ -9,18 +9,18 @@ var foobar = "foobar" + context;
 ok(!!caches, "caches object should be available on global");
 caches
   .open(name)
-  .then(function(openCache) {
+  .then(function (openCache) {
     ok(
       openCache instanceof Cache,
       "cache object should be resolved from caches.open"
     );
     return caches.has(name);
   })
-  .then(function(hasResult) {
+  .then(function (hasResult) {
     ok(hasResult, "caches.has() should resolve true");
     return caches.keys();
   })
-  .then(function(keys) {
+  .then(function (keys) {
     ok(!!keys, "caches.keys() should resolve to a truthy value");
     ok(
       keys.length >= 1,
@@ -32,34 +32,34 @@ caches
     );
     return caches.delete(name);
   })
-  .then(function(deleteResult) {
+  .then(function (deleteResult) {
     ok(deleteResult, "caches.delete() should resolve true");
     return caches.has(name);
   })
-  .then(function(hasMissingCache) {
+  .then(function (hasMissingCache) {
     ok(!hasMissingCache, "missing key should return false from has");
   })
-  .then(function() {
+  .then(function () {
     return caches.open(name);
   })
-  .then(function(snafu) {
+  .then(function (snafu) {
     return snafu.keys();
   })
-  .then(function(empty) {
+  .then(function (empty) {
     is(0, empty.length, "cache.keys() should resolve to an array of length 0");
   })
-  .then(function() {
+  .then(function () {
     return caches.open(name);
   })
-  .then(function(snafu) {
+  .then(function (snafu) {
     var req = "./cachekey";
     var res = new Response("Hello world");
     return snafu
       .put("ftp://invalid", res)
-      .then(function() {
+      .then(function () {
         ok(false, "This should fail");
       })
-      .catch(function(err) {
+      .catch(function (err) {
         is(
           err.name,
           "TypeError",
@@ -67,14 +67,14 @@ caches
         );
         return snafu.put(req, res);
       })
-      .then(function(v) {
+      .then(function (v) {
         return snafu;
       });
   })
-  .then(function(snafu) {
+  .then(function (snafu) {
     return Promise.all([snafu, snafu.keys()]);
   })
-  .then(function(args) {
+  .then(function (args) {
     var snafu = args[0];
     var keys = args[1];
     is(1, keys.length, "cache.keys() should resolve to an array of length 1");
@@ -86,7 +86,7 @@ caches
       snafu.match("ftp://invalid"),
     ]);
   })
-  .then(function(args) {
+  .then(function (args) {
     var snafu = args[0];
     var res = args[1];
     ok(res instanceof Response, "value should be a Response");
@@ -98,80 +98,80 @@ caches
     );
     return Promise.all([snafu, snafu.put("./cachekey2", res)]);
   })
-  .then(function(args) {
+  .then(function (args) {
     var snafu = args[0];
     return snafu.match("./cachekey2");
   })
-  .then(function(res) {
-    return res.text().then(function(v) {
+  .then(function (res) {
+    return res.text().then(function (v) {
       is(v, "Hello world", "Response body should match original");
     });
   })
-  .then(function() {
+  .then(function () {
     // FIXME(nsm): Can't use a Request object for now since the operations
     // consume it's 'body'. See
     // https://github.com/slightlyoff/ServiceWorker/issues/510.
     return caches.open(foobar);
   })
-  .then(function(openCache) {
+  .then(function (openCache) {
     c = openCache;
     return c.put(request, response);
   })
-  .then(function(putResponse) {
+  .then(function (putResponse) {
     is(putResponse, undefined, "The promise should resolve to undefined");
     return c.keys(request);
   })
-  .then(function(keys) {
+  .then(function (keys) {
     ok(keys, "Valid keys object expected");
     is(keys.length, 1, "Only one key is expected");
     return c.keys();
   })
-  .then(function(keys) {
+  .then(function (keys) {
     ok(keys, "Valid keys object expected");
     is(keys.length, 1, "Only one key is expected");
     return c.matchAll(request);
   })
-  .then(function(matchAllResponses) {
+  .then(function (matchAllResponses) {
     ok(matchAllResponses, "matchAll should succeed");
     is(matchAllResponses.length, 1, "Only one match is expected");
     return c.match(request);
   })
-  .then(function(matchResponse) {
+  .then(function (matchResponse) {
     ok(matchResponse, "match should succeed");
     return caches.match(request);
   })
-  .then(function(storageMatchResponse) {
+  .then(function (storageMatchResponse) {
     ok(storageMatchResponse, "storage match should succeed");
     return caches.match(request, { cacheName: foobar });
   })
-  .then(function(storageMatchResponse) {
+  .then(function (storageMatchResponse) {
     ok(storageMatchResponse, "storage match with cacheName should succeed");
     var request2 = new Request("https://example.com/hmm?q=snafu" + context);
     return c.match(request2, { ignoreSearch: true });
   })
-  .then(function(match2Response) {
+  .then(function (match2Response) {
     ok(match2Response, "match should succeed");
     return c.delete(request);
   })
-  .then(function(deleteResult) {
+  .then(function (deleteResult) {
     ok(deleteResult, "delete should succeed");
     return c.keys();
   })
-  .then(function(keys) {
+  .then(function (keys) {
     ok(keys, "Valid keys object expected");
     is(keys.length, 0, "Zero keys is expected");
     return c.matchAll(request);
   })
-  .then(function(matchAll2Responses) {
+  .then(function (matchAll2Responses) {
     ok(matchAll2Responses, "matchAll should succeed");
     is(matchAll2Responses.length, 0, "Zero matches is expected");
     return caches.has(foobar);
   })
-  .then(function(hasResult) {
+  .then(function (hasResult) {
     ok(hasResult, "has should succeed");
     return caches.keys();
   })
-  .then(function(keys) {
+  .then(function (keys) {
     ok(keys, "Valid keys object expected");
     ok(keys.length >= 2, "At least two keys are expected");
     ok(keys.includes(name), "snafu should exist");
@@ -181,15 +181,15 @@ caches
     );
     return caches.delete(foobar);
   })
-  .then(function(deleteResult) {
+  .then(function (deleteResult) {
     ok(deleteResult, "delete should succeed");
     return caches.has(foobar);
   })
-  .then(function(hasMissingCache) {
+  .then(function (hasMissingCache) {
     ok(!hasMissingCache, "has should have a result");
     return caches.delete(name);
   })
-  .then(function(deleteResult) {
+  .then(function (deleteResult) {
     ok(deleteResult, "delete should succeed");
     testDone();
   });

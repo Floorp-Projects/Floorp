@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger(TEST_FILENAME);
 
   await selectSource(dbg, TEST_FILENAME);

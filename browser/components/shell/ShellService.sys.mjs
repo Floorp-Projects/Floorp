@@ -515,7 +515,7 @@ let ShellServiceInternal = {
     const MOZ_E_BUILD = 0xa0000004;
 
     const exeWaitPromise = exeProcess.wait();
-    const timeoutPromise = new Promise(function(resolve) {
+    const timeoutPromise = new Promise(function (resolve) {
       lazy.setTimeout(
         () => resolve({ exitCode: STILL_ACTIVE }),
         exeWaitTimeoutMs

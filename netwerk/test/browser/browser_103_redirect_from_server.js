@@ -6,7 +6,7 @@
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("network.early-hints.enabled");
 });
 
@@ -155,7 +155,7 @@ async function test_hint_redirect(
       url,
       waitForLoad: true,
     },
-    async function() {}
+    async function () {}
   );
 
   // wait until all requests are stopped, especially the cancelled ones
@@ -192,8 +192,9 @@ async function test_hint_redirect(
       got.hinted <= expected.hinted + expected.cancelled,
     `${name}: unexpected amount of hinted request made got ${
       got.hinted
-    }, expected between ${expected.hinted} and ${expected.hinted +
-      expected.cancelled}`
+    }, expected between ${expected.hinted} and ${
+      expected.hinted + expected.cancelled
+    }`
   );
   Assert.ok(
     got.normal == expected.normal,

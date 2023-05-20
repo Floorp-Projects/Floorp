@@ -292,7 +292,7 @@ TaggingService.prototype = {
     }
 
     // sort the tag list
-    tags.sort(function(a, b) {
+    tags.sort(function (a, b) {
       return a.toLowerCase().localeCompare(b.toLowerCase());
     });
     return tags;

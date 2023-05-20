@@ -11,7 +11,7 @@ const ORG_URL_ROOT = URL_ROOT.replace("example.com", "example.org");
 const TEST_ORG_URI =
   ORG_URL_ROOT + "doc_inspector_fission_frame_navigation.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_ORG_URI);
   const tree = `
     id="root"
@@ -121,7 +121,7 @@ async function navigateIframeTo(inspector, url) {
   );
 
   info("Update the src attribute of the iframe tag");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(_url) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function (_url) {
     content.document.querySelector("iframe").setAttribute("src", _url);
   });
 

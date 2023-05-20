@@ -527,7 +527,7 @@ add_task(async function test_user_script_api_script_required() {
       user_scripts: {},
     },
     files: {
-      "content_script.js": function() {
+      "content_script.js": function () {
         browser.test.assertEq(
           undefined,
           browser.userScripts && browser.userScripts.onBeforeScript,

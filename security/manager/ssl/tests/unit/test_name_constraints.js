@@ -55,7 +55,7 @@ function checkCertInNameSpace(cert) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   // Test that name constraints from the entire certificate chain are enforced.
   loadCertWithTrust("ca-example-com-permitted", "CTu,,");
   loadCertWithTrust("int-example-org-permitted", ",,");

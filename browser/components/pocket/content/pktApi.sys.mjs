@@ -83,7 +83,7 @@ function getDatabase() {
   return databasePromise;
 }
 
-export var pktApi = (function() {
+export var pktApi = (function () {
   /**
    * Configuration
    */
@@ -100,7 +100,7 @@ export var pktApi = (function() {
    * Helper
    */
 
-  var extend = function(out) {
+  var extend = function (out) {
     out = out || {};
 
     for (var i = 1; i < arguments.length; i++) {
@@ -117,7 +117,7 @@ export var pktApi = (function() {
     return out;
   };
 
-  var parseJSON = function(jsonString) {
+  var parseJSON = function (jsonString) {
     try {
       var o = JSON.parse(jsonString);
 
@@ -317,7 +317,7 @@ export var pktApi = (function() {
       request.open("GET", url, true);
     }
 
-    request.onreadystatechange = function(e) {
+    request.onreadystatechange = function (e) {
       if (request.readyState == 4) {
         // "done" is a completed XHR regardless of success/error:
         if (options.done) {
@@ -673,7 +673,7 @@ export var pktApi = (function() {
    * Return all cached tags and used tags.
    */
   function getTags() {
-    var tagsFromSettings = function() {
+    var tagsFromSettings = function () {
       var tagsJSON = getSetting("tags");
       if (typeof tagsJSON !== "undefined") {
         return JSON.parse(tagsJSON);
@@ -690,7 +690,7 @@ export var pktApi = (function() {
    * Return all recent tags.
    */
   function getRecentTags() {
-    var tagsFromSettings = function() {
+    var tagsFromSettings = function () {
       var tagsJSON = getSetting("recentTags");
 
       if (typeof tagsJSON !== "undefined") {

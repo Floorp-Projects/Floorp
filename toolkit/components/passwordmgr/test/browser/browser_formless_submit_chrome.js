@@ -31,7 +31,7 @@ function withTestPage(aTaskFn) {
       gBrowser,
       url: "https://example.com" + DIRECTORY_PATH + "formless_basic.html",
     },
-    async function(aBrowser) {
+    async function (aBrowser) {
       info("tab opened");
       await fillTestPage(aBrowser);
       await aTaskFn(aBrowser);
@@ -45,12 +45,12 @@ function withTestPage(aTaskFn) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SimpleTest.promiseFocus(window);
 });
 
 add_task(async function test_urlbar_new_URL() {
-  await withTestPage(async function(aBrowser) {
+  await withTestPage(async function (aBrowser) {
     gURLBar.value = "";
     let focusPromise = BrowserTestUtils.waitForEvent(gURLBar, "focus");
     gURLBar.focus();
@@ -67,7 +67,7 @@ add_task(async function test_urlbar_new_URL() {
 });
 
 add_task(async function test_urlbar_fragment_enter() {
-  await withTestPage(function(aBrowser) {
+  await withTestPage(function (aBrowser) {
     gURLBar.focus();
     gURLBar.select();
     EventUtils.synthesizeKey("KEY_ArrowRight");
@@ -77,7 +77,7 @@ add_task(async function test_urlbar_fragment_enter() {
 });
 
 add_task(async function test_backButton_forwardButton() {
-  await withTestPage(async function(aBrowser) {
+  await withTestPage(async function (aBrowser) {
     info("Loading formless_basic.html?second");
     // Load a new page in the tab so we can test going back
     BrowserTestUtils.loadURIString(
@@ -120,7 +120,7 @@ add_task(async function test_backButton_forwardButton() {
 });
 
 add_task(async function test_reloadButton() {
-  await withTestPage(async function(aBrowser) {
+  await withTestPage(async function (aBrowser) {
     let reloadButton = document.getElementById("reload-button");
     let loadPromise = BrowserTestUtils.browserLoaded(
       aBrowser,
@@ -137,7 +137,7 @@ add_task(async function test_reloadButton() {
 });
 
 add_task(async function test_back_keyboard_shortcut() {
-  await withTestPage(async function(aBrowser) {
+  await withTestPage(async function (aBrowser) {
     // Load a new page in the tab so we can test going back
     BrowserTestUtils.loadURIString(
       aBrowser,

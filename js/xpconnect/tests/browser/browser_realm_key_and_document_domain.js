@@ -6,8 +6,8 @@
 "use strict";
 
 async function test_document(url) {
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let result = await ContentTask.spawn(browser, {}, async function() {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
+    let result = await ContentTask.spawn(browser, {}, async function () {
       let result = content.document.getElementById("result");
       return result.innerText;
     });

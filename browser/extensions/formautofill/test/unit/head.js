@@ -363,7 +363,7 @@ async function runHeuristicsTest(
   });
 
   patterns.forEach(testPattern => {
-    add_task(async function() {
+    add_task(async function () {
       info(`Starting test fixture: ${testPattern.fixturePath ?? ""}`);
       if (testPattern.description) {
         info(`test "${testPattern.description}"`);

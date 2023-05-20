@@ -51,7 +51,7 @@ async function searchAndCheckState({ input, token }) {
   await UrlbarTestUtils.promisePopupClose(window);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   UrlbarTestUtils.init(this);
   registerCleanupFunction(() => {
     UrlbarTestUtils.uninit();

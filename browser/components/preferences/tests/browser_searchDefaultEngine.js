@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 SearchTestUtils.init(this);
 
-add_setup(async function() {
+add_setup(async function () {
   await SearchTestUtils.installSearchExtension({
     name: "engine1",
     search_url: "https://example.com/engine1",

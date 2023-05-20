@@ -149,7 +149,7 @@ function checkShortenedFilename(actual, expected) {
   return false;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   const { HttpServer } = ChromeUtils.import(
     "resource://testing-common/httpd.js"
   );
@@ -251,7 +251,7 @@ add_task(async function save_document() {
   tmpDir.append(baseFilename + "_document_files");
 
   MockFilePicker.displayDirectory = tmpDir;
-  MockFilePicker.showCallback = function(fp) {
+  MockFilePicker.showCallback = function (fp) {
     MockFilePicker.setFiles([tmpFile]);
     MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
   };
@@ -512,7 +512,7 @@ add_task(async function saveas_files() {
       }
 
       let filename = await new Promise(resolve => {
-        MockFilePicker.showCallback = function(fp) {
+        MockFilePicker.showCallback = function (fp) {
           setTimeout(() => {
             resolve(fp.defaultString);
           }, 0);
@@ -658,7 +658,7 @@ add_task(async function saveas_image_links() {
       await popupShown;
 
       let promptPromise = new Promise(resolve => {
-        MockFilePicker.showCallback = function(fp) {
+        MockFilePicker.showCallback = function (fp) {
           setTimeout(() => {
             resolve(fp.defaultString);
           }, 0);
@@ -772,7 +772,7 @@ add_task(async function save_page_with_invalid_after_filepicker() {
   );
 
   let filename = await new Promise(resolve => {
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       let expectedFilename =
         AppConstants.platform == "win" ? "invfile.lnk.htm" : "invfile.lnk.html";
       is(fp.defaultString, expectedFilename, "supplied filename is correct");
@@ -797,7 +797,7 @@ add_task(async function save_page_with_invalid_extension() {
   );
 
   let filename = await new Promise(resolve => {
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       setTimeout(() => {
         resolve(fp.defaultString);
       }, 0);

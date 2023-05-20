@@ -100,7 +100,7 @@ add_task(async function test() {
   let i = 0;
   for (const testcase of tests) {
     ++i;
-    await SpecialPowers.spawn(browser, [[i, tests.length]], function([
+    await SpecialPowers.spawn(browser, [[i, tests.length]], function ([
       idx,
       len,
     ]) {
@@ -133,7 +133,7 @@ add_task(async function test() {
           (completer.propertyName || completer.selector) +
           "]."
       );
-      await SpecialPowers.spawn(browser, [], function() {
+      await SpecialPowers.spawn(browser, [], function () {
         const progress = content.document.getElementById("progress");
         progress.classList.add("failed");
       });

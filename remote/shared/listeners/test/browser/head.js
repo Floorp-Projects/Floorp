@@ -24,7 +24,7 @@ async function clearConsole() {
  *     the content page.
  */
 function createScriptNode(script) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [script], function(
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [script], function (
     _script
   ) {
     var script = content.document.createElement("script");

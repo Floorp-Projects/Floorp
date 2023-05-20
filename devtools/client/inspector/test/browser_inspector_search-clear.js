@@ -23,7 +23,7 @@ const TEST_URI = "data:application/xhtml+xml;charset=utf-8," + encodeURI(XHTML);
 
 // Type "d" in inspector-searchbox, Enter [Back space] key and check if the
 // clear button is shown correctly
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
   const { searchBox, searchClearButton } = inspector;
 

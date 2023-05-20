@@ -100,7 +100,7 @@ function promiseVerifyContents(aFile, aExpectedContents) {
         uri: NetUtil.newURI(aFile),
         loadUsingSystemPrincipal: true,
       },
-      function(aInputStream, aStatus) {
+      function (aInputStream, aStatus) {
         Assert.ok(Components.isSuccessCode(aStatus));
         let contents = NetUtil.readInputStreamToString(
           aInputStream,
@@ -264,7 +264,7 @@ var gStillRunning = true;
 
 add_task(function test_setup() {
   // Wait 10 minutes, that is half of the external xpcshell timeout.
-  do_timeout(10 * 60 * 1000, function() {
+  do_timeout(10 * 60 * 1000, function () {
     if (gStillRunning) {
       do_throw("Test timed out.");
     }

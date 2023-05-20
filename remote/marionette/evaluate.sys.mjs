@@ -74,7 +74,7 @@ export const evaluate = {};
  * @throws {ScriptTimeoutError}
  *   If the script was interrupted due to script timeout.
  */
-evaluate.sandbox = function(
+evaluate.sandbox = function (
   sb,
   script,
   args = [],
@@ -180,7 +180,7 @@ evaluate.sandbox = function(
  * @returns {boolean}
  *     True if <var>obj</var> is dead, false otherwise.
  */
-evaluate.isDead = function(obj, prop) {
+evaluate.isDead = function (obj, prop) {
   try {
     obj[prop];
   } catch (e) {
@@ -202,7 +202,7 @@ export const sandbox = {};
  * Unlike for {@link Components.utils.cloneInto}, `obj` may contain
  * functions and DOM elements.
  */
-sandbox.cloneInto = function(obj, sb) {
+sandbox.cloneInto = function (obj, sb) {
   return Cu.cloneInto(obj, sb, { cloneFunctions: true, wrapReflectors: true });
 };
 
@@ -219,7 +219,7 @@ sandbox.cloneInto = function(obj, sb) {
  * @returns {Sandbox}
  *     The augmented sandbox.
  */
-sandbox.augment = function(sb, adapter) {
+sandbox.augment = function (sb, adapter) {
   function* entries(obj) {
     for (let key of Object.keys(obj)) {
       yield [key, obj[key]];
@@ -246,7 +246,7 @@ sandbox.augment = function(sb, adapter) {
  * @returns {Sandbox}
  *     The created sandbox.
  */
-sandbox.create = function(win, principal = null, opts = {}) {
+sandbox.create = function (win, principal = null, opts = {}) {
   let p = principal || win;
   opts = Object.assign(
     {
@@ -271,7 +271,7 @@ sandbox.create = function(win, principal = null, opts = {}) {
  * @returns {Sandbox}
  *     The created sandbox.
  */
-sandbox.createMutable = function(win) {
+sandbox.createMutable = function (win) {
   let opts = {
     wantComponents: false,
     wantXrays: false,
@@ -280,14 +280,14 @@ sandbox.createMutable = function(win) {
   return Cu.waiveXrays(sandbox.create(win, null, opts));
 };
 
-sandbox.createSystemPrincipal = function(win) {
+sandbox.createSystemPrincipal = function (win) {
   let principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
     Ci.nsIPrincipal
   );
   return sandbox.create(win, principal);
 };
 
-sandbox.createSimpleTest = function(win, harness) {
+sandbox.createSimpleTest = function (win, harness) {
   let sb = sandbox.create(win);
   sb = sandbox.augment(sb, harness);
   sb[FINISH] = () => sb[COMPLETE](harness.generate_results());

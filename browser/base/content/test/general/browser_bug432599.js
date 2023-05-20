@@ -32,7 +32,7 @@ function invokeUsingStarButton(phase) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   const TEST_URL = "data:text/plain,Content";
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);

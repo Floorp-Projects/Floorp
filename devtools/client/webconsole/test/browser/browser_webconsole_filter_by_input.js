@@ -57,7 +57,7 @@ console.log("${HTML_CONSOLE_OUTPUT}");
 <script src="/${JS_ASCII_FILENAME}"></script>
 <script src="/${ENCODED_JS_UNICODE_FILENAME}"></script>`;
 
-add_task(async function() {
+add_task(async function () {
   const testUrl = createServerAndGetTestUrl();
   const hud = await openNewTabAndConsole(testUrl);
 
@@ -203,14 +203,14 @@ function createServerAndGetTestUrl() {
   httpServer.registerContentType("html", "text/html");
   httpServer.registerContentType("js", "application/javascript");
 
-  httpServer.registerPathHandler("/" + HTML_FILENAME, function(
+  httpServer.registerPathHandler("/" + HTML_FILENAME, function (
     request,
     response
   ) {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.write(HTML_CONTENT);
   });
-  httpServer.registerPathHandler("/" + JS_ASCII_FILENAME, function(
+  httpServer.registerPathHandler("/" + JS_ASCII_FILENAME, function (
     request,
     response
   ) {
@@ -222,7 +222,7 @@ function createServerAndGetTestUrl() {
     }
     response.write(content);
   });
-  httpServer.registerPathHandler("/" + ENCODED_JS_UNICODE_FILENAME, function(
+  httpServer.registerPathHandler("/" + ENCODED_JS_UNICODE_FILENAME, function (
     request,
     response
   ) {

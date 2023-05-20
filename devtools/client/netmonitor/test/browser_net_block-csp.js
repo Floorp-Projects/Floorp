@@ -7,7 +7,7 @@
  * Test that CSP violations display in the netmonitor when blocked
  */
 
-add_task(async function() {
+add_task(async function () {
   info("Test requests blocked by CSP in the top level document");
   await testRequestsBlockedByCSP(
     HTTPS_EXAMPLE_URL,

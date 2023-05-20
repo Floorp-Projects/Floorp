@@ -13,7 +13,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html>
 </main>
 `;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Place the mouse on the top left corner to avoid triggering an highlighter request

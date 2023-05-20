@@ -13,7 +13,7 @@ function isBrowserAppTab(browser) {
 }
 
 // Restarts the child process by crashing it then reloading the tab
-var restart = async function(browser) {
+var restart = async function (browser) {
   // If the tab isn't remote this would crash the main process so skip it
   if (!browser.isRemoteBrowser) {
     return;

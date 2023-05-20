@@ -16,7 +16,7 @@ console.info(
 );
 
 Object.defineProperty(window.wrappedJSObject, "webkitSpeechRecognition", {
-  value: exportFunction(function() {
+  value: exportFunction(function () {
     return class {};
   }, window),
 });

@@ -32,7 +32,7 @@ function validateResults() {
   Assert.equal(tags[0], TAG_NAME);
 }
 
-add_task(async function() {
+add_task(async function () {
   let jsonFile = PathUtils.join(PathUtils.profileDir, "bookmarks.json");
 
   // add a valid bookmark

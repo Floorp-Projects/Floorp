@@ -9,7 +9,7 @@ const TESTCASE_URI = TEST_BASE_HTTP + "autocomplete.html";
 // Pref which decides if CSS autocompletion is enabled in Style Editor or not.
 const AUTOCOMPLETION_PREF = "devtools.styleeditor.autocompletion-enabled";
 
-add_task(async function() {
+add_task(async function () {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
   const editor = await ui.editors[0].getSourceEditor();
   editor.sourceEditor.setOption("autocomplete", false);
@@ -25,7 +25,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setBoolPref(AUTOCOMPLETION_PREF, false);
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
   const editor = await ui.editors[0].getSourceEditor();

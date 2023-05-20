@@ -67,7 +67,7 @@ export class GeckoViewPermissionProcessChild extends JSProcessActorChild {
     const contentWindow = aRequest.getProperty("window");
     const devices = [];
 
-    const getStatusString = function(activityStatus) {
+    const getStatusString = function (activityStatus) {
       switch (activityStatus) {
         case lazy.MediaManagerService.STATE_CAPTURE_ENABLED:
         case lazy.MediaManagerService.STATE_CAPTURE_DISABLED:

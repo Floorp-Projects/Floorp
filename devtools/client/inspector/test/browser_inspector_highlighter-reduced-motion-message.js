@@ -44,7 +44,7 @@ add_task(async function testMessageHiddenWhenAlreadyDismissed() {
 // Check that the message is displayed under the expected conditions, that the
 // settings button successfully opens the corresponding panel and that after
 // dismissing the message once, it is no longer displayed.
-add_task(async function() {
+add_task(async function () {
   info("Enable ui.prefersReducedMotion");
   await pushPref(REDUCED_MOTION_PREF, 1);
 

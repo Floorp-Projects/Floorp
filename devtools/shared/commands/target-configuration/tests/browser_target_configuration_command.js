@@ -5,7 +5,7 @@
 
 // Test the watcher's target-configuration actor API.
 
-add_task(async function() {
+add_task(async function () {
   info("Setup the test page with workers of all types");
   const tab = await addTab("data:text/html;charset=utf-8,Configuration actor");
 

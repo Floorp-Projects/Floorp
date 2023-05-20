@@ -41,7 +41,7 @@ function isNoticeVisible(win) {
   return message && message.offsetHeight > 0;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enable clientid - see Discovery.jsm for the first two prefs.

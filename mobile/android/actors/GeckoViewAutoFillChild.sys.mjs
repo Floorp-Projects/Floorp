@@ -218,10 +218,7 @@ export class GeckoViewAutoFillChild extends GeckoViewActorChild {
 
     info = {
       isInputElement,
-      uuid: Services.uuid
-        .generateUUID()
-        .toString()
-        .slice(1, -1), // discard the surrounding curly braces
+      uuid: Services.uuid.generateUUID().toString().slice(1, -1), // discard the surrounding curly braces
       parentUuid: aParent,
       rootUuid: aRoot,
       tag: aElement.tagName,

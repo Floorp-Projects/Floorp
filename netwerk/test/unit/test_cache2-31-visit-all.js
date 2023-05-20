@@ -13,8 +13,8 @@ function run_test() {
 
   var mc = new MultipleCallbacks(
     8,
-    function() {
-      executeSoon(function() {
+    function () {
+      executeSoon(function () {
         var expectedConsumption = 8192;
         var entries = [
           { uri: "http://a/", lci: lcis[0] }, // default
@@ -29,10 +29,10 @@ function run_test() {
 
         Services.cache2.asyncVisitAllStorages(
           // Test should store 8 entries across 4 originAttributes
-          new VisitCallback(8, expectedConsumption, entries, function() {
+          new VisitCallback(8, expectedConsumption, entries, function () {
             Services.cache2.asyncVisitAllStorages(
               // Still 8 entries expected, now don't walk them
-              new VisitCallback(8, expectedConsumption, null, function() {
+              new VisitCallback(8, expectedConsumption, null, function () {
                 finish_cache2_test();
               }),
               false
@@ -52,13 +52,13 @@ function run_test() {
       "disk",
       Ci.nsICacheStorage.OPEN_NORMALLY,
       lcis[i],
-      new OpenCallback(NEW, "a1m", "a1d", function(entry) {
+      new OpenCallback(NEW, "a1m", "a1d", function (entry) {
         asyncOpenCacheEntry(
           "http://a/",
           "disk",
           Ci.nsICacheStorage.OPEN_NORMALLY,
           lcis[i],
-          new OpenCallback(NORMAL, "a1m", "a1d", function(entry) {
+          new OpenCallback(NORMAL, "a1m", "a1d", function (entry) {
             mc.fired();
           })
         );
@@ -70,13 +70,13 @@ function run_test() {
       "disk",
       Ci.nsICacheStorage.OPEN_NORMALLY,
       lcis[i],
-      new OpenCallback(NEW, "b1m", "b1d", function(entry) {
+      new OpenCallback(NEW, "b1m", "b1d", function (entry) {
         asyncOpenCacheEntry(
           "http://b/",
           "disk",
           Ci.nsICacheStorage.OPEN_NORMALLY,
           lcis[i],
-          new OpenCallback(NORMAL, "b1m", "b1d", function(entry) {
+          new OpenCallback(NORMAL, "b1m", "b1d", function (entry) {
             mc.fired();
           })
         );

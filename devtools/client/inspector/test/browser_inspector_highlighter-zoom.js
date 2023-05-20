@@ -19,7 +19,7 @@ const expectedStyle = (w, h, z) =>
   `position:absolute; width:${w * z}px;height:${h * z}px; ` +
   "overflow:hidden";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     TEST_URL
   );

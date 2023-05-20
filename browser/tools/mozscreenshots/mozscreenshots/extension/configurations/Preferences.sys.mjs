@@ -47,7 +47,7 @@ export var Preferences = {
   configurations: {},
 };
 
-let prefHelper = async function(primary, customFn = null) {
+let prefHelper = async function (primary, customFn = null) {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
   let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
 
@@ -55,7 +55,7 @@ let prefHelper = async function(primary, customFn = null) {
   await selectedBrowser.ownerGlobal.SpecialPowers.spawn(
     selectedBrowser,
     [],
-    async function() {
+    async function () {
       // Check that gSubDialog is defined on the content window
       // and that there is an open dialog to close
       if (!content.window.gSubDialog || !content.window.gSubDialog._topDialog) {
@@ -97,7 +97,7 @@ function paintPromise(browserWindow) {
   return new Promise(resolve => {
     browserWindow.addEventListener(
       "MozAfterPaint",
-      function() {
+      function () {
         resolve();
       },
       { once: true }
@@ -109,7 +109,7 @@ async function browsingGroup(aBrowser) {
   await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
-    async function() {
+    async function () {
       content.document.getElementById("browsingGroup").scrollIntoView();
     }
   );
@@ -119,7 +119,7 @@ async function cacheGroup(aBrowser) {
   await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
-    async function() {
+    async function () {
       content.document.getElementById("cacheGroup").scrollIntoView();
     }
   );
@@ -129,7 +129,7 @@ async function DNTDialog(aBrowser) {
   return aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
-    async function() {
+    async function () {
       const button = content.document.getElementById("doNotTrackSettings");
       if (!button) {
         return {
@@ -146,7 +146,7 @@ async function connectionDialog(aBrowser) {
   await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
-    async function() {
+    async function () {
       content.document.getElementById("connectionSettings").click();
     }
   );
@@ -156,7 +156,7 @@ async function clearRecentHistoryDialog(aBrowser) {
   await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
-    async function() {
+    async function () {
       content.document.getElementById("clearHistoryButton").click();
     }
   );
@@ -166,7 +166,7 @@ async function certManager(aBrowser) {
   await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
-    async function() {
+    async function () {
       content.document.getElementById("viewCertificatesButton").click();
     }
   );
@@ -176,7 +176,7 @@ async function deviceManager(aBrowser) {
   await aBrowser.ownerGlobal.SpecialPowers.spawn(
     aBrowser,
     [],
-    async function() {
+    async function () {
       content.document.getElementById("viewSecurityDevicesButton").click();
     }
   );

@@ -1,5 +1,5 @@
 let testframe = document.getElementById("testframe");
-testframe.onload = function() {
+testframe.onload = function () {
   parent.postMessage(
     {
       result: "frame-allowed",
@@ -8,7 +8,7 @@ testframe.onload = function() {
     "*"
   );
 };
-testframe.onerror = function() {
+testframe.onerror = function () {
   parent.postMessage(
     {
       result: "frame-blocked",

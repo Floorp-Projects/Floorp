@@ -10,7 +10,7 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 let bookmarks;
 let folder;
 
-add_setup(async function() {
+add_setup(async function () {
   folder = await PlacesUtils.bookmarks.insert({
     title: "Sidebar Test Folder",
     type: PlacesUtils.bookmarks.TYPE_FOLDER,

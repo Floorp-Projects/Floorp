@@ -20,7 +20,7 @@ const {
 } = require("resource://devtools/client/shared/widgets/tooltip/HTMLTooltip.js");
 loadHelperScript("helper_html_tooltip.js");
 
-add_task(async function() {
+add_task(async function () {
   // Force the toolbox to be 400px tall => 50px for each box.
   await pushPref("devtools.toolbox.footer.height", 400);
 

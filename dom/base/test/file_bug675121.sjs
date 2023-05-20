@@ -9,7 +9,7 @@ function handleRequest(request, response) {
     Components.interfaces.nsITimer
   );
   timer.initWithCallback(
-    function() {
+    function () {
       response.finish();
       // 50ms certainly be enough for one refresh driver firing to happen!
     },

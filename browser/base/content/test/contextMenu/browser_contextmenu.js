@@ -60,7 +60,7 @@ function getThisFrameSubMenu(base_menu) {
   return base_menu;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.separatePrivateDefault.ui.enabled", true],
@@ -121,7 +121,7 @@ add_task(async function test_setup_html() {
 
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let doc = content.document;
     let audioIframe = doc.querySelector("#test-audio-in-iframe");
     // media documents always use a <video> tag.
@@ -1160,28 +1160,36 @@ add_task(async function test_copylinkcommand() {
 
       // The easiest way to check the clipboard is to paste the contents
       // into a textbox.
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-        let doc = content.document;
-        let input = doc.getElementById("test-input");
-        input.focus();
-        input.value = "";
-      });
+      await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [],
+        async function () {
+          let doc = content.document;
+          let input = doc.getElementById("test-input");
+          input.focus();
+          input.value = "";
+        }
+      );
       document.commandDispatcher
         .getControllerForCommand("cmd_paste")
         .doCommand("cmd_paste");
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-        let doc = content.document;
-        let input = doc.getElementById("test-input");
-        Assert.equal(
-          input.value,
-          // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-          "http://mozilla.com/",
-          "paste for command cmd_paste"
-        );
-        // Don't keep focus, because that may affect clipboard commands in
-        // subsequently-opened menus.
-        input.blur();
-      });
+      await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [],
+        async function () {
+          let doc = content.document;
+          let input = doc.getElementById("test-input");
+          Assert.equal(
+            input.value,
+            // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+            "http://mozilla.com/",
+            "paste for command cmd_paste"
+          );
+          // Don't keep focus, because that may affect clipboard commands in
+          // subsequently-opened menus.
+          input.blur();
+        }
+      );
     },
   });
 });
@@ -1226,28 +1234,36 @@ add_task(async function test_dom_full_screen() {
           ["full-screen-api.transition-duration.leave", "0 0"],
         ],
       });
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-        let doc = content.document;
-        let win = doc.defaultView;
-        let full_screen_element = doc.getElementById("test-dom-full-screen");
-        let awaitFullScreenChange = ContentTaskUtils.waitForEvent(
-          win,
-          "fullscreenchange"
-        );
-        full_screen_element.requestFullscreen();
-        await awaitFullScreenChange;
-      });
+      await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [],
+        async function () {
+          let doc = content.document;
+          let win = doc.defaultView;
+          let full_screen_element = doc.getElementById("test-dom-full-screen");
+          let awaitFullScreenChange = ContentTaskUtils.waitForEvent(
+            win,
+            "fullscreenchange"
+          );
+          full_screen_element.requestFullscreen();
+          await awaitFullScreenChange;
+        }
+      );
     },
     async postCheckContextMenuFn() {
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-        let win = content.document.defaultView;
-        let awaitFullScreenChange = ContentTaskUtils.waitForEvent(
-          win,
-          "fullscreenchange"
-        );
-        content.document.exitFullscreen();
-        await awaitFullScreenChange;
-      });
+      await SpecialPowers.spawn(
+        gBrowser.selectedBrowser,
+        [],
+        async function () {
+          let win = content.document.defaultView;
+          let awaitFullScreenChange = ContentTaskUtils.waitForEvent(
+            win,
+            "fullscreenchange"
+          );
+          content.document.exitFullscreen();
+          await awaitFullScreenChange;
+        }
+      );
     },
   });
 });
@@ -1394,7 +1410,7 @@ add_task(async function test_select_text_link() {
         await SpecialPowers.spawn(
           gBrowser.selectedBrowser,
           [],
-          async function() {
+          async function () {
             let win = content.document.defaultView;
             win.getSelection().removeAllRanges();
           }
@@ -1897,7 +1913,7 @@ async function selectText(selector) {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [selector],
-    async function(contentSelector) {
+    async function (contentSelector) {
       info(`Selecting text of ${contentSelector}`);
       let doc = content.document;
       let win = doc.defaultView;

@@ -1675,8 +1675,8 @@ tests.push({
 
     await PlacesUtils.withConnectionWrapper(
       "L.1: Insert foreign key refs",
-      function(db) {
-        return db.executeTransaction(async function() {
+      function (db) {
+        return db.executeTransaction(async function () {
           for (let { placeId, date, type } of visits) {
             await db.executeCached(
               `INSERT INTO moz_historyvisits(place_id, visit_date, visit_type)
@@ -2111,7 +2111,7 @@ tests.push({
       }),
       0
     );
-    await PlacesUtils.withConnectionWrapper("change url hash", async function(
+    await PlacesUtils.withConnectionWrapper("change url hash", async function (
       db
     ) {
       await db.execute(`UPDATE moz_places SET url_hash = 0`);
@@ -2314,7 +2314,7 @@ tests.push({
     );
 
     await PlacesUtils.withConnectionWrapper("Insert tombstones", db =>
-      db.executeTransaction(async function() {
+      db.executeTransaction(async function () {
         for (let guid of ["bookmarkAAAA", "bookmarkBBBB"]) {
           await db.executeCached(
             `INSERT INTO moz_bookmarks_deleted(guid)

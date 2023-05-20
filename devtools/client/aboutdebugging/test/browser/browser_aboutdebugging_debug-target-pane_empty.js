@@ -19,7 +19,7 @@ Services.scriptloader.loadSubScript(
 const EXTENSION_PATH = "resources/test-temporary-extension/manifest.json";
 const EXTENSION_NAME = "test-temporary-extension";
 
-add_task(async function() {
+add_task(async function () {
   prepareCollapsibilitiesTest();
 
   const { document, tab, window } = await openAboutDebugging();

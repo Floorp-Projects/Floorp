@@ -34,7 +34,7 @@ function openEditCertTrustDialog() {
   return new Promise((resolve, reject) => {
     win.addEventListener(
       "load",
-      function() {
+      function () {
         executeSoon(() => resolve(win));
       },
       { once: true }
@@ -42,7 +42,7 @@ function openEditCertTrustDialog() {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Initially trust ca.pem for SSL but not e-mail.
   gCert = await readCertificate("ca.pem", "CT,,");
   Assert.ok(

@@ -61,7 +61,7 @@ function insertIframe(parentBC, uri) {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Enable the service and insert the test rules. We only test
   // MODE_REJECT_OR_ACCEPT here as the other modes are covered by other tests
   // already and hasRuleForBrowsingContextTree mostly shares logic with other

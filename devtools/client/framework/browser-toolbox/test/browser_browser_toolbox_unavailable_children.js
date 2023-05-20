@@ -20,7 +20,7 @@ requestLongerTimeout(4);
 // browser elements when switching from Multi Process mode to Parent Process
 // mode.
 
-add_task(async function() {
+add_task(async function () {
   // Forces the Browser Toolbox to open on the inspector by default
   await pushPref("devtools.browsertoolbox.panel", "inspector");
   await pushPref("devtools.browsertoolbox.scope", "everything");

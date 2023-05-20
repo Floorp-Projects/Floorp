@@ -7,7 +7,7 @@
 // a page load whilst we're getting the search url, then we don't handle the
 // original search query.
 
-add_setup(async function() {
+add_setup(async function () {
   sandbox = sinon.createSandbox();
 
   registerCleanupFunction(async () => {

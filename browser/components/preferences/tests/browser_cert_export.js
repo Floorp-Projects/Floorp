@@ -18,7 +18,7 @@ function createTemporarySaveDirectory() {
 
 // Create the folder the certificates will be saved into.
 var destDir = createTemporarySaveDirectory();
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   destDir.remove(true);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
@@ -81,7 +81,7 @@ async function checkCertExportWorks(
   var destFile = destDir.clone();
   MockFilePicker.init(window);
   MockFilePicker.filterIndex = exportType;
-  MockFilePicker.showCallback = function(fp) {
+  MockFilePicker.showCallback = function (fp) {
     info("showCallback");
     let fileName = fp.defaultString;
     info("fileName: " + fileName);

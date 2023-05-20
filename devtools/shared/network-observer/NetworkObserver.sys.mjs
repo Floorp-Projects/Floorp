@@ -548,7 +548,7 @@ export class NetworkObserver {
    * @param number extraSizeData
    * @param string extraStringData
    */
-  observeActivity = DevToolsInfaillibleUtils.makeInfallible(function(
+  observeActivity = DevToolsInfaillibleUtils.makeInfallible(function (
     channel,
     activityType,
     activitySubtype,

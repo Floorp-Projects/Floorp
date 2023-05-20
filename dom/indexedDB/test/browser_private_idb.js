@@ -49,7 +49,7 @@ async function workerDriverFunc() {
   /* eslint-env worker */
   // (SharedWorker)
   if (!("postMessage" in self)) {
-    addEventListener("connect", function(evt) {
+    addEventListener("connect", function (evt) {
       const port = evt.ports[0];
       resultPromise.then(result => {
         console.log("worker test completed, postMessage-ing result:", result);
@@ -94,12 +94,12 @@ async function workerCheckDeployer({ srcBlob, workerType }) {
   const result = await new Promise((resolve, reject) => {
     port.addEventListener(
       "message",
-      function(evt) {
+      function (evt) {
         resolve(evt.data.idbResult);
       },
       { once: true }
     );
-    worker.addEventListener("error", function(evt) {
+    worker.addEventListener("error", function (evt) {
       console.error("worker problem:", evt);
       reject(evt);
     });
@@ -139,7 +139,7 @@ async function checkTabSharedWorkerIDB(tab) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   const pageUrl =
     "http://example.com/browser/dom/indexedDB/test/page_private_idb.html";
 

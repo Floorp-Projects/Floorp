@@ -5,7 +5,7 @@
 
 // Test whether the scrubber was working for even the animation of infinity duration.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_infinity_duration.html");
   await removeAnimatedElementsExcept([".infinity-delay-iteration-start"]);
   const { animationInspector, panel } = await openAnimationInspector();

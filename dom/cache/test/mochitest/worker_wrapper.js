@@ -113,7 +113,7 @@ addEventListener("message", function workerWrapperOnMessage(e) {
   if ("ServiceWorker" in self) {
     self.clients
       .matchAll({ includeUncontrolled: true })
-      .then(function(clients) {
+      .then(function (clients) {
         for (var i = 0; i < clients.length; ++i) {
           if (clients[i].url.indexOf("message_receiver.html") > -1) {
             client = clients[i];

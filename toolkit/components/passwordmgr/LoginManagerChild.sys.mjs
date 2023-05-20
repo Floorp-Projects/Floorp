@@ -2008,7 +2008,7 @@ export class LoginManagerChild extends JSWindowActorChild {
     } else {
       window.addEventListener(
         "DOMContentLoaded",
-        function() {
+        function () {
           lazy.log(
             "Arming the onDOMInputPasswordAdded DeferredTask due to DOMContentLoaded."
           );
@@ -2943,7 +2943,7 @@ export class LoginManagerChild extends JSWindowActorChild {
         maxPasswordLen = passwordField.maxLength;
       }
 
-      let logins = foundLogins.filter(function(l) {
+      let logins = foundLogins.filter(function (l) {
         let fit =
           l.username.length <= maxUsernameLen &&
           l.password.length <= maxPasswordLen;

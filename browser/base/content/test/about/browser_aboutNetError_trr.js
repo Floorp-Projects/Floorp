@@ -52,7 +52,7 @@ async function loadErrorPage() {
 add_task(async function exceptionButtonTRROnly() {
   let browser = await loadErrorPage();
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),
@@ -93,7 +93,7 @@ add_task(async function TRROnlyExceptionButtonTelemetry() {
 
   let browser = await loadErrorPage();
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),
@@ -122,7 +122,7 @@ add_task(async function TRROnlyExceptionButtonTelemetry() {
     },
   ]);
 
-  await SpecialPowers.spawn(browser, [], function() {
+  await SpecialPowers.spawn(browser, [], function () {
     const doc = content.document;
     let buttons = ["neterrorTryAgainButton", "trrSettingsButton"];
     for (let buttonId of buttons) {

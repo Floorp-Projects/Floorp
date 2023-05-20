@@ -56,7 +56,7 @@ addDebuggerToGlobal(global);
  * @param Boolean watchAllGlobals
  *        If true, only allocations made from DevTools contexts are going to be recorded.
  */
-exports.allocationTracker = function({
+exports.allocationTracker = function ({
   watchGlobal,
   watchAllGlobals,
   watchDevToolsGlobals,
@@ -129,7 +129,7 @@ exports.allocationTracker = function({
 
   // addAllGlobalsAsDebuggees won't automatically track new ones,
   // so ensure tracking all new globals
-  dbg.onNewGlobalObject = function(g) {
+  dbg.onNewGlobalObject = function (g) {
     if (acceptGlobal(g)) {
       dbg.addDebuggee(g);
     }

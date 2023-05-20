@@ -241,7 +241,7 @@ const TreeNodeFactory = createFactory(TreeNode);
 function oncePerAnimationFrame(fn, { getDocument }) {
   let animationId = null;
   let argsToPass = null;
-  return function(...args) {
+  return function (...args) {
     argsToPass = args;
     if (animationId !== null) {
       return;

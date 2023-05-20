@@ -27,12 +27,12 @@ add_task(async function purgeHistoryTest() {
       ok(backButton.hasAttribute("disabled"), "Back button is disabled");
       ok(forwardButton.hasAttribute("disabled"), "Forward button is disabled");
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let startHistory = content.history.length;
         content.history.pushState({}, "");
         content.history.pushState({}, "");
         content.history.back();
-        await new Promise(function(r) {
+        await new Promise(function (r) {
           content.onpopstate = r;
         });
         let newHistory = content.history.length;
@@ -53,7 +53,7 @@ add_task(async function purgeHistoryTest() {
 
       await Sanitizer.sanitize(["history"]);
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         Assert.equal(content.history.length, 1, "SHistory correctly cleared");
       });
 

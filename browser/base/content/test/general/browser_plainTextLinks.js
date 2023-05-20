@@ -11,7 +11,7 @@ function testLinkExpected(expected, msg) {
   is(gContextMenu.linkURL, expected, msg);
 }
 
-add_task(async function() {
+add_task(async function () {
   const url =
     "data:text/html;charset=UTF-8,Test For Non-Hyperlinked url selection";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
@@ -19,7 +19,7 @@ add_task(async function() {
   await SimpleTest.promiseFocus(gBrowser.selectedBrowser);
 
   // Initial setup of the content area.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function(arg) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function (arg) {
     let doc = content.document;
     let range = doc.createRange();
     let selection = content.getSelection();
@@ -181,7 +181,7 @@ add_task(async function() {
     let menuPosition = await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [{ testid }],
-      async function(arg) {
+      async function (arg) {
         let range = content.tests[arg.testid]();
 
         // Get the range of the selection and determine its coordinates. These

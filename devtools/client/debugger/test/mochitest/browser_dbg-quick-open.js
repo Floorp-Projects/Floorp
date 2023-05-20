@@ -6,14 +6,14 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-script-switching.html");
 
   // Inject lots of sources to go beyond the maximum limit of displayed sources (set to 100)
   const injectedSources = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       const sources = [];
       for (let i = 1; i <= 200; i++) {
         const value = String(i).padStart(3, "0");

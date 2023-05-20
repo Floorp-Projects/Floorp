@@ -473,9 +473,9 @@ _setPrefs();
 for (let tc of TEST_ENVIRONMENT_CASES) {
   info("Sanity checking the testcase: " + tc.description);
 
-  (function() {
+  (function () {
     let testcase = tc;
-    add_task(async function() {
+    add_task(async function () {
       info("Starting testcase: " + testcase.description);
 
       for (let pref of testcase.extraTestPreferences) {

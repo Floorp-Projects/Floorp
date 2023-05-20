@@ -185,7 +185,7 @@ const tests = [
 ];
 
 //jscs:disable
-add_task(async function() {
+add_task(async function () {
   //jscs:enable
   const testPromises = tests.map(test => {
     const tabOptions = {

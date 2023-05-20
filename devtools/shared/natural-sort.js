@@ -122,7 +122,7 @@ function naturalSort(a = "", b = "", sessionString, insensitive = false) {
 
 // Normalize spaces; find floats not starting with '0', string or 0 if not
 // defined
-const normalizeChunk = function(str, length) {
+const normalizeChunk = function (str, length) {
   return (
     ((!str.match(startsWithZeroRx) || length == 1) && parseFloat(str)) ||
     str.replace(whitespaceRx, " ").trim() ||

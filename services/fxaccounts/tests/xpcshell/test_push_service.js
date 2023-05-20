@@ -424,7 +424,7 @@ add_test(function observePushTopicPasswordChanged() {
     pushService: mockPushService,
   });
 
-  pushService._onPasswordChanged = function() {
+  pushService._onPasswordChanged = function () {
     run_next_test();
   };
 
@@ -451,7 +451,7 @@ add_test(function observePushTopicPasswordReset() {
     pushService: mockPushService,
   });
 
-  pushService._onPasswordChanged = function() {
+  pushService._onPasswordChanged = function () {
     run_next_test();
   };
 

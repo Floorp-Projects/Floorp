@@ -228,7 +228,7 @@ const TESTCASES = [FR_TESTCASES, DE_TESTCASES];
 
 for (let localeTests of TESTCASES) {
   for (let testcase of localeTests) {
-    add_task(async function() {
+    add_task(async function () {
       info("Starting testcase: " + testcase.description);
 
       let doc = MockDocument.createTestDocument(

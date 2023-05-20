@@ -126,7 +126,7 @@ function openBrowserWindowIntl() {
     gBrowserContext.startURL || "data:text/html,<html></html>"
   );
 
-  whenDelayedStartupFinished(browserWindow(), function() {
+  whenDelayedStartupFinished(browserWindow(), function () {
     addA11yLoadEvent(startBrowserTests, browserWindow());
   });
 }

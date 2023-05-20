@@ -204,14 +204,14 @@ function onAlertLoad() {
     moveWindowToEnd();
   }
 
-  window.addEventListener("XULAlertClose", function() {
+  window.addEventListener("XULAlertClose", function () {
     window.close();
   });
 
   // If the require interaction flag is set, prevent auto-closing the notification.
   if (!gRequireInteraction) {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setTimeout(function() {
+      setTimeout(function () {
         window.close();
       }, ALERT_DURATION_IMMEDIATE);
     } else {

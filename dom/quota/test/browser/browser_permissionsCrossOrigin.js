@@ -7,19 +7,19 @@ const emptyURL =
   "https://example.com/browser/dom/quota/test/browser/empty.html";
 
 addTest(async function testNoPermissionPrompt() {
-  registerPopupEventHandler("popupshowing", function() {
+  registerPopupEventHandler("popupshowing", function () {
     ok(false, "Shouldn't show a popup this time");
   });
-  registerPopupEventHandler("popupshown", function() {
+  registerPopupEventHandler("popupshown", function () {
     ok(false, "Shouldn't show a popup this time");
   });
-  registerPopupEventHandler("popuphidden", function() {
+  registerPopupEventHandler("popuphidden", function () {
     ok(false, "Shouldn't show a popup this time");
   });
 
   info("Creating tab");
 
-  await BrowserTestUtils.withNewTab(emptyURL, async function(browser) {
+  await BrowserTestUtils.withNewTab(emptyURL, async function (browser) {
     await new Promise(r => {
       SpecialPowers.pushPrefEnv(
         {
@@ -33,14 +33,14 @@ addTest(async function testNoPermissionPrompt() {
       );
     });
 
-    await SpecialPowers.spawn(browser, [], async function(host0) {
+    await SpecialPowers.spawn(browser, [], async function (host0) {
       let frame = content.document.createElement("iframe");
       // Cross origin src
       frame.src = "https://example.org/browser/dom/quota/test/empty.html";
       content.document.body.appendChild(frame);
       await ContentTaskUtils.waitForEvent(frame, "load");
 
-      await content.SpecialPowers.spawn(frame, [], async function() {
+      await content.SpecialPowers.spawn(frame, [], async function () {
         // Request a permission.
         const persistAllowed = await this.content.navigator.storage.persist();
         Assert.ok(

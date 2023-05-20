@@ -20,7 +20,7 @@ async function setupForms(numUsernameOnly, numBasic, numOther) {
         numBasic,
       },
     ],
-    async function(data) {
+    async function (data) {
       // type: 1: basic, 2:usernameOnly, 3:other
       function addForm(type) {
         const form = content.document.createElement("form");
@@ -70,7 +70,7 @@ async function checkChildHistogram(id, index, expected) {
   Assert.equal(histogram.values[index], expected);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   SpecialPowers.pushPrefEnv({
     set: [
       ["signon.usernameOnlyForm.enabled", true],

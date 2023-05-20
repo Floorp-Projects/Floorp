@@ -71,7 +71,7 @@ async function testStringChange({
       gBrowser,
       url,
     },
-    async function(browser) {
+    async function (browser) {
       info(`Opened tab with url: ${url}, waiting for focus`);
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       info("Waiting for form-processed message");
@@ -82,7 +82,7 @@ async function testStringChange({
       await ContentTask.spawn(
         browser,
         { USERNAME_INPUT_SELECTOR, expectedKeypresses },
-        async function({ USERNAME_INPUT_SELECTOR, expectedKeypresses }) {
+        async function ({ USERNAME_INPUT_SELECTOR, expectedKeypresses }) {
           let input = content.document.querySelector(USERNAME_INPUT_SELECTOR);
 
           let verifyKeyListener = event => {

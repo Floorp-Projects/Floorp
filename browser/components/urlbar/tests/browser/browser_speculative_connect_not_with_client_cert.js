@@ -148,7 +148,7 @@ function getTestServerCertificate() {
   return null;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.autoFill", true],
@@ -189,7 +189,7 @@ add_setup(async function() {
     true
   );
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     MockRegistrar.unregister(clientAuthDialogsCID);
     certOverrideService.clearValidityOverride("localhost", server.port, {});

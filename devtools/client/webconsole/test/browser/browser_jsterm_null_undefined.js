@@ -6,7 +6,7 @@
 const TEST_URI =
   "data:text/html,<!DOCTYPE html>Test evaluating null and undefined";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Check that an evaluated null produces "null". See Bug 650780.

@@ -28,7 +28,7 @@
 function workerTestExec(script) {
   SimpleTest.waitForExplicitFinish();
   var worker = new Worker("worker_wrapper.js");
-  worker.onmessage = function(event) {
+  worker.onmessage = function (event) {
     if (event.data.type == "finish") {
       SimpleTest.finish();
     } else if (event.data.type == "status") {
@@ -75,7 +75,7 @@ function workerTestExec(script) {
     }
   };
 
-  worker.onerror = function(event) {
+  worker.onerror = function (event) {
     ok(false, "Worker had an error: " + event.data);
     SimpleTest.finish();
   };

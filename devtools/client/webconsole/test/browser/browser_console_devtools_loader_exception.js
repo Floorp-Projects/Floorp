@@ -9,7 +9,7 @@
 const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html><p>browser_console_devtools_loader_exception.js</p>";
 
-add_task(async function() {
+add_task(async function () {
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);

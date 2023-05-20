@@ -103,7 +103,7 @@ function testScript() {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
   gBrowser.selectedTab = tab1;

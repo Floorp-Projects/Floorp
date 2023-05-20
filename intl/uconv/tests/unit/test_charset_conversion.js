@@ -193,7 +193,7 @@ function equalUnicharStreams(s1, s2) {
 }
 
 function stringToCodePoints(str) {
-  return str.split("").map(function(v) {
+  return str.split("").map(function (v) {
     return v.charCodeAt(0);
   });
 }

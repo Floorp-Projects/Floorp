@@ -8,7 +8,7 @@
 const TEST_URL = `data:text/html;charset=utf-8,
                   <div id='retag-me'><div id='retag-me-2'></div></div>`;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   await inspector.markup.expandAll();

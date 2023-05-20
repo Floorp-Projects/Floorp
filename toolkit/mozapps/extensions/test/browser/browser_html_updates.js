@@ -13,7 +13,7 @@ registerCleanupFunction(() => {
   AddonManager.autoUpdateDefault = initialAutoUpdate;
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.checkUpdateSecurity", false]],
   });

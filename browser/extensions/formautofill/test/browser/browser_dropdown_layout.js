@@ -10,7 +10,7 @@ add_task(async function setup_storage() {
 async function reopenPopupWithResizedInput(browser, selector, newSize) {
   await closePopup(browser);
   /* eslint no-shadow: ["error", { "allow": ["selector", "newSize"] }] */
-  await SpecialPowers.spawn(browser, [{ selector, newSize }], async function({
+  await SpecialPowers.spawn(browser, [{ selector, newSize }], async function ({
     selector,
     newSize,
   }) {
@@ -23,7 +23,7 @@ async function reopenPopupWithResizedInput(browser, selector, newSize) {
 }
 
 add_task(async function test_address_dropdown() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     browser
   ) {
     const focusInput = "#organization";

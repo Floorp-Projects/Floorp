@@ -47,7 +47,7 @@ for (let i = 0; i < legacyProps.length; i++) {
 /**
  * After BODY loads, run some more tests.
  */
-addLoadEvent(function() {
+addLoadEvent(function () {
   // Verify that the legacy color properties still have their original values.
   for (let i = 0; i < legacyProps.length; i++) {
     is(

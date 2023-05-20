@@ -119,6 +119,6 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await runEventPopupTests(TEST_URL, TEST_DATA);
 });

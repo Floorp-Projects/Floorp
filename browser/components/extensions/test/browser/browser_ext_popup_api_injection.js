@@ -27,7 +27,7 @@ add_task(async function testPageActionPopup() {
       "popup-b.js": 'browser.test.sendMessage("from-popup-b");',
     },
 
-    background: function() {
+    background: function () {
       let tabId;
       browser.tabs.query({ active: true, currentWindow: true }, tabs => {
         tabId = tabs[0].id;

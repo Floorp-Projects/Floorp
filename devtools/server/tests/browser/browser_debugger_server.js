@@ -5,7 +5,7 @@
 
 // Test basic features of DevToolsServer
 
-add_task(async function() {
+add_task(async function () {
   // When running some other tests before, they may not destroy the main server.
   // Do it manually before running our tests.
   if (DevToolsServer.initialized) {
@@ -156,7 +156,7 @@ async function testDevToolsServerKeepAlive() {
 }
 
 async function assertServerInitialized(tab, expected, message) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [expected, message], function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [expected, message], function (
     _expected,
     _message
   ) {
@@ -171,7 +171,7 @@ async function assertServerInitialized(tab, expected, message) {
 }
 
 async function assertDevToolsOpened(tab, expected, message) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [expected, message], function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [expected, message], function (
     _expected,
     _message
   ) {
@@ -180,7 +180,7 @@ async function assertDevToolsOpened(tab, expected, message) {
 }
 
 async function setContentServerKeepAlive(tab, keepAlive, message) {
-  await SpecialPowers.spawn(tab.linkedBrowser, [keepAlive], function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [keepAlive], function (
     _keepAlive
   ) {
     const { require } = ChromeUtils.importESModule(

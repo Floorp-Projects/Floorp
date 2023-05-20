@@ -19,7 +19,7 @@ const {
 );
 
 async function runSuiteWithContentListener(name, trigger_suite_func, expected) {
-  return async function(browser) {
+  return async function (browser) {
     info("Running content suite: " + name);
     await SpecialPowers.spawn(browser, [expected, name], checkExpectedCookies);
     await trigger_suite_func();

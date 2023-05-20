@@ -88,7 +88,7 @@ describe("ToolbarPanelHub", () => {
     };
     fakeWindow = {
       // eslint-disable-next-line object-shorthand
-      DocumentFragment: function() {
+      DocumentFragment: function () {
         return fakeElementById;
       },
       document: fakeDocument,

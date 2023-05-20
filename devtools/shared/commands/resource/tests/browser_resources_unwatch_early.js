@@ -10,7 +10,7 @@ const ResourceCommand = require("resource://devtools/shared/commands/resource/re
 
 const TEST_URI = "data:text/html;charset=utf-8,";
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URI);
 
   const { client, resourceCommand, targetCommand } = await initResourceCommand(
@@ -88,7 +88,7 @@ add_task(async function() {
 });
 
 function logInTab(tab, message) {
-  return ContentTask.spawn(tab.linkedBrowser, message, function(_message) {
+  return ContentTask.spawn(tab.linkedBrowser, message, function (_message) {
     content.console.log(_message);
   });
 }

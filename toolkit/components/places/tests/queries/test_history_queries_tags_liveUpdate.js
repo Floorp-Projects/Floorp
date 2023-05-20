@@ -64,7 +64,7 @@ add_task(async function test_initialize() {
 
 add_task(function pages_query() {
   let [query, options] = newQueryWithOptions();
-  testQueryContents(query, options, function(root) {
+  testQueryContents(query, options, function (root) {
     compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);
@@ -81,7 +81,7 @@ add_task(function pages_query() {
 add_task(function visits_query() {
   let [query, options] = newQueryWithOptions();
   options.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_VISIT;
-  testQueryContents(query, options, function(root) {
+  testQueryContents(query, options, function (root) {
     compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);
@@ -98,7 +98,7 @@ add_task(function visits_query() {
 add_task(function bookmarks_query() {
   let [query, options] = newQueryWithOptions();
   query.setParents([PlacesUtils.bookmarks.unfiledGuid]);
-  testQueryContents(query, options, function(root) {
+  testQueryContents(query, options, function (root) {
     compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);
@@ -115,7 +115,7 @@ add_task(function bookmarks_query() {
 add_task(function pages_searchterm_query() {
   let [query, options] = newQueryWithOptions();
   query.searchTerms = "example";
-  testQueryContents(query, options, function(root) {
+  testQueryContents(query, options, function (root) {
     compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);
@@ -133,7 +133,7 @@ add_task(function visits_searchterm_query() {
   let [query, options] = newQueryWithOptions();
   query.searchTerms = "example";
   options.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_VISIT;
-  testQueryContents(query, options, function(root) {
+  testQueryContents(query, options, function (root) {
     compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);

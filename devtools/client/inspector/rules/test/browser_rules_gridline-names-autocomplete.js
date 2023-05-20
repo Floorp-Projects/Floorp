@@ -68,7 +68,7 @@ const newRowTestData = [
 
 const TEST_URL = URL_ROOT + "doc_grid_names.html";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URL);
   const { toolbox, inspector, view } = await openRuleView();
 

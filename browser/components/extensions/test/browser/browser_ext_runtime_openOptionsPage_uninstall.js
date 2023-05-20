@@ -22,7 +22,7 @@ async function loadExtension(options) {
           </head>
         </html>`,
 
-      "options.js": function() {
+      "options.js": function () {
         browser.runtime.sendMessage("options.html");
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
           if (msg == "ping") {
@@ -56,7 +56,7 @@ add_task(async function test_inline_options_uninstall() {
       },
     },
 
-    background: async function() {
+    background: async function () {
       let _optionsPromise;
       let awaitOptions = () => {
         browser.test.assertFalse(

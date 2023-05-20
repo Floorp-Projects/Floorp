@@ -166,13 +166,13 @@ async function generateCookies(aHost) {
   let tabInfoA = await openTabInUserContext(aHost, USER_CONTEXT_ID_PERSONAL);
   let tabInfoB = await openTabInUserContext(aHost, USER_CONTEXT_ID_WORK);
 
-  await SpecialPowers.spawn(tabInfoA.browser, [cookies[0]], async function(
+  await SpecialPowers.spawn(tabInfoA.browser, [cookies[0]], async function (
     value
   ) {
     content.document.cookie = value;
   });
 
-  await SpecialPowers.spawn(tabInfoB.browser, [cookies[1]], async function(
+  await SpecialPowers.spawn(tabInfoB.browser, [cookies[1]], async function (
     value
   ) {
     content.document.cookie = value;
@@ -320,7 +320,7 @@ async function doTestForAllTabsFavicon(aTestPage, aFaviconHost, aFaviconURL) {
   tabBrowser.removeAttribute("overflow");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.userContext.enabled", true]],

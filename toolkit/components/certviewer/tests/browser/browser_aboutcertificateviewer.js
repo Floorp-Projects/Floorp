@@ -15,11 +15,11 @@ const error_parsing_cert =
 async function checkForErrorSection(infoMessage, url, errorMessage, testType) {
   info(infoMessage);
 
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     await SpecialPowers.spawn(
       browser,
       [{ errorMessage, testType }],
-      async function({ errorMessage, testType }) {
+      async function ({ errorMessage, testType }) {
         let errorSection;
 
         if (testType === "invalid") {

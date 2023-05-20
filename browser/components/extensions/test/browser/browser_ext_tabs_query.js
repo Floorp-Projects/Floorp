@@ -4,7 +4,7 @@
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:robots"
@@ -82,12 +82,12 @@ add_task(async function() {
       permissions: ["tabs"],
     },
 
-    background: function() {
+    background: function () {
       browser.tabs.query(
         {
           url: "<all_urls>",
         },
-        function(tabs) {
+        function (tabs) {
           browser.test.assertEq(tabs.length, 3, "should have three tabs");
 
           tabs.sort((tab1, tab2) => tab1.index - tab2.index);
@@ -124,12 +124,12 @@ add_task(async function() {
       permissions: ["tabs"],
     },
 
-    background: function() {
+    background: function () {
       browser.tabs.query(
         {
           url: "http://*/MochiKit*",
         },
-        function(tabs) {
+        function (tabs) {
           browser.test.assertEq(tabs.length, 1, "should have one tab");
 
           browser.test.assertEq(
@@ -154,12 +154,12 @@ add_task(async function() {
       permissions: ["tabs"],
     },
 
-    background: function() {
+    background: function () {
       browser.tabs.query(
         {
           url: ["http://*/MochiKit*", "http://*.com/*"],
         },
-        function(tabs) {
+        function (tabs) {
           browser.test.assertEq(tabs.length, 2, "should have two tabs");
 
           tabs.sort((tab1, tab2) => tab1.index - tab2.index);
@@ -249,7 +249,7 @@ add_task(async function() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       let tabs1 = await browser.tabs.query({ highlighted: false });
       browser.test.assertEq(
         3,
@@ -282,7 +282,7 @@ add_task(async function() {
       permissions: ["tabs"],
     },
 
-    background: function() {
+    background: function () {
       browser.test.onMessage.addListener(async msg => {
         let tabs = await browser.tabs.query({ active: true });
 
@@ -389,8 +389,8 @@ add_task(async function test_query_index() {
       permissions: ["tabs"],
     },
 
-    background: function() {
-      browser.tabs.onCreated.addListener(async function({
+    background: function () {
+      browser.tabs.onCreated.addListener(async function ({
         index,
         windowId,
         id,
@@ -429,7 +429,7 @@ add_task(async function test_query_window() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       let badWindowId = 0;
       for (let { id } of await browser.windows.getAll()) {
         badWindowId = Math.max(badWindowId, id + 1);

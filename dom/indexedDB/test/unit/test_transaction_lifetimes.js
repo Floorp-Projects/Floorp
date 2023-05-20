@@ -46,7 +46,7 @@ function* testSteps() {
 
   let wasAbleToGrabObjectStoreOutsideOfCallback = false;
   let wasAbleToGrabIndexOutsideOfCallback = false;
-  executeSoon(function() {
+  executeSoon(function () {
     ok(!requestComplete, "Ordering is correct.");
     wasAbleToGrabObjectStoreOutsideOfCallback = !!transaction.objectStore(
       "foo"

@@ -98,7 +98,7 @@ function* testSteps() {
     20000
   );
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("privacy.reduceTimerPrecision");
     Services.prefs.clearUserPref(
       "privacy.resistFingerprinting.reduceTimerPrecision.microseconds"
@@ -144,7 +144,7 @@ function* testSteps() {
     .QueryInterface(Ci.nsIRaceCacheWithNetwork)
     .test_delayCacheEntryOpeningBy(100000);
   channel.asyncOpen(new ChannelListener(checkContent, null));
-  do_timeout(50, function() {
+  do_timeout(50, function () {
     channel
       .QueryInterface(Ci.nsIRaceCacheWithNetwork)
       .test_triggerDelayedOpenCacheEntry();

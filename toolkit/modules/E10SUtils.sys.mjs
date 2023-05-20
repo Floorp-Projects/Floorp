@@ -139,7 +139,7 @@ function validatedWebRemoteType(
     lazy.separatePrivilegedMozillaWebContentProcess &&
     aTargetUri.asciiHost &&
     aTargetUri.scheme == "https" &&
-    lazy.separatedMozillaDomains.some(function(val) {
+    lazy.separatedMozillaDomains.some(function (val) {
       return (
         aTargetUri.asciiHost == val || aTargetUri.asciiHost.endsWith("." + val)
       );
@@ -968,7 +968,7 @@ export var E10SUtils = {
 XPCOMUtils.defineLazyGetter(
   E10SUtils,
   "SERIALIZED_SYSTEMPRINCIPAL",
-  function() {
+  function () {
     return btoa(
       E10SUtils.serializePrincipal(
         Services.scriptSecurityManager.getSystemPrincipal()

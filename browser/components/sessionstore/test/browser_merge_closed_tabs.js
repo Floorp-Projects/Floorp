@@ -5,7 +5,7 @@
  * This test ensures that closed tabs are merged when restoring
  * a window state without overwriting tabs.
  */
-add_task(async function() {
+add_task(async function () {
   const initialState = {
     windows: [
       {

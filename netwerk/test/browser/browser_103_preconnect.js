@@ -7,7 +7,7 @@ Services.prefs.setBoolPref("network.early-hints.preconnect.enabled", true);
 Services.prefs.setBoolPref("network.http.debug-observations", true);
 Services.prefs.setIntPref("network.early-hints.preconnect.max_connections", 10);
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("network.early-hints.enabled");
   Services.prefs.clearUserPref("network.early-hints.preconnect.enabled");
   Services.prefs.clearUserPref("network.http.debug-observations");
@@ -44,7 +44,7 @@ async function test_hint_preconnect(href, crossOrigin) {
       url: requestUrl,
       waitForLoad: true,
     },
-    async function() {}
+    async function () {}
   );
 
   if (!crossOrigin) {

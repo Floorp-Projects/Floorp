@@ -9,7 +9,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 addAccessibleTask(
   '<ol id="list"></ol>',
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let list = findAccessibleChildByID(accDoc, "list");
 
     testAccessibleTree(list, {

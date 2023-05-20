@@ -273,10 +273,7 @@ add_task(async function test_full_sync() {
     ok(engine.lastRecordUpload > 0);
     ok(!engine.isFirstSync);
     deepEqual(
-      user
-        .collection("clients")
-        .keys()
-        .sort(),
+      user.collection("clients").keys().sort(),
       [activeID, deletedID, engine.localID].sort(),
       "Our record should be uploaded on first sync"
     );
@@ -652,7 +649,7 @@ add_task(async function test_process_incoming_commands() {
   let ev = "weave:service:logout:finish";
 
   let logoutPromise = new Promise(resolve => {
-    var handler = function() {
+    var handler = function () {
       Svc.Obs.remove(ev, handler);
 
       resolve();
@@ -733,10 +730,7 @@ add_task(async function test_filter_duplicate_names() {
     ok(engine.lastRecordUpload > 0);
     ok(!engine.isFirstSync);
     deepEqual(
-      user
-        .collection("clients")
-        .keys()
-        .sort(),
+      user.collection("clients").keys().sort(),
       [recentID, dupeID, oldID, engine.localID].sort(),
       "Our record should be uploaded on first sync"
     );

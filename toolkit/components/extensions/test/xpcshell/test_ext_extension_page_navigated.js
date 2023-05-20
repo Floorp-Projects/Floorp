@@ -36,7 +36,7 @@ function createTestExtPage({ script }) {
 }
 
 function createTestExtPageScript(name) {
-  return `(${async function(pageName) {
+  return `(${async function (pageName) {
     browser.webRequest.onBeforeRequest.addListener(
       details => {
         browser.test.log(
@@ -218,7 +218,7 @@ add_task(async function test_extension_page_context_navigated_to_web_page() {
   const extension = ExtensionTestUtils.loadExtension({
     files: {
       "extpage.html": createTestExtPage({ script: "extpage.js" }),
-      "extpage.js": function() {
+      "extpage.js": function () {
         dump("loaded extension page\n");
         window.addEventListener(
           "pageshow",

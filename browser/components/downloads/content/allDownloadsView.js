@@ -895,7 +895,7 @@ Object.setPrototypeOf(
 );
 
 for (let methodName of ["load", "applyFilter", "selectNode", "selectItems"]) {
-  DownloadsPlacesView.prototype[methodName] = function() {
+  DownloadsPlacesView.prototype[methodName] = function () {
     throw new Error(
       "|" + methodName + "| is not implemented by the downloads view."
     );
@@ -914,21 +914,21 @@ function goUpdateDownloadCommands() {
   updateCommandsForObject(HistoryDownloadElementShell.prototype);
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   let richListBox = document.getElementById("downloadsListBox");
-  richListBox.addEventListener("scroll", function(event) {
+  richListBox.addEventListener("scroll", function (event) {
     return this._placesView.onScroll();
   });
-  richListBox.addEventListener("keypress", function(event) {
+  richListBox.addEventListener("keypress", function (event) {
     return this._placesView.onKeyPress(event);
   });
-  richListBox.addEventListener("dblclick", function(event) {
+  richListBox.addEventListener("dblclick", function (event) {
     return this._placesView.onDoubleClick(event);
   });
-  richListBox.addEventListener("contextmenu", function(event) {
+  richListBox.addEventListener("contextmenu", function (event) {
     return this._placesView.onContextMenu(event);
   });
-  richListBox.addEventListener("dragstart", function(event) {
+  richListBox.addEventListener("dragstart", function (event) {
     this._placesView.onDragStart(event);
   });
   let dropNode = richListBox;
@@ -938,13 +938,13 @@ document.addEventListener("DOMContentLoaded", function() {
   if (document.documentElement.id == "contentAreaDownloadsView") {
     dropNode = richListBox.parentNode;
   }
-  dropNode.addEventListener("dragover", function(event) {
+  dropNode.addEventListener("dragover", function (event) {
     richListBox._placesView.onDragOver(event);
   });
-  dropNode.addEventListener("drop", function(event) {
+  dropNode.addEventListener("drop", function (event) {
     richListBox._placesView.onDrop(event);
   });
-  richListBox.addEventListener("select", function(event) {
+  richListBox.addEventListener("select", function (event) {
     this._placesView.onSelect();
   });
   richListBox.addEventListener("focus", goUpdateDownloadCommands);

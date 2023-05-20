@@ -242,7 +242,7 @@ DebuggerTransport.prototype = {
    * The current outgoing packet will attempt to write some amount of data, but
    * may not complete.
    */
-  onOutputStreamReady: DevToolsUtils.makeInfallible(function(stream) {
+  onOutputStreamReady: DevToolsUtils.makeInfallible(function (stream) {
     if (!this._outgoingEnabled || this._outgoing.length === 0) {
       return;
     }
@@ -323,7 +323,7 @@ DebuggerTransport.prototype = {
   /**
    * Called when the stream is either readable or closed.
    */
-  onInputStreamReady: DevToolsUtils.makeInfallible(function(stream) {
+  onInputStreamReady: DevToolsUtils.makeInfallible(function (stream) {
     try {
       while (
         stream.available() &&

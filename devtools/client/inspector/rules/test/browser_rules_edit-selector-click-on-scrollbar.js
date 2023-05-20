@@ -33,7 +33,7 @@ const TEST_URI = `
   <div class="testclass a b c d e f">Styled Node</div>
 `;
 
-add_task(async function() {
+add_task(async function () {
   info("Toolbox height should be small enough to force scrollbars to appear");
   await new Promise(done => {
     const options = { set: [["devtools.toolbox.footer.height", 200]] };

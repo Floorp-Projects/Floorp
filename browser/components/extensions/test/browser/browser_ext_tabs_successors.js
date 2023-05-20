@@ -20,7 +20,7 @@ async function background(tabCount, testFn) {
         )
       );
 
-    const verifySuccessors = async function(mapping, name) {
+    const verifySuccessors = async function (mapping, name) {
       const promises = [],
         expected = [];
       for (let i = 0; i < mapping.length; i++) {
@@ -72,7 +72,7 @@ async function runTabTest(tabCount, testFn) {
 }
 
 add_task(function testTabSuccessors() {
-  return runTabTest(3, async function({ TAB_ID_NONE, tabIds }) {
+  return runTabTest(3, async function ({ TAB_ID_NONE, tabIds }) {
     const anotherWindow = await browser.windows.create({ url: "about:blank" });
 
     browser.test.assertEq(
@@ -144,7 +144,7 @@ add_task(function testTabSuccessors() {
 });
 
 add_task(function testMoveInSuccession_appendFalse() {
-  return runTabTest(8, async function({
+  return runTabTest(8, async function ({
     TAB_ID_NONE,
     tabIds,
     toTabIds,
@@ -218,7 +218,7 @@ add_task(function testMoveInSuccession_appendFalse() {
 });
 
 add_task(function testMoveInSuccession_appendTrue() {
-  return runTabTest(8, async function({
+  return runTabTest(8, async function ({
     TAB_ID_NONE,
     tabIds,
     toTabIds,
@@ -302,7 +302,7 @@ add_task(function testMoveInSuccession_appendTrue() {
 });
 
 add_task(function testMoveInSuccession_ignoreTabsInOtherWindows() {
-  return runTabTest(2, async function({
+  return runTabTest(2, async function ({
     TAB_ID_NONE,
     tabIds,
     toTabIds,

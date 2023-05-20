@@ -6,7 +6,7 @@
 
 // Check the animation player's updated state
 
-add_task(async function() {
+add_task(async function () {
   const { target, walker, animations } = await initAnimationsFrontForUrl(
     MAIN_DOMAIN + "animation.html"
   );

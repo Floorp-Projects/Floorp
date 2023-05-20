@@ -292,7 +292,7 @@ function testURL(
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   // In this test we want to verify both http and https load
   // restrictions, hence we explicitly switch off the https-first
   // upgrading mechanism.
@@ -335,10 +335,10 @@ add_task(async function() {
   }
 
   // Now test blob URIs, which we need to do in-content.
-  await BrowserTestUtils.withNewTab("http://www.example.com/", async function(
+  await BrowserTestUtils.withNewTab("http://www.example.com/", async function (
     browser
   ) {
-    await SpecialPowers.spawn(browser, [testURL.toString()], async function(
+    await SpecialPowers.spawn(browser, [testURL.toString()], async function (
       testURLFn
     ) {
       // eslint-disable-next-line no-shadow , no-eval

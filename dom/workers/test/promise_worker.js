@@ -26,18 +26,18 @@ function isnot(a, b, msg) {
 function promiseResolve() {
   ok(Promise, "Promise object should exist");
 
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     ok(resolve, "Promise.resolve exists");
     ok(reject, "Promise.reject exists");
 
     resolve(42);
   }).then(
-    function(what) {
+    function (what) {
       ok(true, "Then - resolveCb has been called");
       is(what, 42, "ResolveCb received 42");
       runTest();
     },
-    function() {
+    function () {
       ok(false, "Then - rejectCb has been called");
       runTest();
     }
@@ -45,18 +45,18 @@ function promiseResolve() {
 }
 
 function promiseResolveNoArg() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     ok(resolve, "Promise.resolve exists");
     ok(reject, "Promise.reject exists");
 
     resolve();
   }).then(
-    function(what) {
+    function (what) {
       ok(true, "Then - resolveCb has been called");
       is(what, undefined, "ResolveCb received undefined");
       runTest();
     },
-    function() {
+    function () {
       ok(false, "Then - rejectCb has been called");
       runTest();
     }
@@ -66,21 +66,21 @@ function promiseResolveNoArg() {
 function promiseRejectNoHandler() {
   // This test only checks that the code that reports unhandled errors in the
   // Promises implementation does not crash or leak.
-  var promise = new Promise(function(res, rej) {
+  var promise = new Promise(function (res, rej) {
     noSuchMethod();
   });
   runTest();
 }
 
 function promiseReject() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     reject(42);
   }).then(
-    function(what) {
+    function (what) {
       ok(false, "Then - resolveCb has been called");
       runTest();
     },
-    function(what) {
+    function (what) {
       ok(true, "Then - rejectCb has been called");
       is(what, 42, "RejectCb received 42");
       runTest();
@@ -89,14 +89,14 @@ function promiseReject() {
 }
 
 function promiseRejectNoArg() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     reject();
   }).then(
-    function(what) {
+    function (what) {
       ok(false, "Then - resolveCb has been called");
       runTest();
     },
-    function(what) {
+    function (what) {
       ok(true, "Then - rejectCb has been called");
       is(what, undefined, "RejectCb received undefined");
       runTest();
@@ -105,14 +105,14 @@ function promiseRejectNoArg() {
 }
 
 function promiseException() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     throw 42;
   }).then(
-    function(what) {
+    function (what) {
       ok(false, "Then - resolveCb has been called");
       runTest();
     },
-    function(what) {
+    function (what) {
       ok(true, "Then - rejectCb has been called");
       is(what, 42, "RejectCb received 42");
       runTest();
@@ -123,14 +123,14 @@ function promiseException() {
 function promiseAsync_TimeoutResolveThen() {
   var handlerExecuted = false;
 
-  setTimeout(function() {
+  setTimeout(function () {
     ok(handlerExecuted, "Handler should have been called before the timeout.");
 
     // Allow other assertions to run so the test could fail before the next one.
     setTimeout(runTest, 0);
   }, 0);
 
-  Promise.resolve().then(function() {
+  Promise.resolve().then(function () {
     handlerExecuted = true;
   });
 
@@ -142,14 +142,14 @@ function promiseAsync_ResolveTimeoutThen() {
 
   var promise = Promise.resolve();
 
-  setTimeout(function() {
+  setTimeout(function () {
     ok(handlerExecuted, "Handler should have been called before the timeout.");
 
     // Allow other assertions to run so the test could fail before the next one.
     setTimeout(runTest, 0);
   }, 0);
 
-  promise.then(function() {
+  promise.then(function () {
     handlerExecuted = true;
   });
 
@@ -159,11 +159,11 @@ function promiseAsync_ResolveTimeoutThen() {
 function promiseAsync_ResolveThenTimeout() {
   var handlerExecuted = false;
 
-  Promise.resolve().then(function() {
+  Promise.resolve().then(function () {
     handlerExecuted = true;
   });
 
-  setTimeout(function() {
+  setTimeout(function () {
     ok(handlerExecuted, "Handler should have been called before the timeout.");
 
     // Allow other assertions to run so the test could fail before the next one.
@@ -176,7 +176,7 @@ function promiseAsync_ResolveThenTimeout() {
 function promiseAsync_SyncXHRAndImportScripts() {
   var handlerExecuted = false;
 
-  Promise.resolve().then(function() {
+  Promise.resolve().then(function () {
     handlerExecuted = true;
 
     // Allow other assertions to run so the test could fail before the next one.
@@ -198,62 +198,62 @@ function promiseAsync_SyncXHRAndImportScripts() {
 
 function promiseDoubleThen() {
   var steps = 0;
-  var promise = new Promise(function(r1, r2) {
+  var promise = new Promise(function (r1, r2) {
     r1(42);
   });
 
   promise.then(
-    function(what) {
+    function (what) {
       ok(true, "Then.resolve has been called");
       is(what, 42, "Value == 42");
       steps++;
     },
-    function(what) {
+    function (what) {
       ok(false, "Then.reject has been called");
     }
   );
 
   promise.then(
-    function(what) {
+    function (what) {
       ok(true, "Then.resolve has been called");
       is(steps, 1, "Then.resolve - step == 1");
       is(what, 42, "Value == 42");
       runTest();
     },
-    function(what) {
+    function (what) {
       ok(false, "Then.reject has been called");
     }
   );
 }
 
 function promiseThenException() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     resolve(42);
   });
 
   promise
-    .then(function(what) {
+    .then(function (what) {
       ok(true, "Then.resolve has been called");
       throw "booh";
     })
-    .catch(function(e) {
+    .catch(function (e) {
       ok(true, "Catch has been called!");
       runTest();
     });
 }
 
 function promiseThenCatchThen() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     resolve(42);
   });
 
   var promise2 = promise.then(
-    function(what) {
+    function (what) {
       ok(true, "Then.resolve has been called");
       is(what, 42, "Value == 42");
       return what + 1;
     },
-    function(what) {
+    function (what) {
       ok(false, "Then.reject has been called");
     }
   );
@@ -262,40 +262,40 @@ function promiseThenCatchThen() {
 
   promise2
     .then(
-      function(what) {
+      function (what) {
         ok(true, "Then.resolve has been called");
         is(what, 43, "Value == 43");
         return what + 1;
       },
-      function(what) {
+      function (what) {
         ok(false, "Then.reject has been called");
       }
     )
-    .catch(function() {
+    .catch(function () {
       ok(false, "Catch has been called");
     })
     .then(
-      function(what) {
+      function (what) {
         ok(true, "Then.resolve has been called");
         is(what, 44, "Value == 44");
         runTest();
       },
-      function(what) {
+      function (what) {
         ok(false, "Then.reject has been called");
       }
     );
 }
 
 function promiseRejectThenCatchThen() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     reject(42);
   });
 
   var promise2 = promise.then(
-    function(what) {
+    function (what) {
       ok(false, "Then.resolve has been called");
     },
-    function(what) {
+    function (what) {
       ok(true, "Then.reject has been called");
       is(what, 42, "Value == 42");
       return what + 1;
@@ -305,15 +305,15 @@ function promiseRejectThenCatchThen() {
   isnot(promise, promise2, "These 2 promise objs are different");
 
   promise2
-    .then(function(what) {
+    .then(function (what) {
       ok(true, "Then.resolve has been called");
       is(what, 43, "Value == 43");
       return what + 1;
     })
-    .catch(function(what) {
+    .catch(function (what) {
       ok(false, "Catch has been called");
     })
-    .then(function(what) {
+    .then(function (what) {
       ok(true, "Then.resolve has been called");
       is(what, 44, "Value == 44");
       runTest();
@@ -321,22 +321,22 @@ function promiseRejectThenCatchThen() {
 }
 
 function promiseRejectThenCatchThen2() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     reject(42);
   });
 
   promise
-    .then(function(what) {
+    .then(function (what) {
       ok(true, "Then.resolve has been called");
       is(what, 42, "Value == 42");
       return what + 1;
     })
-    .catch(function(what) {
+    .catch(function (what) {
       is(what, 42, "Value == 42");
       ok(true, "Catch has been called");
       return what + 1;
     })
-    .then(function(what) {
+    .then(function (what) {
       ok(true, "Then.resolve has been called");
       is(what, 43, "Value == 43");
       runTest();
@@ -344,27 +344,27 @@ function promiseRejectThenCatchThen2() {
 }
 
 function promiseRejectThenCatchExceptionThen() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     reject(42);
   });
 
   promise
     .then(
-      function(what) {
+      function (what) {
         ok(false, "Then.resolve has been called");
       },
-      function(what) {
+      function (what) {
         ok(true, "Then.reject has been called");
         is(what, 42, "Value == 42");
         throw what + 1;
       }
     )
-    .catch(function(what) {
+    .catch(function (what) {
       ok(true, "Catch has been called");
       is(what, 43, "Value == 43");
       return what + 1;
     })
-    .then(function(what) {
+    .then(function (what) {
       ok(true, "Then.resolve has been called");
       is(what, 44, "Value == 44");
       runTest();
@@ -373,21 +373,21 @@ function promiseRejectThenCatchExceptionThen() {
 
 function promiseThenCatchOrderingResolve() {
   var global = 0;
-  var f = new Promise(function(r1, r2) {
+  var f = new Promise(function (r1, r2) {
     r1(42);
   });
 
-  f.then(function() {
-    f.then(function() {
+  f.then(function () {
+    f.then(function () {
       global++;
     });
-    f.catch(function() {
+    f.catch(function () {
       global++;
     });
-    f.then(function() {
+    f.then(function () {
       global++;
     });
-    setTimeout(function() {
+    setTimeout(function () {
       is(global, 2, "Many steps... should return 2");
       runTest();
     }, 0);
@@ -396,26 +396,26 @@ function promiseThenCatchOrderingResolve() {
 
 function promiseThenCatchOrderingReject() {
   var global = 0;
-  var f = new Promise(function(r1, r2) {
+  var f = new Promise(function (r1, r2) {
     r2(42);
   });
 
   f.then(
-    function() {},
-    function() {
-      f.then(function() {
+    function () {},
+    function () {
+      f.then(function () {
         global++;
       });
-      f.catch(function() {
+      f.catch(function () {
         global++;
       });
       f.then(
-        function() {},
-        function() {
+        function () {},
+        function () {
           global++;
         }
       );
-      setTimeout(function() {
+      setTimeout(function () {
         is(global, 2, "Many steps... should return 2");
         runTest();
       }, 0);
@@ -424,14 +424,14 @@ function promiseThenCatchOrderingReject() {
 }
 
 function promiseThenNoArg() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     resolve(42);
   });
 
   var clone = promise.then();
   isnot(promise, clone, "These 2 promise objs are different");
-  promise.then(function(v) {
-    clone.then(function(cv) {
+  promise.then(function (v) {
+    clone.then(function (cv) {
       is(v, cv, "Both resolve to the same value");
       runTest();
     });
@@ -439,12 +439,12 @@ function promiseThenNoArg() {
 }
 
 function promiseThenUndefinedResolveFunction() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     reject(42);
   });
 
   try {
-    promise.then(undefined, function(v) {
+    promise.then(undefined, function (v) {
       is(v, 42, "Promise rejected with 42");
       runTest();
     });
@@ -454,12 +454,12 @@ function promiseThenUndefinedResolveFunction() {
 }
 
 function promiseThenNullResolveFunction() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     reject(42);
   });
 
   try {
-    promise.then(null, function(v) {
+    promise.then(null, function (v) {
       is(v, 42, "Promise rejected with 42");
       runTest();
     });
@@ -469,14 +469,14 @@ function promiseThenNullResolveFunction() {
 }
 
 function promiseCatchNoArg() {
-  var promise = new Promise(function(resolve, reject) {
+  var promise = new Promise(function (resolve, reject) {
     reject(42);
   });
 
   var clone = promise.catch();
   isnot(promise, clone, "These 2 promise objs are different");
-  promise.catch(function(v) {
-    clone.catch(function(cv) {
+  promise.catch(function (v) {
+    clone.catch(function (cv) {
       is(v, cv, "Both reject to the same value");
       runTest();
     });
@@ -484,62 +484,62 @@ function promiseCatchNoArg() {
 }
 
 function promiseNestedPromise() {
-  new Promise(function(resolve, reject) {
+  new Promise(function (resolve, reject) {
     resolve(
-      new Promise(function(r) {
+      new Promise(function (r) {
         ok(true, "Nested promise is executed");
         r(42);
       })
     );
-  }).then(function(value) {
+  }).then(function (value) {
     is(value, 42, "Nested promise is executed and then == 42");
     runTest();
   });
 }
 
 function promiseNestedNestedPromise() {
-  new Promise(function(resolve, reject) {
+  new Promise(function (resolve, reject) {
     resolve(
-      new Promise(function(r) {
+      new Promise(function (r) {
         ok(true, "Nested promise is executed");
         r(42);
-      }).then(function(what) {
+      }).then(function (what) {
         return what + 1;
       })
     );
-  }).then(function(value) {
+  }).then(function (value) {
     is(value, 43, "Nested promise is executed and then == 43");
     runTest();
   });
 }
 
 function promiseWrongNestedPromise() {
-  new Promise(function(resolve, reject) {
+  new Promise(function (resolve, reject) {
     resolve(
-      new Promise(function(r, r2) {
+      new Promise(function (r, r2) {
         ok(true, "Nested promise is executed");
         r(42);
       })
     );
     reject(42);
   }).then(
-    function(value) {
+    function (value) {
       is(value, 42, "Nested promise is executed and then == 42");
       runTest();
     },
-    function(value) {
+    function (value) {
       ok(false, "This is wrong");
     }
   );
 }
 
 function promiseLoop() {
-  new Promise(function(resolve, reject) {
+  new Promise(function (resolve, reject) {
     resolve(
-      new Promise(function(r1, r2) {
+      new Promise(function (r1, r2) {
         ok(true, "Nested promise is executed");
         r1(
-          new Promise(function(r3, r4) {
+          new Promise(function (r3, r4) {
             ok(true, "Nested nested promise is executed");
             r3(42);
           })
@@ -547,11 +547,11 @@ function promiseLoop() {
       })
     );
   }).then(
-    function(value) {
+    function (value) {
       is(value, 42, "Nested nested promise is executed and then == 42");
       runTest();
     },
-    function(value) {
+    function (value) {
       ok(false, "This is wrong");
     }
   );
@@ -559,10 +559,10 @@ function promiseLoop() {
 
 function promiseStaticReject() {
   var promise = Promise.reject(42).then(
-    function(what) {
+    function (what) {
       ok(false, "This should not be called");
     },
-    function(what) {
+    function (what) {
       is(what, 42, "Value == 42");
       runTest();
     }
@@ -571,11 +571,11 @@ function promiseStaticReject() {
 
 function promiseStaticResolve() {
   var promise = Promise.resolve(42).then(
-    function(what) {
+    function (what) {
       is(what, 42, "Value == 42");
       runTest();
     },
-    function() {
+    function () {
       ok(false, "This should not be called");
     }
   );
@@ -584,20 +584,20 @@ function promiseStaticResolve() {
 function promiseResolveNestedPromise() {
   var promise = Promise.resolve(
     new Promise(
-      function(r, r2) {
+      function (r, r2) {
         ok(true, "Nested promise is executed");
         r(42);
       },
-      function() {
+      function () {
         ok(false, "This should not be called");
       }
     )
   ).then(
-    function(what) {
+    function (what) {
       is(what, 42, "Value == 42");
       runTest();
     },
-    function() {
+    function () {
       ok(false, "This should not be called");
     }
   );
@@ -613,7 +613,7 @@ function promiseAllArray() {
   var p = Promise.all([1, new Date(), Promise.resolve("firefox")]);
   ok(p instanceof Promise, "Return value of Promise.all should be a Promise.");
   p.then(
-    function(values) {
+    function (values) {
       ok(Array.isArray(values), "Resolved value should be an array.");
       is(
         values.length,
@@ -625,7 +625,7 @@ function promiseAllArray() {
       is(values[2], "firefox", "Array values should match.");
       runTest();
     },
-    function() {
+    function () {
       ok(
         false,
         "Promise.all shouldn't fail when iterable has no rejected Promises."
@@ -637,31 +637,31 @@ function promiseAllArray() {
 
 function promiseAllWaitsForAllPromises() {
   var arr = [
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       setTimeout(resolve.bind(undefined, 1), 50);
     }),
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       setTimeout(resolve.bind(undefined, 2), 10);
     }),
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       setTimeout(
         resolve.bind(
           undefined,
-          new Promise(function(resolve2) {
+          new Promise(function (resolve2) {
             resolve2(3);
           })
         ),
         10
       );
     }),
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       setTimeout(resolve.bind(undefined, 4), 20);
     }),
   ];
 
   var p = Promise.all(arr);
   p.then(
-    function(values) {
+    function (values) {
       ok(Array.isArray(values), "Resolved value should be an array.");
       is(
         values.length,
@@ -674,7 +674,7 @@ function promiseAllWaitsForAllPromises() {
       is(values[3], 4, "Array values should match.");
       runTest();
     },
-    function() {
+    function () {
       ok(
         false,
         "Promise.all shouldn't fail when iterable has no rejected Promises."
@@ -686,30 +686,30 @@ function promiseAllWaitsForAllPromises() {
 
 function promiseAllRejectFails() {
   var arr = [
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       setTimeout(resolve.bind(undefined, 1), 50);
     }),
-    new Promise(function(resolve, reject) {
+    new Promise(function (resolve, reject) {
       setTimeout(reject.bind(undefined, 2), 10);
     }),
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       setTimeout(resolve.bind(undefined, 3), 10);
     }),
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       setTimeout(resolve.bind(undefined, 4), 20);
     }),
   ];
 
   var p = Promise.all(arr);
   p.then(
-    function(values) {
+    function (values) {
       ok(
         false,
         "Promise.all shouldn't resolve when iterable has rejected Promises."
       );
       runTest();
     },
-    function(e) {
+    function (e) {
       ok(
         true,
         "Promise.all should reject when iterable has rejected Promises."
@@ -731,11 +731,11 @@ function promiseRaceValuesArray() {
   var p = Promise.race([true, new Date(), 3]);
   ok(p instanceof Promise, "Should return a Promise.");
   p.then(
-    function(winner) {
+    function (winner) {
       is(winner, true, "First value should win.");
       runTest();
     },
-    function(err) {
+    function (err) {
       ok(false, "Should not fail " + err + ".");
       runTest();
     }
@@ -744,14 +744,14 @@ function promiseRaceValuesArray() {
 
 function promiseRacePromiseArray() {
   var arr = [
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       resolve("first");
     }),
     Promise.resolve("second"),
-    new Promise(function() {}),
-    new Promise(function(resolve) {
-      setTimeout(function() {
-        setTimeout(function() {
+    new Promise(function () {}),
+    new Promise(function (resolve) {
+      setTimeout(function () {
+        setTimeout(function () {
           resolve("fourth");
         }, 0);
       }, 0);
@@ -759,7 +759,7 @@ function promiseRacePromiseArray() {
   ];
 
   var p = Promise.race(arr);
-  p.then(function(winner) {
+  p.then(function (winner) {
     is(winner, "first", "First queued resolution should win the race.");
     runTest();
   });
@@ -768,17 +768,17 @@ function promiseRacePromiseArray() {
 function promiseRaceReject() {
   var p = Promise.race([
     Promise.reject(new Error("Fail bad!")),
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       setTimeout(resolve, 0);
     }),
   ]);
 
   p.then(
-    function() {
+    function () {
       ok(false, "Should not resolve when winning Promise rejected.");
       runTest();
     },
-    function(e) {
+    function (e) {
       ok(true, "Should be rejected");
       ok(e instanceof Error, "Should reject with Error.");
       ok(e.message == "Fail bad!", "Message should match.");
@@ -789,20 +789,20 @@ function promiseRaceReject() {
 
 function promiseRaceThrow() {
   var p = Promise.race([
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       nonExistent();
     }),
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       setTimeout(resolve, 0);
     }),
   ]);
 
   p.then(
-    function() {
+    function () {
       ok(false, "Should not resolve when winning Promise had an error.");
       runTest();
     },
-    function(e) {
+    function (e) {
       ok(true, "Should be rejected");
       ok(
         e instanceof ReferenceError,
@@ -816,7 +816,7 @@ function promiseRaceThrow() {
 function promiseResolveArray() {
   var p = Promise.resolve([1, 2, 3]);
   ok(p instanceof Promise, "Should return a Promise.");
-  p.then(function(v) {
+  p.then(function (v) {
     ok(Array.isArray(v), "Resolved value should be an Array");
     is(v.length, 3, "Length should match");
     is(v[0], 1, "Resolved value should match original");
@@ -834,11 +834,11 @@ function promiseResolveThenable() {
   });
   ok(p instanceof Promise, "Should cast to a Promise.");
   p.then(
-    function(v) {
+    function (v) {
       is(v, 2, "Should resolve to 2.");
       runTest();
     },
-    function(e) {
+    function (e) {
       ok(false, "promiseResolveThenable should've resolved");
       runTest();
     }
@@ -851,7 +851,7 @@ function promiseResolvePromise() {
 
   ok(cast instanceof Promise, "Should cast to a Promise.");
   is(cast, original, "Should return original Promise.");
-  cast.then(function(v) {
+  cast.then(function (v) {
     is(v, true, "Should resolve to true.");
     runTest();
   });
@@ -879,11 +879,11 @@ function promiseResolveThenableCleanStack() {
 
   // check what happens after all "next cycle" steps
   // have had a chance to complete
-  setTimeout(function() {
+  setTimeout(function () {
     // Result should be [0, 2] since `thenable` will be called async.
     is(results[0], 0, "Expected thenable to be called asynchronously");
     // See Bug 1023547 comment 13 for why this check has to be gated on p.
-    p.then(function() {
+    p.then(function () {
       results.push(x);
       is(results[1], 2, "Expected thenable to be called asynchronously");
       runTest();
@@ -893,35 +893,35 @@ function promiseResolveThenableCleanStack() {
 
 // Bug 1062323
 function promiseWrapperAsyncResolution() {
-  var p = new Promise(function(resolve, reject) {
+  var p = new Promise(function (resolve, reject) {
     resolve();
   });
 
   var results = [];
   var q = p
-    .then(function() {
+    .then(function () {
       results.push("1-1");
     })
-    .then(function() {
+    .then(function () {
       results.push("1-2");
     })
-    .then(function() {
+    .then(function () {
       results.push("1-3");
     });
 
   var r = p
-    .then(function() {
+    .then(function () {
       results.push("2-1");
     })
-    .then(function() {
+    .then(function () {
       results.push("2-2");
     })
-    .then(function() {
+    .then(function () {
       results.push("2-3");
     });
 
   Promise.all([q, r]).then(
-    function() {
+    function () {
       var match =
         results[0] == "1-1" &&
         results[1] == "2-1" &&
@@ -932,7 +932,7 @@ function promiseWrapperAsyncResolution() {
       ok(match, "Chained promises should resolve asynchronously.");
       runTest();
     },
-    function() {
+    function () {
       ok(false, "promiseWrapperAsyncResolution: One of the promises failed.");
       runTest();
     }
@@ -1002,6 +1002,6 @@ function runTest() {
   test();
 }
 
-onmessage = function() {
+onmessage = function () {
   runTest();
 };

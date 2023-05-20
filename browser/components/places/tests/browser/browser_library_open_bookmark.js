@@ -23,7 +23,7 @@ add_task(async function test_open_bookmark_from_library() {
 
   let gLibrary = await promiseLibrary("UnfiledBookmarks");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await promiseLibraryClosed(gLibrary);
     await PlacesUtils.bookmarks.eraseEverything();
     await BrowserTestUtils.removeTab(tab);

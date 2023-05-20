@@ -16,13 +16,13 @@ const BRAND_BUNDLE = Services.strings.createBundle(
 const BRAND_FULL_NAME = BRAND_BUNDLE.GetStringFromName("brandFullName");
 
 async function getDocumentVisibilityState(browser) {
-  let visibility = await SpecialPowers.spawn(browser, [], async function() {
+  let visibility = await SpecialPowers.spawn(browser, [], async function () {
     return content.document.visibilityState;
   });
   return visibility;
 }
 
-add_setup(async function() {
+add_setup(async function () {
   Services.prefs.setBoolPref("signon.usernameOnlyForm.enabled", true);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("signon.usernameOnlyForm.enabled");
@@ -122,7 +122,7 @@ testUrls.forEach(testUrl => {
     let fieldValues = await SpecialPowers.spawn(
       tab1.linkedBrowser,
       [],
-      function() {
+      function () {
         let doc = content.document;
         return {
           username: doc.getElementById("form-basic-username").value,
@@ -150,7 +150,7 @@ testUrlsWithForm.forEach(testUrl => {
       `Have enabled primaryPassword, now isLoggedIn? ${Services.logins.isLoggedIn}`
     );
 
-    registerCleanupFunction(async function() {
+    registerCleanupFunction(async function () {
       LoginTestUtils.primaryPassword.disable();
       await LoginTestUtils.reloadData();
     });

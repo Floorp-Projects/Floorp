@@ -173,7 +173,7 @@ var Settings = {
   attachObservers() {
     let elements = document.getElementsByClassName("change-data-choices-link");
     for (let el of elements) {
-      el.parentElement.addEventListener("click", function(event) {
+      el.parentElement.addEventListener("click", function (event) {
         if (event.target.localName === "a") {
           if (AppConstants.platform == "android") {
             var { EventDispatcher } = ChromeUtils.importESModule(
@@ -1101,7 +1101,7 @@ var Histogram = {
     copyButton.className = "copy-node";
     document.l10n.setAttributes(copyButton, "about-telemetry-histogram-copy");
 
-    copyButton.addEventListener("click", async function() {
+    copyButton.addEventListener("click", async function () {
       let divStatsString = await document.l10n.formatValue(
         "about-telemetry-histogram-stats",
         histogramStatsArgs
@@ -1267,7 +1267,7 @@ var Search = {
         filter = RegExp(r[1], r[2]);
       } catch (e) {
         // Incomplete or bad RegExp - always no match
-        isPassFunc = function() {
+        isPassFunc = function () {
           return false;
         };
       }
@@ -2192,7 +2192,7 @@ function setupListeners() {
 
   document
     .getElementById("late-writes-fetch-symbols")
-    .addEventListener("click", function() {
+    .addEventListener("click", function () {
       if (!gPingData) {
         return;
       }
@@ -2209,7 +2209,7 @@ function setupListeners() {
 
   document
     .getElementById("late-writes-hide-symbols")
-    .addEventListener("click", function() {
+    .addEventListener("click", function () {
       if (!gPingData) {
         return;
       }

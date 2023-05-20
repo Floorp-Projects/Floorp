@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(async function() {
+add_task(async function () {
   // allow top level data: URI navigations, otherwise loading data: URIs
   // in toplevel windows fail.
   await SpecialPowers.pushPrefEnv({
@@ -26,7 +26,7 @@ add_task(async function() {
         return SpecialPowers.spawn(
           gBrowser.selectedBrowser,
           [{ writeDomainURL }],
-          async function(arg) {
+          async function (arg) {
             let contentBody = content.document.body;
             contentBody.style.backgroundImage =
               "url('" + arg.writeDomainURL + "')";
@@ -36,7 +36,7 @@ add_task(async function() {
         );
       },
       verify(browser) {
-        return SpecialPowers.spawn(browser, [], async function(arg) {
+        return SpecialPowers.spawn(browser, [], async function (arg) {
           Assert.equal(
             content.document.body.textContent,
             "",
@@ -54,7 +54,7 @@ add_task(async function() {
         return SpecialPowers.spawn(
           gBrowser.selectedBrowser,
           [{ writeDomainURL }],
-          async function(arg) {
+          async function (arg) {
             let doc = content.document;
             let img = doc.createElement("img");
             img.height = 100;
@@ -67,7 +67,7 @@ add_task(async function() {
         );
       },
       verify(browser) {
-        return SpecialPowers.spawn(browser, [], async function(arg) {
+        return SpecialPowers.spawn(browser, [], async function (arg) {
           Assert.equal(
             content.document.body.textContent,
             "",
@@ -85,7 +85,7 @@ add_task(async function() {
         return SpecialPowers.spawn(
           gBrowser.selectedBrowser,
           [{ writeDomainURL }],
-          async function(arg) {
+          async function (arg) {
             let doc = content.document;
             let iframe = doc.createElement("iframe");
             iframe.setAttribute("src", arg.writeDomainURL);
@@ -95,7 +95,7 @@ add_task(async function() {
             return new Promise(resolve => {
               iframe.addEventListener(
                 "load",
-                function() {
+                function () {
                   resolve("context-showonlythisframe");
                 },
                 { capture: true, once: true }
@@ -105,7 +105,7 @@ add_task(async function() {
         );
       },
       verify(browser) {
-        return SpecialPowers.spawn(browser, [], async function(arg) {
+        return SpecialPowers.spawn(browser, [], async function (arg) {
           Assert.equal(
             content.document.body.textContent,
             "",

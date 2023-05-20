@@ -54,7 +54,7 @@ let TestAboutPage = {
  * Test that switching from a remote to a parent process browser
  * correctly clears the userTypedValue
  */
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.skip_about_page_has_csp_assert", true]],
   });

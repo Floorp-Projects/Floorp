@@ -46,7 +46,7 @@ function evalCode(debuggee) {
   /* eslint-disable */
   debuggee.eval(
     "(" +
-      function() {
+      function () {
         function stopMe(number) {
           var a;
           var r = number;

@@ -54,11 +54,7 @@ describe("<Navigation>", () => {
     wrapper.setProps({ header: { title: "Foo" } });
 
     assert.equal(
-      wrapper
-        .find(".ds-navigation")
-        .children()
-        .at(0)
-        .type(),
+      wrapper.find(".ds-navigation").children().at(0).type(),
       FluentOrText
     );
   });

@@ -8,7 +8,7 @@ const { TabStateFlusher } = ChromeUtils.importESModule(
 add_task(async function test_blank() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       // eslint-disable-next-line @microsoft/sdl/no-insecure-url
       BrowserTestUtils.loadURIString(browser, "http://example.com");
       await BrowserTestUtils.browserLoaded(browser);
@@ -20,7 +20,7 @@ add_task(async function test_blank() {
 add_task(async function test_newtab() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       // Can't load it directly because that'll use a preloaded tab if present.
       let stopped = BrowserTestUtils.browserStopped(browser, "about:newtab");
       BrowserTestUtils.loadURIString(browser, "about:newtab");

@@ -24,7 +24,7 @@ const renderRep = (string, props) =>
 
 const testLinkClick = (link, openLink, url) => {
   let syntheticEvent;
-  const preventDefault = jest.fn().mockImplementation(function() {
+  const preventDefault = jest.fn().mockImplementation(function () {
     // This refers to the event object for which preventDefault is called (in
     // this case it is the syntheticEvent that is passed to onClick and
     // consequently to openLink).

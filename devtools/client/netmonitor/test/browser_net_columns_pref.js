@@ -8,7 +8,7 @@
  * header is visible only if there are requests in the list.
  */
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setCharPref(
     "devtools.netmonitor.visibleColumns",
     '["status", "contentSize", "waterfall"]'

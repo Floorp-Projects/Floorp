@@ -56,7 +56,7 @@ function promiseStartDownload(aSourceUrl) {
  * @resolves When the properties have been verified.
  * @rejects JavaScript exception.
  */
-var promiseVerifyTarget = async function(downloadTarget, expectedContents) {
+var promiseVerifyTarget = async function (downloadTarget, expectedContents) {
   Assert.ok(downloadTarget.exists);
   Assert.equal(
     await expectNonZeroDownloadTargetSize(downloadTarget),
@@ -434,7 +434,7 @@ add_task(async function test_referrer() {
   }
   registerCleanupFunction(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
     Assert.ok(aRequest.hasHeader("Referer"));
@@ -600,7 +600,7 @@ add_task(async function test_final_state_notified() {
   let onchangeNotified = false;
   let lastNotifiedStopped;
   let lastNotifiedProgress;
-  download.onchange = function() {
+  download.onchange = function () {
     onchangeNotified = true;
     lastNotifiedStopped = download.stopped;
     lastNotifiedProgress = download.progress;
@@ -731,7 +731,7 @@ add_task(async function test_empty_noprogress() {
     // download starts.
     download = await promiseNewDownload(sourceUrl);
 
-    download.onchange = function() {
+    download.onchange = function () {
       if (!download.stopped) {
         Assert.ok(!download.hasProgress);
         Assert.equal(download.currentBytes, 0);
@@ -835,7 +835,7 @@ add_task(async function test_cancel_midway() {
 
   // Cancel the download after receiving the first part of the response.
   let deferCancel = PromiseUtils.defer();
-  let onchange = function() {
+  let onchange = function () {
     if (!download.stopped && !download.canceled && download.progress == 50) {
       // Cancel the download immediately during the notification.
       deferCancel.resolve(download.cancel());
@@ -1020,7 +1020,7 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
   // The second time, we'll request and obtain the second part of the response,
   // but we still stop when half of the remaining progress is reached.
   let deferMidway = PromiseUtils.defer();
-  download.onchange = function() {
+  download.onchange = function () {
     if (
       !download.stopped &&
       !download.canceled &&
@@ -1712,7 +1712,7 @@ add_task(async function test_public_and_private() {
   }
   registerCleanupFunction(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
     if (testCount == 0) {
@@ -1782,7 +1782,7 @@ add_task(async function test_with_content_encoding() {
   }
   registerCleanupFunction(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.setHeader("Content-Encoding", "gzip", false);
     aResponse.setHeader(
@@ -1819,7 +1819,7 @@ add_task(async function test_with_content_encoding_ignore_extension() {
   }
   registerCleanupFunction(cleanup);
 
-  gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
     aResponse.setHeader("Content-Encoding", "gzip", false);
     aResponse.setHeader(
@@ -1862,7 +1862,7 @@ add_task(async function test_cancel_midway_restart_with_content_encoding() {
 
   // The first time, cancel the download midway.
   await new Promise(resolve => {
-    let onchange = function() {
+    let onchange = function () {
       if (
         !download.stopped &&
         !download.canceled &&

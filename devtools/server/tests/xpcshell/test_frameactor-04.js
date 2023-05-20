@@ -47,7 +47,7 @@ var frameFixtures = [
 function evalCode(debuggee) {
   debuggee.eval(
     "(" +
-      function() {
+      function () {
         function depth3() {
           debugger;
         }

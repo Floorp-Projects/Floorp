@@ -30,13 +30,13 @@ const match_type = "firefox-suggest";
 const index = 1;
 const position = index + 1;
 
-add_setup(async function() {
+add_setup(async function () {
   await setUpTelemetryTest({
     merinoSuggestions: [MERINO_SUGGESTION],
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   await doTelemetryTest({
     index,
     suggestion: MERINO_SUGGESTION,

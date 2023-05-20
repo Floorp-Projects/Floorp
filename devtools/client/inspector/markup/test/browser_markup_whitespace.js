@@ -7,7 +7,7 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_whitespace.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
   const { markup } = inspector;
 
@@ -95,7 +95,7 @@ add_task(async function() {
 });
 
 function getElementChildNodesCount(selector) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function(
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function (
     innerSelector
   ) {
     const node = content.document.querySelector(innerSelector);

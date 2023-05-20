@@ -89,7 +89,7 @@ gTests.push({
     let unloadPromise = new Promise(resolve => {
       this.window.addEventListener(
         "unload",
-        function(event) {
+        function (event) {
           tagsField.popup.removeEventListener(
             "popuphidden",
             popupListener,
@@ -99,7 +99,7 @@ gTests.push({
             self._cleanShutdown,
             "Dialog window should not be closed by pressing Enter on the autocomplete popup"
           );
-          executeSoon(function() {
+          executeSoon(function () {
             resolve();
           });
         },
@@ -218,7 +218,7 @@ gTests.push({
     let hiddenPromise = new Promise(resolve => {
       this.window.addEventListener(
         "unload",
-        function(event) {
+        function (event) {
           tagsField.popup.removeEventListener(
             "popuphidden",
             popupListener,
@@ -228,7 +228,7 @@ gTests.push({
             self._cleanShutdown,
             "Dialog window should not be closed by pressing Escape on the autocomplete popup"
           );
-          executeSoon(function() {
+          executeSoon(function () {
             resolve();
           });
         },
@@ -362,7 +362,7 @@ gTests.push({
         return;
       }
       folderTree.removeEventListener("DOMAttrModified", onDOMAttrModified);
-      executeSoon(async function() {
+      executeSoon(async function () {
         // Create a new folder.
         var newFolderButton = self.window.document.getElementById(
           "editBMPanel_newFolderButton"
@@ -436,7 +436,7 @@ function execute_test_in_sidebar(test) {
     var sidebar = document.getElementById("sidebar");
     sidebar.addEventListener(
       "load",
-      function() {
+      function () {
         // Need to executeSoon since the tree is initialized on sidebar load.
         executeSoon(async () => {
           await open_properties_dialog(test);

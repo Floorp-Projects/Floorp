@@ -47,13 +47,13 @@ function loadExtensionWithMenusApi() {
     },
   });
 
-  extension.callMenuApi = async function(method, ...params) {
+  extension.callMenuApi = async function (method, ...params) {
     info(`Calling ${method}(${JSON.stringify(params)})`);
     extension.sendMessage(method, ...params);
     return extension.awaitMessage(`${method}-result`);
   };
 
-  extension.removeOnShownListener = async function() {
+  extension.removeOnShownListener = async function () {
     extension.callMenuApi("* remove onShown listener");
   };
 

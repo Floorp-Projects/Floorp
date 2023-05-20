@@ -18,7 +18,7 @@ var EXPORTED_SYMBOLS = ["SyncedTabsDeckView"];
  * rerender unless the state flags `isUpdatable`, which helps
  * make small changes without the overhead of a full rerender.
  */
-const SyncedTabsDeckView = function(window, tabListComponent, props) {
+const SyncedTabsDeckView = function (window, tabListComponent, props) {
   this.props = props;
 
   this._window = window;

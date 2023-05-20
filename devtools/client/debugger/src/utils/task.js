@@ -7,8 +7,8 @@
  */
 export const Task = {
   // XXX: Not sure if this works in all cases...
-  async: function(task) {
-    return function() {
+  async: function (task) {
+    return function () {
       return Task.spawn(task, this, arguments);
     };
   },
@@ -18,8 +18,8 @@ export const Task = {
    * @param task A generator function
    * @return A promise, resolved when the task terminates
    */
-  spawn: function(task, scope, args) {
-    return new Promise(function(resolve, reject) {
+  spawn: function (task, scope, args) {
+    return new Promise(function (resolve, reject) {
       const iterator = task.apply(scope, args);
 
       const callNext = lastValue => {

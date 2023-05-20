@@ -3,7 +3,7 @@
 /**
  * Test for "command" event on search input (when user clicks the x button)
  */
-add_task(async function() {
+add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   let generalPane = gBrowser.contentDocument.getElementById("generalCategory");
 

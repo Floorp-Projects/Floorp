@@ -118,7 +118,7 @@ function createTestMarkupWithFrames() {
   )}`;
 }
 
-const hasPromiseResolved = async function(promise) {
+const hasPromiseResolved = async function (promise) {
   let resolved = false;
   promise.finally(() => (resolved = true));
   // Make sure microtasks have time to run.
@@ -153,7 +153,7 @@ async function installSidebarExtension() {
           <script src="sidebar.js"></script>
         </html>
       `,
-      "sidebar.js": function() {
+      "sidebar.js": function () {
         const { browser } = this;
         browser.test.sendMessage("sidebar-loaded", {
           bcId: SpecialPowers.wrap(window).browsingContext.id,
@@ -166,7 +166,7 @@ async function installSidebarExtension() {
           <script src="tab.js"></script>
         </html>
       `,
-      "tab.js": function() {
+      "tab.js": function () {
         const { browser } = this;
         browser.test.sendMessage("tab-loaded", {
           bcId: SpecialPowers.wrap(window).browsingContext.id,

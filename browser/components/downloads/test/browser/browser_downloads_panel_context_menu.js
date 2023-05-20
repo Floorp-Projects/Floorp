@@ -345,7 +345,7 @@ const TestCasesMultipleFiles = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   // remove download files, empty out collections
   let downloadList = await Downloads.getList(Downloads.ALL);
   let downloadCount = (await downloadList.getAll()).length;

@@ -305,7 +305,7 @@ export const NormandyTestUtils = {
   },
 
   withMockPreferences() {
-    return function(testFunction) {
+    return function (testFunction) {
       return async function inner(args) {
         const mockPreferences = new NormandyTestUtils.MockPreferences();
         try {

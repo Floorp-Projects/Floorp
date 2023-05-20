@@ -1,4 +1,4 @@
-onmessage = function() {
+onmessage = function () {
   var wsCreated = true;
   try {
     new WebSocket(

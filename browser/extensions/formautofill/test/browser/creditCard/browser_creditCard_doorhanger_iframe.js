@@ -29,7 +29,7 @@ add_task(async function test_iframe_submit_untouched_creditCard_form() {
   );
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_IFRAME_URL },
-    async function(browser) {
+    async function (browser) {
       let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(
         true
       );
@@ -41,7 +41,7 @@ add_task(async function test_iframe_submit_untouched_creditCard_form() {
       await osKeyStoreLoginShown;
       await waitForAutofill(iframeBC, "#cc-name", "John Doe");
 
-      await SpecialPowers.spawn(iframeBC, [], async function() {
+      await SpecialPowers.spawn(iframeBC, [], async function () {
         let form = content.document.getElementById("form");
         form.querySelector("input[type=submit]").click();
       });
@@ -66,7 +66,7 @@ add_task(async function test_iframe_unload_save_card() {
   let onChanged = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_IFRAME_URL },
-    async function(browser) {
+    async function (browser) {
       let onPopupShown = waitForPopupShown();
       let iframeBC = browser.browsingContext.children[0];
       await focusUpdateSubmitForm(
@@ -85,7 +85,7 @@ add_task(async function test_iframe_unload_save_card() {
       );
 
       info("Removing iframe without submitting");
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let frame = content.document.querySelector("iframe");
         frame.remove();
       });

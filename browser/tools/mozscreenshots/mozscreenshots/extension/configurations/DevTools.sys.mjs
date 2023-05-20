@@ -31,7 +31,7 @@ export var DevTools = {
 
     panels.forEach(panel => {
       this.configurations[panel] = {};
-      this.configurations[panel].applyConfig = async function() {
+      this.configurations[panel].applyConfig = async function () {
         Services.prefs.setIntPref("devtools.toolbox.footer.height", 800);
         let toolbox = await showToolboxForSelectedTab(panel, "bottom");
         this.selectors = [selectToolbox.bind(null, toolbox)];

@@ -13,7 +13,7 @@ const SUGGESTIONS_ENGINE_NAME = "searchSuggestionEngine.xml";
 
 let engine;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.suggest.searches", true],

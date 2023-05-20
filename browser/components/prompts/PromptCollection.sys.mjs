@@ -180,7 +180,7 @@ for (const [bundleName, bundleUrl] of Object.entries(BUNDLES)) {
   XPCOMUtils.defineLazyGetter(
     PromptCollection.prototype.stringBundles,
     bundleName,
-    function() {
+    function () {
       let bundle = Services.strings.createBundle(bundleUrl);
       if (!bundle) {
         throw new Error("String bundle for dom not present!");

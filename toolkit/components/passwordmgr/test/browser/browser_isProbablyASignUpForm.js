@@ -8,7 +8,7 @@ add_task(async () => {
       gBrowser,
       url: TEST_URL,
     },
-    async function(browser) {
+    async function (browser) {
       await SpecialPowers.spawn(browser, [], async () => {
         const doc = content.document;
         const { LoginManagerChild } = ChromeUtils.importESModule(

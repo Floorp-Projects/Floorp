@@ -17,7 +17,7 @@ const NAV_WIDTH = 210;
 const MEDIA_WIDTH = 250;
 
 // Test that sidebar in the styleeditor can be resized.
-add_task(async function() {
+add_task(async function () {
   await pushPref(PREF_SHOW_AT_RULES_SIDEBAR, true);
   await pushPref(PREF_NAV_WIDTH, NAV_WIDTH);
   await pushPref(PREF_SIDEBAR_WIDTH, MEDIA_WIDTH);

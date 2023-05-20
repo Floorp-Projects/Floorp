@@ -9,7 +9,7 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_search.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   let container = await getContainerForSelector("em", inspector, true);

@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const TIP = Cc["@mozilla.org/text-input-processor;1"].createInstance(
     Ci.nsITextInputProcessor
   );
@@ -59,7 +59,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
-    async function(browser) {
+    async function (browser) {
       ok(browser.isRemoteBrowser, "This test passes only in e10s mode");
 
       // IMEContentObserver flushes pending IME notifications at next vsync
@@ -88,7 +88,7 @@ add_task(async function() {
 
       await waitForSendingIMENotificationsInContent();
 
-      (function() {
+      (function () {
         checkNotifications(
           [
             { type: "notify-focus", expected: true },
@@ -150,7 +150,7 @@ add_task(async function() {
 
       await waitForSendingIMENotificationsInContent();
 
-      (function() {
+      (function () {
         checkNotifications(
           [
             { type: "notify-focus", expected: false },
@@ -168,10 +168,7 @@ add_task(async function() {
         );
         if (text?.succeeded) {
           is(
-            text.text
-              .trim()
-              .replace(/\r\n/g, "\n")
-              .replace(/\n\n+/g, "\n"),
+            text.text.trim().replace(/\r\n/g, "\n").replace(/\n\n+/g, "\n"),
             "abc\ndef",
             "text should include the both paragraph's text after modifying focused editor"
           );
@@ -209,7 +206,7 @@ add_task(async function() {
 
       await waitForSendingIMENotificationsInContent();
 
-      (function() {
+      (function () {
         checkNotifications(
           [
             { type: "notify-focus", expected: false },
@@ -227,10 +224,7 @@ add_task(async function() {
         );
         if (text?.succeeded) {
           is(
-            text.text
-              .trim()
-              .replace(/\r\n/g, "\n")
-              .replace(/\n\n+/g, "\n"),
+            text.text.trim().replace(/\r\n/g, "\n").replace(/\n\n+/g, "\n"),
             "abc\ndef",
             "text should include the both paragraph's text after removing all selection ranges from the focused editor"
           );
@@ -258,7 +252,7 @@ add_task(async function() {
 
       await waitForSendingIMENotificationsInContent();
 
-      (function() {
+      (function () {
         checkNotifications(
           [
             { type: "notify-focus", expected: false },

@@ -10,7 +10,7 @@ const sources = [
 ];
 
 async function getPreviewText(previewBrowser) {
-  return SpecialPowers.spawn(previewBrowser, [], function() {
+  return SpecialPowers.spawn(previewBrowser, [], function () {
     return content.document.body.textContent;
   });
 }
@@ -26,7 +26,7 @@ add_task(async function print_selection() {
 
     await BrowserTestUtils.withNewTab(
       "data:text/html," + source,
-      async function(browser) {
+      async function (browser) {
         let frameBC = browser.browsingContext.children[0];
         await SpecialPowers.spawn(frameBC, [], () => {
           let element = content.document.getElementById("other");
@@ -77,7 +77,7 @@ add_task(async function print_selection_parent_process() {
     "There shouldn't be any print preview browser"
   );
 
-  await BrowserTestUtils.withNewTab("about:support", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:support", async function (browser) {
     ok(!browser.isRemote, "Page loaded in parent process");
     let selectedText = await SpecialPowers.spawn(
       browser.browsingContext,
@@ -142,7 +142,7 @@ add_task(async function no_print_selection() {
 
 add_task(async function print_selection_switch() {
   await PrintHelper.withTestPage(async helper => {
-    await SpecialPowers.spawn(helper.sourceBrowser, [], async function() {
+    await SpecialPowers.spawn(helper.sourceBrowser, [], async function () {
       let element = content.document.querySelector("h1");
       content.window.getSelection().selectAllChildren(element);
     });
@@ -200,7 +200,7 @@ add_task(async function print_selection_switch() {
 add_task(async function open_system_print_with_selection_and_pdf() {
   await BrowserTestUtils.withNewTab(
     "data:text/html," + sources[0],
-    async function(browser) {
+    async function (browser) {
       let frameBC = browser.browsingContext.children[0];
       await SpecialPowers.spawn(frameBC, [], () => {
         let element = content.document.getElementById("other");

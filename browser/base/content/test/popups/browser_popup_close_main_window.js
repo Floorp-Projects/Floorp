@@ -63,7 +63,7 @@ add_task(async function closing_last_window_equals_quitting() {
   Services.obs.addObserver(obs, "browser-lastwindow-close-requested");
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   let popupPromise = BrowserTestUtils.waitForNewWindow("https://example.com/");
-  SpecialPowers.spawn(newWin.gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(newWin.gBrowser.selectedBrowser, [], function () {
     content.open("https://example.com/", "_blank", "height=500");
   });
   let popupWin = await popupPromise;

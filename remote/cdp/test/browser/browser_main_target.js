@@ -5,7 +5,7 @@
 
 // Test very basic CDP features.
 
-add_task(async function({ CDP }) {
+add_task(async function ({ CDP }) {
   const { mainProcessTarget } = RemoteAgent.cdp.targetList;
   ok(
     mainProcessTarget,

@@ -1,7 +1,7 @@
 const URI =
   "https://example.com/browser/browser/base/content/test/pageinfo/svg_image.html";
 
-add_task(async function() {
+add_task(async function () {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
   BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, URI);

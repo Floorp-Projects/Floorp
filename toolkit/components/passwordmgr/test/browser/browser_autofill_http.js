@@ -1,7 +1,7 @@
 const TEST_URL_PATH =
   "://example.org/browser/toolkit/components/passwordmgr/test/browser/";
 
-add_setup(async function() {
+add_setup(async function () {
   const login1 = LoginTestUtils.testData.formLogin({
     origin: "http://example.org",
     formActionOrigin: "http://example.org",
@@ -34,7 +34,7 @@ add_task(async function test_http_autofill() {
     let [username, password] = await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [],
-      async function() {
+      async function () {
         let doc = content.document;
         let contentUsername = doc.getElementById("form-basic-username").value;
         let contentPassword = doc.getElementById("form-basic-password").value;
@@ -72,7 +72,7 @@ add_task(async function test_iframe_in_http_autofill() {
     let [username, password] = await SpecialPowers.spawn(
       gBrowser.selectedBrowser.browsingContext.children[0],
       [],
-      async function() {
+      async function () {
         let doc = this.content.document;
         return [
           doc.getElementById("form-basic-username").value,
@@ -110,7 +110,7 @@ add_task(async function test_http_action_autofill() {
     let [username, password] = await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [],
-      async function() {
+      async function () {
         let doc = this.content.document;
         return [
           doc.getElementById("form-basic-username").value,

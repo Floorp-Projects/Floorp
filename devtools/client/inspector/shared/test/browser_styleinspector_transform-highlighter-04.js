@@ -26,7 +26,7 @@ const TEST_URI = `
 
 const TYPE = "CssTransformHighlighter";
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
   await selectNode(".test", inspector);

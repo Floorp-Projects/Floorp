@@ -119,7 +119,7 @@ const ADDITIONAL_FROM_ACTOR_RESOURCE = {
   atRules: [],
 };
 
-add_task(async function() {
+add_task(async function () {
   await testResourceAvailableFeature();
   await testResourceUpdateFeature();
   await testNestedResourceUpdateFeature();

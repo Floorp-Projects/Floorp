@@ -9,7 +9,7 @@ const { CustomizableUITestUtils } = ChromeUtils.importESModule(
 
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
-add_setup(async function() {
+add_setup(async function () {
   // gSync.init() is called in a requestIdleCallback. Force its initialization.
   gSync.init();
   // This preference gets set the very first time that the FxA menu gets opened,
@@ -87,7 +87,7 @@ add_task(async function test_overflow_navBar_button_visibility() {
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   let originalWindowWidth = window.outerWidth;
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     overflowPanel.removeAttribute("animate");
     window.resizeTo(originalWindowWidth, window.outerHeight);
     return TestUtils.waitForCondition(

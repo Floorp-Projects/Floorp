@@ -604,7 +604,7 @@ nsUnknownContentTypeDialog.prototype = {
       this.toggleRememberChoice(rememberChoice);
     }
 
-    this.mDialog.setTimeout(function() {
+    this.mDialog.setTimeout(function () {
       this.dialog.postShowCallback();
     }, 0);
 

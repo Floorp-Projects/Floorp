@@ -20,14 +20,14 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Load the test page before opening the debugger
   // and also force a GC before opening the debugger
   // so that ASM.js is fully garbaged collected.
   // Otherwise on debug builds, the thread actor is able to intermittently
   // retrieve the ASM.js sources and retrieve the breakable lines.
   const tab = await addTab(EXAMPLE_URL + "doc-asm.html");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     Cu.forceGC();
   });
   const toolbox = await openToolboxForTab(tab, "jsdebugger");

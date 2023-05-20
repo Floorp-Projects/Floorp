@@ -24,7 +24,7 @@ Cu.importGlobalProperties(["PathUtils"]);
 
 var { DefaultMap } = ExtensionUtils;
 
-const findModuleByPath = function(path) {
+const findModuleByPath = function (path) {
   for (let module of pkcs11db.listModules()) {
     if (module && module.libName === path) {
       return module;

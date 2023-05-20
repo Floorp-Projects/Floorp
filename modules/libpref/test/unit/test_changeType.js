@@ -44,64 +44,64 @@ function run_test() {
 
   // We only have a default value, and we try to set a default value of a
   // different type --> fails.
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setCharPref("TypeTest.default.bool", "boo");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setIntPref("TypeTest.default.bool", 5);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setCharPref("TypeTest.default.int", "boo");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setBoolPref("TypeTest.default.int", true);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setBoolPref("TypeTest.default.char", true);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setIntPref("TypeTest.default.char", 6);
   }, Cr.NS_ERROR_UNEXPECTED);
 
   // We only have a default value, and we try to set a user value of a
   // different type --> fails.
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setCharPref("TypeTest.default.bool", "boo");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setIntPref("TypeTest.default.bool", 5);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setCharPref("TypeTest.default.int", "boo");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setBoolPref("TypeTest.default.int", true);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setBoolPref("TypeTest.default.char", true);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setIntPref("TypeTest.default.char", 6);
   }, Cr.NS_ERROR_UNEXPECTED);
 
   // We only have a user value, and we try to set a default value of a
   // different type --> fails.
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setCharPref("TypeTest.user.bool", "boo");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setIntPref("TypeTest.user.bool", 5);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setCharPref("TypeTest.user.int", "boo");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setBoolPref("TypeTest.user.int", true);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setBoolPref("TypeTest.user.char", true);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setIntPref("TypeTest.user.char", 6);
   }, Cr.NS_ERROR_UNEXPECTED);
 
@@ -122,43 +122,43 @@ function run_test() {
 
   // We have both a default value and user value, and we try to set a default
   // value of a different type --> fails.
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setCharPref("TypeTest.both.bool", "boo");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setIntPref("TypeTest.both.bool", 5);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setCharPref("TypeTest.both.int", "boo");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setBoolPref("TypeTest.both.int", true);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setBoolPref("TypeTest.both.char", true);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     defaultBranch.setIntPref("TypeTest.both.char", 6);
   }, Cr.NS_ERROR_UNEXPECTED);
 
   // We have both a default value and user value, and we try to set a user
   // value of a different type --> fails.
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setCharPref("TypeTest.both.bool", "boo");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setIntPref("TypeTest.both.bool", 5);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setCharPref("TypeTest.both.int", "boo");
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setBoolPref("TypeTest.both.int", true);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setBoolPref("TypeTest.both.char", true);
   }, Cr.NS_ERROR_UNEXPECTED);
-  do_check_throws(function() {
+  do_check_throws(function () {
     userBranch.setIntPref("TypeTest.both.char", 6);
   }, Cr.NS_ERROR_UNEXPECTED);
 }

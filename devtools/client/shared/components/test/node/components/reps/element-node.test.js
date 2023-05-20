@@ -431,12 +431,9 @@ describe("ElementNode - Element attribute cropping", () => {
         shouldRenderTooltip: true,
       })
     );
-    expect(
-      renderedComponent
-        .first()
-        .find("span.attrValue")
-        .prop("title")
-    ).toBe(undefined);
+    expect(renderedComponent.first().find("span.attrValue").prop("title")).toBe(
+      undefined
+    );
   });
 
   it("renders partial value for long attribute", () => {
@@ -451,12 +448,9 @@ describe("ElementNode - Element attribute cropping", () => {
     expect(renderedComponent.text()).toEqual(
       '<p data-test="aaaaaaaaaaaaaaaaaaaaaaaa…aaaaaaaaaaaaaaaaaaaaaaa">'
     );
-    expect(
-      renderedComponent
-        .first()
-        .find("span.attrValue")
-        .prop("title")
-    ).toBe("a".repeat(100));
+    expect(renderedComponent.first().find("span.attrValue").prop("title")).toBe(
+      "a".repeat(100)
+    );
   });
 
   it("renders partial attribute for LongString", () => {
@@ -472,12 +466,9 @@ describe("ElementNode - Element attribute cropping", () => {
     expect(renderedComponent.text()).toEqual(
       '<div data-test="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…">'
     );
-    expect(
-      renderedComponent
-        .first()
-        .find("span.attrValue")
-        .prop("title")
-    ).toBe("a".repeat(1000));
+    expect(renderedComponent.first().find("span.attrValue").prop("title")).toBe(
+      "a".repeat(1000)
+    );
   });
 });
 

@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
+XPCOMUtils.defineLazyGetter(lazy, "logConsole", function () {
   return console.createInstance({
     prefix: "PlacesPreviews",
     maxLogLevel: Services.prefs.getBoolPref("places.previews.log", false)
@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", function() {
 // Toggling Places previews requires a restart, because a database trigger
 // filling up tombstones is enabled on the database only when the pref is set
 // on startup.
-XPCOMUtils.defineLazyGetter(lazy, "previewsEnabled", function() {
+XPCOMUtils.defineLazyGetter(lazy, "previewsEnabled", function () {
   return Services.prefs.getBoolPref("places.previews.enabled", false);
 });
 

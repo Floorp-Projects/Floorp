@@ -7,7 +7,7 @@
  * Test blocking and unblocking a request.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { monitor, tab } = await initNetMonitor(HTTPS_SIMPLE_URL, {
     requestCount: 1,
   });

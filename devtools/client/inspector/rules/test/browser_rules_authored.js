@@ -17,7 +17,7 @@ async function createTestContent(style) {
   return view;
 }
 
-add_task(async function() {
+add_task(async function () {
   const view = await createTestContent(
     "#testid {" +
       // Invalid property.

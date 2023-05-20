@@ -33,7 +33,7 @@ const extensionData = {
   background() {
     const { manifest_version } = browser.runtime.getManifest();
     let headerToSet = undefined;
-    browser.test.onMessage.addListener(function(msg, arg) {
+    browser.test.onMessage.addListener(function (msg, arg) {
       if (msg !== "header-to-set") {
         return;
       }

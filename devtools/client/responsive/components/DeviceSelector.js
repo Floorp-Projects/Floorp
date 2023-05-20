@@ -121,7 +121,7 @@ class DeviceSelector extends PureComponent {
       }
     }
 
-    menuItems.sort(function(a, b) {
+    menuItems.sort(function (a, b) {
       return a.props.label.localeCompare(b.props.label);
     });
 

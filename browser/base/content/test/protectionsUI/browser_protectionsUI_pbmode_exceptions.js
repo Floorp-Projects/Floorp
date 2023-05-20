@@ -13,7 +13,7 @@ var TrackingProtection = null;
 var gProtectionsHandler = null;
 var browser = null;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref(TP_PB_PREF);
   Services.prefs.clearUserPref(DTSCBN_PREF);
   gProtectionsHandler = TrackingProtection = browser = null;

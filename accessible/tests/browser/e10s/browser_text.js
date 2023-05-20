@@ -28,7 +28,7 @@ ef gh</pre>
 <p id="p">a<br role="presentation">b</p>
 <p id="leafThenWrap" style="font-family: monospace; width: 2ch; word-break: break-word;"><span>a</span>bc</p>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     for (const id of ["br", "pre"]) {
       const acc = findAccessibleChildByID(docAcc, id);
       testCharacterCount([acc], 11);
@@ -135,7 +135,7 @@ addAccessibleTask(
 <p id="initBr"><br></p>
 <p id="rewrap" style="font-family: monospace; width: 2ch; word-break: break-word;"><span id="rewrap1">ac</span>def</p>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const initBr = findAccessibleChildByID(docAcc, "initBr");
     testTextAtOffset(initBr, BOUNDARY_LINE_START, [
       [0, 0, "\n", 0, 1],
@@ -183,7 +183,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<p id="p">test</p>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const p = findAccessibleChildByID(docAcc, "p");
     testTextAtOffset(p, BOUNDARY_LINE_START, [[5, 5, "", 0, 0]]);
     testTextBeforeOffset(p, BOUNDARY_LINE_START, [[5, 5, "", 0, 0]]);
@@ -206,7 +206,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<div id="container">a<a id="link" href="https://example.com/">b</a>c</div>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const container = findAccessibleChildByID(docAcc, "container", [
       nsIAccessibleHyperText,
     ]);
@@ -234,7 +234,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<ul><li id="li"><a id="link" href="https://example.com/">a</a></li></ul>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const li = findAccessibleChildByID(docAcc, "li", [nsIAccessibleHyperText]);
     let link = li.getLinkAt(0);
     queryInterfaces(link, [nsIAccessible]);
@@ -267,7 +267,7 @@ addAccessibleTask(
 <p id="empty"></p>
 <p id="fontFamilies" style="font-family: sans-serif;">ab<span style="font-family: monospace;">cd</span><span style="font-family: monospace;">ef</span>gh</p>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let defAttrs = {
       "text-position": "baseline",
       "font-style": "normal",

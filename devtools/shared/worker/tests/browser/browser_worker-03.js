@@ -25,11 +25,11 @@ function squarePromiseReject(x) {
   return new Promise((_, reject) => reject("Nope"));
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("security.allow_parent_unrestricted_js_loads");
 });
 
-add_task(async function() {
+add_task(async function () {
   // Needed for blob:null
   Services.prefs.setBoolPref(
     "security.allow_parent_unrestricted_js_loads",

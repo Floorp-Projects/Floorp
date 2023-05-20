@@ -72,13 +72,7 @@ describe("SimpleSnippet", () => {
   });
   it("should render .title", () => {
     const wrapper = mountAndCheckProps({ title: "Foo" });
-    assert.equal(
-      wrapper
-        .find(".title")
-        .text()
-        .trim(),
-      "Foo"
-    );
+    assert.equal(wrapper.find(".title").text().trim(), "Foo");
   });
   it("should render a light theme variant .icon", () => {
     const wrapper = mountAndCheckProps({
@@ -150,10 +144,7 @@ describe("SimpleSnippet", () => {
       'url("data:image/gif;base64,R0lGODl")'
     );
     assert.equal(
-      wrapper
-        .find(".section-title-text")
-        .text()
-        .trim(),
+      wrapper.find(".section-title-text").text().trim(),
       "Messages from Mozilla"
     );
     // ensure there is no <a> when a section_title_url is not specified
@@ -172,10 +163,7 @@ describe("SimpleSnippet", () => {
       'url("data:image/gif;base64,R0lGODl")'
     );
     assert.equal(
-      wrapper
-        .find(".section-title-text")
-        .text()
-        .trim(),
+      wrapper.find(".section-title-text").text().trim(),
       "Messages from Mozilla"
     );
     // ensure there is no <a> when a section_title_url is not specified

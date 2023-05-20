@@ -8,7 +8,7 @@ const throttlingProfiles = require("resource://devtools/client/shared/components
 // Tests changing network throttling
 const TEST_URL = "data:text/html;charset=utf-8,Network throttling test";
 
-addRDMTask(TEST_URL, async function({ ui, manager }) {
+addRDMTask(TEST_URL, async function ({ ui, manager }) {
   // Test defaults
   testNetworkThrottlingSelectorLabel(ui, "No Throttling", "No Throttling");
   await testNetworkThrottlingState(ui, null);
@@ -53,7 +53,7 @@ function testNetworkThrottlingSelectorLabel(
   );
 }
 
-var testNetworkThrottlingState = async function(ui, expected) {
+var testNetworkThrottlingState = async function (ui, expected) {
   const state = await ui.networkFront.getNetworkThrottling();
   Assert.deepEqual(
     state,
@@ -62,7 +62,7 @@ var testNetworkThrottlingState = async function(ui, expected) {
   );
 };
 
-var testThrottlingProfile = async function(ui, profile, tooltip) {
+var testThrottlingProfile = async function (ui, profile, tooltip) {
   await selectNetworkThrottling(ui, profile);
   testNetworkThrottlingSelectorLabel(ui, profile, tooltip);
   const data = throttlingProfiles.find(({ id }) => id == profile);

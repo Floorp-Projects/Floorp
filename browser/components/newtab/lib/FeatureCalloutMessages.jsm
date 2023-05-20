@@ -56,8 +56,9 @@ function add24HourImpressionJEXLTargeting(
           message.id
         } | length - 1] == null || messageImpressions.${
           message.id
-        }[messageImpressions.${message.id} | length - 1] < ${Date.now() -
-          ONE_DAY_IN_MS})`
+        }[messageImpressions.${message.id} | length - 1] < ${
+          Date.now() - ONE_DAY_IN_MS
+        })`
     )
     .join(" && ");
 

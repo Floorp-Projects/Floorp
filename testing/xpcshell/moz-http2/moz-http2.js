@@ -29,7 +29,7 @@ var HeaderSetDecompressor = http2_compression.HeaderSetDecompressor;
 var originalRead = HeaderSetDecompressor.prototype.read;
 var lastDecompressor;
 var decompressedPairs;
-HeaderSetDecompressor.prototype.read = function() {
+HeaderSetDecompressor.prototype.read = function () {
   if (this != lastDecompressor) {
     lastDecompressor = this;
     decompressedPairs = [];
@@ -45,7 +45,7 @@ var connection_module = node_http2_root + "/lib/protocol/connection";
 var http2_connection = require(connection_module);
 var Connection = http2_connection.Connection;
 var originalClose = Connection.prototype.close;
-Connection.prototype.close = function(error, lastId) {
+Connection.prototype.close = function (error, lastId) {
   if (lastId !== undefined) {
     this._lastIncomingStream = lastId;
   }
@@ -57,7 +57,7 @@ var framer_module = node_http2_root + "/lib/protocol/framer";
 var http2_framer = require(framer_module);
 var Serializer = http2_framer.Serializer;
 var originalTransform = Serializer.prototype._transform;
-var newTransform = function(frame, encoding, done) {
+var newTransform = function (frame, encoding, done) {
   if (frame.type == "DATA") {
     // Insert our empty DATA frame
     const emptyFrame = {};
@@ -135,7 +135,7 @@ var m = {
   },
 };
 
-var runlater = function() {};
+var runlater = function () {};
 runlater.prototype = {
   req: null,
   resp: null,
@@ -149,7 +149,7 @@ runlater.prototype = {
   },
 };
 
-var runConnectLater = function() {};
+var runConnectLater = function () {};
 runConnectLater.prototype = {
   req: null,
   resp: null,
@@ -166,7 +166,7 @@ runConnectLater.prototype = {
   },
 };
 
-var moreData = function() {};
+var moreData = function () {};
 moreData.prototype = {
   req: null,
   resp: null,
@@ -476,7 +476,7 @@ function handleRequest(req, res) {
       resp.setHeader("Set-Cookie", "trackyou=yes; path=/; max-age=100000;");
       resp.setHeader("Content-Type", contentType);
       if (req.headers["accept-encoding"].includes("gzip")) {
-        zlib.gzip(buffer, function(err, result) {
+        zlib.gzip(buffer, function (err, result) {
           resp.setHeader("Content-Encoding", "gzip");
           resp.setHeader("Content-Length", result.length);
           try {
@@ -811,10 +811,7 @@ function handleRequest(req, res) {
     };
     var pushHdrTxt =
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    var pullHdrTxt = pushHdrTxt
-      .split("")
-      .reverse()
-      .join("");
+    var pullHdrTxt = pushHdrTxt.split("").reverse().join("");
     for (let i = 0; i < 265; i++) {
       pushRequestHeaders["X-Push-Test-Header-" + i] = pushHdrTxt;
       res.setHeader("X-Pull-Test-Header-" + i, pullHdrTxt);
@@ -1890,15 +1887,15 @@ if (process.env.HTTP2_LOG !== undefined) {
 
 var server = http2.createServer(options, handleRequest);
 
-server.on("connection", function(socket) {
-  socket.on("error", function() {
+server.on("connection", function (socket) {
+  socket.on("error", function () {
     // Ignoring SSL socket errors, since they usually represent a connection that was tore down
     // by the browser because of an untrusted certificate. And this happens at least once, when
     // the first test case if done.
   });
 });
 
-server.on("connect", function(req, clientSocket, head) {
+server.on("connect", function (req, clientSocket, head) {
   clientSocket.write(
     "HTTP/1.1 404 Not Found\r\nProxy-agent: Node.js-Proxy\r\n\r\n"
   );

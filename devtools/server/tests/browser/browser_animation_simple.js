@@ -5,7 +5,7 @@
 
 // Simple checks for the AnimationsActor
 
-add_task(async function() {
+add_task(async function () {
   const { target, walker, animations } = await initAnimationsFrontForUrl(
     "data:text/html;charset=utf-8,<title>test</title><div></div>"
   );

@@ -7,7 +7,7 @@
 
 const TEST_URL = "about:buildconfig";
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     opening: TEST_URL,

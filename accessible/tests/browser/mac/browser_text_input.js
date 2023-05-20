@@ -497,7 +497,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<input id="input" value="abc">`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await focusIntoInput(docAcc, "input");
 
     let event = await synthKeyAndTestSelectionChanged(
@@ -554,7 +554,7 @@ gh
 </textarea>
 <div role="textbox" id="wrapped" contenteditable style="width: 1ch;">a b c</div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let hard = getNativeInterface(docAcc, "hard");
     await focusIntoInput(docAcc, "hard");
     is(hard.getAttributeValue("AXInsertionPointLineNumber"), 0);

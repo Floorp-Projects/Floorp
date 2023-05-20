@@ -28,7 +28,7 @@ var listener = {
 var server = new HttpServer();
 function run_test() {
   server.start(SERVER_PORT);
-  server.registerPathHandler("/", function(metadata, response) {
+  server.registerPathHandler("/", function (metadata, response) {
     response.setStatusLine(metadata.httpVersion, 200, "OK");
     response.setHeader("Set-Cookie", "BigCookie=" + cookie, false);
     response.write("Hello world");

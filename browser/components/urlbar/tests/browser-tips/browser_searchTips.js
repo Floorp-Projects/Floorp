@@ -44,7 +44,7 @@ const GOOGLE_DOMAINS = [
 // a redirect.
 const SEARCH_SERP_URL = "https://example.com/?q=chocolate";
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 

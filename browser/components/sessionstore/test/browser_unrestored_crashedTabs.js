@@ -22,7 +22,7 @@ add_task(async function test() {
       gBrowser,
       url: PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       await TabStateFlusher.flush(browser);
 
       // We'll create a second "pending" tab. This is the one we'll

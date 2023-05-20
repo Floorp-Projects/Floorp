@@ -7,7 +7,7 @@ const BASE_URI =
   "http://mochi.test:8888/browser/browser/components/" +
   "contextualidentity/test/browser/empty_file.html";
 
-add_setup(async function() {
+add_setup(async function () {
   // make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -24,7 +24,7 @@ add_task(async function test() {
   });
   let browser1 = gBrowser.getBrowserForTab(tab1);
   await BrowserTestUtils.browserLoaded(browser1);
-  await SpecialPowers.spawn(browser1, [], function(opts) {
+  await SpecialPowers.spawn(browser1, [], function (opts) {
     content.window.name = "tab-1";
   });
 
@@ -34,7 +34,7 @@ add_task(async function test() {
   });
   let browser2 = gBrowser.getBrowserForTab(tab2);
   await BrowserTestUtils.browserLoaded(browser2);
-  await SpecialPowers.spawn(browser2, [], function(opts) {
+  await SpecialPowers.spawn(browser2, [], function (opts) {
     content.window.name = "tab-2";
   });
 
@@ -43,10 +43,10 @@ add_task(async function test() {
   await SpecialPowers.spawn(
     browser1,
     [{ url: BASE_URI + "?new" }],
-    async function(opts) {
+    async function (opts) {
       await new content.window.wrappedJSObject.Promise(resolve => {
         let w = content.window.wrappedJSObject.open(opts.url, "tab-2");
-        w.onload = function() {
+        w.onload = function () {
           resolve();
         };
       });

@@ -1,6 +1,6 @@
 self.importScripts("eventsource_worker_helper.js");
 
-self.addEventListener("fetch", function(event) {
+self.addEventListener("fetch", function (event) {
   var request = event.request;
   var url = new URL(request.url);
 

@@ -81,7 +81,7 @@ registrar.registerFactory(
   ComponentUtils.generateSingletonFactory(HelperAppLauncherDialog)
 );
 
-addMessageListener("unregister", async function() {
+addMessageListener("unregister", async function () {
   registrar.registerFactory(
     HELPERAPP_DIALOG_CID,
     "",

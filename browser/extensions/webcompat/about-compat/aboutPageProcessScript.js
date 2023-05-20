@@ -18,7 +18,7 @@ if (!Cm.isCIDRegistered(classID)) {
     "resource://gre/modules/ComponentUtils.sys.mjs"
   );
 
-  const factory = ComponentUtils.generateSingletonFactory(function() {
+  const factory = ComponentUtils.generateSingletonFactory(function () {
     const { AboutCompat } = ChromeUtils.import(
       "resource://webcompat/AboutCompat.jsm"
     );

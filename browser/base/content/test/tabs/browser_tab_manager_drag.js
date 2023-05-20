@@ -80,7 +80,7 @@ async function testWithNewWindow(func) {
 }
 
 add_task(async function test_reorder() {
-  await testWithNewWindow(async function(newWindow) {
+  await testWithNewWindow(async function (newWindow) {
     Services.telemetry.clearScalars();
 
     const list = newWindow.document.getElementById(
@@ -147,7 +147,7 @@ function tabOf(row) {
 }
 
 add_task(async function test_move_to_tab_bar() {
-  await testWithNewWindow(async function(newWindow) {
+  await testWithNewWindow(async function (newWindow) {
     Services.telemetry.clearScalars();
 
     const list = newWindow.document.getElementById(
@@ -203,7 +203,7 @@ add_task(async function test_move_to_tab_bar() {
 add_task(async function test_move_to_different_tab_bar() {
   const newWindow2 = await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
 
-  await testWithNewWindow(async function(newWindow) {
+  await testWithNewWindow(async function (newWindow) {
     Services.telemetry.clearScalars();
 
     const list = newWindow.document.getElementById(

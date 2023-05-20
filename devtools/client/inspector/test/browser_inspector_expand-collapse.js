@@ -9,7 +9,7 @@ const TEST_URL =
   "data:text/html;charset=utf-8," +
   "<div id='parent-node'><div id='child-node'></div></div>";
 
-add_task(async function() {
+add_task(async function () {
   // Test is often exceeding time-out threshold, similar to Bug 1137765
   requestLongerTimeout(2);
 

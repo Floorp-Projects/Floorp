@@ -34,7 +34,7 @@ async function run_test(count) {
   });
 
   await new Promise(resolve =>
-    setTimeout(function() {
+    setTimeout(function () {
       window.requestIdleCallback(resolve);
     }, 1000)
   );

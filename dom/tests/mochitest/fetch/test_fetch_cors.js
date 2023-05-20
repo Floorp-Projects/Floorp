@@ -12,13 +12,13 @@ function testModeSameOrigin() {
   // Fetch spec Section 4, step 4, "request's mode is same-origin".
   var req = new Request("http://example.com", { mode: "same-origin" });
   return fetch(req).then(
-    function(res) {
+    function (res) {
       ok(
         false,
         "Attempting to fetch a resource from a different origin with mode same-origin should fail."
       );
     },
-    function(e) {
+    function (e) {
       ok(
         e instanceof TypeError,
         "Attempting to fetch a resource from a different origin with mode same-origin should fail."
@@ -87,13 +87,13 @@ function testModeNoCors() {
     mode: "no-cors",
   });
   return fetch(r).then(
-    function(res) {
+    function (res) {
       ok(
         isOpaqueResponse(res),
         "no-cors Request fetch should result in opaque response"
       );
     },
-    function(e) {
+    function (e) {
       ok(false, "no-cors Request fetch should not error");
     }
   );
@@ -131,7 +131,7 @@ function testSameOriginCredentials() {
   ];
 
   var finalPromiseResolve, finalPromiseReject;
-  var finalPromise = new Promise(function(res, rej) {
+  var finalPromise = new Promise(function (res, rej) {
     finalPromiseResolve = res;
     finalPromiseReject = rej;
   });
@@ -167,7 +167,7 @@ function testSameOriginCredentials() {
     ok(test.pass, "Expected test to pass " + JSON.stringify(test));
     is(res.status, 200, "wrong status in test for " + JSON.stringify(test));
     is(res.statusText, "OK", "wrong status text for " + JSON.stringify(test));
-    return res.text().then(function(v) {
+    return res.text().then(function (v) {
       is(
         v,
         "<res>hello pass</res>\n",
@@ -181,8 +181,8 @@ function testSameOriginCredentials() {
     var request = makeRequest(test);
     console.log(request.url);
     fetch(request).then(
-      function(res) {
-        testResponse(res, test).then(function() {
+      function (res) {
+        testResponse(res, test).then(function () {
           if (i < tests.length - 1) {
             runATest(tests, i + 1);
           } else {
@@ -190,7 +190,7 @@ function testSameOriginCredentials() {
           }
         });
       },
-      function(e) {
+      function (e) {
         ok(!test.pass, "Expected test to fail " + JSON.stringify(test));
         ok(e instanceof TypeError, "Test should fail " + JSON.stringify(test));
         if (i < tests.length - 1) {
@@ -842,8 +842,8 @@ function testModeCors() {
     }
 
     fetches.push(
-      (function(test) {
-        return new Promise(function(resolve) {
+      (function (test) {
+        return new Promise(function (resolve) {
           resolve(
             new Request(req.url, {
               method: req.method,
@@ -853,10 +853,10 @@ function testModeCors() {
             })
           );
         })
-          .then(function(request) {
+          .then(function (request) {
             return fetch(request);
           })
-          .then(function(res) {
+          .then(function (res) {
             ok(test.pass, "Expected test to pass for " + JSON.stringify(test));
             if (test.status) {
               is(
@@ -907,7 +907,7 @@ function testModeCors() {
 
             return res.text();
           })
-          .then(function(v) {
+          .then(function (v) {
             if (test.method !== "HEAD") {
               is(
                 v,
@@ -922,7 +922,7 @@ function testModeCors() {
               );
             }
           })
-          .catch(function(e) {
+          .catch(function (e) {
             ok(!test.pass, "Expected test failure for " + JSON.stringify(test));
             ok(
               e instanceof TypeError,
@@ -1101,7 +1101,7 @@ function testCrossOriginCredentials() {
   var origin = "http://mochi.test:8888";
 
   var finalPromiseResolve, finalPromiseReject;
-  var finalPromise = new Promise(function(res, rej) {
+  var finalPromise = new Promise(function (res, rej) {
     finalPromiseResolve = res;
     finalPromiseReject = rej;
   });
@@ -1156,7 +1156,7 @@ function testCrossOriginCredentials() {
     ok(test.pass, "Expected test to pass for " + JSON.stringify(test));
     is(res.status, 200, "wrong status in test for " + JSON.stringify(test));
     is(res.statusText, "OK", "wrong status text for " + JSON.stringify(test));
-    return res.text().then(function(v) {
+    return res.text().then(function (v) {
       is(
         v,
         "<res>hello pass</res>\n",
@@ -1169,8 +1169,8 @@ function testCrossOriginCredentials() {
     var test = tests[i];
     var request = makeRequest(test);
     fetch(request).then(
-      function(res) {
-        testResponse(res, test).then(function() {
+      function (res) {
+        testResponse(res, test).then(function () {
           if (i < tests.length - 1) {
             runATest(tests, i + 1);
           } else {
@@ -1178,7 +1178,7 @@ function testCrossOriginCredentials() {
           }
         });
       },
-      function(e) {
+      function (e) {
         ok(!test.pass, "Expected test failure for " + JSON.stringify(test));
         ok(
           e instanceof TypeError,
@@ -1242,7 +1242,7 @@ function testModeNoCorsCredentials() {
   ];
 
   var finalPromiseResolve, finalPromiseReject;
-  var finalPromise = new Promise(function(res, rej) {
+  var finalPromise = new Promise(function (res, rej) {
     finalPromiseResolve = res;
     finalPromiseReject = rej;
   });
@@ -1284,7 +1284,7 @@ function testModeNoCorsCredentials() {
       "wrong status in test for " + JSON.stringify(test)
     );
 
-    return unfiltered.text().then(function(v) {
+    return unfiltered.text().then(function (v) {
       if (test.status === 200) {
         const expected =
           SpecialPowers.getIntPref(
@@ -1306,9 +1306,9 @@ function testModeNoCorsCredentials() {
     var test = tests[i];
     var request = makeRequest(test);
     fetch(request).then(
-      function(res) {
+      function (res) {
         ok(test.pass, "Expected test to pass " + JSON.stringify(test));
-        testResponse(res, test).then(function() {
+        testResponse(res, test).then(function () {
           if (i < tests.length - 1) {
             runATest(tests, i + 1);
           } else {
@@ -1316,7 +1316,7 @@ function testModeNoCorsCredentials() {
           }
         });
       },
-      function(e) {
+      function (e) {
         ok(!test.pass, "Expected test to fail " + JSON.stringify(test));
         ok(e instanceof TypeError, "Test should fail " + JSON.stringify(test));
         if (i < tests.length - 1) {
@@ -1646,9 +1646,9 @@ function testCORSRedirects() {
       body: req.body,
     });
     fetches.push(
-      (function(request, test) {
+      (function (request, test) {
         return fetch(request).then(
-          function(res) {
+          function (res) {
             ok(test.pass, "Expected test to pass for " + JSON.stringify(test));
             is(
               res.status,
@@ -1684,7 +1684,7 @@ function testCORSRedirects() {
                 "Response URL should be redirected URL"
               );
             }
-            return res.text().then(function(v) {
+            return res.text().then(function (v) {
               is(
                 v,
                 "<res>hello pass</res>\n",
@@ -1692,7 +1692,7 @@ function testCORSRedirects() {
               );
             });
           },
-          function(e) {
+          function (e) {
             ok(!test.pass, "Expected test failure for " + JSON.stringify(test));
             ok(
               e instanceof TypeError,
@@ -1770,8 +1770,8 @@ function testNoCORSRedirects() {
     }
 
     fetches.push(
-      (function(req, test) {
-        return new Promise(function(resolve, reject) {
+      (function (req, test) {
+        return new Promise(function (resolve, reject) {
           resolve(
             new Request(req.url, {
               mode: "no-cors",
@@ -1781,11 +1781,11 @@ function testNoCORSRedirects() {
             })
           );
         })
-          .then(function(request) {
+          .then(function (request) {
             return fetch(request);
           })
           .then(
-            function(res) {
+            function (res) {
               ok(
                 test.pass,
                 "Expected test to pass for " + JSON.stringify(test)
@@ -1809,7 +1809,7 @@ function testNoCORSRedirects() {
                 "wrong status text for " + JSON.stringify(test)
               );
               is(res.url, "", "wrong response url for " + JSON.stringify(test));
-              return res.text().then(function(v) {
+              return res.text().then(function (v) {
                 is(
                   v,
                   "",
@@ -1817,7 +1817,7 @@ function testNoCORSRedirects() {
                 );
               });
             },
-            function(e) {
+            function (e) {
               ok(
                 !test.pass,
                 "Expected test failure for " + JSON.stringify(test)
@@ -1849,11 +1849,11 @@ function testReferrer() {
   return fetch(
     corsServerPath + "headers=" + encodeURIComponent(JSON.stringify(dict))
   ).then(
-    function(res) {
+    function (res) {
       is(res.status, 200, "expected correct referrer header to be sent");
       dump(res.statusText);
     },
-    function(e) {
+    function (e) {
       ok(false, "expected correct referrer header to be sent");
     }
   );

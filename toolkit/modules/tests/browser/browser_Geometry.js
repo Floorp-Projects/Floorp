@@ -92,7 +92,7 @@ var tests = {
     function equals(rects1, rects2) {
       return (
         rects1.length == rects2.length &&
-        rects1.every(function(r, i) {
+        rects1.every(function (r, i) {
           return r.equals(rects2[i]);
         })
       );

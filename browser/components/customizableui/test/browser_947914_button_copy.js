@@ -7,10 +7,10 @@
 var initialLocation = gBrowser.currentURI.spec;
 var globalClipboard;
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function() {
+    async function () {
       info("Check copy button existence and functionality");
       CustomizableUI.addWidgetToArea(
         "edit-controls",

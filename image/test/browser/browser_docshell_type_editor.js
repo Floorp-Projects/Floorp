@@ -19,7 +19,7 @@ function getManifestDir() {
 // APP_TYPE_EDITOR however the load should be allowed.
 // >> chrome://test1/skin/privileged.png
 
-add_task(async function() {
+add_task(async function () {
   info("docshell of appType APP_TYPE_EDITOR can access privileged images.");
 
   // Load a temporary manifest adding a route to a privileged image
@@ -31,8 +31,8 @@ add_task(async function() {
       gBrowser,
       url: SIMPLE_HTML,
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [], async function() {
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [], async function () {
         let rootDocShell = docShell.sameTypeRootTreeItem.QueryInterface(
           Ci.nsIDocShell
         );
@@ -49,13 +49,13 @@ add_task(async function() {
         return new Promise(resolve => {
           let doc = content.document;
           let image = doc.createElement("img");
-          image.onload = function() {
+          image.onload = function () {
             ok(true, "APP_TYPE_EDITOR is allowed to load privileged image");
             // restore appType of rootDocShell before moving on to the next test
             rootDocShell.appType = defaultAppType;
             resolve();
           };
-          image.onerror = function() {
+          image.onerror = function () {
             ok(false, "APP_TYPE_EDITOR is allowed to load privileged image");
             // restore appType of rootDocShell before moving on to the next test
             rootDocShell.appType = defaultAppType;
@@ -71,7 +71,7 @@ add_task(async function() {
   Components.manager.removeBootstrappedManifestLocation(manifestDir);
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "docshell of appType APP_TYPE_UNKNOWN can *not* access privileged images."
   );
@@ -85,8 +85,8 @@ add_task(async function() {
       gBrowser,
       url: SIMPLE_HTML,
     },
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [], async function() {
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [], async function () {
         let rootDocShell = docShell.sameTypeRootTreeItem.QueryInterface(
           Ci.nsIDocShell
         );
@@ -103,7 +103,7 @@ add_task(async function() {
         return new Promise(resolve => {
           let doc = content.document;
           let image = doc.createElement("img");
-          image.onload = function() {
+          image.onload = function () {
             ok(
               false,
               "APP_TYPE_UNKNOWN is *not* allowed to access privileged image"
@@ -112,7 +112,7 @@ add_task(async function() {
             rootDocShell.appType = defaultAppType;
             resolve();
           };
-          image.onerror = function() {
+          image.onerror = function () {
             ok(
               true,
               "APP_TYPE_UNKNOWN is *not* allowed to access privileged image"

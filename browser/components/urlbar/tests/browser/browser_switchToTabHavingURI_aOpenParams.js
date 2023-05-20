@@ -16,7 +16,7 @@ add_task(async function test_ignoreFragment() {
   let hashChangePromise = ContentTask.spawn(
     tabRefAboutHome.linkedBrowser,
     [],
-    async function() {
+    async function () {
       await ContentTaskUtils.waitForEvent(this, "hashchange", true);
     }
   );
@@ -56,7 +56,7 @@ add_task(async function test_ignoreFragment() {
   );
   switchTab("about:mozilla", true);
   switchTab("about:home", true, { ignoreFragment: "whenComparingAndReplace" });
-  await BrowserTestUtils.waitForCondition(function() {
+  await BrowserTestUtils.waitForCondition(function () {
     return tabRefAboutHome.linkedBrowser.currentURI.spec == "about:home";
   });
   is(

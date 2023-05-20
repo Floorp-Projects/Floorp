@@ -15,7 +15,7 @@ function _sendMessage(messageBody) {
 }
 
 function _recvMessage() {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     addEventListener("message", async function onMessage(event) {
       removeEventListener("message", onMessage);
       const data = event.data;

@@ -16,7 +16,9 @@ SimpleTest.ignoreAllUncaughtExceptions(true);
  * @param {Boolean} fullscreenState - true to enter fullscreen, false to leave
  */
 function changeFullscreen(browser, fullscreenState) {
-  return SpecialPowers.spawn(browser, [fullscreenState], async function(state) {
+  return SpecialPowers.spawn(browser, [fullscreenState], async function (
+    state
+  ) {
     if (state) {
       await content.document.body.requestFullscreen();
     } else {
@@ -26,7 +28,7 @@ function changeFullscreen(browser, fullscreenState) {
 }
 
 function triggerInstall(browser, xpi_url) {
-  return SpecialPowers.spawn(browser, [xpi_url], async function(xpi_url) {
+  return SpecialPowers.spawn(browser, [xpi_url], async function (xpi_url) {
     content.location = xpi_url;
   });
 }

@@ -17,7 +17,7 @@ const TEST_URI =
     console.info(error);
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   // Should be removed when sidebar work is complete
   await pushPref("devtools.webconsole.sidebarToggle", true);
 

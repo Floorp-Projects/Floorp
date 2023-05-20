@@ -98,7 +98,7 @@ async function checkEVChains() {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
 

@@ -25,7 +25,7 @@ const {
 // Shared variables used by several methods of this module.
 let root, store, unsubscribe;
 
-const initialize = async function(commands) {
+const initialize = async function (commands) {
   // Exposed by panel.js
   const { gToolbox, gHeapAnalysesClient } = window;
 
@@ -48,7 +48,7 @@ const updateFront = front => {
   store.dispatch(updateMemoryFront(front));
 };
 
-const destroy = function() {
+const destroy = function () {
   const ok = ReactDOM.unmountComponentAtNode(root);
   assert(
     ok,

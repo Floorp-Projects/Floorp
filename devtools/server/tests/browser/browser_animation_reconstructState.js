@@ -6,7 +6,7 @@
 // Check that, even though the AnimationPlayerActor only sends the bits of its
 // state that change, the front reconstructs the whole state everytime.
 
-add_task(async function() {
+add_task(async function () {
   const { target, walker, animations } = await initAnimationsFrontForUrl(
     MAIN_DOMAIN + "animation.html"
   );

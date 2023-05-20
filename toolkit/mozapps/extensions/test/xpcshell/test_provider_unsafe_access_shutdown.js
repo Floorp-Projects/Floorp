@@ -43,7 +43,7 @@ add_task(async function unsafeProviderShutdown() {
 
   let shutdownPromise = null;
   await new Promise(resolve => {
-    secondProvider.shutdownCallback = function() {
+    secondProvider.shutdownCallback = function () {
       return AddonManager.getAddonByID("does-not-exist").then(() => {
         resolve();
       });

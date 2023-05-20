@@ -66,10 +66,7 @@ nsWebHandlerApp.prototype = {
     if (scheme == "ftp" || scheme == "ftps" || scheme == "sftp") {
       // FTP URLs are parsed by nsStandardURL, so clearing the username and
       // password does not throw.
-      aURI = aURI
-        .mutate()
-        .setUserPass("")
-        .finalize();
+      aURI = aURI.mutate().setUserPass("").finalize();
     }
 
     // encode the URI to be handled

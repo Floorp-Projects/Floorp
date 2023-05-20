@@ -139,7 +139,7 @@ function display(profileData) {
 
         td.appendChild(button);
 
-        button.addEventListener("click", function(e) {
+        button.addEventListener("click", function (e) {
           value.reveal();
         });
       }
@@ -161,7 +161,7 @@ function display(profileData) {
 
   let renameButton = document.createElement("button");
   document.l10n.setAttributes(renameButton, "profiles-rename");
-  renameButton.onclick = function() {
+  renameButton.onclick = function () {
     renameProfile(profileData.profile);
   };
   div.appendChild(renameButton);
@@ -169,7 +169,7 @@ function display(profileData) {
   if (!profileData.isInUse) {
     let removeButton = document.createElement("button");
     document.l10n.setAttributes(removeButton, "profiles-remove");
-    removeButton.onclick = function() {
+    removeButton.onclick = function () {
       removeProfile(profileData.profile);
     };
 
@@ -179,7 +179,7 @@ function display(profileData) {
   if (!profileData.isDefault) {
     let defaultButton = document.createElement("button");
     document.l10n.setAttributes(defaultButton, "profiles-set-as-default");
-    defaultButton.onclick = function() {
+    defaultButton.onclick = function () {
       defaultProfile(profileData.profile);
     };
     div.appendChild(defaultButton);
@@ -188,7 +188,7 @@ function display(profileData) {
   if (!profileData.isInUse) {
     let runButton = document.createElement("button");
     document.l10n.setAttributes(runButton, "profiles-launch-profile");
-    runButton.onclick = function() {
+    runButton.onclick = function () {
       openProfile(profileData.profile);
     };
     div.appendChild(runButton);
@@ -370,7 +370,7 @@ function restart(safeMode) {
 
 window.addEventListener(
   "DOMContentLoaded",
-  function() {
+  function () {
     let createButton = document.getElementById("create-button");
     createButton.addEventListener("click", createProfileWizard);
 

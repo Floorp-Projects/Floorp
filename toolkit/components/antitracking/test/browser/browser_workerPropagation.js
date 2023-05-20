@@ -3,7 +3,7 @@
 
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-add_task(async function() {
+add_task(async function () {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();
@@ -42,7 +42,7 @@ add_task(async function() {
 
   // Let's create an iframe and run the test there.
   let page = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "workerIframe.html";
-  await SpecialPowers.spawn(browser, [page], async function(page) {
+  await SpecialPowers.spawn(browser, [page], async function (page) {
     await new content.Promise(resolve => {
       let ifr = content.document.createElement("iframe");
       ifr.id = "test";
@@ -77,7 +77,7 @@ add_task(async function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>

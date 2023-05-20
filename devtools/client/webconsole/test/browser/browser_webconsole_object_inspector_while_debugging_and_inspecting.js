@@ -10,7 +10,7 @@ const TEST_URI =
   "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-eval-in-stackframe.html";
 
-add_task(async function() {
+add_task(async function () {
   // TODO: Remove this pref change when middleware for terminating requests
   // when closing a panel is implemented
   await pushPref("devtools.debugger.features.inline-preview", false);

@@ -144,7 +144,7 @@ function addRDMTaskWithPreAndPost(url, preTask, task, postTask, options) {
     waitForDeviceList = !!options.waitForDeviceList;
   }
 
-  add_task(async function() {
+  add_task(async function () {
     let tab;
     let browser;
     let preTaskValue = null;
@@ -224,7 +224,7 @@ async function spawnViewportTask(ui, args, task) {
 }
 
 function waitForFrameLoad(ui, targetURL) {
-  return spawnViewportTask(ui, { targetURL }, async function(args) {
+  return spawnViewportTask(ui, { targetURL }, async function (args) {
     if (
       (content.document.readyState == "complete" ||
         content.document.readyState == "interactive") &&
@@ -237,7 +237,7 @@ function waitForFrameLoad(ui, targetURL) {
 }
 
 function waitForViewportResizeTo(ui, width, height) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     const isSizeMatching = data => data.width == width && data.height == height;
 
     // If the viewport has already the expected size, we resolve the promise immediately.
@@ -265,7 +265,7 @@ function waitForViewportResizeTo(ui, width, height) {
       resolve();
     };
 
-    const onBrowserLoadEnd = async function() {
+    const onBrowserLoadEnd = async function () {
       const data = ui.getViewportSize(ui);
       onContentResize(data);
     };
@@ -281,7 +281,7 @@ function waitForViewportResizeTo(ui, width, height) {
   });
 }
 
-var setViewportSize = async function(ui, manager, width, height) {
+var setViewportSize = async function (ui, manager, width, height) {
   const size = ui.getViewportSize();
   info(
     `Current size: ${size.width} x ${size.height}, ` +
@@ -296,14 +296,19 @@ var setViewportSize = async function(ui, manager, width, height) {
 
 // This performs the same function as setViewportSize, but additionally
 // ensures that reflow of the viewport has completed.
-var setViewportSizeAndAwaitReflow = async function(ui, manager, width, height) {
+var setViewportSizeAndAwaitReflow = async function (
+  ui,
+  manager,
+  width,
+  height
+) {
   await setViewportSize(ui, manager, width, height);
   await promiseContentReflow(ui);
   await promiseApzFlushedRepaints();
 };
 
 function getViewportDevicePixelRatio(ui) {
-  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function () {
     // Note that devicePixelRatio doesn't return the override to privileged
     // code, see bug 1759962.
     return content.browsingContext.overrideDPPX || content.devicePixelRatio;
@@ -529,7 +534,7 @@ function getSessionHistory(browser) {
     const browsingContext = browser.browsingContext;
     const uri = browsingContext.currentWindowGlobal.documentURI.displaySpec;
     const history = browsingContext.sessionHistory;
-    const body = ContentTask.spawn(browser, browsingContext, function(
+    const body = ContentTask.spawn(browser, browsingContext, function (
       // eslint-disable-next-line no-shadow
       browsingContext
     ) {
@@ -543,7 +548,7 @@ function getSessionHistory(browser) {
     );
     return SessionHistory.collectFromParent(uri, body, history);
   }
-  return ContentTask.spawn(browser, null, function() {
+  return ContentTask.spawn(browser, null, function () {
     const { SessionHistory } = ChromeUtils.importESModule(
       "resource://gre/modules/sessionstore/SessionHistory.sys.mjs"
     );
@@ -694,7 +699,7 @@ async function testUserAgent(ui, expected) {
 }
 
 async function testUserAgentFromBrowser(browser, expected) {
-  const ua = await SpecialPowers.spawn(browser, [], async function() {
+  const ua = await SpecialPowers.spawn(browser, [], async function () {
     return content.navigator.userAgent;
   });
   is(ua, expected, `UA should be set to ${expected}`);
@@ -872,14 +877,14 @@ async function setTouchAndMetaViewportSupport(ui, value) {
 // are all as expected.
 async function testViewportZoomWidthAndHeight(msg, ui, zoom, width, height) {
   if (typeof zoom !== "undefined") {
-    const resolution = await spawnViewportTask(ui, {}, function() {
+    const resolution = await spawnViewportTask(ui, {}, function () {
       return content.windowUtils.getResolution();
     });
     is(resolution, zoom, msg + " should have expected zoom.");
   }
 
   if (typeof width !== "undefined" || typeof height !== "undefined") {
-    const innerSize = await spawnViewportTask(ui, {}, function() {
+    const innerSize = await spawnViewportTask(ui, {}, function () {
       return {
         width: content.innerWidth,
         height: content.innerHeight,
@@ -895,7 +900,7 @@ async function testViewportZoomWidthAndHeight(msg, ui, zoom, width, height) {
 }
 
 function promiseContentReflow(ui) {
-  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
+  return SpecialPowers.spawn(ui.getViewportBrowser(), [], async function () {
     return new Promise(resolve => {
       content.window.requestAnimationFrame(() => {
         content.window.requestAnimationFrame(resolve);
@@ -921,7 +926,7 @@ async function promiseRDMZoom(ui, browser, zoom) {
   //
   // This also has the side effect of updating layout which ensures that any
   // remote frame dimension update message gets there in time.
-  await BrowserTestUtils.waitForCondition(function() {
+  await BrowserTestUtils.waitForCondition(function () {
     return browser.getBoundingClientRect().width != width;
   });
 }
@@ -959,8 +964,8 @@ async function waitForDevicePixelRatio(
   const dpx = await SpecialPowers.spawn(
     ui.getViewportBrowser(),
     [{ expected }],
-    function(args) {
-      const getDpr = function() {
+    function (args) {
+      const getDpr = function () {
         return content.browsingContext.overrideDPPX || content.devicePixelRatio;
       };
       const initial = getDpr();

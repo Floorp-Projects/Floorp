@@ -7,7 +7,9 @@ const source = `<html><h1>Top level text</h1><iframe srcdoc='${frameSource}' id=
 
 add_task(async function testPrintFrame() {
   let url = `data:text/html,${source}`;
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function (
+    browser
+  ) {
     let contentAreaContextMenuPopup = document.getElementById(
       "contentAreaContextMenu"
     );

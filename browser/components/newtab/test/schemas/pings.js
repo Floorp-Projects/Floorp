@@ -17,9 +17,7 @@ export const baseKeys = {
     "both",
     "unknown",
   ]),
-  user_prefs: Joi.number()
-    .integer()
-    .required(),
+  user_prefs: Joi.number().integer().required(),
 };
 
 export const BasePing = Joi.object()
@@ -56,12 +54,8 @@ export const UserEventPing = Joi.object().keys(
 );
 
 export const UTUserEventPing = Joi.array().items(
-  Joi.string()
-    .required()
-    .valid("activity_stream"),
-  Joi.string()
-    .required()
-    .valid("event"),
+  Joi.string().required().valid("activity_stream"),
+  Joi.string().required().valid("event"),
   Joi.string()
     .required()
     .valid([
@@ -161,9 +155,7 @@ export const UserEventAction = Joi.object().keys({
 });
 
 export const TileSchema = Joi.object().keys({
-  id: Joi.number()
-    .integer()
-    .required(),
+  id: Joi.number().integer().required(),
   pos: Joi.number().integer(),
 });
 
@@ -171,9 +163,7 @@ export const ImpressionStatsPing = Joi.object().keys(
   Object.assign({}, baseKeys, {
     source: Joi.string().required(),
     impression_id: Joi.string().required(),
-    tiles: Joi.array()
-      .items(TileSchema)
-      .required(),
+    tiles: Joi.array().items(TileSchema).required(),
     click: Joi.number().integer(),
     block: Joi.number().integer(),
     pocket: Joi.number().integer(),
@@ -269,15 +259,9 @@ export const ASRouterEventPing = Joi.object()
   .or("client_id", "impression_id");
 
 export const UTSessionPing = Joi.array().items(
-  Joi.string()
-    .required()
-    .valid("activity_stream"),
-  Joi.string()
-    .required()
-    .valid("end"),
-  Joi.string()
-    .required()
-    .valid("session"),
+  Joi.string().required().valid("activity_stream"),
+  Joi.string().required().valid("end"),
+  Joi.string().required().valid("session"),
   Joi.string().required(),
   eventsTelemetryExtraKeys
 );
@@ -285,7 +269,7 @@ export const UTSessionPing = Joi.array().items(
 export function chaiAssertions(_chai, utils) {
   const { Assertion } = _chai;
 
-  Assertion.addMethod("validate", function(schema, schemaName) {
+  Assertion.addMethod("validate", function (schema, schemaName) {
     const { error } = Joi.validate(this._obj, schema, { allowUnknown: false });
     this.assert(
       !error,

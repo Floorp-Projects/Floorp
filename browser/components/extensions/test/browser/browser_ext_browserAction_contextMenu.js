@@ -38,7 +38,7 @@ let extData = {
     `,
   },
 
-  background: function() {
+  background: function () {
     browser.contextMenus.create({
       id: "clickme-page",
       title: "Click me!",
@@ -430,7 +430,7 @@ async function browseraction_contextmenu_remove_extension_helper() {
   let promptService = {
     _response: 1,
     QueryInterface: ChromeUtils.generateQI(["nsIPromptService"]),
-    confirmEx: function(...args) {
+    confirmEx: function (...args) {
       promptService._resolveArgs(args);
       return promptService._response;
     },

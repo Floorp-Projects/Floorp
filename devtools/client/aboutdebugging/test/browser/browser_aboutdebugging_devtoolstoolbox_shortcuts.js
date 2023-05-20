@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
 /**
  * Test shortcut keys on about:devtools-toolbox page.
  */
-add_task(async function() {
+add_task(async function () {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 

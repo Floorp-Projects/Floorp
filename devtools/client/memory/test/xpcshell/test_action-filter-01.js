@@ -9,7 +9,7 @@ const {
   setFilterString,
 } = require("resource://devtools/client/memory/actions/filter.js");
 
-add_task(async function() {
+add_task(async function () {
   const store = Store();
   const { getState, dispatch } = store;
 

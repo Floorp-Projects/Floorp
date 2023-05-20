@@ -10,7 +10,7 @@ function clearCache() {
   cacheStorageSrv.clear();
 }
 
-addMessageListener("teardown", function() {
+addMessageListener("teardown", function () {
   clearCache();
   sendAsyncMessage("teardown-complete");
 });

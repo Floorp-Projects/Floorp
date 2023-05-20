@@ -23,7 +23,7 @@ const testToolDefinition = {
   },
 };
 
-add_task(async function() {
+add_task(async function () {
   gDevTools.registerTool(testToolDefinition);
   let tab = await addTab("about:blank");
 

@@ -30,7 +30,7 @@ function setupDarkModeUI() {
 
   setTheme();
 
-  elDarkModeToggle.addEventListener(`click`, function(e) {
+  elDarkModeToggle.addEventListener(`click`, function (e) {
     e.preventDefault;
     isDarkModeEnabled = !isDarkModeEnabled;
     setTheme();

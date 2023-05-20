@@ -180,7 +180,7 @@ async function doEvalLongString(commands) {
   const str = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    function() {
+    function () {
       return content.wrappedJSObject.foobarObject.omgstr;
     }
   );

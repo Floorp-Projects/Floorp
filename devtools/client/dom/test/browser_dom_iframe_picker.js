@@ -10,7 +10,7 @@ const TEST_URL = `https://example.com/document-builder.sjs?html=
   <h1>top_level</h1>
   <iframe src="https://example.org/document-builder.sjs?html=in_iframe"></iframe>`;
 
-add_task(async function() {
+add_task(async function () {
   const { panel } = await addTestTab(TEST_URL);
   const toolbox = panel._toolbox;
 

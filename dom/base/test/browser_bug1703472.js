@@ -16,9 +16,9 @@ add_task(async function bug1703472() {
 
   await BrowserTestUtils.withNewTab(
     BASE_URL + "file_bug1703472.html",
-    async function(browser) {
+    async function (browser) {
       info("Opening popup");
-      let win = await newFocusedWindow(function() {
+      let win = await newFocusedWindow(function () {
         return BrowserTestUtils.synthesizeMouseAtCenter(
           "#openWindow",
           {},
@@ -38,7 +38,7 @@ add_task(async function bug1703472() {
       // and an artificial .click() shouldn't count as a user interaction, so the
       // page shouldn't be allowed to focus it again without user interaction.
       info("Trying to steal focus without interaction");
-      await SpecialPowers.spawn(browser, [], function() {
+      await SpecialPowers.spawn(browser, [], function () {
         content.document.querySelector("#focusWindow").click();
       });
 

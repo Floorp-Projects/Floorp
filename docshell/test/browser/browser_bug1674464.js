@@ -6,7 +6,7 @@ const DUMMY_2 =
   "http://example.com/browser/docshell/test/browser/dummy_page.html";
 
 add_task(async function test_backAndReload() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: DUMMY_1 }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: DUMMY_1 }, async function (
     browser
   ) {
     await BrowserTestUtils.crashFrame(browser);

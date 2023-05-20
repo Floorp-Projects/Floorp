@@ -10,7 +10,7 @@ requestLongerTimeout(2);
 /* import-globals-from helper_disable_cache.js */
 loadHelperScript("helper_disable_cache.js");
 
-add_task(async function() {
+add_task(async function () {
   // Disable rcwn to make cache behavior deterministic.
   await pushPref("network.http.rcwn.enabled", false);
 

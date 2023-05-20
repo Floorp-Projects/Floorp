@@ -48,7 +48,7 @@ async function verifyCookieBehavior(browser, expected) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   for (let regularCookieBehavior of COOKIE_BEHAVIORS) {
     for (let PBMCookieBehavior of COOKIE_BEHAVIORS) {
       await SpecialPowers.flushPrefEnv();

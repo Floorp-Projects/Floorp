@@ -152,7 +152,7 @@ function uploadHandler(request, response) {
   response.setStatusLine(request.httpVersion, 200);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   do_get_profile();
   Services.fog.initializeFOG();
 

@@ -22,7 +22,7 @@ const EXPECTED_REFLOWS = [
  * uninterruptible reflows when switching between two
  * tabs that are both fully visible.
  */
-add_task(async function() {
+add_task(async function () {
   // TODO (bug 1702653): Disable tab shadows for tests since the shadow
   // can extend outside of the boundingClientRect. The tabRect will need
   // to grow to include the shadow size.
@@ -62,7 +62,7 @@ add_task(async function() {
   let inRange = (val, min, max) => min <= val && val <= max;
 
   await withPerfObserver(
-    async function() {
+    async function () {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
       gBrowser.selectedTab = origTab;
       await switchDone;

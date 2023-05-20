@@ -41,7 +41,7 @@ function clearAllImageCaches() {
   imageCache.clearCache(false); // false=content
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   clearAllImageCaches();
   Services.prefs.clearUserPref(PREF_BLOCK_DISPLAY);
   Services.prefs.clearUserPref(PREF_UPGRADE_DISPLAY);
@@ -58,7 +58,7 @@ add_task(async function allowLoopbackMixedContent() {
   const browser = gBrowser.getBrowserForTab(tab);
 
   // Check that loopback content served from the cache is not blocked.
-  await SpecialPowers.spawn(browser, [LOOPBACK_PNG_URL], async function(
+  await SpecialPowers.spawn(browser, [LOOPBACK_PNG_URL], async function (
     loopbackPNGUrl
   ) {
     const doc = content.document;

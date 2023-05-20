@@ -465,10 +465,7 @@ function addScript(file) {
   let script = document.createElement("script");
   script.setAttribute("type", "text/javascript");
   script.setAttribute("src", file);
-  document
-    .getElementsByTagName("head")
-    .item(0)
-    .appendChild(script);
+  document.getElementsByTagName("head").item(0).appendChild(script);
 }
 
 /* exported addFrame */

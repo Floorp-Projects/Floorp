@@ -46,7 +46,7 @@ function* testSteps() {
   yield undefined;
 }
 
-this.runTest = function() {
+this.runTest = function () {
   do_get_profile();
 
   do_test_pending();

@@ -20,7 +20,7 @@ const handlerMap = {
   right: { cx: "x2", cy: "y2" },
 };
 
-add_task(async function() {
+add_task(async function () {
   const helper = await openInspectorForURL(TEST_URL).then(
     getHighlighterHelperFor(HIGHLIGHTER_TYPE)
   );

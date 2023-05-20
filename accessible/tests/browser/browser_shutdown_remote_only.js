@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Making sure that the e10s is enabled on Windows for testing.
   await setE10sPrefs();
 
@@ -20,7 +20,7 @@ add_task(async function() {
         <body></body>
       </html>`,
     },
-    async function(browser) {
+    async function (browser) {
       info("Creating a service in content");
       await loadContentScripts(browser, {
         script: "Common.sys.mjs",

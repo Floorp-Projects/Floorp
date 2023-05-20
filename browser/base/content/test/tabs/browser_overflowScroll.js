@@ -6,7 +6,7 @@ requestLongerTimeout(2);
  * Tests that scrolling the tab strip via the scroll buttons scrolls the right
  * amount in non-smoothscroll mode.
  */
-add_task(async function() {
+add_task(async function () {
   let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
   let scrollbox = arrowScrollbox.scrollbox;
 
@@ -21,7 +21,7 @@ add_task(async function() {
   let nextLeftElement = () => elementFromPoint(left(scrollbox) - 1);
   let nextRightElement = () => elementFromPoint(right(scrollbox) + 1);
   let firstScrollable = () => gBrowser.tabs[gBrowser._numPinnedTabs];
-  let waitForNextFrame = async function() {
+  let waitForNextFrame = async function () {
     await new Promise(requestAnimationFrame);
     await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
   };

@@ -13,7 +13,7 @@ add_task(async function testRemoveSubtree() {
     MAIN_DOMAIN + "inspector-traversal-data.html"
   );
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     function ignoreNode(node) {
       // Duplicate the walker logic to skip blank nodes...
       return (
@@ -59,7 +59,7 @@ add_task(async function testRemoveSubtree() {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [[siblings.previousSibling.actorID, siblings.nextSibling.actorID]],
-    function([previousActorID, nextActorID]) {
+    function ([previousActorID, nextActorID]) {
       const { require } = ChromeUtils.importESModule(
         "resource://devtools/shared/loader/Loader.sys.mjs"
       );

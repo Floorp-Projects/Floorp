@@ -8,7 +8,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderInterventions.sys.mjs",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   Services.telemetry.clearEvents();
   Services.telemetry.clearScalars();
   makeProfileResettable();

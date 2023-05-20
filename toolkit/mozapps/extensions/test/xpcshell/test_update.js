@@ -597,7 +597,7 @@ add_task(async function test_params() {
   let resultsPromise = new Promise(resolve => {
     let results = new Map();
 
-    testserver.registerPathHandler("/data/param_test.json", function(
+    testserver.registerPathHandler("/data/param_test.json", function (
       request,
       response
     ) {

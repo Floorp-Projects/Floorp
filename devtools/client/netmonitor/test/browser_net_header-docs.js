@@ -7,7 +7,7 @@
  * Tests if "Learn More" links are correctly displayed
  * next to headers.
  */
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(POST_DATA_URL, {
     requestCount: 1,
   });

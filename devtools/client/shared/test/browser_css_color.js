@@ -7,7 +7,7 @@ var { colorUtils } = require("resource://devtools/shared/css/color.js");
 /* global getFixtureColorData */
 loadHelperScript("helper_color_data.js");
 
-add_task(async function() {
+add_task(async function () {
   await addTab("about:blank");
   const { host, doc } = await createHost("bottom");
 
@@ -65,21 +65,21 @@ function testColorMatch(name, hex, hsl, rgb, rgba, canvas) {
   let target;
   const ctx = canvas.getContext("2d");
 
-  const clearCanvas = function() {
+  const clearCanvas = function () {
     canvas.width = 1;
   };
-  const setColor = function(color) {
+  const setColor = function (color) {
     ctx.fillStyle = color;
     ctx.fillRect(0, 0, 1, 1);
   };
-  const setTargetColor = function() {
+  const setTargetColor = function () {
     clearCanvas();
     // All colors have rgba so we can use this to compare against.
     setColor(rgba);
     const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
     target = { r, g, b, a };
   };
-  const test = function(color, type) {
+  const test = function (color, type) {
     // hsla -> rgba -> hsla produces inaccurate results so we
     // need some tolerence here.
     const tolerance = 3;

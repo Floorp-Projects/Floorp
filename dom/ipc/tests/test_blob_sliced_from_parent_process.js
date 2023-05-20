@@ -134,7 +134,7 @@ add_task(async function test() {
     testGenerator.next();
 
     let mm = page.browser.messageManager;
-    mm.addMessageListener(messageName, function(message) {
+    mm.addMessageListener(messageName, function (message) {
       let data = message.data;
       switch (data.op) {
         case "info": {

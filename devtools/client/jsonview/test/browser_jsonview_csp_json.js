@@ -5,7 +5,7 @@
 
 const TEST_JSON_URL = URL_ROOT + "csp_json.json";
 
-add_task(async function() {
+add_task(async function () {
   info("Test CSP JSON started");
 
   const tab = await addJsonViewTab(TEST_JSON_URL);
@@ -15,7 +15,7 @@ add_task(async function() {
 
   // The JSON Viewer alters the CSP, but the displayed header should be the original one
   await selectJsonViewContentTab("headers");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const responseHeaders = content.document.querySelector(".netHeadersGroup");
     const names = responseHeaders.querySelectorAll(".netInfoParamName");
     let found = false;

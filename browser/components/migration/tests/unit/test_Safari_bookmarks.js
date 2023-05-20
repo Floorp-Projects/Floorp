@@ -4,7 +4,7 @@ const { CustomizableUI } = ChromeUtils.import(
   "resource:///modules/CustomizableUI.jsm"
 );
 
-add_task(async function() {
+add_task(async function () {
   registerFakePath("ULibDir", do_get_file("Library/"));
   const faviconPath = do_get_file("Library/Safari/Favicon Cache/favicons.db")
     .path;

@@ -9,7 +9,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 // test basic translation
 addAccessibleTask(
   `<p id="translate">hello world</p>`,
-  async function(browser, iframeDocAcc, contentDocAcc) {
+  async function (browser, iframeDocAcc, contentDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
     await testBoundsWithContent(iframeDocAcc, "translate", browser);
 
@@ -32,7 +32,7 @@ addAccessibleTask(
   <p id="p2">world</p>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testBoundsWithContent(docAcc, "p1", browser);
     await testBoundsWithContent(docAcc, "p2", browser);
   },
@@ -42,7 +42,7 @@ addAccessibleTask(
 // test basic rotation
 addAccessibleTask(
   `<p id="rotate">hello world</p>`,
-  async function(browser, iframeDocAcc, contentDocAcc) {
+  async function (browser, iframeDocAcc, contentDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
     await testBoundsWithContent(iframeDocAcc, "rotate", browser);
 
@@ -60,7 +60,7 @@ addAccessibleTask(
 // test basic scale
 addAccessibleTask(
   `<p id="scale">hello world</p>`,
-  async function(browser, iframeDocAcc, contentDocAcc) {
+  async function (browser, iframeDocAcc, contentDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
     await testBoundsWithContent(iframeDocAcc, "scale", browser);
 
@@ -89,7 +89,7 @@ addAccessibleTask(
   </div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     // Even though willChangeTop has no transform, it has
     // will-change: transform, which means nsIFrame::IsTransformed returns
     // true. We don't cache identity matrices, but because there is an offset
@@ -128,7 +128,7 @@ addAccessibleTask(
   <p>test</p>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const tree = { TEXT_CONTAINER: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }] };
 
     const divWithTransform = findAccessibleChildByID(docAcc, "container")
@@ -155,7 +155,7 @@ addAccessibleTask(
   <p>test</p>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let divToTransform = findAccessibleChildByID(docAcc, "div-to-transform");
     ok(!divToTransform, "There should not be a div accessible.");
 
@@ -188,7 +188,7 @@ addAccessibleTask(
   </div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     await testBoundsWithContent(docAcc, "transform", browser);
     await testBoundsWithContent(docAcc, "p", browser);
   },
@@ -202,7 +202,7 @@ addAccessibleTask(
   <p id="test">hello world</p><hr style="height: 100vh;">
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info(
       "Testing that the unscrolled bounds of a transformed element are correct."
     );

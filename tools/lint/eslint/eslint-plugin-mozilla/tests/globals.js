@@ -8,15 +8,15 @@ var assert = require("assert");
 
 /* global describe, it */
 
-describe("globals", function() {
-  it("should reflect top-level this property assignment", function() {
+describe("globals", function () {
+  it("should reflect top-level this property assignment", function () {
     const globals = getGlobalsForCode(`
 this.foo = 10;
 `);
     assert.deepEqual(globals, [{ name: "foo", writable: true }]);
   });
 
-  it("should reflect this property assignment inside block", function() {
+  it("should reflect this property assignment inside block", function () {
     const globals = getGlobalsForCode(`
 {
   this.foo = 10;
@@ -25,7 +25,7 @@ this.foo = 10;
     assert.deepEqual(globals, [{ name: "foo", writable: true }]);
   });
 
-  it("should ignore this property assignment inside function declaration", function() {
+  it("should ignore this property assignment inside function declaration", function () {
     const globals = getGlobalsForCode(`
 function f() {
   this.foo = 10;
@@ -34,7 +34,7 @@ function f() {
     assert.deepEqual(globals, [{ name: "f", writable: true }]);
   });
 
-  it("should ignore this property assignment inside function expression", function() {
+  it("should ignore this property assignment inside function expression", function () {
     const globals = getGlobalsForCode(`
 (function f() {
   this.foo = 10;
@@ -43,7 +43,7 @@ function f() {
     assert.deepEqual(globals, []);
   });
 
-  it("should ignore this property assignment inside method", function() {
+  it("should ignore this property assignment inside method", function () {
     const globals = getGlobalsForCode(`
 ({
   method() {
@@ -54,7 +54,7 @@ function f() {
     assert.deepEqual(globals, []);
   });
 
-  it("should ignore this property assignment inside accessor", function() {
+  it("should ignore this property assignment inside accessor", function () {
     const globals = getGlobalsForCode(`
 ({
   get x() {
@@ -68,7 +68,7 @@ function f() {
     assert.deepEqual(globals, []);
   });
 
-  it("should reflect this property assignment inside arrow function", function() {
+  it("should reflect this property assignment inside arrow function", function () {
     const globals = getGlobalsForCode(`
 () => {
   this.foo = 10;
@@ -77,7 +77,7 @@ function f() {
     assert.deepEqual(globals, [{ name: "foo", writable: true }]);
   });
 
-  it("should ignore this property assignment inside arrow function inside function expression", function() {
+  it("should ignore this property assignment inside arrow function inside function expression", function () {
     const globals = getGlobalsForCode(`
 (function f() {
   () => {
@@ -88,7 +88,7 @@ function f() {
     assert.deepEqual(globals, []);
   });
 
-  it("should ignore this property assignment inside class static", function() {
+  it("should ignore this property assignment inside class static", function () {
     const globals = getGlobalsForCode(`
 class A {
   static {
@@ -102,7 +102,7 @@ class A {
     assert.deepEqual(globals, [{ name: "A", writable: true }]);
   });
 
-  it("should ignore this property assignment inside class property", function() {
+  it("should ignore this property assignment inside class property", function () {
     const globals = getGlobalsForCode(`
 class A {
   a = this.foo = 10;
@@ -114,7 +114,7 @@ class A {
     assert.deepEqual(globals, [{ name: "A", writable: true }]);
   });
 
-  it("should ignore this property assignment inside class static property", function() {
+  it("should ignore this property assignment inside class static property", function () {
     const globals = getGlobalsForCode(`
 class A {
   static a = this.foo = 10;
@@ -126,7 +126,7 @@ class A {
     assert.deepEqual(globals, [{ name: "A", writable: true }]);
   });
 
-  it("should ignore this property assignment inside class private property", function() {
+  it("should ignore this property assignment inside class private property", function () {
     const globals = getGlobalsForCode(`
 class A {
   #a = this.foo = 10;
@@ -138,7 +138,7 @@ class A {
     assert.deepEqual(globals, [{ name: "A", writable: true }]);
   });
 
-  it("should ignore this property assignment inside class static private property", function() {
+  it("should ignore this property assignment inside class static private property", function () {
     const globals = getGlobalsForCode(`
 class A {
   static #a = this.foo = 10;
@@ -150,7 +150,7 @@ class A {
     assert.deepEqual(globals, [{ name: "A", writable: true }]);
   });
 
-  it("should reflect lazy getters", function() {
+  it("should reflect lazy getters", function () {
     const globals = getGlobalsForCode(`
 ChromeUtils.defineESModuleGetters(this, {
   A: "B",

@@ -11,10 +11,10 @@ function checkDataForAboutURL() {
       {}
     );
     let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
-    request.onupgradeneeded = function(e) {
+    request.onupgradeneeded = function (e) {
       data = false;
     };
-    request.onsuccess = function(e) {
+    request.onsuccess = function (e) {
       resolve(data);
     };
   });

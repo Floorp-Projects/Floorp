@@ -18,7 +18,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
     )}'
   ></iframe>`;
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
 
   await selectNodeInFrames(

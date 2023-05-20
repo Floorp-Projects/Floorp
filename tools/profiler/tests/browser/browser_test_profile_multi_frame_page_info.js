@@ -24,7 +24,7 @@ add_task(async function test_profile_multi_frame_page_info() {
   info("Open a tab with multi_frame.html in it.");
   // multi_frame.html embeds single_frame.html inside an iframe.
   const url = BASE_URL + "multi_frame.html";
-  await BrowserTestUtils.withNewTab(url, async function(contentBrowser) {
+  await BrowserTestUtils.withNewTab(url, async function (contentBrowser) {
     const contentPid = await SpecialPowers.spawn(contentBrowser, [], () => {
       return Services.appinfo.processID;
     });

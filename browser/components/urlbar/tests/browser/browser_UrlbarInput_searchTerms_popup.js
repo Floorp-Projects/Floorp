@@ -23,7 +23,7 @@ const SEARCH_TERM = "chocolate";
 const PREF_FEATUREGATE = "browser.urlbar.showSearchTerms.featureGate";
 let defaultTestEngine;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [[PREF_FEATUREGATE, true]],
   });
@@ -38,7 +38,7 @@ add_setup(async function() {
 
   defaultTestEngine = Services.search.getEngineByName("MozSearch");
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 });

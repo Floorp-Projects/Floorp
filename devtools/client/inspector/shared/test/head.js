@@ -111,7 +111,7 @@ function waitForSuccess(validatorFn, name = "untitled") {
  *        The NodeActor that will used to retrieve the dataURL for the
  *        font family tooltip contents.
  */
-var getFontFamilyDataURL = async function(font, nodeFront) {
+var getFontFamilyDataURL = async function (font, nodeFront) {
   const fillStyle = getThemeColor("body-color");
 
   const { data } = await nodeFront.getFontFamilyDataURL(font, fillStyle);
@@ -143,7 +143,7 @@ var getFontFamilyDataURL = async function(font, nodeFront) {
  *          - {String} value The expected style value
  * The style will be checked like so: getComputedStyle(element)[name] === value
  */
-var simulateColorPickerChange = async function(
+var simulateColorPickerChange = async function (
   ruleView,
   colorPicker,
   newRgba,

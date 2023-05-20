@@ -15,7 +15,7 @@ const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><script>
 </script>`;
 const { ELLIPSIS } = require("resource://devtools/shared/l10n.js");
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // On e10s, the exception is triggered in child process

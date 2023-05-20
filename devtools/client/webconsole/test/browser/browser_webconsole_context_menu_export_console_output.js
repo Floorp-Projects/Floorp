@@ -4,7 +4,7 @@
 "use strict";
 
 const httpServer = createTestHTTPServer();
-httpServer.registerPathHandler(`/`, function(request, response) {
+httpServer.registerPathHandler(`/`, function (request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.write(`
     <html>
@@ -16,7 +16,7 @@ httpServer.registerPathHandler(`/`, function(request, response) {
     </html>`);
 });
 
-httpServer.registerPathHandler("/test.js", function(request, response) {
+httpServer.registerPathHandler("/test.js", function (request, response) {
   response.setHeader("Content-Type", "application/javascript");
   response.write(`
     window.logStuff = function() {
@@ -60,7 +60,7 @@ add_task(async function testExportToClipboard() {
   await clearOutput(hud);
 
   info("Call the log function defined in the test page");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.logStuff();
   });
 

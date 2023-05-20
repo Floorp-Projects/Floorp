@@ -22,7 +22,7 @@ add_setup(async function common_initialize() {
   });
   if (LoginHelper.relatedRealmsEnabled) {
     await LoginTestUtils.remoteSettings.setupWebsitesWithSharedCredentials();
-    registerCleanupFunction(async function() {
+    registerCleanupFunction(async function () {
       await LoginTestUtils.remoteSettings.cleanWebsitesWithSharedCredentials();
     });
   }
@@ -193,7 +193,7 @@ async function getFormSubmitResponseResult(
       usernameSelector: username,
       passwordSelector: password,
     },
-    async function({ resultURL, usernameSelector, passwordSelector }) {
+    async function ({ resultURL, usernameSelector, passwordSelector }) {
       await ContentTaskUtils.waitForCondition(() => {
         return (
           content.location.pathname.endsWith(resultURL) &&
@@ -237,7 +237,7 @@ function testSubmittingLoginForm(
       gBrowser,
       url: aOrigin + DIRECTORY_PATH + aPageFile,
     },
-    async function(browser) {
+    async function (browser) {
       Assert.ok(true, "loaded " + aPageFile);
       let fieldValues = await getFormSubmitResponseResult(
         browser,
@@ -879,7 +879,7 @@ async function changeContentInputValue(
   shouldBlur = true
 ) {
   await SimpleTest.promiseFocus(browser.ownerGlobal);
-  let oldValue = await ContentTask.spawn(browser, [selector], function(sel) {
+  let oldValue = await ContentTask.spawn(browser, [selector], function (sel) {
     return content.document.querySelector(sel).value;
   });
 
@@ -891,7 +891,7 @@ async function changeContentInputValue(
   await ContentTask.spawn(
     browser,
     { selector, str, shouldBlur },
-    async function({ selector, str, shouldBlur }) {
+    async function ({ selector, str, shouldBlur }) {
       const EventUtils = ContentTaskUtils.getEventUtils(content);
       let input = content.document.querySelector(selector);
 

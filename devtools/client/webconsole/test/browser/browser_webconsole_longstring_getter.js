@@ -14,7 +14,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html>Test expanding longString getter
     console.dir("Test message", document.querySelector("svg image").href);
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Retrieve the logged message.

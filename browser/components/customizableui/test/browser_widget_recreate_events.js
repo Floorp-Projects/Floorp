@@ -40,7 +40,7 @@ function createPanelView() {
  * Check that panel view/hide events are added back,
  * if widget is destroyed and created again in one session.
  */
-add_task(async function() {
+add_task(async function () {
   let viewCache = document.getElementById("appMenu-viewCache");
   let panelView = createPanelView();
   viewCache.appendChild(panelView);

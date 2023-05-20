@@ -15,7 +15,7 @@ const HTML = `<div style="width: 300px; height: 3000px; position:relative;">
   </div>`;
 const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Make sure the markup frame has the focus");

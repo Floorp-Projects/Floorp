@@ -11,7 +11,7 @@ const TEST_URI =
 const FIRST_LOG_MESSAGE = "fooBug773466a";
 const SECOND_LOG_MESSAGE = "fooBug773466b";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Logging a first message to make sure everything is working");

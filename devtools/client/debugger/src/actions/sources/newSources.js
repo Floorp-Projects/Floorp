@@ -38,7 +38,7 @@ import sourceQueue from "../../utils/source-queue";
 import { validateNavigateContext, ContextError } from "../../utils/context";
 
 function loadSourceMaps(cx, sources) {
-  return async function({ dispatch }) {
+  return async function ({ dispatch }) {
     try {
       const sourceList = await Promise.all(
         sources.map(async sourceActor => {
@@ -71,7 +71,7 @@ function loadSourceMaps(cx, sources) {
  * @static
  */
 function loadSourceMap(cx, sourceActor) {
-  return async function({ dispatch, getState, sourceMapLoader }) {
+  return async function ({ dispatch, getState, sourceMapLoader }) {
     if (!prefs.clientSourceMapsEnabled || !sourceActor.sourceMapURL) {
       return [];
     }

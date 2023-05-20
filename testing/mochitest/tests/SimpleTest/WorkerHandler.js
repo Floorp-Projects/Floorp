@@ -6,11 +6,11 @@
  * style messages.
  */
 function listenForTests(worker, opts = { verbose: true }) {
-  worker.onerror = function(error) {
+  worker.onerror = function (error) {
     error.preventDefault();
     ok(false, "Worker error " + error.message);
   };
-  worker.onmessage = function(msg) {
+  worker.onmessage = function (msg) {
     if (opts && opts.verbose) {
       ok(true, "MAIN: onmessage " + JSON.stringify(msg.data));
     }

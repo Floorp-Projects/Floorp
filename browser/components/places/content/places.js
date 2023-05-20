@@ -204,7 +204,7 @@ var PlacesOrganizer = {
     window.addEventListener("AppCommand", this, true);
 
     let placeContentElement = document.getElementById("placeContent");
-    placeContentElement.addEventListener("onOpenFlatContainer", function(e) {
+    placeContentElement.addEventListener("onOpenFlatContainer", function (e) {
       PlacesOrganizer.openFlatContainer(e.detail);
     });
 
@@ -547,7 +547,7 @@ var PlacesOrganizer = {
       restorePopup.firstChild.remove();
     }
 
-    (async function() {
+    (async function () {
       let backupFiles = await PlacesBackups.getBackupFiles();
       if (!backupFiles.length) {
         return;
@@ -666,7 +666,7 @@ var PlacesOrganizer = {
       return;
     }
 
-    (async function() {
+    (async function () {
       try {
         await BookmarkJSONUtils.importFromFile(aFilePath, {
           replace: true,

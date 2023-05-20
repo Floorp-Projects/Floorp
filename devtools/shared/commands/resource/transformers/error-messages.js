@@ -12,7 +12,7 @@ loader.lazyRequireGetter(
   true
 );
 
-module.exports = function({ resource, targetFront }) {
+module.exports = function ({ resource, targetFront }) {
   if (resource?.pageError?.errorMessage) {
     resource.pageError.errorMessage = getAdHocFrontOrPrimitiveGrip(
       resource.pageError.errorMessage,

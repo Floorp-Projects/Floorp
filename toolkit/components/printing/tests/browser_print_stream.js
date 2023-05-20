@@ -65,7 +65,7 @@ add_task(async function testPrintToStream() {
 
     // Buffering shenanigans? Wait for sizes to match... There's no great
     // IOUtils methods to force a flush without writing anything...
-    await TestUtils.waitForCondition(async function() {
+    await TestUtils.waitForCondition(async function () {
       let fileStat = await IOUtils.stat(filePath);
       let streamStat = await IOUtils.stat(streamPath);
 

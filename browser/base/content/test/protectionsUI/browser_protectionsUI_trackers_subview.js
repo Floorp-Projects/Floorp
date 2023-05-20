@@ -14,7 +14,7 @@ const TRACKING_PAGE =
 
 const TP_PREF = "privacy.trackingprotection.enabled";
 
-add_setup(async function() {
+add_setup(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
 
   registerCleanupFunction(() => {
@@ -68,7 +68,7 @@ async function assertSitesListed(blocked) {
   let change = waitForSecurityChange(1);
   let timeoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     content.postMessage("more-tracking", "*");
   });
 

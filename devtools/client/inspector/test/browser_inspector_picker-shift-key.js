@@ -16,7 +16,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
   </main>`;
 const IS_OSX = Services.appinfo.OS === "Darwin";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(TEST_URI);
 
   const body = await getNodeFront("body", inspector);

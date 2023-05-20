@@ -71,7 +71,7 @@ var ModuleManager = {
 
     const self = this;
     this._modules = new Map(
-      (function*() {
+      (function* () {
         for (const module of aModules) {
           yield [
             module.name,

@@ -8,7 +8,7 @@
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-minified.html", "math.min.js");
 
   await selectSource(dbg, "math.min.js", 2);
@@ -56,7 +56,7 @@ add_task(async function testPrivateFields() {
   httpServer.registerContentType("html", "text/html");
   httpServer.registerContentType("js", "application/javascript");
 
-  httpServer.registerPathHandler(`/`, function(request, response) {
+  httpServer.registerPathHandler(`/`, function (request, response) {
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.write(`
       <html>
@@ -65,7 +65,7 @@ add_task(async function testPrivateFields() {
       </html>`);
   });
 
-  httpServer.registerPathHandler("/class-with-private-fields.js", function(
+  httpServer.registerPathHandler("/class-with-private-fields.js", function (
     request,
     response
   ) {

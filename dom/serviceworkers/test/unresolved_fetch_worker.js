@@ -1,5 +1,5 @@
 var keepPromiseAlive;
-onfetch = function(event) {
+onfetch = function (event) {
   event.waitUntil(
     clients.matchAll().then(clients => {
       clients.forEach(client => {
@@ -10,9 +10,9 @@ onfetch = function(event) {
 
   // Never resolve, and keep it alive on our global so it can't get GC'ed and
   // make this test weird and intermittent.
-  event.respondWith((keepPromiseAlive = new Promise(function(res, rej) {})));
+  event.respondWith((keepPromiseAlive = new Promise(function (res, rej) {})));
 };
 
-addEventListener("activate", function(event) {
+addEventListener("activate", function (event) {
   event.waitUntil(clients.claim());
 });

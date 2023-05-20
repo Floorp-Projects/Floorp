@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
   await SpecialPowers.pushPrefEnv({
     set: [["network.cookie.sameSite.laxByDefault", false]],
@@ -82,7 +82,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [URL_IFRAME],
-    async function(url) {
+    async function (url) {
       const iframe = content.document.querySelector("iframe");
       const onIframeLoaded = new Promise(loaded =>
         iframe.addEventListener("load", loaded, { once: true })

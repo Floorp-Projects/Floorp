@@ -62,7 +62,7 @@ const TEST_CASES = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   Services.telemetry.setEventRecordingEnabled("security.ui.xfocsperror", true);
 
   await SpecialPowers.pushPrefEnv({

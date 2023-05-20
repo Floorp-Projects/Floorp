@@ -62,8 +62,9 @@ add_task(async function test_window_resize() {
         info(
           `Got ${window.outerWidth}x${
             window.outerHeight
-          }. Expecting ${SMALL_WINDOW_SIZE}. ${window.outerHeight ===
-            SMALL_WINDOW_SIZE} ${window.outerWidth === SMALL_WINDOW_SIZE}`
+          }. Expecting ${SMALL_WINDOW_SIZE}. ${
+            window.outerHeight === SMALL_WINDOW_SIZE
+          } ${window.outerWidth === SMALL_WINDOW_SIZE}`
         );
         return (
           window.outerHeight === SMALL_WINDOW_SIZE &&

@@ -62,7 +62,7 @@ add_task(async function test_shutdown_clients() {
   let sleepComplete = false;
   Sqlite.shutdown.addBlocker(
     "test_sqlite.js shutdown blocker (sleep)",
-    async function() {
+    async function () {
       sleepStarted = true;
       await sleep(100);
       sleepComplete = true;
@@ -81,7 +81,7 @@ add_task(async function test_shutdown_clients() {
 
   Sqlite.shutdown.addBlocker(
     "test_sqlite.js shutdown blocker (open a connection during shutdown)",
-    async function() {
+    async function () {
       let db = await getDummyDatabase("opened during shutdown");
       dbOpened = true;
       db.close().then(() => (dbClosed = true)); // Don't wait for this task to complete, Sqlite.sys.mjs must wait automatically

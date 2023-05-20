@@ -86,7 +86,7 @@ function testTelemetry(queryParamToCount) {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.query_stripping.enabled", true],

@@ -7,7 +7,7 @@
  * Test that prefs of types other than bool are not reflected.
  */
 
-add_task(function() {
+add_task(function () {
   const PREFS_LIST = ["installer.int", "installer.string"];
 
   Services.prefs.setIntPref("installer.int", 12);

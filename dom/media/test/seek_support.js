@@ -32,18 +32,18 @@ function startTest(test, token) {
   video.preload = "metadata";
   document.body.appendChild(video);
   var name = test.name + " seek test " + test.number;
-  var localIs = (function(n) {
-    return function(a, b, msg) {
+  var localIs = (function (n) {
+    return function (a, b, msg) {
       is(a, b, n + ": " + msg);
     };
   })(name);
-  var localOk = (function(n) {
-    return function(a, msg) {
+  var localOk = (function (n) {
+    return function (a, msg) {
       ok(a, n + ": " + msg);
     };
   })(name);
-  var localFinish = (function(v, m) {
-    return function() {
+  var localFinish = (function (v, m) {
+    return function () {
       v.onerror = null;
       removeNodeAndSource(v);
       dump("SEEK-TEST: Finished " + name + " token: " + v.token + "\n");

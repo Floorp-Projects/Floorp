@@ -27,7 +27,7 @@ export const permissions = {};
  *     If `marionette.setpermission.enabled` is not set or
  *     an unsupported permission is used.
  */
-permissions.set = function(descriptor, state, oneRealm) {
+permissions.set = function (descriptor, state, oneRealm) {
   if (!lazy.MarionettePrefs.setPermissionEnabled) {
     throw new lazy.error.UnsupportedOperationError(
       "'Set Permission' is not available"

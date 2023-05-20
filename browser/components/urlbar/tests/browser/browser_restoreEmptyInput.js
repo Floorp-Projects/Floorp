@@ -25,7 +25,7 @@ add_task(async function test() {
     );
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 

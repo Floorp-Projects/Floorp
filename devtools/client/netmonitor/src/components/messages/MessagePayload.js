@@ -53,7 +53,7 @@ const {
 const RawData = createFactory(
   require("resource://devtools/client/netmonitor/src/components/messages/RawData.js")
 );
-loader.lazyGetter(this, "PropertiesView", function() {
+loader.lazyGetter(this, "PropertiesView", function () {
   return createFactory(
     require("resource://devtools/client/netmonitor/src/components/request-details/PropertiesView.js")
   );

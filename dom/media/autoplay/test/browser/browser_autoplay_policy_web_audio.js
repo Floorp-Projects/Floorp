@@ -32,7 +32,7 @@ function createAudioContext() {
   ac.allowedToStart = new Promise(resolve => {
     ac.addEventListener(
       "statechange",
-      function() {
+      function () {
         if (ac.state === "running") {
           resolve();
         }
@@ -44,7 +44,7 @@ function createAudioContext() {
   ac.notAllowedToStart = new Promise(resolve => {
     ac.addEventListener(
       "blocked",
-      function() {
+      function () {
         resolve();
       },
       { once: true }
@@ -69,7 +69,7 @@ async function resumeAudioContext(isAllowedToStart) {
   const blockedPromise = new Promise(resolve => {
     ac.addEventListener(
       "blocked",
-      function() {
+      function () {
         resolve();
       },
       { once: true }

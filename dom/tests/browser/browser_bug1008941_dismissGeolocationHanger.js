@@ -28,7 +28,7 @@ add_task(async function testDismissHanger() {
   let hasLocation = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       return content.document.body.innerHTML.includes("location...");
     }
   );

@@ -80,7 +80,7 @@ async function stepOverInA(dbg, func, frameIndex, expectedLocation) {
 }
 
 function run_test() {
-  return (async function() {
+  return (async function () {
     const dbg = await setupTestFromUrl("stepping.js");
 
     info(`Test step over with the 1st frame`);

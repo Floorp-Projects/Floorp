@@ -9,7 +9,7 @@ add_task(async function test_onHighlighted() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       async function expectHighlighted(fn, action) {
         let resolve;
         let promise = new Promise(r => {

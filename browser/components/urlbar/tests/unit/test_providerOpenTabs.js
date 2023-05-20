@@ -22,7 +22,7 @@ add_task(async function test_openTabs() {
 
   let context = createContext();
   let matchCount = 0;
-  let callback = function(provider, match) {
+  let callback = function (provider, match) {
     matchCount++;
     Assert.ok(
       provider instanceof UrlbarProviderOpenTabs,

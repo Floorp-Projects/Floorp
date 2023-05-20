@@ -7,7 +7,7 @@
  * history.pushState, the history service has a title stored for the new URI.
  **/
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "http://example.com"
@@ -18,7 +18,7 @@ add_task(async function() {
     events => /new_page$/.test(events[0].url)
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let title = content.document.title;
     content.history.pushState("", "", "new_page");
     Assert.ok(title, "Content window should initially have a title.");
@@ -27,7 +27,7 @@ add_task(async function() {
   const events = await newTitlePromise;
   const newtitle = events[0].title;
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [{ newtitle }], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [{ newtitle }], async function (
     args
   ) {
     Assert.equal(

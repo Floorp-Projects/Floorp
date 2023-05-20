@@ -37,10 +37,7 @@ function getMenuItems(wrapper, selector) {
   const menuButton = wrapper.find(MenuButton);
   // Focusing on the menu button will trigger rendering of the HTMLTooltip with
   // the menu list.
-  menuButton
-    .childAt(0)
-    .getDOMNode()
-    .focus();
+  menuButton.childAt(0).getDOMNode().focus();
 
   return menuButton
     .instance()

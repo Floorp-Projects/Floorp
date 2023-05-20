@@ -1,4 +1,4 @@
-String.prototype.has = function(s) {
+String.prototype.has = function (s) {
   return this.includes(s);
 };
 

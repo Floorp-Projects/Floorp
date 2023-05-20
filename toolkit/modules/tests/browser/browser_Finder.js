@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-add_task(async function() {
+add_task(async function () {
   const url =
     "data:text/html;base64," +
     btoa(
@@ -44,7 +44,7 @@ add_task(async function() {
   findResult = await promiseFind;
   is(findResult.result, Ci.nsITypeAheadFind.FIND_FOUND, "should find link");
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function(arg) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function (arg) {
     Assert.ok(
       !!content.document.getElementsByTagName("a")[0].style.outline,
       "outline set"
@@ -61,7 +61,7 @@ add_task(async function() {
     "should find link again"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function(arg) {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function (arg) {
     Assert.ok(
       !content.document.getElementsByTagName("a")[0].style.outline,
       "outline not set"

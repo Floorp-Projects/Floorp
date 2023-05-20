@@ -144,7 +144,7 @@ for (let [name, expected] of Object.entries(autocompleteTypes)) {
 }
 
 TESTCASES.forEach(testcase => {
-  add_task(async function() {
+  add_task(async function () {
     info("Starting testcase: " + testcase.description);
     let document = MockDocument.createTestDocument(
       "http://localhost:8080/test/",

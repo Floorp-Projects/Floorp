@@ -3,8 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-registration.onupdatefound = function(e) {
-  clients.matchAll().then(function(clients) {
+registration.onupdatefound = function (e) {
+  clients.matchAll().then(function (clients) {
     if (!clients.length) {
       // We don't control any clients when the first update event is fired
       // because we haven't reached the 'activated' state.

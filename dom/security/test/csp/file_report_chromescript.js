@@ -59,6 +59,6 @@ var openingObserver = {
 };
 
 Services.obs.addObserver(openingObserver, "http-on-opening-request");
-addMessageListener("finish", function() {
+addMessageListener("finish", function () {
   Services.obs.removeObserver(openingObserver, "http-on-opening-request");
 });

@@ -85,8 +85,9 @@ export class _DiscoveryStreamBase extends React.PureComponent {
           });
 
           // Set the actual desired selectors scoped to the component
-          const prefix = `.ds-layout > .ds-column:nth-child(${rowIndex +
-            1}) .ds-column-grid > :nth-child(${componentIndex + 1})`;
+          const prefix = `.ds-layout > .ds-column:nth-child(${
+            rowIndex + 1
+          }) .ds-column-grid > :nth-child(${componentIndex + 1})`;
           // NB: Splitting on "," doesn't work with strings with commas, but
           // we're okay with not supporting those selectors
           rule.selectorText = selectors

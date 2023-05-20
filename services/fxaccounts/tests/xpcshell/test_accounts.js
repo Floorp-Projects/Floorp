@@ -121,7 +121,7 @@ function MockFxAccountsClient() {
 
   // mock calls up to the auth server to determine whether the
   // user account has been verified
-  this.recoveryEmailStatus = async function(sessionToken) {
+  this.recoveryEmailStatus = async function (sessionToken) {
     // simulate a call to /recovery_email/status
     return {
       email: this._email,
@@ -129,18 +129,18 @@ function MockFxAccountsClient() {
     };
   };
 
-  this.accountStatus = async function(uid) {
+  this.accountStatus = async function (uid) {
     return !!uid && !this._deletedOnServer;
   };
 
-  this.sessionStatus = async function() {
+  this.sessionStatus = async function () {
     // If the sessionStatus check says an account is OK, we typically will not
     // end up calling accountStatus - so this must return false if accountStatus
     // would.
     return !this._deletedOnServer;
   };
 
-  this.accountKeys = function(keyFetchToken) {
+  this.accountKeys = function (keyFetchToken) {
     return new Promise(resolve => {
       do_timeout(50, () => {
         resolve({
@@ -151,7 +151,7 @@ function MockFxAccountsClient() {
     });
   };
 
-  this.getScopedKeyData = function(sessionToken, client_id, scopes) {
+  this.getScopedKeyData = function (sessionToken, client_id, scopes) {
     Assert.ok(sessionToken);
     Assert.equal(client_id, FX_OAUTH_CLIENT_ID);
     Assert.equal(scopes, SCOPE_OLD_SYNC);
@@ -169,7 +169,7 @@ function MockFxAccountsClient() {
     });
   };
 
-  this.resendVerificationEmail = function(sessionToken) {
+  this.resendVerificationEmail = function (sessionToken) {
     // Return the session token to show that we received it in the first place
     return Promise.resolve(sessionToken);
   };
@@ -219,7 +219,7 @@ function MockFxAccounts(credentials = null) {
   });
   // and for convenience so we don't have to touch as many lines in this test
   // when we refactored FxAccounts.jsm :)
-  result.setSignedInUser = function(creds) {
+  result.setSignedInUser = function (creds) {
     return result._internal.setSignedInUser(creds);
   };
   return result;
@@ -232,7 +232,7 @@ function MockFxAccounts(credentials = null) {
 async function MakeFxAccounts({ internal = {}, credentials } = {}) {
   if (!internal.newAccountState) {
     // we use a real accountState but mocked storage.
-    internal.newAccountState = function(newCredentials) {
+    internal.newAccountState = function (newCredentials) {
       let storage = new MockStorageManager();
       storage.initialize(newCredentials);
       return new AccountState(storage);
@@ -403,7 +403,7 @@ add_test(function test_verification_poll() {
   let test_user = getTestUser("francine");
   let login_notification_received = false;
 
-  makeObserver(ONVERIFIED_NOTIFICATION, function() {
+  makeObserver(ONVERIFIED_NOTIFICATION, function () {
     log.debug("test_verification_poll observed onverified");
     // Once email verification is complete, we will observe onverified
     fxa._internal
@@ -421,7 +421,7 @@ add_test(function test_verification_poll() {
       .finally(run_next_test);
   });
 
-  makeObserver(ONLOGIN_NOTIFICATION, function() {
+  makeObserver(ONLOGIN_NOTIFICATION, function () {
     log.debug("test_verification_poll observer onlogin");
     login_notification_received = true;
   });
@@ -430,7 +430,7 @@ add_test(function test_verification_poll() {
     fxa._internal.getUserAccountData().then(user => {
       // The user is signing in, but email has not been verified yet
       Assert.equal(user.verified, false);
-      do_timeout(200, function() {
+      do_timeout(200, function () {
         log.debug("Mocking verification of francine's email");
         fxa._internal.fxAccountsClient._email = test_user.email;
         fxa._internal.fxAccountsClient._verified = true;
@@ -451,7 +451,7 @@ add_test(function test_polling_timeout() {
   let fxa = new MockFxAccounts();
   let test_user = getTestUser("carol");
 
-  let removeObserver = makeObserver(ONVERIFIED_NOTIFICATION, function() {
+  let removeObserver = makeObserver(ONVERIFIED_NOTIFICATION, function () {
     do_throw("We should not be getting a login event!");
   });
 
@@ -830,7 +830,7 @@ add_task(async function test_getKeyForScope_nonexistent_account() {
   await fxa.setSignedInUser(bismarck);
 
   let promiseLogout = new Promise(resolve => {
-    makeObserver(ONLOGOUT_NOTIFICATION, function() {
+    makeObserver(ONLOGOUT_NOTIFICATION, function () {
       log.debug("test_getKeyForScope_nonexistent_account observed logout");
       resolve();
     });
@@ -968,7 +968,7 @@ add_test(function test_fetchAndUnwrapAndDeriveKeys_no_token() {
   let user = getTestUser("lettuce.protheroe");
   delete user.keyFetchToken;
 
-  makeObserver(ONLOGOUT_NOTIFICATION, function() {
+  makeObserver(ONLOGOUT_NOTIFICATION, function () {
     log.debug("test_fetchAndUnwrapKeys_no_token observed logout");
     fxa._internal.getUserAccountData().then(user2 => {
       fxa._internal.abortExistingFlow().then(run_next_test);
@@ -993,7 +993,7 @@ add_test(function test_overlapping_signins() {
   let alice = getTestUser("alice");
   let bob = getTestUser("bob");
 
-  makeObserver(ONVERIFIED_NOTIFICATION, function() {
+  makeObserver(ONVERIFIED_NOTIFICATION, function () {
     log.debug("test_overlapping_signins observed onverified");
     // Once email verification is complete, we will observe onverified
     fxa._internal.getUserAccountData().then(user => {
@@ -1014,7 +1014,7 @@ add_test(function test_overlapping_signins() {
       // Now Bob signs in instead and actually verifies his email
       log.debug("Bob signing in ...");
       fxa.setSignedInUser(bob).then(() => {
-        do_timeout(200, function() {
+        do_timeout(200, function () {
           // Mock email verification ...
           log.debug("Bob verifying his email ...");
           fxa._internal.fxAccountsClient._verified = true;
@@ -1363,7 +1363,7 @@ add_test(function test_getOAuthToken_misconfigure_oauth_uri() {
 add_test(function test_getOAuthToken_no_account() {
   let fxa = new MockFxAccounts();
 
-  fxa._internal.currentAccountState.getUserAccountData = function() {
+  fxa._internal.currentAccountState.getUserAccountData = function () {
     return Promise.resolve(null);
   };
 
@@ -1522,7 +1522,7 @@ add_task(async function test_getSignedInUserProfile_error_uses_account_data() {
   let alice = getTestUser("alice");
   alice.verified = true;
 
-  fxa._internal.getSignedInUser = function() {
+  fxa._internal.getSignedInUser = function () {
     return Promise.resolve({ email: "foo@bar.com" });
   };
   fxa._internal._profile = {

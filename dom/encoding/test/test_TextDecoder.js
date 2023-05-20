@@ -110,17 +110,17 @@ function runTextDecoderOptions() {
 
   test(testDecoderGetEncoding, "testDecoderGetEncoding");
   test(testDecodeGreek, "testDecodeGreek");
-  test(function() {
+  test(function () {
     testConstructorFatalOption(data, expectedString);
   }, "testConstructorFatalOption");
-  test(function() {
+  test(function () {
     testConstructorEncodingOption(data, expectedString);
   }, "testConstructorEncodingOption");
-  test(function() {
+  test(function () {
     testDecodeStreamOption(data, expectedString);
   }, "testDecodeStreamOption");
   test(testDecodeStreamCompositions, "testDecodeStreamCompositions");
-  test(function() {
+  test(function () {
     testDecodeABVOption(data, expectedString);
   }, "testDecodeABVOption");
   test(testDecoderForThaiEncoding, "testDecoderForThaiEncoding");
@@ -507,7 +507,7 @@ function testDecodeStreamCompositions() {
     },
     { encoding: "shift_jis", input: [0x81, 0x40], expected: ["", "\u3000"] },
   ];
-  tests.forEach(function(t) {
+  tests.forEach(function (t) {
     (function generateCompositions(a, n) {
       a.push(n);
       var l = a.length - 1;
@@ -1221,7 +1221,7 @@ function testInvalid2022JP() {
   ];
 
   var failureCount = 0;
-  inputs.forEach(function(input) {
+  inputs.forEach(function (input) {
     try {
       // decode() should never throw unless {fatal: true} is specified
       new TextDecoder("iso-2022-jp").decode(new Uint8Array(input));

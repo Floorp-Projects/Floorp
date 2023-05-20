@@ -6,12 +6,12 @@
 add_task(async function test_places_db_stats_table() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:support" },
-    async function(browser) {
+    async function (browser) {
       const [
         initialToggleText,
         toggleTextAfterShow,
         toggleTextAfterHide,
-      ] = await SpecialPowers.spawn(browser, [], async function() {
+      ] = await SpecialPowers.spawn(browser, [], async function () {
         const toggleButton = content.document.getElementById(
           "place-database-stats-toggle"
         );

@@ -3,7 +3,7 @@
 
 const TEST_URL = "data:text/html,test browsertoolbox host";
 
-add_task(async function() {
+add_task(async function () {
   const {
     Toolbox,
   } = require("resource://devtools/client/framework/toolbox.js");

@@ -7,7 +7,7 @@
  * Test that when opening a private browsing window and typing in it before
  * about:privatebrowsing loads, we don't clear the URL bar.
  */
-add_task(async function() {
+add_task(async function () {
   let urlbarTestValue = "Mary had a little lamb";
   let win = OpenBrowserWindow({ private: true });
   registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));

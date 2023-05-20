@@ -28,7 +28,7 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(browser) {
+    async function (browser) {
       Services.fog.testResetFOG();
 
       await Services.fog.testFlushAllChildren();
@@ -42,7 +42,7 @@ add_task(async function test() {
       Assert.ok(Glean.pdfjs.timeToView.testGetValue().sum !== 0);
       Assert.equal(Glean.pdfjs.used.testGetValue(), 1);
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         var viewer = content.wrappedJSObject.PDFViewerApplication;
         await viewer.close();
       });

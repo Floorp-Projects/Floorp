@@ -44,7 +44,7 @@ function sendParts(response) {
   }
   sendNextPart(response);
   partTimer.initWithCallback(
-    function() {
+    function () {
       sendParts(response);
     },
     1,

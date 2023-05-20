@@ -41,8 +41,8 @@ async function test_origin_attributes() {
   // open a tab with altered OA: userContextId
   let t4 = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    opening: (function() {
-      return function() {
+    opening: (function () {
+      return function () {
         // info("calling addTab from lambda");
         gBrowser.selectedTab = BrowserTestUtils.addTab(
           gBrowser,

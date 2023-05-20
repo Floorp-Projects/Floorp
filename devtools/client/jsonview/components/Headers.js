@@ -4,7 +4,7 @@
 
 "use strict";
 
-define(function(require, exports, module) {
+define(function (require, exports, module) {
   const {
     createFactory,
     Component,
@@ -89,7 +89,7 @@ define(function(require, exports, module) {
     render() {
       const headers = this.props.headers;
 
-      headers.sort(function(a, b) {
+      headers.sort(function (a, b) {
         return a.name > b.name ? 1 : -1;
       });
 

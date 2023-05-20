@@ -33,7 +33,7 @@ function checkEndEntity(cert, expectedResult) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   loadCertWithTrust("ca", "CTu,,");
   loadCertWithTrust("int-pre", ",,");
   loadCertWithTrust("int-post", ",,");

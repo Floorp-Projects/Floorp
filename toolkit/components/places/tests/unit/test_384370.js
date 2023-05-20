@@ -25,7 +25,7 @@ var bookmarkData = [
   - tag multiple URIs with multiple tags
   - export as json, import, test
 */
-add_task(async function() {
+add_task(async function () {
   // Remove eventual bookmarks.exported.json.
   let jsonFile = PathUtils.join(
     PathUtils.profileDir,

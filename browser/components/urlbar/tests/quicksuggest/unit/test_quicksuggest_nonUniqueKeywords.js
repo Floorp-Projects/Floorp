@@ -129,7 +129,7 @@ let TESTS = {
   },
 };
 
-add_task(async function() {
+add_task(async function () {
   UrlbarPrefs.set("quicksuggest.enabled", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);

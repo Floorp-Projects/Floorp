@@ -72,8 +72,8 @@ const TESTCASES = [
 for (let testcase of TESTCASES) {
   info("Sanity checking the testcase: " + testcase.description);
 
-  (function() {
-    add_task(async function() {
+  (function () {
+    add_task(async function () {
       info("Starting testcase: " + testcase.description);
 
       for (let subtest of testcase.subtests) {

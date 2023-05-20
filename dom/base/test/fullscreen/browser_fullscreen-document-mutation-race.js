@@ -17,7 +17,7 @@ Services.scriptloader.loadSubScript(
 // error.
 SimpleTest.ignoreAllUncaughtExceptions(true);
 
-add_setup(async function() {
+add_setup(async function () {
   await pushPrefs(
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"],
@@ -34,7 +34,7 @@ async function startTests(setupFun, name) {
           gBrowser,
           url,
         },
-        async function(browser) {
+        async function (browser) {
           let promiseFsState = Promise.all([
             setupFun(browser),
             waitForFullscreenState(document, false, true),
@@ -43,7 +43,7 @@ async function startTests(setupFun, name) {
           SpecialPowers.spawn(
             browser.browsingContext.children[0].children[0],
             [],
-            function() {
+            function () {
               content.setTimeout(() => {
                 content.document.getElementById("div").click();
               }, 0);
@@ -67,12 +67,12 @@ async function startTests(setupFun, name) {
 }
 
 function RemoveElementFromRemoteDocument(aBrowsingContext, aElementId) {
-  return SpecialPowers.spawn(aBrowsingContext, [aElementId], async function(
+  return SpecialPowers.spawn(aBrowsingContext, [aElementId], async function (
     id
   ) {
     content.document.addEventListener(
       "fullscreenchange",
-      function() {
+      function () {
         content.document.getElementById(id).remove();
       },
       { once: true }

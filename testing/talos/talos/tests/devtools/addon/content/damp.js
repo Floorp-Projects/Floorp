@@ -308,7 +308,7 @@ Damp.prototype = {
       const res = this._results[i];
       const disp = []
         .concat(res.value)
-        .map(function(a) {
+        .map(function (a) {
           return isNaN(a) ? -1 : a.toFixed(1);
         })
         .join(" ");

@@ -11,7 +11,7 @@ const {
 } = require("resource://devtools/shared/l10n.js");
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-add_task(async function() {
+add_task(async function () {
   info("Check that the strings used for this test are still valid");
   const STARTUP_L10N = new LocalizationHelper(
     "devtools/client/locales/startup.properties"

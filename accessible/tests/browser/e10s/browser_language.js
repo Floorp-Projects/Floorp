@@ -16,7 +16,7 @@ addAccessibleTask(
   <div id="fr" lang="fr"></div>
 </div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     is(docAcc.language, "en", "Document language correct");
     const inheritEn = findAccessibleChildByID(docAcc, "inheritEn");
     is(inheritEn.language, "en", "inheritEn language correct");

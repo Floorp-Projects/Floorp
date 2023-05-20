@@ -93,7 +93,7 @@ async function checkTelemetry(source, prevEngine, newEngine) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   let searchExtensions = getChromeDir(getResolvedURI(gTestPath));
   searchExtensions.append("search-engines");
 

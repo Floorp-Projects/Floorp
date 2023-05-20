@@ -90,7 +90,7 @@ class XHRBreakpoints extends Component {
     e.preventDefault();
     e.stopPropagation();
 
-    const setXHRBreakpoint = function() {
+    const setXHRBreakpoint = function () {
       this.props.setXHRBreakpoint(
         this.state.inputValue,
         this.state.inputMethod

@@ -58,7 +58,7 @@ const DOCUMENT_SRC =
 
 const TEST_URI = "data:text/html;charset=utf-8," + DOCUMENT_SRC;
 
-add_task(async function() {
+add_task(async function () {
   const {
     inspector,
     toolbox,

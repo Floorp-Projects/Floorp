@@ -12,7 +12,7 @@ add_task(async function test_open_migration_wizard() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#general" },
-    async function(browser) {
+    async function (browser) {
       let button = browser.contentDocument.getElementById(BUTTON_ID);
 
       // First, we'll test the legacy Migration Wizard.

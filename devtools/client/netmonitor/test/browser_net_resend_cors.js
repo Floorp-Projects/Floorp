@@ -8,7 +8,7 @@
  * a preflight OPTIONS request (bug 1270096 and friends)
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(HTTPS_CORS_URL, {
     requestCount: 1,
   });
@@ -26,7 +26,7 @@ add_task(async function() {
 
   info("Waiting for OPTIONS, then POST");
   const wait = waitForNetworkEvents(monitor, 2);
-  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [requestUrl], async function (
     url
   ) {
     content.wrappedJSObject.performRequests(

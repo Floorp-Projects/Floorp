@@ -25,7 +25,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
       </style>\`;
   </script>`;
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
 
   const { inspector, view } = await openRuleView();

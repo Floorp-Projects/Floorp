@@ -590,8 +590,8 @@ addAccessibleTask(
       const head = content.document.getElementById("thead");
       const body = content.document.getElementById("tbody");
 
-      head.addEventListener("click", function() {});
-      body.addEventListener("click", function() {});
+      head.addEventListener("click", function () {});
+      body.addEventListener("click", function () {});
     });
     await reorder;
 

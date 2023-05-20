@@ -96,7 +96,7 @@ function handleRequest(request, response) {
   // if we have received all the requests, we return
   // the result back.
   if (totaltests == 0) {
-    getObjectState("queryResult", function(queryResponse) {
+    getObjectState("queryResult", function (queryResponse) {
       if (!queryResponse) {
         return;
       }

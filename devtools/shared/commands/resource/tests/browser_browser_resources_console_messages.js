@@ -7,7 +7,7 @@
 
 const TEST_URL = URL_ROOT_SSL + "early_console_document.html";
 
-add_task(async function() {
+add_task(async function () {
   // Enable Multiprocess Browser Toolbox.
   await pushPref("devtools.browsertoolbox.scope", "everything");
 

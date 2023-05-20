@@ -7,7 +7,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.debugger.features.windowless-service-workers", true);
   await pushPref("devtools.debugger.threads-visible", true);
   await pushPref("dom.serviceWorkers.enabled", true);

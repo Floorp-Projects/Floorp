@@ -455,7 +455,7 @@ class KintoServer {
  * @returns {Function}
  */
 function appearsAt(startTime) {
-  return function({ since, server }) {
+  return function ({ since, server }) {
     return since < startTime && startTime < server.etag;
   };
 }
@@ -479,8 +479,8 @@ async function withServer(f) {
 // KintoServer. This is meant as a workaround for eslint's refusal to
 // let me have 5 nested callbacks.
 async function withContextAndServer(f) {
-  await withSyncContext(async function(context) {
-    await withServer(async function(server) {
+  await withSyncContext(async function (context) {
+    await withServer(async function (server) {
       await f(context, server);
     });
   });
@@ -571,7 +571,7 @@ function assertPostedUpdatedRecord(post, since) {
 
 // Assert that this post was an encrypted keyring, and produce the
 // decrypted body. Sanity check the body while we're here.
-const assertPostedEncryptedKeys = async function(fxaService, post) {
+const assertPostedEncryptedKeys = async function (fxaService, post) {
   equal(post.path, collectionRecordsPath("storage-sync-crypto") + "/keys");
 
   let body = await new KeyRingEncryptionRemoteTransformer(fxaService).decode(
@@ -600,7 +600,12 @@ function assertKeyRingKey(keyRing, extensionId, expectedKey, message) {
 }
 
 // Assert that this post was posted for a given extension.
-const assertExtensionRecord = async function(fxaService, post, extension, key) {
+const assertExtensionRecord = async function (
+  fxaService,
+  post,
+  extension,
+  key
+) {
   const extensionId = extension.id;
   const cryptoCollection = new CryptoCollection(fxaService);
   const hashedId =
@@ -665,7 +670,7 @@ add_task(async function test_single_initialization() {
   );
   const origOpenConnection = FirefoxAdapter.openConnection;
   let callCount = 0;
-  FirefoxAdapter.openConnection = function(...args) {
+  FirefoxAdapter.openConnection = function (...args) {
     ++callCount;
     return origOpenConnection.apply(this, args);
   };
@@ -728,7 +733,7 @@ add_task(async function test_extension_id_to_collection_id() {
   // FIXME: this doesn't actually require the signed in user, but the
   // extensionIdToCollectionId method exists on CryptoCollection,
   // which needs an fxaService to be instantiated.
-  await withSignedInUser(loggedInUser, async function(
+  await withSignedInUser(loggedInUser, async function (
     extensionStorageSync,
     fxaService
   ) {
@@ -765,8 +770,8 @@ add_task(async function ensureCanSync_clearAll() {
   const extensionId2 = "test-wipe-on-active-context@mochi.test";
   const extension2 = { id: extensionId2 };
 
-  await withContextAndServer(async function(context, server) {
-    await withSignedInUser(loggedInUser, async function(
+  await withContextAndServer(async function (context, server) {
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -835,8 +840,8 @@ add_task(async function ensureCanSync_clearAll() {
 
 add_task(async function ensureCanSync_posts_new_keys() {
   const extensionId = uuid();
-  await withContextAndServer(async function(context, server) {
-    await withSignedInUser(loggedInUser, async function(
+  await withContextAndServer(async function (context, server) {
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -929,8 +934,8 @@ add_task(async function ensureCanSync_pulls_key() {
   await DEFAULT_KEY.generateRandom();
   const RANDOM_KEY = new BulkKeyBundle(extensionId);
   await RANDOM_KEY.generateRandom();
-  await withContextAndServer(async function(context, server) {
-    await withSignedInUser(loggedInUser, async function(
+  await withContextAndServer(async function (context, server) {
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -1078,8 +1083,8 @@ add_task(async function ensureCanSync_handles_conflicts() {
   await DEFAULT_KEY.generateRandom();
   const RANDOM_KEY = new BulkKeyBundle(extensionId);
   await RANDOM_KEY.generateRandom();
-  await withContextAndServer(async function(context, server) {
-    await withSignedInUser(loggedInUser, async function(
+  await withContextAndServer(async function (context, server) {
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -1140,10 +1145,10 @@ add_task(async function ensureCanSync_handles_deleted_conflicts() {
   // Conflict response from the Kinto server. Make sure we handle it correctly.
   const extensionId = uuid();
   const extensionId2 = uuid();
-  await withContextAndServer(async function(context, server) {
+  await withContextAndServer(async function (context, server) {
     server.installCollection("storage-sync-crypto");
     server.installDeleteBucket();
-    await withSignedInUser(loggedInUser, async function(
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -1226,10 +1231,10 @@ add_task(async function ensureCanSync_handles_flushes() {
   // lost. Ensure we can recover for these users as well.
   const extensionId = uuid();
   const extensionId2 = uuid();
-  await withContextAndServer(async function(context, server) {
+  await withContextAndServer(async function (context, server) {
     server.installCollection("storage-sync-crypto");
     server.installDeleteBucket();
-    await withSignedInUser(loggedInUser, async function(
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -1287,8 +1292,8 @@ add_task(async function checkSyncKeyRing_reuploads_keys() {
   // new kbHash when we call touchKeys().
   const extensionId = uuid();
   let extensionKey, extensionSalt;
-  await withContextAndServer(async function(context, server) {
-    await withSignedInUser(loggedInUser, async function(
+  await withContextAndServer(async function (context, server) {
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -1331,7 +1336,7 @@ add_task(async function checkSyncKeyRing_reuploads_keys() {
       },
     });
     let postedKeys;
-    await withSignedInUser(newUser, async function(
+    await withSignedInUser(newUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -1360,7 +1365,7 @@ add_task(async function checkSyncKeyRing_reuploads_keys() {
     });
 
     // Verify that with the old kBHash, we can't decrypt the record.
-    await withSignedInUser(loggedInUser, async function(
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -1388,8 +1393,8 @@ add_task(async function checkSyncKeyRing_overwrites_on_conflict() {
   // overwrite it with our keys.
   const extensionId = uuid();
   let extensionKey;
-  await withSyncContext(async function(context) {
-    await withServer(async function(server) {
+  await withSyncContext(async function (context) {
+    await withServer(async function (server) {
       // The old device has this kbHash, which is very similar to the
       // current kbHash but with the last character changed.
       const oldUser = Object.assign({}, loggedInUser, {
@@ -1403,7 +1408,7 @@ add_task(async function checkSyncKeyRing_overwrites_on_conflict() {
         },
       });
       server.installDeleteBucket();
-      await withSignedInUser(oldUser, async function(
+      await withSignedInUser(oldUser, async function (
         extensionStorageSync,
         fxaService
       ) {
@@ -1411,7 +1416,7 @@ add_task(async function checkSyncKeyRing_overwrites_on_conflict() {
       });
 
       // Now we have this new user with a different kbHash.
-      await withSignedInUser(loggedInUser, async function(
+      await withSignedInUser(loggedInUser, async function (
         extensionStorageSync,
         fxaService
       ) {
@@ -1492,11 +1497,11 @@ add_task(async function checkSyncKeyRing_flushes_on_uuid_change() {
   // keyring, so reset sync state and reupload everything.
   const extensionId = uuid();
   const extension = { id: extensionId };
-  await withSyncContext(async function(context) {
-    await withServer(async function(server) {
+  await withSyncContext(async function (context) {
+    await withServer(async function (server) {
       server.installCollection("storage-sync-crypto");
       server.installDeleteBucket();
-      await withSignedInUser(loggedInUser, async function(
+      await withSignedInUser(loggedInUser, async function (
         extensionStorageSync,
         fxaService
       ) {
@@ -1635,8 +1640,8 @@ add_task(async function checkSyncKeyRing_flushes_on_uuid_change() {
 add_task(async function test_storage_sync_pulls_changes() {
   const extensionId = defaultExtensionId;
   const extension = defaultExtension;
-  await withContextAndServer(async function(context, server) {
-    await withSignedInUser(loggedInUser, async function(
+  await withContextAndServer(async function (context, server) {
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -1646,7 +1651,7 @@ add_task(async function test_storage_sync_pulls_changes() {
       let calls = [];
       await extensionStorageSync.addOnChangedListener(
         extension,
-        function() {
+        function () {
           calls.push(arguments);
         },
         context
@@ -1742,7 +1747,7 @@ add_task(async function test_storage_sync_on_no_active_context() {
           </head>
         </html>
       `,
-      "ext-page.js": function() {
+      "ext-page.js": function () {
         const { browser } = this;
         browser.test.onMessage.addListener(async msg => {
           if (msg === "get-sync-data") {
@@ -1759,7 +1764,7 @@ add_task(async function test_storage_sync_on_no_active_context() {
   await extension.startup();
 
   await withServer(async server => {
-    await withSignedInUser(loggedInUser, async function(
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -1809,8 +1814,8 @@ add_task(async function test_storage_sync_pushes_changes() {
   // keys and salts for the default extension ID
   const extension = defaultExtension;
   const extensionId = defaultExtensionId;
-  await withContextAndServer(async function(context, server) {
-    await withSignedInUser(loggedInUser, async function(
+  await withContextAndServer(async function (context, server) {
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -1828,7 +1833,7 @@ add_task(async function test_storage_sync_pushes_changes() {
       let calls = [];
       extensionStorageSync.addOnChangedListener(
         extension,
-        function() {
+        function () {
           calls.push(arguments);
         },
         context
@@ -1935,8 +1940,8 @@ add_task(async function test_storage_sync_pushes_changes() {
 add_task(async function test_storage_sync_retries_failed_auth() {
   const extensionId = uuid();
   const extension = { id: extensionId };
-  await withContextAndServer(async function(context, server) {
-    await withSignedInUser(loggedInUser, async function(
+  await withContextAndServer(async function (context, server) {
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -2019,8 +2024,8 @@ add_task(async function test_storage_sync_retries_failed_auth() {
 add_task(async function test_storage_sync_pulls_conflicts() {
   const extensionId = uuid();
   const extension = { id: extensionId };
-  await withContextAndServer(async function(context, server) {
-    await withSignedInUser(loggedInUser, async function(
+  await withContextAndServer(async function (context, server) {
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -2052,7 +2057,7 @@ add_task(async function test_storage_sync_pulls_conflicts() {
       let calls = [];
       await extensionStorageSync.addOnChangedListener(
         extension,
-        function() {
+        function () {
           calls.push(arguments);
         },
         context
@@ -2107,8 +2112,8 @@ add_task(async function test_storage_sync_pulls_conflicts() {
 
 add_task(async function test_storage_sync_pulls_deletes() {
   const extension = defaultExtension;
-  await withContextAndServer(async function(context, server) {
-    await withSignedInUser(loggedInUser, async function(
+  await withContextAndServer(async function (context, server) {
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -2126,7 +2131,7 @@ add_task(async function test_storage_sync_pulls_deletes() {
       let calls = [];
       await extensionStorageSync.addOnChangedListener(
         extension,
-        function() {
+        function () {
           calls.push(arguments);
         },
         context
@@ -2182,8 +2187,8 @@ add_task(async function test_storage_sync_pulls_deletes() {
 add_task(async function test_storage_sync_pushes_deletes() {
   const extensionId = uuid();
   const extension = { id: extensionId };
-  await withContextAndServer(async function(context, server) {
-    await withSignedInUser(loggedInUser, async function(
+  await withContextAndServer(async function (context, server) {
+    await withSignedInUser(loggedInUser, async function (
       extensionStorageSync,
       fxaService
     ) {
@@ -2206,7 +2211,7 @@ add_task(async function test_storage_sync_pushes_deletes() {
       let calls = [];
       extensionStorageSync.addOnChangedListener(
         extension,
-        function() {
+        function () {
           calls.push(arguments);
         },
         context

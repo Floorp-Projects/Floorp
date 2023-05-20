@@ -54,7 +54,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 let { makeWidgetId } = ExtensionCommon;
 
-XPCOMUtils.defineLazyGetter(lazy, "strBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "strBundle", function () {
   return Services.strings.createBundle(
     "chrome://global/locale/extensions.properties"
   );
@@ -62,7 +62,7 @@ XPCOMUtils.defineLazyGetter(lazy, "strBundle", function() {
 
 const PREF_BRANCH_INSTALLED_ADDON = "extensions.installedDistroAddon.";
 
-XPCOMUtils.defineLazyGetter(lazy, "distributionAddonsList", function() {
+XPCOMUtils.defineLazyGetter(lazy, "distributionAddonsList", function () {
   let addonList = Services.prefs
     .getChildList(PREF_BRANCH_INSTALLED_ADDON)
     .map(id => id.replace(PREF_BRANCH_INSTALLED_ADDON, ""));

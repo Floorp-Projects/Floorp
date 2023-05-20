@@ -593,9 +593,9 @@ function verifyDetails(handlerDetails, testCaseDetails) {
 }
 
 for (let tc of TESTCASES) {
-  (function() {
+  (function () {
     let testcase = tc;
-    add_task(async function() {
+    add_task(async function () {
       info("Starting testcase: " + testcase.description);
 
       if (testcase.prefs) {

@@ -5,7 +5,7 @@ ChromeUtils.defineESModuleGetters(this, {
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
   let engine = Services.search.getEngineByName("Example");
@@ -16,7 +16,7 @@ add_task(async function test_remove_history() {
   const TEST_URL = "http://remove.me/from_urlbar/";
   await PlacesTestUtils.addVisits(TEST_URL);
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
 
@@ -148,7 +148,7 @@ add_task(async function test_remove_bookmark_doesnt() {
     url: TEST_URL,
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
   });
 
@@ -186,7 +186,7 @@ add_task(async function test_searchMode_removeRestyledHistory() {
   let url = `https://example.com/?q=${query}bar`;
   await PlacesTestUtils.addVisits(url);
 
-  await BrowserTestUtils.withNewTab("about:robots", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:robots", async function (browser) {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: query,

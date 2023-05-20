@@ -167,7 +167,7 @@ function PrefStore(name, engine) {
   Store.call(this, name, engine);
   Svc.Obs.add(
     "profile-before-change",
-    function() {
+    function () {
       this.__prefs = null;
     },
     this

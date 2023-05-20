@@ -71,7 +71,7 @@ function handleRequest(request, response) {
     Components.interfaces.nsITimer
   );
   timer.initWithCallback(
-    function() {
+    function () {
       response.write(position);
       response.finish();
     },

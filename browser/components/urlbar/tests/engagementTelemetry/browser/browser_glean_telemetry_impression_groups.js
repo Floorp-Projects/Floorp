@@ -8,7 +8,7 @@
 // - results
 // - n_results
 
-add_setup(async function() {
+add_setup(async function () {
   await initGroupTest();
   // Increase the pausing time to ensure to ready for all suggestions.
   await SpecialPowers.pushPrefEnv({

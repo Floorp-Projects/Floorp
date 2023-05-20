@@ -302,6 +302,6 @@ if (isRemote) {
 }
 
 // This is used by the XPCOM codepath which expects a constructor
-export const MarionetteFactory = function() {
+export const MarionetteFactory = function () {
   return Marionette;
 };

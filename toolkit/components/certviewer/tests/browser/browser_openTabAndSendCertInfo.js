@@ -29,7 +29,7 @@ function checksCertTab(tabsCount) {
 }
 
 async function checkCertChain(browser) {
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let certificateTabs;
     await ContentTaskUtils.waitForCondition(() => {
       let certificateSection = content.document.querySelector(
@@ -67,7 +67,7 @@ function openCertDownloadDialog(cert) {
   return new Promise((resolve, reject) => {
     win.addEventListener(
       "load",
-      function() {
+      function () {
         executeSoon(() => resolve([win]));
       },
       { once: true }
@@ -123,7 +123,7 @@ add_task(async function testBadCert() {
   let tabsCount = gBrowser.tabs.length;
   let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let advancedButton = content.document.getElementById("advancedButton");
     Assert.ok(advancedButton, "advancedButton found");
     Assert.equal(
@@ -158,7 +158,7 @@ add_task(async function testBadCertIframe() {
   let tabsCount = gBrowser.tabs.length;
   let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let doc = content.document.querySelector("iframe").contentDocument;
     let advancedButton = doc.getElementById("advancedButton");
     Assert.ok(advancedButton, "advancedButton found");
@@ -193,7 +193,7 @@ add_task(async function testGoodCert() {
   let tabsCount = gBrowser.tabs.length;
 
   info(`Loading ${url}`);
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function () {
     info("Opening pageinfo");
     let pageInfo = BrowserPageInfo(url, "securityTab", {});
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
@@ -229,7 +229,9 @@ add_task(async function testPreferencesCert() {
   let tabsCount;
 
   info(`Loading ${url}`);
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function (
+    browser
+  ) {
     tabsCount = gBrowser.tabs.length;
     checkAndClickButton(browser.contentDocument, "viewCertificatesButton");
 

@@ -1746,7 +1746,7 @@ class DebuggerProgressListener {
     });
   }
 
-  onWindowCreated = DevToolsUtils.makeInfallible(function(evt) {
+  onWindowCreated = DevToolsUtils.makeInfallible(function (evt) {
     if (this._targetActor.isDestroyed()) {
       return;
     }
@@ -1784,7 +1784,7 @@ class DebuggerProgressListener {
     this._targetActor._windowReady(window, { isBFCache });
   }, "DebuggerProgressListener.prototype.onWindowCreated");
 
-  onWindowHidden = DevToolsUtils.makeInfallible(function(evt) {
+  onWindowHidden = DevToolsUtils.makeInfallible(function (evt) {
     if (this._targetActor.isDestroyed()) {
       return;
     }
@@ -1814,7 +1814,7 @@ class DebuggerProgressListener {
     this._knownWindowIDs.delete(getWindowID(window));
   }, "DebuggerProgressListener.prototype.onWindowHidden");
 
-  observe = DevToolsUtils.makeInfallible(function(subject, topic) {
+  observe = DevToolsUtils.makeInfallible(function (subject, topic) {
     if (this._targetActor.isDestroyed()) {
       return;
     }
@@ -1846,7 +1846,7 @@ class DebuggerProgressListener {
     }
   }, "DebuggerProgressListener.prototype.observe");
 
-  onStateChange = DevToolsUtils.makeInfallible(function(
+  onStateChange = DevToolsUtils.makeInfallible(function (
     progress,
     request,
     flag,

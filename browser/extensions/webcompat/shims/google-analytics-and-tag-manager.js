@@ -25,7 +25,7 @@ if (window[window.GoogleAnalyticsObject || "ga"]?.loaded === undefined) {
 
   const trackers = new Map();
 
-  const run = function(fn, ...args) {
+  const run = function (fn, ...args) {
     if (typeof fn === "function") {
       try {
         fn(...args);
@@ -163,7 +163,7 @@ if (window[window.GoogleAnalyticsObject || "ga"]?.loaded === undefined) {
   const dl = window.dataLayer;
 
   if (Array.isArray(dl) && !dl.find(e => e["gtm.start"])) {
-    const push = function(o) {
+    const push = function (o) {
       setTimeout(() => run(o?.eventCallback), 1);
       return true;
     };

@@ -102,7 +102,7 @@ function mockHandleAPIRequest(extPage, mockHandleAPIRequest) {
           ExtensionAPIRequestHandler.handleAPIRequest;
       }
 
-      ExtensionAPIRequestHandler.handleAPIRequest = function(policy, request) {
+      ExtensionAPIRequestHandler.handleAPIRequest = function (policy, request) {
         if (request.apiNamespace === "test") {
           return this._handleAPIRequest_orig(policy, request);
         }

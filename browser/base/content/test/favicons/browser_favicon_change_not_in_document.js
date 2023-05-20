@@ -16,7 +16,7 @@ const TEST_URL = TEST_ROOT + "file_favicon_change_not_in_document.html";
  * should not fire the DOMLinkAdded event, nor should it fire the DOMLinkChanged
  * event after its href gets updated later.
  */
-add_task(async function() {
+add_task(async function () {
   let extraTab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
     gBrowser,
     TEST_ROOT

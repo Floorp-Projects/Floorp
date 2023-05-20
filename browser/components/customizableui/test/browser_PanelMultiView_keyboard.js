@@ -70,7 +70,7 @@ async function expectFocusAfterKey(aKey, aFocus) {
   ok(true, aFocus.id + " focused after " + aKey + " pressed");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // This shouldn't be necessary - but it is, because we use same-process frames.
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1565276 covers improving this.
   await SpecialPowers.pushPrefEnv({
@@ -439,7 +439,7 @@ add_task(async function testDynamicButton() {
 add_task(async function testActivation() {
   function checkActivated(elem, activationFn, reason) {
     let activated = false;
-    elem.onclick = function() {
+    elem.onclick = function () {
       activated = true;
     };
     activationFn();
@@ -473,7 +473,7 @@ add_task(async function testActivationMousedown() {
   await openPopup();
   await expectFocusAfterKey("ArrowDown", gMainButton1);
   let activated = false;
-  gMainButton1.onmousedown = function() {
+  gMainButton1.onmousedown = function () {
     activated = true;
   };
   EventUtils.synthesizeKey(" ");

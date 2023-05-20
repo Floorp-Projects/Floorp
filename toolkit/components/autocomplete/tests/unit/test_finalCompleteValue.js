@@ -11,7 +11,7 @@ function AutoCompleteInput(aSearches) {
 AutoCompleteInput.prototype = Object.create(AutoCompleteInputBase.prototype);
 
 add_test(function test_handleEnter_mouse() {
-  doSearch("moz", "mozilla.com", "http://www.mozilla.com", function(
+  doSearch("moz", "mozilla.com", "http://www.mozilla.com", function (
     aController
   ) {
     Assert.equal(aController.input.textValue, "moz");

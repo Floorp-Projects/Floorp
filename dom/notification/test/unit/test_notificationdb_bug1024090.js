@@ -32,7 +32,7 @@ add_test(function test_bug1024090_purge() {
 add_test(function test_bug1024090_send_one() {
   let requestID = 1;
   let msgReply = "Notification:Save:Return:OK";
-  let msgHandler = function(message) {
+  let msgHandler = function (message) {
     equal(requestID, message.data.requestID, "Checking requestID");
   };
 
@@ -47,7 +47,7 @@ add_test(function test_bug1024090_send_one() {
 add_test(function test_bug1024090_get_one() {
   let requestID = 2;
   let msgReply = "Notification:GetAll:Return:OK";
-  let msgHandler = function(message) {
+  let msgHandler = function (message) {
     equal(requestID, message.data.requestID, "Checking requestID");
     equal(1, message.data.notifications.length, "One notification stored");
   };

@@ -17,7 +17,7 @@ function test() {
   requestLongerTimeout(2);
 
   Services.prefs.setIntPref("browser.sessionstore.interval", 4000);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.sessionstore.interval");
   });
 
@@ -35,8 +35,8 @@ function test() {
       entry = sessionHistory.getEntryAtIndex(0);
     }
 
-    whenChildCount(entry, 1, function() {
-      whenChildCount(entry, 2, function() {
+    whenChildCount(entry, 1, function () {
+      whenChildCount(entry, 2, function () {
         promiseBrowserLoaded(browser)
           .then(() => {
             return TabStateFlusher.flush(browser);

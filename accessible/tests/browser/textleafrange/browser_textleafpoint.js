@@ -12,7 +12,7 @@ addAccessibleTask(
 h<a href="#">id i</a>n
 the <strong>big</strong> rug.</p>
 `,
-  function(browser, docAcc) {
+  function (browser, docAcc) {
     const container = findAccessibleChildByID(docAcc, "p");
     const firstPoint = createTextLeafPoint(container, 0);
     const lastPoint = createTextLeafPoint(container, kTextEndOffset);
@@ -179,7 +179,7 @@ addAccessibleTask(
   `<p id="p">
     Rob ca<input id="i1" value="n m">op up.
   </p>`,
-  function(browser, docAcc) {
+  function (browser, docAcc) {
     const container = findAccessibleChildByID(docAcc, "p");
     const firstPoint = createTextLeafPoint(container, 0);
     const lastPoint = createTextLeafPoint(container, kTextEndOffset);
@@ -256,7 +256,7 @@ on a <span style="display: block;">rug</span></p>
     <li>Two</li>
     <li>Three</li>
   </ul>`,
-  function(browser, docAcc) {
+  function (browser, docAcc) {
     const firstPoint = createTextLeafPoint(docAcc, 0);
     const lastPoint = createTextLeafPoint(docAcc, kTextEndOffset);
 
@@ -303,7 +303,7 @@ addAccessibleTask(
     <li style="white-space: pre-line;">Three
 Four</li>
   </ul>`,
-  function(browser, docAcc) {
+  function (browser, docAcc) {
     const firstPoint = createTextLeafPoint(docAcc, 0);
     const lastPoint = createTextLeafPoint(docAcc, kTextEndOffset);
 
@@ -470,7 +470,7 @@ addAccessibleTask(
   <tr><td>c</td><td>d</td></tr>
 </table>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const firstPoint = createTextLeafPoint(docAcc, 0);
     const lastPoint = createTextLeafPoint(docAcc, kTextEndOffset);
     testBoundarySequence(

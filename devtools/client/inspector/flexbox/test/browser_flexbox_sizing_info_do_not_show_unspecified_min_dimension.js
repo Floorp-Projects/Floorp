@@ -25,7 +25,7 @@ async function checkFlexItemCSSProperty(inspector, store, doc, selector) {
   ok(!minDimension, "Minimum dimension property should not be displayed.");
 }
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc, store } = flexboxInspector;

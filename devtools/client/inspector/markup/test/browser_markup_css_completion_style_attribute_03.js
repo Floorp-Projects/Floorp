@@ -45,7 +45,7 @@ const TEST_DATA = [
   ["VK_RETURN", 'style="color:beige;padding:0;"', -1, -1, false],
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   await runStyleAttributeAutocompleteTests(inspector, TEST_DATA);

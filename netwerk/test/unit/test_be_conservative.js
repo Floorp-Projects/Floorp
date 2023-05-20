@@ -205,7 +205,7 @@ function startClient(port, beConservative, expectSuccess) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   Services.prefs.setIntPref("security.tls.version.max", 4);
   Services.prefs.setCharPref("network.dns.localDomains", hostname);
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
@@ -249,7 +249,7 @@ add_task(async function() {
   server.close();
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("security.tls.version.max");
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");

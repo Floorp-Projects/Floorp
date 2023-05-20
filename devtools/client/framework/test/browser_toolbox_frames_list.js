@@ -13,7 +13,7 @@ const TEST_ORG_URL =
   `<iframe src="https://example.org/document-builder.sjs?html=example.org iframe"></iframe>` +
   `<iframe src="https://example.com/document-builder.sjs?html=example.com iframe"></iframe>`;
 
-add_task(async function() {
+add_task(async function () {
   // Enable the frames button.
   await pushPref("devtools.command-button-frames.enabled", true);
 
@@ -30,7 +30,7 @@ add_task(async function() {
   await checkFramesList(toolbox, []);
 
   info("Create a same origin (example.com) iframe");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const comIframe = content.document.createElement("iframe");
     comIframe.src =
       "https://example.com/document-builder.sjs?html=example.com iframe";
@@ -47,7 +47,7 @@ add_task(async function() {
   ]);
 
   info("Create a cross-process origin (example.org) iframe");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const orgIframe = content.document.createElement("iframe");
     orgIframe.src =
       "https://example.org/document-builder.sjs?html=example.org iframe";
@@ -94,7 +94,7 @@ add_task(async function() {
   ]);
 
   info("Check that frames list is updated when removing same-origin iframe");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.document.querySelector("iframe").remove();
   });
   await checkFramesList(toolbox, [
@@ -103,7 +103,7 @@ add_task(async function() {
   ]);
 
   info("Check that frames list is updated when removing cross-origin iframe");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.document.querySelector("iframe").remove();
   });
   await waitFor(() => !getFramesButton(toolbox));

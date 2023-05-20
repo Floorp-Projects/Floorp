@@ -6,7 +6,7 @@
 // Test that copying from the urlbar page works correctly after a result is
 // confirmed but takes a while to load.
 
-add_task(async function() {
+add_task(async function () {
   const SLOW_PAGE =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",

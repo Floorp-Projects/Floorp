@@ -41,7 +41,7 @@ Services.prompt = {
   },
 };
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prompt = oldPrompt;
 });
 
@@ -85,13 +85,13 @@ add_task(async function test() {
   report4.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
   report4.lastModifiedTime = Date.now() - 63172000000;
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     cleanup_fake_appdir();
   });
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:crashes" },
-    async function(browser) {
+    async function (browser) {
       let dirs = [submitdir, pendingdir, crD];
       let existing = [
         file1.path,

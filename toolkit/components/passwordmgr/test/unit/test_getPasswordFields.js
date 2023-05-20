@@ -167,9 +167,9 @@ const TESTCASES = [
 for (let tc of TESTCASES) {
   info("Sanity checking the testcase: " + tc.description);
 
-  (function() {
+  (function () {
     let testcase = tc;
-    add_task(async function() {
+    add_task(async function () {
       info("Starting testcase: " + testcase.description);
       let document = MockDocument.createTestDocument(
         "http://localhost:8080/test/",
@@ -283,9 +283,9 @@ const EMOJI_TESTCASES = [
 for (let tc of EMOJI_TESTCASES) {
   info("Sanity checking the testcase: " + tc.description);
 
-  (function() {
+  (function () {
     let testcase = tc;
-    add_task(async function() {
+    add_task(async function () {
       info("Starting testcase: " + testcase.description);
       let document = MockDocument.createTestDocument(
         "http://localhost:8080/test/",

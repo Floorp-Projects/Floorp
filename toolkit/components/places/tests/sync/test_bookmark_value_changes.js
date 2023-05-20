@@ -2303,7 +2303,7 @@ add_task(async function test_duplicate_url_rows() {
   ];
 
   info("Manually insert local and remote items with duplicate URLs");
-  await buf.db.executeTransaction(async function() {
+  await buf.db.executeTransaction(async function () {
     for (let { guid, href } of placesToInsert) {
       let url = new URL(href);
       await buf.db.executeCached(
@@ -2494,7 +2494,7 @@ add_task(async function test_duplicate_url_rows() {
   ]);
 
   info("Remove duplicate URLs from Places to avoid tripping debug asserts");
-  await buf.db.executeTransaction(async function() {
+  await buf.db.executeTransaction(async function () {
     for (let { guid } of placesToInsert) {
       await buf.db.executeCached(
         `

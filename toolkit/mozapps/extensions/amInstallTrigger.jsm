@@ -37,7 +37,7 @@ log.level =
 function CallbackObject(id, callback, mediator) {
   this.id = id;
   this.callback = callback;
-  this.callCallback = function(url, status) {
+  this.callCallback = function (url, status) {
     try {
       this.callback(url, status);
     } catch (e) {

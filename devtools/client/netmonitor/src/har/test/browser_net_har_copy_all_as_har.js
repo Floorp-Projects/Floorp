@@ -10,7 +10,7 @@
 const EXPECTED_REQUEST_HEADER_COUNT = 9;
 const EXPECTED_RESPONSE_HEADER_COUNT = 6;
 
-add_task(async function() {
+add_task(async function () {
   // Disable tcp fast open, because it is setting a response header indicator
   // (bug 1352274). TCP Fast Open is not present on all platforms therefore the
   // number of response headers will vary depending on the platform.
@@ -125,7 +125,7 @@ async function testClearedRequests({ tab, monitor, toolbox }) {
     "Doing this, should notify a network request that is destroyed on the server side"
   );
   const onNetworkEvents = waitForNetworkEvents(monitor, 2);
-  await SpecialPowers.spawn(tab.linkedBrowser, [iframeURL], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [iframeURL], async function (
     _iframeURL
   ) {
     const iframe = content.document.createElement("iframe");
@@ -139,7 +139,7 @@ async function testClearedRequests({ tab, monitor, toolbox }) {
   await waitForAllNetworkUpdateEvents();
 
   info("Remove the iframe so that lazy request data are freed");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.document.querySelector("iframe").remove();
   });
 

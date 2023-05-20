@@ -7,7 +7,7 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,invalid api usage test";
 
-add_task(async function() {
+add_task(async function () {
   info("Setup the test page with workers of all types");
   const tab = await addTab(TEST_URL);
 
@@ -15,7 +15,7 @@ add_task(async function() {
   const commands = await CommandsFactory.forTab(tab);
   const targetCommand = commands.targetCommand;
 
-  const onAvailable = function() {};
+  const onAvailable = function () {};
 
   await Assert.rejects(
     targetCommand.watchTargets({ types: [null], onAvailable }),

@@ -7,7 +7,7 @@
  * Tests if Copy as Fetch works.
  */
 
-add_task(async function() {
+add_task(async function () {
   const { tab, monitor } = await initNetMonitor(HTTPS_CURL_URL, {
     requestCount: 1,
   });
@@ -48,7 +48,7 @@ add_task(async function() {
           payload_: payload,
         },
       ],
-      async function({ url, method_, payload_ }) {
+      async function ({ url, method_, payload_ }) {
         content.wrappedJSObject.performRequest(url, method_, payload_);
       }
     );

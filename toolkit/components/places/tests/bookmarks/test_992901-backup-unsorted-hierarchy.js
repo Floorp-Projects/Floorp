@@ -7,7 +7,7 @@
  * in the database is unordered so that a hierarchy is defined before its
  * ancestor in the bookmarks table.
  */
-add_task(async function() {
+add_task(async function () {
   let bms = await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.unfiledGuid,
     children: [

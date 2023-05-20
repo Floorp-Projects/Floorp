@@ -435,7 +435,7 @@ export class SyncedBookmarksMirror {
     await this.db.executeBeforeShutdown(
       "SyncedBookmarksMirror: ensureCurrentSyncId",
       db =>
-        db.executeTransaction(async function() {
+        db.executeTransaction(async function () {
           await resetMirror(db);
           await db.execute(
             `
@@ -1450,7 +1450,7 @@ function isDatabaseCorrupt(error) {
 async function attachAndInitMirrorDatabase(db, path) {
   await db.execute(`ATTACH :path AS mirror`, { path });
   try {
-    await db.executeTransaction(async function() {
+    await db.executeTransaction(async function () {
       let currentSchemaVersion = await db.getSchemaVersion("mirror");
       if (currentSchemaVersion > 0) {
         if (currentSchemaVersion < MIRROR_SCHEMA_VERSION) {
@@ -1592,7 +1592,7 @@ async function initializeMirrorDatabase(db) {
  *        The mirror database connection.
  */
 async function cleanupMirrorDatabase(db) {
-  await db.executeTransaction(async function() {
+  await db.executeTransaction(async function () {
     await db.execute(`DROP TABLE changeGuidOps`);
     await db.execute(`DROP TABLE itemsToApply`);
     await db.execute(`DROP TABLE applyNewLocalStructureOps`);

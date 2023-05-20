@@ -194,7 +194,7 @@ const { CustomizableUI } = ChromeUtils.import(
   "resource:///modules/CustomizableUI.jsm"
 );
 let customizationListener = {};
-customizationListener.onWidgetAdded = customizationListener.onWidgetRemoved = customizationListener.onWidgetMoved = function(
+customizationListener.onWidgetAdded = customizationListener.onWidgetRemoved = customizationListener.onWidgetMoved = function (
   aWidgetId
 ) {
   if (aWidgetId == "zoom-controls") {
@@ -203,7 +203,7 @@ customizationListener.onWidgetAdded = customizationListener.onWidgetRemoved = cu
     }
   }
 };
-customizationListener.onWidgetReset = customizationListener.onWidgetUndoMove = function(
+customizationListener.onWidgetReset = customizationListener.onWidgetUndoMove = function (
   aWidgetNode
 ) {
   if (aWidgetNode.id == "zoom-controls") {

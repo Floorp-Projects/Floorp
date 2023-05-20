@@ -1245,7 +1245,7 @@ function testtag_tree_UI_editing(tree, testid, rowInfo) {
   var ci = tree.currentIndex;
 
   // cursor navigation should not change the selection while editing
-  var testKey = function(key) {
+  var testKey = function (key) {
     synthesizeKeyExpectEvent(
       key,
       {},
@@ -1741,7 +1741,7 @@ function testtag_tree_wheel(aTree) {
   }
   window.addEventListener("wheel", wheelListener);
 
-  deltaModes.forEach(function(aDeltaMode) {
+  deltaModes.forEach(function (aDeltaMode) {
     var delta = aDeltaMode == WheelEvent.DOM_DELTA_PIXEL ? 5.0 : 0.3;
     helper(2, -delta, 0, aDeltaMode);
     helper(2, -delta, -1, aDeltaMode);
@@ -2057,7 +2057,7 @@ function getSortedColumnArray(aTree) {
     array.push(columns.getColumnAt(i));
   }
 
-  array.sort(function(a, b) {
+  array.sort(function (a, b) {
     var o1 = parseInt(a.element.style.order);
     var o2 = parseInt(b.element.style.order);
     return o1 - o2;
@@ -2068,7 +2068,7 @@ function getSortedColumnArray(aTree) {
 function checkColumns(aTree, aReference, aMessage) {
   var columns = getSortedColumnArray(aTree);
   var ids = [];
-  columns.forEach(function(e) {
+  columns.forEach(function (e) {
     ids.push(e.element.id);
   });
   is(compareArrays(ids, aReference), true, aMessage);

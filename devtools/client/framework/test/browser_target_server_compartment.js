@@ -10,7 +10,7 @@ const CHROME_PAGE =
   "chrome://mochitests/content/browser/devtools/client/framework/" +
   "test/test_chrome_page.html";
 
-add_task(async function() {
+add_task(async function () {
   await testChromeTab();
   await testMainProcess();
 });
@@ -26,7 +26,7 @@ async function testChromeTab() {
   );
 
   const onThreadActorInstantiated = new Promise(resolve => {
-    const observe = function(subject, topic, data) {
+    const observe = function (subject, topic, data) {
       if (topic === "devtools-thread-ready") {
         Services.obs.removeObserver(observe, "devtools-thread-ready");
         const threadActor = subject.wrappedJSObject;
@@ -62,7 +62,7 @@ async function testChromeTab() {
   );
 
   const onDedicatedLoaderDestroy = new Promise(resolve => {
-    const observe = function(subject, topic, data) {
+    const observe = function (subject, topic, data) {
       if (topic === "devtools:loader:destroy") {
         Services.obs.removeObserver(observe, "devtools:loader:destroy");
         resolve();
@@ -81,7 +81,7 @@ async function testChromeTab() {
 // Test that Main process Target can debug chrome scripts
 async function testMainProcess() {
   const onThreadActorInstantiated = new Promise(resolve => {
-    const observe = function(subject, topic, data) {
+    const observe = function (subject, topic, data) {
       if (topic === "devtools-thread-ready") {
         Services.obs.removeObserver(observe, "devtools-thread-ready");
         const threadActor = subject.wrappedJSObject;

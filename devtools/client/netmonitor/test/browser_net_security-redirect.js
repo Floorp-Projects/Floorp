@@ -8,7 +8,7 @@
  * request.
  */
 
-add_task(async function() {
+add_task(async function () {
   // This test explicitly asserts http -> https redirects.
   await pushPref("dom.security.https_first", false);
 
@@ -24,7 +24,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     tab.linkedBrowser,
     [HTTPS_REDIRECT_SJS],
-    async function(url) {
+    async function (url) {
       content.wrappedJSObject.performRequests(1, url);
     }
   );

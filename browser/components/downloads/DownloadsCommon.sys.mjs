@@ -118,7 +118,7 @@ var PrefObserver = {
     kPrefBranch.addObserver("", this, true);
     for (let key in prefs) {
       let name = key;
-      XPCOMUtils.defineLazyGetter(this, name, function() {
+      XPCOMUtils.defineLazyGetter(this, name, function () {
         return PrefObserver.getPref(name);
       });
     }
@@ -174,7 +174,7 @@ export var DownloadsCommon = {
     for (let string of sb.getSimpleEnumeration()) {
       let stringName = string.key;
       if (stringName in kDownloadsStringsRequiringFormatting) {
-        strings[stringName] = function() {
+        strings[stringName] = function () {
           // Convert "arguments" to a real array before calling into XPCOM.
           return sb.formatStringFromName(stringName, Array.from(arguments));
         };
@@ -714,7 +714,7 @@ export var DownloadsCommon = {
         // before the "load" event.
         subj.addEventListener(
           "DOMContentLoaded",
-          function() {
+          function () {
             if (
               subj.document.documentURI ==
               "chrome://global/content/commonDialog.xhtml"
@@ -1005,11 +1005,11 @@ DownloadsDataCtor.prototype = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(lazy, "HistoryDownloadsData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "HistoryDownloadsData", function () {
   return new DownloadsDataCtor({ isHistory: true });
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "LimitedHistoryDownloadsData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "LimitedHistoryDownloadsData", function () {
   return new DownloadsDataCtor({
     isHistory: true,
     maxHistoryResults: kMaxHistoryResultsForLimitedView,
@@ -1019,7 +1019,7 @@ XPCOMUtils.defineLazyGetter(lazy, "LimitedHistoryDownloadsData", function() {
 XPCOMUtils.defineLazyGetter(
   lazy,
   "LimitedPrivateHistoryDownloadData",
-  function() {
+  function () {
     return new DownloadsDataCtor({
       isPrivate: true,
       isHistory: true,
@@ -1028,11 +1028,11 @@ XPCOMUtils.defineLazyGetter(
   }
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "PrivateDownloadsData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "PrivateDownloadsData", function () {
   return new DownloadsDataCtor({ isPrivate: true });
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "DownloadsData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "DownloadsData", function () {
   return new DownloadsDataCtor();
 });
 
@@ -1465,11 +1465,11 @@ Object.setPrototypeOf(
   DownloadsViewPrototype
 );
 
-XPCOMUtils.defineLazyGetter(lazy, "PrivateDownloadsIndicatorData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "PrivateDownloadsIndicatorData", function () {
   return new DownloadsIndicatorDataCtor(true);
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "DownloadsIndicatorData", function() {
+XPCOMUtils.defineLazyGetter(lazy, "DownloadsIndicatorData", function () {
   return new DownloadsIndicatorDataCtor(false);
 });
 

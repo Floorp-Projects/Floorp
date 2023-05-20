@@ -20,7 +20,7 @@ function test() {
 
 var tests = [
   function test_untrusted_host(done) {
-    loadUITourTestPage(function() {
+    loadUITourTestPage(function () {
       CustomizableUI.addWidgetToArea(
         "bookmarks-menu-button",
         CustomizableUI.AREA_NAVBAR,
@@ -57,12 +57,12 @@ var tests = [
       done();
     }
 
-    loadUITourTestPage(function() {
+    loadUITourTestPage(function () {
       gContentAPI.getConfiguration("appinfo", callback);
     }, "https://test2.example.org/");
   },
   function test_unsecure_host(done) {
-    loadUITourTestPage(function() {
+    loadUITourTestPage(function () {
       let bookmarksMenu = document.getElementById("bookmarks-menu-button");
       is(bookmarksMenu.open, false, "Bookmark menu should initially be closed");
 
@@ -78,7 +78,7 @@ var tests = [
   },
   function test_unsecure_host_override(done) {
     Services.prefs.setBoolPref("browser.uitour.requireSecure", false);
-    loadUITourTestPage(function() {
+    loadUITourTestPage(function () {
       let highlight = document.getElementById("UITourHighlight");
       is_element_hidden(highlight, "Highlight should initially be hidden");
 
@@ -258,7 +258,7 @@ var tests = [
             gContentAPI.showHighlight("appMenu");
             waitForElementToBeVisible(
               highlight,
-              function() {
+              function () {
                 isnot(
                   PanelUI.panel.state,
                   "closed",
@@ -323,7 +323,7 @@ var tests = [
         () => {
           highlight.addEventListener(
             "animationstart",
-            function(aEvent) {
+            function (aEvent) {
               ok(
                 true,
                 "Animation occurred again even though the effect was the same"
@@ -415,7 +415,7 @@ var tests = [
 
     popup.addEventListener(
       "popupshown",
-      function() {
+      function () {
         is(
           popup.anchorNode,
           document.getElementById("urlbar"),
@@ -432,10 +432,10 @@ var tests = [
 
         popup.addEventListener(
           "popuphidden",
-          function() {
+          function () {
             popup.addEventListener(
               "popupshown",
-              function() {
+              function () {
                 done();
               },
               { once: true }
@@ -643,7 +643,7 @@ var tests = [
     Services.fog.testResetFOG();
 
     await new Promise(resolve => {
-      let observe = function(subject, topic, verb) {
+      let observe = function (subject, topic, verb) {
         Services.obs.removeObserver(observe, "browser-search-engine-modified");
         info("browser-search-engine-modified: " + verb);
         if (verb == "engine-default") {

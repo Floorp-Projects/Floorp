@@ -20,14 +20,14 @@ const kApzTestNativeEventUtilsUrl =
 
 Services.scriptloader.loadSubScript(kApzTestNativeEventUtilsUrl, this);
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.events.asyncClipboard.readText", true]],
   });
 });
 
 add_task(async function test_paste_button_clickjacking() {
-  await BrowserTestUtils.withNewTab(kContentFileUrl, async function(browser) {
+  await BrowserTestUtils.withNewTab(kContentFileUrl, async function (browser) {
     const pasteButtonIsShown = promisePasteButtonIsShown();
 
     // synthesize key to trigger readText() to bring up paste popup.

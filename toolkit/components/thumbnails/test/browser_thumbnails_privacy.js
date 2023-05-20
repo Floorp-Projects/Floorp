@@ -7,7 +7,7 @@ const URL =
   "test/privacy_cache_control.sjs";
 
 add_task(async function thumbnails_privacy() {
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref(PREF_DISK_CACHE_SSL);
   });
 

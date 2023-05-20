@@ -135,7 +135,7 @@ add_task(async function testCookies() {
     2000
   );
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("privacy.reduceTimerPrecision");
     Services.prefs.clearUserPref(
       "privacy.resistFingerprinting.reduceTimerPrecision.microseconds"

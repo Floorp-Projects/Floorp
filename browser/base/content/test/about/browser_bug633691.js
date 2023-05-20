@@ -4,10 +4,10 @@
 
 add_task(async function test() {
   const URL = "data:text/html,<iframe width='700' height='700'></iframe>";
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     browser
   ) {
-    let context = await SpecialPowers.spawn(browser, [], function() {
+    let context = await SpecialPowers.spawn(browser, [], function () {
       let iframe = content.document.querySelector("iframe");
       iframe.src = "https://expired.example.com/";
       return BrowsingContext.getFromWindow(iframe.contentWindow);
@@ -16,7 +16,7 @@ add_task(async function test() {
       let frame = context.currentWindowGlobal;
       return frame && frame.documentURI.spec.startsWith("about:certerror");
     });
-    await SpecialPowers.spawn(context, [], async function() {
+    await SpecialPowers.spawn(context, [], async function () {
       await ContentTaskUtils.waitForCondition(
         () => content.document.readyState == "interactive"
       );

@@ -6,7 +6,7 @@
 
 requestLongerTimeout(3);
 
-add_task(async function() {
+add_task(async function () {
   const URL1 = URL_ROOT_COM_SSL + "storage-indexeddb-simple.html";
   const URL2 = URL_ROOT_NET_SSL + "storage-indexeddb-simple-alt.html";
 
@@ -33,7 +33,7 @@ add_task(async function() {
   // Check second domain
   await navigateTo(URL2);
   info("Creating database in the second domain…");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     const win = content.wrappedJSObject;
     await win.setup();
   });
@@ -65,7 +65,7 @@ add_task(async function() {
 });
 
 async function clearStorage() {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     const win = content.wrappedJSObject;
     await win.clear();
   });

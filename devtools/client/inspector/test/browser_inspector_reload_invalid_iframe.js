@@ -9,11 +9,11 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,<div id='fake-iframe'>";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URI);
 
   info("Replace fake-iframe div with a real iframe");
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, async function () {
     await new Promise(resolve => {
       // Remove the fake-iframe div
       content.document.querySelector("#fake-iframe").remove();

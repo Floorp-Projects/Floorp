@@ -71,7 +71,7 @@ add_task(async function step_4() {
   );
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let iframe_loaded = ContentTaskUtils.waitForEvent(
       content.document,
       "load",

@@ -19,7 +19,7 @@ const LEARN_MORE_URI =
 pushPref(NET_PREF, true);
 pushPref(XHR_PREF, true);
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
       resolve()
@@ -33,7 +33,7 @@ add_task(async function task() {
   const onNetworkMessageUpdate = hud.ui.once("network-messages-updated");
 
   // Fire an XHR POST request.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.testXhrPost();
   });
 

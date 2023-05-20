@@ -94,19 +94,19 @@ const PAGECONTENT_TRANSLATED =
   "</div></body></html>";
 
 function getInputEvents() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.wrappedJSObject.gInputEvents;
   });
 }
 
 function getChangeEvents() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.wrappedJSObject.gChangeEvents;
   });
 }
 
 function getClickEvents() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.wrappedJSObject.gClickEvents;
   });
 }
@@ -173,18 +173,20 @@ async function doSelectTests(contentType, content) {
   is(await getClickEvents(), 0, "Before closed - number of click events");
 
   EventUtils.synthesizeKey("a", { accelKey: true });
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [{ isWindows }], function(
-    args
-  ) {
-    Assert.equal(
-      String(content.getSelection()),
-      args.isWindows ? "Text" : "",
-      "Select all while popup is open"
-    );
-  });
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [{ isWindows }],
+    function (args) {
+      Assert.equal(
+        String(content.getSelection()),
+        args.isWindows ? "Text" : "",
+        "Select all while popup is open"
+      );
+    }
+  );
 
   // Backspace should not go back
-  let handleKeyPress = function(event) {
+  let handleKeyPress = function (event) {
     ok(false, "Should not get keypress event");
   };
   window.addEventListener("keypress", handleKeyPress);
@@ -284,34 +286,34 @@ async function doSelectTests(contentType, content) {
   BrowserTestUtils.removeTab(tab);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.forms.select.customstyling", true]],
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   await doSelectTests("text/html", PAGECONTENT);
 });
 
-add_task(async function() {
+add_task(async function () {
   await doSelectTests("application/xhtml+xml", XHTML_DTD + "\n" + PAGECONTENT);
 });
 
-add_task(async function() {
+add_task(async function () {
   await doSelectTests("application/xml", XHTML_DTD + "\n" + PAGECONTENT_XSLT);
 });
 
 // This test opens a select popup and removes the content node of a popup while
 // The popup should close if its node is removed.
-add_task(async function() {
+add_task(async function () {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
   // First, try it when a different <select> element than the one that is open is removed
   const selectPopup = await openSelectPopup("click", "#one");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.body.removeChild(content.document.getElementById("two"));
   });
 
@@ -329,7 +331,7 @@ add_task(async function() {
     selectPopup,
     "popuphidden"
   );
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.document.body.removeChild(content.document.getElementById("three"));
   });
   await popupHiddenPromise;
@@ -350,7 +352,7 @@ add_task(async function() {
 });
 
 // This test opens a select popup that is isn't a frame and has some translations applied.
-add_task(async function() {
+add_task(async function () {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_TRANSLATED);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
@@ -398,7 +400,7 @@ add_task(async function() {
   for (let stepIndex = 0; stepIndex < steps.length; stepIndex++) {
     let step = steps[stepIndex];
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [step], async function(
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [step], async function (
       contentStep
     ) {
       return new Promise(resolve => {
@@ -414,7 +416,7 @@ add_task(async function() {
 
         changedWin.addEventListener(
           "MozAfterPaint",
-          function() {
+          function () {
             resolve();
           },
           { once: true }
@@ -448,7 +450,7 @@ add_task(async function test_event_order() {
       gBrowser,
       url: URL,
     },
-    async function(browser) {
+    async function (browser) {
       // According to https://html.spec.whatwg.org/#the-select-element,
       // we want to fire input, change, and then click events on the
       // <select> (in that order) when it has changed.
@@ -507,7 +509,7 @@ add_task(async function test_event_order() {
         let eventsPromise = SpecialPowers.spawn(
           browser,
           [[mode, expected]],
-          async function([contentMode, contentExpected]) {
+          async function ([contentMode, contentExpected]) {
             return new Promise(resolve => {
               function onEvent(event) {
                 select.removeEventListener(event.type, onEvent);
@@ -568,7 +570,7 @@ add_task(async function test_event_order() {
 
 async function performSelectSearchTests(win) {
   let browser = win.gBrowser.selectedBrowser;
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let doc = content.document;
     let select = doc.getElementById("one");
 
@@ -672,7 +674,7 @@ add_task(async function test_mousemove_correcttarget() {
   await new Promise(resolve => {
     window.addEventListener(
       "mousemove",
-      function(event) {
+      function (event) {
         is(event.target.localName.indexOf("menu"), 0, "mouse over menu");
         resolve();
       },
@@ -754,10 +756,10 @@ add_task(async function test_blur_hides_popup() {
   const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.addEventListener(
       "blur",
-      function(event) {
+      function (event) {
         event.preventDefault();
         event.stopPropagation();
       },
@@ -774,7 +776,7 @@ add_task(async function test_blur_hides_popup() {
     "popuphidden"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.document.getElementById("one").blur();
   });
 

@@ -20,7 +20,7 @@ const NEW_HTML = '<div id="keyboard">Edited</div>';
 
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   inspector.markup._frame.focus();

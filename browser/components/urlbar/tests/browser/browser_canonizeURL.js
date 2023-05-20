@@ -8,7 +8,7 @@
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 add_task(async function checkCtrlWorks() {
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
   });
@@ -196,7 +196,7 @@ add_task(async function autofill() {
   await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test whether canonization is disabled until the ctrl key is releasing if the key was used to paste text into urlbar"
   );
@@ -225,7 +225,7 @@ add_task(async function() {
   await BrowserTestUtils.closeWindow(win);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test whether canonization is enabled again after releasing the ctrl");
 
   await SpecialPowers.pushPrefEnv({

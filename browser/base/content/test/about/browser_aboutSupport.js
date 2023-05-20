@@ -10,14 +10,14 @@ const { ExperimentFakes } = ChromeUtils.importESModule(
   "resource://testing-common/NimbusTestUtils.sys.mjs"
 );
 
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:support" },
-    async function(browser) {
+    async function (browser) {
       let keyLocationServiceGoogleStatus = await SpecialPowers.spawn(
         browser,
         [],
-        async function() {
+        async function () {
           let textBox = content.document.getElementById(
             "key-location-service-google-box"
           );
@@ -36,7 +36,7 @@ add_task(async function() {
       let keySafebrowsingGoogleStatus = await SpecialPowers.spawn(
         browser,
         [],
-        async function() {
+        async function () {
           let textBox = content.document.getElementById(
             "key-safebrowsing-google-box"
           );
@@ -55,7 +55,7 @@ add_task(async function() {
       let keyMozillaStatus = await SpecialPowers.spawn(
         browser,
         [],
-        async function() {
+        async function () {
           let textBox = content.document.getElementById("key-mozilla-box");
           await ContentTaskUtils.waitForCondition(
             () => content.document.l10n.getAttributes(textBox).id,
@@ -78,11 +78,11 @@ add_task(async function test_nimbus_experiments() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:support" },
-    async function(browser) {
+    async function (browser) {
       let experimentName = await SpecialPowers.spawn(
         browser,
         [],
-        async function() {
+        async function () {
           await ContentTaskUtils.waitForCondition(
             () =>
               content.document.querySelector(
@@ -113,11 +113,11 @@ add_task(async function test_remote_configuration() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:support" },
-    async function(browser) {
+    async function (browser) {
       let [userFacingName, branch] = await SpecialPowers.spawn(
         browser,
         [],
-        async function() {
+        async function () {
           await ContentTaskUtils.waitForCondition(
             () =>
               content.document.querySelector(

@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let tests = [
     {
       uri: "data:text/html,Test",

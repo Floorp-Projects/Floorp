@@ -7,7 +7,7 @@
 const PARENT_PROCESS_URI = "about:robots";
 const CONTENT_PROCESS_URI = URL_ROOT_SSL + "page_basic.html";
 
-add_task(async function() {
+add_task(async function () {
   // We use about:robots as the starting page because it will run in the parent process.
   // Navigating from that page to a regular content page will always trigger a target
   // switch, with or without fission.

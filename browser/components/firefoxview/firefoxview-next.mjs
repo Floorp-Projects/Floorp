@@ -7,7 +7,7 @@ let pageList = [];
 
 for (const item of navigation.children) {
   pageList.push(item.getAttribute("page"));
-  item.addEventListener("click", function(event) {
+  item.addEventListener("click", function (event) {
     location.hash = event.target.getAttribute("page");
   });
 }

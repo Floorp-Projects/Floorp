@@ -69,7 +69,7 @@ add_test(function test_intl_accept_language() {
   setLanguagePref(languages[testCount]);
 
   function checkLanguagePref() {
-    CommonUtils.nextTick(function() {
+    CommonUtils.nextTick(function () {
       // Ensure we're only called for the number of entries in languages[].
       Assert.ok(testCount < languages.length);
 
@@ -117,7 +117,7 @@ add_task(async function test_hawk_authenticated_request() {
   };
 
   let server = httpd_setup({
-    "/elysium": function(request, response) {
+    "/elysium": function (request, response) {
       Assert.ok(request.hasHeader("Authorization"));
 
       // check that the header timestamp is our arbitrary system date, not
@@ -183,7 +183,7 @@ add_task(async function test_hawk_language_pref_changed() {
   }
 
   let server = httpd_setup({
-    "/foo": function(request, response) {
+    "/foo": function (request, response) {
       Assert.equal(languages[1], request.getHeader("Accept-Language"));
 
       response.setStatusLine(request.httpVersion, 200, "OK");

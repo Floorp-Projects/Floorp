@@ -108,13 +108,13 @@ paymentSrv.setTestingUIService(
   TestingUIService.QueryInterface(Ci.nsIPaymentUIService)
 );
 
-addMessageListener("set-expected-results", function(results) {
+addMessageListener("set-expected-results", function (results) {
   expectedRequestOption = results.requestResult;
   expectedUpdatedOption = results.responseResult;
   changeShippingOption = results.changeOptionResult;
 });
 
-addMessageListener("teardown", function() {
+addMessageListener("teardown", function () {
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage("teardown-complete");
 });

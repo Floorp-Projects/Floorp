@@ -10,7 +10,7 @@ registerCleanupFunction(cleanup);
 
 // Registering a toolbar without a defaultset attribute should
 // wait for the registerArea call
-add_task(async function() {
+add_task(async function () {
   ok(
     CustomizableUI.inDefaultState,
     "Everything should be in its default state."

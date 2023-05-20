@@ -39,7 +39,7 @@ const TESTS = [
 ];
 
 for (const { key, options, focusToolbox } of TESTS) {
-  add_task(async function() {
+  add_task(async function () {
     info(`Testing cancel shortcut: ${key} with toolbox focus: ${focusToolbox}`);
 
     const {

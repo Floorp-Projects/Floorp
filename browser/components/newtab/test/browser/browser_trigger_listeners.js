@@ -23,7 +23,7 @@ const sleepMs = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms)); // 
 
 const inChaosMode = !!parseInt(Services.env.get("MOZ_CHAOSMODE"), 16);
 
-add_setup(async function() {
+add_setup(async function () {
   // Runtime increases in chaos mode on Mac.
   if (inChaosMode && AppConstants.platform === "macosx") {
     requestLongerTimeout(2);

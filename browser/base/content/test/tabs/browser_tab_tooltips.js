@@ -33,7 +33,7 @@ function closeTooltip(node, tooltip) {
 
 // This test verifies that the tab tooltip appears at the correct location, aligned
 // with the bottom of the tab, and that the tooltip appears near the close button.
-add_task(async function() {
+add_task(async function () {
   const tabUrl =
     "data:text/html,<html><head><title>A Tab</title></head><body>Hello</body></html>";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
@@ -89,7 +89,7 @@ add_task(async function() {
 });
 
 // This test verifies that a mouse wheel closes the tooltip.
-add_task(async function() {
+add_task(async function () {
   const tabUrl =
     "data:text/html,<html><head><title>A Tab</title></head><body>Hello</body></html>";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);

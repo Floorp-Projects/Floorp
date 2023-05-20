@@ -2,7 +2,7 @@
 
 requestLongerTimeout(2);
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.ipc.processCount", 1]],
   });
@@ -25,7 +25,7 @@ function promiseTabsRestored(win, nExpected) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
   // Create 4 tabs with different userContextId.
@@ -71,7 +71,7 @@ add_task(async function() {
 
   for (let i = 0; i < 4; i++) {
     let browser = win2.gBrowser.tabs[i].linkedBrowser;
-    await ContentTask.spawn(browser, { expectedId: i + 1 }, async function(
+    await ContentTask.spawn(browser, { expectedId: i + 1 }, async function (
       args
     ) {
       Assert.equal(
@@ -90,7 +90,9 @@ add_task(async function() {
 
   // Test the last tab, which doesn't have userContextId.
   let browser = win2.gBrowser.tabs[4].linkedBrowser;
-  await SpecialPowers.spawn(browser, [{ expectedId: 0 }], async function(args) {
+  await SpecialPowers.spawn(browser, [{ expectedId: 0 }], async function (
+    args
+  ) {
     Assert.equal(
       docShell.getOriginAttributes().userContextId,
       args.expectedId,
@@ -108,7 +110,7 @@ add_task(async function() {
   await BrowserTestUtils.closeWindow(win2);
 });
 
-add_task(async function() {
+add_task(async function () {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await TabStateFlusher.flush(win.gBrowser.selectedBrowser);
 
@@ -150,7 +152,7 @@ add_task(async function() {
 
   for (let i = 0; i < 2; i++) {
     let browser = win2.gBrowser.tabs[i].linkedBrowser;
-    await ContentTask.spawn(browser, { expectedId: i }, async function(args) {
+    await ContentTask.spawn(browser, { expectedId: i }, async function (args) {
       Assert.equal(
         docShell.getOriginAttributes().userContextId,
         args.expectedId,

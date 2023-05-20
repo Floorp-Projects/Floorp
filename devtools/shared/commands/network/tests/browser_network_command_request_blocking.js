@@ -5,7 +5,7 @@
 
 // Test the NetworkCommand API around request blocking
 
-add_task(async function() {
+add_task(async function () {
   info("Test NetworkCommand request blocking");
   const tab = await addTab("data:text/html,foo");
   const commands = await CommandsFactory.forTab(tab);

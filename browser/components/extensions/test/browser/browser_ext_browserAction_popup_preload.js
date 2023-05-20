@@ -164,7 +164,7 @@ add_task(async function testBrowserActionDisabled() {
       },
     },
 
-    background: async function() {
+    background: async function () {
       await browser.browserAction.disable();
       browser.test.sendMessage("browserAction-disabled");
     },
@@ -276,7 +276,7 @@ add_task(async function testBrowserActionTabPopulation() {
 
     files: {
       "popup.html": scriptPage("popup.js"),
-      "popup.js": function() {
+      "popup.js": function () {
         browser.tabs.query({ active: true, currentWindow: true }).then(tabs => {
           browser.test.assertEq(
             "mochitest index /",
@@ -338,7 +338,7 @@ add_task(async function testClosePopupDuringPreload() {
 
     files: {
       "popup.html": scriptPage("popup.js"),
-      "popup.js": function() {
+      "popup.js": function () {
         browser.test.sendMessage("popup_loaded");
         window.close();
       },

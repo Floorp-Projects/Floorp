@@ -18,16 +18,16 @@ function isnot(a, b, msg) {
 }
 
 var tests = [
-  function() {
+  function () {
     test_basic(directory, next);
   },
-  function() {
+  function () {
     test_getFilesAndDirectories(directory, true, next);
   },
-  function() {
+  function () {
     test_getFiles(directory, false, next);
   },
-  function() {
+  function () {
     test_getFiles(directory, true, next);
   },
 ];
@@ -44,7 +44,7 @@ function next() {
 
 var directory;
 
-onmessage = function(e) {
+onmessage = function (e) {
   directory = e.data;
   next();
 };

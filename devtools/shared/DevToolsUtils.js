@@ -45,7 +45,7 @@ for (const key of Object.keys(ThreadSafeDevToolsUtils)) {
 /**
  * Waits for the next tick in the event loop to execute a callback.
  */
-exports.executeSoon = function(fn) {
+exports.executeSoon = function (fn) {
   if (isWorker) {
     setImmediate(fn);
   } else {
@@ -70,7 +70,7 @@ exports.executeSoon = function(fn) {
  * Similar to executeSoon, but enters microtask before executing the callback
  * if this is called on the main thread.
  */
-exports.executeSoonWithMicroTask = function(fn) {
+exports.executeSoonWithMicroTask = function (fn) {
   if (isWorker) {
     setImmediate(fn);
   } else {
@@ -101,7 +101,7 @@ exports.executeSoonWithMicroTask = function(fn) {
  * @return Promise
  *         A promise that is resolved after the next tick in the event loop.
  */
-exports.waitForTick = function() {
+exports.waitForTick = function () {
   return new Promise(resolve => {
     exports.executeSoon(resolve);
   });
@@ -115,7 +115,7 @@ exports.waitForTick = function() {
  * @return Promise
  *         A promise that is resolved after the specified amount of time passes.
  */
-exports.waitForTime = function(delay) {
+exports.waitForTime = function (delay) {
   return new Promise(resolve => setTimeout(resolve, delay));
 };
 
@@ -132,7 +132,7 @@ exports.waitForTime = function(delay) {
  *        The callback that will be called to determine the value. Will be
  *        called with the |this| value of the current instance.
  */
-exports.defineLazyPrototypeGetter = function(object, key, callback) {
+exports.defineLazyPrototypeGetter = function (object, key, callback) {
   Object.defineProperty(object, key, {
     configurable: true,
     get() {
@@ -164,7 +164,7 @@ exports.defineLazyPrototypeGetter = function(object, key, callback) {
  *        in the content page ⚠️
  * @return Any
  */
-exports.getProperty = function(object, key, invokeUnsafeGetters = false) {
+exports.getProperty = function (object, key, invokeUnsafeGetters = false) {
   const root = object;
   while (object && exports.isSafeDebuggerObject(object)) {
     let desc;
@@ -244,7 +244,7 @@ exports.unwrap = function unwrap(obj) {
  *        The debuggee object to be checked.
  * @return boolean
  */
-exports.isSafeDebuggerObject = function(obj) {
+exports.isSafeDebuggerObject = function (obj) {
   const unwrapped = exports.unwrap(obj);
 
   // Objects belonging to an invisible-to-debugger compartment might be proxies,
@@ -300,7 +300,7 @@ function ensureSideEffectFreeGetters() {
  * @return Boolean
  *         Whether a safe getter was found.
  */
-exports.hasSafeGetter = function(desc) {
+exports.hasSafeGetter = function (desc) {
   // Scripted functions that are CCWs will not appear scripted until after
   // unwrapping.
   let fn = desc.get;
@@ -349,7 +349,7 @@ exports.hasSafeGetter = function(desc) {
  *        in order to retrieve its result's properties.
  * @return Boolean
  */
-exports.isUnsafeGetter = function(object, key) {
+exports.isUnsafeGetter = function (object, key) {
   while (object && exports.isSafeDebuggerObject(object)) {
     let desc;
     try {
@@ -382,7 +382,7 @@ exports.isUnsafeGetter = function(object, key) {
  * @return Boolean
  *         True if it is safe to read properties from obj, or false otherwise.
  */
-exports.isSafeJSObject = function(obj) {
+exports.isSafeJSObject = function (obj) {
   // If we are running on a worker thread, Cu is not available. In this case,
   // we always return false, just to be on the safe side.
   if (isWorker) {
@@ -428,7 +428,7 @@ exports.isSafeJSObject = function(obj) {
  * the preference "devtools.debugger.log" is set to true. Typically it is used
  * for logging the remote debugging protocol calls.
  */
-exports.dumpn = function(str) {
+exports.dumpn = function (str) {
   if (flags.wantLogging) {
     dump("DBG-SERVER: " + str + "\n");
   }
@@ -440,7 +440,7 @@ exports.dumpn = function(str) {
  * mechanisms. The logging can be enabled by changing the preferences
  * "devtools.debugger.log" and "devtools.debugger.log.verbose" to true.
  */
-exports.dumpv = function(msg) {
+exports.dumpv = function (msg) {
   if (flags.wantVerbose) {
     exports.dumpn(msg);
   }
@@ -457,7 +457,7 @@ exports.dumpv = function(msg) {
  *        A function that returns what the getter should return.  This will
  *        only ever be called once.
  */
-exports.defineLazyGetter = function(object, name, lambda) {
+exports.defineLazyGetter = function (object, name, lambda) {
   Object.defineProperty(object, name, {
     get() {
       delete object[name];
@@ -481,7 +481,7 @@ DevToolsUtils.defineLazyGetter(this, "AppConstants", () => {
 /**
  * No operation. The empty function.
  */
-exports.noop = function() {};
+exports.noop = function () {};
 
 let assertionFailureCount = 0;
 
@@ -802,7 +802,7 @@ if (this.isWorker) {
   // Services is not available in worker threads, nor is there any other way
   // to fetch a URL. We need to enlist the help from the main thread here, by
   // issuing an rpc request, to fetch the URL on our behalf.
-  exports.fetch = function(url, options) {
+  exports.fetch = function (url, options) {
     return rpc("fetch", url, options);
   };
 } else {
@@ -816,7 +816,7 @@ if (this.isWorker) {
  *
  * @returns Promise<nsIInputStream>
  */
-exports.openFileStream = function(filePath) {
+exports.openFileStream = function (filePath) {
   return new Promise((resolve, reject) => {
     const uri = NetUtil.newURI(new lazy.FileUtils.File(filePath));
     NetUtil.asyncFetch(
@@ -849,7 +849,7 @@ exports.openFileStream = function(filePath) {
  * @return {String|null}
  *        The path to the local saved file, if saved.
  */
-exports.saveAs = async function(
+exports.saveAs = async function (
   parentWindow,
   dataArray,
   fileName = "",
@@ -888,7 +888,7 @@ exports.saveAs = async function(
  * @return {Promise}
  *         A promise that is resolved after the file is selected by the file picker
  */
-exports.showSaveFileDialog = function(
+exports.showSaveFileDialog = function (
   parentWindow,
   suggestedFilename,
   filters = []

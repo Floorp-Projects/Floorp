@@ -8,7 +8,7 @@
 
 "use strict";
 
-add_setup(async function() {
+add_setup(async function () {
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
   });

@@ -8,7 +8,7 @@
 // All instances of addPermission and removePermission set up 3rd-party storage
 // access in a way that allows the test to proceed with TCP enabled.
 
-add_task(async function() {
+add_task(async function () {
   // open tab
   const URL = URL_ROOT_COM_SSL + "storage-cache-basic.html";
   await SpecialPowers.addPermission(

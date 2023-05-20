@@ -6,7 +6,7 @@
 // Test that the server ResourceCommand are destroyed when the associated target actors
 // are destroyed.
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab("data:text/html,Test");
   const { client, resourceCommand, targetCommand } = await initResourceCommand(
     tab
@@ -28,7 +28,7 @@ add_task(async function() {
     /watcher\d+$/,
     ""
   );
-  await ContentTask.spawn(tab.linkedBrowser, [connectionPrefix], function(
+  await ContentTask.spawn(tab.linkedBrowser, [connectionPrefix], function (
     _connectionPrefix
   ) {
     const { require } = ChromeUtils.importESModule(
@@ -67,7 +67,7 @@ add_task(async function() {
   info(
     "Spawn a content task in order to run some assertions on actors and resource watchers directly"
   );
-  await ContentTask.spawn(tab.linkedBrowser, [], function() {
+  await ContentTask.spawn(tab.linkedBrowser, [], function () {
     const { require } = ChromeUtils.importESModule(
       "resource://devtools/shared/loader/Loader.sys.mjs"
     );

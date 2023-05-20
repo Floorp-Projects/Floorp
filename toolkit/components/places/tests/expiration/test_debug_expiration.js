@@ -461,7 +461,7 @@ add_task(async function test_expire_icons() {
   await PlacesUtils.history.clear();
 });
 
-add_setup(async function() {
+add_setup(async function () {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
   // Set maxPages to a low value, so it's easy to go over it.

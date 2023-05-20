@@ -1,13 +1,13 @@
 const TESTPAGE = `${SECURE_TESTROOT}webapi_addon_listener.html`;
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.webapi.testing", true]],
   });
 });
 
 async function getListenerEvents(browser) {
-  let result = await SpecialPowers.spawn(browser, [], async function() {
+  let result = await SpecialPowers.spawn(browser, [], async function () {
     return content.document.getElementById("result").textContent;
   });
 
@@ -33,7 +33,7 @@ provider.createAddons([
 
 // Test enable/disable events for restartless
 add_task(async function test_restartless() {
-  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function (browser) {
     let addon = await promiseAddonByID(RESTARTLESS_ID);
     is(addon.userDisabled, false, "addon is enabled");
 
@@ -58,7 +58,7 @@ add_task(async function test_restartless() {
 
 // Test install events
 add_task(async function test_restartless() {
-  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function (browser) {
     let addon = new MockAddon(
       INSTALL_ID,
       "installme",
@@ -89,7 +89,7 @@ add_task(async function test_restartless() {
 
 // Test uninstall
 add_task(async function test_uninstall() {
-  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function (browser) {
     let addon = await promiseAddonByID(RESTARTLESS_ID);
     isnot(addon, null, "Found add-on for uninstall");
 
@@ -106,7 +106,7 @@ add_task(async function test_uninstall() {
 
 // Test cancel of uninstall.
 add_task(async function test_cancel() {
-  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
+  await BrowserTestUtils.withNewTab(TESTPAGE, async function (browser) {
     let addon = await promiseAddonByID(CANCEL_ID);
     isnot(addon, null, "Found add-on for cancelling uninstall");
 

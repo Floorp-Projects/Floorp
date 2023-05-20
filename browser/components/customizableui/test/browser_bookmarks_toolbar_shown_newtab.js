@@ -5,7 +5,7 @@
 "use strict";
 
 // Entering customize mode should show the toolbar as long as it's not set to "never"
-add_task(async function() {
+add_task(async function () {
   await resetCustomization();
   ok(CustomizableUI.inDefaultState, "Default state to begin");
 

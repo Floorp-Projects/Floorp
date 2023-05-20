@@ -563,7 +563,7 @@ DownloadSlot.prototype = {
  * @param place
  *        Places query used to retrieve history downloads.
  */
-var DownloadHistoryList = function(publicList, place) {
+var DownloadHistoryList = function (publicList, place) {
   DownloadList.call(this);
 
   // While "this._slots" contains all the data in order, the other properties

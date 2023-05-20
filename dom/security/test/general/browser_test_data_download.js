@@ -13,7 +13,7 @@ function addWindowListener(aURL) {
         info("window opened, waiting for focus");
         Services.wm.removeListener(this);
         var domwindow = aXULWindow.docShell.domWindow;
-        waitForFocus(function() {
+        waitForFocus(function () {
           is(
             domwindow.document.location.href,
             aURL,

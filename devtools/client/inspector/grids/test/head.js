@@ -13,7 +13,7 @@ Services.scriptloader.loadSubScript(
 const asyncStorage = require("resource://devtools/shared/async-storage.js");
 
 Services.prefs.setIntPref("devtools.toolbox.footer.height", 350);
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   Services.prefs.clearUserPref("devtools.toolbox.footer.height");
   await asyncStorage.removeItem("gridInspectorHostColors");
 });

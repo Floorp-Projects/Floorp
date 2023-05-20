@@ -72,7 +72,7 @@ function serializeAction(action) {
       action = formatPause(action);
     }
 
-    const serializer = function(key, value) {
+    const serializer = function (key, value) {
       // Serialize Object/LongString fronts
       if (value?.getGrip) {
         return value.getGrip();

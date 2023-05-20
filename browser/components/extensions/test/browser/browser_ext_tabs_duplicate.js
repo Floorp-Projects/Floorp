@@ -10,7 +10,7 @@ add_task(async function testDuplicateTab() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       let [source] = await browser.tabs.query({
         lastFocusedWindow: true,
         active: true,
@@ -148,7 +148,7 @@ add_task(async function testDuplicatePinnedTab() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       let [source] = await browser.tabs.query({
         lastFocusedWindow: true,
         active: true,
@@ -183,7 +183,7 @@ add_task(async function testDuplicateTabInBackground() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       let tabs = await browser.tabs.query({
         lastFocusedWindow: true,
         active: true,
@@ -210,7 +210,7 @@ add_task(async function testDuplicateTabAtIndex() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       let tabs = await browser.tabs.query({
         lastFocusedWindow: true,
         active: true,
@@ -240,7 +240,7 @@ add_task(async function testDuplicatePinnedTabAtIncorrectIndex() {
       permissions: ["tabs"],
     },
 
-    background: async function() {
+    background: async function () {
       let tabs = await browser.tabs.query({
         lastFocusedWindow: true,
         active: true,
@@ -274,7 +274,7 @@ add_task(async function testDuplicateResolvePromiseRightAway() {
       permissions: ["tabs", "http://mochi.test/"],
     },
 
-    background: async function() {
+    background: async function () {
       let [source] = await browser.tabs.query({
         lastFocusedWindow: true,
         active: true,

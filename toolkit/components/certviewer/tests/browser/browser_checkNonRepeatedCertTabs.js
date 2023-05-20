@@ -22,7 +22,7 @@ add_task(async function testBadCert() {
   let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
   for (let i = 0; i < 2; i++) {
     // try opening two certificates that are the same
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
       let advancedButton = content.document.getElementById("advancedButton");
       Assert.ok(advancedButton, "advancedButton found");
       Assert.equal(
@@ -54,7 +54,7 @@ add_task(async function testGoodCert() {
   let url = "https://example.com/";
 
   info(`Loading ${url}`);
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function() {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function () {
     info("Opening pageinfo");
     let pageInfo = BrowserPageInfo(url, "securityTab", {});
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
@@ -89,7 +89,9 @@ add_task(async function testPreferencesCert() {
   let url = "about:preferences#privacy";
 
   info(`Loading ${url}`);
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function (
+    browser
+  ) {
     checkAndClickButton(browser.contentDocument, "viewCertificatesButton");
 
     let certDialogLoaded = promiseLoadSubDialog(

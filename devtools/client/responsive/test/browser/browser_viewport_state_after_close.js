@@ -8,7 +8,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL =
   "data:text/html;charset=utf-8,<style>h1 {width: 200px;} @media (hover:none) { h1 {width: 400px;background: tomato;}</style><h1>Hello</h1>";
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(TEST_URL);
 
   reloadOnTouchChange(false);
@@ -21,7 +21,7 @@ add_task(async function() {
     info("Open responsive design mode");
     await openRDM(tab);
 
-    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
       const mql = content.matchMedia("(hover:none)");
       if (mql.matches) {
         return;
@@ -45,7 +45,7 @@ add_task(async function() {
 });
 
 function getH1Width() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.document.querySelector("h1").getBoundingClientRect().width;
   });
 }

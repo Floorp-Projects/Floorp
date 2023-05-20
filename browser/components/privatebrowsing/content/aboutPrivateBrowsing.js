@@ -269,7 +269,7 @@ function showDevToolsMessage(msg) {
   RPMRemoveMessageListener(SHOW_DEVTOOLS_MESSAGE, showDevToolsMessage);
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   // check the url to see if we're rendering a devtools message
   if (document.location.toString().includes("debug")) {
     RPMAddMessageListener(SHOW_DEVTOOLS_MESSAGE, showDevToolsMessage);
@@ -280,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.documentElement.classList.add("normal");
     document
       .getElementById("startPrivateBrowsing")
-      .addEventListener("click", function() {
+      .addEventListener("click", function () {
         RPMSendAsyncMessage("OpenPrivateWindow");
       });
     return;
@@ -400,22 +400,22 @@ document.addEventListener("DOMContentLoaded", function() {
       RPMAddMessageListener(DISABLE_SEARCH_TOPIC, disableSearch);
     }
   }
-  btn.addEventListener("focus", function() {
+  btn.addEventListener("focus", function () {
     handoffSearch();
   });
-  btn.addEventListener("click", function() {
+  btn.addEventListener("click", function () {
     handoffSearch();
   });
 
   // Hand-off any text that gets dropped or pasted
-  editable.addEventListener("drop", function(ev) {
+  editable.addEventListener("drop", function (ev) {
     ev.preventDefault();
     let text = ev.dataTransfer.getData("text");
     if (text) {
       handoffSearch(text);
     }
   });
-  editable.addEventListener("paste", function(ev) {
+  editable.addEventListener("paste", function (ev) {
     ev.preventDefault();
     handoffSearch(ev.clipboardData.getData("Text"));
   });

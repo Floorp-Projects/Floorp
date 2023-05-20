@@ -26,7 +26,7 @@ add_task(async function test() {
     .callsFake(observerSpy);
   let notifierStub = sinon
     .stub(ScreenshotsUtils, "notify")
-    .callsFake(function(window, type) {
+    .callsFake(function (window, type) {
       notifierSpy();
       ScreenshotsUtils.notify.wrappedMethod.apply(this, arguments);
     });
@@ -97,7 +97,7 @@ add_task(async function test() {
       await SpecialPowers.spawn(
         browser,
         ["#firefox-screenshots-preselection-iframe"],
-        async function(iframeSelector) {
+        async function (iframeSelector) {
           info(
             `in waitForUIContent content function, iframeSelector: ${iframeSelector}`
           );
@@ -119,7 +119,7 @@ add_task(async function test() {
       await SpecialPowers.spawn(
         browser,
         ["#firefox-screenshots-preselection-iframe"],
-        async function(iframeSelector) {
+        async function (iframeSelector) {
           info(
             `in waitForUIContent content function, iframeSelector: ${iframeSelector}`
           );
@@ -157,7 +157,7 @@ add_task(async function test() {
       await SpecialPowers.spawn(
         browser,
         ["#firefox-screenshots-preselection-iframe"],
-        async function(iframeSelector) {
+        async function (iframeSelector) {
           info(
             `in waitForUIContent content function, iframeSelector: ${iframeSelector}`
           );
@@ -179,7 +179,7 @@ add_task(async function test() {
       await SpecialPowers.spawn(
         browser,
         ["#firefox-screenshots-preselection-iframe"],
-        async function(iframeSelector) {
+        async function (iframeSelector) {
           info(
             `in waitForUIContent content function, iframeSelector: ${iframeSelector}`
           );

@@ -76,7 +76,7 @@ function openSetP12PasswordDialog() {
   return new Promise((resolve, reject) => {
     win.addEventListener(
       "load",
-      function() {
+      function () {
         executeSoon(() => resolve([win, returnVals]));
       },
       { once: true }

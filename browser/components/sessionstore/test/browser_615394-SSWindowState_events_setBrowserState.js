@@ -91,7 +91,7 @@ function test() {
       newWindow = aSubject;
       newWindow.addEventListener(
         "load",
-        function() {
+        function () {
           windowEvents[getOuterWindowID(newWindow)] = {
             busyEventCount: 0,
             readyEventCount: 0,
@@ -120,7 +120,7 @@ function test() {
   window.addEventListener("SSWindowStateReady", onSSWindowStateReady);
   Services.ww.registerNotification(windowObserver);
 
-  waitForBrowserState(lameMultiWindowState, function() {
+  waitForBrowserState(lameMultiWindowState, function () {
     let checkedWindows = 0;
     for (let id of Object.keys(windowEvents)) {
       let winEvents = windowEvents[id];

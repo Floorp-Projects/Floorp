@@ -15,11 +15,11 @@ add_task(async function test_nav_data_uri() {
   await SpecialPowers.pushPrefEnv({
     set: [["security.data_uri.block_toplevel_data_uri_navigations", true]],
   });
-  await BrowserTestUtils.withNewTab(kDataURI, async function(browser) {
+  await BrowserTestUtils.withNewTab(kDataURI, async function (browser) {
     await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
       [{ kDataBody }],
-      async function({ kDataBody }) {
+      async function ({ kDataBody }) {
         // eslint-disable-line
         is(
           content.document.body.innerHTML,
@@ -36,12 +36,12 @@ add_task(async function test_nav_data_uri_redirect() {
     set: [["security.data_uri.block_toplevel_data_uri_navigations", true]],
   });
   let tab = BrowserTestUtils.addTab(gBrowser, kRedirectURI);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(tab);
   });
   // wait to make sure data: URI did not load before checking that it got blocked
   await new Promise(resolve => setTimeout(resolve, 500));
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     is(
       content.document.body.innerHTML,
       "",
@@ -55,12 +55,12 @@ add_task(async function test_nav_data_uri_meta_redirect() {
     set: [["security.data_uri.block_toplevel_data_uri_navigations", true]],
   });
   let tab = BrowserTestUtils.addTab(gBrowser, kMetaRedirectURI);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(tab);
   });
   // wait to make sure data: URI did not load before checking that it got blocked
   await new Promise(resolve => setTimeout(resolve, 500));
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     is(
       content.document.body.innerHTML,
       "",

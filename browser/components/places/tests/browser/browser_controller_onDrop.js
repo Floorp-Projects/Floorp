@@ -8,8 +8,8 @@ var bookmarks;
 var bookmarkIds;
 var library;
 
-add_setup(async function() {
-  registerCleanupFunction(async function() {
+add_setup(async function () {
+  registerCleanupFunction(async function () {
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesUtils.history.clear();
     await promiseLibraryClosed(library);

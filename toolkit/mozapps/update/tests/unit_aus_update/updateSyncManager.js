@@ -16,7 +16,7 @@ const { Subprocess } = ChromeUtils.importESModule(
 const thisBinary = Services.dirsvc.get("XREExeF", Ci.nsIFile);
 const greDir = Services.dirsvc.get("GreD", Ci.nsIFile);
 
-add_task(async function() {
+add_task(async function () {
   setupTestCommon();
 
   // First check that we believe we exclusively hold the lock.

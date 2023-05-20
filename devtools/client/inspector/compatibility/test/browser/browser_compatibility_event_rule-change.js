@@ -97,7 +97,7 @@ const {
   COMPATIBILITY_UPDATE_NODES_COMPLETE,
 } = require("resource://devtools/client/inspector/compatibility/actions/index.js");
 
-add_task(async function() {
+add_task(async function () {
   info("Enable 3 pane mode");
   await pushPref("devtools.inspector.three-pane-enabled", true);
 

@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   const PAGE = `
 <!doctype html>
 <select>
@@ -14,7 +14,7 @@ add_task(async function() {
       gBrowser,
       url,
     },
-    async function(browser) {
+    async function (browser) {
       let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(window);
       await BrowserTestUtils.synthesizeMouseAtCenter("select", {}, browser);
       let popup = await popupShownPromise;

@@ -10,7 +10,7 @@ function testOnWindow(options, callback) {
   var win = OpenBrowserWindow(options);
   win.addEventListener(
     "load",
-    function() {
+    function () {
       windowsToClose.push(win);
       executeSoon(() => callback(win));
     },
@@ -18,8 +18,8 @@ function testOnWindow(options, callback) {
   );
 }
 
-registerCleanupFunction(function() {
-  windowsToClose.forEach(function(win) {
+registerCleanupFunction(function () {
+  windowsToClose.forEach(function (win) {
     win.close();
   });
 });
@@ -34,7 +34,7 @@ function test() {
   );
 
   // open a private window
-  testOnWindow({ private: true }, function(win) {
+  testOnWindow({ private: true }, function (win) {
     is(
       win.document.documentElement.getAttribute("privatebrowsingmode"),
       "temporary",

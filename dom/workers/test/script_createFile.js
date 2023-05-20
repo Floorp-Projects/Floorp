@@ -2,7 +2,7 @@
 
 Cu.importGlobalProperties(["File"]);
 
-addMessageListener("file.open", function(e) {
+addMessageListener("file.open", function (e) {
   var tmpFile = Cc["@mozilla.org/file/directory_service;1"]
     .getService(Ci.nsIDirectoryService)
     .QueryInterface(Ci.nsIProperties)
@@ -10,12 +10,12 @@ addMessageListener("file.open", function(e) {
   tmpFile.append("file.txt");
   tmpFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
-  File.createFromNsIFile(tmpFile).then(function(file) {
+  File.createFromNsIFile(tmpFile).then(function (file) {
     sendAsyncMessage("file.opened", { data: file });
   });
 });
 
-addMessageListener("nonEmptyFile.open", function(e) {
+addMessageListener("nonEmptyFile.open", function (e) {
   var tmpFile = Cc["@mozilla.org/file/directory_service;1"]
     .getService(Ci.nsIDirectoryService)
     .QueryInterface(Ci.nsIProperties)
@@ -36,7 +36,7 @@ addMessageListener("nonEmptyFile.open", function(e) {
   outStream.write(fileData, fileData.length);
   outStream.close();
 
-  File.createFromNsIFile(tmpFile).then(function(file) {
+  File.createFromNsIFile(tmpFile).then(function (file) {
     sendAsyncMessage("nonEmptyFile.opened", { data: file });
   });
 });

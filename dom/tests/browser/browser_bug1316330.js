@@ -14,13 +14,13 @@ const URL =
   "};" +
   "</script>";
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
   let browser = tab.linkedBrowser;
 
   await EventUtils.synthesizeAndWaitKey("d", { repeat: 3 });
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     is(
       content.document.body.getAttribute("data-down"),
       "2",
@@ -35,7 +35,7 @@ add_task(async function() {
 
   await EventUtils.synthesizeAndWaitKey("p", { repeat: 3 });
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     is(
       content.document.body.getAttribute("data-down"),
       "4",

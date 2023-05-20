@@ -81,7 +81,7 @@ var populateTree = async function populate(parentGuid, ...items) {
   return guids;
 };
 
-var moveSyncedBookmarksToUnsyncedParent = async function() {
+var moveSyncedBookmarksToUnsyncedParent = async function () {
   info("Insert synced bookmarks");
   let syncedGuids = await populateTree(
     PlacesUtils.bookmarks.menuGuid,
@@ -129,14 +129,14 @@ var moveSyncedBookmarksToUnsyncedParent = async function() {
   return { syncedGuids, unsyncedFolder };
 };
 
-var setChangesSynced = async function(changes) {
+var setChangesSynced = async function (changes) {
   for (let recordId in changes) {
     changes[recordId].synced = true;
   }
   await PlacesSyncUtils.bookmarks.pushChanges(changes);
 };
 
-var ignoreChangedRoots = async function() {
+var ignoreChangedRoots = async function () {
   let changes = await PlacesSyncUtils.bookmarks.pullChanges();
   let expectedRoots = ["menu", "mobile", "toolbar", "unfiled"];
   if (!ObjectUtils.deepEqual(Object.keys(changes).sort(), expectedRoots)) {
@@ -1615,7 +1615,7 @@ add_task(async function test_pullChanges_tombstones() {
   info("Manually insert conflicting tombstone for new bookmark");
   await PlacesUtils.withConnectionWrapper(
     "test_pullChanges_tombstones",
-    async function(db) {
+    async function (db) {
       await db.executeCached(
         `
         INSERT INTO moz_bookmarks_deleted(guid)
@@ -2169,7 +2169,7 @@ add_task(async function test_migrateOldTrackerEntries() {
   let timerPrecision = Preferences.get("privacy.reduceTimerPrecision");
   Preferences.set("privacy.reduceTimerPrecision", false);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Preferences.set("privacy.reduceTimerPrecision", timerPrecision);
   });
 

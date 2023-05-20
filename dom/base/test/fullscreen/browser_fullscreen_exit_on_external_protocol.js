@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-add_setup(async function() {
+add_setup(async function () {
   await pushPrefs(
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"],
@@ -101,13 +101,13 @@ add_task(async function OpenExternalProtocolOnPendingFullscreen() {
   for (const useClick of [true, false]) {
     await BrowserTestUtils.withNewTab(CONTENT, async browser => {
       const leavelFullscreen = waitForFullscreenState(document, false, true);
-      await SpecialPowers.spawn(browser, [useClick], async function(
+      await SpecialPowers.spawn(browser, [useClick], async function (
         shouldClick
       ) {
         const button = content.document.querySelector("button");
 
         const clickDone = new Promise(r => {
-          button.addEventListener("click", function() {
+          button.addEventListener("click", function () {
             content.document.documentElement.requestFullscreen();
             // When anchor.click() is called, the fullscreen request
             // is probably still pending.
@@ -133,11 +133,11 @@ add_task(async function OpenExternalProtocolOnFullscreen() {
   for (const useClick of [true, false]) {
     await BrowserTestUtils.withNewTab(CONTENT, async browser => {
       const leavelFullscreen = waitForFullscreenState(document, false, true);
-      await SpecialPowers.spawn(browser, [useClick], async function(
+      await SpecialPowers.spawn(browser, [useClick], async function (
         shouldClick
       ) {
         let button = content.document.querySelector("button");
-        button.addEventListener("click", function() {
+        button.addEventListener("click", function () {
           content.document.documentElement.requestFullscreen();
         });
         button.click();

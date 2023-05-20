@@ -7,11 +7,11 @@
 
 const URL = "data:text/html;charset=utf-8,Test page";
 
-add_task(async function() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+add_task(async function () {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     browser
   ) {
-    await SpecialPowers.spawn(browser, [], function() {
+    await SpecialPowers.spawn(browser, [], function () {
       ok(
         "recordProfileTimelineMarkers" in docShell,
         "The recordProfileTimelineMarkers attribute exists"

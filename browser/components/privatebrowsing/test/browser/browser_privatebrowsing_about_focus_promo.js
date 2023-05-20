@@ -29,7 +29,7 @@ add_task(async function test_focus_promo_in_allowed_region() {
 
   const { win, tab } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     const promoContainer = content.document.querySelector(".promo"); // container which is present if promo is enabled and should show
 
     ok(promoContainer, "Focus promo is shown for allowed region");
@@ -47,7 +47,7 @@ add_task(async function test_focus_promo_in_disallowed_region() {
 
   const { win, tab } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab, [], async function() {
+  await SpecialPowers.spawn(tab, [], async function () {
     const promoContainer = content.document.querySelector(".promo"); // container which is removed if promo is disabled and/or should not show
 
     ok(!promoContainer, "Focus promo is not shown for disallowed region");
@@ -66,7 +66,7 @@ add_task(
       setupRegions(region);
       ASRouter.resetMessageState();
       const { win, tab } = await openTabAndWaitForRender();
-      await SpecialPowers.spawn(tab, [], async function() {
+      await SpecialPowers.spawn(tab, [], async function () {
         const buttonText = content.document.querySelector(
           "#private-browsing-promo-link"
         ).textContent;

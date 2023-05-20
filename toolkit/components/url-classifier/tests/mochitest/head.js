@@ -1,13 +1,13 @@
 // calculate the fullhash and send it to gethash server
 function addCompletionToServer(list, url, mochitestUrl) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     var listParam = "list=" + list;
     var fullhashParam = "fullhash=" + hash(url);
 
     var xhr = new XMLHttpRequest();
     xhr.open("PUT", mochitestUrl + "?" + listParam + "&" + fullhashParam, true);
     xhr.setRequestHeader("Content-Type", "text/plain");
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
       if (this.readyState == this.DONE) {
         resolve();
       }

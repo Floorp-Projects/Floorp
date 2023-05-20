@@ -65,7 +65,7 @@ async function getDbPath(name) {
   return path;
 }
 
-add_task(async function() {
+add_task(async function () {
   for (let journal of ["truncate", "wal"]) {
     await check_journal_persists(
       Services.storage.openDatabase(

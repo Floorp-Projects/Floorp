@@ -5,7 +5,7 @@
 // Test that textbox context menu elements are still displayed correctly after reopening
 // the toolbox. Fixes https://bugzilla.mozilla.org/show_bug.cgi?id=1510182.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(`data:text/html;charset=utf-8,<div>test</div>`);
 
   info("Testing the textbox context menu a first time");

@@ -7,7 +7,7 @@
  * Tests if requests render correct information in the details UI.
  */
 
-add_task(async function() {
+add_task(async function () {
   const {
     L10N,
   } = require("resource://devtools/client/netmonitor/src/utils/l10n.js");

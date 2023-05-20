@@ -6,14 +6,14 @@
 
 "use strict";
 
-this.ui = (function() {
+this.ui = (function () {
   // eslint-disable-line no-unused-vars
   const exports = {};
   const SAVE_BUTTON_HEIGHT = 50;
 
   const { watchFunction } = catcher;
 
-  exports.isHeader = function(el) {
+  exports.isHeader = function (el) {
     while (el) {
       if (
         el.classList &&
@@ -178,10 +178,12 @@ this.ui = (function() {
         if (window.getComputedStyle(document.body).position === "relative") {
           const docBoundingRect = document.documentElement.getBoundingClientRect();
           const bodyBoundingRect = document.body.getBoundingClientRect();
-          this.element.style.marginLeft = `-${bodyBoundingRect.left -
-            docBoundingRect.left}px`;
-          this.element.style.marginTop = `-${bodyBoundingRect.top -
-            docBoundingRect.top}px`;
+          this.element.style.marginLeft = `-${
+            bodyBoundingRect.left - docBoundingRect.left
+          }px`;
+          this.element.style.marginTop = `-${
+            bodyBoundingRect.top - docBoundingRect.top
+          }px`;
         }
       }
       if (force && visible) {
@@ -688,7 +690,7 @@ this.ui = (function() {
     // when a user ends scrolling or ends resizing a window
     delayExecution(delay, cb) {
       let timer;
-      return function() {
+      return function () {
         if (typeof timer !== "undefined") {
           clearTimeout(timer);
         }
@@ -887,7 +889,7 @@ this.ui = (function() {
   };
 
   /** Removes every UI this module creates */
-  exports.remove = function() {
+  exports.remove = function () {
     for (const name in exports) {
       if (name.startsWith("iframe")) {
         continue;
@@ -899,7 +901,7 @@ this.ui = (function() {
     exports.iframe.remove();
   };
 
-  exports.triggerDownload = function(url, filename) {
+  exports.triggerDownload = function (url, filename) {
     return catcher.watchPromise(
       callBackground("downloadShot", { url, filename })
     );

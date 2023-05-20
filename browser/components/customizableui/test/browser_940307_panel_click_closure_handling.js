@@ -117,7 +117,7 @@ add_task(async function disabled_button_in_panel() {
   button.remove();
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   if (button && button.parentNode) {
     button.remove();
   }

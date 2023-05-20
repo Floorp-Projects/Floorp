@@ -21,13 +21,15 @@ const kNS_PER_MS = 1000000;
 
 function printProcInfo(procInfo) {
   info(
-    `  pid: ${procInfo.pid}, type = parent, cpu time = ${procInfo.cpuTime /
-      kNS_PER_MS}ms`
+    `  pid: ${procInfo.pid}, type = parent, cpu time = ${
+      procInfo.cpuTime / kNS_PER_MS
+    }ms`
   );
   for (let child of procInfo.children) {
     info(
-      `  pid: ${child.pid}, type = ${child.type}, cpu time = ${child.cpuTime /
-        kNS_PER_MS}ms`
+      `  pid: ${child.pid}, type = ${child.type}, cpu time = ${
+        child.cpuTime / kNS_PER_MS
+      }ms`
     );
   }
 }

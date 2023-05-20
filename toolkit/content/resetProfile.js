@@ -14,7 +14,7 @@ document
     window.close();
   });
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   document
     .getElementById("resetProfileDialog")
     .getButton("accept")

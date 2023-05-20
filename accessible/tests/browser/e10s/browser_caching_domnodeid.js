@@ -9,7 +9,7 @@
  */
 addAccessibleTask(
   '<div id="div"></div>',
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     const div = findAccessibleChildByID(accDoc, "div");
     ok(div, "Got accessible with 'div' ID.");
 

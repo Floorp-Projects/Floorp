@@ -149,8 +149,9 @@ function getStackFromProfile(profile, stack, libs) {
               indexString = "0" + indexString;
             }
             let offset = addr - lib.start;
-            frame = `#${indexString}: ???[${lib.debugPath} ${"+0x" +
-              offset.toString(16)}]`;
+            frame = `#${indexString}: ???[${lib.debugPath} ${
+              "+0x" + offset.toString(16)
+            }]`;
             break;
           }
         }

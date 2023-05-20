@@ -1,11 +1,11 @@
 /* eslint-env mozilla/frame-script */
 
-(function() {
+(function () {
   const TART_PREFIX = "tart@mozilla.org:";
 
   addEventListener(
     TART_PREFIX + "chrome-exec-event",
-    function(e) {
+    function (e) {
       if (!content.location.pathname.endsWith("tart.html")) {
         console.error(
           `Ignore chrome-exec-event on non-tart page ${content.location.href}`

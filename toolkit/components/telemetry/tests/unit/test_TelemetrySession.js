@@ -53,7 +53,7 @@ const DATAREPORTING_DIR = "datareporting";
 const ABORTED_PING_FILE_NAME = "aborted-session-ping";
 const ABORTED_SESSION_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
 
-XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
+XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function () {
   return PathUtils.join(PathUtils.profileDir, DATAREPORTING_DIR);
 });
 
@@ -273,7 +273,7 @@ function checkScalars(processes) {
     "The keyedScalars entry must be an object."
   );
 
-  let checkScalar = function(scalar, name) {
+  let checkScalar = function (scalar, name) {
     // Check if the value is of a supported type.
     const valueType = typeof scalar;
     switch (valueType) {
@@ -1228,7 +1228,7 @@ add_task(async function test_sendShutdownPing() {
     return;
   }
 
-  let checkPendingShutdownPing = async function() {
+  let checkPendingShutdownPing = async function () {
     let pendingPings = await TelemetryStorage.loadPendingPingList();
     Assert.equal(pendingPings.length, 1, "We expect 1 pending ping: shutdown.");
     // Load the pings off the disk.
@@ -1367,7 +1367,7 @@ add_task(async function test_sendFirstShutdownPing() {
     return;
   }
 
-  let storageContainsFirstShutdown = async function() {
+  let storageContainsFirstShutdown = async function () {
     let pendingPings = await TelemetryStorage.loadPendingPingList();
     let pings = await Promise.all(
       pendingPings.map(async p => {
@@ -1377,7 +1377,7 @@ add_task(async function test_sendFirstShutdownPing() {
     return pings.find(p => p.type == "first-shutdown");
   };
 
-  let checkShutdownNotSent = async function() {
+  let checkShutdownNotSent = async function () {
     // The failure-mode of the ping-sender is used to check that a ping was
     // *not* sent. This can be combined with the state of the storage to infer
     // the appropriate behavior from the preference flags.

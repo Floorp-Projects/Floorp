@@ -4,7 +4,7 @@
  */
 
 // This test must be first, since we need the actor not to be created already.
-exported_symbols.testGetDirectoryTwice = async function() {
+exported_symbols.testGetDirectoryTwice = async function () {
   const promise1 = navigator.storage.getDirectory();
   const promise2 = navigator.storage.getDirectory();
 
@@ -13,19 +13,19 @@ exported_symbols.testGetDirectoryTwice = async function() {
   Assert.ok(true, "Should not have thrown");
 };
 
-exported_symbols.testGetDirectoryDoesNotThrow = async function() {
+exported_symbols.testGetDirectoryDoesNotThrow = async function () {
   await navigator.storage.getDirectory();
 
   Assert.ok(true, "Should not have thrown");
 };
 
-exported_symbols.testGetDirectoryKindIsDirectory = async function() {
+exported_symbols.testGetDirectoryKindIsDirectory = async function () {
   const root = await navigator.storage.getDirectory();
 
   Assert.equal(root.kind, "directory");
 };
 
-exported_symbols.testDirectoryHandleStringConversion = async function() {
+exported_symbols.testDirectoryHandleStringConversion = async function () {
   const root = await navigator.storage.getDirectory();
 
   Assert.equal(
@@ -35,7 +35,7 @@ exported_symbols.testDirectoryHandleStringConversion = async function() {
   );
 };
 
-exported_symbols.testNewDirectoryHandleFromPrototype = async function() {
+exported_symbols.testNewDirectoryHandleFromPrototype = async function () {
   const root = await navigator.storage.getDirectory();
 
   try {
@@ -47,7 +47,7 @@ exported_symbols.testNewDirectoryHandleFromPrototype = async function() {
   }
 };
 
-exported_symbols.testIsSameEntryRoot = async function() {
+exported_symbols.testIsSameEntryRoot = async function () {
   const root = await navigator.storage.getDirectory();
   try {
     await root.move(root);
@@ -57,14 +57,14 @@ exported_symbols.testIsSameEntryRoot = async function() {
   }
 };
 
-exported_symbols.testDirectoryHandleSupportsKeysIterator = async function() {
+exported_symbols.testDirectoryHandleSupportsKeysIterator = async function () {
   const root = await navigator.storage.getDirectory();
 
   const it = await root.keys();
   Assert.ok(!!it, "Does root support keys iterator?");
 };
 
-exported_symbols.testKeysIteratorNextIsCallable = async function() {
+exported_symbols.testKeysIteratorNextIsCallable = async function () {
   const root = await navigator.storage.getDirectory();
 
   const it = await root.keys();
@@ -74,14 +74,14 @@ exported_symbols.testKeysIteratorNextIsCallable = async function() {
   Assert.ok(!!item, "Should return an item");
 };
 
-exported_symbols.testDirectoryHandleSupportsValuesIterator = async function() {
+exported_symbols.testDirectoryHandleSupportsValuesIterator = async function () {
   const root = await navigator.storage.getDirectory();
 
   const it = await root.values();
   Assert.ok(!!it, "Does root support values iterator?");
 };
 
-exported_symbols.testValuesIteratorNextIsCallable = async function() {
+exported_symbols.testValuesIteratorNextIsCallable = async function () {
   const root = await navigator.storage.getDirectory();
 
   const it = await root.values();
@@ -91,14 +91,14 @@ exported_symbols.testValuesIteratorNextIsCallable = async function() {
   Assert.ok(!!item, "Should return an item");
 };
 
-exported_symbols.testDirectoryHandleSupportsEntriesIterator = async function() {
+exported_symbols.testDirectoryHandleSupportsEntriesIterator = async function () {
   const root = await navigator.storage.getDirectory();
 
   const it = await root.entries();
   Assert.ok(!!it, "Does root support entries iterator?");
 };
 
-exported_symbols.testEntriesIteratorNextIsCallable = async function() {
+exported_symbols.testEntriesIteratorNextIsCallable = async function () {
   const root = await navigator.storage.getDirectory();
 
   const it = await root.entries();
@@ -108,7 +108,7 @@ exported_symbols.testEntriesIteratorNextIsCallable = async function() {
   Assert.ok(!!item, "Should return an item");
 };
 
-exported_symbols.testGetFileHandleIsCallable = async function() {
+exported_symbols.testGetFileHandleIsCallable = async function () {
   const root = await navigator.storage.getDirectory();
   const allowCreate = { create: true };
 
@@ -116,7 +116,7 @@ exported_symbols.testGetFileHandleIsCallable = async function() {
   Assert.ok(!!item, "Should return an item");
 };
 
-exported_symbols.testGetDirectoryHandleIsCallable = async function() {
+exported_symbols.testGetDirectoryHandleIsCallable = async function () {
   const root = await navigator.storage.getDirectory();
   const allowCreate = { create: true };
 
@@ -124,7 +124,7 @@ exported_symbols.testGetDirectoryHandleIsCallable = async function() {
   Assert.ok(!!item, "Should return an item");
 };
 
-exported_symbols.testRemoveEntryIsCallable = async function() {
+exported_symbols.testRemoveEntryIsCallable = async function () {
   const root = await navigator.storage.getDirectory();
   const removeOptions = { recursive: true };
 
@@ -143,7 +143,7 @@ exported_symbols.testRemoveEntryIsCallable = async function() {
   }
 };
 
-exported_symbols.testResolveIsCallable = async function() {
+exported_symbols.testResolveIsCallable = async function () {
   const root = await navigator.storage.getDirectory();
   const allowCreate = { create: true };
   const item = await root.getFileHandle("fileName", allowCreate);
@@ -153,7 +153,7 @@ exported_symbols.testResolveIsCallable = async function() {
   Assert.equal(path[0], "fileName", "Resolve got the right path");
 };
 
-exported_symbols.testFileType = async function() {
+exported_symbols.testFileType = async function () {
   const root = await navigator.storage.getDirectory();
   const allowCreate = { create: true };
   const nameStem = "testFileType";
@@ -250,7 +250,7 @@ exported_symbols.testFileType = async function() {
   );
 };
 
-exported_symbols.testContentTypeChangesOnMove = async function() {
+exported_symbols.testContentTypeChangesOnMove = async function () {
   const allowCreate = { create: true };
   const root = await navigator.storage.getDirectory();
   const oldName = "testFile.txt";

@@ -7,7 +7,7 @@ const URL = `data:image/svg+xml,<svg viewBox="0 0 100 100" xmlns="http://www.w3.
 
 function test_once() {
   return BrowserTestUtils.withNewTab(URL, async browser => {
-    return await SpecialPowers.spawn(browser, [], async function() {
+    return await SpecialPowers.spawn(browser, [], async function () {
       const rect = content.document.documentElement.getBoundingClientRect();
       info(
         `${rect.width}x${rect.height}, ${content.innerWidth}x${content.innerHeight}`

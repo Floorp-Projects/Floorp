@@ -7,7 +7,7 @@
     Should be applied *inside* catcher.watchFunction
 */
 this.assertIsTrusted = function assertIsTrusted(handlerFunction) {
-  return function(event) {
+  return function (event) {
     if (!event) {
       const exc = new Error("assertIsTrusted did not get an event");
       exc.noPopup = true;

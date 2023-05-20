@@ -48,7 +48,7 @@ const TEST_CREDIT_CARD_2 = {
 
 // Like add_task, but actually adds 2 - one for addresses and one for cards.
 function add_storage_task(test_function) {
-  add_task(async function() {
+  add_task(async function () {
     let path = getTempFile(TEST_STORE_FILE_NAME).path;
     let profileStorage = new FormAutofillStorage(path);
     await profileStorage.initialize();

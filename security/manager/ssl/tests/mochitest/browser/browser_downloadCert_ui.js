@@ -59,7 +59,7 @@ function openCertDownloadDialog(cert) {
   return new Promise((resolve, reject) => {
     win.addEventListener(
       "load",
-      function() {
+      function () {
         executeSoon(() => resolve([win, returnVals]));
       },
       { once: true }
@@ -67,7 +67,7 @@ function openCertDownloadDialog(cert) {
   });
 }
 
-add_setup(async function() {
+add_setup(async function () {
   for (let testCase of TEST_CASES) {
     testCase.cert = await readCertificate(testCase.certFilename, ",,");
     Assert.notEqual(

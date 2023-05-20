@@ -543,7 +543,7 @@ add_task(async function test_persistent_listener_after_staged_upgrade() {
     "http://example.com/",
   ];
   delete extensionData.manifest.optional_permissions;
-  extensionData.background = function() {
+  extensionData.background = function () {
     browser.webRequest.onBeforeRequest.addListener(
       details => {
         browser.test.sendMessage("got-request");

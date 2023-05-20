@@ -3,9 +3,9 @@
 
 "use strict";
 
-add_setup(async function() {
+add_setup(async function () {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.unlockPref("browser.safebrowsing.phishing.enabled");
     Services.prefs.unlockPref("browser.safebrowsing.malware.enabled");
     Services.prefs.unlockPref("browser.safebrowsing.downloads.enabled");
@@ -20,7 +20,7 @@ add_setup(async function() {
 });
 
 // This test just reloads the preferences page for the various tests.
-add_task(async function() {
+add_task(async function () {
   Services.prefs.lockPref("browser.safebrowsing.phishing.enabled");
   Services.prefs.lockPref("browser.safebrowsing.malware.enabled");
   Services.prefs.lockPref("browser.safebrowsing.downloads.enabled");

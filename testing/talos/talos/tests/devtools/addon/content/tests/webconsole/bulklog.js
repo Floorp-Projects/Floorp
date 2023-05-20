@@ -18,7 +18,7 @@ const {
   waitForConsoleOutputChildListChange,
 } = require("damp-test/tests/webconsole/webconsole-helpers");
 
-module.exports = async function() {
+module.exports = async function () {
   let TOTAL_MESSAGES = 1000;
   let tab = await testSetup(SIMPLE_URL);
   let messageManager = tab.linkedBrowser.messageManager;

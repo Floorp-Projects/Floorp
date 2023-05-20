@@ -407,7 +407,7 @@ async function testPasswordChange(
       gBrowser,
       url,
     },
-    async function(browser) {
+    async function (browser) {
       info(`Opened tab with url: ${url}, waiting for focus`);
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       info("Waiting for form-processed message");
@@ -487,13 +487,13 @@ async function initForm(browser, formDefaults, passwordFieldType) {
   await ContentTask.spawn(
     browser,
     { passwordInputSelector, passwordFieldType },
-    async function({ passwordInputSelector, passwordFieldType }) {
+    async function ({ passwordInputSelector, passwordFieldType }) {
       content.document.querySelector(
         passwordInputSelector
       ).type = passwordFieldType;
     }
   );
-  await ContentTask.spawn(browser, formDefaults, async function(
+  await ContentTask.spawn(browser, formDefaults, async function (
     selectorValues
   ) {
     for (let [sel, value] of Object.entries(selectorValues)) {

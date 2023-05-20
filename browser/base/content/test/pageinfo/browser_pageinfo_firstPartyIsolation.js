@@ -58,7 +58,7 @@ async function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("privacy.firstparty.isolate");
   });
 

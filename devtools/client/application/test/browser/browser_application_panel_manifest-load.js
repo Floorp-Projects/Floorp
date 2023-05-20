@@ -7,7 +7,7 @@
  * Check that the application panel fetches a manifest when in the Manifest Page
  */
 
-add_task(async function() {
+add_task(async function () {
   info("Test that manifest page loads the manifest successfully");
   const url = URL_ROOT + "resources/manifest/load-ok.html";
 
@@ -26,7 +26,7 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that manifest page shows an error when failing to load");
   const url = URL_ROOT + "resources/manifest/load-fail.html";
 
@@ -47,7 +47,7 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that manifest page shows a message when there is no manifest");
   const url = URL_ROOT + "resources/manifest/load-no-manifest.html";
 

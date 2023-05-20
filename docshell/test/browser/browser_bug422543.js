@@ -224,7 +224,7 @@ async function setup() {
   );
 
   let browser = tab.linkedBrowser;
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     for (let listener of listeners) {
       browser.browsingContext.sessionHistory.removeSHistoryListener(listener);
     }

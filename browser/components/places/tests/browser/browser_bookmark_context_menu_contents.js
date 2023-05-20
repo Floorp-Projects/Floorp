@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "privacy.userContext.enabled"
 );
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
 
   let toolbar = document.getElementById("PersonalToolbar");
@@ -175,7 +175,7 @@ add_task(async function test_bookmark_contextmenu_contents() {
     );
   }
 
-  await checkContextMenu(async function() {
+  await checkContextMenu(async function () {
     let toolbarBookmark = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       title: "Bookmark Title",
@@ -201,7 +201,7 @@ add_task(async function test_bookmark_contextmenu_contents() {
   let tabs = [];
   let contextMenuOnContent;
 
-  await checkContextMenu(async function() {
+  await checkContextMenu(async function () {
     info("Check context menu after opening context menu on content");
     const toolbarBookmark = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -265,7 +265,7 @@ add_task(async function test_empty_contextmenu_contents() {
     "show-other-bookmarks_PersonalToolbar",
   ];
 
-  await checkContextMenu(async function() {
+  await checkContextMenu(async function () {
     let contextMenu = document.getElementById("placesContext");
     let toolbar = document.querySelector("#PlacesToolbarItems");
     let openToolbarContextMenuPromise = BrowserTestUtils.waitForPopupEvent(
@@ -300,7 +300,7 @@ add_task(async function test_separator_contextmenu_contents() {
     "show-other-bookmarks_PersonalToolbar",
   ];
 
-  await checkContextMenu(async function() {
+  await checkContextMenu(async function () {
     let sep = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -339,7 +339,7 @@ add_task(async function test_folder_contextmenu_contents() {
     "show-other-bookmarks_PersonalToolbar",
   ];
 
-  await checkContextMenu(async function() {
+  await checkContextMenu(async function () {
     let folder = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,

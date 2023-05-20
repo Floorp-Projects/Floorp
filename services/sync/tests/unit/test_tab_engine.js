@@ -156,7 +156,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
 
   let promiseFinished = new Promise(resolve => {
     let syncFinish = engine._syncFinish;
-    engine._syncFinish = async function() {
+    engine._syncFinish = async function () {
       let remoteTabs = await engine._rustStore.getAll();
       equal(
         remoteTabs.length,

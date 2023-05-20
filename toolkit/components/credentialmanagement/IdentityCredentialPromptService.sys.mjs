@@ -37,7 +37,7 @@ function fulfilledPromiseFromFirstListElement(list) {
 function blobToDataUrl(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.addEventListener("loadend", function() {
+    reader.addEventListener("loadend", function () {
       if (reader.error) {
         reject(reader.error);
       }
@@ -179,7 +179,7 @@ export class IdentityCredentialPromptService {
         "identity-credential-list-item-radio"
       )[0];
       newRadio.value = providerIndex;
-      newRadio.addEventListener("change", function(event) {
+      newRadio.addEventListener("change", function (event) {
         for (let item of listBox.children) {
           item.classList.remove("checked");
         }
@@ -298,7 +298,7 @@ export class IdentityCredentialPromptService {
       "chrome://global/skin/icons/defaultFavicon.svg"
     );
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       let browser = browsingContext.top.embedderElement;
       if (!browser) {
         reject();
@@ -502,7 +502,7 @@ export class IdentityCredentialPromptService {
         "identity-credential-list-item-radio"
       )[0];
       newRadio.value = accountIndex;
-      newRadio.addEventListener("change", function(event) {
+      newRadio.addEventListener("change", function (event) {
         for (let item of listBox.children) {
           item.classList.remove("checked");
         }
@@ -543,7 +543,7 @@ export class IdentityCredentialPromptService {
     );
 
     // Create a new promise to wrap the callbacks of the popup buttons
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       // Construct the necessary arguments for notification behavior
       let options = {
         hideClose: true,

@@ -10,7 +10,7 @@ const TEST_URI =
   "browser_inspector_invalidate.js\n" +
   '<div style="width: 100px; height: 100px; background:yellow;"></div>';
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     TEST_URI
   );

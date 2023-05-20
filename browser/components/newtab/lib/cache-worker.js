@@ -189,17 +189,17 @@ let Agent = {
 // that messages from the main thread map to methods on the
 // Agent.
 let worker = new PromiseWorker.AbstractWorker();
-worker.dispatch = function(method, args = []) {
+worker.dispatch = function (method, args = []) {
   return Agent[method](...args);
 };
-worker.postMessage = function(result, ...transfers) {
+worker.postMessage = function (result, ...transfers) {
   self.postMessage(result, ...transfers);
 };
-worker.close = function() {
+worker.close = function () {
   self.close();
 };
 
 self.addEventListener("message", msg => worker.handleMessage(msg));
-self.addEventListener("unhandledrejection", function(error) {
+self.addEventListener("unhandledrejection", function (error) {
   throw error.reason;
 });

@@ -100,7 +100,7 @@ async function stepOutRestartedFrame(
 }
 
 function run_test() {
-  return (async function() {
+  return (async function () {
     const dbg = await setupTestFromUrl("stepping.js");
 
     info(`Test restarting the youngest frame`);

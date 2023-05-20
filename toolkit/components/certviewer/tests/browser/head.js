@@ -74,7 +74,7 @@ function injectErrorPageFrame(tab, src) {
   return SpecialPowers.spawn(
     tab.linkedBrowser,
     [{ frameSrc: src }],
-    async function({ frameSrc }) {
+    async function ({ frameSrc }) {
       let loaded = ContentTaskUtils.waitForEvent(
         content.wrappedJSObject,
         "DOMFrameContentLoaded"

@@ -82,7 +82,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   STORAGE_SYNC_SERVER_URL_PREF,
   KINTO_DEFAULT_SERVER_URL
 );
-XPCOMUtils.defineLazyGetter(lazy, "WeaveCrypto", function() {
+XPCOMUtils.defineLazyGetter(lazy, "WeaveCrypto", function () {
   let { WeaveCrypto } = ChromeUtils.importESModule(
     "resource://services-crypto/WeaveCrypto.sys.mjs"
   );
@@ -159,7 +159,7 @@ async function ciphertextHMAC(keyBundle, id, IV, ciphertext) {
  *     current user.
  * @returns {string} sha256 of the user's kB as a hex string
  */
-const getKBHash = async function(fxaService) {
+const getKBHash = async function (fxaService) {
   const key = await fxaService.keys.getKeyForScope(STORAGE_SYNC_SCOPE);
   return fxaService.keys.kidAsHex(key);
 };
@@ -288,7 +288,7 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
   getKeys() {
     throwIfNoFxA(this._fxaService, "encrypting chrome.storage.sync records");
     const self = this;
-    return (async function() {
+    return (async function () {
       let key = await self._fxaService.keys.getKeyForScope(STORAGE_SYNC_SCOPE);
       return lazy.BulkKeyBundle.fromJWK(key);
     })();
@@ -391,14 +391,7 @@ async function storageSyncInit() {
 // all keys with "key-".
 function keyToId(key) {
   function escapeChar(match) {
-    return (
-      "_" +
-      match
-        .codePointAt(0)
-        .toString(16)
-        .toUpperCase() +
-      "_"
-    );
+    return "_" + match.codePointAt(0).toString(16).toUpperCase() + "_";
   }
   return "key-" + key.replace(/[^a-zA-Z0-9]/g, escapeChar);
 }
@@ -732,7 +725,7 @@ function cleanUpForContext(extension, context) {
  *                 Options to be passed to the call to `.collection()`.
  * @returns {Promise<Collection>}
  */
-const openCollection = async function(extension, options = {}) {
+const openCollection = async function (extension, options = {}) {
   let collectionId = extension.id;
   const { kinto } = await storageSyncInit();
   const coll = kinto.collection(collectionId, {
@@ -888,7 +881,7 @@ class ExtensionStorageSyncKinto {
    */
   _syncCollection(collection, options) {
     // FIXME: this should support syncing to self-hosted
-    return this._requestWithToken(`Syncing ${collection.name}`, function(
+    return this._requestWithToken(`Syncing ${collection.name}`, function (
       token
     ) {
       const allOptions = Object.assign(
@@ -942,7 +935,7 @@ class ExtensionStorageSyncKinto {
    */
   _deleteBucket() {
     log.error("Deleting default bucket and everything in it");
-    return this._requestWithToken("Clearing server", function(token) {
+    return this._requestWithToken("Clearing server", function (token) {
       const headers = { Authorization: "Bearer " + token };
       const kintoHttp = new lazy.KintoHttpClient(
         lazy.prefStorageSyncServerURL,

@@ -181,9 +181,7 @@ class RecentlyClosedTabsList extends MozLitElement {
     if (!recentlyClosedTabs.length) {
       // Show empty message if no recently closed tabs
       closedTabsContainer.toggleContainerStyleForEmptyMsg(true);
-      return html`
-        ${this.emptyMessageTemplate()}
-      `;
+      return html` ${this.emptyMessageTemplate()} `;
     }
 
     closedTabsContainer.toggleContainerStyleForEmptyMsg(false);

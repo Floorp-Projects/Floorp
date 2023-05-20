@@ -3,7 +3,7 @@ async function test() {
   const target = "http://example.com/browser/dom/url/tests/empty.html";
   info("Loading download page...");
   let tab = BrowserTestUtils.addTab(gBrowser, target);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     gBrowser.removeTab(tab);
     window.restore();
   });

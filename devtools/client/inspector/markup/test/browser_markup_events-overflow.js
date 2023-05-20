@@ -29,7 +29,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   const markupContainer = await getContainerForSelector("#events", inspector);

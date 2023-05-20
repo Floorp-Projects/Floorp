@@ -24,7 +24,7 @@ add_task(async function test_section_hidden_when_feature_flag_disabled() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
-    async function(browser) {
+    async function (browser) {
       let groupbox = browser.contentDocument.getElementById(GROUPBOX_ID);
       is_element_hidden(groupbox, "#cookieBannerHandlingGroup is hidden");
     }
@@ -44,7 +44,7 @@ add_task(async function test_section_shown_when_feature_flag_enabled() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
-    async function(browser) {
+    async function (browser) {
       let groupbox = browser.contentDocument.getElementById(GROUPBOX_ID);
       is_element_visible(groupbox, "#cookieBannerHandlingGroup is visible");
     }
@@ -64,7 +64,7 @@ add_task(async function test_checkbox_unchecked_disabled_mode() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
-    async function(browser) {
+    async function (browser) {
       let checkbox = browser.contentDocument.getElementById(CHECKBOX_ID);
       ok(!checkbox.checked, "checkbox is not checked in DISABLED mode");
     }
@@ -85,7 +85,7 @@ add_task(async function test_checkbox_unchecked_detect_only_mode() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
-    async function(browser) {
+    async function (browser) {
       let checkbox = browser.contentDocument.getElementById(CHECKBOX_ID);
       ok(!checkbox.checked, "checkbox is not checked in detect-only mode");
     }
@@ -105,7 +105,7 @@ add_task(async function test_checkbox_checked_reject_or_accept_mode() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
-    async function(browser) {
+    async function (browser) {
       let checkbox = browser.contentDocument.getElementById(CHECKBOX_ID);
       ok(checkbox.checked, "checkbox is checked in REJECT_OR_ACCEPT mode");
     }
@@ -125,7 +125,7 @@ add_task(async function test_checkbox_checked_reject_mode() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
-    async function(browser) {
+    async function (browser) {
       let checkbox = browser.contentDocument.getElementById(CHECKBOX_ID);
       ok(checkbox.checked, "checkbox is checked in REJECT mode");
     }
@@ -148,7 +148,7 @@ add_task(async function test_checkbox_modifies_prefs() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
-    async function(browser) {
+    async function (browser) {
       let checkboxSelector = "#" + CHECKBOX_ID;
       let checkbox = browser.contentDocument.querySelector(checkboxSelector);
       let section = browser.contentDocument.getElementById(GROUPBOX_ID);

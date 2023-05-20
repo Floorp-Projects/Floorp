@@ -124,7 +124,7 @@ const EXCEPTION_CONSTRUCTORS = {
  *
  * @constructor
  */
-var BasePromiseWorker = function(url) {
+var BasePromiseWorker = function (url) {
   if (typeof url != "string") {
     throw new TypeError("Expecting a string");
   }
@@ -444,7 +444,7 @@ function WorkerError(data) {
  *
  * @constructor
  */
-BasePromiseWorker.Meta = function(data, meta) {
+BasePromiseWorker.Meta = function (data, meta) {
   this.data = data;
   this.meta = meta;
 };

@@ -8,7 +8,7 @@
 
 const TEST_PAGE = "doc-inline-script-offset.html";
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger(TEST_PAGE);
   await selectSource(dbg, TEST_PAGE);
 

@@ -133,17 +133,17 @@ paymentSrv.setTestingUIService(
   DummyUIService.QueryInterface(Ci.nsIPaymentUIService)
 );
 
-addMessageListener("start-test", function(testName) {
+addMessageListener("start-test", function (testName) {
   DummyUIService.testName = testName;
   sendAsyncMessage("start-test-complete");
 });
 
-addMessageListener("finish-test", function() {
+addMessageListener("finish-test", function () {
   DummyUIService.testName = "";
   sendAsyncMessage("finish-test-complete");
 });
 
-addMessageListener("interact-with-payment", function() {
+addMessageListener("interact-with-payment", function () {
   if (DummyUIService.requestId === "") {
     emitTestFail(`${DummyUIService.testName}: Unexpected empty requestId`);
   }
@@ -220,7 +220,7 @@ addMessageListener("interact-with-payment", function() {
   sendAsyncMessage("interact-with-payment-complete");
 });
 
-addMessageListener("teardown", function() {
+addMessageListener("teardown", function () {
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage("teardown-complete");
 });

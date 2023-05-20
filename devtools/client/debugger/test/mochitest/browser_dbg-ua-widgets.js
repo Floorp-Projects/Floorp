@@ -9,7 +9,7 @@
 
 const TEST_URL = "data:text/html,<video controls>";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.inspector.showAllAnonymousContent", false);
   let dbg = await initDebuggerWithAbsoluteURL(TEST_URL);
   ok(

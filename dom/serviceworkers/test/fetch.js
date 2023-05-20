@@ -5,14 +5,14 @@ function get_query_params(url) {
   }
   var ret = {};
   var params = search.substring(1).split("&");
-  params.forEach(function(param) {
+  params.forEach(function (param) {
     var element = param.split("=");
     ret[decodeURIComponent(element[0])] = decodeURIComponent(element[1]);
   });
   return ret;
 }
 
-addEventListener("fetch", function(event) {
+addEventListener("fetch", function (event) {
   if (event.request.url.includes("fail.html")) {
     event.respondWith(fetch("hello.html", { integrity: "abc" }));
   } else if (event.request.url.includes("fake.html")) {
@@ -28,6 +28,6 @@ addEventListener("fetch", function(event) {
   }
 });
 
-addEventListener("activate", function(event) {
+addEventListener("activate", function (event) {
   event.waitUntil(clients.claim());
 });

@@ -6,7 +6,7 @@
 
 // We attach Preferences to the window object so other contexts (tests, JSMs)
 // have access to it.
-const Preferences = (window.Preferences = (function() {
+const Preferences = (window.Preferences = (function () {
   const { EventEmitter } = ChromeUtils.importESModule(
     "resource://gre/modules/EventEmitter.sys.mjs"
   );

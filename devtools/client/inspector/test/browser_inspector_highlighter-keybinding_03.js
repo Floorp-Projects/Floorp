@@ -9,7 +9,7 @@
 const IS_OSX = Services.appinfo.OS === "Darwin";
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);

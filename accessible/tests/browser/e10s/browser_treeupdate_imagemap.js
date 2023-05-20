@@ -181,7 +181,7 @@ async function testContainer(browser) {
 
 addAccessibleTask(
   "e10s/doc_treeupdate_imagemap.html",
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     await waitForImageMap(browser, accDoc);
     await testImageMap(browser, accDoc);
     await testContainer(browser);

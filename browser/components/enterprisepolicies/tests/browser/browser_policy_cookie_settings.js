@@ -128,7 +128,7 @@ async function test_cookie_settings({
     );
     let browser = gBrowser.getBrowserForTab(tab);
     await BrowserTestUtils.browserLoaded(browser);
-    await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
       // Load the script twice
       {
         let src = content.document.createElement("script");

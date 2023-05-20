@@ -6,7 +6,7 @@
 const TAB_URL =
   URL_ROOT + "resources/service-workers/dynamic-registration.html";
 
-add_task(async function() {
+add_task(async function () {
   await enableApplicationPanel();
 
   const { panel, tab } = await openNewTabAndApplicationPanel(TAB_URL);
@@ -19,7 +19,7 @@ add_task(async function() {
   ok(isWorkerListEmpty, "No Service Worker displayed");
 
   info("Register a service worker in the page.");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     content.wrappedJSObject.registerServiceWorker();
   });
 
@@ -50,7 +50,7 @@ add_task(async function() {
   );
 
   info("Unregister the service worker");
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     const registration = await content.wrappedJSObject.sw;
     registration.unregister();
   });

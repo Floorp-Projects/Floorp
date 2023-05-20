@@ -8,7 +8,7 @@ const TAB_STATE = {
   index: 1,
 };
 
-add_task(async function() {
+add_task(async function () {
   // Create a background tab.
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;

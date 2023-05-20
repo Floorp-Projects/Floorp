@@ -50,8 +50,8 @@ function waitForCondition(condition, nextTest, errorMsg) {
  * @param {String} fieldName
  *        The name of the field to write to.
  */
-let typeInSearchField = async function(browser, text, fieldName) {
-  await SpecialPowers.spawn(browser, [[fieldName, text]], async function([
+let typeInSearchField = async function (browser, text, fieldName) {
+  await SpecialPowers.spawn(browser, [[fieldName, text]], async function ([
     contentFieldName,
     contentText,
   ]) {
@@ -153,7 +153,7 @@ function clickSecondaryAction(actionIndex) {
     return removePromise;
   }
 
-  return (async function() {
+  return (async function () {
     // Click the dropmarker arrow and wait for the menu to show up.
     let dropdownPromise = BrowserTestUtils.waitForEvent(
       popupNotification.menupopup,

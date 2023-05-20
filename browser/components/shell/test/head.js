@@ -92,9 +92,9 @@ async function testWindowSizePositive(width, height) {
   await new Promise((resolve, reject) => {
     let blob = new Blob([data], { type: "image/png" });
     let reader = new FileReader();
-    reader.onloadend = function() {
+    reader.onloadend = function () {
       let screenshot = new Image();
-      screenshot.onload = function() {
+      screenshot.onload = function () {
         is(
           screenshot.width,
           width,
@@ -129,9 +129,9 @@ async function testGreen(url, path) {
   let image = await new Promise((resolve, reject) => {
     let blob = new Blob([data], { type: "image/png" });
     let reader = new FileReader();
-    reader.onloadend = function() {
+    reader.onloadend = function () {
       let screenshot = new Image();
-      screenshot.onload = function() {
+      screenshot.onload = function () {
         resolve(screenshot);
       };
       screenshot.src = reader.result;

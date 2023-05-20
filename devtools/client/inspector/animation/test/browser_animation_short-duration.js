@@ -5,7 +5,7 @@
 
 // Test tooltips and iteration path of summary graph with short duration animation.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_short_duration.html");
   const { panel } = await openAnimationInspector();
 

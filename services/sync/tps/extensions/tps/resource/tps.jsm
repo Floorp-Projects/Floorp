@@ -168,7 +168,7 @@ var TPS = {
   _init: function TPS__init() {
     this.delayAutoSync();
 
-    OBSERVER_TOPICS.forEach(function(aTopic) {
+    OBSERVER_TOPICS.forEach(function (aTopic) {
       Services.obs.addObserver(this, aTopic, true);
     }, this);
 
@@ -207,7 +207,7 @@ var TPS = {
 
       switch (topic) {
         case "profile-before-change":
-          OBSERVER_TOPICS.forEach(function(topic) {
+          OBSERVER_TOPICS.forEach(function (topic) {
             Services.obs.removeObserver(this, topic);
           }, this);
 
@@ -1197,7 +1197,7 @@ var TPS = {
   _interceptSyncTelemetry() {
     let originalObserve = lazy.SyncTelemetry.observe;
     let self = this;
-    lazy.SyncTelemetry.observe = function() {
+    lazy.SyncTelemetry.observe = function () {
       try {
         originalObserve.apply(this, arguments);
       } catch (e) {

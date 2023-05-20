@@ -16,7 +16,7 @@ function getColumn(table, column, url) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   // Make sure titles are correctly saved for a URI with the proper
   // notifications.
   const titleChangedPromise = PlacesTestUtils.waitForNotification(

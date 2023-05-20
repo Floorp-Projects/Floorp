@@ -34,7 +34,7 @@ const EMPTY_WORKERS_RESPONSE = {
 };
 
 // Test that workers are displayed and updated for remote runtimes when expected.
-add_task(async function() {
+add_task(async function () {
   const mocks = new Mocks();
 
   const { document, tab, window } = await openAboutDebugging({

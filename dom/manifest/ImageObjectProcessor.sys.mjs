@@ -40,7 +40,7 @@ Object.defineProperties(ImageObjectProcessor, {
   },
 });
 
-ImageObjectProcessor.prototype.process = function(
+ImageObjectProcessor.prototype.process = function (
   aManifest,
   aBaseURL,
   aMemberName

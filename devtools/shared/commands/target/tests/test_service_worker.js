@@ -6,6 +6,6 @@
 // We don't need any computation in the worker,
 // but at least register a fetch listener so that
 // we force instantiating the SW when loading the page.
-self.onfetch = function(event) {
+self.onfetch = function (event) {
   // do nothing.
 };

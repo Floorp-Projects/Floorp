@@ -683,7 +683,7 @@ export class FxAccounts {
   }
 }
 
-var FxAccountsInternal = function() {};
+var FxAccountsInternal = function () {};
 
 /**
  * The internal API's prototype.
@@ -707,7 +707,7 @@ FxAccountsInternal.prototype = {
   // All significant initialization should be done in this initialize() method
   // to help with our mocking story.
   initialize() {
-    XPCOMUtils.defineLazyGetter(this, "fxaPushService", function() {
+    XPCOMUtils.defineLazyGetter(this, "fxaPushService", function () {
       return Cc["@mozilla.org/fxaccounts/push;1"].getService(
         Ci.nsISupports
       ).wrappedJSObject;

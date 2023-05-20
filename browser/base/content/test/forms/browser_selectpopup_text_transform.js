@@ -6,7 +6,7 @@ const PAGE = `
 </select>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.forms.select.customstyling", true]],
   });
@@ -16,7 +16,7 @@ add_task(async function() {
       gBrowser,
       url,
     },
-    async function(browser) {
+    async function (browser) {
       let popup = await openSelectPopup("click");
       let menuitems = popup.querySelectorAll("menuitem");
       is(menuitems[0].textContent, "abc", "Option text should be lowercase");

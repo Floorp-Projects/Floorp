@@ -9,7 +9,7 @@ const {
 } = require("resource://devtools/shared/constants.js");
 
 // Checks for the AccessibleWalkerActor audit.
-add_task(async function() {
+add_task(async function () {
   const {
     target,
     a11yWalker,

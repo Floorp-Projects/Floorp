@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 export function addExceptionFromResources(resources) {
-  return async function({ dispatch }) {
+  return async function ({ dispatch }) {
     for (const resource of resources) {
       const { pageError } = resource;
       if (!pageError.error) {

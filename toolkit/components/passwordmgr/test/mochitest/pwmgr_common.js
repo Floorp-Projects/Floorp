@@ -565,7 +565,11 @@ function registerRunTests(existingPasswordFieldsCount = 0) {
       form.appendChild(password);
 
       let foundForcer = false;
-      var observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
+      var observer = SpecialPowers.wrapCallback(function (
+        subject,
+        topic,
+        data
+      ) {
         if (data === "observerforcer") {
           foundForcer = true;
         } else {
@@ -677,7 +681,7 @@ async function loadFormIntoWindow(origin, html, win, task) {
   let loadedPromise = new Promise(resolve => {
     win.addEventListener(
       "load",
-      function(event) {
+      function (event) {
         if (event.target.location.href.endsWith("blank.html")) {
           resolve();
         }
@@ -692,7 +696,7 @@ async function loadFormIntoWindow(origin, html, win, task) {
   info(`Waiting for window to load for origin: ${origin}`);
   await loadedPromise;
 
-  await SpecialPowers.spawn(win, [html, task?.toString()], function(
+  await SpecialPowers.spawn(win, [html, task?.toString()], function (
     contentHtml,
     contentTask = null
   ) {

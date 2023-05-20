@@ -12636,14 +12636,14 @@ gCSSProperties["grid-row-end"] = {
 // The grid-column and grid-row shorthands take values of the form
 //   <grid-line> [ / <grid-line> ]?
 var gridColumnRowOtherValues = [].concat(gridLineOtherValues);
-gridLineOtherValues.concat(["auto"]).forEach(function(val) {
+gridLineOtherValues.concat(["auto"]).forEach(function (val) {
   gridColumnRowOtherValues.push(" foo / " + val);
   gridColumnRowOtherValues.push(val + "/2");
 });
 var gridColumnRowInvalidValues = ["foo, bar", "foo / bar / baz"].concat(
   gridLineInvalidValues
 );
-gridLineInvalidValues.forEach(function(val) {
+gridLineInvalidValues.forEach(function (val) {
   gridColumnRowInvalidValues.push("span 3 / " + val);
   gridColumnRowInvalidValues.push(val + " / foo");
 });
@@ -12667,7 +12667,7 @@ gCSSProperties["grid-row"] = {
 };
 
 var gridAreaOtherValues = gridLineOtherValues.slice();
-gridLineOtherValues.forEach(function(val) {
+gridLineOtherValues.forEach(function (val) {
   gridAreaOtherValues.push("foo / " + val);
   gridAreaOtherValues.push(val + "/2/3");
   gridAreaOtherValues.push("foo / bar / " + val + " / baz");
@@ -12680,7 +12680,7 @@ var gridAreaInvalidValues = [
   "foo / bar / inherit / baz",
   "foo / bar / baz / unset",
 ].concat(gridLineInvalidValues);
-gridLineInvalidValues.forEach(function(val) {
+gridLineInvalidValues.forEach(function (val) {
   gridAreaInvalidValues.push("foo / " + val);
   gridAreaInvalidValues.push("foo / bar / " + val);
   gridAreaInvalidValues.push("foo / 4 / bar / " + val);
@@ -13953,7 +13953,7 @@ for (var prop in gCSSProperties) {
         "prerequisites",
       ];
 
-      fieldsToCopy.forEach(function(fieldName) {
+      fieldsToCopy.forEach(function (fieldName) {
         // (Don't copy the field if the alias already has something there,
         // or if the aliased property doesn't have anything to copy.)
         if (!(fieldName in entry) && fieldName in aliasTargetEntry) {

@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   let oldBlocklistValue = Services.prefs.getStringPref(
     "places.interactions.customBlocklist",
     "[]"

@@ -33,7 +33,7 @@ function waitForThemeChange(list) {
 
 let mockProvider;
 
-add_setup(async function() {
+add_setup(async function () {
   mockProvider = new MockProvider(["extension", "sitepermission"]);
   promptService = mockPromptService();
 });

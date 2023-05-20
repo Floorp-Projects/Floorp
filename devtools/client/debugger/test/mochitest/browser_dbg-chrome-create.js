@@ -20,7 +20,7 @@ const { BrowserToolboxLauncher } = ChromeUtils.importESModule(
   "resource://devtools/client/framework/browser-toolbox/Launcher.sys.mjs"
 );
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.chrome.enabled", true);
   await pushPref("devtools.debugger.remote-enabled", true);
 

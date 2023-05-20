@@ -5,14 +5,14 @@
 
 // Test for Web Console commands registration.
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab("data:text/html,<div id=quack></div>");
 
   const commands = await CommandsFactory.forTab(tab);
   await commands.targetCommand.startListening();
 
   // Fetch WebConsoleCommandsManager so that it is available for next Content Tasks
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
     const { require } = ChromeUtils.importESModule(
       "resource://devtools/shared/loader/Loader.sys.mjs"
     );
@@ -34,7 +34,7 @@ async function evaluateJSAndCheckResult(commands, input, expected) {
 }
 
 async function registerNewCommand(commands) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
     this.WebConsoleCommandsManager.register("setFoo", (owner, value) => {
       owner.window.foo = value;
       return "ok";
@@ -47,13 +47,13 @@ async function registerNewCommand(commands) {
     result: "ok",
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
     is(content.top.foo, "bar", "top.foo should equal to 'bar'");
   });
 }
 
 async function registerAccessor(commands) {
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
     this.WebConsoleCommandsManager.register("$foo", {
       get(owner) {
         const foo = owner.window.document.getElementById("quack");
@@ -68,7 +68,7 @@ async function registerAccessor(commands) {
     result: ">o_/",
   });
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
     is(
       content.document.getElementById("quack").textContent,
       ">o_/",

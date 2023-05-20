@@ -98,7 +98,7 @@ function testInit() {
     );
   } else {
     // This code allows us to redirect without requiring specialpowers for chrome and a11y tests.
-    let messageHandler = function(m) {
+    let messageHandler = function (m) {
       // eslint-disable-next-line no-undef
       messageManager.removeMessageListener("chromeEvent", messageHandler);
       var url = m.json.data;
@@ -659,7 +659,7 @@ Tester.prototype = {
     let newTimers;
     try {
       await this.TestUtils.waitForCondition(
-        async function() {
+        async function () {
           // The array returned by nsITimerManager.getTimers doesn't include
           // timers that are queued in the event loop of their target thread.
           // By waiting for a tick, we ensure the timers that might fire about
@@ -768,7 +768,7 @@ Tester.prototype = {
       this.PromiseTestUtils.assertNoMoreExpectedRejections();
       await this.ensureVsyncDisabled();
 
-      Object.keys(window).forEach(function(prop) {
+      Object.keys(window).forEach(function (prop) {
         if (parseInt(prop) == prop) {
           // This is a string which when parsed as an integer and then
           // stringified gives the original string.  As in, this is in fact a
@@ -1249,7 +1249,7 @@ Tester.prototype = {
     scope.TestUtils = this.TestUtils;
     scope.ExtensionTestUtils = this.ExtensionTestUtils;
     // Pass a custom report function for mochitest style reporting.
-    scope.Assert = new this.Assert(function(err, message, stack) {
+    scope.Assert = new this.Assert(function (err, message, stack) {
       currentTest.addResult(
         new testResult(
           err
@@ -1272,14 +1272,14 @@ Tester.prototype = {
     this.ContentTask.setTestScope(currentScope);
 
     // Allow Assert.sys.mjs methods to be tacked to the current scope.
-    scope.export_assertions = function() {
+    scope.export_assertions = function () {
       for (let func in this.Assert) {
         this[func] = this.Assert[func].bind(this.Assert);
       }
     };
 
     // Override SimpleTest methods with ours.
-    SIMPLETEST_OVERRIDES.forEach(function(m) {
+    SIMPLETEST_OVERRIDES.forEach(function (m) {
       this.SimpleTest[m] = this[m];
     }, scope);
 
@@ -1792,7 +1792,7 @@ function testScope(aTester, aTest, expected) {
   this.finish = function test_finish() {
     self.__done = true;
     if (self.__waitTimer) {
-      self.executeSoon(function() {
+      self.executeSoon(function () {
         if (self.__done && self.__waitTimer) {
           clearTimeout(self.__waitTimer);
           self.__waitTimer = null;
@@ -1804,7 +1804,7 @@ function testScope(aTester, aTest, expected) {
 
   this.requestCompleteLog = function test_requestCompleteLog() {
     self.__tester.structuredLogger.deactivateBuffering();
-    self.registerCleanupFunction(function() {
+    self.registerCleanupFunction(function () {
       self.__tester.structuredLogger.activateBuffering();
     });
   };

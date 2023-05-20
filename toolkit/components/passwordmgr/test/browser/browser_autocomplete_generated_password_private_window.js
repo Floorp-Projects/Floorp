@@ -4,7 +4,7 @@ const FORM_PAGE_PATH =
   "/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
 const passwordInputSelector = "#form-basic-password";
 
-add_setup(async function() {
+add_setup(async function () {
   Services.telemetry.clearEvents();
   TelemetryTestUtils.assertEvents([], {
     category: "pwmgr",
@@ -18,7 +18,7 @@ add_task(async function test_autocomplete_new_password_popup_item_visible() {
       gBrowser,
       url: TEST_ORIGIN,
     },
-    async function(browser) {
+    async function (browser) {
       info("Generate and cache a password for a non-private context");
       let lmp = browser.browsingContext.currentWindowGlobal.getActor(
         "LoginManager"
@@ -40,7 +40,7 @@ add_task(async function test_autocomplete_new_password_popup_item_visible() {
       gBrowser: win.gBrowser,
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       await ContentTask.spawn(
         browser,
@@ -94,7 +94,7 @@ add_task(async function test_autocomplete_menu_item_enabled() {
       gBrowser: win.gBrowser,
       url: TEST_ORIGIN + FORM_PAGE_PATH,
     },
-    async function(browser) {
+    async function (browser) {
       await SimpleTest.promiseFocus(browser);
       await openPasswordContextMenu(browser, passwordInputSelector);
       let generatedPasswordItem = doc.getElementById(

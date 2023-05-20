@@ -16,22 +16,22 @@ const MenuButton = createFactory(
 const ToolboxTabs = createFactory(
   require("resource://devtools/client/framework/components/ToolboxTabs.js")
 );
-loader.lazyGetter(this, "MeatballMenu", function() {
+loader.lazyGetter(this, "MeatballMenu", function () {
   return createFactory(
     require("resource://devtools/client/framework/components/MeatballMenu.js")
   );
 });
-loader.lazyGetter(this, "MenuItem", function() {
+loader.lazyGetter(this, "MenuItem", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/menu/MenuItem.js")
   );
 });
-loader.lazyGetter(this, "MenuList", function() {
+loader.lazyGetter(this, "MenuList", function () {
   return createFactory(
     require("resource://devtools/client/shared/components/menu/MenuList.js")
   );
 });
-loader.lazyGetter(this, "LocalizationProvider", function() {
+loader.lazyGetter(this, "LocalizationProvider", function () {
   return createFactory(
     require("resource://devtools/client/shared/vendor/fluent-react.js")
       .LocalizationProvider
@@ -245,8 +245,9 @@ class ToolboxToolbar extends Component {
         id,
         title: description,
         disabled,
-        className: `devtools-tabbar-button command-button ${buttonClass ||
-          ""} ${isChecked ? "checked" : ""}`,
+        className: `devtools-tabbar-button command-button ${
+          buttonClass || ""
+        } ${isChecked ? "checked" : ""}`,
         onClick: event => {
           onClick(event);
           focusButton(id);

@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-add_setup(async function() {
+add_setup(async function () {
   await setupPolicyEngineWithJson({
     policies: {
       BlockAboutSupport: true,
@@ -26,7 +26,7 @@ add_task(async function test_about_memory() {
     "about:memory"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let aboutSupportLink = content.document.querySelector(
       "a[href='about:support']"
     );

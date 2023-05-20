@@ -7,7 +7,7 @@
 
 const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test paste on middle-click`;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.selfxss.count", 5);
 
   // Enable pasting with middle-click.

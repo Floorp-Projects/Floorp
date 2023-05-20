@@ -313,7 +313,7 @@ class Port {
   }
 }
 
-defineLazyGetter(Port.prototype, "api", function() {
+defineLazyGetter(Port.prototype, "api", function () {
   let api = this.getAPI();
   return Cu.cloneInto(api, this.context.cloneScope, { cloneFunctions: true });
 });

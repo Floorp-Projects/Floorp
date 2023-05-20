@@ -9,7 +9,7 @@
 const TEST_URI = `http://example.com/browser/toolkit/components/reader/test/readerModeArticle.html`;
 const isMacOS = AppConstants.platform === "macosx";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.input.editor", true);
   await pushPref("reader.parse-on-load.enabled", true);
   // Disable eager evaluation to avoid intermittent failures due to pending

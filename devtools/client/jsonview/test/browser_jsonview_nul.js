@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   info("Test JSON with NUL started.");
 
   const TEST_JSON_URL = 'data:application/json,"foo_%00_bar"';

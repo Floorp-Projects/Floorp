@@ -27,7 +27,7 @@ function waitForDialog(callback) {
 
 function waitForDialogDestroyed(node, callback) {
   // Now listen for the dialog going away again...
-  let observer = new MutationObserver(function(muts) {
+  let observer = new MutationObserver(function (muts) {
     if (!node.parentNode) {
       ok(true, "Dialog is gone");
       done();
@@ -39,7 +39,7 @@ function waitForDialogDestroyed(node, callback) {
     node.ownerGlobal.addEventListener("unload", done);
   }
 
-  let failureTimeout = setTimeout(function() {
+  let failureTimeout = setTimeout(function () {
     ok(false, "Dialog should have been destroyed");
     done();
   }, 10000);
@@ -58,7 +58,7 @@ function waitForDialogDestroyed(node, callback) {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.require_user_interaction_for_beforeunload", false]],
   });
@@ -107,11 +107,11 @@ add_task(async function() {
   ok(!testTab.parentNode, "Tab should be closed completely");
 });
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   if (testTab.parentNode) {
     // Remove the handler, or closing this tab will prove tricky:
     try {
-      await SpecialPowers.spawn(testTab.linkedBrowser, [], function() {
+      await SpecialPowers.spawn(testTab.linkedBrowser, [], function () {
         content.window.onbeforeunload = null;
       });
     } catch (ex) {}

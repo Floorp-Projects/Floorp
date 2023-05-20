@@ -542,7 +542,7 @@ function run_test() {
 function checkIllegalProperties(object, propertyNames) {
   let objectName =
     object instanceof Ci.nsIUpdate ? "nsIUpdate" : "nsIUpdatePatch";
-  propertyNames.forEach(function(name) {
+  propertyNames.forEach(function (name) {
     // Check that calling getProperty, setProperty, and deleteProperty on an
     // nsIUpdate attribute throws NS_ERROR_ILLEGAL_VALUE
     let result = 0;

@@ -106,7 +106,7 @@ async function initToolbox(url, host) {
     }
 
     // Display an error page if we are connected to a remote target and we lose it
-    commands.descriptorFront.once("descriptor-destroyed", function() {
+    commands.descriptorFront.once("descriptor-destroyed", function () {
       // Prevent trying to display the error page if the toolbox tab is being destroyed
       if (host.contentDocument) {
         const error = new Error("Debug target was disconnected");

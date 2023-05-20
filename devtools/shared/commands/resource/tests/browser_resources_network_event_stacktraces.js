@@ -22,7 +22,7 @@ const REQUEST_STUB = {
   },
 };
 
-add_task(async function() {
+add_task(async function () {
   info("Test network stacktraces events");
   const tab = await addTab(TEST_URI);
   const { client, resourceCommand, targetCommand } = await initResourceCommand(

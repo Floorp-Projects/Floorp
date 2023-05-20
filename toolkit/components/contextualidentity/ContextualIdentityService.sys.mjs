@@ -12,17 +12,17 @@ const CONTEXTUAL_IDENTITY_ENABLED_PREF = "privacy.userContext.enabled";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "gBrowserBundle", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gBrowserBundle", function () {
   return Services.strings.createBundle(
     "chrome://browser/locale/browser.properties"
   );
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gTextDecoder", function () {
   return new TextDecoder();
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gTextEncoder", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gTextEncoder", function () {
   return new TextEncoder();
 });
 
@@ -526,7 +526,7 @@ _ContextualIdentityService.prototype = {
 
   countContainerTabs(userContextId = 0) {
     let count = 0;
-    this._forEachContainerTab(function() {
+    this._forEachContainerTab(function () {
       ++count;
     }, userContextId);
     return count;

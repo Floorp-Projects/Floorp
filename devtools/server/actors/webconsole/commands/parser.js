@@ -40,10 +40,7 @@ function formatCommand(string) {
   if (!isCommand(string)) {
     throw Error("formatCommand was called without `:`");
   }
-  const tokens = string
-    .trim()
-    .split(/\s+/)
-    .map(createToken);
+  const tokens = string.trim().split(/\s+/).map(createToken);
   const { command, args } = parseCommand(tokens);
   const argsString = formatArgs(args);
   return `${command}(${argsString})`;

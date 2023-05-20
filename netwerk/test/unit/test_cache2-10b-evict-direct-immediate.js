@@ -8,9 +8,9 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW | DOOMED, "b1m", "b1d", function(entry) {
+    new OpenCallback(NEW | DOOMED, "b1m", "b1d", function (entry) {
       entry.asyncDoom(
-        new EvictionCallback(true, function() {
+        new EvictionCallback(true, function () {
           finish_cache2_test();
         })
       );

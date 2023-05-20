@@ -615,7 +615,7 @@ function promiseNativeWheelAndWaitForWheelEvent(
     var targetWindow = windowForTarget(aTarget);
     targetWindow.addEventListener(
       "wheel",
-      function(e) {
+      function (e) {
         setTimeout(resolve, 0);
       },
       { once: true }
@@ -644,7 +644,7 @@ function promiseNativeWheelAndWaitForScrollEvent(
     var targetWindow = windowForTarget(aTarget);
     targetWindow.addEventListener(
       "scroll",
-      function() {
+      function () {
         setTimeout(resolve, 0);
       },
       { capture: true, once: true }
@@ -1198,7 +1198,7 @@ async function synthesizeNativeMouseEventWithAPZ(aParams, aObserver = null) {
       button,
       modifierFlags,
       element,
-      function() {
+      function () {
         utils.sendNativeMouseEvent(
           pt.x,
           pt.y,
@@ -1398,7 +1398,7 @@ async function promiseVerticalScrollbarDrag(
   });
 
   // and return an async function to call afterwards to finish up the drag
-  return async function() {
+  return async function () {
     dump("Finishing drag of #" + targetElement.id + "\n");
     await promiseNativeMouseEventWithAPZ({
       target: aTarget,
@@ -1504,7 +1504,7 @@ async function promiseNativeMouseDrag(
   }
 
   // and return a function-wrapped promise to call afterwards to finish the drag
-  return function() {
+  return function () {
     return promiseNativeMouseEventWithAPZ({
       target,
       offsetX: mouseX + distanceX,
@@ -1567,7 +1567,7 @@ function promiseScrollend(aTarget = window) {
 function promiseTouchEnd(element, count = 1) {
   return new Promise(resolve => {
     var eventCount = 0;
-    var counterFunction = function(e) {
+    var counterFunction = function (e) {
       eventCount++;
       if (eventCount == count) {
         element.removeEventListener("touchend", counterFunction, {

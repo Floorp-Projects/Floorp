@@ -144,7 +144,7 @@ export class GeckoViewContentChild extends GeckoViewActorChild {
         const { contentWindow } = this;
         const dwu = contentWindow.windowUtils;
 
-        const zoomToFocusedInput = function() {
+        const zoomToFocusedInput = function () {
           if (!dwu.flushApzRepaints()) {
             dwu.zoomToFocusedInput();
             return;
@@ -158,7 +158,7 @@ export class GeckoViewContentChild extends GeckoViewActorChild {
         const { force } = message.data;
 
         let gotResize = false;
-        const onResize = function() {
+        const onResize = function () {
           gotResize = true;
           if (dwu.isMozAfterPaintPending) {
             contentWindow.windowRoot.addEventListener(

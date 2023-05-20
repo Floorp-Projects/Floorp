@@ -2,7 +2,7 @@
 // When a page redirects multiple times, from_visit should point to the
 // previous visit in the chain, not to the first visit in the chain.
 
-add_task(async function() {
+add_task(async function () {
   await PlacesUtils.history.clear();
 
   const BASE_URL =
@@ -27,7 +27,7 @@ add_task(async function() {
         is(this._notified.length, 4);
         PlacesObservers.removeListener(["page-visited"], this.handleEvents);
 
-        (async function() {
+        (async function () {
           // Get all pages visited from the original typed one
           let db = await PlacesUtils.promiseDBConnection();
           let rows = await db.execute(
@@ -76,7 +76,7 @@ add_task(async function() {
       gBrowser,
       url: TEST_URI.spec,
     },
-    async function(browser) {
+    async function (browser) {
       // Load begin page, click link on page to record visits.
       await BrowserTestUtils.synthesizeMouseAtCenter("#clickme", {}, browser);
 

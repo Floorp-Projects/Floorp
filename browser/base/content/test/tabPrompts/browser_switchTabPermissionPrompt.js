@@ -8,7 +8,7 @@ add_task(async function test_check_file_prompt() {
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     await BrowserTestUtils.switchTab(gBrowser, initialTab);
 
-    let testHelper = async function(uri, expectedValue) {
+    let testHelper = async function (uri, expectedValue) {
       BrowserTestUtils.loadURIString(browser, uri);
       await BrowserTestUtils.browserLoaded(browser, false, uri);
       let dialogFinishedShowing = TestUtils.topicObserved(

@@ -22,7 +22,7 @@ const {
 
 async function setup() {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.window.testColorMatrix = function(actual, expected) {
+    content.window.testColorMatrix = function (actual, expected) {
       for (const idx in actual) {
         is(
           actual[idx].toFixed(3),
@@ -32,7 +32,7 @@ async function setup() {
       }
     };
   });
-  SimpleTest.registerCleanupFunction(async function() {
+  SimpleTest.registerCleanupFunction(async function () {
     await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
       content.window.testColorMatrix = null;
     });
@@ -49,8 +49,9 @@ async function testSimulate(simulator, matrix, type = null) {
     ([simulationType, simulationMatrix]) => {
       const { window } = content;
       info(
-        `Test that color matrix is set to ${simulationType ||
-          "default"} simulation values.`
+        `Test that color matrix is set to ${
+          simulationType || "default"
+        } simulation values.`
       );
       window.testColorMatrix(
         window.docShell.getColorMatrix(),
@@ -60,7 +61,7 @@ async function testSimulate(simulator, matrix, type = null) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   const {
     target,
     accessibility,

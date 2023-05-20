@@ -6,7 +6,7 @@
 // Test editing selectors for rules inside @import'd stylesheets.
 // This is a regression test for bug 1355819.
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_edit_imported_selector.html");
   const { inspector, view } = await openRuleView();
 

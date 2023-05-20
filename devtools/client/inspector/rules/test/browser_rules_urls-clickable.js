@@ -12,7 +12,7 @@ const BASE_64_URL =
   "FCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAA" +
   "BJRU5ErkJggg==";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, view } = await openRuleView();
   await selectNodes(inspector, view);

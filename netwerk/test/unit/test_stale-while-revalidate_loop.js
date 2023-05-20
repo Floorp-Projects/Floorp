@@ -26,7 +26,7 @@ async function get_response(channel, fromCache) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   do_get_profile();
   const PORT = Services.env.get("MOZHTTP2_PORT");
   const URI = `https://localhost:${PORT}/stale-while-revalidate-loop-test`;

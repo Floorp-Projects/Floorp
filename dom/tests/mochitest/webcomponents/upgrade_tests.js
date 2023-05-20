@@ -1,12 +1,12 @@
 function test_upgrade(f, msg) {
   // Run upgrading test on an element created by HTML parser.
-  test_with_new_window(function(testWindow, testMsg) {
+  test_with_new_window(function (testWindow, testMsg) {
     let elementParser = testWindow.document.querySelector("unresolved-element");
     f(testWindow, elementParser, testMsg);
   }, msg + " (HTML parser)");
 
   // Run upgrading test on an element created by document.createElement.
-  test_with_new_window(function(testWindow, testMsg) {
+  test_with_new_window(function (testWindow, testMsg) {
     let element = testWindow.document.createElement("unresolved-element");
     testWindow.document.documentElement.appendChild(element);
     f(testWindow, element, testMsg);
@@ -15,7 +15,7 @@ function test_upgrade(f, msg) {
 
 // Test cases
 
-test_upgrade(function(testWindow, testElement, msg) {
+test_upgrade(function (testWindow, testElement, msg) {
   class MyCustomElement extends testWindow.HTMLElement {}
   testWindow.customElements.define("unresolved-element", MyCustomElement);
   SimpleTest.is(
@@ -25,7 +25,7 @@ test_upgrade(function(testWindow, testElement, msg) {
   );
 }, "Custom element must be upgraded if there is a matching definition");
 
-test_upgrade(function(testWindow, testElement, msg) {
+test_upgrade(function (testWindow, testElement, msg) {
   testElement.remove();
   class MyCustomElement extends testWindow.HTMLElement {}
   testWindow.customElements.define("unresolved-element", MyCustomElement);
@@ -36,7 +36,7 @@ test_upgrade(function(testWindow, testElement, msg) {
   );
 }, "Custom element must not be upgraded if it has been removed from tree");
 
-test_upgrade(function(testWindow, testElement, msg) {
+test_upgrade(function (testWindow, testElement, msg) {
   let exceptionToThrow = { name: "exception thrown by a custom constructor" };
   class ThrowCustomElement extends testWindow.HTMLElement {
     constructor() {
@@ -48,7 +48,7 @@ test_upgrade(function(testWindow, testElement, msg) {
   }
 
   let uncaughtError;
-  window.onerror = function(message, url, lineNumber, columnNumber, error) {
+  window.onerror = function (message, url, lineNumber, columnNumber, error) {
     uncaughtError = error;
     return true;
   };
@@ -57,7 +57,7 @@ test_upgrade(function(testWindow, testElement, msg) {
   SimpleTest.is(uncaughtError.name, exceptionToThrow.name, msg);
 }, "Upgrading must report an exception thrown by a custom element constructor");
 
-test_upgrade(function(testWindow, testElement, msg) {
+test_upgrade(function (testWindow, testElement, msg) {
   class InstantiatesItselfAfterSuper extends testWindow.HTMLElement {
     constructor(doNotCreateItself) {
       super();
@@ -68,7 +68,7 @@ test_upgrade(function(testWindow, testElement, msg) {
   }
 
   let uncaughtError;
-  window.onerror = function(message, url, lineNumber, columnNumber, error) {
+  window.onerror = function (message, url, lineNumber, columnNumber, error) {
     uncaughtError = error;
     return true;
   };
@@ -81,7 +81,7 @@ test_upgrade(function(testWindow, testElement, msg) {
 }, "Upgrading must report an TypeError when the top of the " +
   "construction stack is marked AlreadyConstructed");
 
-test_upgrade(function(testWindow, testElement, msg) {
+test_upgrade(function (testWindow, testElement, msg) {
   class InstantiatesItselfBeforeSuper extends testWindow.HTMLElement {
     constructor(doNotCreateItself) {
       if (!doNotCreateItself) {
@@ -92,7 +92,7 @@ test_upgrade(function(testWindow, testElement, msg) {
   }
 
   let uncaughtError;
-  window.onerror = function(message, url, lineNumber, columnNumber, error) {
+  window.onerror = function (message, url, lineNumber, columnNumber, error) {
     uncaughtError = error;
     return true;
   };
@@ -106,7 +106,7 @@ test_upgrade(function(testWindow, testElement, msg) {
   "construction stack is marked AlreadyConstructed due to a custom element " +
   "constructor constructing itself before super() call");
 
-test_upgrade(function(testWindow, testElement, msg) {
+test_upgrade(function (testWindow, testElement, msg) {
   class MyOtherElement extends testWindow.HTMLElement {
     constructor() {
       super();
@@ -117,7 +117,7 @@ test_upgrade(function(testWindow, testElement, msg) {
   }
 
   let uncaughtError;
-  window.onerror = function(message, url, lineNumber, columnNumber, error) {
+  window.onerror = function (message, url, lineNumber, columnNumber, error) {
     uncaughtError = error;
     return true;
   };

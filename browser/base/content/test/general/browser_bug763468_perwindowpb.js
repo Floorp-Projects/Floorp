@@ -5,7 +5,7 @@
 
 // This test makes sure that opening a new tab in private browsing mode opens about:privatebrowsing
 add_task(async function testPBNewTab() {
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     for (let win of windowsToClose) {
       await BrowserTestUtils.closeWindow(win);
     }

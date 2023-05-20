@@ -405,8 +405,9 @@ function assertDNRTelemetryMetricsSamplesCount(metrics, msg) {
     Assert.notEqual(
       gleanData,
       undefined,
-      `Got some sample for Glean metric extensionApisDnr.${metric}: ${gleanData &&
-        JSON.stringify(gleanData)}`
+      `Got some sample for Glean metric extensionApisDnr.${metric}: ${
+        gleanData && JSON.stringify(gleanData)
+      }`
     );
     Assert.equal(
       valueSum(gleanData.values),

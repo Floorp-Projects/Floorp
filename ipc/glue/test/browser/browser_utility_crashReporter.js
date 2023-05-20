@@ -29,11 +29,6 @@ add_task(async function utilityOneActor() {
 
 add_task(async function utilityManyActors() {
   await startAndCrashUtility(42, actorNames => {
-    return (
-      actorNames ===
-      Array(42)
-        .fill("unknown")
-        .join(", ")
-    );
+    return actorNames === Array(42).fill("unknown").join(", ");
   });
 });

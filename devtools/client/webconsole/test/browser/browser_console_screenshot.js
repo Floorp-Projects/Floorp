@@ -31,7 +31,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>
       <div></div>
     </body>`;
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const hud = await BrowserConsoleManager.toggleBrowserConsole();
 

@@ -9,7 +9,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 addAccessibleTask(
   "e10s/doc_treeupdate_whitespace.html",
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info("Testing top level doc");
     queryInterfaces(docAcc, [nsIAccessibleDocument]);
     const topUrl =

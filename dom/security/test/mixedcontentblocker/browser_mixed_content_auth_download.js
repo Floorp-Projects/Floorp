@@ -118,7 +118,7 @@ async function runTest(url, link, checkFunction, description) {
   await BrowserTestUtils.removeTab(tab);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   let list = await Downloads.getList(Downloads.ALL);
   list.addView(downloadMonitoringView);
   registerCleanupFunction(() => list.removeView(downloadMonitoringView));

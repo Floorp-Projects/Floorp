@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   // Enable the multiprocess mode as it is more likely to break on startup
   await pushPref("devtools.browsertoolbox.scope", "everything");
 

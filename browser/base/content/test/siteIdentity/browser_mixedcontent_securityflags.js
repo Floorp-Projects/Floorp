@@ -20,7 +20,7 @@ const PREF_DISPLAY_UPGRADE = "security.mixed_content.upgrade_display_content";
 const PREF_ACTIVE = "security.mixed_content.block_active_content";
 var gTestBrowser = null;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   // Set preferences back to their original values
   Services.prefs.clearUserPref(PREF_DISPLAY);
   Services.prefs.clearUserPref(PREF_DISPLAY_UPGRADE);

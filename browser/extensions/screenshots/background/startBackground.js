@@ -15,7 +15,7 @@
 const startTime = Date.now();
 
 // Set up to be able to use fluent:
-(function() {
+(function () {
   let link = document.createElement("link");
   link.setAttribute("rel", "localization");
   link.setAttribute("href", "browser/screenshots.ftl");
@@ -27,7 +27,7 @@ const startTime = Date.now();
   document.head.appendChild(link);
 })();
 
-this.getStrings = async function(ids) {
+this.getStrings = async function (ids) {
   if (document.readyState != "complete") {
     await new Promise(resolve =>
       window.addEventListener("load", resolve, { once: true })
@@ -38,11 +38,11 @@ this.getStrings = async function(ids) {
 };
 
 let zoomFactor = 1;
-this.getZoomFactor = function() {
+this.getZoomFactor = function () {
   return zoomFactor;
 };
 
-this.startBackground = (function() {
+this.startBackground = (function () {
   const exports = { startTime };
 
   const backgroundScripts = [

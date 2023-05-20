@@ -6,7 +6,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await BrowserConsoleManager.toggleBrowserConsole();
 
   // Bug 1687657, if the thread actor is attached or set up for breakpoints,

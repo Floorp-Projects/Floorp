@@ -15,7 +15,7 @@ const TEST_PATH2 = getRootDirectory(gTestPath).replace(
 var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   info("Running the cleanup code");
   MockFilePicker.cleanup();
   if (gTestDir && gTestDir.exists()) {
@@ -71,7 +71,7 @@ function checkContents(dir, expected, str) {
 }
 
 async function addFrame(browser, path, selector) {
-  await SpecialPowers.spawn(browser, [path, selector], async function(
+  await SpecialPowers.spawn(browser, [path, selector], async function (
     path,
     selector
   ) {
@@ -109,8 +109,8 @@ async function handleResult(expected, str) {
   });
 }
 
-add_task(async function() {
-  await BrowserTestUtils.withNewTab(TEST_PATH + "image.html", async function(
+add_task(async function () {
+  await BrowserTestUtils.withNewTab(TEST_PATH + "image.html", async function (
     browser
   ) {
     await addFrame(browser, TEST_PATH + "image.html", "body");
@@ -119,7 +119,7 @@ add_task(async function() {
     gTestDir = createTemporarySaveDirectory();
 
     MockFilePicker.displayDirectory = gTestDir;
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       let destFile = gTestDir.clone();
       destFile.append("first.html");
       MockFilePicker.setFiles([destFile]);
@@ -153,7 +153,7 @@ add_task(async function() {
       "second_files/image_data/dummy.png",
     ]);
 
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       let destFile = gTestDir.clone();
       destFile.append("second.html");
       MockFilePicker.setFiles([destFile]);
@@ -175,7 +175,7 @@ add_task(async function() {
       "third_files/dummy.png",
     ]);
 
-    MockFilePicker.showCallback = function(fp) {
+    MockFilePicker.showCallback = function (fp) {
       let destFile = gTestDir.clone();
       destFile.append("third.html");
       MockFilePicker.setFiles([destFile]);

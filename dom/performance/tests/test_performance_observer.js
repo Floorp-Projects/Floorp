@@ -1,7 +1,7 @@
 test(t => {
   assert_throws(
     { name: "TypeError" },
-    function() {
+    function () {
       new PerformanceObserver();
     },
     "PerformanceObserver constructor should throw TypeError if no argument is specified."
@@ -9,7 +9,7 @@ test(t => {
 
   assert_throws(
     { name: "TypeError" },
-    function() {
+    function () {
       new PerformanceObserver({});
     },
     "PerformanceObserver constructor should throw TypeError if the argument is not a function."
@@ -21,7 +21,7 @@ test(t => {
 
   assert_throws(
     { name: "TypeError" },
-    function() {
+    function () {
       observer.observe();
     },
     "observe() should throw TypeError exception if no option specified."
@@ -29,7 +29,7 @@ test(t => {
 
   assert_throws(
     { name: "TypeError" },
-    function() {
+    function () {
       observer.observe({ unsupportedAttribute: "unsupported" });
     },
     "obsrve() should throw TypeError exception if the option has no 'entryTypes' attribute."
@@ -43,7 +43,7 @@ test(t => {
 
   assert_throws(
     { name: "TypeError" },
-    function() {
+    function () {
       observer.observe({ entryTypes: null });
     },
     "obsrve() should throw TypeError exception if 'entryTypes' attribute is null."

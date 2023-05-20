@@ -3,10 +3,10 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const URI = "data:text/html;charset=utf-8,<iframe id='test-iframe'></iframe>";
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URI }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URI }, async function (
     browser
   ) {
     await SpecialPowers.spawn(browser, [], test_init);

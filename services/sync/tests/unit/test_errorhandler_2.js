@@ -14,7 +14,7 @@ const { FileUtils } = ChromeUtils.importESModule(
 const fakeServer = new SyncServer();
 fakeServer.start();
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   return promiseStopServer(fakeServer).finally(() => {
     Svc.Prefs.resetBranch("");
   });

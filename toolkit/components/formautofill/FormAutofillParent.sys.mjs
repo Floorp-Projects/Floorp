@@ -456,9 +456,7 @@ export class FormAutofillParent extends JSWindowActorParent {
 
       if (
         lcSearchString &&
-        !String(fieldValue)
-          .toLowerCase()
-          .startsWith(lcSearchString)
+        !String(fieldValue).toLowerCase().startsWith(lcSearchString)
       ) {
         continue;
       }

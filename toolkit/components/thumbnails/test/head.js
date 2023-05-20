@@ -23,7 +23,7 @@ var oldEnabledPref = Services.prefs.getBoolPref(
 );
 Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", false);
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeTab(gBrowser.tabs[1]);
   }
@@ -162,7 +162,7 @@ function dontExpireThumbnailURLs(aURLs) {
   let dontExpireURLs = cb => cb(aURLs);
   PageThumbs.addExpirationFilter(dontExpireURLs);
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     PageThumbs.removeExpirationFilter(dontExpireURLs);
   });
 }

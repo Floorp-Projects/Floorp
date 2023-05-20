@@ -104,7 +104,7 @@ function createManifestTemporarily(tempDir, manifestText) {
     .QueryInterface(Ci.nsIComponentRegistrar)
     .autoRegister(tempfile);
 
-  return function() {
+  return function () {
     tempfile.fileSize = 0; // truncate the manifest
     gChromeReg.checkForNewChrome();
     Services.prefs.clearUserPref(XUL_CACHE_PREF);
@@ -123,7 +123,7 @@ function registerManifestTemporarily(manifestURI) {
     .QueryInterface(Ci.nsIComponentRegistrar)
     .autoRegister(tempfile);
 
-  return function() {
+  return function () {
     tempfile.fileSize = 0; // truncate the manifest
     gChromeReg.checkForNewChrome();
     Services.prefs.clearUserPref(XUL_CACHE_PREF);

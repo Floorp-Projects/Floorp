@@ -79,13 +79,13 @@ add_task(async function test() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(newTabBrowser) {
+    async function (newTabBrowser) {
       await waitForPdfJS(
         newTabBrowser,
         TESTROOT + "file_pdfjs_test.pdf#zoom=100"
       );
 
-      await SpecialPowers.spawn(newTabBrowser, [TESTS], async function(
+      await SpecialPowers.spawn(newTabBrowser, [TESTS], async function (
         contentTESTS
       ) {
         let document = content.document;
@@ -201,7 +201,7 @@ function waitForRoundTrip(browser) {
 }
 
 async function waitForRenderAndGetWidth(newTabBrowser) {
-  return SpecialPowers.spawn(newTabBrowser, [], async function() {
+  return SpecialPowers.spawn(newTabBrowser, [], async function () {
     function waitForRender(document) {
       return new Promise(resolve => {
         document.addEventListener(
@@ -237,7 +237,7 @@ async function waitForRenderAndGetWidth(newTabBrowser) {
 add_task(async function test_browser_zoom() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    async function(newTabBrowser) {
+    async function (newTabBrowser) {
       await waitForPdfJS(newTabBrowser, TESTROOT + "file_pdfjs_test.pdf");
 
       const initialWidth = await waitForRenderAndGetWidth(newTabBrowser);
@@ -267,7 +267,7 @@ add_task(async function test_browser_zoom() {
       );
 
       // Clean-up after the PDF viewer.
-      await SpecialPowers.spawn(newTabBrowser, [], function() {
+      await SpecialPowers.spawn(newTabBrowser, [], function () {
         const viewer = content.wrappedJSObject.PDFViewerApplication;
         return viewer.close();
       });

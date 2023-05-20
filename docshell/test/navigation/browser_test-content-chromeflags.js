@@ -9,7 +9,7 @@ const {
  * Tests that when we open new browser windows from content they
  * get the full browser chrome.
  */
-add_task(async function() {
+add_task(async function () {
   // Make sure that the window.open call will open a new
   // window instead of a new tab.
   await new Promise(resolve => {
@@ -26,7 +26,7 @@ add_task(async function() {
       gBrowser,
       url: TEST_PAGE,
     },
-    async function(browser) {
+    async function (browser) {
       let openedPromise = BrowserTestUtils.waitForNewWindow();
       BrowserTestUtils.synthesizeMouse("a", 0, 0, {}, browser);
       let win = await openedPromise;

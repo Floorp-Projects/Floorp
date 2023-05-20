@@ -31,7 +31,7 @@ function test_asyncFetchBadCert() {
       uri: "https://untrusted.example.com",
       loadUsingSystemPrincipal: true,
     },
-    function(aInputStream, aStatusCode, aRequest) {
+    function (aInputStream, aStatusCode, aRequest) {
       ok(!Components.isSuccessCode(aStatusCode), "request failed");
       ok(aRequest instanceof Ci.nsIHttpChannel, "request is an nsIHttpChannel");
 
@@ -51,7 +51,7 @@ function test_asyncFetchBadCert() {
         onProgress() {},
         onStatus() {},
       };
-      NetUtil.asyncFetch(channel, function(
+      NetUtil.asyncFetch(channel, function (
         aInputStream,
         aStatusCode,
         aRequest
@@ -68,7 +68,7 @@ function test_asyncFetchBadCert() {
             uri: "https://example.com",
             loadUsingSystemPrincipal: true,
           },
-          function(aInputStream, aStatusCode, aRequest) {
+          function (aInputStream, aStatusCode, aRequest) {
             info("aStatusCode for valid request: " + aStatusCode);
             ok(Components.isSuccessCode(aStatusCode), "request succeeded");
             ok(
@@ -95,13 +95,13 @@ WindowListener.prototype = {
     var self = this;
     domwindow.addEventListener(
       "load",
-      function() {
+      function () {
         if (domwindow.document.location.href != self.url) {
           return;
         }
 
         // Allow other window load listeners to execute before passing to callback
-        executeSoon(function() {
+        executeSoon(function () {
           self.callback(domwindow);
         });
       },

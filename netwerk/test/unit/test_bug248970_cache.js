@@ -45,7 +45,7 @@ function store_entries(cb) {
   );
 }
 
-var store_data = function(status, entry) {
+var store_data = function (status, entry) {
   Assert.equal(status, Cr.NS_OK);
   var os = entry.openOutputStream(0, entries[store_idx][1].length);
 
@@ -93,8 +93,8 @@ function check_entries(cb, pbExited) {
   );
 }
 
-var check_data = function(status, entry) {
-  var cont = function() {
+var check_data = function (status, entry) {
+  var cont = function () {
     check_idx++;
     executeSoon(check_entries);
   };
@@ -102,7 +102,7 @@ var check_data = function(status, entry) {
   if (!check_pb_exited || entries[check_idx][3]) {
     Assert.equal(status, Cr.NS_OK);
     var is = entry.openInputStream(0);
-    pumpReadStream(is, function(read) {
+    pumpReadStream(is, function (read) {
       entry.close();
       Assert.equal(read, entries[check_idx][1]);
       cont();
@@ -136,7 +136,7 @@ function run_test3() {
   Services.obs.notifyObservers(null, "last-pb-context-exited");
 
   // Make sure the memory device is not empty
-  get_device_entry_count(kMemoryDevice, null, function(count) {
+  get_device_entry_count(kMemoryDevice, null, function (count) {
     Assert.equal(count, 1);
     // Check if cache-A is gone, and cache-B and cache-C are still available
     check_entries(do_test_finished, true);

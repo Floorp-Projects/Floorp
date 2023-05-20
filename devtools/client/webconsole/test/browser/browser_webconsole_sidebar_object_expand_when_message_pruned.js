@@ -11,7 +11,7 @@ const TEST_URI =
   "data:text/html;charset=utf8,<!DOCTYPE html>" +
   "<script>console.log({a:1,b:2,c:[3,4,5]});</script>";
 
-add_task(async function() {
+add_task(async function () {
   // Should be removed when sidebar work is complete (Bug 1447235)
   await pushPref("devtools.webconsole.sidebarToggle", true);
   // Set the loglimit to 1 so message gets pruned as soon as another message is displayed.
@@ -35,7 +35,7 @@ add_task(async function() {
   info("Log a message so the original one gets pruned");
   const messageText = "hello world";
   const onMessage = waitForMessageByType(hud, messageText, ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [messageText], async function(
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [messageText], async function (
     str
   ) {
     content.console.log(str);

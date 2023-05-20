@@ -3,9 +3,9 @@ navigator.serviceWorker.register("./service-worker.js", {
 });
 
 function showNotification() {
-  Notification.requestPermission(function(result) {
+  Notification.requestPermission(function (result) {
     if (result === "granted") {
-      navigator.serviceWorker.ready.then(function(registration) {
+      navigator.serviceWorker.ready.then(function (registration) {
         registration.showNotification("Open Window Notification", {
           body: "Hello",
         });

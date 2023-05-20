@@ -220,7 +220,7 @@ class Mocks {
 }
 /* exported Mocks */
 
-const silenceWorkerUpdates = function() {
+const silenceWorkerUpdates = function () {
   const {
     removeMockedModule,
     setMockedModule,

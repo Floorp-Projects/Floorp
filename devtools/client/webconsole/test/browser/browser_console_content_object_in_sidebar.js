@@ -18,7 +18,7 @@ const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><script>
   );
 </script>`;
 
-add_task(async function() {
+add_task(async function () {
   // Enable sidebar
   await pushPref("devtools.webconsole.sidebarToggle", true);
   // Show the content messages

@@ -6,7 +6,7 @@
 /**
  * Tests if selecting a tab in a tab bar makes it visible
  */
-add_task(async function() {
+add_task(async function () {
   Services.prefs.clearUserPref(
     "devtools.netmonitor.panes-network-details-width"
   );

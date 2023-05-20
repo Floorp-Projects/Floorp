@@ -3,7 +3,7 @@
 const OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
 function withPrivacyPrefs() {
-  return function(testFunc) {
+  return function (testFunc) {
     return async args =>
       BrowserTestUtils.withNewTab("about:preferences#privacy", async browser =>
         testFunc({ ...args, browser })

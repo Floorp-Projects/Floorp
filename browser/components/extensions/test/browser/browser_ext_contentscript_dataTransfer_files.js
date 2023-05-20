@@ -20,7 +20,7 @@ add_task(async function test_contentAndUserScripts_dataTransfer_files() {
       user_scripts: {},
     },
 
-    background: async function() {
+    background: async function () {
       await browser.contentScripts.register({
         js: [{ file: "content_script.js" }],
         matches: ["http://mochi.test/*"],
@@ -37,10 +37,10 @@ add_task(async function test_contentAndUserScripts_dataTransfer_files() {
     },
 
     files: {
-      "content_script.js": function() {
+      "content_script.js": function () {
         document.addEventListener(
           "drop",
-          function(e) {
+          function (e) {
             const files = e.dataTransfer.files || [];
             document.querySelector("#result-content-script").textContent =
               files[0]?.name;
@@ -68,10 +68,10 @@ add_task(async function test_contentAndUserScripts_dataTransfer_files() {
           { defineAs: "testDone" }
         );
       },
-      "user_script.js": function() {
+      "user_script.js": function () {
         document.addEventListener(
           "drop",
-          function(e) {
+          function (e) {
             const files = e.dataTransfer.files || [];
             document.querySelector("#result-user-script").textContent =
               files[0]?.name;

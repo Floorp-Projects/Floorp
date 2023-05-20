@@ -25,7 +25,7 @@ const bookmarksInfo = [
  */
 
 // Setup.
-add_setup(async function() {
+add_setup(async function () {
   // Disable window occlusion. See bug 1733955 / bug 1779559.
   if (navigator.platform.indexOf("Win") == 0) {
     await SpecialPowers.pushPrefEnv({

@@ -9,7 +9,7 @@ const URL0 = HTTPS_TEST_ROOT + "file_bug1554070_1.html";
 const URL1 = HTTPS_TEST_ROOT + "file_bug1554070_2.html";
 const URL2 = "https://example.org/";
 
-add_task(async function() {
+add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     waitForLoad: true,

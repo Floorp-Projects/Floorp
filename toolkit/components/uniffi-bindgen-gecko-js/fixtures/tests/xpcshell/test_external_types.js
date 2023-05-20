@@ -5,7 +5,7 @@ const ExternalTypes = ChromeUtils.importESModule(
   "resource://gre/modules/RustExternalTypes.sys.mjs"
 );
 
-add_task(async function() {
+add_task(async function () {
   const line = new ExternalTypes.Line(
     new ExternalTypes.Point(0, 0, "p1"),
     new ExternalTypes.Point(2, 1, "p2")

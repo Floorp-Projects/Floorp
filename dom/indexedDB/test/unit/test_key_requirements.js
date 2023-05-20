@@ -16,7 +16,7 @@ function* testSteps() {
   let event = yield undefined;
 
   let db = event.target.result;
-  db.addEventListener("error", function(event) {
+  db.addEventListener("error", function (event) {
     event.preventDefault();
   });
 

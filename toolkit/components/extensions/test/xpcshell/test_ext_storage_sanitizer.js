@@ -19,7 +19,7 @@ async function test_sanitize_offlineApps(storageHelpersScript) {
     },
     files: {
       "storageHelpers.js": storageHelpersScript,
-      "background.js": function() {
+      "background.js": function () {
         browser.test.onMessage.addListener(async (msg, args) => {
           let result = {};
           switch (msg) {

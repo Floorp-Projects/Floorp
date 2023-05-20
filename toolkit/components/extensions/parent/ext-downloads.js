@@ -465,7 +465,7 @@ const downloadQuery = query => {
   );
   const matchUrl = makeMatch(query.urlRegex, query.url, "url");
 
-  return function(item) {
+  return function (item) {
     const url = item.url.toLowerCase();
     const filename = item.filename.toLowerCase();
 

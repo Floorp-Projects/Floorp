@@ -17,7 +17,7 @@ let supportsPrimary = Services.clipboard.isClipboardTypeSupported(
 const NON_EMPTY_URL = "data:text/html,Hello";
 const TEXT_FOR_PRIMARY = "Text for PRIMARY selection";
 
-add_task(async function() {
+add_task(async function () {
   tabs.push(
     await BrowserTestUtils.openNewForegroundTab(gBrowser, NON_EMPTY_URL)
   );

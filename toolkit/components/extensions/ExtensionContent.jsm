@@ -295,7 +295,7 @@ class CSSCodeCache extends BaseCSSCache {
 defineLazyGetter(
   BrowserExtensionContent.prototype,
   "staticScripts",
-  function() {
+  function () {
     return new ScriptCache({ hasReturnValue: false }, this);
   }
 );
@@ -303,30 +303,30 @@ defineLazyGetter(
 defineLazyGetter(
   BrowserExtensionContent.prototype,
   "dynamicScripts",
-  function() {
+  function () {
     return new ScriptCache({ hasReturnValue: true }, this);
   }
 );
 
-defineLazyGetter(BrowserExtensionContent.prototype, "userCSS", function() {
+defineLazyGetter(BrowserExtensionContent.prototype, "userCSS", function () {
   return new CSSCache(Ci.nsIStyleSheetService.USER_SHEET, this);
 });
 
-defineLazyGetter(BrowserExtensionContent.prototype, "authorCSS", function() {
+defineLazyGetter(BrowserExtensionContent.prototype, "authorCSS", function () {
   return new CSSCache(Ci.nsIStyleSheetService.AUTHOR_SHEET, this);
 });
 
 // These two caches are similar to the above but specialized to cache the cssCode
 // using an hash computed from the cssCode string as the key (instead of the generated data
 // URI which can be pretty long for bigger injected cssCode).
-defineLazyGetter(BrowserExtensionContent.prototype, "userCSSCode", function() {
+defineLazyGetter(BrowserExtensionContent.prototype, "userCSSCode", function () {
   return new CSSCodeCache(Ci.nsIStyleSheetService.USER_SHEET, this);
 });
 
 defineLazyGetter(
   BrowserExtensionContent.prototype,
   "authorCSSCode",
-  function() {
+  function () {
     return new CSSCodeCache(Ci.nsIStyleSheetService.AUTHOR_SHEET, this);
   }
 );
@@ -1007,14 +1007,14 @@ class ContentScriptContextChild extends BaseContext {
   }
 }
 
-defineLazyGetter(ContentScriptContextChild.prototype, "messenger", function() {
+defineLazyGetter(ContentScriptContextChild.prototype, "messenger", function () {
   return new Messenger(this);
 });
 
 defineLazyGetter(
   ContentScriptContextChild.prototype,
   "childManager",
-  function() {
+  function () {
     apiManager.lazyInit();
 
     let localApis = {};

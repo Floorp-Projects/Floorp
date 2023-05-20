@@ -103,7 +103,7 @@ const DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   // Let's reset the counts.
   Services.telemetry.clearEvents();
 
@@ -148,7 +148,7 @@ function testSidebar(toolbox) {
       const tool = sidebarTools.pop();
       if (tool) {
         inspector.sidebar.select(tool);
-        setTimeout(function() {
+        setTimeout(function () {
           setTimeout(selectSidebarTab, TOOL_DELAY);
         }, TOOL_DELAY);
       } else {

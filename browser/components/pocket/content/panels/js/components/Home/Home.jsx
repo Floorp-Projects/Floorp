@@ -35,7 +35,7 @@ function Home(props) {
     if (!hideRecentSaves) {
       // We don't display the loading message until instructed. This is because cache
       // loads should be fast, so using the loading message for cache just adds loading jank.
-      panelMessaging.addMessageListener("PKT_loadingRecentSaves", function(
+      panelMessaging.addMessageListener("PKT_loadingRecentSaves", function (
         resp
       ) {
         setArticlesState({
@@ -44,7 +44,7 @@ function Home(props) {
         });
       });
 
-      panelMessaging.addMessageListener("PKT_renderRecentSaves", function(
+      panelMessaging.addMessageListener("PKT_renderRecentSaves", function (
         resp
       ) {
         const { data } = resp;

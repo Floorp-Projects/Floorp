@@ -21,7 +21,7 @@ const TEST_DATA = [
   { selector: "#hidden-via-hide-shortcut", isDisplayed: false },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   for (const { selector, isDisplayed } of TEST_DATA) {

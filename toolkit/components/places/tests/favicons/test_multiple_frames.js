@@ -5,7 +5,7 @@
  * This file tests support for icons with multiple frames (like .ico files).
  */
 
-add_task(async function() {
+add_task(async function () {
   //  in: 48x48 ico, 56646 bytes.
   // (howstuffworks.com icon, contains 13 icons with sizes from 16x16 to
   // 48x48 in varying depths)

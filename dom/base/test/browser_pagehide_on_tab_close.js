@@ -6,8 +6,8 @@ function test() {
 
   tab.linkedBrowser.addEventListener(
     "load",
-    function() {
-      tab.linkedBrowser.addEventListener("pagehide", function() {
+    function () {
+      tab.linkedBrowser.addEventListener("pagehide", function () {
         ok(true, "got page hide event");
         finish();
       });

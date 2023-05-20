@@ -3,7 +3,7 @@
  */
 
 // Enabling Searching functionatily. Will display search bar form this testcase forward.
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.preferences.search", true]],
   });
@@ -12,7 +12,7 @@ add_task(async function() {
 /**
  * Test for searching for the "Block Lists" subdialog.
  */
-add_task(async function() {
+add_task(async function () {
   async function doTest() {
     await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
       leaveOpen: true,
@@ -26,7 +26,7 @@ add_task(async function() {
 /**
  * Test for searching for the "Allowed Sites - Pop-ups" subdialog.
  */
-add_task(async function() {
+add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });

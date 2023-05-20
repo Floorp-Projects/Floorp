@@ -118,7 +118,7 @@ async function test_functions() {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   await test_functions();
   await promiseStartupManager();
   await promiseShutdownManager();

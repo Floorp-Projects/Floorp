@@ -68,7 +68,7 @@ function NS_ASSERT(cond, msg) {
     var stack = new Error().stack.split(/\n/);
     dumpn(
       stack
-        .map(function(val) {
+        .map(function (val) {
           return "###!!!   " + val;
         })
         .join("\n")
@@ -652,7 +652,7 @@ nsHttpServer.prototype = {
     this._stopCallback =
       typeof callback === "function"
         ? callback
-        : function() {
+        : function () {
             callback.onStopped();
           };
 
@@ -942,7 +942,7 @@ class NodeServer {
 
     // Passing a function to NodeServer.execute will define that function
     // in node. It can be called in a later execute command.
-    let isFunction = function(obj) {
+    let isFunction = function (obj) {
       return !!(obj && obj.constructor && obj.call && obj.apply);
     };
     let payload = command;
@@ -1352,7 +1352,7 @@ Connection.prototype = {
 
     // If an error triggered a server shutdown, act on it now
     if (server._doQuit) {
-      server.stop(function() {
+      server.stop(function () {
         /* not like we can do anything better */
       });
     }
@@ -2155,7 +2155,7 @@ LineData.prototype = {
  * Creates a request-handling function for an nsIHttpRequestHandler object.
  */
 function createHandlerFunc(handler) {
-  return function(metadata, response) {
+  return function (metadata, response) {
     handler.handle(metadata, response);
   };
 }
@@ -2613,7 +2613,7 @@ ServerHandler.prototype = {
     file = file.clone();
 
     var self = this;
-    this._overridePaths[path] = function(request, response) {
+    this._overridePaths[path] = function (request, response) {
       if (!file.exists()) {
         throw HTTP_404;
       }
@@ -2838,7 +2838,7 @@ ServerHandler.prototype = {
 
       if (start !== undefined && start >= file.fileSize) {
         var HTTP_416 = new HttpError(416, "Requested Range Not Satisfiable");
-        HTTP_416.customErrorHandling = function(errorResponse) {
+        HTTP_416.customErrorHandling = function (errorResponse) {
           maybeAddHeaders(file, metadata, errorResponse);
         };
         throw HTTP_416;
@@ -3017,7 +3017,7 @@ ServerHandler.prototype = {
         throw e;
       }
 
-      let writeMore = function() {
+      let writeMore = function () {
         gThreadManager.currentThread.dispatch(
           writeData,
           Ci.nsIThread.DISPATCH_NORMAL
@@ -3540,7 +3540,7 @@ ServerHandler.prototype = {
    * Contains handlers for the default set of URIs contained in this server.
    */
   _defaultPaths: {
-    "/": function(metadata, response) {
+    "/": function (metadata, response) {
       response.setStatusLine(metadata.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
@@ -3558,7 +3558,7 @@ ServerHandler.prototype = {
       response.bodyOutputStream.write(body, body.length);
     },
 
-    "/trace": function(metadata, response) {
+    "/trace": function (metadata, response) {
       response.setStatusLine(metadata.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "text/plain;charset=utf-8", false);
 

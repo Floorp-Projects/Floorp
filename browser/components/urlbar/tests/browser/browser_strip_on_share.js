@@ -7,7 +7,7 @@ let listService;
 
 // Tests for the strip on share functionality of the urlbar.
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.query_stripping.strip_list", "stripParam"],
@@ -71,7 +71,7 @@ async function testMenuItemDisabled(url, prefEnabled, selection) {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.query_stripping.strip_on_share.enabled", prefEnabled]],
   });
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
     gURLBar.focus();
     if (selection) {
       //select only part of the url
@@ -104,7 +104,7 @@ async function testMenuItemEnabled(selectWholeUrl) {
   });
   let validUrl = "https://www.example.com/?stripParam=1234";
   let strippedUrl = "https://www.example.com/";
-  await BrowserTestUtils.withNewTab(validUrl, async function(browser) {
+  await BrowserTestUtils.withNewTab(validUrl, async function (browser) {
     gURLBar.focus();
     if (selectWholeUrl) {
       //select the whole url

@@ -26,7 +26,7 @@ function listenerC(x) {
   evidence.log += "c";
 }
 
-decorate_task(async function() {
+decorate_task(async function () {
   const eventEmitter = new EventEmitter();
 
   // Fire an unrelated event, to make sure nothing goes wrong

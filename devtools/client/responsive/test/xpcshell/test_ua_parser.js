@@ -119,7 +119,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   for (const { userAgent, expectedBrowser, expectedOS } of TEST_DATA) {
     info(`Test for ${userAgent}`);
     const { browser, os } = parseUserAgent(userAgent);

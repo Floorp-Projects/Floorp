@@ -330,7 +330,7 @@ function testShowResponseInit() {
   sendAsyncMessage("test-show-response-init-complete");
 }
 
-addMessageListener("set-simple-ui-service", function(testName) {
+addMessageListener("set-simple-ui-service", function (testName) {
   DummyUIService.testName = testName;
   DummyUIService.expectedCompleteStatus = null;
   DummyUIService.expectedShowAction = "accept";
@@ -338,7 +338,7 @@ addMessageListener("set-simple-ui-service", function(testName) {
   sendAsyncMessage("set-simple-ui-service-complete");
 });
 
-addMessageListener("set-normal-ui-service", function(testName) {
+addMessageListener("set-normal-ui-service", function (testName) {
   DummyUIService.testName = testName;
   DummyUIService.expectedCompleteStatus = null;
   DummyUIService.expectedShowAction = "update";
@@ -346,7 +346,7 @@ addMessageListener("set-normal-ui-service", function(testName) {
   sendAsyncMessage("set-normal-ui-service-complete");
 });
 
-addMessageListener("set-reject-ui-service", function(testName) {
+addMessageListener("set-reject-ui-service", function (testName) {
   DummyUIService.testName = testName;
   DummyUIService.expectedCompleteStatus = null;
   DummyUIService.expectedShowAction = "reject";
@@ -354,7 +354,7 @@ addMessageListener("set-reject-ui-service", function(testName) {
   sendAsyncMessage("set-reject-ui-service-complete");
 });
 
-addMessageListener("set-update-with-ui-service", function(testName) {
+addMessageListener("set-update-with-ui-service", function (testName) {
   DummyUIService.testName = testName;
   DummyUIService.expectedCompleteStatus = null;
   DummyUIService.expectedShowAction = "update";
@@ -362,7 +362,7 @@ addMessageListener("set-update-with-ui-service", function(testName) {
   sendAsyncMessage("set-update-with-ui-service-complete");
 });
 
-addMessageListener("set-update-with-error-ui-service", function(testName) {
+addMessageListener("set-update-with-error-ui-service", function (testName) {
   DummyUIService.testName = testName;
   DummyUIService.expectedCompleteStatus = null;
   DummyUIService.expectedShowAction = "update";
@@ -372,22 +372,22 @@ addMessageListener("set-update-with-error-ui-service", function(testName) {
 
 addMessageListener("test-show-response-init", testShowResponseInit);
 
-addMessageListener("set-complete-status-success", function() {
+addMessageListener("set-complete-status-success", function () {
   DummyUIService.expectedCompleteStatus = "success";
   sendAsyncMessage("set-complete-status-success-complete");
 });
 
-addMessageListener("set-complete-status-fail", function() {
+addMessageListener("set-complete-status-fail", function () {
   DummyUIService.expectedCompleteStatus = "fail";
   sendAsyncMessage("set-complete-status-fail-complete");
 });
 
-addMessageListener("set-complete-status-unknown", function() {
+addMessageListener("set-complete-status-unknown", function () {
   DummyUIService.expectedCompleteStatus = "unknown";
   sendAsyncMessage("set-complete-status-unknown-complete");
 });
 
-addMessageListener("teardown", function() {
+addMessageListener("teardown", function () {
   paymentSrv.setTestingUIService(null);
   sendAsyncMessage("teardown-complete");
 });

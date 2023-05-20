@@ -115,7 +115,7 @@ function BinaryReconstructor(packet) {
  * @api private
  */
 
-BinaryReconstructor.prototype.takeBinaryData = function(binData) {
+BinaryReconstructor.prototype.takeBinaryData = function (binData) {
   this.buffers.push(binData);
   if (this.buffers.length === this.reconPack.attachments) {
     // done with buffer list
@@ -132,7 +132,7 @@ BinaryReconstructor.prototype.takeBinaryData = function(binData) {
  * @api private
  */
 
-BinaryReconstructor.prototype.finishedReconstruction = function() {
+BinaryReconstructor.prototype.finishedReconstruction = function () {
   this.reconPack = null;
   this.buffers = [];
 };
@@ -145,7 +145,7 @@ BinaryReconstructor.prototype.finishedReconstruction = function() {
  * @api public
  */
 
-Decoder.prototype.add = function(obj) {
+Decoder.prototype.add = function (obj) {
   let packet;
   if (typeof obj === "string") {
     packet = decodeString(obj);
@@ -276,7 +276,7 @@ function tryParse(str) {
  * @api public
  */
 
-Decoder.prototype.destroy = function() {
+Decoder.prototype.destroy = function () {
   if (this.reconstructor) {
     this.reconstructor.finishedReconstruction();
   }

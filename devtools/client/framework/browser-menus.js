@@ -107,7 +107,7 @@ function createToolMenuElements(toolDefinition, doc) {
     return null;
   }
 
-  const oncommand = async function(id, event) {
+  const oncommand = async function (id, event) {
     try {
       const window = event.target.ownerDocument.defaultView;
       await gDevToolsBrowser.selectToolCommand(window, id, Cu.now());
@@ -321,7 +321,7 @@ function removeTopLevelItems(doc) {
  * @param {HTMLDocument} doc
  *        The document to which menus are to be added.
  */
-exports.addMenus = function(doc) {
+exports.addMenus = function (doc) {
   addTopLevelItems(doc);
 
   addAllToolsToMenu(doc);
@@ -333,7 +333,7 @@ exports.addMenus = function(doc) {
  * @param {HTMLDocument} doc
  *        The document to which menus are to be removed.
  */
-exports.removeMenus = function(doc) {
+exports.removeMenus = function (doc) {
   // We only remove top level entries. Per-tool entries are removed while
   // unregistering each tool.
   removeTopLevelItems(doc);

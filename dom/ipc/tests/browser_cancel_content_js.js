@@ -27,7 +27,7 @@ async function test_navigation(nextPage, cancelContentJSPref, shouldCancel) {
     opening: TEST_PAGE,
   });
 
-  const loopEnded = ContentTask.spawn(tab.linkedBrowser, [], async function() {
+  const loopEnded = ContentTask.spawn(tab.linkedBrowser, [], async function () {
     await new Promise(resolve => {
       content.addEventListener("LongLoopEnded", resolve, {
         once: true,
@@ -36,7 +36,7 @@ async function test_navigation(nextPage, cancelContentJSPref, shouldCancel) {
   });
 
   // Wait for the test page's long-running JS loop to start.
-  await ContentTask.spawn(tab.linkedBrowser, [], function() {
+  await ContentTask.spawn(tab.linkedBrowser, [], function () {
     content.dispatchEvent(new content.Event("StartLongLoop"));
   });
 

@@ -1,4 +1,4 @@
-onmessage = async function(e) {
+onmessage = async function (e) {
   if (e.data === "RUN") {
     console.log("worker runs");
     await clients.claim();

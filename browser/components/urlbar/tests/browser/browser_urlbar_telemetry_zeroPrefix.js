@@ -16,7 +16,7 @@ const SCALARS = {
   EXPOSURE: "urlbar.zeroprefix.exposure",
 };
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   Services.telemetry.clearScalars();

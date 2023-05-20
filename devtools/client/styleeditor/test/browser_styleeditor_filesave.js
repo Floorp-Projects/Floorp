@@ -7,7 +7,7 @@
 const TESTCASE_URI_HTML = TEST_BASE_HTTP + "simple.html";
 const TESTCASE_URI_CSS = TEST_BASE_HTTP + "simple.css";
 
-add_task(async function() {
+add_task(async function () {
   const htmlFile = await copy(TESTCASE_URI_HTML, "simple.html");
   await copy(TESTCASE_URI_CSS, "simple.css");
   const uri = Services.io.newFileURI(htmlFile);
@@ -34,7 +34,7 @@ add_task(async function() {
   info("Saving the changes.");
   dirty = editor.sourceEditor.once("dirty-change");
 
-  editor.saveToFile(null, function(file) {
+  editor.saveToFile(null, function (file) {
     ok(file, "file should get saved directly when using a file:// URI");
   });
 
@@ -80,7 +80,7 @@ function write(data, file, callback) {
   const istream = getInputStream(data);
   const ostream = FileUtils.openSafeFileOutputStream(file);
 
-  NetUtil.asyncCopy(istream, ostream, function(status) {
+  NetUtil.asyncCopy(istream, ostream, function (status) {
     if (!Components.isSuccessCode(status)) {
       info("Couldn't write to " + file.path);
       return;

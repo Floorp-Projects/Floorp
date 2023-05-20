@@ -293,7 +293,7 @@ var AboutConfig = {
     this._prefsContainer = empty;
 
     // Quick clear the prefs li.HTML list
-    this._list.forEach(function(item) {
+    this._list.forEach(function (item) {
       delete item.li;
     });
   },
@@ -607,12 +607,12 @@ Pref.prototype = {
       this.li.setAttribute("name", this.name);
 
       // Click callback to ensure list item selected even on no-action tap events
-      this.li.addEventListener("click", function(aEvent) {
+      this.li.addEventListener("click", function (aEvent) {
         AboutConfig.selected = AboutConfig.getLINodeForEvent(aEvent);
       });
 
       // Contextmenu callback to identify selected list item
-      this.li.addEventListener("contextmenu", function(aEvent) {
+      this.li.addEventListener("contextmenu", function (aEvent) {
         AboutConfig.contextMenuLINode = AboutConfig.getLINodeForEvent(aEvent);
       });
 
@@ -620,7 +620,7 @@ Pref.prototype = {
 
       const prefName = document.createElement("div");
       prefName.className = "pref-name";
-      prefName.addEventListener("click", function(event) {
+      prefName.addEventListener("click", function (event) {
         AboutConfig.selectOrToggleBoolPref(event);
       });
       prefName.textContent = this.name;
@@ -632,10 +632,10 @@ Pref.prototype = {
 
       const prefValue = document.createElement("input");
       prefValue.className = "pref-value";
-      prefValue.addEventListener("blur", function(event) {
+      prefValue.addEventListener("blur", function (event) {
         AboutConfig.setIntOrStringPref(event);
       });
-      prefValue.addEventListener("click", function(event) {
+      prefValue.addEventListener("click", function (event) {
         AboutConfig.selectOrToggleBoolPref(event);
       });
       prefValue.value = "";
@@ -643,7 +643,7 @@ Pref.prototype = {
 
       const resetButton = document.createElement("div");
       resetButton.className = "pref-button reset";
-      resetButton.addEventListener("click", function(event) {
+      resetButton.addEventListener("click", function (event) {
         AboutConfig.resetDefaultPref(event);
       });
       resetButton.setAttribute("data-l10n-id", "config-pref-reset-button");
@@ -651,7 +651,7 @@ Pref.prototype = {
 
       const toggleButton = document.createElement("div");
       toggleButton.className = "pref-button toggle";
-      toggleButton.addEventListener("click", function(event) {
+      toggleButton.addEventListener("click", function (event) {
         AboutConfig.toggleBoolPref(event);
       });
       toggleButton.setAttribute("data-l10n-id", "config-pref-toggle-button");
@@ -659,14 +659,14 @@ Pref.prototype = {
 
       const upButton = document.createElement("div");
       upButton.className = "pref-button up";
-      upButton.addEventListener("click", function(event) {
+      upButton.addEventListener("click", function (event) {
         AboutConfig.incrOrDecrIntPref(event, 1);
       });
       prefItemLine.appendChild(upButton);
 
       const downButton = document.createElement("div");
       downButton.className = "pref-button down";
-      downButton.addEventListener("click", function(event) {
+      downButton.addEventListener("click", function (event) {
         AboutConfig.incrOrDecrIntPref(event, -1);
       });
       prefItemLine.appendChild(downButton);

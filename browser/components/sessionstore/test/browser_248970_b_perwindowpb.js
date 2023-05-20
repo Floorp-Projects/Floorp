@@ -26,7 +26,7 @@ function test() {
     "//input[@type='file']": filePath,
   };
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     for (let win of windowsToClose) {
       await BrowserTestUtils.closeWindow(win);
     }
@@ -96,7 +96,7 @@ function test() {
     "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser_248970_b_sample.html";
 
-  whenNewWindowLoaded({ private: false }, function(aWin) {
+  whenNewWindowLoaded({ private: false }, function (aWin) {
     windowsToClose.push(aWin);
 
     // get closed tab count
@@ -148,7 +148,7 @@ function test() {
         );
         aWin.gBrowser.removeTab(tab_A_restored);
 
-        whenNewWindowLoaded({ private: true }, function(win) {
+        whenNewWindowLoaded({ private: true }, function (win) {
           windowsToClose.push(win);
 
           // setup a state for tab (B) so we can check that its duplicated

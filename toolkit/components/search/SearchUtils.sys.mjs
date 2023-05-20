@@ -305,9 +305,7 @@ export var SearchUtils = {
 
     // Use a random name if our input had no valid characters.
     if (result.length < minLength) {
-      result = Math.random()
-        .toString(36)
-        .replace(/^.*\./, "");
+      result = Math.random().toString(36).replace(/^.*\./, "");
     }
 
     // Force max length.

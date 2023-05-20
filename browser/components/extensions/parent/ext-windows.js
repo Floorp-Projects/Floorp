@@ -191,7 +191,7 @@ this.windows = class extends ExtensionAPIPersistent {
           extensionApi: this,
         }).api(),
 
-        get: function(windowId, getInfo) {
+        get: function (windowId, getInfo) {
           let window = windowTracker.getWindow(windowId, context);
           if (!window || !context.canAccessWindow(window)) {
             return Promise.reject({
@@ -201,7 +201,7 @@ this.windows = class extends ExtensionAPIPersistent {
           return Promise.resolve(windowManager.convert(window, getInfo));
         },
 
-        getCurrent: function(getInfo) {
+        getCurrent: function (getInfo) {
           let window = context.currentWindow || windowTracker.topWindow;
           if (!context.canAccessWindow(window)) {
             return Promise.reject({ message: `Invalid window` });
@@ -209,7 +209,7 @@ this.windows = class extends ExtensionAPIPersistent {
           return Promise.resolve(windowManager.convert(window, getInfo));
         },
 
-        getLastFocused: function(getInfo) {
+        getLastFocused: function (getInfo) {
           let window = windowTracker.topWindow;
           if (!context.canAccessWindow(window)) {
             return Promise.reject({ message: `Invalid window` });
@@ -217,7 +217,7 @@ this.windows = class extends ExtensionAPIPersistent {
           return Promise.resolve(windowManager.convert(window, getInfo));
         },
 
-        getAll: function(getInfo) {
+        getAll: function (getInfo) {
           let doNotCheckTypes =
             getInfo === null || getInfo.windowTypes === null;
           let windows = [];
@@ -230,7 +230,7 @@ this.windows = class extends ExtensionAPIPersistent {
           return windows;
         },
 
-        create: async function(createData) {
+        create: async function (createData) {
           let needResize =
             createData.left !== null ||
             createData.top !== null ||
@@ -429,7 +429,7 @@ this.windows = class extends ExtensionAPIPersistent {
           const contentLoaded = new Promise(resolve => {
             window.addEventListener(
               "DOMContentLoaded",
-              function() {
+              function () {
                 if (allowScriptsToClose) {
                   window.gBrowserAllowScriptsToCloseInitialTabs = true;
                 }
@@ -465,7 +465,7 @@ this.windows = class extends ExtensionAPIPersistent {
           return win.convert({ populate: true });
         },
 
-        update: async function(windowId, updateInfo) {
+        update: async function (windowId, updateInfo) {
           if (updateInfo.state !== null && updateInfo.state != "normal") {
             if (
               updateInfo.left !== null ||
@@ -509,7 +509,7 @@ this.windows = class extends ExtensionAPIPersistent {
           return win.convert();
         },
 
-        remove: function(windowId) {
+        remove: function (windowId) {
           let window = windowTracker.getWindow(windowId, context);
           if (!context.canAccessWindow(window)) {
             return Promise.reject({

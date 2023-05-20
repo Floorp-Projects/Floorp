@@ -14,7 +14,7 @@ const TEST_ENGINE_DOMAIN = "example.com";
 // Each test is a function that executes an urlbar action and returns the
 // expected event object.
 const tests = [
-  async function(win) {
+  async function (win) {
     info("Type something, blur.");
     win.gURLBar.select();
     EventUtils.synthesizeKey("x", {}, win);
@@ -32,7 +32,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Open the panel with DOWN, don't type, blur it.");
     await addTopSite("http://example.org/");
     win.gURLBar.value = "";
@@ -54,7 +54,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("With pageproxystate=valid, autoopen the panel, don't type, blur it.");
     win.gURLBar.value = "";
     await UrlbarTestUtils.promisePopupOpen(win, () => {
@@ -74,7 +74,7 @@ const tests = [
     };
   },
 
-  async function(win) {
+  async function (win) {
     info("Enter search mode from Top Sites.");
     await updateTopSites(sites => true, /* enableSearchShorcuts */ true);
 
@@ -153,7 +153,7 @@ const tests = [
     ];
   },
 
-  async function(win) {
+  async function (win) {
     info("Open search mode from a tab-to-search result.");
     await SpecialPowers.pushPrefEnv({
       set: [["browser.urlbar.tabToSearch.onboard.interactionsLeft", 0]],
@@ -228,7 +228,7 @@ const tests = [
     ];
   },
 
-  async function(win) {
+  async function (win) {
     info(
       "With pageproxystate=invalid, open retained results, don't type, blur it."
     );
@@ -252,7 +252,7 @@ const tests = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
 
   // Create a new search engine and mark it as default
@@ -271,7 +271,7 @@ add_setup(async function() {
   // This test used to rely on the initial timer of
   // TestUtils.waitForCondition. See bug 1667216.
   let originalWaitForCondition = TestUtils.waitForCondition;
-  TestUtils.waitForCondition = async function(
+  TestUtils.waitForCondition = async function (
     condition,
     msg,
     interval = 100,
@@ -283,7 +283,7 @@ add_setup(async function() {
     return originalWaitForCondition(condition, msg, interval, maxTries);
   };
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     TestUtils.waitForCondition = originalWaitForCondition;
   });

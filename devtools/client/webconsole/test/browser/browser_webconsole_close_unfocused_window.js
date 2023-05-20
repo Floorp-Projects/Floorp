@@ -10,7 +10,7 @@ const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-console.html";
 
-add_task(async function() {
+add_task(async function () {
   const tab1 = await addTab(TEST_URI, { window });
 
   info("Open a second window");

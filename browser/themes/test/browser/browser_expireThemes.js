@@ -53,7 +53,7 @@ add_task(async function retainExpiredActiveTheme() {
   );
 
   AddonTestUtils.initMochitest(this);
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref(kRetainedThemesPref);
     BuiltInThemes.builtInThemeMap = oldBuiltInThemeMap;
     await BuiltInThemes.ensureBuiltInThemes();

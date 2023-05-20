@@ -182,11 +182,11 @@ const HELPER_SHEET =
 exports.DEFAULT_VALUE_SUMMARY_LENGTH = 50;
 var gValueSummaryLength = exports.DEFAULT_VALUE_SUMMARY_LENGTH;
 
-exports.getValueSummaryLength = function() {
+exports.getValueSummaryLength = function () {
   return gValueSummaryLength;
 };
 
-exports.setValueSummaryLength = function(val) {
+exports.setValueSummaryLength = function (val) {
   gValueSummaryLength = val;
 };
 

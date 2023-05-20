@@ -159,7 +159,7 @@ async function testUserAgentHeader() {
     TEST_TARGET_URL
   );
 
-  let result = await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  let result = await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     return content.document.body.textContent;
   });
 
@@ -179,7 +179,7 @@ async function testNavigator() {
     TEST_PATH + "file_navigator.html"
   );
 
-  let result = await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+  let result = await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     return content.document.getElementById("result").innerHTML;
   });
 
@@ -267,14 +267,14 @@ async function testWorkerNavigator() {
   let result = await SpecialPowers.spawn(
     tab.linkedBrowser,
     [],
-    async function() {
+    async function () {
       let worker = new content.SharedWorker(
         "file_navigatorWorker.js",
         "WorkerNavigatorTest"
       );
 
       let res = await new Promise(resolve => {
-        worker.port.onmessage = function(e) {
+        worker.port.onmessage = function (e) {
           resolve(e.data);
         };
       });

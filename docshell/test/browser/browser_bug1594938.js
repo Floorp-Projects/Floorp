@@ -10,9 +10,9 @@
 add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "https://example.com/" },
-    async function(browser) {
+    async function (browser) {
       if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-        await SpecialPowers.spawn(browser, [], async function() {
+        await SpecialPowers.spawn(browser, [], async function () {
           let history = this.content.docShell.QueryInterface(
             Ci.nsIWebNavigation
           ).sessionHistory;

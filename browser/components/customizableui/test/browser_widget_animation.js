@@ -60,7 +60,7 @@ function promiseOverflowAnimationEnd() {
 
 // Right-click on the stop/reload button, use the context menu to move it to the overflow menu.
 // The button should animate out, and the overflow menu should animate upon adding.
-add_task(async function() {
+add_task(async function () {
   let stopReloadButton = document.getElementById("stop-reload-button");
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);

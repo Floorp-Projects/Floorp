@@ -24,7 +24,7 @@ async function closeAndReopenToolbox() {
   return newui;
 }
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TESTCASE_URI);
   const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
@@ -64,7 +64,7 @@ add_task(async function() {
   const textContent = await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       return content.document.querySelector("style").textContent;
     }
   );

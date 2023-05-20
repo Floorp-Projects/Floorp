@@ -12,7 +12,7 @@ function isAnchorHovered(win) {
   return SpecialPowers.spawn(
     win.gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       const a = content.document.querySelector("a");
       return a.matches(":hover");
     }
@@ -36,7 +36,7 @@ add_task(async function test() {
   await SpecialPowers.spawn(
     newWin.gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       const a = content.document.querySelector("a");
       await EventUtils.synthesizeMouseAtCenter(
         a,
@@ -56,7 +56,7 @@ add_task(async function test() {
   await SpecialPowers.spawn(
     newWin.gBrowser.selectedBrowser,
     [],
-    async function() {
+    async function () {
       const a = content.document.querySelector("a");
       await EventUtils.synthesizeMouseAtCenter(
         a,

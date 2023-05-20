@@ -8,7 +8,7 @@ var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 MockFilePicker.returnValue = MockFilePicker.returnCancel;
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   MockFilePicker.cleanup();
 });
 
@@ -31,8 +31,8 @@ add_task(async function preferred_API() {
       gBrowser,
       url: IMAGE_PAGE,
     },
-    async function(browser) {
-      let url = await SpecialPowers.spawn(browser, [], async function() {
+    async function (browser) {
+      let url = await SpecialPowers.spawn(browser, [], async function () {
         let image = content.document.getElementById("image");
         return image.href;
       });

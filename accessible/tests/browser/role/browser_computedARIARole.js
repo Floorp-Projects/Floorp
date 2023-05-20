@@ -38,7 +38,7 @@ addAccessibleTask(
 <span id="htmlSpan" aria-label="HTML span">HTML span</span>
 <iframe id="iframe"></iframe>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     function testComputedARIARole(id, role) {
       const acc = findAccessibleChildByID(docAcc, id);
       is(acc.computedARIARole, role, `computedARIARole for ${id} is correct`);

@@ -100,7 +100,7 @@ function structural_check_eq_aux(a, b) {
     }
     return;
   }
-  ak.forEach(function(k) {
+  ak.forEach(function (k) {
     let av = a[k];
     let bv = b[k];
     structural_check_eq_aux(av, bv);

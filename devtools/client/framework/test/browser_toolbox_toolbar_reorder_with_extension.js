@@ -23,7 +23,7 @@ const TEST_STARTING_ORDER = [
   EXTENSION,
 ];
 
-add_task(async function() {
+add_task(async function () {
   // Enable the Application panel (atm it's only available on Nightly)
   await pushPref("devtools.application.enabled", true);
 

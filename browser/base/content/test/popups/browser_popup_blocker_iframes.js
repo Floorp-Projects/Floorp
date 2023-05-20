@@ -107,7 +107,7 @@ async function runTest(count, urls, permissions, delayedAllow) {
 
   if (delayedAllow) {
     await delayedAllow();
-    await SpecialPowers.spawn(tab.linkedBrowser, contexts, async function(
+    await SpecialPowers.spawn(tab.linkedBrowser, contexts, async function (
       bc1,
       bc2
     ) {
@@ -127,7 +127,7 @@ async function runTest(count, urls, permissions, delayedAllow) {
   cleaner.clean();
 }
 
-add_task(async function() {
+add_task(async function () {
   let permission = {
     type: "popup",
     allow: true,

@@ -11,8 +11,8 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 add_task(async function test_stripAuthCredentials() {
   await BrowserTestUtils.withNewTab(
     TEST_PATH + "overlink_test.html",
-    async function(browser) {
-      await SpecialPowers.spawn(browser, [], function() {
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [], function () {
         content.document.getElementById("link").focus();
       });
 

@@ -113,7 +113,7 @@ add_task(async function testReopen() {
     "1",
     "Tab(2) with UCI=1 should be opened"
   );
-  await TestUtils.waitForCondition(function() {
+  await TestUtils.waitForCondition(function () {
     return getUrl(containerTab2) == getUrl(tab2);
   }, "Same page (tab2) should be opened");
 
@@ -123,7 +123,7 @@ add_task(async function testReopen() {
     "1",
     "Tab(4) with UCI=1 should be opened"
   );
-  await TestUtils.waitForCondition(function() {
+  await TestUtils.waitForCondition(function () {
     return getUrl(containerTab4) == getUrl(tab4);
   }, "Same page (tab4) should be opened");
 

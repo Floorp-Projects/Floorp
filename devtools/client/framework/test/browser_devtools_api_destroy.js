@@ -34,7 +34,7 @@ async function runTests(aTab) {
 
   gDevTools
     .showToolboxForTab(aTab, { toolId: toolDefinition.id })
-    .then(function(toolbox) {
+    .then(function (toolbox) {
       const panel = toolbox.getPanel(toolDefinition.id);
       ok(panel, "Tool open");
 
@@ -54,7 +54,7 @@ async function runTests(aTab) {
         collectedEvents.push("toolbox-" + toolDefinition.id + "-destroy");
       });
 
-      toolbox.destroy().then(function() {
+      toolbox.destroy().then(function () {
         is(
           collectedEvents.join(":"),
           "toolbox-destroy:destroy:gDevTools-testTool-destroy:toolbox-testTool-destroy",
@@ -64,7 +64,7 @@ async function runTests(aTab) {
         gDevTools.unregisterTool(toolDefinition.id);
         gBrowser.removeCurrentTab();
 
-        executeSoon(function() {
+        executeSoon(function () {
           finish();
         });
       });

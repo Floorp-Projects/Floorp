@@ -15,7 +15,7 @@ const TAB_STATE = {
 };
 
 function checkTabContents(browser) {
-  return SpecialPowers.spawn(browser, [], async function() {
+  return SpecialPowers.spawn(browser, [], async function () {
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory;
     Assert.ok(
@@ -27,7 +27,7 @@ function checkTabContents(browser) {
   });
 }
 
-add_task(async function() {
+add_task(async function () {
   // Create a new tab.
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let browser = tab.linkedBrowser;

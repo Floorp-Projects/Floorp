@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 
 const TEST_URL = "data:text/html;charset=utf8,<div>test element</div>";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(TEST_URL);
 
   info("Select the test node with the browser ctx menu");

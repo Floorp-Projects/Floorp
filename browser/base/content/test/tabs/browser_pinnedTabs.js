@@ -19,14 +19,14 @@ function PinUnpinHandler(tab, eventName) {
   var self = this;
   tab.addEventListener(
     eventName,
-    function() {
+    function () {
       self.eventCount++;
     },
     { capture: true, once: true }
   );
   gBrowser.tabContainer.addEventListener(
     eventName,
-    function(e) {
+    function (e) {
       if (e.originalTarget == tab) {
         self.eventCount++;
       }

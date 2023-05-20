@@ -47,30 +47,27 @@ const { sinon } = ChromeUtils.importESModule(
 );
 
 // Make sinon assertions fail in a way that mochitest understands
-sinon.assert.fail = function(message) {
+sinon.assert.fail = function (message) {
   ok(false, message);
 };
 
 // Prep Telemetry to receive events from tests
 TelemetryEvents.init();
 
-this.TEST_XPI_URL = (function() {
+this.TEST_XPI_URL = (function () {
   const dir = getChromeDir(getResolvedURI(gTestPath));
   dir.append("addons");
   dir.append("normandydriver-a-1.0.xpi");
   return Services.io.newFileURI(dir).spec;
 })();
 
-this.withWebExtension = function(
+this.withWebExtension = function (
   manifestOverrides = {},
   { as = "webExtension" } = {}
 ) {
   return function wrapper(testFunction) {
     return async function wrappedTestFunction(args) {
-      const random = Math.random()
-        .toString(36)
-        .replace(/0./, "")
-        .substr(-3);
+      const random = Math.random().toString(36).replace(/0./, "").substr(-3);
       let addonId = `normandydriver_${random}@example.com`;
       if ("id" in manifestOverrides) {
         addonId = manifestOverrides.id;
@@ -106,12 +103,12 @@ this.withWebExtension = function(
   };
 };
 
-this.withCorruptedWebExtension = function(options) {
+this.withCorruptedWebExtension = function (options) {
   // This should be an invalid manifest version, so that installing this add-on fails.
   return this.withWebExtension({ manifest_version: -1 }, options);
 };
 
-this.withInstalledWebExtension = function(
+this.withInstalledWebExtension = function (
   manifestOverrides = {},
   { expectUninstall = false, as = "installedWebExtension" } = {}
 ) {
@@ -148,8 +145,8 @@ this.withInstalledWebExtension = function(
   };
 };
 
-this.withMockNormandyApi = function() {
-  return function(testFunction) {
+this.withMockNormandyApi = function () {
+  return function (testFunction) {
     return async function inner(args) {
       const mockNormandyApi = {
         actions: [],
@@ -183,8 +180,8 @@ const preferenceBranches = {
   default: new Preferences({ defaultBranch: true }),
 };
 
-this.withMockPreferences = function() {
-  return function(testFunction) {
+this.withMockPreferences = function () {
+  return function (testFunction) {
     return async function inner(args) {
       const mockPreferences = new MockPreferences();
       try {
@@ -255,7 +252,7 @@ class MockPreferences {
   }
 }
 
-this.withPrefEnv = function(inPrefs) {
+this.withPrefEnv = function (inPrefs) {
   return function wrapper(testFunc) {
     return async function inner(args) {
       await SpecialPowers.pushPrefEnv(inPrefs);
@@ -268,8 +265,8 @@ this.withPrefEnv = function(inPrefs) {
   };
 };
 
-this.withStudiesEnabled = function() {
-  return function(testFunc) {
+this.withStudiesEnabled = function () {
+  return function (testFunc) {
     return async function inner(args) {
       await SpecialPowers.pushPrefEnv({
         set: [["app.shield.optoutstudies.enabled", true]],
@@ -294,7 +291,7 @@ this.withStudiesEnabled = function() {
  *
  * func1(func2(func3));
  */
-this.decorate = function(...args) {
+this.decorate = function (...args) {
   const funcs = Array.from(args);
   let decorated = funcs.pop();
   const origName = decorated.name;
@@ -324,11 +321,11 @@ this.decorate = function(...args) {
  *     }
  *   );
  */
-this.decorate_task = function(...args) {
+this.decorate_task = function (...args) {
   return add_task(decorate(...args));
 };
 
-this.withStub = function(
+this.withStub = function (
   object,
   method,
   { returnValue, as = `${method}Stub` } = {}
@@ -346,7 +343,7 @@ this.withStub = function(
   };
 };
 
-this.withSpy = function(object, method, { as = `${method}Spy` } = {}) {
+this.withSpy = function (object, method, { as = `${method}Spy` } = {}) {
   return function wrapper(testFunction) {
     return async function wrappedTestFunction(args) {
       const spy = sinon.spy(object, method);
@@ -359,15 +356,15 @@ this.withSpy = function(object, method, { as = `${method}Spy` } = {}) {
   };
 };
 
-this.studyEndObserved = function(recipeId) {
+this.studyEndObserved = function (recipeId) {
   return TestUtils.topicObserved(
     "shield-study-ended",
     (subject, endedRecipeId) => Number.parseInt(endedRecipeId) === recipeId
   );
 };
 
-this.withSendEventSpy = function() {
-  return function(testFunction) {
+this.withSendEventSpy = function () {
+  return function (testFunction) {
     return async function wrappedTestFunction(args) {
       const sendEventSpy = sinon.spy(TelemetryEvents, "sendEvent");
       sendEventSpy.assertEvents = expected => {
@@ -390,7 +387,7 @@ this.withSendEventSpy = function() {
 };
 
 let _recipeId = 1;
-this.recipeFactory = function(overrides = {}) {
+this.recipeFactory = function (overrides = {}) {
   return Object.assign(
     {
       id: _recipeId++,
@@ -467,7 +464,7 @@ FIXTURE_ADDONS.forEach(addon => {
   };
 });
 
-this.extensionDetailsFactory = function(overrides = {}) {
+this.extensionDetailsFactory = function (overrides = {}) {
   return Object.assign(
     {
       id: 1,
@@ -490,7 +487,7 @@ this.extensionDetailsFactory = function(overrides = {}) {
  * listener, which is not awaited. Wrap it here and trigger a promise once it's
  * done so we can wait until AddonStudies cleanup is finished.
  */
-this.safeUninstallAddon = async function(addon) {
+this.safeUninstallAddon = async function (addon) {
   const activeStudies = (await AddonStudies.getAll()).filter(
     study => study.active
   );
@@ -515,7 +512,7 @@ this.safeUninstallAddon = async function(addon) {
  * Test decorator that is a modified version of the withInstalledWebExtension
  * decorator that safely uninstalls the created addon.
  */
-this.withInstalledWebExtensionSafe = function(
+this.withInstalledWebExtensionSafe = function (
   manifestOverrides = {},
   { as = "installedWebExtensionSafe" } = {}
 ) {
@@ -544,7 +541,7 @@ this.withInstalledWebExtensionSafe = function(
 /**
  * Test decorator to provide a web extension installed from a URL.
  */
-this.withInstalledWebExtensionFromURL = function(
+this.withInstalledWebExtensionFromURL = function (
   url,
   { as = "installedWebExtension" } = {}
 ) {
@@ -579,8 +576,8 @@ this.withInstalledWebExtensionFromURL = function(
  * Test decorator that checks that the test cleans up all add-ons installed
  * during the test. Likely needs to be the first decorator used.
  */
-this.ensureAddonCleanup = function() {
-  return function(testFunction) {
+this.ensureAddonCleanup = function () {
+  return function (testFunction) {
     return async function wrappedTestFunction(args) {
       const beforeAddons = new Set(await AddonManager.getAllAddons());
 
@@ -611,7 +608,7 @@ class MockEventEmitter {
 }
 
 function withStubbedHeartbeat() {
-  return function(testFunction) {
+  return function (testFunction) {
     return async function wrappedTestFunction(args) {
       const heartbeatInstanceStub = new MockHeartbeat();
       const heartbeatClassStub = sinon.stub();
@@ -632,7 +629,7 @@ function withStubbedHeartbeat() {
 }
 
 function withClearStorage() {
-  return function(testFunction) {
+  return function (testFunction) {
     return async function wrappedTestFunction(args) {
       Storage.clearAllStorage();
       try {

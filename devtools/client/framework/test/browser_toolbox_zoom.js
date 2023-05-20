@@ -9,8 +9,8 @@ const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"
 );
 
-add_task(async function() {
-  registerCleanupFunction(function() {
+add_task(async function () {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("devtools.toolbox.zoomValue");
   });
 

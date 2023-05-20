@@ -15,7 +15,7 @@ let referrerInfo = new ReferrerInfo(
 );
 let deReferrerInfo = E10SUtils.serializeReferrerInfo(referrerInfo);
 
-var checkResult = async function(isRemote, browserKey, uri) {
+var checkResult = async function (isRemote, browserKey, uri) {
   is(
     gBrowser.selectedBrowser.isRemoteBrowser,
     isRemote,
@@ -70,7 +70,7 @@ var checkResult = async function(isRemote, browserKey, uri) {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [{ uri, referrerInfo: deReferrerInfo, isRemote }],
-    async function(args) {
+    async function (args) {
       let webNav = content.docShell.QueryInterface(Ci.nsIWebNavigation);
       let sessionHistory = webNav.sessionHistory;
       let entry = sessionHistory.legacySHistory.getEntryAtIndex(
@@ -118,7 +118,7 @@ var checkResult = async function(isRemote, browserKey, uri) {
     }
   );
 };
-var waitForLoad = async function(uri) {
+var waitForLoad = async function (uri) {
   info("waitForLoad " + uri);
   let loadURIOptions = {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),

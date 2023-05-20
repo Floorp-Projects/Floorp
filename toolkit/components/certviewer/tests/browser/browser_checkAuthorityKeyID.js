@@ -4,8 +4,8 @@
 "use strict";
 
 async function checkAuthorityKeyID(url, expectedKeyId) {
-  await BrowserTestUtils.withNewTab(url, async function(browser) {
-    await SpecialPowers.spawn(browser, [expectedKeyId], async function(
+  await BrowserTestUtils.withNewTab(url, async function (browser) {
+    await SpecialPowers.spawn(browser, [expectedKeyId], async function (
       expectedKeyId
     ) {
       let certificateSection = await ContentTaskUtils.waitForCondition(() => {

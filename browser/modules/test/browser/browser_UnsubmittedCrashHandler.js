@@ -111,7 +111,7 @@ function createPendingCrashReports(howMany, accessDate) {
     TelemetrySessionId: "22af5a41-6e84-4112-b1f7-4cb12cb6f6a5",
   });
 
-  return (async function() {
+  return (async function () {
     let uuids = [];
     for (let i = 0; i < howMany; ++i) {
       let uuid = uuidGenerator.generateUUID().toString();
@@ -188,7 +188,7 @@ function waitForIgnoredReports(reportIDs) {
   return Promise.all(promises);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Pending crash reports are stored in the UAppData folder,
   // which exists outside of the profile folder. In order to
   // not overwrite / clear pending crash reports for the poor
@@ -248,7 +248,7 @@ add_setup(async function() {
   });
   UnsubmittedCrashHandler.init();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     clearPendingCrashReports();
     Services.env.set("MOZ_CRASHREPORTER_URL", oldServerURL);
   });

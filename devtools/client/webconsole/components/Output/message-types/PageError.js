@@ -13,11 +13,11 @@ const Message = createFactory(
   require("resource://devtools/client/webconsole/components/Output/Message.js")
 );
 const GripMessageBody = require("resource://devtools/client/webconsole/components/Output/GripMessageBody.js");
-loader.lazyGetter(this, "REPS", function() {
+loader.lazyGetter(this, "REPS", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .REPS;
 });
-loader.lazyGetter(this, "MODE", function() {
+loader.lazyGetter(this, "MODE", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .MODE;
 });

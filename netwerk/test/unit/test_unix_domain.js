@@ -112,7 +112,7 @@ function test_echo() {
       let serverOutput = connection.openOutputStream(0, 0, 0);
 
       serverAsyncInput.asyncWait(
-        function(aStream) {
+        function (aStream) {
           info("called test_echo's server's onInputStreamReady");
           let serverScriptableInput = new ScriptableInputStream(aStream);
 
@@ -157,7 +157,7 @@ function test_echo() {
   info("client has written to server");
 
   clientAsyncInput.asyncWait(
-    function(aStream) {
+    function (aStream) {
       info("called test_echo's client's onInputStreamReady");
       log += "c";
 
@@ -235,7 +235,7 @@ function test_no_such_socket() {
     .openInputStream(0, 0, 0)
     .QueryInterface(Ci.nsIAsyncInputStream);
   clientAsyncInput.asyncWait(
-    function(aStream) {
+    function (aStream) {
       info("called test_no_such_socket's onInputStreamReady");
 
       Assert.equal(aStream, clientAsyncInput);
@@ -381,7 +381,7 @@ function test_connect_permission() {
     .openInputStream(0, 0, 0)
     .QueryInterface(Ci.nsIAsyncInputStream);
   client1AsyncInput.asyncWait(
-    function(aStream) {
+    function (aStream) {
       info("called test_connect_permission's client1's onInputStreamReady");
       log += "1";
 
@@ -406,7 +406,7 @@ function test_connect_permission() {
         .openInputStream(0, 0, 0)
         .QueryInterface(Ci.nsIAsyncInputStream);
       client2AsyncInput.asyncWait(
-        function(aStream) {
+        function (aStream) {
           info("called test_connect_permission's client2's onInputStreamReady");
           log += "2";
 
@@ -458,7 +458,7 @@ function test_connect_permission() {
     let serverOutput = aTransport.openOutputStream(0, 0, 0);
 
     serverInput.asyncWait(
-      function(aStream) {
+      function (aStream) {
         info(
           "called test_connect_permission's socketAccepted's onInputStreamReady"
         );

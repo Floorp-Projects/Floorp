@@ -56,7 +56,7 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   // Bug 1517210: GC heuristics are broken for this test, so that the test ends up
   // running out of memory if we don't force to reduce the GC side before/after the test.
   Cu.forceShrinkingGC();

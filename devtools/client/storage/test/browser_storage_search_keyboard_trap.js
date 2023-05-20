@@ -1,7 +1,7 @@
 // Test ability to focus search field by using keyboard
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await openTabAndSetupStorage(MAIN_DOMAIN_SECURED + "storage-search.html");
 
   gUI.tree.expandAll();

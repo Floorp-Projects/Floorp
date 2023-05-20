@@ -151,7 +151,7 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   for (let setupName of Object.keys(TEST_CONDITIONS)) {
     for (let testName of Object.keys(TESTS)) {
       info("Running test " + setupName + " " + testName);

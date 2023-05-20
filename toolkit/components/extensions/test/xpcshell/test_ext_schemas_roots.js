@@ -169,7 +169,7 @@ let wrapper = {
   },
 };
 
-add_task(async function() {
+add_task(async function () {
   let baseSchemas = new Map([["resource://schemas/base.json", baseSchemaJSON]]);
   let experimentSchemas = new Map([
     ["resource://experiment-foo/schema.json", experimentFooJSON],

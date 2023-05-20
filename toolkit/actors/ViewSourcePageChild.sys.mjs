@@ -30,7 +30,7 @@ export class ViewSourcePageChild extends JSWindowActorChild {
   constructor() {
     super();
 
-    XPCOMUtils.defineLazyGetter(this, "bundle", function() {
+    XPCOMUtils.defineLazyGetter(this, "bundle", function () {
       return Services.strings.createBundle(BUNDLE_URL);
     });
   }

@@ -69,7 +69,7 @@ function injectedScript() {
   if (!window.pageScriptExecutedFirst) {
     window.addEventListener(
       "DOMContentLoaded",
-      function() {
+      function () {
         if (document.querySelector("pre")) {
           document.querySelector("pre").textContent =
             "injected script executed first";

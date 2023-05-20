@@ -19,7 +19,7 @@ const CASES = [
   { id: "scrollbar_none", expected: false },
 ];
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test that elements with scrollbars have a true value for isScrollable, and elements without scrollbars have a false value."
   );

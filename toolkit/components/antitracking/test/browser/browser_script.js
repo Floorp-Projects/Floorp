@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   info("Starting subResources test");
 
   await SpecialPowers.flushPrefEnv();
@@ -55,7 +55,7 @@ add_task(async function() {
       let assertBlocked = () =>
         new content.Promise(resolve => {
           let ifr = content.document.createElement("iframe");
-          ifr.onload = function() {
+          ifr.onload = function () {
             info("Sending code to the 3rd party content");
             ifr.contentWindow.postMessage(callbackBlocked.toString(), "*");
           };
@@ -128,7 +128,7 @@ add_task(async function() {
 
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
-        ifr.onload = function() {
+        ifr.onload = function () {
           info("Sending code to the 3rd party content");
           ifr.contentWindow.postMessage(callbackBlocked.toString(), "*");
         };
@@ -177,7 +177,7 @@ add_task(async function() {
 
       await new content.Promise(resolve => {
         let ifr = content.document.createElement("iframe");
-        ifr.onload = function() {
+        ifr.onload = function () {
           info("Sending code to the 3rd party content");
           ifr.contentWindow.postMessage(callbackAllowed.toString(), "*");
         };
@@ -214,7 +214,7 @@ add_task(async function() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Cleaning up.");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>

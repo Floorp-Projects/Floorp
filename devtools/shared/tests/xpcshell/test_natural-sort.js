@@ -11,7 +11,7 @@ const {
 } = require("resource://devtools/shared/natural-sort.js");
 
 function run_test() {
-  test("different values types", function() {
+  test("different values types", function () {
     runTest(["a", 1], [1, "a"], "number always comes first");
     runTest(
       ["1", 1],
@@ -25,7 +25,7 @@ function run_test() {
     );
   });
 
-  test("datetime", function() {
+  test("datetime", function () {
     runTest(
       ["10/12/2008", "10/11/2008", "10/11/2007", "10/12/2007"],
       ["10/11/2007", "10/12/2007", "10/11/2008", "10/12/2008"],
@@ -221,7 +221,7 @@ function run_test() {
     );
   });
 
-  test("version number strings", function() {
+  test("version number strings", function () {
     runTest(
       ["1.0.2", "1.0.1", "1.0.0", "1.0.9"],
       ["1.0.0", "1.0.1", "1.0.2", "1.0.9"],
@@ -277,7 +277,7 @@ function run_test() {
     );
   });
 
-  test("numerics", function() {
+  test("numerics", function () {
     runTest(["10", 9, 2, "1", "4"], ["1", 2, "4", 9, "10"], "string vs number");
     runTest(
       ["0001", "002", "001"],
@@ -331,7 +331,7 @@ function run_test() {
     );
   });
 
-  test("IP addresses", function() {
+  test("IP addresses", function () {
     runTest(
       [
         "192.168.0.100",
@@ -354,7 +354,7 @@ function run_test() {
     );
   });
 
-  test("filenames", function() {
+  test("filenames", function () {
     runTest(
       ["img12.png", "img10.png", "img2.png", "img1.png"],
       ["img1.png", "img2.png", "img10.png", "img12.png"],
@@ -392,11 +392,11 @@ function run_test() {
     );
   });
 
-  test("space(s) as first character(s)", function() {
+  test("space(s) as first character(s)", function () {
     runTest(["alpha", " 1", "  3", " 2", 0], [0, " 1", " 2", "  3", "alpha"]);
   });
 
-  test("empty strings and space character", function() {
+  test("empty strings and space character", function () {
     runTest(
       ["10023", "999", "", 2, 5.663, 5.6629],
       ["", 2, 5.6629, 5.663, "999", "10023"]
@@ -404,7 +404,7 @@ function run_test() {
     runTest([0, "0", ""], [0, "0", ""]);
   });
 
-  test("hex", function() {
+  test("hex", function () {
     runTest(["0xA", "0x9", "0x99"], ["0x9", "0xA", "0x99"], "real hex numbers");
     runTest(
       ["0xZZ", "0xVVV", "0xVEV", "0xUU"],
@@ -413,7 +413,7 @@ function run_test() {
     );
   });
 
-  test("unicode", function() {
+  test("unicode", function () {
     runTest(
       ["\u0044", "\u0055", "\u0054", "\u0043"],
       ["\u0043", "\u0044", "\u0054", "\u0055"],
@@ -421,7 +421,7 @@ function run_test() {
     );
   });
 
-  test("sparse array sort", function() {
+  test("sparse array sort", function () {
     const sarray = [3, 2];
     const sarrayOutput = [1, 2, 3];
 
@@ -432,7 +432,7 @@ function run_test() {
     runTest(sarray, sarrayOutput, "simple sparse array");
   });
 
-  test("case insensitive support", function() {
+  test("case insensitive support", function () {
     runTest(
       ["A", "b", "C", "d", "E", "f"],
       ["A", "b", "C", "d", "E", "f"],
@@ -457,7 +457,7 @@ function run_test() {
     );
   });
 
-  test("rosetta code natural sort small test set", function() {
+  test("rosetta code natural sort small test set", function () {
     runTest(
       [
         "ignore leading spaces: 2-2",
@@ -576,7 +576,7 @@ function run_test() {
     //   'Character replacements');
   });
 
-  test("contributed tests", function() {
+  test("contributed tests", function () {
     runTest(
       [
         "T78",

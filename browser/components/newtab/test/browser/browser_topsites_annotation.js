@@ -270,7 +270,7 @@ function unpin(link) {
   NewTabUtils.pinnedLinks.unpin(link);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await clearHistoryAndBookmarks();
   registerCleanupFunction(async () => {
     await clearHistoryAndBookmarks();

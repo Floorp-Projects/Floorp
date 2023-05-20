@@ -9,7 +9,7 @@
 const IFRAME1 = URL_ROOT_SSL + "doc_boxmodel_iframe1.html";
 const IFRAME2 = URL_ROOT_SSL + "doc_boxmodel_iframe2.html";
 
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab(IFRAME1);
   const browser = tab.linkedBrowser;
   const { inspector, boxmodel } = await openLayoutView();

@@ -14,7 +14,7 @@ function test() {
     "persistent-storage",
     Ci.nsIPermissionManager.ALLOW_ACTION
   );
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.perms.removeFromPrincipal(principal, "persistent-storage");
   });
 

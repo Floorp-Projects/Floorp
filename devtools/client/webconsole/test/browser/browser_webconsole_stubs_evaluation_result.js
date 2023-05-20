@@ -14,7 +14,7 @@ const {
 const TEST_URI = "data:text/html;charset=utf-8,<!DOCTYPE html>stub generation";
 const STUB_FILE = "evaluationResult.js";
 
-add_task(async function() {
+add_task(async function () {
   const isStubsUpdate = Services.env.get(STUBS_UPDATE_ENV) == "true";
   info(`${isStubsUpdate ? "Update" : "Check"} ${STUB_FILE}`);
 

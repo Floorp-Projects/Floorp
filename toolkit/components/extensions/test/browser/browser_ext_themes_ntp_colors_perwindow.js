@@ -33,7 +33,7 @@ function test_ntp_theme(browser, theme, isBrightText) {
         color: hexToCSS(theme.colors.ntp_text),
       },
     ],
-    function({ isBrightText, background, card_background, color }) {
+    function ({ isBrightText, background, card_background, color }) {
       let doc = content.document;
       ok(
         doc.documentElement.hasAttribute("lwt-newtab"),
@@ -84,7 +84,7 @@ function test_ntp_default_theme(browser, url) {
         color: hexToCSS("#15141A"),
       },
     ],
-    function({ background, color }) {
+    function ({ background, color }) {
       let doc = content.document;
       ok(
         !doc.documentElement.hasAttribute("lwt-newtab"),

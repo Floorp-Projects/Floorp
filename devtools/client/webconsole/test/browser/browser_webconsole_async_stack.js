@@ -24,7 +24,7 @@ promiseThen(onPromiseThen);
 
 </script>`;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("javascript.options.asyncstack_capture_debuggee_only", false);
   const hud = await openNewTabAndConsole(TEST_URI);
 

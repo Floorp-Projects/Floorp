@@ -19,7 +19,7 @@ const EXPECTED_REFLOWS = [
  * uninterruptible reflows when closing a tab that will
  * cause the existing tabs to grow bigger.
  */
-add_task(async function() {
+add_task(async function () {
   // Force-enable tab animations
   gReduceMotionOverride = false;
 
@@ -71,7 +71,7 @@ add_task(async function() {
   }
 
   await withPerfObserver(
-    async function() {
+    async function () {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
       let tab = gBrowser.tabs[gBrowser.tabs.length - 1];
       gBrowser.removeTab(tab, { animate: true });

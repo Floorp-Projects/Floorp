@@ -6,7 +6,7 @@ const PAGE_URL = "http://icon.mozilla.org/";
 const ICON16_URL = "http://places.test/favicon-normal16.png";
 const ICON32_URL = "http://places.test/favicon-normal32.png";
 
-add_task(async function() {
+add_task(async function () {
   await PlacesTestUtils.addVisits(PAGE_URL);
   // Add 2 differently sized favicons for this page.
 

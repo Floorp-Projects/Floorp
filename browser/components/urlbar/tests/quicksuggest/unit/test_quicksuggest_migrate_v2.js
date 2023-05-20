@@ -58,7 +58,7 @@ add_task(async function init() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: on
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     scenario: "offline",
@@ -81,7 +81,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -111,7 +111,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -140,7 +140,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -173,7 +173,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: on
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     scenario: "online",
@@ -196,7 +196,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -226,7 +226,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -255,7 +255,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -291,7 +291,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await withOnlineExperiment(async () => {
     await doMigrateTest({
       testOverrides: TEST_OVERRIDES,
@@ -319,7 +319,7 @@ add_task(async function() {
 // * Sponsored suggestions: off
 // * Data collection: on (since they opted in by checking the main checkbox
 //   while in online)
-add_task(async function() {
+add_task(async function () {
   await withOnlineExperiment(async () => {
     await doMigrateTest({
       testOverrides: TEST_OVERRIDES,
@@ -352,7 +352,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await withOnlineExperiment(async () => {
     await doMigrateTest({
       testOverrides: TEST_OVERRIDES,
@@ -386,7 +386,7 @@ add_task(async function() {
 // * Sponsored suggestions: on
 // * Data collection: on (since they opted in by checking the main checkbox
 //   while in online)
-add_task(async function() {
+add_task(async function () {
   await withOnlineExperiment(async () => {
     await doMigrateTest({
       testOverrides: TEST_OVERRIDES,
@@ -426,7 +426,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -459,7 +459,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: off
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -493,7 +493,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -529,7 +529,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: on
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -565,7 +565,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: on
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -593,7 +593,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: on
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -625,7 +625,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -657,7 +657,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -693,7 +693,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: on
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -721,7 +721,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -753,7 +753,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -791,7 +791,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -824,7 +824,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -859,7 +859,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: on
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -893,7 +893,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: on
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -929,7 +929,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -963,7 +963,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: off
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -999,7 +999,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: on
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -1034,7 +1034,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: on
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -1075,7 +1075,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -1110,7 +1110,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -1146,7 +1146,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: on
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -1185,7 +1185,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: on
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -1223,7 +1223,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: on
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -1265,7 +1265,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: off
 // * Sponsored suggestions: off
 // * Data collection: off
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {
@@ -1305,7 +1305,7 @@ add_task(async function() {
 // * Non-sponsored suggestions: on
 // * Sponsored suggestions: on
 // * Data collection: on
-add_task(async function() {
+add_task(async function () {
   await doMigrateTest({
     testOverrides: TEST_OVERRIDES,
     initialUserBranch: {

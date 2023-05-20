@@ -40,7 +40,7 @@ function submitHandler(request, response) {
   response.setStatusLine(request.httpVersion, 200, "Ok");
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Ensure the initial init is complete.
   await Services.search.init();
 
@@ -82,7 +82,7 @@ add_setup(async function() {
   await gCUITestUtils.addSearchBar();
 
   // Make sure to restore the engine once we're done.
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     let settingsWritten = SearchTestUtils.promiseSearchNotification(
       "write-settings-to-disk-complete"
     );
@@ -230,7 +230,7 @@ add_task(async function test_context_menu() {
   await checkAttributionRecorded(
     async tab => {
       info("Select all the text in the page.");
-      await SpecialPowers.spawn(tab.linkedBrowser, [""], async function() {
+      await SpecialPowers.spawn(tab.linkedBrowser, [""], async function () {
         return new Promise(resolve => {
           content.document.addEventListener(
             "selectionchange",
@@ -288,7 +288,7 @@ add_task(async function test_about_newtab() {
     "about:newtab",
     false
   );
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => !content.document.hidden);
   });
 

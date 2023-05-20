@@ -27,13 +27,13 @@ function checkResponse(r) {
     response.headers.get("Mirrored"),
     "Both responses should have the same Mirrored header"
   );
-  return r.text().then(function(text) {
+  return r.text().then(function (text) {
     is(text, responseText, "The response body should be correct");
   });
 }
 
 fetch(new Request(requestURL, { headers: { Mirror: "bar" } }))
-  .then(function(r) {
+  .then(function (r) {
     is(
       r.headers.get("Mirrored"),
       "bar",
@@ -42,30 +42,30 @@ fetch(new Request(requestURL, { headers: { Mirror: "bar" } }))
     response = r;
     return response.text();
   })
-  .then(function(text) {
+  .then(function (text) {
     responseText = text;
     return caches.open(name);
   })
-  .then(function(cache) {
+  .then(function (cache) {
     c = cache;
     return c.add(new Request(requestURL, { headers: { Mirror: "foo" } }));
   })
-  .then(function() {
+  .then(function () {
     // Overwrite the request, to replace the entry stored in response_headers
     // with a different value.
     return c.add(new Request(requestURL, { headers: { Mirror: "bar" } }));
   })
-  .then(function() {
+  .then(function () {
     return c.matchAll();
   })
-  .then(function(r) {
+  .then(function (r) {
     is(r.length, 1, "Only one request should be in the cache");
     return checkResponse(r[0]);
   })
-  .then(function() {
+  .then(function () {
     return caches.delete(name);
   })
-  .then(function(deleted) {
+  .then(function (deleted) {
     ok(deleted, "The cache should be deleted successfully");
     testDone();
   });

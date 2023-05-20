@@ -13,7 +13,7 @@ const DEFAULT_PAGE = "#/runtime/this-firefox";
  * Check if the disconnect button disconnects the remote runtime
  * and redirects to the default page.
  */
-add_task(async function() {
+add_task(async function () {
   // Create a real local client and use it as the remote USB client for this
   // test.
   const clientWrapper = await createLocalClientWrapper();

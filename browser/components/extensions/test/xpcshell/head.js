@@ -53,7 +53,7 @@ function createHttpServer(port = -1) {
   return server;
 }
 
-var promiseConsoleOutput = async function(task) {
+var promiseConsoleOutput = async function (task) {
   const DONE = `=== console listener ${Math.random()} done ===`;
 
   let listener;

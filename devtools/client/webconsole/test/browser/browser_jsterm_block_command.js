@@ -5,7 +5,7 @@ const TEST_URI =
   "test/browser/test-block-action.html";
 const TIMEOUT = "TIMEOUT";
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   ok(hud, "web console opened");
@@ -70,32 +70,34 @@ add_task(async function() {
 });
 
 async function tryFetching() {
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [TIMEOUT], async function(
-    timeoutStr
-  ) {
-    const win = content.wrappedJSObject;
-    const FETCH_URI =
-      "https://example.com/browser/devtools/client/webconsole/" +
-      "test/browser/test-block-action-style.css";
-    const timeout = new Promise(res =>
-      win.setTimeout(() => res(timeoutStr), 1000)
-    );
-    const fetchPromise = win.fetch(FETCH_URI);
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [TIMEOUT],
+    async function (timeoutStr) {
+      const win = content.wrappedJSObject;
+      const FETCH_URI =
+        "https://example.com/browser/devtools/client/webconsole/" +
+        "test/browser/test-block-action-style.css";
+      const timeout = new Promise(res =>
+        win.setTimeout(() => res(timeoutStr), 1000)
+      );
+      const fetchPromise = win.fetch(FETCH_URI);
 
-    try {
-      const resp = await Promise.race([fetchPromise, timeout]);
-      if (typeof resp === "object") {
-        // Request Promise
-        win.console.log("the request was successful");
-      } else if (resp === timeoutStr) {
-        // Timeout
+      try {
+        const resp = await Promise.race([fetchPromise, timeout]);
+        if (typeof resp === "object") {
+          // Request Promise
+          win.console.log("the request was successful");
+        } else if (resp === timeoutStr) {
+          // Timeout
+          win.console.log("the request was blocked");
+        } else {
+          win.console.error("Unkown response");
+        }
+      } catch {
+        // NetworkError
         win.console.log("the request was blocked");
-      } else {
-        win.console.error("Unkown response");
       }
-    } catch {
-      // NetworkError
-      win.console.log("the request was blocked");
     }
-  });
+  );
 }

@@ -53,7 +53,7 @@ add_task(async function setup() {
   // Despite being called "download", this does not actually access the network
   // when there is a valid dump.
   const originalImpl = ExtensionBlocklistMLBF._client.attachments.download;
-  ExtensionBlocklistMLBF._client.attachments.download = function(record) {
+  ExtensionBlocklistMLBF._client.attachments.download = function (record) {
     let downloadPromise = originalImpl.apply(this, arguments);
     observed.push({ inputRecord: record, downloadPromise });
     return downloadPromise;

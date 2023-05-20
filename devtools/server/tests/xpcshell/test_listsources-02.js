@@ -11,8 +11,8 @@ var gNumTimesSourcesSent = 0;
 
 add_task(
   threadFrontTest(async ({ threadFront, client }) => {
-    client.request = (function(origRequest) {
-      return function(request, onResponse) {
+    client.request = (function (origRequest) {
+      return function (request, onResponse) {
         if (request.type === "sources") {
           ++gNumTimesSourcesSent;
         }

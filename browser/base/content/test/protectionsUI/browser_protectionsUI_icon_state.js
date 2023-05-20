@@ -21,7 +21,7 @@ const COOKIE_PAGE =
   "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/cookiePage.html";
 const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(TP_PB_PREF);
@@ -101,7 +101,7 @@ async function testTrackingProtectionIconState(tabbrowser) {
   info("Inject tracking cookie inside tracking tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   let timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function () {
     content.postMessage("cookie", "*");
   });
   let result = await Promise.race([securityChanged, timeoutPromise]);
@@ -112,7 +112,7 @@ async function testTrackingProtectionIconState(tabbrowser) {
   info("Inject tracking element inside tracking tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function () {
     content.postMessage("tracking", "*");
   });
   result = await Promise.race([securityChanged, timeoutPromise]);
@@ -125,7 +125,7 @@ async function testTrackingProtectionIconState(tabbrowser) {
   info("Inject tracking cookie inside tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function () {
     content.postMessage("cookie", "*");
   });
   result = await Promise.race([securityChanged, timeoutPromise]);
@@ -136,7 +136,7 @@ async function testTrackingProtectionIconState(tabbrowser) {
   info("Inject tracking element inside tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function () {
     content.postMessage("tracking", "*");
   });
   result = await Promise.race([securityChanged, timeoutPromise]);

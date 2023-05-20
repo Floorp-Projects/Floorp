@@ -19,7 +19,7 @@ const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 // will be the timeout callback instead of the timeout itself, so test cases
 // will need to execute it to fake a timeout
 LayoutChangesObserver.prototype._setTimeout = cb => cb;
-LayoutChangesObserver.prototype._clearTimeout = function() {};
+LayoutChangesObserver.prototype._clearTimeout = function () {};
 
 // Mock the targetActor since we only really want to test the LayoutChangesObserver
 // and don't want to depend on a window object, nor want to test protocol.js

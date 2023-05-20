@@ -22,7 +22,7 @@ const TEST_FRAME_DOC_URI = `https://example.com/document-builder.sjs?html=${enco
     <frame class=remote src="${REMOTE_ORIGIN_FRAME_URI}"></frame>
   </frameset>`)}`;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.command-button-frames.enabled", true);
   await addTab(TEST_IFRAME_DOC_URI);
   info(

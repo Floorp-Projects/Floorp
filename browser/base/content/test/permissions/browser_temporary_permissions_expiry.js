@@ -44,7 +44,7 @@ add_task(async function testTempPermissionRequestAfterExpiry() {
   }
 
   for (let id of ids) {
-    await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(
+    await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function (
       browser
     ) {
       let blockedIcon = gPermissionPanel._identityPermissionBox.querySelector(

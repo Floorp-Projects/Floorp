@@ -10,7 +10,7 @@
 // Line where we set a breakpoint in simple2.js
 const BREAKPOINT_LINE = 5;
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html", "simple2.js");
 
   await selectSource(dbg, "simple2.js");
@@ -40,7 +40,7 @@ async function testSimpleAndLog(dbg) {
   info(
     "Eval foo() and trigger the breakpoints. If this freeze here, it means that the log point has been ignored."
   );
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.foo(42);
   });
 
@@ -76,7 +76,7 @@ async function testLogUpdates(dbg) {
   );
 
   info("Eval foo() and trigger the breakpoints");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.foo();
   });
 

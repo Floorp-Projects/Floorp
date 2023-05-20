@@ -13,7 +13,7 @@
 // (that's to see if the reload loads from cache or not)
 const TEST_URL = URL_ROOT + "incremental-js-value-script.sjs";
 
-add_task(async function() {
+add_task(async function () {
   info(" ### Test reloading a Tab");
 
   // Create a TargetCommand for a given test tab
@@ -59,7 +59,7 @@ add_task(async function() {
   await commands.destroy();
 });
 
-add_task(async function() {
+add_task(async function () {
   info(" ### Test reloading an Add-on");
 
   const extension = ExtensionTestUtils.loadExtension({
@@ -110,7 +110,7 @@ add_task(async function() {
   await extension.unload();
 });
 function getContentVariable() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     return content.wrappedJSObject.jsValue;
   });
 }

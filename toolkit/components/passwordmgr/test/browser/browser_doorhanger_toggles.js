@@ -5,7 +5,7 @@ const usernameInputSelector = "#form-basic-username";
 const FORM_URL =
   "https://example.com/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["signon.rememberSignons.visibilityToggle", true]],
   });
@@ -245,7 +245,7 @@ async function testDoorhangerToggles({
       gBrowser,
       url: FORM_URL,
     },
-    async function(browser) {
+    async function (browser) {
       info(`Opened tab with url: ${FORM_URL}, waiting for focus`);
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       info("Waiting for form-processed message");
@@ -422,7 +422,7 @@ async function verifyDoorhangerToggles(browser, notif, expected) {
 }
 
 async function initForm(browser, formDefaults) {
-  await ContentTask.spawn(browser, formDefaults, async function(
+  await ContentTask.spawn(browser, formDefaults, async function (
     selectorValues = {}
   ) {
     for (let [sel, value] of Object.entries(selectorValues)) {
@@ -454,7 +454,7 @@ async function checkForm(browser, expected) {
 async function submitForm(browser, action = "") {
   // Submit the form
   let correctPathNamePromise = BrowserTestUtils.browserLoaded(browser);
-  await SpecialPowers.spawn(browser, [action], async function(actionPathname) {
+  await SpecialPowers.spawn(browser, [action], async function (actionPathname) {
     let form = content.document.querySelector("form");
     if (actionPathname) {
       form.action = actionPathname;

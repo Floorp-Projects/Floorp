@@ -22,7 +22,7 @@ function clearAllDatabases() {
 }
 
 if (!window.runTest) {
-  window.runTest = async function() {
+  window.runTest = async function () {
     SimpleTest.waitForExplicitFinish();
 
     info("Pushing preferences");
@@ -38,14 +38,14 @@ if (!window.runTest) {
 
     await requestFinished(clearAllDatabases());
 
-    SimpleTest.registerCleanupFunction(async function() {
+    SimpleTest.registerCleanupFunction(async function () {
       await requestFinished(clearAllDatabases());
     });
   };
 }
 
 function returnToEventLoop() {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     executeSoon(resolve);
   });
 }
@@ -64,8 +64,8 @@ class RequestError extends Error {
 }
 
 async function requestFinished(request) {
-  await new Promise(function(resolve) {
-    request.callback = SpecialPowers.wrapCallback(function() {
+  await new Promise(function (resolve) {
+    request.callback = SpecialPowers.wrapCallback(function () {
       resolve();
     });
   });

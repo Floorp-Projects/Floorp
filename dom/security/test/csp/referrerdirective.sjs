@@ -6,7 +6,7 @@ function handleRequest(request, response) {
 
   var splits = request.queryString.split("&");
   var params = {};
-  splits.forEach(function(v) {
+  splits.forEach(function (v) {
     let parts = v.split("=");
     params[parts[0]] = unescape(parts[1]);
   });

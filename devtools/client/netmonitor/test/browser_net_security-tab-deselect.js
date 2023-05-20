@@ -8,7 +8,7 @@
  * is selected.
  */
 
-add_task(async function() {
+add_task(async function () {
   // This test needs to trigger http and https requests.
   // Disable https-first to avoid blocking the HTTP request due to mixed content.
   await pushPref("dom.security.https_first", false);
@@ -27,7 +27,7 @@ add_task(async function() {
     "https://example.com" + CORS_SJS_PATH,
     "http://example.com" + CORS_SJS_PATH,
   ];
-  await SpecialPowers.spawn(tab.linkedBrowser, [REQUEST_URLS], async function(
+  await SpecialPowers.spawn(tab.linkedBrowser, [REQUEST_URLS], async function (
     urls
   ) {
     for (const url of urls) {

@@ -664,7 +664,7 @@ function rgbToHsv(r, g, b, a) {
 }
 
 function draggable(element, dragHelper, onmove) {
-  onmove = onmove || function() {};
+  onmove = onmove || function () {};
 
   const doc = element.ownerDocument;
   let dragging = false;

@@ -27,7 +27,7 @@ const {
 var STORE_DIR_COUNT = 0;
 
 function getStore() {
-  return (async function() {
+  return (async function () {
     let storeDir = do_get_tempdir().path;
     storeDir = PathUtils.join(storeDir, "store-" + STORE_DIR_COUNT++);
 

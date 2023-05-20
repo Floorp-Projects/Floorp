@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:robots"
@@ -19,12 +19,12 @@ add_task(async function() {
       permissions: ["tabs"],
     },
 
-    background: function() {
+    background: function () {
       browser.tabs.query(
         {
           lastFocusedWindow: true,
         },
-        function(tabs) {
+        function (tabs) {
           browser.test.assertEq(tabs.length, 3, "should have three tabs");
 
           tabs.sort((tab1, tab2) => tab1.index - tab2.index);
@@ -35,7 +35,7 @@ add_task(async function() {
           browser.test.assertTrue(tabs[0].active, "tab 0 active");
           browser.test.assertFalse(tabs[1].active, "tab 1 inactive");
 
-          browser.tabs.update(tabs[1].id, { active: true }, function() {
+          browser.tabs.update(tabs[1].id, { active: true }, function () {
             browser.test.sendMessage("check");
           });
         }

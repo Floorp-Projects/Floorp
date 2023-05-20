@@ -37,7 +37,7 @@ async function logAndAssertInitialMessages(hud) {
   ok(true, "Messages showed up initially");
 }
 
-add_task(async function() {
+add_task(async function () {
   info("Testing that messages disappear on a refresh if logs aren't persisted");
   const hud = await openNewTabAndConsole(TEST_COM_URI);
 
@@ -54,7 +54,7 @@ add_task(async function() {
   await closeToolbox();
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Testing that messages disappear on a cross origin navigation if logs aren't persisted"
   );
@@ -69,7 +69,7 @@ add_task(async function() {
   await closeToolbox();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Testing that messages disappear on bfcache navigations");
   const firstLocation =
     "data:text/html,<!DOCTYPE html><script>console.log('first document load');window.onpageshow=()=>console.log('first document show');</script>";
@@ -180,7 +180,7 @@ add_task(async function() {
   await closeToolbox();
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Testing that messages persist on a refresh if logs are persisted");
 
   const hud = await openNewTabAndConsole(TEST_COM_URI);

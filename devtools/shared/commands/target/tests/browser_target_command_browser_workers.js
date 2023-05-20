@@ -10,7 +10,7 @@ const WORKER_FILE = "test_worker.js";
 const CHROME_WORKER_URL = CHROME_URL_ROOT + WORKER_FILE;
 const SERVICE_WORKER_URL = URL_ROOT_SSL + "test_service_worker.js";
 
-add_task(async function() {
+add_task(async function () {
   // Enabled fission's pref as the TargetCommand is almost disabled without it
   await pushPref("devtools.browsertoolbox.scope", "everything");
 

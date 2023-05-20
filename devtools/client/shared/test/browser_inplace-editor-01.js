@@ -8,7 +8,7 @@ loadHelperScript("helper_inplace_editor.js");
 
 // Test the inplace-editor behavior.
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8,inline editor tests");
   const { host, doc } = await createHost();
 
@@ -155,7 +155,7 @@ function testEscapeCancel(doc) {
 }
 
 function onDone(value, isCommit, resolve) {
-  return function(actualValue, actualCommit) {
+  return function (actualValue, actualCommit) {
     info("Inplace-editor's done callback executed, checking its state");
     is(actualValue, value, "The value is correct");
     is(actualCommit, isCommit, "The commit boolean is correct");

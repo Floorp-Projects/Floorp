@@ -14,7 +14,7 @@ addAccessibleTask(
      <option id="item1">option1</option>
      <option id="item2">option2</option>
    </select>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info("select@size='1' aka combobox");
     let combobox = findAccessibleChildByID(docAcc, "combobox");
     let comboboxList = combobox.firstChild;
@@ -69,7 +69,7 @@ addAccessibleTask(
       <option id="item2">option2</option>
     </optgroup>
   </select>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info("select@size='1' with optgroups");
     let combobox = findAccessibleChildByID(docAcc, "combobox");
     let comboboxList = combobox.firstChild;
@@ -118,7 +118,7 @@ addAccessibleTask(
     <option id="item1">option1</option>
     <option id="item2">option2</option>
    </select>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info("select@size='4' aka single selectable listbox");
     let select = findAccessibleChildByID(docAcc, "listbox", [
       nsIAccessibleSelectable,
@@ -166,7 +166,7 @@ addAccessibleTask(
       <option id="item2">option2</option>
     </optgroup>
    </select>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info("select@size='4' with optgroups, single selectable");
     let select = findAccessibleChildByID(docAcc, "listbox", [
       nsIAccessibleSelectable,
@@ -208,7 +208,7 @@ addAccessibleTask(
     <option id="item1">option1</option>
     <option id="item2">option2</option>
    </select>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info("select@size='4' multiselect aka listbox");
     let select = findAccessibleChildByID(docAcc, "listbox", [
       nsIAccessibleSelectable,
@@ -236,7 +236,7 @@ addAccessibleTask(
       <option id="item2">option2</option>
     </optgroup>
    </select>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info("select@size='4' multiselect with optgroups");
     let select = findAccessibleChildByID(docAcc, "listbox", [
       nsIAccessibleSelectable,
@@ -269,7 +269,7 @@ addAccessibleTask(
     <option id="item8">option8</option>
     <option id="item9">option9</option>
    </select>`,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     info("select@size='4' multiselect with coalesced selection event");
     let select = findAccessibleChildByID(docAcc, "listbox", [
       nsIAccessibleSelectable,
@@ -313,7 +313,7 @@ addAccessibleTask(
   </select>
 </form>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let selected = waitForEvent(EVENT_SELECTION_WITHIN, "select");
     await invokeContentTask(browser, [], () => {
       const form = content.document.getElementById("form");

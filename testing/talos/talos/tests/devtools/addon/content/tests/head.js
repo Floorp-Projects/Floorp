@@ -41,7 +41,7 @@ function runTest(label, record) {
 }
 exports.runTest = runTest;
 
-exports.testSetup = function(url, { disableCache } = {}) {
+exports.testSetup = function (url, { disableCache } = {}) {
   if (disableCache) {
     // Tests relying on iframes should disable the cache.
     // `browser.reload()` skips the cache for resources loaded by the main page,
@@ -54,14 +54,14 @@ exports.testSetup = function(url, { disableCache } = {}) {
   return damp.testSetup(url);
 };
 
-exports.testTeardown = function() {
+exports.testTeardown = function () {
   // Reset the "devtools.cache.disabled" preference in case it was turned on in
   // testSetup().
   Services.prefs.setBoolPref("devtools.cache.disabled", false);
   return damp.testTeardown();
 };
 
-exports.logTestResult = function(name, value) {
+exports.logTestResult = function (name, value) {
   damp._results.push({ name, value });
 };
 
@@ -75,7 +75,7 @@ function getActiveTab() {
 }
 exports.getActiveTab = getActiveTab;
 
-exports.getToolbox = async function() {
+exports.getToolbox = async function () {
   let tab = getActiveTab();
   return gDevTools.getToolboxForTab(tab);
 };
@@ -97,7 +97,7 @@ exports.waitForPendingPaints = waitForPendingPaints;
  * Waits until the element targeted by the provided selector
  * becomes available
  */
-exports.waitForDOMElement = async function(target, selector) {
+exports.waitForDOMElement = async function (target, selector) {
   await waitForDOMPredicate(
     target,
     () => target.querySelector(selector) !== null
@@ -129,7 +129,7 @@ function waitForDOMPredicate(
 
 exports.waitForDOMPredicate = waitForDOMPredicate;
 
-const openToolbox = async function(tool = "webconsole", onLoad) {
+const openToolbox = async function (tool = "webconsole", onLoad) {
   dump(`Open toolbox on '${tool}'\n`);
   let tab = getActiveTab();
 
@@ -146,7 +146,7 @@ const openToolbox = async function(tool = "webconsole", onLoad) {
 };
 exports.openToolbox = openToolbox;
 
-exports.closeToolbox = async function() {
+exports.closeToolbox = async function () {
   let tab = getActiveTab();
   let toolbox = await gDevTools.getToolboxForTab(tab);
   await toolbox.target.client.waitForRequestsToSettle();
@@ -162,7 +162,7 @@ async function recordPendingPaints(name, toolbox) {
 }
 exports.recordPendingPaints = recordPendingPaints;
 
-exports.openToolboxAndLog = async function(name, tool, onLoad) {
+exports.openToolboxAndLog = async function (name, tool, onLoad) {
   const test = runTest(`${name}.open.DAMP`);
 
   let toolbox = await openToolbox(tool, onLoad);
@@ -177,7 +177,7 @@ exports.openToolboxAndLog = async function(name, tool, onLoad) {
   return toolbox;
 };
 
-exports.closeToolboxAndLog = async function(name, toolbox) {
+exports.closeToolboxAndLog = async function (name, toolbox) {
   let { target } = toolbox;
   dump(`Close toolbox on '${name}'\n`);
   await target.client.waitForRequestsToSettle();
@@ -187,7 +187,7 @@ exports.closeToolboxAndLog = async function(name, toolbox) {
   test.done();
 };
 
-exports.reloadPageAndLog = async function(name, toolbox, onReload) {
+exports.reloadPageAndLog = async function (name, toolbox, onReload) {
   dump(`Reload page on '${name}'\n`);
   let test = runTest(`${name}.reload.DAMP`);
   await damp.reloadPage(onReload);
@@ -196,7 +196,7 @@ exports.reloadPageAndLog = async function(name, toolbox, onReload) {
   await recordPendingPaints(`${name}.reload`, toolbox);
 };
 
-exports.isFissionEnabled = function() {
+exports.isFissionEnabled = function () {
   return Services.appinfo.fissionAutostart;
 };
 

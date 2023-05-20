@@ -14,10 +14,10 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/widget/tests/browser/file_test_ime_state_in_text_control_on_reframe.js",
   this
 );
-add_task(async function() {
+add_task(async function () {
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/widget/tests/browser/file_ime_state_tests.html",
-    async function(browser) {
+    async function (browser) {
       const tipWrapper = new TIPWrapper(window);
       ok(
         tipWrapper.isAvailable(),

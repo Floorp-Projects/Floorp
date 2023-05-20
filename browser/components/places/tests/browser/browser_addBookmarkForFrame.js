@@ -13,7 +13,7 @@ function activateBookmarkFrame(contentAreaContextMenu) {
     contentAreaContextMenu,
     "popuphidden"
   );
-  return async function() {
+  return async function () {
     let frameMenuItem = document.getElementById("frame");
     let frameMenu = frameMenuItem.querySelector(":scope > menupopup");
     let frameMenuShown = BrowserTestUtils.waitForEvent(frameMenu, "popupshown");
@@ -104,7 +104,7 @@ add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
   await withBookmarksDialog(
     false,
     activateBookmarkFrame(contentAreaContextMenu),
-    async function(dialogWin) {
+    async function (dialogWin) {
       let expectedGuid = await PlacesUIUtils.defaultParentGuid;
       let expectedFolder = "BookmarksToolbarFolderTitle";
       let expectedFolderName = PlacesUtils.getString(expectedFolder);

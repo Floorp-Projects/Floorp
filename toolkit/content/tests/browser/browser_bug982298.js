@@ -2,9 +2,11 @@ const scrollHtml =
   '<textarea id="textarea1" row=2>Firefox\n\nFirefox\n\n\n\n\n\n\n\n\n\n' +
   '</textarea><a href="about:blank">blank</a>';
 
-add_task(async function() {
+add_task(async function () {
   let url = "data:text/html;base64," + btoa(scrollHtml);
-  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async function (
+    browser
+  ) {
     let awaitFindResult = new Promise(resolve => {
       let listener = {
         onFindResult(aData) {
@@ -57,7 +59,7 @@ add_task(async function() {
       info("added result listener");
     });
     // find again needs delay for crash test
-    setTimeout(function() {
+    setTimeout(function () {
       // ignore exception if occured
       try {
         info("about to send find again command");

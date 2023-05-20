@@ -7,14 +7,14 @@ add_task(async function test_bug_1572798() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   let windowLoaded = BrowserTestUtils.waitForNewWindow();
   info("- clicking button to spawn a new window -");
-  await ContentTask.spawn(tab.linkedBrowser, null, function() {
+  await ContentTask.spawn(tab.linkedBrowser, null, function () {
     content.document.querySelector("button").click();
   });
   info("- waiting for the new window -");
   let newWin = await windowLoaded;
   info("- checking that the new window plays the audio -");
   let documentOpenedBrowser = newWin.gBrowser.selectedBrowser;
-  await ContentTask.spawn(documentOpenedBrowser, null, async function() {
+  await ContentTask.spawn(documentOpenedBrowser, null, async function () {
     try {
       await content.document.querySelector("audio").play();
       ok(true, "Could play the audio");

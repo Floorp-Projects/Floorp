@@ -314,14 +314,10 @@ add_task(async function test_commands_pollDeviceCommands_push() {
   };
   const commands = new FxAccountsCommands(fxAccounts);
   const mockCommands = sinon.mock(commands);
-  mockCommands
-    .expects("_fetchDeviceCommands")
-    .once()
-    .withArgs(11)
-    .returns({
-      index: remoteIndex,
-      messages: remoteMessages,
-    });
+  mockCommands.expects("_fetchDeviceCommands").once().withArgs(11).returns({
+    index: remoteIndex,
+    messages: remoteMessages,
+  });
   mockCommands
     .expects("_handleCommands")
     .once()
@@ -502,14 +498,10 @@ add_task(
     };
     const commands = new FxAccountsCommands(fxAccounts);
     const mockCommands = sinon.mock(commands);
-    mockCommands
-      .expects("_fetchDeviceCommands")
-      .once()
-      .withArgs(11)
-      .returns({
-        index: remoteIndex,
-        messages: remoteMessages,
-      });
+    mockCommands.expects("_fetchDeviceCommands").once().withArgs(11).returns({
+      index: remoteIndex,
+      messages: remoteMessages,
+    });
     mockCommands
       .expects("_handleCommands")
       .once()
@@ -557,14 +549,10 @@ add_task(async function test_commands_pollDeviceCommands_scheduled_local() {
   };
   const commands = new FxAccountsCommands(fxAccounts);
   const mockCommands = sinon.mock(commands);
-  mockCommands
-    .expects("_fetchDeviceCommands")
-    .once()
-    .withArgs(11)
-    .returns({
-      index: remoteIndex,
-      messages: remoteMessages,
-    });
+  mockCommands.expects("_fetchDeviceCommands").once().withArgs(11).returns({
+    index: remoteIndex,
+    messages: remoteMessages,
+  });
   mockCommands
     .expects("_handleCommands")
     .once()
@@ -610,14 +598,10 @@ add_task(
     };
     const commands = new FxAccountsCommands(fxAccounts);
     const mockCommands = sinon.mock(commands);
-    mockCommands
-      .expects("_fetchDeviceCommands")
-      .once()
-      .withArgs(0)
-      .returns({
-        index: remoteIndex,
-        messages: remoteMessages,
-      });
+    mockCommands.expects("_fetchDeviceCommands").once().withArgs(0).returns({
+      index: remoteIndex,
+      messages: remoteMessages,
+    });
     mockCommands
       .expects("_handleCommands")
       .once()

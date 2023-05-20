@@ -396,7 +396,7 @@ let eseDBWritingHelpers = {
   },
 };
 
-add_task(async function() {
+add_task(async function () {
   let tempFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
   tempFile.append("fx-xpcshell-edge-db");
   tempFile.createUnique(tempFile.DIRECTORY_TYPE, 0o600);

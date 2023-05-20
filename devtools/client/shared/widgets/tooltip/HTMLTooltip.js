@@ -284,7 +284,7 @@ const calculateHorizontalPosition = (
  * reference element (instead of the default for getBoundingClientRect which
  * is always the element's ownerDocument).
  */
-const getRelativeRect = function(node, relativeTo) {
+const getRelativeRect = function (node, relativeTo) {
   // getBoxQuads is a non-standard WebAPI which will not work on non-firefox
   // browser when running launchpad on Chrome.
   if (

@@ -83,7 +83,7 @@ const afterIframeRemoved = {
   },
 };
 
-add_task(async function() {
+add_task(async function () {
   const { commands } = await openTabAndSetupStorage(
     MAIN_DOMAIN + "storage-dynamic-windows.html"
   );

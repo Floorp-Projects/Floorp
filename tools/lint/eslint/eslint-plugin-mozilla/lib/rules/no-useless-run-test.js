@@ -25,7 +25,7 @@ module.exports = {
 
   create(context) {
     return {
-      "Program > FunctionDeclaration": function(node) {
+      "Program > FunctionDeclaration": function (node) {
         if (
           node.id.name === "run_test" &&
           node.body.type === "BlockStatement" &&

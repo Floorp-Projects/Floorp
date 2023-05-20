@@ -80,7 +80,7 @@ if (window.location.protocol === "chrome:" && url.search.length > 1) {
     commandsFromURL,
   } = require("resource://devtools/client/framework/commands-from-url.js");
 
-  (async function() {
+  (async function () {
     try {
       const commands = await commandsFromURL(url);
       const target = await commands.descriptorFront.getTarget();

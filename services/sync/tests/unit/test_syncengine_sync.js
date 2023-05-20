@@ -722,7 +722,7 @@ add_task(async function test_processIncoming_notify_count() {
   // Engine that fails every 5 records.
   let engine = makeRotaryEngine();
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
-  engine._store.applyIncomingBatch = async function(records, countTelemetry) {
+  engine._store.applyIncomingBatch = async function (records, countTelemetry) {
     let sortedRecords = records.sort((a, b) => (a.id > b.id ? 1 : -1));
     let recordsToApply = [],
       recordsToFail = [];
@@ -822,7 +822,7 @@ add_task(async function test_processIncoming_previousFailed() {
   // Engine that alternates between failing and applying every 2 records.
   let engine = makeRotaryEngine();
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
-  engine._store.applyIncomingBatch = async function(records, countTelemetry) {
+  engine._store.applyIncomingBatch = async function (records, countTelemetry) {
     let sortedRecords = records.sort((a, b) => (a.id > b.id ? 1 : -1));
     let recordsToApply = [],
       recordsToFail = [];
@@ -951,7 +951,7 @@ add_task(async function test_processIncoming_failed_records() {
     return this.__reconcile.apply(this, arguments);
   };
   engine._store._applyIncoming = engine._store.applyIncoming;
-  engine._store.applyIncoming = async function(record) {
+  engine._store.applyIncoming = async function (record) {
     if (BOGUS_RECORDS.indexOf(record.id) % 2 == 1) {
       throw new Error("I don't like this record! Baaaaaah!");
     }
@@ -963,7 +963,7 @@ add_task(async function test_processIncoming_failed_records() {
   let uris = [];
   function recording_handler(recordedCollection) {
     let h = recordedCollection.handler();
-    return function(req, res) {
+    return function (req, res) {
       ++count;
       uris.push(req.path + "?" + req.queryString);
       return h(req, res);
@@ -1063,7 +1063,7 @@ add_task(async function test_processIncoming_decrypt_failed() {
 
   // Patch the fake crypto service to throw on the record above.
   Weave.Crypto._decrypt = Weave.Crypto.decrypt;
-  Weave.Crypto.decrypt = function(ciphertext) {
+  Weave.Crypto.decrypt = function (ciphertext) {
     if (ciphertext == "Decrypt this!") {
       throw new Error(
         "Derp! Cipher finalized failed. Im ur crypto destroyin ur recordz."
@@ -1530,8 +1530,8 @@ add_task(async function test_syncFinish_deleteLotsInBatches() {
 
   // Let's count how many times the client does a DELETE request to the server
   var noOfUploads = 0;
-  collection.delete = (function(orig) {
-    return function() {
+  collection.delete = (function (orig) {
+    return function () {
       noOfUploads++;
       return orig.apply(this, arguments);
     };
@@ -1607,8 +1607,8 @@ add_task(async function test_sync_partialUpload() {
 
   // Let the third upload fail completely
   var noOfUploads = 0;
-  collection.post = (function(orig) {
-    return function() {
+  collection.post = (function (orig) {
+    return function () {
       if (noOfUploads == 2) {
         throw new Error("FAIL!");
       }

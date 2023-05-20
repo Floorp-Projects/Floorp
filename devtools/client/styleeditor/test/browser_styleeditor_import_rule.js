@@ -7,7 +7,7 @@
 // http rather than chrome to improve coverage
 const TESTCASE_URI = TEST_BASE_HTTPS + "import.html";
 
-add_task(async function() {
+add_task(async function () {
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 3, "there are 3 stylesheets after loading @imports");

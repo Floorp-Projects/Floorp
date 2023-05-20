@@ -40,7 +40,7 @@ export function Preferences(args) {
  *
  * @returns the value of the pref, if any; otherwise the default value
  */
-Preferences.get = function(prefName, defaultValue, valueType = null) {
+Preferences.get = function (prefName, defaultValue, valueType = null) {
   if (Array.isArray(prefName)) {
     return prefName.map(v => this.get(v, defaultValue));
   }
@@ -48,7 +48,7 @@ Preferences.get = function(prefName, defaultValue, valueType = null) {
   return this._get(prefName, defaultValue, valueType);
 };
 
-Preferences._get = function(prefName, defaultValue, valueType) {
+Preferences._get = function (prefName, defaultValue, valueType) {
   switch (this._prefBranch.getPrefType(prefName)) {
     case Ci.nsIPrefBranch.PREF_STRING:
       if (valueType) {
@@ -100,7 +100,7 @@ Preferences._get = function(prefName, defaultValue, valueType) {
  *   Preferences.set("pi", 3.14159.toString())
  *   Preferences.set("big", Math.pow(2, 31).toString()).
  */
-Preferences.set = function(prefName, prefValue) {
+Preferences.set = function (prefName, prefValue) {
   if (isObject(prefName)) {
     for (let [name, value] of Object.entries(prefName)) {
       this.set(name, value);
@@ -111,7 +111,7 @@ Preferences.set = function(prefName, prefValue) {
   this._set(prefName, prefValue);
 };
 
-Preferences._set = function(prefName, prefValue) {
+Preferences._set = function (prefName, prefValue) {
   let prefType;
   if (typeof prefValue != "undefined" && prefValue != null) {
     prefType = prefValue.constructor.name;
@@ -177,7 +177,7 @@ Preferences._set = function(prefName, prefValue) {
  *          an array of pref names, an array of booleans indicating whether
  *          or not the prefs have values
  */
-Preferences.has = function(prefName) {
+Preferences.has = function (prefName) {
   if (Array.isArray(prefName)) {
     return prefName.map(this.has, this);
   }
@@ -201,7 +201,7 @@ Preferences.has = function(prefName) {
  *          provided an array of pref names, an array of booleans indicating
  *          whether or not the prefs have user-set values
  */
-Preferences.isSet = function(prefName) {
+Preferences.isSet = function (prefName) {
   if (Array.isArray(prefName)) {
     return prefName.map(this.isSet, this);
   }
@@ -214,11 +214,11 @@ Preferences.isSet = function(prefName) {
  * which is equivalent.
  * @deprecated
  */
-Preferences.modified = function(prefName) {
+Preferences.modified = function (prefName) {
   return this.isSet(prefName);
 };
 
-Preferences.reset = function(prefName) {
+Preferences.reset = function (prefName) {
   if (Array.isArray(prefName)) {
     prefName.map(v => this.reset(v));
     return;
@@ -233,7 +233,7 @@ Preferences.reset = function(prefName) {
  * @param   prefName  {String|Array}
  *          the pref to lock, or an array of prefs to lock
  */
-Preferences.lock = function(prefName) {
+Preferences.lock = function (prefName) {
   if (Array.isArray(prefName)) {
     prefName.map(this.lock, this);
   }
@@ -247,7 +247,7 @@ Preferences.lock = function(prefName) {
  * @param   prefName  {String|Array}
  *          the pref to lock, or an array of prefs to lock
  */
-Preferences.unlock = function(prefName) {
+Preferences.unlock = function (prefName) {
   if (Array.isArray(prefName)) {
     prefName.map(this.unlock, this);
   }
@@ -266,7 +266,7 @@ Preferences.unlock = function(prefName) {
  *          provided an array of pref names, an array of booleans indicating
  *          whether or not the prefs have user-set values
  */
-Preferences.locked = function(prefName) {
+Preferences.locked = function (prefName) {
   if (Array.isArray(prefName)) {
     return prefName.map(this.locked, this);
   }
@@ -292,7 +292,7 @@ Preferences.locked = function(prefName) {
  *
  * @returns the wrapped observer
  */
-Preferences.observe = function(prefName, callback, thisObject) {
+Preferences.observe = function (prefName, callback, thisObject) {
   let fullPrefName = this._branchStr + (prefName || "");
 
   let observer = new PrefObserver(fullPrefName, callback, thisObject);
@@ -324,7 +324,7 @@ Preferences.observe = function(prefName, callback, thisObject) {
  * @param   thisObject  {Object}  [optional]
  *          the object being used as |this| when calling a Function callback
  */
-Preferences.ignore = function(prefName, callback, thisObject) {
+Preferences.ignore = function (prefName, callback, thisObject) {
   let fullPrefName = this._branchStr + (prefName || "");
 
   // This seems fairly inefficient, but I'm not sure how much better we can
@@ -348,7 +348,7 @@ Preferences.ignore = function(prefName, callback, thisObject) {
   }
 };
 
-Preferences.resetBranch = function(prefBranch = "") {
+Preferences.resetBranch = function (prefBranch = "") {
   try {
     this._prefBranch.resetBranch(prefBranch);
   } catch (ex) {

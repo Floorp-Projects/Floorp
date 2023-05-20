@@ -1,4 +1,4 @@
-const MESSAGE_PAGE = function(msg) {
+const MESSAGE_PAGE = function (msg) {
   return `
 <!DOCTYPE html>
 <html>

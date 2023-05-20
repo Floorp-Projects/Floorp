@@ -31,7 +31,7 @@ const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 UrlClassifierTestUtils.addTestTrackers();
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
@@ -289,7 +289,7 @@ const now = Date.now();
  */
 function emitContentBlockingMessage() {
   const url = `${CONTENT_BLOCKED_URL}?${++cpt}-${now}`;
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(innerURL) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function (innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }
@@ -300,7 +300,7 @@ function emitContentBlockingMessage() {
  */
 function emitStorageAccessBlockedMessage() {
   const url = `${STORAGE_BLOCKED_URL}?${++cpt}-${now}`;
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(innerURL) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function (innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }
@@ -313,7 +313,7 @@ function emitStorageAccessBlockedMessage() {
  */
 function logString(hud, str) {
   const onMessage = waitForMessageByType(hud, str, ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function(arg) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [str], function (arg) {
     content.console.log(arg);
   });
   return onMessage;

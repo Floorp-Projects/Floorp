@@ -155,7 +155,7 @@ function check_histogram_values(payload) {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   if (!runningInParent) {
     TelemetryController.testSetupContent();
     run_child_test();

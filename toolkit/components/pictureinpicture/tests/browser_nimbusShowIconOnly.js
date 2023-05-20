@@ -41,7 +41,7 @@ add_task(async function test_experiment_control() {
       let videoID = "with-controls";
       await hoverToggle(browser, videoID);
 
-      await SpecialPowers.spawn(browser, [pipExplainerMessage], async function(
+      await SpecialPowers.spawn(browser, [pipExplainerMessage], async function (
         pipExplainerMessage
       ) {
         let video = content.document.getElementById("with-controls");
@@ -69,7 +69,7 @@ add_task(async function test_experiment_iconOnly() {
     },
   });
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await experimentCleanup();
   });
 
@@ -91,7 +91,7 @@ add_task(async function test_experiment_iconOnly() {
       let videoID = "with-controls";
       await hoverToggle(browser, videoID);
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         let video = content.document.getElementById("with-controls");
         let shadowRoot = video.openOrClosedShadowRoot;
         let pipExpanded = shadowRoot.querySelector(".pip-expanded");

@@ -8,7 +8,7 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop_autoscroll_01.html";
 
-add_task(async function() {
+add_task(async function () {
   // Set the toolbox as large as it would get. The toolbox automatically shrinks
   // to not overflow to window.
   await pushPref("devtools.toolbox.footer.height", 10000);

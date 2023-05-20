@@ -3,7 +3,7 @@
 
 // Tests source usage in the form history API.
 
-add_task(async function() {
+add_task(async function () {
   // Shorthands to improve test readability.
   const count = FormHistoryTestUtils.count.bind(FormHistoryTestUtils);
   async function search(fieldname, filters) {

@@ -26,14 +26,14 @@ function toJSON(pos) {
 }
 
 function getPosition() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     geolocation.getCurrentPosition(resolve, reject);
   });
 }
 
 function watchPosition() {
   let seen = 0;
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     let id = geolocation.watchPosition(position => {
       seen++;
       if (seen === 1) {

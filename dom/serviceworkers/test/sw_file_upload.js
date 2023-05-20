@@ -11,6 +11,6 @@ addEventListener("fetch", event => {
   }
 });
 
-addEventListener("activate", function(event) {
+addEventListener("activate", function (event) {
   event.waitUntil(clients.claim());
 });

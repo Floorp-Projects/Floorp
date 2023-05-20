@@ -26,7 +26,7 @@ const TOOLS = [
 /**
  * Test whether about:devtools-toolbox display correctly after reloading.
  */
-add_task(async function() {
+add_task(async function () {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 

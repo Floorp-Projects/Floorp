@@ -118,6 +118,6 @@ var libc = new Library("libc", LIBC_CHOICES, {
   ],
 });
 
-unix.Fd = function(fd) {
+unix.Fd = function (fd) {
   return ctypes.CDataFinalizer(ctypes.int(fd), libc.close);
 };

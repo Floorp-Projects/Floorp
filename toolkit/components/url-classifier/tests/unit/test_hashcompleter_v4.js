@@ -185,7 +185,7 @@ add_test(function test_getHashRequestV4() {
 });
 
 add_test(function test_minWaitDuration() {
-  let failedComplete = function() {
+  let failedComplete = function () {
     gCompleter.complete(
       "0123",
       TEST_TABLE_DATA_V4.gethashUrl,
@@ -198,7 +198,7 @@ add_test(function test_minWaitDuration() {
     );
   };
 
-  let successComplete = function() {
+  let successComplete = function () {
     gCompleter.complete(
       "1234567",
       TEST_TABLE_DATA_V4.gethashUrl,
@@ -244,7 +244,7 @@ add_test(function test_minWaitDuration() {
 function registerHandlerGethashV4(aExpectedQuery) {
   gHttpServV4.registerPathHandler(GETHASH_PATH, null);
   // V4 gethash handler.
-  gHttpServV4.registerPathHandler(GETHASH_PATH, function(request, response) {
+  gHttpServV4.registerPathHandler(GETHASH_PATH, function (request, response) {
     equal(request.queryString, aExpectedQuery);
 
     response.setStatusLine(request.httpVersion, 200, "OK");
@@ -258,7 +258,7 @@ function registerHandlerGethashV4(aExpectedQuery) {
 function registerHandlerUpdateV4() {
   // Update handler. Will respond a valid state to be verified in the
   // gethash handler.
-  gHttpServV4.registerPathHandler(UPDATE_PATH, function(request, response) {
+  gHttpServV4.registerPathHandler(UPDATE_PATH, function (request, response) {
     response.setHeader(
       "Content-Type",
       "application/vnd.google.safebrowsing-update",
@@ -287,6 +287,6 @@ function run_test() {
   run_next_test();
 }
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   stopThrowingOnUpdateErrors();
 });

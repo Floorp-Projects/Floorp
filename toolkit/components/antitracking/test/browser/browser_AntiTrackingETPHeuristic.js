@@ -147,10 +147,10 @@ async function interactWithSpecificTracker(aTracker) {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   await BrowserTestUtils.withNewTab(
     { gBrowser: win.gBrowser, url: aTracker },
-    async function(browser) {
+    async function (browser) {
       info("Let's interact with the tracker");
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         SpecialPowers.wrap(content.document).userInteractionForTesting();
       });
     }
@@ -184,7 +184,7 @@ async function verifyStorageAccessPermission(aExpects) {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["network.cookie.cookieBehavior", BEHAVIOR_REJECT_TRACKER],

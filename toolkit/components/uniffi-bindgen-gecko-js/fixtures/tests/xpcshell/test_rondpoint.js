@@ -21,7 +21,7 @@ const {
   Optionneur,
   OptionneurDictionnaire,
 } = Rondpoint;
-add_task(async function() {
+add_task(async function () {
   const dico = new Dictionnaire(Enumeration.DEUX, true, 0, 1235);
   const copyDico = await copieDictionnaire(dico);
   Assert.deepEqual(dico, copyDico);

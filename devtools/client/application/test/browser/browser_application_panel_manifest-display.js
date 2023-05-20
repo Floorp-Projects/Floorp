@@ -7,7 +7,7 @@
  * Check that the manifest is being properly shown
  */
 
-add_task(async function() {
+add_task(async function () {
   info("Test that we are displaying correctly a valid manifest");
   const url = URL_ROOT + "resources/manifest/load-ok.html";
 
@@ -35,7 +35,7 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info(
     "Test that we are displaying correctly a manifest with validation warnings"
   );
@@ -68,7 +68,7 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that we are displaying correctly a manifest with JSON errors");
   const url = URL_ROOT + "resources/manifest/load-ok-json-error.html";
 
@@ -95,7 +95,7 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that we are displaying correctly a manifest with icons");
   const url = URL_ROOT + "resources/manifest/load-ok-icons.html";
 

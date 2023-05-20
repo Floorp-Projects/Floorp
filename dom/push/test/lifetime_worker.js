@@ -1,7 +1,7 @@
 var state = "from_scope";
 var resolvePromiseCallback;
 
-self.onfetch = function(event) {
+self.onfetch = function (event) {
   if (event.request.url.includes("lifetime_frame.html")) {
     event.respondWith(new Response("iframe_lifetime"));
     return;
@@ -20,11 +20,11 @@ self.onfetch = function(event) {
     state = "update";
   } else if (event.request.url.includes("wait")) {
     event.respondWith(
-      new Promise(function(res, rej) {
+      new Promise(function (res, rej) {
         if (resolvePromiseCallback) {
           dump("ERROR: service worker was already waiting on a promise.\n");
         }
-        resolvePromiseCallback = function() {
+        resolvePromiseCallback = function () {
           res(new Response("resolve_respondWithPromise"));
         };
       })
@@ -45,12 +45,12 @@ function resolvePromise() {
   resolvePromiseCallback = null;
 }
 
-self.onmessage = function(event) {
+self.onmessage = function (event) {
   var lastState = state;
   state = event.data;
   if (state === "wait") {
     event.waitUntil(
-      new Promise(function(res, rej) {
+      new Promise(function (res, rej) {
         if (resolvePromiseCallback) {
           dump("ERROR: service worker was already waiting on a promise.\n");
         }
@@ -63,17 +63,17 @@ self.onmessage = function(event) {
   event.source.postMessage({ type: "message", state: lastState });
 };
 
-self.onpush = function(event) {
+self.onpush = function (event) {
   var pushResolve;
   event.waitUntil(
-    new Promise(function(resolve) {
+    new Promise(function (resolve) {
       pushResolve = resolve;
     })
   );
 
   // FIXME(catalinb): push message carry no data. So we assume the only
   // push message we get is "wait"
-  self.clients.matchAll().then(function(client) {
+  self.clients.matchAll().then(function (client) {
     if (!client.length) {
       dump("ERROR: no clients to send the response to.\n");
     }

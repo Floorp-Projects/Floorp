@@ -27,7 +27,7 @@ const TEST_URI = `
   <h1>Hello nested at-rules!</h1>
 `;
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("layout.css.container-queries.enabled", true);
 
   await addTab(

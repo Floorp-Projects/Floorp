@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
 /**
  * Test the status of menu items when open about:devtools-toolbox.
  */
-add_task(async function() {
+add_task(async function () {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 

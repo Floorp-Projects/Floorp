@@ -353,7 +353,7 @@ export const TabProvider = {
       }
     }
 
-    return tabs.sort(function(a, b) {
+    return tabs.sort(function (a, b) {
       return b.lastAccessed - a.lastAccessed;
     });
   },

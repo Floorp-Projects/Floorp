@@ -10,7 +10,7 @@ const { Service } = ChromeUtils.importESModule(
 
 add_bookmark_test(async function run_test(engine) {
   await engine.initialize();
-  engine._syncStartup = async function() {
+  engine._syncStartup = async function () {
     throw new Error("FAIL!");
   };
 

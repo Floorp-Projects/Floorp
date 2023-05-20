@@ -4,7 +4,7 @@
 // This test verifies that focus is handled correctly when a
 // tab is dragged out to a new window, by checking that the
 // copy and select all commands are enabled properly.
-add_task(async function() {
+add_task(async function () {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "https://www.example.com"

@@ -6,7 +6,7 @@
 
 // Create a new window, then move the stop/reload button to the menu and check both windows have
 // customizationchange events fire on the toolbox:
-add_task(async function() {
+add_task(async function () {
   let newWindow = await openAndLoadWindow();
   let otherToolbox = newWindow.gNavToolbox;
 

@@ -39,7 +39,7 @@ function cleanUpAfterTests() {
   window.focus();
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_ACTIVE, true],
@@ -58,7 +58,7 @@ add_task(async function test1() {
     "Verifying MCB does not trigger warning/error for an http page ";
   expected += "with https css that includes http image";
 
-  await SpecialPowers.spawn(gTestBrowser, [expected], async function(
+  await SpecialPowers.spawn(gTestBrowser, [expected], async function (
     condition
   ) {
     await ContentTaskUtils.waitForCondition(
@@ -83,7 +83,7 @@ add_task(async function test2() {
     "Verifying MCB does not trigger warning/error for an http page ";
   expected += "with https css that includes http font";
 
-  await SpecialPowers.spawn(gTestBrowser, [expected], async function(
+  await SpecialPowers.spawn(gTestBrowser, [expected], async function (
     condition
   ) {
     await ContentTaskUtils.waitForCondition(
@@ -108,7 +108,7 @@ add_task(async function test3() {
   expected +=
     "with https css that imports another http css which includes http font";
 
-  await SpecialPowers.spawn(gTestBrowser, [expected], async function(
+  await SpecialPowers.spawn(gTestBrowser, [expected], async function (
     condition
   ) {
     await ContentTaskUtils.waitForCondition(

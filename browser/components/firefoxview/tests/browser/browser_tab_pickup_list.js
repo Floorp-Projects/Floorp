@@ -136,7 +136,7 @@ const TAB_PICKUP_OPEN_EVENT = [
   ["firefoxview", "tab_pickup_open", "tabs", "false"],
 ];
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   cleanup_tab_pickup();
 });
 

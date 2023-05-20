@@ -113,7 +113,7 @@ function run_test() {
 
   equal(
     "foobar",
-    sprintf("%s", function() {
+    sprintf("%s", function () {
       return "foobar";
     })
   );

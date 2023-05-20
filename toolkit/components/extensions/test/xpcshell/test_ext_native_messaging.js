@@ -737,7 +737,7 @@ add_task(async function test_stderr() {
     });
   }
 
-  let { messages } = await promiseConsoleOutput(async function() {
+  let { messages } = await promiseConsoleOutput(async function () {
     let extension = ExtensionTestUtils.loadExtension({
       background,
       manifest: {

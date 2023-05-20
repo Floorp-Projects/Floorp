@@ -7,7 +7,7 @@ const TEST_URI = URL_ROOT + "doc_browser_fontinspector.html";
 // Verify that a styled input field element is showing proper font information
 // in its font tab.
 // Non-regression test for https://bugzilla.mozilla.org/show_bug.cgi?id=1435469
-add_task(async function() {
+add_task(async function () {
   const { inspector, view } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
 

@@ -20,7 +20,7 @@
 // 7. Test the patches with a Try push.
 // 8. Land the patches on all trees whose code will still be used when the
 //    certificates expire in 3 weeks.
-add_task(async function() {
+add_task(async function () {
   do_get_profile();
   let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB

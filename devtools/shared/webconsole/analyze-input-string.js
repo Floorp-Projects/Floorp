@@ -58,7 +58,7 @@ const OPERATOR_CHARS_SET = new Set(";,:=<>+-*%|&^~!".split(""));
  *            }
  */
 // eslint-disable-next-line complexity
-exports.analyzeInputString = function(str, timeout = 2500) {
+exports.analyzeInputString = function (str, timeout = 2500) {
   // work variables.
   const bodyStack = [];
   let state = STATE_NORMAL;
@@ -359,7 +359,7 @@ exports.analyzeInputString = function(str, timeout = 2500) {
  * @param {object} inputAnalysisState The analyzed string to check
  * @returns {boolean} Whether the input should be autocompleted
  */
-exports.shouldInputBeAutocompleted = function(inputAnalysisState) {
+exports.shouldInputBeAutocompleted = function (inputAnalysisState) {
   const { err, state, lastStatement } = inputAnalysisState;
 
   // There was an error analysing the string.
@@ -394,7 +394,7 @@ exports.shouldInputBeAutocompleted = function(inputAnalysisState) {
  * @param {object} inputAnalysisState
  * @returns {boolean} Whether the input should be eagerly evaluated
  */
-exports.shouldInputBeEagerlyEvaluated = function({ lastStatement }) {
+exports.shouldInputBeEagerlyEvaluated = function ({ lastStatement }) {
   const inComputedProperty =
     lastStatement.lastIndexOf("[") !== -1 &&
     lastStatement.lastIndexOf("[") > lastStatement.lastIndexOf("]");

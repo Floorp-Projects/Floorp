@@ -30,7 +30,7 @@ let testRules = [
   },
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   // Enable the service and insert the test rules.
   await SpecialPowers.pushPrefEnv({
     set: [

@@ -10,7 +10,7 @@
 
 "use strict";
 
-add_setup(async function() {
+add_setup(async function () {
   await setCookieBehaviorPref(
     BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
     false

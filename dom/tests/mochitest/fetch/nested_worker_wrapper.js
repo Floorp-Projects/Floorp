@@ -10,7 +10,7 @@ addEventListener("message", function nestedWorkerWrapperOnMessage(evt) {
 
   worker = new Worker("worker_wrapper.js?script=" + getScriptUrl());
 
-  worker.addEventListener("message", function(evt) {
+  worker.addEventListener("message", function (evt) {
     self.postMessage({
       context: "NestedWorker",
       type: evt.data.type,
@@ -19,7 +19,7 @@ addEventListener("message", function nestedWorkerWrapperOnMessage(evt) {
     });
   });
 
-  worker.addEventListener("error", function(evt) {
+  worker.addEventListener("error", function (evt) {
     self.postMessage({
       context: "NestedWorker",
       type: "status",

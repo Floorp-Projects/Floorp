@@ -28,7 +28,7 @@ function sendEventToContent(browser, data) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.newtab.preload", false],
@@ -456,7 +456,7 @@ async function addTab() {
   return { browser: tab.linkedBrowser };
 }
 
-var currentStateObj = async function(isPrivateWindowValue, hiddenEngine = "") {
+var currentStateObj = async function (isPrivateWindowValue, hiddenEngine = "") {
   let state = {
     engines: [],
     currentEngine: await constructEngineObj(await Services.search.getDefault()),

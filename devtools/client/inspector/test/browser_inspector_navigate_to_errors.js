@@ -11,7 +11,7 @@ const TEST_URL_2 = "http://127.0.0.1:36325/";
 const TEST_URL_3 = "https://www.wronguri.wronguri/";
 const TEST_URL_4 = "data:text/html,<html><body>test-doc-4</body></html>";
 
-add_task(async function() {
+add_task(async function () {
   // Open the inspector on a valid URL
   const { inspector } = await openInspectorForURL(TEST_URL_1);
 

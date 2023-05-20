@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   function httpURL(filename) {
     let chromeURL = getRootDirectory(gTestPath) + filename;
     return chromeURL.replace(

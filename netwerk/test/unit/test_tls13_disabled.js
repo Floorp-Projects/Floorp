@@ -18,7 +18,7 @@ add_task(async function setup() {
   await http3_setup_tests("h3");
 });
 
-let Listener = function() {};
+let Listener = function () {};
 
 Listener.prototype = {
   resumed: false,

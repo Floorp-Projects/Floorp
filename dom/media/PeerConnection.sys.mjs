@@ -100,7 +100,7 @@ export class GlobalPCList {
     if (this._list[winID] === undefined) {
       return;
     }
-    this._list[winID] = this._list[winID].filter(function(e, i, a) {
+    this._list[winID] = this._list[winID].filter(function (e, i, a) {
       return e.get() !== null;
     });
 
@@ -110,9 +110,9 @@ export class GlobalPCList {
   }
 
   handleGMPCrash(data) {
-    let broadcastPluginCrash = function(list, winID, pluginID, pluginName) {
+    let broadcastPluginCrash = function (list, winID, pluginID, pluginName) {
       if (list.hasOwnProperty(winID)) {
-        list[winID].forEach(function(pcref) {
+        list[winID].forEach(function (pcref) {
           let pc = pcref.get();
           if (pc) {
             pc._pc.pluginCrash(pluginID, pluginName);
@@ -135,7 +135,7 @@ export class GlobalPCList {
   }
 
   observe(subject, topic, data) {
-    let cleanupPcRef = function(pcref) {
+    let cleanupPcRef = function (pcref) {
       let pc = pcref.get();
       if (pc) {
         pc._suppressEvents = true;
@@ -143,7 +143,7 @@ export class GlobalPCList {
       }
     };
 
-    let cleanupWinId = function(list, winID) {
+    let cleanupWinId = function (list, winID) {
       if (list.hasOwnProperty(winID)) {
         list[winID].forEach(cleanupPcRef);
         delete list[winID];

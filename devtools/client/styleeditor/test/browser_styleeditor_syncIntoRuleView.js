@@ -13,7 +13,7 @@ const TEST_URI = `
 
 const TESTCASE_CSS_SOURCE = "#testid { color: chartreuse; }";
 
-add_task(async function() {
+add_task(async function () {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   info("Open the inspector and select the node we want to add style to");

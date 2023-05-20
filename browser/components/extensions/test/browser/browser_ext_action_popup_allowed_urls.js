@@ -259,8 +259,9 @@ add_task(async function test_actions_setPopup_allowed_urls() {
       typeof popupUrl === "function" ? popupUrl(extension) : popupUrl;
 
     info(
-      `Testing ${apiNs}.setPopup({ popup: ${popup} }) on manifest_version ${manifest.manifest_version ??
-        2}`
+      `Testing ${apiNs}.setPopup({ popup: ${popup} }) on manifest_version ${
+        manifest.manifest_version ?? 2
+      }`
     );
 
     const popupOptions = { popup };

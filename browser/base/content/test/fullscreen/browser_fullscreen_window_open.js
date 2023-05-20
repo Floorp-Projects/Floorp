@@ -48,7 +48,7 @@ async function testWindowOpenExistingWindow(funToOpenExitingWindow, iframeID) {
   BrowserTestUtils.removeTab(tab);
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.disable_open_during_load", false], // Allow window.open calls without user interaction

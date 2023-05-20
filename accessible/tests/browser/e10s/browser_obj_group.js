@@ -31,7 +31,7 @@ addAccessibleTask(
     <option id="select2_opt3">option3</option>
     <option id="select2_opt4">option4</option>
   </select>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -83,7 +83,7 @@ addAccessibleTask(
   </form>
 
   <input type="radio" id="radio7">`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -171,7 +171,7 @@ addAccessibleTask(
       </div>
     </div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -253,7 +253,7 @@ addAccessibleTask(
     </li>
     <li role="menuitem" aria-haspopup="false" id="menu_item2">Help</li>
   </ul>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -285,7 +285,7 @@ addAccessibleTask(
     <li id="tab_2" role="tab">Veges</li>
     <li id="tab_3" role="tab">Carnivore</li>
   </ul>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -310,7 +310,7 @@ addAccessibleTask(
     <li id="r2" role="radio" aria-checked="false">Subway</li>
     <li id="r3" role="radio" aria-checked="false">Jimmy Johns</li>
   </ul>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////
@@ -386,7 +386,7 @@ addAccessibleTask(
       <div role="treeitem" id="tree3_ti2b">Item 2B</div>
     </div>
   </div>`,
-  async function(browser, accDoc) {
+  async function (browser, accDoc) {
     let getAcc = id => findAccessibleChildByID(accDoc, id);
 
     // ////////////////////////////////////////////////////////////////////////

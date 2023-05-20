@@ -3321,7 +3321,7 @@ for (let meth of [
   "updateSystemAddons",
   "stageLangpacksForAppUpdate",
 ]) {
-  XPIProvider[meth] = function() {
+  XPIProvider[meth] = function () {
     return lazy.XPIInstall[meth](...arguments);
   };
 }
@@ -3333,7 +3333,7 @@ for (let meth of [
   "updateAddonRepositoryData",
   "updateAddonAppDisabledStates",
 ]) {
-  XPIProvider[meth] = function() {
+  XPIProvider[meth] = function () {
     return lazy.XPIDatabase[meth](...arguments);
   };
 }

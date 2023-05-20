@@ -682,13 +682,7 @@ describe("<TopSite>", () => {
     const wrapper = shallow(<TopSite link={link} index={1} activeIndex={1} />);
     wrapper.setState({ showContextMenu: true });
 
-    assert.equal(
-      wrapper
-        .find(TopSiteLink)
-        .props()
-        .className.trim(),
-      "active"
-    );
+    assert.equal(wrapper.find(TopSiteLink).props().className.trim(), "active");
   });
   it("should not add .active class, on top-site-outer if context menu is closed", () => {
     const wrapper = shallow(<TopSite link={link} index={1} />);
@@ -1823,10 +1817,7 @@ describe("TopSitePlaceholder", () => {
       <TopSitePlaceholder dispatch={dispatch} index={7} />
     );
 
-    wrapper
-      .find(".edit-button")
-      .first()
-      .simulate("click");
+    wrapper.find(".edit-button").first().simulate("click");
 
     assert.calledOnce(dispatch);
     assert.calledWithExactly(dispatch, {

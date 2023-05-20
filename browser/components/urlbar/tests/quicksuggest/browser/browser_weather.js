@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
 });
 
-add_setup(async function() {
+add_setup(async function () {
   await MerinoTestUtils.initWeather();
 });
 

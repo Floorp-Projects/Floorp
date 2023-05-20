@@ -83,7 +83,7 @@ async function assertRecentFolders(expectedGuids, msg) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.metadata.delete(PlacesUIUtils.LAST_USED_FOLDERS_META_KEY);
 

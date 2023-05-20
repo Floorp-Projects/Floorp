@@ -162,7 +162,7 @@ function run_test() {
   load_cert("test-int", ",,");
   load_cert("other-test-ca", "CTu,CTu,CTu");
 
-  add_task(async function() {
+  add_task(async function () {
     // check some existing items in revocations.txt are blocked.
     // This test corresponds to:
     // issuer: MBIxEDAOBgNVBAMMB1Rlc3QgQ0E= (CN=Test CA)
@@ -212,7 +212,7 @@ function run_test() {
   // blocklist load is async so we must use add_test from here
   add_task(update_blocklist);
 
-  add_task(async function() {
+  add_task(async function () {
     // The blocklist will be loaded now. Let's check the data is sane.
     // In particular, we should still have the revoked issuer / serial pair
     // that was in revocations.txt but not the blocklist.

@@ -14,7 +14,7 @@ add_task(async function test() {
   let contentDocDead = await ContentTask.spawn(
     browser,
     { innerWindowId },
-    async function(args) {
+    async function (args) {
       let doc = content.document;
       let { TestUtils } = ChromeUtils.importESModule(
         "resource://testing-common/TestUtils.sys.mjs"

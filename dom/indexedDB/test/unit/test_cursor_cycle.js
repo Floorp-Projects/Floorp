@@ -29,12 +29,12 @@ function* testSteps() {
     .transaction("foo", "readwrite")
     .objectStore("foo")
     .index("name")
-    .openCursor().onsuccess = function(event) {
+    .openCursor().onsuccess = function (event) {
     event.target.transaction.oncomplete = continueToNextStep;
     let cursor = event.target.result;
     if (cursor) {
       let objectStore = event.target.transaction.objectStore("foo");
-      objectStore.delete(Bob.ss).onsuccess = function(event) {
+      objectStore.delete(Bob.ss).onsuccess = function (event) {
         cursor.continue();
       };
     }

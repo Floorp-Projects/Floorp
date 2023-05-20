@@ -7,7 +7,7 @@ add_task(async function run_test() {
   }
 
   await do_crash(
-    function() {
+    function () {
       const { ctypes } = ChromeUtils.importESModule(
         "resource://gre/modules/ctypes.sys.mjs"
       );
@@ -15,7 +15,7 @@ add_task(async function run_test() {
       let lib = ctypes.open("wininet");
       lib.close();
     },
-    async function(mdump, extra, extraFile) {
+    async function (mdump, extra, extraFile) {
       runMinidumpAnalyzer(mdump);
 
       // Refresh updated extra data

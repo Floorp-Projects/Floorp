@@ -1,10 +1,10 @@
 "use strict";
 
-window.test = function() {
+window.test = function () {
   console.log("simple function");
 };
 
-window.test_bound_target = function() {
+window.test_bound_target = function () {
   console.log("simple bound target function");
 };
 

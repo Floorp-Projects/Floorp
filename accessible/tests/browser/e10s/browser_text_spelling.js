@@ -63,7 +63,7 @@ addAccessibleTask(
 <textarea id="textarea" spellcheck="true">test tset tset test</textarea>
 <div contenteditable id="editable" spellcheck="true">plain<span> ts</span>et <b>bold</b></div>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const textarea = findAccessibleChildByID(docAcc, "textarea", [
       nsIAccessibleText,
     ]);

@@ -68,7 +68,7 @@ function testBoundsWithOffset(browser, iframeDocAcc, id, domElmBounds, offset) {
 
 addAccessibleTask(
   `<div id='${ELEM_ID}'>hello world</div>`,
-  async function(browser, iframeDocAcc, contentDocAcc) {
+  async function (browser, iframeDocAcc, contentDocAcc) {
     ok(iframeDocAcc, "IFRAME document accessible is present");
 
     await testBoundsWithContent(iframeDocAcc, ELEM_ID, browser);
@@ -143,7 +143,7 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `<div id="div" style="width: 30px; height: 30px"></div>`,
-  async function(browser, accDoc, foo) {
+  async function (browser, accDoc, foo) {
     const docWidth = () => {
       let width = {};
       accDoc.getBounds({}, {}, width, {});
@@ -172,7 +172,7 @@ addAccessibleTask(
   <iframe id="iframe" src="data:text/html,"></iframe>
 </ol>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     let iframeDoc = findAccessibleChildByID(docAcc, "iframe").firstChild;
     ok(iframeDoc, "Got the iframe document");
     const origX = {};

@@ -39,7 +39,7 @@ var RGBAValues = [
 ];
 
 function createOneTest(rgbaValue) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     var tolerance = 5;
     var r = rgbaValue[0];
     var g = rgbaValue[1];
@@ -49,7 +49,7 @@ function createOneTest(rgbaValue) {
 
     var newImageData;
     createImageBitmap(imageData).then(
-      function(imageBitmap) {
+      function (imageBitmap) {
         var context = document.createElement("canvas").getContext("2d");
         context.drawImage(imageBitmap, 0, 0);
         newImageData = context.getImageData(0, 0, 1, 1);
@@ -89,7 +89,7 @@ function createOneTest(rgbaValue) {
           reject();
         }
       },
-      function() {
+      function () {
         reject();
       }
     );

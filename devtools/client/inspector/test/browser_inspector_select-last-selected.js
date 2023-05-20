@@ -53,7 +53,7 @@ var TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(PAGE_1);
 
   for (const { url, nodeToSelect, selectedNode } of TEST_DATA) {

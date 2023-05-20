@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   const ID1 = "sendMessage1@tests.mozilla.org";
   const ID2 = "sendMessage2@tests.mozilla.org";
 
@@ -18,7 +18,7 @@ add_task(async function() {
     },
     manifest: { browser_specific_settings: { gecko: { id: ID1 } } },
     files: {
-      "page.js": function() {
+      "page.js": function () {
         browser.runtime.onMessage.addListener((msg, sender) => {
           browser.test.sendMessage("received-page", { msg, sender });
         });

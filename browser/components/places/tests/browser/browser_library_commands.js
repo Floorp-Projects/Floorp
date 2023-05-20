@@ -10,7 +10,7 @@
 
 const TEST_URI = NetUtil.newURI("http://www.mozilla.org/");
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
 });

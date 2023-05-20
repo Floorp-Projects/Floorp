@@ -20,7 +20,7 @@ var ExtensionTestUtils = {
   },
 };
 
-ExtensionTestUtils.loadExtension = function(ext) {
+ExtensionTestUtils.loadExtension = function (ext) {
   // Cleanup functions need to be registered differently depending on
   // whether we're in browser chrome or plain mochitests.
   var registerCleanup;

@@ -24,7 +24,7 @@ const EXAMPLE_URL =
   "chrome://mochitests/content/browser/devtools/client/shared/test/";
 
 function catchFail(func) {
-  return function() {
+  return function () {
     try {
       return func.apply(null, arguments);
     } catch (ex) {
@@ -99,7 +99,7 @@ function waitForValue(options) {
 
 function oneTimeObserve(name, callback) {
   return new Promise(resolve => {
-    const func = function() {
+    const func = function () {
       Services.obs.removeObserver(func, name);
       if (callback) {
         callback();
@@ -110,7 +110,7 @@ function oneTimeObserve(name, callback) {
   });
 }
 
-const createHost = async function(
+const createHost = async function (
   type = "bottom",
   src = CHROME_URL_ROOT + "dummy.html"
 ) {
@@ -164,7 +164,7 @@ function waitUntil(predicate, interval = 10) {
     return Promise.resolve(true);
   }
   return new Promise(resolve => {
-    setTimeout(function() {
+    setTimeout(function () {
       waitUntil(predicate).then(() => resolve(true));
     }, interval);
   });
@@ -188,7 +188,7 @@ function showFilterPopupPresets(widget) {
  * @param  {string} value
  * @return {Promise}
  */
-const showFilterPopupPresetsAndCreatePreset = async function(
+const showFilterPopupPresetsAndCreatePreset = async function (
   widget,
   name,
   value

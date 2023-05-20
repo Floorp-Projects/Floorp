@@ -219,11 +219,11 @@ function run_test() {
   var input = new AutoCompleteInput([search1.name, search2.name]);
   var numSearchesStarted = 0;
 
-  input.onSearchBegin = function() {
+  input.onSearchBegin = function () {
     numSearchesStarted++;
   };
 
-  input.onSearchComplete = function() {
+  input.onSearchComplete = function () {
     Assert.equal(
       controller.searchStatus,
       Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH

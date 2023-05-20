@@ -15,7 +15,7 @@ function ChromeTask_ChromeScript() {
     "resource://testing-common/Assert.sys.mjs"
   );
 
-  addMessageListener("chrome-task:spawn", async function(aData) {
+  addMessageListener("chrome-task:spawn", async function (aData) {
     let id = aData.id;
     let source = aData.runnable || "()=>{}";
 

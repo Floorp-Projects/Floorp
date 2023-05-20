@@ -25,7 +25,7 @@ const RED_SQUARE =
 
 function handleRequest(request, response) {
   let query = {};
-  request.queryString.split("&").forEach(function(val) {
+  request.queryString.split("&").forEach(function (val) {
     let [name, value] = val.split("=");
     query[name] = unescape(value);
   });

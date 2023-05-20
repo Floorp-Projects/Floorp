@@ -27,7 +27,7 @@ function test() {
       return new Promise(resolve => {
         addEventListener(
           "load",
-          function() {
+          function () {
             // The main page has loaded.  Now wait for the iframe to load.
             let iframe = content.document.getElementById("iframe");
             iframe.addEventListener(

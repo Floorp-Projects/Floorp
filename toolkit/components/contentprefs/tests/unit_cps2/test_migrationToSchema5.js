@@ -38,7 +38,7 @@ const schema_queries = [
   "CREATE INDEX prefs_idx ON prefs(timestamp, groupID, settingID)",
 ];
 
-add_setup(async function() {
+add_setup(async function () {
   let conn = await Sqlite.openConnection({
     path: PathUtils.join(PathUtils.profileDir, "content-prefs.sqlite"),
   });

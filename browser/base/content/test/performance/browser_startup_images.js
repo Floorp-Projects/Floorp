@@ -57,7 +57,7 @@ const knownUnshownImages = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   if (!AppConstants.DEBUG) {
     ok(false, "You need to run this test on a debug build.");
   }

@@ -19,7 +19,7 @@ const { UrlClassifierTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/UrlClassifierTestUtils.sys.mjs"
 );
 UrlClassifierTestUtils.addTestTrackers();
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   UrlClassifierTestUtils.cleanupTestTrackers();
 });
 
@@ -42,7 +42,7 @@ add_task(async function testContentBlockingMessage() {
     "log in group",
     ".console-api"
   );
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.group("myGroup");
     content.wrappedJSObject.console.log("log in group");
   });
@@ -137,7 +137,7 @@ add_task(async function testContentBlockingMessage() {
 
   info("Log a simple message to check if it goes into the console.group");
   onInGroupMessage = waitForMessageByType(hud, "log in group", ".console-api");
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.console.log("second log in group");
   });
   await onInGroupMessage;
@@ -214,7 +214,7 @@ let cpt = 0;
  */
 function emitContentBlockedMessage(prefix) {
   const url = `${BLOCKED_URL}?${prefix}-${++cpt}`;
-  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function(innerURL) {
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [url], function (innerURL) {
     content.wrappedJSObject.loadImage(innerURL);
   });
 }

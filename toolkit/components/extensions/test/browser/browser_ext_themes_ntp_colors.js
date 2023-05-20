@@ -31,7 +31,7 @@ async function test_ntp_theme(theme, isBrightText) {
     originalBackground,
     originalCardBackground,
     originalColor,
-  } = await SpecialPowers.spawn(browser, [], function() {
+  } = await SpecialPowers.spawn(browser, [], function () {
     let doc = content.document;
     ok(
       !doc.documentElement.hasAttribute("lwt-newtab"),
@@ -77,7 +77,7 @@ async function test_ntp_theme(theme, isBrightText) {
         color: hexToCSS(theme.colors.ntp_text),
       },
     ],
-    async function({ isBrightText, background, card_background, color }) {
+    async function ({ isBrightText, background, card_background, color }) {
       let doc = content.document;
       ok(
         doc.documentElement.hasAttribute("lwt-newtab"),
@@ -123,7 +123,7 @@ async function test_ntp_theme(theme, isBrightText) {
         originalColor,
       },
     ],
-    function({ originalBackground, originalCardBackground, originalColor }) {
+    function ({ originalBackground, originalCardBackground, originalColor }) {
       let doc = content.document;
       ok(
         !doc.documentElement.hasAttribute("lwt-newtab"),

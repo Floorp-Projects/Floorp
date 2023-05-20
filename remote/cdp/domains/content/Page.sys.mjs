@@ -173,10 +173,7 @@ export class Page extends ContentProcessDomain {
     if (worldName) {
       this.worldsToEvaluateOnLoad.add(worldName);
     }
-    const identifier = Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1);
+    const identifier = Services.uuid.generateUUID().toString().slice(1, -1);
     this.scriptsToEvaluateOnLoad.set(identifier, { worldName, source });
 
     return { identifier };

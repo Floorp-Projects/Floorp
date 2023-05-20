@@ -68,7 +68,7 @@ function makeChan(uri) {
   return chan;
 }
 
-let WaitForHttp3Listener = function() {};
+let WaitForHttp3Listener = function () {};
 
 WaitForHttp3Listener.prototype = {
   onDataAvailableFired: false,

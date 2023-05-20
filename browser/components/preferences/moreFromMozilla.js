@@ -183,7 +183,7 @@ var gMoreFromMozillaPane = {
             this.getURL(product.button.actionURL, product.region, this.option)
           );
         } else {
-          actionElement.addEventListener("click", function() {
+          actionElement.addEventListener("click", function () {
             let mainWindow = window.windowRoot.ownerGlobal;
             mainWindow.openTrustedLinkIn(
               gMoreFromMozillaPane.getURL(

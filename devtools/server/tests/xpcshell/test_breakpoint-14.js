@@ -28,25 +28,25 @@ add_task(
     threadFront.setBreakpoint(location, {});
 
     const testCallbacks = [
-      function(packet) {
+      function (packet) {
         // Check that the stepping worked.
         Assert.equal(packet.frame.where.line, debuggee.line0 + 5);
         Assert.equal(packet.why.type, "resumeLimit");
       },
-      function(packet) {
+      function (packet) {
         // Reached the breakpoint.
         Assert.equal(packet.frame.where.line, location.line);
         Assert.equal(packet.why.type, "breakpoint");
         Assert.notEqual(packet.why.type, "resumeLimit");
       },
-      function(packet) {
+      function (packet) {
         // The frame is about to be popped while stepping.
         Assert.equal(packet.frame.where.line, debuggee.line0 + 3);
         Assert.notEqual(packet.why.type, "breakpoint");
         Assert.equal(packet.why.type, "resumeLimit");
         Assert.equal(packet.why.frameFinished.return.type, "undefined");
       },
-      function(packet) {
+      function (packet) {
         // Check that the debugger statement wasn't the reason for this pause.
         Assert.equal(debuggee.a, 1);
         Assert.equal(debuggee.b, undefined);
@@ -54,7 +54,7 @@ add_task(
         Assert.notEqual(packet.why.type, "debuggerStatement");
         Assert.equal(packet.why.type, "resumeLimit");
       },
-      function(packet) {
+      function (packet) {
         // Check that the debugger statement wasn't the reason for this pause.
         Assert.equal(packet.frame.where.line, debuggee.line0 + 7);
         Assert.notEqual(packet.why.type, "debuggerStatement");

@@ -127,7 +127,7 @@ function waitForEvent(
 
       unregisterA11yEventListener(aEventType, this);
 
-      window.setTimeout(function() {
+      window.setTimeout(function () {
         aFunc.call(aContext, aArg1, aArg2);
       }, 0);
     },
@@ -503,7 +503,7 @@ function eventQueue(aEventType) {
     if (!aUncondProcess && this.areAllEventsExpected()) {
       // We need delay to avoid events coalesce from different invokers.
       var queue = this;
-      SimpleTest.executeSoon(function() {
+      SimpleTest.executeSoon(function () {
         queue.processNextInvoker();
       });
       return;
@@ -511,7 +511,7 @@ function eventQueue(aEventType) {
 
     // Check in timeout invoker didn't fire registered events.
     window.setTimeout(
-      function(aQueue) {
+      function (aQueue) {
         aQueue.processNextInvoker();
       },
       300,
@@ -2608,7 +2608,7 @@ function sequenceItem(aProcessor, aEventType, aTarget, aItemID) {
   };
 
   this.queue = new eventQueue();
-  this.queue.onFinish = function() {
+  this.queue.onFinish = function () {
     aProcessor.onProcessed();
     return DO_NOT_FINISH_TEST;
   };

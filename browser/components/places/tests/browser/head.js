@@ -2,7 +2,7 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(this, "gFluentStrings", function() {
+XPCOMUtils.defineLazyGetter(this, "gFluentStrings", function () {
   return new Localization(["branding/brand.ftl", "browser/browser.ftl"], true);
 });
 
@@ -13,7 +13,7 @@ function openLibrary(callback, aLeftPaneRoot) {
     "chrome,toolbar=yes,dialog=no,resizable",
     aLeftPaneRoot
   );
-  waitForFocus(function() {
+  waitForFocus(function () {
     checkLibraryPaneVisibility(library, aLeftPaneRoot);
     callback(library);
   }, library);
@@ -56,7 +56,7 @@ function promiseLibraryClosed(organizer) {
     // Wait for the Organizer window to actually be closed
     organizer.addEventListener(
       "unload",
-      function() {
+      function () {
         executeSoon(resolve);
       },
       { once: true }
@@ -202,7 +202,7 @@ function isToolbarVisible(aToolbar) {
  * @returns {string} guid
  *          Bookmark guid
  */
-var withBookmarksDialog = async function(autoCancel, openFn, taskFn, closeFn) {
+var withBookmarksDialog = async function (autoCancel, openFn, taskFn, closeFn) {
   let dialogUrl = "chrome://browser/content/places/bookmarkProperties.xhtml";
   let closed = false;
   // We can't show the in-window prompt for windows which don't have
@@ -299,13 +299,13 @@ var withBookmarksDialog = async function(autoCancel, openFn, taskFn, closeFn) {
  *         Returns a Promise that resolves once the context menu has been
  *         opened.
  */
-var openContextMenuForContentSelector = async function(browser, selector) {
+var openContextMenuForContentSelector = async function (browser, selector) {
   info("wait for the context menu");
   let contextPromise = BrowserTestUtils.waitForEvent(
     document.getElementById("contentAreaContextMenu"),
     "popupshown"
   );
-  await SpecialPowers.spawn(browser, [{ selector }], async function(args) {
+  await SpecialPowers.spawn(browser, [{ selector }], async function (args) {
     let doc = content.document;
     let elt = doc.querySelector(args.selector);
     dump(`openContextMenuForContentSelector: found ${elt}\n`);
@@ -369,13 +369,13 @@ function fillBookmarkTextField(id, text, win, blur = true) {
  *        The task to execute once the sidebar is ready. Will get the Places
  *        tree view as input.
  */
-var withSidebarTree = async function(type, taskFn) {
+var withSidebarTree = async function (type, taskFn) {
   let sidebar = document.getElementById("sidebar");
   info("withSidebarTree: waiting sidebar load");
   let sidebarLoadedPromise = new Promise(resolve => {
     sidebar.addEventListener(
       "load",
-      function() {
+      function () {
         executeSoon(resolve);
       },
       { capture: true, once: true }
@@ -408,7 +408,7 @@ var withSidebarTree = async function(type, taskFn) {
  *        The task to execute once the Library is ready.
  *        Will get { left, right } trees as argument.
  */
-var withLibraryWindow = async function(hierarchy, taskFn) {
+var withLibraryWindow = async function (hierarchy, taskFn) {
   let library = await promiseLibrary(hierarchy);
   let left = library.document.getElementById("placesList");
   let right = library.document.getElementById("placeContent");

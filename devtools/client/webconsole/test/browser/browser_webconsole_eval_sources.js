@@ -10,7 +10,7 @@ const TEST_URI =
 // Test that stack/message links in console API and error messages originating
 // from eval code go to a source in the debugger. This should work even when the
 // console is opened first.
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
 

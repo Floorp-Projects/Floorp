@@ -1,15 +1,15 @@
 function test_workers() {
-  onmessage = function(e) {
+  onmessage = function (e) {
     postMessage(e.data, e.ports);
   };
 
-  onmessageerror = function(e) {
+  onmessageerror = function (e) {
     postMessage("error");
   };
 }
 
 function test_sharedWorkers(port) {
-  port.onmessage = function(e) {
+  port.onmessage = function (e) {
     if (e.data == "terminate") {
       close();
     } else {
@@ -17,33 +17,33 @@ function test_sharedWorkers(port) {
     }
   };
 
-  port.onmessageerror = function(e) {
+  port.onmessageerror = function (e) {
     port.postMessage("error");
   };
 }
 
 function test_broadcastChannel(obj) {
   var bc = new BroadcastChannel("postMessagesTest_inWorkers");
-  bc.onmessage = function(e) {
+  bc.onmessage = function (e) {
     obj.postMessage(e.data);
   };
 
-  bc.onmessageerror = function() {
+  bc.onmessageerror = function () {
     obj.postMessage("error");
   };
 }
 
 function test_messagePort(port) {
-  port.onmessage = function(e) {
+  port.onmessage = function (e) {
     postMessage(e.data, e.ports);
   };
 
-  port.onmessageerror = function(e) {
+  port.onmessageerror = function (e) {
     postMessage("error");
   };
 }
 
-onconnect = function(e) {
+onconnect = function (e) {
   e.ports[0].onmessage = ee => {
     if (ee.data == "sharedworkers") {
       test_sharedWorkers(e.ports[0]);
@@ -57,7 +57,7 @@ onconnect = function(e) {
   };
 };
 
-onmessage = function(e) {
+onmessage = function (e) {
   if (e.data == "workers") {
     test_workers();
     postMessage("ok");

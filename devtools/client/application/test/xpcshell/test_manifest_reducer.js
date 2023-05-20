@@ -131,7 +131,7 @@ const MANIFEST_PROCESSING = [
   },
 ];
 
-add_task(async function() {
+add_task(async function () {
   info("Test manifest reducer: FETCH_MANIFEST_START action");
 
   const state = ManifestState();
@@ -141,7 +141,7 @@ add_task(async function() {
   equal(newState.isLoading, true, "Loading flag is true");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test manifest reducer: FETCH_MANIFEST_FAILURE action");
 
   const state = Object.assign(ManifestState(), { isLoading: true });
@@ -153,7 +153,7 @@ add_task(async function() {
   equal(newState.manifest, null, "Manifest is null");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test manifest reducer: FETCH_MANIFEST_SUCCESS action");
 
   // test manifest processing
@@ -162,7 +162,7 @@ add_task(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test manifest reducer: RESET_MANIFEST action");
 
   const state = Object.assign(ManifestState(), {

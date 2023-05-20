@@ -16,7 +16,7 @@ const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-location-debugger-link.html";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.webconsole.filter.error", true);
   await pushPref("devtools.webconsole.filter.log", true);
 

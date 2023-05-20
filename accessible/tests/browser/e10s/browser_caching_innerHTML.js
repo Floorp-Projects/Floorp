@@ -12,7 +12,7 @@ addAccessibleTask(
 <p id="p">test</p>
 <math id="math"><mfrac><mi>x</mi><mi>y</mi></mfrac></math>
   `,
-  async function(browser, docAcc) {
+  async function (browser, docAcc) {
     const p = findAccessibleChildByID(docAcc, "p");
     let hasHtml;
     try {

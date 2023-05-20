@@ -19,10 +19,7 @@ const ERROR_CYCLIC_REFERENCE = "Object reference chain is too long";
 const ERROR_CANNOT_RETURN_BY_VALUE = "Object couldn't be returned by value";
 
 function uuid() {
-  return Services.uuid
-    .generateUUID()
-    .toString()
-    .slice(1, -1);
+  return Services.uuid.generateUUID().toString().slice(1, -1);
 }
 
 function randomInt() {

@@ -12,7 +12,7 @@ add_task(async function thumbnails_bg_no_cookies_sent() {
     },
     async browser => {
       // The root element of the page shouldn't be green yet.
-      await SpecialPowers.spawn(browser, [], function() {
+      await SpecialPowers.spawn(browser, [], function () {
         Assert.notEqual(
           content.document.documentElement.style.backgroundColor,
           "rgb(0, 255, 0)",
@@ -24,7 +24,7 @@ add_task(async function thumbnails_bg_no_cookies_sent() {
       // will be green if the cookie's set.
       browser.reload();
       await BrowserTestUtils.browserLoaded(browser);
-      await SpecialPowers.spawn(browser, [], function() {
+      await SpecialPowers.spawn(browser, [], function () {
         Assert.equal(
           content.document.documentElement.style.backgroundColor,
           "rgb(0, 255, 0)",

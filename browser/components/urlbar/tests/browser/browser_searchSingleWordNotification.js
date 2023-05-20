@@ -2,8 +2,8 @@
 "use strict";
 
 let gDNSResolved = false;
-add_setup(async function() {
-  registerCleanupFunction(function() {
+add_setup(async function () {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.fixup.domainwhitelist.localhost");
   });
 });

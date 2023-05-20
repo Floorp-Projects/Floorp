@@ -15,11 +15,11 @@ const {
 
 const handlers = Object.create(null);
 
-handlers[actions.POP_VIEW] = function(_state, _action) {
+handlers[actions.POP_VIEW] = function (_state, _action) {
   return null;
 };
 
-handlers[actions.CHANGE_VIEW] = function(individuals, { newViewState }) {
+handlers[actions.CHANGE_VIEW] = function (individuals, { newViewState }) {
   if (newViewState === viewState.INDIVIDUALS) {
     assert(
       !individuals,
@@ -33,12 +33,12 @@ handlers[actions.CHANGE_VIEW] = function(individuals, { newViewState }) {
   return null;
 };
 
-handlers[actions.FOCUS_INDIVIDUAL] = function(individuals, { node }) {
+handlers[actions.FOCUS_INDIVIDUAL] = function (individuals, { node }) {
   assert(individuals, "Should have individuals");
   return immutableUpdate(individuals, { focused: node });
 };
 
-handlers[actions.FETCH_INDIVIDUALS_START] = function(individuals, action) {
+handlers[actions.FETCH_INDIVIDUALS_START] = function (individuals, action) {
   assert(individuals, "Should have individuals");
   return Object.freeze({
     state: individualsState.FETCHING,
@@ -46,7 +46,7 @@ handlers[actions.FETCH_INDIVIDUALS_START] = function(individuals, action) {
   });
 };
 
-handlers[actions.FETCH_INDIVIDUALS_END] = function(individuals, action) {
+handlers[actions.FETCH_INDIVIDUALS_END] = function (individuals, action) {
   assert(individuals, "Should have individuals");
   assert(!individuals.nodes, "Should not have nodes");
   assert(
@@ -70,7 +70,7 @@ handlers[actions.FETCH_INDIVIDUALS_END] = function(individuals, action) {
   });
 };
 
-handlers[actions.INDIVIDUALS_ERROR] = function(_, { error }) {
+handlers[actions.INDIVIDUALS_ERROR] = function (_, { error }) {
   return Object.freeze({
     error,
     nodes: null,
@@ -78,7 +78,7 @@ handlers[actions.INDIVIDUALS_ERROR] = function(_, { error }) {
   });
 };
 
-module.exports = function(individuals = null, action) {
+module.exports = function (individuals = null, action) {
   const handler = handlers[action.type];
   return handler ? handler(individuals, action) : individuals;
 };

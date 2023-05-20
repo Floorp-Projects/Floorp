@@ -10,7 +10,7 @@ add_task(async function test_shared_array_buffer_worker() {
       browser.test.onMessage.addListener(async isPrivileged => {
         const worker = new Worker("worker.js");
         worker.isPrivileged = isPrivileged;
-        worker.onmessage = function(e) {
+        worker.onmessage = function (e) {
           const msg = `${
             this.isPrivileged
               ? "privileged addon can"
@@ -27,7 +27,7 @@ add_task(async function test_shared_array_buffer_worker() {
       });
     },
     files: {
-      "worker.js": function() {
+      "worker.js": function () {
         try {
           new SharedArrayBuffer(1);
           this.postMessage(true);

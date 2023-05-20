@@ -10,7 +10,7 @@ const USB_RUNTIME_DEVICE_NAME = "test device name";
 const USB_RUNTIME_APP_NAME = "TestUsbApp";
 
 // Test that addons are displayed and updated for USB runtimes when expected.
-add_task(async function() {
+add_task(async function () {
   const mocks = new Mocks();
 
   const { document, tab, window } = await openAboutDebugging();

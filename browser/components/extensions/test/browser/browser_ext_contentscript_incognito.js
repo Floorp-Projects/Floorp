@@ -17,7 +17,7 @@ add_task(async function test_contentscript_window_open_doesnot_crash() {
       ],
     },
     files: {
-      "test_window_open.js": function() {
+      "test_window_open.js": function () {
         const newWin = window.open();
         browser.test.log("calling window.open did not triggered a crash");
         browser.test.sendMessage("window-open-called", !!newWin);

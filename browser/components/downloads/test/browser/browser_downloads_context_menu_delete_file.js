@@ -35,7 +35,7 @@ async function createDownloadFiles() {
 
 add_setup(startServer);
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await task_resetState();
   await PlacesUtils.history.clear();
 });
@@ -211,7 +211,7 @@ add_task(async function test_about_downloads_deleteFile_for_history_download() {
   await Promise.all([promiseFileAnnotation, promiseMetaAnnotation]);
 
   let win = await openLibrary("Downloads");
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     win?.close();
   });
 

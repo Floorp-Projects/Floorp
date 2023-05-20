@@ -8,7 +8,7 @@
 const TEST_URL =
   "data:text/html;charset=utf-8," + encodeURIComponent(`<div id="test"></div>`);
 
-add_task(async function() {
+add_task(async function () {
   // Enabled fission's pref as the TargetCommand is almost disabled without it
   await pushPref("devtools.browsertoolbox.scope", "everything");
   // Disable the preloaded process as it gets created lazily and may interfere
@@ -32,7 +32,7 @@ add_task(async function() {
   await commands.destroy();
 });
 
-add_task(async function() {
+add_task(async function () {
   const commands = await CommandsFactory.forMainProcess();
   const targetCommand = commands.targetCommand;
   await targetCommand.startListening();

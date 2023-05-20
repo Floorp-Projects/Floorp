@@ -15,7 +15,7 @@ const PAGE = "http://example.com/";
  *        to be forgotten.
  * @returns Promise
  */
-let forgetTabHelper = async function(forgetFn) {
+let forgetTabHelper = async function (forgetFn) {
   // We want to suppress all non-final updates from the browser tabs
   // so as to eliminate any racy-ness with this test.
   await pushPrefs(["browser.sessionstore.debug.no_auto_updates", true]);
@@ -68,7 +68,7 @@ let forgetTabHelper = async function(forgetFn) {
  *        to be forgotten.
  * @returns Promise
  */
-let forgetWinHelper = async function(forgetFn) {
+let forgetWinHelper = async function (forgetFn) {
   // We want to suppress all non-final updates from the browser tabs
   // so as to eliminate any racy-ness with this test.
   await pushPrefs(["browser.sessionstore.debug.no_auto_updates", true]);

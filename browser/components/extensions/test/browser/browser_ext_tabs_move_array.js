@@ -14,7 +14,7 @@ add_task(async function moveMultiple() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: { permissions: ["tabs"] },
-    background: async function() {
+    background: async function () {
       function num(url) {
         return parseInt(url.slice(-1), 10);
       }

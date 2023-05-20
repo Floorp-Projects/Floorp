@@ -9,8 +9,8 @@ const PATH = DIRPATH + "file_coop_coep.html";
 const ORIGIN = "https://test1.example.com";
 const URL = `${ORIGIN}/${PATH}`;
 
-add_task(async function() {
-  await BrowserTestUtils.withNewTab(URL, async function(browser) {
+add_task(async function () {
+  await BrowserTestUtils.withNewTab(URL, async function (browser) {
     BrowserTestUtils.loadURIString(browser, URL);
     await BrowserTestUtils.browserLoaded(browser);
 
@@ -31,7 +31,7 @@ add_task(async function() {
         var shadow = host.attachShadow({ mode: "closed" });
 
         let promise = new Promise(resolve => {
-          shadow.addEventListener("slotchange", function() {
+          shadow.addEventListener("slotchange", function () {
             hostIds.push(host.id);
             resolve();
           });

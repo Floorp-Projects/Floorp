@@ -2,7 +2,7 @@ const gRoot = "http://mochi.test:8888/tests/dom/serviceworkers/test/";
 const gTestURL = gRoot + "test_notification_openWindow.html";
 const gClientURL = gRoot + "file_notification_openWindow.html";
 
-onmessage = function(event) {
+onmessage = function (event) {
   if (event.data !== "DONE") {
     dump(`ERROR: received unexpected message: ${JSON.stringify(event.data)}\n`);
   }
@@ -20,6 +20,6 @@ onmessage = function(event) {
   );
 };
 
-onnotificationclick = function(event) {
+onnotificationclick = function (event) {
   clients.openWindow(gClientURL);
 };

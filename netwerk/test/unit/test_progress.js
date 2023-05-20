@@ -2,7 +2,7 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-XPCOMUtils.defineLazyGetter(this, "URL", function() {
+XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpserver.identity.primaryPort;
 });
 
@@ -22,7 +22,7 @@ const TYPE_ONSTARTREQUEST = 3;
 const TYPE_ONDATAAVAILABLE = 4;
 const TYPE_ONSTOPREQUEST = 5;
 
-var ProgressCallback = function() {};
+var ProgressCallback = function () {};
 
 ProgressCallback.prototype = {
   _listener: null,

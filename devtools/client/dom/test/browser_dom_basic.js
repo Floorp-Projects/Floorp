@@ -8,7 +8,7 @@ const TEST_PAGE_URL = URL_ROOT + "page_basic.html";
 /**
  * Basic test that checks content of the DOM panel.
  */
-add_task(async function() {
+add_task(async function () {
   info("Test DOM panel basic started");
 
   const { panel } = await addTestTab(TEST_PAGE_URL);

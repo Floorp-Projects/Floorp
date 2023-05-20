@@ -33,7 +33,7 @@ async function task_add_visit(uri, timestamp, transition) {
 }
 
 add_task(async function test_visitAdded() {
-  let promiseNotify = promiseVisitAdded(async function(visit) {
+  let promiseNotify = promiseVisitAdded(async function (visit) {
     Assert.ok(visit.visitId > 0);
     Assert.equal(visit.url, testuri.spec);
     Assert.equal(visit.visitTime, testtime / 1000);
@@ -52,7 +52,7 @@ add_task(async function test_visitAdded() {
 });
 
 add_task(async function test_visitAdded() {
-  let promiseNotify = promiseVisitAdded(async function(visit) {
+  let promiseNotify = promiseVisitAdded(async function (visit) {
     Assert.ok(visit.visitId > 0);
     Assert.equal(visit.url, testuri.spec);
     Assert.equal(visit.visitTime, testtime / 1000);

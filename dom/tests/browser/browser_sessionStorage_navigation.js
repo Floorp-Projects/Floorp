@@ -12,8 +12,8 @@ const URL1 = `${ORIGIN1}/${PATH}`;
 const URL2 = `${ORIGIN2}/${PATH}`;
 const URL1_WITH_COOP_COEP = `${ORIGIN1}/${DIRPATH}file_coop_coep.html`;
 
-add_task(async function() {
-  await BrowserTestUtils.withNewTab(URL1, async function(browser) {
+add_task(async function () {
+  await BrowserTestUtils.withNewTab(URL1, async function (browser) {
     const key = "key";
     const value = "value";
 
@@ -116,7 +116,7 @@ add_task(async function() {
         await content.SpecialPowers.spawn(
           iframe,
           [iframeORIGIN, key, value],
-          async function(ORIGIN, key, value) {
+          async function (ORIGIN, key, value) {
             is(
               content.window.origin,
               ORIGIN,
@@ -166,7 +166,7 @@ add_task(async function() {
         await content.SpecialPowers.spawn(
           iframe,
           [ORIGIN, key, value],
-          async function(ORIGIN, key, value) {
+          async function (ORIGIN, key, value) {
             is(
               content.window.origin,
               ORIGIN,

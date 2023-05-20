@@ -16,7 +16,7 @@ function promiseAuthWindowShown() {
 }
 
 add_task(async function test() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function(
+  await BrowserTestUtils.withNewTab("https://example.com", async function (
     browser
   ) {
     let cancelDialogLimit = Services.prefs.getIntPref(
@@ -44,7 +44,7 @@ add_task(async function test() {
         authShown = promiseAuthWindowShown();
       }
       browserLoaded = BrowserTestUtils.browserLoaded(browser);
-      SpecialPowers.spawn(browser, [], function() {
+      SpecialPowers.spawn(browser, [], function () {
         content.document.location.reload();
       });
       if (i < cancelDialogLimit) {
@@ -80,14 +80,14 @@ add_task(async function test() {
         authShown = promiseAuthWindowShown();
       }
 
-      let iframeLoaded = SpecialPowers.spawn(browser, [], async function() {
+      let iframeLoaded = SpecialPowers.spawn(browser, [], async function () {
         let doc = content.document;
         let iframe = doc.createElement("iframe");
         doc.body.appendChild(iframe);
         let loaded = new Promise(resolve => {
           iframe.addEventListener(
             "load",
-            function(e) {
+            function (e) {
               resolve();
             },
             { once: true }
@@ -108,14 +108,14 @@ add_task(async function test() {
     }
 
     // Verify that third party subresources can not spawn new auth dialogs.
-    let iframeLoaded = SpecialPowers.spawn(browser, [], async function() {
+    let iframeLoaded = SpecialPowers.spawn(browser, [], async function () {
       let doc = content.document;
       let iframe = doc.createElement("iframe");
       doc.body.appendChild(iframe);
       let loaded = new Promise(resolve => {
         iframe.addEventListener(
           "load",
-          function(e) {
+          function (e) {
             resolve();
           },
           { once: true }

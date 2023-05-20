@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-onmessage = function(event) {
+onmessage = function (event) {
   // TEST: does console exist?
   postMessage({ event: "console exists", status: !!console, last: false });
 
@@ -30,7 +30,7 @@ onmessage = function(event) {
   }
   trace1();
 
-  foobar585956c = function(a) {
+  foobar585956c = function (a) {
     console.trace();
     return a + "c";
   };
@@ -71,7 +71,7 @@ onmessage = function(event) {
   timeStamp("foo");
   testGroups();
   startTimer("foo");
-  setTimeout(function() {
+  setTimeout(function () {
     stopTimer("foo");
     nextSteps(event);
   }, 10);
@@ -102,7 +102,7 @@ function nextSteps(event) {
   // Recursive:
   if (event.data == true) {
     var worker = new Worker("console_worker.js");
-    worker.onmessage = function(msg) {
+    worker.onmessage = function (msg) {
       postMessage(msg.data);
     };
     worker.postMessage(false);

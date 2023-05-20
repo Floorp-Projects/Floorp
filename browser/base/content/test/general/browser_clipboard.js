@@ -7,7 +7,7 @@ var testPage =
   "  <div id='main' contenteditable='true'>Test <b>Bold</b> After Text</div>" +
   "</body>";
 
-add_task(async function() {
+add_task(async function () {
   let tab = BrowserTestUtils.addTab(gBrowser);
   let browser = gBrowser.getBrowserForTab(tab);
 

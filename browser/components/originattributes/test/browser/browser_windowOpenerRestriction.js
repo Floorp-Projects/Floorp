@@ -35,7 +35,7 @@ async function testPref(aIsPrefEnabled) {
   await SpecialPowers.spawn(
     browser,
     [{ cookieStr, page: TARGET_PAGE, isPrefEnabled: aIsPrefEnabled }],
-    async function(obj) {
+    async function (obj) {
       // Acquire the iframe element.
       let childFrame = content.document.getElementById("child");
 
@@ -70,7 +70,7 @@ async function testPref(aIsPrefEnabled) {
   );
 
   // Close Tabs.
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     content.openedWindow.close();
   });
   BrowserTestUtils.removeTab(tab);

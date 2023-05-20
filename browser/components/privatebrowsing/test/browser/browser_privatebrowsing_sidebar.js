@@ -30,7 +30,7 @@ function test() {
     .then(openSidebar)
     .then(win => openWindow(win, { private: true }))
     .then(cacheWindow)
-    .then(function({ document }) {
+    .then(function ({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");
       is(
         sidebarBox.hidden,
@@ -45,7 +45,7 @@ function test() {
     .then(openSidebar)
     .then(win => openWindow(win))
     .then(cacheWindow)
-    .then(function({ document }) {
+    .then(function ({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");
       is(
         sidebarBox.hidden,
@@ -60,7 +60,7 @@ function test() {
     .then(openSidebar)
     .then(win => openWindow(win))
     .then(cacheWindow)
-    .then(function({ document }) {
+    .then(function ({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");
       is(
         sidebarBox.hidden,
@@ -75,7 +75,7 @@ function test() {
     .then(openSidebar)
     .then(win => openWindow(win, { private: true }))
     .then(cacheWindow)
-    .then(function({ document }) {
+    .then(function ({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");
       is(
         sidebarBox.hidden,

@@ -8,11 +8,11 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyGetter(lazy, "gCryptoHash", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gCryptoHash", function () {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gUnicodeConverter", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gUnicodeConverter", function () {
   let converter = Cc[
     "@mozilla.org/intl/scriptableunicodeconverter"
   ].createInstance(Ci.nsIScriptableUnicodeConverter);

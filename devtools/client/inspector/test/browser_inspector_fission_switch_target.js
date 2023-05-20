@@ -11,7 +11,7 @@ const EXAMPLE_COM_URI =
 const EXAMPLE_ORG_URI =
   "https://example.org/document-builder.sjs?html=<div id=org>org";
 
-add_task(async function() {
+add_task(async function () {
   const { inspector } = await openInspectorForURL(PARENT_PROCESS_URI);
   const aboutRobotsNodeFront = await getNodeFront(".title-text", inspector);
   ok(!!aboutRobotsNodeFront, "Can retrieve a node front from about:robots");

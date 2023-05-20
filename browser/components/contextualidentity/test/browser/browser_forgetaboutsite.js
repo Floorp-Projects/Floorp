@@ -293,7 +293,7 @@ async function test_storage_cleared() {
     await SpecialPowers.spawn(
       tabInfo.browser,
       [{ userContext: USER_CONTEXTS[userContextId] }],
-      async function(arg) {
+      async function (arg) {
         // Check that the local storage has been set correctly.
         Assert.equal(
           content.localStorage.getItem("userContext"),
@@ -352,7 +352,7 @@ async function test_storage_cleared() {
     );
 
     // Check that do storages be cleared or not.
-    await SpecialPowers.spawn(tabInfo.browser, [], async function() {
+    await SpecialPowers.spawn(tabInfo.browser, [], async function () {
       // Check that does the local storage be cleared or not.
       Assert.ok(
         !content.localStorage.getItem("userContext"),
@@ -390,7 +390,7 @@ async function test_storage_cleared() {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.userContext.enabled", true]],

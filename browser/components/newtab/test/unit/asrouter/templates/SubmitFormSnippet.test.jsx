@@ -76,13 +76,7 @@ describe("SubmitFormSnippet", () => {
   });
   it("should render .title", () => {
     const wrapper = mountAndCheckProps({ scene1_title: "Foo" });
-    assert.equal(
-      wrapper
-        .find(".title")
-        .text()
-        .trim(),
-      "Foo"
-    );
+    assert.equal(wrapper.find(".title").text().trim(), "Foo");
   });
   it("should render light-theme .icon", () => {
     const wrapper = mountAndCheckProps({

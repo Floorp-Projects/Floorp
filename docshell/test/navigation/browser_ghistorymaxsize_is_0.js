@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   // The urls don't really matter as long as they are of the same origin
   var URL =
     "http://mochi.test:8888/browser/docshell/test/navigation/bug343515_pg1.html";
@@ -10,7 +10,7 @@ add_task(async function() {
   // when gHistoryMaxSize is 0 and mIndex and mRequestedIndex are -1
 
   // 1. Navigate to URL
-  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: URL }, async function (
     browser
   ) {
     // At this point, we haven't set gHistoryMaxSize to 0, and it is still 50 (default value).

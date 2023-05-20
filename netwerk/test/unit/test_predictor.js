@@ -25,7 +25,7 @@ function extract_origin(uri) {
 
 var origin_attributes = {};
 
-var ValidityChecker = function(verifier, httpStatus) {
+var ValidityChecker = function (verifier, httpStatus) {
   this.verifier = verifier;
   this.httpStatus = httpStatus;
 };
@@ -269,7 +269,7 @@ function continue_test_pageload() {
 }
 
 function test_pageload() {
-  open_and_continue([pageload_toplevel], function() {
+  open_and_continue([pageload_toplevel], function () {
     if (running_single_process) {
       continue_test_pageload();
     } else {
@@ -361,7 +361,7 @@ function continue_test_redirect() {
 // Test is currently disabled.
 // eslint-disable-next-line no-unused-vars
 function test_redirect() {
-  open_and_continue([redirect_inituri, redirect_targeturi], function() {
+  open_and_continue([redirect_inituri, redirect_targeturi], function () {
     if (running_single_process) {
       continue_test_redirect();
     } else {
@@ -438,7 +438,7 @@ function continue_test_dns() {
 }
 
 function test_dns() {
-  open_and_continue([dns_toplevel], function() {
+  open_and_continue([dns_toplevel], function () {
     // Ensure that this will do preresolves
     Services.prefs.setIntPref(
       "network.predictor.preconnect-min-confidence",
@@ -524,7 +524,7 @@ function continue_test_origin() {
 }
 
 function test_origin() {
-  open_and_continue([origin_toplevel], function() {
+  open_and_continue([origin_toplevel], function () {
     if (running_single_process) {
       continue_test_origin();
     } else {
@@ -608,7 +608,7 @@ function test_prefetch_prime() {
     return;
   }
 
-  open_and_continue([prefetch_tluri], function() {
+  open_and_continue([prefetch_tluri], function () {
     if (running_single_process) {
       predictor.learn(
         prefetch_tluri,

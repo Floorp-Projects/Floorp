@@ -7,7 +7,7 @@
 // Tests for stepping through Babel's compile output.
 requestLongerTimeout(4);
 
-add_task(async function() {
+add_task(async function () {
   const dbg = await initDebugger("doc-sourcemapped.html");
 
   await testStepOverForOf(dbg);

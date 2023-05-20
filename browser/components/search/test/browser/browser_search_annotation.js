@@ -43,7 +43,7 @@ async function assertDatabase({ targetURL, expected }) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 
@@ -56,7 +56,7 @@ add_setup(async function() {
     { setAsDefault: true }
   );
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     gCUITestUtils.removeSearchBar();
   });
 });

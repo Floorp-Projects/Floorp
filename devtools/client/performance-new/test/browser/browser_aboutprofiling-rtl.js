@@ -4,7 +4,7 @@
 
 "use strict";
 
-add_task(async function() {
+add_task(async function () {
   await withAboutProfiling(async document => {
     is(document.dir, "ltr", "About profiling has the expected direction ltr");
     is(
@@ -15,7 +15,7 @@ add_task(async function() {
   });
 });
 
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["intl.l10n.pseudo", "bidi"]],
   });

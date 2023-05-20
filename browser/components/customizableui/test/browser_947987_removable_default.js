@@ -11,7 +11,7 @@ var widgetCounter = 0;
 registerCleanupFunction(removeCustomToolbars);
 
 // Sanity checks
-add_task(function() {
+add_task(function () {
   let brokenSpec = { id: kWidgetId + widgetCounter++, removable: false };
   SimpleTest.doesThrow(
     () => CustomizableUI.createWidget(brokenSpec),
@@ -30,7 +30,7 @@ add_task(function() {
 });
 
 // Test non-removable widget with defaultArea
-add_task(async function() {
+add_task(async function () {
   // Non-removable widget with defaultArea should work:
   let spec = {
     id: kWidgetId + widgetCounter++,

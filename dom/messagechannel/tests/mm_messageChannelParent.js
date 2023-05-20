@@ -18,7 +18,7 @@ function todo_is(v1, v2, message) {
 }
 
 function cleanUp() {
-  window.arguments[0].setTimeout(function() {
+  window.arguments[0].setTimeout(function () {
     this.done();
   }, 0);
   window.close();
@@ -38,7 +38,7 @@ function run_tests() {
     return;
   }
 
-  test(function() {
+  test(function () {
     setTimeout(run_tests, 0);
   });
 }

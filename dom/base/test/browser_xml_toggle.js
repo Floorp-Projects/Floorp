@@ -9,7 +9,7 @@ const URL = `data:text/xml,
 `;
 
 add_task(async function xml_pretty_print_toggle() {
-  await BrowserTestUtils.withNewTab(URL, async function(browser) {
+  await BrowserTestUtils.withNewTab(URL, async function (browser) {
     await SpecialPowers.spawn(browser, [], () => {
       let summary = content.document.documentElement.openOrClosedShadowRoot.querySelector(
         "summary"

@@ -8,7 +8,7 @@ requestLongerTimeout(2);
 
 add_task(async function test() {
   Services.prefs.setBoolPref(PREF_RESTORE_ON_DEMAND, false);
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref(PREF_RESTORE_ON_DEMAND);
   });
 
@@ -147,7 +147,7 @@ add_task(async function test() {
 
   let loadCount = 0;
   let promiseRestoringTabs = new Promise(resolve => {
-    gProgressListener.setCallback(function(
+    gProgressListener.setCallback(function (
       aBrowser,
       aNeedRestore,
       aRestoring,
@@ -193,7 +193,7 @@ add_task(async function test() {
       let win = aSubject;
       win.addEventListener(
         "load",
-        function() {
+        function () {
           Services.ww.unregisterNotification(observer);
           win.gBrowser.addTabsProgressListener(gProgressListener);
         },

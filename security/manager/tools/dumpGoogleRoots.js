@@ -69,7 +69,7 @@ var rootNicknames = [];
 for (var root of roots) {
   rootNicknames.push(makeFormattedNickname(root));
 }
-rootNicknames.sort(function(rootA, rootB) {
+rootNicknames.sort(function (rootA, rootB) {
   let rootALowercase = rootA.toLowerCase().replace(/(^[^"]*")|"/g, "");
   let rootBLowercase = rootB.toLowerCase().replace(/(^[^"]*")|"/g, "");
   if (rootALowercase < rootBLowercase) {

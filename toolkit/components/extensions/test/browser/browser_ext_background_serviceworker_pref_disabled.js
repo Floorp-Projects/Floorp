@@ -55,7 +55,7 @@ add_task(async function test_serviceWorker_register_disallowed() {
   let extensionData = {
     files: {
       "page.html": "<!DOCTYPE html><script src='page.js'></script>",
-      "page.js": async function() {
+      "page.js": async function () {
         try {
           await navigator.serviceWorker.register("sw.js");
           browser.test.fail(

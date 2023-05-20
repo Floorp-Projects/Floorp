@@ -5,7 +5,7 @@
 
 // Check that the "inspect element" context menu item works for parent process
 // chrome pages.
-add_task(async function() {
+add_task(async function () {
   const tab = await addTab("about:debugging");
 
   const browser = tab.linkedBrowser;

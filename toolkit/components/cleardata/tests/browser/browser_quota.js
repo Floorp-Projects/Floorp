@@ -54,7 +54,7 @@ function getRelativeFile(relativePath) {
   let profileDir = getProfileDir();
 
   let file = profileDir.clone();
-  relativePath.split("/").forEach(function(component) {
+  relativePath.split("/").forEach(function (component) {
     file.append(component);
   });
 
@@ -113,7 +113,7 @@ async function runTest(sites, deleteDataFunc) {
   }
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.quotaManager.testing", true],

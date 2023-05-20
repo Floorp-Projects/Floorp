@@ -20,7 +20,7 @@ const DominatorTreeNode = require("resource://devtools/shared/heapsnapshot/Domin
 
 const handlers = Object.create(null);
 
-handlers[actions.SNAPSHOT_ERROR] = function(snapshots, { id, error }) {
+handlers[actions.SNAPSHOT_ERROR] = function (snapshots, { id, error }) {
   return snapshots.map(snapshot => {
     return snapshot.id === id
       ? immutableUpdate(snapshot, { state: states.ERROR, error })
@@ -28,11 +28,11 @@ handlers[actions.SNAPSHOT_ERROR] = function(snapshots, { id, error }) {
   });
 };
 
-handlers[actions.TAKE_SNAPSHOT_START] = function(snapshots, { snapshot }) {
+handlers[actions.TAKE_SNAPSHOT_START] = function (snapshots, { snapshot }) {
   return [...snapshots, snapshot];
 };
 
-handlers[actions.TAKE_SNAPSHOT_END] = function(snapshots, { id, path }) {
+handlers[actions.TAKE_SNAPSHOT_END] = function (snapshots, { id, path }) {
   return snapshots.map(snapshot => {
     return snapshot.id === id
       ? immutableUpdate(snapshot, { state: states.SAVED, path })
@@ -42,7 +42,7 @@ handlers[actions.TAKE_SNAPSHOT_END] = function(snapshots, { id, path }) {
 
 handlers[actions.IMPORT_SNAPSHOT_START] = handlers[actions.TAKE_SNAPSHOT_START];
 
-handlers[actions.READ_SNAPSHOT_START] = function(snapshots, { id }) {
+handlers[actions.READ_SNAPSHOT_START] = function (snapshots, { id }) {
   return snapshots.map(snapshot => {
     return snapshot.id === id
       ? immutableUpdate(snapshot, { state: states.READING })
@@ -50,7 +50,7 @@ handlers[actions.READ_SNAPSHOT_START] = function(snapshots, { id }) {
   });
 };
 
-handlers[actions.READ_SNAPSHOT_END] = function(
+handlers[actions.READ_SNAPSHOT_END] = function (
   snapshots,
   { id, creationTime }
 ) {
@@ -61,7 +61,7 @@ handlers[actions.READ_SNAPSHOT_END] = function(
   });
 };
 
-handlers[actions.TAKE_CENSUS_START] = function(
+handlers[actions.TAKE_CENSUS_START] = function (
   snapshots,
   { id, display, filter }
 ) {
@@ -79,7 +79,7 @@ handlers[actions.TAKE_CENSUS_START] = function(
   });
 };
 
-handlers[actions.TAKE_CENSUS_END] = function(
+handlers[actions.TAKE_CENSUS_END] = function (
   snapshots,
   { id, report, parentMap, display, filter }
 ) {
@@ -99,7 +99,7 @@ handlers[actions.TAKE_CENSUS_END] = function(
   });
 };
 
-handlers[actions.TAKE_CENSUS_ERROR] = function(snapshots, { id, error }) {
+handlers[actions.TAKE_CENSUS_ERROR] = function (snapshots, { id, error }) {
   assert(error, "actions with TAKE_CENSUS_ERROR should have an error");
 
   return snapshots.map(snapshot => {
@@ -116,7 +116,7 @@ handlers[actions.TAKE_CENSUS_ERROR] = function(snapshots, { id, error }) {
   });
 };
 
-handlers[actions.TAKE_TREE_MAP_START] = function(snapshots, { id, display }) {
+handlers[actions.TAKE_TREE_MAP_START] = function (snapshots, { id, display }) {
   const treeMap = {
     report: null,
     display,
@@ -130,7 +130,7 @@ handlers[actions.TAKE_TREE_MAP_START] = function(snapshots, { id, display }) {
   });
 };
 
-handlers[actions.TAKE_TREE_MAP_END] = function(snapshots, action) {
+handlers[actions.TAKE_TREE_MAP_END] = function (snapshots, action) {
   const { id, report, display } = action;
   const treeMap = {
     report,
@@ -145,7 +145,7 @@ handlers[actions.TAKE_TREE_MAP_END] = function(snapshots, action) {
   });
 };
 
-handlers[actions.TAKE_TREE_MAP_ERROR] = function(snapshots, { id, error }) {
+handlers[actions.TAKE_TREE_MAP_ERROR] = function (snapshots, { id, error }) {
   assert(error, "actions with TAKE_TREE_MAP_ERROR should have an error");
 
   return snapshots.map(snapshot => {
@@ -162,7 +162,7 @@ handlers[actions.TAKE_TREE_MAP_ERROR] = function(snapshots, { id, error }) {
   });
 };
 
-handlers[actions.EXPAND_CENSUS_NODE] = function(snapshots, { id, node }) {
+handlers[actions.EXPAND_CENSUS_NODE] = function (snapshots, { id, node }) {
   return snapshots.map(snapshot => {
     if (snapshot.id !== id) {
       return snapshot;
@@ -178,7 +178,7 @@ handlers[actions.EXPAND_CENSUS_NODE] = function(snapshots, { id, node }) {
   });
 };
 
-handlers[actions.COLLAPSE_CENSUS_NODE] = function(snapshots, { id, node }) {
+handlers[actions.COLLAPSE_CENSUS_NODE] = function (snapshots, { id, node }) {
   return snapshots.map(snapshot => {
     if (snapshot.id !== id) {
       return snapshot;
@@ -194,7 +194,7 @@ handlers[actions.COLLAPSE_CENSUS_NODE] = function(snapshots, { id, node }) {
   });
 };
 
-handlers[actions.FOCUS_CENSUS_NODE] = function(snapshots, { id, node }) {
+handlers[actions.FOCUS_CENSUS_NODE] = function (snapshots, { id, node }) {
   return snapshots.map(snapshot => {
     if (snapshot.id !== id) {
       return snapshot;
@@ -206,25 +206,25 @@ handlers[actions.FOCUS_CENSUS_NODE] = function(snapshots, { id, node }) {
   });
 };
 
-handlers[actions.SELECT_SNAPSHOT] = function(snapshots, { id }) {
+handlers[actions.SELECT_SNAPSHOT] = function (snapshots, { id }) {
   return snapshots.map(s => immutableUpdate(s, { selected: s.id === id }));
 };
 
-handlers[actions.DELETE_SNAPSHOTS_START] = function(snapshots, { ids }) {
+handlers[actions.DELETE_SNAPSHOTS_START] = function (snapshots, { ids }) {
   return snapshots.filter(s => !ids.includes(s.id));
 };
 
-handlers[actions.DELETE_SNAPSHOTS_END] = function(snapshots) {
+handlers[actions.DELETE_SNAPSHOTS_END] = function (snapshots) {
   return snapshots;
 };
 
-handlers[actions.CHANGE_VIEW] = function(snapshots, { newViewState }) {
+handlers[actions.CHANGE_VIEW] = function (snapshots, { newViewState }) {
   return newViewState === viewState.DIFFING
     ? snapshots.map(s => immutableUpdate(s, { selected: false }))
     : snapshots;
 };
 
-handlers[actions.POP_VIEW] = function(snapshots, { previousView }) {
+handlers[actions.POP_VIEW] = function (snapshots, { previousView }) {
   return snapshots.map(s =>
     immutableUpdate(s, {
       selected: s.id === previousView.selected,
@@ -232,7 +232,7 @@ handlers[actions.POP_VIEW] = function(snapshots, { previousView }) {
   );
 };
 
-handlers[actions.COMPUTE_DOMINATOR_TREE_START] = function(snapshots, { id }) {
+handlers[actions.COMPUTE_DOMINATOR_TREE_START] = function (snapshots, { id }) {
   const dominatorTree = Object.freeze({
     state: dominatorTreeState.COMPUTING,
     dominatorTreeId: undefined,
@@ -249,7 +249,7 @@ handlers[actions.COMPUTE_DOMINATOR_TREE_START] = function(snapshots, { id }) {
   });
 };
 
-handlers[actions.COMPUTE_DOMINATOR_TREE_END] = function(
+handlers[actions.COMPUTE_DOMINATOR_TREE_END] = function (
   snapshots,
   { id, dominatorTreeId }
 ) {
@@ -272,7 +272,7 @@ handlers[actions.COMPUTE_DOMINATOR_TREE_END] = function(
   });
 };
 
-handlers[actions.FETCH_DOMINATOR_TREE_START] = function(
+handlers[actions.FETCH_DOMINATOR_TREE_START] = function (
   snapshots,
   { id, display }
 ) {
@@ -298,7 +298,10 @@ handlers[actions.FETCH_DOMINATOR_TREE_START] = function(
   });
 };
 
-handlers[actions.FETCH_DOMINATOR_TREE_END] = function(snapshots, { id, root }) {
+handlers[actions.FETCH_DOMINATOR_TREE_END] = function (
+  snapshots,
+  { id, root }
+) {
   return snapshots.map(snapshot => {
     if (snapshot.id !== id) {
       return snapshot;
@@ -342,7 +345,7 @@ handlers[actions.FETCH_DOMINATOR_TREE_END] = function(snapshots, { id, root }) {
   });
 };
 
-handlers[actions.EXPAND_DOMINATOR_TREE_NODE] = function(
+handlers[actions.EXPAND_DOMINATOR_TREE_NODE] = function (
   snapshots,
   { id, node }
 ) {
@@ -363,7 +366,7 @@ handlers[actions.EXPAND_DOMINATOR_TREE_NODE] = function(
   });
 };
 
-handlers[actions.COLLAPSE_DOMINATOR_TREE_NODE] = function(
+handlers[actions.COLLAPSE_DOMINATOR_TREE_NODE] = function (
   snapshots,
   { id, node }
 ) {
@@ -384,7 +387,7 @@ handlers[actions.COLLAPSE_DOMINATOR_TREE_NODE] = function(
   });
 };
 
-handlers[actions.FOCUS_DOMINATOR_TREE_NODE] = function(
+handlers[actions.FOCUS_DOMINATOR_TREE_NODE] = function (
   snapshots,
   { id, node }
 ) {
@@ -401,7 +404,7 @@ handlers[actions.FOCUS_DOMINATOR_TREE_NODE] = function(
   });
 };
 
-handlers[actions.FETCH_IMMEDIATELY_DOMINATED_START] = function(
+handlers[actions.FETCH_IMMEDIATELY_DOMINATED_START] = function (
   snapshots,
   { id }
 ) {
@@ -432,7 +435,7 @@ handlers[actions.FETCH_IMMEDIATELY_DOMINATED_START] = function(
   });
 };
 
-handlers[actions.FETCH_IMMEDIATELY_DOMINATED_END] = function(
+handlers[actions.FETCH_IMMEDIATELY_DOMINATED_END] = function (
   snapshots,
   { id, path, nodes, moreChildrenAvailable }
 ) {
@@ -488,7 +491,7 @@ handlers[actions.FETCH_IMMEDIATELY_DOMINATED_END] = function(
   });
 };
 
-handlers[actions.DOMINATOR_TREE_ERROR] = function(snapshots, { id, error }) {
+handlers[actions.DOMINATOR_TREE_ERROR] = function (snapshots, { id, error }) {
   assert(error, "actions with DOMINATOR_TREE_ERROR should have an error");
 
   return snapshots.map(snapshot => {
@@ -505,7 +508,7 @@ handlers[actions.DOMINATOR_TREE_ERROR] = function(snapshots, { id, error }) {
   });
 };
 
-module.exports = function(snapshots = [], action) {
+module.exports = function (snapshots = [], action) {
   const handler = handlers[action.type];
   if (handler) {
     return handler(snapshots, action);

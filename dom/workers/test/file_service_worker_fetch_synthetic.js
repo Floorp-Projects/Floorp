@@ -1,4 +1,4 @@
-addEventListener("install", function(evt) {
+addEventListener("install", function (evt) {
   evt.waitUntil(self.skipWaiting());
 });
 

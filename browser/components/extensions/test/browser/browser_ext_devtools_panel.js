@@ -127,7 +127,7 @@ async function test_theme_name(testWithPanel = false) {
 
   // Ensure that the initial value of the devtools theme is "light".
   await SpecialPowers.pushPrefEnv({ set: [[DEVTOOLS_THEME_PREF, "light"]] });
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await SpecialPowers.popPrefEnv();
   });
 

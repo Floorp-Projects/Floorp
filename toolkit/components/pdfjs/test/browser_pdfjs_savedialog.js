@@ -22,7 +22,7 @@ function test() {
   );
 
   waitForExplicitFinish();
-  registerCleanupFunction(function() {
+  registerCleanupFunction(function () {
     Services.prefs.clearUserPref(
       "browser.download.always_ask_before_handling_new_types"
     );
@@ -38,7 +38,7 @@ function addWindowListener(aURL, aCallback) {
       Services.wm.removeListener(this);
 
       var domwindow = aXULWindow.docShell.domWindow;
-      waitForFocus(function() {
+      waitForFocus(function () {
         is(
           domwindow.document.location.href,
           aURL,

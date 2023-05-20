@@ -6,9 +6,9 @@ var httpserv;
 
 function TestListener() {}
 
-TestListener.prototype.onStartRequest = function(request) {};
+TestListener.prototype.onStartRequest = function (request) {};
 
-TestListener.prototype.onStopRequest = function(request, status) {
+TestListener.prototype.onStopRequest = function (request, status) {
   httpserv.stop(do_test_finished);
 };
 

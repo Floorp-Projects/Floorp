@@ -4,13 +4,13 @@
 async function waitForCondition(condition) {
   return new Promise(resolve => {
     var tries = 0;
-    var interval = setInterval(function() {
+    var interval = setInterval(function () {
       if (condition() || tries >= 60) {
         moveOn();
       }
       tries++;
     }, 100);
-    var moveOn = function() {
+    var moveOn = function () {
       clearInterval(interval);
       resolve();
     };

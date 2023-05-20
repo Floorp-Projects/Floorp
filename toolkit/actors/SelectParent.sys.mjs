@@ -145,7 +145,7 @@ export var SelectParentHelper = {
       }
 
       for (let property of SUPPORTED_SELECT_PROPERTIES) {
-        let shouldSkip = (function() {
+        let shouldSkip = (function () {
           if (property == "direction") {
             // Handled elsewhere.
             return true;
@@ -230,7 +230,7 @@ export var SelectParentHelper = {
 
       let inactiveRule = null;
       for (const property of SUPPORTED_OPTION_OPTGROUP_PROPERTIES) {
-        let shouldSkip = (function() {
+        let shouldSkip = (function () {
           if (property == "direction" || property == "font-size") {
             // Handled elsewhere.
             return true;

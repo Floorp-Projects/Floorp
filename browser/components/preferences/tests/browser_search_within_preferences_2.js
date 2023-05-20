@@ -6,7 +6,7 @@
 /**
  * Enabling searching functionality. Will display search bar from this testcase forward.
  */
-add_task(async function() {
+add_task(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.preferences.search", true]],
   });
@@ -17,7 +17,7 @@ add_task(async function() {
  * When we search "Remove Account",
  * it should not show the "Remove Account" button if the Firefox account is not logged in yet.
  */
-add_task(async function() {
+add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("paneSync", { leaveOpen: true });
 
   let weavePrefsDeck = gBrowser.contentDocument.getElementById(
@@ -93,7 +93,7 @@ add_task(async function() {
  * l10n id `language-and-appearance-header` and expects the element
  * to be matched on the first word from the l10n id value ("Language" in en-US).
  */
-add_task(async function() {
+add_task(async function () {
   let l10nId = "language-and-appearance-header";
 
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {

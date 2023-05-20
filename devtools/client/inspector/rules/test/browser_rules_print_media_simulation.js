@@ -9,7 +9,7 @@
 // Fission.
 const TEST_URI = URL_ROOT_COM_SSL + "doc_print_media_simulation.html";
 
-add_task(async function() {
+add_task(async function () {
   await addTab(TEST_URI);
   const { inspector, view } = await openRuleView();
 

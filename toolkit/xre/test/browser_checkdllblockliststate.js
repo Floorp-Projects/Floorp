@@ -3,7 +3,7 @@
 
 // Tests that the dll blocklist initializes correctly during test runs.
 add_task(async function test() {
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function(
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function (
     browser
   ) {
     ok(

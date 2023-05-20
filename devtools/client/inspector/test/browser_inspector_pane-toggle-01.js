@@ -6,7 +6,7 @@
 // Tests that the inspector panel has a 3 pane toggle button, and that
 // this button is visible both in BOTTOM and SIDE hosts.
 
-add_task(async function() {
+add_task(async function () {
   info("Switch to 2 pane inspector to test the 3 pane toggle button behavior");
   await pushPref("devtools.inspector.three-pane-enabled", false);
 

@@ -362,7 +362,7 @@ add_task(async function test_bug671378_scenario() {
   let promiseDone = new Promise(resolve => {
     // Wrap scheduleNextSync so we are notified when it is finished.
     scheduler._scheduleNextSync = scheduler.scheduleNextSync;
-    scheduler.scheduleNextSync = function() {
+    scheduler.scheduleNextSync = function () {
       scheduler._scheduleNextSync();
 
       // Check on sync:finish scheduleNextSync sets the appropriate
@@ -388,7 +388,7 @@ add_task(async function test_bug671378_scenario() {
   Svc.Obs.add("weave:service:sync:start", function onSyncStart() {
     // Wait for other sync:start observers to be called so that
     // nextSync is set to 0.
-    CommonUtils.nextTick(function() {
+    CommonUtils.nextTick(function () {
       Svc.Obs.remove("weave:service:sync:start", onSyncStart);
 
       scheduler.scheduleNextSync();

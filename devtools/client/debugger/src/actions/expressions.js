@@ -111,7 +111,7 @@ export function deleteExpression(expression) {
  * @static
  */
 export function evaluateExpressions(cx) {
-  return async function({ dispatch, getState, client }) {
+  return async function ({ dispatch, getState, client }) {
     const expressions = getExpressions(getState());
     const inputs = expressions.map(({ input }) => input);
     const frameId = getSelectedFrameId(getState(), cx.thread);
@@ -124,7 +124,7 @@ export function evaluateExpressions(cx) {
 }
 
 function evaluateExpression(cx, expression) {
-  return async function({ dispatch, getState, client }) {
+  return async function ({ dispatch, getState, client }) {
     if (!expression.input) {
       console.warn("Expressions should not be empty");
       return null;
@@ -167,7 +167,7 @@ function evaluateExpression(cx, expression) {
  * and replaces all posible generated names.
  */
 export function getMappedExpression(expression) {
-  return async function({ dispatch, getState, parserWorker }) {
+  return async function ({ dispatch, getState, parserWorker }) {
     const thread = getCurrentThread(getState());
     const mappings = getSelectedScopeMappings(getState(), thread);
     const bindings = getSelectedFrameBindings(getState(), thread);

@@ -8,7 +8,7 @@
 
 PromiseTestUtils.allowMatchingRejectionsGlobally(/Connection closed/);
 
-add_task(async function() {
+add_task(async function () {
   info("Run test with bfcacheInParent DISABLED");
   await pushPref("fission.bfcacheInParent", false);
   await testSourcesOnNavigation();

@@ -25,7 +25,7 @@ export var Pocket = {
     Pocket._titleToSave = null;
     // ViewShowing fires immediately before it creates the contents,
     // in lieu of an AfterViewShowing event, just spin the event loop.
-    window.setTimeout(function() {
+    window.setTimeout(function () {
       if (urlToSave) {
         window.pktUI.tryToSaveUrl(urlToSave, titleToSave);
       } else {

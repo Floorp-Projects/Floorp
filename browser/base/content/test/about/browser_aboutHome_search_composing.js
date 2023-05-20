@@ -4,7 +4,7 @@
 
 ignoreAllUncaughtExceptions();
 
-add_task(async function() {
+add_task(async function () {
   info("Clicking suggestion list while composing");
 
   await SpecialPowers.pushPrefEnv({
@@ -18,7 +18,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:home" },
-    async function(browser) {
+    async function (browser) {
       // Add a test engine that provides suggestions and switch to it.
       let engine;
       await promiseContentSearchChange(browser, async () => {
@@ -32,7 +32,7 @@ add_task(async function() {
       // Clear any search history results
       await FormHistory.update({ op: "remove" });
 
-      await SpecialPowers.spawn(browser, [], async function() {
+      await SpecialPowers.spawn(browser, [], async function () {
         // Start composition and type "x"
         let input = content.document.querySelector([
           "#searchText",
@@ -42,7 +42,7 @@ add_task(async function() {
       });
 
       info("Setting up the mutation observer before synthesizing composition");
-      let mutationPromise = SpecialPowers.spawn(browser, [], async function() {
+      let mutationPromise = SpecialPowers.spawn(browser, [], async function () {
         let searchController = content.wrappedJSObject.gContentSearchController;
 
         // Wait for the search suggestions to become visible.

@@ -21,7 +21,7 @@ const TEST_DATA = [
   { property: "padding-top", isUnchanged: true },
 ];
 
-add_task(async function() {
+add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([".longhand"]);
   const { panel } = await openAnimationInspector();

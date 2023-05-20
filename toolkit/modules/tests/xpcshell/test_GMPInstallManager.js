@@ -1032,7 +1032,7 @@ async function test_checkForAddons_installAddon(
     // Cleanup
     extractedFile.parent.remove(true);
     zipFile.remove(false);
-    httpServer.stop(function() {});
+    httpServer.stop(function () {});
     installManager.uninit();
   } catch (ex) {
     zipFile.remove(false);
@@ -1165,7 +1165,7 @@ add_test(function test_installAddon_noServer() {
  */
 
 add_task(async function test_GMPExtractor_paths() {
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     // Must stop holding on to the zip file using the JAR cache:
     let zipFile = new FileUtils.File(
       PathUtils.join(tempDir.path, "dummy_gmp.zip")

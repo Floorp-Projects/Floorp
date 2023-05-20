@@ -4,7 +4,7 @@
 "use strict";
 
 const httpServer = createTestHTTPServer();
-httpServer.registerPathHandler(`/`, function(request, response) {
+httpServer.registerPathHandler(`/`, function (request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.write(`
     <meta charset=utf8>
@@ -13,7 +13,7 @@ httpServer.registerPathHandler(`/`, function(request, response) {
     <script type="text/javascript" src="test.js"></script>`);
 });
 
-httpServer.registerPathHandler("/test.js", function(_, response) {
+httpServer.registerPathHandler("/test.js", function (_, response) {
   response.setHeader("Content-Type", "application/javascript");
   response.write(`
     window.myFunc = () => wrapper();
@@ -21,7 +21,7 @@ httpServer.registerPathHandler("/test.js", function(_, response) {
   `);
 });
 
-httpServer.registerPathHandler("/react.js", function(_, response) {
+httpServer.registerPathHandler("/react.js", function (_, response) {
   response.setHeader("Content-Type", "application/javascript");
   response.write(`
     window.render = function() {
@@ -36,7 +36,7 @@ const TEST_URI = `http://localhost:${httpServer.identity.primaryPort}/`;
 // Test the Copy menu item of the webconsole copies the expected clipboard text for
 // a message with a "framework" stacktrace (i.e. with grouped frames).
 
-add_task(async function() {
+add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Call the log function defined in the test page");

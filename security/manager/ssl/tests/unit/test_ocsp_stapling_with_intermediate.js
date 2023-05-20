@@ -11,7 +11,7 @@
 var gOCSPRequestCount = 0;
 
 function add_ocsp_test(aHost, aExpectedResult) {
-  add_connection_test(aHost, aExpectedResult, function() {
+  add_connection_test(aHost, aExpectedResult, function () {
     clearOCSPCache();
     clearSessionCache();
   });
@@ -22,7 +22,7 @@ function run_test() {
   Services.prefs.setBoolPref("security.ssl.enable_ocsp_stapling", true);
 
   let ocspResponder = new HttpServer();
-  ocspResponder.registerPrefixHandler("/", function(request, response) {
+  ocspResponder.registerPrefixHandler("/", function (request, response) {
     gOCSPRequestCount++;
     response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
     let body = "Refusing to return a response";
@@ -37,10 +37,10 @@ function run_test() {
     PRErrorCodeSuccess
   );
 
-  add_test(function() {
+  add_test(function () {
     ocspResponder.stop(run_next_test);
   });
-  add_test(function() {
+  add_test(function () {
     equal(gOCSPRequestCount, 0, "No OCSP requests should have been made");
     run_next_test();
   });

@@ -7,7 +7,7 @@
 // Tests whether the initial selected tab is displayed when switched from 3 pane to 2 pane
 // and back to 3 pane when no other tab is selected explicitly. Rule view is displayed
 // immediately on toggling to 2 pane.
-add_task(async function() {
+add_task(async function () {
   info(
     "Switch to 2 pane inspector and back to 3 pane to test whether the selected tab is used"
   );
@@ -43,7 +43,7 @@ add_task(async function() {
 });
 
 // Tests whether the selected pane in 2 pane view is also used after toggling to 3 pane view.
-add_task(async function() {
+add_task(async function () {
   info("Switch to 3 pane to test whether the selected pane is preserved");
   await pushPref("devtools.inspector.three-pane-enabled", false);
 
@@ -68,7 +68,7 @@ add_task(async function() {
 });
 
 // Tests whether the selected pane is layout view, if rule view is selected before toggling to 3 pane.
-add_task(async function() {
+add_task(async function () {
   info("Switch to 3 pane to test whether the selected pane is layout view");
   await pushPref("devtools.inspector.three-pane-enabled", false);
 

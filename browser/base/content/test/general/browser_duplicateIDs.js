@@ -1,6 +1,6 @@
 function test() {
   var ids = {};
-  Array.prototype.forEach.call(document.querySelectorAll("[id]"), function(
+  Array.prototype.forEach.call(document.querySelectorAll("[id]"), function (
     node
   ) {
     var id = node.id;

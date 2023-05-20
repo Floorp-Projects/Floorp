@@ -6,7 +6,7 @@ const { Service } = ChromeUtils.importESModule(
 );
 
 function login_handling(handler) {
-  return function(request, response) {
+  return function (request, response) {
     if (has_hawk_header(request)) {
       handler(request, response);
     } else {

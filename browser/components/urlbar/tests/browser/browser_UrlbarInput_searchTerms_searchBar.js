@@ -12,7 +12,7 @@ const { CustomizableUITestUtils } = ChromeUtils.importESModule(
 const gCUITestUtils = new CustomizableUITestUtils(window);
 const SEARCH_STRING = "example_string";
 
-add_setup(async function() {
+add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.widget.inNavBar", true],
@@ -29,7 +29,7 @@ add_setup(async function() {
     { setAsDefault: true }
   );
 
-  registerCleanupFunction(async function() {
+  registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
     gCUITestUtils.removeSearchBar();
   });

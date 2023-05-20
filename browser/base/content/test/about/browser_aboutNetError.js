@@ -56,7 +56,7 @@ add_task(async function resetToDefaultConfig() {
     TLS12_PAGE
   );
 
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),
@@ -109,7 +109,7 @@ add_task(async function checkLearnMoreLink() {
 
   const baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
 
-  await SpecialPowers.spawn(browser, [baseURL], function(_baseURL) {
+  await SpecialPowers.spawn(browser, [baseURL], function (_baseURL) {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),
@@ -174,7 +174,7 @@ add_task(async function checkDomainCorrection() {
 
   const baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
 
-  await SpecialPowers.spawn(browser, [baseURL], async function(_baseURL) {
+  await SpecialPowers.spawn(browser, [baseURL], async function (_baseURL) {
     const doc = content.document;
     ok(
       doc.documentURI.startsWith("about:neterror"),

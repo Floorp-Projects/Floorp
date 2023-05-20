@@ -534,7 +534,7 @@ function runTest(parentName, parent, data, ...interfaceGroups) {
   );
 }
 
-workerTestGetHelperData(function(data) {
+workerTestGetHelperData(function (data) {
   runTest("self", self, data, ecmaGlobals, interfaceNamesInGlobalScope);
   if (WebAssembly && !entryDisabled(wasmGlobalEntry, data)) {
     runTest("WebAssembly", WebAssembly, data, wasmGlobalInterfaces);

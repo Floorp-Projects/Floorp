@@ -22,7 +22,7 @@ let UCTObserver = {
           "load",
           function onLoad(event) {
             // Let the dialog initialize
-            SimpleTest.executeSoon(function() {
+            SimpleTest.executeSoon(function () {
               UCTObserver.opened.resolve(win);
             });
           },
@@ -59,7 +59,7 @@ add_task(async function test_unknownContentType_delayedbutton() {
       waitForLoad: false,
       waitForStateStop: true,
     },
-    async function() {
+    async function () {
       let uctWindow = await UCTObserver.opened.promise;
       let dialog = uctWindow.document.getElementById("unknownContentType");
       let ok = dialog.getButton("accept");

@@ -18,7 +18,7 @@ const LEARN_MORE_URI =
   "https://developer.mozilla.org/docs/Web/HTML/Quirks_Mode_and_Standards_Mode" +
   DOCS_GA_PARAMS;
 
-add_task(async function() {
+add_task(async function () {
   info("Navigate to page with quirky doctype");
   const hud = await openNewTabAndConsole(TEST_URI_QUIRKY_DOCTYPE);
 

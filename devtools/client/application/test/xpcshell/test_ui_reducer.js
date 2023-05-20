@@ -12,7 +12,7 @@ const {
   UiState,
 } = require("resource://devtools/client/application/src/reducers/ui-state.js");
 
-add_task(async function() {
+add_task(async function () {
   info("Test ui reducer: UPDATE_SELECTED_PAGE action");
   const state = UiState();
   const action = updateSelectedPage("foo");

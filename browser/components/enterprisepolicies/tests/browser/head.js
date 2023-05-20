@@ -104,7 +104,7 @@ async function check_homepage({
     tab.linkedBrowser,
     { expectedURL, expectedPageVal, locked },
     // eslint-disable-next-line no-shadow
-    async function({ expectedURL, expectedPageVal, locked }) {
+    async function ({ expectedURL, expectedPageVal, locked }) {
       if (expectedPageVal != -1) {
         // Only check restore checkbox for StartPage
         let browserRestoreSessionCheckbox = content.document.getElementById(
@@ -241,7 +241,7 @@ async function testPageBlockedByPolicy(page, policyJSON) {
     async browser => {
       BrowserTestUtils.loadURIString(browser, page);
       await BrowserTestUtils.browserLoaded(browser, false, page, true);
-      await SpecialPowers.spawn(browser, [page], async function(innerPage) {
+      await SpecialPowers.spawn(browser, [page], async function (innerPage) {
         ok(
           content.document.documentURI.startsWith(
             "about:neterror?e=blockedByPolicy"

@@ -91,7 +91,7 @@ WARNING! This test involves background update, but background tasks are
   await UpdateUtils.setAppUpdateAutoEnabled(true);
   await UpdateUtils.writeUpdateConfigSetting(BACKGROUND_UPDATE_PREF, true);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let backgroundUpdateCheckbox = content.document.getElementById(
       "backgroundUpdate"
     );
@@ -124,7 +124,7 @@ WARNING! This test involves background update, but background tasks are
     "Toggling the checkbox should have changed the setting value to false"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let backgroundUpdateCheckbox = content.document.getElementById(
       "backgroundUpdate"
     );
@@ -144,7 +144,7 @@ WARNING! This test involves background update, but background tasks are
     "Toggling the checkbox should have changed the setting value to true"
   );
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     is(
       content.document.getElementById("backgroundUpdate").checked,
       true,
@@ -155,7 +155,7 @@ WARNING! This test involves background update, but background tasks are
   // Test that the UI reacts to observed setting changes properly.
   await UpdateUtils.writeUpdateConfigSetting(BACKGROUND_UPDATE_PREF, false);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     is(
       content.document.getElementById("backgroundUpdate").checked,
       false,
@@ -165,7 +165,7 @@ WARNING! This test involves background update, but background tasks are
 
   await UpdateUtils.writeUpdateConfigSetting(BACKGROUND_UPDATE_PREF, true);
 
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     is(
       content.document.getElementById("backgroundUpdate").checked,
       true,

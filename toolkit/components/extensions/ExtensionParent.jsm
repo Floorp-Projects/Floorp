@@ -700,17 +700,17 @@ class ProxyContextParent extends BaseContext {
   }
 }
 
-defineLazyGetter(ProxyContextParent.prototype, "apiCan", function() {
+defineLazyGetter(ProxyContextParent.prototype, "apiCan", function () {
   let obj = {};
   let can = new CanOfAPIs(this, this.extension.apiManager, obj);
   return can;
 });
 
-defineLazyGetter(ProxyContextParent.prototype, "apiObj", function() {
+defineLazyGetter(ProxyContextParent.prototype, "apiObj", function () {
   return this.apiCan.root;
 });
 
-defineLazyGetter(ProxyContextParent.prototype, "sandbox", function() {
+defineLazyGetter(ProxyContextParent.prototype, "sandbox", function () {
   // NOTE: the required Blob and URL globals are used in the ext-registerContentScript.js
   // API module to convert JS and CSS data into blob URLs.
   return Cu.Sandbox(this.principal, {
@@ -2306,14 +2306,14 @@ ExtensionParent._resetStartupPromises();
 
 XPCOMUtils.defineLazyGetter(ExtensionParent, "PlatformInfo", () => {
   return Object.freeze({
-    os: (function() {
+    os: (function () {
       let os = AppConstants.platform;
       if (os == "macosx") {
         os = "mac";
       }
       return os;
     })(),
-    arch: (function() {
+    arch: (function () {
       let abi = Services.appinfo.XPCOMABI;
       let [arch] = abi.split("-");
       if (arch == "x86") {

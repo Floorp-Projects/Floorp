@@ -159,10 +159,7 @@ export class WebDriverSession {
     // to reconnect.
     this._connections = new Set();
 
-    this.id = Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1);
+    this.id = Services.uuid.generateUUID().toString().slice(1, -1);
 
     // Define the HTTP path to query this session via WebDriver BiDi
     this.path = `/session/${this.id}`;

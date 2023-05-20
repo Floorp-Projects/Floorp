@@ -1314,7 +1314,7 @@ function invokeInTab(fnc, ...args) {
 function clickElementInTab(selector) {
   info(`click element ${selector} in tab`);
 
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function(
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], function (
     _selector
   ) {
     const element = content.document.querySelector(_selector);

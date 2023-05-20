@@ -1436,7 +1436,7 @@ class VideoStreamHelper {
   }
 }
 
-(function() {
+(function () {
   var el = document.createElement("link");
   el.rel = "stylesheet";
   el.type = "text/css";

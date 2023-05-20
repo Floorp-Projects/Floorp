@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   // Even if modifier of a shortcut key same as modifier of content access key,
   // the shortcut key should be executed if (remote) content doesn't handle it.
   // This test uses existing shortcut key declaration on Linux and Windows.

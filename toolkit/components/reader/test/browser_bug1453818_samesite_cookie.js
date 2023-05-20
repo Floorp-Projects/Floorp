@@ -18,7 +18,7 @@ async function clickLink(browser) {
     browser,
     "DOMContentLoaded"
   );
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let link = content.document.getElementById("link");
     ok(link, "The link element was found.");
     link.click();
@@ -27,7 +27,7 @@ async function clickLink(browser) {
 }
 
 async function checkCookiePresent(browser) {
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let cookieSpan = content.document.getElementById("cookieSpan");
     ok(cookieSpan, "cookieSpan element should be in document");
     is(
@@ -40,7 +40,7 @@ async function checkCookiePresent(browser) {
 
 async function checkCookie(browser) {
   info("Check that the SameSite cookie was not sent.");
-  await SpecialPowers.spawn(browser, [], async function() {
+  await SpecialPowers.spawn(browser, [], async function () {
     let cookieSpan = content.document.getElementById("cookieSpan");
     ok(cookieSpan, "cookieSpan element should be in document");
     is(
@@ -65,7 +65,7 @@ async function runTest() {
   info("Check that the cookie has been correctly set.");
   await BrowserTestUtils.withNewTab(
     TEST_ORIGIN1 + "getCookies.sjs",
-    async function(browser) {
+    async function (browser) {
       await checkCookiePresent(browser);
     }
   );
@@ -105,7 +105,7 @@ async function runTest() {
   info("Open the cross-origin page again.");
   await BrowserTestUtils.withNewTab(
     TEST_ORIGIN2 + "linkToGetCookies.html",
-    async function(browser) {
+    async function (browser) {
       let pageShown = BrowserTestUtils.waitForContentEvent(
         browser,
         "AboutReaderContentReady"
@@ -123,10 +123,10 @@ async function runTest() {
   );
 }
 
-add_task(async function() {
+add_task(async function () {
   await runTest(true);
 });
 
-add_task(async function() {
+add_task(async function () {
   await runTest(false);
 });

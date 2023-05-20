@@ -8,7 +8,7 @@
  * when switching the remoteness of that browser.
  */
 add_task(async function test_remoteness_switch_listeners() {
-  await BrowserTestUtils.withNewTab("about:support", async function(browser) {
+  await BrowserTestUtils.withNewTab("about:support", async function (browser) {
     let wpl;
     let navigated = new Promise(resolve => {
       wpl = {

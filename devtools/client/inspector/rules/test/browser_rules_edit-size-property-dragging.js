@@ -32,7 +32,7 @@ const TEST_URI = `
 
 const DRAGGABLE_VALUE_CLASSNAME = "ruleview-propertyvalue-draggable";
 
-add_task(async function() {
+add_task(async function () {
   await pushPref("devtools.inspector.draggable_properties", true);
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));

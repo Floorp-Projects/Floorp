@@ -44,7 +44,7 @@ function withTestTabUntilStorageChange(aPageFile, aTaskFn) {
       gBrowser,
       url: "http://mochi.test:8888" + DIRECTORY_PATH + aPageFile,
     },
-    async function(browser) {
+    async function (browser) {
       Assert.ok(true, "loaded " + aPageFile);
       info("running test case task");
       await aTaskFn();
@@ -54,7 +54,7 @@ function withTestTabUntilStorageChange(aPageFile, aTaskFn) {
   );
 }
 
-add_setup(async function() {
+add_setup(async function () {
   await SimpleTest.promiseFocus(window);
 });
 
@@ -67,7 +67,7 @@ add_task(async function test_saveChromeHiddenAutoClose() {
   let url =
     "subtst_notifications_11.html?notifyu1|notifyp1|" +
     "menubar=no,toolbar=no,location=no|autoclose";
-  await withTestTabUntilStorageChange(url, async function() {
+  await withTestTabUntilStorageChange(url, async function () {
     info("waiting for popupshown");
     await notifShownPromise;
     // the popup closes and the doorhanger should appear in the opener
@@ -104,7 +104,7 @@ add_task(async function test_changeChromeHiddenAutoClose() {
   );
   let url =
     "subtst_notifications_11.html?notifyu1|pass2|menubar=no,toolbar=no,location=no|autoclose";
-  await withTestTabUntilStorageChange(url, async function() {
+  await withTestTabUntilStorageChange(url, async function () {
     info("waiting for popupshown");
     await notifShownPromise;
     let popup = await getCaptureDoorhangerThatMayOpen("password-change");
@@ -139,7 +139,7 @@ add_task(async function test_saveChromeVisibleSameWindow() {
     PopupNotifications.panel,
     "popupshown"
   );
-  await withTestTabUntilStorageChange(url, async function() {
+  await withTestTabUntilStorageChange(url, async function () {
     await notifShownPromise;
     let popup = await getCaptureDoorhangerThatMayOpen("password-save");
     Assert.ok(popup, "got notification popup");
@@ -171,7 +171,7 @@ add_task(async function test_changeChromeVisibleSameWindow() {
     PopupNotifications.panel,
     "popupshown"
   );
-  await withTestTabUntilStorageChange(url, async function() {
+  await withTestTabUntilStorageChange(url, async function () {
     await notifShownPromise;
     let popup = await getCaptureDoorhangerThatMayOpen("password-change");
     Assert.ok(popup, "got notification popup");

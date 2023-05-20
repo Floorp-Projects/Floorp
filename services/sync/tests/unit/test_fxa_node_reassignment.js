@@ -143,7 +143,7 @@ async function syncAndExpectNodeReassignment(
 
       // Make absolutely sure that any event listeners are done with their work
       // before we proceed.
-      waitForZeroTimer(function() {
+      waitForZeroTimer(function () {
         _("Second sync nextTick.");
         Assert.equal(
           numTokenRequests,

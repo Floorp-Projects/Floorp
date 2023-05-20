@@ -9,7 +9,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginCSVImport: "resource://gre/modules/LoginCSVImport.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
+XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function () {
   return new Localization([
     "branding/brand.ftl",
     "browser/migrationWizard.ftl",

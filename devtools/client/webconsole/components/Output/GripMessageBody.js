@@ -18,12 +18,12 @@ const {
 } = require("resource://devtools/client/webconsole/utils/object-inspector.js");
 const actions = require("resource://devtools/client/webconsole/actions/index.js");
 
-loader.lazyGetter(this, "objectInspector", function() {
+loader.lazyGetter(this, "objectInspector", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .objectInspector;
 });
 
-loader.lazyGetter(this, "MODE", function() {
+loader.lazyGetter(this, "MODE", function () {
   return require("resource://devtools/client/shared/components/reps/index.js")
     .MODE;
 });

@@ -11,7 +11,7 @@ const TEST_FILE = "test-network-request.html";
 const TEST_PATH =
   "https://example.com/browser/devtools/client/webconsole/test/browser/";
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
       resolve()

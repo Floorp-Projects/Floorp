@@ -16,17 +16,17 @@ let cps = Cc["@mozilla.org/content-pref/service;1"].getService(
 function makeCallback(resolve, callbacks, success = null) {
   callbacks = callbacks || {};
   if (!callbacks.handleError) {
-    callbacks.handleError = function(error) {
+    callbacks.handleError = function (error) {
       do_throw("handleError call was not expected, error: " + error);
     };
   }
   if (!callbacks.handleResult) {
-    callbacks.handleResult = function() {
+    callbacks.handleResult = function () {
       do_throw("handleResult call was not expected");
     };
   }
   if (!callbacks.handleCompletion) {
-    callbacks.handleCompletion = function(reason) {
+    callbacks.handleCompletion = function (reason) {
       equal(reason, Ci.nsIContentPrefCallback2.COMPLETE_OK);
       if (success) {
         success();
@@ -141,7 +141,7 @@ async function getSubdomainsOK(args, expectedGroupValPairs) {
   if (args.length == 2) {
     args.push(undefined);
   }
-  let expectedPrefs = expectedGroupValPairs.map(function([group, val]) {
+  let expectedPrefs = expectedGroupValPairs.map(function ([group, val]) {
     return { domain: group, name: args[1], value: val };
   });
   await getOKEx("getBySubdomainAndName", args, expectedPrefs);
@@ -168,7 +168,7 @@ async function getOKEx(methodName, args, expectedPrefs, strict, context) {
     );
     cps[methodName].apply(cps, args);
   });
-  arraysOfArraysOK([actualPrefs], [expectedPrefs], function(actual, expected) {
+  arraysOfArraysOK([actualPrefs], [expectedPrefs], function (actual, expected) {
     prefOK(actual, expected, strict);
   });
 }
@@ -198,10 +198,10 @@ function getCachedSubdomainsOK(args, expectedGroupValPairs) {
     args.push(undefined);
   }
   let actualPrefs = cps.getCachedBySubdomainAndName.apply(cps, args);
-  actualPrefs = actualPrefs.sort(function(a, b) {
+  actualPrefs = actualPrefs.sort(function (a, b) {
     return a.domain.localeCompare(b.domain);
   });
-  let expectedPrefs = expectedGroupValPairs.map(function([group, val]) {
+  let expectedPrefs = expectedGroupValPairs.map(function ([group, val]) {
     return { domain: group, name: args[1], value: val };
   });
   arraysOfArraysOK([actualPrefs], [expectedPrefs], prefOK);
@@ -239,7 +239,7 @@ function arraysOK(actual, expected, cmp) {
         JSON.stringify(expected)
     );
   } else {
-    actual.forEach(function(actualElt, j) {
+    actual.forEach(function (actualElt, j) {
       let expectedElt = expected[j];
       cmp(actualElt, expectedElt);
     });
@@ -248,7 +248,7 @@ function arraysOK(actual, expected, cmp) {
 
 function arraysOfArraysOK(actual, expected, cmp) {
   cmp = cmp || equal;
-  arraysOK(actual, expected, function(act, exp) {
+  arraysOK(actual, expected, function (act, exp) {
     arraysOK(act, exp, cmp);
   });
 }
@@ -313,17 +313,17 @@ function onEx(event, names, dontRemove) {
   let deferred = null;
   let triggered = false;
 
-  names.forEach(function(name) {
+  names.forEach(function (name) {
     let obs = {};
-    ["onContentPrefSet", "onContentPrefRemoved"].forEach(function(meth) {
+    ["onContentPrefSet", "onContentPrefRemoved"].forEach(function (meth) {
       obs[meth] = () => do_throw(meth + " should not be called for " + name);
     });
-    obs["onContentPref" + event] = function() {
+    obs["onContentPref" + event] = function () {
       args[name].push(Array.from(arguments));
 
       if (!triggered) {
         triggered = true;
-        executeSoon(function() {
+        executeSoon(function () {
           if (!dontRemove) {
             names.forEach(n => cps.removeObserverForName(n, observers[n]));
           }

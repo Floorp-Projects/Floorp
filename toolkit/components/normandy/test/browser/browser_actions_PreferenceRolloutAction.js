@@ -567,7 +567,7 @@ decorate_task(
 decorate_task(
   PreferenceRollouts.withTestMock(),
   withSendEventSpy(),
-  async function({ sendEventSpy }) {
+  async function ({ sendEventSpy }) {
     const recipe = {
       id: 1,
       arguments: {

@@ -8,7 +8,7 @@
  *  Test enabled commands in the left pane folder of the Library.
  */
 
-registerCleanupFunction(async function() {
+registerCleanupFunction(async function () {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
 });

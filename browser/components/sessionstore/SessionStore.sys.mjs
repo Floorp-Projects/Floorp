@@ -700,7 +700,7 @@ var SessionStoreInternal = {
   _closedObjectsChanged: false,
 
   // A promise resolved once initialization is complete
-  _deferredInitialized: (function() {
+  _deferredInitialized: (function () {
     let deferred = {};
 
     deferred.promise = new Promise((resolve, reject) => {
@@ -715,7 +715,7 @@ var SessionStoreInternal = {
   _sessionInitialized: false,
 
   // A promise resolved once all windows are restored.
-  _deferredAllWindowsRestored: (function() {
+  _deferredAllWindowsRestored: (function () {
     let deferred = {};
 
     deferred.promise = new Promise((resolve, reject) => {
@@ -804,7 +804,7 @@ var SessionStoreInternal = {
     }
 
     TelemetryTimestamps.add("sessionRestoreInitialized");
-    OBSERVING.forEach(function(aTopic) {
+    OBSERVING.forEach(function (aTopic) {
       Services.obs.addObserver(this, aTopic, true);
     }, this);
 
@@ -922,7 +922,7 @@ var SessionStoreInternal = {
 
           // clear any lastSessionWindowID attributes since those don't matter
           // during normal restore
-          state.windows.forEach(function(aWindow) {
+          state.windows.forEach(function (aWindow) {
             delete aWindow.__lastSessionWindowID;
           });
         }
@@ -1637,7 +1637,7 @@ var SessionStoreInternal = {
       this.onTabBrowserInserted(aWindow, tabbrowser.tabs[i]);
     }
     // notification of tab add/remove/selection/show/hide
-    TAB_EVENTS.forEach(function(aEvent) {
+    TAB_EVENTS.forEach(function (aEvent) {
       tabbrowser.tabContainer.addEventListener(aEvent, this, true);
     }, this);
 
@@ -1938,7 +1938,7 @@ var SessionStoreInternal = {
 
     let browsers = Array.from(tabbrowser.browsers);
 
-    TAB_EVENTS.forEach(function(aEvent) {
+    TAB_EVENTS.forEach(function (aEvent) {
       tabbrowser.tabContainer.removeEventListener(aEvent, this, true);
     }, this);
 
@@ -4028,7 +4028,7 @@ var SessionStoreInternal = {
   _updateWindowFeatures: function ssi_updateWindowFeatures(aWindow) {
     var winData = this._windows[aWindow.__SSi];
 
-    WINDOW_ATTRIBUTES.forEach(function(aAttr) {
+    WINDOW_ATTRIBUTES.forEach(function (aAttr) {
       winData[aAttr] = this._getWindowDimension(aWindow, aAttr);
     }, this);
 
@@ -4036,7 +4036,7 @@ var SessionStoreInternal = {
       winData.sizemodeBeforeMinimized = winData.sizemode;
     }
 
-    var hidden = WINDOW_HIDEABLE_FEATURES.filter(function(aItem) {
+    var hidden = WINDOW_HIDEABLE_FEATURES.filter(function (aItem) {
       return aWindow[aItem] && !aWindow[aItem].visible;
     });
     if (hidden.length) {
@@ -5055,7 +5055,7 @@ var SessionStoreInternal = {
    */
   restoreWindowFeatures: function ssi_restoreWindowFeatures(aWindow, aWinData) {
     var hidden = aWinData.hidden ? aWinData.hidden.split(",") : [];
-    WINDOW_HIDEABLE_FEATURES.forEach(function(aItem) {
+    WINDOW_HIDEABLE_FEATURES.forEach(function (aItem) {
       aWindow[aItem].visible = !hidden.includes(aItem);
     });
 
@@ -5767,7 +5767,7 @@ var SessionStoreInternal = {
       // We want to build the rest of this new window object if we have pinnedTabs.
       if (pinnedWindowState.tabs.length) {
         // First get the other attributes off the window
-        WINDOW_ATTRIBUTES.forEach(function(attr) {
+        WINDOW_ATTRIBUTES.forEach(function (attr) {
           if (attr in window) {
             pinnedWindowState[attr] = window[attr];
             delete window[attr];
@@ -6117,7 +6117,7 @@ var SessionStoreInternal = {
     let beats = Math.ceil(delay / DELAY_BEAT);
     let deferred = lazy.PromiseUtils.defer();
     timer.initWithCallback(
-      function() {
+      function () {
         if (beats <= 0) {
           deferred.resolve();
         }

@@ -5,7 +5,7 @@ const PAGE_1 =
 const PAGE_2 =
   "data:text/html,<html><body>Another%20regular,%20everyday,%20normal%20page.";
 
-add_task(async function() {
+add_task(async function () {
   // Load an empty, non-remote tab at about:blank...
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
     forceNotRemote: true,
@@ -32,7 +32,7 @@ add_task(async function() {
     "Should have PAGE_2 as the browser currentURI"
   );
 
-  await SpecialPowers.spawn(browser, [PAGE_2], async function(expectedURL) {
+  await SpecialPowers.spawn(browser, [PAGE_2], async function (expectedURL) {
     docShell.QueryInterface(Ci.nsIWebNavigation);
     Assert.equal(
       docShell.currentURI.spec,

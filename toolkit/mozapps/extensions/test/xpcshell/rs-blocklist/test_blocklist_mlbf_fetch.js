@@ -175,7 +175,7 @@ add_task(async function handle_database_corruption() {
 
   let fetchCount = 0;
   const originalFetchMLBF = ExtensionBlocklistMLBF._fetchMLBF;
-  ExtensionBlocklistMLBF._fetchMLBF = function() {
+  ExtensionBlocklistMLBF._fetchMLBF = function () {
     ++fetchCount;
     return originalFetchMLBF.apply(this, arguments);
   };

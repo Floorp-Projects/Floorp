@@ -54,7 +54,7 @@ global.getTargetTabIdForToolbox = toolbox => {
 
 // Get the WebExtensionInspectedWindowActor eval options (needed to provide the $0 and inspect
 // binding provided to the evaluated js code).
-global.getToolboxEvalOptions = async function(context) {
+global.getToolboxEvalOptions = async function (context) {
   const options = {};
   const toolbox = context.devToolsToolbox;
   const selectedNode = toolbox.selection;

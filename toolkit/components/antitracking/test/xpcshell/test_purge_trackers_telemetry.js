@@ -46,7 +46,7 @@ add_task(async function setup() {
 /**
  * Test telemetry for cookie purging.
  */
-add_task(async function() {
+add_task(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
 
   let FIVE_DAYS = 5 * 24 * 60 * 60 * 1000;
@@ -147,7 +147,7 @@ add_task(async function() {
 /**
  * Test counting correctly across cookies batches
  */
-add_task(async function() {
+add_task(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
 
   // Enforce deleting the same origin twice by adding two cookies and setting

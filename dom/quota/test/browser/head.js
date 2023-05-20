@@ -22,7 +22,7 @@ function registerPopupEventHandler(eventName, callback, win) {
   if (!win) {
     win = window;
   }
-  gActiveListeners[eventName] = function(event) {
+  gActiveListeners[eventName] = function (event) {
     if (event.target != win.PopupNotifications.panel) {
       return;
     }
@@ -85,7 +85,7 @@ async function triggerSecondaryCommand(popup, remember = false, win = window) {
 
 function dismissNotification(popup, win = window) {
   info("dismissing notification");
-  executeSoon(function() {
+  executeSoon(function () {
     EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
   });
 }
@@ -93,8 +93,8 @@ function dismissNotification(popup, win = window) {
 function waitForMessage(aMessage, browser) {
   // We cannot capture aMessage inside the checkFn, so we override the
   // checkFn.toSource to tunnel aMessage instead.
-  let checkFn = function() {};
-  checkFn.toSource = function() {
+  let checkFn = function () {};
+  checkFn.toSource = function () {
     return `function checkFn(event) {
       let message = ${aMessage.toSource()};
       if (event.data == message) {

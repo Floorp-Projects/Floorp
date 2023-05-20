@@ -5,7 +5,7 @@
 // Test the HeapAnalyses{Client,Worker} "computeDominatorTree" request with bad
 // file paths.
 
-add_task(async function() {
+add_task(async function () {
   const client = new HeapAnalysesClient();
 
   let threw = false;

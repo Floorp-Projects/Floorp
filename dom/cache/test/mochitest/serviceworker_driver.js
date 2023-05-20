@@ -2,7 +2,7 @@
 // http://creativecommons.org/publicdomain/zero/1.0/
 
 function serviceWorkerTestExec(testFile) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     function setupSW(registration) {
       var worker =
         registration.installing || registration.waiting || registration.active;
@@ -15,10 +15,7 @@ function serviceWorkerTestExec(testFile) {
         if (event.data.type == "finish") {
           window.removeEventListener("message", onMessage);
           iframe.remove();
-          registration
-            .unregister()
-            .then(resolve)
-            .catch(reject);
+          registration.unregister().then(resolve).catch(reject);
         } else if (event.data.type == "status") {
           ok(event.data.status, event.data.context + ": " + event.data.msg);
         }
@@ -28,7 +25,7 @@ function serviceWorkerTestExec(testFile) {
 
       iframe = document.createElement("iframe");
       iframe.src = "message_receiver.html";
-      iframe.onload = function() {
+      iframe.onload = function () {
         worker.postMessage({ script: testFile });
       };
       document.body.appendChild(iframe);

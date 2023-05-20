@@ -10,7 +10,7 @@ function wasInitialDocumentObserver(subject) {
   subject._test_wasInitialDocument = subject.isInitialDocument;
 }
 Services.obs.addObserver(wasInitialDocumentObserver, "window-global-created");
-SimpleTest.registerCleanupFunction(function() {
+SimpleTest.registerCleanupFunction(function () {
   Services.obs.removeObserver(
     wasInitialDocumentObserver,
     "window-global-created"

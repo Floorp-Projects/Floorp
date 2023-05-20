@@ -23,7 +23,7 @@ async function check_video_decoding_state(args) {
   return new Promise(resolve => {
     video.addEventListener(
       event,
-      function() {
+      function () {
         ok(true, `Video decoding is ${state}.`);
         resolve();
       },

@@ -7,7 +7,7 @@
  * @static
  */
 export function openLink(url) {
-  return async function({ panel }) {
+  return async function ({ panel }) {
     return panel.openLink(url);
   };
 }

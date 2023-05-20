@@ -1,4 +1,4 @@
-add_task(async function() {
+add_task(async function () {
   var win = openDialog(
     AppConstants.BROWSER_CHROME_URL,
     "_blank",
@@ -28,7 +28,7 @@ add_task(async function() {
   await BrowserTestUtils.domWindowClosed(win);
 });
 
-add_task(async function() {
+add_task(async function () {
   var win = openDialog(
     AppConstants.BROWSER_CHROME_URL,
     "_blank",

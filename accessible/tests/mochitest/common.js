@@ -166,7 +166,7 @@ function dumpTree(aId, aMsg) {
  */
 function addA11yLoadEvent(aFunc, aWindow) {
   function waitForDocLoad() {
-    window.setTimeout(function() {
+    window.setTimeout(function () {
       var targetDocument = aWindow ? aWindow.document : document;
       var accDoc = getAccessible(targetDocument);
       var state = {};

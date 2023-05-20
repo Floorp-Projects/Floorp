@@ -40,7 +40,7 @@ const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>console API c
 // Test can be a bit long
 requestLongerTimeout(2);
 
-add_task(async function() {
+add_task(async function () {
   // Show the content messages
   await pushPref("devtools.browsertoolbox.scope", "everything");
   // Show context selector

@@ -19,12 +19,12 @@ add_task(async () => {
       background() {
         const open = indexedDB.open("TestDatabase", 1);
 
-        open.onupgradeneeded = function() {
+        open.onupgradeneeded = function () {
           const db = open.result;
           db.createObjectStore("TestStore", { keyPath: "id" });
         };
 
-        open.onsuccess = function() {
+        open.onsuccess = function () {
           const db = open.result;
           const tx = db.transaction("TestStore", "readwrite");
           const store = tx.objectStore("TestStore");

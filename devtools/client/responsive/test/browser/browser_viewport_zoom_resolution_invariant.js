@@ -46,7 +46,7 @@ for (const { content, res_target } of TESTS) {
     `<body><div style="width:100%;background-color:green">${content}</div>` +
     `</body></html>`;
 
-  addRDMTask(TEST_URL, async function({ ui, manager, browser }) {
+  addRDMTask(TEST_URL, async function ({ ui, manager, browser }) {
     await setViewportSize(ui, manager, WIDTH, HEIGHT);
     await setTouchAndMetaViewportSupport(ui, true);
 

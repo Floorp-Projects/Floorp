@@ -4,7 +4,7 @@
  * Tests that cookies are stored and restored correctly
  * by sessionstore (bug 423132).
  */
-add_task(async function() {
+add_task(async function () {
   const testURL =
     "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser_423132_sample.html";

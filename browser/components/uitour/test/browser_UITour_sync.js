@@ -8,14 +8,14 @@ const MOCK_FLOW_ID =
 const MOCK_FLOW_BEGIN_TIME = 1590780440325;
 const MOCK_DEVICE_ID = "7e450f3337d3479b8582ea1c9bb5ba6c";
 
-registerCleanupFunction(function() {
+registerCleanupFunction(function () {
   Services.prefs.clearUserPref("identity.fxaccounts.remote.root");
   Services.prefs.clearUserPref("services.sync.username");
 });
 
 add_task(setup_UITourTest);
 
-add_setup(async function() {
+add_setup(async function () {
   Services.prefs.setCharPref(
     "identity.fxaccounts.remote.root",
     "https://example.com"

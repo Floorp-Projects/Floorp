@@ -108,7 +108,7 @@ async function encrypt_decrypt_test() {
   }
 }
 
-add_task(async function() {
+add_task(async function () {
   let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
     Ci.nsIOSKeyStore
   );
@@ -191,7 +191,7 @@ add_task(async function() {
 
 // Test that if we kick off a background operation and then call a synchronous function on the
 // keystore, we don't deadlock.
-add_task(async function() {
+add_task(async function () {
   await delete_all_secrets();
 
   let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
@@ -216,7 +216,7 @@ add_task(async function() {
 });
 
 // Test that using a recovery phrase works.
-add_task(async function() {
+add_task(async function () {
   await delete_all_secrets();
 
   let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
@@ -252,7 +252,7 @@ add_task(async function() {
 });
 
 // Test that trying to use a non-base64 recovery phrase fails.
-add_task(async function() {
+add_task(async function () {
   await delete_all_secrets();
 
   let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
@@ -278,7 +278,7 @@ add_task(async function() {
 });
 
 // Test that re-using a label overwrites any previously-stored secret.
-add_task(async function() {
+add_task(async function () {
   await delete_all_secrets();
 
   let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
@@ -317,7 +317,7 @@ add_task(async function() {
 
 // Test that re-using a label (this time using a recovery phrase) overwrites any previously-stored
 // secret.
-add_task(async function() {
+add_task(async function () {
   await delete_all_secrets();
 
   let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(
@@ -354,7 +354,7 @@ add_task(async function() {
 });
 
 // Test that trying to use recovery phrases that are the wrong size fails.
-add_task(async function() {
+add_task(async function () {
   await delete_all_secrets();
 
   let keystore = Cc["@mozilla.org/security/oskeystore;1"].getService(

@@ -180,7 +180,7 @@ class MigrationUtils {
    *   the wrapped function.
    */
   wrapMigrateFunction(aFunction, aCallback) {
-    return function() {
+    return function () {
       let success = false;
       try {
         aFunction.apply(null, arguments);

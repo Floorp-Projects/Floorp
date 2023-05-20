@@ -2,7 +2,7 @@
 
 const URL = MAIN_DOMAIN + "inspector-shadow.html";
 
-add_task(async function() {
+add_task(async function () {
   info("Test that a shadow host has a shadow root");
   const { walker } = await initInspectorFront(URL);
 
@@ -17,7 +17,7 @@ add_task(async function() {
   is(children.nodes.length, 1, "#empty has no other children");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that a shadow host has its children too");
   const { walker } = await initInspectorFront(URL);
 
@@ -33,7 +33,7 @@ add_task(async function() {
   is(children.nodes[1].displayName, "h1", "Second child is <h1>");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that shadow-root has its children");
   const { walker } = await initInspectorFront(URL);
 
@@ -53,7 +53,7 @@ add_task(async function() {
   is(shadowChildren.nodes[1].displayName, "p", "Second child is <p>");
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that shadow root has its children and slotted nodes");
   const { walker } = await initInspectorFront(URL);
 
@@ -92,7 +92,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test pseudoelements in shadow host");
   const { walker } = await initInspectorFront(URL);
 
@@ -110,7 +110,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test pseudoelements in slotted nodes");
   const { walker } = await initInspectorFront(URL);
 
@@ -130,7 +130,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test open/closed modes in shadow roots");
   const { walker } = await initInspectorFront(URL);
 
@@ -151,7 +151,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test that slotted inline text nodes appear in the Shadow DOM tree");
   const { walker } = await initInspectorFront(URL);
 
@@ -180,7 +180,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test UA widgets when showAllAnonymousContent is true");
   await SpecialPowers.pushPrefEnv({
     set: [["devtools.inspector.showAllAnonymousContent", true]],
@@ -206,7 +206,7 @@ add_task(async function() {
   );
 });
 
-add_task(async function() {
+add_task(async function () {
   info("Test UA widgets when showAllAnonymousContent is false");
   await SpecialPowers.pushPrefEnv({
     set: [["devtools.inspector.showAllAnonymousContent", false]],

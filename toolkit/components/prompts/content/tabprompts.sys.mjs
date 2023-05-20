@@ -12,9 +12,7 @@ export var TabModalPrompt = class {
     ));
     win.MozXULElement.insertFTLIfNeeded("toolkit/global/tabprompts.ftl");
     newPrompt.setAttribute("role", "dialog");
-    let randomIdSuffix = Math.random()
-      .toString(32)
-      .substring(2);
+    let randomIdSuffix = Math.random().toString(32).substring(2);
     newPrompt.setAttribute("aria-describedby", `infoBody-${randomIdSuffix}`);
     newPrompt.appendChild(
       win.MozXULElement.parseXULToFragment(

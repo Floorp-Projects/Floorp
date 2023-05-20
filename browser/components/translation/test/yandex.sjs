@@ -66,7 +66,7 @@ function parseQuery(query) {
     params = {},
     pl = /\+/g,
     search = /([^&=]+)=?([^&]*)/g,
-    decode = function(s) {
+    decode = function (s) {
       return decodeURIComponent(s.replace(pl, " "));
     };
 
