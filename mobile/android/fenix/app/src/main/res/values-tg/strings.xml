@@ -127,6 +127,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Варақаи хусусии нав</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Дастрасии зуд ба ниҳонвожаҳо</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Бозгашт ба</string>
@@ -1368,7 +1371,9 @@
     <string name="delete_history_prompt_title">Фосилаи вақте, ки нест карда мешавад</string>
 
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Таърих (аз он ҷумла, таърихи ҳамоҳангшуда аз дастгоҳҳои дигар), кукиҳо ва иттилооти тамошокунии дигарро тоза мекунад.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Таърих (аз он ҷумла, таърихи ҳамоҳангшуда аз дастгоҳҳои дигар), кукиҳо ва иттилооти тамошокунии дигарро тоза мекунад.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Таърихро тоза мекунад (аз он ҷумла таърихи ҳамоҳангшуда бо дастгоҳҳои дигар)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Як соати охир</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

@@ -43,8 +43,13 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Chaya\' pa umajib\'al q\'axwach</string>
 
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Chaya’ pa ramb’al b’e</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Chawelesaj pa ramb’al b’e</string>
+
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Jas k\'ak\'</string>
+    <string name="menu_whats_new">Jas Kxajtajik</string>
     <string name="menu_settings">Taq wiqitajem</string>
     <string name="menu_about">Chi rij</string>
     <string name="menu_help">Tob\'anem</string>
@@ -56,6 +61,15 @@
          blocking of trackers for the current browsing session - for example if the current website
          doesn't work correctly with blocked content. -->
     <string name="menu_trackers_blocked_title">Q\'atetal taq tzukub\'al</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">We kchupisax wa’ wene kusuk’umaj jujun taq uk’axk’olil</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Uq‘atexik upam chak</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Chachupu’ chech usuk’maxik jujun taq uk’olib’al web’</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
@@ -98,6 +112,23 @@
          of 25 characters.
          %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="shortcut_erase_and_open_long_label">Chachupu´ k´ate k´u ri´ chatzija´ %1$s</string>
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Chatzukuj pa Focus</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Chatzukuj pa Klar</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Chatzukuj pa Focus Beta</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Chatzukuj pa Focus Nightly</string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Echeb\'alil chi\'l chajinem</string>

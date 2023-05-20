@@ -979,15 +979,37 @@
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title2">U atinb’ale’ vaa’ ye’ la uch ib’en tu HTTPS</string>
 
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s nisa’ tok ti’ u HTTPS as la chit ilaxi asoj la uchi aq’al uva’ b’a’n tatine’
+ <a href="%2$s">La ootzi ka’te</a> <br/><br/>
+ Jalpu u vaa’ uve’ ni b’anax kat tuche’ > Eetz kuxhtu’ &amp; Kach’ub’al tetz > Kach’ub’al tetz.]]></string>
+
     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Ye’xh kam b’a’n koj taq’onve’</string>
 
-     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+ Kamal tu b’anb’al tuche’ ni yanik kat tzan moj umaj uxhchil q’a ni sa’on tok tzitza’.<br/><br/>
+ Asoj b’a’nik kuxh tatin u vaa’ b’axa, u vaa’ neel cheel tuk kuxh paloje’.
+ ]]></string>
+
+     <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon2">B’a’ne’! Aq’al uva’ ye’l axh li ch’itpi’li axh u vaa’. Laa ku’ u tal texhlale’ aq’al la eele’ ab’iste unq’a vee’ ni kumaj ivatz.</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">La juplu uma’l kam uva’ ni kuxh ichee’</string>
 
     <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">Il axh b’anel ooche’!</string>
+
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">U b’anb’al tuche’ vaa’ uve’ at kan chitu’, ni taq’ uma’l tiib’al tatine’. Oora kuxh la b’an tuche’ aq’al uva’ la iloch axh.</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon2">Laa tzitz’ aq’al uva’ la sojsa kaajayil — unq’a vee’ chukel, cookies as tuk’ ka’t unq’a vee’ — as xe’ten tu uma’t ak’ ilb’al.</string>
 
     <!-- Promote SearchWidget Dialog -->
 

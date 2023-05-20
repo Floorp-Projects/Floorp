@@ -130,6 +130,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">ਨਵੀਂ ਨਿੱਜੀ ਟੈਬ</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">ਪਾਸਵਰਡ ਸ਼ਾਰਟਕੱਟ</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">ਵਾਪਸ ਜਾਓ</string>
@@ -1380,7 +1383,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">ਹਟਾਉਣ ਲਈ ਸਮਾਂ ਹੱਦ</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">ਅਤੀਤ (ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਸਿੰਕ ਕੀਤੇ ਅਤੀਤ ਦੇ ਸਮੇਤ), ਕੂਕੀਜ਼ ਤੇ ਹੋਰ ਬਰਾਊਜ਼ਰ ਡਾਟੇ ਨੂੰ ਮਿਟਾਓ।</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">ਅਤੀਤ (ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਸਿੰਕ ਕੀਤੇ ਅਤੀਤ ਦੇ ਸਮੇਤ), ਕੂਕੀਜ਼ ਤੇ ਹੋਰ ਬਰਾਊਜ਼ਰ ਡਾਟੇ ਨੂੰ ਮਿਟਾਓ।</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">ਅਤੀਤ ਵਿੱਚੋਂ ਹਟਾਓ (ਹੋਰ ਡਿਵਾਈਸ ਤੋਂ ਸਿੰਕ ਕੀਤੇ ਅਤੀਤ ਦੇ ਸਮੇਤ)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">ਆਖਰੀ ਘੰਟਾ</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
