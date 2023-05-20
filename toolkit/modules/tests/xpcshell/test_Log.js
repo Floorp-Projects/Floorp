@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* eslint-disable block-spacing */
-
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
 );
@@ -126,7 +124,7 @@ add_task(async function log_message_with_params() {
   };
   Assert.equal(
     formatMessage("Fail is ${sub}", { sub: ob }),
-    "Fail is (function() {})"
+    "Fail is (function () {})"
   );
 
   // Fall back to .toString if both .toJSON and .toSource fail.
@@ -135,7 +133,7 @@ add_task(async function log_message_with_params() {
   };
   Assert.equal(
     formatMessage("Fail is ${sub}", { sub: ob }),
-    "Fail is function() {}"
+    "Fail is function () {}"
   );
 
   // Fall back to '[object]' if .toJSON, .toSource and .toString fail.
@@ -243,7 +241,7 @@ add_task(async function log_message_with_params() {
   };
   Assert.equal(
     formatMessage("Broken valueOf ${}", vOf),
-    'Broken valueOf ({a:1, valueOf:(function() {\n      throw new Error("oh noes valueOf");\n    })})'
+    'Broken valueOf ({a:1, valueOf:(function () {\n      throw new Error("oh noes valueOf");\n    })})'
   );
   /* eslint-enable object-shorthand */
 

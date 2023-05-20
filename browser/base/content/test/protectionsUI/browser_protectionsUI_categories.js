@@ -23,8 +23,8 @@ registerCleanupFunction(function () {
 });
 
 add_task(async function testCookieCategoryLabel() {
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab(
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://www.example.com",
     async function () {
       // Ensure the category nodes exist.
@@ -182,8 +182,8 @@ add_task(async function testCategorySections() {
     }
   }
 
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab(
+    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://www.example.com",
     async function () {
       // Ensure the category nodes exist.

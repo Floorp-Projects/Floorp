@@ -71084,7 +71084,7 @@
 
     function getIdentifiers(items) {
       let ids = [];
-      items.forEach(function(item) {
+      items.forEach(function (item) {
         if (lib$6.isObjectPattern(item) || lib$6.isArrayPattern(item)) {
           ids = ids.concat(getPatternIdentifiers(item));
         } else if (lib$6.isIdentifier(item)) {
@@ -73481,7 +73481,7 @@
     	}
 
     	function workerHandler(publicInterface) {
-    	  return function(msg) {
+    	  return function (msg) {
     	    const { id, method, calls } = msg.data;
 
     	    Promise.all(
