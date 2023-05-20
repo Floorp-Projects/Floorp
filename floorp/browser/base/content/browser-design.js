@@ -22,7 +22,8 @@ function setBrowserDesign() {
     gnomeUI: `@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`,
     FluerialUI: `@import url(chrome://browser/skin/floorplegacy/test_legacy.css);`,
     FluerialUIMultitab:`@import url(chrome://browser/skin/floorplegacy/test_legacy.css);
-                        @import url(chrome://browser/skin/floorplegacy/test_legacy_multitab.css);`
+                        @import url(chrome://browser/skin/floorplegacy/test_legacy_multitab.css);`,
+    WebkitUI: `@import url(chrome://browser/skin/webkitUI/webkitUI.css);`,
   }
   var Tag = document.createElement('style');
   Tag.setAttribute("id", "browserdesgin");
@@ -44,6 +45,9 @@ function setBrowserDesign() {
       break;
     case 6:
       if (AppConstants.platform == "linux") Tag.innerText = ThemeCSS.gnomeUI;
+      break;
+    case 7:
+      Tag.innerText = ThemeCSS.WebkitUI;
       break;
     case 8: 
       Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.FluerialUIMultitab : ThemeCSS.FluerialUI;
