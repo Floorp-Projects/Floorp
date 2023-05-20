@@ -666,8 +666,8 @@ class PageAction {
         };
 
         primaryActionCallback = async () => {
-          // eslint-disable-next-line no-use-before-define
           primary.action.data.url =
+            // eslint-disable-next-line no-use-before-define
             await CFRPageActions._fetchLatestAddonVersion(content.addon.id);
           this._blockMessage(id);
           this.dispatchUserAction(primary.action);

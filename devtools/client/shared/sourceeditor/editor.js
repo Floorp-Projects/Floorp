@@ -167,8 +167,8 @@ function Editor(config) {
     // - \u2066 LEFT-TO-RIGHT ISOLATE
     // - \u2067 RIGHT-TO-LEFT ISOLATE
     // - \u2069 POP DIRECTIONAL ISOLATE
-    // eslint-disable-next-line no-control-regex
     specialChars:
+      // eslint-disable-next-line no-control-regex
       /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028\u2029\u202d\u202e\u2066\u2067\u2069\ufeff\ufff9-\ufffc]/,
     specialCharPlaceholder: char => {
       // Use the doc provided to the setup function if we don't have a reference to a codeMirror
