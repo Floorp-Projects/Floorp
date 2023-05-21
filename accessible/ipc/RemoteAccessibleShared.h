@@ -12,83 +12,12 @@
  * other/RemoteAccessible.h.
  */
 
-/*
- * Return the states for the proxied accessible.
- */
-virtual uint64_t State() override;
-
-/*
- * Return the native states for the proxied accessible.
- */
-uint64_t NativeState() const;
-
-/*
- * Set aName to the name of the proxied accessible.
- * Return the ENameValueFlag passed from Accessible::Name
- */
-ENameValueFlag Name(nsString& aName) const override;
-
-/*
- * Set aValue to the value of the proxied accessible.
- */
-void Value(nsString& aValue) const override;
-
-/*
- * Set aHelp to the help string of the proxied accessible.
- */
-void Help(nsString& aHelp) const;
-
-/**
- * Set aDesc to the description of the proxied accessible.
- */
-void Description(nsString& aDesc) const override;
-
-/**
- * Get the set of attributes on the proxied accessible.
- */
-virtual already_AddRefed<AccAttributes> Attributes() override;
-
-virtual Relation RelationByType(RelationType aType) const override;
-
-virtual mozilla::a11y::GroupPos GroupPosition() override;
 void ScrollToPoint(uint32_t aScrollType, int32_t aX, int32_t aY);
 
 void Announce(const nsString& aAnnouncement, uint16_t aPriority);
 
-virtual int32_t CaretOffset() const override;
-
-virtual void TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
-                           nsAString& aText) const override;
-
-virtual void TextAfterOffset(int32_t aOffset,
-                             AccessibleTextBoundary aBoundaryType,
-                             int32_t* aStartOffset, int32_t* aEndOffset,
-                             nsAString& aText) override;
-
-virtual void TextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
-                          int32_t* aStartOffset, int32_t* aEndOffset,
-                          nsAString& aText) override;
-
-virtual void TextBeforeOffset(int32_t aOffset,
-                              AccessibleTextBoundary aBoundaryType,
-                              int32_t* aStartOffset, int32_t* aEndOffset,
-                              nsAString& aText) override;
-
-virtual int32_t OffsetAtPoint(int32_t aX, int32_t aY,
-                              uint32_t aCoordType) override;
-
-virtual bool SetSelectionBoundsAt(int32_t aSelectionNum, int32_t aStartOffset,
-                                  int32_t aEndOffset) override;
-
-virtual bool RemoveFromSelection(int32_t aSelectionNum) override;
-
-virtual void ScrollSubstringTo(int32_t aStartOffset, int32_t aEndOffset,
-                               uint32_t aScrollType) override;
-
 void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
                             uint32_t aCoordinateType, int32_t aX, int32_t aY);
-
-void Text(nsString* aText);
 
 void ReplaceText(const nsString& aText);
 
@@ -102,86 +31,9 @@ bool DeleteText(int32_t aStartPos, int32_t aEndPos);
 
 bool PasteText(int32_t aPosition);
 
-LayoutDeviceIntPoint ImagePosition(uint32_t aCoordType);
-
-LayoutDeviceIntSize ImageSize();
-
-uint32_t LinkCount();
-
-RemoteAccessible* TableOfACell();
-
-uint32_t ColIdx();
-
-uint32_t RowIdx();
-
-void GetPosition(uint32_t* aRowIdx, uint32_t* aColIdx);
-
-uint32_t ColExtent();
-
-uint32_t RowExtent();
-
-void GetColRowExtents(uint32_t* aColIdx, uint32_t* aRowIdx,
-                      uint32_t* aColExtent, uint32_t* aRowExtent);
-
-void ColHeaderCells(nsTArray<RemoteAccessible*>* aCells);
-
-void RowHeaderCells(nsTArray<RemoteAccessible*>* aCells);
-
-bool IsCellSelected();
-
-RemoteAccessible* TableCaption();
-void TableSummary(nsString& aSummary);
-uint32_t TableColumnCount();
-uint32_t TableRowCount();
-RemoteAccessible* TableCellAt(uint32_t aRow, uint32_t aCol);
-int32_t TableCellIndexAt(uint32_t aRow, uint32_t aCol);
-int32_t TableColumnIndexAt(uint32_t aCellIndex);
-int32_t TableRowIndexAt(uint32_t aCellIndex);
-void TableRowAndColumnIndicesAt(uint32_t aCellIndex, int32_t* aRow,
-                                int32_t* aCol);
-uint32_t TableColumnExtentAt(uint32_t aRow, uint32_t aCol);
-uint32_t TableRowExtentAt(uint32_t aRow, uint32_t aCol);
-void TableColumnDescription(uint32_t aCol, nsString& aDescription);
-void TableRowDescription(uint32_t aRow, nsString& aDescription);
-bool TableColumnSelected(uint32_t aCol);
-bool TableRowSelected(uint32_t aRow);
-bool TableCellSelected(uint32_t aRow, uint32_t aCol);
-uint32_t TableSelectedCellCount();
-uint32_t TableSelectedColumnCount();
-uint32_t TableSelectedRowCount();
-void TableSelectedCells(nsTArray<RemoteAccessible*>* aCellIDs);
-void TableSelectedCellIndices(nsTArray<uint32_t>* aCellIndices);
-void TableSelectedColumnIndices(nsTArray<uint32_t>* aColumnIndices);
-void TableSelectedRowIndices(nsTArray<uint32_t>* aRowIndices);
-void TableSelectColumn(uint32_t aCol);
-void TableSelectRow(uint32_t aRow);
-void TableUnselectColumn(uint32_t aCol);
-void TableUnselectRow(uint32_t aRow);
-RemoteAccessible* AtkTableColumnHeader(int32_t aCol);
-RemoteAccessible* AtkTableRowHeader(int32_t aRow);
-
-void AtkKeyBinding(nsString& aBinding);
-
-double CurValue() const override;
-double MinValue() const override;
-double MaxValue() const override;
-double Step() const override;
-
-Accessible* ChildAtPoint(
-    int32_t aX, int32_t aY,
-    LocalAccessible::EWhichChildAtPoint aWhichChild) override;
-LayoutDeviceIntRect Bounds() const override;
-virtual nsIntRect BoundsInCSSPixels() const override;
-
-virtual void Language(nsAString& aLocale) override;
 void DocType(nsString& aType);
 void MimeType(nsString aMime);
 void URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
                         nsString& aMimeType);
-
-void Extents(bool aNeedsScreenCoords, int32_t* aX, int32_t* aY, int32_t* aWidth,
-             int32_t* aHeight);
-
-virtual void DOMNodeID(nsString& aID) const override;
 
 #endif

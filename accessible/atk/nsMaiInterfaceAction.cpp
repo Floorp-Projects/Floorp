@@ -65,11 +65,7 @@ static const gchar* getKeyBindingCB(AtkAction* aAction, gint aActionIndex) {
     return nullptr;
   }
   nsAutoString keyBindingsStr;
-  if (a11y::IsCacheActive() || acc->IsLocal()) {
-    AccessibleWrap::GetKeyBinding(acc, keyBindingsStr);
-  } else {
-    acc->AsRemote()->AtkKeyBinding(keyBindingsStr);
-  }
+  AccessibleWrap::GetKeyBinding(acc, keyBindingsStr);
 
   return AccessibleWrap::ReturnString(keyBindingsStr);
 }

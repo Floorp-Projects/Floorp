@@ -46,12 +46,6 @@ xpcAccessibleHyperText::GetCharacterCount(int32_t* aCharacterCount) {
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-#if defined(XP_WIN)
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   *aCharacterCount = static_cast<int32_t>(Intl()->CharacterCount());
   return NS_OK;
 }
@@ -123,12 +117,6 @@ xpcAccessibleHyperText::GetCharacterAtOffset(int32_t aOffset,
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-#if defined(XP_WIN)
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   *aCharacter = Intl()->CharAt(aOffset);
   return NS_OK;
 }
@@ -144,10 +132,6 @@ xpcAccessibleHyperText::GetTextAttributes(
   *aAttributes = nullptr;
 
   if (!mIntl) return NS_ERROR_FAILURE;
-
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
 
   RefPtr<AccAttributes> attributes = Intl()->TextAttributes(
       aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
@@ -174,10 +158,6 @@ xpcAccessibleHyperText::GetDefaultTextAttributes(
   *aAttributes = nullptr;
 
   if (!mIntl) return NS_ERROR_FAILURE;
-
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
 
   RefPtr<AccAttributes> attributes = Intl()->DefaultTextAttributes();
   RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
@@ -210,12 +190,6 @@ xpcAccessibleHyperText::GetCharacterExtents(int32_t aOffset, int32_t* aX,
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-#if defined(XP_WIN)
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   LayoutDeviceIntRect rect = Intl()->CharBounds(aOffset, aCoordType);
   rect.GetRect(aX, aY, aWidth, aHeight);
   return NS_OK;
@@ -233,12 +207,6 @@ xpcAccessibleHyperText::GetRangeExtents(int32_t aStartOffset,
   *aX = *aY = *aWidth = *aHeight = 0;
 
   if (!mIntl) return NS_ERROR_FAILURE;
-
-#if defined(XP_WIN)
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
 
   LayoutDeviceIntRect rect =
       Intl()->TextBounds(aStartOffset, aEndOffset, aCoordType);
@@ -285,12 +253,6 @@ xpcAccessibleHyperText::GetSelectionCount(int32_t* aSelectionCount) {
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-#if defined(XP_WIN)
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   *aSelectionCount = Intl()->SelectionCount();
   return NS_OK;
 }
@@ -307,21 +269,11 @@ xpcAccessibleHyperText::GetSelectionBounds(int32_t aSelectionNum,
 
   if (aSelectionNum < 0) return NS_ERROR_INVALID_ARG;
 
-  if (mIntl->IsLocal() || a11y::IsCacheActive()) {
-    if (aSelectionNum >= Intl()->SelectionCount()) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    Intl()->SelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
-  } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    nsString unused;
-    mIntl->AsRemote()->SelectionBoundsAt(aSelectionNum, unused, aStartOffset,
-                                         aEndOffset);
-#endif
+  if (aSelectionNum >= Intl()->SelectionCount()) {
+    return NS_ERROR_INVALID_ARG;
   }
+
+  Intl()->SelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
   return NS_OK;
 }
 
@@ -333,12 +285,6 @@ xpcAccessibleHyperText::SetSelectionBounds(int32_t aSelectionNum,
 
   if (aSelectionNum < 0) return NS_ERROR_INVALID_ARG;
 
-#if defined(XP_WIN)
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   Intl()->SetSelectionBoundsAt(aSelectionNum, aStartOffset, aEndOffset);
   return NS_OK;
 }
@@ -347,12 +293,6 @@ NS_IMETHODIMP
 xpcAccessibleHyperText::AddSelection(int32_t aStartOffset, int32_t aEndOffset) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-#if defined(XP_WIN)
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   Intl()->AddToSelection(aStartOffset, aEndOffset);
   return NS_OK;
 }
@@ -360,12 +300,6 @@ xpcAccessibleHyperText::AddSelection(int32_t aStartOffset, int32_t aEndOffset) {
 NS_IMETHODIMP
 xpcAccessibleHyperText::RemoveSelection(int32_t aSelectionNum) {
   if (!mIntl) return NS_ERROR_FAILURE;
-
-#if defined(XP_WIN)
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
 
   Intl()->RemoveFromSelection(aSelectionNum);
   return NS_OK;
@@ -419,10 +353,6 @@ NS_IMETHODIMP
 xpcAccessibleHyperText::GetSelectionRanges(nsIArray** aRanges) {
   NS_ENSURE_ARG_POINTER(aRanges);
   *aRanges = nullptr;
-
-  if (!IntlLocal() && !a11y::IsCacheActive()) {
-    return NS_ERROR_FAILURE;
-  }
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMutableArray> xpcRanges =
@@ -615,12 +545,6 @@ xpcAccessibleHyperText::GetLinkCount(int32_t* aLinkCount) {
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-#if defined(XP_WIN)
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
-
   *aLinkCount = static_cast<int32_t>(Intl()->LinkCount());
   return NS_OK;
 }
@@ -632,12 +556,6 @@ xpcAccessibleHyperText::GetLinkAt(int32_t aIndex,
   *aLink = nullptr;
 
   if (!mIntl) return NS_ERROR_FAILURE;
-
-#if defined(XP_WIN)
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
 
   NS_IF_ADDREF(*aLink = ToXPC(Intl()->LinkAt(aIndex)));
   return NS_OK;
@@ -654,11 +572,6 @@ xpcAccessibleHyperText::GetLinkIndex(nsIAccessibleHyperLink* aLink,
 
   nsCOMPtr<nsIAccessible> xpcLink(do_QueryInterface(aLink));
   Accessible* accLink = xpcLink->ToInternalGeneric();
-#if defined(XP_WIN)
-  if (accLink->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
   *aIndex = Intl()->LinkIndexOf(accLink);
   return NS_OK;
 }
@@ -670,12 +583,6 @@ xpcAccessibleHyperText::GetLinkIndexAtOffset(int32_t aOffset,
   *aLinkIndex = -1;  // API says this magic value means 'not found'
 
   if (!mIntl) return NS_ERROR_FAILURE;
-
-#if defined(XP_WIN)
-  if (mIntl->IsRemote() && !a11y::IsCacheActive()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-#endif
 
   *aLinkIndex = Intl()->LinkIndexAtOffset(aOffset);
   return NS_OK;

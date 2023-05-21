@@ -37,9 +37,6 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
 #include "mozilla/a11y/RemoteAccessibleShared.h"
 
-  virtual void TakeFocus() const override;
-  virtual void SetCaretOffset(int32_t aOffset) override;
-
   bool GetCOMInterface(void** aOutAccessible) const;
   void SetCOMInterface(const RefPtr<IAccessible>& aIAccessible) {
     if (aIAccessible) {

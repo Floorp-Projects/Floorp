@@ -437,17 +437,6 @@ static gchar* getTextSelectionCB(AtkText* aText, gint aSelectionNum,
   }
 
   int32_t startOffset = 0, endOffset = 0;
-  if (acc->IsRemote() && !a11y::IsCacheActive()) {
-    RemoteAccessible* remote = acc->AsRemote();
-    nsString data;
-    remote->SelectionBoundsAt(aSelectionNum, data, &startOffset, &endOffset);
-    *aStartOffset = startOffset;
-    *aEndOffset = endOffset;
-
-    NS_ConvertUTF16toUTF8 dataAsUTF8(data);
-    return (dataAsUTF8.get()) ? g_strdup(dataAsUTF8.get()) : nullptr;
-  }
-
   HyperTextAccessibleBase* text = acc->AsHyperTextBase();
   if (!text || !acc->IsTextRole()) {
     return nullptr;
