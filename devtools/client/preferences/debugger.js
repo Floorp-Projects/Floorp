@@ -60,5 +60,4 @@ pref("devtools.debugger.features.autocomplete-expressions", false);
 pref("devtools.debugger.features.map-expression-bindings", true);
 pref("devtools.debugger.features.log-points", true);
 pref("devtools.debugger.features.inline-preview", true);
-pref("devtools.debugger.features.blackbox-lines", false);
 pref("devtools.debugger.features.javascript-tracing", false);

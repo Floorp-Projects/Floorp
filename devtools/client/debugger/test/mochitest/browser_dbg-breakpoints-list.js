@@ -116,7 +116,6 @@ add_task(async function testBreakpointsListForOriginalFiles() {
 });
 
 add_task(async function testBreakpointsListForIgnoredLines() {
-  await pushPref("devtools.debugger.features.blackbox-lines", true);
   const dbg = await initDebugger("doc-sourcemaps.html", "entry.js");
 
   info("Add breakpoint to the entry.js (original source)");
