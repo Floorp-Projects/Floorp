@@ -17,7 +17,6 @@
 
 #include "mozilla/a11y/DocAccessibleChild.h"
 #include "mozilla/Preferences.h"
-#include "nsAccessibilityService.h"
 
 #include "ISimpleDOM.h"
 
@@ -66,26 +65,6 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
   if (aGuidService == SID_IAccessibleContentDocument) {
     if (aIID != IID_IAccessible) return E_NOINTERFACE;
 
-    // If acc is within an OOP iframe document, the top level document
-    // lives in a different process.
-    if (XRE_IsContentProcess()) {
-      RootAccessible* root = localAcc->RootAccessible();
-      // root will be null if acc is the ApplicationAccessible.
-      if (root) {
-        DocAccessibleChild* ipcDoc = root->IPCDoc();
-        if (ipcDoc) {
-          RefPtr<IAccessible> topDoc = ipcDoc->GetTopLevelDocIAccessible();
-          // topDoc will be null if this isn't an OOP iframe document.
-          if (topDoc) {
-            topDoc.forget(aInstancePtr);
-            return S_OK;
-          }
-        }
-      }
-    }
-
-    MOZ_ASSERT(acc->IsLocal() || a11y::IsCacheActive(),
-               "We should only handle remote accs here if the cache is on!");
     Relation rel = acc->RelationByType(RelationType::CONTAINING_TAB_PANE);
     RefPtr<IAccessible> next = MsaaAccessible::GetFrom(rel.Next());
     if (!next) {

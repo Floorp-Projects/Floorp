@@ -214,12 +214,6 @@ uint32_t DocAccessibleParent::AddSubtree(
       newProxy->ApplyCache(CacheUpdateType::Initial, fields);
     }
 
-#if defined(XP_WIN)
-    if (!a11y::IsCacheActive()) {
-      MsaaAccessible::GetFrom(newProxy)->SetID(newChild.MsaaID());
-    }
-#endif
-
     mPendingOOPChildDocs.RemoveIf([&](dom::BrowserBridgeParent* bridge) {
       MOZ_ASSERT(bridge->GetBrowserParent(),
                  "Pending BrowserBridgeParent should be alive");
