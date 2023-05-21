@@ -11015,7 +11015,7 @@
 #if defined(XP_MACOSX)
 -   name: media.plugin_helper_process.enabled
     type: RelaxedAtomicBool
-    value: @IS_NIGHTLY_BUILD@
+    value: false
     mirror: always
 #endif
 
